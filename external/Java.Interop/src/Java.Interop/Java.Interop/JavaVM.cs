@@ -238,10 +238,15 @@ namespace Java.Interop
 		}
 
 		ConcurrentDictionary<IntPtr, JniEnvironment>    Environments = new ConcurrentDictionary<IntPtr, JniEnvironment> ();
+
 		ConcurrentBag<JniInstanceMethodID>              TrackedInstanceMethods;
 		ConcurrentBag<JniStaticMethodID>                TrackedStaticMethods;
 		ConcurrentBag<JniInstanceFieldID>               TrackedInstanceFields;
 		ConcurrentBag<JniStaticFieldID>                 TrackedStaticFields;
+
+		JavaVMInterface                                 Invoker;
+
+		public  JavaVMSafeHandle                        SafeHandle      {get; private set;}
 
 		public JavaVM (JavaVMSafeHandle safeHandle, JniEnvironmentSafeHandle jnienv = null)
 		{
@@ -272,10 +277,6 @@ namespace Java.Interop
 			Dispose ();
 		}
 
-		public  JavaVMSafeHandle    SafeHandle      {get; private set;}
-
-		JavaVMInterface Invoker;
-
 		public override string ToString ()
 		{
 			return string.Format ("Java.Interop.JavaVM(0x{0})", SafeHandle.DangerousGetHandle ().ToString ("x"));
@@ -289,23 +290,8 @@ namespace Java.Interop
 			if (current == this)
 				current = null;
 
-			if (TrackedInstanceMethods != null)
-				foreach (var m in TrackedInstanceMethods)
-					m.Dispose ();
-			if (TrackedStaticMethods != null)
-				foreach (var m in TrackedStaticMethods)
-					m.Dispose ();
-			if (TrackedInstanceFields != null)
-				foreach (var m in TrackedInstanceFields)
-					m.Dispose ();
-			if (TrackedStaticFields != null)
-				foreach (var m in TrackedStaticFields)
-					m.Dispose ();
-
+			ClearTrackedReferences ();
 			Invoker.DestroyJavaVM (SafeHandle);
-			foreach (var env in Environments.Values)
-				env.Dispose ();
-			Environments.Clear ();
 			JavaVM _;
 			JavaVMs.TryRemove (SafeHandle.DangerousGetHandle (), out _);
 			SafeHandle.Dispose ();
@@ -366,6 +352,26 @@ namespace Java.Interop
 		{
 			if (TrackedStaticFields != null)
 				TrackedStaticFields.Add (field);
+		}
+
+		public void ClearTrackedReferences ()
+		{
+			foreach (var env in Environments.Values)
+				env.Dispose ();
+			Environments.Clear ();
+
+			if (TrackedInstanceMethods != null)
+				foreach (var m in TrackedInstanceMethods)
+					m.Dispose ();
+			if (TrackedStaticMethods != null)
+				foreach (var m in TrackedStaticMethods)
+					m.Dispose ();
+			if (TrackedInstanceFields != null)
+				foreach (var m in TrackedInstanceFields)
+					m.Dispose ();
+			if (TrackedStaticFields != null)
+				foreach (var m in TrackedStaticFields)
+					m.Dispose ();
 		}
 	}
 }
