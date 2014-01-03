@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>10.0.0</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{94BD81F7-B06F-4295-9636-F8A3B6BDC762}</ProjectGuid>
+    <ProjectTypeGuids>{786C830F-07A1-408B-BD7F-6EE04809D6DB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <OutputType>Library</OutputType>
+    <RootNamespace>Java.Interop</RootNamespace>
+    <AssemblyName>Java.Interop</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkProfile>Profile6</TargetFrameworkProfile>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>..\..\bin\Debug</OutputPath>
+    <DefineConstants>DEBUG;INTEROP</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>false</ConsolePause>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <Optimize>true</Optimize>
+    <OutputPath>..\..\bin\Release</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>false</ConsolePause>
+    <DefineConstants>INTEROP</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Java.Interop\JavaVM.cs" />
+    <Compile Include="Java.Interop\JniReferenceSafeHandle.cs" />
+    <Compile Include="Java.Interop\JniInstanceMethodID.cs" />
+    <Compile Include="Java.Interop\JniEnvironment.cs" />
+    <Compile Include="Java.Interop\JniEnvironment.g.cs" />
+    <Compile Include="Java.Interop\JniType.cs" />
+    <Compile Include="Java.Interop\JniHandles.cs" />
+    <Compile Include="Java.Interop\JValue.cs" />
+    <Compile Include="Java.Interop\JObjectRefType.cs" />
+    <Compile Include="Java.Interop\JniInstanceFieldID.cs" />
+    <Compile Include="Java.Interop\JniStaticFieldID.cs" />
+    <Compile Include="Java.Interop\JniStaticMethodID.cs" />
+    <Compile Include="Java.Interop\JniGlobalReference.cs" />
+    <Compile Include="Java.Interop\JniWeakGlobalReference.cs" />
+    <Compile Include="Java.Interop\JniLocalReference.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
+  <PropertyGroup>
+    <BuildDependsOn>
+      BuildJniEnvironment_g_cs;
+      $(BuildDependsOn)
+    </BuildDependsOn>
+  </PropertyGroup>
+  <PropertyGroup>
+    <Runtime Condition="'$(OS)' != 'Windows_NT'">mono</Runtime>
+  </PropertyGroup>
+  <Target Name="BuildJniEnvironment_g_cs" Inputs="$(OutputPath)\jnienv-gen.exe" Outputs="Java.Interop\JniEnvironment.g.cs">
+    <Exec Command="$(Runtime) &quot;$(OutputPath)\jnienv-gen.exe&quot; Java.Interop\JniEnvironment.g.cs" />
+  </Target>
+</Project>
