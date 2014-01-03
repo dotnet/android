@@ -178,7 +178,7 @@ namespace Java.Interop
 						c = vm;
 				}
 				if (count == 0)
-					throw new InvalidOperationException ("No JavaVM has been created.");
+					throw new InvalidOperationException ("No JavaVM has been created. Please use JavaVMBuilder.CreateJavaVM().");
 				if (count > 1)
 					throw new NotSupportedException (string.Format ("Found {0} JavaVMs. Don't know which to use. Use JavaVM.SetCurrent().", count));
 				return current = c;
@@ -223,8 +223,15 @@ namespace Java.Interop
 			JavaVMSafeHandle            javavm;
 			JniEnvironmentSafeHandle    jnienv;
 			int r = JNI_CreateJavaVM (out javavm, out jnienv, ref args);
-			if (r != 0)
-				throw new InvalidOperationException ("JNI_CreateJavaVM returned " + r);
+			if (r != 0) {
+				var message = string.Format ("{1}JNI_CreateJavaVM returned {0}.",
+						r,
+						JavaVMs.Count == 0
+							? ""
+							: "The JDK supports creating at most one JVM per process, ever; " +
+							  "do you have a JVM running already, or have you already created (and destroyed?) one? ");
+				throw new NotSupportedException (message);
+			}
 			return new JavaVM (javavm, jnienv) {
 				TrackIDs    = trackIds,
 			};
