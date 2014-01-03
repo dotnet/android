@@ -10,6 +10,11 @@ namespace Hello
 		public static void Main (string[] args)
 		{
 			Console.WriteLine ("Hello World!");
+			try {
+				var ignore = JavaVM.Current;
+			} catch (InvalidOperationException e) {
+				Console.WriteLine (e);
+			}
 			foreach (var h in JavaVM.GetCreatedJavaVMs ()) {
 				Console.WriteLine ("PRE: GetCreatedJavaVMs: {0}", h);
 			}
@@ -19,7 +24,7 @@ namespace Hello
 				Console.WriteLine ("vm.SafeHandle={0}", vm.SafeHandle);
 				var t = new JniType ("java/lang/Object");
 				var c = t.GetConstructor ("()V");
-				var o = t.CreateInstance (c);
+				var o = t.NewObject (c);
 				var m = t.GetInstanceMethod ("hashCode", "()I");
 				int i = m.InvokeIntMethod (o);
 				Console.WriteLine ("java.lang.Object={0}", o);
