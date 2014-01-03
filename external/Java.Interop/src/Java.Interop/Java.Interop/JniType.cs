@@ -30,7 +30,7 @@ namespace Java.Interop {
 			return JniMembers.GetMethodID (SafeHandle, "<init>", signature);
 		}
 
-		public JniLocalReference CreateInstance (JniInstanceMethodID constructor, params JValue[] @params)
+		public JniLocalReference NewObject (JniInstanceMethodID constructor, params JValue[] @params)
 		{
 			return JniActivator.NewObject (SafeHandle, constructor, @params);
 		}
