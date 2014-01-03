@@ -137,6 +137,9 @@ namespace Java.Interop {
 			Debug.WriteLine ("# JniEnvironment..ctor: creating invoker");
 			Invoker = SafeHandle.CreateInvoker ();
 			JavaVM  = javaVM;
+
+			Object_class    = new JniType ("java/lang/Class");
+			Object_toString = Object_class.GetInstanceMethod ("toString", "()Ljava/lang/String;");
 		}
 
 		internal JniEnvironmentInvoker Invoker;
@@ -178,9 +181,20 @@ namespace Java.Interop {
 			SafeHandle = null;
 		}
 
+		JniType             Object_class;
+		JniInstanceMethodID Object_toString;
+
 		public Exception GetExceptionForLastThrowable ()
 		{
-			return null;
+			using (var e = JniErrors.ExceptionOccurred ()) {
+				if (e == null || e.IsInvalid)
+					return null;
+				JniErrors.ExceptionDescribe ();
+				JniErrors.ExceptionClear ();
+				using (var s = Object_toString.InvokeObjectMethod (e)) {
+					return new JniException (JniStrings.ToString (s) ?? "JNI error: no message provided");
+				}
+			}
 		}
 
 		#if false
