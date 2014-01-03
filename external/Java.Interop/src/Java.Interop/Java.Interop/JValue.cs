@@ -75,7 +75,7 @@ namespace Android.Runtime
 		public JValue (JniReferenceSafeHandle value)
 		{
 			this = new JValue ();
-			l = value.DangerousGetHandle ();
+			l = value == null ? IntPtr.Zero : value.DangerousGetHandle ();
 		}
 
 		public override string ToString ()
