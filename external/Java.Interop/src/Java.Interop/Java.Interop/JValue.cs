@@ -77,6 +77,12 @@ namespace Android.Runtime
 			this = new JValue ();
 			l = value.DangerousGetHandle ();
 		}
+
+		public override string ToString ()
+		{
+			return string.Format ("Java.Interop.JValue(z={0},b={1},c={2},s={3},i={4},f={5},d={6},l=0x{7})",
+					z, b, c, s, i, f, d, l.ToString ("x"));
+		}
 	}
 }
 
