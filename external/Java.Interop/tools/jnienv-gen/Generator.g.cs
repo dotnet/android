@@ -1437,7 +1437,7 @@ namespace Xamarin.Java.Interop
 				Parameters    = new ParamInfo [] {new ParamInfo ("jclass", "jclass"), new ParamInfo ("jstaticfieldID", "jfieldID"), new ParamInfo ("jdouble", "val", Modifier.CanBeNull)},
 			},
 			new JniFunction {
-				DeclaringType = "JniString",
+				DeclaringType = "JniStrings",
 				Name          = "NewString",
 				// CustomWrapper = true,
 				Visibility    = "internal",
@@ -1447,7 +1447,7 @@ namespace Xamarin.Java.Interop
 				Parameters    = new ParamInfo [] {new ParamInfo (new TypeInfo ("const jchar*", "IntPtr"), "unicodeChars"), new ParamInfo ("jsize", "len")},
 			},
 			new JniFunction {
-				DeclaringType = "JniString",
+				DeclaringType = "JniStrings",
 				Name          = "GetStringLength",
 				Visibility    = "internal",
 				Prototype     = "jsize       (*GetStringLength)(JNIEnv*, jstring);",
@@ -1455,7 +1455,7 @@ namespace Xamarin.Java.Interop
 				Parameters    = new ParamInfo [] {new ParamInfo ("jstring", "@string")},
 			},
 			new JniFunction {
-				DeclaringType = "JniString",
+				DeclaringType = "JniStrings",
 				Name          = "GetStringChars",
 				Visibility    = "internal",
 				Prototype     = "const jchar* (*GetStringChars)(JNIEnv*, jstring, jboolean*);",
@@ -1463,7 +1463,7 @@ namespace Xamarin.Java.Interop
 				Parameters    = new ParamInfo [] {new ParamInfo ("jstring", "@string"), new ParamInfo ("jboolean*", "isCopy", Modifier.CanBeNull)},
 			},
 			new JniFunction {
-				DeclaringType = "JniString",
+				DeclaringType = "JniStrings",
 				Name          = "ReleaseStringChars",
 				Visibility    = "internal",
 				Prototype     = "void        (*ReleaseStringChars)(JNIEnv*, jstring, const jchar*);",
@@ -1471,7 +1471,7 @@ namespace Xamarin.Java.Interop
 				Parameters    = new ParamInfo [] {new ParamInfo ("jstring", "@string"), new ParamInfo (new TypeInfo ("const jchar*", "IntPtr"), "chars")},
 			},
 			new JniFunction {
-				DeclaringType = "JniString",
+				DeclaringType = "JniStrings",
 				Name          = "NewStringUTF",
 				Visibility    = "private",
 				Throws        = true,
@@ -1480,7 +1480,7 @@ namespace Xamarin.Java.Interop
 				Parameters    = new ParamInfo [] {new ParamInfo ("const char*", "bytes")},
 			},
 			new JniFunction {
-				DeclaringType = "JniString",
+				DeclaringType = "JniStrings",
 				Name          = "GetStringUTFLength",
 				Visibility    = "private",
 				Prototype     = "jsize       (*GetStringUTFLength)(JNIEnv*, jstring);",
@@ -1488,7 +1488,7 @@ namespace Xamarin.Java.Interop
 				Parameters    = new ParamInfo [] {new ParamInfo ("jstring", "@string")},
 			},
 			new JniFunction {
-				DeclaringType = "JniString",
+				DeclaringType = "JniStrings",
 				Name          = "GetStringUTFChars",
 				Visibility    = "private",
 				Prototype     = "const char* (*GetStringUTFChars)(JNIEnv*, jstring, jboolean*);",
@@ -1496,7 +1496,7 @@ namespace Xamarin.Java.Interop
 				Parameters    = new ParamInfo [] {new ParamInfo ("jstring", "@string"), new ParamInfo ("jboolean*", "isCopy", Modifier.CanBeNull)},
 			},
 			new JniFunction {
-				DeclaringType = "JniString",
+				DeclaringType = "JniStrings",
 				Name          = "ReleaseStringUTFChars",
 				Visibility    = "private",
 				Prototype     = "void        (*ReleaseStringUTFChars)(JNIEnv*, jstring, const char*);",
