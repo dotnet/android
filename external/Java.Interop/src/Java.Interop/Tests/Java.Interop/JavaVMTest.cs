@@ -12,24 +12,23 @@ namespace Java.InteropTests
 		[Test]
 		public void CreateJavaVM ()
 		{
-			using (var vm = CreateVM ()) {
-				Assert.IsNotNull (vm.SafeHandle);
-				Assert.IsNotNull (JniEnvironment.Current);
+			Assert.IsNotNull (JVM.Current.SafeHandle);
+			Assert.IsNotNull (JniEnvironment.Current);
+		}
+
+		[Test]
+		public void JDK_OnlySupportsOneVM ()
+		{
+			var first = JVM.Current;
+			try {
+				var second = new JavaVMBuilder ().CreateJavaVM ();
+				// If we reach here, we're in a JVM that supports > 1 VM
+				second.Dispose ();
+				Assert.Ignore ();
+			} catch (NotSupportedException) {
+			} catch (Exception e){
+				Assert.Fail ("Expected NotSupportedException; got: {0}", e);
 			}
-		}
-
-		[Test, ExpectedException (typeof (InvalidOperationException))]
-		public void JavaVM_Current_Throws_InvalidOperationException ()
-		{
-			var vm = JavaVM.Current;
-			GC.KeepAlive (vm);
-		}
-
-		static JavaVM CreateVM (bool trackIds = false)
-		{
-			return new JavaVMBuilder () {
-				TrackIDs = trackIds,
-			}.CreateJavaVM ();
 		}
 	}
 }
