@@ -33,6 +33,6 @@ Global
 		{FED322CB-8A45-4DDB-A885-8FE517994478}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
-		StartupItem = tests\Hello\Hello.csproj
+		StartupItem = samples\Hello\Hello.csproj
 	EndGlobalSection
 EndGlobal
