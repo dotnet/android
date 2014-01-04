@@ -351,6 +351,13 @@ namespace Java.Interop
 			Invoker.DestroyJavaVM (SafeHandle);
 		}
 
+		public virtual Exception GetExceptionForThrowable (JniLocalReference value)
+		{
+			using (var s = JniEnvironment.Current.Object_toString.InvokeObjectMethod (value)) {
+				return new JniException (JniStrings.ToString (s) ?? "JNI error: no message provided");
+			}
+		}
+
 		public int LocalReferenceCount {
 			get {return LrefCount;}
 		}

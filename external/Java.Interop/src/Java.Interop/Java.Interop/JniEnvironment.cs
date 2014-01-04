@@ -182,8 +182,8 @@ namespace Java.Interop {
 			SafeHandle = null;
 		}
 
-		JniType             Object_class;
-		JniInstanceMethodID Object_toString;
+		            JniType             Object_class;
+		internal    JniInstanceMethodID Object_toString;
 
 		public Exception GetExceptionForLastThrowable ()
 		{
@@ -192,9 +192,7 @@ namespace Java.Interop {
 					return null;
 				JniErrors.ExceptionDescribe ();
 				JniErrors.ExceptionClear ();
-				using (var s = Object_toString.InvokeObjectMethod (e)) {
-					return new JniException (JniStrings.ToString (s) ?? "JNI error: no message provided");
-				}
+				return JavaVM.GetExceptionForThrowable (e);
 			}
 		}
 
