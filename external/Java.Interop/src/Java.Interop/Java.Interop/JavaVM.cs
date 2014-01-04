@@ -154,7 +154,7 @@ namespace Java.Interop
 		}
 	}
 
-	public sealed class JavaVM : IDisposable
+	public class JavaVM : IDisposable
 	{
 		const string LibraryName = "/System/Library/Frameworks/JavaVM.framework/JavaVM";
 
@@ -276,7 +276,7 @@ namespace Java.Interop
 
 		~JavaVM ()
 		{
-			Dispose ();
+			Dispose (false);
 		}
 
 		public override string ToString ()
@@ -285,6 +285,11 @@ namespace Java.Interop
 		}
 
 		public void Dispose ()
+		{
+			Dispose (true);
+		}
+
+		protected virtual void Dispose (bool disposing)
 		{
 			if (SafeHandle == null)
 				return;
