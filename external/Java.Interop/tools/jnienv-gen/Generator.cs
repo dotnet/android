@@ -211,6 +211,7 @@ namespace Xamarin.Java.Interop
 					o.WriteLine ("\t\t\t\treturn null;");
 					o.WriteLine ("\t\t\tvar result = JniEnvironment.Current.Invoker.{0} (JniEnvironment.Current.SafeHandle, array.Length);", entry.Name);
 					RaiseException (o, entry);
+					LogHandleCreation (o, entry, "result", "\t\t\t");
 					o.WriteLine ("\t\t\tCopyArray (array, result);");
 					o.WriteLine ("\t\t\treturn result;");
 					break;
@@ -256,6 +257,7 @@ namespace Xamarin.Java.Interop
 					RaiseException (o, entry);
 					if (is_void) {
 					} else {
+						LogHandleCreation (o, entry, "tmp", "\t\t\t");
 						o.WriteLine ("\t\t\treturn tmp;");
 					}
 					break;
@@ -286,6 +288,25 @@ namespace Xamarin.Java.Interop
 			if (c == 0)
 				throw new InvalidOperationException ("Couldn't find matching array copy method for " + entry.Name + ". No candidates found.");
 			return r;
+		}
+
+		static void LogHandleCreation (TextWriter o, JniFunction entry, string variable, string indent)
+		{
+			string rt = entry.GetReturnType (entry.Name);
+			switch (rt) {
+			case "JniGlobalReference":
+				o.Write (indent);
+				o.WriteLine ("JavaVM.Current.LogCreateGlobalRef ({0});", variable);
+				break;
+			case "JniLocalReference":
+				o.Write (indent);
+				o.WriteLine ("JavaVM.Current.LogCreateLocalRef ({0});", variable);
+				break;
+			case "JniWeakGlobalReference":
+				o.Write (indent);
+				o.WriteLine ("JavaVM.Current.LogCreateWeakGlobalRef ({0});", variable);
+				break;
+			}
 		}
 
 		static void NullCheckParameters (TextWriter o, ParamInfo[] ps)

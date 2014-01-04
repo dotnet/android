@@ -175,6 +175,7 @@ namespace Java.Interop {
 		{
 			if (SafeHandle == null)
 				return;
+			Object_class.Dispose ();
 			if (Current == this)
 				current = null;
 			SafeHandle.Dispose ();

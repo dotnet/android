@@ -12,6 +12,7 @@ namespace Java.InteropTests
 		[Test]
 		public void CreateJavaVM ()
 		{
+			Assert.AreSame (JVM.Current, JavaVM.Current);
 			Assert.IsNotNull (JVM.Current.SafeHandle);
 			Assert.IsNotNull (JniEnvironment.Current);
 		}

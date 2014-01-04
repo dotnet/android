@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading;
 
 namespace Java.Interop
 {
@@ -105,7 +106,7 @@ namespace Java.Interop
 
 	public sealed class JavaVMBuilder {
 
-		List<string> Options = new List<string> ();
+		internal    List<string>    Options = new List<string> ();
 
 		public  JniVersion  JniVersion                  {get; set;}
 		public  bool        IgnoreUnrecognizedOptions   {get; set;}
@@ -132,25 +133,9 @@ namespace Java.Interop
 			return this;
 		}
 
-		public unsafe JavaVM CreateJavaVM ()
+		public JavaVM CreateJavaVM ()
 		{
-			var args = new JavaVMInitArgs () {
-				version             = JniVersion,
-				nOptions            = Options.Count,
-				ignoreUnrecognized  = IgnoreUnrecognizedOptions ? (byte) 1 : (byte) 0,
-			};
-			var options = new JavaVMOption [Options.Count];
-			try {
-				for (int i = 0; i < options.Length; ++i)
-					options [i].optionString = Marshal.StringToHGlobalAnsi (Options [i]);
-				fixed (JavaVMOption* popts = options) {
-					args.options = (IntPtr) popts;
-					return JavaVM.CreateJavaVM (ref args, TrackIDs);
-				}
-			} finally {
-				for (int i = 0; i < options.Length; ++i)
-					Marshal.FreeHGlobal (options [i].optionString);
-			}
+			return new JavaVM (this);
 		}
 	}
 
@@ -218,7 +203,7 @@ namespace Java.Interop
 			return new JavaVM (handle, null);
 		}
 
-		internal static JavaVM CreateJavaVM (ref JavaVMInitArgs args, bool trackIds)
+		void CreateJavaVM (ref JavaVMInitArgs args)
 		{
 			JavaVMSafeHandle            javavm;
 			JniEnvironmentSafeHandle    jnienv;
@@ -232,10 +217,7 @@ namespace Java.Interop
 							  "do you have a JVM running already, or have you already created (and destroyed?) one? ");
 				throw new NotSupportedException (message);
 			}
-			return new JavaVM (javavm, jnienv) {
-				TrackIDs    = trackIds,
-				DestroyVM   = true,
-			};
+			Initialize (javavm, jnienv);
 		}
 
 		ConcurrentDictionary<IntPtr, JniEnvironment>    Environments = new ConcurrentDictionary<IntPtr, JniEnvironment> ();
@@ -248,30 +230,68 @@ namespace Java.Interop
 		JavaVMInterface                                 Invoker;
 		bool                                            DestroyVM;
 
+		int                                             GrefCount;
+		int                                             LrefCount;
+		int                                             WgrefCount;
+
 		public  JavaVMSafeHandle                        SafeHandle      {get; private set;}
 
+		protected JavaVM ()
+			: this (new JavaVMBuilder ())
+		{
+		}
+
+		internal protected unsafe JavaVM (JavaVMBuilder builder)
+		{
+			if (builder == null)
+				throw new ArgumentNullException ("builder");
+
+			var args = new JavaVMInitArgs () {
+				version             = builder.JniVersion,
+				nOptions            = builder.Options.Count,
+				ignoreUnrecognized  = builder.IgnoreUnrecognizedOptions ? (byte) 1 : (byte) 0,
+			};
+			var options = new JavaVMOption [builder.Options.Count];
+			try {
+				for (int i = 0; i < options.Length; ++i)
+					options [i].optionString = Marshal.StringToHGlobalAnsi (builder.Options [i]);
+				fixed (JavaVMOption* popts = options) {
+					args.options = (IntPtr) popts;
+					CreateJavaVM (ref args);
+				}
+			} finally {
+				for (int i = 0; i < options.Length; ++i)
+					Marshal.FreeHGlobal (options [i].optionString);
+			}
+
+			TrackIDs    = builder.TrackIDs;
+			DestroyVM   = true;
+		}
+
 		public JavaVM (JavaVMSafeHandle safeHandle, JniEnvironmentSafeHandle jnienv = null)
+		{
+			Initialize (safeHandle, jnienv);
+		}
+
+		void Initialize (JavaVMSafeHandle safeHandle, JniEnvironmentSafeHandle jnienv)
 		{
 			if (safeHandle == null)
 				throw new ArgumentNullException ("safeHandle");
 			if (safeHandle.IsInvalid)
 				throw new ArgumentException ("safeHandle is not valid.", "safeHandle");
 
+			if (current == null)
+				current = this;
+
 			SafeHandle  = safeHandle;
 			Invoker     = safeHandle.CreateInvoker ();
-			Debug.WriteLine ("# JavaVM..ctor: post invoker");
 
 			if (jnienv != null) {
-				Debug.WriteLine ("# JavaVM..ctor: creating JniEnvironment");
 				var env = new JniEnvironment (jnienv, this);
-				Debug.WriteLine ("# JavaVM..ctor: created JniEnvironment");
 				Environments.TryAdd (env.SafeHandle.DangerousGetHandle (), env);
 			}
 
 			JavaVMs.TryAdd (SafeHandle.DangerousGetHandle (), this);
-
-			if (current == null)
-				current = this;
 		}
 
 		~JavaVM ()
@@ -281,7 +301,7 @@ namespace Java.Interop
 
 		public override string ToString ()
 		{
-			return string.Format ("Java.Interop.JavaVM(0x{0})", SafeHandle.DangerousGetHandle ().ToString ("x"));
+			return string.Format ("{0}(0x{1})", GetType ().FullName, SafeHandle.DangerousGetHandle ().ToString ("x"));
 		}
 
 		public void Dispose ()
@@ -329,6 +349,48 @@ namespace Java.Interop
 		public void DestroyJavaVM ()
 		{
 			Invoker.DestroyJavaVM (SafeHandle);
+		}
+
+		public int LocalReferenceCount {
+			get {return LrefCount;}
+		}
+
+		public int GlobalReferenceCount {
+			get {return GrefCount;}
+		}
+
+		public int WeakGlobalReferenceCount {
+			get {return WgrefCount;}
+		}
+
+		protected internal virtual void LogCreateLocalRef (JniLocalReference value)
+		{
+			Interlocked.Increment (ref LrefCount);
+		}
+
+		protected internal virtual void LogDestroyLocalRef (IntPtr value)
+		{
+			Interlocked.Decrement (ref LrefCount);
+		}
+
+		protected internal virtual void LogCreateGlobalRef (JniGlobalReference value)
+		{
+			Interlocked.Increment (ref GrefCount);
+		}
+
+		protected internal virtual void LogDestroyGlobalRef (IntPtr value)
+		{
+			Interlocked.Decrement (ref GrefCount);
+		}
+
+		protected internal virtual void LogCreateWeakGlobalRef (JniWeakGlobalReference value)
+		{
+			Interlocked.Increment (ref WgrefCount);
+		}
+
+		protected internal virtual void LogDestroyWeakGlobalRef (IntPtr value)
+		{
+			Interlocked.Decrement (ref WgrefCount);
 		}
 
 		public bool TrackIDs {
