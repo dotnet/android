@@ -234,6 +234,7 @@ namespace Java.Interop
 			}
 			return new JavaVM (javavm, jnienv) {
 				TrackIDs    = trackIds,
+				DestroyVM   = true,
 			};
 		}
 
@@ -245,6 +246,7 @@ namespace Java.Interop
 		ConcurrentBag<JniStaticFieldID>                 TrackedStaticFields;
 
 		JavaVMInterface                                 Invoker;
+		bool                                            DestroyVM;
 
 		public  JavaVMSafeHandle                        SafeHandle      {get; private set;}
 
@@ -291,7 +293,8 @@ namespace Java.Interop
 				current = null;
 
 			ClearTrackedReferences ();
-			Invoker.DestroyJavaVM (SafeHandle);
+			if (DestroyVM)
+				DestroyJavaVM ();
 			JavaVM _;
 			JavaVMs.TryRemove (SafeHandle.DangerousGetHandle (), out _);
 			SafeHandle.Dispose ();
@@ -316,6 +319,11 @@ namespace Java.Interop
 			} finally {
 				Marshal.FreeHGlobal (threadArgs.name);
 			}
+		}
+
+		public void DestroyJavaVM ()
+		{
+			Invoker.DestroyJavaVM (SafeHandle);
 		}
 
 		public bool TrackIDs {
@@ -354,7 +362,7 @@ namespace Java.Interop
 				TrackedStaticFields.Add (field);
 		}
 
-		public void ClearTrackedReferences ()
+		void ClearTrackedReferences ()
 		{
 			foreach (var env in Environments.Values)
 				env.Dispose ();
