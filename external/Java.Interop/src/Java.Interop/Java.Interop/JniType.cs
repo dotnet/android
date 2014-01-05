@@ -38,6 +38,16 @@ namespace Java.Interop {
 			return JniActivator.NewObject (SafeHandle, constructor, @params);
 		}
 
+		public JniInstanceFieldID GetInstanceField (string name, string signature)
+		{
+			return JniMembers.GetFieldID (SafeHandle, name, signature);
+		}
+
+		public JniStaticFieldID GetStaticField (string name, string signature)
+		{
+			return JniMembers.GetStaticFieldID (SafeHandle, name, signature);
+		}
+
 		public JniInstanceMethodID GetInstanceMethod (string name, string signature)
 		{
 			return JniMembers.GetMethodID (SafeHandle, name, signature);
@@ -51,6 +61,11 @@ namespace Java.Interop {
 			if (Interlocked.CompareExchange (ref cachedMethod, m, null) != null)
 				m.Dispose ();
 			return cachedMethod;
+		}
+
+		public JniStaticMethodID GetStaticMethod (string name, string signature)
+		{
+			return JniMembers.GetStaticMethodID (SafeHandle, name, signature);
 		}
 	}
 }

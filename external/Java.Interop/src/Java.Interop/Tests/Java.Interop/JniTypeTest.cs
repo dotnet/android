@@ -29,6 +29,15 @@ namespace Java.InteropTests
 				Integer_class.GetConstructor ("(C)V");
 			}
 		}
+
+		[Test]
+		public void GetStaticFieldID ()
+		{
+			using (var System_class = new JniType ("java/lang/System")) {
+				var System_in = System_class.GetStaticField ("in", "Ljava/io/InputStream;");
+				Assert.IsNotNull (System_in);
+			}
+		}
 	}
 }
 

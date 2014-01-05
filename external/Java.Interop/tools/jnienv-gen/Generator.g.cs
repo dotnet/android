@@ -1280,7 +1280,7 @@ namespace Xamarin.Java.Interop
 				Visibility    = "public",
 				Throws        = true,
 				Prototype     = "jstaticfieldID    (*GetStaticFieldID)(JNIEnv*, jclass, const char*, const char*);",
-				ReturnType    = new TypeInfo ("jfieldID"),
+				ReturnType    = new TypeInfo ("jstaticfieldID"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jclass", "jclass"), new ParamInfo ("const char*", "name"), new ParamInfo ("const char*", "sig")},
 			},
 			new JniFunction {
