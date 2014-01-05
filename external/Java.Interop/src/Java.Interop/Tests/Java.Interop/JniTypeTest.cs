@@ -16,7 +16,7 @@ namespace Java.InteropTests
 				var Integer_ctor        = Integer_class.GetConstructor ("(I)V");
 				var Integer_intValue    = Integer_class.GetInstanceMethod ("intValue", "()I");
 				using (var o = Integer_class.NewObject (Integer_ctor, new JValue (42))) {
-					int v = Integer_intValue.InvokeIntMethod (o);
+					int v = Integer_intValue.CallVirtualInt32Method (o);
 					Assert.AreEqual (42, v);
 				}
 			}

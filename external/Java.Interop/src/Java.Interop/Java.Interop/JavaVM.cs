@@ -353,7 +353,7 @@ namespace Java.Interop
 
 		public virtual Exception GetExceptionForThrowable (JniLocalReference value)
 		{
-			using (var s = JniEnvironment.Current.Object_toString.InvokeObjectMethod (value)) {
+			using (var s = JniEnvironment.Current.Object_toString.CallVirtualObjectMethod (value)) {
 				return new JniException (JniStrings.ToString (s) ?? "JNI error: no message provided");
 			}
 		}

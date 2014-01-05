@@ -35,7 +35,7 @@ namespace Java.InteropTests
 		{
 			return JniStrings.ToString (
 					TypeRef.GetCachedInstanceMethod (ref Object_toString, "toString", "()Ljava/lang/String;")
-						.InvokeObjectMethod (SafeHandle),
+						.CallVirtualObjectMethod (SafeHandle),
 					JniHandleOwnership.Transfer);
 		}
 	}
