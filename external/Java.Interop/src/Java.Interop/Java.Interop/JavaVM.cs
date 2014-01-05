@@ -412,25 +412,25 @@ namespace Java.Interop
 			}
 		}
 
-		public void Track (JniInstanceMethodID method)
+		internal void Track (JniInstanceMethodID method)
 		{
 			if (TrackedInstanceMethods != null)
 				TrackedInstanceMethods.Add (method);
 		}
 
-		public void Track (JniStaticMethodID method)
+		internal void Track (JniStaticMethodID method)
 		{
 			if (TrackedStaticMethods != null)
 				TrackedStaticMethods.Add (method);
 		}
 
-		public void Track (JniInstanceFieldID field)
+		internal void Track (JniInstanceFieldID field)
 		{
 			if (TrackedInstanceFields != null)
 				TrackedInstanceFields.Add (field);
 		}
 
-		public void Track (JniStaticFieldID field)
+		internal void Track (JniStaticFieldID field)
 		{
 			if (TrackedStaticFields != null)
 				TrackedStaticFields.Add (field);
