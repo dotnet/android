@@ -23,6 +23,21 @@ namespace Java.Interop
 			}
 		}
 
+		public JniGlobalReference NewGlobalRef ()
+		{
+			return JniHandles.NewGlobalRef (this);
+		}
+
+		public JniLocalReference NewLocalRef ()
+		{
+			return JniHandles.NewLocalRef (this);
+		}
+
+		public JniWeakGlobalReference NewWeakGlobalRef ()
+		{
+			return JniHandles.NewWeakGlobalRef (this);
+		}
+
 		public override string ToString ()
 		{
 			return string.Format ("{0}(0x{1})", GetType ().FullName, handle.ToString ("x"));

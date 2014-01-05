@@ -12,7 +12,7 @@ namespace Java.Interop {
 		public JniType (string classname)
 		{
 			using (var t = JniTypes.FindClass (classname))
-				SafeHandle = JniHandles.NewGlobalRef (t);
+				SafeHandle = t.NewGlobalRef ();
 		}
 
 		public void Dispose ()
