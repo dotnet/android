@@ -39,6 +39,7 @@
     <Compile Include="Java.Interop\JavaVMTest.cs" />
     <Compile Include="Java.Interop\JniTypeTest.cs" />
     <Compile Include="Java.Interop\JVM.cs" />
+    <Compile Include="Java.Interop\JniReferenceSafeHandleTest.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
