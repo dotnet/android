@@ -190,7 +190,7 @@ namespace Xamarin.Java.Interop
 				Visibility    = "internal",
 				Prototype     = "jobject     (*NewLocalRef)(JNIEnv*, jobject);",
 				ReturnType    = new TypeInfo ("jobject"),
-				Parameters    = new ParamInfo [] {new ParamInfo ("jobject", "@ref", Modifier.CanBeNull)},
+				Parameters    = new ParamInfo [] {new ParamInfo ("jobject", "jobject", Modifier.CanBeNull)},
 			},
 			new JniFunction {
 				DeclaringType = "JniHandles",
@@ -1996,7 +1996,7 @@ namespace Xamarin.Java.Interop
 				Visibility    = "internal",
 				Prototype     = "jweak       (*NewWeakGlobalRef)(JNIEnv*, jobject);",
 				ReturnType    = new TypeInfo ("jweak"),
-				Parameters    = new ParamInfo [] {new ParamInfo ("jobject", "obj", Modifier.CanBeNull)},
+				Parameters    = new ParamInfo [] {new ParamInfo ("jobject", "jobject", Modifier.CanBeNull)},
 			},
 			new JniFunction {
 				DeclaringType = "JniHandles",
