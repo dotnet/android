@@ -41,3 +41,26 @@ methods into more semantically meaningful types.
 
 Due to the increases use of reference types, there will be increased GC heap
 use. I don't know if this will have a meaningful impact on performance. 
+
+## Notes
+
+The JDK VM supports an effectively unlimited number of global references.
+While Dalvik craps out after creating ~64k GREFs, consider the following
+on the JDK:
+
+    var t = new JniType ("java/lang/Object");
+    var c = t.GetConstructor ("()V");
+    var o = t.NewInstance (c);
+    int count = 0;
+    while (true) {
+        Console.WriteLine ("count: {0}", count++);
+        o.NewGlobalRef ();
+    }
+
+I killed the above loop after reaching 25686556 instances.
+
+    count: 25686556
+    ^C
+
+I'm not sure when the JDK would stop handing out references, but it's probably
+bound to process heap limits (e.g. depends on 32-bit vs. 64-bit process).
