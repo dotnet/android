@@ -325,11 +325,19 @@ namespace Xamarin.Java.Interop
 					continue;
 				}
 				var t = p.Type.GetManagedType (isReturn:false);
-				if (t == "string" || t == "JniReferenceSafeHandle" ||
+				if (t == "string") {
+					haveChecks = true;
+					o.WriteLine ("\t\t\tif ({0} == null)", Escape (p.Name), p.Type.ManagedType);
+					o.WriteLine ("\t\t\t\tthrow new ArgumentNullException (\"{0}\");", Escape (p.Name));
+					continue;
+				}
+				if (t == "JniReferenceSafeHandle" ||
 						(t.StartsWith ("Jni") && t.EndsWith ("ID"))) {
 					haveChecks = true;
 					o.WriteLine ("\t\t\tif ({0} == null)", Escape (p.Name), p.Type.ManagedType);
 					o.WriteLine ("\t\t\t\tthrow new ArgumentNullException (\"{0}\");", Escape (p.Name));
+					o.WriteLine ("\t\t\tif ({0}.IsInvalid)", Escape (p.Name), p.Type.ManagedType);
+					o.WriteLine ("\t\t\t\tthrow new ArgumentException (\"{0}\");", Escape (p.Name));
 					continue;
 				}
 			}
