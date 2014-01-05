@@ -2,9 +2,9 @@ using System;
 
 namespace Java.Interop
 {
-	static partial class JniStrings {
+	public static partial class JniStrings {
 
-		public static unsafe string ToString (JniReferenceSafeHandle value)
+		public static unsafe string ToString (JniReferenceSafeHandle value, JniHandleOwnership transfer = JniHandleOwnership.DoNotTransfer)
 		{
 			if (value == null || value.IsInvalid)
 				return null;
@@ -14,6 +14,7 @@ namespace Java.Interop
 				return new string ((char*) p, 0, len);
 			} finally {
 				JniStrings.ReleaseStringChars (value, p);
+				JniHandles.Dispose (value, transfer);
 			}
 		}
 	}

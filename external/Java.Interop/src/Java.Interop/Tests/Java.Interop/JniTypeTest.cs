@@ -22,6 +22,14 @@ namespace Java.InteropTests
 			}
 		}
 
+		[Test]
+		public void ObjectBinding ()
+		{
+			using (var b = new TestObjectBinding ()) {
+				Console.WriteLine ("# ObjectBinding: {0}", b.ToString ());
+			}
+		}
+
 		[Test, ExpectedException (typeof (JniException))]
 		public void InvalidSignatureThrowsJniException ()
 		{

@@ -15,6 +15,16 @@ namespace Java.Interop {
 				SafeHandle = t.NewGlobalRef ();
 		}
 
+		public static JniType GetCachedJniType (ref JniType cachedType, string classname)
+		{
+			if (cachedType != null && !cachedType.SafeHandle.IsInvalid)
+				return cachedType;
+			var t = new JniType (classname);
+			if (Interlocked.CompareExchange (ref cachedType, t, null) != null)
+				t.Dispose ();
+			return cachedType;
+		}
+
 		public void Dispose ()
 		{
 			if (SafeHandle == null)
@@ -26,6 +36,11 @@ namespace Java.Interop {
 		public JniInstanceMethodID GetConstructor (string signature)
 		{
 			return JniMembers.GetMethodID (SafeHandle, "<init>", signature);
+		}
+
+		public JniInstanceMethodID GetCachedConstructor (ref JniInstanceMethodID cachedMethod, string signature)
+		{
+			return GetCachedInstanceMethod (ref cachedMethod, "<init>", signature);
 		}
 
 		public JniLocalReference AllocObject ()
@@ -43,9 +58,29 @@ namespace Java.Interop {
 			return JniMembers.GetFieldID (SafeHandle, name, signature);
 		}
 
+		public JniInstanceFieldID GetCachedInstanceField (ref JniInstanceFieldID cachedField, string name, string signature)
+		{
+			if (cachedField != null && !cachedField.IsInvalid)
+				return cachedField;
+			var m = GetInstanceField (name, signature);
+			if (Interlocked.CompareExchange (ref cachedField, m, null) != null)
+				m.Dispose ();
+			return cachedField;
+		}
+
 		public JniStaticFieldID GetStaticField (string name, string signature)
 		{
 			return JniMembers.GetStaticFieldID (SafeHandle, name, signature);
+		}
+
+		public JniStaticFieldID GetCachedStaticField (ref JniStaticFieldID cachedField, string name, string signature)
+		{
+			if (cachedField != null && !cachedField.IsInvalid)
+				return cachedField;
+			var m = GetStaticField (name, signature);
+			if (Interlocked.CompareExchange (ref cachedField, m, null) != null)
+				m.Dispose ();
+			return cachedField;
 		}
 
 		public JniInstanceMethodID GetInstanceMethod (string name, string signature)
@@ -66,6 +101,16 @@ namespace Java.Interop {
 		public JniStaticMethodID GetStaticMethod (string name, string signature)
 		{
 			return JniMembers.GetStaticMethodID (SafeHandle, name, signature);
+		}
+
+		public JniStaticMethodID GetCachedStaticMethod (ref JniStaticMethodID cachedMethod, string name, string signature)
+		{
+			if (cachedMethod != null && !cachedMethod.IsInvalid)
+				return cachedMethod;
+			var m = GetStaticMethod (name, signature);
+			if (Interlocked.CompareExchange (ref cachedMethod, m, null) != null)
+				m.Dispose ();
+			return cachedMethod;
 		}
 	}
 }
