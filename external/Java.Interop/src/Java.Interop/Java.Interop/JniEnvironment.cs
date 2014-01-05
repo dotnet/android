@@ -76,6 +76,7 @@ namespace Java.Interop {
 		{
 			if (current != null && current.SafeHandle.DangerousGetHandle () == handle)
 				return current;
+			current = null;
 			var env = new JniEnvironment (new JniEnvironmentSafeHandle (handle), javaVM:null);
 			JavaVMSafeHandle vm;
 			int r = env.Invoker.GetJavaVM (env.SafeHandle, out vm);
