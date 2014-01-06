@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Linq;
 
 using Java.Interop;
 
@@ -9,13 +10,20 @@ namespace Java.InteropTests {
 
 		public static readonly new JavaVM Current = new JVM ();
 
+		bool logGrefs;
+
 		JVM ()
 		{
+			logGrefs = Environment.GetEnvironmentVariable ("_JI_LOG")
+				.Split (new []{ ',' }, StringSplitOptions.RemoveEmptyEntries)
+				.Contains ("gref");
 		}
 
 		protected override void LogCreateGlobalRef (JniGlobalReference value, JniReferenceSafeHandle sourceValue)
 		{
 			base.LogCreateGlobalRef (value, sourceValue);
+			if (!logGrefs)
+				return;
 			Console.WriteLine ("+g+ grefc {0} gwrefc {1} obj-handle 0x{2}/{3} -> new-handle {4}/{5} from {6}",
 					GlobalReferenceCount,
 					WeakGlobalReferenceCount,
@@ -29,6 +37,8 @@ namespace Java.InteropTests {
 		protected override void LogDestroyGlobalRef (IntPtr value)
 		{
 			base.LogDestroyGlobalRef (value);
+			if (!logGrefs)
+				return;
 			Console.WriteLine ("-g- grefc {0} gwrefc {1} handle 0x{2}/{3} from {4}",
 				GlobalReferenceCount,
 				WeakGlobalReferenceCount,
