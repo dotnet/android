@@ -14,7 +14,7 @@ namespace Java.InteropTests {
 
 		JVM ()
 		{
-			logGrefs = Environment.GetEnvironmentVariable ("_JI_LOG")
+			logGrefs = (Environment.GetEnvironmentVariable ("_JI_LOG") ?? "")
 				.Split (new []{ ',' }, StringSplitOptions.RemoveEmptyEntries)
 				.Contains ("gref");
 		}
