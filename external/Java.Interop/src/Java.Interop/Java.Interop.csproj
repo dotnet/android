@@ -53,6 +53,7 @@
     <Compile Include="Java.Interop\JniStrings.cs" />
     <Compile Include="Java.Interop\JniException.cs" />
     <Compile Include="Java.Interop\JniHandleOwnership.cs" />
+    <Compile Include="Java.Interop\JniObject.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
   <PropertyGroup>

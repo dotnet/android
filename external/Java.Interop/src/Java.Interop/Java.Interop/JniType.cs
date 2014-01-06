@@ -7,12 +7,32 @@ namespace Java.Interop {
 
 	public class JniType : IDisposable {
 
+		public static unsafe JniType DefineClass (string name, JniReferenceSafeHandle loader, byte[] classFileData)
+		{
+			fixed (byte* buf = classFileData) {
+				var lref = JniTypes.DefineClass (name, loader, (IntPtr)buf, checked((int) classFileData.Length));
+				return new JniType (lref, JniHandleOwnership.Transfer);
+			}
+		}
+
 		public JniGlobalReference SafeHandle {get; private set;}
 
 		public JniType (string classname)
+			: this (JniTypes.FindClass (classname), JniHandleOwnership.Transfer)
 		{
-			using (var t = JniTypes.FindClass (classname))
-				SafeHandle = t.NewGlobalRef ();
+		}
+
+		public JniType (JniReferenceSafeHandle safeHandle, JniHandleOwnership transfer)
+		{
+			if (safeHandle == null)
+				throw new ArgumentNullException ("safeHandle");
+			if (safeHandle.IsInvalid)
+				throw new ArgumentException ("safeHandle must be valid.", "safeHandle");
+			try {
+				SafeHandle = safeHandle.NewGlobalRef ();
+			} finally {
+				JniHandles.Dispose (safeHandle, transfer);
+			}
 		}
 
 		public static JniType GetCachedJniType (ref JniType cachedType, string classname)
@@ -31,6 +51,28 @@ namespace Java.Interop {
 				return;
 			SafeHandle.Dispose ();
 			SafeHandle = null;
+		}
+
+		public JniType GetSuperclass ()
+		{
+			var lref = JniTypes.GetSuperclass (SafeHandle);
+			if (!lref.IsInvalid)
+				return new JniType (lref, JniHandleOwnership.Transfer);
+			return null;
+		}
+
+		public bool IsAssignableFrom (JniType c)
+		{
+			if (c == null)
+				throw new ArgumentNullException ("c");
+			if (c.SafeHandle == null || c.SafeHandle.IsInvalid)
+				throw new ArgumentException ("'c' has an invalid handle.", "c");
+			return JniTypes.IsAssignableFrom (c.SafeHandle, SafeHandle);
+		}
+
+		public bool IsInstanceOfType (JniReferenceSafeHandle value)
+		{
+			return JniTypes.IsInstanceOf (value, SafeHandle);
 		}
 
 		public JniInstanceMethodID GetConstructor (string signature)

@@ -23,6 +23,40 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		public void GetSuperclass ()
+		{
+			using (var t = new JniType ("java/lang/Object")) {
+				var b = t.GetSuperclass ();
+				Assert.IsNull (b);
+				using (var s = new JniType ("java/lang/String")) {
+					using (var st = s.GetSuperclass ()) {
+						Assert.IsFalse (object.ReferenceEquals (t, st));
+						Assert.IsTrue (JniObject.IsSameInstance (t.SafeHandle, st.SafeHandle));
+					}
+				}
+			}
+		}
+
+		[Test]
+		public void IsAssignableFrom ()
+		{
+			using (var o = new JniType ("java/lang/Object"))
+			using (var s = new JniType ("java/lang/String")) {
+				Assert.IsTrue (o.IsAssignableFrom (s));
+				Assert.IsFalse (s.IsAssignableFrom (o));
+			}
+		}
+
+		[Test]
+		public void IsInstanceOfType ()
+		{
+			using (var t = new JniType ("java/lang/Object"))
+			using (var b = new TestObjectBinding ()) {
+				Assert.IsTrue (t.IsInstanceOfType (b.SafeHandle));
+			}
+		}
+
+		[Test]
 		public void ObjectBinding ()
 		{
 			using (var b = new TestObjectBinding ()) {
