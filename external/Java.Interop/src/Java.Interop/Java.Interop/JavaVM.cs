@@ -372,36 +372,50 @@ namespace Java.Interop
 
 		protected internal virtual void LogCreateLocalRef (JniLocalReference value)
 		{
+			if (value == null || value.IsInvalid)
+				return;
 			Interlocked.Increment (ref LrefCount);
 		}
 
 		protected internal virtual void LogCreateLocalRef (JniLocalReference value, JniReferenceSafeHandle sourceValue)
 		{
+			if (value == null || value.IsInvalid)
+				return;
 			Interlocked.Increment (ref LrefCount);
 		}
 
 		protected internal virtual void LogDestroyLocalRef (IntPtr value)
 		{
+			if (value == IntPtr.Zero)
+				return;
 			Interlocked.Decrement (ref LrefCount);
 		}
 
 		protected internal virtual void LogCreateGlobalRef (JniGlobalReference value, JniReferenceSafeHandle sourceValue)
 		{
+			if (value == null || value.IsInvalid)
+				return;
 			Interlocked.Increment (ref GrefCount);
 		}
 
 		protected internal virtual void LogDestroyGlobalRef (IntPtr value)
 		{
+			if (value == IntPtr.Zero)
+				return;
 			Interlocked.Decrement (ref GrefCount);
 		}
 
 		protected internal virtual void LogCreateWeakGlobalRef (JniWeakGlobalReference value, JniReferenceSafeHandle sourceValue)
 		{
+			if (value == null || value.IsInvalid)
+				return;
 			Interlocked.Increment (ref WgrefCount);
 		}
 
 		protected internal virtual void LogDestroyWeakGlobalRef (IntPtr value)
 		{
+			if (value == IntPtr.Zero)
+				return;
 			Interlocked.Decrement (ref WgrefCount);
 		}
 
