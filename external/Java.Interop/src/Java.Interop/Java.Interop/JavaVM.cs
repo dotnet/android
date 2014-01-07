@@ -26,20 +26,6 @@ namespace Java.Interop
 		public AttachCurrentThreadAsDaemonDelegate AttachCurrentThreadAsDaemon; //jint        (*AttachCurrentThreadAsDaemon)(JavaVM*, JNIEnv**, void*);
 	}
 
-	struct JniNativeMethod {
-
-		public string Name;
-		public string Sig;
-		public Delegate Func;
-
-		public JniNativeMethod (string name, string sig, Delegate func)
-		{
-			Name = name;
-			Sig = sig;
-			Func = func;
-		}
-	}
-
 	public enum JniVersion {
 		// v1_1    = 0x00010001,
 		v1_2    = 0x00010002,

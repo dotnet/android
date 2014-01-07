@@ -77,6 +77,24 @@ namespace Java.Interop {
 			return JniTypes.IsInstanceOf (value, SafeHandle);
 		}
 
+		JniNativeMethodRegistration[] methods;
+
+		public void RegisterNativeMethods (params JniNativeMethodRegistration[] methods)
+		{
+			if (methods == null)
+				throw new ArgumentNullException ("methods");
+			int r = JniTypes.RegisterNatives (SafeHandle, methods, checked ((int)methods.Length));
+			if (r != 0)
+				throw new JniException ("Unable to register native methods.");
+			// Prevents method delegates from being GC'd so long as this type remains
+			this.methods = methods;
+		}
+
+		public void UnregisterNativeMethods ()
+		{
+			JniTypes.UnregisterNatives (SafeHandle);
+		}
+
 		public JniInstanceMethodID GetConstructor (string signature)
 		{
 			return JniMembers.GetMethodID (SafeHandle, "<init>", signature);

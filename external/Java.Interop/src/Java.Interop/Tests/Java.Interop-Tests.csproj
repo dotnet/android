@@ -43,7 +43,25 @@
     <Compile Include="Java.Interop\TestObjectBinding.cs" />
     <Compile Include="Java.Interop\JniObjectTest.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <JavaInteropTestJar Include="java\com\xamarin\interop\TestType.java" />
+    <JavaInteropTestJar Include="java\com\xamarin\interop\MonoVM.java" />
+  </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <BuildDependsOn>
+      BuildJars;
+      $(BuildDependsOn)
+    </BuildDependsOn>
+  </PropertyGroup>
+  <ItemGroup>
+    <TestJar Include="$(OutputPath)interop-test.jar" />
+  </ItemGroup>
+  <Target Name="BuildJars" Inputs="@(JavaInteropTestJar)" Outputs="@(TestJar)">
+    <MakeDir Directories="$(OutputPath)it-classes" />
+    <Exec Command="javac -d &quot;$(OutputPath)it-classes&quot; @(JavaInteropTestJar -&gt; '%(Identity)', ' ')" />
+    <Exec Command="jar cf &quot;$(OutputPath)interop-test.jar&quot; -C &quot;$(OutputPath)it-classes&quot; ." />
+  </Target>
   <ItemGroup>
     <ProjectReference Include="..\Java.Interop.csproj">
       <Project>{94BD81F7-B06F-4295-9636-F8A3B6BDC762}</Project>

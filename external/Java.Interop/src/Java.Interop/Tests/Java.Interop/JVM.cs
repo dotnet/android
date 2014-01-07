@@ -14,6 +14,7 @@ namespace Java.InteropTests {
 		TextWriter  grefLog;
 
 		JVM ()
+			: base (new JavaVMBuilder ().AddSystemProperty ("java.class.path", "interop-test.jar"))
 		{
 			string logGrefs = (Environment.GetEnvironmentVariable ("_JI_LOG") ?? "")
 				.Split (new []{ ',' }, StringSplitOptions.RemoveEmptyEntries)

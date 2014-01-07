@@ -528,7 +528,7 @@ namespace Xamarin.Java.Interop
 			case "const jchar*":
 			case "const char*":             return "string";
 			case "JavaVM**":                return "out JavaVMSafeHandle";
-			case "const JNINativeMethod*":	return "JniNativeMethod []";
+			case "const JNINativeMethod*":	return "JniNativeMethodRegistration []";
 			case "jobjectRefType":          return "JObjectRefType";
 			default:
 				if (native_type.EndsWith ("Array"))

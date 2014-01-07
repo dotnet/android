@@ -1900,7 +1900,7 @@ namespace Xamarin.Java.Interop
 				Parameters    = new ParamInfo [] {new ParamInfo ("jdoubleArray", "array"), new ParamInfo ("jsize", "start"), new ParamInfo ("jsize", "len"), new ParamInfo (new TypeInfo ("const jdouble*", "double[]"), "buf")},
 			},
 			new JniFunction {
-				DeclaringType = "JniNativeMethods",
+				DeclaringType = "JniTypes",
 				Name          = "RegisterNatives",
 				Visibility    = "internal",
 				// Prebind       = true,
@@ -1910,7 +1910,7 @@ namespace Xamarin.Java.Interop
 				Parameters    = new ParamInfo [] {new ParamInfo ("jclass", "jclass"), new ParamInfo ("const JNINativeMethod*", "methods"), new ParamInfo ("jint", "nMethods")},
 			},
 			new JniFunction {
-				DeclaringType = "JniNativeMethods",
+				DeclaringType = "JniTypes",
 				Name          = "UnregisterNatives",
 				Visibility    = "internal",
 				Prototype     = "jint        (*UnregisterNatives)(JNIEnv*, jclass);",
