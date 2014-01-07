@@ -8,7 +8,7 @@ namespace Java.Interop {
 		JniStaticFieldID ()
 			: base (IntPtr.Zero, ownsHandle:false)
 		{
-			JavaVM.Current.Track (this);
+			JniEnvironment.Current.JavaVM.Track (this);
 		}
 
 		protected override bool ReleaseHandle ()

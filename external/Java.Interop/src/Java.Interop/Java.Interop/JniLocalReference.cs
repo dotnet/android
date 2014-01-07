@@ -12,7 +12,7 @@ namespace Java.Interop
 
 		protected override bool ReleaseHandle ()
 		{
-			JavaVM.Current.LogDestroyLocalRef (handle);
+			JniEnvironment.Current.JavaVM.LogDestroyLocalRef (handle);
 			JniHandles._DeleteLocalRef (handle);
 			return true;
 		}
