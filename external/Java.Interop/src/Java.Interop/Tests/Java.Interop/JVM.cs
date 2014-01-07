@@ -18,13 +18,11 @@ namespace Java.InteropTests {
 			string logGrefs = (Environment.GetEnvironmentVariable ("_JI_LOG") ?? "")
 				.Split (new []{ ',' }, StringSplitOptions.RemoveEmptyEntries)
 				.FirstOrDefault (e => e.StartsWith ("gref"));
-			Console.WriteLine ("# logGrefs: {0}", logGrefs);
 			if (logGrefs != null) {
 				if (logGrefs == "gref")
 					grefLog = Console.Out;
 				if (logGrefs.StartsWith ("gref=")) {
 					string file = logGrefs.Substring ("gref=".Length);
-					Console.WriteLine ("# writing grefs to file: {0}", file);
 					grefLog = File.CreateText (file);
 				}
 			}
@@ -35,7 +33,7 @@ namespace Java.InteropTests {
 			base.LogCreateGlobalRef (value, sourceValue);
 			if (grefLog == null)
 				return;
-			grefLog.WriteLine ("+g+ grefc {0} gwrefc {1} obj-handle 0x{2}/{3} -> new-handle {4}/{5} from {6}",
+			grefLog.WriteLine ("+g+ grefc {0} gwrefc {1} obj-handle 0x{2}/{3} -> new-handle 0x{4}/{5} from {6}",
 					GlobalReferenceCount,
 					WeakGlobalReferenceCount,
 					sourceValue.DangerousGetHandle ().ToString ("x"),
