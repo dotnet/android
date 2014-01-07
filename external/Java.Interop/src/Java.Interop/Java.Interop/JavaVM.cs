@@ -222,10 +222,7 @@ namespace Java.Interop
 
 		ConcurrentDictionary<IntPtr, JniEnvironment>    Environments = new ConcurrentDictionary<IntPtr, JniEnvironment> ();
 
-		ConcurrentBag<JniInstanceMethodID>              TrackedInstanceMethods;
-		ConcurrentBag<JniStaticMethodID>                TrackedStaticMethods;
-		ConcurrentBag<JniInstanceFieldID>               TrackedInstanceFields;
-		ConcurrentBag<JniStaticFieldID>                 TrackedStaticFields;
+		ConcurrentDictionary<SafeHandle, IDisposable>   TrackedInstances;
 
 		JavaVMInterface                                 Invoker;
 		bool                                            DestroyVM;
@@ -421,58 +418,39 @@ namespace Java.Interop
 
 		public bool TrackIDs {
 			get {
-				return TrackedInstanceMethods != null;
+				return TrackedInstances != null;
 			}
 			private set {
-				TrackedInstanceMethods  = new ConcurrentBag<JniInstanceMethodID> ();
-				TrackedStaticMethods    = new ConcurrentBag<JniStaticMethodID> ();
-				TrackedStaticFields     = new ConcurrentBag<JniStaticFieldID> ();
-				TrackedInstanceFields   = new ConcurrentBag<JniInstanceFieldID> ();
+				TrackedInstances        = new ConcurrentDictionary<SafeHandle, IDisposable> ();
 			}
 		}
 
-		internal void Track (JniInstanceMethodID method)
+		internal void Track (SafeHandle key, IDisposable value)
 		{
-			if (TrackedInstanceMethods != null)
-				TrackedInstanceMethods.Add (method);
+			if (TrackedInstances != null)
+				TrackedInstances.TryAdd (key, value);
 		}
 
-		internal void Track (JniStaticMethodID method)
+		internal void UnTrack (SafeHandle key)
 		{
-			if (TrackedStaticMethods != null)
-				TrackedStaticMethods.Add (method);
-		}
-
-		internal void Track (JniInstanceFieldID field)
-		{
-			if (TrackedInstanceFields != null)
-				TrackedInstanceFields.Add (field);
-		}
-
-		internal void Track (JniStaticFieldID field)
-		{
-			if (TrackedStaticFields != null)
-				TrackedStaticFields.Add (field);
+			if (TrackedInstances != null) {
+				IDisposable _;
+				TrackedInstances.TryRemove (key, out _);
+			}
 		}
 
 		void ClearTrackedReferences ()
 		{
+			if (TrackedInstances != null) {
+				foreach (var k in TrackedInstances.Keys.ToList ()) {
+					IDisposable d;
+					if (TrackedInstances.TryRemove (k, out d))
+						d.Dispose ();
+				}
+			}
 			foreach (var env in Environments.Values)
 				env.Dispose ();
 			Environments.Clear ();
-
-			if (TrackedInstanceMethods != null)
-				foreach (var m in TrackedInstanceMethods)
-					m.Dispose ();
-			if (TrackedStaticMethods != null)
-				foreach (var m in TrackedStaticMethods)
-					m.Dispose ();
-			if (TrackedInstanceFields != null)
-				foreach (var m in TrackedInstanceFields)
-					m.Dispose ();
-			if (TrackedStaticFields != null)
-				foreach (var m in TrackedStaticFields)
-					m.Dispose ();
 		}
 	}
 }

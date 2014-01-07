@@ -3,15 +3,17 @@ using System.Runtime.InteropServices;
 
 namespace Java.Interop
 {
-	public class JniInstanceFieldID : SafeHandle
+	public sealed class JniInstanceFieldID : SafeHandle
 	{
 		JniInstanceFieldID ()
 			: base (IntPtr.Zero, ownsHandle:false)
 		{
+			JniEnvironment.Current.JavaVM.Track (this, this);
 		}
 
 		protected override bool ReleaseHandle ()
 		{
+			JniEnvironment.Current.JavaVM.UnTrack (this);
 			return true;
 		}
 
