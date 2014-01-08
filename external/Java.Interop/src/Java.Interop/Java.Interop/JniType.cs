@@ -77,7 +77,10 @@ namespace Java.Interop {
 			return JniTypes.IsInstanceOf (value, SafeHandle);
 		}
 
+#pragma warning disable 0414
+		// This isn't used anywhere; it's just present so that the GC won't collect the referenced delegates.
 		JniNativeMethodRegistration[] methods;
+#pragma warning restore 0414
 
 		public void RegisterNativeMethods (params JniNativeMethodRegistration[] methods)
 		{
