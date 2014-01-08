@@ -55,6 +55,8 @@
     <Compile Include="Java.Interop\JniHandleOwnership.cs" />
     <Compile Include="Java.Interop\JniObject.cs" />
     <Compile Include="Java.Interop\JniNativeMethodRegistration.cs" />
+    <Compile Include="Java.Interop\JniFieldID.cs" />
+    <Compile Include="Java.Interop\JniMethodID.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
   <PropertyGroup>

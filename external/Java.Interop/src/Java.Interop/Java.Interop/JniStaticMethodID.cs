@@ -4,24 +4,10 @@ using System.Runtime.InteropServices;
 namespace Java.Interop
 {
 
-	public sealed class JniStaticMethodID : SafeHandle
+	public sealed class JniStaticMethodID : JniMethodID
 	{
-		private JniStaticMethodID ()
-			: base (IntPtr.Zero, ownsHandle:false)
+		JniStaticMethodID ()
 		{
-			JniEnvironment.Current.JavaVM.Track (this, this);
-		}
-
-		protected override bool ReleaseHandle ()
-		{
-			JniEnvironment.Current.JavaVM.UnTrack (this);
-			return true;
-		}
-
-		public override bool IsInvalid {
-			get {
-				return handle == IntPtr.Zero;
-			}
 		}
 
 		public JniLocalReference CallObjectMethod (JniReferenceSafeHandle @this)

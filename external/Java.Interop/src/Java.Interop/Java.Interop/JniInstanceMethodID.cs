@@ -3,24 +3,10 @@ using System.Runtime.InteropServices;
 
 namespace Java.Interop
 {
-	public sealed class JniInstanceMethodID : SafeHandle
+	public sealed class JniInstanceMethodID : JniMethodID
 	{
 		JniInstanceMethodID ()
-			: base (IntPtr.Zero, ownsHandle:false)
 		{
-			JniEnvironment.Current.JavaVM.Track (this, this);
-		}
-
-		protected override bool ReleaseHandle ()
-		{
-			JniEnvironment.Current.JavaVM.UnTrack (this);
-			return true;
-		}
-
-		public override bool IsInvalid {
-			get {
-				return handle == IntPtr.Zero;
-			}
 		}
 
 		public JniLocalReference CallVirtualObjectMethod (JniReferenceSafeHandle @this)
