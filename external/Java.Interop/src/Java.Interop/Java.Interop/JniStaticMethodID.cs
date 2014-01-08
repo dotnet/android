@@ -10,94 +10,94 @@ namespace Java.Interop
 		{
 		}
 
-		public JniLocalReference CallObjectMethod (JniReferenceSafeHandle @this)
+		public JniLocalReference CallObjectMethod (JniReferenceSafeHandle type)
 		{
-			return JniMembers.CallStaticObjectMethod (@this, this);
+			return JniMembers.CallStaticObjectMethod (type, this);
 		}
 
-		public JniLocalReference CallObjectMethod (JniReferenceSafeHandle @this, params JValue[] parameters)
+		public JniLocalReference CallObjectMethod (JniReferenceSafeHandle type, params JValue[] parameters)
 		{
-			return JniMembers.CallStaticObjectMethod (@this, this, parameters);
+			return JniMembers.CallStaticObjectMethod (type, this, parameters);
 		}
 
-		public bool CallBooleanMethod (JniReferenceSafeHandle @this)
+		public bool CallBooleanMethod (JniReferenceSafeHandle type)
 		{
-			return JniMembers.CallStaticBooleanMethod (@this, this);
+			return JniMembers.CallStaticBooleanMethod (type, this);
 		}
 
-		public bool CallBooleanMethod (JniReferenceSafeHandle @this, params JValue[] parameters)
+		public bool CallBooleanMethod (JniReferenceSafeHandle type, params JValue[] parameters)
 		{
-			return JniMembers.CallStaticBooleanMethod (@this, this, parameters);
+			return JniMembers.CallStaticBooleanMethod (type, this, parameters);
 		}
 
-		public sbyte CallByteMethod (JniReferenceSafeHandle @this)
+		public sbyte CallByteMethod (JniReferenceSafeHandle type)
 		{
-			return JniMembers.CallStaticByteMethod (@this, this);
+			return JniMembers.CallStaticByteMethod (type, this);
 		}
 
-		public sbyte CallByteMethod (JniReferenceSafeHandle @this, params JValue[] parameters)
+		public sbyte CallByteMethod (JniReferenceSafeHandle type, params JValue[] parameters)
 		{
-			return JniMembers.CallStaticByteMethod (@this, this, parameters);
+			return JniMembers.CallStaticByteMethod (type, this, parameters);
 		}
 
-		public char CallCharMethod (JniReferenceSafeHandle @this)
+		public char CallCharMethod (JniReferenceSafeHandle type)
 		{
-			return JniMembers.CallStaticCharMethod (@this, this);
+			return JniMembers.CallStaticCharMethod (type, this);
 		}
 
-		public char CallCharMethod (JniReferenceSafeHandle @this, params JValue[] parameters)
+		public char CallCharMethod (JniReferenceSafeHandle type, params JValue[] parameters)
 		{
-			return JniMembers.CallStaticCharMethod (@this, this, parameters);
+			return JniMembers.CallStaticCharMethod (type, this, parameters);
 		}
 
-		public short CallInt16Method (JniReferenceSafeHandle @this)
+		public short CallInt16Method (JniReferenceSafeHandle type)
 		{
-			return JniMembers.CallStaticShortMethod (@this, this);
+			return JniMembers.CallStaticShortMethod (type, this);
 		}
 
-		public short CallInt16Method (JniReferenceSafeHandle @this, params JValue[] parameters)
+		public short CallInt16Method (JniReferenceSafeHandle type, params JValue[] parameters)
 		{
-			return JniMembers.CallStaticShortMethod (@this, this, parameters);
+			return JniMembers.CallStaticShortMethod (type, this, parameters);
 		}
 
-		public int CallInt32Method (JniReferenceSafeHandle @this)
+		public int CallInt32Method (JniReferenceSafeHandle type)
 		{
-			return JniMembers.CallStaticIntMethod (@this, this);
+			return JniMembers.CallStaticIntMethod (type, this);
 		}
 
-		public int CallInt32Method (JniReferenceSafeHandle @this, params JValue[] parameters)
+		public int CallInt32Method (JniReferenceSafeHandle type, params JValue[] parameters)
 		{
-			return JniMembers.CallStaticIntMethod (@this, this, parameters);
+			return JniMembers.CallStaticIntMethod (type, this, parameters);
 		}
 
-		public long CallInt64Method (JniReferenceSafeHandle @this)
+		public long CallInt64Method (JniReferenceSafeHandle type)
 		{
-			return JniMembers.CallStaticLongMethod (@this, this);
+			return JniMembers.CallStaticLongMethod (type, this);
 		}
 
-		public long CallInt64Method (JniReferenceSafeHandle @this, params JValue[] parameters)
+		public long CallInt64Method (JniReferenceSafeHandle type, params JValue[] parameters)
 		{
-			return JniMembers.CallStaticLongMethod (@this, this, parameters);
+			return JniMembers.CallStaticLongMethod (type, this, parameters);
 		}
 
-		public float CallSingleMethod (JniReferenceSafeHandle @this)
+		public float CallSingleMethod (JniReferenceSafeHandle type)
 		{
-			return JniMembers.CallStaticFloatMethod (@this, this);
+			return JniMembers.CallStaticFloatMethod (type, this);
 		}
 
-		public float CallSingleMethod (JniReferenceSafeHandle @this, params JValue[] parameters)
+		public float CallSingleMethod (JniReferenceSafeHandle type, params JValue[] parameters)
 		{
-			return JniMembers.CallStaticFloatMethod (@this, this, parameters);
+			return JniMembers.CallStaticFloatMethod (type, this, parameters);
 		}
 
-		public double CallDoubleMethod (JniReferenceSafeHandle @this)
+		public double CallDoubleMethod (JniReferenceSafeHandle type)
 		{
-			return JniMembers.CallStaticDoubleMethod (@this, this);
+			return JniMembers.CallStaticDoubleMethod (type, this);
 		}
 
-		public double CallDoubleMethod (JniReferenceSafeHandle @this, params JValue[] parameters)
+		public double CallDoubleMethod (JniReferenceSafeHandle type, params JValue[] parameters)
 		{
-			return JniMembers.CallStaticDoubleMethod (@this, this, parameters);
+			return JniMembers.CallStaticDoubleMethod (type, this, parameters);
 		}
 	}
 }
