@@ -37,6 +37,18 @@ type checking.
 Since we now have actual types in more places, we can move the current `JNIEnv`
 methods into more semantically meaningful types.
 
+## Naming Conventions
+
+Types with a `Java` prefix are "high-level" types which participate in cross-VM
+object-reference semantics, e.g. you could add a `JavaObject` subclass to a
+Java-side collection, perform a GC, and the instance will survive the GC.
+
+The exception to this rule is the `JavaVM` type, which is the entrypoint
+to doing lots of interesting things.
+
+Types with a `Jni` prefix are "low-level" types and do *not* participate in
+object-reference semantics.
+
 ## Problems
 
 Due to the increases use of reference types, there will be increased GC heap
