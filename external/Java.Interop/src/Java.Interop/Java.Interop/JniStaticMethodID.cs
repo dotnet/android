@@ -10,6 +10,16 @@ namespace Java.Interop
 		{
 		}
 
+		public void CallVoidtMethod (JniReferenceSafeHandle type)
+		{
+			JniMembers.CallStaticVoidMethod (type, this);
+		}
+
+		public void CallVoidMethod (JniReferenceSafeHandle type, params JValue[] parameters)
+		{
+			JniMembers.CallStaticVoidMethod (type, this, parameters);
+		}
+
 		public JniLocalReference CallObjectMethod (JniReferenceSafeHandle type)
 		{
 			return JniMembers.CallStaticObjectMethod (type, this);

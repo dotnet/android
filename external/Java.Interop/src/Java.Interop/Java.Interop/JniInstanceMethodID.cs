@@ -9,6 +9,16 @@ namespace Java.Interop
 		{
 		}
 
+		public void CallVirtualVoidMethod (JniReferenceSafeHandle @this)
+		{
+			JniMembers.CallVoidMethod (@this, this);
+		}
+
+		public void CallVirtualVoidMethod (JniReferenceSafeHandle @this, params JValue[] parameters)
+		{
+			JniMembers.CallVoidMethod (@this, this, parameters);
+		}
+
 		public JniLocalReference CallVirtualObjectMethod (JniReferenceSafeHandle @this)
 		{
 			return JniMembers.CallObjectMethod (@this, this);
@@ -97,6 +107,16 @@ namespace Java.Interop
 		public double CallVirtualDoubleMethod (JniReferenceSafeHandle @this, params JValue[] parameters)
 		{
 			return JniMembers.CallDoubleMethod (@this, this, parameters);
+		}
+
+		public void CallNonvirtualVoidMethod (JniReferenceSafeHandle @this, JniReferenceSafeHandle declaringType)
+		{
+			JniMembers.CallNonvirtualVoidMethod (@this, declaringType, this);
+		}
+
+		public void CallNonvirtualVoidMethod (JniReferenceSafeHandle @this, JniReferenceSafeHandle declaringType, params JValue[] parameters)
+		{
+			JniMembers.CallNonvirtualVoidMethod (@this, declaringType, this, parameters);
 		}
 
 		public JniLocalReference CallNonvirtualObjectMethod (JniReferenceSafeHandle @this, JniReferenceSafeHandle declaringType)
