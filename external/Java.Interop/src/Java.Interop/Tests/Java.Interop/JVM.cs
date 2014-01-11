@@ -59,6 +59,36 @@ namespace Java.InteropTests {
 			grefLog.Flush ();
 		}
 
+		protected override void LogCreateWeakGlobalRef (JniWeakGlobalReference value, JniReferenceSafeHandle sourceValue)
+		{
+			base.LogCreateWeakGlobalRef (value, sourceValue);
+			if (grefLog == null)
+				return;
+			grefLog.WriteLine ("+w+ grefc {0} gwrefc {1} obj-handle 0x{2}/{3} -> new-handle 0x{4}/{5} from {6}",
+				GlobalReferenceCount,
+				WeakGlobalReferenceCount,
+				sourceValue.DangerousGetHandle ().ToString ("x"),
+				ToChar (sourceValue.RefType),
+				value.DangerousGetHandle ().ToString ("x"),
+				ToChar (value.RefType),
+				new StackTrace (true));
+			grefLog.Flush ();
+		}
+
+		protected override void LogDestroyWeakGlobalRef (IntPtr value)
+		{
+			base.LogDestroyWeakGlobalRef (value);
+			if (grefLog == null)
+				return;
+			grefLog.WriteLine ("-w- grefc {0} gwrefc {1} handle 0x{2}/{3} from {4}",
+				GlobalReferenceCount,
+				WeakGlobalReferenceCount,
+				value.ToString ("x"),
+				'G',
+				new StackTrace (true));
+			grefLog.Flush ();
+		}
+
 		static char ToChar (JObjectRefType type)
 		{
 			switch (type) {
