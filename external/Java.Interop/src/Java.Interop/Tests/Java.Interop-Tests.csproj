@@ -46,7 +46,6 @@
   </ItemGroup>
   <ItemGroup>
     <JavaInteropTestJar Include="java\com\xamarin\interop\TestType.java" />
-    <JavaInteropTestJar Include="java\com\xamarin\interop\MonoVM.java" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
