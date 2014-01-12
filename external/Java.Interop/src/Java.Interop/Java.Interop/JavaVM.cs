@@ -125,7 +125,7 @@ namespace Java.Interop
 		}
 	}
 
-	public class JavaVM : IDisposable
+	public partial class JavaVM : IDisposable
 	{
 		const string LibraryName = "/System/Library/Frameworks/JavaVM.framework/JavaVM";
 
@@ -437,6 +437,62 @@ namespace Java.Interop
 			foreach (var env in Environments.Values)
 				env.Dispose ();
 			Environments.Clear ();
+		}
+	}
+
+	partial class JavaVM {
+
+		Dictionary<int, WeakReference>  RegisteredInstances = new Dictionary<int, WeakReference>();
+
+		internal void RegisterObject (int key, IJavaObject value)
+		{
+			lock (RegisteredInstances)
+				if (!RegisteredInstances.ContainsKey (key))
+					RegisteredInstances.Add (key, new WeakReference (value, trackResurrection:true));
+		}
+
+		internal void UnRegisterObject (int key, IJavaObject value)
+		{
+			lock (RegisteredInstances) {
+				WeakReference               wv;
+				IJavaObject                 t;
+				if (RegisteredInstances.TryGetValue (key, out wv) &&
+						(t = (IJavaObject) wv.Target) != null &&
+						object.ReferenceEquals (value, t))
+					RegisteredInstances.Remove (key);
+			}
+		}
+
+		public IJavaObject GetObject (JniReferenceSafeHandle jniHandle, JniHandleOwnership transfer)
+		{
+			if (jniHandle == null)
+				return null;
+			if (jniHandle.IsInvalid)
+				return null;
+			try {
+				return GetObject (jniHandle.DangerousGetHandle ());
+			} finally {
+				JniHandles.Dispose (jniHandle, transfer);
+			}
+		}
+
+		public IJavaObject GetObject (IntPtr jniHandle)
+		{
+			if (jniHandle == IntPtr.Zero)
+				return null;
+			int key;
+			using (var h = new JniInvocationHandle (jniHandle))
+				key = JniSystem.IdentityHashCode (h);
+			lock (RegisteredInstances) {
+				WeakReference               wv;
+				if (RegisteredInstances.TryGetValue (key, out wv)) {
+					IJavaObject   t = (IJavaObject) wv.Target;
+					if (t != null)
+						return t;
+					RegisteredInstances.Remove (key);
+				}
+			}
+			return null;
 		}
 	}
 }

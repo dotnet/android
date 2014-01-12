@@ -6,7 +6,8 @@ namespace Java.Interop
 {
 
 	public class JniLocalReference : JniReferenceSafeHandle {
-		JniLocalReference ()
+
+		internal JniLocalReference ()
 		{
 		}
 

@@ -52,6 +52,35 @@ namespace Java.InteropTests
 		{
 			Assert.AreEqual (JavaVM.Current, JavaVM.FromHandle (JavaVM.Current.SafeHandle));
 		}
+
+		[Test]
+		public void GetObject_ReturnsNullWithNullHandle ()
+		{
+			var o = JVM.Current.GetObject (IntPtr.Zero);
+			Assert.IsNull (o);
+		}
+
+		[Test]
+		public void GetObject_ReturnsRegisteredInstance ()
+		{
+			JniLocalReference lref;
+			using (var o = new JavaObject ()) {
+				lref = o.SafeHandle.NewLocalRef ();
+				Assert.AreSame (o, JVM.Current.GetObject (lref.DangerousGetHandle ()));
+			}
+			// At this point, the Java-side object is kept alive by `lref`,
+			// but the wrapper instance has been disposed, and thus should
+			// be unregistered, and thus unfindable.
+			Assert.IsNull (JVM.Current.GetObject (lref, JniHandleOwnership.Transfer));
+			Assert.IsTrue (lref.IsInvalid);
+		}
+
+		[Test]
+		public void GetObject_ReturnsNullWithInvalidSafeHandle ()
+		{
+			var invalid = JniReferenceSafeHandle.Null;
+			Assert.IsNull (JVM.Current.GetObject (invalid, JniHandleOwnership.Transfer));
+		}
 	}
 }
 

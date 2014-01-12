@@ -42,6 +42,7 @@
     <Compile Include="Java.Interop\JniReferenceSafeHandleTest.cs" />
     <Compile Include="Java.Interop\TestObjectBinding.cs" />
     <Compile Include="Java.Interop\JniObjectTest.cs" />
+    <Compile Include="Java.Interop\JavaObjectTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <JavaInteropTestJar Include="java\com\xamarin\interop\TestType.java" />
