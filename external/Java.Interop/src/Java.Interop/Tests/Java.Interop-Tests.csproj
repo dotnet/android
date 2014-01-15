@@ -43,6 +43,12 @@
     <Compile Include="Java.Interop\TestObjectBinding.cs" />
     <Compile Include="Java.Interop\JniObjectTest.cs" />
     <Compile Include="Java.Interop\JavaObjectTest.cs" />
+    <Compile Include="Java.Interop\JavaArrayContract.cs" />
+    <Compile Include="Cadenza.Collections\CollectionContract.cs" />
+    <Compile Include="Cadenza.Collections\EnumerableContract.cs" />
+    <Compile Include="Cadenza.Collections\ListContract.cs" />
+    <Compile Include="Cadenza\BaseRocksFixture.cs" />
+    <Compile Include="Java.Interop\JavaByteArrayListContractTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <JavaInteropTestJar Include="java\com\xamarin\interop\TestType.java" />

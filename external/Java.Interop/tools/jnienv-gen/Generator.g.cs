@@ -1544,7 +1544,6 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = "JniArrays",
 				Name          = "NewBooleanArray",
-				// CustomWrapper = true,
 				Visibility    = "public",
 				Prototype     = "jbooleanArray (*NewBooleanArray)(JNIEnv*, jsize);",
 				ReturnType    = new TypeInfo ("jbooleanArray"),
@@ -1553,7 +1552,6 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = "JniArrays",
 				Name          = "NewByteArray",
-				ApiName       = "NewArray",
 				Visibility    = "public",
 				Prototype     = "jbyteArray  (*NewByteArray)(JNIEnv*, jsize);",
 				ReturnType    = new TypeInfo ("jbyteArray"),
@@ -1562,7 +1560,6 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = "JniArrays",
 				Name          = "NewCharArray",
-				ApiName       = "NewArray",
 				Visibility    = "public",
 				Prototype     = "jcharArray  (*NewCharArray)(JNIEnv*, jsize);",
 				ReturnType    = new TypeInfo ("jcharArray"),
@@ -1571,7 +1568,6 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = "JniArrays",
 				Name          = "NewShortArray",
-				ApiName       = "NewArray",
 				Visibility    = "public",
 				Prototype     = "jshortArray (*NewShortArray)(JNIEnv*, jsize);",
 				ReturnType    = new TypeInfo ("jshortArray"),
@@ -1580,7 +1576,6 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = "JniArrays",
 				Name          = "NewIntArray",
-				ApiName       = "NewArray",
 				Visibility    = "public",
 				Prototype     = "jintArray   (*NewIntArray)(JNIEnv*, jsize);",
 				ReturnType    = new TypeInfo ("jintArray"),
@@ -1589,7 +1584,6 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = "JniArrays",
 				Name          = "NewLongArray",
-				ApiName       = "NewArray",
 				Visibility    = "public",
 				Prototype     = "jlongArray  (*NewLongArray)(JNIEnv*, jsize);",
 				ReturnType    = new TypeInfo ("jlongArray"),
@@ -1598,7 +1592,6 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = "JniArrays",
 				Name          = "NewFloatArray",
-				ApiName       = "NewArray",
 				Visibility    = "public",
 				Prototype     = "jfloatArray (*NewFloatArray)(JNIEnv*, jsize);",
 				ReturnType    = new TypeInfo ("jfloatArray"),
@@ -1607,7 +1600,6 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = "JniArrays",
 				Name          = "NewDoubleArray",
-				ApiName       = "NewArray",
 				Visibility    = "public",
 				Prototype     = "jdoubleArray (*NewDoubleArray)(JNIEnv*, jsize);",
 				ReturnType    = new TypeInfo ("jdoubleArray"),
@@ -1616,7 +1608,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = "JniArrays",
 				Name          = "GetBooleanArrayElements",
-				Visibility    = "private",
+				Visibility    = "public",
 				Prototype     = "jboolean*   (*GetBooleanArrayElements)(JNIEnv*, jbooleanArray, jboolean*);",
 				ReturnType    = new TypeInfo ("jboolean*"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jbooleanArray", "array"), new ParamInfo ("jboolean*", "isCopy", Modifier.CanBeNull)},
@@ -1624,7 +1616,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = "JniArrays",
 				Name          = "GetByteArrayElements",
-				Visibility    = "private",
+				Visibility    = "public",
 				Prototype     = "jbyte*      (*GetByteArrayElements)(JNIEnv*, jbyteArray, jboolean*);",
 				ReturnType    = new TypeInfo ("jbyte*"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jbyteArray", "array"), new ParamInfo ("jboolean*", "isCopy", Modifier.CanBeNull)},
@@ -1632,7 +1624,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = "JniArrays",
 				Name          = "GetCharArrayElements",
-				Visibility    = "private",
+				Visibility    = "public",
 				Prototype     = "jchar*      (*GetCharArrayElements)(JNIEnv*, jcharArray, jboolean*);",
 				ReturnType    = new TypeInfo ("jchar*"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jcharArray", "array"), new ParamInfo ("jboolean*", "isCopy", Modifier.CanBeNull)},
@@ -1640,7 +1632,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = "JniArrays",
 				Name          = "GetShortArrayElements",
-				Visibility    = "private",
+				Visibility    = "public",
 				Prototype     = "jshort*     (*GetShortArrayElements)(JNIEnv*, jshortArray, jboolean*);",
 				ReturnType    = new TypeInfo ("jshort*"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jshortArray", "array"), new ParamInfo ("jboolean*", "isCopy", Modifier.CanBeNull)},
@@ -1648,7 +1640,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = "JniArrays",
 				Name          = "GetIntArrayElements",
-				Visibility    = "private",
+				Visibility    = "public",
 				Prototype     = "jint*       (*GetIntArrayElements)(JNIEnv*, jintArray, jboolean*);",
 				ReturnType    = new TypeInfo ("jint*"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jintArray", "array"), new ParamInfo ("jboolean*", "isCopy", Modifier.CanBeNull)},
@@ -1656,7 +1648,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = "JniArrays",
 				Name          = "GetLongArrayElements",
-				Visibility    = "private",
+				Visibility    = "public",
 				Prototype     = "jlong*      (*GetLongArrayElements)(JNIEnv*, jlongArray, jboolean*);",
 				ReturnType    = new TypeInfo ("jlong*"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jlongArray", "array"), new ParamInfo ("jboolean*", "isCopy", Modifier.CanBeNull)},
@@ -1664,7 +1656,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = "JniArrays",
 				Name          = "GetFloatArrayElements",
-				Visibility    = "private",
+				Visibility    = "public",
 				Prototype     = "jfloat*     (*GetFloatArrayElements)(JNIEnv*, jfloatArray, jboolean*);",
 				ReturnType    = new TypeInfo ("jfloat*"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jfloatArray", "array"), new ParamInfo ("jboolean*", "isCopy", Modifier.CanBeNull)},
@@ -1672,7 +1664,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = "JniArrays",
 				Name          = "GetDoubleArrayElements",
-				Visibility    = "private",
+				Visibility    = "public",
 				Prototype     = "jdouble*    (*GetDoubleArrayElements)(JNIEnv*, jdoubleArray, jboolean*);",
 				ReturnType    = new TypeInfo ("jdouble*"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jdoubleArray", "array"), new ParamInfo ("jboolean*", "isCopy", Modifier.CanBeNull)},
@@ -1680,7 +1672,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = "JniArrays",
 				Name          = "ReleaseBooleanArrayElements",
-				Visibility    = "private",
+				Visibility    = "public",
 				Prototype     = "void        (*ReleaseBooleanArrayElements)(JNIEnv*, jbooleanArray, jboolean*, jint);",
 				ReturnType    = new TypeInfo ("void"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jbooleanArray", "array"), new ParamInfo ("jboolean*", "elems"), new ParamInfo ("jint", "mode")},
@@ -1688,7 +1680,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = "JniArrays",
 				Name          = "ReleaseByteArrayElements",
-				Visibility    = "private",
+				Visibility    = "public",
 				Prototype     = "void        (*ReleaseByteArrayElements)(JNIEnv*, jbyteArray, jbyte*, jint);",
 				ReturnType    = new TypeInfo ("void"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jbyteArray", "array"), new ParamInfo ("jbyte*", "elems"), new ParamInfo ("jint", "mode")},
@@ -1696,7 +1688,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = "JniArrays",
 				Name          = "ReleaseCharArrayElements",
-				Visibility    = "private",
+				Visibility    = "public",
 				Prototype     = "void        (*ReleaseCharArrayElements)(JNIEnv*, jcharArray, jchar*, jint);",
 				ReturnType    = new TypeInfo ("void"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jcharArray", "array"), new ParamInfo ("jchar*", "elems"), new ParamInfo ("jint", "mode")},
@@ -1704,7 +1696,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = "JniArrays",
 				Name          = "ReleaseShortArrayElements",
-				Visibility    = "private",
+				Visibility    = "public",
 				Prototype     = "void        (*ReleaseShortArrayElements)(JNIEnv*, jshortArray, jshort*, jint);",
 				ReturnType    = new TypeInfo ("void"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jshortArray", "array"), new ParamInfo ("jshort*", "elems"), new ParamInfo ("jint", "mode")},
@@ -1712,7 +1704,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = "JniArrays",
 				Name          = "ReleaseIntArrayElements",
-				Visibility    = "private",
+				Visibility    = "public",
 				Prototype     = "void        (*ReleaseIntArrayElements)(JNIEnv*, jintArray, jint*, jint);",
 				ReturnType    = new TypeInfo ("void"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jintArray", "array"), new ParamInfo ("jint*", "elems"), new ParamInfo ("jint", "mode")},
@@ -1720,7 +1712,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = "JniArrays",
 				Name          = "ReleaseLongArrayElements",
-				Visibility    = "private",
+				Visibility    = "public",
 				Prototype     = "void        (*ReleaseLongArrayElements)(JNIEnv*, jlongArray, jlong*, jint);",
 				ReturnType    = new TypeInfo ("void"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jlongArray", "array"), new ParamInfo ("jlong*", "elems"), new ParamInfo ("jint", "mode")},
@@ -1728,7 +1720,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = "JniArrays",
 				Name          = "ReleaseFloatArrayElements",
-				Visibility    = "private",
+				Visibility    = "public",
 				Prototype     = "void        (*ReleaseFloatArrayElements)(JNIEnv*, jfloatArray, jfloat*, jint);",
 				ReturnType    = new TypeInfo ("void"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jfloatArray", "array"), new ParamInfo ("jfloat*", "elems"), new ParamInfo ("jint", "mode")},
@@ -1736,7 +1728,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = "JniArrays",
 				Name          = "ReleaseDoubleArrayElements",
-				Visibility    = "private",
+				Visibility    = "public",
 				Prototype     = "void        (*ReleaseDoubleArrayElements)(JNIEnv*, jdoubleArray, jdouble*, jint);",
 				ReturnType    = new TypeInfo ("void"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jdoubleArray", "array"), new ParamInfo ("jdouble*", "elems"), new ParamInfo ("jint", "mode")},
@@ -1753,12 +1745,11 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = "JniArrays",
 				Name          = "GetByteArrayRegion",
-				ApiName       = "CopyArray",
 				Visibility    = "public",
 				Throws        = true,
 				Prototype     = "void        (*GetByteArrayRegion)(JNIEnv*, jbyteArray, jsize, jsize, jbyte*);",
 				ReturnType    = new TypeInfo ("void"),
-				Parameters    = new ParamInfo [] {new ParamInfo ("jbyteArray", "array"), new ParamInfo ("jsize", "start"), new ParamInfo ("jsize", "len"), new ParamInfo (new TypeInfo ("jbyte*", "byte[]"), "buf")},
+				Parameters    = new ParamInfo [] {new ParamInfo ("jbyteArray", "array"), new ParamInfo ("jsize", "start"), new ParamInfo ("jsize", "len"), new ParamInfo (new TypeInfo ("jbyte*"), "buf")},
 			},
 			new JniFunction {
 				DeclaringType = "JniArrays",
@@ -1832,12 +1823,11 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = "JniArrays",
 				Name          = "SetByteArrayRegion",
-				ApiName       = "CopyArray",
 				Visibility    = "public",
 				Throws        = true,
 				Prototype     = "void        (*SetByteArrayRegion)(JNIEnv*, jbyteArray, jsize, jsize, const jbyte*);",
 				ReturnType    = new TypeInfo ("void"),
-				Parameters    = new ParamInfo [] {new ParamInfo ("jbyteArray", "array"), new ParamInfo ("jsize", "start"), new ParamInfo ("jsize", "len"), new ParamInfo (new TypeInfo ("const jbyte*", "byte[]"), "buf")},
+				Parameters    = new ParamInfo [] {new ParamInfo ("jbyteArray", "array"), new ParamInfo ("jsize", "start"), new ParamInfo ("jsize", "len"), new ParamInfo (new TypeInfo ("const jbyte*"), "buf")},
 			},
 			new JniFunction {
 				DeclaringType = "JniArrays",
