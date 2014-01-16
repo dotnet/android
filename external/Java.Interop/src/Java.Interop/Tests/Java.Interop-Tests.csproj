@@ -48,7 +48,15 @@
     <Compile Include="Cadenza.Collections\EnumerableContract.cs" />
     <Compile Include="Cadenza.Collections\ListContract.cs" />
     <Compile Include="Cadenza\BaseRocksFixture.cs" />
-    <Compile Include="Java.Interop\JavaByteArrayListContractTests.cs" />
+    <Compile Include="Java.Interop\JavaSByteArrayContractTests.cs" />
+    <Compile Include="Java.Interop\JavaPrimitiveArrayContract.cs" />
+    <Compile Include="Java.Interop\JavaBooleanArrayContractTests.cs" />
+    <Compile Include="Java.Interop\JavaCharArrayContractTests.cs" />
+    <Compile Include="Java.Interop\JavaDoubleArrayContractTests.cs" />
+    <Compile Include="Java.Interop\JavaInt16ArrayContractTests.cs" />
+    <Compile Include="Java.Interop\JavaInt32ArrayContractTests.cs" />
+    <Compile Include="Java.Interop\JavaInt64ArrayContractTests.cs" />
+    <Compile Include="Java.Interop\JavaSingleArrayContractTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <JavaInteropTestJar Include="java\com\xamarin\interop\TestType.java" />

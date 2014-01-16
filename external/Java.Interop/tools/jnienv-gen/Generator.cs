@@ -61,6 +61,8 @@ namespace Xamarin.Java.Interop
 			o.WriteLine ();
 			GenerateDelegates (o);
 			o.WriteLine ();
+			GenerateArrays (o);
+			o.WriteLine ();
 			GenerateTypes (o);
 			o.WriteLine ();
 			GenerateJniNativeInterface (o);
@@ -178,6 +180,95 @@ namespace Xamarin.Java.Interop
 			if (entry.Name == "NewString" || has_char_array)
 				o.WriteLine ("\t[UnmanagedFunctionPointerAttribute (CallingConvention.Cdecl, CharSet=CharSet.Unicode)]");
 			o.WriteLine (builder.ToString ());
+		}
+
+		static void GenerateArrays (TextWriter o)
+		{
+			GenerateArrayType (o, "Boolean", "Byte", "Boolean");
+			var types = new Dictionary<string, string> () {
+				{ "Byte",       "SByte" },
+				{ "Char",       "Char" },
+				{ "Short",      "Int16" },
+				{ "Int",        "Int32" },
+				{ "Long",       "Int64" },
+				{ "Float",      "Single" },
+				{ "Double",     "Double" },
+			};
+			foreach (var e in types) {
+				GenerateArrayType (o, e.Key, e.Value, e.Value);
+			}
+		}
+
+		static void GenerateArrayType (TextWriter o, string jniType, string managedType, string typeModifier)
+		{
+			o.WriteLine ();
+			o.WriteLine ("\tpublic sealed class Java{0}ArrayElements : JavaArrayElements {{", typeModifier);
+			o.WriteLine ();
+			o.WriteLine ("\t\tJniReferenceSafeHandle arrayHandle;");
+			o.WriteLine ();
+			o.WriteLine ("\t\tinternal Java{0}ArrayElements (JniReferenceSafeHandle arrayHandle, IntPtr elements)", typeModifier);
+			o.WriteLine ("\t\t\t: base (elements)");
+			o.WriteLine ("\t\t{");
+			o.WriteLine ("\t\t\tthis.arrayHandle = arrayHandle;");
+			o.WriteLine ("\t\t}");
+			o.WriteLine ();
+			o.WriteLine ("\t\tpublic new unsafe {0}* Elements {{", managedType);
+			o.WriteLine ("\t\t\tget {{return ({0}*) base.Elements;}}", managedType);
+			o.WriteLine ("\t\t}");
+			o.WriteLine ();
+			o.WriteLine ("\t\tprotected override void Synchronize (JavaArrayElementsReleaseMode releaseMode)");
+			o.WriteLine ("\t\t{");
+			o.WriteLine ("\t\t\tJniArrays.Release{0}ArrayElements (arrayHandle, base.Elements, (int) releaseMode);", jniType);
+			o.WriteLine ("\t\t}");
+			o.WriteLine ("\t}");
+			o.WriteLine ();
+			o.WriteLine ("\tpublic sealed class Java{0}Array : JavaPrimitiveArray<{1}> {{", typeModifier, managedType);
+			o.WriteLine ();
+			o.WriteLine ("\t\tpublic Java{0}Array (JniReferenceSafeHandle handle, JniHandleOwnership transfer)", typeModifier);
+			o.WriteLine ("\t\t\t: base (handle, transfer)");
+			o.WriteLine ("\t\t{");
+			o.WriteLine ("\t\t}");
+			o.WriteLine ();
+			o.WriteLine ("\t\tpublic Java{0}Array (int length)", typeModifier);
+			o.WriteLine ("\t\t\t: base (JniArrays.New{0}Array (length), JniHandleOwnership.Transfer)", jniType);
+			o.WriteLine ("\t\t{");
+			o.WriteLine ("\t\t}");
+			o.WriteLine ();
+			o.WriteLine ("\t\tprotected override JavaArrayElements CreateElements ()");
+			o.WriteLine ("\t\t{");
+			o.WriteLine ("\t\t\treturn GetElements ();");
+			o.WriteLine ("\t\t}");
+			o.WriteLine ();
+			o.WriteLine ("\t\tpublic new Java{0}ArrayElements GetElements ()", typeModifier);
+			o.WriteLine ("\t\t{");
+			o.WriteLine ("\t\t\tIntPtr elements = JniArrays.Get{0}ArrayElements (SafeHandle, IntPtr.Zero);", jniType);
+			o.WriteLine ("\t\t\treturn new Java{0}ArrayElements (SafeHandle, elements);", typeModifier);
+			o.WriteLine ("\t\t}");
+			o.WriteLine ();
+			o.WriteLine ("\t\tpublic override unsafe void CopyTo (int sourceIndex, {0}[] destinationArray, int destinationIndex, int length)", managedType);
+			o.WriteLine ("\t\t{");
+			o.WriteLine ("\t\t\tif (destinationArray == null)");
+			o.WriteLine ("\t\t\t\tthrow new ArgumentNullException (\"destinationArray\");");
+			o.WriteLine ("\t\t\tCheckArrayCopy (sourceIndex, Length, destinationIndex, destinationArray.Length, length);");
+			o.WriteLine ("\t\t\tif (destinationArray.Length == 0)");
+			o.WriteLine ("\t\t\t\treturn;");
+			o.WriteLine ();
+			o.WriteLine ("\t\t\tfixed ({0}* b = destinationArray)", managedType);
+			o.WriteLine ("\t\t\t\tJniArrays.Get{0}ArrayRegion (SafeHandle, sourceIndex, length, (IntPtr) (b+destinationIndex));", jniType);
+			o.WriteLine ("\t\t}");
+			o.WriteLine ();
+			o.WriteLine ("\t\tpublic override unsafe void CopyFrom ({0}[] sourceArray, int sourceIndex, int destinationIndex, int length)", managedType);
+			o.WriteLine ("\t\t{");
+			o.WriteLine ("\t\t\tif (sourceArray == null)");
+			o.WriteLine ("\t\t\t\tthrow new ArgumentNullException (\"sourceArray\");");
+			o.WriteLine ("\t\t\tCheckArrayCopy (sourceIndex, sourceArray.Length, destinationIndex, Length, length);");
+			o.WriteLine ("\t\t\tif (sourceArray.Length == 0)");
+			o.WriteLine ("\t\t\t\treturn;");
+			o.WriteLine ();
+			o.WriteLine ("\t\t\tfixed ({0}* b = sourceArray)", managedType);
+			o.WriteLine ("\t\t\t\tJniArrays.Set{0}ArrayRegion (SafeHandle, destinationIndex, length, (IntPtr) (b+sourceIndex));", jniType);
+			o.WriteLine ("\t\t}");
+			o.WriteLine ("\t}");
 		}
 
 		static void GenerateTypes (TextWriter o)
