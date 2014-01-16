@@ -9,6 +9,7 @@ using NUnit.Framework;
 namespace Java.InteropTests
 {
 	public abstract class JavaPrimitiveArrayContract<TArray, TElement> : JavaArrayContract<TElement>
+		where TArray : JavaPrimitiveArray<TElement>
 	{
 		static JavaPrimitiveArrayContract ()
 		{
@@ -28,6 +29,24 @@ namespace Java.InteropTests
 		protected override TElement FromInt32 (int value)
 		{
 			return (TElement) Convert.ChangeType (value, typeof(TElement));
+		}
+
+		[Test]
+		public void GetElements ()
+		{
+			var a = (TArray) CreateCollection (new[]{FromInt32 ('A')});
+			var e = a.GetElements ();
+			Assert.IsTrue (e.Elements != IntPtr.Zero);
+			e.Dispose ();
+			// Multi-dispose is supported.
+			e.Dispose ();
+			Assert.Throws<ObjectDisposedException> (() => e.Release (JavaArrayElementsReleaseMode.DoNotCopyBack));
+			Assert.Throws<ObjectDisposedException> (() => {
+					#pragma warning disable 0219
+					var _ = e.Elements;
+					#pragma warning restore 0219
+			});
+			a.Dispose ();
 		}
 	}
 }
