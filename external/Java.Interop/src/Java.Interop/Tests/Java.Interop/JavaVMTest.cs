@@ -24,7 +24,7 @@ namespace Java.InteropTests
 			var first = JVM.Current;
 			#pragma warning restore 0219
 			try {
-				var second = new JavaVMBuilder ().CreateJavaVM ();
+				var second = new JreVMBuilder ().CreateJreVM ();
 				// If we reach here, we're in a JVM that supports > 1 VM
 				second.Dispose ();
 				Assert.Ignore ();
@@ -42,15 +42,15 @@ namespace Java.InteropTests
 
 		class JavaVMWithNullBuilder : JavaVM {
 			public JavaVMWithNullBuilder ()
-				: base ((JavaVMBuilder) null)
+				: base ((JavaVMOptions) null)
 			{
 			}
 		}
 
 		[Test]
-		public void FromHandle_ExistingInstance ()
+		public void GetRegisteredJavaVM_ExistingInstance ()
 		{
-			Assert.AreEqual (JavaVM.Current, JavaVM.FromHandle (JavaVM.Current.SafeHandle));
+			Assert.AreEqual (JavaVM.Current, JavaVM.GetRegisteredJavaVM (JavaVM.Current.SafeHandle));
 		}
 
 		[Test]

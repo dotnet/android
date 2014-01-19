@@ -82,7 +82,11 @@ namespace Java.Interop {
 			int r = env.Invoker.GetJavaVM (env.SafeHandle, out vm);
 			if (r < 0)
 				throw new InvalidOperationException ("JNIEnv::GetJavaVM() returned: " + r);
-			env.JavaVM = JavaVM.FromHandle (vm);
+			env.JavaVM = JavaVM.GetRegisteredJavaVM (vm);
+			if (env.JavaVM == null)
+				throw new NotSupportedException (
+						string.Format ("No JavaVM registered with handle 0x{0}.",
+							vm.DangerousGetHandle ().ToString ("x")));
 			return env;
 		}
 
@@ -91,10 +95,12 @@ namespace Java.Interop {
 			if (SafeHandle == null)
 				return;
 			Object_class.Dispose ();
+			Object_toString.Dispose ();
 			if (Current == this)
 				current = null;
 			SafeHandle.Dispose ();
 			SafeHandle = null;
+			JavaVM     = null;
 		}
 
 		            JniType             Object_class;

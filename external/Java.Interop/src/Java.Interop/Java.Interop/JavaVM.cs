@@ -39,19 +39,6 @@ namespace Java.Interop
 		public  IntPtr              group;      /*		 global ref of a ThreadGroup object, or NULL */
 	}
 
-	struct JavaVMOption {
-		public  IntPtr /* const char * */   optionString;
-		public  IntPtr /* void * */         extraInfo;
-	}
-
-	struct JavaVMInitArgs {
-		public  JniVersion                      version;    /*		 use JNI_VERSION_1_2 or later */
-
-		public  int                             nOptions;
-		public  IntPtr /* JavaVMOption[] */     options;
-		public  byte                            ignoreUnrecognized;
-	}
-
 	public sealed class JavaVMSafeHandle : SafeHandle {
 
 		JavaVMSafeHandle ()
@@ -59,7 +46,7 @@ namespace Java.Interop
 		{
 		}
 
-		internal JavaVMSafeHandle (IntPtr handle)
+		public JavaVMSafeHandle (IntPtr handle)
 			: this ()
 		{
 			SetHandle (handle);
@@ -90,52 +77,36 @@ namespace Java.Interop
 		}
 	}
 
-	public sealed class JavaVMBuilder {
+	public class JavaVMOptions {
 
-		internal    List<string>    Options = new List<string> ();
-
-		public  JniVersion  JniVersion                  {get; set;}
-		public  bool        IgnoreUnrecognizedOptions   {get; set;}
 		public  bool        TrackIDs                    {get; set;}
+		public  bool        DestroyVMOnDispose          {get; set;}
 
-		public JavaVMBuilder ()
-		{
-			JniVersion  = JniVersion.v1_2;
-		}
+		public  JavaVMSafeHandle            VMHandle            {get; set;}
+		public  JniEnvironmentSafeHandle    EnvironmentHandle   {get; set;}
 
-		public JavaVMBuilder AddOption (string option)
+		public JavaVMOptions ()
 		{
-			Options.Add (option);
-			return this;
-		}
-
-		public JavaVMBuilder AddSystemProperty (string name, string value)
-		{
-			if (name == null)
-				throw new ArgumentNullException ("name");
-			if (value == null)
-				throw new ArgumentNullException ("value");
-			Options.Add (string.Format ("-D{0}={1}", name, value));
-			return this;
-		}
-
-		public JavaVM CreateJavaVM ()
-		{
-			return new JavaVM (this);
 		}
 	}
 
-	public partial class JavaVM : IDisposable
+	public abstract partial class JavaVM : IDisposable
 	{
-		const string LibraryName = "/System/Library/Frameworks/JavaVM.framework/JavaVM";
-
-		[DllImport (LibraryName)]
-		static extern int JNI_CreateJavaVM (out JavaVMSafeHandle javavm, out JniEnvironmentSafeHandle jnienv, ref JavaVMInitArgs args);
-
-		[DllImport (LibraryName)]
-		static extern int JNI_GetCreatedJavaVMs ([Out] IntPtr[] handles, int bufLen, out int nVMs);
 
 		static ConcurrentDictionary<IntPtr, JavaVM>     JavaVMs = new ConcurrentDictionary<IntPtr, JavaVM> ();
+
+		public static IEnumerable<JavaVM> GetRegisteredJavaVMs ()
+		{
+			return JavaVMs.Values;
+		}
+
+		public static JavaVM GetRegisteredJavaVM (JavaVMSafeHandle handle)
+		{
+			JavaVM vm;
+			return JavaVMs.TryGetValue (handle.DangerousGetHandle (), out vm)
+				? vm
+				: null;
+		}
 
 		static JavaVM current;
 		public static JavaVM Current {
@@ -144,12 +115,12 @@ namespace Java.Interop
 					return current;
 				JavaVM  c       = null;
 				int     count   = 0;
-				foreach (var vm in GetCreatedJavaVMs ()) {
+				foreach (var vm in JavaVMs.Values) {
 					if (count++ == 0)
 						c = vm;
 				}
 				if (count == 0)
-					throw new InvalidOperationException ("No JavaVM has been created. Please use JavaVMBuilder.CreateJavaVM().");
+					throw new InvalidOperationException ("No JavaVM has been created. Please use Java.Interop.JreVMBuilder.CreateJreVM().");
 				if (count > 1)
 					throw new NotSupportedException (string.Format ("Found {0} JavaVMs. Don't know which to use. Use JavaVM.SetCurrent().", count));
 				return current = c;
@@ -160,50 +131,8 @@ namespace Java.Interop
 		{
 			if (newCurrent == null)
 				throw new ArgumentNullException ("newCurrent");
+			JavaVMs.TryAdd (newCurrent.SafeHandle.DangerousGetHandle (), newCurrent);
 			current = newCurrent;
-		}
-
-		public static IEnumerable<JavaVM> GetCreatedJavaVMs ()
-		{
-			int nVMs;
-			int r = JNI_GetCreatedJavaVMs (null, 0, out nVMs);
-			if (r != 0)
-				throw new NotSupportedException ("JNI_GetCreatedJavaVMs() returned: " + r);
-			var handles = new IntPtr [nVMs];
-			r = JNI_GetCreatedJavaVMs (handles, handles.Length, out nVMs);
-			if (r != 0)
-				throw new InvalidOperationException ("JNI_GetCreatedJavaVMs() [take 2!] returned: " + r);
-			foreach (var h in handles) {
-				JavaVM v;
-				if (!JavaVMs.TryGetValue (h, out v))
-					JavaVMs.TryAdd (h, v = new JavaVM (new JavaVMSafeHandle (h)));
-				yield return v;
-			}
-		}
-
-		public static JavaVM FromHandle (JavaVMSafeHandle handle)
-		{
-			JavaVM vm;
-			if (JavaVMs.TryGetValue (handle.DangerousGetHandle (), out vm))
-				return vm;
-			return new JavaVM (handle, null);
-		}
-
-		void CreateJavaVM (ref JavaVMInitArgs args)
-		{
-			JavaVMSafeHandle            javavm;
-			JniEnvironmentSafeHandle    jnienv;
-			int r = JNI_CreateJavaVM (out javavm, out jnienv, ref args);
-			if (r != 0) {
-				var message = string.Format ("{1}JNI_CreateJavaVM returned {0}.",
-						r,
-						JavaVMs.Count == 0
-							? ""
-							: "The JDK supports creating at most one JVM per process, ever; " +
-							  "do you have a JVM running already, or have you already created (and destroyed?) one? ");
-				throw new NotSupportedException (message);
-			}
-			Initialize (javavm, jnienv);
 		}
 
 		ConcurrentDictionary<IntPtr, JniEnvironment>    Environments = new ConcurrentDictionary<IntPtr, JniEnvironment> ();
@@ -219,58 +148,26 @@ namespace Java.Interop
 
 		public  JavaVMSafeHandle                        SafeHandle      {get; private set;}
 
-		protected JavaVM ()
-			: this (new JavaVMBuilder ())
+		protected JavaVM (JavaVMOptions options)
 		{
-		}
+			if (options == null)
+				throw new ArgumentNullException ("options");
+			if (options.VMHandle == null)
+				throw new ArgumentException ("options.VMHandle is null", "options");
+			if (options.VMHandle.IsInvalid)
+				throw new ArgumentException ("options.VMHandle is not valid.", "options");
 
-		internal protected unsafe JavaVM (JavaVMBuilder builder)
-		{
-			if (builder == null)
-				throw new ArgumentNullException ("builder");
+			TrackIDs     = options.TrackIDs;
+			DestroyVM    = options.DestroyVMOnDispose;
 
-			var args = new JavaVMInitArgs () {
-				version             = builder.JniVersion,
-				nOptions            = builder.Options.Count,
-				ignoreUnrecognized  = builder.IgnoreUnrecognizedOptions ? (byte) 1 : (byte) 0,
-			};
-			var options = new JavaVMOption [builder.Options.Count];
-			try {
-				for (int i = 0; i < options.Length; ++i)
-					options [i].optionString = Marshal.StringToHGlobalAnsi (builder.Options [i]);
-				fixed (JavaVMOption* popts = options) {
-					args.options = (IntPtr) popts;
-					CreateJavaVM (ref args);
-				}
-			} finally {
-				for (int i = 0; i < options.Length; ++i)
-					Marshal.FreeHGlobal (options [i].optionString);
-			}
-
-			TrackIDs    = builder.TrackIDs;
-			DestroyVM   = true;
-		}
-
-		public JavaVM (JavaVMSafeHandle safeHandle, JniEnvironmentSafeHandle jnienv = null)
-		{
-			Initialize (safeHandle, jnienv);
-		}
-
-		void Initialize (JavaVMSafeHandle safeHandle, JniEnvironmentSafeHandle jnienv)
-		{
-			if (safeHandle == null)
-				throw new ArgumentNullException ("safeHandle");
-			if (safeHandle.IsInvalid)
-				throw new ArgumentException ("safeHandle is not valid.", "safeHandle");
+			SafeHandle  = options.VMHandle;
+			Invoker     = SafeHandle.CreateInvoker ();
 
 			if (current == null)
 				current = this;
 
-			SafeHandle  = safeHandle;
-			Invoker     = safeHandle.CreateInvoker ();
-
-			if (jnienv != null) {
-				var env = new JniEnvironment (jnienv, this);
+			if (options.EnvironmentHandle != null) {
+				var env = new JniEnvironment (options.EnvironmentHandle, this);
 				Environments.TryAdd (env.SafeHandle.DangerousGetHandle (), env);
 			}
 
@@ -301,10 +198,10 @@ namespace Java.Interop
 				current = null;
 
 			ClearTrackedReferences ();
-			if (DestroyVM)
-				DestroyJavaVM ();
 			JavaVM _;
 			JavaVMs.TryRemove (SafeHandle.DangerousGetHandle (), out _);
+			if (DestroyVM)
+				DestroyJavaVM ();
 			SafeHandle.Dispose ();
 			SafeHandle = null;
 		}

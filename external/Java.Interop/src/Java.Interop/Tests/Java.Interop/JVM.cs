@@ -7,14 +7,14 @@ using Java.Interop;
 
 namespace Java.InteropTests {
 
-	class JVM : JavaVM {
+	class JVM : JreVM {
 
 		public static readonly new JavaVM Current = new JVM ();
 
 		TextWriter  grefLog;
 
 		JVM ()
-			: base (new JavaVMBuilder ().AddSystemProperty ("java.class.path", "interop-test.jar"))
+			: base (new JreVMBuilder ().AddSystemProperty ("java.class.path", "interop-test.jar"))
 		{
 			string logGrefs = (Environment.GetEnvironmentVariable ("_JI_LOG") ?? "")
 				.Split (new []{ ',' }, StringSplitOptions.RemoveEmptyEntries)

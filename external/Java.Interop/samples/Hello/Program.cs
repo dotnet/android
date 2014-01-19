@@ -15,11 +15,11 @@ namespace Hello
 			} catch (InvalidOperationException e) {
 				Console.WriteLine (e);
 			}
-			foreach (var h in JavaVM.GetCreatedJavaVMs ()) {
-				Console.WriteLine ("PRE: GetCreatedJavaVMs: {0}", h);
+			foreach (var h in JreVM.GetCreatedJavaVMHandles ()) {
+				Console.WriteLine ("PRE: GetCreatedJavaVMHandles: {0}", h);
 			}
 			Console.WriteLine ("Part 2!");
-			using (var vm = new JavaVMBuilder ().CreateJavaVM ()) {
+			using (var vm = new JreVMBuilder ().CreateJreVM ()) {
 				Console.WriteLine ("# JniEnvironment.Current={0}", JniEnvironment.Current);
 				Console.WriteLine ("vm.SafeHandle={0}", vm.SafeHandle);
 				var t = new JniType ("java/lang/Object");
@@ -43,12 +43,12 @@ namespace Hello
 				t.Start ();
 				waitForCreation.Wait ();
 				*/
-				foreach (var h in JavaVM.GetCreatedJavaVMs ()) {
+				foreach (var h in JreVM.GetCreatedJavaVMHandles ()) {
 					Console.WriteLine ("WITHIN: GetCreatedJavaVMs: {0}", h);
 				}
 				// exitThread.Signal ();
 			}
-			foreach (var h in JavaVM.GetCreatedJavaVMs ()) {
+			foreach (var h in JreVM.GetCreatedJavaVMHandles ()) {
 				Console.WriteLine ("POST: GetCreatedJavaVMs: {0}", h);
 			}
 		}
