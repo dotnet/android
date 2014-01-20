@@ -356,6 +356,23 @@ namespace Java.Interop
 			}
 		}
 
+		/// <summary>
+		///   Try to garbage collect <paramref name="value"/>.
+		/// </summary>
+		/// <returns>
+		///   <c>true</c>, if <paramref name="value"/> was collected and
+		///   <paramref name="handle"/> is invalid; otherwise <c>false</c>.
+		/// </returns>
+		/// <param name="value">
+		///   The <see cref="T:Java.Interop.IJavaObject"/> instance to collect.
+		/// </param>
+		/// <param name="handle">
+		///   The <see cref="T:Java.Interop.JniReferenceSafeHandle"/> of <paramref name="value"/>.
+		///   This value may be updated, and <see cref="P:Java.Interop.IJavaObject.SafeHandle"/>
+		///   will be updated with this value.
+		/// </param>
+		internal protected abstract bool TryGC (IJavaObject value, ref JniReferenceSafeHandle handle);
+
 		public IJavaObject GetObject (JniReferenceSafeHandle jniHandle, JniHandleOwnership transfer)
 		{
 			if (jniHandle == null)

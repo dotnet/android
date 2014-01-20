@@ -13,20 +13,15 @@ namespace Java.Interop
 
 		~JavaObject ()
 		{
-			System.Diagnostics.Debug.WriteLine ("# JavaObject.Finalize");
-			if (SafeHandle == null || SafeHandle.IsInvalid)
-				return;
-			var wgref = SafeHandle.NewWeakGlobalRef ();
-			System.Diagnostics.Debug.WriteLine ("# JavaObject.Finalize: wgref=0x{0}", wgref.DangerousGetHandle().ToString ("x"));;
-			SafeHandle.Dispose ();
-			JniGC.Collect ();
-			SafeHandle = wgref.NewGlobalRef ();
-			System.Diagnostics.Debug.WriteLine ("# JavaObject.Finalize: SafeHandle.IsInvalid={0}", SafeHandle.IsInvalid);
-			if (!SafeHandle.IsInvalid)
-				GC.ReRegisterForFinalize (this);
-			else {
+			var  h          = SafeHandle;
+			bool collected  = JniEnvironment.Current.JavaVM.TryGC (this, ref h);
+			if (collected) {
+				SafeHandle = null;
 				JniEnvironment.Current.JavaVM.UnRegisterObject (keyHandle, this);
 				Dispose (false);
+			} else {
+				SafeHandle = h;
+				GC.ReRegisterForFinalize (this);
 			}
 		}
 

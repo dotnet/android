@@ -60,8 +60,6 @@
     <Compile Include="Java.Interop\JniArrays.cs" />
     <Compile Include="Java.Interop\IJavaObject.cs" />
     <Compile Include="Java.Interop\JavaObject.cs" />
-    <Compile Include="Java.Interop\JniGC.cs" />
-    <Compile Include="Java.Interop\JniRuntime.cs" />
     <Compile Include="Java.Interop\JniSystem.cs" />
     <Compile Include="Java.Interop\JavaArray.cs" />
   </ItemGroup>

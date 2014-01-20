@@ -45,6 +45,11 @@ namespace Java.InteropTests
 				: base ((JavaVMOptions) null)
 			{
 			}
+
+			protected override bool TryGC (IJavaObject value, ref JniReferenceSafeHandle handle)
+			{
+				throw new NotImplementedException ();
+			}
 		}
 
 		[Test]

@@ -143,6 +143,20 @@ namespace Java.Interop {
 			: base (CreateJreVM (builder))
 		{
 		}
+
+		protected override bool TryGC (IJavaObject value, ref JniReferenceSafeHandle handle)
+		{
+			System.Diagnostics.Debug.WriteLine ("# JreVM.TryGC");
+			if (handle == null || handle.IsInvalid)
+				return true;
+			var wgref = handle.NewWeakGlobalRef ();
+			System.Diagnostics.Debug.WriteLine ("# JreVM.TryGC: wgref=0x{0}", wgref.DangerousGetHandle().ToString ("x"));;
+			handle.Dispose ();
+			JniGC.Collect ();
+			handle = wgref.NewGlobalRef ();
+			System.Diagnostics.Debug.WriteLine ("# JreVM.TryGC: handle.IsInvalid={0}", handle.IsInvalid);
+			return handle == null || handle.IsInvalid;
+		}
 	}
 }
 
