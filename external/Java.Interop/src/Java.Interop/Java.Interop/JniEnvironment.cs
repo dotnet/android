@@ -40,10 +40,6 @@ namespace Java.Interop {
 
 	public sealed partial class JniEnvironment : IDisposable {
 
-		JniEnvironment ()
-		{
-		}
-
 		internal JniEnvironment (JniEnvironmentSafeHandle safeHandle, JavaVM javaVM)
 		{
 			SafeHandle = safeHandle;
