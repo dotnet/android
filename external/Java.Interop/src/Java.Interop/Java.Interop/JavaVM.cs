@@ -135,9 +135,7 @@ namespace Java.Interop
 			current = newCurrent;
 		}
 
-		ConcurrentDictionary<IntPtr, JniEnvironment>    Environments = new ConcurrentDictionary<IntPtr, JniEnvironment> ();
-
-		ConcurrentDictionary<SafeHandle, IDisposable>   TrackedInstances;
+		ConcurrentDictionary<SafeHandle, IDisposable>   TrackedInstances    = new ConcurrentDictionary<SafeHandle, IDisposable> ();
 
 		JavaVMInterface                                 Invoker;
 		bool                                            DestroyVM;
@@ -168,7 +166,7 @@ namespace Java.Interop
 
 			if (options.EnvironmentHandle != null) {
 				var env = new JniEnvironment (options.EnvironmentHandle, this);
-				Environments.TryAdd (env.SafeHandle.DangerousGetHandle (), env);
+				Track (env);
 			}
 
 			JavaVMs.TryAdd (SafeHandle.DangerousGetHandle (), this);
@@ -220,7 +218,8 @@ namespace Java.Interop
 				int r = Invoker.AttachCurrentThread (SafeHandle, out jnienv, ref threadArgs);
 				if (r != 0)
 					throw new NotSupportedException ("AttachCurrentThread returned " + r);
-				Environments.TryAdd (jnienv, new JniEnvironment (new JniEnvironmentSafeHandle (jnienv), this));
+				var env = new JniEnvironment (new JniEnvironmentSafeHandle (jnienv), this);
+				Track (env);
 			} finally {
 				Marshal.FreeHGlobal (threadArgs.name);
 			}
@@ -299,41 +298,38 @@ namespace Java.Interop
 			Interlocked.Decrement (ref WgrefCount);
 		}
 
-		public bool TrackIDs {
-			get {
-				return TrackedInstances != null;
-			}
-			private set {
-				TrackedInstances        = new ConcurrentDictionary<SafeHandle, IDisposable> ();
-			}
+		public bool TrackIDs {get; private set;}
+
+		internal void TrackID (SafeHandle key, IDisposable value)
+		{
+			if (TrackIDs)
+				TrackedInstances.TryAdd (key, value);
 		}
 
-		internal void Track (SafeHandle key, IDisposable value)
+		internal void Track (JniType value)
 		{
-			if (TrackedInstances != null)
-				TrackedInstances.TryAdd (key, value);
+			TrackedInstances.TryAdd (value.SafeHandle, value);
+		}
+
+		internal void Track (JniEnvironment value)
+		{
+			TrackedInstances.TryAdd (value.SafeHandle, value);
 		}
 
 		internal void UnTrack (SafeHandle key)
 		{
-			if (TrackedInstances != null) {
-				IDisposable _;
-				TrackedInstances.TryRemove (key, out _);
-			}
+			IDisposable _;
+			TrackedInstances.TryRemove (key, out _);
 		}
 
 		void ClearTrackedReferences ()
 		{
-			if (TrackedInstances != null) {
-				foreach (var k in TrackedInstances.Keys.ToList ()) {
-					IDisposable d;
-					if (TrackedInstances.TryRemove (k, out d))
-						d.Dispose ();
-				}
+			foreach (var k in TrackedInstances.Keys.ToList ()) {
+				IDisposable d;
+				if (TrackedInstances.TryRemove (k, out d))
+					d.Dispose ();
 			}
-			foreach (var env in Environments.Values)
-				env.Dispose ();
-			Environments.Clear ();
+			TrackedInstances.Clear ();
 		}
 	}
 

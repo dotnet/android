@@ -30,7 +30,7 @@ namespace Java.Interop {
 				throw new ArgumentException ("safeHandle must be valid.", "safeHandle");
 			try {
 				SafeHandle = safeHandle.NewGlobalRef ();
-				JniEnvironment.Current.JavaVM.Track (SafeHandle, this);
+				JniEnvironment.Current.JavaVM.Track (this);
 			} finally {
 				JniHandles.Dispose (safeHandle, transfer);
 			}

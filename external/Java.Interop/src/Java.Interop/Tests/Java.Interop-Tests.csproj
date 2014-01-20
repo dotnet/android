@@ -57,6 +57,7 @@
     <Compile Include="Java.Interop\JavaInt32ArrayContractTests.cs" />
     <Compile Include="Java.Interop\JavaInt64ArrayContractTests.cs" />
     <Compile Include="Java.Interop\JavaSingleArrayContractTests.cs" />
+    <Compile Include="Java.Interop\JniEnvironmentTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <JavaInteropTestJar Include="java\com\xamarin\interop\TestType.java" />

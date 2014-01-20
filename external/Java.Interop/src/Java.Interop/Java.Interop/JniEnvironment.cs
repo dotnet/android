@@ -47,12 +47,13 @@ namespace Java.Interop {
 		internal JniEnvironment (JniEnvironmentSafeHandle safeHandle, JavaVM javaVM)
 		{
 			SafeHandle = safeHandle;
-			if (current == null)
-				current = this;
 			Invoker = SafeHandle.CreateInvoker ();
 			JavaVM  = javaVM;
 
-			Object_class    = new JniType ("java/lang/Class");
+			if (current == null)
+				current = this;
+
+			Object_class    = new JniType ("java/lang/Object");
 			Object_toString = Object_class.GetInstanceMethod ("toString", "()Ljava/lang/String;");
 		}
 
@@ -72,22 +73,29 @@ namespace Java.Interop {
 			}
 		}
 
-		public static JniEnvironment GetEnvironmentFromHandle (IntPtr handle)
+		public static void CheckCurrent (IntPtr jniEnvironmentHandle)
 		{
-			if (current != null && current.SafeHandle.DangerousGetHandle () == handle)
-				return current;
+			if (current != null && current.SafeHandle.DangerousGetHandle () == jniEnvironmentHandle)
+				return;
+			if (current != null)
+				current.Dispose ();
 			current = null;
-			var env = new JniEnvironment (new JniEnvironmentSafeHandle (handle), javaVM:null);
+
 			JavaVMSafeHandle vm;
-			int r = env.Invoker.GetJavaVM (env.SafeHandle, out vm);
+
+			var h = new JniEnvironmentSafeHandle (jniEnvironmentHandle);
+			var i = h.CreateInvoker ();
+			int r = i.GetJavaVM (h, out vm);
 			if (r < 0)
 				throw new InvalidOperationException ("JNIEnv::GetJavaVM() returned: " + r);
-			env.JavaVM = JavaVM.GetRegisteredJavaVM (vm);
-			if (env.JavaVM == null)
+
+			var jvm = JavaVM.GetRegisteredJavaVM (vm);
+			if (jvm == null)
 				throw new NotSupportedException (
 						string.Format ("No JavaVM registered with handle 0x{0}.",
 							vm.DangerousGetHandle ().ToString ("x")));
-			return env;
+
+			new JniEnvironment (h, jvm);
 		}
 
 		public void Dispose ()
@@ -96,8 +104,9 @@ namespace Java.Interop {
 				return;
 			Object_class.Dispose ();
 			Object_toString.Dispose ();
-			if (Current == this)
+			if (current == this)
 				current = null;
+			JavaVM.UnTrack (SafeHandle);
 			SafeHandle.Dispose ();
 			SafeHandle = null;
 			JavaVM     = null;
