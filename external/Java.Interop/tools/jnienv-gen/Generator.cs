@@ -391,7 +391,7 @@ namespace Xamarin.Java.Interop
 				break;
 			case "JniLocalReference":
 				o.Write (indent);
-				o.WriteLine ("JniEnvironment.Current.JavaVM.LogCreateLocalRef ({0}{1});",
+				o.WriteLine ("JniEnvironment.Current.LogCreateLocalRef ({0}{1});",
 						variable,
 						entry.Name == "NewLocalRef" ? ", jobject" : "");
 				break;

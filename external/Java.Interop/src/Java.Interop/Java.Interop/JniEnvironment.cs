@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Threading;
 
 namespace Java.Interop {
 
@@ -106,6 +107,36 @@ namespace Java.Interop {
 			SafeHandle.Dispose ();
 			SafeHandle = null;
 			JavaVM     = null;
+		}
+
+		int LrefCount;
+
+		public int LocalReferenceCount {
+			get {return LrefCount;}
+		}
+
+		internal void LogCreateLocalRef (JniLocalReference value)
+		{
+			if (value == null || value.IsInvalid)
+				return;
+			Interlocked.Increment (ref LrefCount);
+			JavaVM.LogCreateLocalRef (SafeHandle, value);
+		}
+
+		internal void LogCreateLocalRef (JniLocalReference value, JniReferenceSafeHandle sourceValue)
+		{
+			if (value == null || value.IsInvalid)
+				return;
+			Interlocked.Increment (ref LrefCount);
+			JavaVM.LogCreateLocalRef (SafeHandle, value, sourceValue);
+		}
+
+		internal void LogDestroyLocalRef (IntPtr value)
+		{
+			if (value == IntPtr.Zero)
+				return;
+			Interlocked.Decrement (ref LrefCount);
+			JavaVM.LogDestroyLocalRef (SafeHandle, value);
 		}
 
 		            JniType             Object_class;

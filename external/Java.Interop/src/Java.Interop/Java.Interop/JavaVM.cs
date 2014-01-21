@@ -141,7 +141,6 @@ namespace Java.Interop
 		bool                                            DestroyVM;
 
 		int                                             GrefCount;
-		int                                             LrefCount;
 		int                                             WgrefCount;
 
 		public  JavaVMSafeHandle                        SafeHandle      {get; private set;}
@@ -237,10 +236,6 @@ namespace Java.Interop
 			}
 		}
 
-		public int LocalReferenceCount {
-			get {return LrefCount;}
-		}
-
 		public int GlobalReferenceCount {
 			get {return GrefCount;}
 		}
@@ -249,25 +244,16 @@ namespace Java.Interop
 			get {return WgrefCount;}
 		}
 
-		protected internal virtual void LogCreateLocalRef (JniLocalReference value)
+		protected internal virtual void LogCreateLocalRef (JniEnvironmentSafeHandle environmentHandle, JniLocalReference value)
 		{
-			if (value == null || value.IsInvalid)
-				return;
-			Interlocked.Increment (ref LrefCount);
 		}
 
-		protected internal virtual void LogCreateLocalRef (JniLocalReference value, JniReferenceSafeHandle sourceValue)
+		protected internal virtual void LogCreateLocalRef (JniEnvironmentSafeHandle environmentHandle, JniLocalReference value, JniReferenceSafeHandle sourceValue)
 		{
-			if (value == null || value.IsInvalid)
-				return;
-			Interlocked.Increment (ref LrefCount);
 		}
 
-		protected internal virtual void LogDestroyLocalRef (IntPtr value)
+		protected internal virtual void LogDestroyLocalRef (JniEnvironmentSafeHandle environmentHandle, IntPtr value)
 		{
-			if (value == IntPtr.Zero)
-				return;
-			Interlocked.Decrement (ref LrefCount);
 		}
 
 		protected internal virtual void LogCreateGlobalRef (JniGlobalReference value, JniReferenceSafeHandle sourceValue)
