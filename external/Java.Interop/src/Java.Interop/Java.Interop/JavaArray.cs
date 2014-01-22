@@ -208,18 +208,18 @@ namespace Java.Interop
 	}
 	#endif
 
-	public enum JavaArrayElementsReleaseMode {
+	public enum JniArrayElementsReleaseMode {
 		CopyBack        = 0,
 		DoNotCopyBack   = 2
 	}
 
-	public abstract class JavaArrayElements : IDisposable {
+	public abstract class JniArrayElements : IDisposable {
 
 		internal const int JNI_COMMIT = 1;
 
 		IntPtr elements;
 
-		internal JavaArrayElements (IntPtr elements)
+		internal JniArrayElements (IntPtr elements)
 		{
 			if (elements == IntPtr.Zero)
 				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", "elements");
@@ -238,14 +238,14 @@ namespace Java.Interop
 			}
 		}
 
-		protected   abstract    void    Synchronize (JavaArrayElementsReleaseMode releaseMode);
+		protected   abstract    void    Synchronize (JniArrayElementsReleaseMode releaseMode);
 
 		public void CopyToJava ()
 		{
-			Synchronize ((JavaArrayElementsReleaseMode) JNI_COMMIT);
+			Synchronize ((JniArrayElementsReleaseMode) JNI_COMMIT);
 		}
 
-		public void Release (JavaArrayElementsReleaseMode releaseMode)
+		public void Release (JniArrayElementsReleaseMode releaseMode)
 		{
 			if (IsDisposed)
 				throw new ObjectDisposedException (GetType ().FullName);;
@@ -257,7 +257,7 @@ namespace Java.Interop
 		{
 			if (IsDisposed)
 				return;
-			Release (JavaArrayElementsReleaseMode.CopyBack);
+			Release (JniArrayElementsReleaseMode.CopyBack);
 		}
 	}
 	
@@ -271,7 +271,7 @@ namespace Java.Interop
 		public      abstract    void    CopyTo (int sourceIndex, T[] destinationArray, int destinationIndex, int length);
 		public      abstract    void    CopyFrom (T[] sourceArray, int sourceIndex, int destinationIndex, int length);
 
-		protected   abstract    JavaArrayElements   CreateElements ();
+		protected   abstract    JniArrayElements   CreateElements ();
 
 		public override T this [int index] {
 			get {
@@ -287,7 +287,7 @@ namespace Java.Interop
 			}
 		}
 
-		public JavaArrayElements GetElements ()
+		public JniArrayElements GetElements ()
 		{
 			return CreateElements ();
 		}
@@ -298,7 +298,7 @@ namespace Java.Interop
 		}
 	}
 
-	public sealed class JavaByteArrayElements : JavaArrayElements {
+	public sealed class JavaByteArrayElements : JniArrayElements {
 		JniReferenceSafeHandle arrayHandle;
 
 		internal JavaByteArrayElements (JniReferenceSafeHandle arrayHandle, IntPtr elements)
@@ -311,7 +311,7 @@ namespace Java.Interop
 			get {return (sbyte*) base.Elements;}
 		}
 
-		protected override void Synchronize (JavaArrayElementsReleaseMode releaseMode)
+		protected override void Synchronize (JniArrayElementsReleaseMode releaseMode)
 		{
 			JniArrays.ReleaseByteArrayElements (arrayHandle, base.Elements, (int) releaseMode);
 		}
@@ -335,7 +335,7 @@ namespace Java.Interop
 			return new JavaByteArrayElements (this.SafeHandle, elements);
 		}
 
-		protected override JavaArrayElements CreateElements ()
+		protected override JniArrayElements CreateElements ()
 		{
 			return this.GetElements ();
 		}

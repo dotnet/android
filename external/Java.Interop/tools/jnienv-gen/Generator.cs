@@ -202,11 +202,11 @@ namespace Xamarin.Java.Interop
 		static void GenerateArrayType (TextWriter o, string jniType, string managedType, string typeModifier)
 		{
 			o.WriteLine ();
-			o.WriteLine ("\tpublic sealed class Java{0}ArrayElements : JavaArrayElements {{", typeModifier);
+			o.WriteLine ("\tpublic sealed class Jni{0}ArrayElements : JniArrayElements {{", typeModifier);
 			o.WriteLine ();
 			o.WriteLine ("\t\tJniReferenceSafeHandle arrayHandle;");
 			o.WriteLine ();
-			o.WriteLine ("\t\tinternal Java{0}ArrayElements (JniReferenceSafeHandle arrayHandle, IntPtr elements)", typeModifier);
+			o.WriteLine ("\t\tinternal Jni{0}ArrayElements (JniReferenceSafeHandle arrayHandle, IntPtr elements)", typeModifier);
 			o.WriteLine ("\t\t\t: base (elements)");
 			o.WriteLine ("\t\t{");
 			o.WriteLine ("\t\t\tthis.arrayHandle = arrayHandle;");
@@ -216,7 +216,7 @@ namespace Xamarin.Java.Interop
 			o.WriteLine ("\t\t\tget {{return ({0}*) base.Elements;}}", managedType);
 			o.WriteLine ("\t\t}");
 			o.WriteLine ();
-			o.WriteLine ("\t\tprotected override void Synchronize (JavaArrayElementsReleaseMode releaseMode)");
+			o.WriteLine ("\t\tprotected override void Synchronize (JniArrayElementsReleaseMode releaseMode)");
 			o.WriteLine ("\t\t{");
 			o.WriteLine ("\t\t\tJniArrays.Release{0}ArrayElements (arrayHandle, base.Elements, (int) releaseMode);", jniType);
 			o.WriteLine ("\t\t}");
@@ -234,15 +234,15 @@ namespace Xamarin.Java.Interop
 			o.WriteLine ("\t\t{");
 			o.WriteLine ("\t\t}");
 			o.WriteLine ();
-			o.WriteLine ("\t\tprotected override JavaArrayElements CreateElements ()");
+			o.WriteLine ("\t\tprotected override JniArrayElements CreateElements ()");
 			o.WriteLine ("\t\t{");
 			o.WriteLine ("\t\t\treturn GetElements ();");
 			o.WriteLine ("\t\t}");
 			o.WriteLine ();
-			o.WriteLine ("\t\tpublic new Java{0}ArrayElements GetElements ()", typeModifier);
+			o.WriteLine ("\t\tpublic new Jni{0}ArrayElements GetElements ()", typeModifier);
 			o.WriteLine ("\t\t{");
 			o.WriteLine ("\t\t\tIntPtr elements = JniArrays.Get{0}ArrayElements (SafeHandle, IntPtr.Zero);", jniType);
-			o.WriteLine ("\t\t\treturn new Java{0}ArrayElements (SafeHandle, elements);", typeModifier);
+			o.WriteLine ("\t\t\treturn new Jni{0}ArrayElements (SafeHandle, elements);", typeModifier);
 			o.WriteLine ("\t\t}");
 			o.WriteLine ();
 			o.WriteLine ("\t\tpublic override unsafe void CopyTo (int sourceIndex, {0}[] destinationArray, int destinationIndex, int length)", managedType);

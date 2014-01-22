@@ -40,7 +40,7 @@ namespace Java.InteropTests
 			e.Dispose ();
 			// Multi-dispose is supported.
 			e.Dispose ();
-			Assert.Throws<ObjectDisposedException> (() => e.Release (JavaArrayElementsReleaseMode.DoNotCopyBack));
+			Assert.Throws<ObjectDisposedException> (() => e.Release (JniArrayElementsReleaseMode.DoNotCopyBack));
 			Assert.Throws<ObjectDisposedException> (() => {
 					#pragma warning disable 0219
 					var _ = e.Elements;
