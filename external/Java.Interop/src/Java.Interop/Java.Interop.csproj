@@ -43,7 +43,7 @@
     <Compile Include="Java.Interop\JniType.cs" />
     <Compile Include="Java.Interop\JniHandles.cs" />
     <Compile Include="Java.Interop\JValue.cs" />
-    <Compile Include="Java.Interop\JObjectRefType.cs" />
+    <Compile Include="Java.Interop\JniReferenceType.cs" />
     <Compile Include="Java.Interop\JniInstanceFieldID.cs" />
     <Compile Include="Java.Interop\JniStaticFieldID.cs" />
     <Compile Include="Java.Interop\JniStaticMethodID.cs" />

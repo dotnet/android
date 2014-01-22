@@ -38,9 +38,9 @@ namespace Java.InteropTests {
 					GlobalReferenceCount,
 					WeakGlobalReferenceCount,
 					sourceValue.DangerousGetHandle ().ToString ("x"),
-					ToChar (sourceValue.RefType),
+					ToChar (sourceValue.ReferenceType),
 					value.DangerousGetHandle ().ToString ("x"),
-					ToChar (value.RefType),
+					ToChar (value.ReferenceType),
 					new StackTrace (true));
 			grefLog.Flush ();
 		}
@@ -68,9 +68,9 @@ namespace Java.InteropTests {
 				GlobalReferenceCount,
 				WeakGlobalReferenceCount,
 				sourceValue.DangerousGetHandle ().ToString ("x"),
-				ToChar (sourceValue.RefType),
+				ToChar (sourceValue.ReferenceType),
 				value.DangerousGetHandle ().ToString ("x"),
-				ToChar (value.RefType),
+				ToChar (value.ReferenceType),
 				new StackTrace (true));
 			grefLog.Flush ();
 		}
@@ -89,13 +89,13 @@ namespace Java.InteropTests {
 			grefLog.Flush ();
 		}
 
-		static char ToChar (JObjectRefType type)
+		static char ToChar (JniReferenceType type)
 		{
 			switch (type) {
-			case JObjectRefType.Global:     return 'G';
-			case JObjectRefType.Invalid:    return 'I';
-			case JObjectRefType.Local:      return 'L';
-			case JObjectRefType.WeakGlobal: return 'W';
+			case JniReferenceType.Global:       return 'G';
+			case JniReferenceType.Invalid:      return 'I';
+			case JniReferenceType.Local:        return 'L';
+			case JniReferenceType.WeakGlobal:   return 'W';
 			}
 			return '*';
 		}

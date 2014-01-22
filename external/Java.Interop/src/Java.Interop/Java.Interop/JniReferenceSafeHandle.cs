@@ -22,7 +22,7 @@ namespace Java.Interop
 			get {return base.handle == IntPtr.Zero;}
 		}
 
-		public JObjectRefType RefType {
+		public JniReferenceType ReferenceType {
 			get {
 				if (IsInvalid)
 					throw new ObjectDisposedException (GetType ().FullName);
