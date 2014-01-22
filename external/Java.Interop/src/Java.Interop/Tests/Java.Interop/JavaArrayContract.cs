@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 
 using Java.Interop;
 
@@ -24,6 +25,19 @@ namespace Java.InteropTests
 		protected override sealed T CreateValueC ()
 		{
 			return FromInt32 ((int) 'C');
+		}
+
+		[Test]
+		public void ToArray ()
+		{
+			var expected = new[] {
+				CreateValueA (),
+				CreateValueB (),
+				CreateValueC (),
+			};
+			var ja  = (JavaArray<T>) CreateCollection (expected);
+			var a   = ja.ToArray ();
+			Assert.IsTrue (expected.SequenceEqual (a));
 		}
 	}
 }

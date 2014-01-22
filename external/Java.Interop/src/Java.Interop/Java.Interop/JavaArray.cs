@@ -57,6 +57,13 @@ namespace Java.Interop
 			}
 		}
 
+		public T[] ToArray ()
+		{
+			var a = new T [Length];
+			CopyTo (a, 0);
+			return a;
+		}
+
 		public virtual IEnumerator<T> GetEnumerator ()
 		{
 			for (int i = 0; i < Length; ++i)
