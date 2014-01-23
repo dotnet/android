@@ -57,7 +57,6 @@
     <Compile Include="Java.Interop\JniNativeMethodRegistration.cs" />
     <Compile Include="Java.Interop\JniFieldID.cs" />
     <Compile Include="Java.Interop\JniMethodID.cs" />
-    <Compile Include="Java.Interop\JniArrays.cs" />
     <Compile Include="Java.Interop\IJavaObject.cs" />
     <Compile Include="Java.Interop\JavaObject.cs" />
     <Compile Include="Java.Interop\JniSystem.cs" />
