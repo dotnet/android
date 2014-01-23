@@ -33,7 +33,7 @@ namespace Java.InteropTests
 		JniInstanceMethodID Object_toString;
 		public override string ToString ()
 		{
-			return JniStrings.ToString (
+			return JniEnvironment.Strings.ToString (
 					TypeRef.GetCachedInstanceMethod (ref Object_toString, "toString", "()Ljava/lang/String;")
 						.CallVirtualObjectMethod (SafeHandle),
 					JniHandleOwnership.Transfer);

@@ -35,7 +35,7 @@ namespace Java.Interop
 				throw new ArgumentException ("handle is invalid.", "handle");
 
 			SafeHandle = handle.NewGlobalRef ();
-			JniHandles.Dispose (handle, transfer);
+			JniEnvironment.Handles.Dispose (handle, transfer);
 
 			keyHandle = JniSystem.IdentityHashCode (SafeHandle);
 			JniEnvironment.Current.JavaVM.RegisterObject (keyHandle, this);
@@ -87,7 +87,7 @@ namespace Java.Interop
 		{
 			TypeRef.GetCachedInstanceMethod (ref Object_toString, "toString", "()Ljava/lang/String;");
 			var lref = Object_toString.CallVirtualObjectMethod (SafeHandle);
-			return JniStrings.ToString (lref, JniHandleOwnership.Transfer);
+			return JniEnvironment.Strings.ToString (lref, JniHandleOwnership.Transfer);
 		}
 	}
 }

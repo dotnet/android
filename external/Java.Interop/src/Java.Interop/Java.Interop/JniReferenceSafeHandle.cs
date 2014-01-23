@@ -26,23 +26,23 @@ namespace Java.Interop
 			get {
 				if (IsInvalid)
 					throw new ObjectDisposedException (GetType ().FullName);
-				return JniHandles.GetObjectRefType (this);
+				return JniEnvironment.Handles.GetObjectRefType (this);
 			}
 		}
 
 		public JniGlobalReference NewGlobalRef ()
 		{
-			return JniHandles.NewGlobalRef (this);
+			return JniEnvironment.Handles.NewGlobalRef (this);
 		}
 
 		public JniLocalReference NewLocalRef ()
 		{
-			return JniHandles.NewLocalRef (this);
+			return JniEnvironment.Handles.NewLocalRef (this);
 		}
 
 		public JniWeakGlobalReference NewWeakGlobalRef ()
 		{
-			return JniHandles.NewWeakGlobalRef (this);
+			return JniEnvironment.Handles.NewWeakGlobalRef (this);
 		}
 
 		public override string ToString ()

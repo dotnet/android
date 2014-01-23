@@ -12,7 +12,7 @@ namespace Java.Interop
 		}
 
 		public int Length {
-			get {return JniArrays.GetArrayLength (SafeHandle);}
+			get {return JniEnvironment.Arrays.GetArrayLength (SafeHandle);}
 		}
 
 		public abstract T this [int index] {

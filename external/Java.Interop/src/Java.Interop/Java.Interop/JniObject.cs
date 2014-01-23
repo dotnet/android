@@ -6,12 +6,12 @@ namespace Java.Interop
 
 		public static bool IsSameInstance (JniReferenceSafeHandle a, JniReferenceSafeHandle b)
 		{
-			return JniTypes.IsSameObject (a, b);
+			return JniEnvironment.Types.IsSameObject (a, b);
 		}
 
 		public static JniType GetTypeFromInstance (JniReferenceSafeHandle value)
 		{
-			var lref = JniTypes.GetObjectClass (value);
+			var lref = JniEnvironment.Types.GetObjectClass (value);
 			if (!lref.IsInvalid)
 				return new JniType (lref, JniHandleOwnership.Transfer);
 			return null;

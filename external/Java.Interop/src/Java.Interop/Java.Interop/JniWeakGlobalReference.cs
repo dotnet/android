@@ -9,7 +9,7 @@ namespace Java.Interop
 		protected override bool ReleaseHandle ()
 		{
 			JniEnvironment.Current.JavaVM.LogDestroyWeakGlobalRef (handle);
-			JniHandles._DeleteWeakGlobalRef (handle);
+			JniEnvironment.Handles.DeleteWeakGlobalRef (handle);
 			return true;
 		}
 	}

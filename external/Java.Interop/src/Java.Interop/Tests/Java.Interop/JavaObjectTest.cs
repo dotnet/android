@@ -15,20 +15,20 @@ namespace Java.InteropTests
 		{
 			Console.WriteLine ("JavaReferencedInstanceSurvivesCollection");
 			using (var t = new JniType ("java/lang/Object")) {
-				var lrefArray = JniArrays.NewObjectArray (1, t.SafeHandle, JniReferenceSafeHandle.Null);
+				var lrefArray = JniEnvironment.Arrays.NewObjectArray (1, t.SafeHandle, JniReferenceSafeHandle.Null);
 				var grefArray = lrefArray.NewGlobalRef ();
 				lrefArray.Dispose ();
 				var oldHandle = IntPtr.Zero;
 				var w = new Thread (() => {
 						var v       = new JavaObject ();
 						oldHandle   = v.SafeHandle.DangerousGetHandle ();
-						JniArrays.SetObjectArrayElement (grefArray, 0, v.SafeHandle);
+						JniEnvironment.Arrays.SetObjectArrayElement (grefArray, 0, v.SafeHandle);
 				});
 				w.Start ();
 				w.Join ();
 				GC.Collect ();
 				GC.WaitForPendingFinalizers ();
-				var first = JniArrays.GetObjectArrayElement (grefArray, 0);
+				var first = JniEnvironment.Arrays.GetObjectArrayElement (grefArray, 0);
 				var o = (JavaObject) JVM.Current.GetObject (first, JniHandleOwnership.Transfer);
 				Assert.IsNotNull (o);
 				if (oldHandle != o.SafeHandle.DangerousGetHandle ()) {

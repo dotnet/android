@@ -218,7 +218,7 @@ namespace Xamarin.Java.Interop
 			o.WriteLine ();
 			o.WriteLine ("\t\tprotected override void Synchronize (JniArrayElementsReleaseMode releaseMode)");
 			o.WriteLine ("\t\t{");
-			o.WriteLine ("\t\t\tJniArrays.Release{0}ArrayElements (arrayHandle, base.Elements, (int) releaseMode);", jniType);
+			o.WriteLine ("\t\t\tJniEnvironment.Arrays.Release{0}ArrayElements (arrayHandle, base.Elements, (int) releaseMode);", jniType);
 			o.WriteLine ("\t\t}");
 			o.WriteLine ("\t}");
 			o.WriteLine ();
@@ -230,7 +230,7 @@ namespace Xamarin.Java.Interop
 			o.WriteLine ("\t\t}");
 			o.WriteLine ();
 			o.WriteLine ("\t\tpublic Java{0}Array (int length)", typeModifier);
-			o.WriteLine ("\t\t\t: base (JniArrays.New{0}Array (length), JniHandleOwnership.Transfer)", jniType);
+			o.WriteLine ("\t\t\t: base (JniEnvironment.Arrays.New{0}Array (length), JniHandleOwnership.Transfer)", jniType);
 			o.WriteLine ("\t\t{");
 			o.WriteLine ("\t\t}");
 			o.WriteLine ();
@@ -241,7 +241,7 @@ namespace Xamarin.Java.Interop
 			o.WriteLine ();
 			o.WriteLine ("\t\tpublic new Jni{0}ArrayElements GetElements ()", typeModifier);
 			o.WriteLine ("\t\t{");
-			o.WriteLine ("\t\t\tIntPtr elements = JniArrays.Get{0}ArrayElements (SafeHandle, IntPtr.Zero);", jniType);
+			o.WriteLine ("\t\t\tIntPtr elements = JniEnvironment.Arrays.Get{0}ArrayElements (SafeHandle, IntPtr.Zero);", jniType);
 			o.WriteLine ("\t\t\treturn new Jni{0}ArrayElements (SafeHandle, elements);", typeModifier);
 			o.WriteLine ("\t\t}");
 			o.WriteLine ();
@@ -254,7 +254,7 @@ namespace Xamarin.Java.Interop
 			o.WriteLine ("\t\t\t\treturn;");
 			o.WriteLine ();
 			o.WriteLine ("\t\t\tfixed ({0}* b = destinationArray)", managedType);
-			o.WriteLine ("\t\t\t\tJniArrays.Get{0}ArrayRegion (SafeHandle, sourceIndex, length, (IntPtr) (b+destinationIndex));", jniType);
+			o.WriteLine ("\t\t\t\tJniEnvironment.Arrays.Get{0}ArrayRegion (SafeHandle, sourceIndex, length, (IntPtr) (b+destinationIndex));", jniType);
 			o.WriteLine ("\t\t}");
 			o.WriteLine ();
 			o.WriteLine ("\t\tpublic override unsafe void CopyFrom ({0}[] sourceArray, int sourceIndex, int destinationIndex, int length)", managedType);
@@ -266,23 +266,33 @@ namespace Xamarin.Java.Interop
 			o.WriteLine ("\t\t\t\treturn;");
 			o.WriteLine ();
 			o.WriteLine ("\t\t\tfixed ({0}* b = sourceArray)", managedType);
-			o.WriteLine ("\t\t\t\tJniArrays.Set{0}ArrayRegion (SafeHandle, destinationIndex, length, (IntPtr) (b+sourceIndex));", jniType);
+			o.WriteLine ("\t\t\t\tJniEnvironment.Arrays.Set{0}ArrayRegion (SafeHandle, destinationIndex, length, (IntPtr) (b+sourceIndex));", jniType);
 			o.WriteLine ("\t\t}");
 			o.WriteLine ("\t}");
 		}
 
 		static void GenerateTypes (TextWriter o)
 		{
+			var visibilities = new Dictionary<string, string> {
+				{ "Arrays",     "public" },
+				{ "Strings",    "public" },
+			};
+			o.WriteLine ("\tpartial class JniEnvironment {");
 			foreach (var t in JNIEnvEntries
 					.Select (e => e.DeclaringType ?? "JniEnvironment")
 					.Distinct ()
-					.OrderBy (t => t))
-				GenerateJniEnv (o, t);
+					.OrderBy (t => t)) {
+				string visibility;
+				if (!visibilities.TryGetValue (t, out visibility))
+					visibility = "internal";
+				GenerateJniEnv (o, t, visibility);
+			}
+			o.WriteLine ("\t}");
 		}
-		static void GenerateJniEnv (TextWriter o, string type)
+		static void GenerateJniEnv (TextWriter o, string type, string visibility)
 		{
 			o.WriteLine ();
-			o.WriteLine ("\tstatic partial class {0} {{", type);
+			o.WriteLine ("\t{0} static partial class {1} {{", visibility, type);
 			foreach (JniFunction entry in JNIEnvEntries) {
 				if ((entry.DeclaringType ?? "JniEnvironment") != type)
 					continue;

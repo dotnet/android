@@ -231,9 +231,10 @@ namespace Java.Interop
 
 		public virtual Exception GetExceptionForThrowable (JniLocalReference value)
 		{
-			using (var s = JniEnvironment.Current.Object_toString.CallVirtualObjectMethod (value)) {
-				return new JniException (JniStrings.ToString (s) ?? "JNI error: no message provided");
-			}
+			var s = JniEnvironment.Current.Object_toString.CallVirtualObjectMethod (value);
+			return new JniException (
+					JniEnvironment.Strings.ToString (s, JniHandleOwnership.Transfer) ??
+					"JNI error: no message provided");
 		}
 
 		public int GlobalReferenceCount {
@@ -368,7 +369,7 @@ namespace Java.Interop
 			try {
 				return GetObject (jniHandle.DangerousGetHandle ());
 			} finally {
-				JniHandles.Dispose (jniHandle, transfer);
+				JniEnvironment.Handles.Dispose (jniHandle, transfer);
 			}
 		}
 

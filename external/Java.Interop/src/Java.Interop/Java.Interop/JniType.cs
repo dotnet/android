@@ -10,7 +10,7 @@ namespace Java.Interop {
 		public static unsafe JniType DefineClass (string name, JniReferenceSafeHandle loader, byte[] classFileData)
 		{
 			fixed (byte* buf = classFileData) {
-				var lref = JniTypes.DefineClass (name, loader, (IntPtr)buf, checked((int) classFileData.Length));
+				var lref = JniEnvironment.Types.DefineClass (name, loader, (IntPtr) buf, classFileData.Length);
 				return new JniType (lref, JniHandleOwnership.Transfer);
 			}
 		}
@@ -18,7 +18,7 @@ namespace Java.Interop {
 		public JniGlobalReference SafeHandle {get; private set;}
 
 		public JniType (string classname)
-			: this (JniTypes.FindClass (classname), JniHandleOwnership.Transfer)
+			: this (JniEnvironment.Types.FindClass (classname), JniHandleOwnership.Transfer)
 		{
 		}
 
@@ -32,7 +32,7 @@ namespace Java.Interop {
 				SafeHandle = safeHandle.NewGlobalRef ();
 				JniEnvironment.Current.JavaVM.Track (this);
 			} finally {
-				JniHandles.Dispose (safeHandle, transfer);
+				JniEnvironment.Handles.Dispose (safeHandle, transfer);
 			}
 		}
 
@@ -57,7 +57,7 @@ namespace Java.Interop {
 
 		public JniType GetSuperclass ()
 		{
-			var lref = JniTypes.GetSuperclass (SafeHandle);
+			var lref = JniEnvironment.Types.GetSuperclass (SafeHandle);
 			if (!lref.IsInvalid)
 				return new JniType (lref, JniHandleOwnership.Transfer);
 			return null;
@@ -69,12 +69,12 @@ namespace Java.Interop {
 				throw new ArgumentNullException ("c");
 			if (c.SafeHandle == null || c.SafeHandle.IsInvalid)
 				throw new ArgumentException ("'c' has an invalid handle.", "c");
-			return JniTypes.IsAssignableFrom (c.SafeHandle, SafeHandle);
+			return JniEnvironment.Types.IsAssignableFrom (c.SafeHandle, SafeHandle);
 		}
 
 		public bool IsInstanceOfType (JniReferenceSafeHandle value)
 		{
-			return JniTypes.IsInstanceOf (value, SafeHandle);
+			return JniEnvironment.Types.IsInstanceOf (value, SafeHandle);
 		}
 
 #pragma warning disable 0414
@@ -86,7 +86,7 @@ namespace Java.Interop {
 		{
 			if (methods == null)
 				throw new ArgumentNullException ("methods");
-			int r = JniTypes.RegisterNatives (SafeHandle, methods, checked ((int)methods.Length));
+			int r = JniEnvironment.Types.RegisterNatives (SafeHandle, methods, checked ((int)methods.Length));
 			if (r != 0)
 				throw new JniException ("Unable to register native methods.");
 			// Prevents method delegates from being GC'd so long as this type remains
@@ -95,12 +95,12 @@ namespace Java.Interop {
 
 		public void UnregisterNativeMethods ()
 		{
-			JniTypes.UnregisterNatives (SafeHandle);
+			JniEnvironment.Types.UnregisterNatives (SafeHandle);
 		}
 
 		public JniInstanceMethodID GetConstructor (string signature)
 		{
-			return JniMembers.GetMethodID (SafeHandle, "<init>", signature);
+			return JniEnvironment.Members.GetMethodID (SafeHandle, "<init>", signature);
 		}
 
 		public JniInstanceMethodID GetCachedConstructor (ref JniInstanceMethodID cachedMethod, string signature)
@@ -110,17 +110,17 @@ namespace Java.Interop {
 
 		public JniLocalReference AllocObject ()
 		{
-			return JniActivator.AllocObject (SafeHandle);
+			return JniEnvironment.Activator.AllocObject (SafeHandle);
 		}
 
 		public JniLocalReference NewObject (JniInstanceMethodID constructor, params JValue[] @params)
 		{
-			return JniActivator.NewObject (SafeHandle, constructor, @params);
+			return JniEnvironment.Activator.NewObject (SafeHandle, constructor, @params);
 		}
 
 		public JniInstanceFieldID GetInstanceField (string name, string signature)
 		{
-			return JniMembers.GetFieldID (SafeHandle, name, signature);
+			return JniEnvironment.Members.GetFieldID (SafeHandle, name, signature);
 		}
 
 		public JniInstanceFieldID GetCachedInstanceField (ref JniInstanceFieldID cachedField, string name, string signature)
@@ -135,7 +135,7 @@ namespace Java.Interop {
 
 		public JniStaticFieldID GetStaticField (string name, string signature)
 		{
-			return JniMembers.GetStaticFieldID (SafeHandle, name, signature);
+			return JniEnvironment.Members.GetStaticFieldID (SafeHandle, name, signature);
 		}
 
 		public JniStaticFieldID GetCachedStaticField (ref JniStaticFieldID cachedField, string name, string signature)
@@ -150,7 +150,7 @@ namespace Java.Interop {
 
 		public JniInstanceMethodID GetInstanceMethod (string name, string signature)
 		{
-			return JniMembers.GetMethodID (SafeHandle, name, signature);
+			return JniEnvironment.Members.GetMethodID (SafeHandle, name, signature);
 		}
 
 		public JniInstanceMethodID GetCachedInstanceMethod (ref JniInstanceMethodID cachedMethod, string name, string signature)
@@ -165,7 +165,7 @@ namespace Java.Interop {
 
 		public JniStaticMethodID GetStaticMethod (string name, string signature)
 		{
-			return JniMembers.GetStaticMethodID (SafeHandle, name, signature);
+			return JniEnvironment.Members.GetStaticMethodID (SafeHandle, name, signature);
 		}
 
 		public JniStaticMethodID GetCachedStaticMethod (ref JniStaticMethodID cachedMethod, string name, string signature)

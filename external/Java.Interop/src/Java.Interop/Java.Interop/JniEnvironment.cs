@@ -144,11 +144,11 @@ namespace Java.Interop {
 
 		public Exception GetExceptionForLastThrowable ()
 		{
-			using (var e = JniErrors.ExceptionOccurred ()) {
+			using (var e = JniEnvironment.Errors.ExceptionOccurred ()) {
 				if (e == null || e.IsInvalid)
 					return null;
-				JniErrors.ExceptionDescribe ();
-				JniErrors.ExceptionClear ();
+				JniEnvironment.Errors.ExceptionDescribe ();
+				JniEnvironment.Errors.ExceptionClear ();
 				return JavaVM.GetExceptionForThrowable (e);
 			}
 		}
