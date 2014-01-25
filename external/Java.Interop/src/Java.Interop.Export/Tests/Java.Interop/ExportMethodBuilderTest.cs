@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Threading;
 
 using Java.Interop;
@@ -84,11 +85,16 @@ namespace Java.InteropTests
 		{
 			var t = typeof (ExportTest);
 			var m = t.GetMethod ("InstanceAction");
-			var l = ExportMethodBuilder.CreateInvocationExpression (new ExportAttribute (), t, m);
-			Assert.AreEqual (typeof (Action<IntPtr, IntPtr>), l.Type);
-			Assert.AreEqual (
-					"(__jnienv, __context) => JniEnvironment.Current.JavaVM.GetObject(__context).InstanceAction()",
-					l.ToString ());
+			CheckCreateInvocationExpression (null, t, m, typeof (Action<IntPtr, IntPtr>),
+					"(__jnienv, __context) => JniEnvironment.Current.JavaVM.GetObject(__context).InstanceAction()");
+		}
+
+		static void CheckCreateInvocationExpression (ExportAttribute export, Type type, MethodInfo method, Type expectedDelegateType, string expectedBody)
+		{
+			export  = export ?? new ExportAttribute ();
+			var l   = ExportMethodBuilder.CreateInvocationExpression (export, type, method);
+			Assert.AreEqual (expectedDelegateType, l.Type);
+			Assert.AreEqual (expectedBody, l.ToString ());
 		}
 
 		[Test]
@@ -96,11 +102,8 @@ namespace Java.InteropTests
 		{
 			var t       = typeof (ExportTest);
 			Action a    = ExportTest.StaticAction;
-			var l = ExportMethodBuilder.CreateInvocationExpression (new ExportAttribute (), t, a.Method);
-			Assert.AreEqual (typeof (Action<IntPtr, IntPtr>), l.Type);
-			Assert.AreEqual (
-					"(__jnienv, __context) => StaticAction()",
-					l.ToString ());
+			CheckCreateInvocationExpression (null, t, a.Method, typeof (Action<IntPtr, IntPtr>),
+					"(__jnienv, __context) => StaticAction()");
 		}
 	}
 }
