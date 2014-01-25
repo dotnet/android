@@ -85,6 +85,7 @@ namespace Java.InteropTests
 			var t = typeof (ExportTest);
 			var m = t.GetMethod ("InstanceAction");
 			var l = ExportMethodBuilder.CreateInvocationExpression (new ExportAttribute (), t, m);
+			Assert.AreEqual (typeof (Action<IntPtr, IntPtr>), l.Type);
 			Assert.AreEqual (
 					"(__jnienv, __context) => JniEnvironment.Current.JavaVM.GetObject(__context).InstanceAction()",
 					l.ToString ());
@@ -96,6 +97,7 @@ namespace Java.InteropTests
 			var t       = typeof (ExportTest);
 			Action a    = ExportTest.StaticAction;
 			var l = ExportMethodBuilder.CreateInvocationExpression (new ExportAttribute (), t, a.Method);
+			Assert.AreEqual (typeof (Action<IntPtr, IntPtr>), l.Type);
 			Assert.AreEqual (
 					"(__jnienv, __context) => StaticAction()",
 					l.ToString ());
