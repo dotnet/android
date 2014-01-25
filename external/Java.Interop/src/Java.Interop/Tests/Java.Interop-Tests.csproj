@@ -86,5 +86,9 @@
       <Project>{5887B410-D448-4257-A46B-EAC03C80BE93}</Project>
       <Name>Java.Runtime.Environment</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\..\tests\TestJVM\TestJVM.csproj">
+      <Project>{A76309AB-98AC-4AE2-BA30-75481420C52F}</Project>
+      <Name>TestJVM</Name>
+    </ProjectReference>
   </ItemGroup>
 </Project>
