@@ -360,7 +360,7 @@ namespace Java.Interop
 		/// </param>
 		internal protected abstract bool TryGC (IJavaObject value, ref JniReferenceSafeHandle handle);
 
-		public IJavaObject GetObject (JniReferenceSafeHandle jniHandle, JniHandleOwnership transfer)
+		public IJavaObject GetObject (JniReferenceSafeHandle jniHandle, JniHandleOwnership transfer, Type targetType = null)
 		{
 			if (jniHandle == null)
 				return null;
@@ -373,7 +373,7 @@ namespace Java.Interop
 			}
 		}
 
-		public IJavaObject GetObject (IntPtr jniHandle)
+		public IJavaObject GetObject (IntPtr jniHandle, Type targetType = null)
 		{
 			if (jniHandle == IntPtr.Zero)
 				return null;
@@ -390,6 +390,12 @@ namespace Java.Interop
 				}
 			}
 			return null;
+		}
+
+		public T GetObject<T> (IntPtr jniHandle)
+			where T : IJavaObject
+		{
+			return (T) GetObject (jniHandle, typeof(T));
 		}
 	}
 }

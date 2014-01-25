@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>10.0.0</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{82E878E2-E9CE-496B-8B9B-2493D4E71282}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>Java.Interop.ExportTests</RootNamespace>
+    <AssemblyName>Java.Interop.Export-Tests</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>..\..\..\bin\Debug</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <DefineTrace>false</DefineTrace>
+    <DefineDebug>false</DefineDebug>
+    <ConsolePause>false</ConsolePause>
+    <AdditionalParameters>
+    </AdditionalParameters>
+    <WarningLevel>4</WarningLevel>
+    <Optimize>false</Optimize>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <OutputPath>..\..\..\bin\Release</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <ConsolePause>false</ConsolePause>
+    <DefineDebug>false</DefineDebug>
+    <DefineTrace>false</DefineTrace>
+    <AdditionalParameters>
+    </AdditionalParameters>
+    <WarningLevel>4</WarningLevel>
+    <Optimize>false</Optimize>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="nunit.framework">
+      <HintPath>..\..\..\lib\NUnit-2.6.3\bin\nunit.framework.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <ItemGroup>
+    <JavaInteropTestJar Include="java\com\xamarin\interop\export\ExportType.java" />
+  </ItemGroup>
+  <PropertyGroup>
+    <BuildDependsOn>
+      BuildJars;
+      $(BuildDependsOn)
+    </BuildDependsOn>
+  </PropertyGroup>
+  <ItemGroup>
+    <TestJar Include="$(OutputPath)export-test.jar" />
+  </ItemGroup>
+  <Target Name="BuildJars" Inputs="@(JavaInteropTestJar)" Outputs="@(TestJar)">
+    <MakeDir Directories="$(OutputPath)et-classes" />
+    <Exec Command="javac -d &quot;$(OutputPath)et-classes&quot; @(JavaInteropTestJar -&gt; '%(Identity)', ' ')" />
+    <Exec Command="jar cf &quot;$(OutputPath)export-test.jar&quot; -C &quot;$(OutputPath)et-classes&quot; ." />
+  </Target>
+  <ItemGroup>
+    <Compile Include="Java.Interop\ExportMethodBuilderTest.cs" />
+    <Compile Include="Java.Interop\ExportTest.cs" />
+    <Compile Include="Java.Interop\JVM.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Java.Interop.Export.csproj">
+      <Project>{B501D075-6183-4E1D-92C9-F7B5002475B1}</Project>
+      <Name>Java.Interop.Export</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Java.Runtime.Environment\Java.Runtime.Environment.csproj">
+      <Project>{5887B410-D448-4257-A46B-EAC03C80BE93}</Project>
+      <Name>Java.Runtime.Environment</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Java.Interop\Java.Interop.csproj">
+      <Project>{94BD81F7-B06F-4295-9636-F8A3B6BDC762}</Project>
+      <Name>Java.Interop</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Java.Interop\Tests\Java.Interop-Tests.csproj">
+      <Project>{FED322CB-8A45-4DDB-A885-8FE517994478}</Project>
+      <Name>Java.Interop-Tests</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\tests\TestJVM\TestJVM.csproj">
+      <Project>{A76309AB-98AC-4AE2-BA30-75481420C52F}</Project>
+      <Name>TestJVM</Name>
+    </ProjectReference>
+  </ItemGroup>
+</Project>
