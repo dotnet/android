@@ -78,6 +78,15 @@ namespace Android.Runtime
 			l = value == null ? IntPtr.Zero : value.DangerousGetHandle ();
 		}
 
+		public JValue (IJavaObject value)
+		{
+			this = new JValue ();
+			if (value != null && value.SafeHandle != null && !value.SafeHandle.IsInvalid)
+				l = value.SafeHandle.DangerousGetHandle ();
+			else
+				l = IntPtr.Zero;
+		}
+
 		public override string ToString ()
 		{
 			return string.Format ("Java.Interop.JValue(z={0},b={1},c={2},s={3},i={4},f={5},d={6},l=0x{7})",
