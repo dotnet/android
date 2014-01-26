@@ -12,14 +12,11 @@ using NUnit.Framework;
 namespace Java.InteropTests
 {
 	[TestFixture]
-	public class ExportMethodBuilderTest
+	class ExportMethodBuilderTest : JVM
 	{
 		[Test]
 		public void AddExportMethods ()
 		{
-			#pragma warning disable 0219
-			var _ignore = JVM.Current;
-			#pragma warning restore 0219
 			using (var t = CreateExportTestType ()) {
 				var methods = new List<JniNativeMethodRegistration> ();
 				ExportMethodBuilder.AddExportMethods (typeof (ExportTest), methods);
