@@ -1,15 +1,34 @@
 CONFIGURATION = Debug
+
+DEPENDENCIES = \
+	bin/$(CONFIGURATION)/libNativeTiming.dylib
+
 TESTS = \
 	bin/$(CONFIGURATION)/Java.Interop-Tests.dll \
-	bin/$(CONFIGURATION)/Java.Interop.Export-Tests.dll
+	bin/$(CONFIGURATION)/Java.Interop.Export-Tests.dll \
+	bin/$(CONFIGURATION)/Java.Interop-PerformanceTests.dll
 
-all: $(TESTS)
+all: $(DEPENDENCIES) $(TESTS)
+
+clean:
+	xbuild /t:Clean
+	rm -Rf bin/$(CONFIGURATION)
+
+bin/$(CONFIGURATION)/libNativeTiming.dylib: tests/NativeTiming/timing.c
+	mkdir -p `dirname "$@"`
+	gcc -g -shared -o $@ $< -m32 -I /System/Library/Frameworks/JavaVM.framework/Headers
 
 bin/$(CONFIGURATION)/Java.Interop-Tests.dll: $(wildcard src/Java.Interop/*/*.cs src/Java.Interop/Tests/*/*.cs)
 	xbuild
+	touch $@
 
 bin/$(CONFIGURATION)/Java.Interop.Export-Tests.dll: $(wildcard src/Java.Interop.Export/*/*.cs src/Java.Interop.Export/Tests/*/*.cs)
 	xbuild
+	touch $@
+
+bin/$(CONFIGURATION)/Java.Interop-PerformanceTests.dll: $(wildcard tests/Java.Interop-PerformanceTests/*.cs) bin/$(CONFIGURATION)/libNativeTiming.dylib
+	xbuild
+	touch $@
 
 # $(call RUN_TEST,filename)
 define RUN_TEST

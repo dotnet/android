@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>10.0.0</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{6970466B-F6D1-417A-8A27-4FED8555EBD0}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>Java.Interop.PerformanceTests</RootNamespace>
+    <AssemblyName>Java.Interop-PerformanceTests</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>..\..\bin\Debug</OutputPath>
+    <DefineConstants>DEBUG;</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>false</ConsolePause>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>full</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>..\..\bin\Release</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>false</ConsolePause>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="nunit.framework">
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="JavaTiming.cs" />
+    <Compile Include="TimingTests.cs" />
+    <Compile Include="JVM.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <ItemGroup>
+    <JavaInteropTestJar Include="java\com\xamarin\interop\performance\JavaTiming.java" />
+  </ItemGroup>
+  <PropertyGroup>
+    <BuildDependsOn>
+      $(BuildDependsOn);
+      BuildJars
+    </BuildDependsOn>
+  </PropertyGroup>
+  <ItemGroup>
+    <TestJar Include="%24%28OutputPath%29performance-test.jar" />
+  </ItemGroup>
+  <Target Name="BuildJars" Inputs="@(JavaInteropTestJar)" Outputs="@(TestJar)">
+    <MakeDir Directories="$(OutputPath)pt-classes" />
+    <Exec Command="javac -d &quot;$(OutputPath)pt-classes&quot; @(JavaInteropTestJar -&gt; '%(Identity)', ' ')" />
+    <Exec Command="jar cf &quot;$(OutputPath)performance-test.jar&quot; -C &quot;$(OutputPath)pt-classes&quot; ." />
+  </Target>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Java.Interop\Java.Interop.csproj">
+      <Project>{94BD81F7-B06F-4295-9636-F8A3B6BDC762}</Project>
+      <Name>Java.Interop</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\src\Java.Runtime.Environment\Java.Runtime.Environment.csproj">
+      <Project>{5887B410-D448-4257-A46B-EAC03C80BE93}</Project>
+      <Name>Java.Runtime.Environment</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\TestJVM\TestJVM.csproj">
+      <Project>{A76309AB-98AC-4AE2-BA30-75481420C52F}</Project>
+      <Name>TestJVM</Name>
+    </ProjectReference>
+  </ItemGroup>
+</Project>
