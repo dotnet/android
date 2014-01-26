@@ -1,0 +1,3 @@
+[submodule "lib/mono.linq.expressions"]
+	path = lib/mono.linq.expressions
+	url = https://github.com/jbevain/mono.linq.expressions.git

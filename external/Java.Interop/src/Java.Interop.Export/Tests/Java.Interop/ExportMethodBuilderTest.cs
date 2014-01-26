@@ -5,6 +5,8 @@ using System.Threading;
 
 using Java.Interop;
 
+using Mono.Linq.Expressions;
+
 using NUnit.Framework;
 
 namespace Java.InteropTests
@@ -86,7 +88,11 @@ namespace Java.InteropTests
 			var t = typeof (ExportTest);
 			var m = t.GetMethod ("InstanceAction");
 			CheckCreateInvocationExpression (null, t, m, typeof (Action<IntPtr, IntPtr>),
-					"(__jnienv, __context) => JniEnvironment.Current.JavaVM.GetObject(__context).InstanceAction()");
+					@"void (IntPtr __jnienv, IntPtr __context)
+{
+	JniEnvironment.CheckCurrent(__jnienv);
+	JniEnvironment.Current.JavaVM.GetObject<ExportTest>(__context).InstanceAction();
+}");
 		}
 
 		static void CheckCreateInvocationExpression (ExportAttribute export, Type type, MethodInfo method, Type expectedDelegateType, string expectedBody)
@@ -94,7 +100,7 @@ namespace Java.InteropTests
 			export  = export ?? new ExportAttribute ();
 			var l   = ExportMethodBuilder.CreateInvocationExpression (export, type, method);
 			Assert.AreEqual (expectedDelegateType, l.Type);
-			Assert.AreEqual (expectedBody, l.ToString ());
+			Assert.AreEqual (expectedBody, l.ToCSharpCode ());
 		}
 
 		[Test]
@@ -102,8 +108,12 @@ namespace Java.InteropTests
 		{
 			var t       = typeof (ExportTest);
 			Action a    = ExportTest.StaticAction;
-			CheckCreateInvocationExpression (null, t, a.Method, typeof (Action<IntPtr, IntPtr>),
-					"(__jnienv, __context) => StaticAction()");
+			CheckCreateInvocationExpression (null, t, a.Method, typeof(Action<IntPtr, IntPtr>),
+					@"void (IntPtr __jnienv, IntPtr __context)
+{
+	JniEnvironment.CheckCurrent(__jnienv);
+	ExportTest.StaticAction();
+}");
 		}
 	}
 }

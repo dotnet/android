@@ -15,7 +15,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Java.Interop.Export", "src\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Java.Interop.Export-Tests", "src\Java.Interop.Export\Tests\Java.Interop.Export-Tests.csproj", "{82E878E2-E9CE-496B-8B9B-2493D4E71282}"
 EndProject
-Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "TestJVM", "tests\TestJVM\TestJVM.csproj", "{A76309AB-98AC-4AE2-BA30-75481420C52F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestJVM", "tests\TestJVM\TestJVM.csproj", "{A76309AB-98AC-4AE2-BA30-75481420C52F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mono.Linq.Expressions", "lib\mono.linq.expressions\Mono.Linq.Expressions.csproj", "{0C001D50-4176-45AE-BDC8-BA626508B0CC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,6 +25,10 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0C001D50-4176-45AE-BDC8-BA626508B0CC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0C001D50-4176-45AE-BDC8-BA626508B0CC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0C001D50-4176-45AE-BDC8-BA626508B0CC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0C001D50-4176-45AE-BDC8-BA626508B0CC}.Release|Any CPU.Build.0 = Release|Any CPU
 		{5887B410-D448-4257-A46B-EAC03C80BE93}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{5887B410-D448-4257-A46B-EAC03C80BE93}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5887B410-D448-4257-A46B-EAC03C80BE93}.Release|Any CPU.ActiveCfg = Release|Any CPU

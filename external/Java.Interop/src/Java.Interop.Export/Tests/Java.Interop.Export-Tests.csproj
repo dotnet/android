@@ -84,5 +84,9 @@
       <Project>{A76309AB-98AC-4AE2-BA30-75481420C52F}</Project>
       <Name>TestJVM</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\..\lib\mono.linq.expressions\Mono.Linq.Expressions.csproj">
+      <Project>{0C001D50-4176-45AE-BDC8-BA626508B0CC}</Project>
+      <Name>Mono.Linq.Expressions</Name>
+    </ProjectReference>
   </ItemGroup>
 </Project>

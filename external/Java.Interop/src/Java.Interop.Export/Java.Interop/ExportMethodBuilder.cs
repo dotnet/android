@@ -75,12 +75,16 @@ namespace Java.Interop {
 				.ToList ();
 			var jnienv  = Expression.Parameter (typeof (IntPtr), "__jnienv");
 			var context = Expression.Parameter (typeof (IntPtr), "__context");
-			var invoke = (MethodCallExpression) null;
+
+			var marshalBody = new List<Expression> () {
+				CheckJnienv (jnienv),
+			};
+
 			if (method.IsStatic)
-				invoke = Expression.Call (method, ptypes);
+				marshalBody.Add (Expression.Call (method, ptypes));
 			else {
 				var instance = GetThis (context, type);
-				invoke = Expression.Call (instance, method, ptypes);
+				marshalBody.Add (Expression.Call (instance, method, ptypes));
 			}
 			var funcTypeParams = new List<Type> () {
 				typeof (IntPtr),
@@ -97,7 +101,14 @@ namespace Java.Interop {
 			}
 			var bodyParams = new List<ParameterExpression> { jnienv, context };
 			bodyParams.AddRange (ptypes);
-			return Expression.Lambda (marshalerType, invoke, bodyParams);
+			var body = Expression.Block (marshalBody);
+			return Expression.Lambda (marshalerType, body, bodyParams);
+		}
+
+		static Expression CheckJnienv (ParameterExpression jnienv)
+		{
+			Action<IntPtr> a = JniEnvironment.CheckCurrent;
+			return Expression.Call (null, a.Method, jnienv);
 		}
 
 		static Expression GetThis (ParameterExpression context, Type targetType)
