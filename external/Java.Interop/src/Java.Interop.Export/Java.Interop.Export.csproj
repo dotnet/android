@@ -34,7 +34,7 @@
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Java.Interop\ExportAttribute.cs" />
-    <Compile Include="Java.Interop\ExportMethodBuilder.cs" />
+    <Compile Include="Java.Interop\ExportedMemberBuilder.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
   <ItemGroup>

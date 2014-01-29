@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
 
@@ -396,6 +397,24 @@ namespace Java.Interop
 			where T : IJavaObject
 		{
 			return (T) GetObject (jniHandle, typeof(T));
+		}
+	}
+
+	partial class JavaVM {
+
+		static IExportedMemberBuilder memberBuilder;
+		public virtual IExportedMemberBuilder ExportedMemberBuilder {
+			get {
+				if (memberBuilder != null)
+					return memberBuilder;
+				var jie = Assembly.Load ("Java.Interop.Export");
+				var t   = jie.GetType ("Java.Interop.ExportedMemberBuilder");
+				var b   = (IExportedMemberBuilder) Activator.CreateInstance (t, this);
+				if (Interlocked.CompareExchange (ref memberBuilder, b, null) != null) {
+					// do nothing; GC will collect
+				}
+				return memberBuilder;
+			}
 		}
 	}
 }

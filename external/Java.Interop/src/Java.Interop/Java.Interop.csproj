@@ -61,6 +61,7 @@
     <Compile Include="Java.Interop\JavaObject.cs" />
     <Compile Include="Java.Interop\JniSystem.cs" />
     <Compile Include="Java.Interop\JavaArray.cs" />
+    <Compile Include="Java.Interop\IExportedMemberBuilder.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
   <PropertyGroup>

@@ -59,7 +59,7 @@
     <Exec Command="jar cf &quot;$(OutputPath)export-test.jar&quot; -C &quot;$(OutputPath)et-classes&quot; ." />
   </Target>
   <ItemGroup>
-    <Compile Include="Java.Interop\ExportMethodBuilderTest.cs" />
+    <Compile Include="Java.Interop\ExportedMemberBuilderTest.cs" />
     <Compile Include="Java.Interop\ExportTest.cs" />
     <Compile Include="Java.Interop\JVM.cs" />
   </ItemGroup>

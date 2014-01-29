@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Threading;
 
@@ -12,14 +13,15 @@ using NUnit.Framework;
 namespace Java.InteropTests
 {
 	[TestFixture]
-	class ExportMethodBuilderTest : JVM
+	class ExportedMemberBuilderTest : JVM
 	{
 		[Test]
 		public void AddExportMethods ()
 		{
 			using (var t = CreateExportTestType ()) {
-				var methods = new List<JniNativeMethodRegistration> ();
-				ExportMethodBuilder.AddExportMethods (typeof (ExportTest), methods);
+				var methods = new ExportedMemberBuilder ()
+					.GetExportedMemberRegistrations (typeof (ExportTest))
+					.ToList ();
 				Assert.AreEqual (2, methods.Count);
 
 				Assert.AreEqual ("action",  methods [0].Name);
@@ -55,32 +57,34 @@ namespace Java.InteropTests
 		}
 
 		[Test]
-		public void AddExportMethods_NullChecks ()
+		public void GetExportedMemberRegistrations_NullChecks ()
 		{
-			Assert.Throws<ArgumentNullException> (() => ExportMethodBuilder.AddExportMethods (null, new List<JniNativeMethodRegistration> ()));
-			Assert.Throws<ArgumentNullException> (() => ExportMethodBuilder.AddExportMethods (typeof (object), null));
+			var builder = new ExportedMemberBuilder ();
+			Assert.Throws<ArgumentNullException> (() => builder.GetExportedMemberRegistrations (null));
 		}
 
 		[Test]
-		public void CreateNativeMethodRegistration_NullChecks ()
+		public void CreateMarshalFromJniMethodRegistration_NullChecks ()
 		{
-			Action a = ExportTest.StaticAction;
-			Assert.Throws<ArgumentNullException> (() => ExportMethodBuilder.CreateNativeMethodRegistration (null, typeof (ExportTest), a.Method));
-			Assert.Throws<ArgumentNullException> (() => ExportMethodBuilder.CreateNativeMethodRegistration (new ExportAttribute (null), null, a.Method));
-			Assert.Throws<ArgumentNullException> (() => ExportMethodBuilder.CreateNativeMethodRegistration (new ExportAttribute (null), typeof (ExportTest), null));
+			Action a    = ExportTest.StaticAction;
+			var builder = new ExportedMemberBuilder ();
+			Assert.Throws<ArgumentNullException> (() => builder.CreateMarshalFromJniMethodRegistration (null, typeof (ExportTest), a.Method));
+			Assert.Throws<ArgumentNullException> (() => builder.CreateMarshalFromJniMethodRegistration (new ExportAttribute (null), null, a.Method));
+			Assert.Throws<ArgumentNullException> (() => builder.CreateMarshalFromJniMethodRegistration (new ExportAttribute (null), typeof (ExportTest), null));
 		}
 
 		[Test]
 		public void CreateInvocationExpression_NullChecks ()
 		{
-			Action a = ExportTest.StaticAction;
-			Assert.Throws<ArgumentNullException> (() => ExportMethodBuilder.CreateInvocationExpression (null, typeof (ExportTest), a.Method));
-			Assert.Throws<ArgumentNullException> (() => ExportMethodBuilder.CreateInvocationExpression (new ExportAttribute (null), null, a.Method));
-			Assert.Throws<ArgumentNullException> (() => ExportMethodBuilder.CreateInvocationExpression (new ExportAttribute (null), typeof (ExportTest), null));
+			Action      a = ExportTest.StaticAction;
+			var builder = new ExportedMemberBuilder ();
+			Assert.Throws<ArgumentNullException> (() => builder.CreateMarshalFromJniMethodExpression (null, typeof (ExportTest), a.Method));
+			Assert.Throws<ArgumentNullException> (() => builder.CreateMarshalFromJniMethodExpression (new ExportAttribute (null), null, a.Method));
+			Assert.Throws<ArgumentNullException> (() => builder.CreateMarshalFromJniMethodExpression (new ExportAttribute (null), typeof (ExportTest), null));
 		}
 
 		[Test]
-		public void CreateInvocationExpression_InstanceAction ()
+		public void CreateMarshalFromJniMethodExpression_InstanceAction ()
 		{
 			var t = typeof (ExportTest);
 			var m = t.GetMethod ("InstanceAction");
@@ -95,13 +99,14 @@ namespace Java.InteropTests
 		static void CheckCreateInvocationExpression (ExportAttribute export, Type type, MethodInfo method, Type expectedDelegateType, string expectedBody)
 		{
 			export  = export ?? new ExportAttribute ();
-			var l   = ExportMethodBuilder.CreateInvocationExpression (export, type, method);
+			var b   = new ExportedMemberBuilder ();
+			var l   = b.CreateMarshalFromJniMethodExpression (export, type, method);
 			Assert.AreEqual (expectedDelegateType, l.Type);
 			Assert.AreEqual (expectedBody, l.ToCSharpCode ());
 		}
 
 		[Test]
-		public void CreateInvocationExpression_StaticAction ()
+		public void CreateMarshalFromJniMethodExpression_StaticAction ()
 		{
 			var t       = typeof (ExportTest);
 			Action a    = ExportTest.StaticAction;

@@ -7,26 +7,35 @@ using System.Reflection;
 
 namespace Java.Interop {
 
-	public static class ExportMethodBuilder
+	public class ExportedMemberBuilder : IExportedMemberBuilder
 	{
-		public static void AddExportMethods (Type type, ICollection<JniNativeMethodRegistration> methods)
+		public ExportedMemberBuilder (JavaVM javaVM = null)
 		{
-			if (type == null)
-				throw new ArgumentNullException ("type");
-			if (methods == null)
-				throw new ArgumentNullException ("methods");
+			JavaVM = javaVM;
+		}
 
+		public JavaVM JavaVM {get; private set;}
+
+		public IEnumerable<JniNativeMethodRegistration> GetExportedMemberRegistrations (Type declaringType)
+		{
+			if (declaringType == null)
+				throw new ArgumentNullException ("type");
+			return CreateExportedMemberRegistrationIterator (declaringType);
+		}
+
+		IEnumerable<JniNativeMethodRegistration> CreateExportedMemberRegistrationIterator (Type declaringType)
+		{
 			const BindingFlags methodScope = BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
-			foreach (var method in type.GetMethods (methodScope)) {
+			foreach (var method in declaringType.GetMethods (methodScope)) {
 				var exports = (ExportAttribute[]) method.GetCustomAttributes (typeof(ExportAttribute), inherit:false);
 				if (exports == null || exports.Length == 0)
 					continue;
 				var export  = exports [0];
-				methods.Add (CreateNativeMethodRegistration (export, type, method));
+				yield return CreateMarshalFromJniMethodRegistration (export, declaringType, method);
 			}
 		}
 
-		public static JniNativeMethodRegistration CreateNativeMethodRegistration (ExportAttribute export, Type type, MethodInfo method)
+		public JniNativeMethodRegistration CreateMarshalFromJniMethodRegistration (ExportAttribute export, Type type, MethodInfo method)
 		{
 			if (export == null)
 				throw new ArgumentNullException ("export");
@@ -36,32 +45,32 @@ namespace Java.Interop {
 				throw new ArgumentNullException ("method");
 
 			return new JniNativeMethodRegistration () {
-				Name        = CreateName (export, method),
-				Signature   = CreateSignature (export, method),
-				Marshaler   = CreateMarshaler (export, type, method),
+				Name        = GetJniMethodName (export, method),
+				Signature   = GetJniMethodSignature (export, method),
+				Marshaler   = CreateJniMethodMarshaler (export, type, method),
 			};
 		}
 
-		static string CreateName (ExportAttribute export, MethodInfo method)
+		protected virtual string GetJniMethodName (ExportAttribute export, MethodInfo method)
 		{
 			return export.Name ?? "n_" + method.Name;
 		}
 
-		static string CreateSignature (ExportAttribute export, MethodInfo method)
+		protected virtual string GetJniMethodSignature (ExportAttribute export, MethodInfo method)
 		{
 			if (export.Signature != null)
 				return export.Signature;
 			throw new NotSupportedException ("parameter deduction not yet implemented.");
 		}
 
-		static Delegate CreateMarshaler (ExportAttribute export, Type type, MethodInfo method)
+		Delegate CreateJniMethodMarshaler (ExportAttribute export, Type type, MethodInfo method)
 		{
-			var e = CreateInvocationExpression (export, type, method);
+			var e = CreateMarshalFromJniMethodExpression (export, type, method);
 			return e.Compile ();
 		}
 
 		// TODO: make internal, and add [InternalsVisibleTo] for Java.Interop.Export-Tests
-		public static LambdaExpression CreateInvocationExpression (ExportAttribute export, Type type, MethodInfo method)
+		public virtual LambdaExpression CreateMarshalFromJniMethodExpression (ExportAttribute export, Type type, MethodInfo method)
 		{
 			if (export == null)
 				throw new ArgumentNullException ("export");
@@ -71,7 +80,7 @@ namespace Java.Interop {
 				throw new ArgumentNullException ("method");
 
 			var ptypes = method.GetParameters ()
-				.Select (p => Expression.Parameter (p.ParameterType, p.Name))
+				.Select (p => Expression.Parameter (GetMarshalFromJniParameterType (p.ParameterType), p.Name))
 				.ToList ();
 			var jnienv  = Expression.Parameter (typeof (IntPtr), "__jnienv");
 			var context = Expression.Parameter (typeof (IntPtr), "__context");
@@ -96,13 +105,27 @@ namespace Java.Interop {
 			if (method.ReturnType == typeof(void))
 				marshalerType = Expression.GetActionType (funcTypeParams.ToArray ());
 			else {
-				funcTypeParams.Add (method.ReturnType);
+				funcTypeParams.Add (GetMarshalToJniReturnType (method.ReturnType));
 				marshalerType = Expression.GetFuncType (funcTypeParams.ToArray ());
 			}
 			var bodyParams = new List<ParameterExpression> { jnienv, context };
 			bodyParams.AddRange (ptypes);
 			var body = Expression.Block (marshalBody);
 			return Expression.Lambda (marshalerType, body, bodyParams);
+		}
+
+		protected virtual Type GetMarshalFromJniParameterType (Type type)
+		{
+			if (JniBuiltinTypes.Contains (type))
+				return type;
+			return typeof (IntPtr);
+		}
+
+		protected virtual Type GetMarshalToJniReturnType (Type type)
+		{
+			if (JniBuiltinTypes.Contains (type))
+				return type;
+			return typeof (JniReferenceSafeHandle);
 		}
 
 		static Expression CheckJnienv (ParameterExpression jnienv)
@@ -127,6 +150,17 @@ namespace Java.Interop {
 			var vm      = Expression.Property (cenv, "JavaVM");
 			return vm;
 		}
+
+		static readonly ISet<Type> JniBuiltinTypes = new HashSet<Type> {
+			typeof (bool),
+			typeof (sbyte),
+			typeof (char),
+			typeof (short),
+			typeof (int),
+			typeof (long),
+			typeof (float),
+			typeof (double),
+		};
 	}
 }
 
