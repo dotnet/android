@@ -39,7 +39,7 @@ namespace Java.InteropTests
 			base.LogCreateGlobalRef (value, sourceValue);
 			if (grefLog == null)
 				return;
-			grefLog.WriteLine ("+g+ grefc {0} gwrefc {1} obj-handle 0x{2}/{3} -> new-handle 0x{4}/{5} from {6}",
+			LogGref ("+g+ grefc {0} gwrefc {1} obj-handle 0x{2}/{3} -> new-handle 0x{4}/{5} from {6}",
 					GlobalReferenceCount,
 					WeakGlobalReferenceCount,
 					sourceValue.DangerousGetHandle ().ToString ("x"),
@@ -47,7 +47,15 @@ namespace Java.InteropTests
 					value.DangerousGetHandle ().ToString ("x"),
 					ToChar (value.ReferenceType),
 					new StackTrace (true));
-			grefLog.Flush ();
+		}
+
+		void LogGref (string format, params object[] args)
+		{
+			var message = string.Format (format, args);
+			lock (grefLog) {
+				grefLog.WriteLine (message);
+				grefLog.Flush ();
+			}
 		}
 
 		protected override void LogDestroyGlobalRef (IntPtr value)
@@ -55,13 +63,12 @@ namespace Java.InteropTests
 			base.LogDestroyGlobalRef (value);
 			if (grefLog == null)
 				return;
-			grefLog.WriteLine ("-g- grefc {0} gwrefc {1} handle 0x{2}/{3} from {4}",
+			LogGref ("-g- grefc {0} gwrefc {1} handle 0x{2}/{3} from {4}",
 					GlobalReferenceCount,
 					WeakGlobalReferenceCount,
 					value.ToString ("x"),
 					'G',
 					new StackTrace (true));
-			grefLog.Flush ();
 		}
 
 		protected override void LogCreateWeakGlobalRef (JniWeakGlobalReference value, JniReferenceSafeHandle sourceValue)
@@ -69,7 +76,7 @@ namespace Java.InteropTests
 			base.LogCreateWeakGlobalRef (value, sourceValue);
 			if (grefLog == null)
 				return;
-			grefLog.WriteLine ("+w+ grefc {0} gwrefc {1} obj-handle 0x{2}/{3} -> new-handle 0x{4}/{5} from {6}",
+			LogGref ("+w+ grefc {0} gwrefc {1} obj-handle 0x{2}/{3} -> new-handle 0x{4}/{5} from {6}",
 					GlobalReferenceCount,
 					WeakGlobalReferenceCount,
 					sourceValue.DangerousGetHandle ().ToString ("x"),
@@ -77,7 +84,6 @@ namespace Java.InteropTests
 					value.DangerousGetHandle ().ToString ("x"),
 					ToChar (value.ReferenceType),
 					new StackTrace (true));
-			grefLog.Flush ();
 		}
 
 		protected override void LogDestroyWeakGlobalRef (IntPtr value)
@@ -85,13 +91,12 @@ namespace Java.InteropTests
 			base.LogDestroyWeakGlobalRef (value);
 			if (grefLog == null)
 				return;
-			grefLog.WriteLine ("-w- grefc {0} gwrefc {1} handle 0x{2}/{3} from {4}",
+			LogGref ("-w- grefc {0} gwrefc {1} handle 0x{2}/{3} from {4}",
 					GlobalReferenceCount,
 					WeakGlobalReferenceCount,
 					value.ToString ("x"),
 					'G',
 					new StackTrace (true));
-			grefLog.Flush ();
 		}
 
 		static char ToChar (JniReferenceType type)
