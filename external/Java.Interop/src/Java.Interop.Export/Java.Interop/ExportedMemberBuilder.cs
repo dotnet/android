@@ -19,7 +19,7 @@ namespace Java.Interop {
 		public IEnumerable<JniNativeMethodRegistration> GetExportedMemberRegistrations (Type declaringType)
 		{
 			if (declaringType == null)
-				throw new ArgumentNullException ("type");
+				throw new ArgumentNullException ("declaringType");
 			return CreateExportedMemberRegistrationIterator (declaringType);
 		}
 
