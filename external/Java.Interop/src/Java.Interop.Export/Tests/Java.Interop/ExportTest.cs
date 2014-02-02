@@ -31,6 +31,12 @@ namespace Java.InteropTests
 		public void ActionInt32String (int i, string v)
 		{
 		}
+
+		[Export ("funcInt64", Signature = "()J")]
+		public long FuncInt64 ()
+		{
+			return 42;
+		}
 	}
 }
 

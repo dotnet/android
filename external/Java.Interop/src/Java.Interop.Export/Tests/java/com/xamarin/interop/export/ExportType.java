@@ -6,4 +6,6 @@ public class ExportType {
 	public static native void staticAction ();
 
 	public static native void actionInt32String (int i, String s);
+
+	public static native long funcInt64 ();
 }

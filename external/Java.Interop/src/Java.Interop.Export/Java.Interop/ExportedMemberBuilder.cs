@@ -133,7 +133,10 @@ namespace Java.Interop {
 				ret = Expression.Variable (method.ReturnType, "__ret");
 				variables.Add (ret);
 				marshalBody.Add (Expression.Assign (ret, invoke));
-				marshalBody.Add (GetMarshalToJniExpression (ret.Type, ret));
+				if (GetMarshalToJniReturnType (ret.Type) == ret.Type)
+					marshalBody.Add (ret);
+				else
+					marshalBody.Add (GetMarshalToJniExpression (ret.Type, ret));
 			}
 
 

@@ -22,7 +22,7 @@ namespace Java.InteropTests
 				var methods = new ExportedMemberBuilder ()
 					.GetExportedMemberRegistrations (typeof (ExportTest))
 					.ToList ();
-				Assert.AreEqual (3, methods.Count);
+				Assert.AreEqual (4, methods.Count);
 
 				Assert.AreEqual ("action",  methods [0].Name);
 				Assert.AreEqual ("()V",     methods [0].Signature);
@@ -162,6 +162,29 @@ namespace Java.InteropTests
 	__this = __jvm.GetObject<ExportTest>(__context);
 	v = Strings.ToString(native_v);
 	__this.ActionInt32String(i, v);
+}");
+		}
+
+		[Test]
+		public void CreateMarshalFromJniMethodExpression_FuncInt64 ()
+		{
+			var t = typeof (ExportTest);
+			var m = t.GetMethod ("FuncInt64");
+			var e = new ExportAttribute () {
+				Signature = "()J",
+			};
+			CheckCreateInvocationExpression (e, t, m, typeof (Func<IntPtr, IntPtr, long>),
+					@"long (IntPtr __jnienv, IntPtr __context)
+{
+	JavaVM __jvm;
+	ExportTest __this;
+	long __ret;
+
+	JniEnvironment.CheckCurrent(__jnienv);
+	__jvm = JniEnvironment.Current.JavaVM;
+	__this = __jvm.GetObject<ExportTest>(__context);
+	__ret = __this.FuncInt64();
+	return __ret;
 }");
 		}
 	}
