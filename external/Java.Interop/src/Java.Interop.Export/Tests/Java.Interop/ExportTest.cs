@@ -26,6 +26,11 @@ namespace Java.InteropTests
 		{
 			StaticHelloCalled = true;
 		}
+
+		[Export ("actionInt32String", Signature = "(ILjava/lang/String;)V")]
+		public void ActionInt32String (int i, string v)
+		{
+		}
 	}
 }
 

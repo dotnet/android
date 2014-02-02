@@ -12,6 +12,12 @@ namespace Java.Interop
 					return NewString ((IntPtr) s, value.Length);
 			}
 
+			public static string ToString (IntPtr handle)
+			{
+				using (var r = new JniInvocationHandle (handle))
+					return ToString (r);
+			}
+
 			public static unsafe string ToString (JniReferenceSafeHandle value, JniHandleOwnership transfer = JniHandleOwnership.DoNotTransfer)
 			{
 				if (value == null || value.IsInvalid)

@@ -22,7 +22,7 @@ namespace Java.InteropTests
 				var methods = new ExportedMemberBuilder ()
 					.GetExportedMemberRegistrations (typeof (ExportTest))
 					.ToList ();
-				Assert.AreEqual (2, methods.Count);
+				Assert.AreEqual (3, methods.Count);
 
 				Assert.AreEqual ("action",  methods [0].Name);
 				Assert.AreEqual ("()V",     methods [0].Signature);
@@ -91,8 +91,13 @@ namespace Java.InteropTests
 			CheckCreateInvocationExpression (null, t, m, typeof (Action<IntPtr, IntPtr>),
 					@"void (IntPtr __jnienv, IntPtr __context)
 {
+	JavaVM __jvm;
+	ExportTest __this;
+
 	JniEnvironment.CheckCurrent(__jnienv);
-	JniEnvironment.Current.JavaVM.GetObject<ExportTest>(__context).InstanceAction();
+	__jvm = JniEnvironment.Current.JavaVM;
+	__this = __jvm.GetObject<ExportTest>(__context);
+	__this.InstanceAction();
 }");
 		}
 
@@ -101,6 +106,22 @@ namespace Java.InteropTests
 			export  = export ?? new ExportAttribute ();
 			var b   = new ExportedMemberBuilder ();
 			var l   = b.CreateMarshalFromJniMethodExpression (export, type, method);
+			Console.WriteLine ("## method: {0}", method.Name);
+			Console.WriteLine (l.ToCSharpCode ());
+			var da = AppDomain.CurrentDomain.DefineDynamicAssembly(
+				new AssemblyName("dyn"), // call it whatever you want
+				System.Reflection.Emit.AssemblyBuilderAccess.Save);
+
+			var _name = "dyn-" + method.Name + ".dll";
+			var dm = da.DefineDynamicModule("dyn_mod", _name);
+			var dt = dm.DefineType ("dyn_type", TypeAttributes.Public);
+			var mb = dt.DefineMethod(
+				method.Name,
+				MethodAttributes.Public | MethodAttributes.Static);
+
+			l.CompileToMethod(mb);
+			dt.CreateType();
+			da.Save(_name);
 			Assert.AreEqual (expectedDelegateType, l.Type);
 			Assert.AreEqual (expectedBody, l.ToCSharpCode ());
 		}
@@ -113,8 +134,34 @@ namespace Java.InteropTests
 			CheckCreateInvocationExpression (null, t, a.Method, typeof(Action<IntPtr, IntPtr>),
 					@"void (IntPtr __jnienv, IntPtr __context)
 {
+	JavaVM __jvm;
+
 	JniEnvironment.CheckCurrent(__jnienv);
+	__jvm = JniEnvironment.Current.JavaVM;
 	ExportTest.StaticAction();
+}");
+		}
+
+		[Test]
+		public void CreateMarshalFromJniMethodExpression_ActionInt32String ()
+		{
+			var t = typeof (ExportTest);
+			var m = t.GetMethod ("ActionInt32String");
+			var e = new ExportAttribute () {
+				Signature = "(ILjava/lang/String;)V",
+			};
+			CheckCreateInvocationExpression (e, t, m, typeof (Action<IntPtr, IntPtr, int, IntPtr>),
+					@"void (IntPtr __jnienv, IntPtr __context, int i, IntPtr native_v)
+{
+	JavaVM __jvm;
+	ExportTest __this;
+	string v;
+
+	JniEnvironment.CheckCurrent(__jnienv);
+	__jvm = JniEnvironment.Current.JavaVM;
+	__this = __jvm.GetObject<ExportTest>(__context);
+	v = Strings.ToString(native_v);
+	__this.ActionInt32String(i, v);
 }");
 		}
 	}
