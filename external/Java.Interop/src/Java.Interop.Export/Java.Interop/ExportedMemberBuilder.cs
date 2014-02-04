@@ -113,7 +113,7 @@ namespace Java.Interop {
 				else {
 					var np      = Expression.Parameter (jni, "native_" + methodParameters [i].Name);
 					var p       = Expression.Variable (methodParameters [i].ParameterType, methodParameters [i].Name);
-					var fromJni = GetMarshalFromJniExpression (p.Type, np);
+					var fromJni = GetMarshalFromJniExpression (jvm, p.Type, np);
 					if (fromJni == null)
 						throw new NotSupportedException (string.Format ("Cannot convert from '{0}' to '{1}'.", jni, methodParameters [i].ParameterType));
 					variables.Add (p);
@@ -130,13 +130,24 @@ namespace Java.Interop {
 			if (method.ReturnType == typeof (void)) {
 				marshalBody.Add (invoke);
 			} else {
-				ret = Expression.Variable (method.ReturnType, "__ret");
+				var jniRType    = GetMarshalToJniReturnType (method.ReturnType);
+				var exit        = Expression.Label (jniRType, "__exit");
+				ret             = Expression.Variable (jniRType, "__jret");
+				var mret        = Expression.Variable (method.ReturnType, "__mret");
 				variables.Add (ret);
-				marshalBody.Add (Expression.Assign (ret, invoke));
-				if (GetMarshalToJniReturnType (ret.Type) == ret.Type)
-					marshalBody.Add (ret);
-				else
-					marshalBody.Add (GetMarshalToJniExpression (ret.Type, ret));
+				variables.Add (mret);
+				marshalBody.Add (Expression.Assign (mret, invoke));
+				if (jniRType == method.ReturnType)
+					marshalBody.Add (Expression.Assign (ret, mret));
+				else {
+					var marshalExpr = GetMarshalToJniExpression (method.ReturnType, mret);
+					if (marshalExpr == null)
+						throw new NotSupportedException (string.Format ("Don't know how to marshal '{0}' to '{1}'.",
+								method.ReturnType, jniRType));
+					marshalBody.Add (Expression.Assign (ret, marshalExpr));
+				}
+				marshalBody.Add (Expression.Return (exit, ret));
+				marshalBody.Add (Expression.Label (exit, ret));
 			}
 
 
@@ -147,7 +158,7 @@ namespace Java.Interop {
 			foreach (var p in marshalParameters)
 				funcTypeParams.Add (p.Type);
 			if (ret != null)
-				funcTypeParams.Add (GetMarshalToJniReturnType (ret.Type));
+				funcTypeParams.Add (ret.Type);
 			var marshalerType = ret == null
 				? Expression.GetActionType (funcTypeParams.ToArray ())
 				: Expression.GetFuncType (funcTypeParams.ToArray ());
@@ -169,14 +180,16 @@ namespace Java.Interop {
 		{
 			if (JniBuiltinTypes.Contains (type))
 				return type;
-			return typeof (JniReferenceSafeHandle);
+			return typeof (IntPtr);
 		}
 
-		protected virtual Expression GetMarshalFromJniExpression (Type targetType, Expression jniParameter)
+		protected virtual Expression GetMarshalFromJniExpression (Expression jvm, Type targetType, Expression jniParameter)
 		{
 			MarshalInfo v;
 			if (Marshalers.TryGetValue (targetType, out v))
-				return v.FromJni (jniParameter);
+				return v.FromJni (jvm, targetType, jniParameter);
+			if (typeof (IJavaObject).IsAssignableFrom (targetType))
+				return Marshalers [typeof (IJavaObject)].FromJni (jvm, targetType, jniParameter);
 			return null;
 		}
 
@@ -185,14 +198,20 @@ namespace Java.Interop {
 			MarshalInfo v;
 			if (Marshalers.TryGetValue (sourceType, out v))
 				return v.ToJni (managedParameter);
+			if (typeof (IJavaObject).IsAssignableFrom (sourceType))
+				return Marshalers [typeof (IJavaObject)].ToJni (managedParameter);
 			return null;
 		}
 
 		static readonly Dictionary<Type, MarshalInfo> Marshalers = new Dictionary<Type, MarshalInfo> () {
-			{ typeof (string), new MarshalInfo (
-					from:   p => Expression.Call (F<IntPtr, string> (JniEnvironment.Strings.ToString).Method, p),
-					to:     p => Expression.Call (F<string, JniLocalReference> (JniEnvironment.Strings.NewString).Method, p)
-			) },
+			{ typeof (string), new MarshalInfo {
+					FromJni = (vm, t, p) => Expression.Call (F<IntPtr, string> (JniEnvironment.Strings.ToString).Method, p),
+					ToJni   = p => Expression.Call (F<string, JniLocalReference> (JniEnvironment.Strings.NewString).Method, p)
+			} },
+			{ typeof (IJavaObject), new MarshalInfo {
+					FromJni = (vm, t, p) => GetThis (vm, t, p),
+					ToJni   = p => Expression.Call (F<IJavaObject, IntPtr> (JniEnvironment.Handles.NewReturnToJniRef).Method, p)
+			} },
 		};
 
 		static Func<T, TRet> F<T, TRet> (Func<T, TRet> func)
@@ -206,7 +225,7 @@ namespace Java.Interop {
 			return Expression.Call (null, a.Method, jnienv);
 		}
 
-		static Expression GetThis (ParameterExpression vm, Type targetType, ParameterExpression context)
+		static Expression GetThis (Expression vm, Type targetType, Expression context)
 		{
 			return Expression.Call (
 					vm,
@@ -239,14 +258,8 @@ namespace Java.Interop {
 
 	class MarshalInfo {
 
-		public MarshalInfo (Func<Expression, Expression> from, Func<Expression, Expression> to)
-		{
-			FromJni = from;
-			ToJni   = to;
-		}
-
-		public readonly Func<Expression, Expression>    FromJni;
-		public readonly Func<Expression, Expression>    ToJni;
+		public Func<Expression /* vm */, Type /* targetType */, Expression /* value */, Expression /* managed rep */>    FromJni;
+		public Func<Expression /* managed rep */, Expression /* jni rep */>    ToJni;
 	}
 }
 

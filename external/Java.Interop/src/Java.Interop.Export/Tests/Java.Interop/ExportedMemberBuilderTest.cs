@@ -22,7 +22,7 @@ namespace Java.InteropTests
 				var methods = new ExportedMemberBuilder ()
 					.GetExportedMemberRegistrations (typeof (ExportTest))
 					.ToList ();
-				Assert.AreEqual (4, methods.Count);
+				Assert.AreEqual (5, methods.Count);
 
 				Assert.AreEqual ("action",  methods [0].Name);
 				Assert.AreEqual ("()V",     methods [0].Signature);
@@ -34,11 +34,12 @@ namespace Java.InteropTests
 
 				t.RegisterNativeMethods (methods.ToArray ());
 
-				t.GetStaticMethod ("staticAction", "()V").CallVoidMethod (t.SafeHandle);
+				t.GetStaticMethod ("testStaticMethods", "()V").CallVoidMethod (t.SafeHandle);
 				Assert.IsTrue (ExportTest.StaticHelloCalled);
+				Assert.IsTrue (ExportTest.StaticActionInt32StringCalled);
 
 				using (var o = CreateExportTest (t)) {
-					t.GetInstanceMethod ("action", "()V").CallVirtualVoidMethod (o.SafeHandle);
+					t.GetInstanceMethod ("testMethods", "()V").CallVirtualVoidMethod (o.SafeHandle);
 					Assert.IsTrue (o.HelloCalled);
 					o.Dispose ();
 				}
@@ -143,25 +144,23 @@ namespace Java.InteropTests
 		}
 
 		[Test]
-		public void CreateMarshalFromJniMethodExpression_ActionInt32String ()
+		public void CreateMarshalFromJniMethodExpression_StaticActionInt32String ()
 		{
 			var t = typeof (ExportTest);
-			var m = t.GetMethod ("ActionInt32String");
+			var m = ((Action<int, string>) ExportTest.StaticActionInt32String);
 			var e = new ExportAttribute () {
 				Signature = "(ILjava/lang/String;)V",
 			};
-			CheckCreateInvocationExpression (e, t, m, typeof (Action<IntPtr, IntPtr, int, IntPtr>),
+			CheckCreateInvocationExpression (e, t, m.Method, typeof (Action<IntPtr, IntPtr, int, IntPtr>),
 					@"void (IntPtr __jnienv, IntPtr __context, int i, IntPtr native_v)
 {
 	JavaVM __jvm;
-	ExportTest __this;
 	string v;
 
 	JniEnvironment.CheckCurrent(__jnienv);
 	__jvm = JniEnvironment.Current.JavaVM;
-	__this = __jvm.GetObject<ExportTest>(__context);
 	v = Strings.ToString(native_v);
-	__this.ActionInt32String(i, v);
+	ExportTest.StaticActionInt32String(i, v);
 }");
 		}
 
@@ -178,13 +177,40 @@ namespace Java.InteropTests
 {
 	JavaVM __jvm;
 	ExportTest __this;
-	long __ret;
+	long __jret;
+	long __mret;
 
 	JniEnvironment.CheckCurrent(__jnienv);
 	__jvm = JniEnvironment.Current.JavaVM;
 	__this = __jvm.GetObject<ExportTest>(__context);
-	__ret = __this.FuncInt64();
-	return __ret;
+	__mret = __this.FuncInt64();
+	__jret = __mret;
+	return __jret;
+}");
+		}
+
+		[Test]
+		public void CreateMarshalFromJniMethodExpression_FuncIJavaObject ()
+		{
+			var t = typeof (ExportTest);
+			var m = t.GetMethod ("FuncIJavaObject");
+			var e = new ExportAttribute () {
+				Signature = "()Ljava/lang/Object;",
+			};
+			CheckCreateInvocationExpression (e, t, m, typeof (Func<IntPtr, IntPtr, IntPtr>),
+					@"IntPtr (IntPtr __jnienv, IntPtr __context)
+{
+	JavaVM __jvm;
+	ExportTest __this;
+	IntPtr __jret;
+	JavaObject __mret;
+
+	JniEnvironment.CheckCurrent(__jnienv);
+	__jvm = JniEnvironment.Current.JavaVM;
+	__this = __jvm.GetObject<ExportTest>(__context);
+	__mret = __this.FuncIJavaObject();
+	__jret = Handles.NewReturnToJniRef(__mret);
+	return __jret;
 }");
 		}
 	}

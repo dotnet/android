@@ -27,15 +27,24 @@ namespace Java.InteropTests
 			StaticHelloCalled = true;
 		}
 
-		[Export ("actionInt32String", Signature = "(ILjava/lang/String;)V")]
-		public void ActionInt32String (int i, string v)
+		public static bool StaticActionInt32StringCalled;
+
+		[Export ("staticActionInt32String", Signature = "(ILjava/lang/String;)V")]
+		public static void StaticActionInt32String (int i, string v)
 		{
+			StaticActionInt32StringCalled = i == 1 && v == "2";
 		}
 
 		[Export ("funcInt64", Signature = "()J")]
 		public long FuncInt64 ()
 		{
 			return 42;
+		}
+
+		[Export ("funcIJavaObject", Signature = "()Ljava/lang/Object;")]
+		public JavaObject FuncIJavaObject ()
+		{
+			return this;
 		}
 	}
 }

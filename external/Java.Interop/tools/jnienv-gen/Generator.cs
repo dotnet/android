@@ -110,7 +110,7 @@ namespace Xamarin.Java.Interop
 		{
 			o.WriteLine ("\tpartial class JniEnvironmentInvoker {");
 			o.WriteLine ();
-			o.WriteLine ("\t\tJniNativeInterfaceStruct env;");
+			o.WriteLine ("\t\tinternal JniNativeInterfaceStruct env;");
 			o.WriteLine ();
 			o.WriteLine ("\t\tpublic unsafe JniEnvironmentInvoker (JniNativeInterfaceStruct* p)");
 			o.WriteLine ("\t\t{");
@@ -275,6 +275,7 @@ namespace Xamarin.Java.Interop
 		{
 			var visibilities = new Dictionary<string, string> {
 				{ "Arrays",     "public" },
+				{ "Handles",    "public" },
 				{ "Strings",    "public" },
 			};
 			o.WriteLine ("\tpartial class JniEnvironment {");
