@@ -18,6 +18,21 @@ namespace Java.InteropTests
 			#pragma warning restore 0219
 		}
 
+		protected override sealed TElement CreateValueA ()
+		{
+			return FromInt32 ((int) 'A');
+		}
+
+		protected override sealed TElement CreateValueB ()
+		{
+			return FromInt32 ((int) 'B');
+		}
+
+		protected override sealed TElement CreateValueC ()
+		{
+			return FromInt32 ((int) 'C');
+		}
+
 		protected override ICollection<TElement> CreateCollection (IEnumerable<TElement> values)
 		{
 			var elements    = values.ToArray ();
@@ -26,7 +41,7 @@ namespace Java.InteropTests
 			return array;
 		}
 
-		protected override TElement FromInt32 (int value)
+		protected TElement FromInt32 (int value)
 		{
 			return (TElement) Convert.ChangeType (value, typeof(TElement));
 		}

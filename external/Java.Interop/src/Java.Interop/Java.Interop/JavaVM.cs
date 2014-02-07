@@ -402,6 +402,82 @@ namespace Java.Interop
 
 	partial class JavaVM {
 
+		public virtual JniTypeInfo GetJniTypeInfoForType (Type type)
+		{
+			if (type == null)
+				throw new ArgumentNullException ("type");
+			if (type.ContainsGenericParameters)
+				throw new ArgumentException ("Generic type definitions are not supported.", "type");
+
+			var originalType    = type;
+			int rank            = 0;
+			while (type.IsArray) {
+				if (type.IsArray && type.GetArrayRank () > 1)
+					throw new ArgumentException ("Multidimensional array '" + originalType.FullName + "' is not supported.", "type");
+				rank++;
+				type    = type.GetElementType ();
+			}
+
+			if (type.IsEnum)
+				type = Enum.GetUnderlyingType (type);
+
+			foreach (var mapping in JniBuiltinTypeNameMappings) {
+				if (mapping.Key == type) {
+					var r = mapping.Value;
+					r.ArrayRank += rank;
+					return r;
+				}
+			}
+
+			var names = (JniTypeInfoAttribute[]) type.GetCustomAttributes (typeof (JniTypeInfoAttribute), inherit:false);
+			if (names.Length != 0)
+				return new JniTypeInfo (names [0].JniTypeName, names [0].TypeIsKeyword, names [0].ArrayRank + rank);
+
+			if (type.IsGenericType) {
+				var def = type.GetGenericTypeDefinition ();
+				if (def == typeof(JavaArray<>) || def == typeof(JavaObjectArray<>)) {
+					var r = GetJniTypeInfoForType (type.GetGenericArguments () [0]);
+					r.ArrayRank += rank + 1;
+					return r;
+				}
+			}
+			return new JniTypeInfo (null, false, rank);
+		}
+
+		static readonly KeyValuePair<Type, JniTypeInfo>[] JniBuiltinTypeNameMappings = new []{
+			new KeyValuePair<Type, JniTypeInfo>(typeof (void),      new JniTypeInfo ("V",   true)),
+
+			new KeyValuePair<Type, JniTypeInfo>(typeof (sbyte),     new JniTypeInfo ("B",   true)),
+			new KeyValuePair<Type, JniTypeInfo>(typeof (short),     new JniTypeInfo ("S",   true)),
+			new KeyValuePair<Type, JniTypeInfo>(typeof (int),       new JniTypeInfo ("I",   true)),
+			new KeyValuePair<Type, JniTypeInfo>(typeof (long),      new JniTypeInfo ("J",   true)),
+			new KeyValuePair<Type, JniTypeInfo>(typeof (float),     new JniTypeInfo ("F",   true)),
+			new KeyValuePair<Type, JniTypeInfo>(typeof (double),    new JniTypeInfo ("D",   true)),
+			new KeyValuePair<Type, JniTypeInfo>(typeof (char),      new JniTypeInfo ("C",   true)),
+			new KeyValuePair<Type, JniTypeInfo>(typeof (bool),      new JniTypeInfo ("Z",   true)),
+
+			new KeyValuePair<Type, JniTypeInfo>(typeof (JavaPrimitiveArray<SByte>),     new JniTypeInfo ("B",  true,   1)),
+			new KeyValuePair<Type, JniTypeInfo>(typeof (JavaPrimitiveArray<Int16>),     new JniTypeInfo ("S",  true,   1)),
+			new KeyValuePair<Type, JniTypeInfo>(typeof (JavaPrimitiveArray<Int32>),     new JniTypeInfo ("I",  true,   1)),
+			new KeyValuePair<Type, JniTypeInfo>(typeof (JavaPrimitiveArray<Int64>),     new JniTypeInfo ("J",  true,   1)),
+			new KeyValuePair<Type, JniTypeInfo>(typeof (JavaPrimitiveArray<Single>),    new JniTypeInfo ("F",  true,   1)),
+			new KeyValuePair<Type, JniTypeInfo>(typeof (JavaPrimitiveArray<Double>),    new JniTypeInfo ("D",  true,   1)),
+			new KeyValuePair<Type, JniTypeInfo>(typeof (JavaPrimitiveArray<Char>),      new JniTypeInfo ("C",  true,   1)),
+			new KeyValuePair<Type, JniTypeInfo>(typeof (JavaPrimitiveArray<Boolean>),   new JniTypeInfo ("Z",  true,   1)),
+
+			new KeyValuePair<Type, JniTypeInfo>(typeof (JavaArray<SByte>),      new JniTypeInfo ("B",  true,   1)),
+			new KeyValuePair<Type, JniTypeInfo>(typeof (JavaArray<Int16>),      new JniTypeInfo ("S",  true,   1)),
+			new KeyValuePair<Type, JniTypeInfo>(typeof (JavaArray<Int32>),      new JniTypeInfo ("I",  true,   1)),
+			new KeyValuePair<Type, JniTypeInfo>(typeof (JavaArray<Int64>),      new JniTypeInfo ("J",  true,   1)),
+			new KeyValuePair<Type, JniTypeInfo>(typeof (JavaArray<Single>),     new JniTypeInfo ("F",  true,   1)),
+			new KeyValuePair<Type, JniTypeInfo>(typeof (JavaArray<Double>),     new JniTypeInfo ("D",  true,   1)),
+			new KeyValuePair<Type, JniTypeInfo>(typeof (JavaArray<Char>),       new JniTypeInfo ("C",  true,   1)),
+			new KeyValuePair<Type, JniTypeInfo>(typeof (JavaArray<Boolean>),    new JniTypeInfo ("Z",  true,   1)),
+		};
+	}
+
+	partial class JavaVM {
+
 		static IExportedMemberBuilder memberBuilder;
 		public virtual IExportedMemberBuilder ExportedMemberBuilder {
 			get {

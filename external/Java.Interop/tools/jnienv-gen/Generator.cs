@@ -222,7 +222,7 @@ namespace Xamarin.Java.Interop
 			o.WriteLine ("\t\t}");
 			o.WriteLine ("\t}");
 			o.WriteLine ();
-			o.WriteLine ("\tpublic sealed class Java{0}Array : JavaPrimitiveArray<{1}> {{", typeModifier, managedType);
+			o.WriteLine ("\tpublic sealed partial class Java{0}Array : JavaPrimitiveArray<{1}> {{", typeModifier, managedType);
 			o.WriteLine ();
 			o.WriteLine ("\t\tpublic Java{0}Array (JniReferenceSafeHandle handle, JniHandleOwnership transfer)", typeModifier);
 			o.WriteLine ("\t\t\t: base (handle, transfer)");

@@ -4,6 +4,7 @@ using Java.Interop;
 
 namespace Java.InteropTests
 {
+	[JniTypeInfo ("com/xamarin/interop/export/ExportType")]
 	public class ExportTest : JavaObject
 	{
 		public ExportTest (JniReferenceSafeHandle handle, JniHandleOwnership transfer)

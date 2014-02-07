@@ -2,6 +2,7 @@ using System;
 
 namespace Java.Interop
 {
+	[JniTypeInfo ("java/lang/Object")]
 	public class JavaObject : IJavaObject
 	{
 		static JniType _typeRef;

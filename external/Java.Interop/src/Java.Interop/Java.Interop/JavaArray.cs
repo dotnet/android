@@ -187,26 +187,29 @@ namespace Java.Interop
 		}
 	}
 
-	#if false
-	public class JavaObjectArray<T> : JavaArray<T>
-		where T : IJavaObject
-	{
-		public JavaObjectArray (int length)
-			: base (JniArrays.NewObjectArray (length, JniType.FromType(typeof(T)).SafeHandle, JniReferenceSafeHandle.Null), JniHandleOwnership.Transfer
-		{
-		}
+	[JniTypeInfo ("Z", ArrayRank=1, TypeIsKeyword=true)]
+	partial class JavaBooleanArray  {}
 
-		public override T this [int index] {
-			get {
-				var lref = JniArrays.GetObjectArrayElement (SafeHandle, index);
-				return (T) JniEnvironment.Current.JavaVM.GetObject (lref, JniHandleOwnership.Transfer);
-			}
-			set {
-				JniArrays.SetObjectArrayElement (SafeHandle, index, value.SafeHandle);
-			}
-		}
-	}
-	#endif
+	[JniTypeInfo ("B", ArrayRank=1, TypeIsKeyword=true)]
+	partial class JavaSByteArray    {}
+
+	[JniTypeInfo ("C", ArrayRank=1, TypeIsKeyword=true)]
+	partial class JavaCharArray     {}
+
+	[JniTypeInfo ("S", ArrayRank=1, TypeIsKeyword=true)]
+	partial class JavaInt16Array    {}
+
+	[JniTypeInfo ("I", ArrayRank=1, TypeIsKeyword=true)]
+	partial class JavaInt32Array    {}
+
+	[JniTypeInfo ("J", ArrayRank=1, TypeIsKeyword=true)]
+	partial class JavaInt64Array    {}
+
+	[JniTypeInfo ("F", ArrayRank=1, TypeIsKeyword=true)]
+	partial class JavaSingleArray   {}
+
+	[JniTypeInfo ("D", ArrayRank=1, TypeIsKeyword=true)]
+	partial class JavaDoubleArray   {}
 
 	public enum JniArrayElementsReleaseMode {
 		CopyBack        = 0,
