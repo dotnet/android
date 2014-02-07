@@ -85,6 +85,31 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		public void CreateMarshalFromJniMethodExpression_SignatureMismatch ()
+		{
+			Action<int, string> a   = ExportTest.StaticActionInt32String;
+			var builder             = new ExportedMemberBuilder ();
+
+			// Parameter count mismatch: 0 != 2
+			Assert.Throws<ArgumentException>(() => builder.CreateMarshalFromJniMethodExpression (
+					new ExportAttribute () { Signature = "()V" }, a.Method.DeclaringType, a.Method));
+			// Parameter count mismatch: 1 != 2
+			Assert.Throws<ArgumentException>(() => builder.CreateMarshalFromJniMethodExpression (
+					new ExportAttribute () { Signature = "(I)V" }, a.Method.DeclaringType, a.Method));
+			// Parameter type mismatch: (int, int) != (int, string)
+			Assert.Throws<ArgumentException>(() => builder.CreateMarshalFromJniMethodExpression (
+					new ExportAttribute () { Signature = "(II)V" }, a.Method.DeclaringType, a.Method));
+			// return type mismatch: int != void
+			Assert.Throws<ArgumentException>(() => builder.CreateMarshalFromJniMethodExpression (
+					new ExportAttribute () { Signature = "(ILjava/lang/String;)I" }, a.Method.DeclaringType, a.Method));
+			// invalid JNI signatures
+			Assert.Throws<ArgumentException>(() => builder.CreateMarshalFromJniMethodExpression (
+					new ExportAttribute () { Signature = "(IL)I" }, a.Method.DeclaringType, a.Method));
+			Assert.Throws<ArgumentException>(() => builder.CreateMarshalFromJniMethodExpression (
+					new ExportAttribute () { Signature = "(I[)I" }, a.Method.DeclaringType, a.Method));
+		}
+
+		[Test]
 		public void CreateMarshalFromJniMethodExpression_InstanceAction ()
 		{
 			var t = typeof (ExportTest);

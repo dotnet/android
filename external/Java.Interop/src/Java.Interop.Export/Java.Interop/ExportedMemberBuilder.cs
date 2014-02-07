@@ -81,6 +81,8 @@ namespace Java.Interop {
 
 			var methodParameters = method.GetParameters ();
 
+			CheckMarshalTypesMatch (method, export.Signature, methodParameters);
+
 			var jnienv  = Expression.Parameter (typeof (IntPtr), "__jnienv");
 			var context = Expression.Parameter (typeof (IntPtr), "__context");
 
@@ -169,6 +171,35 @@ namespace Java.Interop {
 			return Expression.Lambda (marshalerType, body, bodyParams);
 		}
 
+		void CheckMarshalTypesMatch (MethodInfo method, string signature, ParameterInfo[] methodParameters)
+		{
+			if (signature == null)
+				return;
+
+			var mptypes = JniSignature.GetMarshalParameterTypes (signature).ToList ();
+			int len     = Math.Min (methodParameters.Length, mptypes.Count);
+			for (int i = 0; i < len; ++i) {
+				var jni = GetMarshalFromJniParameterType (methodParameters [i].ParameterType);
+				if (mptypes [i] != jni)
+					throw new ArgumentException (
+							string.Format ("JNI parameter type mismatch. Type '{0}' != '{1}.", jni, mptypes [i]),
+							"signature");
+			}
+
+			if (mptypes.Count != methodParameters.Length)
+				throw new ArgumentException (
+						string.Format ("JNI parametr count mismatch: signature contains {0} parameters, method contains {1}.",
+							mptypes.Count, methodParameters.Length),
+						"signature");
+
+			var jrinfo = JniSignature.GetMarshalReturnType (signature);
+			var mrinfo = GetMarshalToJniReturnType (method.ReturnType);
+			if (mrinfo != jrinfo)
+				throw new ArgumentException (
+						string.Format ("JNI return type mismatch. Type '{0}' != '{1}.", jrinfo, mrinfo),
+						"signature");
+		}
+
 		protected virtual Type GetMarshalFromJniParameterType (Type type)
 		{
 			if (JniBuiltinTypes.Contains (type))
@@ -254,12 +285,89 @@ namespace Java.Interop {
 			typeof (float),
 			typeof (double),
 		};
+
 	}
 
 	class MarshalInfo {
 
 		public Func<Expression /* vm */, Type /* targetType */, Expression /* value */, Expression /* managed rep */>    FromJni;
 		public Func<Expression /* managed rep */, Expression /* jni rep */>    ToJni;
+	}
+
+	static class JniSignature {
+
+		public static Type GetMarshalReturnType (string signature)
+		{
+			int idx = signature.LastIndexOf (')') + 1;
+			return ExtractMarshalTypeFromSignature (signature, ref idx);
+		}
+
+		public static IEnumerable<Type> GetMarshalParameterTypes (string signature)
+		{
+			if (signature.StartsWith ("(", StringComparison.Ordinal)) {
+				int e = signature.IndexOf (")", StringComparison.Ordinal);
+				signature = signature.Substring (1, e >= 0 ? e-1 : signature.Length-1);
+			}
+			int i = 0;
+			Type t;
+			while ((t = ExtractMarshalTypeFromSignature (signature, ref i)) != null)
+				yield return t;
+		}
+
+		// as per: http://java.sun.com/j2se/1.5.0/docs/guide/jni/spec/types.html
+		static Type ExtractMarshalTypeFromSignature (string signature, ref int index)
+		{
+			#if false
+			if (index >= signature.Length)
+				return null;
+			var i = index++;
+			switch (signature [i]) {
+			case 'B':   return typeof (sbyte);
+			case 'C':   return typeof (char);
+			case 'D':   return typeof (double);
+			case 'F':   return typeof (float);
+			case 'I':   return typeof (int);
+			case 'J':   return typeof (long);
+			case 'S':   return typeof (short);
+			case 'V':   return typeof (void);
+			case 'Z':   return typeof (bool);
+			case '[':
+			case 'L':   return typeof (IntPtr);
+			default:
+				throw new ArgumentException ("Unknown JNI Type '" + signature [i] + "' within: " + signature, "signature");
+			}
+			#else
+			if (index >= signature.Length)
+				return null;
+			var i = index++;
+			switch (signature [i]) {
+			case 'B':   return typeof (sbyte);
+			case 'C':   return typeof (char);
+			case 'D':   return typeof (double);
+			case 'F':   return typeof (float);
+			case 'I':   return typeof (int);
+			case 'J':   return typeof (long);
+			case 'S':   return typeof (short);
+			case 'V':   return typeof (void);
+			case 'Z':   return typeof (bool);
+			case '[':
+				++i;
+				if (i >= signature.Length)
+					throw new ArgumentException ("Missing array type after '[' at index " + i + " in: " + signature, "signature");
+				ExtractMarshalTypeFromSignature (signature, ref index);
+				return typeof (IntPtr);
+			case 'L': {
+				var e = signature.IndexOf (";", index, StringComparison.Ordinal);
+				if (e <= 0)
+					throw new ArgumentException ("Missing reference type after 'L' at index " + i + "in: " + signature, "signature");
+				index = e + 1;
+				return typeof (IntPtr);
+			}
+			default:
+				throw new ArgumentException ("Unknown JNI Type '" + signature [i] + "' within: " + signature, "signature");
+			}
+			#endif
+		}
 	}
 }
 
