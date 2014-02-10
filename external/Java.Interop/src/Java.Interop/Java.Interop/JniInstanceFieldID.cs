@@ -9,94 +9,94 @@ namespace Java.Interop
 		{
 		}
 
-		public JniLocalReference GetObjectValue (JniReferenceSafeHandle @class)
+		public JniLocalReference GetObjectValue (JniReferenceSafeHandle @this)
 		{
-			return JniEnvironment.Members.GetObjectField (@class, this);
+			return JniEnvironment.Members.GetObjectField (@this, this);
 		}
 
-		public bool GetBooleanValue (JniReferenceSafeHandle @class)
+		public bool GetBooleanValue (JniReferenceSafeHandle @this)
 		{
-			return JniEnvironment.Members.GetBooleanField (@class, this);
+			return JniEnvironment.Members.GetBooleanField (@this, this);
 		}
 
-		public sbyte GetByteValue (JniReferenceSafeHandle @class)
+		public sbyte GetByteValue (JniReferenceSafeHandle @this)
 		{
-			return JniEnvironment.Members.GetByteField (@class, this);
+			return JniEnvironment.Members.GetByteField (@this, this);
 		}
 
-		public char GetCharValue (JniReferenceSafeHandle @class)
+		public char GetCharValue (JniReferenceSafeHandle @this)
 		{
-			return JniEnvironment.Members.GetCharField (@class, this);
+			return JniEnvironment.Members.GetCharField (@this, this);
 		}
 
-		public short GetInt16Value (JniReferenceSafeHandle @class)
+		public short GetInt16Value (JniReferenceSafeHandle @this)
 		{
-			return JniEnvironment.Members.GetShortField (@class, this);
+			return JniEnvironment.Members.GetShortField (@this, this);
 		}
 
-		public int GetInt32Value (JniReferenceSafeHandle @class)
+		public int GetInt32Value (JniReferenceSafeHandle @this)
 		{
-			return JniEnvironment.Members.GetIntField (@class, this);
+			return JniEnvironment.Members.GetIntField (@this, this);
 		}
 
-		public long GetInt64Value (JniReferenceSafeHandle @class)
+		public long GetInt64Value (JniReferenceSafeHandle @this)
 		{
-			return JniEnvironment.Members.GetLongField (@class, this);
+			return JniEnvironment.Members.GetLongField (@this, this);
 		}
 
-		public float GetSingleValue (JniReferenceSafeHandle @class)
+		public float GetSingleValue (JniReferenceSafeHandle @this)
 		{
-			return JniEnvironment.Members.GetFloatField (@class, this);
+			return JniEnvironment.Members.GetFloatField (@this, this);
 		}
 
-		public double GetDoubleValue (JniReferenceSafeHandle @class)
+		public double GetDoubleValue (JniReferenceSafeHandle @this)
 		{
-			return JniEnvironment.Members.GetDoubleField (@class, this);
+			return JniEnvironment.Members.GetDoubleField (@this, this);
 		}
 
-		public void SetValue (JniReferenceSafeHandle @class, JniReferenceSafeHandle value)
+		public void SetValue (JniReferenceSafeHandle @this, JniReferenceSafeHandle value)
 		{
-			JniEnvironment.Members.SetField (@class, this, value);
+			JniEnvironment.Members.SetField (@this, this, value);
 		}
 
-		public void SetValue (JniReferenceSafeHandle @class, bool value)
+		public void SetValue (JniReferenceSafeHandle @this, bool value)
 		{
-			JniEnvironment.Members.SetField (@class, this, value);
+			JniEnvironment.Members.SetField (@this, this, value);
 		}
 
-		public void SetValue (JniReferenceSafeHandle @class, sbyte value)
+		public void SetValue (JniReferenceSafeHandle @this, sbyte value)
 		{
-			JniEnvironment.Members.SetField (@class, this, value);
+			JniEnvironment.Members.SetField (@this, this, value);
 		}
 
-		public void SetValue (JniReferenceSafeHandle @class, char value)
+		public void SetValue (JniReferenceSafeHandle @this, char value)
 		{
-			JniEnvironment.Members.SetField (@class, this, value);
+			JniEnvironment.Members.SetField (@this, this, value);
 		}
 
-		public void SetValue (JniReferenceSafeHandle @class, short value)
+		public void SetValue (JniReferenceSafeHandle @this, short value)
 		{
-			JniEnvironment.Members.SetField (@class, this, value);
+			JniEnvironment.Members.SetField (@this, this, value);
 		}
 
-		public void SetValue (JniReferenceSafeHandle @class, int value)
+		public void SetValue (JniReferenceSafeHandle @this, int value)
 		{
-			JniEnvironment.Members.SetField (@class, this, value);
+			JniEnvironment.Members.SetField (@this, this, value);
 		}
 
-		public void SetValue (JniReferenceSafeHandle @class, long value)
+		public void SetValue (JniReferenceSafeHandle @this, long value)
 		{
-			JniEnvironment.Members.SetField (@class, this, value);
+			JniEnvironment.Members.SetField (@this, this, value);
 		}
 
-		public void SetValue (JniReferenceSafeHandle @class, float value)
+		public void SetValue (JniReferenceSafeHandle @this, float value)
 		{
-			JniEnvironment.Members.SetField (@class, this, value);
+			JniEnvironment.Members.SetField (@this, this, value);
 		}
 
-		public void SetValue (JniReferenceSafeHandle @class, double value)
+		public void SetValue (JniReferenceSafeHandle @this, double value)
 		{
-			JniEnvironment.Members.SetField (@class, this, value);
+			JniEnvironment.Members.SetField (@this, this, value);
 		}
 	}
 }
