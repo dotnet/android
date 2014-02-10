@@ -61,8 +61,11 @@
     <Compile Include="Java.Interop\JniTypeInfoAttributeTest.cs" />
     <Compile Include="Java.Interop\JavaObjectArrayTest.cs" />
     <Compile Include="Java.Interop\JniTypeInfoTest.cs" />
+    <Compile Include="Java.Interop\JniInstanceMethodIDTest.cs" />
   </ItemGroup>
   <ItemGroup>
+    <JavaInteropTestJar Include="java\com\xamarin\interop\CallNonvirtualBase.java" />
+    <JavaInteropTestJar Include="java\com\xamarin\interop\CallNonvirtualDerived.java" />
     <JavaInteropTestJar Include="java\com\xamarin\interop\TestType.java" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
