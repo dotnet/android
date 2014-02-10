@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Collections.Concurrent;
 
 using Java.Interop;
 
@@ -132,6 +134,42 @@ namespace Java.Interop.PerformanceTests
 		{
 			TypeRef.GetCachedStaticMethod (ref svmi3, "StaticVoidMethod3IArgs", "(III)V");
 			svmi1.CallVoidMethod (TypeRef.SafeHandle, new JValue (obj1), new JValue (obj2), new JValue (obj3));
+		}
+
+		const string toString_name  = "toString";
+		const string toString_sig   = "()Ljava/lang/String;";
+
+		static JniInstanceMethodID toString;
+		public JniLocalReference Timing_ToString_Traditional ()
+		{
+			TypeRef.GetCachedInstanceMethod (ref toString, toString_name, toString_sig);
+			return toString.CallVirtualObjectMethod (SafeHandle);
+		}
+
+		public JniLocalReference Timing_ToString_NoCache ()
+		{
+			using (var m = TypeRef.GetInstanceMethod (toString_name, toString_sig))
+				return m.CallVirtualObjectMethod (SafeHandle);
+		}
+
+		static Dictionary<string, JniInstanceMethodID> dictInstanceMethods = new Dictionary<string, JniInstanceMethodID>();
+		public JniLocalReference Timing_ToString_DictWithLock ()
+		{
+			JniInstanceMethodID m;
+			lock (dictInstanceMethods) {
+				if (!dictInstanceMethods.TryGetValue (toString_name + toString_sig, out m) || m.IsInvalid)
+					dictInstanceMethods.Add (toString_name + toString_sig, m = TypeRef.GetInstanceMethod (toString_name, toString_sig));
+			}
+			return m.CallVirtualObjectMethod (SafeHandle);
+		}
+
+		static ConcurrentDictionary<string, JniInstanceMethodID> nolockInstanceMethods = new ConcurrentDictionary<string, JniInstanceMethodID>();
+		public JniLocalReference Timing_ToString_DictWithNoLock ()
+		{
+			var m = nolockInstanceMethods.AddOrUpdate (toString_name + toString_sig,
+				s => TypeRef.GetInstanceMethod (toString_name, toString_sig),
+				(s, c) => c.IsInvalid ? TypeRef.GetInstanceMethod (toString_name, toString_sig) : c);
+			return m.CallVirtualObjectMethod (SafeHandle);
 		}
 	}
 }

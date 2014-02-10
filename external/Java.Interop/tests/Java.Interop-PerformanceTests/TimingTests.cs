@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -262,6 +263,39 @@ namespace Java.Interop.PerformanceTests {
 		static Action A (Action a)
 		{
 			return a;
+		}
+
+		[Test]
+		public void MethodLookupTiming ()
+		{
+			const int count = 1000000;
+			using (var o = new JavaTiming ()) {
+				var tt = Stopwatch.StartNew ();
+				for (int i = 0; i < count; ++i)
+					o.Timing_ToString_Traditional ().Dispose ();
+				tt.Stop ();
+
+				var ta = Stopwatch.StartNew ();
+				for (int i = 0; i < count; ++i)
+					o.Timing_ToString_NoCache ().Dispose ();
+				ta.Stop ();
+
+				var td = Stopwatch.StartNew ();
+				for (int i = 0; i < count; ++i)
+					o.Timing_ToString_DictWithLock ().Dispose ();
+				td.Stop ();
+
+				var tc = Stopwatch.StartNew ();
+				for (int i = 0; i < count; ++i)
+					o.Timing_ToString_DictWithNoLock ().Dispose ();
+				tc.Stop ();
+
+				Console.WriteLine ("Method Lookup + Invoke Timing:");
+				Console.WriteLine ("\t   Traditional: {0}", tt.Elapsed);
+				Console.WriteLine ("\t    No caching: {0}", ta.Elapsed);
+				Console.WriteLine ("\t  Dict w/ lock: {0}", td.Elapsed);
+				Console.WriteLine ("\tConcurrentDict: {0}", tc.Elapsed);
+			}
 		}
 	}
 
