@@ -19,7 +19,7 @@ namespace Java.InteropTests
 		public void AddExportMethods ()
 		{
 			using (var t = CreateExportTestType ()) {
-				var methods = new ExportedMemberBuilder ()
+				var methods = CreateBuilder ()
 					.GetExportedMemberRegistrations (typeof (ExportTest))
 					.ToList ();
 				Assert.AreEqual (5, methods.Count);
@@ -46,6 +46,11 @@ namespace Java.InteropTests
 			}
 		}
 
+		static ExportedMemberBuilder CreateBuilder ()
+		{
+			return new ExportedMemberBuilder (JVM.Current);
+		}
+
 		static JniType CreateExportTestType ()
 		{
 			return new JniType ("com/xamarin/interop/export/ExportType");
@@ -60,15 +65,52 @@ namespace Java.InteropTests
 		[Test]
 		public void GetExportedMemberRegistrations_NullChecks ()
 		{
-			var builder = new ExportedMemberBuilder ();
+			var builder = CreateBuilder ();
 			Assert.Throws<ArgumentNullException> (() => builder.GetExportedMemberRegistrations (null));
+		}
+
+		[Test]
+		public void GetJniMethodSignature_NullChecks ()
+		{
+			var builder = CreateBuilder ();
+			Action a    = () => {};
+			Assert.Throws<ArgumentNullException> (() => builder.GetJniMethodSignature (null, a.Method));
+			Assert.Throws<ArgumentNullException> (() => builder.GetJniMethodSignature (new ExportAttribute (), null));
+		}
+
+		[Test]
+		public void GetJniMethodSignature ()
+		{
+			var builder = CreateBuilder ();
+			Action a    = () => {};
+			var export  = new ExportAttribute () {
+				Signature = "(I)V",
+			};
+			// Note: no validation between actual MethodInfo & existing signature
+			// Validation would be done by CreateMarshalFromJniMethodRegistration().
+			Assert.AreEqual ("(I)V", builder.GetJniMethodSignature (export, a.Method));
+			Assert.AreEqual ("(I)V", export.Signature);
+
+			export = new ExportAttribute () {
+				Signature = null,
+			};
+			Assert.AreEqual ("()V", builder.GetJniMethodSignature (export, a.Method));
+			// Note: export.Signature updated
+			Assert.AreEqual ("()V", export.Signature);
+
+			// Note: string currently has no builtin marshaling defaults
+			Action<string> s    = v => {};
+			Assert.Throws<NotSupportedException> (() => builder.GetJniMethodSignature (new ExportAttribute (), s.Method));
+
+			Func<string> fs     = () => null;
+			Assert.Throws<NotSupportedException> (() => builder.GetJniMethodSignature (new ExportAttribute (), fs.Method));
 		}
 
 		[Test]
 		public void CreateMarshalFromJniMethodRegistration_NullChecks ()
 		{
 			Action a    = ExportTest.StaticAction;
-			var builder = new ExportedMemberBuilder ();
+			var builder = CreateBuilder ();
 			Assert.Throws<ArgumentNullException> (() => builder.CreateMarshalFromJniMethodRegistration (null, typeof (ExportTest), a.Method));
 			Assert.Throws<ArgumentNullException> (() => builder.CreateMarshalFromJniMethodRegistration (new ExportAttribute (null), null, a.Method));
 			Assert.Throws<ArgumentNullException> (() => builder.CreateMarshalFromJniMethodRegistration (new ExportAttribute (null), typeof (ExportTest), null));
@@ -77,8 +119,8 @@ namespace Java.InteropTests
 		[Test]
 		public void CreateInvocationExpression_NullChecks ()
 		{
-			Action      a = ExportTest.StaticAction;
-			var builder = new ExportedMemberBuilder ();
+			Action    a = ExportTest.StaticAction;
+			var builder = CreateBuilder ();
 			Assert.Throws<ArgumentNullException> (() => builder.CreateMarshalFromJniMethodExpression (null, typeof (ExportTest), a.Method));
 			Assert.Throws<ArgumentNullException> (() => builder.CreateMarshalFromJniMethodExpression (new ExportAttribute (null), null, a.Method));
 			Assert.Throws<ArgumentNullException> (() => builder.CreateMarshalFromJniMethodExpression (new ExportAttribute (null), typeof (ExportTest), null));
@@ -88,7 +130,7 @@ namespace Java.InteropTests
 		public void CreateMarshalFromJniMethodExpression_SignatureMismatch ()
 		{
 			Action<int, string> a   = ExportTest.StaticActionInt32String;
-			var builder             = new ExportedMemberBuilder ();
+			var builder             = CreateBuilder ();
 
 			// Parameter count mismatch: 0 != 2
 			Assert.Throws<ArgumentException>(() => builder.CreateMarshalFromJniMethodExpression (
@@ -130,7 +172,7 @@ namespace Java.InteropTests
 		static void CheckCreateInvocationExpression (ExportAttribute export, Type type, MethodInfo method, Type expectedDelegateType, string expectedBody)
 		{
 			export  = export ?? new ExportAttribute ();
-			var b   = new ExportedMemberBuilder ();
+			var b   = CreateBuilder ();
 			var l   = b.CreateMarshalFromJniMethodExpression (export, type, method);
 			Console.WriteLine ("## method: {0}", method.Name);
 			Console.WriteLine (l.ToCSharpCode ());

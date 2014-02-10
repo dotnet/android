@@ -4,13 +4,16 @@ using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Text;
 
 namespace Java.Interop {
 
 	public class ExportedMemberBuilder : IExportedMemberBuilder
 	{
-		public ExportedMemberBuilder (JavaVM javaVM = null)
+		public ExportedMemberBuilder (JavaVM javaVM)
 		{
+			if (javaVM == null)
+				throw new ArgumentNullException ("javaVM");
 			JavaVM = javaVM;
 		}
 
@@ -44,9 +47,10 @@ namespace Java.Interop {
 			if (method == null)
 				throw new ArgumentNullException ("method");
 
+			string signature = GetJniMethodSignature (export, method);
 			return new JniNativeMethodRegistration () {
 				Name        = GetJniMethodName (export, method),
-				Signature   = GetJniMethodSignature (export, method),
+				Signature   = signature,
 				Marshaler   = CreateJniMethodMarshaler (export, type, method),
 			};
 		}
@@ -56,11 +60,29 @@ namespace Java.Interop {
 			return export.Name ?? "n_" + method.Name;
 		}
 
-		protected virtual string GetJniMethodSignature (ExportAttribute export, MethodInfo method)
+		public virtual string GetJniMethodSignature (ExportAttribute export, MethodInfo method)
 		{
+			if (export == null)
+				throw new ArgumentNullException ("export");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+
 			if (export.Signature != null)
 				return export.Signature;
-			throw new NotSupportedException ("parameter deduction not yet implemented.");
+
+			var signature = new StringBuilder ().Append ("(");
+			foreach (var p in method.GetParameters ()) {
+				var info = JavaVM.GetJniTypeInfoForType (p.ParameterType);
+				if (info.JniTypeName == null)
+					throw new NotSupportedException ("Don't know how to determine JNI signature for parameter type: " + p.ParameterType.FullName + ".");
+				signature.Append (info.ToString ());
+			}
+			signature.Append (")");
+			var ret = JavaVM.GetJniTypeInfoForType (method.ReturnType);
+			if (ret.JniTypeName == null)
+				throw new NotSupportedException ("Don't know how to determine JNI signature for return type: " + method.ReturnType.FullName + ".");
+			signature.Append (ret.ToString ());
+			return export.Signature = signature.ToString ();
 		}
 
 		Delegate CreateJniMethodMarshaler (ExportAttribute export, Type type, MethodInfo method)
