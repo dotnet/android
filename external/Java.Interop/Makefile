@@ -5,7 +5,9 @@ DEPENDENCIES = \
 
 TESTS = \
 	bin/$(CONFIGURATION)/Java.Interop-Tests.dll \
-	bin/$(CONFIGURATION)/Java.Interop.Export-Tests.dll \
+	bin/$(CONFIGURATION)/Java.Interop.Export-Tests.dll
+
+PTESTS = \
 	bin/$(CONFIGURATION)/Java.Interop-PerformanceTests.dll
 
 all: $(DEPENDENCIES) $(TESTS)
@@ -41,3 +43,6 @@ endef
 
 run-tests: $(TESTS)
 	$(foreach t,$(TESTS), $(call RUN_TEST,$(t)))
+
+run-ptests: $(PTESTS)
+	$(foreach t,$(PTESTS), $(call RUN_TEST,$(t)))
