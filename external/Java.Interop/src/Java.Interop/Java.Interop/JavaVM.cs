@@ -325,6 +325,13 @@ namespace Java.Interop
 
 		Dictionary<int, WeakReference>  RegisteredInstances = new Dictionary<int, WeakReference>();
 
+		public List<WeakReference> GetSurfacedObjects ()
+		{
+			lock (RegisteredInstances) {
+				return RegisteredInstances.Values.ToList ();
+			}
+		}
+
 		internal void RegisterObject (int key, IJavaObject value)
 		{
 			lock (RegisteredInstances)

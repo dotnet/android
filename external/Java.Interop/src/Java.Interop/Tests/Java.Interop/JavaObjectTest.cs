@@ -22,6 +22,7 @@ namespace Java.InteropTests
 				var w = new Thread (() => {
 						var v       = new JavaObject ();
 						oldHandle   = v.SafeHandle.DangerousGetHandle ();
+						v.Register ();
 						JniEnvironment.Arrays.SetObjectArrayElement (grefArray, 0, v.SafeHandle);
 				});
 				w.Start ();
@@ -42,6 +43,30 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		public void Register ()
+		{
+			int registeredCount = JVM.Current.GetSurfacedObjects ().Count;
+			IntPtr h;
+			JavaObject o;
+			using (o = new JavaObject ()) {
+				var l   = o.SafeHandle;
+				h       = o.SafeHandle.DangerousGetHandle ();
+				Assert.AreEqual (JniReferenceType.Local, o.SafeHandle.ReferenceType);
+				Assert.AreEqual (registeredCount, JVM.Current.GetSurfacedObjects ().Count);
+				Assert.IsNull (JVM.Current.GetObject (h));
+				o.Register ();
+				Assert.AreNotSame (l, o.SafeHandle);
+				Assert.AreEqual (JniReferenceType.Global, o.SafeHandle.ReferenceType);
+				h = o.SafeHandle.DangerousGetHandle ();
+				Assert.AreEqual (registeredCount + 1, JVM.Current.GetSurfacedObjects ().Count);
+				Assert.AreSame (o, JVM.Current.GetObject (h));
+			}
+			Assert.AreEqual (registeredCount, JVM.Current.GetSurfacedObjects ().Count);
+			Assert.IsNull (JVM.Current.GetObject (h));
+			Assert.Throws<ObjectDisposedException> (() => o.Register ());
+		}
+
+		[Test]
 		public void UnreferencedInstanceIsCollected ()
 		{
 			var oldHandle   = IntPtr.Zero;
@@ -50,6 +75,7 @@ namespace Java.InteropTests
 					var v     = new JavaObject ();
 					oldHandle = v.SafeHandle.DangerousGetHandle ();
 					r         = new WeakReference (v);
+					v.Register ();
 			});
 			t.Start ();
 			t.Join ();

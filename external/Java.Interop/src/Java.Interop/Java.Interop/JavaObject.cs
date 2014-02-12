@@ -10,7 +10,8 @@ namespace Java.Interop
 			get {return JniType.GetCachedJniType (ref _typeRef, "java/lang/Object");}
 		}
 
-		int keyHandle;
+		int     keyHandle;
+		bool    registered;
 
 		~JavaObject ()
 		{
@@ -18,7 +19,8 @@ namespace Java.Interop
 			bool collected  = JniEnvironment.Current.JavaVM.TryGC (this, ref h);
 			if (collected) {
 				SafeHandle = null;
-				JniEnvironment.Current.JavaVM.UnRegisterObject (keyHandle, this);
+				if (registered)
+					JniEnvironment.Current.JavaVM.UnRegisterObject (keyHandle, this);
 				Dispose (false);
 			} else {
 				SafeHandle = h;
@@ -35,11 +37,10 @@ namespace Java.Interop
 			if (handle.IsInvalid)
 				throw new ArgumentException ("handle is invalid.", "handle");
 
-			SafeHandle = handle.NewGlobalRef ();
+			SafeHandle = handle.NewLocalRef ();
 			JniEnvironment.Handles.Dispose (handle, transfer);
 
 			keyHandle = JniSystem.IdentityHashCode (SafeHandle);
-			JniEnvironment.Current.JavaVM.RegisterObject (keyHandle, this);
 		}
 
 		static JniInstanceMethodID Object_ctor;
@@ -54,10 +55,31 @@ namespace Java.Interop
 		{
 		}
 
+		public void Register ()
+		{
+			if (SafeHandle == null || SafeHandle.IsInvalid)
+				throw new ObjectDisposedException (GetType ().FullName);
+
+			if (registered)
+				return;
+
+			if (SafeHandle.ReferenceType != JniReferenceType.Global) {
+				var o = SafeHandle;
+				SafeHandle = o.NewGlobalRef ();
+				o.Dispose ();
+			}
+			JniEnvironment.Current.JavaVM.RegisterObject (keyHandle, this);
+			registered = true;
+		}
+
 		public void Dispose ()
 		{
+			if (SafeHandle == null || SafeHandle.IsInvalid)
+				return;
+
 			Dispose (true);
-			JniEnvironment.Current.JavaVM.UnRegisterObject (keyHandle, this);
+			if (registered)
+				JniEnvironment.Current.JavaVM.UnRegisterObject (keyHandle, this);
 			SafeHandle.Dispose ();
 			GC.SuppressFinalize (this);
 		}

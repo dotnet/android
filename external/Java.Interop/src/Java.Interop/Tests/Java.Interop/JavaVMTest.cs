@@ -71,6 +71,8 @@ namespace Java.InteropTests
 			JniLocalReference lref;
 			using (var o = new JavaObject ()) {
 				lref = o.SafeHandle.NewLocalRef ();
+				Assert.IsNull (JVM.Current.GetObject (lref.DangerousGetHandle ()));
+				o.Register ();
 				Assert.AreSame (o, JVM.Current.GetObject (lref.DangerousGetHandle ()));
 			}
 			// At this point, the Java-side object is kept alive by `lref`,
