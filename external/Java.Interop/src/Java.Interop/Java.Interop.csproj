@@ -42,6 +42,7 @@
     <Compile Include="Java.Interop\JniEnvironment.g.cs" />
     <Compile Include="Java.Interop\JniEnvironment.Handles.cs" />
     <Compile Include="Java.Interop\JniEnvironment.Strings.cs" />
+    <Compile Include="Java.Interop\JniEnvironment.Types.cs" />
     <Compile Include="Java.Interop\JniType.cs" />
     <Compile Include="Java.Interop\JValue.cs" />
     <Compile Include="Java.Interop\JniReferenceType.cs" />
@@ -53,7 +54,6 @@
     <Compile Include="Java.Interop\JniLocalReference.cs" />
     <Compile Include="Java.Interop\JniException.cs" />
     <Compile Include="Java.Interop\JniHandleOwnership.cs" />
-    <Compile Include="Java.Interop\JniObject.cs" />
     <Compile Include="Java.Interop\JniNativeMethodRegistration.cs" />
     <Compile Include="Java.Interop\JniFieldID.cs" />
     <Compile Include="Java.Interop\JniMethodID.cs" />

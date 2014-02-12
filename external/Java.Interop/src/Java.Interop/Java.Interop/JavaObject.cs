@@ -72,7 +72,7 @@ namespace Java.Interop
 				return true;
 			var o = obj as IJavaObject;
 			if (o != null)
-				return JniObject.IsSameInstance (SafeHandle, o.SafeHandle);
+				return JniEnvironment.Types.IsSameObject (SafeHandle, o.SafeHandle);
 			return false;
 		}
 

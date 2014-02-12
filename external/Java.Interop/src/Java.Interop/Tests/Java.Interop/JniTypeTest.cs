@@ -31,7 +31,7 @@ namespace Java.InteropTests
 				using (var s = new JniType ("java/lang/String")) {
 					using (var st = s.GetSuperclass ()) {
 						Assert.IsFalse (object.ReferenceEquals (t, st));
-						Assert.IsTrue (JniObject.IsSameInstance (t.SafeHandle, st.SafeHandle));
+						Assert.IsTrue (JniEnvironment.Types.IsSameObject (t.SafeHandle, st.SafeHandle));
 					}
 				}
 			}

@@ -277,6 +277,7 @@ namespace Xamarin.Java.Interop
 				{ "Arrays",     "public" },
 				{ "Handles",    "public" },
 				{ "Strings",    "public" },
+				{ "Types",      "public" },
 			};
 			o.WriteLine ("\tpartial class JniEnvironment {");
 			foreach (var t in JNIEnvEntries

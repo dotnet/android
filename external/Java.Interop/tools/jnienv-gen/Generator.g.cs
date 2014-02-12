@@ -14,7 +14,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = "Types",
 				Name          = "DefineClass",
-				Visibility    = "public",
+				Visibility    = "internal",
 				Throws        = true,
 				Prototype     = "jclass      (*DefineClass)(JNIEnv*, const char, jobject, const jbyte*, jsize);",
 				ReturnType    = new TypeInfo ("JniLocalReference"),
