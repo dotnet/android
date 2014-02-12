@@ -51,7 +51,7 @@ namespace Java.Interop
 		}
 	}
 
-	class JniInvocationHandle : JniReferenceSafeHandle {
+	public class JniInvocationHandle : JniReferenceSafeHandle {
 
 		public JniInvocationHandle (IntPtr handle)
 			: base (ownsHandle:false)

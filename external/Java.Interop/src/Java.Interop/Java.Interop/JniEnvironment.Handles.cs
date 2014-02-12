@@ -20,6 +20,11 @@ namespace Java.Interop
 				}
 			}
 
+			public static int GetIdentityHashCode (JniReferenceSafeHandle value)
+			{
+				return JniSystem.IdentityHashCode (value);
+			}
+
 			public static IntPtr NewReturnToJniRef (IJavaObject value)
 			{
 				if (value == null)
@@ -31,16 +36,8 @@ namespace Java.Interop
 			{
 				if (value == null || value.IsInvalid)
 					return IntPtr.Zero;
-				return _NewReturnToJniRef (JniEnvironment.Current.SafeHandle, value);
-			}
-
-			static JniFunc_JniEnvironmentSafeHandle_JniReferenceSafeHandle_IntPtr __NewReturnToJniRef;
-			static JniFunc_JniEnvironmentSafeHandle_JniReferenceSafeHandle_IntPtr _NewReturnToJniRef {
-				get {
-					if (__NewReturnToJniRef == null)
-						__NewReturnToJniRef = (JniFunc_JniEnvironmentSafeHandle_JniReferenceSafeHandle_IntPtr) Marshal.GetDelegateForFunctionPointer (JniEnvironment.Current.Invoker.env.NewLocalRef, typeof (JniFunc_JniEnvironmentSafeHandle_JniReferenceSafeHandle_IntPtr));
-					return __NewReturnToJniRef;
-				}
+				using (var l = value.NewLocalRef ())
+					return l.ReturnToJniRef ();
 			}
 		}
 	}

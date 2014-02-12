@@ -17,5 +17,12 @@ namespace Java.Interop
 			JniEnvironment.Handles.DeleteLocalRef (handle);
 			return true;
 		}
+
+		internal IntPtr ReturnToJniRef ()
+		{
+			var h = handle;
+			base.handle = IntPtr.Zero;
+			return h;
+		}
 	}
 }

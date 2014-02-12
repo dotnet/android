@@ -35,6 +35,20 @@ namespace Java.InteropTests
 				}
 			}
 		}
+
+		[Test]
+		public void Handles_NewReturnToJniRef ()
+		{
+			using (var t = new JniType ("java/lang/Object")) {
+				var c = t.GetConstructor ("()V");
+				using (var o = t.NewObject (c)) {
+					// warning: lref 'leak'
+					var r = JniEnvironment.Handles.NewReturnToJniRef (o);
+					var h = new JniInvocationHandle (r);
+					Assert.AreEqual (JniEnvironment.Handles.GetIdentityHashCode (o), JniEnvironment.Handles.GetIdentityHashCode (h));
+				}
+			}
+		}
 	}
 }
 
