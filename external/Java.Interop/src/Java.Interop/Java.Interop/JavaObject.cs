@@ -99,12 +99,12 @@ namespace Java.Interop
 
 		public override int GetHashCode ()
 		{
-			return JniPeerMembers.CallInstanceInt32Method ("hashCode", "()I", "hashCode()I", this);
+			return _members.CallInstanceInt32Method ("hashCode", "()I", "hashCode()I", this);
 		}
 
 		public override string ToString ()
 		{
-			var lref = JniPeerMembers.CallInstanceObjectMethod (
+			var lref = _members.CallInstanceObjectMethod (
 					"toString",
 					"()Ljava/lang/String;",
 					"toString()Ljava/lang/String;",
