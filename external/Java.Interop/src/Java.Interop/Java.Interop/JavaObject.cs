@@ -26,7 +26,7 @@ namespace Java.Interop
 		}
 
 		public          JniReferenceSafeHandle  SafeHandle {get; private set;}
-		public  virtual JniPeerMembers              JniMembers {
+		public  virtual JniPeerMembers              JniPeerMembers {
 			get {return _members;}
 		}
 
@@ -99,12 +99,12 @@ namespace Java.Interop
 
 		public override int GetHashCode ()
 		{
-			return JniMembers.CallInstanceInt32Method ("hashCode", "()I", "hashCode()I", this);
+			return JniPeerMembers.CallInstanceInt32Method ("hashCode", "()I", "hashCode()I", this);
 		}
 
 		public override string ToString ()
 		{
-			var lref = JniMembers.CallInstanceObjectMethod (
+			var lref = JniPeerMembers.CallInstanceObjectMethod (
 					"toString",
 					"()Ljava/lang/String;",
 					"toString()Ljava/lang/String;",

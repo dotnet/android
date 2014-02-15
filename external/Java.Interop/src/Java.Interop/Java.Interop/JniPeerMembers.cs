@@ -79,7 +79,7 @@ namespace Java.Interop {
 			if (self.GetType () == ManagedPeerType)
 				m.CallVirtualVoidMethod (self.SafeHandle);
 			else {
-				var j = self.JniMembers;
+				var j = self.JniPeerMembers;
 				m = j.GetInstanceMethodID (method, signature, methodAndSignature);
 				m.CallNonvirtualVoidMethod (self.SafeHandle, j.JniPeerType.SafeHandle);
 			}
@@ -96,7 +96,7 @@ namespace Java.Interop {
 				return m.CallVirtualInt32Method (self.SafeHandle);
 			}
 			else {
-				var j = self.JniMembers;
+				var j = self.JniPeerMembers;
 				m = j.GetInstanceMethodID (method, signature, methodAndSignature);
 				return m.CallNonvirtualInt32Method (self.SafeHandle, j.JniPeerType.SafeHandle);
 			}
@@ -113,7 +113,7 @@ namespace Java.Interop {
 				return m.CallVirtualObjectMethod (self.SafeHandle);
 			}
 			else {
-				var j = self.JniMembers;
+				var j = self.JniPeerMembers;
 				m = j.GetInstanceMethodID (method, signature, methodAndSignature);
 				return m.CallNonvirtualObjectMethod (self.SafeHandle, j.JniPeerType.SafeHandle);
 			}
@@ -133,7 +133,7 @@ namespace Java.Interop {
 				return e.GetObject<T> (lref, JniHandleOwnership.Transfer);
 			}
 			else {
-				var j = self.JniMembers;
+				var j = self.JniPeerMembers;
 				m = j.GetInstanceMethodID (method, signature, methodAndSignature);
 				var lref = m.CallNonvirtualObjectMethod (self.SafeHandle, j.JniPeerType.SafeHandle);
 				return e.GetObject<T> (lref, JniHandleOwnership.Transfer);

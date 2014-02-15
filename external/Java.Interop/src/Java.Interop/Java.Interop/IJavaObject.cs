@@ -5,7 +5,7 @@ namespace Java.Interop
 	public interface IJavaObject : IDisposable
 	{
 		JniReferenceSafeHandle  SafeHandle {get;}
-		JniPeerMembers          JniMembers {get;}
+		JniPeerMembers          JniPeerMembers {get;}
 
 		void    Register ();
 	}

@@ -8,7 +8,7 @@ namespace Java.InteropTests
 	{
 		readonly static JniPeerMembers _members = new JniPeerMembers ("com/xamarin/interop/CallNonvirtualBase", typeof (CallNonvirtualBase));
 
-		public override JniPeerMembers JniMembers {
+		public override JniPeerMembers JniPeerMembers {
 			get {return _members;}
 		}
 
