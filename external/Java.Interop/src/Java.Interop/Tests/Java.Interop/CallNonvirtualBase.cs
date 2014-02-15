@@ -6,23 +6,16 @@ namespace Java.InteropTests
 {
 	public class CallNonvirtualBase : JavaObject
 	{
-		static JniType _TypeRef;
-		static JniType TypeRef {
-			get {return JniType.GetCachedJniType (ref _TypeRef, "com/xamarin/interop/CallNonvirtualBase");}
+		readonly static JniPeerMembers _members = new JniPeerMembers ("com/xamarin/interop/CallNonvirtualBase", typeof (CallNonvirtualBase));
+
+		public override JniPeerMembers JniMembers {
+			get {return _members;}
 		}
 
-		public override Type JniThresholdType {
-			get {return typeof (CallNonvirtualBase);}
-		}
-		public override JniType JniThresholdClass {
-			get {return TypeRef;}
-		}
-
-		static JniInstanceMethodID Base_ctor;
 		static JniLocalReference _NewObject ()
 		{
-			TypeRef.GetCachedConstructor (ref Base_ctor, "()V");
-			return TypeRef.NewObject (Base_ctor);
+			var c = _members.GetConstructor ("()V");
+			return _members.JniPeerType.NewObject (c);
 		}
 
 		public CallNonvirtualBase ()
@@ -35,29 +28,14 @@ namespace Java.InteropTests
 		{
 		}
 
-		static JniInstanceMethodID _method;
 		public virtual void Method ()
 		{
-			TypeRef.GetCachedInstanceMethod (ref _method, "method", "()V");
-			if (GetType () == JniThresholdType)
-				_method.CallVirtualVoidMethod (SafeHandle);
-			else {
-				// Ugh. Just...Ugh. No caching at all!
-				JniThresholdClass.GetInstanceMethod ("method", "()V")
-					.CallNonvirtualVoidMethod (SafeHandle, JniThresholdClass.SafeHandle);
-			}
+			_members.CallInstanceVoidMethod ("method", "()V", "method()V", this);
 		}
 
-		static JniInstanceFieldID _methodInvoked;
 		public bool MethodInvoked {
-			get {
-				TypeRef.GetCachedInstanceField (ref _methodInvoked, "methodInvoked", "Z");
-				return _methodInvoked.GetBooleanValue (SafeHandle);
-			}
-			set {
-				TypeRef.GetCachedInstanceField (ref _methodInvoked, "methodInvoked", "Z");
-				_methodInvoked.SetValue (SafeHandle, value);
-			}
+			get {return _members.GetBooleanInstanceFieldValue (this, "methodInvoked");}
+			set {_members.SetInstanceFieldValue (this, "methodInvoked", value);}
 		}
 	}
 }

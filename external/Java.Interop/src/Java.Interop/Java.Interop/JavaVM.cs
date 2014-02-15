@@ -381,6 +381,12 @@ namespace Java.Interop
 			}
 		}
 
+		public T GetObject<T> (JniReferenceSafeHandle jniHandle, JniHandleOwnership transfer)
+			where T : IJavaObject
+		{
+			return (T) GetObject (jniHandle, transfer, typeof (T));
+		}
+
 		public IJavaObject GetObject (IntPtr jniHandle, Type targetType = null)
 		{
 			if (jniHandle == IntPtr.Zero)

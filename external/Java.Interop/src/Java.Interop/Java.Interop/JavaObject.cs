@@ -5,10 +5,7 @@ namespace Java.Interop
 	[JniTypeInfo ("java/lang/Object")]
 	public class JavaObject : IJavaObject
 	{
-		static JniType _typeRef;
-		static JniType TypeRef {
-			get {return JniType.GetCachedJniType (ref _typeRef, "java/lang/Object");}
-		}
+		readonly static JniPeerMembers _members = new JniPeerMembers ("java/lang/Object", typeof (JavaObject));
 
 		int     keyHandle;
 		bool    registered;
@@ -29,11 +26,8 @@ namespace Java.Interop
 		}
 
 		public          JniReferenceSafeHandle  SafeHandle {get; private set;}
-		public  virtual Type                    JniThresholdType {
-			get {return typeof (JavaObject);}
-		}
-		public  virtual JniType                 JniThresholdClass {
-			get {return TypeRef;}
+		public  virtual JniPeerMembers              JniMembers {
+			get {return _members;}
 		}
 
 		public JavaObject (JniReferenceSafeHandle handle, JniHandleOwnership transfer)
@@ -49,11 +43,10 @@ namespace Java.Interop
 			keyHandle = JniSystem.IdentityHashCode (SafeHandle);
 		}
 
-		static JniInstanceMethodID Object_ctor;
 		static JniLocalReference _NewObject ()
 		{
-			TypeRef.GetCachedConstructor (ref Object_ctor, "()V");
-			return TypeRef.NewObject (Object_ctor);
+			var c = _members.GetConstructor ("()V");
+			return _members.JniPeerType.NewObject (c);
 		}
 
 		public JavaObject ()
@@ -104,18 +97,18 @@ namespace Java.Interop
 			return false;
 		}
 
-		static JniInstanceMethodID Object_hashCode;
 		public override int GetHashCode ()
 		{
-			return TypeRef.GetCachedInstanceMethod (ref Object_hashCode, "hashCode", "()I")
-				.CallVirtualInt32Method (SafeHandle);
+			return JniMembers.CallInstanceInt32Method ("hashCode", "()I", "hashCode()I", this);
 		}
 
-		static JniInstanceMethodID Object_toString;
 		public override string ToString ()
 		{
-			TypeRef.GetCachedInstanceMethod (ref Object_toString, "toString", "()Ljava/lang/String;");
-			var lref = Object_toString.CallVirtualObjectMethod (SafeHandle);
+			var lref = JniMembers.CallInstanceObjectMethod (
+					"toString",
+					"()Ljava/lang/String;",
+					"toString()Ljava/lang/String;",
+					this);
 			return JniEnvironment.Strings.ToString (lref, JniHandleOwnership.Transfer);
 		}
 	}

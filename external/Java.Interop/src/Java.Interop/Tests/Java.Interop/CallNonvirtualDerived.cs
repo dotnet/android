@@ -6,23 +6,16 @@ namespace Java.InteropTests
 {
 	public class CallNonvirtualDerived : CallNonvirtualBase
 	{
-		static JniType _TypeRef;
-		static JniType TypeRef {
-			get {return JniType.GetCachedJniType (ref _TypeRef, "com/xamarin/interop/CallNonvirtualDerived");}
+		readonly static JniPeerMembers _members = new JniPeerMembers ("com/xamarin/interop/CallNonvirtualDerived", typeof (CallNonvirtualBase));
+
+		public override JniPeerMembers JniMembers {
+			get {return _members;}
 		}
 
-		public override Type JniThresholdType {
-			get {return typeof (CallNonvirtualDerived);}
-		}
-		public override JniType JniThresholdClass {
-			get {return TypeRef;}
-		}
-
-		static JniInstanceMethodID Derived_ctor;
 		static JniLocalReference _NewObject ()
 		{
-			TypeRef.GetCachedConstructor (ref Derived_ctor, "()V");
-			return TypeRef.NewObject (Derived_ctor);
+			var c = _members.GetConstructor ("()V");
+			return _members.JniPeerType.NewObject (c);
 		}
 
 		public CallNonvirtualDerived ()
@@ -35,16 +28,9 @@ namespace Java.InteropTests
 		{
 		}
 
-		static JniInstanceFieldID _methodInvoked;
 		public new bool MethodInvoked {
-			get {
-				TypeRef.GetCachedInstanceField (ref _methodInvoked, "methodInvoked", "Z");
-				return _methodInvoked.GetBooleanValue (SafeHandle);
-			}
-			set {
-				TypeRef.GetCachedInstanceField (ref _methodInvoked, "methodInvoked", "Z");
-				_methodInvoked.SetValue (SafeHandle, value);
-			}
+			get {return _members.GetBooleanInstanceFieldValue (this, "methodInvoked");}
+			set {_members.SetInstanceFieldValue (this, "methodInvoked", value);}
 		}
 	}
 }
