@@ -36,6 +36,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Java.Interop\CallNonvirtualBase.cs" />
+    <Compile Include="Java.Interop\CallNonvirtualDerived.cs" />
+    <Compile Include="Java.Interop\CallNonvirtualDerived2.cs" />
     <Compile Include="Java.Interop\JavaVMTest.cs" />
     <Compile Include="Java.Interop\JniTypeTest.cs" />
     <Compile Include="Java.Interop\JVM.cs" />
@@ -61,10 +64,12 @@
     <Compile Include="Java.Interop\JavaObjectArrayTest.cs" />
     <Compile Include="Java.Interop\JniTypeInfoTest.cs" />
     <Compile Include="Java.Interop\JniInstanceMethodIDTest.cs" />
+    <Compile Include="Java.Interop\MethodBindingTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <JavaInteropTestJar Include="java\com\xamarin\interop\CallNonvirtualBase.java" />
     <JavaInteropTestJar Include="java\com\xamarin\interop\CallNonvirtualDerived.java" />
+    <JavaInteropTestJar Include="java\com\xamarin\interop\CallNonvirtualDerived2.java" />
     <JavaInteropTestJar Include="java\com\xamarin\interop\TestType.java" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />

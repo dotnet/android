@@ -28,7 +28,13 @@ namespace Java.Interop
 			}
 		}
 
-		public JniReferenceSafeHandle SafeHandle {get; private set;}
+		public          JniReferenceSafeHandle  SafeHandle {get; private set;}
+		public  virtual Type                    JniThresholdType {
+			get {return typeof (JavaObject);}
+		}
+		public  virtual JniType                 JniThresholdClass {
+			get {return TypeRef;}
+		}
 
 		public JavaObject (JniReferenceSafeHandle handle, JniHandleOwnership transfer)
 		{
