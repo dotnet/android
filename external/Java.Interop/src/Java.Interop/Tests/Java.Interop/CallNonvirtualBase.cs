@@ -4,27 +4,18 @@ using Java.Interop;
 
 namespace Java.InteropTests
 {
+	[JniTypeInfo (CallNonvirtualBase.JniTypeName)]
 	public class CallNonvirtualBase : JavaObject
 	{
-		readonly static JniPeerMembers _members = new JniPeerMembers ("com/xamarin/interop/CallNonvirtualBase", typeof (CallNonvirtualBase));
+		internal const string JniTypeName = "com/xamarin/interop/CallNonvirtualBase";
+
+		readonly static JniPeerMembers _members = new JniPeerMembers (JniTypeName, typeof (CallNonvirtualBase));
 
 		public override JniPeerMembers JniPeerMembers {
 			get {return _members;}
 		}
 
-		static JniLocalReference _NewObject ()
-		{
-			var c = _members.GetConstructor ("()V");
-			return _members.JniPeerType.NewObject (c);
-		}
-
 		public CallNonvirtualBase ()
-			: base (_NewObject (), JniHandleOwnership.Transfer)
-		{
-		}
-
-		protected CallNonvirtualBase (JniReferenceSafeHandle handle, JniHandleOwnership transfer)
-			: base (handle, transfer)
 		{
 		}
 

@@ -4,22 +4,12 @@ using Java.Interop;
 
 namespace Java.InteropTests
 {
+	[JniTypeInfo (CallNonvirtualDerived2.JniTypeName)]
 	public class CallNonvirtualDerived2 : CallNonvirtualDerived
 	{
-		static JniType _TypeRef;
-		static JniType TypeRef {
-			get {return JniType.GetCachedJniType (ref _TypeRef, "com/xamarin/interop/CallNonvirtualDerived2");}
-		}
-
-		static JniInstanceMethodID Derived_ctor;
-		static JniLocalReference _NewObject ()
-		{
-			TypeRef.GetCachedConstructor (ref Derived_ctor, "()V");
-			return TypeRef.NewObject (Derived_ctor);
-		}
+		internal new const string JniTypeName = "com/xamarin/interop/CallNonvirtualDerived2";
 
 		public CallNonvirtualDerived2 ()
-			: base (_NewObject (), JniHandleOwnership.Transfer)
 		{
 		}
 	}

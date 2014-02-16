@@ -32,6 +32,11 @@ namespace Java.Interop
 
 		public JavaObject (JniReferenceSafeHandle handle, JniHandleOwnership transfer)
 		{
+			SetSafeHandle (handle, transfer);
+		}
+
+		void SetSafeHandle (JniReferenceSafeHandle handle, JniHandleOwnership transfer)
+		{
 			if (handle == null)
 				throw new ArgumentNullException ("handle");
 			if (handle.IsInvalid)
@@ -43,15 +48,27 @@ namespace Java.Interop
 			keyHandle = JniSystem.IdentityHashCode (SafeHandle);
 		}
 
-		static JniLocalReference _NewObject ()
+		static JniLocalReference _NewObject (Type type, JniPeerMembers peerMembers)
 		{
-			var c = _members.GetConstructor ("()V");
-			return _members.JniPeerType.NewObject (c);
+			var info    = JniEnvironment.Current.JavaVM.GetJniTypeInfoForType (type);
+			if (info.JniTypeName == null)
+				throw new NotSupportedException (
+						string.Format ("Cannot create instance of type '{0}': no Java peer type found.",
+							type.FullName));
+
+			if (type == peerMembers.ManagedPeerType) {
+				var c = peerMembers.GetConstructor ("()V");
+				return peerMembers.JniPeerType.NewObject (c);
+			}
+			using (var t = new JniType (info.ToString ()))
+			using (var c = t.GetConstructor ("()V")) {
+				return t.NewObject (c);
+			}
 		}
 
 		public JavaObject ()
-			: this (_NewObject (), JniHandleOwnership.Transfer)
 		{
+			SetSafeHandle (_NewObject (GetType (), JniPeerMembers), JniHandleOwnership.Transfer);
 		}
 
 		public void Register ()
