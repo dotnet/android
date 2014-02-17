@@ -86,10 +86,47 @@ namespace Java.InteropTests
 			Assert.IsNull (JVM.Current.GetObject (oldHandle));
 		}
 
-		// Note: This may break if/when JavaVM provides "default"
 		[Test]
-		public void Ctor_ThrowsWhenJavaPeerNotFound ()
+		public void ObjectDisposed ()
 		{
+			var o = new JavaObject ();
+			o.Dispose ();
+
+			// These should not throw
+			var h = o.SafeHandle;
+			var p = o.JniPeerMembers;
+
+			// These should throw
+			Assert.Throws<ObjectDisposedException> (() => o.GetHashCode ());
+			Assert.Throws<ObjectDisposedException> (() => o.Register ());
+			Assert.Throws<ObjectDisposedException> (() => o.ToString ());
+			Assert.Throws<ObjectDisposedException> (() => o.Equals (o));
+		}
+
+		[Test]
+		public void Ctor ()
+		{
+			using (var t = new JniType ("java/lang/Object"))
+			using (var c = t.GetConstructor ("()V")) {
+				var lref = t.NewObject (c);
+				using (var o = new JavaObject (lref, JniHandleOwnership.DoNotTransfer)) {
+					Assert.IsFalse (lref.IsInvalid);
+					Assert.AreNotSame (lref, o.SafeHandle);
+				}
+				using (var o = new JavaObject (lref, JniHandleOwnership.Transfer)) {
+					Assert.IsTrue (lref.IsInvalid);
+					Assert.AreNotSame (lref, o.SafeHandle);
+				}
+			}
+		}
+
+		[Test]
+		public void Ctor_Exceptions ()
+		{
+			Assert.Throws<ArgumentNullException> (() => new JavaObject (null, JniHandleOwnership.Transfer));
+			Assert.Throws<ArgumentException> (() => new JavaObject (new JniInvocationHandle (IntPtr.Zero), JniHandleOwnership.Transfer));
+
+			// Note: This may break if/when JavaVM provides "default"
 			Assert.Throws<NotSupportedException> (() => new JavaObjectWithNoJavaPeer ());
 			Assert.Throws<JniException> (() => new JavaObjectWithMissingJavaPeer ());
 		}

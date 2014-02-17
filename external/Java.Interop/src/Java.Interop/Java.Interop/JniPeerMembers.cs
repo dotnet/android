@@ -75,6 +75,7 @@ namespace Java.Interop {
 				string methodAndSignature,
 				IJavaObject self)
 		{
+			AssertSelf (self);
 			var m = GetInstanceMethodID (method, signature, methodAndSignature);
 			if (self.GetType () == ManagedPeerType)
 				m.CallVirtualVoidMethod (self.SafeHandle);
@@ -85,12 +86,23 @@ namespace Java.Interop {
 			}
 		}
 
+		internal static void AssertSelf (IJavaObject self)
+		{
+			if (self == null)
+				throw new ArgumentNullException ("self");
+			if (self.SafeHandle == null)
+				throw new ArgumentException ("self.SafeHandle is null", "self");
+			if (self.SafeHandle.IsInvalid)
+				throw new ObjectDisposedException (self.GetType ().FullName);
+		}
+
 		public int CallInstanceInt32Method (
 				string method,
 				string signature,
 				string methodAndSignature,
 				IJavaObject self)
 		{
+			AssertSelf (self);
 			var m = GetInstanceMethodID (method, signature, methodAndSignature);
 			if (self.GetType () == ManagedPeerType) {
 				return m.CallVirtualInt32Method (self.SafeHandle);
@@ -108,6 +120,7 @@ namespace Java.Interop {
 				string methodAndSignature,
 				IJavaObject self)
 		{
+			AssertSelf (self);
 			var m = GetInstanceMethodID (method, signature, methodAndSignature);
 			if (self.GetType () == ManagedPeerType) {
 				return m.CallVirtualObjectMethod (self.SafeHandle);
@@ -126,6 +139,7 @@ namespace Java.Interop {
 				IJavaObject self)
 			where T : IJavaObject
 		{
+			AssertSelf (self);
 			var m = GetInstanceMethodID (method, signature, methodAndSignature);
 			var e = JniEnvironment.Current.JavaVM;
 			if (self.GetType () == ManagedPeerType) {
@@ -142,11 +156,13 @@ namespace Java.Interop {
 
 		public bool GetBooleanInstanceFieldValue (IJavaObject self, string name)
 		{
+			AssertSelf (self);
 			return GetInstanceFieldID (name, "Z").GetBooleanValue (self.SafeHandle);
 		}
 
 		public void SetInstanceFieldValue (IJavaObject self, string name, bool value)
 		{
+			AssertSelf (self);
 			GetInstanceFieldID (name, "Z").SetValue (self.SafeHandle, value);
 		}
 	}

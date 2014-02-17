@@ -110,6 +110,8 @@ namespace Java.Interop
 
 		public override bool Equals (object obj)
 		{
+			JniPeerMembers.AssertSelf (this);
+
 			if (object.ReferenceEquals (obj, this))
 				return true;
 			var o = obj as IJavaObject;
