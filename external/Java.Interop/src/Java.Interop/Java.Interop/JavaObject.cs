@@ -25,7 +25,11 @@ namespace Java.Interop
 			}
 		}
 
-		public          JniReferenceSafeHandle  SafeHandle {get; private set;}
+		public          JniReferenceSafeHandle      SafeHandle {get; private set;}
+
+		// Note: JniPeerMembers is invoked virtually from the constructor;
+		// it MUST be valid before the derived constructor executes!
+		// The pattern MUST be followed.
 		public  virtual JniPeerMembers              JniPeerMembers {
 			get {return _members;}
 		}

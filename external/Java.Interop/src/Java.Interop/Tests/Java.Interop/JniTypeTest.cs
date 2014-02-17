@@ -23,6 +23,12 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		public void Ctor_ThrowsIfTypeNotFound ()
+		{
+			Assert.Throws<JniException> (() => new JniType ("__this__/__type__/__had__/__better__/__not__/__Exist__"));
+		}
+
+		[Test]
 		public void GetSuperclass ()
 		{
 			using (var t = new JniType ("java/lang/Object")) {

@@ -85,6 +85,21 @@ namespace Java.InteropTests
 			Assert.IsNull (r.Target);
 			Assert.IsNull (JVM.Current.GetObject (oldHandle));
 		}
+
+		// Note: This may break if/when JavaVM provides "default"
+		[Test]
+		public void Ctor_ThrowsWhenJavaPeerNotFound ()
+		{
+			Assert.Throws<NotSupportedException> (() => new JavaObjectWithNoJavaPeer ());
+			Assert.Throws<JniException> (() => new JavaObjectWithMissingJavaPeer ());
+		}
+	}
+
+	class JavaObjectWithNoJavaPeer : JavaObject {
+	}
+
+	[JniTypeInfo ("__this__/__type__/__had__/__better__/__not__/__Exist__")]
+	class JavaObjectWithMissingJavaPeer : JavaObject {
 	}
 }
 
