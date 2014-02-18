@@ -15,19 +15,21 @@ namespace Java.InteropTests {
 			JniReferenceSafeHandle h;
 			using (var t = new JniType ("java/lang/Object")) {
 				h = t.SafeHandle;
-				Assert.AreEqual (JniReferenceType.Global, h.ReferenceType);
+				Assert.AreEqual (JniReferenceType.Local, h.ReferenceType);
 			}
 		}
 
-		[Test, ExpectedException (typeof (ObjectDisposedException))]
+		[Test]
 		public void RefType_ThrowsObjectDisposedException ()
 		{
 			JniReferenceSafeHandle h;
 			using (var t = new JniType ("java/lang/Object")) {
 				h = t.SafeHandle;
 			}
-			Assert.AreEqual (JniReferenceType.Invalid, h.ReferenceType);
-			Assert.Fail ("Should not be reached; h.RefType should have thrown ObjectDisposedException.");
+			Assert.Throws<ObjectDisposedException> (() => {
+					var ignore  = h.ReferenceType;
+					GC.KeepAlive (ignore);
+			});
 		}
 	}
 }

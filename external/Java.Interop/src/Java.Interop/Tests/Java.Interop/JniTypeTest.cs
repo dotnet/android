@@ -29,6 +29,36 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		public void Dispose_Exceptions ()
+		{
+			var t = new JniType ("java/lang/Object");
+			t.Dispose ();
+			Assert.Throws<ObjectDisposedException> (() => t.AllocObject ());
+			Assert.Throws<ObjectDisposedException> (() => t.NewObject (null));
+			Assert.Throws<ObjectDisposedException> (() => t.GetConstructor (null));
+			Assert.Throws<ObjectDisposedException> (() => t.GetInstanceField (null, null));
+			Assert.Throws<ObjectDisposedException> (() => t.GetInstanceMethod (null, null));
+			Assert.Throws<ObjectDisposedException> (() => t.GetStaticField (null, null));
+			Assert.Throws<ObjectDisposedException> (() => t.GetStaticMethod (null, null));
+			Assert.Throws<ObjectDisposedException> (() => t.GetSuperclass ());
+			Assert.Throws<ObjectDisposedException> (() => t.IsAssignableFrom (null));
+			Assert.Throws<ObjectDisposedException> (() => t.IsInstanceOfType (null));
+			Assert.Throws<ObjectDisposedException> (() => t.Register ());
+			Assert.Throws<ObjectDisposedException> (() => t.RegisterNativeMethods (null));
+			Assert.Throws<ObjectDisposedException> (() => t.UnregisterNativeMethods ());
+
+			JniInstanceFieldID jif = null;
+			Assert.Throws<ObjectDisposedException> (() => t.GetCachedInstanceField (ref jif, null, null));
+			JniInstanceMethodID jim = null;
+			Assert.Throws<ObjectDisposedException> (() => t.GetCachedConstructor (ref jim, null));
+			Assert.Throws<ObjectDisposedException> (() => t.GetCachedInstanceMethod (ref jim, null, null));
+			JniStaticFieldID jsf = null;
+			Assert.Throws<ObjectDisposedException> (() => t.GetCachedStaticField (ref jsf, null, null));
+			JniStaticMethodID jsm = null;
+			Assert.Throws<ObjectDisposedException> (() => t.GetCachedStaticMethod (ref jsm, null, null));
+		}
+
+		[Test]
 		public void GetSuperclass ()
 		{
 			using (var t = new JniType ("java/lang/Object")) {
@@ -70,11 +100,11 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test, ExpectedException (typeof (JniException))]
+		[Test]
 		public void InvalidSignatureThrowsJniException ()
 		{
 			using (var Integer_class = new JniType ("java/lang/Integer")) {
-				Integer_class.GetConstructor ("(C)V");
+				Assert.Throws<JniException> (() => Integer_class.GetConstructor ("(C)V"));
 			}
 		}
 
@@ -84,6 +114,28 @@ namespace Java.InteropTests
 			using (var System_class = new JniType ("java/lang/System")) {
 				var System_in = System_class.GetStaticField ("in", "Ljava/io/InputStream;");
 				Assert.IsNotNull (System_in);
+			}
+		}
+
+		[Test]
+		public void Register ()
+		{
+			using (var Object_class = new JniType ("java/lang/Object")) {
+				Assert.AreEqual (JniReferenceType.Local, Object_class.SafeHandle.ReferenceType);
+				var cur = Object_class.SafeHandle;
+				Object_class.Register ();
+				Assert.AreEqual (JniReferenceType.Global, Object_class.SafeHandle.ReferenceType);
+				Assert.IsTrue (cur.IsInvalid);
+			}
+		}
+
+		[Test]
+		public void RegisterNativeMethods ()
+		{
+			using (var TestType_class = new JniType ("com/xamarin/interop/TestType")) {
+				Assert.AreEqual (JniReferenceType.Local, TestType_class.SafeHandle.ReferenceType);
+				TestType_class.RegisterNativeMethods ();
+				Assert.AreEqual (JniReferenceType.Global, TestType_class.SafeHandle.ReferenceType);
 			}
 		}
 	}

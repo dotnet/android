@@ -5,7 +5,7 @@ using Java.Interop;
 
 namespace Java.Interop {
 
-	public class JniType : IDisposable {
+	public sealed class JniType : IDisposable {
 
 		public static unsafe JniType DefineClass (string name, JniReferenceSafeHandle loader, byte[] classFileData)
 		{
@@ -15,7 +15,9 @@ namespace Java.Interop {
 			}
 		}
 
-		public JniGlobalReference SafeHandle {get; private set;}
+		bool    registered;
+
+		public  JniReferenceSafeHandle  SafeHandle {get; private set;}
 
 		public JniType (string classname)
 			: this (JniEnvironment.Types.FindClass (classname), JniHandleOwnership.Transfer)
@@ -29,11 +31,34 @@ namespace Java.Interop {
 			if (safeHandle.IsInvalid)
 				throw new ArgumentException ("safeHandle must be valid.", "safeHandle");
 			try {
-				SafeHandle = safeHandle.NewGlobalRef ();
-				JniEnvironment.Current.JavaVM.Track (this);
+				SafeHandle = safeHandle.NewLocalRef ();
 			} finally {
 				JniEnvironment.Handles.Dispose (safeHandle, transfer);
 			}
+		}
+
+		public void Register ()
+		{
+			AssertValid ();
+
+			if (registered)
+				return;
+
+			lock (this) {
+				if (SafeHandle.ReferenceType != JniReferenceType.Global) {
+					var o = SafeHandle;
+					SafeHandle = o.NewGlobalRef ();
+					o.Dispose ();
+				}
+				JniEnvironment.Current.JavaVM.Track (this);
+				registered = true;
+			}
+		}
+
+		void AssertValid ()
+		{
+			if (SafeHandle == null || SafeHandle.IsInvalid)
+				throw new ObjectDisposedException (GetType ().FullName);
 		}
 
 		public static JniType GetCachedJniType (ref JniType cachedType, string classname)
@@ -50,13 +75,18 @@ namespace Java.Interop {
 		{
 			if (SafeHandle == null)
 				return;
-			JniEnvironment.Current.JavaVM.UnTrack (SafeHandle);
+			if (registered)
+				JniEnvironment.Current.JavaVM.UnTrack (SafeHandle);
+			if (methods != null)
+				UnregisterNativeMethods ();
 			SafeHandle.Dispose ();
 			SafeHandle = null;
 		}
 
 		public JniType GetSuperclass ()
 		{
+			AssertValid ();
+
 			var lref = JniEnvironment.Types.GetSuperclass (SafeHandle);
 			if (!lref.IsInvalid)
 				return new JniType (lref, JniHandleOwnership.Transfer);
@@ -65,15 +95,20 @@ namespace Java.Interop {
 
 		public bool IsAssignableFrom (JniType c)
 		{
+			AssertValid ();
+
 			if (c == null)
 				throw new ArgumentNullException ("c");
 			if (c.SafeHandle == null || c.SafeHandle.IsInvalid)
 				throw new ArgumentException ("'c' has an invalid handle.", "c");
+
 			return JniEnvironment.Types.IsAssignableFrom (c.SafeHandle, SafeHandle);
 		}
 
 		public bool IsInstanceOfType (JniReferenceSafeHandle value)
 		{
+			AssertValid ();
+
 			return JniEnvironment.Types.IsInstanceOf (value, SafeHandle);
 		}
 
@@ -84,6 +119,8 @@ namespace Java.Interop {
 
 		public void RegisterNativeMethods (params JniNativeMethodRegistration[] methods)
 		{
+			AssertValid ();
+
 			if (methods == null)
 				throw new ArgumentNullException ("methods");
 			int r = JniEnvironment.Types.RegisterNatives (SafeHandle, methods, checked ((int)methods.Length));
@@ -91,40 +128,55 @@ namespace Java.Interop {
 				throw new JniException ("Unable to register native methods.");
 			// Prevents method delegates from being GC'd so long as this type remains
 			this.methods = methods;
+			Register ();
 		}
 
 		public void UnregisterNativeMethods ()
 		{
+			AssertValid ();
+
 			JniEnvironment.Types.UnregisterNatives (SafeHandle);
 		}
 
 		public JniInstanceMethodID GetConstructor (string signature)
 		{
+			AssertValid ();
+
 			return JniEnvironment.Members.GetMethodID (SafeHandle, "<init>", signature);
 		}
 
 		public JniInstanceMethodID GetCachedConstructor (ref JniInstanceMethodID cachedMethod, string signature)
 		{
+			AssertValid ();
+
 			return GetCachedInstanceMethod (ref cachedMethod, "<init>", signature);
 		}
 
 		public JniLocalReference AllocObject ()
 		{
+			AssertValid ();
+
 			return JniEnvironment.Activator.AllocObject (SafeHandle);
 		}
 
 		public JniLocalReference NewObject (JniInstanceMethodID constructor, params JValue[] @params)
 		{
+			AssertValid ();
+
 			return JniEnvironment.Activator.NewObject (SafeHandle, constructor, @params);
 		}
 
 		public JniInstanceFieldID GetInstanceField (string name, string signature)
 		{
+			AssertValid ();
+
 			return JniEnvironment.Members.GetFieldID (SafeHandle, name, signature);
 		}
 
 		public JniInstanceFieldID GetCachedInstanceField (ref JniInstanceFieldID cachedField, string name, string signature)
 		{
+			AssertValid ();
+
 			if (cachedField != null && !cachedField.IsInvalid)
 				return cachedField;
 			var m = GetInstanceField (name, signature);
@@ -135,11 +187,15 @@ namespace Java.Interop {
 
 		public JniStaticFieldID GetStaticField (string name, string signature)
 		{
+			AssertValid ();
+
 			return JniEnvironment.Members.GetStaticFieldID (SafeHandle, name, signature);
 		}
 
 		public JniStaticFieldID GetCachedStaticField (ref JniStaticFieldID cachedField, string name, string signature)
 		{
+			AssertValid ();
+
 			if (cachedField != null && !cachedField.IsInvalid)
 				return cachedField;
 			var m = GetStaticField (name, signature);
@@ -150,11 +206,15 @@ namespace Java.Interop {
 
 		public JniInstanceMethodID GetInstanceMethod (string name, string signature)
 		{
+			AssertValid ();
+
 			return JniEnvironment.Members.GetMethodID (SafeHandle, name, signature);
 		}
 
 		public JniInstanceMethodID GetCachedInstanceMethod (ref JniInstanceMethodID cachedMethod, string name, string signature)
 		{
+			AssertValid ();
+
 			if (cachedMethod != null && !cachedMethod.IsInvalid)
 				return cachedMethod;
 			var m = GetInstanceMethod (name, signature);
@@ -165,11 +225,15 @@ namespace Java.Interop {
 
 		public JniStaticMethodID GetStaticMethod (string name, string signature)
 		{
+			AssertValid ();
+
 			return JniEnvironment.Members.GetStaticMethodID (SafeHandle, name, signature);
 		}
 
 		public JniStaticMethodID GetCachedStaticMethod (ref JniStaticMethodID cachedMethod, string name, string signature)
 		{
+			AssertValid ();
+
 			if (cachedMethod != null && !cachedMethod.IsInvalid)
 				return cachedMethod;
 			var m = GetStaticMethod (name, signature);
