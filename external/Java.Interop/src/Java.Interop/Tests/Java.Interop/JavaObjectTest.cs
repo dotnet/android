@@ -87,6 +87,34 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		public void Dispose ()
+		{
+			var d = false;
+			var f = false;
+			var o = new JavaDisposedObject (() => d = true, () => f = true);
+			o.Dispose ();
+			Assert.IsTrue (d);
+			Assert.IsFalse (f);
+		}
+
+		[Test]
+		public void Dispose_Finalized ()
+		{
+			var d = false;
+			var f = false;
+			var t = new Thread (() => {
+				var v     = new JavaDisposedObject (() => d = true, () => f = true);
+				GC.KeepAlive (v);
+			});
+			t.Start ();
+			t.Join ();
+			GC.Collect ();
+			GC.WaitForPendingFinalizers ();
+			Assert.IsFalse (d);
+			Assert.IsTrue (f);
+		}
+
+		[Test]
 		public void ObjectDisposed ()
 		{
 			var o = new JavaObject ();
@@ -137,6 +165,27 @@ namespace Java.InteropTests
 
 	[JniTypeInfo ("__this__/__type__/__had__/__better__/__not__/__Exist__")]
 	class JavaObjectWithMissingJavaPeer : JavaObject {
+	}
+
+	[JniTypeInfo ("java/lang/Object")]
+	class JavaDisposedObject : JavaObject {
+
+		public Action   OnDisposed;
+		public Action   OnFinalized;
+
+		public JavaDisposedObject (Action disposed, Action finalized)
+		{
+			OnDisposed  = disposed;
+			OnFinalized = finalized;
+		}
+
+		protected override void Dispose (bool disposing)
+		{
+			if (disposing)
+				OnDisposed ();
+			else
+				OnFinalized ();
+		}
 	}
 }
 

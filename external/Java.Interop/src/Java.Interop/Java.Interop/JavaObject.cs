@@ -12,6 +12,21 @@ namespace Java.Interop
 
 		~JavaObject ()
 		{
+			// MUST NOT use SafeHandle.ReferenceType: local refs are tied to a JniEnvironment
+			// and the JniEnvironment's corresponding thread; it's a thread-local value.
+			// Accessing SafeHandle.ReferenceType won't kill anything (so far...), but
+			// instead it always returns JniReferenceType.Invalid.
+			if (SafeHandle == null || SafeHandle.IsInvalid || SafeHandle is JniLocalReference) {
+				Dispose (disposing: false);
+
+				// TODO: is this actually safe?
+				// I can't find anything in the JNI docs to suggest that calling
+				// JNIEnv::DeleteLocalRef() is "bad", but nothing says it's "good" either.
+				if (SafeHandle != null)
+					SafeHandle.Dispose ();
+				return;
+			}
+
 			var  h          = SafeHandle;
 			bool collected  = JniEnvironment.Current.JavaVM.TryGC (this, ref h);
 			if (collected) {
