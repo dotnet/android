@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 
 using Java.Interop;
 
@@ -10,6 +11,7 @@ namespace Java.InteropTests
 	public class TestJVM : JreVM {
 
 		TextWriter  grefLog;
+		TextWriter  lrefLog;
 
 		static JreVMBuilder CreateBuilder (string[] jars)
 		{
@@ -21,9 +23,13 @@ namespace Java.InteropTests
 		public TestJVM (params string[] jars)
 			: base (CreateBuilder (jars))
 		{
-			string logGrefs = (Environment.GetEnvironmentVariable ("_JI_LOG") ?? "")
+			var log = Environment.GetEnvironmentVariable ("_JI_LOG") ?? "";
+			string logGrefs = log
 				.Split (new []{ ',' }, StringSplitOptions.RemoveEmptyEntries)
 				.FirstOrDefault (e => e.StartsWith ("gref"));
+			string logLrefs = log
+				.Split (new []{ ',' }, StringSplitOptions.RemoveEmptyEntries)
+				.FirstOrDefault (e => e.StartsWith ("lref"));
 			if (logGrefs != null) {
 				if (logGrefs == "gref")
 					grefLog = Console.Out;
@@ -32,6 +38,73 @@ namespace Java.InteropTests
 					grefLog = File.CreateText (file);
 				}
 			}
+			if (logLrefs != null) {
+				if (logGrefs == "lref")
+					lrefLog = Console.Out;
+				if (logLrefs.StartsWith ("lref=")) {
+					string file = logLrefs.Substring ("lref=".Length);
+					lrefLog = File.CreateText (file);
+				}
+			}
+		}
+
+		protected override void LogCreateLocalRef (JniEnvironmentSafeHandle environmentHandle, JniLocalReference value)
+		{
+			base.LogCreateLocalRef (environmentHandle, value);
+			if (lrefLog == null)
+				return;
+			var t = Thread.CurrentThread;
+			LogLref ("+l+ thread '{0}'({1}) lrefc {2} -> new-handle 0x{3}/{4} from{5}{6}",
+					t.Name,
+					t.ManagedThreadId,
+					JniEnvironment.Current.LocalReferenceCount,
+					value.DangerousGetHandle ().ToString ("x"),
+					ToChar (value.ReferenceType),
+					Environment.NewLine,
+					new StackTrace (true));
+		}
+
+		void LogLref (string format, params object[] args)
+		{
+			var message = string.Format (format, args);
+			lock (lrefLog) {
+				lrefLog.WriteLine (message);
+				lrefLog.Flush ();
+			}
+		}
+
+		protected override void LogCreateLocalRef (JniEnvironmentSafeHandle environmentHandle, JniLocalReference value, JniReferenceSafeHandle sourceValue)
+		{
+			base.LogCreateLocalRef (environmentHandle, value, sourceValue);
+			if (grefLog == null)
+				return;
+			var t = Thread.CurrentThread;
+			LogLref ("+l+ thread '{0}'({1}) lrefc {2} obj-handle 0x{3}/{4} -> new-handle 0x{5}/{6} from{7}{8}",
+					t.Name,
+					t.ManagedThreadId,
+					JniEnvironment.Current.LocalReferenceCount,
+					sourceValue.DangerousGetHandle ().ToString ("x"),
+					ToChar (sourceValue.ReferenceType),
+					value.DangerousGetHandle ().ToString ("x"),
+					ToChar (value.ReferenceType),
+					Environment.NewLine,
+					new StackTrace (true));
+		}
+
+		protected override void LogDestroyLocalRef (JniEnvironmentSafeHandle environmentHandle, IntPtr value)
+		{
+			base.LogDestroyLocalRef (environmentHandle, value);
+			if (lrefLog == null)
+				return;
+			var t = Thread.CurrentThread;
+			LogLref ("-l- thread '{0}'({1}) lrefc {2} handle 0x{3}/{4} from{5}{6}",
+					t.Name,
+					t.ManagedThreadId,
+					JniEnvironment.Current.LocalReferenceCount,
+					value.ToString ("x"),
+					'L',
+					Environment.NewLine,
+					new StackTrace (true));
 		}
 
 		protected override void LogCreateGlobalRef (JniGlobalReference value, JniReferenceSafeHandle sourceValue)

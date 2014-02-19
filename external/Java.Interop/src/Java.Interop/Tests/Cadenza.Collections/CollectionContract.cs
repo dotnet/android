@@ -69,13 +69,30 @@ namespace Cadenza.Collections.Tests {
 		{
 			var c = CreateCollection (new T [0]);
 			Assert.AreEqual (0, c.Count);
+			Dispose (c);
+		}
+
+		protected static void Dispose (object value)
+		{
+			var d = value as IDisposable;
+			if (d != null)
+				d.Dispose ();
 		}
 
 		[Test]
 		public void Ctor_CopySequence ()
 		{
-			var c = CreateCollection (new []{CreateValueA (), CreateValueB (), CreateValueC ()});
+			var e = new[] {
+				CreateValueA (),
+				CreateValueB (),
+				CreateValueC ()
+			};
+			var c = CreateCollection (e);
 			Assert.AreEqual (3, c.Count);
+
+			Dispose (c);
+			foreach (var v in e)
+				Dispose (e);
 		}
 
 		[Test]
@@ -83,13 +100,18 @@ namespace Cadenza.Collections.Tests {
 		{
 			var c = CreateCollection (new T [0]);
 			var n = c.Count;
+			var a = CreateValueA ();
+
 			try {
-				c.Add (CreateValueA ());
+				c.Add (a);
 				Assert.AreEqual (n+1, c.Count);
 			}
 			catch (NotSupportedException) {
 				Assert.IsTrue (c.IsReadOnly || IsFixedSize (c));
 			}
+
+			Dispose (c);
+			Dispose (a);
 		}
 
 		protected static bool IsFixedSize (ICollection<T> c)
@@ -101,7 +123,8 @@ namespace Cadenza.Collections.Tests {
 		[Test]
 		public void Clear ()
 		{
-			var c = CreateCollection (new []{CreateValueA ()});
+			var a = CreateValueA ();
+			var c = CreateCollection (new []{a});
 			try {
 				c.Clear ();
 				Assert.AreEqual (IsFixedSize (c) ? 1 : 0, c.Count);
@@ -109,6 +132,9 @@ namespace Cadenza.Collections.Tests {
 			catch (NotSupportedException) {
 				Assert.IsTrue (c.IsReadOnly);
 			}
+
+			Dispose (c);
+			Dispose (a);
 		}
 
 		[Test]
@@ -121,18 +147,31 @@ namespace Cadenza.Collections.Tests {
 			Assert.IsTrue (c.Contains (a));
 			Assert.IsTrue (c.Contains (b));
 			Assert.IsFalse (c.Contains (CreateValueC ()));
+
+			Dispose (c);
+			Dispose (b);
+			Dispose (a);
 		}
 
 		[Test]
 		public void CopyTo_Exceptions ()
 		{
-			var c = CreateCollection (new []{CreateValueA (), CreateValueB (), CreateValueC ()});
+			var e = new[] {
+				CreateValueA (),
+				CreateValueB (),
+				CreateValueC (),
+			};
+			var c = CreateCollection (e);
 			Assert.Throws<ArgumentNullException>(() => c.CopyTo (null, 0));
 			Assert.Throws<ArgumentOutOfRangeException>(() => c.CopyTo (new T [3], -1));
 			var d = new T[5];
 			// not enough space from d[3..d.Length-1] to hold c.Count elements.
 			Assert.Throws<ArgumentException>(() => c.CopyTo (d, 3));
 			Assert.Throws<ArgumentException>(() => c.CopyTo (new T [0], 0));
+
+			Dispose (c);
+			foreach (var v in e)
+				Dispose (v);
 		}
 
 		// can fail for IDictionary<TKey,TValue> implementations; override if appropriate.
@@ -149,6 +188,11 @@ namespace Cadenza.Collections.Tests {
 			Assert.IsTrue (new []{
 				default (T), a, b, c, default (T),
 			}.SequenceEqual (d));
+
+			Dispose (coll);
+			Dispose (c);
+			Dispose (b);
+			Dispose (a);
 		}
 
 		[Test]
@@ -164,6 +208,11 @@ namespace Cadenza.Collections.Tests {
 			Assert.IsTrue (Array.IndexOf (d, a) >= 0);
 			Assert.IsTrue (Array.IndexOf (d, b) >= 0);
 			Assert.IsTrue (Array.IndexOf (d, c) >= 0);
+
+			Dispose (coll);
+			Dispose (c);
+			Dispose (b);
+			Dispose (a);
 		}
 
 		[Test]
@@ -184,6 +233,11 @@ namespace Cadenza.Collections.Tests {
 			catch (NotSupportedException) {
 				Assert.IsTrue (coll.IsReadOnly || IsFixedSize (coll));
 			}
+
+			Dispose (coll);
+			Dispose (c);
+			Dispose (b);
+			Dispose (a);
 		}
 	}
 }

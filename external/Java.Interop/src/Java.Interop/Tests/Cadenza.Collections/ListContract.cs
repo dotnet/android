@@ -71,10 +71,15 @@ namespace Cadenza.Collections.Tests {
 			catch (NotSupportedException) {
 				Assert.IsTrue (list.IsReadOnly || IsFixedSize (list));
 			}
+			Dispose (list);
 
 			list = CreateList (new T[]{ a, b });
 			Assert.AreEqual (0, list.IndexOf (a));
 			Assert.AreEqual (1, list.IndexOf (b));
+
+			Dispose (list);
+			Dispose (a);
+			Dispose (b);
 		}
 
 		[Test]
@@ -111,6 +116,10 @@ namespace Cadenza.Collections.Tests {
 			catch (NotSupportedException) {
 				Assert.IsTrue (list.IsReadOnly || IsFixedSize (list));
 			}
+
+			Dispose (list);
+			Dispose (a);
+			Dispose (b);
 		}
 
 		[Test]
@@ -151,6 +160,10 @@ namespace Cadenza.Collections.Tests {
 			catch (NotSupportedException) {
 				Assert.IsTrue (list.IsReadOnly || IsFixedSize (list));
 			}
+
+			Dispose (list);
+			Dispose (a);
+			Dispose (b);
 		}
 
 		[Test]
@@ -175,6 +188,10 @@ namespace Cadenza.Collections.Tests {
 			catch (NotSupportedException) {
 				Assert.IsTrue (list.IsReadOnly);
 			}
+
+			Dispose (list);
+			Dispose (a);
+			Dispose (b);
 		}
 	}
 }
