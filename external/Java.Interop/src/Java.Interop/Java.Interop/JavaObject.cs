@@ -17,13 +17,12 @@ namespace Java.Interop
 			// Accessing SafeHandle.ReferenceType won't kill anything (so far...), but
 			// instead it always returns JniReferenceType.Invalid.
 			if (SafeHandle == null || SafeHandle.IsInvalid || SafeHandle is JniLocalReference) {
-				Dispose (disposing: false);
 
-				// TODO: is this actually safe?
-				// I can't find anything in the JNI docs to suggest that calling
-				// JNIEnv::DeleteLocalRef() is "bad", but nothing says it's "good" either.
 				if (SafeHandle != null)
 					SafeHandle.Dispose ();
+
+				Dispose (disposing: false);
+
 				return;
 			}
 
