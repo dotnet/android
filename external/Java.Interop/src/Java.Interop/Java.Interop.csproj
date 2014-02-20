@@ -53,12 +53,13 @@
     <Compile Include="Java.Interop\JniGlobalReference.cs" />
     <Compile Include="Java.Interop\JniWeakGlobalReference.cs" />
     <Compile Include="Java.Interop\JniLocalReference.cs" />
-    <Compile Include="Java.Interop\JniException.cs" />
+    <Compile Include="Java.Interop\JavaException.cs" />
     <Compile Include="Java.Interop\JniHandleOwnership.cs" />
     <Compile Include="Java.Interop\JniNativeMethodRegistration.cs" />
     <Compile Include="Java.Interop\JniFieldID.cs" />
     <Compile Include="Java.Interop\JniMethodID.cs" />
     <Compile Include="Java.Interop\IJavaObject.cs" />
+    <Compile Include="Java.Interop\IJavaObjectEx.cs" />
     <Compile Include="Java.Interop\JavaObject.cs" />
     <Compile Include="Java.Interop\JniSystem.cs" />
     <Compile Include="Java.Interop\JavaArray.cs" />

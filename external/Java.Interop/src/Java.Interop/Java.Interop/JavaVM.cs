@@ -230,12 +230,9 @@ namespace Java.Interop
 			Invoker.DestroyJavaVM (SafeHandle);
 		}
 
-		public virtual Exception GetExceptionForThrowable (JniLocalReference value)
+		public virtual Exception GetExceptionForThrowable (JniLocalReference value, JniHandleOwnership transfer)
 		{
-			var s = JniEnvironment.Current.Object_toString.CallVirtualObjectMethod (value);
-			return new JniException (
-					JniEnvironment.Strings.ToString (s, JniHandleOwnership.Transfer) ??
-					"JNI error: no message provided");
+			return new JavaException (value, transfer);
 		}
 
 		public int GlobalReferenceCount {
@@ -332,15 +329,29 @@ namespace Java.Interop
 			}
 		}
 
-		internal void RegisterObject (int key, IJavaObject value)
+		internal void RegisterObject<T> (T value)
+			where T : IJavaObject, IJavaObjectEx
 		{
+			if (value.SafeHandle == null || value.SafeHandle.IsInvalid)
+				throw new ObjectDisposedException (value.GetType ().FullName);
+			if (value.Registered)
+				return;
+
+			if (value.SafeHandle.ReferenceType != JniReferenceType.Global) {
+				var o = value.SafeHandle;
+				value.SetSafeHandle (o.NewGlobalRef ());
+				o.Dispose ();
+			}
+			int key = value.IdentityHashCode;
 			lock (RegisteredInstances)
 				if (!RegisteredInstances.ContainsKey (key))
 					RegisteredInstances.Add (key, new WeakReference (value, trackResurrection:true));
+			value.Registered = true;
 		}
 
-		internal void UnRegisterObject (int key, IJavaObject value)
+		internal void UnRegisterObject (IJavaObjectEx value)
 		{
+			int key = value.IdentityHashCode;
 			lock (RegisteredInstances) {
 				WeakReference               wv;
 				IJavaObject                 t;
@@ -348,6 +359,65 @@ namespace Java.Interop
 						(t = (IJavaObject) wv.Target) != null &&
 						object.ReferenceEquals (value, t))
 					RegisteredInstances.Remove (key);
+			}
+		}
+
+		internal static void SetObjectSafeHandle<T> (T value, JniReferenceSafeHandle handle, JniHandleOwnership transfer)
+			where T : IJavaObject, IJavaObjectEx
+		{
+			if (handle == null)
+				throw new ArgumentNullException ("handle");
+			if (handle.IsInvalid)
+				throw new ArgumentException ("handle is invalid.", "handle");
+
+			value.SetSafeHandle (handle.NewLocalRef ());
+			JniEnvironment.Handles.Dispose (handle, transfer);
+
+			value.IdentityHashCode = JniSystem.IdentityHashCode (value.SafeHandle);
+		}
+
+		internal void DisposeObject<T> (T value)
+			where T : IJavaObject, IJavaObjectEx
+		{
+			if (value.SafeHandle == null || value.SafeHandle.IsInvalid)
+				return;
+
+			if (value.Registered)
+				UnRegisterObject (value);
+			value.Dispose (disposing: true);
+			value.SafeHandle.Dispose ();
+			value.SetSafeHandle (null);
+			GC.SuppressFinalize (value);
+		}
+
+		internal void TryCollectObject<T> (T value)
+			where T : IJavaObject, IJavaObjectEx
+		{
+			// MUST NOT use SafeHandle.ReferenceType: local refs are tied to a JniEnvironment
+			// and the JniEnvironment's corresponding thread; it's a thread-local value.
+			// Accessing SafeHandle.ReferenceType won't kill anything (so far...), but
+			// instead it always returns JniReferenceType.Invalid.
+			if (value.SafeHandle == null || value.SafeHandle.IsInvalid || value.SafeHandle is JniLocalReference) {
+
+				if (value.SafeHandle != null) {
+					value.SafeHandle.Dispose ();
+					value.SetSafeHandle (null);
+				}
+
+				value.Dispose (disposing: false);
+				return;
+			}
+
+			var  h          = value.SafeHandle;
+			bool collected  = TryGC (value, ref h);
+			if (collected) {
+				value.SetSafeHandle (null);
+				if (value.Registered)
+					UnRegisterObject (value);
+				value.Dispose (disposing: false);
+			} else {
+				value.SetSafeHandle (h);
+				GC.ReRegisterForFinalize (value);
 			}
 		}
 

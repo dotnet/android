@@ -147,9 +147,9 @@ namespace Java.Interop {
 			using (var e = JniEnvironment.Errors.ExceptionOccurred ()) {
 				if (e == null || e.IsInvalid)
 					return null;
-				JniEnvironment.Errors.ExceptionDescribe ();
+				// JniEnvironment.Errors.ExceptionDescribe ();
 				JniEnvironment.Errors.ExceptionClear ();
-				return JavaVM.GetExceptionForThrowable (e);
+				return JavaVM.GetExceptionForThrowable (e, JniHandleOwnership.Transfer);
 			}
 		}
 	}

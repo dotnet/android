@@ -28,7 +28,11 @@ namespace Java.Interop {
 		public      Type        ManagedPeerType {get; private set;}
 		public      string      JniPeerTypeName {get; private set;}
 		public      JniType     JniPeerType {
-			get {return JniType.GetCachedJniType (ref jniPeerType, JniPeerTypeName);}
+			get {
+				var t = JniType.GetCachedJniType (ref jniPeerType, JniPeerTypeName);
+				JniEnvironment.Current.JavaVM.Track (t);
+				return t;
+			}
 		}
 
 		public JniInstanceMethodID GetConstructor (string signature)
@@ -90,9 +94,7 @@ namespace Java.Interop {
 		{
 			if (self == null)
 				throw new ArgumentNullException ("self");
-			if (self.SafeHandle == null)
-				throw new ArgumentException ("self.SafeHandle is null", "self");
-			if (self.SafeHandle.IsInvalid)
+			if (self.SafeHandle == null || self.SafeHandle.IsInvalid)
 				throw new ObjectDisposedException (self.GetType ().FullName);
 		}
 

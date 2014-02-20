@@ -65,6 +65,7 @@
     <Compile Include="Java.Interop\JniTypeInfoTest.cs" />
     <Compile Include="Java.Interop\JniInstanceMethodIDTest.cs" />
     <Compile Include="Java.Interop\MethodBindingTests.cs" />
+    <Compile Include="Java.Interop\JavaExceptionTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <JavaInteropTestJar Include="java\com\xamarin\interop\CallNonvirtualBase.java" />

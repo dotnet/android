@@ -156,7 +156,7 @@ namespace Java.InteropTests
 
 			// Note: This may break if/when JavaVM provides "default"
 			Assert.Throws<NotSupportedException> (() => new JavaObjectWithNoJavaPeer ());
-			Assert.Throws<JniException> (() => new JavaObjectWithMissingJavaPeer ());
+			Assert.Throws<JavaException> (() => new JavaObjectWithMissingJavaPeer ());
 		}
 	}
 

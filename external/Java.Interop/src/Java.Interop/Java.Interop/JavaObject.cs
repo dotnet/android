@@ -3,7 +3,7 @@ using System;
 namespace Java.Interop
 {
 	[JniTypeInfo ("java/lang/Object")]
-	public class JavaObject : IJavaObject
+	public class JavaObject : IJavaObject, IJavaObjectEx
 	{
 		readonly static JniPeerMembers _members = new JniPeerMembers ("java/lang/Object", typeof (JavaObject));
 
@@ -12,31 +12,7 @@ namespace Java.Interop
 
 		~JavaObject ()
 		{
-			// MUST NOT use SafeHandle.ReferenceType: local refs are tied to a JniEnvironment
-			// and the JniEnvironment's corresponding thread; it's a thread-local value.
-			// Accessing SafeHandle.ReferenceType won't kill anything (so far...), but
-			// instead it always returns JniReferenceType.Invalid.
-			if (SafeHandle == null || SafeHandle.IsInvalid || SafeHandle is JniLocalReference) {
-
-				if (SafeHandle != null)
-					SafeHandle.Dispose ();
-
-				Dispose (disposing: false);
-
-				return;
-			}
-
-			var  h          = SafeHandle;
-			bool collected  = JniEnvironment.Current.JavaVM.TryGC (this, ref h);
-			if (collected) {
-				SafeHandle = null;
-				if (registered)
-					JniEnvironment.Current.JavaVM.UnRegisterObject (keyHandle, this);
-				Dispose (false);
-			} else {
-				SafeHandle = h;
-				GC.ReRegisterForFinalize (this);
-			}
+			JniEnvironment.Current.JavaVM.TryCollectObject (this);
 		}
 
 		public          JniReferenceSafeHandle      SafeHandle {get; private set;}
@@ -50,20 +26,7 @@ namespace Java.Interop
 
 		public JavaObject (JniReferenceSafeHandle handle, JniHandleOwnership transfer)
 		{
-			SetSafeHandle (handle, transfer);
-		}
-
-		void SetSafeHandle (JniReferenceSafeHandle handle, JniHandleOwnership transfer)
-		{
-			if (handle == null)
-				throw new ArgumentNullException ("handle");
-			if (handle.IsInvalid)
-				throw new ArgumentException ("handle is invalid.", "handle");
-
-			SafeHandle = handle.NewLocalRef ();
-			JniEnvironment.Handles.Dispose (handle, transfer);
-
-			keyHandle = JniSystem.IdentityHashCode (SafeHandle);
+			JavaVM.SetObjectSafeHandle (this, handle, transfer);
 		}
 
 		static JniLocalReference _NewObject (Type type, JniPeerMembers peerMembers)
@@ -86,36 +49,17 @@ namespace Java.Interop
 
 		public JavaObject ()
 		{
-			SetSafeHandle (_NewObject (GetType (), JniPeerMembers), JniHandleOwnership.Transfer);
+			JavaVM.SetObjectSafeHandle (this, _NewObject (GetType (), JniPeerMembers), JniHandleOwnership.Transfer);
 		}
 
 		public void Register ()
 		{
-			if (SafeHandle == null || SafeHandle.IsInvalid)
-				throw new ObjectDisposedException (GetType ().FullName);
-
-			if (registered)
-				return;
-
-			if (SafeHandle.ReferenceType != JniReferenceType.Global) {
-				var o = SafeHandle;
-				SafeHandle = o.NewGlobalRef ();
-				o.Dispose ();
-			}
-			JniEnvironment.Current.JavaVM.RegisterObject (keyHandle, this);
-			registered = true;
+			JniEnvironment.Current.JavaVM.RegisterObject (this);
 		}
 
 		public void Dispose ()
 		{
-			if (SafeHandle == null || SafeHandle.IsInvalid)
-				return;
-
-			Dispose (true);
-			if (registered)
-				JniEnvironment.Current.JavaVM.UnRegisterObject (keyHandle, this);
-			SafeHandle.Dispose ();
-			GC.SuppressFinalize (this);
+			JniEnvironment.Current.JavaVM.DisposeObject (this);
 		}
 
 		protected virtual void Dispose (bool disposing)
@@ -147,6 +91,26 @@ namespace Java.Interop
 					"toString()Ljava/lang/String;",
 					this);
 			return JniEnvironment.Strings.ToString (lref, JniHandleOwnership.Transfer);
+		}
+
+		int IJavaObjectEx.IdentityHashCode {
+			get {return keyHandle;}
+			set {keyHandle = value;}
+		}
+
+		bool IJavaObjectEx.Registered {
+			get {return registered;}
+			set {registered = value;}
+		}
+
+		void IJavaObjectEx.Dispose (bool disposing)
+		{
+			Dispose (disposing);
+		}
+
+		void IJavaObjectEx.SetSafeHandle (JniReferenceSafeHandle handle)
+		{
+			SafeHandle = handle;
 		}
 	}
 }
