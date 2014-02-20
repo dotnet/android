@@ -22,7 +22,7 @@ namespace Java.InteropTests
 				var w = new Thread (() => {
 						var v       = new JavaObject ();
 						oldHandle   = v.SafeHandle.DangerousGetHandle ();
-						v.Register ();
+						v.RegisterWithVM ();
 						JniEnvironment.Arrays.SetObjectArrayElement (grefArray, 0, v.SafeHandle);
 				});
 				w.Start ();
@@ -54,7 +54,7 @@ namespace Java.InteropTests
 				Assert.AreEqual (JniReferenceType.Local, o.SafeHandle.ReferenceType);
 				Assert.AreEqual (registeredCount, JVM.Current.GetSurfacedObjects ().Count);
 				Assert.IsNull (JVM.Current.GetObject (h));
-				o.Register ();
+				o.RegisterWithVM ();
 				Assert.AreNotSame (l, o.SafeHandle);
 				Assert.AreEqual (JniReferenceType.Global, o.SafeHandle.ReferenceType);
 				h = o.SafeHandle.DangerousGetHandle ();
@@ -63,7 +63,7 @@ namespace Java.InteropTests
 			}
 			Assert.AreEqual (registeredCount, JVM.Current.GetSurfacedObjects ().Count);
 			Assert.IsNull (JVM.Current.GetObject (h));
-			Assert.Throws<ObjectDisposedException> (() => o.Register ());
+			Assert.Throws<ObjectDisposedException> (() => o.RegisterWithVM ());
 		}
 
 		[Test]
@@ -75,7 +75,7 @@ namespace Java.InteropTests
 					var v     = new JavaObject ();
 					oldHandle = v.SafeHandle.DangerousGetHandle ();
 					r         = new WeakReference (v);
-					v.Register ();
+					v.RegisterWithVM ();
 			});
 			t.Start ();
 			t.Join ();
@@ -126,7 +126,7 @@ namespace Java.InteropTests
 
 			// These should throw
 			Assert.Throws<ObjectDisposedException> (() => o.GetHashCode ());
-			Assert.Throws<ObjectDisposedException> (() => o.Register ());
+			Assert.Throws<ObjectDisposedException> (() => o.RegisterWithVM ());
 			Assert.Throws<ObjectDisposedException> (() => o.ToString ());
 			Assert.Throws<ObjectDisposedException> (() => o.Equals (o));
 		}

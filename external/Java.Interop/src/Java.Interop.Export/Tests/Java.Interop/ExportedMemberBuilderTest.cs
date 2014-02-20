@@ -39,7 +39,7 @@ namespace Java.InteropTests
 				Assert.IsTrue (ExportTest.StaticActionInt32StringCalled);
 
 				using (var o = CreateExportTest (t)) {
-					o.Register ();
+					o.RegisterWithVM ();
 					t.GetInstanceMethod ("testMethods", "()V").CallVirtualVoidMethod (o.SafeHandle);
 					Assert.IsTrue (o.HelloCalled);
 					o.Dispose ();

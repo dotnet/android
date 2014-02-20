@@ -7,7 +7,7 @@ namespace Java.Interop
 		JniReferenceSafeHandle  SafeHandle {get;}
 		JniPeerMembers          JniPeerMembers {get;}
 
-		void    Register ();
+		void    RegisterWithVM ();
 	}
 }
 

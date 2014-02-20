@@ -52,7 +52,7 @@ namespace Java.Interop
 			JavaVM.SetObjectSafeHandle (this, _NewObject (GetType (), JniPeerMembers), JniHandleOwnership.Transfer);
 		}
 
-		public void Register ()
+		public void RegisterWithVM ()
 		{
 			JniEnvironment.Current.JavaVM.RegisterObject (this);
 		}

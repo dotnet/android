@@ -65,7 +65,7 @@ namespace Java.Interop
 			}
 		}
 
-		public void Register ()
+		public void RegisterWithVM ()
 		{
 			JniEnvironment.Current.JavaVM.RegisterObject (this);
 		}

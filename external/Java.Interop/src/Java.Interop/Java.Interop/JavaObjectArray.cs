@@ -37,7 +37,7 @@ namespace Java.Interop
 				if (index < 0 || index >= Length)
 					throw new ArgumentOutOfRangeException ("index", "index < 0 || index >= Length");
 				if (value != null && !value.SafeHandle.IsInvalid)
-					value.Register ();
+					value.RegisterWithVM ();
 				JniEnvironment.Arrays.SetObjectArrayElement (SafeHandle, index,
 						value == null || value.SafeHandle.IsInvalid
 						? JniReferenceSafeHandle.Null
