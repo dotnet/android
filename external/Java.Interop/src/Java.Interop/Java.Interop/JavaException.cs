@@ -33,7 +33,7 @@ namespace Java.Interop
 		}
 
 		public JavaException (JniReferenceSafeHandle handle, JniHandleOwnership transfer)
-			: base (_GetMessage (handle))
+			: base (_GetMessage (handle), _GetCause (handle))
 		{
 			JavaVM.SetObjectSafeHandle (this, handle, transfer);
 			javaStackTrace    = _GetJavaStack (SafeHandle);
@@ -60,7 +60,7 @@ namespace Java.Interop
 		public override string StackTrace {
 			get {
 				return base.StackTrace + Environment.NewLine +
-					"  --- End of managed exception stack trace ---" + Environment.NewLine +
+					"  --- End of managed " + GetType ().FullName + " stack trace ---" + Environment.NewLine +
 					javaStackTrace;
 			}
 		}
@@ -101,6 +101,13 @@ namespace Java.Interop
 			var m = _members.GetInstanceMethodID ("getMessage", "()Ljava/lang/String;", "getMessage()Ljava/lang/String;");
 			var s = m.CallVirtualObjectMethod (handle);
 			return JniEnvironment.Strings.ToString (s, JniHandleOwnership.Transfer);
+		}
+
+		static JavaException _GetCause (JniReferenceSafeHandle handle)
+		{
+			var m = _members.GetInstanceMethodID ("getCause", "()Ljava/lang/Throwable;", "getCause()Ljava/lang/Throwable;");
+			var e = m.CallVirtualObjectMethod (handle);
+			return JniEnvironment.Current.JavaVM.GetObject<JavaException> (e, JniHandleOwnership.Transfer);
 		}
 
 		string _GetJavaStack (JniReferenceSafeHandle handle)

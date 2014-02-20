@@ -445,7 +445,7 @@ namespace Java.Interop
 			if (jniHandle.IsInvalid)
 				return null;
 			try {
-				return GetObject (jniHandle.DangerousGetHandle ());
+				return GetObject (jniHandle.DangerousGetHandle (), targetType);
 			} finally {
 				JniEnvironment.Handles.Dispose (jniHandle, transfer);
 			}
@@ -472,6 +472,10 @@ namespace Java.Interop
 						return t;
 					RegisteredInstances.Remove (key);
 				}
+			}
+			if (targetType != null) {
+				using (var h = new JniInvocationHandle (jniHandle))
+					return (IJavaObject) Activator.CreateInstance (targetType, h, JniHandleOwnership.DoNotTransfer);
 			}
 			return null;
 		}
