@@ -43,7 +43,7 @@ namespace Java.InteropTests
 		}
 
 		[Test]
-		public void Register ()
+		public void RegisterWithVM ()
 		{
 			int registeredCount = JVM.Current.GetSurfacedObjects ().Count;
 			IntPtr h;
@@ -64,6 +64,17 @@ namespace Java.InteropTests
 			Assert.AreEqual (registeredCount, JVM.Current.GetSurfacedObjects ().Count);
 			Assert.IsNull (JVM.Current.GetObject (h));
 			Assert.Throws<ObjectDisposedException> (() => o.RegisterWithVM ());
+		}
+
+		[Test]
+		public void RegisterWithVM_ThrowsOnDuplicateEntry ()
+		{
+			using (var original = new JavaObject ()) {
+				original.RegisterWithVM ();
+				using (var alias    = new JavaObject (original.SafeHandle, JniHandleOwnership.DoNotTransfer)) {
+					Assert.Throws<NotSupportedException> (() => alias.RegisterWithVM ());
+				}
+			}
 		}
 
 		[Test]

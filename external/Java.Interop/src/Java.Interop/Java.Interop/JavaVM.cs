@@ -343,9 +343,16 @@ namespace Java.Interop
 				o.Dispose ();
 			}
 			int key = value.IdentityHashCode;
-			lock (RegisteredInstances)
-				if (!RegisteredInstances.ContainsKey (key))
-					RegisteredInstances.Add (key, new WeakReference (value, trackResurrection:true));
+			lock (RegisteredInstances) {
+				WeakReference   existing;
+				IJavaObject     target;
+				if (RegisteredInstances.TryGetValue (key, out existing) && (target = (IJavaObject) existing.Target) != null)
+					throw new NotSupportedException (
+							string.Format ("Cannot register instance {0}(0x{1}), as an instance with the same handle {2}(0x{3}) has already been registered.",
+								value.GetType ().FullName, value.SafeHandle.DangerousGetHandle ().ToString ("x"),
+								target.GetType ().FullName, target.SafeHandle.DangerousGetHandle ().ToString ("x")));
+				RegisteredInstances [key] = new WeakReference (value, trackResurrection: true);
+			}
 			value.Registered = true;
 		}
 
