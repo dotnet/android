@@ -7,8 +7,7 @@ using NUnit.Framework;
 
 namespace Java.InteropTests
 {
-	public class JavaObjectArrayContractTest<T> : JavaArrayContract<T>
-		where T : class, IJavaObject, new()
+	public abstract class JavaObjectArrayContractTest<T> : JavaArrayContract<T>
 	{
 		protected override System.Collections.Generic.ICollection<T> CreateCollection (System.Collections.Generic.IEnumerable<T> values)
 		{
@@ -18,25 +17,27 @@ namespace Java.InteropTests
 				array [i] = items [i];
 			return array;
 		}
-
-		protected override T CreateValueA ()
-		{
-			return new T ();
-		}
-
-		protected override T CreateValueB ()
-		{
-			return new T ();
-		}
-
-		protected override T CreateValueC ()
-		{
-			return new T ();
-		}
 	}
 
 	[TestFixture]
 	public class JavaObjectArrayContractTest : JavaObjectArrayContractTest<JavaObject> {
+		protected override JavaObject CreateValueA () {return new JavaObject ();}
+		protected override JavaObject CreateValueB () {return new JavaObject ();}
+		protected override JavaObject CreateValueC () {return new JavaObject ();}
+	}
+
+	[TestFixture]
+	public class JavaObjectArray_string_ContractTest : JavaObjectArrayContractTest<string> {
+		protected override string CreateValueA () {return "a";}
+		protected override string CreateValueB () {return "b";}
+		protected override string CreateValueC () {return "c";}
+	}
+
+	[TestFixture]
+	public class JavaObjectArray_object_ContractTest : JavaObjectArrayContractTest<object> {
+		protected override object CreateValueA () {return new object ();}
+		protected override object CreateValueB () {return new object ();}
+		protected override object CreateValueC () {return new object ();}
 	}
 }
 

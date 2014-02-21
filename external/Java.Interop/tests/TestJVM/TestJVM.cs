@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Diagnostics;
 using System.Linq;
@@ -16,7 +17,11 @@ namespace Java.InteropTests
 		static JreVMBuilder CreateBuilder (string[] jars)
 		{
 			var builder = new JreVMBuilder ();
-			builder.AddSystemProperty ("java.class.path", string.Join (":", jars));
+			var _jars   = new List<string> (jars) {
+				"java-interop.jar",
+			};
+			_jars.AddRange (jars);
+			builder.AddSystemProperty ("java.class.path", string.Join (":", _jars));
 			return builder;
 		}
 

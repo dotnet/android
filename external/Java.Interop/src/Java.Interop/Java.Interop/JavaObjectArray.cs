@@ -3,7 +3,6 @@
 namespace Java.Interop
 {
 	public class JavaObjectArray<T> : JavaArray<T>
-		where T : class, IJavaObject
 	{
 		public JavaObjectArray (JniReferenceSafeHandle handle, JniHandleOwnership transfer)
 			: base (handle, transfer)
@@ -25,23 +24,18 @@ namespace Java.Interop
 		{
 		}
 
-		// TODO: remove `IJavaObject` constraint
 		public override T this [int index] {
 			get {
 				if (index < 0 || index >= Length)
 					throw new ArgumentOutOfRangeException ("index", "index < 0 || index >= Length");
 				var lref = JniEnvironment.Arrays.GetObjectArrayElement (SafeHandle, index);
-				return (T) JniEnvironment.Current.JavaVM.GetObject (lref, JniHandleOwnership.Transfer, typeof (T));
+				return JniMarshal.GetValue<T> (lref, JniHandleOwnership.Transfer);
 			}
 			set {
 				if (index < 0 || index >= Length)
 					throw new ArgumentOutOfRangeException ("index", "index < 0 || index >= Length");
-				if (value != null && !value.SafeHandle.IsInvalid)
-					value.RegisterWithVM ();
-				JniEnvironment.Arrays.SetObjectArrayElement (SafeHandle, index,
-						value == null || value.SafeHandle.IsInvalid
-						? JniReferenceSafeHandle.Null
-						: value.SafeHandle);
+				using (var h = JniMarshal.CreateLocalRef (value))
+					JniEnvironment.Arrays.SetObjectArrayElement (SafeHandle, index, h);
 			}
 		}
 	}

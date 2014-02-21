@@ -67,11 +67,17 @@
     <Compile Include="Java.Interop\JavaObjectArray.cs" />
     <Compile Include="Java.Interop\JniTypeInfoAttribute.cs" />
     <Compile Include="Java.Interop\JniTypeInfo.cs" />
+    <Compile Include="Java.Interop\JavaProxyObject.cs" />
+    <Compile Include="Java.Interop\JniMarshal.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <CompileJavaInteropJar Include="java\com\xamarin\android\internal\JavaProxyObject.java" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
   <PropertyGroup>
     <BuildDependsOn>
       BuildJniEnvironment_g_cs;
+      BuildInteropJar;
       $(BuildDependsOn)
     </BuildDependsOn>
   </PropertyGroup>
@@ -80,5 +86,13 @@
   </PropertyGroup>
   <Target Name="BuildJniEnvironment_g_cs" Inputs="$(OutputPath)\jnienv-gen.exe" Outputs="Java.Interop\JniEnvironment.g.cs">
     <Exec Command="$(Runtime) &quot;$(OutputPath)\jnienv-gen.exe&quot; Java.Interop\JniEnvironment.g.cs" />
+  </Target>
+  <ItemGroup>
+    <JavaInteropJar Include="$(OutputPath)java-interop.jar" />
+  </ItemGroup>
+  <Target Name="BuildInteropJar" Inputs="@(CompileJavaInteropJar)" Outputs="@(JavaInteropJar)">
+    <MakeDir Directories="$(OutputPath)ji-classes" />
+    <Exec Command="javac -d &quot;$(OutputPath)ji-classes&quot; @(CompileJavaInteropJar -&gt; '%(Identity)', ' ')" />
+    <Exec Command="jar cf &quot;$(OutputPath)java-interop.jar&quot; -C &quot;$(OutputPath)ji-classes&quot; ." />
   </Target>
 </Project>
