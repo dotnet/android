@@ -37,7 +37,7 @@ namespace Java.Interop {
 			}
 		}
 
-		public void Register ()
+		public void RegisterWithVM ()
 		{
 			AssertValid ();
 
@@ -128,7 +128,7 @@ namespace Java.Interop {
 				throw new JavaException ("Unable to register native methods.");
 			// Prevents method delegates from being GC'd so long as this type remains
 			this.methods = methods;
-			Register ();
+			RegisterWithVM ();
 		}
 
 		public void UnregisterNativeMethods ()

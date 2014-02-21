@@ -43,7 +43,7 @@ namespace Java.InteropTests
 			Assert.Throws<ObjectDisposedException> (() => t.GetSuperclass ());
 			Assert.Throws<ObjectDisposedException> (() => t.IsAssignableFrom (null));
 			Assert.Throws<ObjectDisposedException> (() => t.IsInstanceOfType (null));
-			Assert.Throws<ObjectDisposedException> (() => t.Register ());
+			Assert.Throws<ObjectDisposedException> (() => t.RegisterWithVM ());
 			Assert.Throws<ObjectDisposedException> (() => t.RegisterNativeMethods (null));
 			Assert.Throws<ObjectDisposedException> (() => t.UnregisterNativeMethods ());
 
@@ -118,12 +118,12 @@ namespace Java.InteropTests
 		}
 
 		[Test]
-		public void Register ()
+		public void RegisterWithVM ()
 		{
 			using (var Object_class = new JniType ("java/lang/Object")) {
 				Assert.AreEqual (JniReferenceType.Local, Object_class.SafeHandle.ReferenceType);
 				var cur = Object_class.SafeHandle;
-				Object_class.Register ();
+				Object_class.RegisterWithVM ();
 				Assert.AreEqual (JniReferenceType.Global, Object_class.SafeHandle.ReferenceType);
 				Assert.IsTrue (cur.IsInvalid);
 			}
