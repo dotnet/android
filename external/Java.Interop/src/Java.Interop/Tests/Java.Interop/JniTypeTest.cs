@@ -87,7 +87,7 @@ namespace Java.InteropTests
 		public void IsInstanceOfType ()
 		{
 			using (var t = new JniType ("java/lang/Object"))
-			using (var b = new TestObjectBinding ()) {
+			using (var b = new TestType ()) {
 				Assert.IsTrue (t.IsInstanceOfType (b.SafeHandle));
 			}
 		}
@@ -95,7 +95,7 @@ namespace Java.InteropTests
 		[Test]
 		public void ObjectBinding ()
 		{
-			using (var b = new TestObjectBinding ()) {
+			using (var b = new TestType ()) {
 				Console.WriteLine ("# ObjectBinding: {0}", b.ToString ());
 			}
 		}

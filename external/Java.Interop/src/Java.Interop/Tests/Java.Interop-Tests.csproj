@@ -43,7 +43,7 @@
     <Compile Include="Java.Interop\JniTypeTest.cs" />
     <Compile Include="Java.Interop\JVM.cs" />
     <Compile Include="Java.Interop\JniReferenceSafeHandleTest.cs" />
-    <Compile Include="Java.Interop\TestObjectBinding.cs" />
+    <Compile Include="Java.Interop\TestType.cs" />
     <Compile Include="Java.Interop\JavaObjectTest.cs" />
     <Compile Include="Java.Interop\JavaArrayContract.cs" />
     <Compile Include="Cadenza.Collections\CollectionContract.cs" />
