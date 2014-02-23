@@ -171,6 +171,31 @@ namespace Java.InteropTests
 			Assert.Throws<NotSupportedException> (() => new JavaObjectWithNoJavaPeer ());
 			Assert.Throws<JavaException> (() => new JavaObjectWithMissingJavaPeer ());
 		}
+
+		[Test]
+		public void CrossThreadSharingRequresRegistration ()
+		{
+			JavaObject o = null;
+			var t = new Thread (() => {
+					o = new JavaObject ();
+					o.RegisterWithVM ();
+			});
+			t.Start ();
+			t.Join ();
+			o.ToString ();
+			o.Dispose ();
+		}
+
+		[Test]
+		public void CrossThreadSharingNotSupported ()
+		{
+			JavaObject o = null;
+			var t = new Thread (() => o = new JavaObject ());
+			t.Start ();
+			t.Join ();
+			Assert.Throws<NotSupportedException> (() => o.ToString ());
+			o.Dispose ();
+		}
 	}
 
 	class JavaObjectWithNoJavaPeer : JavaObject {

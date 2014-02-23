@@ -96,6 +96,14 @@ namespace Java.Interop {
 				throw new ArgumentNullException ("self");
 			if (self.SafeHandle == null || self.SafeHandle.IsInvalid)
 				throw new ObjectDisposedException (self.GetType ().FullName);
+			if (self.SafeHandle.ReferenceType == JniReferenceType.Invalid) {
+				var t = self.GetType ().FullName;
+				throw new NotSupportedException (
+						"You've created a " + t + " in one thread and are using it " +
+						"from another thread without calling IJavaObject.Register(). " +
+						"Passing JNI local references between threads is not supported; " +
+						"call IJavaObject.RegisterWithVM() if sharing between threads is required.");
+			}
 		}
 
 		public int CallInstanceInt32Method (
