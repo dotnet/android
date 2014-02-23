@@ -30,8 +30,8 @@ namespace Java.InteropTests
 				GC.Collect ();
 				GC.WaitForPendingFinalizers ();
 				var first = JniEnvironment.Arrays.GetObjectArrayElement (grefArray, 0);
+				Assert.IsNotNull (JVM.Current.PeekObject (first));
 				var o = (JavaObject) JVM.Current.GetObject (first, JniHandleOwnership.Transfer);
-				Assert.IsNotNull (o);
 				if (oldHandle != o.SafeHandle.DangerousGetHandle ()) {
 					Console.WriteLine ("Yay, object handle changed; value survived a GC!");
 				} else {
@@ -46,23 +46,24 @@ namespace Java.InteropTests
 		public void RegisterWithVM ()
 		{
 			int registeredCount = JVM.Current.GetSurfacedObjects ().Count;
-			IntPtr h;
+			JniLocalReference l;
 			JavaObject o;
 			using (o = new JavaObject ()) {
-				var l   = o.SafeHandle;
-				h       = o.SafeHandle.DangerousGetHandle ();
+				l   = o.SafeHandle.NewLocalRef ();
 				Assert.AreEqual (JniReferenceType.Local, o.SafeHandle.ReferenceType);
 				Assert.AreEqual (registeredCount, JVM.Current.GetSurfacedObjects ().Count);
-				Assert.IsNull (JVM.Current.GetObject (h));
+				Assert.IsNull (JVM.Current.PeekObject (l));
 				o.RegisterWithVM ();
 				Assert.AreNotSame (l, o.SafeHandle);
 				Assert.AreEqual (JniReferenceType.Global, o.SafeHandle.ReferenceType);
-				h = o.SafeHandle.DangerousGetHandle ();
+				l.Dispose ();
+				l = o.SafeHandle.NewLocalRef ();
 				Assert.AreEqual (registeredCount + 1, JVM.Current.GetSurfacedObjects ().Count);
-				Assert.AreSame (o, JVM.Current.GetObject (h));
+				Assert.AreSame (o, JVM.Current.PeekObject (l));
 			}
 			Assert.AreEqual (registeredCount, JVM.Current.GetSurfacedObjects ().Count);
-			Assert.IsNull (JVM.Current.GetObject (h));
+			Assert.IsNull (JVM.Current.PeekObject (l));
+			l.Dispose ();
 			Assert.Throws<ObjectDisposedException> (() => o.RegisterWithVM ());
 		}
 
@@ -80,11 +81,11 @@ namespace Java.InteropTests
 		[Test]
 		public void UnreferencedInstanceIsCollected ()
 		{
-			var oldHandle   = IntPtr.Zero;
+			JniLocalReference oldHandle = null;
 			WeakReference r = null;
 			var t = new Thread (() => {
 					var v     = new JavaObject ();
-					oldHandle = v.SafeHandle.DangerousGetHandle ();
+					oldHandle = v.SafeHandle.NewLocalRef ();
 					r         = new WeakReference (v);
 					v.RegisterWithVM ();
 			});
@@ -94,7 +95,8 @@ namespace Java.InteropTests
 			GC.WaitForPendingFinalizers ();
 			Assert.IsFalse (r.IsAlive);
 			Assert.IsNull (r.Target);
-			Assert.IsNull (JVM.Current.GetObject (oldHandle));
+			Assert.IsNull (JVM.Current.PeekObject (oldHandle));
+			oldHandle.Dispose ();
 		}
 
 		[Test]

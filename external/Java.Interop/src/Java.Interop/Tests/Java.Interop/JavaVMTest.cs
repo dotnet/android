@@ -71,15 +71,15 @@ namespace Java.InteropTests
 			JniLocalReference lref;
 			using (var o = new JavaObject ()) {
 				lref = o.SafeHandle.NewLocalRef ();
-				Assert.IsNull (JVM.Current.GetObject (lref.DangerousGetHandle ()));
+				Assert.IsNull (JVM.Current.PeekObject (lref));
 				o.RegisterWithVM ();
-				Assert.AreSame (o, JVM.Current.GetObject (lref.DangerousGetHandle ()));
+				Assert.AreSame (o, JVM.Current.PeekObject (lref));
 			}
 			// At this point, the Java-side object is kept alive by `lref`,
 			// but the wrapper instance has been disposed, and thus should
 			// be unregistered, and thus unfindable.
-			Assert.IsNull (JVM.Current.GetObject (lref, JniHandleOwnership.Transfer));
-			Assert.IsTrue (lref.IsInvalid);
+			Assert.IsNull (JVM.Current.PeekObject (lref));
+			lref.Dispose ();
 		}
 
 		[Test]

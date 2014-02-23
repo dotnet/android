@@ -461,17 +461,42 @@ namespace Java.Interop
 		/// </param>
 		internal protected abstract bool TryGC (IJavaObject value, ref JniReferenceSafeHandle handle);
 
-		public IJavaObject GetObject (JniReferenceSafeHandle jniHandle, JniHandleOwnership transfer, Type targetType = null)
+		public IJavaObject PeekObject (JniReferenceSafeHandle handle)
 		{
-			if (jniHandle == null)
+			if (handle == null || handle.IsInvalid)
 				return null;
-			if (jniHandle.IsInvalid)
-				return null;
-			try {
-				return GetObject (jniHandle.DangerousGetHandle (), targetType);
-			} finally {
-				JniEnvironment.Handles.Dispose (jniHandle, transfer);
+			int key = JniSystem.IdentityHashCode (handle);
+			lock (RegisteredInstances) {
+				WeakReference               wv;
+				if (RegisteredInstances.TryGetValue (key, out wv)) {
+					IJavaObject   t = (IJavaObject) wv.Target;
+					if (t != null)
+						return t;
+					RegisteredInstances.Remove (key);
+				}
 			}
+			return null;
+		}
+
+		public IJavaObject GetObject (JniReferenceSafeHandle handle, JniHandleOwnership transfer, Type targetType = null)
+		{
+			if (handle == null || handle.IsInvalid)
+				return null;
+
+			var existing = PeekObject (handle);
+			if (existing != null && targetType != null && targetType.IsInstanceOfType (existing))
+				return existing;
+
+			return CreateObjectWrapper (handle, transfer, targetType);
+		}
+
+		protected virtual IJavaObject CreateObjectWrapper (JniReferenceSafeHandle handle, JniHandleOwnership transfer, Type targetType)
+		{
+			if (targetType == null)
+				return new JavaObject (handle, transfer);
+			if (!typeof (IJavaObject).IsAssignableFrom (targetType))
+				throw new ArgumentException ("targetType must implement IJavaObject!", "targetType");
+			return (IJavaObject)Activator.CreateInstance (targetType, handle, transfer);
 		}
 
 		public T GetObject<T> (JniReferenceSafeHandle jniHandle, JniHandleOwnership transfer)
@@ -484,23 +509,8 @@ namespace Java.Interop
 		{
 			if (jniHandle == IntPtr.Zero)
 				return null;
-			int key;
 			using (var h = new JniInvocationHandle (jniHandle))
-				key = JniSystem.IdentityHashCode (h);
-			lock (RegisteredInstances) {
-				WeakReference               wv;
-				if (RegisteredInstances.TryGetValue (key, out wv)) {
-					IJavaObject   t = (IJavaObject) wv.Target;
-					if (t != null)
-						return t;
-					RegisteredInstances.Remove (key);
-				}
-			}
-			if (targetType != null) {
-				using (var h = new JniInvocationHandle (jniHandle))
-					return (IJavaObject) Activator.CreateInstance (targetType, h, JniHandleOwnership.DoNotTransfer);
-			}
-			return null;
+				return GetObject (h, JniHandleOwnership.DoNotTransfer, targetType);
 		}
 
 		public T GetObject<T> (IntPtr jniHandle)
