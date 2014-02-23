@@ -195,6 +195,11 @@ namespace Java.Interop
 			if (current == this)
 				current = null;
 
+			foreach (var o in RegisteredInstances.Values) {
+				var t = (IDisposable) o.Target;
+				t.Dispose ();
+			}
+			RegisteredInstances.Clear ();
 			ClearTrackedReferences ();
 			JavaVM _;
 			JavaVMs.TryRemove (SafeHandle.DangerousGetHandle (), out _);
