@@ -30,7 +30,7 @@ namespace Java.Interop {
 		public      JniType     JniPeerType {
 			get {
 				var t = JniType.GetCachedJniType (ref jniPeerType, JniPeerTypeName);
-				JniEnvironment.Current.JavaVM.Track (t);
+				t.RegisterWithVM ();
 				return t;
 			}
 		}
