@@ -59,6 +59,21 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		public void GetObject_ReturnsAlias ()
+		{
+			var local   = new JavaObject ();
+			Assert.IsNull (JVM.Current.PeekObject (local.SafeHandle));
+			// GetObject must always return a value (unless handle is null, etc.).
+			// However, since we didn't call local.RegisterWithVM(),
+			// JavaVM.PeekObject() is null (asserted above), but GetObject() must
+			// **still** return _something_.
+			// In this case, it returns an _alias_.
+			// TODO: "most derived type" alias generation. (Not relevant here, but...)
+			var alias   = JVM.Current.GetObject (local.SafeHandle, JniHandleOwnership.DoNotTransfer);
+			Assert.AreNotSame (local, alias);
+		}
+
+		[Test]
 		public void GetObject_ReturnsNullWithNullHandle ()
 		{
 			var o = JVM.Current.GetObject (IntPtr.Zero);
