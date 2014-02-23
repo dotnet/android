@@ -177,6 +177,13 @@ namespace Java.Interop
 			Dispose (false);
 		}
 
+		public virtual void FailFast (string message)
+		{
+			var t = typeof (Environment);
+			var m = t.GetMethod ("FailFast");
+			m.Invoke (null, new object[]{ message });
+		}
+
 		public override string ToString ()
 		{
 			return string.Format ("{0}(0x{1})", GetType ().FullName, SafeHandle.DangerousGetHandle ().ToString ("x"));
@@ -420,16 +427,20 @@ namespace Java.Interop
 				return;
 			}
 
-			var  h          = value.SafeHandle;
-			bool collected  = TryGC (value, ref h);
-			if (collected) {
-				value.SetSafeHandle (null);
-				if (value.Registered)
-					UnRegisterObject (value);
-				value.Dispose (disposing: false);
-			} else {
-				value.SetSafeHandle (h);
-				GC.ReRegisterForFinalize (value);
+			try {
+				var  h          = value.SafeHandle;
+				bool collected = TryGC (value, ref h);;
+				if (collected) {
+					value.SetSafeHandle (null);
+					if (value.Registered)
+						UnRegisterObject (value);
+					value.Dispose (disposing: false);
+				} else {
+					value.SetSafeHandle (h);
+					GC.ReRegisterForFinalize (value);
+				}
+			} catch (Exception e) {
+				FailFast ("Unable to perform a GC! " + e);
 			}
 		}
 

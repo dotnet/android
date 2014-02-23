@@ -56,7 +56,7 @@ namespace Java.InteropTests
 		protected override void LogCreateLocalRef (JniEnvironmentSafeHandle environmentHandle, JniLocalReference value)
 		{
 			base.LogCreateLocalRef (environmentHandle, value);
-			if (lrefLog == null)
+			if (lrefLog == null || value == null || value.IsInvalid)
 				return;
 			var t = Thread.CurrentThread;
 			LogLref ("+l+ thread '{0}'({1}) lrefc {2} -> new-handle 0x{3}/{4} from{5}{6}",
@@ -81,7 +81,7 @@ namespace Java.InteropTests
 		protected override void LogCreateLocalRef (JniEnvironmentSafeHandle environmentHandle, JniLocalReference value, JniReferenceSafeHandle sourceValue)
 		{
 			base.LogCreateLocalRef (environmentHandle, value, sourceValue);
-			if (grefLog == null)
+			if (lrefLog == null || value == null || value.IsInvalid)
 				return;
 			var t = Thread.CurrentThread;
 			LogLref ("+l+ thread '{0}'({1}) lrefc {2} obj-handle 0x{3}/{4} -> new-handle 0x{5}/{6} from{7}{8}",
@@ -115,7 +115,7 @@ namespace Java.InteropTests
 		protected override void LogCreateGlobalRef (JniGlobalReference value, JniReferenceSafeHandle sourceValue)
 		{
 			base.LogCreateGlobalRef (value, sourceValue);
-			if (grefLog == null)
+			if (grefLog == null || value == null || value.IsInvalid)
 				return;
 			LogGref ("+g+ grefc {0} gwrefc {1} obj-handle 0x{2}/{3} -> new-handle 0x{4}/{5} from {6}",
 					GlobalReferenceCount,
@@ -152,7 +152,7 @@ namespace Java.InteropTests
 		protected override void LogCreateWeakGlobalRef (JniWeakGlobalReference value, JniReferenceSafeHandle sourceValue)
 		{
 			base.LogCreateWeakGlobalRef (value, sourceValue);
-			if (grefLog == null)
+			if (grefLog == null || value == null || value.IsInvalid)
 				return;
 			LogGref ("+w+ grefc {0} gwrefc {1} obj-handle 0x{2}/{3} -> new-handle 0x{4}/{5} from {6}",
 					GlobalReferenceCount,
