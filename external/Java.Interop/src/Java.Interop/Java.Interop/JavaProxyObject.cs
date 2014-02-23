@@ -8,18 +8,21 @@ namespace Java.Interop {
 	{
 		internal const string JniTypeName = "com/xamarin/android/internal/JavaProxyObject";
 
-		static  readonly    JniType                                         TypeRef;
-		static  readonly    ConditionalWeakTable<object, JavaProxyObject>   CachedValues;
+		static  readonly    JniPeerMembers                                  _members        = new JniPeerMembers (JniTypeName, typeof (JavaProxyObject));
+		static  readonly    ConditionalWeakTable<object, JavaProxyObject>   CachedValues    = new ConditionalWeakTable<object, JavaProxyObject> ();
 
 		static JavaProxyObject ()
 		{
-			TypeRef = new JniType (JniTypeName);
-			TypeRef.RegisterWithVM ();
-			TypeRef.RegisterNativeMethods (
+			_members.JniPeerType.RegisterNativeMethods (
 					new JniNativeMethodRegistration ("equals",      "(Ljava/lang/Object;)Z",    (Func<IntPtr, IntPtr, IntPtr, bool>)    _Equals),
 					new JniNativeMethodRegistration ("hashCode",    "()I",                      (Func<IntPtr, IntPtr, int>)             _GetHashCode),
 					new JniNativeMethodRegistration ("toString",    "()Ljava/lang/String;",     (Func<IntPtr, IntPtr, IntPtr>)          _ToString));
-			CachedValues = new ConditionalWeakTable<object, JavaProxyObject> ();
+		}
+
+		public override JniPeerMembers JniPeerMembers {
+			get {
+				return _members;
+			}
 		}
 
 		JavaProxyObject (object value)
