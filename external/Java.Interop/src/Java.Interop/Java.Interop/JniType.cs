@@ -68,6 +68,7 @@ namespace Java.Interop {
 			var t = new JniType (classname);
 			if (Interlocked.CompareExchange (ref cachedType, t, null) != null)
 				t.Dispose ();
+			cachedType.RegisterWithVM ();
 			return cachedType;
 		}
 
