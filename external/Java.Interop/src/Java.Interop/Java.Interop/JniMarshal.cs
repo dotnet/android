@@ -15,6 +15,11 @@ namespace Java.Interop {
 			if (proxy != null)
 				return (T) proxy.Value;
 
+			var info = jvm.GetJniTypeInfoForType (typeof (T));
+			if (info.MarshalFromJni != null) {
+				return (T) info.MarshalFromJni (handle, transfer, typeof (T));
+			}
+
 			return (T) jvm.GetObject (handle, transfer, typeof (T));
 		}
 
@@ -24,6 +29,12 @@ namespace Java.Interop {
 				JavaProxyObject.GetProxy (value);
 			if (o == null || o.SafeHandle.IsInvalid)
 				return new JniLocalReference ();
+
+			var info = JniEnvironment.Current.JavaVM.GetJniTypeInfoForType (typeof (T));
+			if (info.MarshalToJni != null) {
+				return info.MarshalToJni (value);
+			}
+
 			return o.SafeHandle.NewLocalRef ();
 		}
 	}

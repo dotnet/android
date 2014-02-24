@@ -39,6 +39,14 @@ namespace Java.InteropTests
 		protected override string CreateValueA () {return "a";}
 		protected override string CreateValueB () {return "b";}
 		protected override string CreateValueC () {return "c";}
+
+		[Test]
+		public void ObjectArrayType ()
+		{
+			var c = CreateCollection (new string[0]);
+			Assert.AreEqual ("[Ljava/lang/String;", JniEnvironment.Types.GetJniTypeNameFromInstance (((IJavaObject) c).SafeHandle));
+			Dispose (c);
+		}
 	}
 
 	[TestFixture]

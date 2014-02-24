@@ -34,6 +34,26 @@ namespace Java.InteropTests
 			var a = new JniTypeInfo ("I");
 			Assert.Throws<ArgumentException> (() => a.ArrayRank = -1);
 		}
+
+		[Test]
+		public void JniTypeReference ()
+		{
+			var info    = new JniTypeInfo ("java/lang/String");
+			Assert.AreEqual ("Ljava/lang/String;",  info.JniTypeReference);
+			Assert.AreEqual ("java/lang/String",    info.ToString ());
+
+			info    = new JniTypeInfo ("java/lang/String", arrayRank:1);
+			Assert.AreEqual ("[Ljava/lang/String;", info.JniTypeReference);
+			Assert.AreEqual ("[Ljava/lang/String;", info.ToString ());
+
+			info    = new JniTypeInfo ("B", typeIsKeyword: true);
+			Assert.AreEqual ("B",   info.JniTypeReference);
+			Assert.AreEqual ("B",   info.ToString ());
+
+			info    = new JniTypeInfo ("B", typeIsKeyword: true, arrayRank: 2);
+			Assert.AreEqual ("[[B", info.JniTypeReference);
+			Assert.AreEqual ("[[B", info.ToString ());
+		}
 	}
 }
 

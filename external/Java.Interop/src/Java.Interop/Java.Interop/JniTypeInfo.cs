@@ -26,6 +26,17 @@ namespace Java.Interop
 
 		public bool TypeIsKeyword { get; set; }
 
+		public string JniTypeReference {
+			get {
+				string typename = TypeIsKeyword
+					? JniTypeName
+					: "L" + JniTypeName + ";";
+				return ArrayRank == 0
+					? typename
+					: new string ('[', ArrayRank) + typename;
+			}
+		}
+
 		public JniTypeInfo (string jniTypeName, bool typeIsKeyword = false, int arrayRank = 0)
 		{
 			if (jniTypeName != null && jniTypeName.Contains ("."))
@@ -41,6 +52,9 @@ namespace Java.Interop
 			ArrayRank       = arrayRank;
 			TypeIsKeyword   = typeIsKeyword;
 		}
+
+		public Func<JniReferenceSafeHandle, JniHandleOwnership, Type, object>   MarshalFromJni;
+		public Func<object, JniLocalReference>                                  MarshalToJni;
 
 		public override string ToString ()
 		{

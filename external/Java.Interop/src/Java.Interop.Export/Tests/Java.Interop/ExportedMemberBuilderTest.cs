@@ -99,12 +99,19 @@ namespace Java.InteropTests
 			// Note: export.Signature updated
 			Assert.AreEqual ("()V", export.Signature);
 
-			// Note: string currently has no builtin marshaling defaults
 			Action<string> s    = v => {};
-			Assert.Throws<NotSupportedException> (() => builder.GetJniMethodSignature (new ExportAttribute (), s.Method));
+			Assert.AreEqual ("(Ljava/lang/String;)V", builder.GetJniMethodSignature (new ExportAttribute (), s.Method));
 
 			Func<string> fs     = () => null;
-			Assert.Throws<NotSupportedException> (() => builder.GetJniMethodSignature (new ExportAttribute (), fs.Method));
+			Assert.AreEqual ("()Ljava/lang/String;", builder.GetJniMethodSignature (new ExportAttribute (), fs.Method));
+
+			// Note: AppDomain currently has no builtin marshaling defaults
+			// TODO: but should it? We could default wrap to JavaProxyObject...?
+			Action<AppDomain> aad    = v => {};
+			Assert.Throws<NotSupportedException> (() => builder.GetJniMethodSignature (new ExportAttribute (), aad.Method));
+
+			Func<AppDomain> fad    = () => null;
+			Assert.Throws<NotSupportedException> (() => builder.GetJniMethodSignature (new ExportAttribute (), fad.Method));
 		}
 
 		[Test]

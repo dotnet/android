@@ -113,8 +113,7 @@ namespace Java.InteropTests
 			Assert.Throws<ArgumentException>(() => JVM.Current.GetJniTypeInfoForType (typeof (int[][,])));
 			Assert.Throws<ArgumentException>(() => JVM.Current.GetJniTypeInfoForType (typeof (Action<>)));
 
-			// TODO? Not currently mapped to java/lang/String; should it?
-			AssertGetJniTypeInfoForType (typeof (string),   null,   false,  0);
+			AssertGetJniTypeInfoForType (typeof (string),   "java/lang/String",   false,  0);
 
 			AssertGetJniTypeInfoForType (typeof (sbyte),    "B",    true,   0);
 			AssertGetJniTypeInfoForType (typeof (short),    "S",    true,   0);

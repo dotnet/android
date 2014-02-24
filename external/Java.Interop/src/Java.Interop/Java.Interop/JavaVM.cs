@@ -565,6 +565,11 @@ namespace Java.Interop
 		}
 
 		static readonly KeyValuePair<Type, JniTypeInfo>[] JniBuiltinTypeNameMappings = new []{
+			new KeyValuePair<Type, JniTypeInfo>(typeof (string),    new JniTypeInfo ("java/lang/String") {
+				MarshalFromJni  = (h, t, _) => JniEnvironment.Strings.ToString (h, t),
+				MarshalToJni    = v         => JniEnvironment.Strings.NewString ((string) v),
+			}),
+
 			new KeyValuePair<Type, JniTypeInfo>(typeof (void),      new JniTypeInfo ("V",   true)),
 
 			new KeyValuePair<Type, JniTypeInfo>(typeof (sbyte),     new JniTypeInfo ("B",   true)),

@@ -75,13 +75,13 @@ namespace Java.Interop {
 				var info = JavaVM.GetJniTypeInfoForType (p.ParameterType);
 				if (info.JniTypeName == null)
 					throw new NotSupportedException ("Don't know how to determine JNI signature for parameter type: " + p.ParameterType.FullName + ".");
-				signature.Append (info.ToString ());
+				signature.Append (info.JniTypeReference);
 			}
 			signature.Append (")");
 			var ret = JavaVM.GetJniTypeInfoForType (method.ReturnType);
 			if (ret.JniTypeName == null)
 				throw new NotSupportedException ("Don't know how to determine JNI signature for return type: " + method.ReturnType.FullName + ".");
-			signature.Append (ret.ToString ());
+			signature.Append (ret.JniTypeReference);
 			return export.Signature = signature.ToString ();
 		}
 
