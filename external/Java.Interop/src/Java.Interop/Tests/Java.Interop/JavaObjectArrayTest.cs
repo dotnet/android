@@ -24,6 +24,14 @@ namespace Java.InteropTests
 		protected override JavaObject CreateValueA () {return new JavaObject ();}
 		protected override JavaObject CreateValueB () {return new JavaObject ();}
 		protected override JavaObject CreateValueC () {return new JavaObject ();}
+
+		[Test]
+		public void ObjectArrayType ()
+		{
+			var c = CreateCollection (new JavaObject [0]);
+			Assert.AreEqual ("[Ljava/lang/Object;", JniEnvironment.Types.GetJniTypeNameFromInstance (((IJavaObject) c).SafeHandle));
+			Dispose (c);
+		}
 	}
 
 	[TestFixture]
@@ -38,6 +46,14 @@ namespace Java.InteropTests
 		protected override object CreateValueA () {return new object ();}
 		protected override object CreateValueB () {return new object ();}
 		protected override object CreateValueC () {return new object ();}
+
+		[Test]
+		public void ObjectArrayType ()
+		{
+			var c = CreateCollection (new object[0]);
+			Assert.AreEqual ("[Ljava/lang/Object;", JniEnvironment.Types.GetJniTypeNameFromInstance (((IJavaObject) c).SafeHandle));
+			Dispose (c);
+		}
 	}
 }
 

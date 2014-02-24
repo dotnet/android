@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 
 namespace Java.Interop
 {
@@ -11,6 +12,19 @@ namespace Java.Interop
 				if (!lref.IsInvalid)
 					return new JniType (lref, JniHandleOwnership.Transfer);
 				return null;
+			}
+
+			public static string GetJniTypeNameFromInstance (JniReferenceSafeHandle handle)
+			{
+				using (var c = GetObjectClass (handle)) {
+					var s = JniEnvironment.Current.Class_getName.CallVirtualObjectMethod (c);
+					return JavaClassToJniType (Strings.ToString (s, JniHandleOwnership.Transfer));
+				}
+			}
+
+			static string JavaClassToJniType (string value)
+			{
+				return value.Replace ('.', '/');
 			}
 		}
 	}

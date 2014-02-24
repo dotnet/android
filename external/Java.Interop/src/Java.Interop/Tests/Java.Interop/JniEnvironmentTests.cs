@@ -37,6 +37,15 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		public void Types_GetJniTypeNameFromInstance ()
+		{
+			using (var o = new JavaObject ())
+				Assert.AreEqual ("java/lang/Object", JniEnvironment.Types.GetJniTypeNameFromInstance (o.SafeHandle));
+			using (var o = new JavaInt32Array (0))
+				Assert.AreEqual ("[I", JniEnvironment.Types.GetJniTypeNameFromInstance (o.SafeHandle));
+		}
+
+		[Test]
 		public void Handles_NewReturnToJniRef ()
 		{
 			using (var t = new JniType ("java/lang/Object")) {

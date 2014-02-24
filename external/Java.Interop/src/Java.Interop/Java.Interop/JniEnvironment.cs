@@ -52,6 +52,9 @@ namespace Java.Interop {
 
 			Object_class    = new JniType ("java/lang/Object");
 			Object_toString = Object_class.GetInstanceMethod ("toString", "()Ljava/lang/String;");
+
+			using (var t = new JniType ("java/lang/Class"))
+				Class_getName = t.GetInstanceMethod ("getName", "()Ljava/lang/String;");
 		}
 
 		internal JniEnvironmentInvoker Invoker;
@@ -141,6 +144,7 @@ namespace Java.Interop {
 
 		            JniType             Object_class;
 		internal    JniInstanceMethodID Object_toString;
+		internal    JniInstanceMethodID Class_getName;
 
 		public Exception GetExceptionForLastThrowable ()
 		{
