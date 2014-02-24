@@ -54,6 +54,7 @@
     <Compile Include="Java.Interop\JniWeakGlobalReference.cs" />
     <Compile Include="Java.Interop\JniLocalReference.cs" />
     <Compile Include="Java.Interop\JavaException.cs" />
+    <Compile Include="Java.Interop\JavaObjectExtensions.cs" />
     <Compile Include="Java.Interop\JniHandleOwnership.cs" />
     <Compile Include="Java.Interop\JniNativeMethodRegistration.cs" />
     <Compile Include="Java.Interop\JniFieldID.cs" />
