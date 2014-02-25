@@ -146,11 +146,13 @@ namespace Cadenza.Collections.Tests {
 			var c = CreateCollection (new []{a, b});
 			Assert.IsTrue (c.Contains (a));
 			Assert.IsTrue (c.Contains (b));
-			Assert.IsFalse (c.Contains (CreateValueC ()));
+			var ic = CreateValueC ();
+			Assert.IsFalse (c.Contains (ic));
 
 			Dispose (c);
 			Dispose (b);
 			Dispose (a);
+			Dispose (ic);
 		}
 
 		[Test]

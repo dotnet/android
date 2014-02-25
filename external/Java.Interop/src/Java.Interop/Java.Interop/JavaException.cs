@@ -72,7 +72,13 @@ namespace Java.Interop
 
 		public void Dispose ()
 		{
+			if (SafeHandle == null)
+				return;
 			JniEnvironment.Current.JavaVM.DisposeObject (this);
+			var inner = InnerException as JavaException;
+			if (inner != null) {
+				inner.Dispose ();
+			}
 		}
 
 		protected virtual void Dispose (bool disposing)

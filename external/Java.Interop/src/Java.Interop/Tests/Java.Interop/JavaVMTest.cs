@@ -71,6 +71,7 @@ namespace Java.InteropTests
 			// TODO: "most derived type" alias generation. (Not relevant here, but...)
 			var alias   = JVM.Current.GetObject (local.SafeHandle, JniHandleOwnership.DoNotTransfer);
 			Assert.AreNotSame (local, alias);
+			alias.Dispose ();
 		}
 
 		[Test]

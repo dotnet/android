@@ -12,8 +12,10 @@ namespace Java.Interop {
 			var jvm     = JniEnvironment.Current.JavaVM;
 			var target  = jvm.PeekObject (handle);
 			var proxy   = target as JavaProxyObject;
-			if (proxy != null)
+			if (proxy != null) {
+				JniEnvironment.Handles.Dispose (handle, transfer);
 				return (T) proxy.Value;
+			}
 
 			var info = jvm.GetJniTypeInfoForType (typeof (T));
 			if (info.MarshalFromJni != null) {
