@@ -72,6 +72,7 @@ namespace Java.InteropTests
 			var alias   = JVM.Current.GetObject (local.SafeHandle, JniHandleOwnership.DoNotTransfer);
 			Assert.AreNotSame (local, alias);
 			alias.Dispose ();
+			local.Dispose ();
 		}
 
 		[Test]

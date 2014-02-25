@@ -25,7 +25,7 @@ namespace Java.InteropTests
 		[Test]
 		public void Ctor_ThrowsIfTypeNotFound ()
 		{
-			Assert.Throws<JavaException> (() => new JniType ("__this__/__type__/__had__/__better__/__not__/__Exist__"));
+			Assert.Throws<JavaException> (() => new JniType ("__this__/__type__/__had__/__better__/__not__/__Exist__")).Dispose ();
 		}
 
 		[Test]
@@ -104,7 +104,7 @@ namespace Java.InteropTests
 		public void InvalidSignatureThrowsJniException ()
 		{
 			using (var Integer_class = new JniType ("java/lang/Integer")) {
-				Assert.Throws<JavaException> (() => Integer_class.GetConstructor ("(C)V"));
+				Assert.Throws<JavaException> (() => Integer_class.GetConstructor ("(C)V")).Dispose ();
 			}
 		}
 

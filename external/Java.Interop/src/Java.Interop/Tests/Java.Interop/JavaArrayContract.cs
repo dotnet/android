@@ -22,9 +22,8 @@ namespace Java.InteropTests
 			var a   = ja.ToArray ();
 			Assert.IsTrue (expected.SequenceEqual (a));
 			ja.Dispose ();
-			Dispose (expected [0]);
-			Dispose (expected [1]);
-			Dispose (expected [2]);
+			DisposeCollection (a);
+			DisposeCollection (expected);
 		}
 	}
 }

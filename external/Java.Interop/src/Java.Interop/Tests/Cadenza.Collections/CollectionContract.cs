@@ -79,6 +79,14 @@ namespace Cadenza.Collections.Tests {
 				d.Dispose ();
 		}
 
+		protected static void DisposeCollection (IEnumerable c)
+		{
+			if (c == null)
+				return;
+			foreach (var e in c)
+				Dispose (e);
+		}
+
 		[Test]
 		public void Ctor_CopySequence ()
 		{
@@ -91,8 +99,7 @@ namespace Cadenza.Collections.Tests {
 			Assert.AreEqual (3, c.Count);
 
 			Dispose (c);
-			foreach (var v in e)
-				Dispose (e);
+			DisposeCollection (e);
 		}
 
 		[Test]
@@ -172,8 +179,7 @@ namespace Cadenza.Collections.Tests {
 			Assert.Throws<ArgumentException>(() => c.CopyTo (new T [0], 0));
 
 			Dispose (c);
-			foreach (var v in e)
-				Dispose (v);
+			DisposeCollection (e);
 		}
 
 		// can fail for IDictionary<TKey,TValue> implementations; override if appropriate.
@@ -192,6 +198,7 @@ namespace Cadenza.Collections.Tests {
 			}.SequenceEqual (d));
 
 			Dispose (coll);
+			DisposeCollection (d);
 			Dispose (c);
 			Dispose (b);
 			Dispose (a);
@@ -212,6 +219,7 @@ namespace Cadenza.Collections.Tests {
 			Assert.IsTrue (Array.IndexOf (d, c) >= 0);
 
 			Dispose (coll);
+			DisposeCollection (d);
 			Dispose (c);
 			Dispose (b);
 			Dispose (a);

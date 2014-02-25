@@ -174,7 +174,8 @@ namespace Cadenza.Collections.Tests {
 
 			var list = CreateList (new []{a});
 
-			Assert.AreEqual (a, list [0]);
+			var e = list [0];
+			Assert.AreEqual (a, e);
 			Assert.Throws<ArgumentOutOfRangeException>(() => Ignore (list [-1]));
 
 			try {
@@ -192,6 +193,7 @@ namespace Cadenza.Collections.Tests {
 			Dispose (list);
 			Dispose (a);
 			Dispose (b);
+			Dispose (e);
 		}
 	}
 }

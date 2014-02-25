@@ -8,6 +8,8 @@ namespace Java.Interop
 
 			public static unsafe JniLocalReference NewString (string value)
 			{
+				if (value == null)
+					return new JniLocalReference ();
 				fixed (char* s = value)
 					return NewString ((IntPtr) s, value.Length);
 			}
