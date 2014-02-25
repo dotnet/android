@@ -81,6 +81,13 @@ namespace Java.Interop
 			}
 		}
 
+		public void DisposeUnlessRegistered ()
+		{
+			if (registered)
+				return;
+			Dispose ();
+		}
+
 		protected virtual void Dispose (bool disposing)
 		{
 		}

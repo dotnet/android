@@ -50,27 +50,43 @@ namespace Java.InteropTests
 				var self    = jvm.GetObject<TestType>(n_self);
 				var value   = jvm.GetObject (n_value);
 
-				return self.EqualsThis (value);
+				try {
+					return self.EqualsThis (value);
+				} finally {
+					self.DisposeUnlessRegistered ();
+					value.DisposeUnlessRegistered ();
+				}
 			};
 			return h;
 		}
 
 		static Delegate GetInt32ValueHandler ()
 		{
-			Func<IntPtr, IntPtr, int> h = (jnienv, self) => {
+			Func<IntPtr, IntPtr, int> h = (jnienv, n_self) => {
 				JniEnvironment.CheckCurrent (jnienv);
-				return JniEnvironment.Current.JavaVM.GetObject<TestType>(self).GetInt32Value ();
+
+				var self = JniEnvironment.Current.JavaVM.GetObject<TestType>(n_self);
+				try {
+					return self.GetInt32Value ();
+				} finally {
+					self.DisposeUnlessRegistered ();
+				}
 			};
 			return h;
 		}
 
 		static Delegate GetStringValueHandler ()
 		{
-			Func<IntPtr, IntPtr, int, IntPtr> h = (jnienv, self, value) => {
+			Func<IntPtr, IntPtr, int, IntPtr> h = (jnienv, n_self, value) => {
 				JniEnvironment.CheckCurrent (jnienv);
-				var s = JniEnvironment.Current.JavaVM.GetObject<TestType>(self).GetStringValue (value);
-				using (var r = JniEnvironment.Strings.NewString (s))
-					return JniEnvironment.Handles.NewReturnToJniRef (r);
+				var self = JniEnvironment.Current.JavaVM.GetObject<TestType>(n_self);
+				try {
+					var s = self.GetStringValue (value);
+					using (var r = JniEnvironment.Strings.NewString (s))
+						return JniEnvironment.Handles.NewReturnToJniRef (r);
+				} finally {
+					self.DisposeUnlessRegistered ();
+				}
 			};
 			return h;
 		}

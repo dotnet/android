@@ -23,9 +23,17 @@ namespace Java.Interop
 		public virtual int IndexOf (T item)
 		{
 			int len = Length;
-			for (int i = 0; i < len; i++)
-				if (EqualityComparer<T>.Default.Equals (item, this [i]))
-					return i;
+			for (int i = 0; i < len; i++) {
+				var at = this [i];
+				try {
+					if (EqualityComparer<T>.Default.Equals (item, at))
+						return i;
+				} finally {
+					var j = at as IJavaObject;
+					if (j != null)
+						j.DisposeUnlessRegistered ();
+				}
+			}
 			return -1;
 		}
 

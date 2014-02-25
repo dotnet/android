@@ -8,6 +8,7 @@ namespace Java.Interop
 		JniPeerMembers          JniPeerMembers {get;}
 
 		void    RegisterWithVM ();
+		void    DisposeUnlessRegistered ();
 	}
 }
 

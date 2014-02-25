@@ -62,6 +62,13 @@ namespace Java.Interop
 			JniEnvironment.Current.JavaVM.DisposeObject (this);
 		}
 
+		public void DisposeUnlessRegistered ()
+		{
+			if (registered)
+				return;
+			Dispose ();
+		}
+
 		protected virtual void Dispose (bool disposing)
 		{
 		}
