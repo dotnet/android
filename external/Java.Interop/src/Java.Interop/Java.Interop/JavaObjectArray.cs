@@ -14,6 +14,10 @@ namespace Java.Interop
 			var info = JniEnvironment.Current.JavaVM.GetJniTypeInfoForType (typeof (T));
 			if (info.JniTypeName == null)
 				info.JniTypeName = "java/lang/Object";
+			if (info.TypeIsKeyword && info.ArrayRank == 0) {
+				if (info.JniTypeName == "I")
+					info.JniTypeName = JniInteger.JniTypeName;
+			}
 			using (var t = new JniType (info.ToString ())) {
 				return JniEnvironment.Arrays.NewObjectArray (length, t.SafeHandle, JniReferenceSafeHandle.Null);
 			}

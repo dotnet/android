@@ -35,6 +35,21 @@ namespace Java.InteropTests
 	}
 
 	[TestFixture]
+	public class JavaObjectArray_Int32_ContractTest : JavaObjectArrayContractTest<int> {
+		protected override int  CreateValueA () {return 1;}
+		protected override int  CreateValueB () {return 2;}
+		protected override int  CreateValueC () {return 3;}
+
+		[Test]
+		public void ObjectArrayType ()
+		{
+			var c = CreateCollection (new int[0]);
+			Assert.AreEqual ("[Ljava/lang/Integer;", ((IJavaObject) c).GetJniTypeName ());
+			Dispose (c);
+		}
+	}
+
+	[TestFixture]
 	public class JavaObjectArray_string_ContractTest : JavaObjectArrayContractTest<string> {
 		protected override string CreateValueA () {return "a";}
 		protected override string CreateValueB () {return "b";}

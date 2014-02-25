@@ -38,5 +38,32 @@ namespace Java.Interop {
 			return o.SafeHandle.NewLocalRef ();
 		}
 	}
+
+	static class JniInteger {
+		internal    const   string  JniTypeName = "java/lang/Integer";
+
+		static JniType _TypeRef;
+		static JniType TypeRef {
+			get {return JniType.GetCachedJniType (ref _TypeRef, JniTypeName);}
+		}
+
+		static JniInstanceMethodID init;
+		public static JniLocalReference NewValue (int value)
+		{
+			TypeRef.GetCachedConstructor (ref init, "(I)V");
+			return TypeRef.NewObject (init, new JValue (value));
+		}
+
+		static JniInstanceMethodID intValue;
+		public static int GetValue (JniReferenceSafeHandle self, JniHandleOwnership transfer)
+		{
+			TypeRef.GetCachedInstanceMethod (ref intValue, "intValue", "()I");
+			try {
+				return intValue.CallVirtualInt32Method (self);
+			} finally {
+				JniEnvironment.Handles.Dispose (self, transfer);
+			}
+		}
+	}
 }
 
