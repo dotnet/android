@@ -10,6 +10,21 @@ namespace Java.InteropTests
 {
 	public abstract class JavaArrayContract<T> : ListContract<T>
 	{
+		int lrefStartCount;
+
+		[TestFixtureSetUp]
+		public void StartArrayTests ()
+		{
+			lrefStartCount  = JniEnvironment.Current.LocalReferenceCount;
+		}
+
+		[TestFixtureTearDown]
+		public void EndArrayTests ()
+		{
+			int lref    = JniEnvironment.Current.LocalReferenceCount;
+			Assert.AreEqual (lrefStartCount, lref, "JNI local references");
+		}
+
 		[Test]
 		public void ToArray ()
 		{
