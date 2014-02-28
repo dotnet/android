@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 using Java.Interop;
@@ -12,6 +13,14 @@ namespace Java.InteropTests
 		protected override System.Collections.Generic.ICollection<T> CreateCollection (System.Collections.Generic.IEnumerable<T> values)
 		{
 			return new JavaObjectArray<T> (values);
+		}
+
+		[Test]
+		public void Constructor_Exceptions ()
+		{
+			Assert.Throws<ArgumentNullException> (() => new JavaObjectArray<T> ((IEnumerable<T>)null));
+			Assert.Throws<ArgumentNullException> (() => new JavaObjectArray<T> ((IList<T>)null));
+			Assert.Throws<ArgumentException> (() => new JavaObjectArray<T> (-1));
 		}
 	}
 
