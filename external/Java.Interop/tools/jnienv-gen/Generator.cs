@@ -54,6 +54,7 @@ namespace Xamarin.Java.Interop
 			o.WriteLine ("// To make changes, edit monodroid/tools/jnienv-gen-interop and rerun");
 			o.WriteLine ();
 			o.WriteLine ("using System;");
+			o.WriteLine ("using System.Linq;");
 			o.WriteLine ("using System.Runtime.InteropServices;");
 			o.WriteLine ("using System.Threading;");
 			o.WriteLine ();
@@ -230,7 +231,18 @@ namespace Xamarin.Java.Interop
 			o.WriteLine ("\t\t}");
 			o.WriteLine ();
 			o.WriteLine ("\t\tpublic Java{0}Array (int length)", typeModifier);
-			o.WriteLine ("\t\t\t: base (JniEnvironment.Arrays.New{0}Array (length), JniHandleOwnership.Transfer)", jniType);
+			o.WriteLine ("\t\t\t: base (JniEnvironment.Arrays.New{0}Array (CheckLength (length)), JniHandleOwnership.Transfer)", jniType);
+			o.WriteLine ("\t\t{");
+			o.WriteLine ("\t\t}");
+			o.WriteLine ();
+			o.WriteLine ("\t\tpublic Java{0}Array (System.Collections.Generic.IList<{1}> value)", typeModifier, managedType);
+			o.WriteLine ("\t\t\t: this (CheckLength (value))");
+			o.WriteLine ("\t\t{");
+			o.WriteLine ("\t\t\tCopyFrom (_ToArray (value), 0, 0, value.Count);");
+			o.WriteLine ("\t\t}");
+			o.WriteLine ();
+			o.WriteLine ("\t\tpublic Java{0}Array (System.Collections.Generic.IEnumerable<{1}> value)", typeModifier, managedType);
+			o.WriteLine ("\t\t\t: this (_ToArray (value))");
 			o.WriteLine ("\t\t{");
 			o.WriteLine ("\t\t}");
 			o.WriteLine ();

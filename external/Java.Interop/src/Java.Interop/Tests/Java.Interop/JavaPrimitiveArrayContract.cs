@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 using Java.Interop;
 
@@ -35,15 +36,29 @@ namespace Java.InteropTests
 
 		protected override ICollection<TElement> CreateCollection (IEnumerable<TElement> values)
 		{
-			var elements    = values.ToArray ();
-			var array       = (JavaPrimitiveArray<TElement>) Activator.CreateInstance (typeof (TArray), elements.Length);
-			array.CopyFrom (elements, 0, 0, elements.Length);
+			var array       = (JavaPrimitiveArray<TElement>) Activator.CreateInstance (typeof (TArray), values);
 			return array;
 		}
 
 		protected TElement FromInt32 (int value)
 		{
 			return (TElement) Convert.ChangeType (value, typeof(TElement));
+		}
+
+		[Test]
+		public void Constructor_Exceptions ()
+		{
+			var ctor = typeof (TArray).GetConstructor (new[]{ typeof (IList<TElement>) });
+			var ex = Assert.Throws<TargetInvocationException> (() => ctor.Invoke (new object[]{ null }));
+			Assert.IsInstanceOf<ArgumentNullException> (ex.InnerException);
+
+			ctor = typeof (TArray).GetConstructor (new[]{ typeof (IEnumerable<TElement>) });
+			ex = Assert.Throws<TargetInvocationException> (() => ctor.Invoke (new object[]{ null }));
+			Assert.IsInstanceOf<ArgumentNullException> (ex.InnerException);
+
+			ctor = typeof (TArray).GetConstructor (new[]{ typeof (int) });
+			ex = Assert.Throws<TargetInvocationException> (() => ctor.Invoke (new object[]{ -1 }));
+			Assert.IsInstanceOf<ArgumentException> (ex.InnerException);
 		}
 
 		[Test]

@@ -11,11 +11,7 @@ namespace Java.InteropTests
 	{
 		protected override System.Collections.Generic.ICollection<T> CreateCollection (System.Collections.Generic.IEnumerable<T> values)
 		{
-			var items = values.ToList ();
-			var array = new JavaObjectArray<T> (items.Count);
-			for (int i = 0; i < items.Count; ++i)
-				array [i] = items [i];
-			return array;
+			return new JavaObjectArray<T> (values);
 		}
 	}
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Java.Interop
 {
@@ -24,7 +25,19 @@ namespace Java.Interop
 		}
 
 		public JavaObjectArray (int length)
-			: this (_NewArray (length), JniHandleOwnership.Transfer)
+			: this (_NewArray (CheckLength (length)), JniHandleOwnership.Transfer)
+		{
+		}
+
+		public JavaObjectArray (IList<T> value)
+			: this (CheckLength (value))
+		{
+			for (int i = 0; i < value.Count; ++i)
+				this [i] = value [i];
+		}
+
+		public JavaObjectArray (IEnumerable<T> value)
+			: this (_ToList (value))
 		{
 		}
 

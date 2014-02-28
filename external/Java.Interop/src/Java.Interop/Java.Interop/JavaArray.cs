@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Java.Interop
 {
@@ -92,6 +93,30 @@ namespace Java.Interop
 				throw new ArgumentException ("destination index is > destination length.", "destinationIndex");
 			if (checked (destinationIndex + length) > destinationLength)
 				throw new ArgumentException ("destination index + length >= destination length", "length");
+		}
+
+		internal static int CheckLength (int length)
+		{
+			if (length < 0)
+				throw new ArgumentException ("'length' cannot be negative.", "length");
+			return length;
+		}
+
+		internal static int CheckLength (IList<T> value)
+		{
+			if (value == null)
+				throw new ArgumentNullException ("value");
+			return value.Count;
+		}
+
+		internal static IList<T> _ToList (IEnumerable<T> value)
+		{
+			if (value == null)
+				throw new ArgumentNullException ("value");
+			IList<T> list = value as IList<T>;
+			if (list != null)
+				return list;
+			return value.ToList ();
 		}
 
 		bool ICollection.IsSynchronized {
@@ -306,6 +331,14 @@ namespace Java.Interop
 		public override void CopyTo (T[] array, int arrayIndex)
 		{
 			CopyTo (0, array, arrayIndex, Length);
+		}
+
+		internal static T[] _ToArray (IEnumerable<T> value)
+		{
+			var array = value as T[];
+			if (array != null)
+				return array;
+			return value.ToArray ();
 		}
 	}
 }
