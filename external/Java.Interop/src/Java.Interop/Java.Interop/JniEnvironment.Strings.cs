@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 
 namespace Java.Interop
 {
@@ -12,6 +13,12 @@ namespace Java.Interop
 					return new JniLocalReference ();
 				fixed (char* s = value)
 					return NewString ((IntPtr) s, value.Length);
+			}
+
+			internal static JniLocalReference NewString (object value)
+			{
+				Debug.Assert (value == null || (value is string));
+				return NewString ((string) value);
 			}
 
 			public static string ToString (IntPtr handle)
@@ -32,6 +39,12 @@ namespace Java.Interop
 					JniEnvironment.Strings.ReleaseStringChars (value, p);
 					JniEnvironment.Handles.Dispose (value, transfer);
 				}
+			}
+
+			internal static unsafe string ToString (JniReferenceSafeHandle value, JniHandleOwnership transfer, Type targetType)
+			{
+				Debug.Assert (targetType == typeof (string));
+				return ToString (value, transfer);
 			}
 		}
 	}

@@ -53,9 +53,6 @@ namespace Java.Interop
 			TypeIsKeyword   = typeIsKeyword;
 		}
 
-		public Func<JniReferenceSafeHandle, JniHandleOwnership, Type, object>   MarshalFromJni;
-		public Func<object, JniLocalReference>                                  MarshalToJni;
-
 		public override string ToString ()
 		{
 			string typename = JniTypeName;

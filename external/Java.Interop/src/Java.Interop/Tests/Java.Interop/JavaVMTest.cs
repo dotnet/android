@@ -179,6 +179,53 @@ namespace Java.InteropTests
 			Assert.AreEqual (isKeyword, info.TypeIsKeyword);
 			Assert.AreEqual (arrayRank, info.ArrayRank);
 		}
+
+		[Test]
+		public void GetJniMarshalInfoForType ()
+		{
+			Assert.Throws<ArgumentNullException> (() => JVM.Current.GetJniTypeInfoForType (null));
+			Assert.Throws<ArgumentException> (() => JVM.Current.GetJniTypeInfoForType (typeof (Action<>)));
+
+			// not yet implemented...
+			// TODO: but should we default to using JavaProxyObject, instead of special-casing in JniMarshal?
+			//       Probably not? Means that JavaVM.GetJniTypeInfoForType() subclasses can't "just" check for
+			//       null values, but maybe they shouldn't anyway?
+			AssertGetJniMarshalInfoForType (typeof (AppDomain),         marshalFromJni: null,   marshalToJni: null);
+
+			// not yet implemented...
+			AssertGetJniMarshalInfoForType (typeof (short),             null, null);
+			AssertGetJniMarshalInfoForType (typeof (int[]),             null, null);
+
+			AssertGetJniMarshalInfoForType (typeof (int),               "JniInteger.GetValue",      "JniInteger.NewValue");
+			AssertGetJniMarshalInfoForType (typeof (string),            "Strings.ToString",         "Strings.NewString");
+
+			// TODO: This is "wrong"; defaults to IJavaObject marshaler, shouldn't.
+			AssertGetJniMarshalInfoForType (typeof(JavaInt32Array),     "JavaVM.<DefaultObjectMarshaler>m__0",  "JavaVM.<DefaultObjectMarshaler>m__1");
+
+			// TODO: This is going to break on .NET, I just know it
+			AssertGetJniMarshalInfoForType (typeof (JavaObject),        "JavaVM.<DefaultObjectMarshaler>m__0",  "JavaVM.<DefaultObjectMarshaler>m__1");
+			AssertGetJniMarshalInfoForType (typeof (JavaException),     "JavaVM.<DefaultObjectMarshaler>m__0",  "JavaVM.<DefaultObjectMarshaler>m__1");
+		}
+
+		static void AssertGetJniMarshalInfoForType (Type type, string marshalFromJni, string marshalToJni)
+		{
+			var info = JVM.Current.GetJniMarshalInfoForType (type);
+			if (info.MarshalFromJni == null)
+				Assert.IsNull (marshalFromJni);
+			else {
+				var m = info.MarshalFromJni.Method;
+				Assert.AreEqual (marshalFromJni,
+						string.Format ("{0}.{1}", m.DeclaringType.Name, m.Name));
+			}
+
+			if (info.MarshalToJni == null)
+				Assert.IsNull (marshalToJni);
+			else {
+				var m = info.MarshalToJni.Method;
+				Assert.AreEqual (marshalToJni,
+					string.Format ("{0}.{1}", m.DeclaringType.Name, m.Name));
+			}
+		}
 	}
 }
 

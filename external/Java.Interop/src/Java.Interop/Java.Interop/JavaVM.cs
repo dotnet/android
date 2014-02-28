@@ -565,18 +565,13 @@ namespace Java.Interop
 		}
 
 		static readonly KeyValuePair<Type, JniTypeInfo>[] JniBuiltinTypeNameMappings = new []{
-			new KeyValuePair<Type, JniTypeInfo>(typeof (string),    new JniTypeInfo ("java/lang/String") {
-				MarshalFromJni  = (h, t, _) => JniEnvironment.Strings.ToString (h, t),
-				MarshalToJni    = v         => JniEnvironment.Strings.NewString ((string) v),
-			}),
+			new KeyValuePair<Type, JniTypeInfo>(typeof (string),    new JniTypeInfo ("java/lang/String")),
 
 			new KeyValuePair<Type, JniTypeInfo>(typeof (void),      new JniTypeInfo ("V",   true)),
 
 			new KeyValuePair<Type, JniTypeInfo>(typeof (sbyte),     new JniTypeInfo ("B",   true)),
 			new KeyValuePair<Type, JniTypeInfo>(typeof (short),     new JniTypeInfo ("S",   true)),
 			new KeyValuePair<Type, JniTypeInfo>(typeof (int),       new JniTypeInfo ("I",   true) {
-				MarshalFromJni  = (h, t, _) => JniInteger.GetValue (h, t),
-				MarshalToJni    = v         => JniInteger.NewValue ((int) v),
 			}),
 			new KeyValuePair<Type, JniTypeInfo>(typeof (long),      new JniTypeInfo ("J",   true)),
 			new KeyValuePair<Type, JniTypeInfo>(typeof (float),     new JniTypeInfo ("F",   true)),
@@ -601,6 +596,48 @@ namespace Java.Interop
 			new KeyValuePair<Type, JniTypeInfo>(typeof (JavaArray<Double>),     new JniTypeInfo ("D",  true,   1)),
 			new KeyValuePair<Type, JniTypeInfo>(typeof (JavaArray<Char>),       new JniTypeInfo ("C",  true,   1)),
 			new KeyValuePair<Type, JniTypeInfo>(typeof (JavaArray<Boolean>),    new JniTypeInfo ("Z",  true,   1)),
+		};
+
+		public virtual JniMarshalInfo GetJniMarshalInfoForType (Type type)
+		{
+			if (type == null)
+				throw new ArgumentNullException ("type");
+			if (type.ContainsGenericParameters)
+				throw new ArgumentException ("Generic type definitions are not supported.", "type");
+
+			if (typeof (IJavaObject) == type)
+				return DefaultObjectMarshaler;
+
+			foreach (var marshaler in JniBuiltinMarshalers) {
+				if (marshaler.Key == type)
+					return marshaler.Value;
+			}
+			if (typeof (IJavaObject).IsAssignableFrom (type)) {
+				return DefaultObjectMarshaler;
+			}
+			return new JniMarshalInfo ();
+		}
+
+		static readonly JniMarshalInfo DefaultObjectMarshaler = new JniMarshalInfo {
+
+			MarshalFromJni  = (h, t, _) => JniEnvironment.Current.JavaVM.GetObject (h, t, _),
+			MarshalToJni    = v         => {
+				var o = v as IJavaObject;
+				if (o == null || o.SafeHandle == null || o.SafeHandle.IsInvalid)
+					return new JniLocalReference ();
+				return o.SafeHandle.NewLocalRef ();
+			},
+		};
+
+		static readonly KeyValuePair<Type, JniMarshalInfo>[] JniBuiltinMarshalers = new []{
+			new KeyValuePair<Type, JniMarshalInfo>(typeof (string), new JniMarshalInfo {
+				MarshalFromJni  = JniEnvironment.Strings.ToString,
+				MarshalToJni    = JniEnvironment.Strings.NewString,
+			}),
+			new KeyValuePair<Type, JniMarshalInfo>(typeof (int), new JniMarshalInfo {
+				MarshalFromJni  = JniInteger.GetValue,
+				MarshalToJni    = JniInteger.NewValue,
+			}),
 		};
 	}
 

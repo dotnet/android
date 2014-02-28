@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 
 namespace Java.Interop {
 
@@ -17,7 +18,7 @@ namespace Java.Interop {
 				return (T) proxy.Value;
 			}
 
-			var info = jvm.GetJniTypeInfoForType (typeof (T));
+			var info = jvm.GetJniMarshalInfoForType (typeof (T));
 			if (info.MarshalFromJni != null) {
 				return (T) info.MarshalFromJni (handle, transfer, typeof (T));
 			}
@@ -27,17 +28,15 @@ namespace Java.Interop {
 
 		public static JniLocalReference CreateLocalRef<T> (T value)
 		{
-			var info = JniEnvironment.Current.JavaVM.GetJniTypeInfoForType (typeof (T));
+			var jvm     = JniEnvironment.Current.JavaVM;
+			var info    = jvm.GetJniMarshalInfoForType (typeof (T));
 			if (info.MarshalToJni != null) {
 				return info.MarshalToJni (value);
 			}
 
 			var o = (value as IJavaObject) ??
 				JavaProxyObject.GetProxy (value);
-			if (o == null || o.SafeHandle.IsInvalid)
-				return new JniLocalReference ();
-
-			return o.SafeHandle.NewLocalRef ();
+			return jvm.GetJniMarshalInfoForType (typeof (IJavaObject)).MarshalToJni (o);
 		}
 	}
 
@@ -50,15 +49,17 @@ namespace Java.Interop {
 		}
 
 		static JniInstanceMethodID init;
-		public static JniLocalReference NewValue (int value)
+		internal static JniLocalReference NewValue (object value)
 		{
+			Debug.Assert (value is int);
 			TypeRef.GetCachedConstructor (ref init, "(I)V");
-			return TypeRef.NewObject (init, new JValue (value));
+			return TypeRef.NewObject (init, new JValue ((int) value));
 		}
 
 		static JniInstanceMethodID intValue;
-		public static int GetValue (JniReferenceSafeHandle self, JniHandleOwnership transfer)
+		internal static object GetValue (JniReferenceSafeHandle self, JniHandleOwnership transfer, Type targetType)
 		{
+			Debug.Assert (targetType == typeof (int));
 			TypeRef.GetCachedInstanceMethod (ref intValue, "intValue", "()I");
 			try {
 				return intValue.CallVirtualInt32Method (self);
