@@ -56,6 +56,40 @@ namespace Java.Interop
 			}
 		}
 
+		public override void Clear ()
+		{
+			int len = Length;
+			for (int i = 0; i < len; i++)
+				this [i] = default (T);
+		}
+
+		public override int IndexOf (T item)
+		{
+			int len = Length;
+			for (int i = 0; i < len; i++) {
+				var at = this [i];
+				try {
+					if (EqualityComparer<T>.Default.Equals (item, at) || JniMarshal.RecursiveEquals (item, at))
+						return i;
+				} finally {
+					var j = at as IJavaObject;
+					if (j != null)
+						j.DisposeUnlessRegistered ();
+				}
+			}
+			return -1;
+		}
+
+		public override void CopyTo (T[] array, int arrayIndex)
+		{
+			if (array == null)
+				throw new ArgumentNullException ("array");
+			CheckArrayCopy (0, Length, arrayIndex, array.Length, Length);
+			int len = Length;
+			for (int i = 0; i < len; i++)
+				array [arrayIndex + i] = this [i];
+		}
+
 		internal static object GetValue (JniReferenceSafeHandle handle, JniHandleOwnership transfer, Type targetType)
 		{
 			var v = JniEnvironment.Current.JavaVM.PeekObject (handle) as JavaObjectArray<T>;

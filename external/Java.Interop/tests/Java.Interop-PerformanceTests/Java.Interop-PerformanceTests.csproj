@@ -20,6 +20,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <ConsolePause>false</ConsolePause>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>full</DebugType>
@@ -28,11 +29,12 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <ConsolePause>false</ConsolePause>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="nunit.framework">
-      <Private>False</Private>
+      <HintPath>..\..\lib\NUnit-2.6.3\bin\nunit.framework.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -51,7 +53,7 @@
     </BuildDependsOn>
   </PropertyGroup>
   <ItemGroup>
-    <TestJar Include="%24%28OutputPath%29performance-test.jar" />
+    <TestJar Include="$(OutputPath)performance-test.jar" />
   </ItemGroup>
   <Target Name="BuildJars" Inputs="@(JavaInteropTestJar)" Outputs="@(TestJar)">
     <MakeDir Directories="$(OutputPath)pt-classes" />

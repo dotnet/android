@@ -22,43 +22,13 @@ namespace Java.Interop
 			set;
 		}
 
-		public virtual int IndexOf (T item)
-		{
-			int len = Length;
-			for (int i = 0; i < len; i++) {
-				var at = this [i];
-				try {
-					if (EqualityComparer<T>.Default.Equals (item, at) || JniMarshal.RecursiveEquals (item, at))
-						return i;
-				} finally {
-					var j = at as IJavaObject;
-					if (j != null)
-						j.DisposeUnlessRegistered ();
-				}
-			}
-			return -1;
-		}
-
-		public virtual void Clear ()
-		{
-			int len = Length;
-			for (int i = 0; i < len; i++)
-				this [i] = default (T);
-		}
+		public  abstract    void    Clear ();
+		public  abstract    void    CopyTo (T[] array, int arrayIndex);
+		public  abstract    int     IndexOf (T item);
 
 		public virtual bool Contains (T item)
 		{
 			return IndexOf (item) >= 0;
-		}
-
-		public virtual void CopyTo (T[] array, int arrayIndex)
-		{
-			if (array == null)
-				throw new ArgumentNullException ("array");
-			CheckArrayCopy (0, Length, arrayIndex, array.Length, Length);
-			int len = Length;
-			for (int i = 0; i < len; i++)
-				array [arrayIndex + i] = this [i];
 		}
 
 		public bool IsReadOnly {

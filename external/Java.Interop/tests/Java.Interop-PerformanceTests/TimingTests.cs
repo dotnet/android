@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -296,6 +297,36 @@ namespace Java.Interop.PerformanceTests {
 				Console.WriteLine ("\t  Dict w/ lock: {0}", td.Elapsed);
 				Console.WriteLine ("\tConcurrentDict: {0}", tc.Elapsed);
 			}
+		}
+
+		[Test]
+		public void IndexOfTiming ()
+		{
+			const int C = 10000;
+			using (var array = new JavaInt32Array (Enumerable.Range (0, 10000))) {
+				var io = Stopwatch.StartNew ();
+				for (int c = 0; c < C; ++c)
+					array.IndexOf (10000);
+				io.Stop ();
+				var _io = Stopwatch.StartNew ();
+				for (int c = 0; c < C; ++c)
+					_IndexOf (array, 10000);
+				_io.Stop ();
+				Console.WriteLine ("JavaArray<T>.IndexOf Timing:");
+				Console.WriteLine ("\t   JavaArray<T>.IndexOf: {0}", io.Elapsed);
+				Console.WriteLine ("\tJavaInt32Array._IndexOf: {0}", _io.Elapsed);
+			}
+		}
+
+		static unsafe int _IndexOf (JavaInt32Array array, int item)
+		{
+			using (var e = array.GetElements ()) {
+				int len = array.Length;
+				for (int i = 0; i < len; ++i)
+					if (e.Elements [i] == item)
+						return i;
+			}
+			return -1;
 		}
 	}
 
