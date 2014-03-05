@@ -12,7 +12,6 @@ namespace Java.Interop {
 				return true;
 			var ae = objA as IEnumerable;
 			var be = objB as IEnumerable;
-			Debug.WriteLine ("# jonp: SequenceEqual({0}, {1})", ae, be);
 			if (ae != null && be != null) {
 				var ai = ae.GetEnumerator ();
 				var bi = be.GetEnumerator ();
