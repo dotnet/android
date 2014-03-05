@@ -22,6 +22,19 @@ namespace Java.InteropTests
 			Assert.Throws<ArgumentNullException> (() => new JavaObjectArray<T> ((IList<T>)null));
 			Assert.Throws<ArgumentException> (() => new JavaObjectArray<T> (-1));
 		}
+
+		protected override int IndexOf (T[] array, T value)
+		{
+			for (int i = 0; i < array.Length; ++i)
+				if (JniMarshal.RecursiveEquals (array [i], value))
+					return i;
+			return -1;
+		}
+
+		protected override bool SequenceEqual (IEnumerable<T> a, IEnumerable<T> b)
+		{
+			return JniMarshal.RecursiveEquals (a, b);
+		}
 	}
 
 	[TestFixture]
@@ -50,6 +63,36 @@ namespace Java.InteropTests
 		{
 			var c = CreateCollection (new int[0]);
 			Assert.AreEqual ("[Ljava/lang/Integer;", ((IJavaObject) c).GetJniTypeName ());
+			Dispose (c);
+		}
+	}
+
+	[TestFixture]
+	public class JavaObjectArray_Int32Array_ContractTest : JavaObjectArrayContractTest<int[]> {
+		protected override int[]  CreateValueA () {return new[]{1};}
+		protected override int[]  CreateValueB () {return new[]{2};}
+		protected override int[]  CreateValueC () {return new[]{3};}
+
+		[Test]
+		public void ObjectArrayType ()
+		{
+			var c = CreateCollection (new int[0][]);
+			Assert.AreEqual ("[[I", ((IJavaObject) c).GetJniTypeName ());
+			Dispose (c);
+		}
+	}
+
+	[TestFixture]
+	public class JavaObjectArray_JavaInt32Array_ContractTest : JavaObjectArrayContractTest<JavaInt32Array> {
+		protected override JavaInt32Array CreateValueA () {return new JavaInt32Array (new[]{1});}
+		protected override JavaInt32Array CreateValueB () {return new JavaInt32Array (new[]{2});}
+		protected override JavaInt32Array CreateValueC () {return new JavaInt32Array (new[]{3});}
+
+		[Test]
+		public void ObjectArrayType ()
+		{
+			var c = CreateCollection (new JavaInt32Array [0]);
+			Assert.AreEqual ("[[I", ((IJavaObject) c).GetJniTypeName ());
 			Dispose (c);
 		}
 	}

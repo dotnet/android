@@ -55,6 +55,30 @@ namespace Java.Interop
 					JniEnvironment.Arrays.SetObjectArrayElement (SafeHandle, index, h);
 			}
 		}
+
+		internal static object GetValue (JniReferenceSafeHandle handle, JniHandleOwnership transfer, Type targetType)
+		{
+			var v = JniEnvironment.Current.JavaVM.PeekObject (handle) as JavaObjectArray<T>;
+			if (v != null) {
+				return v;
+			}
+			return new JavaObjectArray<T> (handle, transfer);
+		}
+
+		internal static JniLocalReference CreateLocalRef (object value)
+		{
+			if (value == null)
+				return new JniLocalReference ();
+			var v = value as JavaObjectArray<T>;
+			if (v != null)
+				return v.SafeHandle.NewLocalRef ();
+			var list = value as IList<T>;
+			if (list == null)
+				throw CreateMarshalNotSupportedException (value.GetType (), typeof (JavaObjectArray<T>));
+			using (var temp = new JavaObjectArray<T> (list)) {
+				return temp.SafeHandle.NewLocalRef ();
+			}
+		}
 	}
 }
 

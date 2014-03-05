@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace Java.Interop
@@ -27,7 +28,7 @@ namespace Java.Interop
 			for (int i = 0; i < len; i++) {
 				var at = this [i];
 				try {
-					if (EqualityComparer<T>.Default.Equals (item, at))
+					if (EqualityComparer<T>.Default.Equals (item, at) || JniMarshal.RecursiveEquals (item, at))
 						return i;
 				} finally {
 					var j = at as IJavaObject;
@@ -117,6 +118,13 @@ namespace Java.Interop
 			if (list != null)
 				return list;
 			return value.ToList ();
+		}
+
+		internal static Exception CreateMarshalNotSupportedException (Type sourceType, Type targetType)
+		{
+			throw new NotSupportedException (
+					string.Format ("Do not know how to marshal a '{0}' into a '{1}'.",
+						sourceType.FullName, targetType.FullName));
 		}
 
 		bool ICollection.IsSynchronized {
@@ -233,7 +241,50 @@ namespace Java.Interop
 	partial class JavaInt16Array    {}
 
 	[JniTypeInfo ("I", ArrayRank=1, TypeIsKeyword=true)]
-	partial class JavaInt32Array    {}
+	partial class JavaInt32Array {
+
+		public static JniLocalReference CreateLocalRef (object value)
+		{
+			if (value == null)
+				return new JniLocalReference ();
+			var array = value as JavaInt32Array;
+			if (array != null)
+				return array.SafeHandle.NewLocalRef ();
+			var items = value as IList<int>;
+			if (items == null)
+				throw CreateMarshalNotSupportedException (value.GetType (), typeof (JavaInt32Array));
+			using (array = new JavaInt32Array (items))
+				return array.SafeHandle.NewLocalRef ();
+		}
+
+		public static IList<int> GetValue (JniReferenceSafeHandle handle, JniHandleOwnership transfer, Type targetType)
+		{
+			Debug.WriteLine ("JavaInt32Array.GetValue! targetType={0}", targetType);
+			var value = JniEnvironment.Current.JavaVM.PeekObject (handle);
+			var array = value as JavaInt32Array;
+			if (array != null) {
+				JniEnvironment.Handles.Dispose (handle, transfer);
+				return array.ToTargetType (targetType, dispose: false);
+			}
+			return new JavaInt32Array (handle, transfer)
+				.ToTargetType (targetType, dispose: true);
+		}
+
+		IList<int> ToTargetType (Type targetType, bool dispose)
+		{
+			if (targetType == null || typeof (JavaPrimitiveArray<int>) == targetType || typeof (JavaInt32Array) == targetType)
+				return this;
+			if (targetType == typeof (int[])) {
+				try {
+					return ToArray ();
+				} finally {
+					if (dispose)
+						Dispose ();
+				}
+			}
+			throw CreateMarshalNotSupportedException (GetType (), targetType);
+		}
+	}
 
 	[JniTypeInfo ("J", ArrayRank=1, TypeIsKeyword=true)]
 	partial class JavaInt64Array    {}

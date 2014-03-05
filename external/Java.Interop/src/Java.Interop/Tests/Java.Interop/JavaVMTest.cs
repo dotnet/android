@@ -194,17 +194,18 @@ namespace Java.InteropTests
 
 			// not yet implemented...
 			AssertGetJniMarshalInfoForType (typeof (short),             null, null);
-			AssertGetJniMarshalInfoForType (typeof (int[]),             null, null);
 
 			AssertGetJniMarshalInfoForType (typeof (int),               "JniInteger.GetValue",      "JniInteger.NewValue");
 			AssertGetJniMarshalInfoForType (typeof (string),            "Strings.ToString",         "Strings.NewString");
 
-			// TODO: This is "wrong"; defaults to IJavaObject marshaler, shouldn't.
-			AssertGetJniMarshalInfoForType (typeof(JavaInt32Array),     "JavaVM.<DefaultObjectMarshaler>m__0",  "JavaVM.<DefaultObjectMarshaler>m__1");
+			AssertGetJniMarshalInfoForType (typeof (int[]),                             "JavaInt32Array.GetValue",  "JavaInt32Array.CreateLocalRef");
+			AssertGetJniMarshalInfoForType (typeof (JavaInt32Array),                    "JavaInt32Array.GetValue",  "JavaInt32Array.CreateLocalRef");
+			AssertGetJniMarshalInfoForType (typeof (JavaObjectArray<int>),              "JavaObjectArray`1.GetValue",   "JavaObjectArray`1.CreateLocalRef");
+			AssertGetJniMarshalInfoForType (typeof (JavaObjectArray<int[]>),            "JavaObjectArray`1.GetValue",   "JavaObjectArray`1.CreateLocalRef");
+			AssertGetJniMarshalInfoForType (typeof (JavaObjectArray<JavaInt32Array>),   "JavaObjectArray`1.GetValue",   "JavaObjectArray`1.CreateLocalRef");
 
-			// TODO: This is going to break on .NET, I just know it
-			AssertGetJniMarshalInfoForType (typeof (JavaObject),        "JavaVM.<DefaultObjectMarshaler>m__0",  "JavaVM.<DefaultObjectMarshaler>m__1");
-			AssertGetJniMarshalInfoForType (typeof (JavaException),     "JavaVM.<DefaultObjectMarshaler>m__0",  "JavaVM.<DefaultObjectMarshaler>m__1");
+			AssertGetJniMarshalInfoForType (typeof (JavaObject),        "JavaObjectExtensions.GetValue",    "JavaObjectExtensions.CreateLocalRef");
+			AssertGetJniMarshalInfoForType (typeof (JavaException),     "JavaObjectExtensions.GetValue",    "JavaObjectExtensions.CreateLocalRef");
 		}
 
 		static void AssertGetJniMarshalInfoForType (Type type, string marshalFromJni, string marshalToJni)

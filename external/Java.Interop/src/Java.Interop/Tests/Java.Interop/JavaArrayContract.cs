@@ -35,7 +35,7 @@ namespace Java.InteropTests
 			};
 			var ja  = (JavaArray<T>) CreateCollection (expected);
 			var a   = ja.ToArray ();
-			Assert.IsTrue (expected.SequenceEqual (a));
+			Assert.IsTrue (SequenceEqual (expected, a));
 			ja.Dispose ();
 			DisposeCollection (a);
 			DisposeCollection (expected);

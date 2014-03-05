@@ -60,6 +60,7 @@
     <Compile Include="Java.Interop\JavaInt64ArrayContractTests.cs" />
     <Compile Include="Java.Interop\JavaSingleArrayContractTests.cs" />
     <Compile Include="Java.Interop\JniEnvironmentTests.cs" />
+    <Compile Include="Java.Interop\JniMarshalTests.cs" />
     <Compile Include="Java.Interop\JniTypeInfoAttributeTest.cs" />
     <Compile Include="Java.Interop\JavaObjectArrayTest.cs" />
     <Compile Include="Java.Interop\JniTypeInfoTest.cs" />

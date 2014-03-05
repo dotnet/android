@@ -193,15 +193,21 @@ namespace Cadenza.Collections.Tests {
 			var coll = CreateCollection (new []{a, b, c});
 			var d = new T [5];
 			coll.CopyTo (d, 1);
-			Assert.IsTrue (new []{
-				default (T), a, b, c, default (T),
-			}.SequenceEqual (d));
+			Assert.IsTrue (
+				SequenceEqual (
+						new []{default (T), a, b, c, default (T)},
+						d));
 
 			Dispose (coll);
 			DisposeCollection (d);
 			Dispose (c);
 			Dispose (b);
 			Dispose (a);
+		}
+
+		protected virtual bool SequenceEqual (IEnumerable<T> a, IEnumerable<T> b)
+		{
+			return a.SequenceEqual (b);
 		}
 
 		[Test]
@@ -214,15 +220,20 @@ namespace Cadenza.Collections.Tests {
 			var coll = CreateCollection (new []{a, b, c});
 			var d = new T [5];
 			coll.CopyTo (d, 1);
-			Assert.IsTrue (Array.IndexOf (d, a) >= 0);
-			Assert.IsTrue (Array.IndexOf (d, b) >= 0);
-			Assert.IsTrue (Array.IndexOf (d, c) >= 0);
+			Assert.IsTrue (IndexOf (d, a) >= 0);
+			Assert.IsTrue (IndexOf (d, b) >= 0);
+			Assert.IsTrue (IndexOf (d, c) >= 0);
 
 			Dispose (coll);
 			DisposeCollection (d);
 			Dispose (c);
 			Dispose (b);
 			Dispose (a);
+		}
+
+		protected virtual int IndexOf (T[] array, T value)
+		{
+			return Array.IndexOf (array, value);
 		}
 
 		[Test]

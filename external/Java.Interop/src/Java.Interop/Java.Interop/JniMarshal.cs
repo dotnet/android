@@ -1,11 +1,45 @@
 ﻿using System;
+using System.Collections;
 using System.Diagnostics;
 
 namespace Java.Interop {
 
-	static class JniMarshal {
+	public static class JniMarshal {
 
-		public static T GetValue<T> (JniReferenceSafeHandle handle, JniHandleOwnership transfer)
+		public static bool RecursiveEquals (object objA, object objB)
+		{
+			if (object.Equals (objA, objB))
+				return true;
+			var ae = objA as IEnumerable;
+			var be = objB as IEnumerable;
+			Debug.WriteLine ("# jonp: SequenceEqual({0}, {1})", ae, be);
+			if (ae != null && be != null) {
+				var ai = ae.GetEnumerator ();
+				var bi = be.GetEnumerator ();
+				try {
+					bool am, bm;
+					do {
+						am = ai.MoveNext ();
+						bm = bi.MoveNext ();
+						if (!(am && bm))
+							break;
+						if (!RecursiveEquals (ai.Current, bi.Current))
+							return false;
+					} while (true);
+					return (am == bm);
+				} finally {
+					var ad = ai as IDisposable;
+					var bd = bi as IDisposable;
+					if (ad != null)
+						ad.Dispose ();
+					if (bd != null)
+						bd.Dispose ();
+				}
+			}
+			return false;
+		}
+
+		internal static T GetValue<T> (JniReferenceSafeHandle handle, JniHandleOwnership transfer)
 		{
 			if (handle == null || handle.IsInvalid)
 				return default (T);
@@ -26,7 +60,7 @@ namespace Java.Interop {
 			return (T) jvm.GetObject (handle, transfer, typeof (T));
 		}
 
-		public static JniLocalReference CreateLocalRef<T> (T value)
+		internal static JniLocalReference CreateLocalRef<T> (T value)
 		{
 			var jvm     = JniEnvironment.Current.JavaVM;
 			var info    = jvm.GetJniMarshalInfoForType (typeof (T));
