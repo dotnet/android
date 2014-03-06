@@ -38,7 +38,7 @@ namespace Java.InteropTests
 
 		public void RunTests ()
 		{
-			_members.CallInstanceVoidMethod ("runTests", "()V", "runTests()V", this);
+			_members.CallInstanceVoidMethod ("runTests\u0000()V", this);
 		}
 
 		static Delegate GetEqualsThisHandler ()

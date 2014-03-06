@@ -21,12 +21,12 @@ namespace Java.InteropTests
 
 		public virtual void Method ()
 		{
-			_members.CallInstanceVoidMethod ("method", "()V", "method()V", this);
+			_members.CallInstanceVoidMethod ("method\u0000()V", this);
 		}
 
 		public bool MethodInvoked {
-			get {return _members.GetBooleanInstanceFieldValue (this, "methodInvoked");}
-			set {_members.SetInstanceFieldValue (this, "methodInvoked", value);}
+			get {return _members.GetBooleanInstanceFieldValue (this, "methodInvoked\u0000Z");}
+			set {_members.SetInstanceFieldValue (this, "methodInvoked\u0000Z", value);}
 		}
 	}
 }

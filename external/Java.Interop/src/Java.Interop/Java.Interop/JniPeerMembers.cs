@@ -38,54 +38,68 @@ namespace Java.Interop {
 		public JniInstanceMethodID GetConstructor (string signature)
 		{
 			string method               = "<init>";
-			string methodAndSignature   = method + signature;
 			lock (InstanceMethods) {
 				JniInstanceMethodID m;
-				if (!InstanceMethods.TryGetValue (methodAndSignature, out m)) {
+				if (!InstanceMethods.TryGetValue (signature, out m)) {
 					m = JniPeerType.GetInstanceMethod (method, signature);
-					InstanceMethods.Add (methodAndSignature, m);
+					InstanceMethods.Add (signature, m);
 				}
 				return m;
 			}
 		}
 
-		public JniInstanceMethodID GetInstanceMethodID (string method, string signature, string methodAndSignature)
+		public JniInstanceMethodID GetInstanceMethodID (string encodedMember)
 		{
 			lock (InstanceMethods) {
 				JniInstanceMethodID m;
-				if (!InstanceMethods.TryGetValue (methodAndSignature, out m)) {
+				if (!InstanceMethods.TryGetValue (encodedMember, out m)) {
+					string method, signature;
+					GetNameAndSignature (encodedMember, out method, out signature);
 					m = JniPeerType.GetInstanceMethod (method, signature);
-					InstanceMethods.Add (methodAndSignature, m);
+					InstanceMethods.Add (encodedMember, m);
 				}
 				return m;
 			}
 		}
 
-		public JniInstanceFieldID GetInstanceFieldID (string field, string signature)
+		static void GetNameAndSignature (string encodedMember, out string name, out string signature)
+		{
+			if (encodedMember == null)
+				throw new ArgumentNullException ("encodedMember");
+			int n = encodedMember.IndexOf ('\u0000');
+			if (n < 0)
+				throw new ArgumentException (
+						"Invalid encoding; 'encodedMember' should be encoded as \"<NAME>\\u0000<SIGNATURE>\".",
+						"encodedMember");
+			name        = encodedMember.Substring (0, n);
+			signature   = encodedMember.Substring (n + 1);
+		}
+
+		public JniInstanceFieldID GetInstanceFieldID (string encodedMember)
 		{
 			lock (InstanceFields) {
 				JniInstanceFieldID f;
-				if (!InstanceFields.TryGetValue (field, out f)) {
+				if (!InstanceFields.TryGetValue (encodedMember, out f)) {
+					string field, signature;
+					GetNameAndSignature (encodedMember, out field, out signature);
 					f = JniPeerType.GetInstanceField (field, signature);
-					InstanceFields.Add (field, f);
+					InstanceFields.Add (encodedMember, f);
 				}
 				return f;
 			}
 		}
 
 		public void CallInstanceVoidMethod (
-				string method,
-				string signature,
-				string methodAndSignature,
+				string encodedMember,
 				IJavaObject self)
 		{
 			AssertSelf (self);
-			var m = GetInstanceMethodID (method, signature, methodAndSignature);
+			var m = GetInstanceMethodID (encodedMember);
 			if (self.GetType () == ManagedPeerType)
 				m.CallVirtualVoidMethod (self.SafeHandle);
 			else {
 				var j = self.JniPeerMembers;
-				m = j.GetInstanceMethodID (method, signature, methodAndSignature);
+				m = j.GetInstanceMethodID (encodedMember);
 				m.CallNonvirtualVoidMethod (self.SafeHandle, j.JniPeerType.SafeHandle);
 			}
 		}
@@ -107,50 +121,44 @@ namespace Java.Interop {
 		}
 
 		public int CallInstanceInt32Method (
-				string method,
-				string signature,
-				string methodAndSignature,
+				string encodedMember,
 				IJavaObject self)
 		{
 			AssertSelf (self);
-			var m = GetInstanceMethodID (method, signature, methodAndSignature);
+			var m = GetInstanceMethodID (encodedMember);
 			if (self.GetType () == ManagedPeerType) {
 				return m.CallVirtualInt32Method (self.SafeHandle);
 			}
 			else {
 				var j = self.JniPeerMembers;
-				m = j.GetInstanceMethodID (method, signature, methodAndSignature);
+				m = j.GetInstanceMethodID (encodedMember);
 				return m.CallNonvirtualInt32Method (self.SafeHandle, j.JniPeerType.SafeHandle);
 			}
 		}
 
 		public JniLocalReference CallInstanceObjectMethod (
-				string method,
-				string signature,
-				string methodAndSignature,
+				string encodedMember,
 				IJavaObject self)
 		{
 			AssertSelf (self);
-			var m = GetInstanceMethodID (method, signature, methodAndSignature);
+			var m = GetInstanceMethodID (encodedMember);
 			if (self.GetType () == ManagedPeerType) {
 				return m.CallVirtualObjectMethod (self.SafeHandle);
 			}
 			else {
 				var j = self.JniPeerMembers;
-				m = j.GetInstanceMethodID (method, signature, methodAndSignature);
+				m = j.GetInstanceMethodID (encodedMember);
 				return m.CallNonvirtualObjectMethod (self.SafeHandle, j.JniPeerType.SafeHandle);
 			}
 		}
 
 		public T CallInstanceObjectMethod<T> (
-				string method,
-				string signature,
-				string methodAndSignature,
+				string encodedMember,
 				IJavaObject self)
 			where T : IJavaObject
 		{
 			AssertSelf (self);
-			var m = GetInstanceMethodID (method, signature, methodAndSignature);
+			var m = GetInstanceMethodID (encodedMember);
 			var e = JniEnvironment.Current.JavaVM;
 			if (self.GetType () == ManagedPeerType) {
 				var lref = m.CallVirtualObjectMethod (self.SafeHandle);
@@ -158,22 +166,22 @@ namespace Java.Interop {
 			}
 			else {
 				var j = self.JniPeerMembers;
-				m = j.GetInstanceMethodID (method, signature, methodAndSignature);
+				m = j.GetInstanceMethodID (encodedMember);
 				var lref = m.CallNonvirtualObjectMethod (self.SafeHandle, j.JniPeerType.SafeHandle);
 				return e.GetObject<T> (lref, JniHandleOwnership.Transfer);
 			}
 		}
 
-		public bool GetBooleanInstanceFieldValue (IJavaObject self, string name)
+		public bool GetBooleanInstanceFieldValue (IJavaObject self, string encodedMember)
 		{
 			AssertSelf (self);
-			return GetInstanceFieldID (name, "Z").GetBooleanValue (self.SafeHandle);
+			return GetInstanceFieldID (encodedMember).GetBooleanValue (self.SafeHandle);
 		}
 
-		public void SetInstanceFieldValue (IJavaObject self, string name, bool value)
+		public void SetInstanceFieldValue (IJavaObject self, string encodedMember, bool value)
 		{
 			AssertSelf (self);
-			GetInstanceFieldID (name, "Z").SetValue (self.SafeHandle, value);
+			GetInstanceFieldID (encodedMember).SetValue (self.SafeHandle, value);
 		}
 	}
 }

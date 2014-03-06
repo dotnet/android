@@ -87,15 +87,13 @@ namespace Java.Interop
 
 		public override int GetHashCode ()
 		{
-			return _members.CallInstanceInt32Method ("hashCode", "()I", "hashCode()I", this);
+			return _members.CallInstanceInt32Method ("hashCode\u0000()I", this);
 		}
 
 		public override string ToString ()
 		{
 			var lref = _members.CallInstanceObjectMethod (
-					"toString",
-					"()Ljava/lang/String;",
-					"toString()Ljava/lang/String;",
+					"toString\u0000()Ljava/lang/String;",
 					this);
 			return JniEnvironment.Strings.ToString (lref, JniHandleOwnership.Transfer);
 		}
