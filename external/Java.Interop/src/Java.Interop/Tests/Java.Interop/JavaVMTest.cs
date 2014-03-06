@@ -202,6 +202,7 @@ namespace Java.InteropTests
 			AssertGetJniMarshalInfoForType (typeof (JavaInt32Array),                    "JavaInt32Array.GetValue",  "JavaInt32Array.CreateLocalRef");
 			AssertGetJniMarshalInfoForType (typeof (JavaObjectArray<int>),              "JavaObjectArray`1.GetValue",   "JavaObjectArray`1.CreateLocalRef");
 			AssertGetJniMarshalInfoForType (typeof (JavaObjectArray<int[]>),            "JavaObjectArray`1.GetValue",   "JavaObjectArray`1.CreateLocalRef");
+			AssertGetJniMarshalInfoForType (typeof (JavaObjectArray<int[][]>),          "JavaObjectArray`1.GetValue",   "JavaObjectArray`1.CreateLocalRef");
 			AssertGetJniMarshalInfoForType (typeof (JavaObjectArray<JavaInt32Array>),   "JavaObjectArray`1.GetValue",   "JavaObjectArray`1.CreateLocalRef");
 
 			AssertGetJniMarshalInfoForType (typeof (JavaObject),        "JavaObjectExtensions.GetValue",    "JavaObjectExtensions.CreateLocalRef");

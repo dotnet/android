@@ -90,6 +90,26 @@ namespace Java.Interop
 			return value.ToList ();
 		}
 
+		internal IList<T> ToTargetType (Type targetType, bool dispose)
+		{
+			if (TargetTypeIsCurrentType (targetType))
+				return this;
+			if (targetType == typeof (T[])) {
+				try {
+					return ToArray ();
+				} finally {
+					if (dispose)
+						Dispose ();
+				}
+			}
+			throw CreateMarshalNotSupportedException (GetType (), targetType);
+		}
+
+		internal virtual bool TargetTypeIsCurrentType (Type targetType)
+		{
+			return targetType == null || targetType == typeof (JavaArray<T>);
+		}
+
 		internal static Exception CreateMarshalNotSupportedException (Type sourceType, Type targetType)
 		{
 			throw new NotSupportedException (
@@ -229,7 +249,6 @@ namespace Java.Interop
 
 		public static IList<int> GetValue (JniReferenceSafeHandle handle, JniHandleOwnership transfer, Type targetType)
 		{
-			Debug.WriteLine ("JavaInt32Array.GetValue! targetType={0}", targetType);
 			var value = JniEnvironment.Current.JavaVM.PeekObject (handle);
 			var array = value as JavaInt32Array;
 			if (array != null) {
@@ -240,19 +259,11 @@ namespace Java.Interop
 				.ToTargetType (targetType, dispose: true);
 		}
 
-		IList<int> ToTargetType (Type targetType, bool dispose)
+		internal override bool TargetTypeIsCurrentType (Type targetType)
 		{
-			if (targetType == null || typeof (JavaPrimitiveArray<int>) == targetType || typeof (JavaInt32Array) == targetType)
-				return this;
-			if (targetType == typeof (int[])) {
-				try {
-					return ToArray ();
-				} finally {
-					if (dispose)
-						Dispose ();
-				}
-			}
-			throw CreateMarshalNotSupportedException (GetType (), targetType);
+			return base.TargetTypeIsCurrentType (targetType) ||
+				typeof (JavaPrimitiveArray<int>) == targetType ||
+				typeof (JavaInt32Array) == targetType;
 		}
 	}
 

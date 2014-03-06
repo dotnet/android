@@ -90,13 +90,22 @@ namespace Java.Interop
 				array [arrayIndex + i] = this [i];
 		}
 
+		internal override bool TargetTypeIsCurrentType (Type targetType)
+		{
+			return base.TargetTypeIsCurrentType (targetType) ||
+				targetType == typeof (JavaObjectArray<T>);
+		}
+
 		internal static object GetValue (JniReferenceSafeHandle handle, JniHandleOwnership transfer, Type targetType)
 		{
-			var v = JniEnvironment.Current.JavaVM.PeekObject (handle) as JavaObjectArray<T>;
-			if (v != null) {
-				return v;
+			var value = JniEnvironment.Current.JavaVM.PeekObject (handle);
+			var array = value as JavaObjectArray<T>;
+			if (array != null) {
+				JniEnvironment.Handles.Dispose (handle, transfer);
+				return array.ToTargetType (targetType, dispose: false);
 			}
-			return new JavaObjectArray<T> (handle, transfer);
+			return new JavaObjectArray<T> (handle, transfer)
+				.ToTargetType (targetType, dispose: true);
 		}
 
 		internal static JniLocalReference CreateLocalRef (object value)
