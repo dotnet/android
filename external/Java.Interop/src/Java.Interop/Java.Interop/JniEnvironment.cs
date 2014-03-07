@@ -50,9 +50,8 @@ namespace Java.Interop {
 			if (current == null)
 				current = this;
 
-			Object_class    = new JniType ("java/lang/Object");
-			Object_toString = Object_class.GetInstanceMethod ("toString", "()Ljava/lang/String;");
-
+			using (var t = new JniType ("java/lang/Object"))
+				Object_toString = t.GetInstanceMethod ("toString", "()Ljava/lang/String;");
 			using (var t = new JniType ("java/lang/Class"))
 				Class_getName = t.GetInstanceMethod ("getName", "()Ljava/lang/String;");
 		}
@@ -102,7 +101,6 @@ namespace Java.Interop {
 		{
 			if (SafeHandle == null)
 				return;
-			Object_class.Dispose ();
 			Object_toString.Dispose ();
 			if (current == this)
 				current = null;
@@ -142,7 +140,6 @@ namespace Java.Interop {
 			JavaVM.LogDestroyLocalRef (SafeHandle, value);
 		}
 
-		            JniType             Object_class;
 		internal    JniInstanceMethodID Object_toString;
 		internal    JniInstanceMethodID Class_getName;
 
