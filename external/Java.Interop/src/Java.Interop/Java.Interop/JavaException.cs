@@ -106,19 +106,19 @@ namespace Java.Interop
 
 		public override int GetHashCode ()
 		{
-			return _members.CallInstanceInt32Method ("hashCode\u0000()I", this);
+			return _members.InstanceMethods.CallInt32Method ("hashCode\u0000()I", this);
 		}
 
 		static string _GetMessage (JniReferenceSafeHandle handle)
 		{
-			var m = _members.GetInstanceMethodID ("getMessage\u0000()Ljava/lang/String;");
+			var m = _members.InstanceMethods.GetMethodID ("getMessage\u0000()Ljava/lang/String;");
 			var s = m.CallVirtualObjectMethod (handle);
 			return JniEnvironment.Strings.ToString (s, JniHandleOwnership.Transfer);
 		}
 
 		static JavaException _GetCause (JniReferenceSafeHandle handle)
 		{
-			var m = _members.GetInstanceMethodID ("getCause\u0000()Ljava/lang/Throwable;");
+			var m = _members.InstanceMethods.GetMethodID ("getCause\u0000()Ljava/lang/Throwable;");
 			var e = m.CallVirtualObjectMethod (handle);
 			return JniEnvironment.Current.JavaVM.GetObject<JavaException> (e, JniHandleOwnership.Transfer);
 		}
@@ -131,7 +131,7 @@ namespace Java.Interop
 			using (var PrintWriter_class    = new JniType ("java/io/PrintWriter"))
 			using (var PrintWriter_init     = PrintWriter_class.GetConstructor ("(Ljava/io/Writer;)V"))
 			using (var pwriter              = PrintWriter_class.NewObject (PrintWriter_init, new JValue (swriter))) {
-				var pst = _members.GetInstanceMethodID ("printStackTrace\u0000(Ljava/io/PrintWriter;)V");
+				var pst = _members.InstanceMethods.GetMethodID ("printStackTrace\u0000(Ljava/io/PrintWriter;)V");
 				pst.CallVirtualVoidMethod (handle, new JValue (pwriter));
 				var s   = JniEnvironment.Current.Object_toString.CallVirtualObjectMethod (swriter);
 				return JniEnvironment.Strings.ToString (s, JniHandleOwnership.Transfer);
@@ -147,7 +147,7 @@ namespace Java.Interop
 						type.FullName));
 
 			if (type == peerMembers.ManagedPeerType) {
-				var c = peerMembers.GetConstructor ("()V");
+				var c = peerMembers.InstanceMethods.GetConstructor ("()V");
 				return peerMembers.JniPeerType.NewObject (c);
 			}
 			using (var t = new JniType (info.ToString ()))

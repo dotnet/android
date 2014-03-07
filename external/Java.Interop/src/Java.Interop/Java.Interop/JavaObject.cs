@@ -38,7 +38,7 @@ namespace Java.Interop
 							type.FullName));
 
 			if (type == peerMembers.ManagedPeerType) {
-				var c = peerMembers.GetConstructor ("()V");
+				var c = peerMembers.InstanceMethods.GetConstructor ("()V");
 				return peerMembers.JniPeerType.NewObject (c);
 			}
 			using (var t = new JniType (info.ToString ()))
@@ -87,12 +87,12 @@ namespace Java.Interop
 
 		public override int GetHashCode ()
 		{
-			return _members.CallInstanceInt32Method ("hashCode\u0000()I", this);
+			return _members.InstanceMethods.CallInt32Method ("hashCode\u0000()I", this);
 		}
 
 		public override string ToString ()
 		{
-			var lref = _members.CallInstanceObjectMethod (
+			var lref = _members.InstanceMethods.CallObjectMethod (
 					"toString\u0000()Ljava/lang/String;",
 					this);
 			return JniEnvironment.Strings.ToString (lref, JniHandleOwnership.Transfer);

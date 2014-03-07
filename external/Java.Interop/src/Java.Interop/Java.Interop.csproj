@@ -71,6 +71,8 @@
     <Compile Include="Java.Interop\JavaProxyObject.cs" />
     <Compile Include="Java.Interop\JniMarshal.cs" />
     <Compile Include="Java.Interop\JniMarshalInfo.cs" />
+    <Compile Include="Java.Interop\JniPeerInstanceMethods.cs" />
+    <Compile Include="Java.Interop\JniPeerInstanceFields.cs" />
   </ItemGroup>
   <ItemGroup>
     <CompileJavaInteropJar Include="java\com\xamarin\android\internal\JavaProxyObject.java" />
