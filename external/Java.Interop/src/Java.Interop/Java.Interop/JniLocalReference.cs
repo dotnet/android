@@ -22,6 +22,9 @@ namespace Java.Interop
 		{
 			var h = handle;
 			base.handle = IntPtr.Zero;
+			// Tehnically we're not destroying it; we're just passing 'ownership' to the JVM.
+			// We "destroy" it here so that, accounting-wise, we don't keep counting it.
+			JniEnvironment.Current.LogDestroyLocalRef (h);
 			return h;
 		}
 	}
