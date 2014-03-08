@@ -5,6 +5,10 @@ namespace Java.Interop
 {
 	public class JavaObjectArray<T> : JavaArray<T>
 	{
+		// Value was created via CreateMarshalCollection, and thus can 
+		// be disposed of with impunity when no longer needed.
+		bool forMarshalCollection;
+
 		public JavaObjectArray (JniReferenceSafeHandle handle, JniHandleOwnership transfer)
 			: base (handle, transfer)
 		{
@@ -85,9 +89,21 @@ namespace Java.Interop
 			if (array == null)
 				throw new ArgumentNullException ("array");
 			CheckArrayCopy (0, Length, arrayIndex, array.Length, Length);
+			CopyTo ((IList<T>) array, arrayIndex);
+		}
+
+		void CopyTo (IList<T> list, int index)
+		{
 			int len = Length;
-			for (int i = 0; i < len; i++)
-				array [arrayIndex + i] = this [i];
+			for (int i = 0; i < len; i++) {
+				var item = this [i];
+				list [index + i] = item;
+				if (forMarshalCollection) {
+					var d = item as IJavaObject;
+					if (d != null)
+						d.DisposeUnlessRegistered ();
+				}
+			}
 		}
 
 		internal override bool TargetTypeIsCurrentType (Type targetType)
@@ -104,8 +120,9 @@ namespace Java.Interop
 				JniEnvironment.Handles.Dispose (handle, transfer);
 				return array.ToTargetType (targetType, dispose: false);
 			}
-			return new JavaObjectArray<T> (handle, transfer)
-				.ToTargetType (targetType, dispose: true);
+			return new JavaObjectArray<T> (handle, transfer) {
+				forMarshalCollection = true,
+			}.ToTargetType (targetType, dispose: true);
 		}
 
 		internal static JniLocalReference CreateLocalRef (object value)
@@ -120,6 +137,39 @@ namespace Java.Interop
 				throw CreateMarshalNotSupportedException (value.GetType (), typeof (JavaObjectArray<T>));
 			using (var temp = new JavaObjectArray<T> (list)) {
 				return temp.SafeHandle.NewLocalRef ();
+			}
+		}
+
+		internal static IJavaObject CreateMarshalCollection (object value)
+		{
+			if (value == null)
+				return null;
+			var v = value as JavaObjectArray<T>;
+			if (v != null)
+				return v;
+			var list = value as IList<T>;
+			if (list == null)
+				throw CreateMarshalNotSupportedException (value.GetType (), typeof (JavaObjectArray<T>));
+			return new JavaObjectArray<T> (list) {
+				forMarshalCollection = true,
+			};
+		}
+
+		internal static void CleanupMarshalCollection (IJavaObject marshalObject, object value)
+		{
+			System.Diagnostics.Debug.WriteLine ("# CleanupMarshalObject: marshalObject={0}; value={1}", marshalObject, value);
+			var source = (JavaObjectArray<T>) marshalObject;
+			if (source == null)
+				return;
+
+			var listDest  = value as IList<T>;
+			if (listDest != null) {
+				System.Diagnostics.Debug.WriteLine ("# CleanupMarshalObject: copying marshalObject > value");
+				source.CopyTo (listDest, 0);
+			}
+			if (source.forMarshalCollection) {
+				System.Diagnostics.Debug.WriteLine ("# CleanupMarshalObject: disposing marshalObject");
+				source.Dispose ();
 			}
 		}
 	}

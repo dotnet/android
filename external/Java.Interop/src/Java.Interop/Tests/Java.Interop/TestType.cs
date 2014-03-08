@@ -41,6 +41,11 @@ namespace Java.InteropTests
 			_members.InstanceMethods.CallVoidMethod ("runTests\u0000()V", this);
 		}
 
+		public int UpdateInt32ArrayArray (int[][][] value)
+		{
+			return _members.InstanceMethods.CallInt32Method ("updateInt32ArrayArray\u0000([[[I)I", this, value);
+		}
+
 		static Delegate GetEqualsThisHandler ()
 		{
 			Func<IntPtr, IntPtr, IntPtr, bool> h = (jnienv, n_self, n_value) => {

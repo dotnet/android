@@ -15,6 +15,22 @@ public class TestType {
 			throw new Error("Expected equalsThis(this)==true!");
 	}
 
+	public  int updateInt32ArrayArray (int[][][] array)
+	{
+		if (array == null)
+			return -1;
+		for (int i = 0; i < array.length; ++i) {
+			for (int j = 0; j < array [i].length; ++j) {
+				for (int k = 0; k < array [i][j].length; ++k) {
+					if (array [i][j][k] != ((i+1)*100) + ((j+1)*10) + (k+1))
+						return 1;
+					array [i][j][k] *= 2;
+				}
+			}
+		}
+		return 0;
+	}
+
 	public  native  boolean equalsThis (Object value);
 	public  native  int     getInt32Value ();
 	public  native  String  getStringValue (int value);

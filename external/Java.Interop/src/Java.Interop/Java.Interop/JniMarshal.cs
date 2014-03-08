@@ -52,8 +52,8 @@ namespace Java.Interop {
 			}
 
 			var info = jvm.GetJniMarshalInfoForType (typeof (T));
-			if (info.MarshalFromJni != null) {
-				return (T) info.MarshalFromJni (handle, transfer, typeof (T));
+			if (info.GetValueFromJni != null) {
+				return (T) info.GetValueFromJni (handle, transfer, typeof (T));
 			}
 
 			return (T) jvm.GetObject (handle, transfer, typeof (T));
@@ -63,13 +63,13 @@ namespace Java.Interop {
 		{
 			var jvm     = JniEnvironment.Current.JavaVM;
 			var info    = jvm.GetJniMarshalInfoForType (typeof (T));
-			if (info.MarshalToJni != null) {
-				return info.MarshalToJni (value);
+			if (info.CreateLocalRef != null) {
+				return info.CreateLocalRef (value);
 			}
 
 			var o = (value as IJavaObject) ??
 				JavaProxyObject.GetProxy (value);
-			return jvm.GetJniMarshalInfoForType (typeof (IJavaObject)).MarshalToJni (o);
+			return jvm.GetJniMarshalInfoForType (typeof (IJavaObject)).CreateLocalRef (o);
 		}
 	}
 

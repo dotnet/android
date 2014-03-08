@@ -212,18 +212,18 @@ namespace Java.InteropTests
 		static void AssertGetJniMarshalInfoForType (Type type, string marshalFromJni, string marshalToJni)
 		{
 			var info = JVM.Current.GetJniMarshalInfoForType (type);
-			if (info.MarshalFromJni == null)
+			if (info.GetValueFromJni == null)
 				Assert.IsNull (marshalFromJni);
 			else {
-				var m = info.MarshalFromJni.Method;
+				var m = info.GetValueFromJni.Method;
 				Assert.AreEqual (marshalFromJni,
 						string.Format ("{0}.{1}", m.DeclaringType.Name, m.Name));
 			}
 
-			if (info.MarshalToJni == null)
+			if (info.CreateLocalRef == null)
 				Assert.IsNull (marshalToJni);
 			else {
-				var m = info.MarshalToJni.Method;
+				var m = info.CreateLocalRef.Method;
 				Assert.AreEqual (marshalToJni,
 					string.Format ("{0}.{1}", m.DeclaringType.Name, m.Name));
 			}
