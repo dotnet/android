@@ -32,17 +32,17 @@ bin/$(CONFIGURATION)/Java.Interop-PerformanceTests.dll: $(wildcard tests/Java.In
 	xbuild
 	touch $@
 
-# $(call RUN_TEST,filename)
+# $(call RUN_TEST,filename,log-lref?)
 define RUN_TEST
 	MONO_TRACE_LISTENER=Console.Out \
-	_JI_LOG=gref=g-$(basename $(notdir $(1))).txt,lref=l-$(basename $(notdir $(1))).txt \
+	_JI_LOG=gref=g-$(basename $(notdir $(1))).txt,$(if $(2),lref=l-$(basename $(notdir $(1))).txt,) \
 	mono --debug=casts $$MONO_OPTIONS --runtime=v4.0.0 \
 		lib/NUnit-2.6.3/bin/nunit-console.exe $(1) \
 		-output=bin/$(CONFIGURATION)/TestOutput-$(basename $(notdir $(1))).txt ;
 endef
 
 run-tests: $(TESTS)
-	$(foreach t,$(TESTS), $(call RUN_TEST,$(t)))
+	$(foreach t,$(TESTS), $(call RUN_TEST,$(t),1))
 
 run-ptests: $(PTESTS)
 	$(foreach t,$(PTESTS), $(call RUN_TEST,$(t)))
