@@ -328,6 +328,46 @@ namespace Java.Interop.PerformanceTests {
 			}
 			return -1;
 		}
+
+		[Test]
+		public void DelegateVsVirtualMethodInvocationTiming ()
+		{
+			const int C = 100000;
+
+			var d = GetDelegateTimingInfo ();
+			var dt = Stopwatch.StartNew ();
+			for (int i = 0; i < C; ++i) {
+				if (d.GetValue != null)
+					d.GetValue ();
+			}
+			dt.Stop ();
+
+			var m = GetVirtualMethodTimingInfo ();
+			var ct = Stopwatch.StartNew ();
+			for (int i = 0; i < C; ++i) {
+				if (m.CanGetValue)
+					m.GetValue ();
+			}
+			ct.Stop ();
+
+			Console.WriteLine ("Delegate vs. Method Invocation Timing:");
+			Console.WriteLine ("\t      Delegate Timing: {0}", dt.Elapsed);
+			Console.WriteLine ("\tVirtual Method Timing: {0}", ct.Elapsed);
+		}
+
+		[MethodImpl (MethodImplOptions.NoInlining)]
+		static DelegateInvocationTiming GetDelegateTimingInfo ()
+		{
+			var d = new DelegateInvocationTiming ();
+			d.GetValue = () => null;
+			return d;
+		}
+
+		[MethodImpl (MethodImplOptions.NoInlining)]
+		static VirtualMethodInvocationTiming GetVirtualMethodTimingInfo ()
+		{
+			return new VirtualMethodInvocationImpl ();
+		}
 	}
 
 	class ManagedTiming {
@@ -416,6 +456,34 @@ namespace Java.Interop.PerformanceTests {
 
 	[StructLayout (LayoutKind.Sequential)]
 	class SomeClass {
+	}
+
+	struct DelegateInvocationTiming {
+		public Func<object> GetValue;
+	}
+
+	class VirtualMethodInvocationTiming {
+		public virtual bool CanGetValue {
+			get { return false; }
+		}
+
+		public virtual object GetValue ()
+		{
+			throw new NotImplementedException ();
+		}
+	}
+
+	class VirtualMethodInvocationImpl : VirtualMethodInvocationTiming {
+		public override bool CanGetValue {
+			get {
+				return true;
+			}
+		}
+
+		public override object GetValue ()
+		{
+			return null;
+		}
 	}
 }
 
