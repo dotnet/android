@@ -8,9 +8,12 @@ namespace Java.Interop.PerformanceTests
 {
 	public class JavaTiming : JavaObject
 	{
+		const               string          JniTypeName = "com/xamarin/interop/performance/JavaTiming";
+		static  readonly    JniPeerMembers  _members    = new JniPeerMembers (JniTypeName, typeof (JavaTiming));
+
 		static JniType _TypeRef;
 		internal static JniType TypeRef {
-			get {return JniType.GetCachedJniType (ref _TypeRef, "com/xamarin/interop/performance/JavaTiming");}
+			get {return JniType.GetCachedJniType (ref _TypeRef, JniTypeName);}
 		}
 
 		static JniInstanceMethodID Object_ctor;
@@ -89,6 +92,46 @@ namespace Java.Interop.PerformanceTests
 			TypeRef.GetCachedInstanceMethod (ref fom, "FinalObjectMethod", "()Ljava/lang/Object;");
 			var lref = vom.CallNonvirtualObjectMethod (SafeHandle, TypeRef.SafeHandle);
 			return JniEnvironment.Current.JavaVM.GetObject (lref, JniHandleOwnership.Transfer);
+		}
+
+		static JniInstanceMethodID vim1;
+		public int VirtualIntMethod1Args (int value)
+		{
+			TypeRef.GetCachedInstanceMethod (ref vim1, "VirtualIntMethod1Args", "(I)I");
+			int r;
+			if (GetType () == _members.ManagedPeerType)
+				r = vim1.CallVirtualInt32Method (SafeHandle, new JValue (value));
+			else {
+				JniInstanceMethodID m = JniPeerMembers.InstanceMethods.GetMethodID ("VirtualIntMethod1Args\u0000(I)I");
+				r = m.CallNonvirtualInt32Method (SafeHandle, JniPeerMembers.JniPeerType.SafeHandle, new JValue (value));
+			}
+			return r;
+		}
+
+		public virtual int Timing_VirtualIntMethod1Args (int value)
+		{
+			return _members.InstanceMethods.CallInt32Method ("VirtualIntMethod1Args\u0000(I)I", this, value);
+		}
+
+		static JniInstanceMethodID vim1_a;
+		public int VirtualIntMethod1Args (int[][][] value)
+		{
+			TypeRef.GetCachedInstanceMethod (ref vim1_a, "VirtualIntMethod1Args", "([[[I)I");
+			var native_array = new JavaObjectArray<int[][]> (value);
+			int r;
+			if (GetType () == _members.ManagedPeerType)
+				r = vim1_a.CallVirtualInt32Method (SafeHandle, new JValue (native_array));
+			else {
+				JniInstanceMethodID m = JniPeerMembers.InstanceMethods.GetMethodID ("VirtualIntMethod1Args\u0000([[[I)I");
+				r = m.CallNonvirtualInt32Method (SafeHandle, JniPeerMembers.JniPeerType.SafeHandle, new JValue (native_array));
+			}
+			native_array.CopyTo (value, 0);
+			return r;
+		}
+
+		public virtual int Timing_VirtualIntMethod1Args (int[][][] value)
+		{
+			return _members.InstanceMethods.CallInt32Method ("VirtualIntMethod1Args\u0000([[[I)I", this, value);
 		}
 
 		static JniStaticMethodID svm1;

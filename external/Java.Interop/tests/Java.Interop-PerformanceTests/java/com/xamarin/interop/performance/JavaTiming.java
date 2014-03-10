@@ -44,6 +44,16 @@ public class JavaTiming {
 		return null;
 	}
 
+	public int VirtualIntMethod1Args (int value)
+	{
+		return value;
+	}
+
+	public int VirtualIntMethod1Args (int[][][] value)
+	{
+		return 0;
+	}
+
 	public static void StaticVoidMethod1Args (Object obj1)
 	{
 	}

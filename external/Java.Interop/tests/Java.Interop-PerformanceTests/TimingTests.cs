@@ -368,6 +368,65 @@ namespace Java.Interop.PerformanceTests {
 		{
 			return new VirtualMethodInvocationImpl ();
 		}
+
+		[Test]
+		public void GenericMarshalingOverhead_Int32 ()
+		{
+			const int C = 100000;
+
+			using (var t = new JavaTiming ()) {
+				var n = Stopwatch.StartNew ();
+				for (int i = 0; i < C; ++i) {
+					t.VirtualIntMethod1Args (i);
+				}
+				n.Stop ();
+
+				var g = Stopwatch.StartNew ();
+				for (int i = 0; i < C; ++i) {
+					t.Timing_VirtualIntMethod1Args (i);
+				}
+				g.Stop ();
+
+				Console.WriteLine ("Generic Marshaling Overhead: (I)I");
+				Console.WriteLine ("\t Native Marshaling: {0}", n.Elapsed);
+				Console.WriteLine ("\tGeneric Marshaling: {0}", g.Elapsed);
+			}
+		}
+
+		[Test]
+		public void GenericMarshalingOverhead_Int32ArrayArrayArray ()
+		{
+			const int C = 10000;
+
+			var value = new int[][][] {
+				new int[][] {
+					new int[]{111, 112, 113},
+					new int[]{121, 122, 123},
+				},
+				new int[][] {
+					new int[]{211, 212, 213},
+					new int[]{221, 222, 223},
+				},
+			};
+
+			using (var t = new JavaTiming ()) {
+				var n = Stopwatch.StartNew ();
+				for (int i = 0; i < C; ++i) {
+					t.VirtualIntMethod1Args (value);
+				}
+				n.Stop ();
+
+				var g = Stopwatch.StartNew ();
+				for (int i = 0; i < C; ++i) {
+					t.Timing_VirtualIntMethod1Args (value);
+				}
+				g.Stop ();
+
+				Console.WriteLine ("Generic Marshaling Overhead: ([[[I)I");
+				Console.WriteLine ("\t Native Marshaling: {0}", n.Elapsed);
+				Console.WriteLine ("\tGeneric Marshaling: {0}", g.Elapsed);
+			}
+		}
 	}
 
 	class ManagedTiming {
