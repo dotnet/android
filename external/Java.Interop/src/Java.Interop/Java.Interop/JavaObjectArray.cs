@@ -157,18 +157,15 @@ namespace Java.Interop
 
 		internal static void CleanupMarshalCollection (IJavaObject marshalObject, object value)
 		{
-			System.Diagnostics.Debug.WriteLine ("# CleanupMarshalObject: marshalObject={0}; value={1}", marshalObject, value);
 			var source = (JavaObjectArray<T>) marshalObject;
 			if (source == null)
 				return;
 
 			var listDest  = value as IList<T>;
 			if (listDest != null) {
-				System.Diagnostics.Debug.WriteLine ("# CleanupMarshalObject: copying marshalObject > value");
 				source.CopyTo (listDest, 0);
 			}
 			if (source.forMarshalCollection) {
-				System.Diagnostics.Debug.WriteLine ("# CleanupMarshalObject: disposing marshalObject");
 				source.Dispose ();
 			}
 		}
