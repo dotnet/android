@@ -147,14 +147,14 @@ namespace Java.Interop
 			this        = new JniArgumentMarshalInfo<T> ();
 			var jvm     = JniEnvironment.Current.JavaVM;
 			var info    = jvm.GetJniMarshalInfoForType (typeof (T));
-			if (info.CreateMarshalCollection != null) {
+			if (info.CreateJValue != null)
+				jvalue = info.CreateJValue (value);
+			else if (info.CreateMarshalCollection != null) {
 				obj     = info.CreateMarshalCollection (value);
 				jvalue  = new JValue (obj);
 			} else if (info.CreateLocalRef != null) {
 				lref    = info.CreateLocalRef (value);
 				jvalue  = new JValue (lref);
-			} else if (info.CreateJValue != null) {
-				jvalue  = info.CreateJValue (value);
 			} else
 				throw new NotSupportedException ("Don't know how to get a JValue for: " + typeof (T).FullName);
 			cleanup     = info.CleanupMarshalCollection;

@@ -190,43 +190,73 @@ namespace Java.InteropTests
 			// TODO: but should we default to using JavaProxyObject, instead of special-casing in JniMarshal?
 			//       Probably not? Means that JavaVM.GetJniTypeInfoForType() subclasses can't "just" check for
 			//       null values, but maybe they shouldn't anyway?
-			AssertGetJniMarshalInfoForType (typeof (AppDomain),         marshalFromJni: null,   marshalToJni: null);
+			AssertGetJniMarshalInfoForType (typeof (AppDomain));
 
 			// not yet implemented...
-			AssertGetJniMarshalInfoForType (typeof (short),             null, null);
+			AssertGetJniMarshalInfoForType (typeof (short));
 
-			AssertGetJniMarshalInfoForType (typeof (int),               "JniInteger.GetValue",      "JniInteger.NewValue");
-			AssertGetJniMarshalInfoForType (typeof (string),            "Strings.ToString",         "Strings.NewString");
+			AssertGetJniMarshalInfoForType (typeof (int),
+					getValue:                   "JniInteger.GetValue",
+					createJValue:               "JniInteger.CreateJValue",
+					createLocalRef:             "JniInteger.NewValue");
+			AssertGetJniMarshalInfoForType (typeof (string),
+					getValue:                   "Strings.ToString",
+					createLocalRef:             "Strings.NewString");
 
-			AssertGetJniMarshalInfoForType (typeof (int[]),                             "JavaInt32Array.GetValue",  "JavaInt32Array.CreateLocalRef");
-			AssertGetJniMarshalInfoForType (typeof (JavaInt32Array),                    "JavaInt32Array.GetValue",  "JavaInt32Array.CreateLocalRef");
-			AssertGetJniMarshalInfoForType (typeof (JavaObjectArray<int>),              "JavaObjectArray`1.GetValue",   "JavaObjectArray`1.CreateLocalRef");
-			AssertGetJniMarshalInfoForType (typeof (JavaObjectArray<int[]>),            "JavaObjectArray`1.GetValue",   "JavaObjectArray`1.CreateLocalRef");
-			AssertGetJniMarshalInfoForType (typeof (JavaObjectArray<int[][]>),          "JavaObjectArray`1.GetValue",   "JavaObjectArray`1.CreateLocalRef");
-			AssertGetJniMarshalInfoForType (typeof (JavaObjectArray<JavaInt32Array>),   "JavaObjectArray`1.GetValue",   "JavaObjectArray`1.CreateLocalRef");
+			AssertGetJniMarshalInfoForType (typeof (JavaObject),
+					getValue:                   "JavaObjectExtensions.GetValue",
+					createLocalRef:             "JavaObjectExtensions.CreateLocalRef");
+			AssertGetJniMarshalInfoForType (typeof (JavaException),
+					getValue:                   "JavaObjectExtensions.GetValue",
+					createLocalRef:             "JavaObjectExtensions.CreateLocalRef");
 
-			AssertGetJniMarshalInfoForType (typeof (JavaObject),        "JavaObjectExtensions.GetValue",    "JavaObjectExtensions.CreateLocalRef");
-			AssertGetJniMarshalInfoForType (typeof (JavaException),     "JavaObjectExtensions.GetValue",    "JavaObjectExtensions.CreateLocalRef");
+			AssertGetJniMarshalInfoForType (typeof (int[]),
+					getValue:                   "JavaInt32Array.GetValue",
+					createLocalRef:             "JavaInt32Array.CreateLocalRef");
+			AssertGetJniMarshalInfoForType (typeof(JavaInt32Array),
+					getValue: "JavaInt32Array.GetValue",
+					createLocalRef: "JavaInt32Array.CreateLocalRef");
+			AssertGetJniMarshalInfoForType (typeof (JavaObjectArray<int>),
+					getValue:                   "JavaObjectArray`1.GetValue",
+					createLocalRef:             "JavaObjectArray`1.CreateLocalRef",
+					createMarshalCollection:    "JavaObjectArray`1.CreateMarshalCollection",
+					cleanupMarshalCollection:   "JavaObjectArray`1.CleanupMarshalCollection");
+			AssertGetJniMarshalInfoForType (typeof (JavaObjectArray<int[]>),
+					getValue:                   "JavaObjectArray`1.GetValue",
+					createLocalRef:             "JavaObjectArray`1.CreateLocalRef",
+					createMarshalCollection:    "JavaObjectArray`1.CreateMarshalCollection",
+					cleanupMarshalCollection:   "JavaObjectArray`1.CleanupMarshalCollection");
+			AssertGetJniMarshalInfoForType (typeof (JavaObjectArray<int[][]>),
+					getValue:                   "JavaObjectArray`1.GetValue",
+					createLocalRef:             "JavaObjectArray`1.CreateLocalRef",
+					createMarshalCollection:    "JavaObjectArray`1.CreateMarshalCollection",
+					cleanupMarshalCollection:   "JavaObjectArray`1.CleanupMarshalCollection");
+			AssertGetJniMarshalInfoForType (typeof (JavaObjectArray<JavaInt32Array>),
+					getValue:                   "JavaObjectArray`1.GetValue",
+					createLocalRef:             "JavaObjectArray`1.CreateLocalRef",
+					createMarshalCollection:    "JavaObjectArray`1.CreateMarshalCollection",
+					cleanupMarshalCollection:   "JavaObjectArray`1.CleanupMarshalCollection");
 		}
 
-		static void AssertGetJniMarshalInfoForType (Type type, string marshalFromJni, string marshalToJni)
+		static void AssertGetJniMarshalInfoForType (Type type, string getValue = null, string createJValue = null, string createLocalRef = null, string createMarshalCollection = null, string cleanupMarshalCollection = null)
 		{
+			Action<string, Delegate, string> assertMethod = (expected, target, message) => {
+				if (expected == null)
+					Assert.IsNull (target, message);
+				else {
+					var m = target.Method;
+					Assert.AreEqual (
+							expected,
+							string.Format ("{0}.{1}", m.DeclaringType.Name, m.Name),
+							message);
+				}
+			};
 			var info = JVM.Current.GetJniMarshalInfoForType (type);
-			if (info.GetValueFromJni == null)
-				Assert.IsNull (marshalFromJni);
-			else {
-				var m = info.GetValueFromJni.Method;
-				Assert.AreEqual (marshalFromJni,
-						string.Format ("{0}.{1}", m.DeclaringType.Name, m.Name));
-			}
-
-			if (info.CreateLocalRef == null)
-				Assert.IsNull (marshalToJni);
-			else {
-				var m = info.CreateLocalRef.Method;
-				Assert.AreEqual (marshalToJni,
-					string.Format ("{0}.{1}", m.DeclaringType.Name, m.Name));
-			}
+			assertMethod (getValue,                 info.GetValueFromJni,           "GetValueFromJni");
+			assertMethod (createJValue,             info.CreateJValue,              "CreateJValue");
+			assertMethod (createLocalRef,           info.CreateLocalRef,            "CreateLocalRef");
+			assertMethod (createMarshalCollection,  info.CreateMarshalCollection,   "CreateMarshalCollection");
+			assertMethod (cleanupMarshalCollection, info.CleanupMarshalCollection,  "CleanupMarshalCollection");
 		}
 	}
 }

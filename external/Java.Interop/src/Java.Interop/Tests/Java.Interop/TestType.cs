@@ -46,6 +46,11 @@ namespace Java.InteropTests
 			return _members.InstanceMethods.CallInt32Method ("updateInt32ArrayArray\u0000([[[I)I", this, value);
 		}
 
+		public int Identity (int value)
+		{
+			return _members.InstanceMethods.CallInt32Method ("identity\u0000(I)I", this, value);
+		}
+
 		static Delegate GetEqualsThisHandler ()
 		{
 			Func<IntPtr, IntPtr, IntPtr, bool> h = (jnienv, n_self, n_value) => {

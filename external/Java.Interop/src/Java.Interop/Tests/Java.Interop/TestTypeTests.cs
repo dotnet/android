@@ -59,6 +59,15 @@ namespace Java.InteropTests
 				Assert.IsTrue (new[]{ 442, 444, 446 }.SequenceEqual (value [1][1]));
 			}
 		}
+
+		[Test]
+		public void Identity ()
+		{
+			using (var t = new TestType ()) {
+				for (int i = 0; i < 10; ++i)
+					Assert.AreEqual (i, t.Identity (i));
+			}
+		}
 	}
 }
 

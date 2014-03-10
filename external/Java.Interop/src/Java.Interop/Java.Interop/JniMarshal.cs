@@ -81,6 +81,11 @@ namespace Java.Interop {
 			get {return JniType.GetCachedJniType (ref _TypeRef, JniTypeName);}
 		}
 
+		internal static JValue CreateJValue (object value)
+		{
+			return new JValue ((int) value);
+		}
+
 		static JniInstanceMethodID init;
 		internal static JniLocalReference NewValue (object value)
 		{
