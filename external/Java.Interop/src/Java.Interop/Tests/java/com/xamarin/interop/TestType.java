@@ -15,7 +15,31 @@ public class TestType {
 			throw new Error("Expected equalsThis(this)==true!");
 	}
 
-	public  int updateInt32ArrayArray (int[][][] array)
+	public int updateInt32Array (int[] array) {
+		if (array == null)
+			return -1;
+		for (int i = 0; i < array.length; ++i) {
+			if (array [i] != (i+1)*1)
+				return 1;
+			array [i] *= 2;
+		}
+		return 0;
+	}
+
+	public int updateInt32ArrayArray (int[][] array) {
+		if (array == null)
+			return -1;
+		for (int i = 0; i < array.length; ++i) {
+			for (int j = 0; j < array [i].length; ++j) {
+				if (array [i][j] != ((i+1)*10) + ((j+1)*1))
+					return 1;
+				array [i][j] *= 2;
+			}
+		}
+		return 0;
+	}
+
+	public  int updateInt32ArrayArrayArray (int[][][] array)
 	{
 		if (array == null)
 			return -1;

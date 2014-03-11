@@ -8,6 +8,10 @@ namespace Java.Interop
 {
 	public abstract class JavaArray<T> : JavaObject, IList, IList<T>
 	{
+		// Value was created via CreateMarshalCollection, and thus can
+		// be disposed of with impunity when no longer needed.
+		protected bool forMarshalCollection;
+
 		internal JavaArray (JniReferenceSafeHandle handle, JniHandleOwnership transfer)
 			: base (handle, transfer)
 		{
@@ -257,6 +261,47 @@ namespace Java.Interop
 			}
 			return new JavaInt32Array (handle, transfer)
 				.ToTargetType (targetType, dispose: true);
+		}
+
+		internal static IJavaObject CreateMarshalCollection (object value)
+		{
+			if (value == null)
+				return null;
+			var v = value as JavaPrimitiveArray<int>;
+			if (v != null)
+				return v;
+			var list = value as IList<int>;
+			if (list == null)
+				throw CreateMarshalNotSupportedException (value.GetType (), typeof (JavaInt32Array));
+			return new JavaInt32Array (list) {
+				forMarshalCollection = true,
+			};
+		}
+
+		internal static void CleanupMarshalCollection (IJavaObject marshalObject, object value)
+		{
+			var source = (JavaInt32Array) marshalObject;
+			if (source == null)
+				return;
+
+			var arrayDest = value as int[];
+			var listDest  = value as IList<int>;
+			if (arrayDest != null)
+				source.CopyTo (arrayDest, 0);
+			else if (listDest != null)
+				source.CopyToList (listDest, 0);
+
+			if (source.forMarshalCollection) {
+				source.Dispose ();
+			}
+		}
+
+		void CopyToList (IList<int> list, int index)
+		{
+			int len = Length;
+			for (int i = 0; i < len; i++) {
+				list [index + i] = this [i];
+			}
 		}
 
 		internal override bool TargetTypeIsCurrentType (Type targetType)

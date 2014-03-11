@@ -41,9 +41,19 @@ namespace Java.InteropTests
 			_members.InstanceMethods.CallVoidMethod ("runTests\u0000()V", this);
 		}
 
-		public int UpdateInt32ArrayArray (int[][][] value)
+		public int UpdateInt32Array (int[] value)
 		{
-			return _members.InstanceMethods.CallInt32Method ("updateInt32ArrayArray\u0000([[[I)I", this, value);
+			return _members.InstanceMethods.CallInt32Method ("updateInt32Array\u0000([I)I", this, value);
+		}
+
+		public int UpdateInt32ArrayArray (int[][] value)
+		{
+			return _members.InstanceMethods.CallInt32Method ("updateInt32ArrayArray\u0000([[I)I", this, value);
+		}
+
+		public int UpdateInt32ArrayArrayArray (int[][][] value)
+		{
+			return _members.InstanceMethods.CallInt32Method ("updateInt32ArrayArrayArray\u0000([[[I)I", this, value);
 		}
 
 		public int Identity (int value)

@@ -34,14 +34,46 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		public void UpdateInt32Array ()
+		{
+			using (var t = new TestType ()) {
+				Assert.AreEqual (-1, t.UpdateInt32Array (null));
+				int[] value = new [] { 0 };
+				Assert.AreEqual (1, t.UpdateInt32Array (value));
+				value = new[]{ 1, 2, 3 };
+				Assert.AreEqual (0, t.UpdateInt32Array (value));
+				Assert.IsTrue (new[]{ 2, 4, 6 }.SequenceEqual (value));
+			}
+		}
+
+		[Test]
 		public void UpdateInt32ArrayArray ()
 		{
 			using (var t = new TestType ()) {
 				Assert.AreEqual (-1, t.UpdateInt32ArrayArray (null));
+				int[][] value = new [] {
+					new []{0},
+				};
+				Assert.AreEqual (1, t.UpdateInt32ArrayArray (value));
+				value = new int[][] {
+					new int[] {11, 12, 13},
+					new int[] {21, 22, 23},
+				};
+				Assert.AreEqual (0, t.UpdateInt32ArrayArray (value));
+				Assert.IsTrue (new[]{ 22, 24, 26 }.SequenceEqual (value [0]));
+				Assert.IsTrue (new[]{ 42, 44, 46 }.SequenceEqual (value [1]));
+			}
+		}
+
+		[Test]
+		public void UpdateInt32ArrayArrayArray ()
+		{
+			using (var t = new TestType ()) {
+				Assert.AreEqual (-1, t.UpdateInt32ArrayArrayArray (null));
 				int[][][] value = new [] {
 					new []{new[]{1}},
 				};
-				Assert.AreEqual (1, t.UpdateInt32ArrayArray (value));
+				Assert.AreEqual (1, t.UpdateInt32ArrayArrayArray (value));
 				value = new int[][][] {
 					new int[][] {
 						new int[]{111, 112, 113},
@@ -52,7 +84,7 @@ namespace Java.InteropTests
 						new int[]{221, 222, 223},
 					},
 				};
-				Assert.AreEqual (0, t.UpdateInt32ArrayArray (value));
+				Assert.AreEqual (0, t.UpdateInt32ArrayArrayArray (value));
 				Assert.IsTrue (new[]{ 222, 224, 226 }.SequenceEqual (value [0][0]));
 				Assert.IsTrue (new[]{ 242, 244, 246 }.SequenceEqual (value [0][1]));
 				Assert.IsTrue (new[]{ 422, 424, 426 }.SequenceEqual (value [1][0]));

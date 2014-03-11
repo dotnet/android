@@ -5,10 +5,6 @@ namespace Java.Interop
 {
 	public class JavaObjectArray<T> : JavaArray<T>
 	{
-		// Value was created via CreateMarshalCollection, and thus can 
-		// be disposed of with impunity when no longer needed.
-		bool forMarshalCollection;
-
 		public JavaObjectArray (JniReferenceSafeHandle handle, JniHandleOwnership transfer)
 			: base (handle, transfer)
 		{
