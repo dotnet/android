@@ -85,10 +85,10 @@ namespace Java.Interop
 			if (array == null)
 				throw new ArgumentNullException ("array");
 			CheckArrayCopy (0, Length, arrayIndex, array.Length, Length);
-			CopyTo ((IList<T>) array, arrayIndex);
+			CopyToList (array, arrayIndex);
 		}
 
-		void CopyTo (IList<T> list, int index)
+		internal override void CopyToList (IList<T> list, int index)
 		{
 			int len = Length;
 			for (int i = 0; i < len; i++) {
@@ -110,60 +110,26 @@ namespace Java.Interop
 
 		internal static object GetValue (JniReferenceSafeHandle handle, JniHandleOwnership transfer, Type targetType)
 		{
-			var value = JniEnvironment.Current.JavaVM.PeekObject (handle);
-			var array = value as JavaObjectArray<T>;
-			if (array != null) {
-				JniEnvironment.Handles.Dispose (handle, transfer);
-				return array.ToTargetType (targetType, dispose: false);
-			}
-			return new JavaObjectArray<T> (handle, transfer) {
-				forMarshalCollection = true,
-			}.ToTargetType (targetType, dispose: true);
+			return JavaArray<T>.GetValueFromJni (handle, transfer, targetType, (h, T) => new JavaObjectArray<T> (h, T) {
+				forMarshalCollection    = true,
+			});
 		}
 
 		internal static JniLocalReference CreateLocalRef (object value)
 		{
-			if (value == null)
-				return new JniLocalReference ();
-			var v = value as JavaObjectArray<T>;
-			if (v != null)
-				return v.SafeHandle.NewLocalRef ();
-			var list = value as IList<T>;
-			if (list == null)
-				throw CreateMarshalNotSupportedException (value.GetType (), typeof (JavaObjectArray<T>));
-			using (var temp = new JavaObjectArray<T> (list)) {
-				return temp.SafeHandle.NewLocalRef ();
-			}
+			return JavaArray<T>.CreateLocalRef (value, list => new JavaObjectArray<T>(list));
 		}
 
 		internal static IJavaObject CreateMarshalCollection (object value)
 		{
-			if (value == null)
-				return null;
-			var v = value as JavaObjectArray<T>;
-			if (v != null)
-				return v;
-			var list = value as IList<T>;
-			if (list == null)
-				throw CreateMarshalNotSupportedException (value.GetType (), typeof (JavaObjectArray<T>));
-			return new JavaObjectArray<T> (list) {
-				forMarshalCollection = true,
-			};
+			return JavaArray<T>.CreateMarshalCollection (value, list => new JavaObjectArray<T> (list) {
+				forMarshalCollection    = true,
+			});
 		}
 
 		internal static void CleanupMarshalCollection (IJavaObject marshalObject, object value)
 		{
-			var source = (JavaObjectArray<T>) marshalObject;
-			if (source == null)
-				return;
-
-			var listDest  = value as IList<T>;
-			if (listDest != null) {
-				source.CopyTo (listDest, 0);
-			}
-			if (source.forMarshalCollection) {
-				source.Dispose ();
-			}
+			JavaArray<T>.CleanupMarshalCollection<JavaObjectArray<T>> (marshalObject, value);
 		}
 	}
 }
