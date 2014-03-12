@@ -73,6 +73,9 @@
     <Compile Include="Java.Interop\JniMarshalInfo.cs" />
     <Compile Include="Java.Interop\JniPeerInstanceMethods.cs" />
     <Compile Include="Java.Interop\JniPeerInstanceFields.cs" />
+    <Compile Include="Java.Interop\JavaPrimitiveArrays.cs">
+      <DependentUpon>JavaPrimitiveArrays.tt</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <CompileJavaInteropJar Include="java\com\xamarin\android\internal\JavaProxyObject.java" />
@@ -99,4 +102,10 @@
     <Exec Command="javac -d &quot;$(OutputPath)ji-classes&quot; @(CompileJavaInteropJar -&gt; '%(Identity)', ' ')" />
     <Exec Command="jar cf &quot;$(OutputPath)java-interop.jar&quot; -C &quot;$(OutputPath)ji-classes&quot; ." />
   </Target>
+  <ItemGroup>
+    <None Include="Java.Interop\JavaPrimitiveArrays.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>JavaPrimitiveArrays.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
 </Project>

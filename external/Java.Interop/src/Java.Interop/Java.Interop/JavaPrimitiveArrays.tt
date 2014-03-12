@@ -1,0 +1,127 @@
+<#@ template  language="C#" #>
+<#@ assembly  name="System.Core" #>
+<#@ import    namespace="System.Collections.Generic" #>
+<#@ import    namespace="System.Linq" #>
+<#@ import    namespace="System.Text" #>
+
+using System;
+using System.Collections.Generic;
+
+namespace Java.Interop {
+
+<#
+	var arrayTypeInfo = new[]{
+		new { JniType   = "Boolean",    ManagedType = "Byte",   TypeModifier    = "Boolean" },
+		new { JniType   = "Byte",       ManagedType = "SByte",  TypeModifier    = "SByte" },
+		new { JniType   = "Char",       ManagedType = "Char",   TypeModifier    = "Char" },
+		new { JniType   = "Short",      ManagedType = "Int16",  TypeModifier    = "Int16" },
+		new { JniType   = "Int",        ManagedType = "Int32",  TypeModifier    = "Int32" },
+		new { JniType   = "Long",       ManagedType = "Int64",  TypeModifier    = "Int64" },
+		new { JniType   = "Float",      ManagedType = "Single", TypeModifier    = "Single" },
+		new { JniType   = "Double",     ManagedType = "Double", TypeModifier    = "Double" },
+	};
+	foreach (var info in arrayTypeInfo) {
+#>
+	public sealed class Jni<#= info.TypeModifier #>ArrayElements : JniArrayElements {
+
+		JniReferenceSafeHandle arrayHandle;
+
+		internal Jni<#= info.TypeModifier #>ArrayElements (JniReferenceSafeHandle arrayHandle, IntPtr elements)
+			: base (elements)
+		{
+			this.arrayHandle = arrayHandle;
+		}
+
+		public new unsafe <#= info.ManagedType #>* Elements {
+			get {return (<#= info.ManagedType #>*) base.Elements;}
+		}
+
+		protected override void Synchronize (JniArrayElementsReleaseMode releaseMode)
+		{
+			JniEnvironment.Arrays.Release<#= info.JniType #>ArrayElements (arrayHandle, base.Elements, (int) releaseMode);
+		}
+	}
+
+	public sealed partial class Java<#= info.TypeModifier #>Array : JavaPrimitiveArray<<#= info.ManagedType #>> {
+
+		public Java<#= info.TypeModifier #>Array (JniReferenceSafeHandle handle, JniHandleOwnership transfer)
+			: base (handle, transfer)
+		{
+		}
+
+		public Java<#= info.TypeModifier #>Array (int length)
+			: base (JniEnvironment.Arrays.New<#= info.JniType #>Array (CheckLength (length)), JniHandleOwnership.Transfer)
+		{
+		}
+
+		public Java<#= info.TypeModifier #>Array (System.Collections.Generic.IList<<#= info.ManagedType #>> value)
+			: this (CheckLength (value))
+		{
+			CopyFrom (_ToArray (value), 0, 0, value.Count);
+		}
+
+		public Java<#= info.TypeModifier #>Array (System.Collections.Generic.IEnumerable<<#= info.ManagedType #>> value)
+			: this (_ToArray (value))
+		{
+		}
+
+		protected override JniArrayElements CreateElements ()
+		{
+			return GetElements ();
+		}
+
+		public new Jni<#= info.TypeModifier #>ArrayElements GetElements ()
+		{
+			IntPtr elements = JniEnvironment.Arrays.Get<#= info.JniType #>ArrayElements (SafeHandle, IntPtr.Zero);
+			return new Jni<#= info.TypeModifier #>ArrayElements (SafeHandle, elements);
+		}
+
+		public override unsafe int IndexOf (<#= info.ManagedType #> item)
+		{
+			int len = Length;
+			using (var e = GetElements ()) {
+				for (int i = 0; i < len; ++i) {
+					if (e.Elements [i] == item)
+						return i;
+				}
+			}
+			return -1;
+		}
+
+		public override unsafe void Clear ()
+		{
+			int len = Length;
+			using (var e = GetElements ()) {
+				for (int i = 0; i < len; ++i) {
+					e.Elements [i] = default (<#= info.ManagedType #>);
+				}
+			}
+		}
+
+		public override unsafe void CopyTo (int sourceIndex, <#= info.ManagedType #>[] destinationArray, int destinationIndex, int length)
+		{
+			if (destinationArray == null)
+				throw new ArgumentNullException ("destinationArray");
+			CheckArrayCopy (sourceIndex, Length, destinationIndex, destinationArray.Length, length);
+			if (destinationArray.Length == 0)
+				return;
+
+			fixed (<#= info.ManagedType #>* b = destinationArray)
+				JniEnvironment.Arrays.Get<#= info.JniType #>ArrayRegion (SafeHandle, sourceIndex, length, (IntPtr) (b+destinationIndex));
+		}
+
+		public override unsafe void CopyFrom (<#= info.ManagedType #>[] sourceArray, int sourceIndex, int destinationIndex, int length)
+		{
+			if (sourceArray == null)
+				throw new ArgumentNullException ("sourceArray");
+			CheckArrayCopy (sourceIndex, sourceArray.Length, destinationIndex, Length, length);
+			if (sourceArray.Length == 0)
+				return;
+
+			fixed (<#= info.ManagedType #>* b = sourceArray)
+				JniEnvironment.Arrays.Set<#= info.JniType #>ArrayRegion (SafeHandle, destinationIndex, length, (IntPtr) (b+sourceIndex));
+		}
+	}
+
+<#  } #>
+}
