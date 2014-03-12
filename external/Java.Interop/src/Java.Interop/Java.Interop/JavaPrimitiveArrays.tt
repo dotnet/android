@@ -11,15 +11,51 @@ namespace Java.Interop {
 
 <#
 	var arrayTypeInfo = new[]{
-		new { JniType   = "Boolean",    ManagedType = "Byte",   TypeModifier    = "Boolean" },
-		new { JniType   = "Byte",       ManagedType = "SByte",  TypeModifier    = "SByte" },
-		new { JniType   = "Char",       ManagedType = "Char",   TypeModifier    = "Char" },
-		new { JniType   = "Short",      ManagedType = "Int16",  TypeModifier    = "Int16" },
-		new { JniType   = "Int",        ManagedType = "Int32",  TypeModifier    = "Int32" },
-		new { JniType   = "Long",       ManagedType = "Int64",  TypeModifier    = "Int64" },
-		new { JniType   = "Float",      ManagedType = "Single", TypeModifier    = "Single" },
-		new { JniType   = "Double",     ManagedType = "Double", TypeModifier    = "Double" },
+		new { JniType = "Z",    JniMarshalType  = "Boolean",    ManagedType = "Byte",   TypeModifier    = "Boolean" },
+		new { JniType = "B",    JniMarshalType  = "Byte",       ManagedType = "SByte",  TypeModifier    = "SByte" },
+		new { JniType = "C",    JniMarshalType  = "Char",       ManagedType = "Char",   TypeModifier    = "Char" },
+		new { JniType = "S",    JniMarshalType  = "Short",      ManagedType = "Int16",  TypeModifier    = "Int16" },
+		new { JniType = "I",    JniMarshalType  = "Int",        ManagedType = "Int32",  TypeModifier    = "Int32" },
+		new { JniType = "J",    JniMarshalType  = "Long",       ManagedType = "Int64",  TypeModifier    = "Int64" },
+		new { JniType = "F",    JniMarshalType  = "Float",      ManagedType = "Single", TypeModifier    = "Single" },
+		new { JniType = "D",    JniMarshalType  = "Double",     ManagedType = "Double", TypeModifier    = "Double" },
 	};
+#>
+	partial class JavaVM {
+		static readonly KeyValuePair<Type, JniMarshalInfo>[] JniPrimitiveArrayMarshalers = new []{
+<#
+	foreach (var info in arrayTypeInfo) {
+#>
+			new KeyValuePair<Type, JniMarshalInfo>(typeof (<#= info.ManagedType #>[]), new JniMarshalInfo {
+				GetValueFromJni             = Java<#= info.TypeModifier #>Array.GetValueFromJni,
+				CreateLocalRef              = Java<#= info.TypeModifier #>Array.CreateLocalRef,
+				CreateMarshalCollection     = Java<#= info.TypeModifier #>Array.CreateMarshalCollection,
+				CleanupMarshalCollection    = Java<#= info.TypeModifier #>Array.CleanupMarshalCollection,
+			}),
+			new KeyValuePair<Type, JniMarshalInfo>(typeof (JavaArray<<#= info.ManagedType #>>), new JniMarshalInfo {
+				GetValueFromJni             = Java<#= info.TypeModifier #>Array.GetValueFromJni,
+				CreateLocalRef              = Java<#= info.TypeModifier #>Array.CreateLocalRef,
+				CreateMarshalCollection     = Java<#= info.TypeModifier #>Array.CreateMarshalCollection,
+				CleanupMarshalCollection    = Java<#= info.TypeModifier #>Array.CleanupMarshalCollection,
+			}),
+			new KeyValuePair<Type, JniMarshalInfo>(typeof (JavaPrimitiveArray<<#= info.ManagedType #>>), new JniMarshalInfo {
+				GetValueFromJni             = Java<#= info.TypeModifier #>Array.GetValueFromJni,
+				CreateLocalRef              = Java<#= info.TypeModifier #>Array.CreateLocalRef,
+				CreateMarshalCollection     = Java<#= info.TypeModifier #>Array.CreateMarshalCollection,
+				CleanupMarshalCollection    = Java<#= info.TypeModifier #>Array.CleanupMarshalCollection,
+			}),
+			new KeyValuePair<Type, JniMarshalInfo>(typeof (Java<#= info.TypeModifier #>Array), new JniMarshalInfo {
+				GetValueFromJni             = Java<#= info.TypeModifier #>Array.GetValueFromJni,
+				CreateLocalRef              = Java<#= info.TypeModifier #>Array.CreateLocalRef,
+				CreateMarshalCollection     = Java<#= info.TypeModifier #>Array.CreateMarshalCollection,
+				CleanupMarshalCollection    = Java<#= info.TypeModifier #>Array.CleanupMarshalCollection,
+			}),
+<#
+	}
+#>
+		};
+	}
+<#
 	foreach (var info in arrayTypeInfo) {
 #>
 	public sealed class Jni<#= info.TypeModifier #>ArrayElements : JniArrayElements {
@@ -38,10 +74,11 @@ namespace Java.Interop {
 
 		protected override void Synchronize (JniArrayElementsReleaseMode releaseMode)
 		{
-			JniEnvironment.Arrays.Release<#= info.JniType #>ArrayElements (arrayHandle, base.Elements, (int) releaseMode);
+			JniEnvironment.Arrays.Release<#= info.JniMarshalType #>ArrayElements (arrayHandle, base.Elements, (int) releaseMode);
 		}
 	}
 
+	[JniTypeInfo ("<#= info.JniType #>", ArrayRank=1, TypeIsKeyword=true)]
 	public sealed partial class Java<#= info.TypeModifier #>Array : JavaPrimitiveArray<<#= info.ManagedType #>> {
 
 		public Java<#= info.TypeModifier #>Array (JniReferenceSafeHandle handle, JniHandleOwnership transfer)
@@ -50,7 +87,7 @@ namespace Java.Interop {
 		}
 
 		public Java<#= info.TypeModifier #>Array (int length)
-			: base (JniEnvironment.Arrays.New<#= info.JniType #>Array (CheckLength (length)), JniHandleOwnership.Transfer)
+			: base (JniEnvironment.Arrays.New<#= info.JniMarshalType #>Array (CheckLength (length)), JniHandleOwnership.Transfer)
 		{
 		}
 
@@ -72,7 +109,7 @@ namespace Java.Interop {
 
 		public new Jni<#= info.TypeModifier #>ArrayElements GetElements ()
 		{
-			IntPtr elements = JniEnvironment.Arrays.Get<#= info.JniType #>ArrayElements (SafeHandle, IntPtr.Zero);
+			IntPtr elements = JniEnvironment.Arrays.Get<#= info.JniMarshalType #>ArrayElements (SafeHandle, IntPtr.Zero);
 			return new Jni<#= info.TypeModifier #>ArrayElements (SafeHandle, elements);
 		}
 
@@ -107,7 +144,7 @@ namespace Java.Interop {
 				return;
 
 			fixed (<#= info.ManagedType #>* b = destinationArray)
-				JniEnvironment.Arrays.Get<#= info.JniType #>ArrayRegion (SafeHandle, sourceIndex, length, (IntPtr) (b+destinationIndex));
+				JniEnvironment.Arrays.Get<#= info.JniMarshalType #>ArrayRegion (SafeHandle, sourceIndex, length, (IntPtr) (b+destinationIndex));
 		}
 
 		public override unsafe void CopyFrom (<#= info.ManagedType #>[] sourceArray, int sourceIndex, int destinationIndex, int length)
@@ -119,7 +156,42 @@ namespace Java.Interop {
 				return;
 
 			fixed (<#= info.ManagedType #>* b = sourceArray)
-				JniEnvironment.Arrays.Set<#= info.JniType #>ArrayRegion (SafeHandle, destinationIndex, length, (IntPtr) (b+sourceIndex));
+				JniEnvironment.Arrays.Set<#= info.JniMarshalType #>ArrayRegion (SafeHandle, destinationIndex, length, (IntPtr) (b+sourceIndex));
+		}
+
+		internal override bool TargetTypeIsCurrentType (Type targetType)
+		{
+			return base.TargetTypeIsCurrentType (targetType) ||
+				typeof (JavaPrimitiveArray<<#= info.ManagedType #>>) == targetType ||
+				typeof (Java<#= info.TypeModifier #>Array) == targetType;
+		}
+
+		internal static JniLocalReference CreateLocalRef (object value)
+		{
+		    return JavaArray<<#= info.ManagedType #>>.CreateLocalRef<Java<#= info.TypeModifier #>Array> (
+		            value,
+		            list => new Java<#= info.TypeModifier #>Array (list));
+		}
+
+		internal static IList<<#= info.ManagedType #>> GetValueFromJni (JniReferenceSafeHandle handle, JniHandleOwnership transfer, Type targetType)
+		{
+		    return JavaArray<<#= info.ManagedType #>>.GetValueFromJni (
+		            handle,
+		            transfer,
+		            targetType,
+		            (h, t) => new Java<#= info.TypeModifier #>Array (h, t));
+		}
+
+		internal static IJavaObject CreateMarshalCollection (object value)
+		{
+		    return JavaArray<<#= info.ManagedType #>>.CreateMarshalCollection (value, list => new Java<#= info.TypeModifier #>Array (list) {
+		        forMarshalCollection = true,
+		    });
+		}
+
+		internal static void CleanupMarshalCollection (IJavaObject marshalObject, object value)
+		{
+		    JavaArray<<#= info.ManagedType #>>.CleanupMarshalCollection<Java<#= info.TypeModifier #>Array> (marshalObject, value);
 		}
 	}
 

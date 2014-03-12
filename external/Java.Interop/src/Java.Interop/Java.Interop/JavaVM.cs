@@ -617,6 +617,12 @@ namespace Java.Interop
 				.FirstOrDefault (i => i.IsGenericType && i.GetGenericTypeDefinition () == typeof (IList<>));
 			if (listType != null) {
 				var elementType = listType.GetGenericArguments () [0];
+				if (elementType.IsValueType) {
+					foreach (var marshaler in JniPrimitiveArrayMarshalers) {
+						if (marshaler.Key == type)
+							return marshaler.Value;
+					}
+				}
 				var arrayType   = typeof (JavaObjectArray<>).MakeGenericType (elementType);
 				var getValue    = CreateMethodDelegate<Func<JniReferenceSafeHandle, JniHandleOwnership, Type, object>> (arrayType, "GetValue");
 				var createLRef  = CreateMethodDelegate<Func<object, JniLocalReference>> (arrayType, "CreateLocalRef");
@@ -659,30 +665,6 @@ namespace Java.Interop
 				CreateJValue                = JniInteger.CreateJValue,
 				GetValueFromJni             = JniInteger.GetValue,
 				CreateLocalRef              = JniInteger.NewValue,
-			}),
-			new KeyValuePair<Type, JniMarshalInfo>(typeof (int[]), new JniMarshalInfo {
-				GetValueFromJni             = JavaInt32Array.GetValue,
-				CreateLocalRef              = JavaInt32Array.CreateLocalRef,
-				CreateMarshalCollection     = JavaInt32Array.CreateMarshalCollection,
-				CleanupMarshalCollection    = JavaInt32Array.CleanupMarshalCollection,
-			}),
-			new KeyValuePair<Type, JniMarshalInfo>(typeof (JavaArray<int>), new JniMarshalInfo {
-				GetValueFromJni             = JavaInt32Array.GetValue,
-				CreateLocalRef              = JavaInt32Array.CreateLocalRef,
-				CreateMarshalCollection     = JavaInt32Array.CreateMarshalCollection,
-				CleanupMarshalCollection    = JavaInt32Array.CleanupMarshalCollection,
-			}),
-			new KeyValuePair<Type, JniMarshalInfo>(typeof (JavaPrimitiveArray<int>), new JniMarshalInfo {
-				GetValueFromJni             = JavaInt32Array.GetValue,
-				CreateLocalRef              = JavaInt32Array.CreateLocalRef,
-				CreateMarshalCollection     = JavaInt32Array.CreateMarshalCollection,
-				CleanupMarshalCollection    = JavaInt32Array.CleanupMarshalCollection,
-			}),
-			new KeyValuePair<Type, JniMarshalInfo>(typeof (JavaInt32Array), new JniMarshalInfo {
-				GetValueFromJni             = JavaInt32Array.GetValue,
-				CreateLocalRef              = JavaInt32Array.CreateLocalRef,
-				CreateMarshalCollection     = JavaInt32Array.CreateMarshalCollection,
-				CleanupMarshalCollection    = JavaInt32Array.CleanupMarshalCollection,
 			}),
 		};
 	}

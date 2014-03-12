@@ -121,6 +121,75 @@ namespace Java.Interop
 						sourceType.FullName, targetType.FullName));
 		}
 
+		internal static JniLocalReference CreateLocalRef<TArray> (object value, Func<IList<T>, TArray> creator)
+			where TArray : JavaArray<T>
+		{
+			if (value == null)
+				return new JniLocalReference ();
+			var array = value as TArray;
+			if (array != null)
+				return array.SafeHandle.NewLocalRef ();
+			var items = value as IList<T>;
+			if (items == null)
+				throw CreateMarshalNotSupportedException (value.GetType (), typeof (TArray));
+			using (array = creator (items))
+				return array.SafeHandle.NewLocalRef ();
+		}
+
+		internal static IList<T> GetValueFromJni<TArray> (JniReferenceSafeHandle handle, JniHandleOwnership transfer, Type targetType, Func<JniReferenceSafeHandle, JniHandleOwnership, TArray> creator)
+			where TArray : JavaArray<T>
+		{
+			var value = JniEnvironment.Current.JavaVM.PeekObject (handle);
+			var array = value as TArray;
+			if (array != null) {
+				JniEnvironment.Handles.Dispose (handle, transfer);
+				return array.ToTargetType (targetType, dispose: false);
+			}
+			return creator (handle, transfer)
+				.ToTargetType (targetType, dispose: true);
+		}
+
+		internal static IJavaObject CreateMarshalCollection<TArray> (object value, Func<IList<T>, TArray> creator)
+			where TArray : JavaArray<T>
+		{
+			if (value == null)
+				return null;
+			var v = value as TArray;
+			if (v != null)
+				return v;
+			var list = value as IList<T>;
+			if (list == null)
+				throw CreateMarshalNotSupportedException (value.GetType (), typeof (TArray));
+			return creator (list);
+		}
+
+		internal static void CleanupMarshalCollection<TArray> (IJavaObject marshalObject, object value)
+			where TArray : JavaArray<T>
+		{
+			var source = (TArray) marshalObject;
+			if (source == null)
+				return;
+
+			var arrayDest = value as T[];
+			var listDest  = value as IList<T>;
+			if (arrayDest != null)
+				source.CopyTo (arrayDest, 0);
+			else if (listDest != null)
+				source.CopyToList (listDest, 0);
+
+			if (source.forMarshalCollection) {
+				source.Dispose ();
+			}
+		}
+
+		internal virtual void CopyToList (IList<T> list, int index)
+		{
+			int len = Length;
+			for (int i = 0; i < len; i++) {
+				list [index + i] = this [i];
+			}
+		}
+
 		bool ICollection.IsSynchronized {
 			get {
 				return false;
@@ -221,105 +290,6 @@ namespace Java.Interop
 			throw new NotSupportedException ();
 		}
 	}
-
-	[JniTypeInfo ("Z", ArrayRank=1, TypeIsKeyword=true)]
-	partial class JavaBooleanArray  {}
-
-	[JniTypeInfo ("B", ArrayRank=1, TypeIsKeyword=true)]
-	partial class JavaSByteArray    {}
-
-	[JniTypeInfo ("C", ArrayRank=1, TypeIsKeyword=true)]
-	partial class JavaCharArray     {}
-
-	[JniTypeInfo ("S", ArrayRank=1, TypeIsKeyword=true)]
-	partial class JavaInt16Array    {}
-
-	[JniTypeInfo ("I", ArrayRank=1, TypeIsKeyword=true)]
-	partial class JavaInt32Array {
-
-		public static JniLocalReference CreateLocalRef (object value)
-		{
-			if (value == null)
-				return new JniLocalReference ();
-			var array = value as JavaInt32Array;
-			if (array != null)
-				return array.SafeHandle.NewLocalRef ();
-			var items = value as IList<int>;
-			if (items == null)
-				throw CreateMarshalNotSupportedException (value.GetType (), typeof (JavaInt32Array));
-			using (array = new JavaInt32Array (items))
-				return array.SafeHandle.NewLocalRef ();
-		}
-
-		public static IList<int> GetValue (JniReferenceSafeHandle handle, JniHandleOwnership transfer, Type targetType)
-		{
-			var value = JniEnvironment.Current.JavaVM.PeekObject (handle);
-			var array = value as JavaInt32Array;
-			if (array != null) {
-				JniEnvironment.Handles.Dispose (handle, transfer);
-				return array.ToTargetType (targetType, dispose: false);
-			}
-			return new JavaInt32Array (handle, transfer)
-				.ToTargetType (targetType, dispose: true);
-		}
-
-		internal static IJavaObject CreateMarshalCollection (object value)
-		{
-			if (value == null)
-				return null;
-			var v = value as JavaPrimitiveArray<int>;
-			if (v != null)
-				return v;
-			var list = value as IList<int>;
-			if (list == null)
-				throw CreateMarshalNotSupportedException (value.GetType (), typeof (JavaInt32Array));
-			return new JavaInt32Array (list) {
-				forMarshalCollection = true,
-			};
-		}
-
-		internal static void CleanupMarshalCollection (IJavaObject marshalObject, object value)
-		{
-			var source = (JavaInt32Array) marshalObject;
-			if (source == null)
-				return;
-
-			var arrayDest = value as int[];
-			var listDest  = value as IList<int>;
-			if (arrayDest != null)
-				source.CopyTo (arrayDest, 0);
-			else if (listDest != null)
-				source.CopyToList (listDest, 0);
-
-			if (source.forMarshalCollection) {
-				source.Dispose ();
-			}
-		}
-
-		void CopyToList (IList<int> list, int index)
-		{
-			int len = Length;
-			for (int i = 0; i < len; i++) {
-				list [index + i] = this [i];
-			}
-		}
-
-		internal override bool TargetTypeIsCurrentType (Type targetType)
-		{
-			return base.TargetTypeIsCurrentType (targetType) ||
-				typeof (JavaPrimitiveArray<int>) == targetType ||
-				typeof (JavaInt32Array) == targetType;
-		}
-	}
-
-	[JniTypeInfo ("J", ArrayRank=1, TypeIsKeyword=true)]
-	partial class JavaInt64Array    {}
-
-	[JniTypeInfo ("F", ArrayRank=1, TypeIsKeyword=true)]
-	partial class JavaSingleArray   {}
-
-	[JniTypeInfo ("D", ArrayRank=1, TypeIsKeyword=true)]
-	partial class JavaDoubleArray   {}
 
 	public enum JniArrayElementsReleaseMode {
 		CopyBack        = 0,

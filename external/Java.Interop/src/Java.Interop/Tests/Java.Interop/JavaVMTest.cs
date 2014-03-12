@@ -210,16 +210,15 @@ namespace Java.InteropTests
 					getValue:                   "JavaObjectExtensions.GetValue",
 					createLocalRef:             "JavaObjectExtensions.CreateLocalRef");
 
-			AssertGetJniMarshalInfoForType (typeof (int[]),
-					getValue:                   "JavaInt32Array.GetValue",
-					createLocalRef:             "JavaInt32Array.CreateLocalRef",
-					createMarshalCollection:    "JavaInt32Array.CreateMarshalCollection",
-					cleanupMarshalCollection:   "JavaInt32Array.CleanupMarshalCollection");
-			AssertGetJniMarshalInfoForType (typeof(JavaInt32Array),
-					getValue:                   "JavaInt32Array.GetValue",
-					createLocalRef:             "JavaInt32Array.CreateLocalRef",
-					createMarshalCollection:    "JavaInt32Array.CreateMarshalCollection",
-					cleanupMarshalCollection:   "JavaInt32Array.CleanupMarshalCollection");
+			AssertGetJniMarshalInfoForPrimitiveArray<JavaBooleanArray, byte> ();
+			AssertGetJniMarshalInfoForPrimitiveArray<JavaSByteArray, sbyte> ();
+			AssertGetJniMarshalInfoForPrimitiveArray<JavaCharArray, char> ();
+			AssertGetJniMarshalInfoForPrimitiveArray<JavaInt16Array, short> ();
+			AssertGetJniMarshalInfoForPrimitiveArray<JavaInt32Array, int> ();
+			AssertGetJniMarshalInfoForPrimitiveArray<JavaInt64Array, long> ();
+			AssertGetJniMarshalInfoForPrimitiveArray<JavaSingleArray, float> ();
+			AssertGetJniMarshalInfoForPrimitiveArray<JavaDoubleArray, double> ();
+
 			AssertGetJniMarshalInfoForType (typeof (JavaObjectArray<int>),
 					getValue:                   "JavaObjectArray`1.GetValue",
 					createLocalRef:             "JavaObjectArray`1.CreateLocalRef",
@@ -261,6 +260,30 @@ namespace Java.InteropTests
 			assertMethod (createLocalRef,           info.CreateLocalRef,            "CreateLocalRef");
 			assertMethod (createMarshalCollection,  info.CreateMarshalCollection,   "CreateMarshalCollection");
 			assertMethod (cleanupMarshalCollection, info.CleanupMarshalCollection,  "CleanupMarshalCollection");
+		}
+
+		static void AssertGetJniMarshalInfoForPrimitiveArray<TArray, TElement> ()
+		{
+			AssertGetJniMarshalInfoForType (typeof (TElement[]),
+					getValue:                   typeof (TArray).Name + ".GetValueFromJni",
+					createLocalRef:             typeof (TArray).Name + ".CreateLocalRef",
+					createMarshalCollection:    typeof (TArray).Name + ".CreateMarshalCollection",
+					cleanupMarshalCollection:   typeof (TArray).Name + ".CleanupMarshalCollection");
+			AssertGetJniMarshalInfoForType (typeof (JavaArray<TElement>),
+					getValue:                   typeof (TArray).Name + ".GetValueFromJni",
+					createLocalRef:             typeof (TArray).Name + ".CreateLocalRef",
+					createMarshalCollection:    typeof (TArray).Name + ".CreateMarshalCollection",
+					cleanupMarshalCollection:   typeof (TArray).Name + ".CleanupMarshalCollection");
+			AssertGetJniMarshalInfoForType (typeof (JavaPrimitiveArray<TElement>),
+					getValue:                   typeof (TArray).Name + ".GetValueFromJni",
+					createLocalRef:             typeof (TArray).Name + ".CreateLocalRef",
+					createMarshalCollection:    typeof (TArray).Name + ".CreateMarshalCollection",
+					cleanupMarshalCollection:   typeof (TArray).Name + ".CleanupMarshalCollection");
+			AssertGetJniMarshalInfoForType (typeof (TArray),
+					getValue:                   typeof (TArray).Name + ".GetValueFromJni",
+					createLocalRef:             typeof (TArray).Name + ".CreateLocalRef",
+					createMarshalCollection:    typeof (TArray).Name + ".CreateMarshalCollection",
+					cleanupMarshalCollection:   typeof (TArray).Name + ".CleanupMarshalCollection");
 		}
 	}
 }
