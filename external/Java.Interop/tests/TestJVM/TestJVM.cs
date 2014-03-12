@@ -59,12 +59,12 @@ namespace Java.InteropTests
 			if (lrefLog == null || value == null || value.IsInvalid)
 				return;
 			var t = Thread.CurrentThread;
-			LogLref ("+l+ thread '{0}'({1}) lrefc {2} -> new-handle 0x{3}/{4} from{5}{6}",
-					t.Name,
-					t.ManagedThreadId,
+			LogLref ("+l+ lrefc {0} -> new-handle 0x{1}/{2} from thread '{3}'({4}){5}{6}",
 					JniEnvironment.Current.LocalReferenceCount,
 					value.DangerousGetHandle ().ToString ("x"),
 					ToChar (value.ReferenceType),
+					t.Name,
+					t.ManagedThreadId,
 					Environment.NewLine,
 					new StackTrace (true));
 		}
@@ -84,14 +84,14 @@ namespace Java.InteropTests
 			if (lrefLog == null || value == null || value.IsInvalid)
 				return;
 			var t = Thread.CurrentThread;
-			LogLref ("+l+ thread '{0}'({1}) lrefc {2} obj-handle 0x{3}/{4} -> new-handle 0x{5}/{6} from{7}{8}",
-					t.Name,
-					t.ManagedThreadId,
+			LogLref ("+l+ lrefc {0} obj-handle 0x{1}/{2} -> new-handle 0x{3}/{4} from thread '{5}'({6}){7}{8}",
 					JniEnvironment.Current.LocalReferenceCount,
 					sourceValue.DangerousGetHandle ().ToString ("x"),
 					ToChar (sourceValue.ReferenceType),
 					value.DangerousGetHandle ().ToString ("x"),
 					ToChar (value.ReferenceType),
+					t.Name,
+					t.ManagedThreadId,
 					Environment.NewLine,
 					new StackTrace (true));
 		}
@@ -102,12 +102,12 @@ namespace Java.InteropTests
 			if (lrefLog == null)
 				return;
 			var t = Thread.CurrentThread;
-			LogLref ("-l- thread '{0}'({1}) lrefc {2} handle 0x{3}/{4} from{5}{6}",
-					t.Name,
-					t.ManagedThreadId,
+			LogLref ("-l- lrefc {0} handle 0x{1}/{2} from thread '{3}'({4}){5}{6}",
 					JniEnvironment.Current.LocalReferenceCount,
 					value.ToString ("x"),
 					'L',
+					t.Name,
+					t.ManagedThreadId,
 					Environment.NewLine,
 					new StackTrace (true));
 		}
@@ -117,13 +117,17 @@ namespace Java.InteropTests
 			base.LogCreateGlobalRef (value, sourceValue);
 			if (grefLog == null || value == null || value.IsInvalid)
 				return;
-			LogGref ("+g+ grefc {0} gwrefc {1} obj-handle 0x{2}/{3} -> new-handle 0x{4}/{5} from {6}",
+			var t = Thread.CurrentThread;
+			LogGref ("+g+ grefc {0} gwrefc {1} obj-handle 0x{2}/{3} -> new-handle 0x{4}/{5} from thread '{6}'({7}){8}{9}",
 					GlobalReferenceCount,
 					WeakGlobalReferenceCount,
 					sourceValue.DangerousGetHandle ().ToString ("x"),
 					ToChar (sourceValue.ReferenceType),
 					value.DangerousGetHandle ().ToString ("x"),
 					ToChar (value.ReferenceType),
+					t.Name,
+					t.ManagedThreadId,
+					Environment.NewLine,
 					new StackTrace (true));
 		}
 
@@ -141,11 +145,15 @@ namespace Java.InteropTests
 			base.LogDestroyGlobalRef (value);
 			if (grefLog == null)
 				return;
-			LogGref ("-g- grefc {0} gwrefc {1} handle 0x{2}/{3} from {4}",
+			var t = Thread.CurrentThread;
+			LogGref ("-g- grefc {0} gwrefc {1} handle 0x{2}/{3} from thread '{4}'({5}){6}{7}",
 					GlobalReferenceCount,
 					WeakGlobalReferenceCount,
 					value.ToString ("x"),
 					'G',
+					t.Name,
+					t.ManagedThreadId,
+					Environment.NewLine,
 					new StackTrace (true));
 		}
 
@@ -154,13 +162,17 @@ namespace Java.InteropTests
 			base.LogCreateWeakGlobalRef (value, sourceValue);
 			if (grefLog == null || value == null || value.IsInvalid)
 				return;
-			LogGref ("+w+ grefc {0} gwrefc {1} obj-handle 0x{2}/{3} -> new-handle 0x{4}/{5} from {6}",
+			var t = Thread.CurrentThread;
+			LogGref ("+w+ grefc {0} gwrefc {1} obj-handle 0x{2}/{3} -> new-handle 0x{4}/{5} from thread '{6}'({7}){8}{9}",
 					GlobalReferenceCount,
 					WeakGlobalReferenceCount,
 					sourceValue.DangerousGetHandle ().ToString ("x"),
 					ToChar (sourceValue.ReferenceType),
 					value.DangerousGetHandle ().ToString ("x"),
 					ToChar (value.ReferenceType),
+					t.Name,
+					t.ManagedThreadId,
+					Environment.NewLine,
 					new StackTrace (true));
 		}
 
@@ -169,11 +181,15 @@ namespace Java.InteropTests
 			base.LogDestroyWeakGlobalRef (value);
 			if (grefLog == null)
 				return;
-			LogGref ("-w- grefc {0} gwrefc {1} handle 0x{2}/{3} from {4}",
+			var t = Thread.CurrentThread;
+			LogGref ("-w- grefc {0} gwrefc {1} handle 0x{2}/{3} from thread '{4}'({5}){6}{7}",
 					GlobalReferenceCount,
 					WeakGlobalReferenceCount,
 					value.ToString ("x"),
 					'G',
+					t.Name,
+					t.ManagedThreadId,
+					Environment.NewLine,
 					new StackTrace (true));
 		}
 
