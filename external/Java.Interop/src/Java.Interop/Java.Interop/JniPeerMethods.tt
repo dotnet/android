@@ -24,6 +24,28 @@ namespace Java.Interop {
 
 <#
 	foreach (var info in jniReturnTypes) {
+		string ret = "";
+		if (info.ReturnType != "void") {
+		    ret = "return ";
+		}
+
+#>
+		public <#= info.ReturnType #> Call<#= info.JniCallType #>Method (
+			string encodedMember,
+			IJavaObject self,
+			params JValue[] arguments)
+		{
+			JniPeerMembers.AssertSelf (self);
+
+			if (self.GetType () == Members.ManagedPeerType) {
+				var m = GetMethodID (encodedMember);
+				<#= ret #>m.CallVirtual<#= info.JniCallType #>Method (self.SafeHandle, arguments);
+			}
+			var j = self.JniPeerMembers;
+			var n = j.InstanceMethods.GetMethodID (encodedMember);
+			<#= ret #>n.CallNonvirtual<#= info.JniCallType #>Method (self.SafeHandle, j.JniPeerType.SafeHandle, arguments);
+		}
+<#
 		for (int i = 0; i < 16; ++i ) {
 			string typeParams   = i == 1
 				? "T"
@@ -46,8 +68,6 @@ namespace Java.Interop {
 			IJavaObject self<#= i == 0 ? "" : ",\n\t\t\t" + methodParams #>
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 <#
 			for (int a = 1; a <= i; ++a) {
 			    WriteLine ("\t\t\tJniArgumentMarshalInfo<{0}> arg{1} = new JniArgumentMarshalInfo<{0}>(value{1});",
@@ -62,27 +82,8 @@ namespace Java.Interop {
 			}
 			WriteLine ("\t\t\t};");
 #>
-
-			var m = GetMethodID (encodedMember);
-<#
-			string retAssign = "";
-			if (info.ReturnType != "void") {
-			    WriteLine ("\t\t\t{0} r;", info.ReturnType);
-			    retAssign = "r = ";
-			}
-#>
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    <#= retAssign #>m.CallVirtual<#= info.JniCallType #>Method (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					<#= retAssign #>m.CallNonvirtual<#= info.JniCallType #>Method (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-<#
-			if (info.ReturnType != "void")
-				WriteLine ("\t\t\t\treturn r;");
-#>
+				<#= ret #>Call<#= info.JniCallType #>Method (encodedMember, self, args);
 			} finally {
 <#
 			for (int a = 1; a <= i; ++a) {

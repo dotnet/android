@@ -3,27 +3,32 @@ namespace Java.Interop {
 
 	partial class JniPeerInstanceMethods {
 
+		public void CallVoidMethod (
+			string encodedMember,
+			IJavaObject self,
+			params JValue[] arguments)
+		{
+			JniPeerMembers.AssertSelf (self);
+
+			if (self.GetType () == Members.ManagedPeerType) {
+				var m = GetMethodID (encodedMember);
+				m.CallVirtualVoidMethod (self.SafeHandle, arguments);
+			}
+			var j = self.JniPeerMembers;
+			var n = j.InstanceMethods.GetMethodID (encodedMember);
+			n.CallNonvirtualVoidMethod (self.SafeHandle, j.JniPeerType.SafeHandle, arguments);
+		}
 
 		public void CallVoidMethod (
 			string encodedMember,
 			IJavaObject self
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 
 			var args = new JValue[]{
 			};
-
-			var m = GetMethodID (encodedMember);
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    m.CallVirtualVoidMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					m.CallNonvirtualVoidMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
+				CallVoidMethod (encodedMember, self, args);
 			} finally {
 			}
 		}
@@ -34,23 +39,13 @@ namespace Java.Interop {
 			T value
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T> arg = new JniArgumentMarshalInfo<T>(value);
 
 			var args = new JValue[]{
 				arg.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    m.CallVirtualVoidMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					m.CallNonvirtualVoidMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
+				CallVoidMethod (encodedMember, self, args);
 			} finally {
 				arg.Cleanup (value);
 			}
@@ -62,8 +57,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 
@@ -71,16 +64,8 @@ namespace Java.Interop {
 				arg1.JValue,
 				arg2.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    m.CallVirtualVoidMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					m.CallNonvirtualVoidMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
+				CallVoidMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -93,8 +78,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -104,16 +87,8 @@ namespace Java.Interop {
 				arg2.JValue,
 				arg3.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    m.CallVirtualVoidMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					m.CallNonvirtualVoidMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
+				CallVoidMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -127,8 +102,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -140,16 +113,8 @@ namespace Java.Interop {
 				arg3.JValue,
 				arg4.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    m.CallVirtualVoidMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					m.CallNonvirtualVoidMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
+				CallVoidMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -164,8 +129,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -179,16 +142,8 @@ namespace Java.Interop {
 				arg4.JValue,
 				arg5.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    m.CallVirtualVoidMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					m.CallNonvirtualVoidMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
+				CallVoidMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -204,8 +159,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -221,16 +174,8 @@ namespace Java.Interop {
 				arg5.JValue,
 				arg6.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    m.CallVirtualVoidMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					m.CallNonvirtualVoidMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
+				CallVoidMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -247,8 +192,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -266,16 +209,8 @@ namespace Java.Interop {
 				arg6.JValue,
 				arg7.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    m.CallVirtualVoidMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					m.CallNonvirtualVoidMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
+				CallVoidMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -293,8 +228,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -314,16 +247,8 @@ namespace Java.Interop {
 				arg7.JValue,
 				arg8.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    m.CallVirtualVoidMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					m.CallNonvirtualVoidMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
+				CallVoidMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -342,8 +267,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -365,16 +288,8 @@ namespace Java.Interop {
 				arg8.JValue,
 				arg9.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    m.CallVirtualVoidMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					m.CallNonvirtualVoidMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
+				CallVoidMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -394,8 +309,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -419,16 +332,8 @@ namespace Java.Interop {
 				arg9.JValue,
 				arg10.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    m.CallVirtualVoidMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					m.CallNonvirtualVoidMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
+				CallVoidMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -449,8 +354,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -476,16 +379,8 @@ namespace Java.Interop {
 				arg10.JValue,
 				arg11.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    m.CallVirtualVoidMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					m.CallNonvirtualVoidMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
+				CallVoidMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -507,8 +402,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -536,16 +429,8 @@ namespace Java.Interop {
 				arg11.JValue,
 				arg12.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    m.CallVirtualVoidMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					m.CallNonvirtualVoidMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
+				CallVoidMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -568,8 +453,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -599,16 +482,8 @@ namespace Java.Interop {
 				arg12.JValue,
 				arg13.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    m.CallVirtualVoidMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					m.CallNonvirtualVoidMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
+				CallVoidMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -632,8 +507,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -665,16 +538,8 @@ namespace Java.Interop {
 				arg13.JValue,
 				arg14.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    m.CallVirtualVoidMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					m.CallNonvirtualVoidMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
+				CallVoidMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -699,8 +564,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -734,16 +597,8 @@ namespace Java.Interop {
 				arg14.JValue,
 				arg15.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    m.CallVirtualVoidMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					m.CallNonvirtualVoidMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
+				CallVoidMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -762,29 +617,32 @@ namespace Java.Interop {
 				arg15.Cleanup (value15);
 			}
 		}
+		public bool CallBooleanMethod (
+			string encodedMember,
+			IJavaObject self,
+			params JValue[] arguments)
+		{
+			JniPeerMembers.AssertSelf (self);
+
+			if (self.GetType () == Members.ManagedPeerType) {
+				var m = GetMethodID (encodedMember);
+				return m.CallVirtualBooleanMethod (self.SafeHandle, arguments);
+			}
+			var j = self.JniPeerMembers;
+			var n = j.InstanceMethods.GetMethodID (encodedMember);
+			return n.CallNonvirtualBooleanMethod (self.SafeHandle, j.JniPeerType.SafeHandle, arguments);
+		}
 
 		public bool CallBooleanMethod (
 			string encodedMember,
 			IJavaObject self
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 
 			var args = new JValue[]{
 			};
-
-			var m = GetMethodID (encodedMember);
-			bool r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualBooleanMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualBooleanMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallBooleanMethod (encodedMember, self, args);
 			} finally {
 			}
 		}
@@ -795,25 +653,13 @@ namespace Java.Interop {
 			T value
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T> arg = new JniArgumentMarshalInfo<T>(value);
 
 			var args = new JValue[]{
 				arg.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			bool r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualBooleanMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualBooleanMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallBooleanMethod (encodedMember, self, args);
 			} finally {
 				arg.Cleanup (value);
 			}
@@ -825,8 +671,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 
@@ -834,18 +678,8 @@ namespace Java.Interop {
 				arg1.JValue,
 				arg2.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			bool r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualBooleanMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualBooleanMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallBooleanMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -858,8 +692,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -869,18 +701,8 @@ namespace Java.Interop {
 				arg2.JValue,
 				arg3.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			bool r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualBooleanMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualBooleanMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallBooleanMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -894,8 +716,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -907,18 +727,8 @@ namespace Java.Interop {
 				arg3.JValue,
 				arg4.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			bool r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualBooleanMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualBooleanMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallBooleanMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -933,8 +743,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -948,18 +756,8 @@ namespace Java.Interop {
 				arg4.JValue,
 				arg5.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			bool r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualBooleanMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualBooleanMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallBooleanMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -975,8 +773,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -992,18 +788,8 @@ namespace Java.Interop {
 				arg5.JValue,
 				arg6.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			bool r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualBooleanMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualBooleanMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallBooleanMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -1020,8 +806,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -1039,18 +823,8 @@ namespace Java.Interop {
 				arg6.JValue,
 				arg7.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			bool r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualBooleanMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualBooleanMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallBooleanMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -1068,8 +842,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -1089,18 +861,8 @@ namespace Java.Interop {
 				arg7.JValue,
 				arg8.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			bool r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualBooleanMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualBooleanMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallBooleanMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -1119,8 +881,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -1142,18 +902,8 @@ namespace Java.Interop {
 				arg8.JValue,
 				arg9.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			bool r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualBooleanMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualBooleanMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallBooleanMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -1173,8 +923,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -1198,18 +946,8 @@ namespace Java.Interop {
 				arg9.JValue,
 				arg10.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			bool r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualBooleanMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualBooleanMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallBooleanMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -1230,8 +968,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -1257,18 +993,8 @@ namespace Java.Interop {
 				arg10.JValue,
 				arg11.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			bool r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualBooleanMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualBooleanMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallBooleanMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -1290,8 +1016,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -1319,18 +1043,8 @@ namespace Java.Interop {
 				arg11.JValue,
 				arg12.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			bool r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualBooleanMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualBooleanMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallBooleanMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -1353,8 +1067,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -1384,18 +1096,8 @@ namespace Java.Interop {
 				arg12.JValue,
 				arg13.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			bool r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualBooleanMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualBooleanMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallBooleanMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -1419,8 +1121,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -1452,18 +1152,8 @@ namespace Java.Interop {
 				arg13.JValue,
 				arg14.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			bool r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualBooleanMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualBooleanMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallBooleanMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -1488,8 +1178,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -1523,18 +1211,8 @@ namespace Java.Interop {
 				arg14.JValue,
 				arg15.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			bool r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualBooleanMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualBooleanMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallBooleanMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -1553,29 +1231,32 @@ namespace Java.Interop {
 				arg15.Cleanup (value15);
 			}
 		}
+		public sbyte CallByteMethod (
+			string encodedMember,
+			IJavaObject self,
+			params JValue[] arguments)
+		{
+			JniPeerMembers.AssertSelf (self);
+
+			if (self.GetType () == Members.ManagedPeerType) {
+				var m = GetMethodID (encodedMember);
+				return m.CallVirtualByteMethod (self.SafeHandle, arguments);
+			}
+			var j = self.JniPeerMembers;
+			var n = j.InstanceMethods.GetMethodID (encodedMember);
+			return n.CallNonvirtualByteMethod (self.SafeHandle, j.JniPeerType.SafeHandle, arguments);
+		}
 
 		public sbyte CallByteMethod (
 			string encodedMember,
 			IJavaObject self
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 
 			var args = new JValue[]{
 			};
-
-			var m = GetMethodID (encodedMember);
-			sbyte r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualByteMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualByteMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallByteMethod (encodedMember, self, args);
 			} finally {
 			}
 		}
@@ -1586,25 +1267,13 @@ namespace Java.Interop {
 			T value
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T> arg = new JniArgumentMarshalInfo<T>(value);
 
 			var args = new JValue[]{
 				arg.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			sbyte r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualByteMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualByteMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallByteMethod (encodedMember, self, args);
 			} finally {
 				arg.Cleanup (value);
 			}
@@ -1616,8 +1285,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 
@@ -1625,18 +1292,8 @@ namespace Java.Interop {
 				arg1.JValue,
 				arg2.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			sbyte r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualByteMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualByteMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallByteMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -1649,8 +1306,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -1660,18 +1315,8 @@ namespace Java.Interop {
 				arg2.JValue,
 				arg3.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			sbyte r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualByteMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualByteMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallByteMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -1685,8 +1330,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -1698,18 +1341,8 @@ namespace Java.Interop {
 				arg3.JValue,
 				arg4.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			sbyte r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualByteMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualByteMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallByteMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -1724,8 +1357,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -1739,18 +1370,8 @@ namespace Java.Interop {
 				arg4.JValue,
 				arg5.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			sbyte r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualByteMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualByteMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallByteMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -1766,8 +1387,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -1783,18 +1402,8 @@ namespace Java.Interop {
 				arg5.JValue,
 				arg6.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			sbyte r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualByteMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualByteMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallByteMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -1811,8 +1420,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -1830,18 +1437,8 @@ namespace Java.Interop {
 				arg6.JValue,
 				arg7.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			sbyte r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualByteMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualByteMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallByteMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -1859,8 +1456,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -1880,18 +1475,8 @@ namespace Java.Interop {
 				arg7.JValue,
 				arg8.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			sbyte r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualByteMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualByteMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallByteMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -1910,8 +1495,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -1933,18 +1516,8 @@ namespace Java.Interop {
 				arg8.JValue,
 				arg9.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			sbyte r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualByteMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualByteMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallByteMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -1964,8 +1537,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -1989,18 +1560,8 @@ namespace Java.Interop {
 				arg9.JValue,
 				arg10.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			sbyte r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualByteMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualByteMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallByteMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -2021,8 +1582,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -2048,18 +1607,8 @@ namespace Java.Interop {
 				arg10.JValue,
 				arg11.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			sbyte r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualByteMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualByteMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallByteMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -2081,8 +1630,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -2110,18 +1657,8 @@ namespace Java.Interop {
 				arg11.JValue,
 				arg12.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			sbyte r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualByteMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualByteMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallByteMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -2144,8 +1681,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -2175,18 +1710,8 @@ namespace Java.Interop {
 				arg12.JValue,
 				arg13.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			sbyte r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualByteMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualByteMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallByteMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -2210,8 +1735,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -2243,18 +1766,8 @@ namespace Java.Interop {
 				arg13.JValue,
 				arg14.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			sbyte r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualByteMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualByteMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallByteMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -2279,8 +1792,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -2314,18 +1825,8 @@ namespace Java.Interop {
 				arg14.JValue,
 				arg15.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			sbyte r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualByteMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualByteMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallByteMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -2344,29 +1845,32 @@ namespace Java.Interop {
 				arg15.Cleanup (value15);
 			}
 		}
+		public char CallCharMethod (
+			string encodedMember,
+			IJavaObject self,
+			params JValue[] arguments)
+		{
+			JniPeerMembers.AssertSelf (self);
+
+			if (self.GetType () == Members.ManagedPeerType) {
+				var m = GetMethodID (encodedMember);
+				return m.CallVirtualCharMethod (self.SafeHandle, arguments);
+			}
+			var j = self.JniPeerMembers;
+			var n = j.InstanceMethods.GetMethodID (encodedMember);
+			return n.CallNonvirtualCharMethod (self.SafeHandle, j.JniPeerType.SafeHandle, arguments);
+		}
 
 		public char CallCharMethod (
 			string encodedMember,
 			IJavaObject self
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 
 			var args = new JValue[]{
 			};
-
-			var m = GetMethodID (encodedMember);
-			char r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualCharMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualCharMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallCharMethod (encodedMember, self, args);
 			} finally {
 			}
 		}
@@ -2377,25 +1881,13 @@ namespace Java.Interop {
 			T value
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T> arg = new JniArgumentMarshalInfo<T>(value);
 
 			var args = new JValue[]{
 				arg.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			char r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualCharMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualCharMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallCharMethod (encodedMember, self, args);
 			} finally {
 				arg.Cleanup (value);
 			}
@@ -2407,8 +1899,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 
@@ -2416,18 +1906,8 @@ namespace Java.Interop {
 				arg1.JValue,
 				arg2.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			char r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualCharMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualCharMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallCharMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -2440,8 +1920,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -2451,18 +1929,8 @@ namespace Java.Interop {
 				arg2.JValue,
 				arg3.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			char r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualCharMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualCharMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallCharMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -2476,8 +1944,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -2489,18 +1955,8 @@ namespace Java.Interop {
 				arg3.JValue,
 				arg4.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			char r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualCharMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualCharMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallCharMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -2515,8 +1971,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -2530,18 +1984,8 @@ namespace Java.Interop {
 				arg4.JValue,
 				arg5.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			char r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualCharMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualCharMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallCharMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -2557,8 +2001,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -2574,18 +2016,8 @@ namespace Java.Interop {
 				arg5.JValue,
 				arg6.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			char r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualCharMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualCharMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallCharMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -2602,8 +2034,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -2621,18 +2051,8 @@ namespace Java.Interop {
 				arg6.JValue,
 				arg7.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			char r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualCharMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualCharMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallCharMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -2650,8 +2070,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -2671,18 +2089,8 @@ namespace Java.Interop {
 				arg7.JValue,
 				arg8.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			char r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualCharMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualCharMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallCharMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -2701,8 +2109,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -2724,18 +2130,8 @@ namespace Java.Interop {
 				arg8.JValue,
 				arg9.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			char r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualCharMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualCharMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallCharMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -2755,8 +2151,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -2780,18 +2174,8 @@ namespace Java.Interop {
 				arg9.JValue,
 				arg10.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			char r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualCharMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualCharMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallCharMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -2812,8 +2196,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -2839,18 +2221,8 @@ namespace Java.Interop {
 				arg10.JValue,
 				arg11.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			char r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualCharMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualCharMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallCharMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -2872,8 +2244,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -2901,18 +2271,8 @@ namespace Java.Interop {
 				arg11.JValue,
 				arg12.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			char r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualCharMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualCharMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallCharMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -2935,8 +2295,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -2966,18 +2324,8 @@ namespace Java.Interop {
 				arg12.JValue,
 				arg13.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			char r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualCharMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualCharMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallCharMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -3001,8 +2349,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -3034,18 +2380,8 @@ namespace Java.Interop {
 				arg13.JValue,
 				arg14.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			char r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualCharMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualCharMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallCharMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -3070,8 +2406,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -3105,18 +2439,8 @@ namespace Java.Interop {
 				arg14.JValue,
 				arg15.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			char r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualCharMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualCharMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallCharMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -3135,29 +2459,32 @@ namespace Java.Interop {
 				arg15.Cleanup (value15);
 			}
 		}
+		public short CallInt16Method (
+			string encodedMember,
+			IJavaObject self,
+			params JValue[] arguments)
+		{
+			JniPeerMembers.AssertSelf (self);
+
+			if (self.GetType () == Members.ManagedPeerType) {
+				var m = GetMethodID (encodedMember);
+				return m.CallVirtualInt16Method (self.SafeHandle, arguments);
+			}
+			var j = self.JniPeerMembers;
+			var n = j.InstanceMethods.GetMethodID (encodedMember);
+			return n.CallNonvirtualInt16Method (self.SafeHandle, j.JniPeerType.SafeHandle, arguments);
+		}
 
 		public short CallInt16Method (
 			string encodedMember,
 			IJavaObject self
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 
 			var args = new JValue[]{
 			};
-
-			var m = GetMethodID (encodedMember);
-			short r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualInt16Method (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualInt16Method (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallInt16Method (encodedMember, self, args);
 			} finally {
 			}
 		}
@@ -3168,25 +2495,13 @@ namespace Java.Interop {
 			T value
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T> arg = new JniArgumentMarshalInfo<T>(value);
 
 			var args = new JValue[]{
 				arg.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			short r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualInt16Method (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualInt16Method (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallInt16Method (encodedMember, self, args);
 			} finally {
 				arg.Cleanup (value);
 			}
@@ -3198,8 +2513,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 
@@ -3207,18 +2520,8 @@ namespace Java.Interop {
 				arg1.JValue,
 				arg2.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			short r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualInt16Method (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualInt16Method (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallInt16Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -3231,8 +2534,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -3242,18 +2543,8 @@ namespace Java.Interop {
 				arg2.JValue,
 				arg3.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			short r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualInt16Method (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualInt16Method (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallInt16Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -3267,8 +2558,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -3280,18 +2569,8 @@ namespace Java.Interop {
 				arg3.JValue,
 				arg4.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			short r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualInt16Method (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualInt16Method (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallInt16Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -3306,8 +2585,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -3321,18 +2598,8 @@ namespace Java.Interop {
 				arg4.JValue,
 				arg5.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			short r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualInt16Method (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualInt16Method (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallInt16Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -3348,8 +2615,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -3365,18 +2630,8 @@ namespace Java.Interop {
 				arg5.JValue,
 				arg6.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			short r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualInt16Method (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualInt16Method (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallInt16Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -3393,8 +2648,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -3412,18 +2665,8 @@ namespace Java.Interop {
 				arg6.JValue,
 				arg7.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			short r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualInt16Method (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualInt16Method (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallInt16Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -3441,8 +2684,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -3462,18 +2703,8 @@ namespace Java.Interop {
 				arg7.JValue,
 				arg8.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			short r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualInt16Method (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualInt16Method (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallInt16Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -3492,8 +2723,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -3515,18 +2744,8 @@ namespace Java.Interop {
 				arg8.JValue,
 				arg9.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			short r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualInt16Method (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualInt16Method (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallInt16Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -3546,8 +2765,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -3571,18 +2788,8 @@ namespace Java.Interop {
 				arg9.JValue,
 				arg10.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			short r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualInt16Method (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualInt16Method (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallInt16Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -3603,8 +2810,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -3630,18 +2835,8 @@ namespace Java.Interop {
 				arg10.JValue,
 				arg11.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			short r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualInt16Method (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualInt16Method (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallInt16Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -3663,8 +2858,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -3692,18 +2885,8 @@ namespace Java.Interop {
 				arg11.JValue,
 				arg12.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			short r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualInt16Method (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualInt16Method (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallInt16Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -3726,8 +2909,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -3757,18 +2938,8 @@ namespace Java.Interop {
 				arg12.JValue,
 				arg13.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			short r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualInt16Method (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualInt16Method (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallInt16Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -3792,8 +2963,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -3825,18 +2994,8 @@ namespace Java.Interop {
 				arg13.JValue,
 				arg14.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			short r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualInt16Method (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualInt16Method (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallInt16Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -3861,8 +3020,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -3896,18 +3053,8 @@ namespace Java.Interop {
 				arg14.JValue,
 				arg15.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			short r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualInt16Method (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualInt16Method (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallInt16Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -3926,29 +3073,32 @@ namespace Java.Interop {
 				arg15.Cleanup (value15);
 			}
 		}
+		public int CallInt32Method (
+			string encodedMember,
+			IJavaObject self,
+			params JValue[] arguments)
+		{
+			JniPeerMembers.AssertSelf (self);
+
+			if (self.GetType () == Members.ManagedPeerType) {
+				var m = GetMethodID (encodedMember);
+				return m.CallVirtualInt32Method (self.SafeHandle, arguments);
+			}
+			var j = self.JniPeerMembers;
+			var n = j.InstanceMethods.GetMethodID (encodedMember);
+			return n.CallNonvirtualInt32Method (self.SafeHandle, j.JniPeerType.SafeHandle, arguments);
+		}
 
 		public int CallInt32Method (
 			string encodedMember,
 			IJavaObject self
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 
 			var args = new JValue[]{
 			};
-
-			var m = GetMethodID (encodedMember);
-			int r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualInt32Method (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualInt32Method (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallInt32Method (encodedMember, self, args);
 			} finally {
 			}
 		}
@@ -3959,25 +3109,13 @@ namespace Java.Interop {
 			T value
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T> arg = new JniArgumentMarshalInfo<T>(value);
 
 			var args = new JValue[]{
 				arg.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			int r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualInt32Method (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualInt32Method (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallInt32Method (encodedMember, self, args);
 			} finally {
 				arg.Cleanup (value);
 			}
@@ -3989,8 +3127,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 
@@ -3998,18 +3134,8 @@ namespace Java.Interop {
 				arg1.JValue,
 				arg2.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			int r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualInt32Method (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualInt32Method (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallInt32Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -4022,8 +3148,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -4033,18 +3157,8 @@ namespace Java.Interop {
 				arg2.JValue,
 				arg3.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			int r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualInt32Method (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualInt32Method (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallInt32Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -4058,8 +3172,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -4071,18 +3183,8 @@ namespace Java.Interop {
 				arg3.JValue,
 				arg4.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			int r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualInt32Method (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualInt32Method (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallInt32Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -4097,8 +3199,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -4112,18 +3212,8 @@ namespace Java.Interop {
 				arg4.JValue,
 				arg5.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			int r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualInt32Method (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualInt32Method (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallInt32Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -4139,8 +3229,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -4156,18 +3244,8 @@ namespace Java.Interop {
 				arg5.JValue,
 				arg6.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			int r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualInt32Method (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualInt32Method (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallInt32Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -4184,8 +3262,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -4203,18 +3279,8 @@ namespace Java.Interop {
 				arg6.JValue,
 				arg7.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			int r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualInt32Method (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualInt32Method (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallInt32Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -4232,8 +3298,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -4253,18 +3317,8 @@ namespace Java.Interop {
 				arg7.JValue,
 				arg8.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			int r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualInt32Method (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualInt32Method (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallInt32Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -4283,8 +3337,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -4306,18 +3358,8 @@ namespace Java.Interop {
 				arg8.JValue,
 				arg9.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			int r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualInt32Method (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualInt32Method (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallInt32Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -4337,8 +3379,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -4362,18 +3402,8 @@ namespace Java.Interop {
 				arg9.JValue,
 				arg10.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			int r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualInt32Method (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualInt32Method (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallInt32Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -4394,8 +3424,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -4421,18 +3449,8 @@ namespace Java.Interop {
 				arg10.JValue,
 				arg11.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			int r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualInt32Method (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualInt32Method (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallInt32Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -4454,8 +3472,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -4483,18 +3499,8 @@ namespace Java.Interop {
 				arg11.JValue,
 				arg12.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			int r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualInt32Method (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualInt32Method (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallInt32Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -4517,8 +3523,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -4548,18 +3552,8 @@ namespace Java.Interop {
 				arg12.JValue,
 				arg13.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			int r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualInt32Method (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualInt32Method (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallInt32Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -4583,8 +3577,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -4616,18 +3608,8 @@ namespace Java.Interop {
 				arg13.JValue,
 				arg14.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			int r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualInt32Method (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualInt32Method (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallInt32Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -4652,8 +3634,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -4687,18 +3667,8 @@ namespace Java.Interop {
 				arg14.JValue,
 				arg15.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			int r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualInt32Method (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualInt32Method (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallInt32Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -4717,29 +3687,32 @@ namespace Java.Interop {
 				arg15.Cleanup (value15);
 			}
 		}
+		public long CallInt64Method (
+			string encodedMember,
+			IJavaObject self,
+			params JValue[] arguments)
+		{
+			JniPeerMembers.AssertSelf (self);
+
+			if (self.GetType () == Members.ManagedPeerType) {
+				var m = GetMethodID (encodedMember);
+				return m.CallVirtualInt64Method (self.SafeHandle, arguments);
+			}
+			var j = self.JniPeerMembers;
+			var n = j.InstanceMethods.GetMethodID (encodedMember);
+			return n.CallNonvirtualInt64Method (self.SafeHandle, j.JniPeerType.SafeHandle, arguments);
+		}
 
 		public long CallInt64Method (
 			string encodedMember,
 			IJavaObject self
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 
 			var args = new JValue[]{
 			};
-
-			var m = GetMethodID (encodedMember);
-			long r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualInt64Method (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualInt64Method (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallInt64Method (encodedMember, self, args);
 			} finally {
 			}
 		}
@@ -4750,25 +3723,13 @@ namespace Java.Interop {
 			T value
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T> arg = new JniArgumentMarshalInfo<T>(value);
 
 			var args = new JValue[]{
 				arg.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			long r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualInt64Method (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualInt64Method (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallInt64Method (encodedMember, self, args);
 			} finally {
 				arg.Cleanup (value);
 			}
@@ -4780,8 +3741,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 
@@ -4789,18 +3748,8 @@ namespace Java.Interop {
 				arg1.JValue,
 				arg2.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			long r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualInt64Method (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualInt64Method (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallInt64Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -4813,8 +3762,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -4824,18 +3771,8 @@ namespace Java.Interop {
 				arg2.JValue,
 				arg3.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			long r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualInt64Method (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualInt64Method (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallInt64Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -4849,8 +3786,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -4862,18 +3797,8 @@ namespace Java.Interop {
 				arg3.JValue,
 				arg4.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			long r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualInt64Method (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualInt64Method (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallInt64Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -4888,8 +3813,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -4903,18 +3826,8 @@ namespace Java.Interop {
 				arg4.JValue,
 				arg5.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			long r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualInt64Method (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualInt64Method (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallInt64Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -4930,8 +3843,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -4947,18 +3858,8 @@ namespace Java.Interop {
 				arg5.JValue,
 				arg6.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			long r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualInt64Method (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualInt64Method (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallInt64Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -4975,8 +3876,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -4994,18 +3893,8 @@ namespace Java.Interop {
 				arg6.JValue,
 				arg7.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			long r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualInt64Method (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualInt64Method (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallInt64Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -5023,8 +3912,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -5044,18 +3931,8 @@ namespace Java.Interop {
 				arg7.JValue,
 				arg8.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			long r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualInt64Method (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualInt64Method (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallInt64Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -5074,8 +3951,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -5097,18 +3972,8 @@ namespace Java.Interop {
 				arg8.JValue,
 				arg9.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			long r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualInt64Method (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualInt64Method (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallInt64Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -5128,8 +3993,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -5153,18 +4016,8 @@ namespace Java.Interop {
 				arg9.JValue,
 				arg10.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			long r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualInt64Method (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualInt64Method (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallInt64Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -5185,8 +4038,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -5212,18 +4063,8 @@ namespace Java.Interop {
 				arg10.JValue,
 				arg11.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			long r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualInt64Method (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualInt64Method (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallInt64Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -5245,8 +4086,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -5274,18 +4113,8 @@ namespace Java.Interop {
 				arg11.JValue,
 				arg12.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			long r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualInt64Method (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualInt64Method (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallInt64Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -5308,8 +4137,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -5339,18 +4166,8 @@ namespace Java.Interop {
 				arg12.JValue,
 				arg13.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			long r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualInt64Method (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualInt64Method (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallInt64Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -5374,8 +4191,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -5407,18 +4222,8 @@ namespace Java.Interop {
 				arg13.JValue,
 				arg14.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			long r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualInt64Method (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualInt64Method (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallInt64Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -5443,8 +4248,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -5478,18 +4281,8 @@ namespace Java.Interop {
 				arg14.JValue,
 				arg15.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			long r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualInt64Method (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualInt64Method (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallInt64Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -5508,29 +4301,32 @@ namespace Java.Interop {
 				arg15.Cleanup (value15);
 			}
 		}
+		public float CallSingleMethod (
+			string encodedMember,
+			IJavaObject self,
+			params JValue[] arguments)
+		{
+			JniPeerMembers.AssertSelf (self);
+
+			if (self.GetType () == Members.ManagedPeerType) {
+				var m = GetMethodID (encodedMember);
+				return m.CallVirtualSingleMethod (self.SafeHandle, arguments);
+			}
+			var j = self.JniPeerMembers;
+			var n = j.InstanceMethods.GetMethodID (encodedMember);
+			return n.CallNonvirtualSingleMethod (self.SafeHandle, j.JniPeerType.SafeHandle, arguments);
+		}
 
 		public float CallSingleMethod (
 			string encodedMember,
 			IJavaObject self
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 
 			var args = new JValue[]{
 			};
-
-			var m = GetMethodID (encodedMember);
-			float r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualSingleMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualSingleMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallSingleMethod (encodedMember, self, args);
 			} finally {
 			}
 		}
@@ -5541,25 +4337,13 @@ namespace Java.Interop {
 			T value
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T> arg = new JniArgumentMarshalInfo<T>(value);
 
 			var args = new JValue[]{
 				arg.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			float r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualSingleMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualSingleMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallSingleMethod (encodedMember, self, args);
 			} finally {
 				arg.Cleanup (value);
 			}
@@ -5571,8 +4355,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 
@@ -5580,18 +4362,8 @@ namespace Java.Interop {
 				arg1.JValue,
 				arg2.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			float r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualSingleMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualSingleMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallSingleMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -5604,8 +4376,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -5615,18 +4385,8 @@ namespace Java.Interop {
 				arg2.JValue,
 				arg3.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			float r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualSingleMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualSingleMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallSingleMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -5640,8 +4400,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -5653,18 +4411,8 @@ namespace Java.Interop {
 				arg3.JValue,
 				arg4.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			float r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualSingleMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualSingleMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallSingleMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -5679,8 +4427,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -5694,18 +4440,8 @@ namespace Java.Interop {
 				arg4.JValue,
 				arg5.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			float r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualSingleMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualSingleMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallSingleMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -5721,8 +4457,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -5738,18 +4472,8 @@ namespace Java.Interop {
 				arg5.JValue,
 				arg6.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			float r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualSingleMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualSingleMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallSingleMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -5766,8 +4490,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -5785,18 +4507,8 @@ namespace Java.Interop {
 				arg6.JValue,
 				arg7.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			float r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualSingleMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualSingleMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallSingleMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -5814,8 +4526,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -5835,18 +4545,8 @@ namespace Java.Interop {
 				arg7.JValue,
 				arg8.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			float r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualSingleMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualSingleMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallSingleMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -5865,8 +4565,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -5888,18 +4586,8 @@ namespace Java.Interop {
 				arg8.JValue,
 				arg9.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			float r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualSingleMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualSingleMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallSingleMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -5919,8 +4607,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -5944,18 +4630,8 @@ namespace Java.Interop {
 				arg9.JValue,
 				arg10.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			float r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualSingleMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualSingleMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallSingleMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -5976,8 +4652,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -6003,18 +4677,8 @@ namespace Java.Interop {
 				arg10.JValue,
 				arg11.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			float r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualSingleMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualSingleMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallSingleMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -6036,8 +4700,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -6065,18 +4727,8 @@ namespace Java.Interop {
 				arg11.JValue,
 				arg12.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			float r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualSingleMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualSingleMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallSingleMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -6099,8 +4751,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -6130,18 +4780,8 @@ namespace Java.Interop {
 				arg12.JValue,
 				arg13.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			float r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualSingleMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualSingleMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallSingleMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -6165,8 +4805,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -6198,18 +4836,8 @@ namespace Java.Interop {
 				arg13.JValue,
 				arg14.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			float r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualSingleMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualSingleMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallSingleMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -6234,8 +4862,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -6269,18 +4895,8 @@ namespace Java.Interop {
 				arg14.JValue,
 				arg15.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			float r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualSingleMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualSingleMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallSingleMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -6299,29 +4915,32 @@ namespace Java.Interop {
 				arg15.Cleanup (value15);
 			}
 		}
+		public double CallDoubleMethod (
+			string encodedMember,
+			IJavaObject self,
+			params JValue[] arguments)
+		{
+			JniPeerMembers.AssertSelf (self);
+
+			if (self.GetType () == Members.ManagedPeerType) {
+				var m = GetMethodID (encodedMember);
+				return m.CallVirtualDoubleMethod (self.SafeHandle, arguments);
+			}
+			var j = self.JniPeerMembers;
+			var n = j.InstanceMethods.GetMethodID (encodedMember);
+			return n.CallNonvirtualDoubleMethod (self.SafeHandle, j.JniPeerType.SafeHandle, arguments);
+		}
 
 		public double CallDoubleMethod (
 			string encodedMember,
 			IJavaObject self
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 
 			var args = new JValue[]{
 			};
-
-			var m = GetMethodID (encodedMember);
-			double r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualDoubleMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualDoubleMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallDoubleMethod (encodedMember, self, args);
 			} finally {
 			}
 		}
@@ -6332,25 +4951,13 @@ namespace Java.Interop {
 			T value
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T> arg = new JniArgumentMarshalInfo<T>(value);
 
 			var args = new JValue[]{
 				arg.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			double r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualDoubleMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualDoubleMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallDoubleMethod (encodedMember, self, args);
 			} finally {
 				arg.Cleanup (value);
 			}
@@ -6362,8 +4969,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 
@@ -6371,18 +4976,8 @@ namespace Java.Interop {
 				arg1.JValue,
 				arg2.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			double r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualDoubleMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualDoubleMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallDoubleMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -6395,8 +4990,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -6406,18 +4999,8 @@ namespace Java.Interop {
 				arg2.JValue,
 				arg3.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			double r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualDoubleMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualDoubleMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallDoubleMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -6431,8 +5014,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -6444,18 +5025,8 @@ namespace Java.Interop {
 				arg3.JValue,
 				arg4.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			double r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualDoubleMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualDoubleMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallDoubleMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -6470,8 +5041,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -6485,18 +5054,8 @@ namespace Java.Interop {
 				arg4.JValue,
 				arg5.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			double r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualDoubleMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualDoubleMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallDoubleMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -6512,8 +5071,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -6529,18 +5086,8 @@ namespace Java.Interop {
 				arg5.JValue,
 				arg6.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			double r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualDoubleMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualDoubleMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallDoubleMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -6557,8 +5104,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -6576,18 +5121,8 @@ namespace Java.Interop {
 				arg6.JValue,
 				arg7.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			double r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualDoubleMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualDoubleMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallDoubleMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -6605,8 +5140,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -6626,18 +5159,8 @@ namespace Java.Interop {
 				arg7.JValue,
 				arg8.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			double r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualDoubleMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualDoubleMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallDoubleMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -6656,8 +5179,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -6679,18 +5200,8 @@ namespace Java.Interop {
 				arg8.JValue,
 				arg9.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			double r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualDoubleMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualDoubleMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallDoubleMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -6710,8 +5221,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -6735,18 +5244,8 @@ namespace Java.Interop {
 				arg9.JValue,
 				arg10.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			double r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualDoubleMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualDoubleMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallDoubleMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -6767,8 +5266,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -6794,18 +5291,8 @@ namespace Java.Interop {
 				arg10.JValue,
 				arg11.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			double r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualDoubleMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualDoubleMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallDoubleMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -6827,8 +5314,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -6856,18 +5341,8 @@ namespace Java.Interop {
 				arg11.JValue,
 				arg12.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			double r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualDoubleMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualDoubleMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallDoubleMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -6890,8 +5365,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -6921,18 +5394,8 @@ namespace Java.Interop {
 				arg12.JValue,
 				arg13.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			double r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualDoubleMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualDoubleMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallDoubleMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -6956,8 +5419,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -6989,18 +5450,8 @@ namespace Java.Interop {
 				arg13.JValue,
 				arg14.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			double r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualDoubleMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualDoubleMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallDoubleMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -7025,8 +5476,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -7060,18 +5509,8 @@ namespace Java.Interop {
 				arg14.JValue,
 				arg15.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			double r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualDoubleMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualDoubleMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallDoubleMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -7090,29 +5529,32 @@ namespace Java.Interop {
 				arg15.Cleanup (value15);
 			}
 		}
+		public JniLocalReference CallObjectMethod (
+			string encodedMember,
+			IJavaObject self,
+			params JValue[] arguments)
+		{
+			JniPeerMembers.AssertSelf (self);
+
+			if (self.GetType () == Members.ManagedPeerType) {
+				var m = GetMethodID (encodedMember);
+				return m.CallVirtualObjectMethod (self.SafeHandle, arguments);
+			}
+			var j = self.JniPeerMembers;
+			var n = j.InstanceMethods.GetMethodID (encodedMember);
+			return n.CallNonvirtualObjectMethod (self.SafeHandle, j.JniPeerType.SafeHandle, arguments);
+		}
 
 		public JniLocalReference CallObjectMethod (
 			string encodedMember,
 			IJavaObject self
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 
 			var args = new JValue[]{
 			};
-
-			var m = GetMethodID (encodedMember);
-			JniLocalReference r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualObjectMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualObjectMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallObjectMethod (encodedMember, self, args);
 			} finally {
 			}
 		}
@@ -7123,25 +5565,13 @@ namespace Java.Interop {
 			T value
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T> arg = new JniArgumentMarshalInfo<T>(value);
 
 			var args = new JValue[]{
 				arg.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			JniLocalReference r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualObjectMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualObjectMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallObjectMethod (encodedMember, self, args);
 			} finally {
 				arg.Cleanup (value);
 			}
@@ -7153,8 +5583,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 
@@ -7162,18 +5590,8 @@ namespace Java.Interop {
 				arg1.JValue,
 				arg2.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			JniLocalReference r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualObjectMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualObjectMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallObjectMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -7186,8 +5604,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -7197,18 +5613,8 @@ namespace Java.Interop {
 				arg2.JValue,
 				arg3.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			JniLocalReference r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualObjectMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualObjectMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallObjectMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -7222,8 +5628,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -7235,18 +5639,8 @@ namespace Java.Interop {
 				arg3.JValue,
 				arg4.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			JniLocalReference r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualObjectMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualObjectMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallObjectMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -7261,8 +5655,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -7276,18 +5668,8 @@ namespace Java.Interop {
 				arg4.JValue,
 				arg5.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			JniLocalReference r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualObjectMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualObjectMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallObjectMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -7303,8 +5685,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -7320,18 +5700,8 @@ namespace Java.Interop {
 				arg5.JValue,
 				arg6.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			JniLocalReference r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualObjectMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualObjectMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallObjectMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -7348,8 +5718,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -7367,18 +5735,8 @@ namespace Java.Interop {
 				arg6.JValue,
 				arg7.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			JniLocalReference r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualObjectMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualObjectMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallObjectMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -7396,8 +5754,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -7417,18 +5773,8 @@ namespace Java.Interop {
 				arg7.JValue,
 				arg8.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			JniLocalReference r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualObjectMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualObjectMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallObjectMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -7447,8 +5793,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -7470,18 +5814,8 @@ namespace Java.Interop {
 				arg8.JValue,
 				arg9.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			JniLocalReference r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualObjectMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualObjectMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallObjectMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -7501,8 +5835,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -7526,18 +5858,8 @@ namespace Java.Interop {
 				arg9.JValue,
 				arg10.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			JniLocalReference r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualObjectMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualObjectMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallObjectMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -7558,8 +5880,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -7585,18 +5905,8 @@ namespace Java.Interop {
 				arg10.JValue,
 				arg11.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			JniLocalReference r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualObjectMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualObjectMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallObjectMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -7618,8 +5928,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -7647,18 +5955,8 @@ namespace Java.Interop {
 				arg11.JValue,
 				arg12.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			JniLocalReference r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualObjectMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualObjectMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallObjectMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -7681,8 +5979,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -7712,18 +6008,8 @@ namespace Java.Interop {
 				arg12.JValue,
 				arg13.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			JniLocalReference r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualObjectMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualObjectMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallObjectMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -7747,8 +6033,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -7780,18 +6064,8 @@ namespace Java.Interop {
 				arg13.JValue,
 				arg14.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			JniLocalReference r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualObjectMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualObjectMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallObjectMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -7816,8 +6090,6 @@ namespace Java.Interop {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
 		)
 		{
-			JniPeerMembers.AssertSelf (self);
-
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
@@ -7851,18 +6123,8 @@ namespace Java.Interop {
 				arg14.JValue,
 				arg15.JValue,
 			};
-
-			var m = GetMethodID (encodedMember);
-			JniLocalReference r;
 			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-				    r = m.CallVirtualObjectMethod (self.SafeHandle, args);
-				} else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					r = m.CallNonvirtualObjectMethod (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-				return r;
+				return CallObjectMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);

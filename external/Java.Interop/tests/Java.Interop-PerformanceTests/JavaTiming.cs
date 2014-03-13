@@ -108,7 +108,12 @@ namespace Java.Interop.PerformanceTests
 			return r;
 		}
 
-		public virtual int Timing_VirtualIntMethod1Args (int value)
+		public virtual int Timing_VirtualIntMethod_Marshal1Args (int value)
+		{
+			return _members.InstanceMethods.CallInt32Method ("VirtualIntMethod1Args\u0000(I)I", this, new JValue (value));
+		}
+
+		public virtual int Timing_VirtualIntMethod_GenericMarshal1Args (int value)
 		{
 			return _members.InstanceMethods.CallInt32Method ("VirtualIntMethod1Args\u0000(I)I", this, value);
 		}
@@ -129,7 +134,17 @@ namespace Java.Interop.PerformanceTests
 			return r;
 		}
 
-		public virtual int Timing_VirtualIntMethod1Args (int[][][] value)
+		public virtual int Timing_VirtualIntMethod_Marshal1Args (int[][][] value)
+		{
+			var native_array = new JavaObjectArray<int[][]> (value);
+			try {
+				return _members.InstanceMethods.CallInt32Method ("VirtualIntMethod1Args\u0000([[[I)I", this, new JValue (native_array));
+			} finally {
+				native_array.CopyTo (value, 0);
+			}
+		}
+
+		public virtual int Timing_VirtualIntMethod_GenericMarshal1Args (int[][][] value)
 		{
 			return _members.InstanceMethods.CallInt32Method ("VirtualIntMethod1Args\u0000([[[I)I", this, value);
 		}

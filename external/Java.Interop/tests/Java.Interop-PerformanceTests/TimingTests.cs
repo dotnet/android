@@ -381,14 +381,21 @@ namespace Java.Interop.PerformanceTests {
 				}
 				n.Stop ();
 
+				var m = Stopwatch.StartNew ();
+				for (int i = 0; i < C; ++i) {
+					t.Timing_VirtualIntMethod_Marshal1Args (i);
+				}
+				m.Stop ();
+
 				var g = Stopwatch.StartNew ();
 				for (int i = 0; i < C; ++i) {
-					t.Timing_VirtualIntMethod1Args (i);
+					t.Timing_VirtualIntMethod_GenericMarshal1Args (i);
 				}
 				g.Stop ();
 
 				Console.WriteLine ("Generic Marshaling Overhead: (I)I");
 				Console.WriteLine ("\t Native Marshaling: {0}", n.Elapsed);
+				Console.WriteLine ("\tPartial Marshaling: {0}", m.Elapsed);
 				Console.WriteLine ("\tGeneric Marshaling: {0}", g.Elapsed);
 			}
 		}
@@ -416,14 +423,21 @@ namespace Java.Interop.PerformanceTests {
 				}
 				n.Stop ();
 
+				var m = Stopwatch.StartNew ();
+				for (int i = 0; i < C; ++i) {
+					t.Timing_VirtualIntMethod_Marshal1Args (value);
+				}
+				m.Stop ();
+
 				var g = Stopwatch.StartNew ();
 				for (int i = 0; i < C; ++i) {
-					t.Timing_VirtualIntMethod1Args (value);
+					t.Timing_VirtualIntMethod_GenericMarshal1Args (value);
 				}
 				g.Stop ();
 
 				Console.WriteLine ("Generic Marshaling Overhead: ([[[I)I");
 				Console.WriteLine ("\t Native Marshaling: {0}", n.Elapsed);
+				Console.WriteLine ("\tPartial Marshaling: {0}", m.Elapsed);
 				Console.WriteLine ("\tGeneric Marshaling: {0}", g.Elapsed);
 			}
 		}
