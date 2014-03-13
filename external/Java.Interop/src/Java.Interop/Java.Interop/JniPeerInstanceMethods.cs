@@ -39,26 +39,6 @@ namespace Java.Interop
 				return m;
 			}
 		}
-
-		public T CallObjectMethod<T> (
-			string encodedMember,
-			IJavaObject self)
-			where T : IJavaObject
-		{
-			JniPeerMembers.AssertSelf (self);
-			var m = GetMethodID (encodedMember);
-			var e = JniEnvironment.Current.JavaVM;
-			if (self.GetType () == Members.ManagedPeerType) {
-				var lref = m.CallVirtualObjectMethod (self.SafeHandle);
-				return e.GetObject<T> (lref, JniHandleOwnership.Transfer);
-			}
-			else {
-				var j = self.JniPeerMembers;
-				m = j.InstanceMethods.GetMethodID (encodedMember);
-				var lref = m.CallNonvirtualObjectMethod (self.SafeHandle, j.JniPeerType.SafeHandle);
-				return e.GetObject<T> (lref, JniHandleOwnership.Transfer);
-			}
-		}
 	}
 
 	struct JniArgumentMarshalInfo<T> {
