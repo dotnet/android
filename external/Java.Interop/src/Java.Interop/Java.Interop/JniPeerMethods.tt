@@ -1,0 +1,100 @@
+﻿<#@ template  language="C#" #>
+<#@ assembly  name="System.Core" #>
+<#@ import    namespace="System.Collections.Generic" #>
+<#@ import    namespace="System.Linq" #>
+<#@ import    namespace="System.Text" #>
+
+<#
+	var jniReturnTypes = new[]{
+		new { JniCallType   = "Void",       ReturnType  = "void" },
+		new { JniCallType   = "Boolean",    ReturnType  = "bool" },
+		new { JniCallType   = "Byte",       ReturnType  = "sbyte" },
+		new { JniCallType   = "Char",       ReturnType  = "char" },
+		new { JniCallType   = "Int16",      ReturnType  = "short" },
+		new { JniCallType   = "Int32",      ReturnType  = "int" },
+		new { JniCallType   = "Int64",      ReturnType  = "long" },
+		new { JniCallType   = "Single",     ReturnType  = "float" },
+		new { JniCallType   = "Double",     ReturnType  = "double" },
+		new { JniCallType   = "Object",     ReturnType  = "JniLocalReference" },
+	};
+#>
+namespace Java.Interop {
+
+	partial class JniPeerInstanceMethods {
+
+<#
+	foreach (var info in jniReturnTypes) {
+		for (int i = 0; i < 16; ++i ) {
+			string typeParams   = i == 1
+				? "T"
+				: string.Join (", ", Enumerable.Range (1, i)
+				.Select (v => "T" + v));
+			string methodParams = i == 1
+				? "T value"
+				: string.Join (", ", Enumerable.Range (1, i)
+				.Select (v => "T" + v + " value" + v));
+			if (i == 0) {
+				typeParams = "";
+				methodParams = "";
+			} else {
+				typeParams = "<" + typeParams + ">";
+			}
+#>
+
+		public <#= info.ReturnType #> Call<#= info.JniCallType #>Method<#= typeParams #> (
+			string encodedMember,
+			IJavaObject self<#= i == 0 ? "" : ",\n\t\t\t" + methodParams #>
+		)
+		{
+			JniPeerMembers.AssertSelf (self);
+
+<#
+			for (int a = 1; a <= i; ++a) {
+			    WriteLine ("\t\t\tJniArgumentMarshalInfo<{0}> arg{1} = new JniArgumentMarshalInfo<{0}>(value{1});",
+			            i == 1 ? "T" : "T" + a,
+			            i == 1 ? "" : a.ToString ());
+			}
+			WriteLine ("");
+			WriteLine ("\t\t\tvar args = new JValue[]{");
+			for (int a = 1; a <= i; ++a) {
+			    WriteLine ("\t\t\t\targ{0}.JValue,",
+			            i == 1 ? "" : a.ToString ());
+			}
+			WriteLine ("\t\t\t};");
+#>
+
+			var m = GetMethodID (encodedMember);
+<#
+			string retAssign = "";
+			if (info.ReturnType != "void") {
+			    WriteLine ("\t\t\t{0} r;", info.ReturnType);
+			    retAssign = "r = ";
+			}
+#>
+			try {
+				if (self.GetType () == Members.ManagedPeerType) {
+				    <#= retAssign #>m.CallVirtual<#= info.JniCallType #>Method (self.SafeHandle, args);
+				} else {
+					var j = self.JniPeerMembers;
+					m = j.InstanceMethods.GetMethodID (encodedMember);
+					<#= retAssign #>m.CallNonvirtual<#= info.JniCallType #>Method (self.SafeHandle, j.JniPeerType.SafeHandle, args);
+				}
+<#
+			if (info.ReturnType != "void")
+				WriteLine ("\t\t\t\treturn r;");
+#>
+			} finally {
+<#
+			for (int a = 1; a <= i; ++a) {
+			    WriteLine ("\t\t\t\targ{0}.Cleanup (value{0});",
+			            i == 1 ? "" : a.ToString ());
+			}
+#>
+			}
+		}
+<#
+		}
+	}
+#>
+	}
+}

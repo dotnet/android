@@ -40,53 +40,6 @@ namespace Java.Interop
 			}
 		}
 
-		public void CallVoidMethod (
-			string encodedMember,
-			IJavaObject self)
-		{
-			JniPeerMembers.AssertSelf (self);
-			var m = GetMethodID (encodedMember);
-			if (self.GetType () == Members.ManagedPeerType)
-				m.CallVirtualVoidMethod (self.SafeHandle);
-			else {
-				var j = self.JniPeerMembers;
-				m = j.InstanceMethods.GetMethodID (encodedMember);
-				m.CallNonvirtualVoidMethod (self.SafeHandle, j.JniPeerType.SafeHandle);
-			}
-		}
-
-		public int CallInt32Method (
-			string encodedMember,
-			IJavaObject self)
-		{
-			JniPeerMembers.AssertSelf (self);
-			var m = GetMethodID (encodedMember);
-			if (self.GetType () == Members.ManagedPeerType) {
-				return m.CallVirtualInt32Method (self.SafeHandle);
-			}
-			else {
-				var j = self.JniPeerMembers;
-				m = j.InstanceMethods.GetMethodID (encodedMember);
-				return m.CallNonvirtualInt32Method (self.SafeHandle, j.JniPeerType.SafeHandle);
-			}
-		}
-
-		public JniLocalReference CallObjectMethod (
-			string encodedMember,
-			IJavaObject self)
-		{
-			JniPeerMembers.AssertSelf (self);
-			var m = GetMethodID (encodedMember);
-			if (self.GetType () == Members.ManagedPeerType) {
-				return m.CallVirtualObjectMethod (self.SafeHandle);
-			}
-			else {
-				var j = self.JniPeerMembers;
-				m = j.InstanceMethods.GetMethodID (encodedMember);
-				return m.CallNonvirtualObjectMethod (self.SafeHandle, j.JniPeerType.SafeHandle);
-			}
-		}
-
 		public T CallObjectMethod<T> (
 			string encodedMember,
 			IJavaObject self)
@@ -104,34 +57,6 @@ namespace Java.Interop
 				m = j.InstanceMethods.GetMethodID (encodedMember);
 				var lref = m.CallNonvirtualObjectMethod (self.SafeHandle, j.JniPeerType.SafeHandle);
 				return e.GetObject<T> (lref, JniHandleOwnership.Transfer);
-			}
-		}
-
-		public int CallInt32Method<T> (
-			string encodedMember,
-			IJavaObject self,
-			T argument)
-		{
-			JniPeerMembers.AssertSelf (self);
-
-			JniArgumentMarshalInfo<T> arg = new JniArgumentMarshalInfo<T> (argument);
-
-			var args = new [] {
-				arg.JValue,
-			};
-
-			var m = GetMethodID (encodedMember);
-			try {
-				if (self.GetType () == Members.ManagedPeerType) {
-					return m.CallVirtualInt32Method (self.SafeHandle, args);
-				}
-				else {
-					var j = self.JniPeerMembers;
-					m = j.InstanceMethods.GetMethodID (encodedMember);
-					return m.CallNonvirtualInt32Method (self.SafeHandle, j.JniPeerType.SafeHandle, args);
-				}
-			} finally {
-				arg.Cleanup (argument);
 			}
 		}
 	}

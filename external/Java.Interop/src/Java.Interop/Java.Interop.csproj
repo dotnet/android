@@ -76,6 +76,9 @@
     <Compile Include="Java.Interop\JavaPrimitiveArrays.cs">
       <DependentUpon>JavaPrimitiveArrays.tt</DependentUpon>
     </Compile>
+    <Compile Include="Java.Interop\JniPeerMethods.cs">
+      <DependentUpon>JniPeerMethods.tt</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <CompileJavaInteropJar Include="java\com\xamarin\android\internal\JavaProxyObject.java" />
@@ -106,6 +109,10 @@
     <None Include="Java.Interop\JavaPrimitiveArrays.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>JavaPrimitiveArrays.cs</LastGenOutput>
+    </None>
+    <None Include="Java.Interop\JniPeerMethods.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>JniPeerMethods.cs</LastGenOutput>
     </None>
   </ItemGroup>
 </Project>
