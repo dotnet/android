@@ -46,7 +46,7 @@ namespace Java.Interop {
 			<#= ret #>n.CallNonvirtual<#= info.JniCallType #>Method (self.SafeHandle, j.JniPeerType.SafeHandle, arguments);
 		}
 <#
-		for (int i = 0; i < 16; ++i ) {
+		for (int i = 0; i <= 16; ++i ) {
 			string typeParams   = i == 1
 				? "T"
 				: string.Join (", ", Enumerable.Range (1, i)
