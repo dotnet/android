@@ -26,18 +26,6 @@ namespace Java.Interop
 				return f;
 			}
 		}
-
-		public bool GetBooleanValue (IJavaObject self, string encodedMember)
-		{
-			JniPeerMembers.AssertSelf (self);
-			return GetFieldID (encodedMember).GetBooleanValue (self.SafeHandle);
-		}
-
-		public void SetValue (IJavaObject self, string encodedMember, bool value)
-		{
-			JniPeerMembers.AssertSelf (self);
-			GetFieldID (encodedMember).SetValue (self.SafeHandle, value);
-		}
 	}
 }
 

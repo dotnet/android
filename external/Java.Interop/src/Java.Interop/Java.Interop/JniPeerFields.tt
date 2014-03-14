@@ -1,0 +1,48 @@
+﻿<#@ template  language="C#" #>
+<#@ assembly  name="System.Core" #>
+<#@ import    namespace="System.Collections.Generic" #>
+<#@ import    namespace="System.Linq" #>
+<#@ import    namespace="System.Text" #>
+<#
+	var jniReturnTypes = new[]{
+		new { JniCallType   = "Boolean",    ReturnType  = "bool",               ParameterType = "bool" },
+		new { JniCallType   = "Byte",       ReturnType  = "sbyte",              ParameterType = "sbyte" },
+		new { JniCallType   = "Char",       ReturnType  = "char",               ParameterType = "char" },
+		new { JniCallType   = "Int16",      ReturnType  = "short",              ParameterType = "short" },
+		new { JniCallType   = "Int32",      ReturnType  = "int",                ParameterType = "int" },
+		new { JniCallType   = "Int64",      ReturnType  = "long",               ParameterType = "long" },
+		new { JniCallType   = "Single",     ReturnType  = "float",              ParameterType = "float" },
+		new { JniCallType   = "Double",     ReturnType  = "double",             ParameterType = "double" },
+		new { JniCallType   = "Object",     ReturnType  = "JniLocalReference",  ParameterType = "JniReferenceSafeHandle" },
+	};
+
+#>
+namespace Java.Interop {
+
+	partial class JniPeerInstanceFields {
+<#
+	foreach (var info in jniReturnTypes) {
+#>
+
+		public <#= info.ReturnType #> Get<#= info.JniCallType #>Value (
+			string encodedMember,
+			IJavaObject self)
+		{
+			JniPeerMembers.AssertSelf (self);
+
+			return GetFieldID (encodedMember)
+				.Get<#= info.JniCallType #>Value (self.SafeHandle);
+		}
+
+		public void SetValue (string encodedMember, IJavaObject self, <#= info.ParameterType #> value)
+		{
+			JniPeerMembers.AssertSelf (self);
+
+			GetFieldID (encodedMember)
+				.SetValue (self.SafeHandle, value);
+		}
+<#
+	}
+#>
+	}
+}
