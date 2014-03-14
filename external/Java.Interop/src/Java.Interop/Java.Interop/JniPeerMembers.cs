@@ -18,12 +18,14 @@ namespace Java.Interop {
 			ManagedPeerType = managedPeerType;
 			instanceMethods = new JniPeerInstanceMethods (this);
 			instanceFields  = new JniPeerInstanceFields (this);
+			staticMethods   = new JniPeerStaticMethods (this);
 		}
 
 		JniType     jniPeerType;
 
 		readonly    JniPeerInstanceMethods  instanceMethods;
 		readonly    JniPeerInstanceFields   instanceFields;
+		readonly    JniPeerStaticMethods    staticMethods;
 
 		public      Type        ManagedPeerType {get; private set;}
 		public      string      JniPeerTypeName {get; private set;}
@@ -41,6 +43,10 @@ namespace Java.Interop {
 
 		public  JniPeerInstanceFields   InstanceFields {
 			get {return instanceFields;}
+		}
+
+		public  JniPeerStaticMethods    StaticMethods {
+			get {return staticMethods;}
 		}
 
 		internal static void AssertSelf (IJavaObject self)

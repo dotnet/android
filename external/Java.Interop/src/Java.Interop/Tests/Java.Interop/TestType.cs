@@ -61,6 +61,11 @@ namespace Java.InteropTests
 			return _members.InstanceMethods.CallInt32Method ("identity\u0000(I)I", this, value);
 		}
 
+		public static int StaticIdentity (int value)
+		{
+			return _members.StaticMethods.CallInt32Method ("staticIdentity\u0000(I)I", value);
+		}
+
 		static Delegate GetEqualsThisHandler ()
 		{
 			Func<IntPtr, IntPtr, IntPtr, bool> h = (jnienv, n_self, n_value) => {

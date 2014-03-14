@@ -100,6 +100,13 @@ namespace Java.InteropTests
 					Assert.AreEqual (i, t.Identity (i));
 			}
 		}
+
+		[Test]
+		public void StaticIdentity ()
+		{
+			for (int i = 0; i < 10; ++i)
+				Assert.AreEqual (i, TestType.StaticIdentity (i));
+		}
 	}
 }
 

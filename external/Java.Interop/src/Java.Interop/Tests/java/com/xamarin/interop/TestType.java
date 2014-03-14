@@ -59,6 +59,10 @@ public class TestType {
 	    return value;
 	}
 
+	public static int staticIdentity (int value) {
+	    return value;
+	}
+
 	public  native  boolean equalsThis (Object value);
 	public  native  int     getInt32Value ();
 	public  native  String  getStringValue (int value);

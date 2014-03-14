@@ -3,7 +3,6 @@
 <#@ import    namespace="System.Collections.Generic" #>
 <#@ import    namespace="System.Linq" #>
 <#@ import    namespace="System.Text" #>
-
 <#
 	var jniReturnTypes = new[]{
 		new { JniCallType   = "Void",       ReturnType  = "void" },
@@ -17,6 +16,7 @@
 		new { JniCallType   = "Double",     ReturnType  = "double" },
 		new { JniCallType   = "Object",     ReturnType  = "JniLocalReference" },
 	};
+
 #>
 namespace Java.Interop {
 
@@ -84,6 +84,76 @@ namespace Java.Interop {
 #>
 			try {
 				<#= ret #>Call<#= info.JniCallType #>Method (encodedMember, self, args);
+			} finally {
+<#
+			for (int a = 1; a <= i; ++a) {
+			    WriteLine ("\t\t\t\targ{0}.Cleanup (value{0});",
+			            i == 1 ? "" : a.ToString ());
+			}
+#>
+			}
+		}
+<#
+		}
+	}
+#>
+	}
+
+	partial class JniPeerStaticMethods {
+
+<#
+	foreach (var info in jniReturnTypes) {
+		string ret = "";
+		if (info.ReturnType != "void") {
+		    ret = "return ";
+		}
+
+#>
+		public <#= info.ReturnType #> Call<#= info.JniCallType #>Method (
+			string encodedMember,
+			params JValue[] arguments)
+		{
+			var m = GetMethodID (encodedMember);
+			<#= ret #>m.Call<#= info.JniCallType #>Method (Members.JniPeerType.SafeHandle, arguments);
+		}
+<#
+		for (int i = 1; i <= 16; ++i ) {
+			string typeParams   = i == 1
+				? "T"
+				: string.Join (", ", Enumerable.Range (1, i)
+				.Select (v => "T" + v));
+			string methodParams = i == 1
+				? "T value"
+				: string.Join (", ", Enumerable.Range (1, i)
+				.Select (v => "T" + v + " value" + v));
+			if (i == 0) {
+				typeParams = "";
+				methodParams = "";
+			} else {
+				typeParams = "<" + typeParams + ">";
+			}
+#>
+
+		public <#= info.ReturnType #> Call<#= info.JniCallType #>Method<#= typeParams #> (
+			string encodedMember<#= i == 0 ? "" : ",\n\t\t\t" + methodParams #>
+		)
+		{
+<#
+			for (int a = 1; a <= i; ++a) {
+			    WriteLine ("\t\t\tJniArgumentMarshalInfo<{0}> arg{1} = new JniArgumentMarshalInfo<{0}>(value{1});",
+			            i == 1 ? "T" : "T" + a,
+			            i == 1 ? "" : a.ToString ());
+			}
+			WriteLine ("");
+			WriteLine ("\t\t\tvar args = new JValue[]{");
+			for (int a = 1; a <= i; ++a) {
+			    WriteLine ("\t\t\t\targ{0}.JValue,",
+			            i == 1 ? "" : a.ToString ());
+			}
+			WriteLine ("\t\t\t};");
+#>
+			try {
+				<#= ret #>Call<#= info.JniCallType #>Method (encodedMember, args);
 			} finally {
 <#
 			for (int a = 1; a <= i; ++a) {

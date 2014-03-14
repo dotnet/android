@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>10.0.0</ProductVersion>
+    <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{94BD81F7-B06F-4295-9636-F8A3B6BDC762}</ProjectGuid>
     <ProjectTypeGuids>{786C830F-07A1-408B-BD7F-6EE04809D6DB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
@@ -73,6 +73,7 @@
     <Compile Include="Java.Interop\JniMarshalInfo.cs" />
     <Compile Include="Java.Interop\JniPeerInstanceMethods.cs" />
     <Compile Include="Java.Interop\JniPeerInstanceFields.cs" />
+    <Compile Include="Java.Interop\JniPeerStaticMethods.cs" />
     <Compile Include="Java.Interop\JavaPrimitiveArrays.cs">
       <DependentUpon>JavaPrimitiveArrays.tt</DependentUpon>
     </Compile>
