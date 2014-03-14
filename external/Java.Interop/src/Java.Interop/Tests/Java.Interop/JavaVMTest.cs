@@ -192,13 +192,14 @@ namespace Java.InteropTests
 			//       null values, but maybe they shouldn't anyway?
 			AssertGetJniMarshalInfoForType (typeof (AppDomain));
 
-			// not yet implemented...
-			AssertGetJniMarshalInfoForType (typeof (short));
+			AssertGetJniMarshalInfoForPrimitiveType<bool> ("JniBoolean");
+			AssertGetJniMarshalInfoForPrimitiveType<char> ("JniCharacter");
+			AssertGetJniMarshalInfoForPrimitiveType<short> ("JniShort");
+			AssertGetJniMarshalInfoForPrimitiveType<int> ("JniInteger");
+			AssertGetJniMarshalInfoForPrimitiveType<long> ("JniLong");
+			AssertGetJniMarshalInfoForPrimitiveType<float> ("JniFloat");
+			AssertGetJniMarshalInfoForPrimitiveType<double> ("JniDouble");
 
-			AssertGetJniMarshalInfoForType (typeof (int),
-					getValue:                   "JniInteger.GetValue",
-					createJValue:               "JniInteger.CreateJValue",
-					createLocalRef:             "JniInteger.NewValue");
 			AssertGetJniMarshalInfoForType (typeof (string),
 					getValue:                   "Strings.ToString",
 					createLocalRef:             "Strings.NewString");
@@ -260,6 +261,18 @@ namespace Java.InteropTests
 			assertMethod (createLocalRef,           info.CreateLocalRef,            "CreateLocalRef");
 			assertMethod (createMarshalCollection,  info.CreateMarshalCollection,   "CreateMarshalCollection");
 			assertMethod (cleanupMarshalCollection, info.CleanupMarshalCollection,  "CleanupMarshalCollection");
+		}
+
+		static void AssertGetJniMarshalInfoForPrimitiveType<T> (string type)
+		{
+			AssertGetJniMarshalInfoForType (typeof (T),
+					getValue:       type + ".GetValueFromJni",
+					createJValue:   type + ".CreateJValue",
+					createLocalRef: type + ".CreateLocalRef");
+			var info = JVM.Current.GetJniMarshalInfoForType (typeof(T));
+			info.CreateJValue (default (T));
+			using (var lref = info.CreateLocalRef (default (T)))
+				Assert.AreEqual (default (T), info.GetValueFromJni (lref, JniHandleOwnership.DoNotTransfer, null));
 		}
 
 		static void AssertGetJniMarshalInfoForPrimitiveArray<TArray, TElement> ()

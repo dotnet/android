@@ -84,6 +84,9 @@
     <Compile Include="Java.Interop\JniPeerFields.cs">
       <DependentUpon>JniPeerFields.tt</DependentUpon>
     </Compile>
+    <Compile Include="Java.Interop\JniBuiltinMarshalers.cs">
+      <DependentUpon>JniBuiltinMarshalers.tt</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <CompileJavaInteropJar Include="java\com\xamarin\android\internal\JavaProxyObject.java" />
@@ -122,6 +125,10 @@
     <None Include="Java.Interop\JniPeerFields.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>JniPeerFields.cs</LastGenOutput>
+    </None>
+    <None Include="Java.Interop\JniBuiltinMarshalers.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>JniBuiltinMarshalers.cs</LastGenOutput>
     </None>
   </ItemGroup>
 </Project>

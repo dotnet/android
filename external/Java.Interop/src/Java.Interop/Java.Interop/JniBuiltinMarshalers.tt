@@ -1,0 +1,83 @@
+﻿<#@ template  language="C#" #>
+<#@ assembly  name="System.Core" #>
+<#@ import    namespace="System.Collections.Generic" #>
+<#@ import    namespace="System.Linq" #>
+<#@ import    namespace="System.Text" #>
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+
+namespace Java.Interop {
+<#
+	var types = new[]{
+		new { Name = "Boolean",     Type = "Boolean",   JniType = "Z",  GetValue = "booleanValue" },
+		new { Name = "Character",   Type = "Char",      JniType = "C",  GetValue = "charValue" },
+		new { Name = "Short",       Type = "Int16",     JniType = "S",  GetValue = "shortValue" },
+		new { Name = "Integer",     Type = "Int32",     JniType = "I",  GetValue = "intValue" },
+		new { Name = "Long",        Type = "Int64",     JniType = "J",  GetValue = "longValue" },
+		new { Name = "Float",       Type = "Single",    JniType = "F",  GetValue = "floatValue" },
+		new { Name = "Double",      Type = "Double",    JniType = "D",  GetValue = "doubleValue" },
+	};
+#>
+
+	partial class JavaVM {
+
+		static readonly KeyValuePair<Type, JniMarshalInfo>[] JniBuiltinMarshalers = new []{
+			new KeyValuePair<Type, JniMarshalInfo>(typeof (string), new JniMarshalInfo {
+				GetValueFromJni             = JniEnvironment.Strings.ToString,
+				CreateLocalRef              = JniEnvironment.Strings.NewString,
+			}),
+<#
+	foreach (var type in types) {
+#>
+			new KeyValuePair<Type, JniMarshalInfo>(typeof (<#= type.Type #>), new JniMarshalInfo {
+				CreateJValue                = Jni<#= type.Name #>.CreateJValue,
+				GetValueFromJni             = Jni<#= type.Name #>.GetValueFromJni,
+				CreateLocalRef              = Jni<#= type.Name #>.CreateLocalRef,
+			}),
+<#
+	}
+#>
+		};
+	}
+<#
+	foreach (var type in types) {
+#>
+
+	static class Jni<#= type.Name #> {
+		internal    const   string  JniTypeName = "java/lang/<#= type.Name #>";
+
+		static JniType _TypeRef;
+		static JniType TypeRef {
+			get {return JniType.GetCachedJniType (ref _TypeRef, JniTypeName);}
+		}
+
+		internal static JValue CreateJValue (object value)
+		{
+			return new JValue ((<#= type.Type #>) value);
+		}
+
+		static JniInstanceMethodID init;
+		internal static JniLocalReference CreateLocalRef (object value)
+		{
+			Debug.Assert (value is <#= type.Type #>);
+			TypeRef.GetCachedConstructor (ref init, "(<#= type.JniType #>)V");
+			return TypeRef.NewObject (init, new JValue ((<#= type.Type #>) value));
+		}
+
+		static JniInstanceMethodID <#= type.GetValue #>;
+		internal static object GetValueFromJni (JniReferenceSafeHandle self, JniHandleOwnership transfer, Type targetType)
+		{
+			Debug.Assert (targetType == typeof (<#= type.Type #>));
+			TypeRef.GetCachedInstanceMethod (ref <#= type.GetValue #>, "<#= type.GetValue #>", "()<#= type.JniType #>");
+			try {
+				return <#= type.GetValue #>.CallVirtual<#= type.Type #>Method (self);
+			} finally {
+				JniEnvironment.Handles.Dispose (self, transfer);
+			}
+		}
+	}
+<#
+	}
+#>
+}

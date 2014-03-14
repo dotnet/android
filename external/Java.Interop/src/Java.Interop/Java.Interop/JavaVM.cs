@@ -655,18 +655,6 @@ namespace Java.Interop
 			GetValueFromJni         = JavaObjectExtensions.GetValue,
 			CreateLocalRef          = JavaObjectExtensions.CreateLocalRef,
 		};
-
-		static readonly KeyValuePair<Type, JniMarshalInfo>[] JniBuiltinMarshalers = new []{
-			new KeyValuePair<Type, JniMarshalInfo>(typeof (string), new JniMarshalInfo {
-				GetValueFromJni             = JniEnvironment.Strings.ToString,
-				CreateLocalRef              = JniEnvironment.Strings.NewString,
-			}),
-			new KeyValuePair<Type, JniMarshalInfo>(typeof (int), new JniMarshalInfo {
-				CreateJValue                = JniInteger.CreateJValue,
-				GetValueFromJni             = JniInteger.GetValue,
-				CreateLocalRef              = JniInteger.NewValue,
-			}),
-		};
 	}
 
 	partial class JavaVM {
