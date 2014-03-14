@@ -45,4 +45,25 @@ namespace Java.Interop {
 	}
 #>
 	}
+
+	partial class JniPeerStaticFields {
+<#
+	foreach (var info in jniReturnTypes) {
+#>
+
+		public <#= info.ReturnType #> Get<#= info.JniCallType #>Value (string encodedMember)
+		{
+			return GetFieldID (encodedMember)
+				.Get<#= info.JniCallType #>Value (Members.JniPeerType.SafeHandle);
+		}
+
+		public void SetValue (string encodedMember, <#= info.ParameterType #> value)
+		{
+			GetFieldID (encodedMember)
+				.SetValue (Members.JniPeerType.SafeHandle, value);
+		}
+<#
+	}
+#>
+	}
 }

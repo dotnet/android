@@ -74,6 +74,7 @@
     <Compile Include="Java.Interop\JniPeerInstanceMethods.cs" />
     <Compile Include="Java.Interop\JniPeerInstanceFields.cs" />
     <Compile Include="Java.Interop\JniPeerStaticMethods.cs" />
+    <Compile Include="Java.Interop\JniPeerStaticFields.cs" />
     <Compile Include="Java.Interop\JavaPrimitiveArrays.cs">
       <DependentUpon>JavaPrimitiveArrays.tt</DependentUpon>
     </Compile>
