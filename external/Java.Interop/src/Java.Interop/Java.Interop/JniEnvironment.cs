@@ -110,6 +110,10 @@ namespace Java.Interop {
 			JavaVM     = null;
 		}
 
+		public JniVersion JniVersion {
+			get {return (JniVersion) Versions.GetVersion ();}
+		}
+
 		int LrefCount;
 
 		public int LocalReferenceCount {
