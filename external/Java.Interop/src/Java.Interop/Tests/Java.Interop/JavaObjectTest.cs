@@ -15,30 +15,29 @@ namespace Java.InteropTests
 		{
 			Console.WriteLine ("JavaReferencedInstanceSurvivesCollection");
 			using (var t = new JniType ("java/lang/Object")) {
-				var lrefArray = JniEnvironment.Arrays.NewObjectArray (1, t.SafeHandle, JniReferenceSafeHandle.Null);
-				var grefArray = lrefArray.NewGlobalRef ();
-				lrefArray.Dispose ();
 				var oldHandle = IntPtr.Zero;
+				var array     = new JavaObjectArray<JavaObject> (1);
+				array.RegisterWithVM ();
 				var w = new Thread (() => {
 						var v       = new JavaObject ();
 						oldHandle   = v.SafeHandle.DangerousGetHandle ();
 						v.RegisterWithVM ();
-						JniEnvironment.Arrays.SetObjectArrayElement (grefArray, 0, v.SafeHandle);
+						array [0] = v;
 				});
 				w.Start ();
 				w.Join ();
 				GC.Collect ();
 				GC.WaitForPendingFinalizers ();
-				var first = JniEnvironment.Arrays.GetObjectArrayElement (grefArray, 0);
-				Assert.IsNotNull (JVM.Current.PeekObject (first));
-				var o = (JavaObject) JVM.Current.GetObject (first, JniHandleOwnership.Transfer);
+				var first = array [0];
+				Assert.IsNotNull (JVM.Current.PeekObject (first.SafeHandle));
+				var o = (JavaObject) JVM.Current.GetObject (first.SafeHandle, JniHandleOwnership.DoNotTransfer);
 				if (oldHandle != o.SafeHandle.DangerousGetHandle ()) {
 					Console.WriteLine ("Yay, object handle changed; value survived a GC!");
 				} else {
 					Console.WriteLine ("What is this, Android pre-ICS?!");
 				}
 				o.Dispose ();
-				grefArray.Dispose ();
+				array.Dispose ();
 			}
 		}
 

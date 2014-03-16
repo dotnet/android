@@ -184,7 +184,6 @@ namespace Xamarin.Java.Interop
 		static void GenerateTypes (TextWriter o)
 		{
 			var visibilities = new Dictionary<string, string> {
-				{ "Arrays",     "public" },
 				{ "Errors",     "public" },
 				{ "Handles",    "public" },
 				{ "Strings",    "public" },
