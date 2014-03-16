@@ -100,7 +100,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = "Errors",
 				Name          = "ExceptionOccurred",
-				Visibility    = "public",
+				Visibility    = "internal",
 				Prototype     = "jthrowable  (*ExceptionOccurred)(JNIEnv*);",
 				ReturnType    = new TypeInfo ("jthrowable"),
 				Parameters    = new ParamInfo [] {},
@@ -108,7 +108,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = "Errors",
 				Name          = "ExceptionDescribe",
-				Visibility    = "public",
+				Visibility    = "internal",
 				Prototype     = "void        (*ExceptionDescribe)(JNIEnv*);",
 				ReturnType    = new TypeInfo ("void"),
 				Parameters    = new ParamInfo [] {},
@@ -116,7 +116,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = "Errors",
 				Name          = "ExceptionClear",
-				Visibility    = "public",
+				Visibility    = "internal",
 				Prototype     = "void        (*ExceptionClear)(JNIEnv*);",
 				ReturnType    = new TypeInfo ("void"),
 				Parameters    = new ParamInfo [] {},
@@ -1988,7 +1988,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = "Errors",
 				Name          = "ExceptionCheck",
-				Visibility    = "public",
+				Visibility    = "internal",
 				Prototype     = "jboolean    (*ExceptionCheck)(JNIEnv*);",
 				ReturnType    = new TypeInfo ("jboolean"),
 				Parameters    = new ParamInfo [] {},
