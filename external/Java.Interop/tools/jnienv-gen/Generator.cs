@@ -394,12 +394,12 @@ namespace Xamarin.Java.Interop
 		
 		public TypeInfo ReturnType;
 		public ParamInfo [] Parameters;
-		
+
 		// If true, then we initialize the binding on the static ctor, we dont lazy-define it
-		public bool Prebind;
+		public bool Prebind = false;
 
 		// If there is a custom wrapper in JNIEnv (so an automatic one shouldn't be generated)
-		public bool CustomWrapper;
+		public bool CustomWrapper = false;
 
 		// If the JNI function can throw an exception (ExceptionOccurred needs to be invoked)
 		public bool Throws;
