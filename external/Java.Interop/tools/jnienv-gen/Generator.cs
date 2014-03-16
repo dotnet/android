@@ -186,6 +186,7 @@ namespace Xamarin.Java.Interop
 			var visibilities = new Dictionary<string, string> {
 				{ "Errors",     "public" },
 				{ "Handles",    "public" },
+				{ "IO",         "public" },
 				{ "Strings",    "public" },
 				{ "Types",      "public" },
 			};
