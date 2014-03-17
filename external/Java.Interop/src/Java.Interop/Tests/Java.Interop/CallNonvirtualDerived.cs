@@ -9,7 +9,7 @@ namespace Java.InteropTests
 	{
 		internal new const string JniTypeName = "com/xamarin/interop/CallNonvirtualDerived";
 
-		readonly static JniPeerMembers _members = new JniPeerMembers (JniTypeName, typeof (CallNonvirtualBase));
+		readonly static JniPeerMembers _members = new JniPeerMembers (JniTypeName, typeof (CallNonvirtualDerived));
 
 		public override JniPeerMembers JniPeerMembers {
 			get {return _members;}
