@@ -17,7 +17,7 @@ namespace Java.Interop
 
 			internal static JniLocalReference NewString (object value)
 			{
-				Debug.Assert (value == null || (value is string));
+				Debug.Assert (value == null || (value is string), "Expected value==null or string; was: " + (value ?? "").GetType ().FullName);
 				return NewString ((string) value);
 			}
 
@@ -43,7 +43,7 @@ namespace Java.Interop
 
 			internal static unsafe string ToString (JniReferenceSafeHandle value, JniHandleOwnership transfer, Type targetType)
 			{
-				Debug.Assert (targetType == typeof (string));
+				Debug.Assert (targetType == typeof (string), "Expected targetType==typeof(string); was: " + targetType);
 				return ToString (value, transfer);
 			}
 		}
