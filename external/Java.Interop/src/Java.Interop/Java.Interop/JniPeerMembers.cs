@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Collections.Generic;
 
 namespace Java.Interop {
@@ -13,6 +14,13 @@ namespace Java.Interop {
 				throw new ArgumentNullException ("managedPeerType");
 			if (!typeof (IJavaObject).IsAssignableFrom (managedPeerType))
 				throw new ArgumentException ("'managedPeerType' must implement the IJavaObject interface.", "managedPeerType");
+
+			Debug.Assert (
+					JniEnvironment.Current.JavaVM.GetJniTypeInfoForType (managedPeerType).JniTypeName == jniPeerType,
+					string.Format ("ManagedPeerType <=> JniTypeName Mismatch! javaVM.GetJniTypeInfoForType(typeof({0})).JniTypeName=\"{1}\" != \"{2}\"",
+						managedPeerType.FullName,
+						JniEnvironment.Current.JavaVM.GetJniTypeInfoForType (managedPeerType).JniTypeName,
+						jniPeerType));
 
 			JniPeerTypeName = jniPeerType;
 			ManagedPeerType = managedPeerType;
