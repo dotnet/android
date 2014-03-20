@@ -36,6 +36,7 @@
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Java.Interop\JavaVM.cs" />
+    <Compile Include="Java.Interop\JniAllocObjectRef.cs" />
     <Compile Include="Java.Interop\JniReferenceSafeHandle.cs" />
     <Compile Include="Java.Interop\JniInstanceMethodID.cs" />
     <Compile Include="Java.Interop\JniEnvironment.cs" />

@@ -163,7 +163,6 @@ namespace Java.InteropTests
 		[Test]
 		public void Ctor_Exceptions ()
 		{
-			Assert.Throws<ArgumentNullException> (() => new JavaObject (null, JniHandleOwnership.Transfer));
 			Assert.Throws<ArgumentException> (() => new JavaObject (new JniInvocationHandle (IntPtr.Zero), JniHandleOwnership.Transfer));
 
 			// Note: This may break if/when JavaVM provides "default"

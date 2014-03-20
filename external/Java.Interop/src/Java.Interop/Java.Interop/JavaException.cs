@@ -14,28 +14,45 @@ namespace Java.Interop
 
 		public JavaException ()
 		{
-			JavaVM.SetObjectSafeHandle (this, _NewObject (GetType (), JniPeerMembers), JniHandleOwnership.Transfer);
+			using (SetSafeHandle (
+						JniPeerMembers.InstanceMethods.StartCreateInstance ("()V", GetType ()),
+						JniHandleOwnership.Transfer)) {
+				JniPeerMembers.InstanceMethods.FinishCreateInstance ("()V", this);
+			}
 			javaStackTrace    = _GetJavaStack (SafeHandle);
 		}
 
 		public JavaException (string message)
 			: base (message)
 		{
-			JavaVM.SetObjectSafeHandle (this, _NewObject (GetType (), JniPeerMembers), JniHandleOwnership.Transfer);
+			const string signature  = "(Ljava/lang/String;)V";
+			using (SetSafeHandle (
+						JniPeerMembers.InstanceMethods.StartCreateInstance (signature, GetType (), message),
+						JniHandleOwnership.Transfer)) {
+				JniPeerMembers.InstanceMethods.FinishCreateInstance (signature, this, message);
+			}
 			javaStackTrace    = _GetJavaStack (SafeHandle);
 		}
 
 		public JavaException (string message, Exception innerException)
 			: base (message, innerException)
 		{
-			JavaVM.SetObjectSafeHandle (this, _NewObject (GetType (), JniPeerMembers), JniHandleOwnership.Transfer);
+			const string signature  = "(Ljava/lang/String;)V";
+			using (SetSafeHandle (
+						JniPeerMembers.InstanceMethods.StartCreateInstance (signature, GetType (), message),
+						JniHandleOwnership.Transfer)) {
+				JniPeerMembers.InstanceMethods.FinishCreateInstance (signature, this, message);
+			}
 			javaStackTrace    = _GetJavaStack (SafeHandle);
 		}
 
 		public JavaException (JniReferenceSafeHandle handle, JniHandleOwnership transfer)
 			: base (_GetMessage (handle), _GetCause (handle))
 		{
-			JavaVM.SetObjectSafeHandle (this, handle, transfer);
+			if (handle == null)
+				return;
+			using (SetSafeHandle (handle, transfer)) {
+			}
 			javaStackTrace    = _GetJavaStack (SafeHandle);
 		}
 
@@ -63,6 +80,15 @@ namespace Java.Interop
 					"  --- End of managed " + GetType ().FullName + " stack trace ---" + Environment.NewLine +
 					javaStackTrace;
 			}
+		}
+
+		protected SetSafeHandleCompletion SetSafeHandle (JniReferenceSafeHandle handle, JniHandleOwnership transfer)
+		{
+			return JniEnvironment.Current.JavaVM.SetObjectSafeHandle (
+					this,
+					handle,
+					transfer,
+					a => new SetSafeHandleCompletion (a));
 		}
 
 		public void RegisterWithVM ()
@@ -138,24 +164,6 @@ namespace Java.Interop
 			}
 		}
 
-		static JniLocalReference _NewObject (Type type, JniPeerMembers peerMembers)
-		{
-			var info    = JniEnvironment.Current.JavaVM.GetJniTypeInfoForType (type);
-			if (info.JniTypeName == null)
-				throw new NotSupportedException (
-					string.Format ("Cannot create instance of type '{0}': no Java peer type found.",
-						type.FullName));
-
-			if (type == peerMembers.ManagedPeerType) {
-				var c = peerMembers.InstanceMethods.GetConstructor ("()V");
-				return peerMembers.JniPeerType.NewObject (c);
-			}
-			using (var t = new JniType (info.ToString ()))
-			using (var c = t.GetConstructor ("()V")) {
-				return t.NewObject (c);
-			}
-		}
-
 		int IJavaObjectEx.IdentityHashCode {
 			get {return identity;}
 			set {identity = value;}
@@ -174,6 +182,22 @@ namespace Java.Interop
 		void IJavaObjectEx.SetSafeHandle (JniReferenceSafeHandle handle)
 		{
 			SafeHandle = handle;
+		}
+
+		protected struct SetSafeHandleCompletion : IDisposable {
+
+			readonly    Action  action;
+
+			public SetSafeHandleCompletion (Action action)
+			{
+				this.action = action;
+			}
+
+			public void Dispose ()
+			{
+				if (action != null)
+					action ();
+			}
 		}
 	}
 }

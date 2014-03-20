@@ -27,5 +27,12 @@ namespace Java.Interop
 			JniEnvironment.Current.LogDestroyLocalRef (h);
 			return h;
 		}
+
+		internal JniAllocObjectRef ToAllocObjectRef ()
+		{
+			var h   = handle;
+			handle  = IntPtr.Zero;
+			return new JniAllocObjectRef (h);
+		}
 	}
 }

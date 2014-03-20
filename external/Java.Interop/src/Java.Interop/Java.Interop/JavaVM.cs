@@ -83,6 +83,9 @@ namespace Java.Interop
 		public  bool        TrackIDs                    {get; set;}
 		public  bool        DestroyVMOnDispose          {get; set;}
 
+		// Prefer JNIEnv::NewObject() over JNIEnv::AllocObject() + JNIEnv::CallNonvirtualVoidMethod()
+		public  bool        NewObjectRequired           {get; set;}
+
 		public  JavaVMSafeHandle            VMHandle            {get; set;}
 		public  JniEnvironmentSafeHandle    EnvironmentHandle   {get; set;}
 
@@ -146,6 +149,8 @@ namespace Java.Interop
 
 		public  JavaVMSafeHandle                        SafeHandle      {get; private set;}
 
+		public  bool                                    NewObjectRequired   {get; private set;}
+
 		protected JavaVM (JavaVMOptions options)
 		{
 			if (options == null)
@@ -157,6 +162,8 @@ namespace Java.Interop
 
 			TrackIDs     = options.TrackIDs;
 			DestroyVM    = options.DestroyVMOnDispose;
+
+			NewObjectRequired   = options.NewObjectRequired;
 
 			SafeHandle  = options.VMHandle;
 			Invoker     = SafeHandle.CreateInvoker ();
@@ -378,21 +385,36 @@ namespace Java.Interop
 						(t = (IJavaObject) wv.Target) != null &&
 						object.ReferenceEquals (value, t))
 					RegisteredInstances.Remove (key);
+				value.Registered = false;
 			}
 		}
 
-		internal static void SetObjectSafeHandle<T> (T value, JniReferenceSafeHandle handle, JniHandleOwnership transfer)
+		internal TCleanup SetObjectSafeHandle<T, TCleanup> (T value, JniReferenceSafeHandle handle, JniHandleOwnership transfer, Func<Action, TCleanup> createCleanup)
 			where T : IJavaObject, IJavaObjectEx
+			where TCleanup : IDisposable
 		{
 			if (handle == null)
 				throw new ArgumentNullException ("handle");
 			if (handle.IsInvalid)
 				throw new ArgumentException ("handle is invalid.", "handle");
 
+			bool register   = handle is JniAllocObjectRef;
+
 			value.SetSafeHandle (handle.NewLocalRef ());
 			JniEnvironment.Handles.Dispose (handle, transfer);
 
 			value.IdentityHashCode = JniSystem.IdentityHashCode (value.SafeHandle);
+
+			if (register) {
+				RegisterObject (value);
+				Action unregister = () => {
+					UnRegisterObject (value);
+					using (var g = value.SafeHandle)
+						value.SetSafeHandle (g.NewLocalRef ());
+				};
+				return createCleanup (unregister);
+			}
+			return createCleanup (null);
 		}
 
 		internal void DisposeObject<T> (T value)

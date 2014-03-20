@@ -26,30 +26,28 @@ namespace Java.Interop
 
 		public JavaObject (JniReferenceSafeHandle handle, JniHandleOwnership transfer)
 		{
-			JavaVM.SetObjectSafeHandle (this, handle, transfer);
-		}
-
-		static JniLocalReference _NewObject (Type type, JniPeerMembers peerMembers)
-		{
-			var info    = JniEnvironment.Current.JavaVM.GetJniTypeInfoForType (type);
-			if (info.JniTypeName == null)
-				throw new NotSupportedException (
-						string.Format ("Cannot create instance of type '{0}': no Java peer type found.",
-							type.FullName));
-
-			if (type == peerMembers.ManagedPeerType) {
-				var c = peerMembers.InstanceMethods.GetConstructor ("()V");
-				return peerMembers.JniPeerType.NewObject (c);
-			}
-			using (var t = new JniType (info.ToString ()))
-			using (var c = t.GetConstructor ("()V")) {
-				return t.NewObject (c);
+			if (handle == null)
+				return;
+			using (SetSafeHandle (handle, transfer)) {
 			}
 		}
 
 		public JavaObject ()
 		{
-			JavaVM.SetObjectSafeHandle (this, _NewObject (GetType (), JniPeerMembers), JniHandleOwnership.Transfer);
+			using (SetSafeHandle (
+						JniPeerMembers.InstanceMethods.StartCreateInstance ("()V", GetType ()),
+						JniHandleOwnership.Transfer)) {
+				JniPeerMembers.InstanceMethods.FinishCreateInstance ("()V", this);
+			}
+		}
+
+		protected SetSafeHandleCompletion SetSafeHandle (JniReferenceSafeHandle handle, JniHandleOwnership transfer)
+		{
+			return JniEnvironment.Current.JavaVM.SetObjectSafeHandle (
+					this,
+					handle,
+					transfer,
+					a => new SetSafeHandleCompletion (a));
 		}
 
 		public void RegisterWithVM ()
@@ -116,6 +114,22 @@ namespace Java.Interop
 		void IJavaObjectEx.SetSafeHandle (JniReferenceSafeHandle handle)
 		{
 			SafeHandle = handle;
+		}
+
+		protected struct SetSafeHandleCompletion : IDisposable {
+
+			readonly    Action  action;
+
+			public SetSafeHandleCompletion (Action action)
+			{
+				this.action = action;
+			}
+
+			public void Dispose ()
+			{
+				if (action != null)
+					action ();
+			}
 		}
 	}
 }

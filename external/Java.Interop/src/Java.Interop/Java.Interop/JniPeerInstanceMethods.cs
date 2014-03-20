@@ -7,23 +7,56 @@ namespace Java.Interop
 	{
 		internal JniPeerInstanceMethods (JniPeerMembers members)
 		{
-			Members = members;
+			DeclaringType   = members.ManagedPeerType;
+			JniPeerType     = members.JniPeerType;
 		}
 
-		readonly JniPeerMembers                             Members;
+		JniPeerInstanceMethods (Type declaringType)
+		{
+			var jvm     = JniEnvironment.Current.JavaVM;
+			var info    = jvm.GetJniTypeInfoForType (declaringType);
+			if (info.JniTypeName == null)
+				throw new NotSupportedException (
+						string.Format ("Cannot create instance of type '{0}': no Java peer type found.",
+							declaringType.FullName));
+
+			DeclaringType   = declaringType;
+			JniPeerType     = new JniType (info.ToString ());
+			JniPeerType.RegisterWithVM ();
+		}
+
+		readonly Type                                       DeclaringType;
+		readonly JniType                                    JniPeerType;
 		readonly Dictionary<string, JniInstanceMethodID>    InstanceMethods = new Dictionary<string, JniInstanceMethodID>();
+		readonly Dictionary<Type, JniPeerInstanceMethods>   SubclassConstructors = new Dictionary<Type, JniPeerInstanceMethods> ();
 
 		public JniInstanceMethodID GetConstructor (string signature)
 		{
-			string method   = "<init>";
+			if (signature == null)
+				throw new ArgumentNullException ("signature");
 			lock (InstanceMethods) {
 				JniInstanceMethodID m;
 				if (!InstanceMethods.TryGetValue (signature, out m)) {
-					m = Members.JniPeerType.GetInstanceMethod (method, signature);
+					m = JniPeerType.GetConstructor (signature);
 					InstanceMethods.Add (signature, m);
 				}
 				return m;
 			}
+		}
+
+		JniPeerInstanceMethods GetConstructorsForType (Type declaringType)
+		{
+			if (declaringType == DeclaringType)
+				return this;
+
+			JniPeerInstanceMethods methods;
+			lock (SubclassConstructors) {
+				if (!SubclassConstructors.TryGetValue (declaringType, out methods)) {
+					methods = new JniPeerInstanceMethods (declaringType);
+					SubclassConstructors.Add (declaringType, methods);
+				}
+			}
+			return methods;
 		}
 
 		public JniInstanceMethodID GetMethodID (string encodedMember)
@@ -33,11 +66,39 @@ namespace Java.Interop
 				if (!InstanceMethods.TryGetValue (encodedMember, out m)) {
 					string method, signature;
 					JniPeerMembers.GetNameAndSignature (encodedMember, out method, out signature);
-					m = Members.JniPeerType.GetInstanceMethod (method, signature);
+					m = JniPeerType.GetInstanceMethod (method, signature);
 					InstanceMethods.Add (encodedMember, m);
 				}
 				return m;
 			}
+		}
+
+		public JniLocalReference StartCreateInstance (string constructorSignature, Type declaringType, params JValue[] arguments)
+		{
+			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+				return NewObject (constructorSignature, declaringType, arguments);
+			}
+			using (var lref = GetConstructorsForType (declaringType)
+					.JniPeerType
+					.AllocObject ())
+				return lref.ToAllocObjectRef ();
+		}
+
+		JniLocalReference NewObject (string constructorSignature, Type declaringType, JValue[] arguments)
+		{
+			var methods = GetConstructorsForType (declaringType);
+			var ctor    = methods.GetConstructor (constructorSignature);
+			return methods.JniPeerType.NewObject (ctor, arguments);
+		}
+
+		public void FinishCreateInstance (string constructorSignature, IJavaObject self, params JValue[] arguments)
+		{
+			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+				return;
+			}
+			var methods = GetConstructorsForType (self.GetType ());
+			var ctor    = methods.GetConstructor (constructorSignature);
+			ctor.CallNonvirtualVoidMethod (self.SafeHandle, methods.JniPeerType.SafeHandle, arguments);
 		}
 	}
 

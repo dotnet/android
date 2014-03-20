@@ -1,7 +1,1768 @@
-﻿namespace Java.Interop {
+﻿using System;
+
+namespace Java.Interop {
 
 	partial class JniPeerInstanceMethods {
 
+		public JniLocalReference StartCreateInstance<T> (
+			string  constructorSignature,
+			Type    declaringType,
+			T value
+		)
+		{
+			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+				return NewObject (constructorSignature, declaringType, value);
+			}
+			using (var lref = GetConstructorsForType (declaringType)
+					.JniPeerType
+					.AllocObject ())
+				return lref.ToAllocObjectRef ();
+		}
+
+		JniLocalReference NewObject<T> (
+		    string  constructorSignature,
+		    Type    declaringType,
+		    T value
+		)
+		{
+			JniArgumentMarshalInfo<T> arg = new JniArgumentMarshalInfo<T>(value);
+
+			var args = new JValue[]{
+				arg.JValue,
+			};
+			try {
+			    return NewObject (constructorSignature, declaringType, args);
+			} finally {
+				arg.Cleanup (value);
+			}
+		}
+
+		public void FinishCreateInstance<T> (
+		    string      constructorSignature,
+		    IJavaObject self,
+		    T value
+		)
+		{
+			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+				return;
+			}
+			_InvokeConstructor (constructorSignature, self, value);
+		}
+
+		void _InvokeConstructor<T> (
+		    string      constructorSignature,
+		    IJavaObject self,
+		    T value
+		)
+		{
+			JniArgumentMarshalInfo<T> arg = new JniArgumentMarshalInfo<T>(value);
+
+			var args = new JValue[]{
+				arg.JValue,
+			};
+			try {
+				var methods = GetConstructorsForType (self.GetType ());
+				var ctor    = methods.GetConstructor (constructorSignature);
+				ctor.CallNonvirtualVoidMethod (self.SafeHandle, methods.JniPeerType.SafeHandle, args);
+			} finally {
+				arg.Cleanup (value);
+			}
+		}
+
+		public JniLocalReference StartCreateInstance<T1, T2> (
+			string  constructorSignature,
+			Type    declaringType,
+			T1 value1, T2 value2
+		)
+		{
+			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+				return NewObject (constructorSignature, declaringType, value1, value2);
+			}
+			using (var lref = GetConstructorsForType (declaringType)
+					.JniPeerType
+					.AllocObject ())
+				return lref.ToAllocObjectRef ();
+		}
+
+		JniLocalReference NewObject<T1, T2> (
+		    string  constructorSignature,
+		    Type    declaringType,
+		    T1 value1, T2 value2
+		)
+		{
+			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
+			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
+
+			var args = new JValue[]{
+				arg1.JValue,
+				arg2.JValue,
+			};
+			try {
+			    return NewObject (constructorSignature, declaringType, args);
+			} finally {
+				arg1.Cleanup (value1);
+				arg2.Cleanup (value2);
+			}
+		}
+
+		public void FinishCreateInstance<T1, T2> (
+		    string      constructorSignature,
+		    IJavaObject self,
+		    T1 value1, T2 value2
+		)
+		{
+			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+				return;
+			}
+			_InvokeConstructor (constructorSignature, self, value1, value2);
+		}
+
+		void _InvokeConstructor<T1, T2> (
+		    string      constructorSignature,
+		    IJavaObject self,
+		    T1 value1, T2 value2
+		)
+		{
+			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
+			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
+
+			var args = new JValue[]{
+				arg1.JValue,
+				arg2.JValue,
+			};
+			try {
+				var methods = GetConstructorsForType (self.GetType ());
+				var ctor    = methods.GetConstructor (constructorSignature);
+				ctor.CallNonvirtualVoidMethod (self.SafeHandle, methods.JniPeerType.SafeHandle, args);
+			} finally {
+				arg1.Cleanup (value1);
+				arg2.Cleanup (value2);
+			}
+		}
+
+		public JniLocalReference StartCreateInstance<T1, T2, T3> (
+			string  constructorSignature,
+			Type    declaringType,
+			T1 value1, T2 value2, T3 value3
+		)
+		{
+			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+				return NewObject (constructorSignature, declaringType, value1, value2, value3);
+			}
+			using (var lref = GetConstructorsForType (declaringType)
+					.JniPeerType
+					.AllocObject ())
+				return lref.ToAllocObjectRef ();
+		}
+
+		JniLocalReference NewObject<T1, T2, T3> (
+		    string  constructorSignature,
+		    Type    declaringType,
+		    T1 value1, T2 value2, T3 value3
+		)
+		{
+			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
+			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
+			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
+
+			var args = new JValue[]{
+				arg1.JValue,
+				arg2.JValue,
+				arg3.JValue,
+			};
+			try {
+			    return NewObject (constructorSignature, declaringType, args);
+			} finally {
+				arg1.Cleanup (value1);
+				arg2.Cleanup (value2);
+				arg3.Cleanup (value3);
+			}
+		}
+
+		public void FinishCreateInstance<T1, T2, T3> (
+		    string      constructorSignature,
+		    IJavaObject self,
+		    T1 value1, T2 value2, T3 value3
+		)
+		{
+			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+				return;
+			}
+			_InvokeConstructor (constructorSignature, self, value1, value2, value3);
+		}
+
+		void _InvokeConstructor<T1, T2, T3> (
+		    string      constructorSignature,
+		    IJavaObject self,
+		    T1 value1, T2 value2, T3 value3
+		)
+		{
+			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
+			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
+			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
+
+			var args = new JValue[]{
+				arg1.JValue,
+				arg2.JValue,
+				arg3.JValue,
+			};
+			try {
+				var methods = GetConstructorsForType (self.GetType ());
+				var ctor    = methods.GetConstructor (constructorSignature);
+				ctor.CallNonvirtualVoidMethod (self.SafeHandle, methods.JniPeerType.SafeHandle, args);
+			} finally {
+				arg1.Cleanup (value1);
+				arg2.Cleanup (value2);
+				arg3.Cleanup (value3);
+			}
+		}
+
+		public JniLocalReference StartCreateInstance<T1, T2, T3, T4> (
+			string  constructorSignature,
+			Type    declaringType,
+			T1 value1, T2 value2, T3 value3, T4 value4
+		)
+		{
+			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+				return NewObject (constructorSignature, declaringType, value1, value2, value3, value4);
+			}
+			using (var lref = GetConstructorsForType (declaringType)
+					.JniPeerType
+					.AllocObject ())
+				return lref.ToAllocObjectRef ();
+		}
+
+		JniLocalReference NewObject<T1, T2, T3, T4> (
+		    string  constructorSignature,
+		    Type    declaringType,
+		    T1 value1, T2 value2, T3 value3, T4 value4
+		)
+		{
+			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
+			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
+			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
+			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
+
+			var args = new JValue[]{
+				arg1.JValue,
+				arg2.JValue,
+				arg3.JValue,
+				arg4.JValue,
+			};
+			try {
+			    return NewObject (constructorSignature, declaringType, args);
+			} finally {
+				arg1.Cleanup (value1);
+				arg2.Cleanup (value2);
+				arg3.Cleanup (value3);
+				arg4.Cleanup (value4);
+			}
+		}
+
+		public void FinishCreateInstance<T1, T2, T3, T4> (
+		    string      constructorSignature,
+		    IJavaObject self,
+		    T1 value1, T2 value2, T3 value3, T4 value4
+		)
+		{
+			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+				return;
+			}
+			_InvokeConstructor (constructorSignature, self, value1, value2, value3, value4);
+		}
+
+		void _InvokeConstructor<T1, T2, T3, T4> (
+		    string      constructorSignature,
+		    IJavaObject self,
+		    T1 value1, T2 value2, T3 value3, T4 value4
+		)
+		{
+			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
+			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
+			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
+			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
+
+			var args = new JValue[]{
+				arg1.JValue,
+				arg2.JValue,
+				arg3.JValue,
+				arg4.JValue,
+			};
+			try {
+				var methods = GetConstructorsForType (self.GetType ());
+				var ctor    = methods.GetConstructor (constructorSignature);
+				ctor.CallNonvirtualVoidMethod (self.SafeHandle, methods.JniPeerType.SafeHandle, args);
+			} finally {
+				arg1.Cleanup (value1);
+				arg2.Cleanup (value2);
+				arg3.Cleanup (value3);
+				arg4.Cleanup (value4);
+			}
+		}
+
+		public JniLocalReference StartCreateInstance<T1, T2, T3, T4, T5> (
+			string  constructorSignature,
+			Type    declaringType,
+			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
+		)
+		{
+			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+				return NewObject (constructorSignature, declaringType, value1, value2, value3, value4, value5);
+			}
+			using (var lref = GetConstructorsForType (declaringType)
+					.JniPeerType
+					.AllocObject ())
+				return lref.ToAllocObjectRef ();
+		}
+
+		JniLocalReference NewObject<T1, T2, T3, T4, T5> (
+		    string  constructorSignature,
+		    Type    declaringType,
+		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
+		)
+		{
+			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
+			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
+			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
+			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
+			JniArgumentMarshalInfo<T5> arg5 = new JniArgumentMarshalInfo<T5>(value5);
+
+			var args = new JValue[]{
+				arg1.JValue,
+				arg2.JValue,
+				arg3.JValue,
+				arg4.JValue,
+				arg5.JValue,
+			};
+			try {
+			    return NewObject (constructorSignature, declaringType, args);
+			} finally {
+				arg1.Cleanup (value1);
+				arg2.Cleanup (value2);
+				arg3.Cleanup (value3);
+				arg4.Cleanup (value4);
+				arg5.Cleanup (value5);
+			}
+		}
+
+		public void FinishCreateInstance<T1, T2, T3, T4, T5> (
+		    string      constructorSignature,
+		    IJavaObject self,
+		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
+		)
+		{
+			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+				return;
+			}
+			_InvokeConstructor (constructorSignature, self, value1, value2, value3, value4, value5);
+		}
+
+		void _InvokeConstructor<T1, T2, T3, T4, T5> (
+		    string      constructorSignature,
+		    IJavaObject self,
+		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
+		)
+		{
+			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
+			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
+			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
+			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
+			JniArgumentMarshalInfo<T5> arg5 = new JniArgumentMarshalInfo<T5>(value5);
+
+			var args = new JValue[]{
+				arg1.JValue,
+				arg2.JValue,
+				arg3.JValue,
+				arg4.JValue,
+				arg5.JValue,
+			};
+			try {
+				var methods = GetConstructorsForType (self.GetType ());
+				var ctor    = methods.GetConstructor (constructorSignature);
+				ctor.CallNonvirtualVoidMethod (self.SafeHandle, methods.JniPeerType.SafeHandle, args);
+			} finally {
+				arg1.Cleanup (value1);
+				arg2.Cleanup (value2);
+				arg3.Cleanup (value3);
+				arg4.Cleanup (value4);
+				arg5.Cleanup (value5);
+			}
+		}
+
+		public JniLocalReference StartCreateInstance<T1, T2, T3, T4, T5, T6> (
+			string  constructorSignature,
+			Type    declaringType,
+			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
+		)
+		{
+			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+				return NewObject (constructorSignature, declaringType, value1, value2, value3, value4, value5, value6);
+			}
+			using (var lref = GetConstructorsForType (declaringType)
+					.JniPeerType
+					.AllocObject ())
+				return lref.ToAllocObjectRef ();
+		}
+
+		JniLocalReference NewObject<T1, T2, T3, T4, T5, T6> (
+		    string  constructorSignature,
+		    Type    declaringType,
+		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
+		)
+		{
+			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
+			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
+			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
+			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
+			JniArgumentMarshalInfo<T5> arg5 = new JniArgumentMarshalInfo<T5>(value5);
+			JniArgumentMarshalInfo<T6> arg6 = new JniArgumentMarshalInfo<T6>(value6);
+
+			var args = new JValue[]{
+				arg1.JValue,
+				arg2.JValue,
+				arg3.JValue,
+				arg4.JValue,
+				arg5.JValue,
+				arg6.JValue,
+			};
+			try {
+			    return NewObject (constructorSignature, declaringType, args);
+			} finally {
+				arg1.Cleanup (value1);
+				arg2.Cleanup (value2);
+				arg3.Cleanup (value3);
+				arg4.Cleanup (value4);
+				arg5.Cleanup (value5);
+				arg6.Cleanup (value6);
+			}
+		}
+
+		public void FinishCreateInstance<T1, T2, T3, T4, T5, T6> (
+		    string      constructorSignature,
+		    IJavaObject self,
+		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
+		)
+		{
+			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+				return;
+			}
+			_InvokeConstructor (constructorSignature, self, value1, value2, value3, value4, value5, value6);
+		}
+
+		void _InvokeConstructor<T1, T2, T3, T4, T5, T6> (
+		    string      constructorSignature,
+		    IJavaObject self,
+		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
+		)
+		{
+			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
+			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
+			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
+			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
+			JniArgumentMarshalInfo<T5> arg5 = new JniArgumentMarshalInfo<T5>(value5);
+			JniArgumentMarshalInfo<T6> arg6 = new JniArgumentMarshalInfo<T6>(value6);
+
+			var args = new JValue[]{
+				arg1.JValue,
+				arg2.JValue,
+				arg3.JValue,
+				arg4.JValue,
+				arg5.JValue,
+				arg6.JValue,
+			};
+			try {
+				var methods = GetConstructorsForType (self.GetType ());
+				var ctor    = methods.GetConstructor (constructorSignature);
+				ctor.CallNonvirtualVoidMethod (self.SafeHandle, methods.JniPeerType.SafeHandle, args);
+			} finally {
+				arg1.Cleanup (value1);
+				arg2.Cleanup (value2);
+				arg3.Cleanup (value3);
+				arg4.Cleanup (value4);
+				arg5.Cleanup (value5);
+				arg6.Cleanup (value6);
+			}
+		}
+
+		public JniLocalReference StartCreateInstance<T1, T2, T3, T4, T5, T6, T7> (
+			string  constructorSignature,
+			Type    declaringType,
+			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
+		)
+		{
+			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+				return NewObject (constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7);
+			}
+			using (var lref = GetConstructorsForType (declaringType)
+					.JniPeerType
+					.AllocObject ())
+				return lref.ToAllocObjectRef ();
+		}
+
+		JniLocalReference NewObject<T1, T2, T3, T4, T5, T6, T7> (
+		    string  constructorSignature,
+		    Type    declaringType,
+		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
+		)
+		{
+			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
+			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
+			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
+			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
+			JniArgumentMarshalInfo<T5> arg5 = new JniArgumentMarshalInfo<T5>(value5);
+			JniArgumentMarshalInfo<T6> arg6 = new JniArgumentMarshalInfo<T6>(value6);
+			JniArgumentMarshalInfo<T7> arg7 = new JniArgumentMarshalInfo<T7>(value7);
+
+			var args = new JValue[]{
+				arg1.JValue,
+				arg2.JValue,
+				arg3.JValue,
+				arg4.JValue,
+				arg5.JValue,
+				arg6.JValue,
+				arg7.JValue,
+			};
+			try {
+			    return NewObject (constructorSignature, declaringType, args);
+			} finally {
+				arg1.Cleanup (value1);
+				arg2.Cleanup (value2);
+				arg3.Cleanup (value3);
+				arg4.Cleanup (value4);
+				arg5.Cleanup (value5);
+				arg6.Cleanup (value6);
+				arg7.Cleanup (value7);
+			}
+		}
+
+		public void FinishCreateInstance<T1, T2, T3, T4, T5, T6, T7> (
+		    string      constructorSignature,
+		    IJavaObject self,
+		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
+		)
+		{
+			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+				return;
+			}
+			_InvokeConstructor (constructorSignature, self, value1, value2, value3, value4, value5, value6, value7);
+		}
+
+		void _InvokeConstructor<T1, T2, T3, T4, T5, T6, T7> (
+		    string      constructorSignature,
+		    IJavaObject self,
+		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
+		)
+		{
+			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
+			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
+			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
+			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
+			JniArgumentMarshalInfo<T5> arg5 = new JniArgumentMarshalInfo<T5>(value5);
+			JniArgumentMarshalInfo<T6> arg6 = new JniArgumentMarshalInfo<T6>(value6);
+			JniArgumentMarshalInfo<T7> arg7 = new JniArgumentMarshalInfo<T7>(value7);
+
+			var args = new JValue[]{
+				arg1.JValue,
+				arg2.JValue,
+				arg3.JValue,
+				arg4.JValue,
+				arg5.JValue,
+				arg6.JValue,
+				arg7.JValue,
+			};
+			try {
+				var methods = GetConstructorsForType (self.GetType ());
+				var ctor    = methods.GetConstructor (constructorSignature);
+				ctor.CallNonvirtualVoidMethod (self.SafeHandle, methods.JniPeerType.SafeHandle, args);
+			} finally {
+				arg1.Cleanup (value1);
+				arg2.Cleanup (value2);
+				arg3.Cleanup (value3);
+				arg4.Cleanup (value4);
+				arg5.Cleanup (value5);
+				arg6.Cleanup (value6);
+				arg7.Cleanup (value7);
+			}
+		}
+
+		public JniLocalReference StartCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8> (
+			string  constructorSignature,
+			Type    declaringType,
+			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
+		)
+		{
+			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+				return NewObject (constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7, value8);
+			}
+			using (var lref = GetConstructorsForType (declaringType)
+					.JniPeerType
+					.AllocObject ())
+				return lref.ToAllocObjectRef ();
+		}
+
+		JniLocalReference NewObject<T1, T2, T3, T4, T5, T6, T7, T8> (
+		    string  constructorSignature,
+		    Type    declaringType,
+		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
+		)
+		{
+			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
+			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
+			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
+			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
+			JniArgumentMarshalInfo<T5> arg5 = new JniArgumentMarshalInfo<T5>(value5);
+			JniArgumentMarshalInfo<T6> arg6 = new JniArgumentMarshalInfo<T6>(value6);
+			JniArgumentMarshalInfo<T7> arg7 = new JniArgumentMarshalInfo<T7>(value7);
+			JniArgumentMarshalInfo<T8> arg8 = new JniArgumentMarshalInfo<T8>(value8);
+
+			var args = new JValue[]{
+				arg1.JValue,
+				arg2.JValue,
+				arg3.JValue,
+				arg4.JValue,
+				arg5.JValue,
+				arg6.JValue,
+				arg7.JValue,
+				arg8.JValue,
+			};
+			try {
+			    return NewObject (constructorSignature, declaringType, args);
+			} finally {
+				arg1.Cleanup (value1);
+				arg2.Cleanup (value2);
+				arg3.Cleanup (value3);
+				arg4.Cleanup (value4);
+				arg5.Cleanup (value5);
+				arg6.Cleanup (value6);
+				arg7.Cleanup (value7);
+				arg8.Cleanup (value8);
+			}
+		}
+
+		public void FinishCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8> (
+		    string      constructorSignature,
+		    IJavaObject self,
+		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
+		)
+		{
+			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+				return;
+			}
+			_InvokeConstructor (constructorSignature, self, value1, value2, value3, value4, value5, value6, value7, value8);
+		}
+
+		void _InvokeConstructor<T1, T2, T3, T4, T5, T6, T7, T8> (
+		    string      constructorSignature,
+		    IJavaObject self,
+		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
+		)
+		{
+			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
+			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
+			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
+			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
+			JniArgumentMarshalInfo<T5> arg5 = new JniArgumentMarshalInfo<T5>(value5);
+			JniArgumentMarshalInfo<T6> arg6 = new JniArgumentMarshalInfo<T6>(value6);
+			JniArgumentMarshalInfo<T7> arg7 = new JniArgumentMarshalInfo<T7>(value7);
+			JniArgumentMarshalInfo<T8> arg8 = new JniArgumentMarshalInfo<T8>(value8);
+
+			var args = new JValue[]{
+				arg1.JValue,
+				arg2.JValue,
+				arg3.JValue,
+				arg4.JValue,
+				arg5.JValue,
+				arg6.JValue,
+				arg7.JValue,
+				arg8.JValue,
+			};
+			try {
+				var methods = GetConstructorsForType (self.GetType ());
+				var ctor    = methods.GetConstructor (constructorSignature);
+				ctor.CallNonvirtualVoidMethod (self.SafeHandle, methods.JniPeerType.SafeHandle, args);
+			} finally {
+				arg1.Cleanup (value1);
+				arg2.Cleanup (value2);
+				arg3.Cleanup (value3);
+				arg4.Cleanup (value4);
+				arg5.Cleanup (value5);
+				arg6.Cleanup (value6);
+				arg7.Cleanup (value7);
+				arg8.Cleanup (value8);
+			}
+		}
+
+		public JniLocalReference StartCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+			string  constructorSignature,
+			Type    declaringType,
+			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
+		)
+		{
+			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+				return NewObject (constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7, value8, value9);
+			}
+			using (var lref = GetConstructorsForType (declaringType)
+					.JniPeerType
+					.AllocObject ())
+				return lref.ToAllocObjectRef ();
+		}
+
+		JniLocalReference NewObject<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+		    string  constructorSignature,
+		    Type    declaringType,
+		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
+		)
+		{
+			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
+			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
+			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
+			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
+			JniArgumentMarshalInfo<T5> arg5 = new JniArgumentMarshalInfo<T5>(value5);
+			JniArgumentMarshalInfo<T6> arg6 = new JniArgumentMarshalInfo<T6>(value6);
+			JniArgumentMarshalInfo<T7> arg7 = new JniArgumentMarshalInfo<T7>(value7);
+			JniArgumentMarshalInfo<T8> arg8 = new JniArgumentMarshalInfo<T8>(value8);
+			JniArgumentMarshalInfo<T9> arg9 = new JniArgumentMarshalInfo<T9>(value9);
+
+			var args = new JValue[]{
+				arg1.JValue,
+				arg2.JValue,
+				arg3.JValue,
+				arg4.JValue,
+				arg5.JValue,
+				arg6.JValue,
+				arg7.JValue,
+				arg8.JValue,
+				arg9.JValue,
+			};
+			try {
+			    return NewObject (constructorSignature, declaringType, args);
+			} finally {
+				arg1.Cleanup (value1);
+				arg2.Cleanup (value2);
+				arg3.Cleanup (value3);
+				arg4.Cleanup (value4);
+				arg5.Cleanup (value5);
+				arg6.Cleanup (value6);
+				arg7.Cleanup (value7);
+				arg8.Cleanup (value8);
+				arg9.Cleanup (value9);
+			}
+		}
+
+		public void FinishCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+		    string      constructorSignature,
+		    IJavaObject self,
+		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
+		)
+		{
+			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+				return;
+			}
+			_InvokeConstructor (constructorSignature, self, value1, value2, value3, value4, value5, value6, value7, value8, value9);
+		}
+
+		void _InvokeConstructor<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+		    string      constructorSignature,
+		    IJavaObject self,
+		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
+		)
+		{
+			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
+			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
+			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
+			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
+			JniArgumentMarshalInfo<T5> arg5 = new JniArgumentMarshalInfo<T5>(value5);
+			JniArgumentMarshalInfo<T6> arg6 = new JniArgumentMarshalInfo<T6>(value6);
+			JniArgumentMarshalInfo<T7> arg7 = new JniArgumentMarshalInfo<T7>(value7);
+			JniArgumentMarshalInfo<T8> arg8 = new JniArgumentMarshalInfo<T8>(value8);
+			JniArgumentMarshalInfo<T9> arg9 = new JniArgumentMarshalInfo<T9>(value9);
+
+			var args = new JValue[]{
+				arg1.JValue,
+				arg2.JValue,
+				arg3.JValue,
+				arg4.JValue,
+				arg5.JValue,
+				arg6.JValue,
+				arg7.JValue,
+				arg8.JValue,
+				arg9.JValue,
+			};
+			try {
+				var methods = GetConstructorsForType (self.GetType ());
+				var ctor    = methods.GetConstructor (constructorSignature);
+				ctor.CallNonvirtualVoidMethod (self.SafeHandle, methods.JniPeerType.SafeHandle, args);
+			} finally {
+				arg1.Cleanup (value1);
+				arg2.Cleanup (value2);
+				arg3.Cleanup (value3);
+				arg4.Cleanup (value4);
+				arg5.Cleanup (value5);
+				arg6.Cleanup (value6);
+				arg7.Cleanup (value7);
+				arg8.Cleanup (value8);
+				arg9.Cleanup (value9);
+			}
+		}
+
+		public JniLocalReference StartCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+			string  constructorSignature,
+			Type    declaringType,
+			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
+		)
+		{
+			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+				return NewObject (constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10);
+			}
+			using (var lref = GetConstructorsForType (declaringType)
+					.JniPeerType
+					.AllocObject ())
+				return lref.ToAllocObjectRef ();
+		}
+
+		JniLocalReference NewObject<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+		    string  constructorSignature,
+		    Type    declaringType,
+		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
+		)
+		{
+			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
+			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
+			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
+			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
+			JniArgumentMarshalInfo<T5> arg5 = new JniArgumentMarshalInfo<T5>(value5);
+			JniArgumentMarshalInfo<T6> arg6 = new JniArgumentMarshalInfo<T6>(value6);
+			JniArgumentMarshalInfo<T7> arg7 = new JniArgumentMarshalInfo<T7>(value7);
+			JniArgumentMarshalInfo<T8> arg8 = new JniArgumentMarshalInfo<T8>(value8);
+			JniArgumentMarshalInfo<T9> arg9 = new JniArgumentMarshalInfo<T9>(value9);
+			JniArgumentMarshalInfo<T10> arg10 = new JniArgumentMarshalInfo<T10>(value10);
+
+			var args = new JValue[]{
+				arg1.JValue,
+				arg2.JValue,
+				arg3.JValue,
+				arg4.JValue,
+				arg5.JValue,
+				arg6.JValue,
+				arg7.JValue,
+				arg8.JValue,
+				arg9.JValue,
+				arg10.JValue,
+			};
+			try {
+			    return NewObject (constructorSignature, declaringType, args);
+			} finally {
+				arg1.Cleanup (value1);
+				arg2.Cleanup (value2);
+				arg3.Cleanup (value3);
+				arg4.Cleanup (value4);
+				arg5.Cleanup (value5);
+				arg6.Cleanup (value6);
+				arg7.Cleanup (value7);
+				arg8.Cleanup (value8);
+				arg9.Cleanup (value9);
+				arg10.Cleanup (value10);
+			}
+		}
+
+		public void FinishCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+		    string      constructorSignature,
+		    IJavaObject self,
+		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
+		)
+		{
+			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+				return;
+			}
+			_InvokeConstructor (constructorSignature, self, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10);
+		}
+
+		void _InvokeConstructor<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+		    string      constructorSignature,
+		    IJavaObject self,
+		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
+		)
+		{
+			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
+			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
+			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
+			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
+			JniArgumentMarshalInfo<T5> arg5 = new JniArgumentMarshalInfo<T5>(value5);
+			JniArgumentMarshalInfo<T6> arg6 = new JniArgumentMarshalInfo<T6>(value6);
+			JniArgumentMarshalInfo<T7> arg7 = new JniArgumentMarshalInfo<T7>(value7);
+			JniArgumentMarshalInfo<T8> arg8 = new JniArgumentMarshalInfo<T8>(value8);
+			JniArgumentMarshalInfo<T9> arg9 = new JniArgumentMarshalInfo<T9>(value9);
+			JniArgumentMarshalInfo<T10> arg10 = new JniArgumentMarshalInfo<T10>(value10);
+
+			var args = new JValue[]{
+				arg1.JValue,
+				arg2.JValue,
+				arg3.JValue,
+				arg4.JValue,
+				arg5.JValue,
+				arg6.JValue,
+				arg7.JValue,
+				arg8.JValue,
+				arg9.JValue,
+				arg10.JValue,
+			};
+			try {
+				var methods = GetConstructorsForType (self.GetType ());
+				var ctor    = methods.GetConstructor (constructorSignature);
+				ctor.CallNonvirtualVoidMethod (self.SafeHandle, methods.JniPeerType.SafeHandle, args);
+			} finally {
+				arg1.Cleanup (value1);
+				arg2.Cleanup (value2);
+				arg3.Cleanup (value3);
+				arg4.Cleanup (value4);
+				arg5.Cleanup (value5);
+				arg6.Cleanup (value6);
+				arg7.Cleanup (value7);
+				arg8.Cleanup (value8);
+				arg9.Cleanup (value9);
+				arg10.Cleanup (value10);
+			}
+		}
+
+		public JniLocalReference StartCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+			string  constructorSignature,
+			Type    declaringType,
+			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
+		)
+		{
+			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+				return NewObject (constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11);
+			}
+			using (var lref = GetConstructorsForType (declaringType)
+					.JniPeerType
+					.AllocObject ())
+				return lref.ToAllocObjectRef ();
+		}
+
+		JniLocalReference NewObject<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+		    string  constructorSignature,
+		    Type    declaringType,
+		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
+		)
+		{
+			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
+			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
+			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
+			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
+			JniArgumentMarshalInfo<T5> arg5 = new JniArgumentMarshalInfo<T5>(value5);
+			JniArgumentMarshalInfo<T6> arg6 = new JniArgumentMarshalInfo<T6>(value6);
+			JniArgumentMarshalInfo<T7> arg7 = new JniArgumentMarshalInfo<T7>(value7);
+			JniArgumentMarshalInfo<T8> arg8 = new JniArgumentMarshalInfo<T8>(value8);
+			JniArgumentMarshalInfo<T9> arg9 = new JniArgumentMarshalInfo<T9>(value9);
+			JniArgumentMarshalInfo<T10> arg10 = new JniArgumentMarshalInfo<T10>(value10);
+			JniArgumentMarshalInfo<T11> arg11 = new JniArgumentMarshalInfo<T11>(value11);
+
+			var args = new JValue[]{
+				arg1.JValue,
+				arg2.JValue,
+				arg3.JValue,
+				arg4.JValue,
+				arg5.JValue,
+				arg6.JValue,
+				arg7.JValue,
+				arg8.JValue,
+				arg9.JValue,
+				arg10.JValue,
+				arg11.JValue,
+			};
+			try {
+			    return NewObject (constructorSignature, declaringType, args);
+			} finally {
+				arg1.Cleanup (value1);
+				arg2.Cleanup (value2);
+				arg3.Cleanup (value3);
+				arg4.Cleanup (value4);
+				arg5.Cleanup (value5);
+				arg6.Cleanup (value6);
+				arg7.Cleanup (value7);
+				arg8.Cleanup (value8);
+				arg9.Cleanup (value9);
+				arg10.Cleanup (value10);
+				arg11.Cleanup (value11);
+			}
+		}
+
+		public void FinishCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+		    string      constructorSignature,
+		    IJavaObject self,
+		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
+		)
+		{
+			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+				return;
+			}
+			_InvokeConstructor (constructorSignature, self, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11);
+		}
+
+		void _InvokeConstructor<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+		    string      constructorSignature,
+		    IJavaObject self,
+		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
+		)
+		{
+			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
+			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
+			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
+			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
+			JniArgumentMarshalInfo<T5> arg5 = new JniArgumentMarshalInfo<T5>(value5);
+			JniArgumentMarshalInfo<T6> arg6 = new JniArgumentMarshalInfo<T6>(value6);
+			JniArgumentMarshalInfo<T7> arg7 = new JniArgumentMarshalInfo<T7>(value7);
+			JniArgumentMarshalInfo<T8> arg8 = new JniArgumentMarshalInfo<T8>(value8);
+			JniArgumentMarshalInfo<T9> arg9 = new JniArgumentMarshalInfo<T9>(value9);
+			JniArgumentMarshalInfo<T10> arg10 = new JniArgumentMarshalInfo<T10>(value10);
+			JniArgumentMarshalInfo<T11> arg11 = new JniArgumentMarshalInfo<T11>(value11);
+
+			var args = new JValue[]{
+				arg1.JValue,
+				arg2.JValue,
+				arg3.JValue,
+				arg4.JValue,
+				arg5.JValue,
+				arg6.JValue,
+				arg7.JValue,
+				arg8.JValue,
+				arg9.JValue,
+				arg10.JValue,
+				arg11.JValue,
+			};
+			try {
+				var methods = GetConstructorsForType (self.GetType ());
+				var ctor    = methods.GetConstructor (constructorSignature);
+				ctor.CallNonvirtualVoidMethod (self.SafeHandle, methods.JniPeerType.SafeHandle, args);
+			} finally {
+				arg1.Cleanup (value1);
+				arg2.Cleanup (value2);
+				arg3.Cleanup (value3);
+				arg4.Cleanup (value4);
+				arg5.Cleanup (value5);
+				arg6.Cleanup (value6);
+				arg7.Cleanup (value7);
+				arg8.Cleanup (value8);
+				arg9.Cleanup (value9);
+				arg10.Cleanup (value10);
+				arg11.Cleanup (value11);
+			}
+		}
+
+		public JniLocalReference StartCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+			string  constructorSignature,
+			Type    declaringType,
+			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
+		)
+		{
+			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+				return NewObject (constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12);
+			}
+			using (var lref = GetConstructorsForType (declaringType)
+					.JniPeerType
+					.AllocObject ())
+				return lref.ToAllocObjectRef ();
+		}
+
+		JniLocalReference NewObject<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+		    string  constructorSignature,
+		    Type    declaringType,
+		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
+		)
+		{
+			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
+			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
+			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
+			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
+			JniArgumentMarshalInfo<T5> arg5 = new JniArgumentMarshalInfo<T5>(value5);
+			JniArgumentMarshalInfo<T6> arg6 = new JniArgumentMarshalInfo<T6>(value6);
+			JniArgumentMarshalInfo<T7> arg7 = new JniArgumentMarshalInfo<T7>(value7);
+			JniArgumentMarshalInfo<T8> arg8 = new JniArgumentMarshalInfo<T8>(value8);
+			JniArgumentMarshalInfo<T9> arg9 = new JniArgumentMarshalInfo<T9>(value9);
+			JniArgumentMarshalInfo<T10> arg10 = new JniArgumentMarshalInfo<T10>(value10);
+			JniArgumentMarshalInfo<T11> arg11 = new JniArgumentMarshalInfo<T11>(value11);
+			JniArgumentMarshalInfo<T12> arg12 = new JniArgumentMarshalInfo<T12>(value12);
+
+			var args = new JValue[]{
+				arg1.JValue,
+				arg2.JValue,
+				arg3.JValue,
+				arg4.JValue,
+				arg5.JValue,
+				arg6.JValue,
+				arg7.JValue,
+				arg8.JValue,
+				arg9.JValue,
+				arg10.JValue,
+				arg11.JValue,
+				arg12.JValue,
+			};
+			try {
+			    return NewObject (constructorSignature, declaringType, args);
+			} finally {
+				arg1.Cleanup (value1);
+				arg2.Cleanup (value2);
+				arg3.Cleanup (value3);
+				arg4.Cleanup (value4);
+				arg5.Cleanup (value5);
+				arg6.Cleanup (value6);
+				arg7.Cleanup (value7);
+				arg8.Cleanup (value8);
+				arg9.Cleanup (value9);
+				arg10.Cleanup (value10);
+				arg11.Cleanup (value11);
+				arg12.Cleanup (value12);
+			}
+		}
+
+		public void FinishCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+		    string      constructorSignature,
+		    IJavaObject self,
+		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
+		)
+		{
+			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+				return;
+			}
+			_InvokeConstructor (constructorSignature, self, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12);
+		}
+
+		void _InvokeConstructor<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+		    string      constructorSignature,
+		    IJavaObject self,
+		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
+		)
+		{
+			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
+			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
+			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
+			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
+			JniArgumentMarshalInfo<T5> arg5 = new JniArgumentMarshalInfo<T5>(value5);
+			JniArgumentMarshalInfo<T6> arg6 = new JniArgumentMarshalInfo<T6>(value6);
+			JniArgumentMarshalInfo<T7> arg7 = new JniArgumentMarshalInfo<T7>(value7);
+			JniArgumentMarshalInfo<T8> arg8 = new JniArgumentMarshalInfo<T8>(value8);
+			JniArgumentMarshalInfo<T9> arg9 = new JniArgumentMarshalInfo<T9>(value9);
+			JniArgumentMarshalInfo<T10> arg10 = new JniArgumentMarshalInfo<T10>(value10);
+			JniArgumentMarshalInfo<T11> arg11 = new JniArgumentMarshalInfo<T11>(value11);
+			JniArgumentMarshalInfo<T12> arg12 = new JniArgumentMarshalInfo<T12>(value12);
+
+			var args = new JValue[]{
+				arg1.JValue,
+				arg2.JValue,
+				arg3.JValue,
+				arg4.JValue,
+				arg5.JValue,
+				arg6.JValue,
+				arg7.JValue,
+				arg8.JValue,
+				arg9.JValue,
+				arg10.JValue,
+				arg11.JValue,
+				arg12.JValue,
+			};
+			try {
+				var methods = GetConstructorsForType (self.GetType ());
+				var ctor    = methods.GetConstructor (constructorSignature);
+				ctor.CallNonvirtualVoidMethod (self.SafeHandle, methods.JniPeerType.SafeHandle, args);
+			} finally {
+				arg1.Cleanup (value1);
+				arg2.Cleanup (value2);
+				arg3.Cleanup (value3);
+				arg4.Cleanup (value4);
+				arg5.Cleanup (value5);
+				arg6.Cleanup (value6);
+				arg7.Cleanup (value7);
+				arg8.Cleanup (value8);
+				arg9.Cleanup (value9);
+				arg10.Cleanup (value10);
+				arg11.Cleanup (value11);
+				arg12.Cleanup (value12);
+			}
+		}
+
+		public JniLocalReference StartCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+			string  constructorSignature,
+			Type    declaringType,
+			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
+		)
+		{
+			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+				return NewObject (constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13);
+			}
+			using (var lref = GetConstructorsForType (declaringType)
+					.JniPeerType
+					.AllocObject ())
+				return lref.ToAllocObjectRef ();
+		}
+
+		JniLocalReference NewObject<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+		    string  constructorSignature,
+		    Type    declaringType,
+		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
+		)
+		{
+			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
+			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
+			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
+			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
+			JniArgumentMarshalInfo<T5> arg5 = new JniArgumentMarshalInfo<T5>(value5);
+			JniArgumentMarshalInfo<T6> arg6 = new JniArgumentMarshalInfo<T6>(value6);
+			JniArgumentMarshalInfo<T7> arg7 = new JniArgumentMarshalInfo<T7>(value7);
+			JniArgumentMarshalInfo<T8> arg8 = new JniArgumentMarshalInfo<T8>(value8);
+			JniArgumentMarshalInfo<T9> arg9 = new JniArgumentMarshalInfo<T9>(value9);
+			JniArgumentMarshalInfo<T10> arg10 = new JniArgumentMarshalInfo<T10>(value10);
+			JniArgumentMarshalInfo<T11> arg11 = new JniArgumentMarshalInfo<T11>(value11);
+			JniArgumentMarshalInfo<T12> arg12 = new JniArgumentMarshalInfo<T12>(value12);
+			JniArgumentMarshalInfo<T13> arg13 = new JniArgumentMarshalInfo<T13>(value13);
+
+			var args = new JValue[]{
+				arg1.JValue,
+				arg2.JValue,
+				arg3.JValue,
+				arg4.JValue,
+				arg5.JValue,
+				arg6.JValue,
+				arg7.JValue,
+				arg8.JValue,
+				arg9.JValue,
+				arg10.JValue,
+				arg11.JValue,
+				arg12.JValue,
+				arg13.JValue,
+			};
+			try {
+			    return NewObject (constructorSignature, declaringType, args);
+			} finally {
+				arg1.Cleanup (value1);
+				arg2.Cleanup (value2);
+				arg3.Cleanup (value3);
+				arg4.Cleanup (value4);
+				arg5.Cleanup (value5);
+				arg6.Cleanup (value6);
+				arg7.Cleanup (value7);
+				arg8.Cleanup (value8);
+				arg9.Cleanup (value9);
+				arg10.Cleanup (value10);
+				arg11.Cleanup (value11);
+				arg12.Cleanup (value12);
+				arg13.Cleanup (value13);
+			}
+		}
+
+		public void FinishCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+		    string      constructorSignature,
+		    IJavaObject self,
+		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
+		)
+		{
+			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+				return;
+			}
+			_InvokeConstructor (constructorSignature, self, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13);
+		}
+
+		void _InvokeConstructor<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+		    string      constructorSignature,
+		    IJavaObject self,
+		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
+		)
+		{
+			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
+			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
+			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
+			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
+			JniArgumentMarshalInfo<T5> arg5 = new JniArgumentMarshalInfo<T5>(value5);
+			JniArgumentMarshalInfo<T6> arg6 = new JniArgumentMarshalInfo<T6>(value6);
+			JniArgumentMarshalInfo<T7> arg7 = new JniArgumentMarshalInfo<T7>(value7);
+			JniArgumentMarshalInfo<T8> arg8 = new JniArgumentMarshalInfo<T8>(value8);
+			JniArgumentMarshalInfo<T9> arg9 = new JniArgumentMarshalInfo<T9>(value9);
+			JniArgumentMarshalInfo<T10> arg10 = new JniArgumentMarshalInfo<T10>(value10);
+			JniArgumentMarshalInfo<T11> arg11 = new JniArgumentMarshalInfo<T11>(value11);
+			JniArgumentMarshalInfo<T12> arg12 = new JniArgumentMarshalInfo<T12>(value12);
+			JniArgumentMarshalInfo<T13> arg13 = new JniArgumentMarshalInfo<T13>(value13);
+
+			var args = new JValue[]{
+				arg1.JValue,
+				arg2.JValue,
+				arg3.JValue,
+				arg4.JValue,
+				arg5.JValue,
+				arg6.JValue,
+				arg7.JValue,
+				arg8.JValue,
+				arg9.JValue,
+				arg10.JValue,
+				arg11.JValue,
+				arg12.JValue,
+				arg13.JValue,
+			};
+			try {
+				var methods = GetConstructorsForType (self.GetType ());
+				var ctor    = methods.GetConstructor (constructorSignature);
+				ctor.CallNonvirtualVoidMethod (self.SafeHandle, methods.JniPeerType.SafeHandle, args);
+			} finally {
+				arg1.Cleanup (value1);
+				arg2.Cleanup (value2);
+				arg3.Cleanup (value3);
+				arg4.Cleanup (value4);
+				arg5.Cleanup (value5);
+				arg6.Cleanup (value6);
+				arg7.Cleanup (value7);
+				arg8.Cleanup (value8);
+				arg9.Cleanup (value9);
+				arg10.Cleanup (value10);
+				arg11.Cleanup (value11);
+				arg12.Cleanup (value12);
+				arg13.Cleanup (value13);
+			}
+		}
+
+		public JniLocalReference StartCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+			string  constructorSignature,
+			Type    declaringType,
+			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
+		)
+		{
+			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+				return NewObject (constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13, value14);
+			}
+			using (var lref = GetConstructorsForType (declaringType)
+					.JniPeerType
+					.AllocObject ())
+				return lref.ToAllocObjectRef ();
+		}
+
+		JniLocalReference NewObject<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+		    string  constructorSignature,
+		    Type    declaringType,
+		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
+		)
+		{
+			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
+			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
+			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
+			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
+			JniArgumentMarshalInfo<T5> arg5 = new JniArgumentMarshalInfo<T5>(value5);
+			JniArgumentMarshalInfo<T6> arg6 = new JniArgumentMarshalInfo<T6>(value6);
+			JniArgumentMarshalInfo<T7> arg7 = new JniArgumentMarshalInfo<T7>(value7);
+			JniArgumentMarshalInfo<T8> arg8 = new JniArgumentMarshalInfo<T8>(value8);
+			JniArgumentMarshalInfo<T9> arg9 = new JniArgumentMarshalInfo<T9>(value9);
+			JniArgumentMarshalInfo<T10> arg10 = new JniArgumentMarshalInfo<T10>(value10);
+			JniArgumentMarshalInfo<T11> arg11 = new JniArgumentMarshalInfo<T11>(value11);
+			JniArgumentMarshalInfo<T12> arg12 = new JniArgumentMarshalInfo<T12>(value12);
+			JniArgumentMarshalInfo<T13> arg13 = new JniArgumentMarshalInfo<T13>(value13);
+			JniArgumentMarshalInfo<T14> arg14 = new JniArgumentMarshalInfo<T14>(value14);
+
+			var args = new JValue[]{
+				arg1.JValue,
+				arg2.JValue,
+				arg3.JValue,
+				arg4.JValue,
+				arg5.JValue,
+				arg6.JValue,
+				arg7.JValue,
+				arg8.JValue,
+				arg9.JValue,
+				arg10.JValue,
+				arg11.JValue,
+				arg12.JValue,
+				arg13.JValue,
+				arg14.JValue,
+			};
+			try {
+			    return NewObject (constructorSignature, declaringType, args);
+			} finally {
+				arg1.Cleanup (value1);
+				arg2.Cleanup (value2);
+				arg3.Cleanup (value3);
+				arg4.Cleanup (value4);
+				arg5.Cleanup (value5);
+				arg6.Cleanup (value6);
+				arg7.Cleanup (value7);
+				arg8.Cleanup (value8);
+				arg9.Cleanup (value9);
+				arg10.Cleanup (value10);
+				arg11.Cleanup (value11);
+				arg12.Cleanup (value12);
+				arg13.Cleanup (value13);
+				arg14.Cleanup (value14);
+			}
+		}
+
+		public void FinishCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+		    string      constructorSignature,
+		    IJavaObject self,
+		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
+		)
+		{
+			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+				return;
+			}
+			_InvokeConstructor (constructorSignature, self, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13, value14);
+		}
+
+		void _InvokeConstructor<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+		    string      constructorSignature,
+		    IJavaObject self,
+		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
+		)
+		{
+			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
+			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
+			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
+			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
+			JniArgumentMarshalInfo<T5> arg5 = new JniArgumentMarshalInfo<T5>(value5);
+			JniArgumentMarshalInfo<T6> arg6 = new JniArgumentMarshalInfo<T6>(value6);
+			JniArgumentMarshalInfo<T7> arg7 = new JniArgumentMarshalInfo<T7>(value7);
+			JniArgumentMarshalInfo<T8> arg8 = new JniArgumentMarshalInfo<T8>(value8);
+			JniArgumentMarshalInfo<T9> arg9 = new JniArgumentMarshalInfo<T9>(value9);
+			JniArgumentMarshalInfo<T10> arg10 = new JniArgumentMarshalInfo<T10>(value10);
+			JniArgumentMarshalInfo<T11> arg11 = new JniArgumentMarshalInfo<T11>(value11);
+			JniArgumentMarshalInfo<T12> arg12 = new JniArgumentMarshalInfo<T12>(value12);
+			JniArgumentMarshalInfo<T13> arg13 = new JniArgumentMarshalInfo<T13>(value13);
+			JniArgumentMarshalInfo<T14> arg14 = new JniArgumentMarshalInfo<T14>(value14);
+
+			var args = new JValue[]{
+				arg1.JValue,
+				arg2.JValue,
+				arg3.JValue,
+				arg4.JValue,
+				arg5.JValue,
+				arg6.JValue,
+				arg7.JValue,
+				arg8.JValue,
+				arg9.JValue,
+				arg10.JValue,
+				arg11.JValue,
+				arg12.JValue,
+				arg13.JValue,
+				arg14.JValue,
+			};
+			try {
+				var methods = GetConstructorsForType (self.GetType ());
+				var ctor    = methods.GetConstructor (constructorSignature);
+				ctor.CallNonvirtualVoidMethod (self.SafeHandle, methods.JniPeerType.SafeHandle, args);
+			} finally {
+				arg1.Cleanup (value1);
+				arg2.Cleanup (value2);
+				arg3.Cleanup (value3);
+				arg4.Cleanup (value4);
+				arg5.Cleanup (value5);
+				arg6.Cleanup (value6);
+				arg7.Cleanup (value7);
+				arg8.Cleanup (value8);
+				arg9.Cleanup (value9);
+				arg10.Cleanup (value10);
+				arg11.Cleanup (value11);
+				arg12.Cleanup (value12);
+				arg13.Cleanup (value13);
+				arg14.Cleanup (value14);
+			}
+		}
+
+		public JniLocalReference StartCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+			string  constructorSignature,
+			Type    declaringType,
+			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
+		)
+		{
+			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+				return NewObject (constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13, value14, value15);
+			}
+			using (var lref = GetConstructorsForType (declaringType)
+					.JniPeerType
+					.AllocObject ())
+				return lref.ToAllocObjectRef ();
+		}
+
+		JniLocalReference NewObject<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+		    string  constructorSignature,
+		    Type    declaringType,
+		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
+		)
+		{
+			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
+			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
+			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
+			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
+			JniArgumentMarshalInfo<T5> arg5 = new JniArgumentMarshalInfo<T5>(value5);
+			JniArgumentMarshalInfo<T6> arg6 = new JniArgumentMarshalInfo<T6>(value6);
+			JniArgumentMarshalInfo<T7> arg7 = new JniArgumentMarshalInfo<T7>(value7);
+			JniArgumentMarshalInfo<T8> arg8 = new JniArgumentMarshalInfo<T8>(value8);
+			JniArgumentMarshalInfo<T9> arg9 = new JniArgumentMarshalInfo<T9>(value9);
+			JniArgumentMarshalInfo<T10> arg10 = new JniArgumentMarshalInfo<T10>(value10);
+			JniArgumentMarshalInfo<T11> arg11 = new JniArgumentMarshalInfo<T11>(value11);
+			JniArgumentMarshalInfo<T12> arg12 = new JniArgumentMarshalInfo<T12>(value12);
+			JniArgumentMarshalInfo<T13> arg13 = new JniArgumentMarshalInfo<T13>(value13);
+			JniArgumentMarshalInfo<T14> arg14 = new JniArgumentMarshalInfo<T14>(value14);
+			JniArgumentMarshalInfo<T15> arg15 = new JniArgumentMarshalInfo<T15>(value15);
+
+			var args = new JValue[]{
+				arg1.JValue,
+				arg2.JValue,
+				arg3.JValue,
+				arg4.JValue,
+				arg5.JValue,
+				arg6.JValue,
+				arg7.JValue,
+				arg8.JValue,
+				arg9.JValue,
+				arg10.JValue,
+				arg11.JValue,
+				arg12.JValue,
+				arg13.JValue,
+				arg14.JValue,
+				arg15.JValue,
+			};
+			try {
+			    return NewObject (constructorSignature, declaringType, args);
+			} finally {
+				arg1.Cleanup (value1);
+				arg2.Cleanup (value2);
+				arg3.Cleanup (value3);
+				arg4.Cleanup (value4);
+				arg5.Cleanup (value5);
+				arg6.Cleanup (value6);
+				arg7.Cleanup (value7);
+				arg8.Cleanup (value8);
+				arg9.Cleanup (value9);
+				arg10.Cleanup (value10);
+				arg11.Cleanup (value11);
+				arg12.Cleanup (value12);
+				arg13.Cleanup (value13);
+				arg14.Cleanup (value14);
+				arg15.Cleanup (value15);
+			}
+		}
+
+		public void FinishCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+		    string      constructorSignature,
+		    IJavaObject self,
+		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
+		)
+		{
+			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+				return;
+			}
+			_InvokeConstructor (constructorSignature, self, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13, value14, value15);
+		}
+
+		void _InvokeConstructor<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+		    string      constructorSignature,
+		    IJavaObject self,
+		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
+		)
+		{
+			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
+			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
+			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
+			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
+			JniArgumentMarshalInfo<T5> arg5 = new JniArgumentMarshalInfo<T5>(value5);
+			JniArgumentMarshalInfo<T6> arg6 = new JniArgumentMarshalInfo<T6>(value6);
+			JniArgumentMarshalInfo<T7> arg7 = new JniArgumentMarshalInfo<T7>(value7);
+			JniArgumentMarshalInfo<T8> arg8 = new JniArgumentMarshalInfo<T8>(value8);
+			JniArgumentMarshalInfo<T9> arg9 = new JniArgumentMarshalInfo<T9>(value9);
+			JniArgumentMarshalInfo<T10> arg10 = new JniArgumentMarshalInfo<T10>(value10);
+			JniArgumentMarshalInfo<T11> arg11 = new JniArgumentMarshalInfo<T11>(value11);
+			JniArgumentMarshalInfo<T12> arg12 = new JniArgumentMarshalInfo<T12>(value12);
+			JniArgumentMarshalInfo<T13> arg13 = new JniArgumentMarshalInfo<T13>(value13);
+			JniArgumentMarshalInfo<T14> arg14 = new JniArgumentMarshalInfo<T14>(value14);
+			JniArgumentMarshalInfo<T15> arg15 = new JniArgumentMarshalInfo<T15>(value15);
+
+			var args = new JValue[]{
+				arg1.JValue,
+				arg2.JValue,
+				arg3.JValue,
+				arg4.JValue,
+				arg5.JValue,
+				arg6.JValue,
+				arg7.JValue,
+				arg8.JValue,
+				arg9.JValue,
+				arg10.JValue,
+				arg11.JValue,
+				arg12.JValue,
+				arg13.JValue,
+				arg14.JValue,
+				arg15.JValue,
+			};
+			try {
+				var methods = GetConstructorsForType (self.GetType ());
+				var ctor    = methods.GetConstructor (constructorSignature);
+				ctor.CallNonvirtualVoidMethod (self.SafeHandle, methods.JniPeerType.SafeHandle, args);
+			} finally {
+				arg1.Cleanup (value1);
+				arg2.Cleanup (value2);
+				arg3.Cleanup (value3);
+				arg4.Cleanup (value4);
+				arg5.Cleanup (value5);
+				arg6.Cleanup (value6);
+				arg7.Cleanup (value7);
+				arg8.Cleanup (value8);
+				arg9.Cleanup (value9);
+				arg10.Cleanup (value10);
+				arg11.Cleanup (value11);
+				arg12.Cleanup (value12);
+				arg13.Cleanup (value13);
+				arg14.Cleanup (value14);
+				arg15.Cleanup (value15);
+			}
+		}
+
+		public JniLocalReference StartCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+			string  constructorSignature,
+			Type    declaringType,
+			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
+		)
+		{
+			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+				return NewObject (constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13, value14, value15, value16);
+			}
+			using (var lref = GetConstructorsForType (declaringType)
+					.JniPeerType
+					.AllocObject ())
+				return lref.ToAllocObjectRef ();
+		}
+
+		JniLocalReference NewObject<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+		    string  constructorSignature,
+		    Type    declaringType,
+		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
+		)
+		{
+			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
+			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
+			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
+			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
+			JniArgumentMarshalInfo<T5> arg5 = new JniArgumentMarshalInfo<T5>(value5);
+			JniArgumentMarshalInfo<T6> arg6 = new JniArgumentMarshalInfo<T6>(value6);
+			JniArgumentMarshalInfo<T7> arg7 = new JniArgumentMarshalInfo<T7>(value7);
+			JniArgumentMarshalInfo<T8> arg8 = new JniArgumentMarshalInfo<T8>(value8);
+			JniArgumentMarshalInfo<T9> arg9 = new JniArgumentMarshalInfo<T9>(value9);
+			JniArgumentMarshalInfo<T10> arg10 = new JniArgumentMarshalInfo<T10>(value10);
+			JniArgumentMarshalInfo<T11> arg11 = new JniArgumentMarshalInfo<T11>(value11);
+			JniArgumentMarshalInfo<T12> arg12 = new JniArgumentMarshalInfo<T12>(value12);
+			JniArgumentMarshalInfo<T13> arg13 = new JniArgumentMarshalInfo<T13>(value13);
+			JniArgumentMarshalInfo<T14> arg14 = new JniArgumentMarshalInfo<T14>(value14);
+			JniArgumentMarshalInfo<T15> arg15 = new JniArgumentMarshalInfo<T15>(value15);
+			JniArgumentMarshalInfo<T16> arg16 = new JniArgumentMarshalInfo<T16>(value16);
+
+			var args = new JValue[]{
+				arg1.JValue,
+				arg2.JValue,
+				arg3.JValue,
+				arg4.JValue,
+				arg5.JValue,
+				arg6.JValue,
+				arg7.JValue,
+				arg8.JValue,
+				arg9.JValue,
+				arg10.JValue,
+				arg11.JValue,
+				arg12.JValue,
+				arg13.JValue,
+				arg14.JValue,
+				arg15.JValue,
+				arg16.JValue,
+			};
+			try {
+			    return NewObject (constructorSignature, declaringType, args);
+			} finally {
+				arg1.Cleanup (value1);
+				arg2.Cleanup (value2);
+				arg3.Cleanup (value3);
+				arg4.Cleanup (value4);
+				arg5.Cleanup (value5);
+				arg6.Cleanup (value6);
+				arg7.Cleanup (value7);
+				arg8.Cleanup (value8);
+				arg9.Cleanup (value9);
+				arg10.Cleanup (value10);
+				arg11.Cleanup (value11);
+				arg12.Cleanup (value12);
+				arg13.Cleanup (value13);
+				arg14.Cleanup (value14);
+				arg15.Cleanup (value15);
+				arg16.Cleanup (value16);
+			}
+		}
+
+		public void FinishCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+		    string      constructorSignature,
+		    IJavaObject self,
+		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
+		)
+		{
+			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+				return;
+			}
+			_InvokeConstructor (constructorSignature, self, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13, value14, value15, value16);
+		}
+
+		void _InvokeConstructor<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+		    string      constructorSignature,
+		    IJavaObject self,
+		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
+		)
+		{
+			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
+			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
+			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
+			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
+			JniArgumentMarshalInfo<T5> arg5 = new JniArgumentMarshalInfo<T5>(value5);
+			JniArgumentMarshalInfo<T6> arg6 = new JniArgumentMarshalInfo<T6>(value6);
+			JniArgumentMarshalInfo<T7> arg7 = new JniArgumentMarshalInfo<T7>(value7);
+			JniArgumentMarshalInfo<T8> arg8 = new JniArgumentMarshalInfo<T8>(value8);
+			JniArgumentMarshalInfo<T9> arg9 = new JniArgumentMarshalInfo<T9>(value9);
+			JniArgumentMarshalInfo<T10> arg10 = new JniArgumentMarshalInfo<T10>(value10);
+			JniArgumentMarshalInfo<T11> arg11 = new JniArgumentMarshalInfo<T11>(value11);
+			JniArgumentMarshalInfo<T12> arg12 = new JniArgumentMarshalInfo<T12>(value12);
+			JniArgumentMarshalInfo<T13> arg13 = new JniArgumentMarshalInfo<T13>(value13);
+			JniArgumentMarshalInfo<T14> arg14 = new JniArgumentMarshalInfo<T14>(value14);
+			JniArgumentMarshalInfo<T15> arg15 = new JniArgumentMarshalInfo<T15>(value15);
+			JniArgumentMarshalInfo<T16> arg16 = new JniArgumentMarshalInfo<T16>(value16);
+
+			var args = new JValue[]{
+				arg1.JValue,
+				arg2.JValue,
+				arg3.JValue,
+				arg4.JValue,
+				arg5.JValue,
+				arg6.JValue,
+				arg7.JValue,
+				arg8.JValue,
+				arg9.JValue,
+				arg10.JValue,
+				arg11.JValue,
+				arg12.JValue,
+				arg13.JValue,
+				arg14.JValue,
+				arg15.JValue,
+				arg16.JValue,
+			};
+			try {
+				var methods = GetConstructorsForType (self.GetType ());
+				var ctor    = methods.GetConstructor (constructorSignature);
+				ctor.CallNonvirtualVoidMethod (self.SafeHandle, methods.JniPeerType.SafeHandle, args);
+			} finally {
+				arg1.Cleanup (value1);
+				arg2.Cleanup (value2);
+				arg3.Cleanup (value3);
+				arg4.Cleanup (value4);
+				arg5.Cleanup (value5);
+				arg6.Cleanup (value6);
+				arg7.Cleanup (value7);
+				arg8.Cleanup (value8);
+				arg9.Cleanup (value9);
+				arg10.Cleanup (value10);
+				arg11.Cleanup (value11);
+				arg12.Cleanup (value12);
+				arg13.Cleanup (value13);
+				arg14.Cleanup (value14);
+				arg15.Cleanup (value15);
+				arg16.Cleanup (value16);
+			}
+		}
 		public void CallVoidMethod (
 			string encodedMember,
 			IJavaObject self,
@@ -9,7 +1770,7 @@
 		{
 			JniPeerMembers.AssertSelf (self);
 
-			if (self.GetType () == Members.ManagedPeerType) {
+			if (self.GetType () == DeclaringType) {
 				var m = GetMethodID (encodedMember);
 				m.CallVirtualVoidMethod (self.SafeHandle, arguments);
 			}
@@ -686,7 +2447,7 @@
 		{
 			JniPeerMembers.AssertSelf (self);
 
-			if (self.GetType () == Members.ManagedPeerType) {
+			if (self.GetType () == DeclaringType) {
 				var m = GetMethodID (encodedMember);
 				return m.CallVirtualBooleanMethod (self.SafeHandle, arguments);
 			}
@@ -1363,7 +3124,7 @@
 		{
 			JniPeerMembers.AssertSelf (self);
 
-			if (self.GetType () == Members.ManagedPeerType) {
+			if (self.GetType () == DeclaringType) {
 				var m = GetMethodID (encodedMember);
 				return m.CallVirtualByteMethod (self.SafeHandle, arguments);
 			}
@@ -2040,7 +3801,7 @@
 		{
 			JniPeerMembers.AssertSelf (self);
 
-			if (self.GetType () == Members.ManagedPeerType) {
+			if (self.GetType () == DeclaringType) {
 				var m = GetMethodID (encodedMember);
 				return m.CallVirtualCharMethod (self.SafeHandle, arguments);
 			}
@@ -2717,7 +4478,7 @@
 		{
 			JniPeerMembers.AssertSelf (self);
 
-			if (self.GetType () == Members.ManagedPeerType) {
+			if (self.GetType () == DeclaringType) {
 				var m = GetMethodID (encodedMember);
 				return m.CallVirtualInt16Method (self.SafeHandle, arguments);
 			}
@@ -3394,7 +5155,7 @@
 		{
 			JniPeerMembers.AssertSelf (self);
 
-			if (self.GetType () == Members.ManagedPeerType) {
+			if (self.GetType () == DeclaringType) {
 				var m = GetMethodID (encodedMember);
 				return m.CallVirtualInt32Method (self.SafeHandle, arguments);
 			}
@@ -4071,7 +5832,7 @@
 		{
 			JniPeerMembers.AssertSelf (self);
 
-			if (self.GetType () == Members.ManagedPeerType) {
+			if (self.GetType () == DeclaringType) {
 				var m = GetMethodID (encodedMember);
 				return m.CallVirtualInt64Method (self.SafeHandle, arguments);
 			}
@@ -4748,7 +6509,7 @@
 		{
 			JniPeerMembers.AssertSelf (self);
 
-			if (self.GetType () == Members.ManagedPeerType) {
+			if (self.GetType () == DeclaringType) {
 				var m = GetMethodID (encodedMember);
 				return m.CallVirtualSingleMethod (self.SafeHandle, arguments);
 			}
@@ -5425,7 +7186,7 @@
 		{
 			JniPeerMembers.AssertSelf (self);
 
-			if (self.GetType () == Members.ManagedPeerType) {
+			if (self.GetType () == DeclaringType) {
 				var m = GetMethodID (encodedMember);
 				return m.CallVirtualDoubleMethod (self.SafeHandle, arguments);
 			}
@@ -6102,7 +7863,7 @@
 		{
 			JniPeerMembers.AssertSelf (self);
 
-			if (self.GetType () == Members.ManagedPeerType) {
+			if (self.GetType () == DeclaringType) {
 				var m = GetMethodID (encodedMember);
 				return m.CallVirtualObjectMethod (self.SafeHandle, arguments);
 			}

@@ -18,10 +18,137 @@
 	};
 
 #>
+using System;
+
 namespace Java.Interop {
 
 	partial class JniPeerInstanceMethods {
+<#
+	for (int i = 1; i <= 16; ++i ) {
+		string typeParams   = i == 1
+			? "T"
+			: string.Join (", ", Enumerable.Range (1, i)
+			.Select (v => "T" + v));
+		string methodParams = i == 1
+			? "T value"
+			: string.Join (", ", Enumerable.Range (1, i)
+			.Select (v => "T" + v + " value" + v));
+		string methodArgs = i == 1
+			? "value"
+			: string.Join (", ", Enumerable.Range (1, i)
+			.Select (v => "value" + v));
+		if (i == 0) {
+			typeParams = "";
+			methodParams = "";
+		} else {
+			typeParams = "<" + typeParams + ">";
+		}
+#>
 
+		public JniLocalReference StartCreateInstance<#= typeParams #> (
+			string  constructorSignature,
+			Type    declaringType,
+			<#= methodParams #>
+		)
+		{
+			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+				return NewObject (constructorSignature, declaringType, <#= methodArgs #>);
+			}
+			using (var lref = GetConstructorsForType (declaringType)
+					.JniPeerType
+					.AllocObject ())
+				return lref.ToAllocObjectRef ();
+		}
+
+		JniLocalReference NewObject<#= typeParams #> (
+		    string  constructorSignature,
+		    Type    declaringType,
+		    <#= methodParams #>
+		)
+		{
+<#
+		for (int a = 1; a <= i; ++a) {
+		    WriteLine ("\t\t\tJniArgumentMarshalInfo<{0}> arg{1} = new JniArgumentMarshalInfo<{0}>(value{1});",
+		            i == 1 ? "T" : "T" + a,
+		            i == 1 ? "" : a.ToString ());
+		}
+		WriteLine ("");
+		WriteLine ("\t\t\tvar args = new JValue[]{");
+		for (int a = 1; a <= i; ++a) {
+		    WriteLine ("\t\t\t\targ{0}.JValue,",
+		            i == 1 ? "" : a.ToString ());
+		}
+		WriteLine ("\t\t\t};");
+#>
+			try {
+			    return NewObject (constructorSignature, declaringType, args);
+			} finally {
+<#
+		for (int a = 1; a <= i; ++a) {
+		    WriteLine ("\t\t\t\targ{0}.Cleanup (value{0});",
+		            i == 1 ? "" : a.ToString ());
+		}
+#>
+			}
+		}
+
+		public void FinishCreateInstance<#= typeParams #> (
+		    string      constructorSignature,
+		    IJavaObject self,
+		    <#= methodParams #>
+		)
+		{
+			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+				return;
+			}
+			_InvokeConstructor (constructorSignature, self, <#= methodArgs #>);
+		}
+
+		void _InvokeConstructor<#= typeParams #> (
+		    string      constructorSignature,
+		    IJavaObject self,
+		    <#= methodParams #>
+		)
+		{
+<#
+		for (int a = 1; a <= i; ++a) {
+		    WriteLine ("\t\t\tJniArgumentMarshalInfo<{0}> arg{1} = new JniArgumentMarshalInfo<{0}>(value{1});",
+		            i == 1 ? "T" : "T" + a,
+		            i == 1 ? "" : a.ToString ());
+		}
+		WriteLine ("");
+		WriteLine ("\t\t\tvar args = new JValue[]{");
+		for (int a = 1; a <= i; ++a) {
+		    WriteLine ("\t\t\t\targ{0}.JValue,",
+		            i == 1 ? "" : a.ToString ());
+		}
+		WriteLine ("\t\t\t};");
+#>
+			try {
+				var methods = GetConstructorsForType (self.GetType ());
+				var ctor    = methods.GetConstructor (constructorSignature);
+				ctor.CallNonvirtualVoidMethod (self.SafeHandle, methods.JniPeerType.SafeHandle, args);
+			} finally {
+<#
+		for (int a = 1; a <= i; ++a) {
+		    WriteLine ("\t\t\t\targ{0}.Cleanup (value{0});",
+		            i == 1 ? "" : a.ToString ());
+		}
+#>
+			}
+		}
+<#
+	}
+	foreach (var info in jniReturnTypes) {
+		string ret = "";
+		if (info.ReturnType != "void") {
+		    ret = "return ";
+		}
+
+#>
+<#
+	}
+#>
 <#
 	foreach (var info in jniReturnTypes) {
 		string ret = "";
@@ -37,7 +164,7 @@ namespace Java.Interop {
 		{
 			JniPeerMembers.AssertSelf (self);
 
-			if (self.GetType () == Members.ManagedPeerType) {
+			if (self.GetType () == DeclaringType) {
 				var m = GetMethodID (encodedMember);
 				<#= ret #>m.CallVirtual<#= info.JniCallType #>Method (self.SafeHandle, arguments);
 			}

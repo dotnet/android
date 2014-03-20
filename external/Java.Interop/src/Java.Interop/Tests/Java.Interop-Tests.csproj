@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>10.0.0</ProductVersion>
+    <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{FED322CB-8A45-4DDB-A885-8FE517994478}</ProjectGuid>
     <OutputType>Library</OutputType>
@@ -39,6 +39,9 @@
     <Compile Include="Java.Interop\CallNonvirtualBase.cs" />
     <Compile Include="Java.Interop\CallNonvirtualDerived.cs" />
     <Compile Include="Java.Interop\CallNonvirtualDerived2.cs" />
+    <Compile Include="Java.Interop\CallVirtualFromConstructorBase.cs" />
+    <Compile Include="Java.Interop\CallVirtualFromConstructorDerived.cs" />
+    <Compile Include="Java.Interop\InvokeVirtualFromConstructorTests.cs" />
     <Compile Include="Java.Interop\JavaVMTest.cs" />
     <Compile Include="Java.Interop\JniTypeTest.cs" />
     <Compile Include="Java.Interop\JVM.cs" />
@@ -74,6 +77,8 @@
     <JavaInteropTestJar Include="java\com\xamarin\interop\CallNonvirtualBase.java" />
     <JavaInteropTestJar Include="java\com\xamarin\interop\CallNonvirtualDerived.java" />
     <JavaInteropTestJar Include="java\com\xamarin\interop\CallNonvirtualDerived2.java" />
+    <JavaInteropTestJar Include="java\com\xamarin\interop\CallVirtualFromConstructorDerived.java" />
+    <JavaInteropTestJar Include="java\com\xamarin\interop\CallVirtualFromConstructorBase.java" />
     <JavaInteropTestJar Include="java\com\xamarin\interop\TestType.java" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
