@@ -88,9 +88,13 @@
     <Compile Include="Java.Interop\JniBuiltinMarshalers.cs">
       <DependentUpon>JniBuiltinMarshalers.tt</DependentUpon>
     </Compile>
+    <Compile Include="Java.Interop\JavaProxyThrowable.cs" />
+    <Compile Include="Java.Interop\JniEnvironment.Errors.cs" />
+    <Compile Include="Java.Interop\JniMarshalMethod.cs" />
   </ItemGroup>
   <ItemGroup>
     <CompileJavaInteropJar Include="java\com\xamarin\android\internal\JavaProxyObject.java" />
+    <CompileJavaInteropJar Include="java\com\xamarin\android\internal\JavaProxyThrowable.java" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
   <PropertyGroup>

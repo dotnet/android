@@ -18,7 +18,8 @@ namespace Java.InteropTests
 			_members.JniPeerType.RegisterNativeMethods (
 					new JniNativeMethodRegistration ("equalsThis", "(Ljava/lang/Object;)Z", GetEqualsThisHandler ()),
 					new JniNativeMethodRegistration ("getInt32Value", "()I", GetInt32ValueHandler ()),
-					new JniNativeMethodRegistration ("getStringValue", "(I)Ljava/lang/String;", GetStringValueHandler ()));
+					new JniNativeMethodRegistration ("getStringValue", "(I)Ljava/lang/String;", GetStringValueHandler ()),
+					new JniNativeMethodRegistration ("methodThrows", "()V", (Action<IntPtr, IntPtr>) MethodThrowsHandler));
 		}
 
 		public override JniPeerMembers JniPeerMembers {
@@ -66,11 +67,23 @@ namespace Java.InteropTests
 			return _members.StaticMethods.CallInt32Method ("staticIdentity\u0000(I)I", value);
 		}
 
+		public void MethodThrows ()
+		{
+			throw new InvalidOperationException ("jonp: bye!");
+		}
+
+		public void PropogateException ()
+		{
+			_members.InstanceMethods.CallVoidMethod ("propogateException\u0000()V", this);
+		}
+
+		public bool PropogateFinallyBlockExecuted {
+			get {return _members.InstanceFields.GetBooleanValue ("propogateFinallyBlockExecuted\u0000Z", this);}
+		}
+
 		static Delegate GetEqualsThisHandler ()
 		{
 			Func<IntPtr, IntPtr, IntPtr, bool> h = (jnienv, n_self, n_value) => {
-				JniEnvironment.CheckCurrent (jnienv);
-
 				var jvm     = JniEnvironment.Current.JavaVM;
 				var self    = jvm.GetObject<TestType>(n_self);
 				var value   = jvm.GetObject (n_value);
@@ -88,8 +101,6 @@ namespace Java.InteropTests
 		static Delegate GetInt32ValueHandler ()
 		{
 			Func<IntPtr, IntPtr, int> h = (jnienv, n_self) => {
-				JniEnvironment.CheckCurrent (jnienv);
-
 				var self = JniEnvironment.Current.JavaVM.GetObject<TestType>(n_self);
 				try {
 					return self.GetInt32Value ();
@@ -103,7 +114,6 @@ namespace Java.InteropTests
 		static Delegate GetStringValueHandler ()
 		{
 			Func<IntPtr, IntPtr, int, IntPtr> h = (jnienv, n_self, value) => {
-				JniEnvironment.CheckCurrent (jnienv);
 				var self = JniEnvironment.Current.JavaVM.GetObject<TestType>(n_self);
 				try {
 					var s = self.GetStringValue (value);
@@ -114,6 +124,16 @@ namespace Java.InteropTests
 				}
 			};
 			return h;
+		}
+
+		static void MethodThrowsHandler (IntPtr jnienv, IntPtr n_self)
+		{
+			var self = JniEnvironment.Current.JavaVM.GetObject<TestType> (n_self);
+			try {
+				self.MethodThrows ();
+			} finally {
+				self.DisposeUnlessRegistered ();
+			}
 		}
 
 		public bool EqualsThis (IJavaObject value)

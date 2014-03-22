@@ -40,9 +40,9 @@ namespace Java.InteropTests
 
 		static void CalledFromConstructorHandler (IntPtr jnienv, IntPtr n_self, int value)
 		{
-			JniEnvironment.CheckCurrent (jnienv);
 			var self = JniEnvironment.Current.JavaVM.GetObject<CallVirtualFromConstructorDerived>(n_self);
 			self.CalledFromConstructor (value);
+			self.DisposeUnlessRegistered ();
 		}
 	}
 }

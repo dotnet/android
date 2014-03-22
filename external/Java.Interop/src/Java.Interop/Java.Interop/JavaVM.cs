@@ -251,7 +251,16 @@ namespace Java.Interop
 
 		public virtual Exception GetExceptionForThrowable (JniLocalReference value, JniHandleOwnership transfer)
 		{
-			return new JavaException (value, transfer);
+			var o   = PeekObject (value);
+			var e   = o as JavaException;
+			if (e != null) {
+				JniEnvironment.Handles.Dispose (value, transfer);
+				var p   = e as JavaProxyThrowable;
+				if (p != null)
+					return p.Exception;
+				return e;
+			}
+			return GetObject<JavaException> (value, transfer);
 		}
 
 		public int GlobalReferenceCount {

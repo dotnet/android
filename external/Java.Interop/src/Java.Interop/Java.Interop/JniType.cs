@@ -1,4 +1,8 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
 using System.Threading;
 
 using Java.Interop;
@@ -124,6 +128,11 @@ namespace Java.Interop {
 
 			if (methods == null)
 				throw new ArgumentNullException ("methods");
+
+			for (int i = 0; i < methods.Length; ++i) {
+				methods [i].Marshaler = JniMarshalMethod.Wrap  (methods [i].Marshaler);
+			}
+
 			int r = JniEnvironment.Types.RegisterNatives (SafeHandle, methods, checked ((int)methods.Length));
 			if (r != 0)
 				throw new JavaException ("Unable to register native methods.");

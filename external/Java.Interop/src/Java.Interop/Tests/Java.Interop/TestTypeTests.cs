@@ -107,6 +107,22 @@ namespace Java.InteropTests
 			for (int i = 0; i < 10; ++i)
 				Assert.AreEqual (i, TestType.StaticIdentity (i));
 		}
+
+		[Test]
+		public void PropogateException ()
+		{
+			using (var t = new TestType ()) {
+				try {
+					Assert.IsFalse (t.PropogateFinallyBlockExecuted);
+					t.PropogateException ();
+				} catch (InvalidOperationException e) {
+					Assert.AreEqual ("jonp: bye!", e.Message);
+					Assert.IsTrue (t.PropogateFinallyBlockExecuted);
+				} catch (Exception e) {
+					Assert.Fail ("Expected InvalidOperationException; got: " + e);
+				}
+			}
+		}
 	}
 }
 

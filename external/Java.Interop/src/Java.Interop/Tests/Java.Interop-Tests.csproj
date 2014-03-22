@@ -43,6 +43,7 @@
     <Compile Include="Java.Interop\CallVirtualFromConstructorDerived.cs" />
     <Compile Include="Java.Interop\InvokeVirtualFromConstructorTests.cs" />
     <Compile Include="Java.Interop\JavaVMTest.cs" />
+    <Compile Include="Java.Interop\JniMarshalMethodTests.cs" />
     <Compile Include="Java.Interop\JniTypeTest.cs" />
     <Compile Include="Java.Interop\JVM.cs" />
     <Compile Include="Java.Interop\JniReferenceSafeHandleTest.cs" />
@@ -108,6 +109,10 @@
     <ProjectReference Include="..\..\..\tests\TestJVM\TestJVM.csproj">
       <Project>{A76309AB-98AC-4AE2-BA30-75481420C52F}</Project>
       <Name>TestJVM</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\lib\mono.linq.expressions\Mono.Linq.Expressions.csproj">
+      <Project>{0C001D50-4176-45AE-BDC8-BA626508B0CC}</Project>
+      <Name>Mono.Linq.Expressions</Name>
     </ProjectReference>
   </ItemGroup>
 </Project>

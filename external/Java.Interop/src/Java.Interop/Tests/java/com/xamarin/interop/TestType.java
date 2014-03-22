@@ -13,6 +13,16 @@ public class TestType {
 
 		if (!equalsThis(this))
 			throw new Error("Expected equalsThis(this)==true!");
+
+		try {
+			methodThrows ();
+			throw new Exception ("should not be reached");
+		} catch (Throwable t) {
+			String expected = "System.InvalidOperationException: jonp: bye!";
+			String actual   = t.getMessage ();
+			if (actual == null || !actual.startsWith (expected))
+				throw new Error ("Expected message to start with '" + expected + "'! Was: " + actual);
+		}
 	}
 
 	public int updateInt32Array (int[] array) {
@@ -63,7 +73,17 @@ public class TestType {
 	    return value;
 	}
 
+	public  boolean propogateFinallyBlockExecuted;
+	public  void propogateException () {
+		try {
+			methodThrows ();
+		} finally {
+			propogateFinallyBlockExecuted = true;
+		}
+	}
+
 	public  native  boolean equalsThis (Object value);
 	public  native  int     getInt32Value ();
 	public  native  String  getStringValue (int value);
+	public  native  void    methodThrows ();
 }

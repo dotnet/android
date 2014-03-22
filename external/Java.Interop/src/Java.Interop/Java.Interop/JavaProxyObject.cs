@@ -70,7 +70,6 @@ namespace Java.Interop {
 
 		static bool _Equals (IntPtr jnienv, IntPtr n_self, IntPtr n_value)
 		{
-			JniEnvironment.CheckCurrent (jnienv);
 			var self    = JniEnvironment.Current.JavaVM.GetObject<JavaProxyObject> (n_self);
 			var value   = JniEnvironment.Current.JavaVM.GetObject (n_value);
 			return self.Equals (value);
@@ -78,14 +77,12 @@ namespace Java.Interop {
 
 		static int _GetHashCode (IntPtr jnienv, IntPtr n_self)
 		{
-			JniEnvironment.CheckCurrent (jnienv);
 			var self = JniEnvironment.Current.JavaVM.GetObject<JavaProxyObject> (n_self);
 			return self.GetHashCode ();
 		}
 
 		static IntPtr _ToString (IntPtr jnienv, IntPtr n_self)
 		{
-			JniEnvironment.CheckCurrent (jnienv);
 			var self    = JniEnvironment.Current.JavaVM.GetObject<JavaProxyObject> (n_self);
 			var s       = self.ToString ();
 			using (var r = JniEnvironment.Strings.NewString (s))
