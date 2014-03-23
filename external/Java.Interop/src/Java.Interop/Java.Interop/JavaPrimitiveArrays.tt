@@ -6,6 +6,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Java.Interop {
 
@@ -110,13 +111,19 @@ namespace Java.Interop {
 		public new Jni<#= info.TypeModifier #>ArrayElements GetElements ()
 		{
 			IntPtr elements = JniEnvironment.Arrays.Get<#= info.JniMarshalType #>ArrayElements (SafeHandle, IntPtr.Zero);
-			return new Jni<#= info.TypeModifier #>ArrayElements (SafeHandle, elements);
+			return elements == IntPtr.Zero ? null : new Jni<#= info.TypeModifier #>ArrayElements (SafeHandle, elements);
 		}
 
 		public override unsafe int IndexOf (<#= info.ManagedType #> item)
 		{
 			int len = Length;
+			if (len == 0)
+				return -1;
 			using (var e = GetElements ()) {
+				Debug.Assert (e != null, "Java.<#= info.TypeModifier #>.Array.GetElements() returned null! OOM?");
+				if (e == null)
+					return -1;      // IList<T>.IndexOf() documents no exceptions. :-/
+
 				for (int i = 0; i < len; ++i) {
 					if (e.Elements [i] == item)
 						return i;

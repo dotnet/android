@@ -1,6 +1,7 @@
 ﻿
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Java.Interop {
 
@@ -252,13 +253,19 @@ namespace Java.Interop {
 		public new JniBooleanArrayElements GetElements ()
 		{
 			IntPtr elements = JniEnvironment.Arrays.GetBooleanArrayElements (SafeHandle, IntPtr.Zero);
-			return new JniBooleanArrayElements (SafeHandle, elements);
+			return elements == IntPtr.Zero ? null : new JniBooleanArrayElements (SafeHandle, elements);
 		}
 
 		public override unsafe int IndexOf (Byte item)
 		{
 			int len = Length;
+			if (len == 0)
+				return -1;
 			using (var e = GetElements ()) {
+				Debug.Assert (e != null, "Java.Boolean.Array.GetElements() returned null! OOM?");
+				if (e == null)
+					return -1;      // IList<T>.IndexOf() documents no exceptions. :-/
+
 				for (int i = 0; i < len; ++i) {
 					if (e.Elements [i] == item)
 						return i;
@@ -389,13 +396,19 @@ namespace Java.Interop {
 		public new JniSByteArrayElements GetElements ()
 		{
 			IntPtr elements = JniEnvironment.Arrays.GetByteArrayElements (SafeHandle, IntPtr.Zero);
-			return new JniSByteArrayElements (SafeHandle, elements);
+			return elements == IntPtr.Zero ? null : new JniSByteArrayElements (SafeHandle, elements);
 		}
 
 		public override unsafe int IndexOf (SByte item)
 		{
 			int len = Length;
+			if (len == 0)
+				return -1;
 			using (var e = GetElements ()) {
+				Debug.Assert (e != null, "Java.SByte.Array.GetElements() returned null! OOM?");
+				if (e == null)
+					return -1;      // IList<T>.IndexOf() documents no exceptions. :-/
+
 				for (int i = 0; i < len; ++i) {
 					if (e.Elements [i] == item)
 						return i;
@@ -526,13 +539,19 @@ namespace Java.Interop {
 		public new JniCharArrayElements GetElements ()
 		{
 			IntPtr elements = JniEnvironment.Arrays.GetCharArrayElements (SafeHandle, IntPtr.Zero);
-			return new JniCharArrayElements (SafeHandle, elements);
+			return elements == IntPtr.Zero ? null : new JniCharArrayElements (SafeHandle, elements);
 		}
 
 		public override unsafe int IndexOf (Char item)
 		{
 			int len = Length;
+			if (len == 0)
+				return -1;
 			using (var e = GetElements ()) {
+				Debug.Assert (e != null, "Java.Char.Array.GetElements() returned null! OOM?");
+				if (e == null)
+					return -1;      // IList<T>.IndexOf() documents no exceptions. :-/
+
 				for (int i = 0; i < len; ++i) {
 					if (e.Elements [i] == item)
 						return i;
@@ -663,13 +682,19 @@ namespace Java.Interop {
 		public new JniInt16ArrayElements GetElements ()
 		{
 			IntPtr elements = JniEnvironment.Arrays.GetShortArrayElements (SafeHandle, IntPtr.Zero);
-			return new JniInt16ArrayElements (SafeHandle, elements);
+			return elements == IntPtr.Zero ? null : new JniInt16ArrayElements (SafeHandle, elements);
 		}
 
 		public override unsafe int IndexOf (Int16 item)
 		{
 			int len = Length;
+			if (len == 0)
+				return -1;
 			using (var e = GetElements ()) {
+				Debug.Assert (e != null, "Java.Int16.Array.GetElements() returned null! OOM?");
+				if (e == null)
+					return -1;      // IList<T>.IndexOf() documents no exceptions. :-/
+
 				for (int i = 0; i < len; ++i) {
 					if (e.Elements [i] == item)
 						return i;
@@ -800,13 +825,19 @@ namespace Java.Interop {
 		public new JniInt32ArrayElements GetElements ()
 		{
 			IntPtr elements = JniEnvironment.Arrays.GetIntArrayElements (SafeHandle, IntPtr.Zero);
-			return new JniInt32ArrayElements (SafeHandle, elements);
+			return elements == IntPtr.Zero ? null : new JniInt32ArrayElements (SafeHandle, elements);
 		}
 
 		public override unsafe int IndexOf (Int32 item)
 		{
 			int len = Length;
+			if (len == 0)
+				return -1;
 			using (var e = GetElements ()) {
+				Debug.Assert (e != null, "Java.Int32.Array.GetElements() returned null! OOM?");
+				if (e == null)
+					return -1;      // IList<T>.IndexOf() documents no exceptions. :-/
+
 				for (int i = 0; i < len; ++i) {
 					if (e.Elements [i] == item)
 						return i;
@@ -937,13 +968,19 @@ namespace Java.Interop {
 		public new JniInt64ArrayElements GetElements ()
 		{
 			IntPtr elements = JniEnvironment.Arrays.GetLongArrayElements (SafeHandle, IntPtr.Zero);
-			return new JniInt64ArrayElements (SafeHandle, elements);
+			return elements == IntPtr.Zero ? null : new JniInt64ArrayElements (SafeHandle, elements);
 		}
 
 		public override unsafe int IndexOf (Int64 item)
 		{
 			int len = Length;
+			if (len == 0)
+				return -1;
 			using (var e = GetElements ()) {
+				Debug.Assert (e != null, "Java.Int64.Array.GetElements() returned null! OOM?");
+				if (e == null)
+					return -1;      // IList<T>.IndexOf() documents no exceptions. :-/
+
 				for (int i = 0; i < len; ++i) {
 					if (e.Elements [i] == item)
 						return i;
@@ -1074,13 +1111,19 @@ namespace Java.Interop {
 		public new JniSingleArrayElements GetElements ()
 		{
 			IntPtr elements = JniEnvironment.Arrays.GetFloatArrayElements (SafeHandle, IntPtr.Zero);
-			return new JniSingleArrayElements (SafeHandle, elements);
+			return elements == IntPtr.Zero ? null : new JniSingleArrayElements (SafeHandle, elements);
 		}
 
 		public override unsafe int IndexOf (Single item)
 		{
 			int len = Length;
+			if (len == 0)
+				return -1;
 			using (var e = GetElements ()) {
+				Debug.Assert (e != null, "Java.Single.Array.GetElements() returned null! OOM?");
+				if (e == null)
+					return -1;      // IList<T>.IndexOf() documents no exceptions. :-/
+
 				for (int i = 0; i < len; ++i) {
 					if (e.Elements [i] == item)
 						return i;
@@ -1211,13 +1254,19 @@ namespace Java.Interop {
 		public new JniDoubleArrayElements GetElements ()
 		{
 			IntPtr elements = JniEnvironment.Arrays.GetDoubleArrayElements (SafeHandle, IntPtr.Zero);
-			return new JniDoubleArrayElements (SafeHandle, elements);
+			return elements == IntPtr.Zero ? null : new JniDoubleArrayElements (SafeHandle, elements);
 		}
 
 		public override unsafe int IndexOf (Double item)
 		{
 			int len = Length;
+			if (len == 0)
+				return -1;
 			using (var e = GetElements ()) {
+				Debug.Assert (e != null, "Java.Double.Array.GetElements() returned null! OOM?");
+				if (e == null)
+					return -1;      // IList<T>.IndexOf() documents no exceptions. :-/
+
 				for (int i = 0; i < len; ++i) {
 					if (e.Elements [i] == item)
 						return i;

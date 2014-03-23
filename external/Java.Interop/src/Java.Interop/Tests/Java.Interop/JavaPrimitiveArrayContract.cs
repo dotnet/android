@@ -65,11 +65,14 @@ namespace Java.InteropTests
 		public void GetElements ()
 		{
 			var a = (TArray) CreateCollection (new[]{FromInt32 ('A')});
-			var e = a.GetElements ();
-			Assert.IsTrue (e.Elements != IntPtr.Zero);
-			e.Dispose ();
-			// Multi-dispose is supported.
-			e.Dispose ();
+			JniArrayElements e;
+			using (e = a.GetElements ()) {
+				if (e == null) // OOM?
+					return;
+				Assert.IsTrue (e.Elements != IntPtr.Zero);
+				// Multi-dispose is supported.
+				e.Dispose ();
+			}
 			Assert.Throws<ObjectDisposedException> (() => e.Release (JniArrayElementsReleaseMode.DoNotCopyBack));
 			Assert.Throws<ObjectDisposedException> (() => {
 					#pragma warning disable 0219
@@ -91,11 +94,14 @@ namespace Java.InteropTests
 		public void GetElements_EmptyArray ()
 		{
 			var a = (TArray) CreateCollection (new TElement[0]);
-			var e = a.GetElements ();
-			Assert.IsTrue (e.Elements != IntPtr.Zero);
-			e.Dispose ();
-			// Multi-dispose is supported.
-			e.Dispose ();
+			JniArrayElements e;
+			using (e = a.GetElements ()) {
+				if (e == null)
+					return;
+				Assert.IsTrue (e.Elements != IntPtr.Zero);
+				// Multi-dispose is supported.
+				e.Dispose ();
+			}
 			Assert.Throws<ObjectDisposedException> (() => e.Release (JniArrayElementsReleaseMode.DoNotCopyBack));
 			Assert.Throws<ObjectDisposedException> (() => {
 				#pragma warning disable 0219
