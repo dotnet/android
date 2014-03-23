@@ -154,7 +154,7 @@ namespace Java.InteropTests
 			AssertGetJniTypeInfoForType (typeof (JavaPrimitiveArray<Single>),   "[F",   true,   1);
 			AssertGetJniTypeInfoForType (typeof (JavaPrimitiveArray<Double>),   "[D",   true,   1);
 			AssertGetJniTypeInfoForType (typeof (JavaPrimitiveArray<Char>),     "[C",   true,   1);
-			AssertGetJniTypeInfoForType (typeof (JavaPrimitiveArray<Boolean>),  "[Z",   true,   1);
+			AssertGetJniTypeInfoForType (typeof (JavaPrimitiveArray<Byte>),     "[Z",   true,   1);
 
 			AssertGetJniTypeInfoForType (typeof (JavaArray<SByte>),    "[B",    true,   1);
 			AssertGetJniTypeInfoForType (typeof (JavaArray<Int16>),    "[S",    true,   1);
@@ -163,9 +163,9 @@ namespace Java.InteropTests
 			AssertGetJniTypeInfoForType (typeof (JavaArray<Single>),   "[F",    true,   1);
 			AssertGetJniTypeInfoForType (typeof (JavaArray<Double>),   "[D",    true,   1);
 			AssertGetJniTypeInfoForType (typeof (JavaArray<Char>),     "[C",    true,   1);
-			AssertGetJniTypeInfoForType (typeof (JavaArray<Boolean>),  "[Z",    true,   1);
+			AssertGetJniTypeInfoForType (typeof (JavaArray<Byte>),     "[Z",    true,   1);
 
-			AssertGetJniTypeInfoForType (typeof (JavaArray<Boolean>[]), "[[Z",  true,   2);
+			AssertGetJniTypeInfoForType (typeof (JavaArray<Byte>[]),   "[[Z",  true,   2);
 
 			AssertGetJniTypeInfoForType (typeof (JavaArray<JavaObject>),    "[Ljava/lang/Object;",  false,  1);
 			AssertGetJniTypeInfoForType (typeof (JavaArray<int[]>),         "[[I",                  true,   2);
@@ -178,6 +178,14 @@ namespace Java.InteropTests
 			Assert.AreEqual (jniType,   info.ToString ());
 			Assert.AreEqual (isKeyword, info.TypeIsKeyword);
 			Assert.AreEqual (arrayRank, info.ArrayRank);
+		}
+
+		[Test]
+		public void GetJniTypeNameForType ()
+		{
+			Assert.Throws<ArgumentNullException> (() => JVM.Current.GetJniTypeNameForType (null));
+			Assert.Throws<ArgumentException> (() => JVM.Current.GetJniTypeNameForType (typeof (int[])));
+			Assert.AreEqual (null, JVM.Current.GetJniTypeNameForType (typeof(JavaVMTest)));
 		}
 
 		[Test]

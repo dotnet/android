@@ -553,7 +553,7 @@ namespace Java.Interop
 
 	partial class JavaVM {
 
-		public virtual JniTypeInfo GetJniTypeInfoForType (Type type)
+		public JniTypeInfo GetJniTypeInfoForType (Type type)
 		{
 			if (type == null)
 				throw new ArgumentNullException ("type");
@@ -580,6 +580,14 @@ namespace Java.Interop
 				}
 			}
 
+			foreach (var mapping in JniBuiltinArrayMappings) {
+				if (mapping.Key == type) {
+					var r = mapping.Value;
+					r.ArrayRank += rank;
+					return r;
+				}
+			}
+
 			var names = (JniTypeInfoAttribute[]) type.GetCustomAttributes (typeof (JniTypeInfoAttribute), inherit:false);
 			if (names.Length != 0)
 				return new JniTypeInfo (names [0].JniTypeName, names [0].TypeIsKeyword, names [0].ArrayRank + rank);
@@ -592,7 +600,17 @@ namespace Java.Interop
 					return r;
 				}
 			}
-			return new JniTypeInfo (null, false, rank);
+			return new JniTypeInfo (GetJniTypeNameForType (type), false, rank);
+		}
+
+		// Should be protected, but how then would we test?
+		public virtual string GetJniTypeNameForType (Type type)
+		{
+			if (type == null)
+				throw new ArgumentNullException ("type");
+			if (type.IsArray)
+				throw new ArgumentException ("Array type '" + type.FullName + "' is not supported.", "type");
+			return null;
 		}
 
 		static readonly KeyValuePair<Type, JniTypeInfo>[] JniBuiltinTypeNameMappings = new []{
@@ -609,24 +627,6 @@ namespace Java.Interop
 			new KeyValuePair<Type, JniTypeInfo>(typeof (double),    new JniTypeInfo ("D",   true)),
 			new KeyValuePair<Type, JniTypeInfo>(typeof (char),      new JniTypeInfo ("C",   true)),
 			new KeyValuePair<Type, JniTypeInfo>(typeof (bool),      new JniTypeInfo ("Z",   true)),
-
-			new KeyValuePair<Type, JniTypeInfo>(typeof (JavaPrimitiveArray<SByte>),     new JniTypeInfo ("B",  true,   1)),
-			new KeyValuePair<Type, JniTypeInfo>(typeof (JavaPrimitiveArray<Int16>),     new JniTypeInfo ("S",  true,   1)),
-			new KeyValuePair<Type, JniTypeInfo>(typeof (JavaPrimitiveArray<Int32>),     new JniTypeInfo ("I",  true,   1)),
-			new KeyValuePair<Type, JniTypeInfo>(typeof (JavaPrimitiveArray<Int64>),     new JniTypeInfo ("J",  true,   1)),
-			new KeyValuePair<Type, JniTypeInfo>(typeof (JavaPrimitiveArray<Single>),    new JniTypeInfo ("F",  true,   1)),
-			new KeyValuePair<Type, JniTypeInfo>(typeof (JavaPrimitiveArray<Double>),    new JniTypeInfo ("D",  true,   1)),
-			new KeyValuePair<Type, JniTypeInfo>(typeof (JavaPrimitiveArray<Char>),      new JniTypeInfo ("C",  true,   1)),
-			new KeyValuePair<Type, JniTypeInfo>(typeof (JavaPrimitiveArray<Boolean>),   new JniTypeInfo ("Z",  true,   1)),
-
-			new KeyValuePair<Type, JniTypeInfo>(typeof (JavaArray<SByte>),      new JniTypeInfo ("B",  true,   1)),
-			new KeyValuePair<Type, JniTypeInfo>(typeof (JavaArray<Int16>),      new JniTypeInfo ("S",  true,   1)),
-			new KeyValuePair<Type, JniTypeInfo>(typeof (JavaArray<Int32>),      new JniTypeInfo ("I",  true,   1)),
-			new KeyValuePair<Type, JniTypeInfo>(typeof (JavaArray<Int64>),      new JniTypeInfo ("J",  true,   1)),
-			new KeyValuePair<Type, JniTypeInfo>(typeof (JavaArray<Single>),     new JniTypeInfo ("F",  true,   1)),
-			new KeyValuePair<Type, JniTypeInfo>(typeof (JavaArray<Double>),     new JniTypeInfo ("D",  true,   1)),
-			new KeyValuePair<Type, JniTypeInfo>(typeof (JavaArray<Char>),       new JniTypeInfo ("C",  true,   1)),
-			new KeyValuePair<Type, JniTypeInfo>(typeof (JavaArray<Boolean>),    new JniTypeInfo ("Z",  true,   1)),
 		};
 
 		public virtual JniMarshalInfo GetJniMarshalInfoForType (Type type)

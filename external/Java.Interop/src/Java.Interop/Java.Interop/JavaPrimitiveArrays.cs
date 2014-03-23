@@ -6,6 +6,25 @@ using System.Diagnostics;
 namespace Java.Interop {
 
 	partial class JavaVM {
+		static readonly KeyValuePair<Type, JniTypeInfo>[] JniBuiltinArrayMappings = new[]{
+			new KeyValuePair<Type, JniTypeInfo>(typeof (JavaPrimitiveArray<Byte>),   new JniTypeInfo ("Z", true, 1)),
+			new KeyValuePair<Type, JniTypeInfo>(typeof (JavaArray<Byte>),            new JniTypeInfo ("Z", true, 1)),
+			new KeyValuePair<Type, JniTypeInfo>(typeof (JavaPrimitiveArray<SByte>),   new JniTypeInfo ("B", true, 1)),
+			new KeyValuePair<Type, JniTypeInfo>(typeof (JavaArray<SByte>),            new JniTypeInfo ("B", true, 1)),
+			new KeyValuePair<Type, JniTypeInfo>(typeof (JavaPrimitiveArray<Char>),   new JniTypeInfo ("C", true, 1)),
+			new KeyValuePair<Type, JniTypeInfo>(typeof (JavaArray<Char>),            new JniTypeInfo ("C", true, 1)),
+			new KeyValuePair<Type, JniTypeInfo>(typeof (JavaPrimitiveArray<Int16>),   new JniTypeInfo ("S", true, 1)),
+			new KeyValuePair<Type, JniTypeInfo>(typeof (JavaArray<Int16>),            new JniTypeInfo ("S", true, 1)),
+			new KeyValuePair<Type, JniTypeInfo>(typeof (JavaPrimitiveArray<Int32>),   new JniTypeInfo ("I", true, 1)),
+			new KeyValuePair<Type, JniTypeInfo>(typeof (JavaArray<Int32>),            new JniTypeInfo ("I", true, 1)),
+			new KeyValuePair<Type, JniTypeInfo>(typeof (JavaPrimitiveArray<Int64>),   new JniTypeInfo ("J", true, 1)),
+			new KeyValuePair<Type, JniTypeInfo>(typeof (JavaArray<Int64>),            new JniTypeInfo ("J", true, 1)),
+			new KeyValuePair<Type, JniTypeInfo>(typeof (JavaPrimitiveArray<Single>),   new JniTypeInfo ("F", true, 1)),
+			new KeyValuePair<Type, JniTypeInfo>(typeof (JavaArray<Single>),            new JniTypeInfo ("F", true, 1)),
+			new KeyValuePair<Type, JniTypeInfo>(typeof (JavaPrimitiveArray<Double>),   new JniTypeInfo ("D", true, 1)),
+			new KeyValuePair<Type, JniTypeInfo>(typeof (JavaArray<Double>),            new JniTypeInfo ("D", true, 1)),
+		};
+
 		static readonly KeyValuePair<Type, JniMarshalInfo>[] JniPrimitiveArrayMarshalers = new []{
 			new KeyValuePair<Type, JniMarshalInfo>(typeof (Byte[]), new JniMarshalInfo {
 				GetValueFromJni             = JavaBooleanArray.GetValueFromJni,
