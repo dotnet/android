@@ -78,6 +78,32 @@ namespace Java.InteropTests
 			});
 			a.Dispose ();
 		}
+
+		// TODO: http://developer.android.com/training/articles/perf-jni.html#arrays
+		//       "Also, if the Get call fails, you must ensure that your code doesn't
+		//        try to Release a NULL pointer later."
+		//  This implies that JNIEnv::Get<Type>ArrayElements() can return NULL; how/when?
+		//  Theory: this happens if the array is empty (kinda like what C# `fixed` does?).
+		//  Try to test this.
+		//  (Alas, on OpenJDK JNIEnv::Get<Type>ArrayElements() returns a non-NULL pointer
+		//   when the array is empty, so we'll need to run this on Android.)
+		[Test]
+		public void GetElements_EmptyArray ()
+		{
+			var a = (TArray) CreateCollection (new TElement[0]);
+			var e = a.GetElements ();
+			Assert.IsTrue (e.Elements != IntPtr.Zero);
+			e.Dispose ();
+			// Multi-dispose is supported.
+			e.Dispose ();
+			Assert.Throws<ObjectDisposedException> (() => e.Release (JniArrayElementsReleaseMode.DoNotCopyBack));
+			Assert.Throws<ObjectDisposedException> (() => {
+				#pragma warning disable 0219
+				var _ = e.Elements;
+				#pragma warning restore 0219
+			});
+			a.Dispose ();
+		}
 	}
 }
 
