@@ -12,7 +12,7 @@ namespace Java.Interop {
 
 <#
 	var arrayTypeInfo = new[]{
-		new { JniType = "Z",    JniMarshalType  = "Boolean",    ManagedType = "Byte",   TypeModifier    = "Boolean" },
+		new { JniType = "Z",    JniMarshalType  = "Boolean",    ManagedType = "Boolean",TypeModifier    = "Boolean" },
 		new { JniType = "B",    JniMarshalType  = "Byte",       ManagedType = "SByte",  TypeModifier    = "SByte" },
 		new { JniType = "C",    JniMarshalType  = "Char",       ManagedType = "Char",   TypeModifier    = "Char" },
 		new { JniType = "S",    JniMarshalType  = "Short",      ManagedType = "Int16",  TypeModifier    = "Int16" },

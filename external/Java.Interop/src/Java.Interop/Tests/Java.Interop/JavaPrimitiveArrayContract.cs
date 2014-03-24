@@ -19,17 +19,17 @@ namespace Java.InteropTests
 			#pragma warning restore 0219
 		}
 
-		protected override sealed TElement CreateValueA ()
+		protected override TElement CreateValueA ()
 		{
 			return FromInt32 ((int) 'A');
 		}
 
-		protected override sealed TElement CreateValueB ()
+		protected override TElement CreateValueB ()
 		{
 			return FromInt32 ((int) 'B');
 		}
 
-		protected override sealed TElement CreateValueC ()
+		protected override TElement CreateValueC ()
 		{
 			return FromInt32 ((int) 'C');
 		}

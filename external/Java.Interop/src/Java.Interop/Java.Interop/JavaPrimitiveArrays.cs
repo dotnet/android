@@ -7,8 +7,8 @@ namespace Java.Interop {
 
 	partial class JavaVM {
 		static readonly KeyValuePair<Type, JniTypeInfo>[] JniBuiltinArrayMappings = new[]{
-			new KeyValuePair<Type, JniTypeInfo>(typeof (JavaPrimitiveArray<Byte>),   new JniTypeInfo ("Z", true, 1)),
-			new KeyValuePair<Type, JniTypeInfo>(typeof (JavaArray<Byte>),            new JniTypeInfo ("Z", true, 1)),
+			new KeyValuePair<Type, JniTypeInfo>(typeof (JavaPrimitiveArray<Boolean>),   new JniTypeInfo ("Z", true, 1)),
+			new KeyValuePair<Type, JniTypeInfo>(typeof (JavaArray<Boolean>),            new JniTypeInfo ("Z", true, 1)),
 			new KeyValuePair<Type, JniTypeInfo>(typeof (JavaPrimitiveArray<SByte>),   new JniTypeInfo ("B", true, 1)),
 			new KeyValuePair<Type, JniTypeInfo>(typeof (JavaArray<SByte>),            new JniTypeInfo ("B", true, 1)),
 			new KeyValuePair<Type, JniTypeInfo>(typeof (JavaPrimitiveArray<Char>),   new JniTypeInfo ("C", true, 1)),
@@ -26,19 +26,19 @@ namespace Java.Interop {
 		};
 
 		static readonly KeyValuePair<Type, JniMarshalInfo>[] JniPrimitiveArrayMarshalers = new []{
-			new KeyValuePair<Type, JniMarshalInfo>(typeof (Byte[]), new JniMarshalInfo {
+			new KeyValuePair<Type, JniMarshalInfo>(typeof (Boolean[]), new JniMarshalInfo {
 				GetValueFromJni             = JavaBooleanArray.GetValueFromJni,
 				CreateLocalRef              = JavaBooleanArray.CreateLocalRef,
 				CreateMarshalCollection     = JavaBooleanArray.CreateMarshalCollection,
 				CleanupMarshalCollection    = JavaBooleanArray.CleanupMarshalCollection,
 			}),
-			new KeyValuePair<Type, JniMarshalInfo>(typeof (JavaArray<Byte>), new JniMarshalInfo {
+			new KeyValuePair<Type, JniMarshalInfo>(typeof (JavaArray<Boolean>), new JniMarshalInfo {
 				GetValueFromJni             = JavaBooleanArray.GetValueFromJni,
 				CreateLocalRef              = JavaBooleanArray.CreateLocalRef,
 				CreateMarshalCollection     = JavaBooleanArray.CreateMarshalCollection,
 				CleanupMarshalCollection    = JavaBooleanArray.CleanupMarshalCollection,
 			}),
-			new KeyValuePair<Type, JniMarshalInfo>(typeof (JavaPrimitiveArray<Byte>), new JniMarshalInfo {
+			new KeyValuePair<Type, JniMarshalInfo>(typeof (JavaPrimitiveArray<Boolean>), new JniMarshalInfo {
 				GetValueFromJni             = JavaBooleanArray.GetValueFromJni,
 				CreateLocalRef              = JavaBooleanArray.CreateLocalRef,
 				CreateMarshalCollection     = JavaBooleanArray.CreateMarshalCollection,
@@ -230,8 +230,8 @@ namespace Java.Interop {
 			this.arrayHandle = arrayHandle;
 		}
 
-		public new unsafe Byte* Elements {
-			get {return (Byte*) base.Elements;}
+		public new unsafe Boolean* Elements {
+			get {return (Boolean*) base.Elements;}
 		}
 
 		protected override void Synchronize (JniArrayElementsReleaseMode releaseMode)
@@ -241,7 +241,7 @@ namespace Java.Interop {
 	}
 
 	[JniTypeInfo ("Z", ArrayRank=1, TypeIsKeyword=true)]
-	public sealed partial class JavaBooleanArray : JavaPrimitiveArray<Byte> {
+	public sealed partial class JavaBooleanArray : JavaPrimitiveArray<Boolean> {
 
 		public JavaBooleanArray (JniReferenceSafeHandle handle, JniHandleOwnership transfer)
 			: base (handle, transfer)
@@ -253,13 +253,13 @@ namespace Java.Interop {
 		{
 		}
 
-		public JavaBooleanArray (System.Collections.Generic.IList<Byte> value)
+		public JavaBooleanArray (System.Collections.Generic.IList<Boolean> value)
 			: this (CheckLength (value))
 		{
 			CopyFrom (_ToArray (value), 0, 0, value.Count);
 		}
 
-		public JavaBooleanArray (System.Collections.Generic.IEnumerable<Byte> value)
+		public JavaBooleanArray (System.Collections.Generic.IEnumerable<Boolean> value)
 			: this (_ToArray (value))
 		{
 		}
@@ -275,7 +275,7 @@ namespace Java.Interop {
 			return elements == IntPtr.Zero ? null : new JniBooleanArrayElements (SafeHandle, elements);
 		}
 
-		public override unsafe int IndexOf (Byte item)
+		public override unsafe int IndexOf (Boolean item)
 		{
 			int len = Length;
 			if (len == 0)
@@ -298,12 +298,12 @@ namespace Java.Interop {
 			int len = Length;
 			using (var e = GetElements ()) {
 				for (int i = 0; i < len; ++i) {
-					e.Elements [i] = default (Byte);
+					e.Elements [i] = default (Boolean);
 				}
 			}
 		}
 
-		public override unsafe void CopyTo (int sourceIndex, Byte[] destinationArray, int destinationIndex, int length)
+		public override unsafe void CopyTo (int sourceIndex, Boolean[] destinationArray, int destinationIndex, int length)
 		{
 			if (destinationArray == null)
 				throw new ArgumentNullException ("destinationArray");
@@ -311,11 +311,11 @@ namespace Java.Interop {
 			if (destinationArray.Length == 0)
 				return;
 
-			fixed (Byte* b = destinationArray)
+			fixed (Boolean* b = destinationArray)
 				JniEnvironment.Arrays.GetBooleanArrayRegion (SafeHandle, sourceIndex, length, (IntPtr) (b+destinationIndex));
 		}
 
-		public override unsafe void CopyFrom (Byte[] sourceArray, int sourceIndex, int destinationIndex, int length)
+		public override unsafe void CopyFrom (Boolean[] sourceArray, int sourceIndex, int destinationIndex, int length)
 		{
 			if (sourceArray == null)
 				throw new ArgumentNullException ("sourceArray");
@@ -323,27 +323,27 @@ namespace Java.Interop {
 			if (sourceArray.Length == 0)
 				return;
 
-			fixed (Byte* b = sourceArray)
+			fixed (Boolean* b = sourceArray)
 				JniEnvironment.Arrays.SetBooleanArrayRegion (SafeHandle, destinationIndex, length, (IntPtr) (b+sourceIndex));
 		}
 
 		internal override bool TargetTypeIsCurrentType (Type targetType)
 		{
 			return base.TargetTypeIsCurrentType (targetType) ||
-				typeof (JavaPrimitiveArray<Byte>) == targetType ||
+				typeof (JavaPrimitiveArray<Boolean>) == targetType ||
 				typeof (JavaBooleanArray) == targetType;
 		}
 
 		internal static JniLocalReference CreateLocalRef (object value)
 		{
-		    return JavaArray<Byte>.CreateLocalRef<JavaBooleanArray> (
+		    return JavaArray<Boolean>.CreateLocalRef<JavaBooleanArray> (
 		            value,
 		            list => new JavaBooleanArray (list));
 		}
 
-		internal static IList<Byte> GetValueFromJni (JniReferenceSafeHandle handle, JniHandleOwnership transfer, Type targetType)
+		internal static IList<Boolean> GetValueFromJni (JniReferenceSafeHandle handle, JniHandleOwnership transfer, Type targetType)
 		{
-		    return JavaArray<Byte>.GetValueFromJni (
+		    return JavaArray<Boolean>.GetValueFromJni (
 		            handle,
 		            transfer,
 		            targetType,
@@ -352,14 +352,14 @@ namespace Java.Interop {
 
 		internal static IJavaObject CreateMarshalCollection (object value)
 		{
-		    return JavaArray<Byte>.CreateMarshalCollection (value, list => new JavaBooleanArray (list) {
+		    return JavaArray<Boolean>.CreateMarshalCollection (value, list => new JavaBooleanArray (list) {
 		        forMarshalCollection = true,
 		    });
 		}
 
 		internal static void CleanupMarshalCollection (IJavaObject marshalObject, object value)
 		{
-		    JavaArray<Byte>.CleanupMarshalCollection<JavaBooleanArray> (marshalObject, value);
+		    JavaArray<Boolean>.CleanupMarshalCollection<JavaBooleanArray> (marshalObject, value);
 		}
 	}
 

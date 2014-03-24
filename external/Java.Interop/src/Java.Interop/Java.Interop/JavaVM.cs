@@ -624,11 +624,7 @@ namespace Java.Interop
 			var rank    = info.ArrayRank;
 			var type    = inner;
 			if (info.TypeIsKeyword && rank > 0) {
-				// Because `[Z` is binary compatible with bool[], while
-				// bool[] marshals as int[].
-				// TODO: FIX THE DEFAULT bool[] MARSHALING!
-				type = typeof (JavaPrimitiveArray<>).MakeGenericType (
-						type == typeof (bool) ? typeof (byte) : type);
+				type = typeof(JavaPrimitiveArray<>).MakeGenericType (type);
 				if (--rank == 0)
 					return type;
 			}

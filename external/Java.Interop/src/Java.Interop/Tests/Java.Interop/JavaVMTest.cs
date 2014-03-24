@@ -154,7 +154,7 @@ namespace Java.InteropTests
 			AssertGetJniTypeInfoForType (typeof (JavaPrimitiveArray<Single>),   "[F",   true,   1);
 			AssertGetJniTypeInfoForType (typeof (JavaPrimitiveArray<Double>),   "[D",   true,   1);
 			AssertGetJniTypeInfoForType (typeof (JavaPrimitiveArray<Char>),     "[C",   true,   1);
-			AssertGetJniTypeInfoForType (typeof (JavaPrimitiveArray<Byte>),     "[Z",   true,   1);
+			AssertGetJniTypeInfoForType (typeof (JavaPrimitiveArray<bool>),     "[Z",   true,   1);
 
 			AssertGetJniTypeInfoForType (typeof (JavaArray<SByte>),    "[B",    true,   1);
 			AssertGetJniTypeInfoForType (typeof (JavaArray<Int16>),    "[S",    true,   1);
@@ -163,9 +163,9 @@ namespace Java.InteropTests
 			AssertGetJniTypeInfoForType (typeof (JavaArray<Single>),   "[F",    true,   1);
 			AssertGetJniTypeInfoForType (typeof (JavaArray<Double>),   "[D",    true,   1);
 			AssertGetJniTypeInfoForType (typeof (JavaArray<Char>),     "[C",    true,   1);
-			AssertGetJniTypeInfoForType (typeof (JavaArray<Byte>),     "[Z",    true,   1);
+			AssertGetJniTypeInfoForType (typeof (JavaArray<bool>),     "[Z",    true,   1);
 
-			AssertGetJniTypeInfoForType (typeof (JavaArray<Byte>[]),   "[[Z",  true,   2);
+			AssertGetJniTypeInfoForType (typeof (JavaArray<bool>[]),   "[[Z",  true,   2);
 
 			AssertGetJniTypeInfoForType (typeof (JavaArray<JavaObject>),    "[Ljava/lang/Object;",  false,  1);
 			AssertGetJniTypeInfoForType (typeof (JavaArray<int[]>),         "[[I",                  true,   2);
@@ -219,7 +219,7 @@ namespace Java.InteropTests
 					getValue:                   "JavaObjectExtensions.GetValue",
 					createLocalRef:             "JavaObjectExtensions.CreateLocalRef");
 
-			AssertGetJniMarshalInfoForPrimitiveArray<JavaBooleanArray, byte> ();
+			AssertGetJniMarshalInfoForPrimitiveArray<JavaBooleanArray, bool> ();
 			AssertGetJniMarshalInfoForPrimitiveArray<JavaSByteArray, sbyte> ();
 			AssertGetJniMarshalInfoForPrimitiveArray<JavaCharArray, char> ();
 			AssertGetJniMarshalInfoForPrimitiveArray<JavaInt16Array, short> ();
@@ -329,7 +329,7 @@ namespace Java.InteropTests
 			Assert.AreEqual (null,              JVM.Current.GetTypeForJniTypeRefererence ("Lcom/example/does/not/exist;"));
 			Assert.AreEqual (null,              JVM.Current.GetTypeForJniTypeRefererence ("[Lcom/example/does/not/exist;"));
 
-			Assert.AreEqual (typeof (JavaPrimitiveArray<byte>),     JVM.Current.GetTypeForJniTypeRefererence ("[Z"));
+			Assert.AreEqual (typeof (JavaPrimitiveArray<bool>),     JVM.Current.GetTypeForJniTypeRefererence ("[Z"));
 			Assert.AreEqual (typeof (JavaPrimitiveArray<char>),     JVM.Current.GetTypeForJniTypeRefererence ("[C"));
 			Assert.AreEqual (typeof (JavaPrimitiveArray<sbyte>),    JVM.Current.GetTypeForJniTypeRefererence ("[B"));
 			Assert.AreEqual (typeof (JavaPrimitiveArray<short>),    JVM.Current.GetTypeForJniTypeRefererence ("[S"));
@@ -339,7 +339,7 @@ namespace Java.InteropTests
 			Assert.AreEqual (typeof (JavaPrimitiveArray<double>),   JVM.Current.GetTypeForJniTypeRefererence ("[D"));
 			Assert.AreEqual (typeof (JavaObjectArray<string>),      JVM.Current.GetTypeForJniTypeRefererence ("[Ljava/lang/String;"));
 
-			Assert.AreEqual (typeof (JavaObjectArray<JavaPrimitiveArray<byte>>),    JVM.Current.GetTypeForJniTypeRefererence ("[[Z"));
+			Assert.AreEqual (typeof (JavaObjectArray<JavaPrimitiveArray<bool>>),    JVM.Current.GetTypeForJniTypeRefererence ("[[Z"));
 			Assert.AreEqual (typeof (JavaObjectArray<JavaPrimitiveArray<char>>),    JVM.Current.GetTypeForJniTypeRefererence ("[[C"));
 			Assert.AreEqual (typeof (JavaObjectArray<JavaPrimitiveArray<sbyte>>),   JVM.Current.GetTypeForJniTypeRefererence ("[[B"));
 			Assert.AreEqual (typeof (JavaObjectArray<JavaPrimitiveArray<short>>),   JVM.Current.GetTypeForJniTypeRefererence ("[[S"));
