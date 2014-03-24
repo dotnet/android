@@ -600,16 +600,125 @@ namespace Java.Interop
 					return r;
 				}
 			}
-			return new JniTypeInfo (GetJniTypeNameForType (type), false, rank);
+			return new JniTypeInfo (GetJniSimplifiedTypeReferenceForType (type), false, rank);
 		}
 
 		// Should be protected, but how then would we test?
-		public virtual string GetJniTypeNameForType (Type type)
+		public virtual string GetJniSimplifiedTypeReferenceForType (Type type)
 		{
 			if (type == null)
 				throw new ArgumentNullException ("type");
 			if (type.IsArray)
 				throw new ArgumentException ("Array type '" + type.FullName + "' is not supported.", "type");
+			return null;
+		}
+
+		public Type GetTypeForJniTypeRefererence (string jniTypeReference)
+		{
+			var info    = GetJniTypeInfoForJniTypeReference (jniTypeReference);
+			if (info.JniTypeName == null)
+				return null;
+			var inner   = GetTypeForJniSimplifiedTypeReference (info.JniTypeName);
+			if (inner == null)
+				return null;
+			var rank    = info.ArrayRank;
+			var type    = inner;
+			if (info.TypeIsKeyword && rank > 0) {
+				// Because `[Z` is binary compatible with bool[], while
+				// bool[] marshals as int[].
+				// TODO: FIX THE DEFAULT bool[] MARSHALING!
+				type = typeof (JavaPrimitiveArray<>).MakeGenericType (
+						type == typeof (bool) ? typeof (byte) : type);
+				if (--rank == 0)
+					return type;
+			}
+			while (rank-- > 0) {
+				type = typeof (JavaObjectArray<>).MakeGenericType (type);
+			}
+			return type;
+		}
+
+		public JniTypeInfo GetJniTypeInfoForJniTypeReference (string jniTypeReference)
+		{
+			if (jniTypeReference == null)
+				throw new ArgumentNullException ("jniTypeReference");
+			var info = new JniTypeInfo ();
+			int i = 0;
+			while (i < jniTypeReference.Length && jniTypeReference [i] == '[') {
+				i++;
+				info.ArrayRank++;
+			}
+			switch (jniTypeReference [i]) {
+			case 'B':
+			case 'C':
+			case 'D':
+			case 'I':
+			case 'F':
+			case 'J':
+			case 'S':
+			case 'Z':
+				if (jniTypeReference.Length - i > 1)
+					info.JniTypeName    = jniTypeReference.Substring (i);
+				else {
+					info.JniTypeName    = jniTypeReference [i].ToString ();
+					info.TypeIsKeyword  = true;
+				}
+				break;
+			case 'L':
+				int s = jniTypeReference.IndexOf (';', i);
+				if (s >= i && s != jniTypeReference.Length-1)
+					throw new ArgumentException (
+							string.Format ("Malformed JNI type reference: trailing text after ';' in '{0}'.", jniTypeReference),
+							"jniTypeReference");
+				if (i == 0) {
+					info.JniTypeName = s > i
+						? jniTypeReference.Substring (i + 1, s - i - 1)
+						: jniTypeReference;
+				} else {
+					if (s < i)
+						throw new ArgumentException (
+								string.Format ("Malformed JNI type reference; no terminating ';' for type ref: '{0}'.", jniTypeReference.Substring (i)),
+								"jniTypeReference");
+					if (s != jniTypeReference.Length - 1)
+						throw new ArgumentException (
+								string.Format ("Malformed jNI type reference: invalid trailing text: '{0}'.", jniTypeReference.Substring (i)),
+								"jniTypeReference");
+					info.JniTypeName = jniTypeReference.Substring (i + 1, s - i - 1);
+				}
+				break;
+			default:
+				if (i != 0)
+					throw new ArgumentException (
+							string.Format ("Malformed JNI type reference: found unrecognized char '{0}' in '{1}'.",
+								jniTypeReference [i], jniTypeReference),
+							"jniTypeReference");
+				info.JniTypeName = jniTypeReference;
+				break;
+			}
+			Debug.WriteLine ("# '{0}' => [{1}] '{2}'", jniTypeReference, info.JniTypeName, info.ToString ());
+			int bad = info.JniTypeName.IndexOfAny (new[]{ '.', ';' });
+			if (bad >= 0)
+				throw new ArgumentException (
+						string.Format ("Malformed JNI type reference: contains '{0}': {1}", info.JniTypeName [bad], jniTypeReference),
+						"jniTypeReference");
+			return info;
+		}
+
+		public virtual Type GetTypeForJniSimplifiedTypeReference (string jniTypeReference)
+		{
+			if (jniTypeReference == null)
+				throw new ArgumentNullException ("jniTypeReference");
+			if (jniTypeReference != null && jniTypeReference.Contains ("."))
+				throw new ArgumentException ("JNI type names do not contain '.', they use '/'. Are you sure you're using a JNI type name?", "jniTypeReference");
+			if (jniTypeReference != null && jniTypeReference.StartsWith ("[", StringComparison.Ordinal))
+				throw new ArgumentException ("Only simplified type references are supported.", "jniTypeReference");
+			if (jniTypeReference != null && jniTypeReference.StartsWith ("L", StringComparison.Ordinal) && jniTypeReference.EndsWith (";", StringComparison.Ordinal))
+				throw new ArgumentException ("Only simplified type references are supported.", "jniTypeReference");
+
+			foreach (var mapping in JniBuiltinTypeNameMappings) {
+				if (mapping.Value.JniTypeName == jniTypeReference)
+					return mapping.Key;
+			}
 			return null;
 		}
 
