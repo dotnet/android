@@ -523,11 +523,43 @@ namespace Java.Interop
 
 		protected virtual IJavaObject CreateObjectWrapper (JniReferenceSafeHandle handle, JniHandleOwnership transfer, Type targetType)
 		{
-			if (targetType == null)
-				return new JavaObject (handle, transfer);
+			targetType  = targetType ?? typeof (JavaObject);
 			if (!typeof (IJavaObject).IsAssignableFrom (targetType))
 				throw new ArgumentException ("targetType must implement IJavaObject!", "targetType");
+
+			var bestType = GetWrapperType (handle);
+			if (targetType != null && targetType.IsAssignableFrom (bestType))
+				targetType = bestType;
+
 			return (IJavaObject)Activator.CreateInstance (targetType, handle, transfer);
+		}
+
+		Type GetWrapperType (JniReferenceSafeHandle handle)
+		{
+			var jniTypeName = handle.GetJniTypeName ();
+			Type type = null;
+			while (jniTypeName != null) {
+				type = GetTypeForJniTypeRefererence (jniTypeName);
+
+				if (type != null) {
+					const BindingFlags bindingFlags = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance;
+					var ctors =
+						from    c in type.GetConstructors (bindingFlags)
+						let     p = c.GetParameters ()
+						where   p.Length == 2
+						where   p [0].ParameterType == typeof(JniReferenceSafeHandle) &&
+						    p [1].ParameterType == typeof(JniHandleOwnership)
+						select  c;
+					if (ctors.Any ())
+						return type;
+				}
+
+				using (var jniType  = new JniType (jniTypeName))
+				using (var super    = jniType.GetSuperclass ()) {
+					jniTypeName = super == null ? null : super.Name;
+				}
+			}
+			return null;
 		}
 
 		public T GetObject<T> (JniReferenceSafeHandle jniHandle, JniHandleOwnership transfer)
@@ -691,7 +723,6 @@ namespace Java.Interop
 				info.JniTypeName = jniTypeReference;
 				break;
 			}
-			Debug.WriteLine ("# '{0}' => [{1}] '{2}'", jniTypeReference, info.JniTypeName, info.ToString ());
 			int bad = info.JniTypeName.IndexOfAny (new[]{ '.', ';' });
 			if (bad >= 0)
 				throw new ArgumentException (

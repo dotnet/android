@@ -41,6 +41,16 @@ namespace Java.Interop {
 			}
 		}
 
+		public string Name {
+			get {
+				AssertValid ();
+
+				var s = JniEnvironment.Current.Class_getName.CallVirtualObjectMethod (SafeHandle);
+				return JniEnvironment.Strings.ToString (s, JniHandleOwnership.Transfer)
+					.Replace ('.', '/');
+			}
+		}
+
 		public void RegisterWithVM ()
 		{
 			AssertValid ();

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Diagnostics;
 using System.Linq;
@@ -9,7 +10,11 @@ namespace Java.InteropTests {
 
 	class JVM {
 
-		public static readonly JavaVM Current = new TestJVM ("interop-test.jar");
+		public static readonly JavaVM Current = new TestJVM (
+				jars: new[]{ "interop-test.jar" },
+				typeMappings: new Dictionary<string, Type> () {
+					{ TestType.JniTypeName, typeof (TestType) },
+		});
 	}
 }
 

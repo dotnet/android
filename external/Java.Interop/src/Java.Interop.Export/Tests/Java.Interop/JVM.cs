@@ -9,7 +9,7 @@ namespace Java.InteropTests {
 
 	class JVM {
 
-		public static readonly JavaVM Current = new TestJVM ("export-test.jar");
+		public static readonly JavaVM Current = new TestJVM (new[]{"export-test.jar"});
 	}
 }
 

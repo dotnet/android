@@ -10,7 +10,7 @@ namespace Java.Interop.PerformanceTests {
 
 	class JVM {
 
-		public static readonly JavaVM Current = new TestJVM ("performance-test.jar");
+		public static readonly JavaVM Current = new TestJVM (new[]{"performance-test.jar"});
 	}
 }
 

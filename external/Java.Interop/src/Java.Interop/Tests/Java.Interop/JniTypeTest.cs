@@ -13,6 +13,8 @@ namespace Java.InteropTests
 		public void Sanity ()
 		{
 			using (var Integer_class = new JniType ("java/lang/Integer")) {
+				Assert.AreEqual ("java/lang/Integer", Integer_class.Name);
+
 				var Integer_ctor        = Integer_class.GetConstructor ("(I)V");
 				var Integer_intValue    = Integer_class.GetInstanceMethod ("intValue", "()I");
 				using (var o = Integer_class.NewObject (Integer_ctor, new JValue (42))) {

@@ -25,7 +25,9 @@ namespace Java.InteropTests
 			return builder;
 		}
 
-		public TestJVM (params string[] jars)
+		Dictionary<string, Type> typeMappings;
+
+		public TestJVM (string[] jars = null, Dictionary<string, Type> typeMappings = null)
 			: base (CreateBuilder (jars))
 		{
 			var log = Environment.GetEnvironmentVariable ("_JI_LOG") ?? "";
@@ -51,6 +53,19 @@ namespace Java.InteropTests
 					lrefLog = File.CreateText (file);
 				}
 			}
+			this.typeMappings = typeMappings == null
+				? new Dictionary<string, Type> ()
+				: typeMappings;
+		}
+
+		public override Type GetTypeForJniSimplifiedTypeReference (string jniTypeReference)
+		{
+			Type target = base.GetTypeForJniSimplifiedTypeReference (jniTypeReference);
+			if (target != null)
+				return target;
+			if (typeMappings.TryGetValue (jniTypeReference, out target))
+				return target;
+			return null;
 		}
 
 		protected override void LogCreateLocalRef (JniEnvironmentSafeHandle environmentHandle, JniLocalReference value)
