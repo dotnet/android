@@ -749,22 +749,6 @@ namespace Java.Interop
 			return null;
 		}
 
-		static readonly KeyValuePair<Type, JniTypeInfo>[] JniBuiltinTypeNameMappings = new []{
-			new KeyValuePair<Type, JniTypeInfo>(typeof (string),    new JniTypeInfo ("java/lang/String")),
-
-			new KeyValuePair<Type, JniTypeInfo>(typeof (void),      new JniTypeInfo ("V",   true)),
-
-			new KeyValuePair<Type, JniTypeInfo>(typeof (sbyte),     new JniTypeInfo ("B",   true)),
-			new KeyValuePair<Type, JniTypeInfo>(typeof (short),     new JniTypeInfo ("S",   true)),
-			new KeyValuePair<Type, JniTypeInfo>(typeof (int),       new JniTypeInfo ("I",   true) {
-			}),
-			new KeyValuePair<Type, JniTypeInfo>(typeof (long),      new JniTypeInfo ("J",   true)),
-			new KeyValuePair<Type, JniTypeInfo>(typeof (float),     new JniTypeInfo ("F",   true)),
-			new KeyValuePair<Type, JniTypeInfo>(typeof (double),    new JniTypeInfo ("D",   true)),
-			new KeyValuePair<Type, JniTypeInfo>(typeof (char),      new JniTypeInfo ("C",   true)),
-			new KeyValuePair<Type, JniTypeInfo>(typeof (bool),      new JniTypeInfo ("Z",   true)),
-		};
-
 		public virtual JniMarshalInfo GetJniMarshalInfoForType (Type type)
 		{
 			if (type == null)

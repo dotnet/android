@@ -129,9 +129,36 @@ namespace Java.InteropTests
 
 	[TestFixture]
 	public class JavaObjectArray_object_ContractTest : JavaObjectArrayContractTest<object> {
-		protected override object CreateValueA () {return new object ();}
-		protected override object CreateValueB () {return new object ();}
-		protected override object CreateValueC () {return new object ();}
+		static  readonly    object  a   = new object ();
+
+		protected override object CreateValueA () {return a;}
+		protected override object CreateValueB () {return 42;}
+		protected override object CreateValueC () {return "C";}
+
+		int grefStartCount;
+
+		[TestFixtureSetUp]
+		public void BeginCheckGlobalRefCount ()
+		{
+			// For diagnostic tracking purposes
+			using (var o = new JavaObject ())
+				o.RegisterWithVM ();
+			// So that the JavaProxyObject.TypeRef GREF isn't counted.
+			using (var o = new JavaObjectArray<object> (1))
+				o [0] = a;
+			grefStartCount  = JniEnvironment.Current.JavaVM.GlobalReferenceCount;
+		}
+
+		[TestFixtureTearDown]
+		public void EndCheckGlobalRefCount ()
+		{
+			using (var o = new JavaObject ())
+				o.RegisterWithVM ();
+			int gref    = JniEnvironment.Current.JavaVM.GlobalReferenceCount;
+			Assert.IsTrue (gref <= (grefStartCount),
+					string.Format ("JNI global references: grefStartCount={0}; gref={1}", grefStartCount, gref));
+			GC.Collect ();
+		}
 
 		[Test]
 		public void ObjectArrayType ()

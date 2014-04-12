@@ -6,6 +6,29 @@ namespace Java.Interop {
 
 	partial class JavaVM {
 
+		static readonly KeyValuePair<Type, JniTypeInfo>[] JniBuiltinTypeNameMappings = new []{
+			new KeyValuePair<Type, JniTypeInfo>(typeof (string),    new JniTypeInfo ("java/lang/String")),
+
+			new KeyValuePair<Type, JniTypeInfo>(typeof (void),      new JniTypeInfo ("V",   typeIsKeyword: true)),
+			new KeyValuePair<Type, JniTypeInfo>(typeof (void),      new JniTypeInfo ("java/lang/Void")),
+
+			new KeyValuePair<Type, JniTypeInfo>(typeof (sbyte),     new JniTypeInfo ("B",   true)),
+			new KeyValuePair<Type, JniTypeInfo>(typeof (Boolean),  new JniTypeInfo ("Z", typeIsKeyword: true)),
+			new KeyValuePair<Type, JniTypeInfo>(typeof (Boolean),  new JniTypeInfo ("java/lang/Boolean")),
+			new KeyValuePair<Type, JniTypeInfo>(typeof (Char),  new JniTypeInfo ("C", typeIsKeyword: true)),
+			new KeyValuePair<Type, JniTypeInfo>(typeof (Char),  new JniTypeInfo ("java/lang/Character")),
+			new KeyValuePair<Type, JniTypeInfo>(typeof (Int16),  new JniTypeInfo ("S", typeIsKeyword: true)),
+			new KeyValuePair<Type, JniTypeInfo>(typeof (Int16),  new JniTypeInfo ("java/lang/Short")),
+			new KeyValuePair<Type, JniTypeInfo>(typeof (Int32),  new JniTypeInfo ("I", typeIsKeyword: true)),
+			new KeyValuePair<Type, JniTypeInfo>(typeof (Int32),  new JniTypeInfo ("java/lang/Integer")),
+			new KeyValuePair<Type, JniTypeInfo>(typeof (Int64),  new JniTypeInfo ("J", typeIsKeyword: true)),
+			new KeyValuePair<Type, JniTypeInfo>(typeof (Int64),  new JniTypeInfo ("java/lang/Long")),
+			new KeyValuePair<Type, JniTypeInfo>(typeof (Single),  new JniTypeInfo ("F", typeIsKeyword: true)),
+			new KeyValuePair<Type, JniTypeInfo>(typeof (Single),  new JniTypeInfo ("java/lang/Float")),
+			new KeyValuePair<Type, JniTypeInfo>(typeof (Double),  new JniTypeInfo ("D", typeIsKeyword: true)),
+			new KeyValuePair<Type, JniTypeInfo>(typeof (Double),  new JniTypeInfo ("java/lang/Double")),
+		};
+
 		static readonly KeyValuePair<Type, JniMarshalInfo>[] JniBuiltinMarshalers = new []{
 			new KeyValuePair<Type, JniMarshalInfo>(typeof (string), new JniMarshalInfo {
 				GetValueFromJni             = JniEnvironment.Strings.ToString,
