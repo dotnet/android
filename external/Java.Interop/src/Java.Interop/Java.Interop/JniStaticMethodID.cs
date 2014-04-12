@@ -40,14 +40,14 @@ namespace Java.Interop
 			return JniEnvironment.Members.CallStaticBooleanMethod (type, this, parameters);
 		}
 
-		public sbyte CallByteMethod (JniReferenceSafeHandle type)
+		public sbyte CallSByteMethod (JniReferenceSafeHandle type)
 		{
-			return JniEnvironment.Members.CallStaticByteMethod (type, this);
+			return JniEnvironment.Members.CallStaticSByteMethod (type, this);
 		}
 
-		public sbyte CallByteMethod (JniReferenceSafeHandle type, params JValue[] parameters)
+		public sbyte CallSByteMethod (JniReferenceSafeHandle type, params JValue[] parameters)
 		{
-			return JniEnvironment.Members.CallStaticByteMethod (type, this, parameters);
+			return JniEnvironment.Members.CallStaticSByteMethod (type, this, parameters);
 		}
 
 		public char CallCharMethod (JniReferenceSafeHandle type)

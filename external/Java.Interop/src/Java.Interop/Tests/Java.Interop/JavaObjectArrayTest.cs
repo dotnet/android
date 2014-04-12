@@ -140,9 +140,6 @@ namespace Java.InteropTests
 		[TestFixtureSetUp]
 		public void BeginCheckGlobalRefCount ()
 		{
-			// For diagnostic tracking purposes
-			using (var o = new JavaObject ())
-				o.RegisterWithVM ();
 			// So that the JavaProxyObject.TypeRef GREF isn't counted.
 			using (var o = new JavaObjectArray<object> (1))
 				o [0] = a;

@@ -11,6 +11,7 @@ namespace Java.Interop {
 <#
 	var types = new[]{
 		new { Name = "Boolean",     Type = "Boolean",   JniType = "Z",  GetValue = "booleanValue" },
+		new { Name = "Byte",        Type = "SByte",     JniType = "B",  GetValue = "byteValue" },
 		new { Name = "Character",   Type = "Char",      JniType = "C",  GetValue = "charValue" },
 		new { Name = "Short",       Type = "Int16",     JniType = "S",  GetValue = "shortValue" },
 		new { Name = "Integer",     Type = "Int32",     JniType = "I",  GetValue = "intValue" },
@@ -28,7 +29,6 @@ namespace Java.Interop {
 			new KeyValuePair<Type, JniTypeInfo>(typeof (void),      new JniTypeInfo ("V",   typeIsKeyword: true)),
 			new KeyValuePair<Type, JniTypeInfo>(typeof (void),      new JniTypeInfo ("java/lang/Void")),
 
-			new KeyValuePair<Type, JniTypeInfo>(typeof (sbyte),     new JniTypeInfo ("B",   true)),
 <#
 	foreach (var type in types) {
 #>

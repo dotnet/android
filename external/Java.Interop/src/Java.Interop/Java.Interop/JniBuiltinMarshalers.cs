@@ -12,9 +12,10 @@ namespace Java.Interop {
 			new KeyValuePair<Type, JniTypeInfo>(typeof (void),      new JniTypeInfo ("V",   typeIsKeyword: true)),
 			new KeyValuePair<Type, JniTypeInfo>(typeof (void),      new JniTypeInfo ("java/lang/Void")),
 
-			new KeyValuePair<Type, JniTypeInfo>(typeof (sbyte),     new JniTypeInfo ("B",   true)),
 			new KeyValuePair<Type, JniTypeInfo>(typeof (Boolean),  new JniTypeInfo ("Z", typeIsKeyword: true)),
 			new KeyValuePair<Type, JniTypeInfo>(typeof (Boolean),  new JniTypeInfo ("java/lang/Boolean")),
+			new KeyValuePair<Type, JniTypeInfo>(typeof (SByte),  new JniTypeInfo ("B", typeIsKeyword: true)),
+			new KeyValuePair<Type, JniTypeInfo>(typeof (SByte),  new JniTypeInfo ("java/lang/Byte")),
 			new KeyValuePair<Type, JniTypeInfo>(typeof (Char),  new JniTypeInfo ("C", typeIsKeyword: true)),
 			new KeyValuePair<Type, JniTypeInfo>(typeof (Char),  new JniTypeInfo ("java/lang/Character")),
 			new KeyValuePair<Type, JniTypeInfo>(typeof (Int16),  new JniTypeInfo ("S", typeIsKeyword: true)),
@@ -38,6 +39,11 @@ namespace Java.Interop {
 				CreateJValue                = JniBoolean.CreateJValue,
 				GetValueFromJni             = JniBoolean.GetValueFromJni,
 				CreateLocalRef              = JniBoolean.CreateLocalRef,
+			}),
+			new KeyValuePair<Type, JniMarshalInfo>(typeof (SByte), new JniMarshalInfo {
+				CreateJValue                = JniByte.CreateJValue,
+				GetValueFromJni             = JniByte.GetValueFromJni,
+				CreateLocalRef              = JniByte.CreateLocalRef,
 			}),
 			new KeyValuePair<Type, JniMarshalInfo>(typeof (Char), new JniMarshalInfo {
 				CreateJValue                = JniCharacter.CreateJValue,
@@ -100,6 +106,40 @@ namespace Java.Interop {
 			TypeRef.GetCachedInstanceMethod (ref booleanValue, "booleanValue", "()Z");
 			try {
 				return booleanValue.CallVirtualBooleanMethod (self);
+			} finally {
+				JniEnvironment.Handles.Dispose (self, transfer);
+			}
+		}
+	}
+
+	static class JniByte {
+		internal    const   string  JniTypeName = "java/lang/Byte";
+
+		static JniType _TypeRef;
+		static JniType TypeRef {
+			get {return JniType.GetCachedJniType (ref _TypeRef, JniTypeName);}
+		}
+
+		internal static JValue CreateJValue (object value)
+		{
+			return new JValue ((SByte) value);
+		}
+
+		static JniInstanceMethodID init;
+		internal static JniLocalReference CreateLocalRef (object value)
+		{
+			Debug.Assert (value is SByte, "Expected value of type `SByte`; was: " + (value == null ? "<null>" : value.GetType ().FullName));
+			TypeRef.GetCachedConstructor (ref init, "(B)V");
+			return TypeRef.NewObject (init, new JValue ((SByte) value));
+		}
+
+		static JniInstanceMethodID byteValue;
+		internal static object GetValueFromJni (JniReferenceSafeHandle self, JniHandleOwnership transfer, Type targetType)
+		{
+			Debug.Assert (targetType == null || targetType == typeof (SByte), "Expected targetType==typeof(SByte); was: " + targetType);
+			TypeRef.GetCachedInstanceMethod (ref byteValue, "byteValue", "()B");
+			try {
+				return byteValue.CallVirtualSByteMethod (self);
 			} finally {
 				JniEnvironment.Handles.Dispose (self, transfer);
 			}

@@ -39,14 +39,14 @@ namespace Java.Interop
 			return JniEnvironment.Members.CallBooleanMethod (@this, this, parameters);
 		}
 
-		public sbyte CallVirtualByteMethod (JniReferenceSafeHandle @this)
+		public sbyte CallVirtualSByteMethod (JniReferenceSafeHandle @this)
 		{
-			return JniEnvironment.Members.CallByteMethod (@this, this);
+			return JniEnvironment.Members.CallSByteMethod (@this, this);
 		}
 
-		public sbyte CallVirtualByteMethod (JniReferenceSafeHandle @this, params JValue[] parameters)
+		public sbyte CallVirtualSByteMethod (JniReferenceSafeHandle @this, params JValue[] parameters)
 		{
-			return JniEnvironment.Members.CallByteMethod (@this, this, parameters);
+			return JniEnvironment.Members.CallSByteMethod (@this, this, parameters);
 		}
 
 		public char CallVirtualCharMethod (JniReferenceSafeHandle @this)
@@ -139,14 +139,14 @@ namespace Java.Interop
 			return JniEnvironment.Members.CallNonvirtualBooleanMethod (@this, declaringType, this, parameters);
 		}
 
-		public sbyte CallNonvirtualByteMethod (JniReferenceSafeHandle @this, JniReferenceSafeHandle declaringType)
+		public sbyte CallNonvirtualSByteMethod (JniReferenceSafeHandle @this, JniReferenceSafeHandle declaringType)
 		{
-			return JniEnvironment.Members.CallNonvirtualByteMethod (@this, declaringType, this);
+			return JniEnvironment.Members.CallNonvirtualSByteMethod (@this, declaringType, this);
 		}
 
-		public sbyte CallNonvirtualByteMethod (JniReferenceSafeHandle @this, JniReferenceSafeHandle declaringType, params JValue[] parameters)
+		public sbyte CallNonvirtualSByteMethod (JniReferenceSafeHandle @this, JniReferenceSafeHandle declaringType, params JValue[] parameters)
 		{
-			return JniEnvironment.Members.CallNonvirtualByteMethod (@this, declaringType, this, parameters);
+			return JniEnvironment.Members.CallNonvirtualSByteMethod (@this, declaringType, this, parameters);
 		}
 
 		public char CallNonvirtualCharMethod (JniReferenceSafeHandle @this, JniReferenceSafeHandle declaringType)

@@ -3117,7 +3117,7 @@ namespace Java.Interop {
 				arg16.Cleanup (value16);
 			}
 		}
-		public sbyte CallByteMethod (
+		public sbyte CallSByteMethod (
 			string encodedMember,
 			IJavaObject self,
 			params JValue[] arguments)
@@ -3126,14 +3126,14 @@ namespace Java.Interop {
 
 			if (self.GetType () == DeclaringType) {
 				var m = GetMethodID (encodedMember);
-				return m.CallVirtualByteMethod (self.SafeHandle, arguments);
+				return m.CallVirtualSByteMethod (self.SafeHandle, arguments);
 			}
 			var j = self.JniPeerMembers;
 			var n = j.InstanceMethods.GetMethodID (encodedMember);
-			return n.CallNonvirtualByteMethod (self.SafeHandle, j.JniPeerType.SafeHandle, arguments);
+			return n.CallNonvirtualSByteMethod (self.SafeHandle, j.JniPeerType.SafeHandle, arguments);
 		}
 
-		public sbyte CallByteMethod (
+		public sbyte CallSByteMethod (
 			string encodedMember,
 			IJavaObject self
 		)
@@ -3142,12 +3142,12 @@ namespace Java.Interop {
 			var args = new JValue[]{
 			};
 			try {
-				return CallByteMethod (encodedMember, self, args);
+				return CallSByteMethod (encodedMember, self, args);
 			} finally {
 			}
 		}
 
-		public sbyte CallByteMethod<T> (
+		public sbyte CallSByteMethod<T> (
 			string encodedMember,
 			IJavaObject self,
 			T value
@@ -3159,13 +3159,13 @@ namespace Java.Interop {
 				arg.JValue,
 			};
 			try {
-				return CallByteMethod (encodedMember, self, args);
+				return CallSByteMethod (encodedMember, self, args);
 			} finally {
 				arg.Cleanup (value);
 			}
 		}
 
-		public sbyte CallByteMethod<T1, T2> (
+		public sbyte CallSByteMethod<T1, T2> (
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2
@@ -3179,14 +3179,14 @@ namespace Java.Interop {
 				arg2.JValue,
 			};
 			try {
-				return CallByteMethod (encodedMember, self, args);
+				return CallSByteMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
 			}
 		}
 
-		public sbyte CallByteMethod<T1, T2, T3> (
+		public sbyte CallSByteMethod<T1, T2, T3> (
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3
@@ -3202,7 +3202,7 @@ namespace Java.Interop {
 				arg3.JValue,
 			};
 			try {
-				return CallByteMethod (encodedMember, self, args);
+				return CallSByteMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -3210,7 +3210,7 @@ namespace Java.Interop {
 			}
 		}
 
-		public sbyte CallByteMethod<T1, T2, T3, T4> (
+		public sbyte CallSByteMethod<T1, T2, T3, T4> (
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4
@@ -3228,7 +3228,7 @@ namespace Java.Interop {
 				arg4.JValue,
 			};
 			try {
-				return CallByteMethod (encodedMember, self, args);
+				return CallSByteMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -3237,7 +3237,7 @@ namespace Java.Interop {
 			}
 		}
 
-		public sbyte CallByteMethod<T1, T2, T3, T4, T5> (
+		public sbyte CallSByteMethod<T1, T2, T3, T4, T5> (
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
@@ -3257,7 +3257,7 @@ namespace Java.Interop {
 				arg5.JValue,
 			};
 			try {
-				return CallByteMethod (encodedMember, self, args);
+				return CallSByteMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -3267,7 +3267,7 @@ namespace Java.Interop {
 			}
 		}
 
-		public sbyte CallByteMethod<T1, T2, T3, T4, T5, T6> (
+		public sbyte CallSByteMethod<T1, T2, T3, T4, T5, T6> (
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
@@ -3289,7 +3289,7 @@ namespace Java.Interop {
 				arg6.JValue,
 			};
 			try {
-				return CallByteMethod (encodedMember, self, args);
+				return CallSByteMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -3300,7 +3300,7 @@ namespace Java.Interop {
 			}
 		}
 
-		public sbyte CallByteMethod<T1, T2, T3, T4, T5, T6, T7> (
+		public sbyte CallSByteMethod<T1, T2, T3, T4, T5, T6, T7> (
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
@@ -3324,7 +3324,7 @@ namespace Java.Interop {
 				arg7.JValue,
 			};
 			try {
-				return CallByteMethod (encodedMember, self, args);
+				return CallSByteMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -3336,7 +3336,7 @@ namespace Java.Interop {
 			}
 		}
 
-		public sbyte CallByteMethod<T1, T2, T3, T4, T5, T6, T7, T8> (
+		public sbyte CallSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8> (
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
@@ -3362,7 +3362,7 @@ namespace Java.Interop {
 				arg8.JValue,
 			};
 			try {
-				return CallByteMethod (encodedMember, self, args);
+				return CallSByteMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -3375,7 +3375,7 @@ namespace Java.Interop {
 			}
 		}
 
-		public sbyte CallByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+		public sbyte CallSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
@@ -3403,7 +3403,7 @@ namespace Java.Interop {
 				arg9.JValue,
 			};
 			try {
-				return CallByteMethod (encodedMember, self, args);
+				return CallSByteMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -3417,7 +3417,7 @@ namespace Java.Interop {
 			}
 		}
 
-		public sbyte CallByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+		public sbyte CallSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
@@ -3447,7 +3447,7 @@ namespace Java.Interop {
 				arg10.JValue,
 			};
 			try {
-				return CallByteMethod (encodedMember, self, args);
+				return CallSByteMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -3462,7 +3462,7 @@ namespace Java.Interop {
 			}
 		}
 
-		public sbyte CallByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+		public sbyte CallSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
@@ -3494,7 +3494,7 @@ namespace Java.Interop {
 				arg11.JValue,
 			};
 			try {
-				return CallByteMethod (encodedMember, self, args);
+				return CallSByteMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -3510,7 +3510,7 @@ namespace Java.Interop {
 			}
 		}
 
-		public sbyte CallByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+		public sbyte CallSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
@@ -3544,7 +3544,7 @@ namespace Java.Interop {
 				arg12.JValue,
 			};
 			try {
-				return CallByteMethod (encodedMember, self, args);
+				return CallSByteMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -3561,7 +3561,7 @@ namespace Java.Interop {
 			}
 		}
 
-		public sbyte CallByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+		public sbyte CallSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
@@ -3597,7 +3597,7 @@ namespace Java.Interop {
 				arg13.JValue,
 			};
 			try {
-				return CallByteMethod (encodedMember, self, args);
+				return CallSByteMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -3615,7 +3615,7 @@ namespace Java.Interop {
 			}
 		}
 
-		public sbyte CallByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+		public sbyte CallSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
@@ -3653,7 +3653,7 @@ namespace Java.Interop {
 				arg14.JValue,
 			};
 			try {
-				return CallByteMethod (encodedMember, self, args);
+				return CallSByteMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -3672,7 +3672,7 @@ namespace Java.Interop {
 			}
 		}
 
-		public sbyte CallByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+		public sbyte CallSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
@@ -3712,7 +3712,7 @@ namespace Java.Interop {
 				arg15.JValue,
 			};
 			try {
-				return CallByteMethod (encodedMember, self, args);
+				return CallSByteMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -3732,7 +3732,7 @@ namespace Java.Interop {
 			}
 		}
 
-		public sbyte CallByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+		public sbyte CallSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
@@ -3774,7 +3774,7 @@ namespace Java.Interop {
 				arg16.JValue,
 			};
 			try {
-				return CallByteMethod (encodedMember, self, args);
+				return CallSByteMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -9815,15 +9815,15 @@ namespace Java.Interop {
 				arg16.Cleanup (value16);
 			}
 		}
-		public sbyte CallByteMethod (
+		public sbyte CallSByteMethod (
 			string encodedMember,
 			params JValue[] arguments)
 		{
 			var m = GetMethodID (encodedMember);
-			return m.CallByteMethod (Members.JniPeerType.SafeHandle, arguments);
+			return m.CallSByteMethod (Members.JniPeerType.SafeHandle, arguments);
 		}
 
-		public sbyte CallByteMethod<T> (
+		public sbyte CallSByteMethod<T> (
 			string encodedMember,
 			T value
 		)
@@ -9834,13 +9834,13 @@ namespace Java.Interop {
 				arg.JValue,
 			};
 			try {
-				return CallByteMethod (encodedMember, args);
+				return CallSByteMethod (encodedMember, args);
 			} finally {
 				arg.Cleanup (value);
 			}
 		}
 
-		public sbyte CallByteMethod<T1, T2> (
+		public sbyte CallSByteMethod<T1, T2> (
 			string encodedMember,
 			T1 value1, T2 value2
 		)
@@ -9853,14 +9853,14 @@ namespace Java.Interop {
 				arg2.JValue,
 			};
 			try {
-				return CallByteMethod (encodedMember, args);
+				return CallSByteMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
 			}
 		}
 
-		public sbyte CallByteMethod<T1, T2, T3> (
+		public sbyte CallSByteMethod<T1, T2, T3> (
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3
 		)
@@ -9875,7 +9875,7 @@ namespace Java.Interop {
 				arg3.JValue,
 			};
 			try {
-				return CallByteMethod (encodedMember, args);
+				return CallSByteMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -9883,7 +9883,7 @@ namespace Java.Interop {
 			}
 		}
 
-		public sbyte CallByteMethod<T1, T2, T3, T4> (
+		public sbyte CallSByteMethod<T1, T2, T3, T4> (
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4
 		)
@@ -9900,7 +9900,7 @@ namespace Java.Interop {
 				arg4.JValue,
 			};
 			try {
-				return CallByteMethod (encodedMember, args);
+				return CallSByteMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -9909,7 +9909,7 @@ namespace Java.Interop {
 			}
 		}
 
-		public sbyte CallByteMethod<T1, T2, T3, T4, T5> (
+		public sbyte CallSByteMethod<T1, T2, T3, T4, T5> (
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
 		)
@@ -9928,7 +9928,7 @@ namespace Java.Interop {
 				arg5.JValue,
 			};
 			try {
-				return CallByteMethod (encodedMember, args);
+				return CallSByteMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -9938,7 +9938,7 @@ namespace Java.Interop {
 			}
 		}
 
-		public sbyte CallByteMethod<T1, T2, T3, T4, T5, T6> (
+		public sbyte CallSByteMethod<T1, T2, T3, T4, T5, T6> (
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
 		)
@@ -9959,7 +9959,7 @@ namespace Java.Interop {
 				arg6.JValue,
 			};
 			try {
-				return CallByteMethod (encodedMember, args);
+				return CallSByteMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -9970,7 +9970,7 @@ namespace Java.Interop {
 			}
 		}
 
-		public sbyte CallByteMethod<T1, T2, T3, T4, T5, T6, T7> (
+		public sbyte CallSByteMethod<T1, T2, T3, T4, T5, T6, T7> (
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
 		)
@@ -9993,7 +9993,7 @@ namespace Java.Interop {
 				arg7.JValue,
 			};
 			try {
-				return CallByteMethod (encodedMember, args);
+				return CallSByteMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -10005,7 +10005,7 @@ namespace Java.Interop {
 			}
 		}
 
-		public sbyte CallByteMethod<T1, T2, T3, T4, T5, T6, T7, T8> (
+		public sbyte CallSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8> (
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
 		)
@@ -10030,7 +10030,7 @@ namespace Java.Interop {
 				arg8.JValue,
 			};
 			try {
-				return CallByteMethod (encodedMember, args);
+				return CallSByteMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -10043,7 +10043,7 @@ namespace Java.Interop {
 			}
 		}
 
-		public sbyte CallByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+		public sbyte CallSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
 		)
@@ -10070,7 +10070,7 @@ namespace Java.Interop {
 				arg9.JValue,
 			};
 			try {
-				return CallByteMethod (encodedMember, args);
+				return CallSByteMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -10084,7 +10084,7 @@ namespace Java.Interop {
 			}
 		}
 
-		public sbyte CallByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+		public sbyte CallSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
 		)
@@ -10113,7 +10113,7 @@ namespace Java.Interop {
 				arg10.JValue,
 			};
 			try {
-				return CallByteMethod (encodedMember, args);
+				return CallSByteMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -10128,7 +10128,7 @@ namespace Java.Interop {
 			}
 		}
 
-		public sbyte CallByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+		public sbyte CallSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
 		)
@@ -10159,7 +10159,7 @@ namespace Java.Interop {
 				arg11.JValue,
 			};
 			try {
-				return CallByteMethod (encodedMember, args);
+				return CallSByteMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -10175,7 +10175,7 @@ namespace Java.Interop {
 			}
 		}
 
-		public sbyte CallByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+		public sbyte CallSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
 		)
@@ -10208,7 +10208,7 @@ namespace Java.Interop {
 				arg12.JValue,
 			};
 			try {
-				return CallByteMethod (encodedMember, args);
+				return CallSByteMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -10225,7 +10225,7 @@ namespace Java.Interop {
 			}
 		}
 
-		public sbyte CallByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+		public sbyte CallSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
 		)
@@ -10260,7 +10260,7 @@ namespace Java.Interop {
 				arg13.JValue,
 			};
 			try {
-				return CallByteMethod (encodedMember, args);
+				return CallSByteMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -10278,7 +10278,7 @@ namespace Java.Interop {
 			}
 		}
 
-		public sbyte CallByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+		public sbyte CallSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
 		)
@@ -10315,7 +10315,7 @@ namespace Java.Interop {
 				arg14.JValue,
 			};
 			try {
-				return CallByteMethod (encodedMember, args);
+				return CallSByteMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -10334,7 +10334,7 @@ namespace Java.Interop {
 			}
 		}
 
-		public sbyte CallByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+		public sbyte CallSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
 		)
@@ -10373,7 +10373,7 @@ namespace Java.Interop {
 				arg15.JValue,
 			};
 			try {
-				return CallByteMethod (encodedMember, args);
+				return CallSByteMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -10393,7 +10393,7 @@ namespace Java.Interop {
 			}
 		}
 
-		public sbyte CallByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+		public sbyte CallSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
 		)
@@ -10434,7 +10434,7 @@ namespace Java.Interop {
 				arg16.JValue,
 			};
 			try {
-				return CallByteMethod (encodedMember, args);
+				return CallSByteMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
