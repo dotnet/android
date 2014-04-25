@@ -2,6 +2,15 @@ package com.xamarin.interop;
 
 public class TestType {
 
+	public TestType () {
+		com.xamarin.android.ManagedPeer.runConstructor (
+				TestType.class,
+				this,
+				"Java.InteropTests.TestType, Java.Interop-Tests, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
+				""
+		);
+	}
+
 	public  void    runTests () {
 		int n = getInt32Value ();
 		if (getInt32Value() != 42)

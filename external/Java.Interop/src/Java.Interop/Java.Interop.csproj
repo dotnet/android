@@ -91,10 +91,12 @@
     <Compile Include="Java.Interop\JavaProxyThrowable.cs" />
     <Compile Include="Java.Interop\JniEnvironment.Errors.cs" />
     <Compile Include="Java.Interop\JniMarshalMethod.cs" />
+    <Compile Include="Java.Interop\ManagedPeer.cs" />
   </ItemGroup>
   <ItemGroup>
     <CompileJavaInteropJar Include="java\com\xamarin\android\internal\JavaProxyObject.java" />
     <CompileJavaInteropJar Include="java\com\xamarin\android\internal\JavaProxyThrowable.java" />
+    <CompileJavaInteropJar Include="java\com\xamarin\android\ManagedPeer.java" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
   <PropertyGroup>

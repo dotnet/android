@@ -177,6 +177,8 @@ namespace Java.Interop
 			}
 
 			JavaVMs.TryAdd (SafeHandle.DangerousGetHandle (), this);
+
+			ManagedPeer.Init ();
 		}
 
 		~JavaVM ()
