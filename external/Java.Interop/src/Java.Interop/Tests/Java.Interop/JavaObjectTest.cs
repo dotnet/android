@@ -28,6 +28,7 @@ namespace Java.InteropTests
 				w.Join ();
 				GC.Collect ();
 				GC.WaitForPendingFinalizers ();
+				GC.WaitForPendingFinalizers ();
 				var first = array [0];
 				Assert.IsNotNull (JVM.Current.PeekObject (first.SafeHandle));
 				var o = (JavaObject) JVM.Current.GetObject (first.SafeHandle, JniHandleOwnership.DoNotTransfer);
@@ -92,6 +93,7 @@ namespace Java.InteropTests
 			t.Join ();
 			GC.Collect ();
 			GC.WaitForPendingFinalizers ();
+			GC.WaitForPendingFinalizers ();
 			Assert.IsFalse (r.IsAlive);
 			Assert.IsNull (r.Target);
 			Assert.IsNull (JVM.Current.PeekObject (oldHandle));
@@ -121,6 +123,7 @@ namespace Java.InteropTests
 			t.Start ();
 			t.Join ();
 			GC.Collect ();
+			GC.WaitForPendingFinalizers ();
 			GC.WaitForPendingFinalizers ();
 			Assert.IsFalse (d);
 			Assert.IsTrue (f);
