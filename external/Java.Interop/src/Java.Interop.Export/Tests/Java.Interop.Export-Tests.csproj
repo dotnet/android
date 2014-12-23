@@ -55,7 +55,7 @@
   </ItemGroup>
   <Target Name="BuildJars" Inputs="@(JavaInteropTestJar)" Outputs="@(TestJar)">
     <MakeDir Directories="$(OutputPath)et-classes" />
-    <Exec Command="javac -d &quot;$(OutputPath)et-classes&quot; @(JavaInteropTestJar -&gt; '%(Identity)', ' ')" />
+    <Exec Command="javac -source 1.5 -target 1.6 -d &quot;$(OutputPath)et-classes&quot; @(JavaInteropTestJar -&gt; '%(Identity)', ' ')" />
     <Exec Command="jar cf &quot;$(OutputPath)export-test.jar&quot; -C &quot;$(OutputPath)et-classes&quot; ." />
   </Target>
   <ItemGroup>
