@@ -88,7 +88,7 @@ namespace Java.Interop {
 
 		public void Dispose ()
 		{
-			if (SafeHandle == null)
+			if (SafeHandle == null || SafeHandle.IsInvalid)
 				return;
 			if (registered)
 				JniEnvironment.Current.JavaVM.UnTrack (SafeHandle);

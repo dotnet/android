@@ -99,7 +99,7 @@ namespace Java.Interop {
 
 		public void Dispose ()
 		{
-			if (SafeHandle == null)
+			if (SafeHandle == null || SafeHandle.IsInvalid)
 				return;
 			Object_toString.Dispose ();
 			if (current == this)

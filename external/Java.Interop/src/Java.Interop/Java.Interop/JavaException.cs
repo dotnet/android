@@ -49,7 +49,7 @@ namespace Java.Interop
 		public JavaException (JniReferenceSafeHandle handle, JniHandleOwnership transfer)
 			: base (_GetMessage (handle), _GetCause (handle))
 		{
-			if (handle == null)
+			if (handle == null || handle.IsInvalid)
 				return;
 			using (SetSafeHandle (handle, transfer)) {
 			}
@@ -98,7 +98,7 @@ namespace Java.Interop
 
 		public void Dispose ()
 		{
-			if (SafeHandle == null)
+			if (SafeHandle == null || SafeHandle.IsInvalid)
 				return;
 			JniEnvironment.Current.JavaVM.DisposeObject (this);
 			var inner = InnerException as JavaException;

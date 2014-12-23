@@ -205,7 +205,7 @@ namespace Java.Interop
 
 		protected virtual void Dispose (bool disposing)
 		{
-			if (SafeHandle == null)
+			if (SafeHandle == null || SafeHandle.IsInvalid)
 				return;
 
 			if (current == this)
