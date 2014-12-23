@@ -53,9 +53,7 @@ namespace Java.InteropTests
 					lrefLog = File.CreateText (file);
 				}
 			}
-			this.typeMappings = typeMappings == null
-				? new Dictionary<string, Type> ()
-				: typeMappings;
+			this.typeMappings = typeMappings;
 		}
 
 		public override Type GetTypeForJniSimplifiedTypeReference (string jniTypeReference)
@@ -63,7 +61,7 @@ namespace Java.InteropTests
 			Type target = base.GetTypeForJniSimplifiedTypeReference (jniTypeReference);
 			if (target != null)
 				return target;
-			if (typeMappings.TryGetValue (jniTypeReference, out target))
+			if (typeMappings != null && typeMappings.TryGetValue (jniTypeReference, out target))
 				return target;
 			return null;
 		}
