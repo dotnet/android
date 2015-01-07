@@ -114,7 +114,7 @@ namespace Java.Interop {
 			get {return (JniVersion) Versions.GetVersion ();}
 		}
 
-		int LrefCount;
+		internal    int     LrefCount;
 
 		public int LocalReferenceCount {
 			get {return LrefCount;}
@@ -124,24 +124,7 @@ namespace Java.Interop {
 		{
 			if (value == null || value.IsInvalid)
 				return;
-			Interlocked.Increment (ref LrefCount);
-			JavaVM.LogCreateLocalRef (SafeHandle, value);
-		}
-
-		internal void LogCreateLocalRef (JniLocalReference value, JniReferenceSafeHandle sourceValue)
-		{
-			if (value == null || value.IsInvalid)
-				return;
-			Interlocked.Increment (ref LrefCount);
-			JavaVM.LogCreateLocalRef (SafeHandle, value, sourceValue);
-		}
-
-		internal void LogDestroyLocalRef (IntPtr value)
-		{
-			if (value == IntPtr.Zero)
-				return;
-			Interlocked.Decrement (ref LrefCount);
-			JavaVM.LogDestroyLocalRef (SafeHandle, value);
+			JavaVM.JniHandleManager.CreatedLocalReference (this, value);
 		}
 
 		internal    JniInstanceMethodID Object_toString;

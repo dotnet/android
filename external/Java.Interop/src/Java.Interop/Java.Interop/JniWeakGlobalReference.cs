@@ -8,8 +8,7 @@ namespace Java.Interop
 	public class JniWeakGlobalReference : JniReferenceSafeHandle {
 		protected override bool ReleaseHandle ()
 		{
-			JniEnvironment.Current.JavaVM.LogDestroyWeakGlobalRef (handle);
-			JniEnvironment.Handles.DeleteWeakGlobalRef (handle);
+			JniEnvironment.Current.JavaVM.JniHandleManager.DeleteWeakGlobalReference (handle);
 			return true;
 		}
 	}

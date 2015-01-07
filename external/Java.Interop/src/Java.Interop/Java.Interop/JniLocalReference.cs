@@ -13,19 +13,13 @@ namespace Java.Interop
 
 		protected override bool ReleaseHandle ()
 		{
-			JniEnvironment.Current.LogDestroyLocalRef (handle);
-			JniEnvironment.Handles.DeleteLocalRef (handle);
+			JniEnvironment.Current.JavaVM.JniHandleManager.DeleteLocalReference (JniEnvironment.Current, handle);
 			return true;
 		}
 
 		internal IntPtr ReturnToJniRef ()
 		{
-			var h = handle;
-			base.handle = IntPtr.Zero;
-			// Tehnically we're not destroying it; we're just passing 'ownership' to the JVM.
-			// We "destroy" it here so that, accounting-wise, we don't keep counting it.
-			JniEnvironment.Current.LogDestroyLocalRef (h);
-			return h;
+			return JniEnvironment.Current.JavaVM.JniHandleManager.ReleaseLocalReference (JniEnvironment.Current, this);
 		}
 
 		internal JniAllocObjectRef ToAllocObjectRef ()

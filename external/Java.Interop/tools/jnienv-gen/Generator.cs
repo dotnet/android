@@ -309,19 +309,12 @@ namespace Xamarin.Java.Interop
 		{
 			string rt = entry.GetReturnType (entry.Name);
 			switch (rt) {
-			case "JniGlobalReference":
-				o.Write (indent);
-				o.WriteLine ("JniEnvironment.Current.JavaVM.LogCreateGlobalRef ({0}, jobject);", variable);
-				break;
 			case "JniLocalReference":
+				if (entry.Name == "NewLocalRef")
+					break;
 				o.Write (indent);
-				o.WriteLine ("JniEnvironment.Current.LogCreateLocalRef ({0}{1});",
-						variable,
-						entry.Name == "NewLocalRef" ? ", jobject" : "");
-				break;
-			case "JniWeakGlobalReference":
-				o.Write (indent);
-				o.WriteLine ("JniEnvironment.Current.JavaVM.LogCreateWeakGlobalRef ({0}, jobject);", variable);
+				o.WriteLine ("JniEnvironment.Current.LogCreateLocalRef ({0});",
+						variable);
 				break;
 			}
 		}

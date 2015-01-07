@@ -30,19 +30,26 @@ namespace Java.Interop
 			}
 		}
 
+		internal IntPtr _GetAndClearHandle ()
+		{
+			var h   = handle;
+			handle  = IntPtr.Zero;
+			return h;
+		}
+
 		public JniGlobalReference NewGlobalRef ()
 		{
-			return JniEnvironment.Handles.NewGlobalRef (this);
+			return JniEnvironment.Current.JavaVM.JniHandleManager.CreateGlobalReference (this);
 		}
 
 		public JniLocalReference NewLocalRef ()
 		{
-			return JniEnvironment.Handles.NewLocalRef (this);
+			return JniEnvironment.Current.JavaVM.JniHandleManager.CreateLocalReference (JniEnvironment.Current, this);
 		}
 
 		public JniWeakGlobalReference NewWeakGlobalRef ()
 		{
-			return JniEnvironment.Handles.NewWeakGlobalRef (this);
+			return JniEnvironment.Current.JavaVM.JniHandleManager.CreateWeakGlobalReference (this);
 		}
 
 		internal string GetJniTypeName ()

@@ -35,6 +35,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Java.Interop\IJniHandleManager.cs" />
     <Compile Include="Java.Interop\JavaVM.cs" />
     <Compile Include="Java.Interop\JniAllocObjectRef.cs" />
     <Compile Include="Java.Interop\JniReferenceSafeHandle.cs" />
@@ -45,6 +46,7 @@
     <Compile Include="Java.Interop\JniEnvironment.Strings.cs" />
     <Compile Include="Java.Interop\JniEnvironment.Types.cs" />
     <Compile Include="Java.Interop\JniPeerMembers.cs" />
+    <Compile Include="Java.Interop\JniHandleManager.cs" />
     <Compile Include="Java.Interop\JniType.cs" />
     <Compile Include="Java.Interop\JValue.cs" />
     <Compile Include="Java.Interop\JniReferenceType.cs" />

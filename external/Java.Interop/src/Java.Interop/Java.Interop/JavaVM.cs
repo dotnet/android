@@ -88,6 +88,7 @@ namespace Java.Interop
 
 		public  JavaVMSafeHandle            VMHandle            {get; set;}
 		public  JniEnvironmentSafeHandle    EnvironmentHandle   {get; set;}
+		public  IJniHandleManager           JniHandleManager    {get; set;}
 
 		public JavaVMOptions ()
 		{
@@ -144,9 +145,6 @@ namespace Java.Interop
 		JavaVMInterface                                 Invoker;
 		bool                                            DestroyVM;
 
-		int                                             GrefCount;
-		int                                             WgrefCount;
-
 		public  JavaVMSafeHandle                        SafeHandle      {get; private set;}
 
 		public  bool                                    NewObjectRequired   {get; private set;}
@@ -163,6 +161,7 @@ namespace Java.Interop
 			TrackIDs     = options.TrackIDs;
 			DestroyVM    = options.DestroyVMOnDispose;
 
+			JniHandleManager    = options.JniHandleManager ?? new JniHandleManager ();
 			NewObjectRequired   = options.NewObjectRequired;
 
 			SafeHandle  = options.VMHandle;
@@ -266,52 +265,14 @@ namespace Java.Interop
 		}
 
 		public int GlobalReferenceCount {
-			get {return GrefCount;}
+			get {return JniHandleManager.GlobalReferenceCount;}
 		}
 
 		public int WeakGlobalReferenceCount {
-			get {return WgrefCount;}
+			get {return JniHandleManager.WeakGlobalReferenceCount;}
 		}
 
-		protected internal virtual void LogCreateLocalRef (JniEnvironmentSafeHandle environmentHandle, JniLocalReference value)
-		{
-		}
-
-		protected internal virtual void LogCreateLocalRef (JniEnvironmentSafeHandle environmentHandle, JniLocalReference value, JniReferenceSafeHandle sourceValue)
-		{
-		}
-
-		protected internal virtual void LogDestroyLocalRef (JniEnvironmentSafeHandle environmentHandle, IntPtr value)
-		{
-		}
-
-		protected internal virtual void LogCreateGlobalRef (JniGlobalReference value, JniReferenceSafeHandle sourceValue)
-		{
-			if (value == null || value.IsInvalid)
-				return;
-			Interlocked.Increment (ref GrefCount);
-		}
-
-		protected internal virtual void LogDestroyGlobalRef (IntPtr value)
-		{
-			if (value == IntPtr.Zero)
-				return;
-			Interlocked.Decrement (ref GrefCount);
-		}
-
-		protected internal virtual void LogCreateWeakGlobalRef (JniWeakGlobalReference value, JniReferenceSafeHandle sourceValue)
-		{
-			if (value == null || value.IsInvalid)
-				return;
-			Interlocked.Increment (ref WgrefCount);
-		}
-
-		protected internal virtual void LogDestroyWeakGlobalRef (IntPtr value)
-		{
-			if (value == IntPtr.Zero)
-				return;
-			Interlocked.Decrement (ref WgrefCount);
-		}
+		public IJniHandleManager JniHandleManager   {get; private set;}
 
 		public bool TrackIDs {get; private set;}
 
