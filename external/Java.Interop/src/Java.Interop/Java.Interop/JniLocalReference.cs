@@ -9,11 +9,12 @@ namespace Java.Interop
 
 		internal JniLocalReference ()
 		{
+			JniEnvironment.Current.LocalReferences.Add (this);
 		}
 
 		protected override bool ReleaseHandle ()
 		{
-			JniEnvironment.Current.JavaVM.JniHandleManager.DeleteLocalReference (JniEnvironment.Current, handle);
+			JniEnvironment.Current.DeleteLocalReference (this, handle);
 			return true;
 		}
 

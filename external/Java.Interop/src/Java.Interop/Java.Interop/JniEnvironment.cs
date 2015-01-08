@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -60,6 +61,11 @@ namespace Java.Interop {
 
 		public          JniEnvironmentSafeHandle    SafeHandle  {get; private set;}
 		public          JavaVM                      JavaVM      {get; private set;}
+
+		List<JniLocalReference> lrefs;
+		internal List<JniLocalReference> LocalReferences {
+			get {return lrefs ?? (lrefs = new List<JniLocalReference> ());}
+		}
 
 		[ThreadStatic]
 		static JniEnvironment current;
@@ -125,6 +131,16 @@ namespace Java.Interop {
 			if (value == null || value.IsInvalid)
 				return;
 			JavaVM.JniHandleManager.CreatedLocalReference (this, value);
+		}
+
+		internal void DeleteLocalReference (JniLocalReference value, IntPtr handle)
+		{
+			if (lrefs == null || !lrefs.Contains (value)) {
+				Debug.WriteLine ("Deleting JNI local reference handle 0x{0} from wrong thread! Ignoring...", handle.ToString ("x"));
+				return;
+			}
+			lrefs.Remove (value);
+			JniEnvironment.Current.JavaVM.JniHandleManager.DeleteLocalReference (this, handle);
 		}
 
 		internal    JniInstanceMethodID Object_toString;
