@@ -45,6 +45,34 @@ namespace Java.InteropTests {
 }");
 		}
 
+		[Test]
+		public void CreateMarshalMethodExpression_GetStringValueHandler ()
+		{
+			var t = typeof (Func<IntPtr, IntPtr, int, IntPtr>);
+			var m = typeof (TestType).GetMethod ("GetStringValueHandler", BindingFlags.NonPublic | BindingFlags.Static);
+			var d = Delegate.CreateDelegate (t, m);
+			CheckCreateMarshalMethodExpression (d, t,
+					@"IntPtr (IntPtr arg1, IntPtr arg2, int arg3)
+{
+	JniEnvironment __envp;
+
+	__envp = new JniEnvironment(arg1);
+	try
+	{
+		return TestType.GetStringValueHandler(arg1, arg2, arg3);
+	}
+	catch (Exception __e)
+	{
+		__envp.SetPendingException(__e);
+		return default(IntPtr);
+	}
+	finally
+	{
+		__envp.Dispose();
+	}
+}");
+		}
+
 		static void CheckCreateMarshalMethodExpression (Delegate value, Type expectedDelegateType, string expectedBody)
 		{
 			var l   = JniMarshalMethod.CreateMarshalMethodExpression (value);

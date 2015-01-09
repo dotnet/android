@@ -18,7 +18,7 @@ namespace Java.InteropTests
 			_members.JniPeerType.RegisterNativeMethods (
 					new JniNativeMethodRegistration ("equalsThis", "(Ljava/lang/Object;)Z", GetEqualsThisHandler ()),
 					new JniNativeMethodRegistration ("getInt32Value", "()I", GetInt32ValueHandler ()),
-					new JniNativeMethodRegistration ("getStringValue", "(I)Ljava/lang/String;", GetStringValueHandler ()),
+					new JniNativeMethodRegistration ("getStringValue", "(I)Ljava/lang/String;", _GetStringValueHandler ()),
 					new JniNativeMethodRegistration ("methodThrows", "()V", (Action<IntPtr, IntPtr>) MethodThrowsHandler));
 		}
 
@@ -111,19 +111,22 @@ namespace Java.InteropTests
 			return h;
 		}
 
-		static Delegate GetStringValueHandler ()
+		static Delegate _GetStringValueHandler ()
 		{
-			Func<IntPtr, IntPtr, int, IntPtr> h = (jnienv, n_self, value) => {
-				var self = JniEnvironment.Current.JavaVM.GetObject<TestType>(n_self);
-				try {
-					var s = self.GetStringValue (value);
-					using (var r = JniEnvironment.Strings.NewString (s))
-						return JniEnvironment.Handles.NewReturnToJniRef (r);
-				} finally {
-					self.DisposeUnlessRegistered ();
-				}
-			};
+			Func<IntPtr, IntPtr, int, IntPtr> h = GetStringValueHandler;
 			return h;
+		}
+
+		static IntPtr GetStringValueHandler (IntPtr jnienv, IntPtr n_self, int value)
+		{
+			var self = JniEnvironment.Current.JavaVM.GetObject<TestType>(n_self);
+			try {
+				var s = self.GetStringValue (value);
+				using (var r = JniEnvironment.Strings.NewString (s))
+					return JniEnvironment.Handles.NewReturnToJniRef (r);
+			} finally {
+				self.DisposeUnlessRegistered ();
+			}
 		}
 
 		static void MethodThrowsHandler (IntPtr jnienv, IntPtr n_self)
