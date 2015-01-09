@@ -167,12 +167,26 @@ namespace Java.InteropTests
 			CheckCreateInvocationExpression (null, t, m, typeof (Action<IntPtr, IntPtr>),
 					@"void (IntPtr __jnienv, IntPtr __context)
 {
-	JavaVM __jvm;
-	ExportTest __this;
+	JniEnvironment __envp;
 
-	__jvm = JniEnvironment.Current.JavaVM;
-	__this = __jvm.GetObject<ExportTest>(__context);
-	__this.InstanceAction();
+	__envp = new JniEnvironment(__jnienv);
+	try
+	{
+		JavaVM __jvm;
+		ExportTest __this;
+
+		__jvm = JniEnvironment.Current.JavaVM;
+		__this = __jvm.GetObject<ExportTest>(__context);
+		__this.InstanceAction();
+	}
+	catch (Exception __e)
+	{
+		__envp.SetPendingException(__e);
+	}
+	finally
+	{
+		__envp.Dispose();
+	}
 }");
 		}
 
@@ -209,10 +223,24 @@ namespace Java.InteropTests
 			CheckCreateInvocationExpression (null, t, a.Method, typeof(Action<IntPtr, IntPtr>),
 					@"void (IntPtr __jnienv, IntPtr __context)
 {
-	JavaVM __jvm;
+	JniEnvironment __envp;
 
-	__jvm = JniEnvironment.Current.JavaVM;
-	ExportTest.StaticAction();
+	__envp = new JniEnvironment(__jnienv);
+	try
+	{
+		JavaVM __jvm;
+
+		__jvm = JniEnvironment.Current.JavaVM;
+		ExportTest.StaticAction();
+	}
+	catch (Exception __e)
+	{
+		__envp.SetPendingException(__e);
+	}
+	finally
+	{
+		__envp.Dispose();
+	}
 }");
 		}
 
@@ -227,12 +255,26 @@ namespace Java.InteropTests
 			CheckCreateInvocationExpression (e, t, m.Method, typeof (Action<IntPtr, IntPtr, int, IntPtr>),
 					@"void (IntPtr __jnienv, IntPtr __context, int i, IntPtr native_v)
 {
-	JavaVM __jvm;
-	string v;
+	JniEnvironment __envp;
 
-	__jvm = JniEnvironment.Current.JavaVM;
-	v = Strings.ToString(native_v);
-	ExportTest.StaticActionInt32String(i, v);
+	__envp = new JniEnvironment(__jnienv);
+	try
+	{
+		JavaVM __jvm;
+		string v;
+
+		__jvm = JniEnvironment.Current.JavaVM;
+		v = Strings.ToString(native_v);
+		ExportTest.StaticActionInt32String(i, v);
+	}
+	catch (Exception __e)
+	{
+		__envp.SetPendingException(__e);
+	}
+	finally
+	{
+		__envp.Dispose();
+	}
 }");
 		}
 
@@ -247,16 +289,31 @@ namespace Java.InteropTests
 			CheckCreateInvocationExpression (e, t, m, typeof (Func<IntPtr, IntPtr, long>),
 					@"long (IntPtr __jnienv, IntPtr __context)
 {
-	JavaVM __jvm;
-	ExportTest __this;
+	JniEnvironment __envp;
 	long __jret;
-	long __mret;
 
-	__jvm = JniEnvironment.Current.JavaVM;
-	__this = __jvm.GetObject<ExportTest>(__context);
-	__mret = __this.FuncInt64();
-	__jret = __mret;
-	return __jret;
+	__envp = new JniEnvironment(__jnienv);
+	try
+	{
+		JavaVM __jvm;
+		ExportTest __this;
+		long __mret;
+
+		__jvm = JniEnvironment.Current.JavaVM;
+		__this = __jvm.GetObject<ExportTest>(__context);
+		__mret = __this.FuncInt64();
+		__jret = __mret;
+		return __jret;
+	}
+	catch (Exception __e)
+	{
+		__envp.SetPendingException(__e);
+		return default(long);
+	}
+	finally
+	{
+		__envp.Dispose();
+	}
 }");
 		}
 
@@ -271,16 +328,31 @@ namespace Java.InteropTests
 			CheckCreateInvocationExpression (e, t, m, typeof (Func<IntPtr, IntPtr, IntPtr>),
 					@"IntPtr (IntPtr __jnienv, IntPtr __context)
 {
-	JavaVM __jvm;
-	ExportTest __this;
+	JniEnvironment __envp;
 	IntPtr __jret;
-	JavaObject __mret;
 
-	__jvm = JniEnvironment.Current.JavaVM;
-	__this = __jvm.GetObject<ExportTest>(__context);
-	__mret = __this.FuncIJavaObject();
-	__jret = Handles.NewReturnToJniRef(__mret);
-	return __jret;
+	__envp = new JniEnvironment(__jnienv);
+	try
+	{
+		JavaVM __jvm;
+		ExportTest __this;
+		JavaObject __mret;
+
+		__jvm = JniEnvironment.Current.JavaVM;
+		__this = __jvm.GetObject<ExportTest>(__context);
+		__mret = __this.FuncIJavaObject();
+		__jret = Handles.NewReturnToJniRef(__mret);
+		return __jret;
+	}
+	catch (Exception __e)
+	{
+		__envp.SetPendingException(__e);
+		return default(IntPtr);
+	}
+	finally
+	{
+		__envp.Dispose();
+	}
 }");
 		}
 	}

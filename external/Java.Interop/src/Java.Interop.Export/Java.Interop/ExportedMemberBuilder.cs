@@ -108,6 +108,15 @@ namespace Java.Interop {
 			var jnienv  = Expression.Parameter (typeof (IntPtr), "__jnienv");
 			var context = Expression.Parameter (typeof (IntPtr), "__context");
 
+			var envp        = Expression.Variable (typeof (JniEnvironment), "__envp");
+			var envpVars    = new List<ParameterExpression> () {
+				envp,
+			};
+
+			var envpBody    = new List<Expression> () {
+				Expression.Assign (envp, CreateJniEnvironment (jnienv)),
+			};
+
 			var jvm         = Expression.Variable (typeof (JavaVM), "__jvm");
 			var variables   = new List<ParameterExpression> () {
 				jvm,
@@ -152,12 +161,17 @@ namespace Java.Interop {
 			ParameterExpression ret = null;
 			if (method.ReturnType == typeof (void)) {
 				marshalBody.Add (invoke);
+				envpBody.Add (
+						Expression.TryCatchFinally (
+							Expression.Block (variables, marshalBody),
+							CreateDisposeJniEnvironment (envp),
+							CreateMarshalException (envp, null)));
 			} else {
 				var jniRType    = GetMarshalToJniReturnType (method.ReturnType);
 				var exit        = Expression.Label (jniRType, "__exit");
 				ret             = Expression.Variable (jniRType, "__jret");
 				var mret        = Expression.Variable (method.ReturnType, "__mret");
-				variables.Add (ret);
+				envpVars.Add (ret);
 				variables.Add (mret);
 				marshalBody.Add (Expression.Assign (mret, invoke));
 				if (jniRType == method.ReturnType)
@@ -170,9 +184,15 @@ namespace Java.Interop {
 					marshalBody.Add (Expression.Assign (ret, marshalExpr));
 				}
 				marshalBody.Add (Expression.Return (exit, ret));
-				marshalBody.Add (Expression.Label (exit, ret));
-			}
 
+				envpBody.Add (
+						Expression.TryCatchFinally (
+						Expression.Block (variables, marshalBody),
+							CreateDisposeJniEnvironment (envp),
+							CreateMarshalException (envp, exit)));
+
+				envpBody.Add (Expression.Label (exit, Expression.Default (jniRType)));
+			}
 
 			var funcTypeParams = new List<Type> () {
 				typeof (IntPtr),
@@ -188,7 +208,7 @@ namespace Java.Interop {
 
 			var bodyParams = new List<ParameterExpression> { jnienv, context };
 			bodyParams.AddRange (marshalParameters);
-			var body = Expression.Block (variables, marshalBody);
+			var body = Expression.Block (envpVars, envpBody);
 			return Expression.Lambda (marshalerType, body, bodyParams);
 		}
 
@@ -269,6 +289,31 @@ namespace Java.Interop {
 		static Func<T, TRet> F<T, TRet> (Func<T, TRet> func)
 		{
 			return func;
+		}
+
+		static Expression CreateJniEnvironment (ParameterExpression jnienv)
+		{
+			return Expression.New (
+					typeof (JniEnvironment).GetConstructor (new []{typeof (IntPtr)}),
+					jnienv);
+		}
+
+		static CatchBlock CreateMarshalException  (ParameterExpression envp, LabelTarget exit)
+		{
+			var spe     = typeof (JniEnvironment).GetMethod ("SetPendingException");
+			var ex      = Expression.Variable (typeof (Exception), "__e");
+			var body = new List<Expression> () {
+				Expression.Call (envp, spe, ex),
+			};
+			if (exit != null) {
+				body.Add (Expression.Return (exit, Expression.Default (exit.Type)));
+			}
+			return Expression.Catch (ex, Expression.Block (body));
+		}
+
+		static Expression CreateDisposeJniEnvironment (ParameterExpression envp)
+		{
+			return Expression.Call (envp, typeof (JniEnvironment).GetMethod ("Dispose"));
 		}
 
 		static Expression GetThis (Expression vm, Type targetType, Expression context)
