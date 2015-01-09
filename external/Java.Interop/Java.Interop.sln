@@ -5,6 +5,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "jnienv-gen", "tools\jnienv-
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Java.Interop", "src\Java.Interop\Java.Interop.csproj", "{94BD81F7-B06F-4295-9636-F8A3B6BDC762}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Java.Interop.Dynamic", "src\Java.Interop.Dynamic\Java.Interop.Dynamic.csproj", "{AD4468F8-8883-434B-9D4C-E1801BB3B52A}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Java.Interop.Export", "src\Java.Interop.Export\Java.Interop.Export.csproj", "{B501D075-6183-4E1D-92C9-F7B5002475B1}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Java.Runtime.Environment", "src\Java.Runtime.Environment\Java.Runtime.Environment.csproj", "{5887B410-D448-4257-A46B-EAC03C80BE93}"
@@ -12,6 +14,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestJVM", "tests\TestJVM\TestJVM.csproj", "{A76309AB-98AC-4AE2-BA30-75481420C52F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Java.Interop-Tests", "src\Java.Interop\Tests\Java.Interop-Tests.csproj", "{FED322CB-8A45-4DDB-A885-8FE517994478}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Java.Interop.Dynamic-Tests", "src\Java.Interop.Dynamic\Tests\Java.Interop.Dynamic-Tests.csproj", "{447A2149-60AA-494C-A5CB-8B186F522F5D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Java.Interop.Export-Tests", "src\Java.Interop.Export\Tests\Java.Interop.Export-Tests.csproj", "{82E878E2-E9CE-496B-8B9B-2493D4E71282}"
 EndProject
@@ -59,6 +63,10 @@ Global
 		{94BD81F7-B06F-4295-9636-F8A3B6BDC762}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{94BD81F7-B06F-4295-9636-F8A3B6BDC762}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{94BD81F7-B06F-4295-9636-F8A3B6BDC762}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AD4468F8-8883-434B-9D4C-E1801BB3B52A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AD4468F8-8883-434B-9D4C-E1801BB3B52A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AD4468F8-8883-434B-9D4C-E1801BB3B52A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AD4468F8-8883-434B-9D4C-E1801BB3B52A}.Release|Any CPU.Build.0 = Release|Any CPU
 		{A76309AB-98AC-4AE2-BA30-75481420C52F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{A76309AB-98AC-4AE2-BA30-75481420C52F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A76309AB-98AC-4AE2-BA30-75481420C52F}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -75,6 +83,10 @@ Global
 		{FED322CB-8A45-4DDB-A885-8FE517994478}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FED322CB-8A45-4DDB-A885-8FE517994478}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FED322CB-8A45-4DDB-A885-8FE517994478}.Release|Any CPU.Build.0 = Release|Any CPU
+		{447A2149-60AA-494C-A5CB-8B186F522F5D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{447A2149-60AA-494C-A5CB-8B186F522F5D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{447A2149-60AA-494C-A5CB-8B186F522F5D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{447A2149-60AA-494C-A5CB-8B186F522F5D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{82E878E2-E9CE-496B-8B9B-2493D4E71282} = {647B3EED-85D7-45E6-A297-44DC70C79503}

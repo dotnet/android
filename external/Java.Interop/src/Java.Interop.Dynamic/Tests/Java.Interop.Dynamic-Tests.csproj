@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{447A2149-60AA-494C-A5CB-8B186F522F5D}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>Java.Interop.DynamicTests</RootNamespace>
+    <AssemblyName>Java.Interop.Dynamic-Tests</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>..\..\..\bin\Debug</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <DefineTrace>false</DefineTrace>
+    <DefineDebug>false</DefineDebug>
+    <ConsolePause>false</ConsolePause>
+    <AdditionalParameters>
+    </AdditionalParameters>
+    <WarningLevel>4</WarningLevel>
+    <Optimize>false</Optimize>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <OutputPath>..\..\..\bin\Release</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <ConsolePause>false</ConsolePause>
+    <DefineDebug>false</DefineDebug>
+    <DefineTrace>false</DefineTrace>
+    <AdditionalParameters>
+    </AdditionalParameters>
+    <WarningLevel>4</WarningLevel>
+    <Optimize>false</Optimize>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="nunit.framework">
+      <HintPath>..\..\..\lib\NUnit-2.6.3\bin\nunit.framework.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.CSharp" />
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <ItemGroup>
+    <Compile Include="Java.Interop.Dynamic\DynamicJavaClassTests.cs" />
+    <Compile Include="Java.Interop.Dynamic\JVM.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Java.Runtime.Environment\Java.Runtime.Environment.csproj">
+      <Project>{5887B410-D448-4257-A46B-EAC03C80BE93}</Project>
+      <Name>Java.Runtime.Environment</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Java.Interop\Java.Interop.csproj">
+      <Project>{94BD81F7-B06F-4295-9636-F8A3B6BDC762}</Project>
+      <Name>Java.Interop</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Java.Interop\Tests\Java.Interop-Tests.csproj">
+      <Project>{FED322CB-8A45-4DDB-A885-8FE517994478}</Project>
+      <Name>Java.Interop-Tests</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\tests\TestJVM\TestJVM.csproj">
+      <Project>{A76309AB-98AC-4AE2-BA30-75481420C52F}</Project>
+      <Name>TestJVM</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\lib\mono.linq.expressions\Mono.Linq.Expressions.csproj">
+      <Project>{0C001D50-4176-45AE-BDC8-BA626508B0CC}</Project>
+      <Name>Mono.Linq.Expressions</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Java.Interop.Dynamic.csproj">
+      <Project>{AD4468F8-8883-434B-9D4C-E1801BB3B52A}</Project>
+      <Name>Java.Interop.Dynamic</Name>
+    </ProjectReference>
+  </ItemGroup>
+</Project>

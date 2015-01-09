@@ -5,6 +5,7 @@ DEPENDENCIES = \
 
 TESTS = \
 	bin/$(CONFIGURATION)/Java.Interop-Tests.dll \
+	bin/$(CONFIGURATION)/Java.Interop.Dynamic-Tests.dll \
 	bin/$(CONFIGURATION)/Java.Interop.Export-Tests.dll
 
 PTESTS = \
