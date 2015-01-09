@@ -224,7 +224,6 @@ namespace Java.InteropTests
 			var _jars   = new List<string> (jars ?? new string [0]) {
 				"java-interop.jar",
 			};
-			_jars.AddRange (jars);
 			builder.AddSystemProperty ("java.class.path", string.Join (":", _jars));
 
 			TextWriter  grefLog = null;
