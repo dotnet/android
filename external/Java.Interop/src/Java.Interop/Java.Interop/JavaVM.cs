@@ -172,7 +172,7 @@ namespace Java.Interop
 
 			if (options.EnvironmentHandle != null) {
 				var env = new JniEnvironment (options.EnvironmentHandle, this);
-				Track (env);
+				JniEnvironment.SetRootEnvironment (env);
 			}
 
 			JavaVMs.TryAdd (SafeHandle.DangerousGetHandle (), this);
@@ -218,13 +218,17 @@ namespace Java.Interop
 			ClearTrackedReferences ();
 			JavaVM _;
 			JavaVMs.TryRemove (SafeHandle.DangerousGetHandle (), out _);
+			JniHandleManager.Dispose ();
+			// TODO: Dispose JniEnvironment.RootEnvironments
+			// Requires .NET 4.5+
+			JniEnvironment.RootEnvironments.Dispose ();
 			if (DestroyVM)
 				DestroyJavaVM ();
 			SafeHandle.Dispose ();
 			SafeHandle = null;
 		}
 
-		public void AttachCurrentThread (string name = null, JniReferenceSafeHandle group = null)
+		public JniEnvironment AttachCurrentThread (string name = null, JniReferenceSafeHandle group = null)
 		{
 			var threadArgs = new JavaVMThreadAttachArgs () {
 				version = JniVersion.v1_2,
@@ -239,7 +243,7 @@ namespace Java.Interop
 				if (r != 0)
 					throw new NotSupportedException ("AttachCurrentThread returned " + r);
 				var env = new JniEnvironment (new JniEnvironmentSafeHandle (jnienv), this);
-				Track (env);
+				return env;
 			} finally {
 				Marshal.FreeHGlobal (threadArgs.name);
 			}
@@ -283,11 +287,6 @@ namespace Java.Interop
 		}
 
 		internal void Track (JniType value)
-		{
-			TrackedInstances.TryAdd (value.SafeHandle, value);
-		}
-
-		internal void Track (JniEnvironment value)
 		{
 			TrackedInstances.TryAdd (value.SafeHandle, value);
 		}

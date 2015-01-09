@@ -6,7 +6,7 @@ namespace Java.Interop
 {
 	public abstract class JniReferenceSafeHandle : SafeHandle
 	{
-		public static readonly JniReferenceSafeHandle Null = new JniLocalReference ();
+		public static readonly JniReferenceSafeHandle Null = new JniInvocationHandle (IntPtr.Zero);
 
 		protected JniReferenceSafeHandle ()
 			: this (ownsHandle:true)

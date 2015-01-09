@@ -27,14 +27,20 @@ namespace Java.InteropTests {
 			CheckCreateMarshalMethodExpression (d, t,
 					@"void (IntPtr arg1, IntPtr arg2)
 {
-	JniEnvironment.CheckCurrent(arg1);
+	JniEnvironment __envp;
+
+	__envp = new JniEnvironment(arg1);
 	try
 	{
 		TestType.MethodThrowsHandler(arg1, arg2);
 	}
 	catch (Exception __e)
 	{
-		Errors.Throw(__e);
+		__envp.SetPendingException(__e);
+	}
+	finally
+	{
+		__envp.Dispose();
 	}
 }");
 		}

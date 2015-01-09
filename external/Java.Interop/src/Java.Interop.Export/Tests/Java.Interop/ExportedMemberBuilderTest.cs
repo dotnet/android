@@ -170,7 +170,6 @@ namespace Java.InteropTests
 	JavaVM __jvm;
 	ExportTest __this;
 
-	JniEnvironment.CheckCurrent(__jnienv);
 	__jvm = JniEnvironment.Current.JavaVM;
 	__this = __jvm.GetObject<ExportTest>(__context);
 	__this.InstanceAction();
@@ -212,7 +211,6 @@ namespace Java.InteropTests
 {
 	JavaVM __jvm;
 
-	JniEnvironment.CheckCurrent(__jnienv);
 	__jvm = JniEnvironment.Current.JavaVM;
 	ExportTest.StaticAction();
 }");
@@ -232,7 +230,6 @@ namespace Java.InteropTests
 	JavaVM __jvm;
 	string v;
 
-	JniEnvironment.CheckCurrent(__jnienv);
 	__jvm = JniEnvironment.Current.JavaVM;
 	v = Strings.ToString(native_v);
 	ExportTest.StaticActionInt32String(i, v);
@@ -255,7 +252,6 @@ namespace Java.InteropTests
 	long __jret;
 	long __mret;
 
-	JniEnvironment.CheckCurrent(__jnienv);
 	__jvm = JniEnvironment.Current.JavaVM;
 	__this = __jvm.GetObject<ExportTest>(__context);
 	__mret = __this.FuncInt64();
@@ -280,7 +276,6 @@ namespace Java.InteropTests
 	IntPtr __jret;
 	JavaObject __mret;
 
-	JniEnvironment.CheckCurrent(__jnienv);
 	__jvm = JniEnvironment.Current.JavaVM;
 	__this = __jvm.GetObject<ExportTest>(__context);
 	__mret = __this.FuncIJavaObject();

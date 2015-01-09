@@ -11,14 +11,44 @@ namespace Java.InteropTests
 	public class JniEnvironmentTests
 	{
 		[Test]
-		public void CheckCurrent ()
+		public void Constructor_SetsCurrent ()
+		{
+			var f = typeof (JniEnvironment).GetField ("current", BindingFlags.NonPublic | BindingFlags.Static);
+			var e = JniEnvironment.Current;
+
+			var c = f.GetValue (null);
+			Assert.IsNotNull (c);
+			Assert.AreSame (c, JniEnvironment.Current);
+			Assert.AreSame (c, JniEnvironment.RootEnvironment);
+
+			using (var envp = new JniEnvironment (e.SafeHandle.DangerousGetHandle ())) {
+				Assert.AreSame (envp, f.GetValue (null));
+				Assert.AreNotSame (envp, JniEnvironment.RootEnvironment);
+			}
+
+			Assert.AreSame (c, JniEnvironment.Current);
+		}
+
+		[Test]
+		public void Dispose_ClearsLocalReferences ()
+		{
+			JniLocalReference lref;
+			using (var envp = new JniEnvironment (JniEnvironment.Current.SafeHandle.DangerousGetHandle ())) {
+				lref    = (JniLocalReference) new JavaObject ().SafeHandle;
+				Assert.IsFalse (lref.IsClosed);
+			}
+			Assert.IsTrue (lref.IsClosed);
+		}
+
+
+		[Test]
+		public void Dispose_ClearsCurrentField ()
 		{
 			var f = typeof (JniEnvironment).GetField ("current", BindingFlags.NonPublic | BindingFlags.Static);
 			var e = JniEnvironment.Current;
 			var h = e.SafeHandle.DangerousGetHandle ();
 			e.Dispose ();
 			Assert.IsNull (f.GetValue (null));
-			JniEnvironment.CheckCurrent (h);
 			Assert.IsNotNull (JniEnvironment.Current);
 			Assert.AreEqual (h, JniEnvironment.Current.SafeHandle.DangerousGetHandle ());
 		}

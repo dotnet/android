@@ -42,62 +42,74 @@ namespace Java.Interop {
 			if (methodParameters [0].ParameterType != typeof(IntPtr))
 				throw new NotSupportedException ("What kind of JNI marshal method is this where the first parameter isn't an IntPtr?! Is: " + methodParameters [0].ParameterType);
 
-			var variables   = methodParameters
+			var parameters  = methodParameters
 				.Select (p => Expression.Parameter (p.ParameterType, p.Name))
 				.ToList ();
+			var envp        = Expression.Variable (typeof (JniEnvironment), "__envp");
+			var variables   = new List<ParameterExpression> () {
+				envp,
+			};
 
-			var jnienv  = variables [0];
+			var jnienv  = parameters [0];
 			MethodCallExpression invoke;
 			if (value.Target == null) {
-				invoke = Expression.Call (value.Method, variables);
+				invoke = Expression.Call (value.Method, parameters);
 			} else {
 				var delArgs = new List<Expression> () {
 					Expression.Constant (value.Target),
 				};
-				delArgs.AddRange (variables);
+				delArgs.AddRange (parameters);
 				invoke = Expression.Call (value.Method, delArgs);
 			}
 			var body    = new List<Expression> () {
-				CheckJnienv (jnienv),
+				Expression.Assign (envp, CreateJniEnvironment (jnienv)),
 			};
 
 			if (delegateType.ReturnType == typeof (void)) {
-				body.Add (Expression.TryCatch (
+				body.Add (Expression.TryCatchFinally (
 					invoke,
-					CreateMarshalException (delegateType, null)));
+					CreateDisposeJniEnvironment (envp),
+					CreateMarshalException (envp, delegateType, null)));
 			} else {
 				var jniRType    = delegateType.ReturnType;
 				var exit        = Expression.Label (jniRType, "__exit");
-				body.Add (Expression.TryCatch (
+				body.Add (Expression.TryCatchFinally (
 					Expression.Return (exit, invoke),
-					CreateMarshalException (delegateType, exit)));
+					CreateDisposeJniEnvironment (envp),
+					CreateMarshalException (envp, delegateType, exit)));
 				body.Add (Expression.Label (exit, Expression.Default (jniRType)));
 			}
 
-			var block = Expression.Block (body);
+			var block = Expression.Block (variables, body);
 			var funcT   = methodParameters.Select (p => p.ParameterType).ToList ();
 			funcT.Add (delegateType.ReturnType);
 			var marshalerType = Expression.GetDelegateType (funcT.ToArray ());
-			return Expression.Lambda (marshalerType, block, variables);
+			return Expression.Lambda (marshalerType, block, parameters);
 		}
 
-		static Expression CheckJnienv (ParameterExpression jnienv)
+		static Expression CreateJniEnvironment (ParameterExpression jnienv)
 		{
-			Action<IntPtr> a = JniEnvironment.CheckCurrent;
-			return Expression.Call (null, a.Method, jnienv);
+			return Expression.New (
+					typeof (JniEnvironment).GetConstructor (new []{typeof (IntPtr)}),
+					jnienv);
 		}
 
-		static CatchBlock CreateMarshalException  (MethodInfo method, LabelTarget exit)
+		static CatchBlock CreateMarshalException  (ParameterExpression envp, MethodInfo method, LabelTarget exit)
 		{
-			Action<Exception>   a = JniEnvironment.Errors.Throw;
+			var spe     = typeof (JniEnvironment).GetMethod ("SetPendingException");
 			var ex      = Expression.Variable (typeof (Exception), "__e");
 			var body = new List<Expression> () {
-				Expression.Call (a.Method, ex),
+				Expression.Call (envp, spe, ex),
 			};
 			if (exit != null) {
 				body.Add (Expression.Return (exit, Expression.Default (method.ReturnType)));
 			}
 			return Expression.Catch (ex, Expression.Block (body));
+		}
+
+		static Expression CreateDisposeJniEnvironment (ParameterExpression envp)
+		{
+			return Expression.Call (envp, typeof (JniEnvironment).GetMethod ("Dispose"));
 		}
 	}
 }

@@ -114,7 +114,6 @@ namespace Java.Interop {
 			};
 
 			var marshalBody = new List<Expression> () {
-				CheckJnienv (jnienv),
 				Expression.Assign (jvm, GetJavaVM ()),
 			};
 
@@ -270,12 +269,6 @@ namespace Java.Interop {
 		static Func<T, TRet> F<T, TRet> (Func<T, TRet> func)
 		{
 			return func;
-		}
-
-		static Expression CheckJnienv (ParameterExpression jnienv)
-		{
-			Action<IntPtr> a = JniEnvironment.CheckCurrent;
-			return Expression.Call (null, a.Method, jnienv);
 		}
 
 		static Expression GetThis (Expression vm, Type targetType, Expression context)
