@@ -17,9 +17,16 @@ namespace Java.Interop.DynamicTests {
 	class DynamicJavaClassTests : JVM
 	{
 		[Test]
+		public void Constructor ()
+		{
+			Assert.Throws<ArgumentNullException> (() => new DynamicJavaClass (null));
+		}
+
+		[Test]
 		public void Frobnicate ()
 		{
-			dynamic d = new DynamicJavaClass ();
+			Console.WriteLine ("---");
+			dynamic d = new DynamicJavaClass ("java/lang/Object");
 
 			d.P3 = d.M1(d.P1, d.M2(d.P2));
 			Console.WriteLine ("--");
@@ -34,6 +41,14 @@ namespace Java.Interop.DynamicTests {
 			} catch (Exception e) {
 				Console.WriteLine (e);
 			}
+		}
+
+		[Test]
+		public void AccessStaticMember ()
+		{
+			dynamic Integer = new DynamicJavaClass ("java/lang/Integer");
+			int max = Integer.MAX_VALUE;
+			Assert.AreEqual (int.MaxValue, max);
 		}
 	}
 }

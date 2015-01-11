@@ -37,4 +37,14 @@
     <Compile Include="Java.Interop.Dynamic\DynamicJavaClass.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <ItemGroup>
+    <ProjectReference Include="..\..\lib\mono.linq.expressions\Mono.Linq.Expressions.csproj">
+      <Project>{0C001D50-4176-45AE-BDC8-BA626508B0CC}</Project>
+      <Name>Mono.Linq.Expressions</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Java.Interop\Java.Interop.csproj">
+      <Project>{94BD81F7-B06F-4295-9636-F8A3B6BDC762}</Project>
+      <Name>Java.Interop</Name>
+    </ProjectReference>
+  </ItemGroup>
 </Project>

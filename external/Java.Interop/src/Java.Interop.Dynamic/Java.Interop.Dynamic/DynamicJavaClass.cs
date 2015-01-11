@@ -4,7 +4,11 @@ using System.Diagnostics;
 using System.Dynamic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
+using System.Reflection.Emit;
 using System.Text;
+
+using Mono.Linq.Expressions;
 
 using Java.Interop;
 
@@ -12,27 +16,77 @@ namespace Java.Interop.Dynamic {
 
 	public class DynamicJavaClass : IDynamicMetaObjectProvider
 	{
-		public DynamicMetaObject GetMetaObject(Expression parameter)
+		public  string          JniClassName            {get; private set;}
+
+		JniPeerMembers          members;
+
+		public DynamicJavaClass (string jniClassName)
 		{
-			return new MyMetaObject(parameter, this);
+			if (jniClassName == null)
+				throw new ArgumentNullException ("jniClassName");
+
+			JniClassName    = jniClassName;
+			members         = new JniPeerMembers (jniClassName, CreateManagedPeerType ());
+		}
+
+		DynamicMetaObject IDynamicMetaObjectProvider.GetMetaObject (Expression parameter)
+		{
+			return new MetaStaticMemberAccessObject (parameter, this);
+		}
+
+		public object GetStaticFieldValue (string fieldName, Type fieldType)
+		{
+			Console.WriteLine ("# DynamicJavaClass({0}).field({1}) as {2}", JniClassName, fieldName, fieldType);
+			var typeInfo    = JniEnvironment.Current.JavaVM.GetJniTypeInfoForJniTypeReference (JniClassName);
+			switch (typeInfo.ToString ()) {
+			case "I":
+			case "java/lang/Integer":   // WTF?
+				return members.StaticFields.GetInt32Value (fieldName + "\u0000I");
+			}
+			return null;
+		}
+
+		internal StaticFieldAccess GetStaticFieldAccess (string fieldName)
+		{
+			return new StaticFieldAccess (this, fieldName);
+		}
+
+		Type CreateManagedPeerType ()
+		{
+			var className   = JniClassName.Replace ('/', '-');
+			var aname       = new AssemblyName ("Java.Interop.Dynamic-" + className);
+
+			var assembly    = AppDomain.CurrentDomain.DefineDynamicAssembly (aname, AssemblyBuilderAccess.ReflectionOnly);
+			var module      = assembly.DefineDynamicModule (className);
+			var type        = module.DefineType (JniClassName, TypeAttributes.Sealed, typeof (JavaObject));
+			type.SetCustomAttribute (
+					new CustomAttributeBuilder (
+						typeof (JniTypeInfoAttribute).GetConstructor (new[]{ typeof(string) }),
+						new []{JniClassName}));
+
+			return type.CreateType ();
 		}
 	}
 
-	public class MyMetaObject : DynamicMetaObject
+	class MetaStaticMemberAccessObject : DynamicMetaObject
 	{
-		public MyMetaObject(Expression parameter, object value)
+		public MetaStaticMemberAccessObject (Expression parameter, object value)
 			: base(parameter, BindingRestrictions.Empty, value)
 		{
+			Console.WriteLine ("# MyMetaObject..ctor: paramter={0} {1} {2}", parameter.ToCSharpCode (), parameter.GetType (), parameter.Type);
+			Console.WriteLine ("# MyMetaObject..ctor: value={0} {1}", value, value.GetType ());
 		}
 
 		public override DynamicMetaObject BindConvert(ConvertBinder binder)
 		{
+			Console.WriteLine ("Convert: Expression={0} [{1}]", Expression.ToCSharpCode (), Expression.Type);
 			return this.PrintAndReturnIdentity("Convert: Explicit={0}; ReturnType={1}; Type={2}", binder.Explicit, binder.ReturnType, binder.Type);
 		}
 
 		public override DynamicMetaObject BindInvokeMember(InvokeMemberBinder binder, DynamicMetaObject[] args)
 		{
-			return this.PrintAndReturnIdentity("InvokeMember of method {0}", binder.Name);
+			return this.PrintAndReturnIdentity("InvokeMember of method={0}; ReturnType={1}; args={{{2}}}; CallInfo={3}", binder.Name, binder.ReturnType,
+				string.Join (", ", args.Select (a => string.Format ("{0} [{1}]", a.Expression.ToCSharpCode (), a.LimitType))), binder.CallInfo);
 		}
 
 		public override DynamicMetaObject BindSetMember(SetMemberBinder binder, DynamicMetaObject value)
@@ -42,7 +96,17 @@ namespace Java.Interop.Dynamic {
 
 		public override DynamicMetaObject BindGetMember(GetMemberBinder binder)
 		{
-			return this.PrintAndReturnIdentity("GetMember of property {0}", binder.Name);
+			Console.WriteLine ("GetMember: Expression={0} [{1}]; property={2}", Expression.ToCSharpCode (), Expression.Type, binder.Name);
+			var expr =
+				Expression.Call (
+					Expression.Convert (Expression, typeof(DynamicJavaClass)),
+					typeof (DynamicJavaClass).GetMethod ("GetStaticFieldAccess", BindingFlags.Instance | BindingFlags.NonPublic),
+					Expression.Constant (binder.Name));
+			return new DynamicMetaObject (
+				expr,
+				BindingRestrictions.GetTypeRestriction (
+					expr,
+					typeof (StaticFieldAccess)));
 		}
 
 		private DynamicMetaObject PrintAndReturnIdentity(string message, params object[] args)
@@ -55,6 +119,51 @@ namespace Java.Interop.Dynamic {
 					typeof (DynamicJavaClass)));
 		}
 	}
+	class StaticFieldAccess : IDynamicMetaObjectProvider {
+
+		public  string              FieldName   {get; private set;}
+		public  DynamicJavaClass    JavaClass   {get; private set;}
+
+		public StaticFieldAccess (DynamicJavaClass klass, string fieldName)
+		{
+			JavaClass = klass;
+			FieldName = fieldName;
+		}
+
+		public DynamicMetaObject GetMetaObject(Expression parameter)
+		{
+			Console.WriteLine ("# FieldAccessInfo.GetMetaObject: parameter={0}", parameter);
+			return new MetaStaticFieldAccessObject(parameter, this);
+		}
+	}
+
+	class MetaStaticFieldAccessObject : DynamicMetaObject {
+
+		public MetaStaticFieldAccessObject (Expression e, object value)
+			: base (e, BindingRestrictions.Empty, value)
+		{
+			Console.WriteLine ("MyHelperObject: e={0}", e.ToCSharpCode ());
+		}
+
+		public override DynamicMetaObject BindConvert (ConvertBinder binder)
+		{
+			Console.WriteLine ("MetaStaticFieldAccessObject.Convert: Expression={0} [{1}]", Expression.ToCSharpCode (), Expression.Type);
+
+			var field       = Expression.Convert(Expression, typeof(StaticFieldAccess));
+			var instance    = Expression.Property (field, "JavaClass");
+			var fieldName   = Expression.Property (field, "FieldName");
+			var gsfv        = typeof(DynamicJavaClass).GetMethod ("GetStaticFieldValue");
+			var expr        = Expression.Convert (
+					Expression.Call (instance, gsfv, fieldName, Expression.Constant (binder.Type)),
+                    binder.Type);
+			return new DynamicMetaObject (
+					expr,
+					BindingRestrictions.GetTypeRestriction (
+						expr,
+						binder.Type));
+		}
+	}
+
 #if false
 	public class DynamicJavaClass : DynamicObject {
 
