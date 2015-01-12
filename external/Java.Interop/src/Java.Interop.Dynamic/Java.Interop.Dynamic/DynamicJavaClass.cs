@@ -37,11 +37,11 @@ namespace Java.Interop.Dynamic {
 		public object GetStaticFieldValue (string fieldName, Type fieldType)
 		{
 			Console.WriteLine ("# DynamicJavaClass({0}).field({1}) as {2}", JniClassName, fieldName, fieldType);
-			var typeInfo    = JniEnvironment.Current.JavaVM.GetJniTypeInfoForJniTypeReference (JniClassName);
+			var typeInfo    = JniEnvironment.Current.JavaVM.GetJniTypeInfoForType (fieldType);
+			var encoded     = fieldName + "\u0000" + typeInfo.ToString ();
 			switch (typeInfo.ToString ()) {
 			case "I":
-			case "java/lang/Integer":   // WTF?
-				return members.StaticFields.GetInt32Value (fieldName + "\u0000I");
+				return members.StaticFields.GetInt32Value (encoded);
 			}
 			return null;
 		}
