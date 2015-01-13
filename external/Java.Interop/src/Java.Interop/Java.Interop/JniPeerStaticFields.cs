@@ -47,6 +47,29 @@ namespace Java.Interop
 				throw new NotSupportedException ("Unsupported argument type: " + encodedMember.Substring (n + 1));
 			}
 		}
+
+		public void SetValue (string encodedMember, object value)
+		{
+			var n   = JniPeerMembers.GetSignatureSeparatorIndex (encodedMember);
+			switch (encodedMember [n + 1]) {
+			case 'Z':   SetValue (encodedMember, (bool)   value);   break;
+			case 'B':   SetValue (encodedMember, (byte)   value);   break;
+			case 'C':   SetValue (encodedMember, (char)   value);   break;
+			case 'S':   SetValue (encodedMember, (short)  value);   break;
+			case 'I':   SetValue (encodedMember, (int)    value);   break;
+			case 'J':   SetValue (encodedMember, (long)   value);   break;
+			case 'F':   SetValue (encodedMember, (float)  value);   break;
+			case 'D':   SetValue (encodedMember, (double) value);   break;
+			case 'L':
+			case '[':
+				using (var lref = JniMarshal.CreateLocalRef (value)) {
+					SetValue (encodedMember, lref);
+				}
+				return;
+			default:
+				throw new NotSupportedException ("Unsupported argument type: " + encodedMember.Substring (n + 1));
+			}
+		}
 	}
 }
 

@@ -23,32 +23,25 @@ namespace Java.Interop.DynamicTests {
 		}
 
 		[Test]
-		public void Frobnicate ()
-		{
-			Console.WriteLine ("---");
-			dynamic d = new DynamicJavaClass ("java/lang/Object");
-
-			d.P3 = d.M1(d.P1, d.M2(d.P2));
-			Console.WriteLine ("--");
-			try {
-				int a = d.member;
-			} catch (Exception e) {
-				Console.WriteLine (e);
-			}
-			Console.WriteLine ("--");
-			try {
-				int b = d.method(42);
-			} catch (Exception e) {
-				Console.WriteLine (e);
-			}
-		}
-
-		[Test]
-		public void AccessStaticMember ()
+		public void ReadStaticMember ()
 		{
 			dynamic Integer = new DynamicJavaClass ("java/lang/Integer");
 			int max = Integer.MAX_VALUE;
 			Assert.AreEqual (int.MaxValue, max);
+		}
+
+		[Test]
+		public void WriteStaticMember ()
+		{
+			dynamic Integer = new DynamicJavaClass ("java/lang/Integer");
+			int cur = Integer.MAX_VALUE;
+			Console.WriteLine ("# MAX_VALUE={0}", cur);
+			Integer.MAX_VALUE = 42;
+			int max = Integer.MAX_VALUE;
+			Console.WriteLine ("# set MAX_VALUE=42");
+			Assert.AreEqual (42, max);
+			Integer.MAX_VALUE   = cur;
+			Console.WriteLine ("# done!");
 		}
 	}
 }
