@@ -26,6 +26,27 @@ namespace Java.Interop
 				return f;
 			}
 		}
+
+		public object GetValue (string encodedMember)
+		{
+			var n   = JniPeerMembers.GetSignatureSeparatorIndex (encodedMember);
+			switch (encodedMember [n + 1]) {
+			case 'Z':   return GetBooleanValue (encodedMember);
+			case 'B':   return GetByteValue (encodedMember);
+			case 'C':   return GetCharValue (encodedMember);
+			case 'S':   return GetInt16Value (encodedMember);
+			case 'I':   return GetInt32Value (encodedMember);
+			case 'J':   return GetInt64Value (encodedMember);
+			case 'F':   return GetSingleValue (encodedMember);
+			case 'D':   return GetDoubleValue (encodedMember);
+			case 'L':
+			case '[':
+				var lref = GetObjectValue (encodedMember);
+				return JniEnvironment.Current.JavaVM.GetObject (lref, JniHandleOwnership.Transfer);
+			default:
+				throw new NotSupportedException ("Unsupported argument type: " + encodedMember.Substring (n + 1));
+			}
+		}
 	}
 }
 

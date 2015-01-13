@@ -79,7 +79,7 @@ namespace Java.Interop {
 			}
 		}
 
-		internal static void GetNameAndSignature (string encodedMember, out string name, out string signature)
+		internal static int GetSignatureSeparatorIndex (string encodedMember)
 		{
 			if (encodedMember == null)
 				throw new ArgumentNullException ("encodedMember");
@@ -88,6 +88,16 @@ namespace Java.Interop {
 				throw new ArgumentException (
 						"Invalid encoding; 'encodedMember' should be encoded as \"<NAME>\\u0000<SIGNATURE>\".",
 						"encodedMember");
+			if (encodedMember.Length <= (n+1))
+				throw new ArgumentException (
+						"Invalid encoding; 'encodedMember' is missing a JNI signature, and should be in the format \"<NAME>\\u0000<SIGNATURE>\".",
+						"encodedMember");
+			return n;
+		}
+
+		internal static void GetNameAndSignature (string encodedMember, out string name, out string signature)
+		{
+			int n       = GetSignatureSeparatorIndex (encodedMember);
 			name        = encodedMember.Substring (0, n);
 			signature   = encodedMember.Substring (n + 1);
 		}

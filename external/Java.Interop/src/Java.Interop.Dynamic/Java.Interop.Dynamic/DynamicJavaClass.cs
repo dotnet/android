@@ -39,11 +39,7 @@ namespace Java.Interop.Dynamic {
 			Console.WriteLine ("# DynamicJavaClass({0}).field({1}) as {2}", JniClassName, fieldName, fieldType);
 			var typeInfo    = JniEnvironment.Current.JavaVM.GetJniTypeInfoForType (fieldType);
 			var encoded     = fieldName + "\u0000" + typeInfo.ToString ();
-			switch (typeInfo.ToString ()) {
-			case "I":
-				return members.StaticFields.GetInt32Value (encoded);
-			}
-			return null;
+			return members.StaticFields.GetValue (encoded);
 		}
 
 		internal StaticFieldAccess GetStaticFieldAccess (string fieldName)
