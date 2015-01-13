@@ -179,9 +179,7 @@ namespace Java.Interop.Dynamic {
                     binder.Type);
 			return new DynamicMetaObject (
 					expr,
-					BindingRestrictions.GetTypeRestriction (
-						expr,
-						binder.Type));
+					BindingRestrictions.GetInstanceRestriction (Expression, Value));
 		}
 	}
 
