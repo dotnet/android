@@ -23,6 +23,16 @@ namespace Java.Interop.DynamicTests {
 		}
 
 		[Test]
+		public void CallStaticMethod ()
+		{
+			dynamic Arrays  = new DynamicJavaClass ("java/util/Arrays");
+			var array       = new int[]{ 1, 2, 3, 4 };
+			int value       = 3;
+			int index       = Arrays.binarySearch (array, value);
+			Assert.AreEqual (2, index);
+		}
+
+		[Test]
 		public void ReadStaticMember ()
 		{
 			dynamic Integer = new DynamicJavaClass ("java/lang/Integer");
