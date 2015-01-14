@@ -61,3 +61,7 @@ run-tests: $(TESTS)
 
 run-ptests: $(PTESTS)
 	$(foreach t,$(PTESTS), $(call RUN_TEST,$(t)))
+
+run-test-jnimarshal: bin/$(CONFIGURATION)/Java.Interop.Export-Tests.dll
+	MONO_TRACE_LISTENER=Console.Out \
+	mono --debug bin/$(CONFIGURATION)/jnimarshalmethod-gen.exe bin/$(CONFIGURATION)/Java.Interop.Export-Tests.dll

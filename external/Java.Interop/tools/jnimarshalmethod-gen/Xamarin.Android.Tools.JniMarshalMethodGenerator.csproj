@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{D1295A8F-4F42-461D-A046-564476C10002}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Xamarin.Android.Tools.JniMarshalMethodGenerator</RootNamespace>
+    <AssemblyName>jnimarshalmethod-gen</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>..\..\bin\Debug</OutputPath>
+    <DefineConstants>DEBUG;</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Externalconsole>true</Externalconsole>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>full</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>..\..\bin\Release</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Externalconsole>true</Externalconsole>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="App.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Java.Interop.Export\Java.Interop.Export.csproj">
+      <Project>{B501D075-6183-4E1D-92C9-F7B5002475B1}</Project>
+      <Name>Java.Interop.Export</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\src\Java.Interop\Java.Interop.csproj">
+      <Project>{94BD81F7-B06F-4295-9636-F8A3B6BDC762}</Project>
+      <Name>Java.Interop</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\src\Java.Runtime.Environment\Java.Runtime.Environment.csproj">
+      <Project>{5887B410-D448-4257-A46B-EAC03C80BE93}</Project>
+      <Name>Java.Runtime.Environment</Name>
+    </ProjectReference>
+  </ItemGroup>
+</Project>
