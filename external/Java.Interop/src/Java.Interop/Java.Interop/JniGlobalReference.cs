@@ -8,7 +8,8 @@ namespace Java.Interop
 	public class JniGlobalReference : JniReferenceSafeHandle {
 		protected override bool ReleaseHandle ()
 		{
-			JniEnvironment.Current.JavaVM.JniHandleManager.DeleteGlobalReference (handle);
+			if (JniEnvironment.HasCurrent)
+				JniEnvironment.Current.JavaVM.JniHandleManager.DeleteGlobalReference (handle);
 			return true;
 		}
 	}

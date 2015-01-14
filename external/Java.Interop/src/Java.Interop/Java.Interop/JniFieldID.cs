@@ -13,7 +13,8 @@ namespace Java.Interop
 
 		protected override bool ReleaseHandle ()
 		{
-			JniEnvironment.Current.JavaVM.UnTrack (this);
+			if (JniEnvironment.HasCurrent)
+				JniEnvironment.Current.JavaVM.UnTrack (this);
 			return true;
 		}
 

@@ -118,6 +118,10 @@ namespace Java.Interop {
 			get {return lrefs ?? (lrefs = new List<JniLocalReference> ());}
 		}
 
+		internal    static  bool    HasCurrent {
+			get {return current != null;}
+		}
+
 		public static   JniEnvironment              Current {
 			get {
 				return current ?? RootEnvironment;
