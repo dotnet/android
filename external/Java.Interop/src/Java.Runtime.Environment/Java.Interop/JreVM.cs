@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 
@@ -25,9 +27,16 @@ namespace Java.Interop {
 		public  JniVersion  JniVersion                  {get; set;}
 		public  bool        IgnoreUnrecognizedOptions   {get; set;}
 
+		public  Collection<string>  ClassPath           {get; private set;}
+
 		public JreVMBuilder ()
 		{
 			JniVersion  = JniVersion.v1_2;
+			ClassPath   = new Collection<string> () {
+				Path.Combine (
+					Path.GetDirectoryName (typeof (JreVMBuilder).Assembly.Location),
+					"java-interop.jar"),
+			};
 		}
 
 		public JreVMBuilder AddOption (string option)
@@ -42,6 +51,8 @@ namespace Java.Interop {
 				throw new ArgumentNullException ("name");
 			if (value == null)
 				throw new ArgumentNullException ("value");
+			if (name == "java.class.path")
+				throw new ArgumentException ("Do not use AddSystemProperty() for the 'java.class.path' property. Add to the ClassPath collection instead.", "name");
 			Options.Add (string.Format ("-D{0}={1}", name, value));
 			return this;
 		}
@@ -108,13 +119,15 @@ namespace Java.Interop {
 
 			var args = new JavaVMInitArgs () {
 				version             = builder.JniVersion,
-				nOptions            = builder.Options.Count,
+				nOptions            = builder.Options.Count + 1,
 				ignoreUnrecognized  = builder.IgnoreUnrecognizedOptions ? (byte) 1 : (byte) 0,
 			};
-			var options = new JavaVMOption [builder.Options.Count];
+			var options = new JavaVMOption [builder.Options.Count + 1];
 			try {
-				for (int i = 0; i < options.Length; ++i)
+				for (int i = 0; i < builder.Options.Count; ++i)
 					options [i].optionString = Marshal.StringToHGlobalAnsi (builder.Options [i]);
+				var classPath   = Marshal.StringToHGlobalAnsi (string.Format ("-Djava.class.path={0}", string.Join (Path.PathSeparator.ToString (), builder.ClassPath)));
+				options [builder.Options.Count].optionString = classPath;
 				fixed (JavaVMOption* popts = options) {
 					args.options = (IntPtr) popts;
 					JavaVMSafeHandle            javavm;

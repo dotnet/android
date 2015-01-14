@@ -221,10 +221,10 @@ namespace Java.InteropTests
 		static JreVMBuilder CreateBuilder (string[] jars)
 		{
 			var builder = new JreVMBuilder ();
-			var _jars   = new List<string> (jars ?? new string [0]) {
-				"java-interop.jar",
-			};
-			builder.AddSystemProperty ("java.class.path", string.Join (":", _jars));
+			if (jars != null) {
+				foreach (var jar in jars)
+					builder.ClassPath.Add (jar);
+			}
 
 			TextWriter  grefLog = null;
 			TextWriter  lrefLog = null;;
