@@ -1,46 +1,52 @@
 ﻿using System;
+using System.Diagnostics;
+
 using NUnit.Framework;
+
+using Android.Runtime;
+
+using Java.Interop;
 
 namespace Android.InteropTests {
 
 	[TestFixture]
 	public class TestsSample {
-		
-		[SetUp]
-		public void Setup ()
-		{
-		}
 
-		
-		[TearDown]
-		public void Tear ()
+		const int ToString_Iterations = 10000;
+
+		[Test]
+		public void XAMethodCallTimings ()
 		{
+			var k = JNIEnv.FindClass ("java/lang/Object");
+			var c = JNIEnv.GetMethodID (k, "<init>", "()V");
+			var o = JNIEnv.NewObject (k, c);
+			var t = JNIEnv.GetMethodID (k, "toString", "()Ljava/lang/String;");
+
+			var sw = Stopwatch.StartNew ();
+			for (int i = 0; i < ToString_Iterations; ++i) {
+				var r = JNIEnv.CallObjectMethod (o, t);
+				JNIEnv.DeleteLocalRef (r);
+			}
+			sw.Stop ();
+			Console.WriteLine ("Xamarin.Android Object.toString() Timing: {0}", sw.Elapsed);
 		}
 
 		[Test]
-		public void Pass ()
+		public void JIMethodCallTimings ()
 		{
-			Console.WriteLine ("test1");
-			Assert.True (true);
-		}
+			using (var k = new JniType ("java/lang/Object"))
+			using (var c = k.GetConstructor ("()V"))
+			using (var o = k.NewObject (c))
+			using (var t = k.GetInstanceMethod ("toString", "()Ljava/lang/String;")) {
 
-		[Test]
-		public void Fail ()
-		{
-			Assert.False (true);
-		}
-
-		[Test]
-		[Ignore ("another time")]
-		public void Ignore ()
-		{
-			Assert.True (false);
-		}
-
-		[Test]
-		public void Inconclusive ()
-		{
-			Assert.Inconclusive ("Inconclusive");
+				var sw = Stopwatch.StartNew ();
+				for (int i = 0; i < ToString_Iterations; ++i) {
+					using (var r = t.CallVirtualObjectMethod (o)) {
+					}
+				}
+				sw.Stop ();
+				Console.WriteLine ("   Java.Interop Object.toString() Timing: {0}", sw.Elapsed);
+			}
 		}
 	}
 }
