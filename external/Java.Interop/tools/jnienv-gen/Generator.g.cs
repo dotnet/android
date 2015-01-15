@@ -1912,9 +1912,9 @@ namespace Xamarin.Java.Interop
 				Parameters    = new ParamInfo [] {new ParamInfo ("jobject", "obj")},
 			},
 			new JniFunction {
-				DeclaringType = "VMs",
+				DeclaringType = "Handles",
 				Name          = "GetJavaVM",
-				Visibility    = "internal",
+				Visibility    = "public",
 				// Prebind       = true,
 				Prototype     = "jint        (*GetJavaVM)(JNIEnv*, JavaVM**);",
 				ReturnType    = new TypeInfo ("jint"),

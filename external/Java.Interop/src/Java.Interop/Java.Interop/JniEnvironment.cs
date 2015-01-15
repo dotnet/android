@@ -14,7 +14,7 @@ namespace Java.Interop {
 		{
 		}
 
-		internal JniEnvironmentSafeHandle (IntPtr handle)
+		public JniEnvironmentSafeHandle (IntPtr handle)
 			: this ()
 		{
 			SetHandle (handle);
@@ -62,11 +62,6 @@ namespace Java.Interop {
 
 			previous    = current;
 			current     = this;
-
-			using (var t = new JniType ("java/lang/Object"))
-				Object_toString = t.GetInstanceMethod ("toString", "()Ljava/lang/String;");
-			using (var t = new JniType ("java/lang/Class"))
-				Class_getName = t.GetInstanceMethod ("getName", "()Ljava/lang/String;");
 		}
 
 		public JniEnvironment (IntPtr jniEnvironmentHandle)
@@ -170,8 +165,10 @@ namespace Java.Interop {
 			if (pendingException != null)
 				Errors.Throw (pendingException);
 
-			Object_toString.Dispose ();
-			Class_getName.Dispose ();
+			if (Obj_toS != null)
+				Obj_toS.Dispose ();
+			if (Cls_getN != null)
+				Cls_getN.Dispose ();
 
 			if ((previous == null && !RootEnvironments.IsValueCreated) ||
 					(RootEnvironments.IsValueCreated && RootEnvironment == this)) {
@@ -216,8 +213,30 @@ namespace Java.Interop {
 			JniEnvironment.Current.JavaVM.JniHandleManager.DeleteLocalReference (this, handle);
 		}
 
-		internal    JniInstanceMethodID Object_toString;
-		internal    JniInstanceMethodID Class_getName;
+		JniInstanceMethodID Obj_toS;
+		internal    JniInstanceMethodID Object_toString {
+			get {
+				if (Obj_toS != null)
+					return Obj_toS;
+
+				using (var t = new JniType ("java/lang/Object"))
+					Obj_toS     = t.GetInstanceMethod ("toString", "()Ljava/lang/String;");
+
+				return Obj_toS;
+			}
+		}
+
+		JniInstanceMethodID Cls_getN;
+		internal    JniInstanceMethodID Class_getName {
+			get {
+				if (Cls_getN != null)
+					return Cls_getN;
+				using (var t = new JniType ("java/lang/Class"))
+					Cls_getN    = t.GetInstanceMethod ("getName", "()Ljava/lang/String;");
+
+				return Cls_getN;
+			}
+		}
 
 		public Exception GetExceptionForLastThrowable ()
 		{
