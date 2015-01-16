@@ -4,6 +4,10 @@ using Android.Runtime;
 
 namespace Java.Interop {
 
+	// FOR TEST PURPOSES ONLY
+	public  delegate    JniLocalReference   SafeHandleDelegate_CallObjectMethodA    (JniEnvironmentSafeHandle   env,    JniReferenceSafeHandle  instance,   JniInstanceMethodID method, JValue[]    args);
+	public  delegate    void                SafeHandleDelegate_DeleteLocalRef       (JniEnvironmentSafeHandle   env,    IntPtr handle);
+
 	class AndroidVMBuilder : JavaVMOptions {
 
 		public AndroidVMBuilder ()
