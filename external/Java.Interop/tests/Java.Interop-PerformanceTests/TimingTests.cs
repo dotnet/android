@@ -269,7 +269,7 @@ namespace Java.Interop.PerformanceTests {
 		[Test]
 		public void MethodLookupTiming ()
 		{
-			const int count = 1000000;
+			const int count = 1000;
 			using (var o = new JavaTiming ()) {
 				var tt = Stopwatch.StartNew ();
 				for (int i = 0; i < count; ++i)
@@ -298,11 +298,10 @@ namespace Java.Interop.PerformanceTests {
 				Console.WriteLine ("\tConcurrentDict: {0}", tc.Elapsed);
 			}
 		}
-
 		[Test]
 		public void IndexOfTiming ()
 		{
-			const int C = 10000;
+			const int C = 1000;
 			using (var array = new JavaInt32Array (Enumerable.Range (0, 10000))) {
 				var io = Stopwatch.StartNew ();
 				for (int c = 0; c < C; ++c)
@@ -372,7 +371,7 @@ namespace Java.Interop.PerformanceTests {
 		[Test]
 		public void GenericMarshalingOverhead_Int32 ()
 		{
-			const int C = 100000;
+			const int C = 10000;
 
 			using (var t = new JavaTiming ()) {
 				var n = Stopwatch.StartNew ();
@@ -403,7 +402,7 @@ namespace Java.Interop.PerformanceTests {
 		[Test]
 		public void GenericMarshalingOverhead_Int32ArrayArrayArray ()
 		{
-			const int C = 10000;
+			const int C = 1000;
 
 			var value = new int[][][] {
 				new int[][] {

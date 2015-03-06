@@ -6,6 +6,7 @@ using Java.Interop;
 
 namespace Java.Interop.PerformanceTests
 {
+	[JniTypeInfoAttribute (JniTypeName)]
 	public class JavaTiming : JavaObject
 	{
 		const               string          JniTypeName = "com/xamarin/interop/performance/JavaTiming";
@@ -110,7 +111,7 @@ namespace Java.Interop.PerformanceTests
 
 		public virtual int Timing_VirtualIntMethod_Marshal1Args (int value)
 		{
-			return _members.InstanceMethods.CallInt32Method ("VirtualIntMethod1Args\u0000(I)I", this, new JValue (value));
+			return _members.InstanceMethods.CallInt32Method ("VirtualIntMethod1Args\u0000(I)I", this, new JValue[]{new JValue (value)});
 		}
 
 		public virtual int Timing_VirtualIntMethod_GenericMarshal1Args (int value)
@@ -138,7 +139,7 @@ namespace Java.Interop.PerformanceTests
 		{
 			var native_array = new JavaObjectArray<int[][]> (value);
 			try {
-				return _members.InstanceMethods.CallInt32Method ("VirtualIntMethod1Args\u0000([[[I)I", this, new JValue (native_array));
+				return _members.InstanceMethods.CallInt32Method ("VirtualIntMethod1Args\u0000([[[I)I", this, new JValue[]{new JValue (native_array)});
 			} finally {
 				native_array.CopyTo (value, 0);
 			}
