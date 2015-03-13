@@ -113,6 +113,21 @@ namespace Java.Interop {
 			get {return lrefs ?? (lrefs = new List<JniLocalReference> ());}
 		}
 
+		internal static bool IsHandleValid (JniLocalReference lref)
+		{
+			if (lref == null)
+				return false;
+
+			var e = JniEnvironment.Current;
+			for (; e != null; e = e.previous) {
+				if (e.lrefs == null)
+					continue;
+				if (e.lrefs.Contains (lref))
+					return true;
+			}
+			return false;
+		}
+
 		internal    static  bool    HasCurrent {
 			get {return current != null;}
 		}
@@ -245,6 +260,7 @@ namespace Java.Interop {
 					return null;
 				// JniEnvironment.Errors.ExceptionDescribe ();
 				JniEnvironment.Errors.ExceptionClear ();
+				JniEnvironment.Current.LogCreateLocalRef (e);
 				return JavaVM.GetExceptionForThrowable (e, JniHandleOwnership.Transfer);
 			}
 		}

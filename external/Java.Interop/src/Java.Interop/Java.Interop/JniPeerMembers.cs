@@ -69,7 +69,8 @@ namespace Java.Interop {
 				throw new ArgumentNullException ("self");
 			if (self.SafeHandle == null || self.SafeHandle.IsInvalid)
 				throw new ObjectDisposedException (self.GetType ().FullName);
-			if (self.SafeHandle.ReferenceType == JniReferenceType.Invalid) {
+			var lref = self.SafeHandle as JniLocalReference;
+			if (lref != null && !JniEnvironment.IsHandleValid (lref)) {
 				var t = self.GetType ().FullName;
 				throw new NotSupportedException (
 						"You've created a " + t + " in one thread and are using it " +

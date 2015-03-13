@@ -138,12 +138,7 @@ namespace Java.InteropTests {
 			LogLref ("+l+ lrefc {0} -> new-handle 0x{1}/{2} from thread '{3}'({4}){5}{6}",
 					environment.LocalReferenceCount,
 					value.DangerousGetHandle ().ToString ("x"),
-#if __ANDROID__
-					// ART asserts the process if JNIEnv::GetObjectRefType() is invoked with an exception pending.
-					'*',
-#else
 					ToChar (value.ReferenceType),
-#endif
 					t.Name,
 					t.ManagedThreadId,
 					Environment.NewLine,

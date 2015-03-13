@@ -310,7 +310,7 @@ namespace Xamarin.Java.Interop
 			string rt = entry.GetReturnType (entry.Name);
 			switch (rt) {
 			case "JniLocalReference":
-				if (entry.Name == "NewLocalRef")
+				if (entry.Name == "NewLocalRef" || entry.Name == "ExceptionOccurred")
 					break;
 				o.Write (indent);
 				o.WriteLine ("JniEnvironment.Current.LogCreateLocalRef ({0});",
