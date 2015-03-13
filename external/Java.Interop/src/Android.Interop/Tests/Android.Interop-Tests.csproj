@@ -56,6 +56,7 @@
     <Compile Include="Resources\Resource.designer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="JVM.cs" />
+    <Compile Include="TestInstrumentation.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\AboutResources.txt" />
@@ -102,4 +103,7 @@
       <Link>java-interop.jar</Link>
     </AndroidJavaLibrary>
   </ItemGroup>
+  <Target Name="RunTests" DependsOnTargets="_ValidateAndroidPackageProperties">
+    <Exec Command="&quot;$(_AndroidPlatformToolsDirectory)adb&quot; $(AdbTarget) $(AdbOptions) shell am instrument -w $(_AndroidPackage)/com.xamarin.javainterop.TestInstrumentation" />
+  </Target>
 </Project>
