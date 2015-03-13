@@ -21,6 +21,7 @@ namespace Java.Interop {
 					throw new InvalidOperationException ("JNIEnv::GetJavaVM() returned: " + r);
 				VMHandle    = vm;
 			}
+			JniHandleManager    = Java.InteropTests.LoggingJniHandleManagerDecorator.GetHandleManager (new JniHandleManager ());
 		}
 
 		public AndroidVM CreateAndroidVM ()

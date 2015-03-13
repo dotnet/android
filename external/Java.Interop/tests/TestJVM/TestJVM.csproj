@@ -44,6 +44,9 @@
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
     <Compile Include="TestJVM.cs" />
+    <Compile Include="..\..\src\Java.Interop\Tests\Java.Interop\LoggingJniHandleManagerDecorator.cs">
+      <Link>LoggingJniHandleManagerDecorator.cs</Link>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Java.Runtime.Environment\Java.Runtime.Environment.csproj">

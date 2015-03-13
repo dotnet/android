@@ -46,6 +46,9 @@
   <ItemGroup>
     <Compile Include="Resources\Resource.designer.cs" />
     <Compile Include="Java.Interop\AndroidVM.cs" />
+    <Compile Include="..\Java.Interop\Tests\Java.Interop\LoggingJniHandleManagerDecorator.cs">
+      <Link>LoggingJniHandleManagerDecorator.cs</Link>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\AboutResources.txt" />
