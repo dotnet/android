@@ -1,3 +1,4 @@
+#if !__ANDROID__
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -357,4 +358,4 @@ namespace Java.InteropTests
 		}
 	}
 }
-
+#endif  // !__ANDROID__

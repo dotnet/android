@@ -55,10 +55,6 @@
       <Project>{94BD81F7-B06F-4295-9636-F8A3B6BDC762}</Project>
       <Name>Java.Interop</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Java.Interop\Tests\Java.Interop-Tests.csproj">
-      <Project>{FED322CB-8A45-4DDB-A885-8FE517994478}</Project>
-      <Name>Java.Interop-Tests</Name>
-    </ProjectReference>
     <ProjectReference Include="..\..\..\tests\TestJVM\TestJVM.csproj">
       <Project>{A76309AB-98AC-4AE2-BA30-75481420C52F}</Project>
       <Name>TestJVM</Name>

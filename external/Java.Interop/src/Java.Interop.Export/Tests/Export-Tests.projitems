@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>{849ABEDC-6A9C-44F0-8543-5298C096A3FB}</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>Java.Interop.ExportTests</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\ExportedMemberBuilderTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\ExportTest.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <JavaExportTestJar Include="$(MSBuildThisFileDirectory)java\com\xamarin\interop\export\ExportType.java" />
+  </ItemGroup>
+  <Target Name="BuildExportTestJar" Inputs="@(JavaExportTestJar)" Outputs="$(OutputPath)export-test.jar">
+    <MakeDir Directories="$(OutputPath)et-classes" />
+    <Exec Command="javac -source 1.5 -target 1.6 -d &quot;$(OutputPath)et-classes&quot; @(JavaExportTestJar -&gt; '%(Identity)', ' ')" />
+    <Exec Command="jar cf &quot;$(OutputPath)export-test.jar&quot; -C &quot;$(OutputPath)et-classes&quot; ." />
+  </Target>
+</Project>

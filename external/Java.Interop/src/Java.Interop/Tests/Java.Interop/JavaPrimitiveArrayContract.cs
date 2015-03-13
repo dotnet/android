@@ -50,15 +50,15 @@ namespace Java.InteropTests
 		{
 			var ctor = typeof (TArray).GetConstructor (new[]{ typeof (IList<TElement>) });
 			var ex = Assert.Throws<TargetInvocationException> (() => ctor.Invoke (new object[]{ null }));
-			Assert.IsInstanceOf<ArgumentNullException> (ex.InnerException);
+			Assert.IsTrue (ex.InnerException is ArgumentNullException);
 
 			ctor = typeof (TArray).GetConstructor (new[]{ typeof (IEnumerable<TElement>) });
 			ex = Assert.Throws<TargetInvocationException> (() => ctor.Invoke (new object[]{ null }));
-			Assert.IsInstanceOf<ArgumentNullException> (ex.InnerException);
+			Assert.IsTrue (ex.InnerException is ArgumentNullException);
 
 			ctor = typeof (TArray).GetConstructor (new[]{ typeof (int) });
 			ex = Assert.Throws<TargetInvocationException> (() => ctor.Invoke (new object[]{ -1 }));
-			Assert.IsInstanceOf<ArgumentException> (ex.InnerException);
+			Assert.IsTrue (ex.InnerException is ArgumentException);
 		}
 
 		[Test]

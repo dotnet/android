@@ -17,6 +17,7 @@ namespace Java.InteropTests
 			Assert.IsNotNull (JniEnvironment.Current);
 		}
 
+#if !__ANDROID__
 		[Test]
 		public void JDK_OnlySupportsOneVM ()
 		{
@@ -33,6 +34,7 @@ namespace Java.InteropTests
 				Assert.Fail ("Expected NotSupportedException; got: {0}", e);
 			}
 		}
+#endif  // !__ANDROID__
 
 		[Test, ExpectedException (typeof (ArgumentNullException))]
 		public void CreateJavaVMWithNullBuilder ()

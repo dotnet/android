@@ -3,12 +3,15 @@ using System.Reflection;
 
 using Java.Interop;
 
+#if !__ANDROID__
 using Mono.Linq.Expressions;
+#endif  // !__ANDROID__
 
 using NUnit.Framework;
 
 namespace Java.InteropTests {
 
+#if !__ANDROID__
 	[TestFixture]
 	public class JniMarshalMethodTests {
 
@@ -96,5 +99,6 @@ namespace Java.InteropTests {
 			Assert.AreEqual (expectedBody, l.ToCSharpCode ());
 		}
 	}
+#endif  // !__ANDROID__
 }
 

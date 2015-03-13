@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>{0ADB8D72-7479-49AF-8809-E03AE4A4EAE2}</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>Java.InteropTests</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Cadenza.Collections\CollectionContract.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Cadenza.Collections\EnumerableContract.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Cadenza.Collections\ListContract.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Cadenza\BaseRocksFixture.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\CallNonvirtualBase.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\CallNonvirtualDerived.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\CallNonvirtualDerived2.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\CallVirtualFromConstructorBase.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\CallVirtualFromConstructorDerived.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\InvokeVirtualFromConstructorTests.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JavaArrayContract.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JavaBooleanArrayContractTests.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JavaCharArrayContractTests.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JavaDoubleArrayContractTests.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JavaExceptionTests.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JavaInt16ArrayContractTests.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JavaInt32ArrayContractTests.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JavaInt64ArrayContractTests.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JavaObjectArrayTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JavaObjectExtensionsTests.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JavaObjectTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JavaPrimitiveArrayContract.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JavaSByteArrayContractTests.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JavaSingleArrayContractTests.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JavaVMTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JniEnvironmentTests.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JniInstanceMethodIDTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JniMarshalMethodTests.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JniMarshalTests.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JniReferenceSafeHandleTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JniTypeInfoAttributeTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JniTypeInfoTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JniTypeTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\MethodBindingTests.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\TestType.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\TestTypeTests.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\com\xamarin\interop\CallNonvirtualBase.java" />
+    <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\com\xamarin\interop\CallNonvirtualDerived.java" />
+    <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\com\xamarin\interop\CallNonvirtualDerived2.java" />
+    <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\com\xamarin\interop\CallVirtualFromConstructorBase.java" />
+    <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\com\xamarin\interop\CallVirtualFromConstructorDerived.java" />
+    <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\com\xamarin\interop\SelfRegistration.java" />
+    <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\com\xamarin\interop\TestType.java" />
+  </ItemGroup>
+  <Target Name="BuildInteropTestJar" Inputs="@(JavaInteropTestJar)" Outputs="$(OutputPath)interop-test.jar">
+    <MakeDir Directories="$(OutputPath)it-classes" />
+    <Exec Command="javac -source 1.5 -target 1.6 -d &quot;$(OutputPath)it-classes&quot; -classpath &quot;$(OutputPath)\java-interop.jar&quot; @(JavaInteropTestJar -&gt; '%(Identity)', ' ')" />
+    <Exec Command="jar cf &quot;$(OutputPath)interop-test.jar&quot; -C &quot;$(OutputPath)it-classes&quot; ." />
+  </Target>
+</Project>

@@ -23,8 +23,9 @@ namespace Java.InteropTests {
 		[Test]
 		public void GetJniTypeName_Exceptions ()
 		{
-			Assert.Throws<ArgumentNullException> (() => JavaObjectExtensions.GetJniTypeName (null));
-			var o = new JavaObject ();
+			IJavaObject o = null;
+			Assert.Throws<ArgumentNullException> (() => o.GetJniTypeName ());
+			o = new JavaObject ();
 			o.Dispose ();
 			Assert.Throws<ObjectDisposedException> (() => o.GetJniTypeName ());
 		}
