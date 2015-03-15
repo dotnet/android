@@ -81,11 +81,11 @@ namespace Java.InteropTests
 		[Test]
 		public void UnreferencedInstanceIsCollected ()
 		{
-			JniLocalReference oldHandle = null;
+			JniWeakGlobalReference  oldHandle = null;
 			WeakReference r = null;
 			var t = new Thread (() => {
 					var v     = new JavaObject ();
-					oldHandle = v.SafeHandle.NewLocalRef ();
+					oldHandle = v.SafeHandle.NewWeakGlobalRef ();
 					r         = new WeakReference (v);
 					v.RegisterWithVM ();
 			});
