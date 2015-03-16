@@ -29,11 +29,6 @@ namespace Java.InteropTests
 			return FromInt32 ((int) 'B');
 		}
 
-		protected override TElement CreateValueC ()
-		{
-			return FromInt32 ((int) 'C');
-		}
-
 		protected override ICollection<TElement> CreateCollection (IEnumerable<TElement> values)
 		{
 			var array       = (JavaPrimitiveArray<TElement>) Activator.CreateInstance (typeof (TArray), values);

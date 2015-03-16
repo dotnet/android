@@ -31,7 +31,6 @@ namespace Java.InteropTests
 			var expected = new[] {
 				CreateValueA (),
 				CreateValueB (),
-				CreateValueC (),
 			};
 			var ja  = (JavaArray<T>) CreateCollection (expected);
 			var a   = ja.ToArray ();

@@ -49,7 +49,6 @@ namespace Cadenza.Collections.Tests {
 		protected abstract ICollection<T> CreateCollection (IEnumerable<T> values);
 		protected abstract T CreateValueA ();
 		protected abstract T CreateValueB ();
-		protected abstract T CreateValueC ();
 
 		public void RunAllTests ()
 		{
@@ -93,10 +92,9 @@ namespace Cadenza.Collections.Tests {
 			var e = new[] {
 				CreateValueA (),
 				CreateValueB (),
-				CreateValueC ()
 			};
 			var c = CreateCollection (e);
-			Assert.AreEqual (3, c.Count);
+			Assert.AreEqual (e.Length,  c.Count);
 
 			Dispose (c);
 			DisposeCollection (e);
@@ -148,18 +146,15 @@ namespace Cadenza.Collections.Tests {
 		public void Contains ()
 		{
 			var a = CreateValueA ();
-			var b = CreateValueB ();
 
-			var c = CreateCollection (new []{a, b});
+			var c = CreateCollection (new []{a});
 			Assert.IsTrue (c.Contains (a));
-			Assert.IsTrue (c.Contains (b));
-			var ic = CreateValueC ();
-			Assert.IsFalse (c.Contains (ic));
+			var b = CreateValueB ();
+			Assert.IsFalse (c.Contains (b));
 
 			Dispose (c);
 			Dispose (b);
 			Dispose (a);
-			Dispose (ic);
 		}
 
 		[Test]
@@ -168,12 +163,11 @@ namespace Cadenza.Collections.Tests {
 			var e = new[] {
 				CreateValueA (),
 				CreateValueB (),
-				CreateValueC (),
 			};
 			var c = CreateCollection (e);
 			Assert.Throws<ArgumentNullException>(() => c.CopyTo (null, 0));
 			Assert.Throws<ArgumentOutOfRangeException>(() => c.CopyTo (new T [3], -1));
-			var d = new T[5];
+			var d = new T[e.Length + 2];
 			// not enough space from d[3..d.Length-1] to hold c.Count elements.
 			Assert.Throws<ArgumentException>(() => c.CopyTo (d, 3));
 			Assert.Throws<ArgumentException>(() => c.CopyTo (new T [0], 0));
@@ -188,19 +182,17 @@ namespace Cadenza.Collections.Tests {
 		{
 			var a = CreateValueA ();
 			var b = CreateValueB ();
-			var c = CreateValueC ();
 
-			var coll = CreateCollection (new []{a, b, c});
-			var d = new T [5];
+			var coll = CreateCollection (new []{a, b});
+			var d = new T [4];
 			coll.CopyTo (d, 1);
 			Assert.IsTrue (
 				SequenceEqual (
-						new []{default (T), a, b, c, default (T)},
+						new []{default (T), a, b, default (T)},
 						d));
 
 			Dispose (coll);
 			DisposeCollection (d);
-			Dispose (c);
 			Dispose (b);
 			Dispose (a);
 		}
@@ -215,18 +207,15 @@ namespace Cadenza.Collections.Tests {
 		{
 			var a = CreateValueA ();
 			var b = CreateValueB ();
-			var c = CreateValueC ();
 
-			var coll = CreateCollection (new []{a, b, c});
+			var coll = CreateCollection (new []{a, b});
 			var d = new T [5];
 			coll.CopyTo (d, 1);
 			Assert.IsTrue (IndexOf (d, a) >= 0);
 			Assert.IsTrue (IndexOf (d, b) >= 0);
-			Assert.IsTrue (IndexOf (d, c) >= 0);
 
 			Dispose (coll);
 			DisposeCollection (d);
-			Dispose (c);
 			Dispose (b);
 			Dispose (a);
 		}
@@ -241,12 +230,11 @@ namespace Cadenza.Collections.Tests {
 		{
 			var a = CreateValueA ();
 			var b = CreateValueB ();
-			var c = CreateValueC ();
 
-			var coll = CreateCollection (new []{a, b});
+			var coll = CreateCollection (new []{a});
 			int n = coll.Count;
 			try {
-				Assert.IsFalse (coll.Remove (c));
+				Assert.IsFalse (coll.Remove (b));
 				Assert.AreEqual (n, coll.Count);
 				Assert.IsTrue (coll.Remove (a));
 				Assert.AreEqual (n-1, coll.Count);
@@ -256,7 +244,6 @@ namespace Cadenza.Collections.Tests {
 			}
 
 			Dispose (coll);
-			Dispose (c);
 			Dispose (b);
 			Dispose (a);
 		}

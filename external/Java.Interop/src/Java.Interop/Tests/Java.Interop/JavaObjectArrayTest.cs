@@ -41,7 +41,6 @@ namespace Java.InteropTests
 	public class JavaObjectArrayContractTest : JavaObjectArrayContractTest<JavaObject> {
 		protected override JavaObject CreateValueA () {return new JavaObject ();}
 		protected override JavaObject CreateValueB () {return new JavaObject ();}
-		protected override JavaObject CreateValueC () {return new JavaObject ();}
 
 		[Test]
 		public void ObjectArrayType ()
@@ -56,7 +55,6 @@ namespace Java.InteropTests
 	public class JavaObjectArray_Int32_ContractTest : JavaObjectArrayContractTest<int> {
 		protected override int  CreateValueA () {return 1;}
 		protected override int  CreateValueB () {return 2;}
-		protected override int  CreateValueC () {return 3;}
 
 		[Test]
 		public void ObjectArrayType ()
@@ -71,7 +69,6 @@ namespace Java.InteropTests
 	public class JavaObjectArray_Int32Array_ContractTest : JavaObjectArrayContractTest<int[]> {
 		protected override int[]  CreateValueA () {return new[]{1};}
 		protected override int[]  CreateValueB () {return new[]{2};}
-		protected override int[]  CreateValueC () {return new[]{3};}
 
 		[Test]
 		public void ObjectArrayType ()
@@ -86,7 +83,6 @@ namespace Java.InteropTests
 	public class JavaObjectArray_Int32ArrayArray_ContractTest : JavaObjectArrayContractTest<int[][]> {
 		protected override int[][]  CreateValueA () {return new[]{new[]{1}};}
 		protected override int[][]  CreateValueB () {return new[]{new[]{2}};}
-		protected override int[][]  CreateValueC () {return new[]{new[]{3}};}
 
 		[Test]
 		public void ObjectArrayType ()
@@ -101,7 +97,6 @@ namespace Java.InteropTests
 	public class JavaObjectArray_JavaInt32Array_ContractTest : JavaObjectArrayContractTest<JavaInt32Array> {
 		protected override JavaInt32Array CreateValueA () {return new JavaInt32Array (new[]{1});}
 		protected override JavaInt32Array CreateValueB () {return new JavaInt32Array (new[]{2});}
-		protected override JavaInt32Array CreateValueC () {return new JavaInt32Array (new[]{3});}
 
 		[Test]
 		public void ObjectArrayType ()
@@ -116,7 +111,6 @@ namespace Java.InteropTests
 	public class JavaObjectArray_string_ContractTest : JavaObjectArrayContractTest<string> {
 		protected override string CreateValueA () {return "a";}
 		protected override string CreateValueB () {return "b";}
-		protected override string CreateValueC () {return "c";}
 
 		[Test]
 		public void ObjectArrayType ()
@@ -133,7 +127,6 @@ namespace Java.InteropTests
 
 		protected override object CreateValueA () {return a;}
 		protected override object CreateValueB () {return 42;}
-		protected override object CreateValueC () {return "C";}
 
 		int grefStartCount;
 
