@@ -49,7 +49,13 @@ namespace Java.Interop {
 			System.Diagnostics.Debug.WriteLine ("# AndroidVM.TryGC");
 			if (handle == null || handle.IsInvalid)
 				return true;
-			return false;
+			var wgref = handle.NewWeakGlobalRef ();
+			System.Diagnostics.Debug.WriteLine ("# AndroidVM.TryGC: wgref=0x{0}", wgref.DangerousGetHandle().ToString ("x"));;
+			handle.Dispose ();
+			Java.Lang.Runtime.GetRuntime ().Gc ();
+			handle = wgref.NewGlobalRef ();
+			System.Diagnostics.Debug.WriteLine ("# AndroidVM.TryGC: handle.IsInvalid={0}", handle.IsInvalid);
+			return handle == null || handle.IsInvalid;
 		}
 
 		Dictionary<string, Type> typeMappings   = new Dictionary<string, Type> ();
