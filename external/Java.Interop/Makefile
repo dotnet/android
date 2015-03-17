@@ -11,6 +11,9 @@ TESTS = \
 PTESTS = \
 	bin/$(CONFIGURATION)/Java.Interop-PerformanceTests.dll
 
+ATESTS = \
+	bin/$(CONFIGURATION)/Android.Interop-Tests.dll
+
 all: $(DEPENDENCIES) $(TESTS)
 
 clean:
@@ -30,6 +33,10 @@ bin/$(CONFIGURATION)/Java.Interop.Export-Tests.dll: $(wildcard src/Java.Interop.
 	touch $@
 
 bin/$(CONFIGURATION)/Java.Interop-PerformanceTests.dll: $(wildcard tests/Java.Interop-PerformanceTests/*.cs) bin/$(CONFIGURATION)/libNativeTiming.dylib
+	xbuild
+	touch $@
+
+bin/$(CONFIGURATION)/Android.Interop-Tests.dll: $(wildcard src/Android.Interop/*/*.cs src/Android.Interop/Tests/*/*.cs)
 	xbuild
 	touch $@
 
@@ -61,6 +68,9 @@ run-tests: $(TESTS)
 
 run-ptests: $(PTESTS)
 	$(foreach t,$(PTESTS), $(call RUN_TEST,$(t)))
+
+run-android: $(ATESTS)
+	(cd src/Android.Interop/Tests; xbuild '/t:Install;RunTests')
 
 run-test-jnimarshal: bin/$(CONFIGURATION)/Java.Interop.Export-Tests.dll
 	MONO_TRACE_LISTENER=Console.Out \
