@@ -7,7 +7,7 @@ using NUnit.Framework;
 namespace Java.InteropTests
 {
 	[TestFixture]
-	public class MethodBindingTests
+	public class MethodBindingTests : JavaVMFixture
 	{
 		//
 		//  https://bugzilla.xamarin.com/show_bug.cgi?id=17630

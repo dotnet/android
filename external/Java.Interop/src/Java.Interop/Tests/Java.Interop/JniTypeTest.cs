@@ -7,7 +7,7 @@ using NUnit.Framework;
 namespace Java.InteropTests
 {
 	[TestFixture]
-	public class JniTypeTest {
+	public class JniTypeTest : JavaVMFixture {
 
 		[Test]
 		public void Sanity ()

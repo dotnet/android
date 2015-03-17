@@ -70,6 +70,6 @@
     <Folder Include="Java.Interop\" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Java.Interop\JVM.cs" />
+    <Compile Include="Java.Interop\JavaVMFixture.cs" />
   </ItemGroup>
 </Project>

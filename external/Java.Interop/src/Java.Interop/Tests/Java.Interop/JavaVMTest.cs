@@ -7,13 +7,13 @@ using NUnit.Framework;
 namespace Java.InteropTests
 {
 	[TestFixture]
-	public class JavaVMTest
+	public class JavaVMTest : JavaVMFixture
 	{
 		[Test]
 		public void CreateJavaVM ()
 		{
-			Assert.AreSame (JVM.Current, JavaVM.Current);
-			Assert.IsNotNull (JVM.Current.SafeHandle);
+			Assert.AreSame (JavaVM.Current, JavaVM.Current);
+			Assert.IsNotNull (JavaVM.Current.SafeHandle);
 			Assert.IsNotNull (JniEnvironment.Current);
 		}
 
@@ -21,9 +21,6 @@ namespace Java.InteropTests
 		[Test]
 		public void JDK_OnlySupportsOneVM ()
 		{
-			#pragma warning disable 0219
-			var first = JVM.Current;
-			#pragma warning restore 0219
 			try {
 				var second = new JreVMBuilder ().CreateJreVM ();
 				// If we reach here, we're in a JVM that supports > 1 VM
@@ -64,14 +61,14 @@ namespace Java.InteropTests
 		public void GetObject_ReturnsAlias ()
 		{
 			var local   = new JavaObject ();
-			Assert.IsNull (JVM.Current.PeekObject (local.SafeHandle));
+			Assert.IsNull (JavaVM.Current.PeekObject (local.SafeHandle));
 			// GetObject must always return a value (unless handle is null, etc.).
 			// However, since we didn't call local.RegisterWithVM(),
 			// JavaVM.PeekObject() is null (asserted above), but GetObject() must
 			// **still** return _something_.
 			// In this case, it returns an _alias_.
 			// TODO: "most derived type" alias generation. (Not relevant here, but...)
-			var alias   = JVM.Current.GetObject (local.SafeHandle, JniHandleOwnership.DoNotTransfer);
+			var alias   = JavaVM.Current.GetObject (local.SafeHandle, JniHandleOwnership.DoNotTransfer);
 			Assert.AreNotSame (local, alias);
 			alias.Dispose ();
 			local.Dispose ();
@@ -80,7 +77,7 @@ namespace Java.InteropTests
 		[Test]
 		public void GetObject_ReturnsNullWithNullHandle ()
 		{
-			var o = JVM.Current.GetObject (IntPtr.Zero);
+			var o = JavaVM.Current.GetObject (IntPtr.Zero);
 			Assert.IsNull (o);
 		}
 
@@ -90,14 +87,14 @@ namespace Java.InteropTests
 			JniLocalReference lref;
 			using (var o = new JavaObject ()) {
 				lref = o.SafeHandle.NewLocalRef ();
-				Assert.IsNull (JVM.Current.PeekObject (lref));
+				Assert.IsNull (JavaVM.Current.PeekObject (lref));
 				o.RegisterWithVM ();
-				Assert.AreSame (o, JVM.Current.PeekObject (lref));
+				Assert.AreSame (o, JavaVM.Current.PeekObject (lref));
 			}
 			// At this point, the Java-side object is kept alive by `lref`,
 			// but the wrapper instance has been disposed, and thus should
 			// be unregistered, and thus unfindable.
-			Assert.IsNull (JVM.Current.PeekObject (lref));
+			Assert.IsNull (JavaVM.Current.PeekObject (lref));
 			lref.Dispose ();
 		}
 
@@ -105,7 +102,7 @@ namespace Java.InteropTests
 		public void GetObject_ReturnsNullWithInvalidSafeHandle ()
 		{
 			var invalid = JniReferenceSafeHandle.Null;
-			Assert.IsNull (JVM.Current.GetObject (invalid, JniHandleOwnership.Transfer));
+			Assert.IsNull (JavaVM.Current.GetObject (invalid, JniHandleOwnership.Transfer));
 		}
 
 		[Test]
@@ -114,7 +111,7 @@ namespace Java.InteropTests
 			using (var t = new JniType (TestType.JniTypeName))
 			using (var c = t.GetConstructor ("()V"))
 			using (var o = t.NewObject (c))
-			using (var w = JVM.Current.GetObject (o, JniHandleOwnership.DoNotTransfer)) {
+			using (var w = JavaVM.Current.GetObject (o, JniHandleOwnership.DoNotTransfer)) {
 				Assert.AreEqual (typeof (TestType), w.GetType ());
 			}
 		}
@@ -122,11 +119,11 @@ namespace Java.InteropTests
 		[Test]
 		public void GetJniTypeInfoForType ()
 		{
-			Assert.Throws<ArgumentNullException> (() => JVM.Current.GetJniTypeInfoForType (null));
-			Assert.Throws<ArgumentException>(() => JVM.Current.GetJniTypeInfoForType (typeof (int[,])));
-			Assert.Throws<ArgumentException>(() => JVM.Current.GetJniTypeInfoForType (typeof (int[,][])));
-			Assert.Throws<ArgumentException>(() => JVM.Current.GetJniTypeInfoForType (typeof (int[][,])));
-			Assert.Throws<ArgumentException>(() => JVM.Current.GetJniTypeInfoForType (typeof (Action<>)));
+			Assert.Throws<ArgumentNullException> (() => JavaVM.Current.GetJniTypeInfoForType (null));
+			Assert.Throws<ArgumentException>(() => JavaVM.Current.GetJniTypeInfoForType (typeof (int[,])));
+			Assert.Throws<ArgumentException>(() => JavaVM.Current.GetJniTypeInfoForType (typeof (int[,][])));
+			Assert.Throws<ArgumentException>(() => JavaVM.Current.GetJniTypeInfoForType (typeof (int[][,])));
+			Assert.Throws<ArgumentException>(() => JavaVM.Current.GetJniTypeInfoForType (typeof (Action<>)));
 
 			AssertGetJniTypeInfoForType (typeof (string),   "java/lang/String",   false,  0);
 
@@ -187,7 +184,7 @@ namespace Java.InteropTests
 
 		static void AssertGetJniTypeInfoForType (Type type, string jniType, bool isKeyword, int arrayRank)
 		{
-			var info = JVM.Current.GetJniTypeInfoForType (type);
+			var info = JavaVM.Current.GetJniTypeInfoForType (type);
 			Assert.AreEqual (jniType,   info.ToString ());
 			Assert.AreEqual (isKeyword, info.TypeIsKeyword);
 			Assert.AreEqual (arrayRank, info.ArrayRank);
@@ -196,16 +193,16 @@ namespace Java.InteropTests
 		[Test]
 		public void GetJniSimplifiedTypeReferenceForType ()
 		{
-			Assert.Throws<ArgumentNullException> (() => JVM.Current.GetJniSimplifiedTypeReferenceForType (null));
-			Assert.Throws<ArgumentException> (() => JVM.Current.GetJniSimplifiedTypeReferenceForType (typeof (int[])));
-			Assert.AreEqual (null, JVM.Current.GetJniSimplifiedTypeReferenceForType (typeof(JavaVMTest)));
+			Assert.Throws<ArgumentNullException> (() => JavaVM.Current.GetJniSimplifiedTypeReferenceForType (null));
+			Assert.Throws<ArgumentException> (() => JavaVM.Current.GetJniSimplifiedTypeReferenceForType (typeof (int[])));
+			Assert.AreEqual (null, JavaVM.Current.GetJniSimplifiedTypeReferenceForType (typeof(JavaVMTest)));
 		}
 
 		[Test]
 		public void GetJniMarshalInfoForType ()
 		{
-			Assert.Throws<ArgumentNullException> (() => JVM.Current.GetJniTypeInfoForType (null));
-			Assert.Throws<ArgumentException> (() => JVM.Current.GetJniTypeInfoForType (typeof (Action<>)));
+			Assert.Throws<ArgumentNullException> (() => JavaVM.Current.GetJniTypeInfoForType (null));
+			Assert.Throws<ArgumentException> (() => JavaVM.Current.GetJniTypeInfoForType (typeof (Action<>)));
 
 			// not yet implemented...
 			// TODO: but should we default to using JavaProxyObject, instead of special-casing in JniMarshal?
@@ -276,7 +273,7 @@ namespace Java.InteropTests
 							message);
 				}
 			};
-			var info = JVM.Current.GetJniMarshalInfoForType (type);
+			var info = JavaVM.Current.GetJniMarshalInfoForType (type);
 			assertMethod (getValue,                 info.GetValueFromJni,           "GetValueFromJni");
 			assertMethod (createJValue,             info.CreateJValue,              "CreateJValue");
 			assertMethod (createLocalRef,           info.CreateLocalRef,            "CreateLocalRef");
@@ -290,7 +287,7 @@ namespace Java.InteropTests
 					getValue:       type + ".GetValueFromJni",
 					createJValue:   type + ".CreateJValue",
 					createLocalRef: type + ".CreateLocalRef");
-			var info = JVM.Current.GetJniMarshalInfoForType (typeof(T));
+			var info = JavaVM.Current.GetJniMarshalInfoForType (typeof(T));
 			info.CreateJValue (default (T));
 			using (var lref = info.CreateLocalRef (default (T)))
 				Assert.AreEqual (default (T), info.GetValueFromJni (lref, JniHandleOwnership.DoNotTransfer, null));
@@ -323,59 +320,59 @@ namespace Java.InteropTests
 		[Test]
 		public void GetTypeForJniTypeRefererence ()
 		{
-			Assert.Throws<ArgumentNullException> (() => JVM.Current.GetTypeForJniTypeRefererence (null));
-			Assert.Throws<ArgumentException> (() => JVM.Current.GetTypeForJniTypeRefererence ("java.lang.String"));
-			Assert.Throws<ArgumentException> (() => JVM.Current.GetTypeForJniTypeRefererence ("Ljava/lang/String;I"));
-			Assert.Throws<ArgumentException> (() => JVM.Current.GetTypeForJniTypeRefererence ("ILjava/lang/String;"));
+			Assert.Throws<ArgumentNullException> (() => JavaVM.Current.GetTypeForJniTypeRefererence (null));
+			Assert.Throws<ArgumentException> (() => JavaVM.Current.GetTypeForJniTypeRefererence ("java.lang.String"));
+			Assert.Throws<ArgumentException> (() => JavaVM.Current.GetTypeForJniTypeRefererence ("Ljava/lang/String;I"));
+			Assert.Throws<ArgumentException> (() => JavaVM.Current.GetTypeForJniTypeRefererence ("ILjava/lang/String;"));
 
-			Assert.AreEqual (typeof (void),     JVM.Current.GetTypeForJniTypeRefererence ("V"));
-			Assert.AreEqual (typeof (bool),     JVM.Current.GetTypeForJniTypeRefererence ("Z"));
-			Assert.AreEqual (typeof (char),     JVM.Current.GetTypeForJniTypeRefererence ("C"));
-			Assert.AreEqual (typeof (sbyte),    JVM.Current.GetTypeForJniTypeRefererence ("B"));
-			Assert.AreEqual (typeof (short),    JVM.Current.GetTypeForJniTypeRefererence ("S"));
-			Assert.AreEqual (typeof (int),      JVM.Current.GetTypeForJniTypeRefererence ("I"));
-			Assert.AreEqual (typeof (long),     JVM.Current.GetTypeForJniTypeRefererence ("J"));
-			Assert.AreEqual (typeof (float),    JVM.Current.GetTypeForJniTypeRefererence ("F"));
-			Assert.AreEqual (typeof (double),   JVM.Current.GetTypeForJniTypeRefererence ("D"));
-			Assert.AreEqual (typeof (string),   JVM.Current.GetTypeForJniTypeRefererence ("java/lang/String"));
-			Assert.AreEqual (null,              JVM.Current.GetTypeForJniTypeRefererence ("com/example/does/not/exist"));
-			Assert.AreEqual (null,              JVM.Current.GetTypeForJniTypeRefererence ("Lcom/example/does/not/exist;"));
-			Assert.AreEqual (null,              JVM.Current.GetTypeForJniTypeRefererence ("[Lcom/example/does/not/exist;"));
+			Assert.AreEqual (typeof (void),     JavaVM.Current.GetTypeForJniTypeRefererence ("V"));
+			Assert.AreEqual (typeof (bool),     JavaVM.Current.GetTypeForJniTypeRefererence ("Z"));
+			Assert.AreEqual (typeof (char),     JavaVM.Current.GetTypeForJniTypeRefererence ("C"));
+			Assert.AreEqual (typeof (sbyte),    JavaVM.Current.GetTypeForJniTypeRefererence ("B"));
+			Assert.AreEqual (typeof (short),    JavaVM.Current.GetTypeForJniTypeRefererence ("S"));
+			Assert.AreEqual (typeof (int),      JavaVM.Current.GetTypeForJniTypeRefererence ("I"));
+			Assert.AreEqual (typeof (long),     JavaVM.Current.GetTypeForJniTypeRefererence ("J"));
+			Assert.AreEqual (typeof (float),    JavaVM.Current.GetTypeForJniTypeRefererence ("F"));
+			Assert.AreEqual (typeof (double),   JavaVM.Current.GetTypeForJniTypeRefererence ("D"));
+			Assert.AreEqual (typeof (string),   JavaVM.Current.GetTypeForJniTypeRefererence ("java/lang/String"));
+			Assert.AreEqual (null,              JavaVM.Current.GetTypeForJniTypeRefererence ("com/example/does/not/exist"));
+			Assert.AreEqual (null,              JavaVM.Current.GetTypeForJniTypeRefererence ("Lcom/example/does/not/exist;"));
+			Assert.AreEqual (null,              JavaVM.Current.GetTypeForJniTypeRefererence ("[Lcom/example/does/not/exist;"));
 
-			Assert.AreEqual (typeof (JavaPrimitiveArray<bool>),     JVM.Current.GetTypeForJniTypeRefererence ("[Z"));
-			Assert.AreEqual (typeof (JavaPrimitiveArray<char>),     JVM.Current.GetTypeForJniTypeRefererence ("[C"));
-			Assert.AreEqual (typeof (JavaPrimitiveArray<sbyte>),    JVM.Current.GetTypeForJniTypeRefererence ("[B"));
-			Assert.AreEqual (typeof (JavaPrimitiveArray<short>),    JVM.Current.GetTypeForJniTypeRefererence ("[S"));
-			Assert.AreEqual (typeof (JavaPrimitiveArray<int>),      JVM.Current.GetTypeForJniTypeRefererence ("[I"));
-			Assert.AreEqual (typeof (JavaPrimitiveArray<long>),     JVM.Current.GetTypeForJniTypeRefererence ("[J"));
-			Assert.AreEqual (typeof (JavaPrimitiveArray<float>),    JVM.Current.GetTypeForJniTypeRefererence ("[F"));
-			Assert.AreEqual (typeof (JavaPrimitiveArray<double>),   JVM.Current.GetTypeForJniTypeRefererence ("[D"));
-			Assert.AreEqual (typeof (JavaObjectArray<string>),      JVM.Current.GetTypeForJniTypeRefererence ("[Ljava/lang/String;"));
+			Assert.AreEqual (typeof (JavaPrimitiveArray<bool>),     JavaVM.Current.GetTypeForJniTypeRefererence ("[Z"));
+			Assert.AreEqual (typeof (JavaPrimitiveArray<char>),     JavaVM.Current.GetTypeForJniTypeRefererence ("[C"));
+			Assert.AreEqual (typeof (JavaPrimitiveArray<sbyte>),    JavaVM.Current.GetTypeForJniTypeRefererence ("[B"));
+			Assert.AreEqual (typeof (JavaPrimitiveArray<short>),    JavaVM.Current.GetTypeForJniTypeRefererence ("[S"));
+			Assert.AreEqual (typeof (JavaPrimitiveArray<int>),      JavaVM.Current.GetTypeForJniTypeRefererence ("[I"));
+			Assert.AreEqual (typeof (JavaPrimitiveArray<long>),     JavaVM.Current.GetTypeForJniTypeRefererence ("[J"));
+			Assert.AreEqual (typeof (JavaPrimitiveArray<float>),    JavaVM.Current.GetTypeForJniTypeRefererence ("[F"));
+			Assert.AreEqual (typeof (JavaPrimitiveArray<double>),   JavaVM.Current.GetTypeForJniTypeRefererence ("[D"));
+			Assert.AreEqual (typeof (JavaObjectArray<string>),      JavaVM.Current.GetTypeForJniTypeRefererence ("[Ljava/lang/String;"));
 
-			Assert.AreEqual (typeof (JavaObjectArray<JavaPrimitiveArray<bool>>),    JVM.Current.GetTypeForJniTypeRefererence ("[[Z"));
-			Assert.AreEqual (typeof (JavaObjectArray<JavaPrimitiveArray<char>>),    JVM.Current.GetTypeForJniTypeRefererence ("[[C"));
-			Assert.AreEqual (typeof (JavaObjectArray<JavaPrimitiveArray<sbyte>>),   JVM.Current.GetTypeForJniTypeRefererence ("[[B"));
-			Assert.AreEqual (typeof (JavaObjectArray<JavaPrimitiveArray<short>>),   JVM.Current.GetTypeForJniTypeRefererence ("[[S"));
-			Assert.AreEqual (typeof (JavaObjectArray<JavaPrimitiveArray<int>>),     JVM.Current.GetTypeForJniTypeRefererence ("[[I"));
-			Assert.AreEqual (typeof (JavaObjectArray<JavaPrimitiveArray<long>>),    JVM.Current.GetTypeForJniTypeRefererence ("[[J"));
-			Assert.AreEqual (typeof (JavaObjectArray<JavaPrimitiveArray<float>>),   JVM.Current.GetTypeForJniTypeRefererence ("[[F"));
-			Assert.AreEqual (typeof (JavaObjectArray<JavaPrimitiveArray<double>>),  JVM.Current.GetTypeForJniTypeRefererence ("[[D"));
-			Assert.AreEqual (typeof (JavaObjectArray<JavaObjectArray<string>>),     JVM.Current.GetTypeForJniTypeRefererence ("[[Ljava/lang/String;"));
+			Assert.AreEqual (typeof (JavaObjectArray<JavaPrimitiveArray<bool>>),    JavaVM.Current.GetTypeForJniTypeRefererence ("[[Z"));
+			Assert.AreEqual (typeof (JavaObjectArray<JavaPrimitiveArray<char>>),    JavaVM.Current.GetTypeForJniTypeRefererence ("[[C"));
+			Assert.AreEqual (typeof (JavaObjectArray<JavaPrimitiveArray<sbyte>>),   JavaVM.Current.GetTypeForJniTypeRefererence ("[[B"));
+			Assert.AreEqual (typeof (JavaObjectArray<JavaPrimitiveArray<short>>),   JavaVM.Current.GetTypeForJniTypeRefererence ("[[S"));
+			Assert.AreEqual (typeof (JavaObjectArray<JavaPrimitiveArray<int>>),     JavaVM.Current.GetTypeForJniTypeRefererence ("[[I"));
+			Assert.AreEqual (typeof (JavaObjectArray<JavaPrimitiveArray<long>>),    JavaVM.Current.GetTypeForJniTypeRefererence ("[[J"));
+			Assert.AreEqual (typeof (JavaObjectArray<JavaPrimitiveArray<float>>),   JavaVM.Current.GetTypeForJniTypeRefererence ("[[F"));
+			Assert.AreEqual (typeof (JavaObjectArray<JavaPrimitiveArray<double>>),  JavaVM.Current.GetTypeForJniTypeRefererence ("[[D"));
+			Assert.AreEqual (typeof (JavaObjectArray<JavaObjectArray<string>>),     JavaVM.Current.GetTypeForJniTypeRefererence ("[[Ljava/lang/String;"));
 
 			// Yes, these look weird...
 			// Assume: class II {}
-			Assert.AreEqual (null, JVM.Current.GetTypeForJniTypeRefererence ("II"));
+			Assert.AreEqual (null, JavaVM.Current.GetTypeForJniTypeRefererence ("II"));
 			// Assume: package Ljava.lang; class String {}
-			Assert.AreEqual (null, JVM.Current.GetTypeForJniTypeRefererence ("Ljava/lang/String"));
+			Assert.AreEqual (null, JavaVM.Current.GetTypeForJniTypeRefererence ("Ljava/lang/String"));
 		}
 
 		[Test]
 		public void GetJniTypeInfoForJniTypeReference ()
 		{
-			Assert.Throws<ArgumentNullException> (() => JVM.Current.GetJniTypeInfoForJniTypeReference (null));
-			Assert.Throws<ArgumentException> (() => JVM.Current.GetJniTypeInfoForJniTypeReference ("java.lang.String"));
-			Assert.Throws<ArgumentException> (() => JVM.Current.GetJniTypeInfoForJniTypeReference ("Ljava/lang/String;I"));
-			Assert.Throws<ArgumentException> (() => JVM.Current.GetJniTypeInfoForJniTypeReference ("ILjava/lang/String;"));
+			Assert.Throws<ArgumentNullException> (() => JavaVM.Current.GetJniTypeInfoForJniTypeReference (null));
+			Assert.Throws<ArgumentException> (() => JavaVM.Current.GetJniTypeInfoForJniTypeReference ("java.lang.String"));
+			Assert.Throws<ArgumentException> (() => JavaVM.Current.GetJniTypeInfoForJniTypeReference ("Ljava/lang/String;I"));
+			Assert.Throws<ArgumentException> (() => JavaVM.Current.GetJniTypeInfoForJniTypeReference ("ILjava/lang/String;"));
 
 			AssertGetJniTypeInfoForJniTypeReference ("java/lang/String",    "java/lang/String");
 			AssertGetJniTypeInfoForJniTypeReference ("Ljava/lang/String;",  "java/lang/String");
@@ -392,7 +389,7 @@ namespace Java.InteropTests
 
 		static void AssertGetJniTypeInfoForJniTypeReference (string jniTypeReference, string jniTypeName, bool typeIsKeyword = false, int arrayRank = 0)
 		{
-			var info = JVM.Current.GetJniTypeInfoForJniTypeReference (jniTypeReference);
+			var info = JavaVM.Current.GetJniTypeInfoForJniTypeReference (jniTypeReference);
 			Assert.AreEqual (jniTypeName,   info.JniTypeName,   "JniTypeName for: " + jniTypeReference);
 			Assert.AreEqual (typeIsKeyword, info.TypeIsKeyword, "TypeIsKeyword for: " + jniTypeReference);
 			Assert.AreEqual (arrayRank,     info.ArrayRank,     "ArrayRank for: " + jniTypeReference);
@@ -401,22 +398,22 @@ namespace Java.InteropTests
 		[Test]
 		public void GetTypeForJniSimplifiedTypeReference ()
 		{
-			Assert.Throws<ArgumentNullException> (() => JVM.Current.GetTypeForJniSimplifiedTypeReference (null));
-			Assert.Throws<ArgumentException> (() => JVM.Current.GetTypeForJniSimplifiedTypeReference ("foo.bar"));
-			Assert.Throws<ArgumentException> (() => JVM.Current.GetTypeForJniSimplifiedTypeReference ("[I"));
-			Assert.Throws<ArgumentException> (() => JVM.Current.GetTypeForJniSimplifiedTypeReference ("Ljava/lang/String;"));
+			Assert.Throws<ArgumentNullException> (() => JavaVM.Current.GetTypeForJniSimplifiedTypeReference (null));
+			Assert.Throws<ArgumentException> (() => JavaVM.Current.GetTypeForJniSimplifiedTypeReference ("foo.bar"));
+			Assert.Throws<ArgumentException> (() => JavaVM.Current.GetTypeForJniSimplifiedTypeReference ("[I"));
+			Assert.Throws<ArgumentException> (() => JavaVM.Current.GetTypeForJniSimplifiedTypeReference ("Ljava/lang/String;"));
 
-			Assert.AreEqual (typeof (void),     JVM.Current.GetTypeForJniSimplifiedTypeReference ("V"));
-			Assert.AreEqual (typeof (bool),     JVM.Current.GetTypeForJniSimplifiedTypeReference ("Z"));
-			Assert.AreEqual (typeof (char),     JVM.Current.GetTypeForJniSimplifiedTypeReference ("C"));
-			Assert.AreEqual (typeof (sbyte),    JVM.Current.GetTypeForJniSimplifiedTypeReference ("B"));
-			Assert.AreEqual (typeof (short),    JVM.Current.GetTypeForJniSimplifiedTypeReference ("S"));
-			Assert.AreEqual (typeof (int),      JVM.Current.GetTypeForJniSimplifiedTypeReference ("I"));
-			Assert.AreEqual (typeof (long),     JVM.Current.GetTypeForJniSimplifiedTypeReference ("J"));
-			Assert.AreEqual (typeof (float),    JVM.Current.GetTypeForJniSimplifiedTypeReference ("F"));
-			Assert.AreEqual (typeof (double),   JVM.Current.GetTypeForJniSimplifiedTypeReference ("D"));
-			Assert.AreEqual (typeof (string),   JVM.Current.GetTypeForJniSimplifiedTypeReference ("java/lang/String"));
-			Assert.AreEqual (null,              JVM.Current.GetTypeForJniSimplifiedTypeReference ("com/example/does/not/exist"));
+			Assert.AreEqual (typeof (void),     JavaVM.Current.GetTypeForJniSimplifiedTypeReference ("V"));
+			Assert.AreEqual (typeof (bool),     JavaVM.Current.GetTypeForJniSimplifiedTypeReference ("Z"));
+			Assert.AreEqual (typeof (char),     JavaVM.Current.GetTypeForJniSimplifiedTypeReference ("C"));
+			Assert.AreEqual (typeof (sbyte),    JavaVM.Current.GetTypeForJniSimplifiedTypeReference ("B"));
+			Assert.AreEqual (typeof (short),    JavaVM.Current.GetTypeForJniSimplifiedTypeReference ("S"));
+			Assert.AreEqual (typeof (int),      JavaVM.Current.GetTypeForJniSimplifiedTypeReference ("I"));
+			Assert.AreEqual (typeof (long),     JavaVM.Current.GetTypeForJniSimplifiedTypeReference ("J"));
+			Assert.AreEqual (typeof (float),    JavaVM.Current.GetTypeForJniSimplifiedTypeReference ("F"));
+			Assert.AreEqual (typeof (double),   JavaVM.Current.GetTypeForJniSimplifiedTypeReference ("D"));
+			Assert.AreEqual (typeof (string),   JavaVM.Current.GetTypeForJniSimplifiedTypeReference ("java/lang/String"));
+			Assert.AreEqual (null,              JavaVM.Current.GetTypeForJniSimplifiedTypeReference ("com/example/does/not/exist"));
 		}
 	}
 }

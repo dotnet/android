@@ -7,7 +7,7 @@ using NUnit.Framework;
 namespace Java.InteropTests
 {
 	[TestFixture]
-	public class JniInstanceMethodIDTest
+	public class JniInstanceMethodIDTest : JavaVMFixture
 	{
 		// https://code.google.com/p/android/issues/detail?id=65710
 		[Test]

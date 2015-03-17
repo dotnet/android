@@ -16,7 +16,7 @@ namespace Android.InteropTests {
 	delegate    void                IntPtrDelegate_DeleteLocalRef           (IntPtr                     env,    IntPtr handle);
 
 	[TestFixture]
-	public class TestsSample {
+	public class TestsSample : Java.InteropTests.JavaVMFixture {
 
 		const   int     Unified_ToString_Iterations     = 10000;
 		const   int     MaxLocalRefs                    = 500;

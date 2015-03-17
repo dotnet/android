@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 using Android.Runtime;
 
@@ -39,7 +40,7 @@ namespace Java.Interop {
 
 		static  readonly    AndroidVM   current = new AndroidVMBuilder ().CreateAndroidVM ();
 
-		public static new JavaVM Current {
+		public static new AndroidVM Current {
 			get {return current;}
 		}
 
@@ -49,6 +50,27 @@ namespace Java.Interop {
 			if (handle == null || handle.IsInvalid)
 				return true;
 			return false;
+		}
+
+		Dictionary<string, Type> typeMappings   = new Dictionary<string, Type> ();
+
+		public void AddTypeMapping (string jniTypeReference, Type type)
+		{
+			lock (typeMappings) {
+				typeMappings [jniTypeReference] = type;
+			}
+		}
+
+		public override Type GetTypeForJniSimplifiedTypeReference (string jniTypeReference)
+		{
+			Type target = base.GetTypeForJniSimplifiedTypeReference (jniTypeReference);
+			if (target != null)
+				return target;
+			lock (typeMappings) {
+				if (typeMappings != null && typeMappings.TryGetValue (jniTypeReference, out target))
+					return target;
+			}
+			return null;
 		}
 	}
 }

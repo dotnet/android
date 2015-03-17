@@ -8,7 +8,7 @@ using NUnit.Framework;
 namespace Java.InteropTests
 {
 	[TestFixture]
-	public class TestTypeTests
+	public class TestTypeTests : JavaVMFixture
 	{
 		int lrefStartCount;
 

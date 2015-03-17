@@ -12,13 +12,6 @@ namespace Java.InteropTests
 	public abstract class JavaPrimitiveArrayContract<TArray, TElement> : JavaArrayContract<TElement>
 		where TArray : JavaPrimitiveArray<TElement>
 	{
-		static JavaPrimitiveArrayContract ()
-		{
-			#pragma warning disable 0219
-			var ignore = JVM.Current;
-			#pragma warning restore 0219
-		}
-
 		protected override TElement CreateValueA ()
 		{
 			return FromInt32 ((int) 'A');

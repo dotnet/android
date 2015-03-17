@@ -13,7 +13,7 @@ namespace Java.InteropTests {
 
 #if !__ANDROID__
 	[TestFixture]
-	public class JniMarshalMethodTests {
+	public class JniMarshalMethodTests : JavaVMFixture {
 
 		[Test]
 		public void CreateMarshalMethodExpression_NullChecks ()

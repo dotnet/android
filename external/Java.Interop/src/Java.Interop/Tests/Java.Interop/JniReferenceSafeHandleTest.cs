@@ -7,7 +7,7 @@ using NUnit.Framework;
 namespace Java.InteropTests {
 
 	[TestFixture]
-	public class JniReferenceSafeHandleTest {
+	public class JniReferenceSafeHandleTest : JavaVMFixture {
 
 		[Test]
 		public void RefType ()

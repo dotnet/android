@@ -8,7 +8,7 @@ using NUnit.Framework;
 namespace Java.InteropTests
 {
 	[TestFixture]
-	public class JavaObjectTest
+	public class JavaObjectTest : JavaVMFixture
 	{
 		[Test]
 		public void JavaReferencedInstanceSurvivesCollection ()
@@ -30,8 +30,8 @@ namespace Java.InteropTests
 				GC.WaitForPendingFinalizers ();
 				GC.WaitForPendingFinalizers ();
 				var first = array [0];
-				Assert.IsNotNull (JVM.Current.PeekObject (first.SafeHandle));
-				var o = (JavaObject) JVM.Current.GetObject (first.SafeHandle, JniHandleOwnership.DoNotTransfer);
+				Assert.IsNotNull (JavaVM.Current.PeekObject (first.SafeHandle));
+				var o = (JavaObject) JavaVM.Current.GetObject (first.SafeHandle, JniHandleOwnership.DoNotTransfer);
 				if (oldHandle != o.SafeHandle.DangerousGetHandle ()) {
 					Console.WriteLine ("Yay, object handle changed; value survived a GC!");
 				} else {
@@ -45,24 +45,24 @@ namespace Java.InteropTests
 		[Test]
 		public void RegisterWithVM ()
 		{
-			int registeredCount = JVM.Current.GetSurfacedObjects ().Count;
+			int registeredCount = JavaVM.Current.GetSurfacedObjects ().Count;
 			JniLocalReference l;
 			JavaObject o;
 			using (o = new JavaObject ()) {
 				l   = o.SafeHandle.NewLocalRef ();
 				Assert.AreEqual (JniReferenceType.Local, o.SafeHandle.ReferenceType);
-				Assert.AreEqual (registeredCount, JVM.Current.GetSurfacedObjects ().Count);
-				Assert.IsNull (JVM.Current.PeekObject (l));
+				Assert.AreEqual (registeredCount, JavaVM.Current.GetSurfacedObjects ().Count);
+				Assert.IsNull (JavaVM.Current.PeekObject (l));
 				o.RegisterWithVM ();
 				Assert.AreNotSame (l, o.SafeHandle);
 				Assert.AreEqual (JniReferenceType.Global, o.SafeHandle.ReferenceType);
 				l.Dispose ();
 				l = o.SafeHandle.NewLocalRef ();
-				Assert.AreEqual (registeredCount + 1, JVM.Current.GetSurfacedObjects ().Count);
-				Assert.AreSame (o, JVM.Current.PeekObject (l));
+				Assert.AreEqual (registeredCount + 1, JavaVM.Current.GetSurfacedObjects ().Count);
+				Assert.AreSame (o, JavaVM.Current.PeekObject (l));
 			}
-			Assert.AreEqual (registeredCount, JVM.Current.GetSurfacedObjects ().Count);
-			Assert.IsNull (JVM.Current.PeekObject (l));
+			Assert.AreEqual (registeredCount, JavaVM.Current.GetSurfacedObjects ().Count);
+			Assert.IsNull (JavaVM.Current.PeekObject (l));
 			l.Dispose ();
 			Assert.Throws<ObjectDisposedException> (() => o.RegisterWithVM ());
 		}
@@ -96,7 +96,7 @@ namespace Java.InteropTests
 			GC.WaitForPendingFinalizers ();
 			Assert.IsFalse (r.IsAlive);
 			Assert.IsNull (r.Target);
-			Assert.IsNull (JVM.Current.PeekObject (oldHandle));
+			Assert.IsNull (JavaVM.Current.PeekObject (oldHandle));
 			oldHandle.Dispose ();
 		}
 

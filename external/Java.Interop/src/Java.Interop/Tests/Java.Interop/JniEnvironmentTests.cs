@@ -8,7 +8,7 @@ using NUnit.Framework;
 namespace Java.InteropTests
 {
 	[TestFixture]
-	public class JniEnvironmentTests
+	public class JniEnvironmentTests : JavaVMFixture
 	{
 		[Test]
 		public void Constructor_SetsCurrent ()

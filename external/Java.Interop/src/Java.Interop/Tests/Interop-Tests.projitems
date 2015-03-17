@@ -33,6 +33,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JavaPrimitiveArrayContract.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JavaSByteArrayContractTests.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JavaSingleArrayContractTests.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JavaVMFixture.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JavaVMTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JniEnvironmentTests.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JniInstanceMethodIDTest.cs" />
