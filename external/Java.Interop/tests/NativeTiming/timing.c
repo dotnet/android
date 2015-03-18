@@ -121,7 +121,7 @@ foo_init (JNIEnv *env)
 {
 	jclass Timing, Object;
 
-	printf ("# NativeTiming: foo_init; env=%p", env);
+	printf ("# NativeTiming: foo_init; env=%p\n", env);
 
 	/* libbar.so loading test */
 	if (!env)
@@ -217,7 +217,7 @@ foo_get_native_jni_timings (JNIEnv *env, int count, jclass klass, jobject self, 
 	end = current_time_millis ();
 
 	jniTimes [0] = end - start;
-	printf ("# NativeTiming: foo/timing: static void    method invoke: %lli ms", jniTimes [0]);
+	printf ("# NativeTiming: foo/timing: static void    method invoke: %lli ms\n", jniTimes [0]);
 
 	start = current_time_millis ();
 	for (i = 0; i < count; i++)
@@ -225,7 +225,7 @@ foo_get_native_jni_timings (JNIEnv *env, int count, jclass klass, jobject self, 
 	end = current_time_millis ();
 
 	jniTimes [1] = end - start;
-	printf ("# NativeTiming: foo/timing: static int     method invoke: %lli ms", jniTimes [1]);
+	printf ("# NativeTiming: foo/timing: static int     method invoke: %lli ms\n", jniTimes [1]);
 
 	start = current_time_millis ();
 	for (i = 0; i < count; i++)
@@ -233,7 +233,7 @@ foo_get_native_jni_timings (JNIEnv *env, int count, jclass klass, jobject self, 
 	end = current_time_millis ();
 
 	jniTimes [2] = end - start;
-	printf ("# NativeTiming: foo/timing: static Object  method invoke: %lli ms", jniTimes [2]);
+	printf ("# NativeTiming: foo/timing: static Object  method invoke: %lli ms\n", jniTimes [2]);
 
 	start = current_time_millis ();
 	for (i = 0; i < count; i++)
@@ -241,7 +241,7 @@ foo_get_native_jni_timings (JNIEnv *env, int count, jclass klass, jobject self, 
 	end = current_time_millis ();
 
 	jniTimes [3] = end - start;
-	printf ("# NativeTiming: foo/timing: virtual void   method invoke: %lli ms", jniTimes [3]);
+	printf ("# NativeTiming: foo/timing: virtual void   method invoke: %lli ms\n", jniTimes [3]);
 
 	start = current_time_millis ();
 	for (i = 0; i < count; i++)
@@ -249,7 +249,7 @@ foo_get_native_jni_timings (JNIEnv *env, int count, jclass klass, jobject self, 
 	end = current_time_millis ();
 
 	jniTimes [4] = end - start;
-	printf ("# NativeTiming: foo/timing: virtual int    method invoke: %lli ms", jniTimes [4]);
+	printf ("# NativeTiming: foo/timing: virtual int    method invoke: %lli ms\n", jniTimes [4]);
 
 	start = current_time_millis ();
 	for (i = 0; i < count; i++)
@@ -257,7 +257,7 @@ foo_get_native_jni_timings (JNIEnv *env, int count, jclass klass, jobject self, 
 	end = current_time_millis ();
 
 	jniTimes [5] = end - start;
-	printf ("# NativeTiming: foo/timing: virtual Object method invoke: %lli ms", jniTimes [5]);
+	printf ("# NativeTiming: foo/timing: virtual Object method invoke: %lli ms\n", jniTimes [5]);
 
 	start = current_time_millis ();
 	for (i = 0; i < count; i++)
@@ -265,7 +265,7 @@ foo_get_native_jni_timings (JNIEnv *env, int count, jclass klass, jobject self, 
 	end = current_time_millis ();
 
 	jniTimes [6] = end - start;
-	printf ("# NativeTiming: foo/timing: final void     method invoke: %lli ms", jniTimes [6]);
+	printf ("# NativeTiming: foo/timing: final void     method invoke: %lli ms\n", jniTimes [6]);
 
 	start = current_time_millis ();
 	for (i = 0; i < count; i++)
@@ -273,7 +273,7 @@ foo_get_native_jni_timings (JNIEnv *env, int count, jclass klass, jobject self, 
 	end = current_time_millis ();
 
 	jniTimes [7] = end - start;
-	printf ("# NativeTiming: foo/timing: final int      method invoke: %lli ms", jniTimes [7]);
+	printf ("# NativeTiming: foo/timing: final int      method invoke: %lli ms\n", jniTimes [7]);
 
 	start = current_time_millis ();
 	for (i = 0; i < count; i++)
@@ -281,7 +281,7 @@ foo_get_native_jni_timings (JNIEnv *env, int count, jclass klass, jobject self, 
 	end = current_time_millis ();
 
 	jniTimes [8] = end - start;
-	printf ("# NativeTiming: foo/timing: final Object   method invoke: %lli ms", jniTimes [8]);
+	printf ("# NativeTiming: foo/timing: final Object   method invoke: %lli ms\n", jniTimes [8]);
 
 
 
@@ -291,7 +291,7 @@ foo_get_native_jni_timings (JNIEnv *env, int count, jclass klass, jobject self, 
 	end = current_time_millis ();
 
 	jniTimes [9] = end - start;
-	printf ("# NativeTiming: foo/timing: static void o1 method invoke: %lli ms", jniTimes [9]);
+	printf ("# NativeTiming: foo/timing: static void o1 method invoke: %lli ms\n", jniTimes [9]);
 
 	start = current_time_millis ();
 	for (i = 0; i < count; i++)
@@ -299,7 +299,7 @@ foo_get_native_jni_timings (JNIEnv *env, int count, jclass klass, jobject self, 
 	end = current_time_millis ();
 
 	jniTimes [10] = end - start;
-	printf ("# NativeTiming: foo/timing: static void o2 method invoke: %lli ms", jniTimes [10]);
+	printf ("# NativeTiming: foo/timing: static void o2 method invoke: %lli ms\n", jniTimes [10]);
 
 	start = current_time_millis ();
 	for (i = 0; i < count; i++)
@@ -307,7 +307,7 @@ foo_get_native_jni_timings (JNIEnv *env, int count, jclass klass, jobject self, 
 	end = current_time_millis ();
 
 	jniTimes [11] = end - start;
-	printf ("# NativeTiming: foo/timing: static void o3 method invoke: %lli ms", jniTimes [11]);
+	printf ("# NativeTiming: foo/timing: static void o3 method invoke: %lli ms\n", jniTimes [11]);
 
 
 
@@ -317,7 +317,7 @@ foo_get_native_jni_timings (JNIEnv *env, int count, jclass klass, jobject self, 
 	end = current_time_millis ();
 
 	jniTimes [12] = end - start;
-	printf ("# NativeTiming: foo/timing: static void i1 method invoke: %lli ms", jniTimes [12]);
+	printf ("# NativeTiming: foo/timing: static void i1 method invoke: %lli ms\n", jniTimes [12]);
 
 	start = current_time_millis ();
 	for (i = 0; i < count; i++)
@@ -325,7 +325,7 @@ foo_get_native_jni_timings (JNIEnv *env, int count, jclass klass, jobject self, 
 	end = current_time_millis ();
 
 	jniTimes [13] = end - start;
-	printf ("# NativeTiming: foo/timing: static void i2 method invoke: %lli ms", jniTimes [13]);
+	printf ("# NativeTiming: foo/timing: static void i2 method invoke: %lli ms\n", jniTimes [13]);
 
 	start = current_time_millis ();
 	for (i = 0; i < count; i++)
@@ -333,6 +333,6 @@ foo_get_native_jni_timings (JNIEnv *env, int count, jclass klass, jobject self, 
 	end = current_time_millis ();
 
 	jniTimes [14] = end - start;
-	printf ("# NativeTiming: foo/timing: static void i3 method invoke: %lli ms", jniTimes [14]);
+	printf ("# NativeTiming: foo/timing: static void i3 method invoke: %lli ms\n", jniTimes [14]);
 }
 
