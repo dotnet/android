@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>{0FBECD2A-7C91-41AB-A4B4-B781E8EC8479}</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>Java.Interop.PerformanceTests</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)JavaTiming.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)TimingTests.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <JavaPerformanceTestJar Include="$(MSBuildThisFileDirectory)java\com\xamarin\interop\performance\JavaTiming.java" />
+  </ItemGroup>
+  <Target Name="BuildPerformanceTestJar" Inputs="@(JavaPerformanceTestJar)" Outputs="$(OutputPath)performance-test.jar">
+    <MakeDir Directories="$(OutputPath)pt-classes" />
+    <Exec Command="javac -source 1.5 -target 1.6 -d &quot;$(OutputPath)pt-classes&quot; @(JavaPerformanceTestJar -&gt; '%(Identity)', ' ')" />
+    <Exec Command="jar cf &quot;$(OutputPath)performance-test.jar&quot; -C &quot;$(OutputPath)pt-classes&quot; ." />
+  </Target>
+</Project>

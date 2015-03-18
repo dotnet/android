@@ -38,28 +38,16 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="JavaTiming.cs" />
-    <Compile Include="TimingTests.cs" />
-    <Compile Include="JVM.cs" />
+    <Compile Include="Java.Interop\JavaVMFixture.cs" />
   </ItemGroup>
+  <Import Project="..\PerformanceTests\PerformanceTests.projitems" Label="Shared" Condition="Exists('..\PerformanceTests\PerformanceTests.projitems')" />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
-  <ItemGroup>
-    <JavaInteropTestJar Include="java\com\xamarin\interop\performance\JavaTiming.java" />
-  </ItemGroup>
   <PropertyGroup>
     <BuildDependsOn>
+      BuildPerformanceTestJar;
       $(BuildDependsOn);
-      BuildJars
     </BuildDependsOn>
   </PropertyGroup>
-  <ItemGroup>
-    <TestJar Include="$(OutputPath)performance-test.jar" />
-  </ItemGroup>
-  <Target Name="BuildJars" Inputs="@(JavaInteropTestJar)" Outputs="@(TestJar)">
-    <MakeDir Directories="$(OutputPath)pt-classes" />
-    <Exec Command="javac -source 1.5 -target 1.6 -d &quot;$(OutputPath)pt-classes&quot; @(JavaInteropTestJar -&gt; '%(Identity)', ' ')" />
-    <Exec Command="jar cf &quot;$(OutputPath)performance-test.jar&quot; -C &quot;$(OutputPath)pt-classes&quot; ." />
-  </Target>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Java.Interop\Java.Interop.csproj">
       <Project>{94BD81F7-B06F-4295-9636-F8A3B6BDC762}</Project>

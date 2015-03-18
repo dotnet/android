@@ -11,7 +11,7 @@ using NUnit.Framework;
 namespace Java.Interop.PerformanceTests {
 
 	[TestFixture]
-	class TimingTests : JVM {
+	class TimingTests : Java.InteropTests.JavaVMFixture {
 
 		const string LibName = "NativeTiming";
 
