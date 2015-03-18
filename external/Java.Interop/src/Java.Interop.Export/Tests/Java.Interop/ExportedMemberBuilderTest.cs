@@ -1,4 +1,3 @@
-#if !__ANDROID__
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,7 +13,7 @@ using NUnit.Framework;
 namespace Java.InteropTests
 {
 	[TestFixture]
-	class ExportedMemberBuilderTest : JVM
+	class ExportedMemberBuilderTest : JavaVMFixture
 	{
 		[Test]
 		public void AddExportMethods ()
@@ -50,7 +49,7 @@ namespace Java.InteropTests
 
 		static ExportedMemberBuilder CreateBuilder ()
 		{
-			return new ExportedMemberBuilder (JVM.Current);
+			return new ExportedMemberBuilder (JavaVM.Current);
 		}
 
 		static JniType CreateExportTestType ()
@@ -77,7 +76,7 @@ namespace Java.InteropTests
 			var builder = CreateBuilder ();
 			Action a    = () => {};
 			Assert.Throws<ArgumentNullException> (() => builder.GetJniMethodSignature (null, a.Method));
-			Assert.Throws<ArgumentNullException> (() => builder.GetJniMethodSignature (new ExportAttribute (), null));
+			Assert.Throws<ArgumentNullException> (() => builder.GetJniMethodSignature (new JavaCallableAttribute (), null));
 		}
 
 		[Test]
@@ -85,7 +84,7 @@ namespace Java.InteropTests
 		{
 			var builder = CreateBuilder ();
 			Action a    = () => {};
-			var export  = new ExportAttribute () {
+			var export  = new JavaCallableAttribute () {
 				Signature = "(I)V",
 			};
 			// Note: no validation between actual MethodInfo & existing signature
@@ -93,7 +92,7 @@ namespace Java.InteropTests
 			Assert.AreEqual ("(I)V", builder.GetJniMethodSignature (export, a.Method));
 			Assert.AreEqual ("(I)V", export.Signature);
 
-			export = new ExportAttribute () {
+			export = new JavaCallableAttribute () {
 				Signature = null,
 			};
 			Assert.AreEqual ("()V", builder.GetJniMethodSignature (export, a.Method));
@@ -101,18 +100,18 @@ namespace Java.InteropTests
 			Assert.AreEqual ("()V", export.Signature);
 
 			Action<string> s    = v => {};
-			Assert.AreEqual ("(Ljava/lang/String;)V", builder.GetJniMethodSignature (new ExportAttribute (), s.Method));
+			Assert.AreEqual ("(Ljava/lang/String;)V", builder.GetJniMethodSignature (new JavaCallableAttribute (), s.Method));
 
 			Func<string> fs     = () => null;
-			Assert.AreEqual ("()Ljava/lang/String;", builder.GetJniMethodSignature (new ExportAttribute (), fs.Method));
+			Assert.AreEqual ("()Ljava/lang/String;", builder.GetJniMethodSignature (new JavaCallableAttribute (), fs.Method));
 
 			// Note: AppDomain currently has no builtin marshaling defaults
 			// TODO: but should it? We could default wrap to JavaProxyObject...?
 			Action<AppDomain> aad    = v => {};
-			Assert.Throws<NotSupportedException> (() => builder.GetJniMethodSignature (new ExportAttribute (), aad.Method));
+			Assert.Throws<NotSupportedException> (() => builder.GetJniMethodSignature (new JavaCallableAttribute (), aad.Method));
 
 			Func<AppDomain> fad    = () => null;
-			Assert.Throws<NotSupportedException> (() => builder.GetJniMethodSignature (new ExportAttribute (), fad.Method));
+			Assert.Throws<NotSupportedException> (() => builder.GetJniMethodSignature (new JavaCallableAttribute (), fad.Method));
 		}
 
 		[Test]
@@ -121,8 +120,8 @@ namespace Java.InteropTests
 			Action a    = ExportTest.StaticAction;
 			var builder = CreateBuilder ();
 			Assert.Throws<ArgumentNullException> (() => builder.CreateMarshalFromJniMethodRegistration (null, typeof (ExportTest), a.Method));
-			Assert.Throws<ArgumentNullException> (() => builder.CreateMarshalFromJniMethodRegistration (new ExportAttribute (null), null, a.Method));
-			Assert.Throws<ArgumentNullException> (() => builder.CreateMarshalFromJniMethodRegistration (new ExportAttribute (null), typeof (ExportTest), null));
+			Assert.Throws<ArgumentNullException> (() => builder.CreateMarshalFromJniMethodRegistration (new JavaCallableAttribute (null), null, a.Method));
+			Assert.Throws<ArgumentNullException> (() => builder.CreateMarshalFromJniMethodRegistration (new JavaCallableAttribute (null), typeof (ExportTest), null));
 		}
 
 		[Test]
@@ -131,8 +130,8 @@ namespace Java.InteropTests
 			Action    a = ExportTest.StaticAction;
 			var builder = CreateBuilder ();
 			Assert.Throws<ArgumentNullException> (() => builder.CreateMarshalFromJniMethodExpression (null, typeof (ExportTest), a.Method));
-			Assert.Throws<ArgumentNullException> (() => builder.CreateMarshalFromJniMethodExpression (new ExportAttribute (null), null, a.Method));
-			Assert.Throws<ArgumentNullException> (() => builder.CreateMarshalFromJniMethodExpression (new ExportAttribute (null), typeof (ExportTest), null));
+			Assert.Throws<ArgumentNullException> (() => builder.CreateMarshalFromJniMethodExpression (new JavaCallableAttribute (null), null, a.Method));
+			Assert.Throws<ArgumentNullException> (() => builder.CreateMarshalFromJniMethodExpression (new JavaCallableAttribute (null), typeof (ExportTest), null));
 		}
 
 		[Test]
@@ -143,21 +142,21 @@ namespace Java.InteropTests
 
 			// Parameter count mismatch: 0 != 2
 			Assert.Throws<ArgumentException>(() => builder.CreateMarshalFromJniMethodExpression (
-					new ExportAttribute () { Signature = "()V" }, a.Method.DeclaringType, a.Method));
+					new JavaCallableAttribute () { Signature = "()V" }, a.Method.DeclaringType, a.Method));
 			// Parameter count mismatch: 1 != 2
 			Assert.Throws<ArgumentException>(() => builder.CreateMarshalFromJniMethodExpression (
-					new ExportAttribute () { Signature = "(I)V" }, a.Method.DeclaringType, a.Method));
+					new JavaCallableAttribute () { Signature = "(I)V" }, a.Method.DeclaringType, a.Method));
 			// Parameter type mismatch: (int, int) != (int, string)
 			Assert.Throws<ArgumentException>(() => builder.CreateMarshalFromJniMethodExpression (
-					new ExportAttribute () { Signature = "(II)V" }, a.Method.DeclaringType, a.Method));
+					new JavaCallableAttribute () { Signature = "(II)V" }, a.Method.DeclaringType, a.Method));
 			// return type mismatch: int != void
 			Assert.Throws<ArgumentException>(() => builder.CreateMarshalFromJniMethodExpression (
-					new ExportAttribute () { Signature = "(ILjava/lang/String;)I" }, a.Method.DeclaringType, a.Method));
+					new JavaCallableAttribute () { Signature = "(ILjava/lang/String;)I" }, a.Method.DeclaringType, a.Method));
 			// invalid JNI signatures
 			Assert.Throws<ArgumentException>(() => builder.CreateMarshalFromJniMethodExpression (
-					new ExportAttribute () { Signature = "(IL)I" }, a.Method.DeclaringType, a.Method));
+					new JavaCallableAttribute () { Signature = "(IL)I" }, a.Method.DeclaringType, a.Method));
 			Assert.Throws<ArgumentException>(() => builder.CreateMarshalFromJniMethodExpression (
-					new ExportAttribute () { Signature = "(I[)I" }, a.Method.DeclaringType, a.Method));
+					new JavaCallableAttribute () { Signature = "(I[)I" }, a.Method.DeclaringType, a.Method));
 		}
 
 		[Test]
@@ -191,9 +190,9 @@ namespace Java.InteropTests
 }");
 		}
 
-		static void CheckCreateInvocationExpression (ExportAttribute export, Type type, MethodInfo method, Type expectedDelegateType, string expectedBody)
+		static void CheckCreateInvocationExpression (JavaCallableAttribute export, Type type, MethodInfo method, Type expectedDelegateType, string expectedBody)
 		{
-			export  = export ?? new ExportAttribute ();
+			export  = export ?? new JavaCallableAttribute ();
 			var b   = CreateBuilder ();
 			var l   = b.CreateMarshalFromJniMethodExpression (export, type, method);
 			Console.WriteLine ("## method: {0}", method.Name);
@@ -211,9 +210,11 @@ namespace Java.InteropTests
 
 			l.CompileToMethod(mb);
 			dt.CreateType();
-			da.Save(_name);
 			Assert.AreEqual (expectedDelegateType, l.Type);
 			Assert.AreEqual (expectedBody, l.ToCSharpCode ());
+#if !__ANDROID__
+			da.Save (_name);
+#endif  // !__ANDROID__
 		}
 
 		[Test]
@@ -250,7 +251,7 @@ namespace Java.InteropTests
 		{
 			var t = typeof (ExportTest);
 			var m = ((Action<int, string>) ExportTest.StaticActionInt32String);
-			var e = new ExportAttribute () {
+			var e = new JavaCallableAttribute () {
 				Signature = "(ILjava/lang/String;)V",
 			};
 			CheckCreateInvocationExpression (e, t, m.Method, typeof (Action<IntPtr, IntPtr, int, IntPtr>),
@@ -284,7 +285,7 @@ namespace Java.InteropTests
 		{
 			var t = typeof (ExportTest);
 			var m = t.GetMethod ("FuncInt64");
-			var e = new ExportAttribute () {
+			var e = new JavaCallableAttribute () {
 				Signature = "()J",
 			};
 			CheckCreateInvocationExpression (e, t, m, typeof (Func<IntPtr, IntPtr, long>),
@@ -323,7 +324,7 @@ namespace Java.InteropTests
 		{
 			var t = typeof (ExportTest);
 			var m = t.GetMethod ("FuncIJavaObject");
-			var e = new ExportAttribute () {
+			var e = new JavaCallableAttribute () {
 				Signature = "()Ljava/lang/Object;",
 			};
 			CheckCreateInvocationExpression (e, t, m, typeof (Func<IntPtr, IntPtr, IntPtr>),
@@ -358,4 +359,3 @@ namespace Java.InteropTests
 		}
 	}
 }
-#endif  // !__ANDROID__

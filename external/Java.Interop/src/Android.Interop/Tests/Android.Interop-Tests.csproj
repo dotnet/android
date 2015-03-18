@@ -71,6 +71,7 @@
     <AndroidResource Include="Resources\drawable-xxxhdpi\Icon.png" />
   </ItemGroup>
   <Import Project="..\..\Java.Interop\Tests\Interop-Tests.projitems" Label="Shared" Condition="Exists('..\..\Java.Interop\Tests\Interop-Tests.projitems')" />
+  <Import Project="..\..\Java.Interop.Export\Tests\Export-Tests.projitems" Label="Shared" Condition="Exists('..\..\Java.Interop.Export\Tests\Export-Tests.projitems')" />
   <Import Project="$(MSBuildExtensionsPath)\Novell\Novell.MonoDroid.CSharp.targets" />
   <PropertyGroup>
     <BuildDependsOn>

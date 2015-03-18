@@ -68,7 +68,7 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 						BindingFlags.Instance | BindingFlags.Static;
 				foreach (var method in type.GetMethods (flags )) {
 					// TODO: Constructors, [Register] methods
-					var export  = method.GetCustomAttribute<ExportAttribute> ();
+					var export  = method.GetCustomAttribute<JavaCallableAttribute> ();
 					if (export == null)
 						continue;
 					if (dt == null)

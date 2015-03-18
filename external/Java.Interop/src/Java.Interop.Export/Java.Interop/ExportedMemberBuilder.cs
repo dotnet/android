@@ -30,7 +30,7 @@ namespace Java.Interop {
 		{
 			const BindingFlags methodScope = BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
 			foreach (var method in declaringType.GetMethods (methodScope)) {
-				var exports = (ExportAttribute[]) method.GetCustomAttributes (typeof(ExportAttribute), inherit:false);
+				var exports = (JavaCallableAttribute[]) method.GetCustomAttributes (typeof(JavaCallableAttribute), inherit:false);
 				if (exports == null || exports.Length == 0)
 					continue;
 				var export  = exports [0];
@@ -38,7 +38,7 @@ namespace Java.Interop {
 			}
 		}
 
-		public JniNativeMethodRegistration CreateMarshalFromJniMethodRegistration (ExportAttribute export, Type type, MethodInfo method)
+		public JniNativeMethodRegistration CreateMarshalFromJniMethodRegistration (JavaCallableAttribute export, Type type, MethodInfo method)
 		{
 			if (export == null)
 				throw new ArgumentNullException ("export");
@@ -55,12 +55,12 @@ namespace Java.Interop {
 			};
 		}
 
-		protected virtual string GetJniMethodName (ExportAttribute export, MethodInfo method)
+		protected virtual string GetJniMethodName (JavaCallableAttribute export, MethodInfo method)
 		{
 			return export.Name ?? "n_" + method.Name;
 		}
 
-		public virtual string GetJniMethodSignature (ExportAttribute export, MethodInfo method)
+		public virtual string GetJniMethodSignature (JavaCallableAttribute export, MethodInfo method)
 		{
 			if (export == null)
 				throw new ArgumentNullException ("export");
@@ -85,14 +85,14 @@ namespace Java.Interop {
 			return export.Signature = signature.ToString ();
 		}
 
-		Delegate CreateJniMethodMarshaler (ExportAttribute export, Type type, MethodInfo method)
+		Delegate CreateJniMethodMarshaler (JavaCallableAttribute export, Type type, MethodInfo method)
 		{
 			var e = CreateMarshalFromJniMethodExpression (export, type, method);
 			return e.Compile ();
 		}
 
 		// TODO: make internal, and add [InternalsVisibleTo] for Java.Interop.Export-Tests
-		public virtual LambdaExpression CreateMarshalFromJniMethodExpression (ExportAttribute export, Type type, MethodInfo method)
+		public virtual LambdaExpression CreateMarshalFromJniMethodExpression (JavaCallableAttribute export, Type type, MethodInfo method)
 		{
 			if (export == null)
 				throw new ArgumentNullException ("export");

@@ -3,13 +3,13 @@ using System;
 namespace Java.Interop {
 
 	[AttributeUsage (AttributeTargets.Method, AllowMultiple=false)]
-	public sealed class ExportAttribute : Attribute {
+	public sealed class JavaCallableAttribute : Attribute {
 
-		public ExportAttribute ()
+		public JavaCallableAttribute ()
 		{
 		}
 
-		public ExportAttribute (string name)
+		public JavaCallableAttribute (string name)
 		{
 			Name = name;
 		}
