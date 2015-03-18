@@ -91,6 +91,10 @@
       <Project>{5FBF138D-1119-4C29-99E1-E928B5209D06}</Project>
       <Name>Android.Interop</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\..\lib\mono.linq.expressions\Mono.Linq.Expressions-Android\Mono.Linq.Expressions-Android.csproj">
+      <Project>{9ECA2816-41D2-4796-8CA2-758EDCFB5C68}</Project>
+      <Name>Mono.Linq.Expressions-Android</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <AndroidJavaLibrary Include="..\..\..\bin\Debug\export-test.jar">

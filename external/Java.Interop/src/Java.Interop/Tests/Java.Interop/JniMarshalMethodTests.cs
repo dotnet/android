@@ -3,15 +3,12 @@ using System.Reflection;
 
 using Java.Interop;
 
-#if !__ANDROID__
 using Mono.Linq.Expressions;
-#endif  // !__ANDROID__
 
 using NUnit.Framework;
 
 namespace Java.InteropTests {
 
-#if !__ANDROID__
 	[TestFixture]
 	public class JniMarshalMethodTests : JavaVMFixture {
 
@@ -94,11 +91,12 @@ namespace Java.InteropTests {
 
 			l.CompileToMethod(mb);
 			dt.CreateType();
-			da.Save(_name);
 			Assert.AreEqual (expectedDelegateType, l.Type);
 			Assert.AreEqual (expectedBody, l.ToCSharpCode ());
+#if !__ANDROID__
+			da.Save(_name);
+#endif  // !__ANDROID__
 		}
 	}
-#endif  // !__ANDROID__
 }
 
