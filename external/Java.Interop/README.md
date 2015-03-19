@@ -107,6 +107,8 @@ To run a specific test fixture, set the FIXTURE variable:
 
 ## Notes
 
+### JDK and Global References
+
 The JDK VM supports an effectively unlimited number of global references.
 While Dalvik craps out after creating ~64k GREFs, consider the following
 on the JDK:
@@ -127,3 +129,45 @@ I killed the above loop after reaching 25686556 instances.
 
 I'm not sure when the JDK would stop handing out references, but it's probably
 bound to process heap limits (e.g. depends on 32-bit vs. 64-bit process).
+
+### JNI Invocation Overhead
+
+[tests/PerformanceTests/TimingTests.cs](tests/PerformanceTests/TimingTests.cs)
+contains various tests to investigate the overheads involved in using JNI to
+invoke Java methods. In particular, see the
+`Java.Interop.PerformanceTests.JniMethodInvocationOverheadTiming.MethodInvocationTiming()`
+tests, invokes a JNI method `count` times and attempts to "normalize" that to
+invoking an equivalent, non-inlined, C# method.
+
+[Commit c60f6093][c60f6093] observed that Android appeared to be much faster
+than the JVM at these tests. This observation appears to have been wrong.
+More interesting is that the "JNI method invocation overhead," defined as
+what this test is attempting to measure (which may be wrong!), varies
+based on the number of method invocations.
+
+[c60f6093]: https://github.com/xamarin/Java.Interop/commit/c60f6093
+
+For example, if we look at just the summary information of one test
+as we vary the value of `count`, the number of times we invoke the
+Java method via JNI or the C# method, we see that there is a nonlinear
+relationship between the count and the overhead:
+
+    count=    10: Method Invoke: static void i3: JNI is 5x managed
+    count=   100: Method Invoke: static void i3: JNI is 10x managed
+    count=   500: Method Invoke: static void i3: JNI is 22x managed
+    count=  1000: Method Invoke: static void i3: JNI is 63x managed
+    count= 10000: Method Invoke: static void i3: JNI is 474x managed
+    count=100000: Method Invoke: static void i3: JNI is 808x managed
+
+Particularly troubling is the *huge* jump between count=1000 and
+count=10000. Count=1000000 is provided for comparison with the JVM,
+which provides the following results:
+
+    count=1000000: Method Invoke: static void i3: JNI is 413x managed   [JVM]
+
+We don't know why there's a jump, but this is in fact somewhat encouraging:
+if you're only calling methods in a one-off fashion -- as is frequently
+the case in Xamarin.Android -- then the overhead isn't actually that bad,
+on a per-method invoke basis. It appears to only get really bad when
+invoking the same method repetitively, *a lot*, which I believe shouldn't
+be *that* common a use case (outside of image manipulation?).
