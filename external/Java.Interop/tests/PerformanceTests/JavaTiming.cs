@@ -123,25 +123,27 @@ namespace Java.Interop.PerformanceTests
 		public int VirtualIntMethod1Args (int[][][] value)
 		{
 			TypeRef.GetCachedInstanceMethod (ref vim1_a, "VirtualIntMethod1Args", "([[[I)I");
-			var native_array = new JavaObjectArray<int[][]> (value);
 			int r;
-			if (GetType () == _members.ManagedPeerType)
-				r = vim1_a.CallVirtualInt32Method (SafeHandle, new JValue (native_array));
-			else {
-				JniInstanceMethodID m = JniPeerMembers.InstanceMethods.GetMethodID ("VirtualIntMethod1Args\u0000([[[I)I");
-				r = m.CallNonvirtualInt32Method (SafeHandle, JniPeerMembers.JniPeerType.SafeHandle, new JValue (native_array));
+			using (var native_array = new JavaObjectArray<int[][]> (value)) {
+				if (GetType () == _members.ManagedPeerType)
+					r = vim1_a.CallVirtualInt32Method (SafeHandle, new JValue (native_array));
+				else {
+					JniInstanceMethodID m = JniPeerMembers.InstanceMethods.GetMethodID ("VirtualIntMethod1Args\u0000([[[I)I");
+					r = m.CallNonvirtualInt32Method (SafeHandle, JniPeerMembers.JniPeerType.SafeHandle, new JValue (native_array));
+				}
+				native_array.CopyTo (value, 0);
 			}
-			native_array.CopyTo (value, 0);
 			return r;
 		}
 
 		public virtual int Timing_VirtualIntMethod_Marshal1Args (int[][][] value)
 		{
-			var native_array = new JavaObjectArray<int[][]> (value);
-			try {
-				return _members.InstanceMethods.CallInt32Method ("VirtualIntMethod1Args\u0000([[[I)I", this, new JValue[]{new JValue (native_array)});
-			} finally {
-				native_array.CopyTo (value, 0);
+			using (var native_array = new JavaObjectArray<int[][]> (value)) {
+				try {
+					return _members.InstanceMethods.CallInt32Method ("VirtualIntMethod1Args\u0000([[[I)I", this, new JValue[]{ new JValue (native_array) });
+				} finally {
+					native_array.CopyTo (value, 0);
+				}
 			}
 		}
 
