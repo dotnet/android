@@ -70,7 +70,7 @@ run-ptests: $(PTESTS)
 	$(foreach t,$(PTESTS), $(call RUN_TEST,$(t)))
 
 run-android: $(ATESTS)
-	(cd src/Android.Interop/Tests; xbuild '/t:Install;RunTests')
+	(cd src/Android.Interop/Tests; xbuild '/t:Install;RunTests' $(if $(FIXTURE),/p:TestFixture=$(FIXTURE)))
 
 run-test-jnimarshal: bin/$(CONFIGURATION)/Java.Interop.Export-Tests.dll
 	MONO_TRACE_LISTENER=Console.Out \

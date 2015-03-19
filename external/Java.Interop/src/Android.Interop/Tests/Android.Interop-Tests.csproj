@@ -125,6 +125,9 @@
     <Exec Command="&quot;$(_AndroidNdkDirectory)\ndk-build&quot;" />
   </Target>
   <Target Name="RunTests" DependsOnTargets="_ValidateAndroidPackageProperties">
-    <Exec Command="&quot;$(_AndroidPlatformToolsDirectory)adb&quot; $(AdbTarget) $(AdbOptions) shell am instrument -w $(_AndroidPackage)/com.xamarin.javainterop.TestInstrumentation" />
+    <PropertyGroup>
+      <_TestSuite Condition=" '$(TestFixture)' != '' ">-e suite $(TestFixture)</_TestSuite>
+    </PropertyGroup>
+    <Exec Command="&quot;$(_AndroidPlatformToolsDirectory)adb&quot; $(AdbTarget) $(AdbOptions) shell am instrument -w $(_TestSuite) $(_AndroidPackage)/com.xamarin.javainterop.TestInstrumentation" />
   </Target>
 </Project>

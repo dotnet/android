@@ -93,6 +93,18 @@ object-reference semantics.
 Due to the increases use of reference types, there will be increased GC heap
 use. I don't know if this will have a meaningful impact on performance. 
 
+## Android Tests
+
+The top-level `make run-android` target will run the Java.Interop unit tests
+on Android via the Android.Interop-Tests project.
+
+The Android.Interop-Tests project currently contains *all* tests, including
+the time intensive "PerformanceTests".
+
+To run a specific test fixture, set the FIXTURE variable:
+
+    make run-android FIXTURE=Java.Interop.PerformanceTests.TimingTests
+
 ## Notes
 
 The JDK VM supports an effectively unlimited number of global references.
