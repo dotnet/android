@@ -11,7 +11,7 @@ using NUnit.Framework;
 namespace Java.Interop.PerformanceTests {
 
 	[TestFixture]
-	class TimingTests : Java.InteropTests.JavaVMFixture {
+	class JniMethodInvocationOverheadTiming : Java.InteropTests.JavaVMFixture {
 
 		const string LibName = "NativeTiming";
 
@@ -61,7 +61,7 @@ namespace Java.Interop.PerformanceTests {
 		delegate void DV3AI (int i1, int i2, int i3);
 
 		[Test]
-		public void MethodTiming ()
+		public void MethodInvocationTiming ()
 		{
 			FooMethods pinvoke_methods;
 			foo_get_methods (out pinvoke_methods);
@@ -269,6 +269,11 @@ namespace Java.Interop.PerformanceTests {
 		{
 			return a;
 		}
+	}
+
+
+	[TestFixture]
+	class JniMethodLookupOverheadTiming : Java.InteropTests.JavaVMFixture {
 
 		[Test]
 		public void MethodLookupTiming ()
@@ -306,6 +311,11 @@ namespace Java.Interop.PerformanceTests {
 				Console.WriteLine ("\tConcurrentDict: {0}", tc.Elapsed);
 			}
 		}
+	}
+
+	[TestFixture]
+	class JavaArrayTiming : Java.InteropTests.JavaVMFixture {
+
 		[Test]
 		public void IndexOfTiming ()
 		{
@@ -339,6 +349,10 @@ namespace Java.Interop.PerformanceTests {
 			}
 			return -1;
 		}
+	}
+
+	[TestFixture]
+	class MiscRuntimeTiming : Java.InteropTests.JavaVMFixture {
 
 		[Test]
 		public void DelegateVsVirtualMethodInvocationTiming ()
@@ -379,6 +393,11 @@ namespace Java.Interop.PerformanceTests {
 		{
 			return new VirtualMethodInvocationImpl ();
 		}
+
+	}
+
+	[TestFixture]
+	class GenericMarshalOverheadTiming : Java.InteropTests.JavaVMFixture {
 
 		[Test]
 		public void GenericMarshalingOverhead_Int32 ()
