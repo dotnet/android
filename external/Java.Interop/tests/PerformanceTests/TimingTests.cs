@@ -219,7 +219,11 @@ namespace Java.Interop.PerformanceTests {
 				},
 			};
 
+#if __ANDROID__
+			const int count = 100;
+#else   // __ANDROID__
 			const int count = 100000;
+#endif  // __ANDROID__
 
 			foo_init (JniEnvironment.Current.SafeHandle);
 
@@ -269,7 +273,11 @@ namespace Java.Interop.PerformanceTests {
 		[Test]
 		public void MethodLookupTiming ()
 		{
+#if __ANDROID__
+			const int count = 100;
+#else   // __ANDROID__
 			const int count = 1000;
+#endif  // __ANDROID__
 			using (var o = new JavaTiming ()) {
 				var tt = Stopwatch.StartNew ();
 				for (int i = 0; i < count; ++i)
@@ -301,7 +309,11 @@ namespace Java.Interop.PerformanceTests {
 		[Test]
 		public void IndexOfTiming ()
 		{
+#if __ANDROID__
+			const int C = 100;
+#else   // __ANDROID__
 			const int C = 1000;
+#endif  // __ANDROID__
 			using (var array = new JavaInt32Array (Enumerable.Range (0, 10000))) {
 				var io = Stopwatch.StartNew ();
 				for (int c = 0; c < C; ++c)
@@ -402,7 +414,11 @@ namespace Java.Interop.PerformanceTests {
 		[Test]
 		public void GenericMarshalingOverhead_Int32ArrayArrayArray ()
 		{
+#if __ANDROID__
+			const int C = 100;
+#else   // __ANDROID__
 			const int C = 1000;
+#endif  // __ANDROID__
 
 			var value = new int[][][] {
 				new int[][] {

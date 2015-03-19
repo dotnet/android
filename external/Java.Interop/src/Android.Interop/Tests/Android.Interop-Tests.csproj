@@ -72,10 +72,14 @@
   </ItemGroup>
   <Import Project="..\..\Java.Interop\Tests\Interop-Tests.projitems" Label="Shared" Condition="Exists('..\..\Java.Interop\Tests\Interop-Tests.projitems')" />
   <Import Project="..\..\Java.Interop.Export\Tests\Export-Tests.projitems" Label="Shared" Condition="Exists('..\..\Java.Interop.Export\Tests\Export-Tests.projitems')" />
+  <Import Project="..\..\..\tests\PerformanceTests\PerformanceTests.projitems" Label="Shared" Condition="Exists('..\..\..\tests\PerformanceTests\PerformanceTests.projitems')" />
   <Import Project="$(MSBuildExtensionsPath)\Novell\Novell.MonoDroid.CSharp.targets" />
   <PropertyGroup>
     <BuildDependsOn>
       BuildInteropTestJar;
+      BuildExportTestJar;
+      BuildPerformanceTestJar;
+      BuildNativeLibs;
       $(BuildDependsOn)
     </BuildDependsOn>
   </PropertyGroup>
@@ -98,16 +102,28 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <AndroidJavaLibrary Include="..\..\..\bin\Debug\export-test.jar">
+    <AndroidJavaLibrary Include="..\..\..\bin\$(Configuration)\export-test.jar">
       <Link>export-test.jar</Link>
     </AndroidJavaLibrary>
-    <AndroidJavaLibrary Include="..\..\..\bin\Debug\interop-test.jar">
+    <AndroidJavaLibrary Include="..\..\..\bin\$(Configuration)\interop-test.jar">
       <Link>interop-test.jar</Link>
     </AndroidJavaLibrary>
-    <AndroidJavaLibrary Include="..\..\..\bin\Debug\java-interop.jar">
+    <AndroidJavaLibrary Include="..\..\..\bin\$(Configuration)\java-interop.jar">
       <Link>java-interop.jar</Link>
     </AndroidJavaLibrary>
+    <AndroidJavaLibrary Include="..\..\..\bin\$(Configuration)\performance-test.jar">
+      <Link>performance-test.jar</Link>
+    </AndroidJavaLibrary>
   </ItemGroup>
+  <ItemGroup>
+    <AndroidNativeLibrary Include="libs\armeabi\libNativeTiming.so" />
+    <AndroidNativeLibrary Include="libs\armeabi-v7a\libNativeTiming.so" />
+    <AndroidNativeLibrary Include="libs\x86\libNativeTiming.so" />
+  </ItemGroup>
+  <Target Name="BuildNativeLibs" DependsOnTargets="_ResolveMonoAndroidSdks" Inputs="jni\timing.c;jni\Android.mk" Outputs="@(AndroidNativeLibrary)">
+    <Error Text="Could not locate Android NDK." Condition="!Exists ('$(_AndroidNdkDirectory)\ndk-build')" />
+    <Exec Command="&quot;$(_AndroidNdkDirectory)\ndk-build&quot;" />
+  </Target>
   <Target Name="RunTests" DependsOnTargets="_ValidateAndroidPackageProperties">
     <Exec Command="&quot;$(_AndroidPlatformToolsDirectory)adb&quot; $(AdbTarget) $(AdbOptions) shell am instrument -w $(_AndroidPackage)/com.xamarin.javainterop.TestInstrumentation" />
   </Target>
