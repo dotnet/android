@@ -171,3 +171,64 @@ the case in Xamarin.Android -- then the overhead isn't actually that bad,
 on a per-method invoke basis. It appears to only get really bad when
 invoking the same method repetitively, *a lot*, which I believe shouldn't
 be *that* common a use case (outside of image manipulation?).
+
+### JNI and P/Invoke
+
+[Commit 9d2dfc5][9d2dfc5] observed that there's a fair bit of overhead
+associated with using `SafeHandle`s, in large parge because `SafeHandle`s
+need to be [*thread safe*][cbrumme-SafeHandle] in order to prevent
+[handle recycling attacks][handle-recycle]. Xamarin.Android doesn't
+suffer from handle recycling attacks *only* because Mono's SGEN GC
+conservatively scans the stack, prolonging the lifetime of all temporaries
+found there. If/when Xamarin.Android moves to a precise GC for the stack,
+this will no longer be the case and handle recycling attacks -- along
+with possibly finalizing/`Dispose()`ing of instances
+*while they're still being used* -- can become "a thing".
+
+[9d2dfc5]: https://github.com/xamarin/Java.Interop/commit/9d2dfc5
+[cbrumme-SafeHandle]: http://blogs.msdn.com/b/cbrumme/archive/2004/02/20/77460.aspx
+[handle-recycle]: http://blogs.msdn.com/b/cbrumme/archive/2003/04/19/51365.aspx
+
+An idea that came to mind to reduce the overhead of `SafeHandle` use was to
+P/Invoke to a native library to perform the `JNIEnv` function pointer
+invocations instead of using `delegate` invocations alongside
+`Marshal.GetDelegateForFunctionPointer()`, as is currently the case.
+
+This was implemented in the [pinvoke-jnienv][pinvoke-jnienv] branch,
+in [commit 802842a3][802842a3].
+
+[pinvoke-jnienv]: https://github.com/xamarin/Java.Interop/commits/pinvoke-jnienv
+[802842a3]: https://github.com/xamarin/Java.Interop/commit/802842a361380812e290fe3585fea8c0a7a19b97
+
+The result: Using P/Invoke *increases* invocation overhead:
+
+	# "Full" Invocations: JNIEnv::CallObjectMethod() + JNIEnv::DeleteLocalRef() for 10000 iterations
+	           Java.Interop Object.toString() Timing: 00:00:30.0774575;   3.00774575 ms/iteration                                -- ~386.391119190154x
+	        Xamarin.Android Object.toString() Timing: 00:00:00.0778420;    0.0077842 ms/iteration
+	# JNIEnv::CallObjectMethod() for 500 iterations
+	           Java.Interop Object.toString() Timing: 00:00:00.8041310;     1.608262 ms/CallVirtualObjectMethod()                -- ~266.648207712969x
+	       Xamarin.Android CallObjectMethod() Timing: 00:00:00.0030157;    0.0060314 ms/CallObjectMethod()
+	# JNIEnv::DeleteLocalRef() for 500 iterations
+	 Java.Interop JniLocalReference.Dispose() Timing: 00:00:00.8979645;     1.795929 ms/Dispose()                                -- ~1661.05160932297x
+	         Xamarin.Android DeleteLocalRef() Timing: 00:00:00.0005406;    0.0010812 ms/DeleteLocalRef()
+	## Breaking down the above Object.toString() + JniLocalReference.Dispose() timings, the JNI calls:
+	# JNIEnv::CallObjectMethod: SafeHandle vs. IntPtr
+	                  Java.Interop safeCall() Timing: 00:00:00.0058775;     0.011755 ms/SafeHandle JNIEnv::CallObjectMethodA()   -- ~2.14538618776464x
+	         Java.Interop P/Invoke safeCall() Timing: 00:00:00.0069479;    0.0138958 ms/SafeHandle JNIEnv::CallObjectMethodA()   -- ~2.53610016060739x
+	                Java.Interop unsafeCall() Timing: 00:00:00.0027396;    0.0054792 ms/IntPtr JNIEnv::CallObjectMethodA()
+	# JNIEnv::DeleteLocalRef: SafeHandle vs. IntPtr
+	                   Java.Interop safeDel() Timing: 00:00:00.0006010;     0.001202 ms/SafeHandle JNIEnv::DeleteLocalRef()      -- ~1.47412312975227x
+	          Java.Interop P/Invoke safeDel() Timing: 00:00:00.0007480;     0.001496 ms/SafeHandle JNIEnv::DeleteLocalRef()      -- ~1.83468236448369x
+	                 Java.Interop unsafeDel() Timing: 00:00:00.0004077;    0.0008154 ms/IntPtr JNIEnv::DeleteLocalRef
+
+In particular, note the `Java.Interop P/Invoke` lines:
+
+	         Java.Interop P/Invoke safeCall() Timing: 00:00:00.0069479;    0.0138958 ms/SafeHandle JNIEnv::CallObjectMethodA()   -- ~2.53610016060739x
+	          Java.Interop P/Invoke safeDel() Timing: 00:00:00.0007480;     0.001496 ms/SafeHandle JNIEnv::DeleteLocalRef()      -- ~1.83468236448369x
+
+Compare to the `SafeHandle`-using delegate-based invocations:
+
+	                  Java.Interop safeCall() Timing: 00:00:00.0058775;     0.011755 ms/SafeHandle JNIEnv::CallObjectMethodA()   -- ~2.14538618776464x
+	                   Java.Interop safeDel() Timing: 00:00:00.0006010;     0.001202 ms/SafeHandle JNIEnv::DeleteLocalRef()      -- ~1.47412312975227x
+
+Surprisingly, using delegates results in less overhead than using P/Invoke.
