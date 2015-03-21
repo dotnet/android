@@ -7,9 +7,8 @@ namespace Java.Interop {
 	public sealed partial class JniPeerMembers {
 
 		public JniPeerMembers (string jniPeerType, Type managedPeerType)
+			: this (jniPeerType)
 		{
-			if (jniPeerType == null)
-				throw new ArgumentNullException ("jniPeerType");
 			if (managedPeerType == null)
 				throw new ArgumentNullException ("managedPeerType");
 			if (!typeof (IJavaObject).IsAssignableFrom (managedPeerType))
@@ -22,12 +21,24 @@ namespace Java.Interop {
 						JniEnvironment.Current.JavaVM.GetJniTypeInfoForType (managedPeerType).JniTypeName,
 						jniPeerType));
 
-			JniPeerTypeName = jniPeerType;
 			ManagedPeerType = managedPeerType;
+		}
+
+		JniPeerMembers (string jniPeerType)
+		{
+			if (jniPeerType == null)
+				throw new ArgumentNullException ("jniPeerType");
+
+			JniPeerTypeName = jniPeerType;
 			instanceMethods = new JniPeerInstanceMethods (this);
 			instanceFields  = new JniPeerInstanceFields (this);
 			staticMethods   = new JniPeerStaticMethods (this);
 			staticFields    = new JniPeerStaticFields (this);
+		}
+
+		static JniPeerMembers CreatePeerMembers (string jniPeerType)
+		{
+			return new JniPeerMembers (jniPeerType);
 		}
 
 		JniType     jniPeerType;

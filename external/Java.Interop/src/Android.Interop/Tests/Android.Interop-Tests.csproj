@@ -45,6 +45,7 @@
     <Reference Include="System" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Core" />
+    <Reference Include="Microsoft.CSharp" />
     <Reference Include="Mono.Android" />
     <Reference Include="Xamarin.Android.NUnitLite" />
   </ItemGroup>
@@ -73,6 +74,7 @@
   <Import Project="..\..\Java.Interop\Tests\Interop-Tests.projitems" Label="Shared" Condition="Exists('..\..\Java.Interop\Tests\Interop-Tests.projitems')" />
   <Import Project="..\..\Java.Interop.Export\Tests\Export-Tests.projitems" Label="Shared" Condition="Exists('..\..\Java.Interop.Export\Tests\Export-Tests.projitems')" />
   <Import Project="..\..\..\tests\PerformanceTests\PerformanceTests.projitems" Label="Shared" Condition="Exists('..\..\..\tests\PerformanceTests\PerformanceTests.projitems')" />
+  <Import Project="..\..\Java.Interop.Dynamic\Tests\Dynamic-Tests.projitems" Label="Shared" Condition="Exists('..\..\Java.Interop.Dynamic\Tests\Dynamic-Tests.projitems')" />
   <Import Project="$(MSBuildExtensionsPath)\Novell\Novell.MonoDroid.CSharp.targets" />
   <PropertyGroup>
     <BuildDependsOn>
@@ -99,6 +101,10 @@
     <ProjectReference Include="..\..\..\lib\mono.linq.expressions\Mono.Linq.Expressions-Android\Mono.Linq.Expressions-Android.csproj">
       <Project>{9ECA2816-41D2-4796-8CA2-758EDCFB5C68}</Project>
       <Name>Mono.Linq.Expressions-Android</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Java.Interop.Dynamic\Java.Interop.Dynamic.csproj">
+      <Project>{AD4468F8-8883-434B-9D4C-E1801BB3B52A}</Project>
+      <Name>Java.Interop.Dynamic</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

@@ -1770,7 +1770,7 @@ namespace Java.Interop {
 		{
 			JniPeerMembers.AssertSelf (self);
 
-			if (self.GetType () == DeclaringType) {
+			if (self.GetType () == DeclaringType || DeclaringType == null) {
 				var m = GetMethodID (encodedMember);
 				m.CallVirtualVoidMethod (self.SafeHandle, arguments);
 			}
@@ -2447,7 +2447,7 @@ namespace Java.Interop {
 		{
 			JniPeerMembers.AssertSelf (self);
 
-			if (self.GetType () == DeclaringType) {
+			if (self.GetType () == DeclaringType || DeclaringType == null) {
 				var m = GetMethodID (encodedMember);
 				return m.CallVirtualBooleanMethod (self.SafeHandle, arguments);
 			}
@@ -3124,7 +3124,7 @@ namespace Java.Interop {
 		{
 			JniPeerMembers.AssertSelf (self);
 
-			if (self.GetType () == DeclaringType) {
+			if (self.GetType () == DeclaringType || DeclaringType == null) {
 				var m = GetMethodID (encodedMember);
 				return m.CallVirtualSByteMethod (self.SafeHandle, arguments);
 			}
@@ -3801,7 +3801,7 @@ namespace Java.Interop {
 		{
 			JniPeerMembers.AssertSelf (self);
 
-			if (self.GetType () == DeclaringType) {
+			if (self.GetType () == DeclaringType || DeclaringType == null) {
 				var m = GetMethodID (encodedMember);
 				return m.CallVirtualCharMethod (self.SafeHandle, arguments);
 			}
@@ -4478,7 +4478,7 @@ namespace Java.Interop {
 		{
 			JniPeerMembers.AssertSelf (self);
 
-			if (self.GetType () == DeclaringType) {
+			if (self.GetType () == DeclaringType || DeclaringType == null) {
 				var m = GetMethodID (encodedMember);
 				return m.CallVirtualInt16Method (self.SafeHandle, arguments);
 			}
@@ -5155,7 +5155,7 @@ namespace Java.Interop {
 		{
 			JniPeerMembers.AssertSelf (self);
 
-			if (self.GetType () == DeclaringType) {
+			if (self.GetType () == DeclaringType || DeclaringType == null) {
 				var m = GetMethodID (encodedMember);
 				return m.CallVirtualInt32Method (self.SafeHandle, arguments);
 			}
@@ -5832,7 +5832,7 @@ namespace Java.Interop {
 		{
 			JniPeerMembers.AssertSelf (self);
 
-			if (self.GetType () == DeclaringType) {
+			if (self.GetType () == DeclaringType || DeclaringType == null) {
 				var m = GetMethodID (encodedMember);
 				return m.CallVirtualInt64Method (self.SafeHandle, arguments);
 			}
@@ -6509,7 +6509,7 @@ namespace Java.Interop {
 		{
 			JniPeerMembers.AssertSelf (self);
 
-			if (self.GetType () == DeclaringType) {
+			if (self.GetType () == DeclaringType || DeclaringType == null) {
 				var m = GetMethodID (encodedMember);
 				return m.CallVirtualSingleMethod (self.SafeHandle, arguments);
 			}
@@ -7186,7 +7186,7 @@ namespace Java.Interop {
 		{
 			JniPeerMembers.AssertSelf (self);
 
-			if (self.GetType () == DeclaringType) {
+			if (self.GetType () == DeclaringType || DeclaringType == null) {
 				var m = GetMethodID (encodedMember);
 				return m.CallVirtualDoubleMethod (self.SafeHandle, arguments);
 			}
@@ -7863,7 +7863,7 @@ namespace Java.Interop {
 		{
 			JniPeerMembers.AssertSelf (self);
 
-			if (self.GetType () == DeclaringType) {
+			if (self.GetType () == DeclaringType || DeclaringType == null) {
 				var m = GetMethodID (encodedMember);
 				return m.CallVirtualObjectMethod (self.SafeHandle, arguments);
 			}

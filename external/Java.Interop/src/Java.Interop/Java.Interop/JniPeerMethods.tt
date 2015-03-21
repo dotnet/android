@@ -164,7 +164,7 @@ namespace Java.Interop {
 		{
 			JniPeerMembers.AssertSelf (self);
 
-			if (self.GetType () == DeclaringType) {
+			if (self.GetType () == DeclaringType || DeclaringType == null) {
 				var m = GetMethodID (encodedMember);
 				<#= ret #>m.CallVirtual<#= info.JniCallType #>Method (self.SafeHandle, arguments);
 			}

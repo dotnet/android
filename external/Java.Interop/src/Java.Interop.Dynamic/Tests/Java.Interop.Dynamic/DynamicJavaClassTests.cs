@@ -14,7 +14,7 @@ using NUnit.Framework;
 namespace Java.Interop.DynamicTests {
 
 	[TestFixture]
-	class DynamicJavaClassTests : JVM
+	class DynamicJavaClassTests : Java.InteropTests.JavaVMFixture
 	{
 		[Test]
 		public void Constructor ()
