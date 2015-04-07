@@ -142,11 +142,11 @@ namespace Java.Interop
 			return JniEnvironment.Strings.ToString (s, JniHandleOwnership.Transfer);
 		}
 
-		static JavaException _GetCause (JniReferenceSafeHandle handle)
+		static Exception _GetCause (JniReferenceSafeHandle handle)
 		{
 			var m = _members.InstanceMethods.GetMethodID ("getCause\u0000()Ljava/lang/Throwable;");
 			var e = m.CallVirtualObjectMethod (handle);
-			return JniEnvironment.Current.JavaVM.GetObject<JavaException> (e, JniHandleOwnership.Transfer);
+			return JniEnvironment.Current.JavaVM.GetExceptionForThrowable (e, JniHandleOwnership.Transfer);
 		}
 
 		string _GetJavaStack (JniReferenceSafeHandle handle)

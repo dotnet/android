@@ -50,11 +50,42 @@ namespace Java.InteropTests
 
 		static void SetThrowableCause (JniType type, JniLocalReference outer, string message)
 		{
-			var i = type.GetInstanceMethod ("initCause", "(Ljava/lang/Throwable;)Ljava/lang/Throwable;");
 			using (var cause = CreateThrowable (type, message)) {
-				i.CallVirtualObjectMethod (outer, new JValue (cause))
-					.Dispose ();
+				SetThrowableCause (type, outer, cause);
 			}
+		}
+
+		static void SetThrowableCause (JniType type, JniLocalReference outer, JniReferenceSafeHandle inner)
+		{
+			var i = type.GetInstanceMethod ("initCause", "(Ljava/lang/Throwable;)Ljava/lang/Throwable;");
+			i.CallVirtualObjectMethod (outer, new JValue (inner))
+				.Dispose ();
+		}
+
+		[Test]
+		public void InnerExceptionIsNotAProxy ()
+		{
+			using (var t = new JniType ("java/lang/Throwable")) {
+				var outer = CreateThrowable (t, "Outer Exception");
+				var ex    = new InvalidOperationException ("Managed Exception!");
+				var exp   = CreateJavaProxyThrowable (ex);
+				SetThrowableCause (t, outer, exp.SafeHandle);
+				using (var e = new JavaException (outer, JniHandleOwnership.Transfer)) {
+					Assert.IsNotNull (e.InnerException);
+					Assert.AreSame (ex, e.InnerException);
+				}
+				exp.Dispose ();
+			}
+		}
+
+		static JavaException CreateJavaProxyThrowable (Exception value)
+		{
+			var JavaProxyThrowable_type = typeof(JavaObject)
+				.Assembly
+				.GetType ("Java.Interop.JavaProxyThrowable", throwOnError :true);
+			var proxy   = (JavaException) Activator.CreateInstance (JavaProxyThrowable_type, value);
+			proxy.RegisterWithVM ();
+			return proxy;
 		}
 	}
 }
