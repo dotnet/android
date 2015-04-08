@@ -29,8 +29,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Android.Interop", "src\Andr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Android.Interop-Tests", "src\Android.Interop\Tests\Android.Interop-Tests.csproj", "{C5176170-4025-4A87-B143-11DC64F9BDD1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mono.Linq.Expressions-Android", "lib\mono.linq.expressions\Mono.Linq.Expressions-Android\Mono.Linq.Expressions-Android.csproj", "{9ECA2816-41D2-4796-8CA2-758EDCFB5C68}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Desktop", "Desktop", "{0998E45F-8BCE-4791-A944-962CD54E2D80}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Java.Runtime.Environment", "src\Java.Runtime.Environment\Java.Runtime.Environment.csproj", "{5887B410-D448-4257-A46B-EAC03C80BE93}"
