@@ -142,8 +142,6 @@ namespace Java.InteropTests
 		[TestFixtureTearDown]
 		public void EndCheckGlobalRefCount ()
 		{
-			using (var o = new JavaObject ())
-				o.RegisterWithVM ();
 			int gref    = JniEnvironment.Current.JavaVM.GlobalReferenceCount;
 			Assert.IsTrue (gref <= (grefStartCount),
 					string.Format ("JNI global references: grefStartCount={0}; gref={1}", grefStartCount, gref));
