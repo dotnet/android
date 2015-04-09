@@ -15,6 +15,8 @@ namespace Java.Interop {
 		int                     GlobalReferenceCount        {get;}
 		int                     WeakGlobalReferenceCount    {get;}
 
+		void                    WriteLocalReferenceLine (string format, params object[] args);
+
 		JniLocalReference       CreateLocalReference (JniEnvironment environment, JniReferenceSafeHandle value);
 		void                    DeleteLocalReference (JniEnvironment environment, IntPtr value);
 
@@ -26,6 +28,8 @@ namespace Java.Interop {
 		// to give the VM to update local reference counts. The IntPtr returned
 		// will be passed to the JVM as a JNI return value.
 		IntPtr                  ReleaseLocalReference (JniEnvironment environment, JniLocalReference value);
+
+		void                    WriteGlobalReferenceLine (string format, params object[] args);
 
 		JniGlobalReference      CreateGlobalReference (JniReferenceSafeHandle value);
 		void                    DeleteGlobalReference (IntPtr value);

@@ -89,6 +89,14 @@ namespace Java.InteropTests {
 #endif
 		}
 
+		public void WriteLocalReferenceLine (string format, params object[] args)
+		{
+			if (lrefLog == null)
+				return;
+			var message = string.Format (format, args);
+			lrefLog.WriteLine (message);
+		}
+
 		public JniLocalReference CreateLocalReference (JniEnvironment environment, JniReferenceSafeHandle value)
 		{
 			var newValue    = manager.CreateLocalReference (environment, value);
@@ -151,6 +159,14 @@ namespace Java.InteropTests {
 				LogDeleteLocalRef (environment, value.DangerousGetHandle ());
 			}
 			return manager.ReleaseLocalReference (environment, value);
+		}
+
+		public void WriteGlobalReferenceLine (string format, params object[] args)
+		{
+			if (grefLog == null)
+				return;
+			var message = string.Format (format, args);
+			grefLog.WriteLine (message);
 		}
 
 		public JniGlobalReference CreateGlobalReference (JniReferenceSafeHandle value)

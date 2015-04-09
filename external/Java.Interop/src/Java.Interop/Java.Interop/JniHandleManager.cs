@@ -21,6 +21,10 @@ namespace Java.Interop {
 			 get {return wgrefc;}
 		}
 
+		public void WriteLocalReferenceLine (string format, params object[] args)
+		{
+		}
+
 		public JniLocalReference CreateLocalReference (JniEnvironment environment, JniReferenceSafeHandle value)
 		{
 			if (value == null || value.IsInvalid)
@@ -54,6 +58,10 @@ namespace Java.Interop {
 			AssertCount (environment.LrefCount, "LREF", value.DangerousGetHandle ());
 			environment.LrefCount--;
 			return value._GetAndClearHandle ();
+		}
+
+		public void WriteGlobalReferenceLine (string format, params object[] args)
+		{
 		}
 
 		public JniGlobalReference CreateGlobalReference (JniReferenceSafeHandle value)
