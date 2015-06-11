@@ -14,10 +14,12 @@ PTESTS = \
 ATESTS = \
 	bin/$(CONFIGURATION)/Android.Interop-Tests.dll
 
+XBUILD = xbuild
+
 all: $(DEPENDENCIES) $(TESTS)
 
 clean:
-	xbuild /t:Clean
+	$(XBUILD) /t:Clean
 	rm -Rf bin/$(CONFIGURATION)
 
 bin/$(CONFIGURATION)/libNativeTiming.dylib: tests/NativeTiming/timing.c
@@ -25,19 +27,19 @@ bin/$(CONFIGURATION)/libNativeTiming.dylib: tests/NativeTiming/timing.c
 	gcc -g -shared -o $@ $< -m32 -I /System/Library/Frameworks/JavaVM.framework/Headers
 
 bin/$(CONFIGURATION)/Java.Interop-Tests.dll: $(wildcard src/Java.Interop/*/*.cs src/Java.Interop/Tests/*/*.cs)
-	xbuild
+	$(XBUILD)
 	touch $@
 
 bin/$(CONFIGURATION)/Java.Interop.Export-Tests.dll: $(wildcard src/Java.Interop.Export/*/*.cs src/Java.Interop.Export/Tests/*/*.cs)
-	xbuild
+	$(XBUILD)
 	touch $@
 
 bin/$(CONFIGURATION)/Java.Interop-PerformanceTests.dll: $(wildcard tests/Java.Interop-PerformanceTests/*.cs) bin/$(CONFIGURATION)/libNativeTiming.dylib
-	xbuild
+	$(XBUILD)
 	touch $@
 
 bin/$(CONFIGURATION)/Android.Interop-Tests.dll: $(wildcard src/Android.Interop/*/*.cs src/Android.Interop/Tests/*/*.cs)
-	xbuild
+	$(XBUILD)
 	touch $@
 
 CSHARP_REFS = \
@@ -70,7 +72,7 @@ run-ptests: $(PTESTS)
 	$(foreach t,$(PTESTS), $(call RUN_TEST,$(t)))
 
 run-android: $(ATESTS)
-	(cd src/Android.Interop/Tests; xbuild '/t:Install;RunTests' $(if $(FIXTURE),/p:TestFixture=$(FIXTURE)))
+	(cd src/Android.Interop/Tests; $(XBUILD) '/t:Install;RunTests' $(if $(FIXTURE),/p:TestFixture=$(FIXTURE)))
 
 run-test-jnimarshal: bin/$(CONFIGURATION)/Java.Interop.Export-Tests.dll
 	MONO_TRACE_LISTENER=Console.Out \
