@@ -15,13 +15,14 @@ namespace Java.InteropTests
 			try {
 				new JniType ("this/type/had/better/not/exist");
 			} catch (JavaException e) {
-#if __ANDROID__
-				Assert.IsTrue (e.Message.StartsWith ("Didn't find class \"this.type.had.better.not.exist\" on path: DexPathList"));
-				Assert.IsTrue (e.JavaStackTrace.StartsWith ("java.lang.ClassNotFoundException: ", StringComparison.Ordinal));
-#else   // __ANDROID__
-				Assert.AreEqual ("this/type/had/better/not/exist", e.Message);
-				Assert.IsTrue (e.JavaStackTrace.StartsWith ("java.lang.NoClassDefFoundError: this/type/had/better/not/exist", StringComparison.Ordinal));
-#endif  // __ANDROID__
+				Assert.IsTrue (
+						string.Equals ("this/type/had/better/not/exist", e.Message, StringComparison.OrdinalIgnoreCase) ||
+						e.Message.StartsWith ("Didn't find class \"this.type.had.better.not.exist\" on path: DexPathList"));
+				Assert.IsTrue (
+						// ART
+						e.JavaStackTrace.StartsWith ("java.lang.ClassNotFoundException: ", StringComparison.Ordinal) ||
+						// Dalvik, JVM
+						e.JavaStackTrace.StartsWith ("java.lang.NoClassDefFoundError: this/type/had/better/not/exist", StringComparison.Ordinal));
 				e.Dispose ();
 			}
 		}

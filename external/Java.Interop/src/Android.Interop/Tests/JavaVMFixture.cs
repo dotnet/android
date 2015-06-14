@@ -1,4 +1,5 @@
-﻿using Java.Interop;
+﻿using System;
+using Java.Interop;
 
 namespace Java.InteropTests {
 
@@ -8,6 +9,10 @@ namespace Java.InteropTests {
 		{
 			var c = AndroidVM.Current;
 			c.AddTypeMapping (TestType.JniTypeName, typeof (TestType));
+
+			bool dalvik = (Java.Lang.JavaSystem.GetProperty ("java.vm.version") ?? "")
+				.StartsWith ("1.", StringComparison.OrdinalIgnoreCase);
+			CallNonvirtualVoidMethodSupportsDeclaringClassMismatch = dalvik;
 		}
 	}
 }

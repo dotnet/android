@@ -11,6 +11,10 @@ namespace Java.InteropTests {
 
 		static partial void CreateJavaVM ();
 
+		// VM supports specifying a class to JNIEnv::CallNonvirtualVoidMethod()
+		// that  isn't where the jmethodID came from.
+		public  static  bool    CallNonvirtualVoidMethodSupportsDeclaringClassMismatch;
+
 		protected JavaVMFixture ()
 		{
 		}
