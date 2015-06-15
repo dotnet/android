@@ -127,7 +127,7 @@ namespace Java.InteropTests
 				var cur = Object_class.SafeHandle;
 				Object_class.RegisterWithVM ();
 				Assert.AreEqual (JniReferenceType.Global, Object_class.SafeHandle.ReferenceType);
-				Assert.IsTrue (cur.IsInvalid);
+				Assert.IsTrue (cur.IsClosed);
 			}
 		}
 

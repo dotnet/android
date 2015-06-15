@@ -100,7 +100,7 @@ namespace Java.InteropTests {
 		public JniLocalReference CreateLocalReference (JniEnvironment environment, JniReferenceSafeHandle value)
 		{
 			var newValue    = manager.CreateLocalReference (environment, value);
-			if (lrefLog == null || newValue == null || newValue.IsInvalid)
+			if (lrefLog == null || newValue == null || newValue.IsClosed || newValue.IsInvalid)
 				return newValue;
 			var t = Thread.CurrentThread;
 			LogLref ("+l+ lrefc {0} obj-handle 0x{1}/{2} -> new-handle 0x{3}/{4} from thread '{5}'({6}){7}{8}",
@@ -140,7 +140,7 @@ namespace Java.InteropTests {
 		public void CreatedLocalReference (JniEnvironment environment, JniLocalReference value)
 		{
 			manager.CreatedLocalReference (environment, value);
-			if (lrefLog == null || value == null || value.IsInvalid)
+			if (lrefLog == null || value == null || value.IsClosed || value.IsInvalid)
 				return;
 			var t = Thread.CurrentThread;
 			LogLref ("+l+ lrefc {0} -> new-handle 0x{1}/{2} from thread '{3}'({4}){5}{6}",
@@ -155,7 +155,7 @@ namespace Java.InteropTests {
 
 		public IntPtr ReleaseLocalReference (JniEnvironment environment, JniLocalReference value)
 		{
-			if (lrefLog != null && value != null && !value.IsInvalid) {
+			if (lrefLog != null && value != null && !value.IsClosed && !value.IsInvalid) {
 				LogDeleteLocalRef (environment, value.DangerousGetHandle ());
 			}
 			return manager.ReleaseLocalReference (environment, value);
@@ -172,7 +172,7 @@ namespace Java.InteropTests {
 		public JniGlobalReference CreateGlobalReference (JniReferenceSafeHandle value)
 		{
 			var newValue    = manager.CreateGlobalReference (value);
-			if (grefLog == null || newValue == null || newValue.IsInvalid)
+			if (grefLog == null || newValue == null || newValue.IsClosed || newValue.IsInvalid)
 				return newValue;
 			var t = Thread.CurrentThread;
 			LogGref ("+g+ grefc {0} gwrefc {1} obj-handle 0x{2}/{3} -> new-handle 0x{4}/{5} from thread '{6}'({7}){8}{9}",
@@ -209,7 +209,7 @@ namespace Java.InteropTests {
 		public JniWeakGlobalReference CreateWeakGlobalReference (JniReferenceSafeHandle value)
 		{
 			var newValue    = manager.CreateWeakGlobalReference (value);
-			if (grefLog == null || newValue != null || newValue.IsInvalid) {
+			if (grefLog == null || newValue != null || newValue.IsClosed || newValue.IsInvalid) {
 				return newValue;
 			}
 			var t = Thread.CurrentThread;

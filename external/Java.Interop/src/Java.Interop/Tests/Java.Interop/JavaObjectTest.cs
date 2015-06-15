@@ -157,7 +157,7 @@ namespace Java.InteropTests
 					Assert.AreNotSame (lref, o.SafeHandle);
 				}
 				using (var o = new JavaObject (lref, JniHandleOwnership.Transfer)) {
-					Assert.IsTrue (lref.IsInvalid);
+					Assert.IsTrue (lref.IsClosed);
 					Assert.AreNotSame (lref, o.SafeHandle);
 				}
 			}
