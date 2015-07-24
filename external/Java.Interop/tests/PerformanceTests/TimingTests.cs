@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -220,7 +221,7 @@ namespace Java.Interop.PerformanceTests {
 			};
 
 #if __ANDROID__
-			const int count = 100;
+			const int count = 1000;
 #else   // __ANDROID__
 			const int count = 100000;
 #endif  // __ANDROID__
@@ -255,19 +256,42 @@ namespace Java.Interop.PerformanceTests {
 				Console.WriteLine (message);
 
 				var ct = TimeSpan.FromMilliseconds (jniTimes [jniTimeIndex++]);
-				Console.WriteLine ("\t  C/JNI: {0}", ct);
-				Console.WriteLine ("\t    JNI: {0}; {1}x C/JNI", jw.Elapsed,
-					System.Math.Round (jw.Elapsed.TotalMilliseconds / ct.TotalMilliseconds));
-				Console.WriteLine ("\tManaged: {0}", mw.Elapsed);
+				Console.WriteLine ("\t  C/JNI: {0} ms               | average: {1} ms",
+						FormatFraction (ct.TotalMilliseconds, 10, 5),
+						FormatFraction (ct.TotalMilliseconds / count, 12, 5));
+				Console.WriteLine ("\t    JNI: {0} ms; {1,3}x C/JNI   | average: {2} ms",
+						FormatFraction (jw.Elapsed.TotalMilliseconds, 10, 5),
+						ToString (jw.Elapsed, ct),
+						FormatFraction (jw.Elapsed.TotalMilliseconds / count, 12, 5));
+				Console.WriteLine ("\tManaged: {0} ms               | average: {1} ms",
+						FormatFraction (mw.Elapsed.TotalMilliseconds, 10, 5),
+						FormatFraction (mw.Elapsed.TotalMilliseconds / count, 12, 5));
 				if (pw != null)
-					Console.WriteLine ("\tPinvoke: {0}; {1}x managed", pw.Elapsed,
-						System.Math.Round (pw.Elapsed.TotalMilliseconds / mw.Elapsed.TotalMilliseconds));
+					Console.WriteLine ("\tPinvoke: {0} ms; {1,3}x managed | average: {2} ms",
+							FormatFraction (pw.Elapsed.TotalMilliseconds, 10, 5),
+							ToString (pw.Elapsed, mw.Elapsed),
+							FormatFraction (pw.Elapsed.TotalMilliseconds / count, 12, 5));
 			}
 		}
 
 		static Action A (Action a)
 		{
 			return a;
+		}
+
+		static string FormatFraction (double value, int width, int fractionWidth)
+		{
+			var v = value.ToString ("0.0" + new string ('#', fractionWidth - 1));
+			var i = v.IndexOf (NumberFormatInfo.CurrentInfo.NumberDecimalSeparator);
+			var p = new string (' ', width - fractionWidth - i - 1);
+			return p + v + new string (' ', width - p.Length - v.Length);
+		}
+
+		static string ToString (TimeSpan numerator, TimeSpan denominator)
+		{
+			if (System.Math.Abs (denominator.TotalMilliseconds) > double.Epsilon)
+				return System.Math.Round (numerator.TotalMilliseconds / denominator.TotalMilliseconds).ToString ();
+			return " ∞ ";
 		}
 	}
 
