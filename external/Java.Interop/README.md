@@ -371,9 +371,9 @@ consistent on ART (Android M Preview 2, Nexus 5). It doesn't vary, certainly not
 with the `count` vaue.
 
 Instead, JNI overhead appears to be fairly consistent (for a given signature).
-Unfortunately, at ~0.002ms per invocation, you can only perform 500 method
-invocations per *second*, so things aren't great, and that's from *C*.
-Use the C# average time of 0.015ms/invocation, and that's only 70!
+At ~0.002ms per invocation, you can perform roughly 500,000 JNI method
+invocations per *second* from C#, which sounds good unless you need to
+manipulate raw Bitmap data...
 
 ---
 
