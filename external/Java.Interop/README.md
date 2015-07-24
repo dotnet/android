@@ -322,6 +322,61 @@ invoke Java methods. In particular, see the
 tests, invokes a JNI method `count` times and attempts to "normalize" that to
 invoking an equivalent, non-inlined, C# method.
 
+**Update**: I believe the tests are wrong, but I don't know *how* they're
+wrong. (Leaving "misleading" statements in this file until I know what's
+actually going on.)
+
+The content below suggests that the JNI overhead is proportional with the
+number of JNI invocations, e.g. when `count` is 10, JNI invocations are ~5x
+that of an "equivalent" C# method invocation, while when `count` is 100000,
+JNI invocations are ~808x, which makes *no sense at all*, but that was the
+observed behavior.
+
+Further investigation suggests that this hypothesis is bunk, those numbers
+are bunk, something else is going on, and I still have no idea what's going on.
+
+That said, consider [commit c9db386c][c9db386c], which now starts printing
+the *average* invocation time in a nice, human-readable, format.
+When `count` is 100000, the `static void i3` output is:
+
+[c9db386c]: https://github.com/xamarin/Java.Interop/commit/c9db386c5457ff6243b3e36d919ca8669f502192
+
+    Method Invoke: static void i3: JNI is 94x managed
+              C/JNI:    2.0     ms               | average:      0.002   ms
+                JNI:   14.3707  ms;   7x C/JNI   | average:      0.01437 ms
+            Managed:    0.1529  ms               | average:      0.00015 ms
+            Pinvoke:    0.1269  ms;   1x managed | average:      0.00013 ms
+
+(Quick aside: odd that the above run says JNI is 94x managed, while below
+it's 808x managed! Numbers be *weird*.)
+
+Of interest here is the **C/JNI** line, which shows that the average
+invocation time of the `static void i3` method is 0.002ms.
+
+What the description below suggests is that this average time is proportional
+to `count`: when `count` is small, the C/JNI average time is smaller than
+the C/JNI average time when `count` is large.
+
+*This cannot be independently verified.*
+
+In point of fact, [I cannot reproduce this behavior][art-timing-test.zip].
+No matter what `count` value I choose, the average time for invoking
+`JNIEnv::CallStaticVoidMethod()` *is the same* (roughly): 0.001ms. (It differs
+from the above `static void i3` value, likely because it's a `static void`).
+
+[art-timing-test.zip]: https://files.xamarin.com/~jonp/tests/art-timing-test.zip
+
+For a given Java method signature, e.g. `static void m()`, invocation time is
+consistent on ART (Android M Preview 2, Nexus 5). It doesn't vary, certainly not
+with the `count` vaue.
+
+Instead, JNI overhead appears to be fairly consistent (for a given signature).
+Unfortunately, at ~0.002ms per invocation, you can only perform 500 method
+invocations per *second*, so things aren't great, and that's from *C*.
+Use the C# average time of 0.015ms/invocation, and that's only 70!
+
+---
+
 [Commit c60f6093][c60f6093] observed that Android appeared to be much faster
 than the JVM at these tests. This observation appears to have been wrong.
 More interesting is that the "JNI method invocation overhead," defined as
