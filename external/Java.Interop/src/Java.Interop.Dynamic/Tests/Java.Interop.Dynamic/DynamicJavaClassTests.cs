@@ -13,6 +13,16 @@ using NUnit.Framework;
 
 namespace Java.Interop.DynamicTests {
 
+	class MyDynamicObject : DynamicJavaClass {
+
+		public MyDynamicObject ()
+			: base ("java/lang/Object")
+		{
+		}
+
+		public  int     MyProperty {get; set;}
+	}
+
 	[TestFixture]
 	class DynamicJavaClassTests : Java.InteropTests.JavaVMFixture
 	{
@@ -63,6 +73,16 @@ namespace Java.Interop.DynamicTests {
 			Assert.AreEqual (42, max);
 			Integer.MAX_VALUE   = cur;
 			Console.WriteLine ("# done!");
+		}
+
+		[Test]
+		public void FallbackPropertySet ()
+		{
+			dynamic d = new MyDynamicObject ();
+
+			d.MyProperty    = 42;
+			int v           = d.MyProperty;
+			Assert.AreEqual (42, v);
 		}
 	}
 }

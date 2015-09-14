@@ -98,12 +98,19 @@ namespace Java.Interop.Dynamic {
 			}
 		}
 
-		public void SetStaticFieldValue (string fieldName, Type fieldType, object value)
+		internal bool TrySetStaticMemberValue (string fieldName, Type fieldType, object value)
 		{
 			Debug.WriteLine ("# DynamicJavaClass({0}).field({1}) as {2} = {3}", JniClassName, fieldName, fieldType, value);
 			var typeInfo    = JniEnvironment.Current.JavaVM.GetJniTypeInfoForType (fieldType);
 			var encoded     = fieldName + "\u0000" + typeInfo.JniTypeReference;
-			members.StaticFields.SetValue (encoded,  value);
+			try {
+				members.StaticFields.SetValue (encoded,  value);
+				return true;
+			}
+			catch (JavaException e) {
+				e.Dispose ();
+			}
+			return false;
 		}
 
 #if false
@@ -180,24 +187,20 @@ namespace Java.Interop.Dynamic {
 
 		public override DynamicMetaObject BindSetMember(SetMemberBinder binder, DynamicMetaObject value)
 		{
-//			Console.WriteLine ("SetMember: Expression={0} [{1}]; property={2}; value.LimitType={3}; value.RuntimeType={4}; value.Value={5}", Expression.ToCSharpCode (), Expression.Type, binder.Name, value.LimitType, value.RuntimeType, value.Value);
+			// Debug.WriteLine ("SetMember: Expression={0} [{1}]; property={2}; value.LimitType={3}; value.RuntimeType={4}; value.Value={5}", Expression.ToCSharpCode (), Expression.Type, binder.Name, value.LimitType, value.RuntimeType, value.Value);
 			var self        = Value;
 			var fieldValue  = value.Expression;
-			if (!value.HasValue) {
-				fieldValue  = binder.Defer (value).Expression;
-			}
 			fieldValue      = Expression.Convert (fieldValue, typeof (object));
 
-			Action<string, Type, object> sfv    = self.SetStaticFieldValue;
-			var expr = Expression.Block (
-					Expression.Call (
-						ExpressionAsT,
-						sfv.Method,
-						Expression.Constant (binder.Name),
-						Expression.Constant (value.LimitType),
-						fieldValue),
-					Expression);
-			return new DynamicMetaObject (expr, BindingRestrictions.GetTypeRestriction (Expression, typeof (DynamicJavaClass)));
+			Func<string, Type, object, bool>    sfv = self.TrySetStaticMemberValue;
+			var call = Expression.Condition (
+					test:       Expression.Call (ExpressionAsT, sfv.Method, Expression.Constant (binder.Name), Expression.Constant (value.LimitType), fieldValue),
+					ifTrue:     Expression,
+					ifFalse:    Expression.Block (new[] {
+						binder.FallbackSetMember (this, value).Expression,
+						Expression
+			}));
+			return new DynamicMetaObject (call, BindingRestrictions.GetInstanceRestriction (Expression, Value));
 		}
 
 		public override DynamicMetaObject BindGetMember(GetMemberBinder binder)
