@@ -16,6 +16,9 @@ namespace Java.Interop.DynamicTests {
 	[TestFixture]
 	class DynamicJavaClassTests : Java.InteropTests.JavaVMFixture
 	{
+		const   string  Arrays_class    = "java/util/Arrays";
+		const   string  Integer_class   = "java/lang/Integer";
+
 		[Test]
 		public void Constructor ()
 		{
@@ -23,9 +26,17 @@ namespace Java.Interop.DynamicTests {
 		}
 
 		[Test]
+		public void JniClassName ()
+		{
+			dynamic Arrays  = new DynamicJavaClass (Arrays_class);
+			string name     = Arrays.JniClassName;
+			Assert.AreEqual (Arrays_class, name);
+		}
+
+		[Test]
 		public void CallStaticMethod ()
 		{
-			dynamic Arrays  = new DynamicJavaClass ("java/util/Arrays");
+			dynamic Arrays  = new DynamicJavaClass (Arrays_class);
 			var array       = new int[]{ 1, 2, 3, 4 };
 			int value       = 3;
 			int index       = Arrays.binarySearch (array, value);
@@ -35,7 +46,7 @@ namespace Java.Interop.DynamicTests {
 		[Test]
 		public void ReadStaticMember ()
 		{
-			dynamic Integer = new DynamicJavaClass ("java/lang/Integer");
+			dynamic Integer = new DynamicJavaClass (Integer_class);
 			int max = Integer.MAX_VALUE;
 			Assert.AreEqual (int.MaxValue, max);
 		}
@@ -43,7 +54,7 @@ namespace Java.Interop.DynamicTests {
 		[Test]
 		public void WriteStaticMember ()
 		{
-			dynamic Integer = new DynamicJavaClass ("java/lang/Integer");
+			dynamic Integer = new DynamicJavaClass (Integer_class);
 			int cur = Integer.MAX_VALUE;
 			Console.WriteLine ("# MAX_VALUE={0}", cur);
 			Integer.MAX_VALUE = 42;
