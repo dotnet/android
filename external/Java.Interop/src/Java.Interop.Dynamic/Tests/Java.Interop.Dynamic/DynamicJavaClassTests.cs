@@ -21,6 +21,11 @@ namespace Java.Interop.DynamicTests {
 		}
 
 		public  int     MyProperty {get; set;}
+
+		public int Method (string value)
+		{
+			return value.Length;
+		}
 	}
 
 	[TestFixture]
@@ -83,6 +88,14 @@ namespace Java.Interop.DynamicTests {
 			d.MyProperty    = 42;
 			int v           = d.MyProperty;
 			Assert.AreEqual (42, v);
+		}
+
+		[Test]
+		public void FallbackInvokeMember ()
+		{
+			dynamic d   = new MyDynamicObject ();
+			int v       = d.Method ("foo");
+			Assert.AreEqual (3, v);
 		}
 	}
 }

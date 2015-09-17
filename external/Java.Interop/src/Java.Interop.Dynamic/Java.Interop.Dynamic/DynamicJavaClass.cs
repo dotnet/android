@@ -45,23 +45,28 @@ namespace Java.Interop.Dynamic {
 			return new MetaStaticMemberAccessObject (parameter, this);
 		}
 
-		internal StaticMethodAccess GetStaticMethodAccess (InvokeMemberBinder binder, DynamicMetaObject[] args)
-		{
-			return new StaticMethodAccess (this, binder, args);
-		}
-
-		public object CallStaticMethod (InvokeMemberBinder binder, DynamicMetaObject[] args, Type returnType)
+		internal bool TryInvokeStaticMember (InvokeMemberBinder binder, DynamicMetaObject[] args, Type returnType, out object value)
 		{
 			Debug.WriteLine ("# DynamicJavaClass({0}).invoke({1}) with args({2}) as {3}",
 					JniClassName, binder.Name, string.Join (", ", args.Select (a => a.Value)), returnType);
-			var encoded = GetEncodedJniSignature (binder, args, returnType);
-			var margs   = args.Select (arg => new JniArgumentMarshalInfo (arg.Value, arg.LimitType)).ToList ();
-			var jvalues = margs.Select (a => a.JValue).ToArray ();
-			var result  = members.StaticMethods.CallMethod (encoded, jvalues);
-			for (int i = 0; i < margs.Count; ++i) {
-				margs [i].Cleanup (args [i]);
+			value       = null;
+			var margs   = (List<JniArgumentMarshalInfo>) null;
+			try {
+				var encoded = GetEncodedJniSignature (binder, args, returnType);
+				margs       = args.Select (arg => new JniArgumentMarshalInfo (arg.Value, arg.LimitType)).ToList ();
+				var jvalues = margs.Select (a => a.JValue).ToArray ();
+				value       = members.StaticMethods.CallMethod (encoded, jvalues);
+				return true;
 			}
-			return result;
+			catch (JavaException e) {
+				e.Dispose ();
+			}
+			finally {
+				for (int i = 0; margs != null && i < margs.Count; ++i) {
+					margs [i].Cleanup (args [i]);
+				}
+			}
+			return false;
 		}
 
 		static string GetEncodedJniSignature (InvokeMemberBinder binder, DynamicMetaObject[] args, Type returnType)
@@ -151,6 +156,7 @@ namespace Java.Interop.Dynamic {
 	class MetaStaticMemberAccessObject : DynamicMetaObject<DynamicJavaClass>
 	{
 		delegate bool TryGetStaticMemberValue (string fieldName, Type fieldType, out object value);
+		delegate bool TryInvokeStaticMember (InvokeMemberBinder binder, DynamicMetaObject[] args, Type returnType, out object value);
 
 		public MetaStaticMemberAccessObject (Expression parameter, DynamicJavaClass value)
 			: base (parameter, value)
@@ -167,22 +173,18 @@ namespace Java.Interop.Dynamic {
 
 		public override DynamicMetaObject BindInvokeMember(InvokeMemberBinder binder, DynamicMetaObject[] args)
 		{
-//			Console.WriteLine ("InvokeMember of method={0}; ReturnType={1}; args={{{2}}}; CallInfo={3}", binder.Name, binder.ReturnType,
-//				string.Join (", ", args.Select (a => string.Format ("{0} [{1}]", a.Expression.ToCSharpCode (), a.LimitType))), binder.CallInfo);
+			Debug.WriteLine ("## MetaStaticMemberAccessObject.BindInvokeMember of method={0}; ReturnType={1}; args={{{2}}}; CallInfo={3}", binder.Name, binder.ReturnType,
+				string.Join (", ", args.Select (a => string.Format ("{0} [{1}]", a.Expression.ToCSharpCode (), a.LimitType))), binder.CallInfo);
 
-			Func<InvokeMemberBinder, DynamicMetaObject[], StaticMethodAccess> gsma = Value.GetStaticMethodAccess;
-
-			var expr =
-				Expression.Call (
-					ExpressionAsT,
-					gsma.Method,
-					Expression.Constant (binder),
-					Expression.Constant (args));
-			return new DynamicMetaObject (
-				expr,
-				BindingRestrictions.GetTypeRestriction (
-					expr,
-					typeof (StaticMethodAccess)));
+			TryInvokeStaticMember m = Value.TryInvokeStaticMember;
+			var call    = new DeferredConvert<DynamicJavaClass> {
+				Arguments           = new[]{Expression.Constant (binder), Expression.Constant (args)},
+				Instance            = Value,
+				FallbackCreator     = v => binder.FallbackInvokeMember (v, args),
+				Method              = m.Method,
+			};
+			var callE   = Expression.Constant (call);
+			return new DynamicMetaObject (callE, BindingRestrictions.GetInstanceRestriction (callE, call));
 		}
 
 		public override DynamicMetaObject BindSetMember(SetMemberBinder binder, DynamicMetaObject value)
@@ -218,54 +220,6 @@ namespace Java.Interop.Dynamic {
 		}
 	}
 
-	class StaticMethodAccess : IDynamicMetaObjectProvider {
-
-		public  DynamicJavaClass        JavaClass           {get; private set;}
-		public  InvokeMemberBinder      InvokeBinder        {get; private set;}
-		public  DynamicMetaObject[]     MethodArguments     {get; private set;}
-
-		public StaticMethodAccess (DynamicJavaClass klass, InvokeMemberBinder invokeBinder, DynamicMetaObject[] args)
-		{
-			JavaClass       = klass;
-			InvokeBinder    = invokeBinder;
-			MethodArguments = args;
-		}
-
-		public DynamicMetaObject GetMetaObject(Expression parameter)
-		{
-//			Console.WriteLine ("# StaticMethodAccess.GetMetaObject: parameter={0}", parameter);
-			return new MetaStaticMethodAccessObject (parameter, this);
-		}
-	}
-
-	class MetaStaticMethodAccessObject : DynamicMetaObject<StaticMethodAccess> {
-
-		public MetaStaticMethodAccessObject (Expression e, StaticMethodAccess value)
-			: base (e, value)
-		{
-//			Console.WriteLine ("MetaStaticMethodAccessObject: e={0}", e.ToCSharpCode ());
-		}
-
-		public override DynamicMetaObject BindConvert (ConvertBinder binder)
-		{
-//			Console.WriteLine ("MetaStaticMethodAccessObject.Convert: Expression={0} [{1}]", Expression.ToCSharpCode (), Expression.Type);
-
-			var method      = ExpressionAsT;
-			var instance    = Expression.Property (method, "JavaClass");
-			var mbinder     = Expression.Property (method, "InvokeBinder");
-			var args        = Expression.Property (method, "MethodArguments");
-			var csm         = typeof (DynamicJavaClass).GetMethod ("CallStaticMethod");
-			var returnType  = Expression.Constant (binder.Type);
-
-			var expr        = Expression.Convert (
-					Expression.Call (instance, csm, mbinder, args, returnType),
-					binder.Type);
-			return new DynamicMetaObject (
-					expr,
-					BindingRestrictions.GetInstanceRestriction (Expression, Value));
-		}
-	}
-
 	class DeferredConvert<T> : IDynamicMetaObjectProvider {
 
 		public  T                                               Instance;
@@ -292,7 +246,7 @@ namespace Java.Interop.Dynamic {
 			Debug.WriteLine ("DeferredConvertMetaObject<{0}>.BindConvert: Expression='{1}'; Expression.Type={2}", typeof (T).Name, Expression.ToCSharpCode (), Expression.Type);
 
 			var instance    = Expression.Constant (Value.Instance);
-			var instanceMO  = new DynamicMetaObject (instance, BindingRestrictions.GetInstanceRestriction (instance, typeof (T)));
+			var instanceMO  = new DynamicMetaObject (instance, BindingRestrictions.GetInstanceRestriction (instance, Value.Instance));
 			var value       = Expression.Parameter (typeof (object), "value");
 			Debug.WriteLine ("DeferredConvertMetaObject<{0}>.BindConvert: Fallback={1}", typeof (T).Name, Value.FallbackCreator (instanceMO).Expression.ToCSharpCode ());
 			var call = Expression.Block (
@@ -302,7 +256,7 @@ namespace Java.Interop.Dynamic {
 						ifTrue:     Expression.Convert (value, binder.Type),
 						ifFalse:    Expression.Convert (Value.FallbackCreator (instanceMO).Expression, binder.Type))
 			);
-			Debug.WriteLine ("MetaStaticFieldAccessObject.Convert: call={0}", call.ToCSharpCode ());
+			Debug.WriteLine ("DeferredConvertMetaObject<{0}>.BindConvert: call={1}", typeof (T).Name, call.ToCSharpCode ());
 			return new DynamicMetaObject (
 					call,
 					BindingRestrictions.GetInstanceRestriction (Expression, Value));
