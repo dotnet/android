@@ -220,11 +220,21 @@ namespace Java.Interop {
 
 		internal void DeleteLocalReference (JniLocalReference value, IntPtr handle)
 		{
-			if (lrefs == null || !lrefs.Contains (value)) {
-				Debug.WriteLine ("Deleting JNI local reference handle 0x{0} from wrong thread! Ignoring...", handle.ToString ("x"));
+			var c = current;
+			for ( ; c != null; c = c.previous) {
+				if (c.lrefs == null || !c.lrefs.Contains (value))
+					continue;
+				break;
+			}
+			if (c == null) {
+				JavaVM.JniHandleManager.WriteLocalReferenceLine (
+						"Deleting JNI local reference handle 0x{0} from wrong thread id={1}! Ignoring...",
+						handle.ToString ("x"), Thread.CurrentThread.ManagedThreadId);
+				JavaVM.JniHandleManager.WriteLocalReferenceLine ("{0}",
+						System.Activator.CreateInstance (Type.GetType ("System.Diagnostics.StackTrace")));
 				return;
 			}
-			lrefs.Remove (value);
+			c.lrefs.Remove (value);
 			JniEnvironment.Current.JavaVM.JniHandleManager.DeleteLocalReference (this, handle);
 		}
 
