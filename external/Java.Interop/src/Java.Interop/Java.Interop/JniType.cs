@@ -11,6 +11,18 @@ namespace Java.Interop {
 
 	public sealed class JniType : IDisposable {
 
+		readonly    static  KeyValuePair<string, string>[]  BuiltinMappings = new KeyValuePair<string, string>[] {
+			new KeyValuePair<string, string>("byte",       "B"),
+			new KeyValuePair<string, string>("boolean",    "Z"),
+			new KeyValuePair<string, string>("char",       "C"),
+			new KeyValuePair<string, string>("double",     "D"),
+			new KeyValuePair<string, string>("float",      "F"),
+			new KeyValuePair<string, string>("int",        "I"),
+			new KeyValuePair<string, string>("long",       "J"),
+			new KeyValuePair<string, string>("short",      "S"),
+			new KeyValuePair<string, string>("void",       "V"),
+		};
+
 		public static unsafe JniType DefineClass (string name, JniReferenceSafeHandle loader, byte[] classFileData)
 		{
 			fixed (byte* buf = classFileData) {
@@ -46,8 +58,13 @@ namespace Java.Interop {
 				AssertValid ();
 
 				var s = JniEnvironment.Current.Class_getName.CallVirtualObjectMethod (SafeHandle);
-				return JniEnvironment.Strings.ToString (s, JniHandleOwnership.Transfer)
+				var n = JniEnvironment.Strings.ToString (s, JniHandleOwnership.Transfer)
 					.Replace ('.', '/');
+				for (int i = 0; i < BuiltinMappings.Length; ++i) {
+					if (n == BuiltinMappings [i].Key)
+						return BuiltinMappings [i].Value;
+				}
+				return n;
 			}
 		}
 

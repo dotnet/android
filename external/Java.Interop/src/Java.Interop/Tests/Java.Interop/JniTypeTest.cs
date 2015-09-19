@@ -120,6 +120,25 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		public void Name ()
+		{
+			using (var Object_class         = new JniType ("java/lang/Object"))
+			using (var Class_class          = new JniType ("java/lang/Class"))
+			using (var Class_getMethod      = Class_class.GetInstanceMethod ("getMethod", "(Ljava/lang/String;[Ljava/lang/Class;)Ljava/lang/reflect/Method;"))
+			using (var Method_class         = new JniType ("java/lang/reflect/Method"))
+			using (var Method_getReturnType = Method_class.GetInstanceMethod ("getReturnType", "()Ljava/lang/Class;"))
+			using (var hashCode_str         = JniEnvironment.Strings.NewString ("hashCode"))
+			using (var Object_hashCode      = Class_getMethod.CallVirtualObjectMethod (Object_class.SafeHandle, new JValue (hashCode_str)))
+			using (var Object_hashCode_rt   = Method_getReturnType.CallVirtualObjectMethod (Object_hashCode))
+			{
+				Assert.AreEqual ("java/lang/Object", Object_class.Name);
+
+				using (var t = new JniType (Object_hashCode_rt, JniHandleOwnership.DoNotTransfer))
+					Assert.AreEqual ("I", t.Name);
+			}
+		}
+
+		[Test]
 		public void RegisterWithVM ()
 		{
 			using (var Object_class = new JniType ("java/lang/Object")) {
