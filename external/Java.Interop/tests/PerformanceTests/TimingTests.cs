@@ -226,6 +226,8 @@ namespace Java.Interop.PerformanceTests {
 			const int count = 100000;
 #endif  // __ANDROID__
 
+			var total   = Stopwatch.StartNew ();
+
 			foo_init (JniEnvironment.Current.SafeHandle);
 
 			var jniTimes = new long [comparisons.Length];
@@ -272,6 +274,9 @@ namespace Java.Interop.PerformanceTests {
 							ToString (pw.Elapsed, mw.Elapsed),
 							FormatFraction (pw.Elapsed.TotalMilliseconds / count, 12, 5));
 			}
+
+			total.Stop ();
+			Console.WriteLine ("## {0} Timing: {1}", nameof (MethodInvocationTiming), total.Elapsed);
 		}
 
 		static Action A (Action a)
@@ -305,8 +310,11 @@ namespace Java.Interop.PerformanceTests {
 #if __ANDROID__
 			const int count = 100;
 #else   // __ANDROID__
-			const int count = 1000;
+			const int count = 100;
 #endif  // __ANDROID__
+
+			var total   = Stopwatch.StartNew ();
+
 			using (var o = new JavaTiming ()) {
 				var tt = Stopwatch.StartNew ();
 				for (int i = 0; i < count; ++i)
@@ -334,6 +342,9 @@ namespace Java.Interop.PerformanceTests {
 				Console.WriteLine ("\t  Dict w/ lock: {0}", td.Elapsed);
 				Console.WriteLine ("\tConcurrentDict: {0}", tc.Elapsed);
 			}
+
+			total.Stop ();
+			Console.WriteLine ("## {0} Timing: {1}", nameof (MethodLookupTiming), total.Elapsed);
 		}
 	}
 
@@ -348,6 +359,9 @@ namespace Java.Interop.PerformanceTests {
 #else   // __ANDROID__
 			const int C = 1000;
 #endif  // __ANDROID__
+
+			var total   = Stopwatch.StartNew ();
+
 			using (var array = new JavaInt32Array (Enumerable.Range (0, 10000))) {
 				var io = Stopwatch.StartNew ();
 				for (int c = 0; c < C; ++c)
@@ -361,6 +375,9 @@ namespace Java.Interop.PerformanceTests {
 				Console.WriteLine ("\t   JavaArray<T>.IndexOf: {0}", io.Elapsed);
 				Console.WriteLine ("\tJavaInt32Array._IndexOf: {0}", _io.Elapsed);
 			}
+
+			total.Stop ();
+			Console.WriteLine ("## {0} Timing: {1}", nameof (IndexOfTiming), total.Elapsed);
 		}
 
 		static unsafe int _IndexOf (JavaInt32Array array, int item)
@@ -381,7 +398,9 @@ namespace Java.Interop.PerformanceTests {
 		[Test]
 		public void DelegateVsVirtualMethodInvocationTiming ()
 		{
-			const int C = 100000;
+			const int C = 1000;
+
+			var total   = Stopwatch.StartNew ();
 
 			var d = GetDelegateTimingInfo ();
 			var dt = Stopwatch.StartNew ();
@@ -402,6 +421,9 @@ namespace Java.Interop.PerformanceTests {
 			Console.WriteLine ("Delegate vs. Method Invocation Timing:");
 			Console.WriteLine ("\t      Delegate Timing: {0}", dt.Elapsed);
 			Console.WriteLine ("\tVirtual Method Timing: {0}", ct.Elapsed);
+
+			total.Stop ();
+			Console.WriteLine ("## {0} Timing: {1}", nameof (DelegateVsVirtualMethodInvocationTiming), total.Elapsed);
 		}
 
 		[MethodImpl (MethodImplOptions.NoInlining)]
@@ -428,6 +450,8 @@ namespace Java.Interop.PerformanceTests {
 		{
 			const int C = 10000;
 
+			var total   = Stopwatch.StartNew ();
+
 			using (var t = new JavaTiming ()) {
 				var n = Stopwatch.StartNew ();
 				for (int i = 0; i < C; ++i) {
@@ -452,6 +476,9 @@ namespace Java.Interop.PerformanceTests {
 				Console.WriteLine ("\tPartial Marshaling: {0}", m.Elapsed);
 				Console.WriteLine ("\tGeneric Marshaling: {0}", g.Elapsed);
 			}
+
+			total.Stop ();
+			Console.WriteLine ("## {0} Timing: {1}", nameof (GenericMarshalingOverhead_Int32), total.Elapsed);
 		}
 
 		[Test]
@@ -460,8 +487,10 @@ namespace Java.Interop.PerformanceTests {
 #if __ANDROID__
 			const int C = 100;
 #else   // __ANDROID__
-			const int C = 1000;
+			const int C = 100;
 #endif  // __ANDROID__
+
+			var total   = Stopwatch.StartNew ();
 
 			var value = new int[][][] {
 				new int[][] {
@@ -498,6 +527,9 @@ namespace Java.Interop.PerformanceTests {
 				Console.WriteLine ("\tPartial Marshaling: {0}", m.Elapsed);
 				Console.WriteLine ("\tGeneric Marshaling: {0}", g.Elapsed);
 			}
+
+			total.Stop ();
+			Console.WriteLine ("## {0} Timing: {1}", nameof (GenericMarshalingOverhead_Int32ArrayArrayArray), total.Elapsed);
 		}
 	}
 
