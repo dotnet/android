@@ -13,7 +13,7 @@ using Mono.Linq.Expressions;
 
 namespace Java.Interop.Dynamic {
 
-	public class DynamicJavaClass : IDynamicMetaObjectProvider
+	public class DynamicJavaClass : IDynamicMetaObjectProvider, IDisposable
 	{
 		readonly    static  Func<string, JniPeerMembers>    CreatePeerMembers;
 
@@ -67,6 +67,7 @@ namespace Java.Interop.Dynamic {
 		public  string          JniClassName            {get; private set;}
 
 		JniPeerMembers          members;
+		bool                    disposed;
 
 		Dictionary<string, HashSet<string>>                 StaticFields;
 		Dictionary<string, List<JavaMethodInvokeInfo>>      StaticMethods;
@@ -80,9 +81,35 @@ namespace Java.Interop.Dynamic {
 			members         = CreatePeerMembers (jniClassName);
 		}
 
+		public void Dispose ()
+		{
+			Dispose (disposing: true);
+			GC.SuppressFinalize (this);
+		}
+
+		protected virtual void Dispose (bool disposing)
+		{
+			if (!disposing)
+				return;
+
+			if (disposed)
+				return;
+
+			foreach (var name in StaticMethods.Keys.ToList ()) {
+				foreach (var info in StaticMethods [name])
+					info.Dispose ();
+				StaticMethods [name]    = null;
+			}
+
+			JniPeerMembers.Dispose (members);
+			members     = null;
+
+			disposed    = true;
+		}
+
 		void LookupMethods ()
 		{
-			if (StaticMethods != null)
+			if (StaticMethods != null || disposed)
 				return;
 
 			StaticMethods   = new Dictionary<string, List<JavaMethodInvokeInfo>> ();
@@ -110,7 +137,7 @@ namespace Java.Interop.Dynamic {
 
 		void LookupFields ()
 		{
-			if (StaticFields != null)
+			if (StaticFields != null || disposed)
 				return;
 
 			StaticFields    = new Dictionary<string, HashSet<string>> ();
@@ -141,8 +168,6 @@ namespace Java.Interop.Dynamic {
 
 		DynamicMetaObject IDynamicMetaObjectProvider.GetMetaObject (Expression parameter)
 		{
-			if (members == null)
-				throw new ObjectDisposedException (nameof (DynamicJavaClass));
 			return new MetaObject (parameter, this);
 		}
 
@@ -185,6 +210,9 @@ namespace Java.Interop.Dynamic {
 				try {
 					var at  = new JniType (vm.GetJniTypeInfoForType (a.LimitType).JniTypeReference);
 					r.Add (at);
+				} catch (JavaException e) {
+					e.Dispose ();
+					r.Add (null);
 				} catch {
 					r.Add (null);
 				}
@@ -234,6 +262,10 @@ namespace Java.Interop.Dynamic {
 				if (overloads == null)
 					return binder.FallbackGetMember (this);
 
+				if (Value.disposed) {
+					return new DynamicMetaObject (ThrowObjectDisposedException (typeof (object)), BindingRestrictions.GetInstanceRestriction (Expression, Value));
+				}
+
 				Func<string, object>    getValue    = Value.members.StaticFields.GetValue;
 
 				var e = Expression.Call (Expression.Constant (Value.members.StaticFields), getValue.Method, Expression.Constant (overloads.First ()));
@@ -241,12 +273,17 @@ namespace Java.Interop.Dynamic {
 				return new DynamicMetaObject (e, BindingRestrictions.GetInstanceRestriction (Expression, Value));
 			}
 
+			static Expression ThrowObjectDisposedException (Type type = null)
+			{
+				return Expression.Throw (Expression.Constant (new ObjectDisposedException (nameof (DynamicJavaClass))), type);
+			}
+
 			HashSet<string> GetField (string name)
 			{
 				Value.LookupFields ();
 
 				HashSet<string> overloads;
-				if (Value.StaticFields.TryGetValue (name, out overloads))
+				if (Value.StaticFields != null && Value.StaticFields.TryGetValue (name, out overloads))
 					return overloads;
 				return null;
 			}
@@ -254,9 +291,13 @@ namespace Java.Interop.Dynamic {
 			public override DynamicMetaObject BindInvokeMember (InvokeMemberBinder binder, DynamicMetaObject[] args)
 			{
 				Value.LookupMethods ();
-				List<JavaMethodInvokeInfo> overloads;
-				if (!Value.StaticMethods.TryGetValue (binder.Name, out overloads))
+				List<JavaMethodInvokeInfo> overloads    = null;
+				if (Value.StaticMethods != null && !Value.StaticMethods.TryGetValue (binder.Name, out overloads))
 					return binder.FallbackInvokeMember (this, args);
+
+				if (Value.disposed) {
+					return new DynamicMetaObject (ThrowObjectDisposedException (typeof (object)), BindingRestrictions.GetInstanceRestriction (Expression, Value));
+				}
 
 				foreach (var m in overloads)
 					m.LookupArguments ();
@@ -283,6 +324,10 @@ namespace Java.Interop.Dynamic {
 				HashSet<string> overloads = GetField (binder.Name);
 				if (overloads == null)
 					return binder.FallbackSetMember (this, value);
+
+				if (Value.disposed) {
+					return new DynamicMetaObject (ThrowObjectDisposedException (), BindingRestrictions.GetInstanceRestriction (Expression, Value));
+				}
 
 				Action<string, object>  setValue    = Value.members.StaticFields.SetValue;
 				var e = Expression.Block (
@@ -333,8 +378,16 @@ namespace Java.Interop.Dynamic {
 			Method.Dispose ();
 			ReturnType.Dispose ();
 			ReturnType  = null;
-			for (int i = 0; i < Arguments.Count; ++i)
+
+			if (Arguments == null)
+				return;
+
+			for (int i = 0; i < Arguments.Count; ++i) {
+				if (Arguments [i] == null)
+					continue;
 				Arguments [i].Dispose ();
+				Arguments [i] = null;
+			}
 			Arguments   = null;
 		}
 

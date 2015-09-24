@@ -11,7 +11,18 @@ namespace Java.Interop
 		}
 
 		readonly JniPeerMembers                             Members;
-		readonly Dictionary<string, JniStaticMethodID>      StaticMethods   = new Dictionary<string, JniStaticMethodID>();
+
+		Dictionary<string, JniStaticMethodID>               StaticMethods   = new Dictionary<string, JniStaticMethodID>();
+
+		internal void Dispose ()
+		{
+			if (StaticMethods == null)
+				return;
+
+			foreach (var m in StaticMethods.Values)
+				m.Dispose ();
+			StaticMethods   = null;
+		}
 
 		public JniStaticMethodID GetMethodID (string encodedMember)
 		{

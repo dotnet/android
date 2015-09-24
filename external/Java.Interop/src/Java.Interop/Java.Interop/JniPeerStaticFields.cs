@@ -11,7 +11,8 @@ namespace Java.Interop
 		}
 
 		readonly JniPeerMembers                             Members;
-		readonly Dictionary<string, JniStaticFieldID>       StaticFields  = new Dictionary<string, JniStaticFieldID>();
+
+		Dictionary<string, JniStaticFieldID>                StaticFields  = new Dictionary<string, JniStaticFieldID>();
 
 		public JniStaticFieldID GetFieldID (string encodedMember)
 		{
@@ -25,6 +26,16 @@ namespace Java.Interop
 				}
 				return f;
 			}
+		}
+
+		internal void Dispose ()
+		{
+			if (StaticFields == null)
+				return;
+
+			foreach (var f in StaticFields.Values)
+				f.Dispose ();
+			StaticFields = null;
 		}
 
 		public object GetValue (string encodedMember)

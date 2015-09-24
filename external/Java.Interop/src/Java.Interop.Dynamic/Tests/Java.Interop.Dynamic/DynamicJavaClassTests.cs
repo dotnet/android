@@ -41,10 +41,26 @@ namespace Java.Interop.DynamicTests {
 		}
 
 		[Test]
+		public void DisposedInstanceThrowsObjectDisposedException ()
+		{
+			dynamic Integer = new DynamicJavaClass (Integer_class);
+			Integer.Dispose ();
+			Integer.Dispose ();  // Dispose() is idempotent
+			Assert.Catch<Exception> (() => Integer.bitCount (2));
+			Assert.Catch<Exception> (() => {
+				int max = Integer.MAX_INT;
+			});
+			Assert.Catch<Exception> (() => {
+				Integer.MAX_INT = 42;
+			});
+		}
+
+		[Test]
 		public void JniClassName ()
 		{
 			dynamic Arrays  = new DynamicJavaClass (Arrays_class);
 			Assert.AreEqual (Arrays_class, Arrays.JniClassName);
+			Arrays.Dispose ();
 		}
 
 		[Test]
@@ -55,6 +71,7 @@ namespace Java.Interop.DynamicTests {
 			int value       = 3;
 			int index       = Arrays.binarySearch (array, value);
 			Assert.AreEqual (2, index);
+			Arrays.Dispose ();
 		}
 
 		[Test]
@@ -63,6 +80,7 @@ namespace Java.Interop.DynamicTests {
 			dynamic Integer = new DynamicJavaClass (Integer_class);
 			int max = Integer.MAX_VALUE;
 			Assert.AreEqual (int.MaxValue, max);
+			Integer.Dispose ();
 		}
 
 		[Test]
@@ -77,6 +95,7 @@ namespace Java.Interop.DynamicTests {
 			Assert.AreEqual (42, max);
 			Integer.MAX_VALUE   = cur;
 			Console.WriteLine ("# done!");
+			Integer.Dispose ();
 		}
 
 		[Test]
@@ -87,6 +106,7 @@ namespace Java.Interop.DynamicTests {
 			d.MyProperty    = 42;
 			int v           = d.MyProperty;
 			Assert.AreEqual (42, v);
+			d.Dispose ();
 		}
 
 		[Test]
@@ -95,6 +115,7 @@ namespace Java.Interop.DynamicTests {
 			dynamic d   = new MyDynamicObject ();
 			int v       = d.Method ("foo");
 			Assert.AreEqual (3, v);
+			d.Dispose ();
 		}
 	}
 }

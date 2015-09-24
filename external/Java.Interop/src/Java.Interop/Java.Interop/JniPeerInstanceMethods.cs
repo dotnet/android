@@ -26,9 +26,27 @@ namespace Java.Interop
 		}
 
 		readonly Type                                       DeclaringType;
-		readonly JniType                                    JniPeerType;
-		readonly Dictionary<string, JniInstanceMethodID>    InstanceMethods = new Dictionary<string, JniInstanceMethodID>();
-		readonly Dictionary<Type, JniPeerInstanceMethods>   SubclassConstructors = new Dictionary<Type, JniPeerInstanceMethods> ();
+
+		JniType                                             JniPeerType;
+		Dictionary<string, JniInstanceMethodID>             InstanceMethods = new Dictionary<string, JniInstanceMethodID>();
+		Dictionary<Type, JniPeerInstanceMethods>            SubclassConstructors = new Dictionary<Type, JniPeerInstanceMethods> ();
+
+		internal void Dispose ()
+		{
+			if (JniPeerType == null)
+				return;
+
+			// Don't dispose JniPeerType; it's shared with others.
+			foreach (var m in InstanceMethods.Values)
+				m.Dispose ();
+			InstanceMethods         = null;
+
+			foreach (var p in SubclassConstructors.Values)
+				p.Dispose ();
+			SubclassConstructors    = null;
+
+			JniPeerType = null;
+		}
 
 		public JniInstanceMethodID GetConstructor (string signature)
 		{

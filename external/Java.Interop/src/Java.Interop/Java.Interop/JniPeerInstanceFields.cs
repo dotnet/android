@@ -11,7 +11,18 @@ namespace Java.Interop
 		}
 
 		readonly JniPeerMembers                             Members;
-		readonly Dictionary<string, JniInstanceFieldID>     InstanceFields  = new Dictionary<string, JniInstanceFieldID>();
+
+		Dictionary<string, JniInstanceFieldID>              InstanceFields  = new Dictionary<string, JniInstanceFieldID>();
+
+		internal void Dispose ()
+		{
+			if (InstanceFields == null)
+				return;
+
+			foreach (var f in InstanceFields.Values)
+				f.Dispose ();
+			InstanceFields  = null;
+		}
 
 		public JniInstanceFieldID GetFieldID (string encodedMember)
 		{

@@ -43,10 +43,10 @@ namespace Java.Interop {
 
 		JniType     jniPeerType;
 
-		readonly    JniPeerInstanceMethods  instanceMethods;
-		readonly    JniPeerInstanceFields   instanceFields;
-		readonly    JniPeerStaticMethods    staticMethods;
-		readonly    JniPeerStaticFields     staticFields;
+		JniPeerInstanceMethods  instanceMethods;
+		JniPeerInstanceFields   instanceFields;
+		JniPeerStaticMethods    staticMethods;
+		JniPeerStaticFields     staticFields;
 
 		public      Type        ManagedPeerType {get; private set;}
 		public      string      JniPeerTypeName {get; private set;}
@@ -59,19 +59,48 @@ namespace Java.Interop {
 		}
 
 		public  JniPeerInstanceMethods  InstanceMethods {
-			get {return instanceMethods;}
+			get {return Assert (instanceMethods);}
 		}
 
 		public  JniPeerInstanceFields   InstanceFields {
-			get {return instanceFields;}
+			get {return Assert (instanceFields);}
 		}
 
 		public  JniPeerStaticMethods    StaticMethods {
-			get {return staticMethods;}
+			get {return Assert (staticMethods);}
 		}
 
 		public  JniPeerStaticFields     StaticFields {
-			get {return staticFields;}
+			get {return Assert (staticFields);}
+		}
+
+		static T Assert<T>(T value)
+			where T : class
+		{
+			if (value == null)
+				throw new ObjectDisposedException (nameof (JniPeerMembers));
+			return value;
+		}
+
+		public static void Dispose (JniPeerMembers members)
+		{
+			if (members.jniPeerType == null)
+				return;
+
+			members.instanceMethods.Dispose ();
+			members.instanceMethods = null;
+
+			members.instanceFields.Dispose ();
+			members.instanceFields  = null;
+
+			members.staticMethods.Dispose ();
+			members.staticMethods   = null;
+
+			members.staticFields.Dispose ();
+			members.staticFields    = null;
+
+			members.jniPeerType.Dispose ();
+			members.jniPeerType     = null;
 		}
 
 		internal static void AssertSelf (IJavaObject self)
