@@ -44,8 +44,7 @@ namespace Java.Interop.DynamicTests {
 		public void JniClassName ()
 		{
 			dynamic Arrays  = new DynamicJavaClass (Arrays_class);
-			string name     = Arrays.JniClassName;
-			Assert.AreEqual (Arrays_class, name);
+			Assert.AreEqual (Arrays_class, Arrays.JniClassName);
 		}
 
 		[Test]
