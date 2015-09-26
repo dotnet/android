@@ -33,7 +33,7 @@ namespace Java.Interop
 			: this (CheckLength (value))
 		{
 			for (int i = 0; i < value.Count; ++i)
-				this [i] = value [i];
+				SetElementAt (i, value [i]);
 		}
 
 		public JavaObjectArray (IEnumerable<T> value)
@@ -45,29 +45,50 @@ namespace Java.Interop
 			get {
 				if (index < 0 || index >= Length)
 					throw new ArgumentOutOfRangeException ("index", "index < 0 || index >= Length");
-				var lref = JniEnvironment.Arrays.GetObjectArrayElement (SafeHandle, index);
-				return JniMarshal.GetValue<T> (lref, JniHandleOwnership.Transfer);
+				return GetElementAt (index);
 			}
 			set {
 				if (index < 0 || index >= Length)
 					throw new ArgumentOutOfRangeException ("index", "index < 0 || index >= Length");
-				using (var h = JniMarshal.CreateLocalRef (value))
-					JniEnvironment.Arrays.SetObjectArrayElement (SafeHandle, index, h);
+				SetElementAt (index, value);
+			}
+		}
+
+		T GetElementAt (int index)
+		{
+			var lref = JniEnvironment.Arrays.GetObjectArrayElement (SafeHandle, index);
+			return JniMarshal.GetValue<T> (lref, JniHandleOwnership.Transfer);
+		}
+
+		void SetElementAt (int index, T value)
+		{
+			using (var h = JniMarshal.CreateLocalRef (value))
+				JniEnvironment.Arrays.SetObjectArrayElement (SafeHandle, index, h);
+		}
+
+		public override IEnumerator<T> GetEnumerator ()
+		{
+			int len = Length;
+			for (int i = 0; i < len; ++i) {
+				yield return GetElementAt (i);
 			}
 		}
 
 		public override void Clear ()
 		{
 			int len = Length;
-			for (int i = 0; i < len; i++)
-				this [i] = default (T);
+			using (var v = JniMarshal.CreateLocalRef (default (T))) {
+				for (int i = 0; i < len; i++) {
+					JniEnvironment.Arrays.SetObjectArrayElement (SafeHandle, i, v);
+				}
+			}
 		}
 
 		public override int IndexOf (T item)
 		{
 			int len = Length;
 			for (int i = 0; i < len; i++) {
-				var at = this [i];
+				var at = GetElementAt (i);
 				try {
 					if (EqualityComparer<T>.Default.Equals (item, at) || JniMarshal.RecursiveEquals (item, at))
 						return i;
@@ -92,7 +113,7 @@ namespace Java.Interop
 		{
 			int len = Length;
 			for (int i = 0; i < len; i++) {
-				var item = this [i];
+				var item         = GetElementAt (i);
 				list [index + i] = item;
 				if (forMarshalCollection) {
 					var d = item as IJavaObject;

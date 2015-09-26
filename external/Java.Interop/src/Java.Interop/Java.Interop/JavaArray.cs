@@ -50,7 +50,8 @@ namespace Java.Interop
 
 		public virtual IEnumerator<T> GetEnumerator ()
 		{
-			for (int i = 0; i < Length; ++i)
+			int len = Length;
+			for (int i = 0; i < len; ++i)
 				yield return this [i];
 		}
 

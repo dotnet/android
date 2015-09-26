@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
@@ -390,6 +391,127 @@ namespace Java.Interop.PerformanceTests {
 			}
 			return -1;
 		}
+
+		[Test]
+		public void ObjectArrayEnumerationTiming ()
+		{
+			const int C = 100;
+
+			var total   = Stopwatch.StartNew ();
+
+			JniInstanceMethodID Class_getMethods;
+			using (var t = new JniType ("java/lang/Class")) {
+				Class_getMethods        = t.GetInstanceMethod ("getMethods", "()[Ljava/lang/reflect/Method;");
+			}
+
+			JniInstanceMethodID Method_getName;
+			JniInstanceMethodID Method_getParameterTypes;
+			JniInstanceMethodID Method_getReturnType;
+			using (var t = new JniType ("java/lang/reflect/Method")) {
+				Method_getName              = t.GetInstanceMethod ("getName", "()Ljava/lang/String;");
+				Method_getParameterTypes    = t.GetInstanceMethod ("getParameterTypes", "()[Ljava/lang/Class;");
+				Method_getReturnType        = t.GetInstanceMethod ("getReturnType", "()Ljava/lang/Class;");
+			}
+			Console.WriteLine ("# {0}: Method Lookups Timing: {1}", nameof (ObjectArrayEnumerationTiming), total.Elapsed);
+
+			var methodHandles   = new List<JavaObject> ();
+
+			using (var Arrays_class = new JniType ("java/util/Arrays")) {
+				var lrefMethods = Class_getMethods.CallVirtualObjectMethod (Arrays_class.SafeHandle);
+				Console.WriteLine ("# {0}: java.util.Arrays.class.getMethods() Timing: {1}", nameof (ObjectArrayEnumerationTiming), total.Elapsed);
+
+				var methodsTiming   = Stopwatch.StartNew ();
+				using (var methods  = new JavaObjectArray<JavaObject> (lrefMethods, JniHandleOwnership.DoNotTransfer)) {
+					foreach (var method in methods) {
+						methodHandles.Add (method);
+					}
+				}
+				methodsTiming.Stop ();
+				Console.WriteLine ("# methodHandles(JavaObjectArray<JavaObject>) creation timing: {0} Count={1}", methodsTiming.Elapsed, methodHandles.Count);
+
+				methodsTiming       = Stopwatch.StartNew ();
+				var methodHandlesGO = new List<JavaObject> ();
+				var vm              = JniEnvironment.Current.JavaVM;
+				int len             = JniEnvironment.Arrays.GetArrayLength (lrefMethods);
+				for (int i = 0; i < len; ++i) {
+					var v = JniEnvironment.Arrays.GetObjectArrayElement (lrefMethods, i);
+					methodHandlesGO.Add (vm.GetObject<JavaObject> (v, JniHandleOwnership.Transfer));
+				}
+				methodsTiming.Stop ();
+				Console.WriteLine ("# methodHandles(JavaVM.GetObject) creation timing: {0} Count={1}", methodsTiming.Elapsed, methodHandles.Count);
+
+				foreach (var h in methodHandlesGO)
+					h.DisposeUnlessRegistered ();
+
+				methodsTiming       = Stopwatch.StartNew ();
+				var methodHandlesAr = new List<JavaObject> ();
+				len                 = JniEnvironment.Arrays.GetArrayLength (lrefMethods);
+				for (int i = 0; i < len; ++i) {
+					var v = JniEnvironment.Arrays.GetObjectArrayElement (lrefMethods, i);
+					methodHandlesAr.Add (new JavaObject (v, JniHandleOwnership.Transfer));
+				}
+				methodsTiming.Stop ();
+				Console.WriteLine ("# methodHandles(JavaObject[]) creation timing: {0} Count={1}", methodsTiming.Elapsed, methodHandles.Count);
+
+				foreach (var h in methodHandlesAr)
+					h.Dispose ();
+
+
+				methodsTiming       = Stopwatch.StartNew ();
+				var methodHandlesGR = new List<JniGlobalReference> ();
+				len                 = JniEnvironment.Arrays.GetArrayLength (lrefMethods);
+				for (int i = 0; i < len; ++i) {
+					using (var v = JniEnvironment.Arrays.GetObjectArrayElement (lrefMethods, i))
+						methodHandlesGR.Add (v.NewGlobalRef ());
+				}
+				methodsTiming.Stop ();
+				Console.WriteLine ("# methodHandles(JniGlobalReference) creation timing: {0} Count={1}", methodsTiming.Elapsed, methodHandles.Count);
+
+				foreach (var h in methodHandlesGR)
+					h.Dispose ();
+
+				lrefMethods.Dispose ();
+			}
+
+
+			foreach (var method in methodHandles) {
+				var lookupTiming    = Stopwatch.StartNew ();
+				var name            = JniEnvironment.Strings.ToString (Method_getName.CallVirtualObjectMethod (method.SafeHandle), JniHandleOwnership.Transfer);
+				using (var rt       = new JniType (Method_getReturnType.CallVirtualObjectMethod (method.SafeHandle), JniHandleOwnership.Transfer)) {
+				}
+				var parameterTiming = Stopwatch.StartNew ();
+				var enumTime        = new TimeSpan ();
+				var lrefPs          = Method_getParameterTypes.CallVirtualObjectMethod (method.SafeHandle);
+				Stopwatch cleanup;
+				using (var ps = new JavaObjectArray<JavaObject>(lrefPs, JniHandleOwnership.Transfer)) {
+					var enumSw  = Stopwatch.StartNew ();
+					foreach (var p in ps) {
+						using (var pt = new JniType (p.SafeHandle, JniHandleOwnership.DoNotTransfer)) {
+						}
+					}
+					enumSw.Stop ();
+					enumTime    = enumSw.Elapsed;
+					cleanup     = Stopwatch.StartNew ();
+				}
+				cleanup.Stop ();
+				parameterTiming.Stop ();
+
+				Console.WriteLine ("## method '{0}' timing: Total={1}; Parameters={2} Parameters.Dispose={3}",
+						name,
+						lookupTiming.Elapsed,
+						enumTime,
+						cleanup.Elapsed);
+			}
+
+			var mhDisposeTiming = Stopwatch.StartNew ();
+			foreach (var method in methodHandles)
+				method.Dispose ();
+			mhDisposeTiming.Stop ();
+			Console.WriteLine ("# methodHandles -> Dispose() Timing: {0}", mhDisposeTiming.Elapsed);
+
+			total.Stop ();
+			Console.WriteLine ("## {0} Timing: {1}", nameof (ObjectArrayEnumerationTiming), total.Elapsed);
+		}
 	}
 
 	[TestFixture]
@@ -440,6 +562,65 @@ namespace Java.Interop.PerformanceTests {
 			return new VirtualMethodInvocationImpl ();
 		}
 
+		[Test]
+		public void ObjectCreationTiming ()
+		{
+			const int C = 100;
+
+			var total       = Stopwatch.StartNew ();
+
+			Stopwatch   allocTime, newObjectTime, newTime, getObjectTime;
+
+			using (var Object_class = new JniType ("java/lang/Object"))
+			using (var Object_init  = Object_class.GetConstructor ("()V"))
+			{
+				allocTime   = Stopwatch.StartNew ();
+				for (int i = 0; i < C; ++i) {
+					using (var h = Object_class.AllocObject ()) {
+					}
+				}
+				allocTime.Stop ();
+
+				newObjectTime   = Stopwatch.StartNew ();
+				for (int i = 0; i < C; ++i) {
+					using (var h = Object_class.NewObject (Object_init)) {
+					}
+				}
+				newObjectTime.Stop ();
+
+				newTime     = Stopwatch.StartNew ();
+				var olist   = new List<JavaObject> (C);
+				for (int i = 0; i < C; ++i) {
+					olist.Add (new JavaObject ());
+				}
+				newTime.Stop ();
+				foreach (var o in olist)
+					o.Dispose ();
+
+				var strings = new JavaObjectArray<string> (100);
+				for (int i = 0; i < 100; ++i) {
+					strings [i] = i.ToString ();
+				}
+
+				using (strings) {
+					var vm          = JniEnvironment.Current.JavaVM;
+					var rlist       = new List<JavaObject> (C);
+					getObjectTime   = Stopwatch.StartNew ();
+					for (int i  = 0; i < C; ++i) {
+						var h   = JniEnvironment.Arrays.GetObjectArrayElement (strings.SafeHandle, i);
+						var o   = vm.GetObject<JavaObject> (h, JniHandleOwnership.Transfer);
+						rlist.Add (o);
+					}
+					getObjectTime.Stop ();
+					foreach (var o in rlist)
+						o.DisposeUnlessRegistered ();
+				}
+			}
+
+			total.Stop ();
+			Console.WriteLine ("## {0} Timing: Total={1} AllocObject={2} NewObject={3} `new JavaObject()`={4} JavaVM.GetObject()={5}",
+					nameof (ObjectCreationTiming), total.Elapsed, allocTime.Elapsed, newObjectTime.Elapsed, newTime.Elapsed, getObjectTime.Elapsed);
+		}
 	}
 
 	[TestFixture]

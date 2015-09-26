@@ -496,9 +496,11 @@ namespace Java.Interop
 			return (IJavaObject)Activator.CreateInstance (targetType, handle, transfer);
 		}
 
-		Type GetWrapperType (JniReferenceSafeHandle handle)
+		Type GetWrapperType (JniReferenceSafeHandle instance)
 		{
-			var jniTypeName = handle.GetJniTypeName ();
+			var klass       = JniEnvironment.Types.GetObjectClass (instance);
+			var jniTypeName = JniEnvironment.Types.GetJniTypeNameFromClass (klass);
+
 			Type type = null;
 			while (jniTypeName != null) {
 				type = GetTypeForJniTypeRefererence (jniTypeName);
@@ -512,15 +514,22 @@ namespace Java.Interop
 						where   p [0].ParameterType == typeof(JniReferenceSafeHandle) &&
 						    p [1].ParameterType == typeof(JniHandleOwnership)
 						select  c;
-					if (ctors.Any ())
+					if (ctors.Any ()) {
+						klass.Dispose ();
 						return type;
+					}
 				}
 
-				using (var jniType  = new JniType (jniTypeName))
-				using (var super    = jniType.GetSuperclass ()) {
-					jniTypeName = super == null ? null : super.Name;
-				}
+				var super   = JniEnvironment.Types.GetSuperclass (klass);
+				jniTypeName = (super == null || super.IsClosed || super.IsInvalid)
+					? null
+					: JniEnvironment.Types.GetJniTypeNameFromClass (super);
+
+				klass.Dispose ();
+				klass      = super;
 			}
+			if (klass != null)
+				klass.Dispose ();
 			return null;
 		}
 

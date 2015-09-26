@@ -114,23 +114,26 @@ namespace Java.Interop.Dynamic {
 
 			StaticMethods   = new Dictionary<string, List<JavaMethodInvokeInfo>> ();
 
-			using (var methods = new JavaObjectArray<JavaObject> (Class_getMethods.CallVirtualObjectMethod (members.JniPeerType.SafeHandle), JniHandleOwnership.Transfer)) {
-				foreach (var method in methods) {
-					var s = Member_getModifiers.CallVirtualInt32Method (method.SafeHandle);
+			using (var methods = Class_getMethods.CallVirtualObjectMethod (members.JniPeerType.SafeHandle)) {
+				int len = JniEnvironment.Arrays.GetArrayLength (methods);
+				for (int i = 0; i < len; ++i) {
+					var method  = JniEnvironment.Arrays.GetObjectArrayElement (methods, i);
+					var s       = Member_getModifiers.CallVirtualInt32Method (method);
 					if ((s & JavaModifiers.Static) != JavaModifiers.Static) {
 						method.Dispose ();
 						continue;
 					}
 
-					var name = JniEnvironment.Strings.ToString (Method_getName.CallVirtualObjectMethod (method.SafeHandle), JniHandleOwnership.Transfer);
+					var name = JniEnvironment.Strings.ToString (Method_getName.CallVirtualObjectMethod (method), JniHandleOwnership.Transfer);
 
 					List<JavaMethodInvokeInfo> overloads;
 					if (!StaticMethods.TryGetValue (name, out overloads))
 						StaticMethods.Add (name, overloads = new List<JavaMethodInvokeInfo> ());
 
-					var rt = new JniType (Method_getReturnType.CallVirtualObjectMethod (method.SafeHandle), JniHandleOwnership.Transfer);
-					var m = new JavaMethodInvokeInfo (name, true, rt, method);
+					var rt  = new JniType (Method_getReturnType.CallVirtualObjectMethod (method), JniHandleOwnership.Transfer);
+					var m   = new JavaMethodInvokeInfo (name, true, rt, method);
 					overloads.Add (m);
+					method.Dispose ();
 				}
 			}
 		}
@@ -356,18 +359,19 @@ namespace Java.Interop.Dynamic {
 
 		public  string          Name;
 		public  JniType         ReturnType;
-		public  List<JniType>   Arguments;
 		public  bool            IsStatic;
-		public  JavaObject      Method;
+
+		public  List<JniGlobalReference>    Arguments;
+		public  JniGlobalReference          Method;
 
 		public  string          Signature;
 
-		public JavaMethodInvokeInfo (string name, bool isStatic, JniType returnType, JavaObject method)
+		public JavaMethodInvokeInfo (string name, bool isStatic, JniType returnType, JniReferenceSafeHandle method)
 		{
 			Name            = name;
 			IsStatic        = isStatic;
 			ReturnType      = returnType;
-			Method          = method;
+			Method          = method.NewGlobalRef ();
 		}
 
 		public void Dispose ()
@@ -383,8 +387,6 @@ namespace Java.Interop.Dynamic {
 				return;
 
 			for (int i = 0; i < Arguments.Count; ++i) {
-				if (Arguments [i] == null)
-					continue;
 				Arguments [i].Dispose ();
 				Arguments [i] = null;
 			}
@@ -400,13 +402,14 @@ namespace Java.Interop.Dynamic {
 			var sb  = new StringBuilder ();
 			sb.Append (Name).Append ("\u0000").Append ("(");
 
-			Arguments   = new List<JniType> ();
-			using (var methodParams = new JavaObjectArray<JavaObject> (DynamicJavaClass.Method_getParameterTypes.CallVirtualObjectMethod (Method.SafeHandle), JniHandleOwnership.Transfer)) {
-				foreach (var p in methodParams) {
-					var pt  = new JniType (p.SafeHandle, JniHandleOwnership.DoNotTransfer);
-					Arguments.Add (pt);
-					sb.Append (vm.GetJniTypeInfoForJniTypeReference (pt.Name).JniTypeReference);
-					p.Dispose ();
+			using (var methodParams = DynamicJavaClass.Method_getParameterTypes.CallVirtualObjectMethod (Method)) {
+				int len     = JniEnvironment.Arrays.GetArrayLength (methodParams);
+				Arguments   = new List<JniGlobalReference> (len);
+				for (int i = 0; i < len; ++i) {
+					using (var p = JniEnvironment.Arrays.GetObjectArrayElement (methodParams, i)) {
+						sb.Append (JniEnvironment.Types.GetJniTypeNameFromClass (p));
+						Arguments.Add (p.NewGlobalRef ());
+					}
 				}
 			}
 			sb.Append (")").Append (vm.GetJniTypeInfoForJniTypeReference (ReturnType.Name).JniTypeReference);
@@ -425,10 +428,10 @@ namespace Java.Interop.Dynamic {
 			for (int i = 0; i < Arguments.Count; ++i) {
 				if (args [i] == null) {
 					// Builtin type -- JNIEnv.FindClass("I") throws!
-					if (Arguments [i].Name != vm.GetJniTypeInfoForType (dargs [i].LimitType).JniTypeReference)
+					if (JniEnvironment.Types.GetJniTypeNameFromClass (Arguments [i]) != vm.GetJniTypeInfoForType (dargs [i].LimitType).JniTypeReference)
 						return false;
 				}
-				else if (!Arguments [i].IsAssignableFrom (args [i]))
+				else if (!JniEnvironment.Types.IsAssignableFrom (Arguments [i], args [i].SafeHandle))
 					return false;
 			}
 			return true;
