@@ -7,7 +7,7 @@ namespace Java.Interop {
 	public sealed partial class JniPeerMembers {
 
 		public JniPeerMembers (string jniPeerType, Type managedPeerType)
-			: this (jniPeerType)
+			: this (jniPeerType, managedPeerType, checkManagedPeerType: true)
 		{
 			if (managedPeerType == null)
 				throw new ArgumentNullException ("managedPeerType");
@@ -24,21 +24,37 @@ namespace Java.Interop {
 			ManagedPeerType = managedPeerType;
 		}
 
-		JniPeerMembers (string jniPeerType)
+		JniPeerMembers (string jniPeerType, Type managedPeerType, bool checkManagedPeerType)
 		{
 			if (jniPeerType == null)
 				throw new ArgumentNullException ("jniPeerType");
 
+			if (checkManagedPeerType) {
+				if (managedPeerType == null)
+					throw new ArgumentNullException ("managedPeerType");
+				if (!typeof (IJavaObject).IsAssignableFrom (managedPeerType))
+					throw new ArgumentException ("'managedPeerType' must implement the IJavaObject interface.", "managedPeerType");
+
+				Debug.Assert (
+					JniEnvironment.Current.JavaVM.GetJniTypeInfoForType (managedPeerType).JniTypeName == jniPeerType,
+					string.Format ("ManagedPeerType <=> JniTypeName Mismatch! javaVM.GetJniTypeInfoForType(typeof({0})).JniTypeName=\"{1}\" != \"{2}\"",
+						managedPeerType.FullName,
+						JniEnvironment.Current.JavaVM.GetJniTypeInfoForType (managedPeerType).JniTypeName,
+						jniPeerType));
+			}
+
 			JniPeerTypeName = jniPeerType;
+			ManagedPeerType = managedPeerType;
+
 			instanceMethods = new JniPeerInstanceMethods (this);
 			instanceFields  = new JniPeerInstanceFields (this);
 			staticMethods   = new JniPeerStaticMethods (this);
 			staticFields    = new JniPeerStaticFields (this);
 		}
 
-		static JniPeerMembers CreatePeerMembers (string jniPeerType)
+		static JniPeerMembers CreatePeerMembers (string jniPeerType, Type managedPeerType)
 		{
-			return new JniPeerMembers (jniPeerType);
+			return new JniPeerMembers (jniPeerType, managedPeerType, checkManagedPeerType: false);
 		}
 
 		JniType     jniPeerType;

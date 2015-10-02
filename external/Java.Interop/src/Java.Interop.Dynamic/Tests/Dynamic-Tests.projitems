@@ -10,5 +10,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop.Dynamic\DynamicJavaClassTests.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop.Dynamic\DynamicJavaInstanceTests.cs" />
   </ItemGroup>
 </Project>

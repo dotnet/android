@@ -34,6 +34,15 @@
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Java.Interop.Dynamic\DynamicJavaClass.cs" />
+    <Compile Include="Java.Interop.Dynamic\DynamicJavaInstance.cs" />
+    <Compile Include="Java.Interop.Dynamic\JavaClassInfo.cs" />
+    <Compile Include="Java.Interop.Dynamic\JavaConstructorInfo.cs" />
+    <Compile Include="Java.Interop.Dynamic\JavaFieldInfo.cs" />
+    <Compile Include="Java.Interop.Dynamic\JavaInstanceProxy.cs" />
+    <Compile Include="Java.Interop.Dynamic\JavaMemberInfo.cs" />
+    <Compile Include="Java.Interop.Dynamic\JavaMethodBase.cs" />
+    <Compile Include="Java.Interop.Dynamic\JavaMethodInfo.cs" />
+    <Compile Include="Java.Interop.Dynamic\JniMetaObject.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
   <ItemGroup>

@@ -71,7 +71,7 @@ namespace Java.Interop {
 			return (T) jvm.GetObject (handle, transfer, typeof (T));
 		}
 
-		internal static JniLocalReference CreateLocalRef<T> (T value)
+		public  static JniLocalReference CreateLocalRef<T> (T value)
 		{
 			var jvm     = JniEnvironment.Current.JavaVM;
 

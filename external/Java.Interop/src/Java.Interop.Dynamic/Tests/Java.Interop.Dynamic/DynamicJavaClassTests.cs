@@ -44,7 +44,9 @@ namespace Java.Interop.DynamicTests {
 		public void DisposedInstanceThrowsObjectDisposedException ()
 		{
 			dynamic Integer = new DynamicJavaClass (Integer_class);
+			Assert.AreEqual (1,     JavaClassInfo.GetClassInfoCount (Integer_class));
 			Integer.Dispose ();
+			Assert.AreEqual (-1,    JavaClassInfo.GetClassInfoCount (Integer_class));
 			Integer.Dispose ();  // Dispose() is idempotent
 			Assert.Catch<Exception> (() => Integer.bitCount (2));
 			Assert.Catch<Exception> (() => {
@@ -59,8 +61,10 @@ namespace Java.Interop.DynamicTests {
 		public void JniClassName ()
 		{
 			dynamic Arrays  = new DynamicJavaClass (Arrays_class);
+			Assert.AreEqual (1,     JavaClassInfo.GetClassInfoCount (Arrays_class));
 			Assert.AreEqual (Arrays_class, Arrays.JniClassName);
 			Arrays.Dispose ();
+			Assert.AreEqual (-1,    JavaClassInfo.GetClassInfoCount (Arrays_class));
 		}
 
 		[Test]
@@ -116,6 +120,37 @@ namespace Java.Interop.DynamicTests {
 			int v       = d.Method ("foo");
 			Assert.AreEqual (3, v);
 			d.Dispose ();
+		}
+
+		[Test]
+		public void InvokeConstructor ()
+		{
+			dynamic Integer = new DynamicJavaClass (Integer_class);
+			Assert.AreEqual (1,     JavaClassInfo.GetClassInfoCount (Integer_class));
+			dynamic value = Integer (42);
+			Assert.AreEqual (2,     JavaClassInfo.GetClassInfoCount (Integer_class));
+			Assert.IsTrue (value is DynamicJavaInstance);
+			value.Dispose ();
+			Assert.AreEqual (1,     JavaClassInfo.GetClassInfoCount (Integer_class));
+			Integer.Dispose ();
+			Assert.AreEqual (-1,    JavaClassInfo.GetClassInfoCount (Integer_class));
+		}
+	}
+
+	static class JavaClassInfo {
+
+		static  Func<string, int>   getClassInfoCount;
+
+		static JavaClassInfo ()
+		{
+			var t               = typeof (DynamicJavaClass).Assembly.GetType ("Java.Interop.Dynamic.JavaClassInfo");
+			getClassInfoCount   = (Func<string, int>)
+				Delegate.CreateDelegate (typeof (Func<string, int>), t.GetMethod ("GetClassInfoCount"));
+		}
+
+		public  static  int GetClassInfoCount (string jniClassName)
+		{
+			return getClassInfoCount (jniClassName);
 		}
 	}
 }
