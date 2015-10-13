@@ -159,7 +159,7 @@ namespace Xamarin.Java.Interop
 			if (name == null)
 				return;
 
-			builder.AppendFormat ("\tdelegate {0} {1} (JniEnvironmentSafeHandle env", entry.GetReturnType (entry.Name), name);
+			builder.AppendFormat ("\tunsafe delegate {0} {1} (JniEnvironmentSafeHandle env", entry.GetReturnType (entry.Name), name);
 			for (int i = 0; i < entry.Parameters.Length; i++) {
 				if (i >= 0) {
 					builder.Append (", ");
@@ -219,43 +219,13 @@ namespace Xamarin.Java.Interop
 					continue;
 
 				o.WriteLine ();
-				o.Write ("\t\t{2} static {0} {1} (", entry.GetReturnType(entry.Name), entry.ApiName, entry.Visibility);
+				o.Write ("\t\t{2} static unsafe {0} {1} (", entry.GetReturnType(entry.Name), entry.ApiName, entry.Visibility);
 				switch (entry.ApiName) {
-				case "NewArray":
-					var copyArray = GetArrayCopy (entry);
-					o.WriteLine ("{0} array)", copyArray.Parameters [3].Type.ManagedType);
-					o.WriteLine ("\t\t{");
-					o.WriteLine ("\t\t\tif (array == null)");
-					o.WriteLine ("\t\t\t\treturn null;");
-					o.WriteLine ("\t\t\tvar result = JniEnvironment.Current.Invoker.{0} (JniEnvironment.Current.SafeHandle, array.Length);", entry.Name);
-					RaiseException (o, entry);
-					LogHandleCreation (o, entry, "result", "\t\t\t");
-					o.WriteLine ("\t\t\tCopyArray (array, result);");
-					o.WriteLine ("\t\t\treturn result;");
-					break;
-				case "CopyArray":
-					if (entry.Name.StartsWith ("G")) {
-						o.WriteLine ("JniReferenceSafeHandle src, {0} dest)", entry.Parameters [3].Type.ManagedType);
-						o.WriteLine ("\t\t{");
-						o.WriteLine ("\t\t\tif (src == null)");
-						o.WriteLine ("\t\t\t\treturn;");
-						o.WriteLine ("\t\t\tJniEnvironment.Current.Invoker.{0} (JniEnvironment.Current.SafeHandle, src, 0, dest.Length, dest);", entry.Name);
-					} else {
-						o.WriteLine ("{0} src, JniReferenceSafeHandle dest)", entry.Parameters [3].Type.ManagedType);
-						o.WriteLine ("\t\t{");
-						o.WriteLine ("\t\t\tif (src == null)");
-						o.WriteLine ("\t\t\t\tthrow new ArgumentNullException (\"src\");");
-						o.WriteLine ("\t\t\tJniEnvironment.Current.Invoker.{0} (JniEnvironment.Current.SafeHandle, dest, 0, src.Length, src);", entry.Name);
-					}
-					RaiseException (o, entry);
-					break;
 				default:
 					bool is_void = entry.ReturnType.ManagedType == "void";
 					for (int i = 0; i < entry.Parameters.Length; i++) {
 						if (i > 0)
 							o.Write (", ");
-						if (entry.Parameters [i].IsParamArray)
-							o.Write ("params ");
 						o.Write ("{0} {1}", entry.Parameters [i].Type.ManagedType, Escape (entry.Parameters [i].Name));
 					}
 					o.WriteLine (")");
@@ -513,7 +483,7 @@ namespace Xamarin.Java.Interop
 		{
 			native_type = native_type ?? managed_type ?? Type;
 			switch (native_type) {
-			case "jvalue*":                 return "JValue[]";
+			case "jvalue*":                 return "JValue*";
 			case "jbyte":                   return "sbyte";
 			case "jchar":                   return "char";
 			case "jchar*":                  return "IntPtr";

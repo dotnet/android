@@ -32,12 +32,12 @@ namespace Java.Interop
 			}
 		}
 
-		public JavaObject ()
+		public unsafe JavaObject ()
 		{
 			using (SetSafeHandle (
-						JniPeerMembers.InstanceMethods.StartCreateInstance ("()V", GetType ()),
+						JniPeerMembers.InstanceMethods.StartCreateInstance ("()V", GetType (), null),
 						JniHandleOwnership.Transfer)) {
-				JniPeerMembers.InstanceMethods.FinishCreateInstance ("()V", this);
+				JniPeerMembers.InstanceMethods.FinishCreateInstance ("()V", this, null);
 			}
 		}
 

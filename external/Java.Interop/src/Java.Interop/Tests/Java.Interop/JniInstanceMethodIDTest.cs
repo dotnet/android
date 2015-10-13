@@ -11,7 +11,7 @@ namespace Java.InteropTests
 	{
 		// https://code.google.com/p/android/issues/detail?id=65710
 		[Test]
-		public void CallNonvirtualVoidMethod_WithBaseMethodIDAndDerivedType ()
+		public unsafe void CallNonvirtualVoidMethod_WithBaseMethodIDAndDerivedType ()
 		{
 			using (var b = new JniType ("com/xamarin/interop/CallNonvirtualBase"))
 			using (var d = new JniType ("com/xamarin/interop/CallNonvirtualDerived")) {
@@ -20,7 +20,7 @@ namespace Java.InteropTests
 
 				var c = d.GetConstructor ("()V");
 				var g = d.GetInstanceField ("methodInvoked", "Z");
-				using (var o = d.NewObject (c)) {
+				using (var o = d.NewObject (c, null)) {
 					if (JavaVMFixture.CallNonvirtualVoidMethodSupportsDeclaringClassMismatch) {
 						m.CallNonvirtualVoidMethod (o, d.SafeHandle);
 						Assert.IsFalse (f.GetBooleanValue (o));

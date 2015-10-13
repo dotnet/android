@@ -46,11 +46,11 @@ namespace Android.InteropTests {
 			return sw.Elapsed;
 		}
 
-		TimeSpan GetJIMethodCallTiming ()
+		unsafe TimeSpan GetJIMethodCallTiming ()
 		{
 			using (var k = new JniType ("java/lang/Object"))
 			using (var c = k.GetConstructor ("()V"))
-			using (var o = k.NewObject (c))
+			using (var o = k.NewObject (c, null))
 			using (var t = k.GetInstanceMethod ("toString", "()Ljava/lang/String;")) {
 
 				var sw = Stopwatch.StartNew ();
@@ -92,7 +92,7 @@ namespace Android.InteropTests {
 			deleteLocalRefTiming    = sw.Elapsed;
 		}
 
-		void GetJICallObjectMethodAndDeleteLocalRefTimings (
+		unsafe void GetJICallObjectMethodAndDeleteLocalRefTimings (
 				out TimeSpan callVirtualObjectMethodTime, out TimeSpan disposeTime,
 				out TimeSpan safeCallObjectMethodTime, out TimeSpan safeDeleteLocalRefTime,
 				out TimeSpan unsafeCallObjectMethodTime, out TimeSpan unsafeDeleteLocalRefTime)
@@ -100,7 +100,7 @@ namespace Android.InteropTests {
 
 			using (var k = new JniType ("java/lang/Object"))
 			using (var c = k.GetConstructor ("()V"))
-			using (var o = k.NewObject (c))
+			using (var o = k.NewObject (c, null))
 			using (var t = k.GetInstanceMethod ("toString", "()Ljava/lang/String;")) {
 
 				using (var r = t.CallVirtualObjectMethod (o)) {

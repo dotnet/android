@@ -275,7 +275,7 @@ namespace Java.Interop.Dynamic {
 			return (s & JavaModifiers.Static) == JavaModifiers.Static;
 		}
 
-		internal bool TryInvokeMember (IJavaObject self, JavaMethodBase[] overloads, DynamicMetaObject[] args, out object value)
+		internal unsafe bool TryInvokeMember (IJavaObject self, JavaMethodBase[] overloads, DynamicMetaObject[] args, out object value)
 		{
 			value       = null;
 			var margs   = (List<JniArgumentMarshalInfo>) null;
@@ -288,8 +288,10 @@ namespace Java.Interop.Dynamic {
 					return false;
 
 				margs       = args.Select (arg => new JniArgumentMarshalInfo (arg.Value, arg.LimitType)).ToList ();
-				var jvalues = margs.Select (a => a.JValue).ToArray ();
-				value       = invoke.Invoke (self, jvalues);
+				var jargs   = stackalloc JValue [margs.Count];
+				for (int i = 0; i < margs.Count; ++i)
+					jargs [i] = margs [i].JValue;
+				value       = invoke.Invoke (self, jargs);
 				return true;
 			}
 			finally {

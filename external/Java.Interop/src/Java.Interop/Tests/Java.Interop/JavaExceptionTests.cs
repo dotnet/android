@@ -41,11 +41,13 @@ namespace Java.InteropTests
 			}
 		}
 
-		static JniLocalReference CreateThrowable (JniType type, string message)
+		static unsafe JniLocalReference CreateThrowable (JniType type, string message)
 		{
 			var c = type.GetConstructor ("(Ljava/lang/String;)V");
 			using (var s = JniEnvironment.Strings.NewString (message)) {
-				return type.NewObject (c, new JValue (s));
+				var args = stackalloc JValue [1];
+				args [0] = new JValue (s);
+				return type.NewObject (c, args);
 			}
 		}
 
@@ -56,10 +58,13 @@ namespace Java.InteropTests
 			}
 		}
 
-		static void SetThrowableCause (JniType type, JniLocalReference outer, JniReferenceSafeHandle inner)
+		static unsafe void SetThrowableCause (JniType type, JniLocalReference outer, JniReferenceSafeHandle inner)
 		{
+			var a = stackalloc JValue [1];
+			a [0] = new JValue (inner);
+
 			var i = type.GetInstanceMethod ("initCause", "(Ljava/lang/Throwable;)Ljava/lang/Throwable;");
-			i.CallVirtualObjectMethod (outer, new JValue (inner))
+			i.CallVirtualObjectMethod (outer, a)
 				.Dispose ();
 		}
 

@@ -54,11 +54,11 @@ namespace Java.InteropTests
 		}
 
 		[Test]
-		public void Types_IsSameObject ()
+		public unsafe void Types_IsSameObject ()
 		{
 			using (var t = new JniType ("java/lang/Object")) {
 				var c = t.GetConstructor ("()V");
-				using (var o = t.NewObject (c)) {
+				using (var o = t.NewObject (c, null)) {
 					using (var ot = JniEnvironment.Types.GetTypeFromInstance (o)) {
 						Assert.IsTrue (JniEnvironment.Types.IsSameObject (t.SafeHandle, ot.SafeHandle));
 					}
@@ -76,11 +76,11 @@ namespace Java.InteropTests
 		}
 
 		[Test]
-		public void Handles_NewReturnToJniRef ()
+		public unsafe void Handles_NewReturnToJniRef ()
 		{
 			using (var t = new JniType ("java/lang/Object")) {
 				var c = t.GetConstructor ("()V");
-				using (var o = t.NewObject (c)) {
+				using (var o = t.NewObject (c, null)) {
 					// warning: lref 'leak'
 					var r = JniEnvironment.Handles.NewReturnToJniRef (o);
 					var h = new JniInvocationHandle (r);

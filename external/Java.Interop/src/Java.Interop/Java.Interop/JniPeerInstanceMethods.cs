@@ -91,10 +91,10 @@ namespace Java.Interop
 			}
 		}
 
-		public JniLocalReference StartCreateInstance (string constructorSignature, Type declaringType, params JValue[] arguments)
+		public unsafe JniLocalReference StartCreateInstance (string constructorSignature, Type declaringType, JValue* parameters)
 		{
 			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
-				return NewObject (constructorSignature, declaringType, arguments);
+				return NewObject (constructorSignature, declaringType, parameters);
 			}
 			using (var lref = GetConstructorsForType (declaringType)
 					.JniPeerType
@@ -102,21 +102,21 @@ namespace Java.Interop
 				return lref.ToAllocObjectRef ();
 		}
 
-		JniLocalReference NewObject (string constructorSignature, Type declaringType, JValue[] arguments)
+		unsafe JniLocalReference NewObject (string constructorSignature, Type declaringType, JValue* parameters)
 		{
 			var methods = GetConstructorsForType (declaringType);
 			var ctor    = methods.GetConstructor (constructorSignature);
-			return methods.JniPeerType.NewObject (ctor, arguments);
+			return methods.JniPeerType.NewObject (ctor, parameters);
 		}
 
-		public void FinishCreateInstance (string constructorSignature, IJavaObject self, params JValue[] arguments)
+		public unsafe void FinishCreateInstance (string constructorSignature, IJavaObject self, JValue* parameters)
 		{
 			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
 				return;
 			}
 			var methods = GetConstructorsForType (self.GetType ());
 			var ctor    = methods.GetConstructor (constructorSignature);
-			ctor.CallNonvirtualVoidMethod (self.SafeHandle, methods.JniPeerType.SafeHandle, arguments);
+			ctor.CallNonvirtualVoidMethod (self.SafeHandle, methods.JniPeerType.SafeHandle, parameters);
 		}
 	}
 

@@ -10,14 +10,17 @@ namespace Java.InteropTests
 	public class JniTypeTest : JavaVMFixture {
 
 		[Test]
-		public void Sanity ()
+		public unsafe void Sanity ()
 		{
 			using (var Integer_class = new JniType ("java/lang/Integer")) {
 				Assert.AreEqual ("java/lang/Integer", Integer_class.Name);
 
+				var ctor_args = stackalloc JValue [1];
+				ctor_args [0] = new JValue (42);
+
 				var Integer_ctor        = Integer_class.GetConstructor ("(I)V");
 				var Integer_intValue    = Integer_class.GetInstanceMethod ("intValue", "()I");
-				using (var o = Integer_class.NewObject (Integer_ctor, new JValue (42))) {
+				using (var o = Integer_class.NewObject (Integer_ctor, ctor_args)) {
 					int v = Integer_intValue.CallVirtualInt32Method (o);
 					Assert.AreEqual (42, v);
 				}
@@ -31,12 +34,12 @@ namespace Java.InteropTests
 		}
 
 		[Test]
-		public void Dispose_Exceptions ()
+		public unsafe void Dispose_Exceptions ()
 		{
 			var t = new JniType ("java/lang/Object");
 			t.Dispose ();
 			Assert.Throws<ObjectDisposedException> (() => t.AllocObject ());
-			Assert.Throws<ObjectDisposedException> (() => t.NewObject (null));
+			Assert.Throws<ObjectDisposedException> (() => t.NewObject (null, null));
 			Assert.Throws<ObjectDisposedException> (() => t.GetConstructor (null));
 			Assert.Throws<ObjectDisposedException> (() => t.GetInstanceField (null, null));
 			Assert.Throws<ObjectDisposedException> (() => t.GetInstanceMethod (null, null));
@@ -120,21 +123,23 @@ namespace Java.InteropTests
 		}
 
 		[Test]
-		public void Name ()
+		public unsafe void Name ()
 		{
 			using (var Object_class         = new JniType ("java/lang/Object"))
 			using (var Class_class          = new JniType ("java/lang/Class"))
 			using (var Class_getMethod      = Class_class.GetInstanceMethod ("getMethod", "(Ljava/lang/String;[Ljava/lang/Class;)Ljava/lang/reflect/Method;"))
 			using (var Method_class         = new JniType ("java/lang/reflect/Method"))
 			using (var Method_getReturnType = Method_class.GetInstanceMethod ("getReturnType", "()Ljava/lang/Class;"))
-			using (var hashCode_str         = JniEnvironment.Strings.NewString ("hashCode"))
-			using (var Object_hashCode      = Class_getMethod.CallVirtualObjectMethod (Object_class.SafeHandle, new JValue (hashCode_str)))
-			using (var Object_hashCode_rt   = Method_getReturnType.CallVirtualObjectMethod (Object_hashCode))
-			{
-				Assert.AreEqual ("java/lang/Object", Object_class.Name);
+			using (var hashCode_str         = JniEnvironment.Strings.NewString ("hashCode")) {
+				var hashCode_args           = stackalloc JValue [1];
+				hashCode_args [0]           = new JValue (hashCode_str);
+				using (var Object_hashCode = Class_getMethod.CallVirtualObjectMethod (Object_class.SafeHandle, hashCode_args))
+				using (var Object_hashCode_rt = Method_getReturnType.CallVirtualObjectMethod (Object_hashCode, null)) {
+					Assert.AreEqual ("java/lang/Object", Object_class.Name);
 
-				using (var t = new JniType (Object_hashCode_rt, JniHandleOwnership.DoNotTransfer))
-					Assert.AreEqual ("I", t.Name);
+					using (var t = new JniType (Object_hashCode_rt, JniHandleOwnership.DoNotTransfer))
+						Assert.AreEqual ("I", t.Name);
+				}
 			}
 		}
 

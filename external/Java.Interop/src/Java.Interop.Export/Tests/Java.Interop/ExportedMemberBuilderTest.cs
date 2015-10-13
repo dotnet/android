@@ -57,10 +57,10 @@ namespace Java.InteropTests
 			return new JniType ("com/xamarin/interop/export/ExportType");
 		}
 
-		static ExportTest CreateExportTest (JniType type)
+		static unsafe ExportTest CreateExportTest (JniType type)
 		{
 			var c = type.GetConstructor ("()V");
-			return new ExportTest (type.NewObject (c), JniHandleOwnership.Transfer);
+			return new ExportTest (type.NewObject (c, null), JniHandleOwnership.Transfer);
 		}
 
 		[Test]

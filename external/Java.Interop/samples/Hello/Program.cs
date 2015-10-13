@@ -7,7 +7,7 @@ namespace Hello
 {
 	class MainClass
 	{
-		public static void Main (string[] args)
+		public static unsafe void Main (string[] args)
 		{
 			Console.WriteLine ("Hello World!");
 			try {
@@ -24,7 +24,7 @@ namespace Hello
 				Console.WriteLine ("vm.SafeHandle={0}", vm.SafeHandle);
 				var t = new JniType ("java/lang/Object");
 				var c = t.GetConstructor ("()V");
-				var o = t.NewObject (c);
+				var o = t.NewObject (c, null);
 				var m = t.GetInstanceMethod ("hashCode", "()I");
 				int i = m.CallVirtualInt32Method (o);
 				Console.WriteLine ("java.lang.Object={0}", o);

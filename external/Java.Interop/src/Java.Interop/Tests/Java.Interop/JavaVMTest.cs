@@ -106,11 +106,11 @@ namespace Java.InteropTests
 		}
 
 		[Test]
-		public void GetObject_FindBestMatchType ()
+		public unsafe void GetObject_FindBestMatchType ()
 		{
 			using (var t = new JniType (TestType.JniTypeName))
 			using (var c = t.GetConstructor ("()V"))
-			using (var o = t.NewObject (c))
+			using (var o = t.NewObject (c, null))
 			using (var w = JavaVM.Current.GetObject (o, JniHandleOwnership.DoNotTransfer)) {
 				Assert.AreEqual (typeof (TestType), w.GetType ());
 			}

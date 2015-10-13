@@ -63,7 +63,7 @@ namespace Java.Interop.PerformanceTests {
 		delegate void DV3AI (int i1, int i2, int i3);
 
 		[Test]
-		public void MethodInvocationTiming ()
+		public unsafe void MethodInvocationTiming ()
 		{
 			FooMethods pinvoke_methods;
 			foo_get_methods (out pinvoke_methods);
@@ -85,9 +85,9 @@ namespace Java.Interop.PerformanceTests {
 
 			var transfer    = JniHandleOwnership.Transfer;
 
-			var jobj1 = new JavaObject (Object_class.NewObject (Object_init), transfer);
-			var jobj2 = new JavaObject (Object_class.NewObject (Object_init), transfer);
-			var jobj3 = new JavaObject (Object_class.NewObject (Object_init), transfer);
+			var jobj1 = new JavaObject (Object_class.NewObject (Object_init, null), transfer);
+			var jobj2 = new JavaObject (Object_class.NewObject (Object_init, null), transfer);
+			var jobj3 = new JavaObject (Object_class.NewObject (Object_init, null), transfer);
 
 			var obj1 = new SomeClass ();
 			var obj2 = new SomeClass ();
@@ -563,7 +563,7 @@ namespace Java.Interop.PerformanceTests {
 		}
 
 		[Test]
-		public void ObjectCreationTiming ()
+		public unsafe void ObjectCreationTiming ()
 		{
 			const int C = 100;
 
@@ -583,7 +583,7 @@ namespace Java.Interop.PerformanceTests {
 
 				newObjectTime   = Stopwatch.StartNew ();
 				for (int i = 0; i < C; ++i) {
-					using (var h = Object_class.NewObject (Object_init)) {
+					using (var h = Object_class.NewObject (Object_init, null)) {
 					}
 				}
 				newObjectTime.Stop ();

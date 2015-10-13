@@ -18,10 +18,10 @@ namespace Java.Interop.PerformanceTests
 		}
 
 		static JniInstanceMethodID Object_ctor;
-		static JniLocalReference _NewObject ()
+		static unsafe JniLocalReference _NewObject ()
 		{
 			TypeRef.GetCachedConstructor (ref Object_ctor, "()V");
-			return TypeRef.NewObject (Object_ctor);
+			return TypeRef.NewObject (Object_ctor, null);
 		}
 
 		public JavaTiming ()
@@ -96,15 +96,19 @@ namespace Java.Interop.PerformanceTests
 		}
 
 		static JniInstanceMethodID vim1;
-		public int VirtualIntMethod1Args (int value)
+		public unsafe int VirtualIntMethod1Args (int value)
 		{
 			TypeRef.GetCachedInstanceMethod (ref vim1, "VirtualIntMethod1Args", "(I)I");
+
+			var args = stackalloc JValue [1];
+			args [0] = new JValue (value);
 			int r;
+
 			if (GetType () == _members.ManagedPeerType)
-				r = vim1.CallVirtualInt32Method (SafeHandle, new JValue (value));
+				r = vim1.CallVirtualInt32Method (SafeHandle, args);
 			else {
 				JniInstanceMethodID m = JniPeerMembers.InstanceMethods.GetMethodID ("VirtualIntMethod1Args\u0000(I)I");
-				r = m.CallNonvirtualInt32Method (SafeHandle, JniPeerMembers.JniPeerType.SafeHandle, new JValue (value));
+				r = m.CallNonvirtualInt32Method (SafeHandle, JniPeerMembers.JniPeerType.SafeHandle, args);
 			}
 			return r;
 		}
@@ -120,27 +124,33 @@ namespace Java.Interop.PerformanceTests
 		}
 
 		static JniInstanceMethodID vim1_a;
-		public int VirtualIntMethod1Args (int[][][] value)
+		public unsafe int VirtualIntMethod1Args (int[][][] value)
 		{
 			TypeRef.GetCachedInstanceMethod (ref vim1_a, "VirtualIntMethod1Args", "([[[I)I");
+
 			int r;
+
 			using (var native_array = new JavaObjectArray<int[][]> (value)) {
+				var args = stackalloc JValue [1];
+				args [0] = new JValue (native_array);
 				if (GetType () == _members.ManagedPeerType)
-					r = vim1_a.CallVirtualInt32Method (SafeHandle, new JValue (native_array));
+					r = vim1_a.CallVirtualInt32Method (SafeHandle, args);
 				else {
 					JniInstanceMethodID m = JniPeerMembers.InstanceMethods.GetMethodID ("VirtualIntMethod1Args\u0000([[[I)I");
-					r = m.CallNonvirtualInt32Method (SafeHandle, JniPeerMembers.JniPeerType.SafeHandle, new JValue (native_array));
+					r = m.CallNonvirtualInt32Method (SafeHandle, JniPeerMembers.JniPeerType.SafeHandle, args);
 				}
 				native_array.CopyTo (value, 0);
 			}
 			return r;
 		}
 
-		public virtual int Timing_VirtualIntMethod_Marshal1Args (int[][][] value)
+		public unsafe virtual int Timing_VirtualIntMethod_Marshal1Args (int[][][] value)
 		{
 			using (var native_array = new JavaObjectArray<int[][]> (value)) {
+				var args = stackalloc JValue [1];
+				args [0] = new JValue (native_array);
 				try {
-					return _members.InstanceMethods.CallInt32Method ("VirtualIntMethod1Args\u0000([[[I)I", this, new JValue[]{ new JValue (native_array) });
+					return _members.InstanceMethods.CallInt32Method ("VirtualIntMethod1Args\u0000([[[I)I", this, args);
 				} finally {
 					native_array.CopyTo (value, 0);
 				}
@@ -153,48 +163,66 @@ namespace Java.Interop.PerformanceTests
 		}
 
 		static JniStaticMethodID svm1;
-		public static void StaticVoidMethod1Args (IJavaObject obj1)
+		public static unsafe void StaticVoidMethod1Args (IJavaObject obj1)
 		{
 			TypeRef.GetCachedStaticMethod (ref svm1, "StaticVoidMethod1Args",
 					"(Ljava/lang/Object;)V");
-			svm1.CallVoidMethod (TypeRef.SafeHandle, new JValue (obj1));
+			var args = stackalloc JValue [1];
+			args [0] = new JValue (obj1);
+			svm1.CallVoidMethod (TypeRef.SafeHandle, args);
 		}
 
 		static JniStaticMethodID svm2;
-		public static void StaticVoidMethod2Args (IJavaObject obj1, IJavaObject obj2)
+		public static unsafe void StaticVoidMethod2Args (IJavaObject obj1, IJavaObject obj2)
 		{
 			TypeRef.GetCachedStaticMethod (ref svm2, "StaticVoidMethod2Args",
 					"(Ljava/lang/Object;Ljava/lang/Object;)V");
-			svm2.CallVoidMethod (TypeRef.SafeHandle, new JValue (obj1), new JValue (obj2));
+			var args = stackalloc JValue [2];
+			args [0] = new JValue (obj1);
+			args [1] = new JValue (obj2);
+			svm2.CallVoidMethod (TypeRef.SafeHandle, args);
 		}
 
 		static JniStaticMethodID svm3;
-		public static void StaticVoidMethod3Args (IJavaObject obj1, IJavaObject obj2, IJavaObject obj3)
+		public static unsafe void StaticVoidMethod3Args (IJavaObject obj1, IJavaObject obj2, IJavaObject obj3)
 		{
 			TypeRef.GetCachedStaticMethod (ref svm3, "StaticVoidMethod3Args",
 				"(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)V");
-			svm2.CallVoidMethod (TypeRef.SafeHandle, new JValue (obj1), new JValue (obj2), new JValue (obj3));
+			var args = stackalloc JValue [3];
+			args [0] = new JValue (obj1);
+			args [1] = new JValue (obj2);
+			args [1] = new JValue (obj3);
+			svm2.CallVoidMethod (TypeRef.SafeHandle, args);
 		}
 
 		static JniStaticMethodID svmi1;
-		public static void StaticVoidMethod1IArgs (int obj1)
+		public static unsafe void StaticVoidMethod1IArgs (int obj1)
 		{
 			TypeRef.GetCachedStaticMethod (ref svmi1, "StaticVoidMethod1IArgs", "(I)V");
-			svmi1.CallVoidMethod (TypeRef.SafeHandle, new JValue (obj1));
+			var args = stackalloc JValue [1];
+			args [0] = new JValue (obj1);
+			svmi1.CallVoidMethod (TypeRef.SafeHandle, args);
 		}
 
 		static JniStaticMethodID svmi2;
-		public static void StaticVoidMethod2IArgs (int obj1, int obj2)
+		public static unsafe void StaticVoidMethod2IArgs (int obj1, int obj2)
 		{
 			TypeRef.GetCachedStaticMethod (ref svmi2, "StaticVoidMethod2IArgs", "(II)V");
-			svmi1.CallVoidMethod (TypeRef.SafeHandle, new JValue (obj1), new JValue (obj2));
+			var args = stackalloc JValue [2];
+			args [0] = new JValue (obj1);
+			args [1] = new JValue (obj2);
+			svmi1.CallVoidMethod (TypeRef.SafeHandle, args);
 		}
 
 		static JniStaticMethodID svmi3;
-		public static void StaticVoidMethod3IArgs (int obj1, int obj2, int obj3)
+		public static unsafe void StaticVoidMethod3IArgs (int obj1, int obj2, int obj3)
 		{
 			TypeRef.GetCachedStaticMethod (ref svmi3, "StaticVoidMethod3IArgs", "(III)V");
-			svmi1.CallVoidMethod (TypeRef.SafeHandle, new JValue (obj1), new JValue (obj2), new JValue (obj3));
+			var args = stackalloc JValue [3];
+			args [0] = new JValue (obj1);
+			args [1] = new JValue (obj2);
+			args [1] = new JValue (obj3);
+			svmi1.CallVoidMethod (TypeRef.SafeHandle, args);
 		}
 
 		const string toString_name  = "toString";

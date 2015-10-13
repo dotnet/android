@@ -92,11 +92,15 @@ namespace Java.Interop {
 		}
 
 		static JniInstanceMethodID init;
-		internal static JniLocalReference CreateLocalRef (object value)
+		internal static unsafe JniLocalReference CreateLocalRef (object value)
 		{
 			Debug.Assert (value is Boolean, "Expected value of type `Boolean`; was: " + (value == null ? "<null>" : value.GetType ().FullName));
+
+			var args    = stackalloc JValue [1];
+			args [0]    = new JValue ((Boolean) value);
+
 			TypeRef.GetCachedConstructor (ref init, "(Z)V");
-			return TypeRef.NewObject (init, new JValue ((Boolean) value));
+			return TypeRef.NewObject (init, args);
 		}
 
 		static JniInstanceMethodID booleanValue;
@@ -126,11 +130,15 @@ namespace Java.Interop {
 		}
 
 		static JniInstanceMethodID init;
-		internal static JniLocalReference CreateLocalRef (object value)
+		internal static unsafe JniLocalReference CreateLocalRef (object value)
 		{
 			Debug.Assert (value is SByte, "Expected value of type `SByte`; was: " + (value == null ? "<null>" : value.GetType ().FullName));
+
+			var args    = stackalloc JValue [1];
+			args [0]    = new JValue ((SByte) value);
+
 			TypeRef.GetCachedConstructor (ref init, "(B)V");
-			return TypeRef.NewObject (init, new JValue ((SByte) value));
+			return TypeRef.NewObject (init, args);
 		}
 
 		static JniInstanceMethodID byteValue;
@@ -160,11 +168,15 @@ namespace Java.Interop {
 		}
 
 		static JniInstanceMethodID init;
-		internal static JniLocalReference CreateLocalRef (object value)
+		internal static unsafe JniLocalReference CreateLocalRef (object value)
 		{
 			Debug.Assert (value is Char, "Expected value of type `Char`; was: " + (value == null ? "<null>" : value.GetType ().FullName));
+
+			var args    = stackalloc JValue [1];
+			args [0]    = new JValue ((Char) value);
+
 			TypeRef.GetCachedConstructor (ref init, "(C)V");
-			return TypeRef.NewObject (init, new JValue ((Char) value));
+			return TypeRef.NewObject (init, args);
 		}
 
 		static JniInstanceMethodID charValue;
@@ -194,11 +206,15 @@ namespace Java.Interop {
 		}
 
 		static JniInstanceMethodID init;
-		internal static JniLocalReference CreateLocalRef (object value)
+		internal static unsafe JniLocalReference CreateLocalRef (object value)
 		{
 			Debug.Assert (value is Int16, "Expected value of type `Int16`; was: " + (value == null ? "<null>" : value.GetType ().FullName));
+
+			var args    = stackalloc JValue [1];
+			args [0]    = new JValue ((Int16) value);
+
 			TypeRef.GetCachedConstructor (ref init, "(S)V");
-			return TypeRef.NewObject (init, new JValue ((Int16) value));
+			return TypeRef.NewObject (init, args);
 		}
 
 		static JniInstanceMethodID shortValue;
@@ -228,11 +244,15 @@ namespace Java.Interop {
 		}
 
 		static JniInstanceMethodID init;
-		internal static JniLocalReference CreateLocalRef (object value)
+		internal static unsafe JniLocalReference CreateLocalRef (object value)
 		{
 			Debug.Assert (value is Int32, "Expected value of type `Int32`; was: " + (value == null ? "<null>" : value.GetType ().FullName));
+
+			var args    = stackalloc JValue [1];
+			args [0]    = new JValue ((Int32) value);
+
 			TypeRef.GetCachedConstructor (ref init, "(I)V");
-			return TypeRef.NewObject (init, new JValue ((Int32) value));
+			return TypeRef.NewObject (init, args);
 		}
 
 		static JniInstanceMethodID intValue;
@@ -262,11 +282,15 @@ namespace Java.Interop {
 		}
 
 		static JniInstanceMethodID init;
-		internal static JniLocalReference CreateLocalRef (object value)
+		internal static unsafe JniLocalReference CreateLocalRef (object value)
 		{
 			Debug.Assert (value is Int64, "Expected value of type `Int64`; was: " + (value == null ? "<null>" : value.GetType ().FullName));
+
+			var args    = stackalloc JValue [1];
+			args [0]    = new JValue ((Int64) value);
+
 			TypeRef.GetCachedConstructor (ref init, "(J)V");
-			return TypeRef.NewObject (init, new JValue ((Int64) value));
+			return TypeRef.NewObject (init, args);
 		}
 
 		static JniInstanceMethodID longValue;
@@ -296,11 +320,15 @@ namespace Java.Interop {
 		}
 
 		static JniInstanceMethodID init;
-		internal static JniLocalReference CreateLocalRef (object value)
+		internal static unsafe JniLocalReference CreateLocalRef (object value)
 		{
 			Debug.Assert (value is Single, "Expected value of type `Single`; was: " + (value == null ? "<null>" : value.GetType ().FullName));
+
+			var args    = stackalloc JValue [1];
+			args [0]    = new JValue ((Single) value);
+
 			TypeRef.GetCachedConstructor (ref init, "(F)V");
-			return TypeRef.NewObject (init, new JValue ((Single) value));
+			return TypeRef.NewObject (init, args);
 		}
 
 		static JniInstanceMethodID floatValue;
@@ -330,11 +358,15 @@ namespace Java.Interop {
 		}
 
 		static JniInstanceMethodID init;
-		internal static JniLocalReference CreateLocalRef (object value)
+		internal static unsafe JniLocalReference CreateLocalRef (object value)
 		{
 			Debug.Assert (value is Double, "Expected value of type `Double`; was: " + (value == null ? "<null>" : value.GetType ().FullName));
+
+			var args    = stackalloc JValue [1];
+			args [0]    = new JValue ((Double) value);
+
 			TypeRef.GetCachedConstructor (ref init, "(D)V");
-			return TypeRef.NewObject (init, new JValue ((Double) value));
+			return TypeRef.NewObject (init, args);
 		}
 
 		static JniInstanceMethodID doubleValue;

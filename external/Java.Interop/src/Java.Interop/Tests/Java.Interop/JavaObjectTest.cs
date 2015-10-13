@@ -147,11 +147,11 @@ namespace Java.InteropTests
 		}
 
 		[Test]
-		public void Ctor ()
+		public unsafe void Ctor ()
 		{
 			using (var t = new JniType ("java/lang/Object"))
 			using (var c = t.GetConstructor ("()V")) {
-				var lref = t.NewObject (c);
+				var lref = t.NewObject (c, null);
 				using (var o = new JavaObject (lref, JniHandleOwnership.DoNotTransfer)) {
 					Assert.IsFalse (lref.IsInvalid);
 					Assert.AreNotSame (lref, o.SafeHandle);

@@ -177,11 +177,11 @@ namespace Java.Interop {
 			return JniEnvironment.Activator.AllocObject (SafeHandle);
 		}
 
-		public JniLocalReference NewObject (JniInstanceMethodID constructor, params JValue[] @params)
+		public unsafe JniLocalReference NewObject (JniInstanceMethodID constructor, JValue* @parameters)
 		{
 			AssertValid ();
 
-			return JniEnvironment.Activator.NewObject (SafeHandle, constructor, @params);
+			return JniEnvironment.Activator.NewObject (SafeHandle, constructor, parameters);
 		}
 
 		public JniInstanceFieldID GetInstanceField (string name, string signature)

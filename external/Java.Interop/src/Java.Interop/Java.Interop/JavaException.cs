@@ -12,12 +12,12 @@ namespace Java.Interop
 		bool    registered;
 		string  javaStackTrace;
 
-		public JavaException ()
+		public unsafe JavaException ()
 		{
 			using (SetSafeHandle (
-						JniPeerMembers.InstanceMethods.StartCreateInstance ("()V", GetType ()),
+						JniPeerMembers.InstanceMethods.StartCreateInstance ("()V", GetType (), null),
 						JniHandleOwnership.Transfer)) {
-				JniPeerMembers.InstanceMethods.FinishCreateInstance ("()V", this);
+				JniPeerMembers.InstanceMethods.FinishCreateInstance ("()V", this, null);
 			}
 			javaStackTrace    = _GetJavaStack (SafeHandle);
 		}
@@ -149,18 +149,23 @@ namespace Java.Interop
 			return JniEnvironment.Current.JavaVM.GetExceptionForThrowable (e, JniHandleOwnership.Transfer);
 		}
 
-		string _GetJavaStack (JniReferenceSafeHandle handle)
+		unsafe string _GetJavaStack (JniReferenceSafeHandle handle)
 		{
 			using (var StringWriter_class   = new JniType ("java/io/StringWriter"))
 			using (var StringWriter_init    = StringWriter_class.GetConstructor ("()V"))
-			using (var swriter              = StringWriter_class.NewObject (StringWriter_init))
+			using (var swriter              = StringWriter_class.NewObject (StringWriter_init, null))
 			using (var PrintWriter_class    = new JniType ("java/io/PrintWriter"))
-			using (var PrintWriter_init     = PrintWriter_class.GetConstructor ("(Ljava/io/Writer;)V"))
-			using (var pwriter              = PrintWriter_class.NewObject (PrintWriter_init, new JValue (swriter))) {
-				var pst = _members.InstanceMethods.GetMethodID ("printStackTrace\u0000(Ljava/io/PrintWriter;)V");
-				pst.CallVirtualVoidMethod (handle, new JValue (pwriter));
-				var s   = JniEnvironment.Current.Object_toString.CallVirtualObjectMethod (swriter);
-				return JniEnvironment.Strings.ToString (s, JniHandleOwnership.Transfer);
+			using (var PrintWriter_init     = PrintWriter_class.GetConstructor ("(Ljava/io/Writer;)V")) {
+				var pwriter_args = stackalloc JValue [1];
+				pwriter_args [0] = new JValue (swriter);
+				using (var pwriter = PrintWriter_class.NewObject (PrintWriter_init, pwriter_args)) {
+					var pst = _members.InstanceMethods.GetMethodID ("printStackTrace\u0000(Ljava/io/PrintWriter;)V");
+					var pst_args = stackalloc JValue [1];
+					pst_args [0] = new JValue (pwriter);
+					pst.CallVirtualVoidMethod (handle, pst_args);
+					var s = JniEnvironment.Current.Object_toString.CallVirtualObjectMethod (swriter);
+					return JniEnvironment.Strings.ToString (s, JniHandleOwnership.Transfer);
+				}
 			}
 		}
 

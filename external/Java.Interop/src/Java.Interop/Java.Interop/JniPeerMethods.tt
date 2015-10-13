@@ -60,7 +60,7 @@ namespace Java.Interop {
 				return lref.ToAllocObjectRef ();
 		}
 
-		JniLocalReference NewObject<#= typeParams #> (
+		unsafe JniLocalReference NewObject<#= typeParams #> (
 		    string  constructorSignature,
 		    Type    declaringType,
 		    <#= methodParams #>
@@ -73,12 +73,13 @@ namespace Java.Interop {
 		            i == 1 ? "" : a.ToString ());
 		}
 		WriteLine ("");
-		WriteLine ("\t\t\tvar args = new JValue[]{");
+		WriteLine ("\t\t\tvar args = stackalloc JValue [{0}];", i);
 		for (int a = 1; a <= i; ++a) {
-		    WriteLine ("\t\t\t\targ{0}.JValue,",
+		    WriteLine ("\t\t\targs [{0}] = arg{1}.JValue;",
+					a - 1,
 		            i == 1 ? "" : a.ToString ());
 		}
-		WriteLine ("\t\t\t};");
+		WriteLine ("");
 #>
 			try {
 			    return NewObject (constructorSignature, declaringType, args);
@@ -104,7 +105,7 @@ namespace Java.Interop {
 			_InvokeConstructor (constructorSignature, self, <#= methodArgs #>);
 		}
 
-		void _InvokeConstructor<#= typeParams #> (
+		unsafe void _InvokeConstructor<#= typeParams #> (
 		    string      constructorSignature,
 		    IJavaObject self,
 		    <#= methodParams #>
@@ -117,12 +118,13 @@ namespace Java.Interop {
 		            i == 1 ? "" : a.ToString ());
 		}
 		WriteLine ("");
-		WriteLine ("\t\t\tvar args = new JValue[]{");
+		WriteLine ("\t\t\tvar args = stackalloc JValue [{0}];", i);
 		for (int a = 1; a <= i; ++a) {
-		    WriteLine ("\t\t\t\targ{0}.JValue,",
+		    WriteLine ("\t\t\targs [{0}] = arg{1}.JValue;",
+					a - 1,
 		            i == 1 ? "" : a.ToString ());
 		}
-		WriteLine ("\t\t\t};");
+		WriteLine ("");
 #>
 			try {
 				var methods = GetConstructorsForType (self.GetType ());
@@ -157,20 +159,20 @@ namespace Java.Interop {
 		}
 
 #>
-		public <#= info.ReturnType #> Call<#= info.JniCallType #>Method (
+		public unsafe <#= info.ReturnType #> Call<#= info.JniCallType #>Method (
 			string encodedMember,
 			IJavaObject self,
-			params JValue[] arguments)
+			JValue* parameters)
 		{
 			JniPeerMembers.AssertSelf (self);
 
 			if (self.GetType () == DeclaringType || DeclaringType == null) {
 				var m = GetMethodID (encodedMember);
-				<#= ret #>m.CallVirtual<#= info.JniCallType #>Method (self.SafeHandle, arguments);
+				<#= ret #>m.CallVirtual<#= info.JniCallType #>Method (self.SafeHandle, parameters);
 			}
 			var j = self.JniPeerMembers;
 			var n = j.InstanceMethods.GetMethodID (encodedMember);
-			<#= ret #>n.CallNonvirtual<#= info.JniCallType #>Method (self.SafeHandle, j.JniPeerType.SafeHandle, arguments);
+			<#= ret #>n.CallNonvirtual<#= info.JniCallType #>Method (self.SafeHandle, j.JniPeerType.SafeHandle, parameters);
 		}
 <#
 		for (int i = 0; i <= 16; ++i ) {
@@ -190,7 +192,7 @@ namespace Java.Interop {
 			}
 #>
 
-		public <#= info.ReturnType #> Call<#= info.JniCallType #>Method<#= typeParams #> (
+		public unsafe <#= info.ReturnType #> Call<#= info.JniCallType #>Method<#= typeParams #> (
 			string encodedMember,
 			IJavaObject self<#= i == 0 ? "" : ",\n\t\t\t" + methodParams #>
 		)
@@ -202,12 +204,13 @@ namespace Java.Interop {
 			            i == 1 ? "" : a.ToString ());
 			}
 			WriteLine ("");
-			WriteLine ("\t\t\tvar args = new JValue[]{");
+			WriteLine ("\t\t\tvar args = stackalloc JValue [{0}];", i);
 			for (int a = 1; a <= i; ++a) {
-			    WriteLine ("\t\t\t\targ{0}.JValue,",
+			    WriteLine ("\t\t\targs [{0}] = arg{1}.JValue;",
+						a - 1,
 			            i == 1 ? "" : a.ToString ());
 			}
-			WriteLine ("\t\t\t};");
+			WriteLine ("");
 #>
 			try {
 				<#= ret #>Call<#= info.JniCallType #>Method (encodedMember, self, args);
@@ -236,12 +239,12 @@ namespace Java.Interop {
 		}
 
 #>
-		public <#= info.ReturnType #> Call<#= info.JniCallType #>Method (
+		public unsafe <#= info.ReturnType #> Call<#= info.JniCallType #>Method (
 			string encodedMember,
-			params JValue[] arguments)
+			JValue* parameters)
 		{
 			var m = GetMethodID (encodedMember);
-			<#= ret #>m.Call<#= info.JniCallType #>Method (Members.JniPeerType.SafeHandle, arguments);
+			<#= ret #>m.Call<#= info.JniCallType #>Method (Members.JniPeerType.SafeHandle, parameters);
 		}
 <#
 		for (int i = 1; i <= 16; ++i ) {
@@ -261,7 +264,7 @@ namespace Java.Interop {
 			}
 #>
 
-		public <#= info.ReturnType #> Call<#= info.JniCallType #>Method<#= typeParams #> (
+		public unsafe <#= info.ReturnType #> Call<#= info.JniCallType #>Method<#= typeParams #> (
 			string encodedMember<#= i == 0 ? "" : ",\n\t\t\t" + methodParams #>
 		)
 		{
@@ -272,12 +275,13 @@ namespace Java.Interop {
 			            i == 1 ? "" : a.ToString ());
 			}
 			WriteLine ("");
-			WriteLine ("\t\t\tvar args = new JValue[]{");
+			WriteLine ("\t\t\tvar args = stackalloc JValue [{0}];", i);
 			for (int a = 1; a <= i; ++a) {
-			    WriteLine ("\t\t\t\targ{0}.JValue,",
+			    WriteLine ("\t\t\targs [{0}] = arg{1}.JValue;",
+						a - 1,
 			            i == 1 ? "" : a.ToString ());
 			}
-			WriteLine ("\t\t\t};");
+			WriteLine ("");
 #>
 			try {
 				<#= ret #>Call<#= info.JniCallType #>Method (encodedMember, args);

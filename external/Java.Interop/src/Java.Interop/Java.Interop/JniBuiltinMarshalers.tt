@@ -75,11 +75,15 @@ namespace Java.Interop {
 		}
 
 		static JniInstanceMethodID init;
-		internal static JniLocalReference CreateLocalRef (object value)
+		internal static unsafe JniLocalReference CreateLocalRef (object value)
 		{
 			Debug.Assert (value is <#= type.Type #>, "Expected value of type `<#= type.Type #>`; was: " + (value == null ? "<null>" : value.GetType ().FullName));
+
+			var args    = stackalloc JValue [1];
+			args [0]    = new JValue ((<#= type.Type #>) value);
+
 			TypeRef.GetCachedConstructor (ref init, "(<#= type.JniType #>)V");
-			return TypeRef.NewObject (init, new JValue ((<#= type.Type #>) value));
+			return TypeRef.NewObject (init, args);
 		}
 
 		static JniInstanceMethodID <#= type.GetValue #>;

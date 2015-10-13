@@ -9,10 +9,12 @@ namespace Java.Interop
 		}
 
 		static JniStaticMethodID _identityHashCode;
-		internal static int IdentityHashCode (JniReferenceSafeHandle value)
+		internal static unsafe int IdentityHashCode (JniReferenceSafeHandle value)
 		{
+			var args = stackalloc JValue [1];
+			args [0] = new JValue (value);
 			return TypeRef.GetCachedStaticMethod (ref _identityHashCode, "identityHashCode", "(Ljava/lang/Object;)I")
-				.CallInt32Method (TypeRef.SafeHandle, new JValue (value));
+				.CallInt32Method (TypeRef.SafeHandle, args);
 		}
 	}
 }
