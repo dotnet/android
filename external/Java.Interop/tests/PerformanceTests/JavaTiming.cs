@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Concurrent;
 
 using Java.Interop;
+using Java.Interop.GenericMarshaler;
 
 namespace Java.Interop.PerformanceTests
 {
@@ -113,14 +114,17 @@ namespace Java.Interop.PerformanceTests
 			return r;
 		}
 
-		public virtual int Timing_VirtualIntMethod_Marshal1Args (int value)
+		public virtual unsafe int Timing_VirtualIntMethod_Marshal1Args (int value)
 		{
-			return _members.InstanceMethods.CallInt32Method ("VirtualIntMethod1Args\u0000(I)I", this, new JValue[]{new JValue (value)});
+			var args = stackalloc JValue [1];
+			args [0] = new JValue (value);
+
+			return _members.InstanceMethods.CallInt32Method ("VirtualIntMethod1Args\u0000(I)I", this, args);
 		}
 
 		public virtual int Timing_VirtualIntMethod_GenericMarshal1Args (int value)
 		{
-			return _members.InstanceMethods.CallInt32Method ("VirtualIntMethod1Args\u0000(I)I", this, value);
+			return _members.InstanceMethods.CallGenericInt32Method ("VirtualIntMethod1Args\u0000(I)I", this, value);
 		}
 
 		static JniInstanceMethodID vim1_a;
@@ -159,7 +163,7 @@ namespace Java.Interop.PerformanceTests
 
 		public virtual int Timing_VirtualIntMethod_GenericMarshal1Args (int[][][] value)
 		{
-			return _members.InstanceMethods.CallInt32Method ("VirtualIntMethod1Args\u0000([[[I)I", this, value);
+			return _members.InstanceMethods.CallGenericInt32Method ("VirtualIntMethod1Args\u0000([[[I)I", this, value);
 		}
 
 		static JniStaticMethodID svm1;

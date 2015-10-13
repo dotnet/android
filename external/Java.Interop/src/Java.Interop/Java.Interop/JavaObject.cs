@@ -83,16 +83,17 @@ namespace Java.Interop
 			return false;
 		}
 
-		public override int GetHashCode ()
+		public override unsafe int GetHashCode ()
 		{
-			return _members.InstanceMethods.CallInt32Method ("hashCode\u0000()I", this);
+			return _members.InstanceMethods.CallInt32Method ("hashCode\u0000()I", this, null);
 		}
 
-		public override string ToString ()
+		public override unsafe string ToString ()
 		{
 			var lref = _members.InstanceMethods.CallObjectMethod (
 					"toString\u0000()Ljava/lang/String;",
-					this);
+					this,
+					null);
 			return JniEnvironment.Strings.ToString (lref, JniHandleOwnership.Transfer);
 		}
 

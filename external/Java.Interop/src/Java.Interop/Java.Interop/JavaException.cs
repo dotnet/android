@@ -22,26 +22,34 @@ namespace Java.Interop
 			javaStackTrace    = _GetJavaStack (SafeHandle);
 		}
 
-		public JavaException (string message)
+		public unsafe JavaException (string message)
 			: base (message)
 		{
 			const string signature  = "(Ljava/lang/String;)V";
-			using (SetSafeHandle (
-						JniPeerMembers.InstanceMethods.StartCreateInstance (signature, GetType (), message),
+			using (var native_message  = JniEnvironment.Strings.NewString (message)) {
+				var args = stackalloc JValue [1];
+				args [0] = new JValue (native_message);
+				using (SetSafeHandle (
+						JniPeerMembers.InstanceMethods.StartCreateInstance (signature, GetType (), args),
 						JniHandleOwnership.Transfer)) {
-				JniPeerMembers.InstanceMethods.FinishCreateInstance (signature, this, message);
+					JniPeerMembers.InstanceMethods.FinishCreateInstance (signature, this, args);
+				}
 			}
 			javaStackTrace    = _GetJavaStack (SafeHandle);
 		}
 
-		public JavaException (string message, Exception innerException)
+		public unsafe JavaException (string message, Exception innerException)
 			: base (message, innerException)
 		{
 			const string signature  = "(Ljava/lang/String;)V";
-			using (SetSafeHandle (
-						JniPeerMembers.InstanceMethods.StartCreateInstance (signature, GetType (), message),
+			using (var native_message = JniEnvironment.Strings.NewString (message)) {
+				var args = stackalloc JValue [1];
+				args [0] = new JValue (native_message);
+				using (SetSafeHandle (
+						JniPeerMembers.InstanceMethods.StartCreateInstance (signature, GetType (), args),
 						JniHandleOwnership.Transfer)) {
-				JniPeerMembers.InstanceMethods.FinishCreateInstance (signature, this, message);
+					JniPeerMembers.InstanceMethods.FinishCreateInstance (signature, this, args);
+				}
 			}
 			javaStackTrace    = _GetJavaStack (SafeHandle);
 		}
@@ -130,9 +138,9 @@ namespace Java.Interop
 			return false;
 		}
 
-		public override int GetHashCode ()
+		public override unsafe int GetHashCode ()
 		{
-			return _members.InstanceMethods.CallInt32Method ("hashCode\u0000()I", this);
+			return _members.InstanceMethods.CallInt32Method ("hashCode\u0000()I", this, null);
 		}
 
 		static string _GetMessage (JniReferenceSafeHandle handle)

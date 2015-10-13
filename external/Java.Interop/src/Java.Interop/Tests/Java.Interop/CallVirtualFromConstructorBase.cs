@@ -1,6 +1,7 @@
 ﻿using System;
 
 using Java.Interop;
+using Java.Interop.GenericMarshaler;
 
 namespace Java.InteropTests {
 
@@ -18,15 +19,15 @@ namespace Java.InteropTests {
 			: base (null, 0)
 		{
 			using (SetSafeHandle (
-						JniPeerMembers.InstanceMethods.StartCreateInstance ("(I)V", GetType (), value),
+						JniPeerMembers.InstanceMethods.StartGenericCreateInstance ("(I)V", GetType (), value),
 						JniHandleOwnership.Transfer)) {
-				JniPeerMembers.InstanceMethods.FinishCreateInstance ("(I)V", this, value);
+				JniPeerMembers.InstanceMethods.FinishGenericCreateInstance ("(I)V", this, value);
 			}
 		}
 
 		public virtual void CalledFromConstructor (int value)
 		{
-			_members.InstanceMethods.CallVoidMethod ("calledFromConstructor\u0000(I)V", this, value);
+			_members.InstanceMethods.CallGenericVoidMethod ("calledFromConstructor\u0000(I)V", this, value);
 		}
 	}
 }

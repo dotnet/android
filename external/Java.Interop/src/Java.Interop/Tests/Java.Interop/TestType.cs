@@ -2,6 +2,7 @@
 using System;
 
 using Java.Interop;
+using Java.Interop.GenericMarshaler;
 
 using NUnit.Framework;
 
@@ -37,34 +38,34 @@ namespace Java.InteropTests
 		{
 		}
 
-		public void RunTests ()
+		public unsafe void RunTests ()
 		{
-			_members.InstanceMethods.CallVoidMethod ("runTests\u0000()V", this);
+			_members.InstanceMethods.CallVoidMethod ("runTests\u0000()V", this, null);
 		}
 
 		public int UpdateInt32Array (int[] value)
 		{
-			return _members.InstanceMethods.CallInt32Method ("updateInt32Array\u0000([I)I", this, value);
+			return _members.InstanceMethods.CallGenericInt32Method ("updateInt32Array\u0000([I)I", this, value);
 		}
 
 		public int UpdateInt32ArrayArray (int[][] value)
 		{
-			return _members.InstanceMethods.CallInt32Method ("updateInt32ArrayArray\u0000([[I)I", this, value);
+			return _members.InstanceMethods.CallGenericInt32Method ("updateInt32ArrayArray\u0000([[I)I", this, value);
 		}
 
 		public int UpdateInt32ArrayArrayArray (int[][][] value)
 		{
-			return _members.InstanceMethods.CallInt32Method ("updateInt32ArrayArrayArray\u0000([[[I)I", this, value);
+			return _members.InstanceMethods.CallGenericInt32Method ("updateInt32ArrayArrayArray\u0000([[[I)I", this, value);
 		}
 
 		public int Identity (int value)
 		{
-			return _members.InstanceMethods.CallInt32Method ("identity\u0000(I)I", this, value);
+			return _members.InstanceMethods.CallGenericInt32Method ("identity\u0000(I)I", this, value);
 		}
 
 		public static int StaticIdentity (int value)
 		{
-			return _members.StaticMethods.CallInt32Method ("staticIdentity\u0000(I)I", value);
+			return _members.StaticMethods.CallGenericInt32Method ("staticIdentity\u0000(I)I", value);
 		}
 
 		public void MethodThrows ()
@@ -72,9 +73,9 @@ namespace Java.InteropTests
 			throw new InvalidOperationException ("jonp: bye!");
 		}
 
-		public void PropogateException ()
+		public unsafe void PropogateException ()
 		{
-			_members.InstanceMethods.CallVoidMethod ("propogateException\u0000()V", this);
+			_members.InstanceMethods.CallVoidMethod ("propogateException\u0000()V", this, null);
 		}
 
 		public bool PropogateFinallyBlockExecuted {

@@ -1,25 +1,25 @@
 ﻿using System;
 
-namespace Java.Interop {
+namespace Java.Interop.GenericMarshaler {
 
-	partial class JniPeerInstanceMethods {
+	public static partial class JniPeerInstanceMethodsExtensions {
 
-		public JniLocalReference StartCreateInstance<T> (
+		public static JniLocalReference StartGenericCreateInstance<T> (
+			this    JniPeerInstanceMethods peer,
 			string  constructorSignature,
 			Type    declaringType,
 			T value
 		)
 		{
 			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
-				return NewObject (constructorSignature, declaringType, value);
+				return NewObject (peer, constructorSignature, declaringType, value);
 			}
-			using (var lref = GetConstructorsForType (declaringType)
-					.JniPeerType
-					.AllocObject ())
+			using (var lref = peer.AllocObject (declaringType))
 				return lref.ToAllocObjectRef ();
 		}
 
-		unsafe JniLocalReference NewObject<T> (
+		static unsafe JniLocalReference NewObject<T> (
+			JniPeerInstanceMethods  peer,
 		    string  constructorSignature,
 		    Type    declaringType,
 		    T value
@@ -31,13 +31,14 @@ namespace Java.Interop {
 			args [0] = arg.JValue;
 
 			try {
-			    return NewObject (constructorSignature, declaringType, args);
+			    return peer.NewObject (constructorSignature, declaringType, args);
 			} finally {
 				arg.Cleanup (value);
 			}
 		}
 
-		public void FinishCreateInstance<T> (
+		public static void FinishGenericCreateInstance<T> (
+			this        JniPeerInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaObject self,
 		    T value
@@ -46,10 +47,11 @@ namespace Java.Interop {
 			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
 				return;
 			}
-			_InvokeConstructor (constructorSignature, self, value);
+			_InvokeConstructor (peer, constructorSignature, self, value);
 		}
 
-		unsafe void _InvokeConstructor<T> (
+		static unsafe void _InvokeConstructor<T> (
+			JniPeerInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaObject self,
 		    T value
@@ -61,7 +63,7 @@ namespace Java.Interop {
 			args [0] = arg.JValue;
 
 			try {
-				var methods = GetConstructorsForType (self.GetType ());
+				var methods = peer.GetConstructorsForType (self.GetType ());
 				var ctor    = methods.GetConstructor (constructorSignature);
 				ctor.CallNonvirtualVoidMethod (self.SafeHandle, methods.JniPeerType.SafeHandle, args);
 			} finally {
@@ -69,22 +71,22 @@ namespace Java.Interop {
 			}
 		}
 
-		public JniLocalReference StartCreateInstance<T1, T2> (
+		public static JniLocalReference StartGenericCreateInstance<T1, T2> (
+			this    JniPeerInstanceMethods peer,
 			string  constructorSignature,
 			Type    declaringType,
 			T1 value1, T2 value2
 		)
 		{
 			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
-				return NewObject (constructorSignature, declaringType, value1, value2);
+				return NewObject (peer, constructorSignature, declaringType, value1, value2);
 			}
-			using (var lref = GetConstructorsForType (declaringType)
-					.JniPeerType
-					.AllocObject ())
+			using (var lref = peer.AllocObject (declaringType))
 				return lref.ToAllocObjectRef ();
 		}
 
-		unsafe JniLocalReference NewObject<T1, T2> (
+		static unsafe JniLocalReference NewObject<T1, T2> (
+			JniPeerInstanceMethods  peer,
 		    string  constructorSignature,
 		    Type    declaringType,
 		    T1 value1, T2 value2
@@ -98,14 +100,15 @@ namespace Java.Interop {
 			args [1] = arg2.JValue;
 
 			try {
-			    return NewObject (constructorSignature, declaringType, args);
+			    return peer.NewObject (constructorSignature, declaringType, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
 			}
 		}
 
-		public void FinishCreateInstance<T1, T2> (
+		public static void FinishGenericCreateInstance<T1, T2> (
+			this        JniPeerInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaObject self,
 		    T1 value1, T2 value2
@@ -114,10 +117,11 @@ namespace Java.Interop {
 			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
 				return;
 			}
-			_InvokeConstructor (constructorSignature, self, value1, value2);
+			_InvokeConstructor (peer, constructorSignature, self, value1, value2);
 		}
 
-		unsafe void _InvokeConstructor<T1, T2> (
+		static unsafe void _InvokeConstructor<T1, T2> (
+			JniPeerInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaObject self,
 		    T1 value1, T2 value2
@@ -131,7 +135,7 @@ namespace Java.Interop {
 			args [1] = arg2.JValue;
 
 			try {
-				var methods = GetConstructorsForType (self.GetType ());
+				var methods = peer.GetConstructorsForType (self.GetType ());
 				var ctor    = methods.GetConstructor (constructorSignature);
 				ctor.CallNonvirtualVoidMethod (self.SafeHandle, methods.JniPeerType.SafeHandle, args);
 			} finally {
@@ -140,22 +144,22 @@ namespace Java.Interop {
 			}
 		}
 
-		public JniLocalReference StartCreateInstance<T1, T2, T3> (
+		public static JniLocalReference StartGenericCreateInstance<T1, T2, T3> (
+			this    JniPeerInstanceMethods peer,
 			string  constructorSignature,
 			Type    declaringType,
 			T1 value1, T2 value2, T3 value3
 		)
 		{
 			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
-				return NewObject (constructorSignature, declaringType, value1, value2, value3);
+				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3);
 			}
-			using (var lref = GetConstructorsForType (declaringType)
-					.JniPeerType
-					.AllocObject ())
+			using (var lref = peer.AllocObject (declaringType))
 				return lref.ToAllocObjectRef ();
 		}
 
-		unsafe JniLocalReference NewObject<T1, T2, T3> (
+		static unsafe JniLocalReference NewObject<T1, T2, T3> (
+			JniPeerInstanceMethods  peer,
 		    string  constructorSignature,
 		    Type    declaringType,
 		    T1 value1, T2 value2, T3 value3
@@ -171,7 +175,7 @@ namespace Java.Interop {
 			args [2] = arg3.JValue;
 
 			try {
-			    return NewObject (constructorSignature, declaringType, args);
+			    return peer.NewObject (constructorSignature, declaringType, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -179,7 +183,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public void FinishCreateInstance<T1, T2, T3> (
+		public static void FinishGenericCreateInstance<T1, T2, T3> (
+			this        JniPeerInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaObject self,
 		    T1 value1, T2 value2, T3 value3
@@ -188,10 +193,11 @@ namespace Java.Interop {
 			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
 				return;
 			}
-			_InvokeConstructor (constructorSignature, self, value1, value2, value3);
+			_InvokeConstructor (peer, constructorSignature, self, value1, value2, value3);
 		}
 
-		unsafe void _InvokeConstructor<T1, T2, T3> (
+		static unsafe void _InvokeConstructor<T1, T2, T3> (
+			JniPeerInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaObject self,
 		    T1 value1, T2 value2, T3 value3
@@ -207,7 +213,7 @@ namespace Java.Interop {
 			args [2] = arg3.JValue;
 
 			try {
-				var methods = GetConstructorsForType (self.GetType ());
+				var methods = peer.GetConstructorsForType (self.GetType ());
 				var ctor    = methods.GetConstructor (constructorSignature);
 				ctor.CallNonvirtualVoidMethod (self.SafeHandle, methods.JniPeerType.SafeHandle, args);
 			} finally {
@@ -217,22 +223,22 @@ namespace Java.Interop {
 			}
 		}
 
-		public JniLocalReference StartCreateInstance<T1, T2, T3, T4> (
+		public static JniLocalReference StartGenericCreateInstance<T1, T2, T3, T4> (
+			this    JniPeerInstanceMethods peer,
 			string  constructorSignature,
 			Type    declaringType,
 			T1 value1, T2 value2, T3 value3, T4 value4
 		)
 		{
 			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
-				return NewObject (constructorSignature, declaringType, value1, value2, value3, value4);
+				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3, value4);
 			}
-			using (var lref = GetConstructorsForType (declaringType)
-					.JniPeerType
-					.AllocObject ())
+			using (var lref = peer.AllocObject (declaringType))
 				return lref.ToAllocObjectRef ();
 		}
 
-		unsafe JniLocalReference NewObject<T1, T2, T3, T4> (
+		static unsafe JniLocalReference NewObject<T1, T2, T3, T4> (
+			JniPeerInstanceMethods  peer,
 		    string  constructorSignature,
 		    Type    declaringType,
 		    T1 value1, T2 value2, T3 value3, T4 value4
@@ -250,7 +256,7 @@ namespace Java.Interop {
 			args [3] = arg4.JValue;
 
 			try {
-			    return NewObject (constructorSignature, declaringType, args);
+			    return peer.NewObject (constructorSignature, declaringType, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -259,7 +265,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public void FinishCreateInstance<T1, T2, T3, T4> (
+		public static void FinishGenericCreateInstance<T1, T2, T3, T4> (
+			this        JniPeerInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaObject self,
 		    T1 value1, T2 value2, T3 value3, T4 value4
@@ -268,10 +275,11 @@ namespace Java.Interop {
 			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
 				return;
 			}
-			_InvokeConstructor (constructorSignature, self, value1, value2, value3, value4);
+			_InvokeConstructor (peer, constructorSignature, self, value1, value2, value3, value4);
 		}
 
-		unsafe void _InvokeConstructor<T1, T2, T3, T4> (
+		static unsafe void _InvokeConstructor<T1, T2, T3, T4> (
+			JniPeerInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaObject self,
 		    T1 value1, T2 value2, T3 value3, T4 value4
@@ -289,7 +297,7 @@ namespace Java.Interop {
 			args [3] = arg4.JValue;
 
 			try {
-				var methods = GetConstructorsForType (self.GetType ());
+				var methods = peer.GetConstructorsForType (self.GetType ());
 				var ctor    = methods.GetConstructor (constructorSignature);
 				ctor.CallNonvirtualVoidMethod (self.SafeHandle, methods.JniPeerType.SafeHandle, args);
 			} finally {
@@ -300,22 +308,22 @@ namespace Java.Interop {
 			}
 		}
 
-		public JniLocalReference StartCreateInstance<T1, T2, T3, T4, T5> (
+		public static JniLocalReference StartGenericCreateInstance<T1, T2, T3, T4, T5> (
+			this    JniPeerInstanceMethods peer,
 			string  constructorSignature,
 			Type    declaringType,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
 		)
 		{
 			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
-				return NewObject (constructorSignature, declaringType, value1, value2, value3, value4, value5);
+				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3, value4, value5);
 			}
-			using (var lref = GetConstructorsForType (declaringType)
-					.JniPeerType
-					.AllocObject ())
+			using (var lref = peer.AllocObject (declaringType))
 				return lref.ToAllocObjectRef ();
 		}
 
-		unsafe JniLocalReference NewObject<T1, T2, T3, T4, T5> (
+		static unsafe JniLocalReference NewObject<T1, T2, T3, T4, T5> (
+			JniPeerInstanceMethods  peer,
 		    string  constructorSignature,
 		    Type    declaringType,
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
@@ -335,7 +343,7 @@ namespace Java.Interop {
 			args [4] = arg5.JValue;
 
 			try {
-			    return NewObject (constructorSignature, declaringType, args);
+			    return peer.NewObject (constructorSignature, declaringType, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -345,7 +353,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public void FinishCreateInstance<T1, T2, T3, T4, T5> (
+		public static void FinishGenericCreateInstance<T1, T2, T3, T4, T5> (
+			this        JniPeerInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaObject self,
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
@@ -354,10 +363,11 @@ namespace Java.Interop {
 			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
 				return;
 			}
-			_InvokeConstructor (constructorSignature, self, value1, value2, value3, value4, value5);
+			_InvokeConstructor (peer, constructorSignature, self, value1, value2, value3, value4, value5);
 		}
 
-		unsafe void _InvokeConstructor<T1, T2, T3, T4, T5> (
+		static unsafe void _InvokeConstructor<T1, T2, T3, T4, T5> (
+			JniPeerInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaObject self,
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
@@ -377,7 +387,7 @@ namespace Java.Interop {
 			args [4] = arg5.JValue;
 
 			try {
-				var methods = GetConstructorsForType (self.GetType ());
+				var methods = peer.GetConstructorsForType (self.GetType ());
 				var ctor    = methods.GetConstructor (constructorSignature);
 				ctor.CallNonvirtualVoidMethod (self.SafeHandle, methods.JniPeerType.SafeHandle, args);
 			} finally {
@@ -389,22 +399,22 @@ namespace Java.Interop {
 			}
 		}
 
-		public JniLocalReference StartCreateInstance<T1, T2, T3, T4, T5, T6> (
+		public static JniLocalReference StartGenericCreateInstance<T1, T2, T3, T4, T5, T6> (
+			this    JniPeerInstanceMethods peer,
 			string  constructorSignature,
 			Type    declaringType,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
 		)
 		{
 			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
-				return NewObject (constructorSignature, declaringType, value1, value2, value3, value4, value5, value6);
+				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3, value4, value5, value6);
 			}
-			using (var lref = GetConstructorsForType (declaringType)
-					.JniPeerType
-					.AllocObject ())
+			using (var lref = peer.AllocObject (declaringType))
 				return lref.ToAllocObjectRef ();
 		}
 
-		unsafe JniLocalReference NewObject<T1, T2, T3, T4, T5, T6> (
+		static unsafe JniLocalReference NewObject<T1, T2, T3, T4, T5, T6> (
+			JniPeerInstanceMethods  peer,
 		    string  constructorSignature,
 		    Type    declaringType,
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
@@ -426,7 +436,7 @@ namespace Java.Interop {
 			args [5] = arg6.JValue;
 
 			try {
-			    return NewObject (constructorSignature, declaringType, args);
+			    return peer.NewObject (constructorSignature, declaringType, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -437,7 +447,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public void FinishCreateInstance<T1, T2, T3, T4, T5, T6> (
+		public static void FinishGenericCreateInstance<T1, T2, T3, T4, T5, T6> (
+			this        JniPeerInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaObject self,
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
@@ -446,10 +457,11 @@ namespace Java.Interop {
 			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
 				return;
 			}
-			_InvokeConstructor (constructorSignature, self, value1, value2, value3, value4, value5, value6);
+			_InvokeConstructor (peer, constructorSignature, self, value1, value2, value3, value4, value5, value6);
 		}
 
-		unsafe void _InvokeConstructor<T1, T2, T3, T4, T5, T6> (
+		static unsafe void _InvokeConstructor<T1, T2, T3, T4, T5, T6> (
+			JniPeerInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaObject self,
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
@@ -471,7 +483,7 @@ namespace Java.Interop {
 			args [5] = arg6.JValue;
 
 			try {
-				var methods = GetConstructorsForType (self.GetType ());
+				var methods = peer.GetConstructorsForType (self.GetType ());
 				var ctor    = methods.GetConstructor (constructorSignature);
 				ctor.CallNonvirtualVoidMethod (self.SafeHandle, methods.JniPeerType.SafeHandle, args);
 			} finally {
@@ -484,22 +496,22 @@ namespace Java.Interop {
 			}
 		}
 
-		public JniLocalReference StartCreateInstance<T1, T2, T3, T4, T5, T6, T7> (
+		public static JniLocalReference StartGenericCreateInstance<T1, T2, T3, T4, T5, T6, T7> (
+			this    JniPeerInstanceMethods peer,
 			string  constructorSignature,
 			Type    declaringType,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
 		)
 		{
 			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
-				return NewObject (constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7);
+				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7);
 			}
-			using (var lref = GetConstructorsForType (declaringType)
-					.JniPeerType
-					.AllocObject ())
+			using (var lref = peer.AllocObject (declaringType))
 				return lref.ToAllocObjectRef ();
 		}
 
-		unsafe JniLocalReference NewObject<T1, T2, T3, T4, T5, T6, T7> (
+		static unsafe JniLocalReference NewObject<T1, T2, T3, T4, T5, T6, T7> (
+			JniPeerInstanceMethods  peer,
 		    string  constructorSignature,
 		    Type    declaringType,
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
@@ -523,7 +535,7 @@ namespace Java.Interop {
 			args [6] = arg7.JValue;
 
 			try {
-			    return NewObject (constructorSignature, declaringType, args);
+			    return peer.NewObject (constructorSignature, declaringType, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -535,7 +547,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public void FinishCreateInstance<T1, T2, T3, T4, T5, T6, T7> (
+		public static void FinishGenericCreateInstance<T1, T2, T3, T4, T5, T6, T7> (
+			this        JniPeerInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaObject self,
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
@@ -544,10 +557,11 @@ namespace Java.Interop {
 			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
 				return;
 			}
-			_InvokeConstructor (constructorSignature, self, value1, value2, value3, value4, value5, value6, value7);
+			_InvokeConstructor (peer, constructorSignature, self, value1, value2, value3, value4, value5, value6, value7);
 		}
 
-		unsafe void _InvokeConstructor<T1, T2, T3, T4, T5, T6, T7> (
+		static unsafe void _InvokeConstructor<T1, T2, T3, T4, T5, T6, T7> (
+			JniPeerInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaObject self,
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
@@ -571,7 +585,7 @@ namespace Java.Interop {
 			args [6] = arg7.JValue;
 
 			try {
-				var methods = GetConstructorsForType (self.GetType ());
+				var methods = peer.GetConstructorsForType (self.GetType ());
 				var ctor    = methods.GetConstructor (constructorSignature);
 				ctor.CallNonvirtualVoidMethod (self.SafeHandle, methods.JniPeerType.SafeHandle, args);
 			} finally {
@@ -585,22 +599,22 @@ namespace Java.Interop {
 			}
 		}
 
-		public JniLocalReference StartCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8> (
+		public static JniLocalReference StartGenericCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8> (
+			this    JniPeerInstanceMethods peer,
 			string  constructorSignature,
 			Type    declaringType,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
 		)
 		{
 			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
-				return NewObject (constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7, value8);
+				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7, value8);
 			}
-			using (var lref = GetConstructorsForType (declaringType)
-					.JniPeerType
-					.AllocObject ())
+			using (var lref = peer.AllocObject (declaringType))
 				return lref.ToAllocObjectRef ();
 		}
 
-		unsafe JniLocalReference NewObject<T1, T2, T3, T4, T5, T6, T7, T8> (
+		static unsafe JniLocalReference NewObject<T1, T2, T3, T4, T5, T6, T7, T8> (
+			JniPeerInstanceMethods  peer,
 		    string  constructorSignature,
 		    Type    declaringType,
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
@@ -626,7 +640,7 @@ namespace Java.Interop {
 			args [7] = arg8.JValue;
 
 			try {
-			    return NewObject (constructorSignature, declaringType, args);
+			    return peer.NewObject (constructorSignature, declaringType, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -639,7 +653,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public void FinishCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8> (
+		public static void FinishGenericCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8> (
+			this        JniPeerInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaObject self,
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
@@ -648,10 +663,11 @@ namespace Java.Interop {
 			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
 				return;
 			}
-			_InvokeConstructor (constructorSignature, self, value1, value2, value3, value4, value5, value6, value7, value8);
+			_InvokeConstructor (peer, constructorSignature, self, value1, value2, value3, value4, value5, value6, value7, value8);
 		}
 
-		unsafe void _InvokeConstructor<T1, T2, T3, T4, T5, T6, T7, T8> (
+		static unsafe void _InvokeConstructor<T1, T2, T3, T4, T5, T6, T7, T8> (
+			JniPeerInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaObject self,
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
@@ -677,7 +693,7 @@ namespace Java.Interop {
 			args [7] = arg8.JValue;
 
 			try {
-				var methods = GetConstructorsForType (self.GetType ());
+				var methods = peer.GetConstructorsForType (self.GetType ());
 				var ctor    = methods.GetConstructor (constructorSignature);
 				ctor.CallNonvirtualVoidMethod (self.SafeHandle, methods.JniPeerType.SafeHandle, args);
 			} finally {
@@ -692,22 +708,22 @@ namespace Java.Interop {
 			}
 		}
 
-		public JniLocalReference StartCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+		public static JniLocalReference StartGenericCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+			this    JniPeerInstanceMethods peer,
 			string  constructorSignature,
 			Type    declaringType,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
 		)
 		{
 			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
-				return NewObject (constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7, value8, value9);
+				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7, value8, value9);
 			}
-			using (var lref = GetConstructorsForType (declaringType)
-					.JniPeerType
-					.AllocObject ())
+			using (var lref = peer.AllocObject (declaringType))
 				return lref.ToAllocObjectRef ();
 		}
 
-		unsafe JniLocalReference NewObject<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+		static unsafe JniLocalReference NewObject<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+			JniPeerInstanceMethods  peer,
 		    string  constructorSignature,
 		    Type    declaringType,
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
@@ -735,7 +751,7 @@ namespace Java.Interop {
 			args [8] = arg9.JValue;
 
 			try {
-			    return NewObject (constructorSignature, declaringType, args);
+			    return peer.NewObject (constructorSignature, declaringType, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -749,7 +765,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public void FinishCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+		public static void FinishGenericCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+			this        JniPeerInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaObject self,
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
@@ -758,10 +775,11 @@ namespace Java.Interop {
 			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
 				return;
 			}
-			_InvokeConstructor (constructorSignature, self, value1, value2, value3, value4, value5, value6, value7, value8, value9);
+			_InvokeConstructor (peer, constructorSignature, self, value1, value2, value3, value4, value5, value6, value7, value8, value9);
 		}
 
-		unsafe void _InvokeConstructor<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+		static unsafe void _InvokeConstructor<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+			JniPeerInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaObject self,
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
@@ -789,7 +807,7 @@ namespace Java.Interop {
 			args [8] = arg9.JValue;
 
 			try {
-				var methods = GetConstructorsForType (self.GetType ());
+				var methods = peer.GetConstructorsForType (self.GetType ());
 				var ctor    = methods.GetConstructor (constructorSignature);
 				ctor.CallNonvirtualVoidMethod (self.SafeHandle, methods.JniPeerType.SafeHandle, args);
 			} finally {
@@ -805,22 +823,22 @@ namespace Java.Interop {
 			}
 		}
 
-		public JniLocalReference StartCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+		public static JniLocalReference StartGenericCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+			this    JniPeerInstanceMethods peer,
 			string  constructorSignature,
 			Type    declaringType,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
 		)
 		{
 			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
-				return NewObject (constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10);
+				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10);
 			}
-			using (var lref = GetConstructorsForType (declaringType)
-					.JniPeerType
-					.AllocObject ())
+			using (var lref = peer.AllocObject (declaringType))
 				return lref.ToAllocObjectRef ();
 		}
 
-		unsafe JniLocalReference NewObject<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+		static unsafe JniLocalReference NewObject<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+			JniPeerInstanceMethods  peer,
 		    string  constructorSignature,
 		    Type    declaringType,
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
@@ -850,7 +868,7 @@ namespace Java.Interop {
 			args [9] = arg10.JValue;
 
 			try {
-			    return NewObject (constructorSignature, declaringType, args);
+			    return peer.NewObject (constructorSignature, declaringType, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -865,7 +883,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public void FinishCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+		public static void FinishGenericCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+			this        JniPeerInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaObject self,
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
@@ -874,10 +893,11 @@ namespace Java.Interop {
 			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
 				return;
 			}
-			_InvokeConstructor (constructorSignature, self, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10);
+			_InvokeConstructor (peer, constructorSignature, self, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10);
 		}
 
-		unsafe void _InvokeConstructor<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+		static unsafe void _InvokeConstructor<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+			JniPeerInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaObject self,
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
@@ -907,7 +927,7 @@ namespace Java.Interop {
 			args [9] = arg10.JValue;
 
 			try {
-				var methods = GetConstructorsForType (self.GetType ());
+				var methods = peer.GetConstructorsForType (self.GetType ());
 				var ctor    = methods.GetConstructor (constructorSignature);
 				ctor.CallNonvirtualVoidMethod (self.SafeHandle, methods.JniPeerType.SafeHandle, args);
 			} finally {
@@ -924,22 +944,22 @@ namespace Java.Interop {
 			}
 		}
 
-		public JniLocalReference StartCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+		public static JniLocalReference StartGenericCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+			this    JniPeerInstanceMethods peer,
 			string  constructorSignature,
 			Type    declaringType,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
 		)
 		{
 			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
-				return NewObject (constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11);
+				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11);
 			}
-			using (var lref = GetConstructorsForType (declaringType)
-					.JniPeerType
-					.AllocObject ())
+			using (var lref = peer.AllocObject (declaringType))
 				return lref.ToAllocObjectRef ();
 		}
 
-		unsafe JniLocalReference NewObject<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+		static unsafe JniLocalReference NewObject<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+			JniPeerInstanceMethods  peer,
 		    string  constructorSignature,
 		    Type    declaringType,
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
@@ -971,7 +991,7 @@ namespace Java.Interop {
 			args [10] = arg11.JValue;
 
 			try {
-			    return NewObject (constructorSignature, declaringType, args);
+			    return peer.NewObject (constructorSignature, declaringType, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -987,7 +1007,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public void FinishCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+		public static void FinishGenericCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+			this        JniPeerInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaObject self,
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
@@ -996,10 +1017,11 @@ namespace Java.Interop {
 			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
 				return;
 			}
-			_InvokeConstructor (constructorSignature, self, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11);
+			_InvokeConstructor (peer, constructorSignature, self, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11);
 		}
 
-		unsafe void _InvokeConstructor<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+		static unsafe void _InvokeConstructor<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+			JniPeerInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaObject self,
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
@@ -1031,7 +1053,7 @@ namespace Java.Interop {
 			args [10] = arg11.JValue;
 
 			try {
-				var methods = GetConstructorsForType (self.GetType ());
+				var methods = peer.GetConstructorsForType (self.GetType ());
 				var ctor    = methods.GetConstructor (constructorSignature);
 				ctor.CallNonvirtualVoidMethod (self.SafeHandle, methods.JniPeerType.SafeHandle, args);
 			} finally {
@@ -1049,22 +1071,22 @@ namespace Java.Interop {
 			}
 		}
 
-		public JniLocalReference StartCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+		public static JniLocalReference StartGenericCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+			this    JniPeerInstanceMethods peer,
 			string  constructorSignature,
 			Type    declaringType,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
 		)
 		{
 			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
-				return NewObject (constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12);
+				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12);
 			}
-			using (var lref = GetConstructorsForType (declaringType)
-					.JniPeerType
-					.AllocObject ())
+			using (var lref = peer.AllocObject (declaringType))
 				return lref.ToAllocObjectRef ();
 		}
 
-		unsafe JniLocalReference NewObject<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+		static unsafe JniLocalReference NewObject<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+			JniPeerInstanceMethods  peer,
 		    string  constructorSignature,
 		    Type    declaringType,
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
@@ -1098,7 +1120,7 @@ namespace Java.Interop {
 			args [11] = arg12.JValue;
 
 			try {
-			    return NewObject (constructorSignature, declaringType, args);
+			    return peer.NewObject (constructorSignature, declaringType, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -1115,7 +1137,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public void FinishCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+		public static void FinishGenericCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+			this        JniPeerInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaObject self,
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
@@ -1124,10 +1147,11 @@ namespace Java.Interop {
 			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
 				return;
 			}
-			_InvokeConstructor (constructorSignature, self, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12);
+			_InvokeConstructor (peer, constructorSignature, self, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12);
 		}
 
-		unsafe void _InvokeConstructor<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+		static unsafe void _InvokeConstructor<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+			JniPeerInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaObject self,
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
@@ -1161,7 +1185,7 @@ namespace Java.Interop {
 			args [11] = arg12.JValue;
 
 			try {
-				var methods = GetConstructorsForType (self.GetType ());
+				var methods = peer.GetConstructorsForType (self.GetType ());
 				var ctor    = methods.GetConstructor (constructorSignature);
 				ctor.CallNonvirtualVoidMethod (self.SafeHandle, methods.JniPeerType.SafeHandle, args);
 			} finally {
@@ -1180,22 +1204,22 @@ namespace Java.Interop {
 			}
 		}
 
-		public JniLocalReference StartCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+		public static JniLocalReference StartGenericCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+			this    JniPeerInstanceMethods peer,
 			string  constructorSignature,
 			Type    declaringType,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
 		)
 		{
 			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
-				return NewObject (constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13);
+				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13);
 			}
-			using (var lref = GetConstructorsForType (declaringType)
-					.JniPeerType
-					.AllocObject ())
+			using (var lref = peer.AllocObject (declaringType))
 				return lref.ToAllocObjectRef ();
 		}
 
-		unsafe JniLocalReference NewObject<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+		static unsafe JniLocalReference NewObject<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+			JniPeerInstanceMethods  peer,
 		    string  constructorSignature,
 		    Type    declaringType,
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
@@ -1231,7 +1255,7 @@ namespace Java.Interop {
 			args [12] = arg13.JValue;
 
 			try {
-			    return NewObject (constructorSignature, declaringType, args);
+			    return peer.NewObject (constructorSignature, declaringType, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -1249,7 +1273,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public void FinishCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+		public static void FinishGenericCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+			this        JniPeerInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaObject self,
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
@@ -1258,10 +1283,11 @@ namespace Java.Interop {
 			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
 				return;
 			}
-			_InvokeConstructor (constructorSignature, self, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13);
+			_InvokeConstructor (peer, constructorSignature, self, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13);
 		}
 
-		unsafe void _InvokeConstructor<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+		static unsafe void _InvokeConstructor<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+			JniPeerInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaObject self,
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
@@ -1297,7 +1323,7 @@ namespace Java.Interop {
 			args [12] = arg13.JValue;
 
 			try {
-				var methods = GetConstructorsForType (self.GetType ());
+				var methods = peer.GetConstructorsForType (self.GetType ());
 				var ctor    = methods.GetConstructor (constructorSignature);
 				ctor.CallNonvirtualVoidMethod (self.SafeHandle, methods.JniPeerType.SafeHandle, args);
 			} finally {
@@ -1317,22 +1343,22 @@ namespace Java.Interop {
 			}
 		}
 
-		public JniLocalReference StartCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+		public static JniLocalReference StartGenericCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+			this    JniPeerInstanceMethods peer,
 			string  constructorSignature,
 			Type    declaringType,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
 		)
 		{
 			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
-				return NewObject (constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13, value14);
+				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13, value14);
 			}
-			using (var lref = GetConstructorsForType (declaringType)
-					.JniPeerType
-					.AllocObject ())
+			using (var lref = peer.AllocObject (declaringType))
 				return lref.ToAllocObjectRef ();
 		}
 
-		unsafe JniLocalReference NewObject<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+		static unsafe JniLocalReference NewObject<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+			JniPeerInstanceMethods  peer,
 		    string  constructorSignature,
 		    Type    declaringType,
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
@@ -1370,7 +1396,7 @@ namespace Java.Interop {
 			args [13] = arg14.JValue;
 
 			try {
-			    return NewObject (constructorSignature, declaringType, args);
+			    return peer.NewObject (constructorSignature, declaringType, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -1389,7 +1415,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public void FinishCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+		public static void FinishGenericCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+			this        JniPeerInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaObject self,
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
@@ -1398,10 +1425,11 @@ namespace Java.Interop {
 			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
 				return;
 			}
-			_InvokeConstructor (constructorSignature, self, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13, value14);
+			_InvokeConstructor (peer, constructorSignature, self, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13, value14);
 		}
 
-		unsafe void _InvokeConstructor<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+		static unsafe void _InvokeConstructor<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+			JniPeerInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaObject self,
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
@@ -1439,7 +1467,7 @@ namespace Java.Interop {
 			args [13] = arg14.JValue;
 
 			try {
-				var methods = GetConstructorsForType (self.GetType ());
+				var methods = peer.GetConstructorsForType (self.GetType ());
 				var ctor    = methods.GetConstructor (constructorSignature);
 				ctor.CallNonvirtualVoidMethod (self.SafeHandle, methods.JniPeerType.SafeHandle, args);
 			} finally {
@@ -1460,22 +1488,22 @@ namespace Java.Interop {
 			}
 		}
 
-		public JniLocalReference StartCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+		public static JniLocalReference StartGenericCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+			this    JniPeerInstanceMethods peer,
 			string  constructorSignature,
 			Type    declaringType,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
 		)
 		{
 			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
-				return NewObject (constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13, value14, value15);
+				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13, value14, value15);
 			}
-			using (var lref = GetConstructorsForType (declaringType)
-					.JniPeerType
-					.AllocObject ())
+			using (var lref = peer.AllocObject (declaringType))
 				return lref.ToAllocObjectRef ();
 		}
 
-		unsafe JniLocalReference NewObject<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+		static unsafe JniLocalReference NewObject<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+			JniPeerInstanceMethods  peer,
 		    string  constructorSignature,
 		    Type    declaringType,
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
@@ -1515,7 +1543,7 @@ namespace Java.Interop {
 			args [14] = arg15.JValue;
 
 			try {
-			    return NewObject (constructorSignature, declaringType, args);
+			    return peer.NewObject (constructorSignature, declaringType, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -1535,7 +1563,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public void FinishCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+		public static void FinishGenericCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+			this        JniPeerInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaObject self,
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
@@ -1544,10 +1573,11 @@ namespace Java.Interop {
 			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
 				return;
 			}
-			_InvokeConstructor (constructorSignature, self, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13, value14, value15);
+			_InvokeConstructor (peer, constructorSignature, self, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13, value14, value15);
 		}
 
-		unsafe void _InvokeConstructor<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+		static unsafe void _InvokeConstructor<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+			JniPeerInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaObject self,
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
@@ -1587,7 +1617,7 @@ namespace Java.Interop {
 			args [14] = arg15.JValue;
 
 			try {
-				var methods = GetConstructorsForType (self.GetType ());
+				var methods = peer.GetConstructorsForType (self.GetType ());
 				var ctor    = methods.GetConstructor (constructorSignature);
 				ctor.CallNonvirtualVoidMethod (self.SafeHandle, methods.JniPeerType.SafeHandle, args);
 			} finally {
@@ -1609,22 +1639,22 @@ namespace Java.Interop {
 			}
 		}
 
-		public JniLocalReference StartCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+		public static JniLocalReference StartGenericCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+			this    JniPeerInstanceMethods peer,
 			string  constructorSignature,
 			Type    declaringType,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
 		)
 		{
 			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
-				return NewObject (constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13, value14, value15, value16);
+				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13, value14, value15, value16);
 			}
-			using (var lref = GetConstructorsForType (declaringType)
-					.JniPeerType
-					.AllocObject ())
+			using (var lref = peer.AllocObject (declaringType))
 				return lref.ToAllocObjectRef ();
 		}
 
-		unsafe JniLocalReference NewObject<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+		static unsafe JniLocalReference NewObject<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+			JniPeerInstanceMethods  peer,
 		    string  constructorSignature,
 		    Type    declaringType,
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
@@ -1666,7 +1696,7 @@ namespace Java.Interop {
 			args [15] = arg16.JValue;
 
 			try {
-			    return NewObject (constructorSignature, declaringType, args);
+			    return peer.NewObject (constructorSignature, declaringType, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -1687,7 +1717,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public void FinishCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+		public static void FinishGenericCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+			this        JniPeerInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaObject self,
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
@@ -1696,10 +1727,11 @@ namespace Java.Interop {
 			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
 				return;
 			}
-			_InvokeConstructor (constructorSignature, self, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13, value14, value15, value16);
+			_InvokeConstructor (peer, constructorSignature, self, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13, value14, value15, value16);
 		}
 
-		unsafe void _InvokeConstructor<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+		static unsafe void _InvokeConstructor<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+			JniPeerInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaObject self,
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
@@ -1741,7 +1773,7 @@ namespace Java.Interop {
 			args [15] = arg16.JValue;
 
 			try {
-				var methods = GetConstructorsForType (self.GetType ());
+				var methods = peer.GetConstructorsForType (self.GetType ());
 				var ctor    = methods.GetConstructor (constructorSignature);
 				ctor.CallNonvirtualVoidMethod (self.SafeHandle, methods.JniPeerType.SafeHandle, args);
 			} finally {
@@ -1763,23 +1795,9 @@ namespace Java.Interop {
 				arg16.Cleanup (value16);
 			}
 		}
-		public unsafe void CallVoidMethod (
-			string encodedMember,
-			IJavaObject self,
-			JValue* parameters)
-		{
-			JniPeerMembers.AssertSelf (self);
 
-			if (self.GetType () == DeclaringType || DeclaringType == null) {
-				var m = GetMethodID (encodedMember);
-				m.CallVirtualVoidMethod (self.SafeHandle, parameters);
-			}
-			var j = self.JniPeerMembers;
-			var n = j.InstanceMethods.GetMethodID (encodedMember);
-			n.CallNonvirtualVoidMethod (self.SafeHandle, j.JniPeerType.SafeHandle, parameters);
-		}
-
-		public unsafe void CallVoidMethod (
+		public static unsafe void CallGenericVoidMethod (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self
 		)
@@ -1788,12 +1806,13 @@ namespace Java.Interop {
 			var args = stackalloc JValue [0];
 
 			try {
-				CallVoidMethod (encodedMember, self, args);
+				peer.CallVoidMethod (encodedMember, self, args);
 			} finally {
 			}
 		}
 
-		public unsafe void CallVoidMethod<T> (
+		public static unsafe void CallGenericVoidMethod<T> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T value
@@ -1805,13 +1824,14 @@ namespace Java.Interop {
 			args [0] = arg.JValue;
 
 			try {
-				CallVoidMethod (encodedMember, self, args);
+				peer.CallVoidMethod (encodedMember, self, args);
 			} finally {
 				arg.Cleanup (value);
 			}
 		}
 
-		public unsafe void CallVoidMethod<T1, T2> (
+		public static unsafe void CallGenericVoidMethod<T1, T2> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2
@@ -1825,14 +1845,15 @@ namespace Java.Interop {
 			args [1] = arg2.JValue;
 
 			try {
-				CallVoidMethod (encodedMember, self, args);
+				peer.CallVoidMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
 			}
 		}
 
-		public unsafe void CallVoidMethod<T1, T2, T3> (
+		public static unsafe void CallGenericVoidMethod<T1, T2, T3> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3
@@ -1848,7 +1869,7 @@ namespace Java.Interop {
 			args [2] = arg3.JValue;
 
 			try {
-				CallVoidMethod (encodedMember, self, args);
+				peer.CallVoidMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -1856,7 +1877,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe void CallVoidMethod<T1, T2, T3, T4> (
+		public static unsafe void CallGenericVoidMethod<T1, T2, T3, T4> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4
@@ -1874,7 +1896,7 @@ namespace Java.Interop {
 			args [3] = arg4.JValue;
 
 			try {
-				CallVoidMethod (encodedMember, self, args);
+				peer.CallVoidMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -1883,7 +1905,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe void CallVoidMethod<T1, T2, T3, T4, T5> (
+		public static unsafe void CallGenericVoidMethod<T1, T2, T3, T4, T5> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
@@ -1903,7 +1926,7 @@ namespace Java.Interop {
 			args [4] = arg5.JValue;
 
 			try {
-				CallVoidMethod (encodedMember, self, args);
+				peer.CallVoidMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -1913,7 +1936,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe void CallVoidMethod<T1, T2, T3, T4, T5, T6> (
+		public static unsafe void CallGenericVoidMethod<T1, T2, T3, T4, T5, T6> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
@@ -1935,7 +1959,7 @@ namespace Java.Interop {
 			args [5] = arg6.JValue;
 
 			try {
-				CallVoidMethod (encodedMember, self, args);
+				peer.CallVoidMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -1946,7 +1970,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe void CallVoidMethod<T1, T2, T3, T4, T5, T6, T7> (
+		public static unsafe void CallGenericVoidMethod<T1, T2, T3, T4, T5, T6, T7> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
@@ -1970,7 +1995,7 @@ namespace Java.Interop {
 			args [6] = arg7.JValue;
 
 			try {
-				CallVoidMethod (encodedMember, self, args);
+				peer.CallVoidMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -1982,7 +2007,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe void CallVoidMethod<T1, T2, T3, T4, T5, T6, T7, T8> (
+		public static unsafe void CallGenericVoidMethod<T1, T2, T3, T4, T5, T6, T7, T8> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
@@ -2008,7 +2034,7 @@ namespace Java.Interop {
 			args [7] = arg8.JValue;
 
 			try {
-				CallVoidMethod (encodedMember, self, args);
+				peer.CallVoidMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -2021,7 +2047,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe void CallVoidMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+		public static unsafe void CallGenericVoidMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
@@ -2049,7 +2076,7 @@ namespace Java.Interop {
 			args [8] = arg9.JValue;
 
 			try {
-				CallVoidMethod (encodedMember, self, args);
+				peer.CallVoidMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -2063,7 +2090,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe void CallVoidMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+		public static unsafe void CallGenericVoidMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
@@ -2093,7 +2121,7 @@ namespace Java.Interop {
 			args [9] = arg10.JValue;
 
 			try {
-				CallVoidMethod (encodedMember, self, args);
+				peer.CallVoidMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -2108,7 +2136,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe void CallVoidMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+		public static unsafe void CallGenericVoidMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
@@ -2140,7 +2169,7 @@ namespace Java.Interop {
 			args [10] = arg11.JValue;
 
 			try {
-				CallVoidMethod (encodedMember, self, args);
+				peer.CallVoidMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -2156,7 +2185,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe void CallVoidMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+		public static unsafe void CallGenericVoidMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
@@ -2190,7 +2220,7 @@ namespace Java.Interop {
 			args [11] = arg12.JValue;
 
 			try {
-				CallVoidMethod (encodedMember, self, args);
+				peer.CallVoidMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -2207,7 +2237,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe void CallVoidMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+		public static unsafe void CallGenericVoidMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
@@ -2243,7 +2274,7 @@ namespace Java.Interop {
 			args [12] = arg13.JValue;
 
 			try {
-				CallVoidMethod (encodedMember, self, args);
+				peer.CallVoidMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -2261,7 +2292,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe void CallVoidMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+		public static unsafe void CallGenericVoidMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
@@ -2299,7 +2331,7 @@ namespace Java.Interop {
 			args [13] = arg14.JValue;
 
 			try {
-				CallVoidMethod (encodedMember, self, args);
+				peer.CallVoidMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -2318,7 +2350,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe void CallVoidMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+		public static unsafe void CallGenericVoidMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
@@ -2358,7 +2391,7 @@ namespace Java.Interop {
 			args [14] = arg15.JValue;
 
 			try {
-				CallVoidMethod (encodedMember, self, args);
+				peer.CallVoidMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -2378,7 +2411,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe void CallVoidMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+		public static unsafe void CallGenericVoidMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
@@ -2420,7 +2454,7 @@ namespace Java.Interop {
 			args [15] = arg16.JValue;
 
 			try {
-				CallVoidMethod (encodedMember, self, args);
+				peer.CallVoidMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -2440,23 +2474,9 @@ namespace Java.Interop {
 				arg16.Cleanup (value16);
 			}
 		}
-		public unsafe bool CallBooleanMethod (
-			string encodedMember,
-			IJavaObject self,
-			JValue* parameters)
-		{
-			JniPeerMembers.AssertSelf (self);
 
-			if (self.GetType () == DeclaringType || DeclaringType == null) {
-				var m = GetMethodID (encodedMember);
-				return m.CallVirtualBooleanMethod (self.SafeHandle, parameters);
-			}
-			var j = self.JniPeerMembers;
-			var n = j.InstanceMethods.GetMethodID (encodedMember);
-			return n.CallNonvirtualBooleanMethod (self.SafeHandle, j.JniPeerType.SafeHandle, parameters);
-		}
-
-		public unsafe bool CallBooleanMethod (
+		public static unsafe bool CallGenericBooleanMethod (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self
 		)
@@ -2465,12 +2485,13 @@ namespace Java.Interop {
 			var args = stackalloc JValue [0];
 
 			try {
-				return CallBooleanMethod (encodedMember, self, args);
+				return peer.CallBooleanMethod (encodedMember, self, args);
 			} finally {
 			}
 		}
 
-		public unsafe bool CallBooleanMethod<T> (
+		public static unsafe bool CallGenericBooleanMethod<T> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T value
@@ -2482,13 +2503,14 @@ namespace Java.Interop {
 			args [0] = arg.JValue;
 
 			try {
-				return CallBooleanMethod (encodedMember, self, args);
+				return peer.CallBooleanMethod (encodedMember, self, args);
 			} finally {
 				arg.Cleanup (value);
 			}
 		}
 
-		public unsafe bool CallBooleanMethod<T1, T2> (
+		public static unsafe bool CallGenericBooleanMethod<T1, T2> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2
@@ -2502,14 +2524,15 @@ namespace Java.Interop {
 			args [1] = arg2.JValue;
 
 			try {
-				return CallBooleanMethod (encodedMember, self, args);
+				return peer.CallBooleanMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
 			}
 		}
 
-		public unsafe bool CallBooleanMethod<T1, T2, T3> (
+		public static unsafe bool CallGenericBooleanMethod<T1, T2, T3> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3
@@ -2525,7 +2548,7 @@ namespace Java.Interop {
 			args [2] = arg3.JValue;
 
 			try {
-				return CallBooleanMethod (encodedMember, self, args);
+				return peer.CallBooleanMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -2533,7 +2556,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe bool CallBooleanMethod<T1, T2, T3, T4> (
+		public static unsafe bool CallGenericBooleanMethod<T1, T2, T3, T4> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4
@@ -2551,7 +2575,7 @@ namespace Java.Interop {
 			args [3] = arg4.JValue;
 
 			try {
-				return CallBooleanMethod (encodedMember, self, args);
+				return peer.CallBooleanMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -2560,7 +2584,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe bool CallBooleanMethod<T1, T2, T3, T4, T5> (
+		public static unsafe bool CallGenericBooleanMethod<T1, T2, T3, T4, T5> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
@@ -2580,7 +2605,7 @@ namespace Java.Interop {
 			args [4] = arg5.JValue;
 
 			try {
-				return CallBooleanMethod (encodedMember, self, args);
+				return peer.CallBooleanMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -2590,7 +2615,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe bool CallBooleanMethod<T1, T2, T3, T4, T5, T6> (
+		public static unsafe bool CallGenericBooleanMethod<T1, T2, T3, T4, T5, T6> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
@@ -2612,7 +2638,7 @@ namespace Java.Interop {
 			args [5] = arg6.JValue;
 
 			try {
-				return CallBooleanMethod (encodedMember, self, args);
+				return peer.CallBooleanMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -2623,7 +2649,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe bool CallBooleanMethod<T1, T2, T3, T4, T5, T6, T7> (
+		public static unsafe bool CallGenericBooleanMethod<T1, T2, T3, T4, T5, T6, T7> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
@@ -2647,7 +2674,7 @@ namespace Java.Interop {
 			args [6] = arg7.JValue;
 
 			try {
-				return CallBooleanMethod (encodedMember, self, args);
+				return peer.CallBooleanMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -2659,7 +2686,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe bool CallBooleanMethod<T1, T2, T3, T4, T5, T6, T7, T8> (
+		public static unsafe bool CallGenericBooleanMethod<T1, T2, T3, T4, T5, T6, T7, T8> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
@@ -2685,7 +2713,7 @@ namespace Java.Interop {
 			args [7] = arg8.JValue;
 
 			try {
-				return CallBooleanMethod (encodedMember, self, args);
+				return peer.CallBooleanMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -2698,7 +2726,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe bool CallBooleanMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+		public static unsafe bool CallGenericBooleanMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
@@ -2726,7 +2755,7 @@ namespace Java.Interop {
 			args [8] = arg9.JValue;
 
 			try {
-				return CallBooleanMethod (encodedMember, self, args);
+				return peer.CallBooleanMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -2740,7 +2769,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe bool CallBooleanMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+		public static unsafe bool CallGenericBooleanMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
@@ -2770,7 +2800,7 @@ namespace Java.Interop {
 			args [9] = arg10.JValue;
 
 			try {
-				return CallBooleanMethod (encodedMember, self, args);
+				return peer.CallBooleanMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -2785,7 +2815,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe bool CallBooleanMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+		public static unsafe bool CallGenericBooleanMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
@@ -2817,7 +2848,7 @@ namespace Java.Interop {
 			args [10] = arg11.JValue;
 
 			try {
-				return CallBooleanMethod (encodedMember, self, args);
+				return peer.CallBooleanMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -2833,7 +2864,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe bool CallBooleanMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+		public static unsafe bool CallGenericBooleanMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
@@ -2867,7 +2899,7 @@ namespace Java.Interop {
 			args [11] = arg12.JValue;
 
 			try {
-				return CallBooleanMethod (encodedMember, self, args);
+				return peer.CallBooleanMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -2884,7 +2916,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe bool CallBooleanMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+		public static unsafe bool CallGenericBooleanMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
@@ -2920,7 +2953,7 @@ namespace Java.Interop {
 			args [12] = arg13.JValue;
 
 			try {
-				return CallBooleanMethod (encodedMember, self, args);
+				return peer.CallBooleanMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -2938,7 +2971,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe bool CallBooleanMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+		public static unsafe bool CallGenericBooleanMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
@@ -2976,7 +3010,7 @@ namespace Java.Interop {
 			args [13] = arg14.JValue;
 
 			try {
-				return CallBooleanMethod (encodedMember, self, args);
+				return peer.CallBooleanMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -2995,7 +3029,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe bool CallBooleanMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+		public static unsafe bool CallGenericBooleanMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
@@ -3035,7 +3070,7 @@ namespace Java.Interop {
 			args [14] = arg15.JValue;
 
 			try {
-				return CallBooleanMethod (encodedMember, self, args);
+				return peer.CallBooleanMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -3055,7 +3090,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe bool CallBooleanMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+		public static unsafe bool CallGenericBooleanMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
@@ -3097,7 +3133,7 @@ namespace Java.Interop {
 			args [15] = arg16.JValue;
 
 			try {
-				return CallBooleanMethod (encodedMember, self, args);
+				return peer.CallBooleanMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -3117,23 +3153,9 @@ namespace Java.Interop {
 				arg16.Cleanup (value16);
 			}
 		}
-		public unsafe sbyte CallSByteMethod (
-			string encodedMember,
-			IJavaObject self,
-			JValue* parameters)
-		{
-			JniPeerMembers.AssertSelf (self);
 
-			if (self.GetType () == DeclaringType || DeclaringType == null) {
-				var m = GetMethodID (encodedMember);
-				return m.CallVirtualSByteMethod (self.SafeHandle, parameters);
-			}
-			var j = self.JniPeerMembers;
-			var n = j.InstanceMethods.GetMethodID (encodedMember);
-			return n.CallNonvirtualSByteMethod (self.SafeHandle, j.JniPeerType.SafeHandle, parameters);
-		}
-
-		public unsafe sbyte CallSByteMethod (
+		public static unsafe sbyte CallGenericSByteMethod (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self
 		)
@@ -3142,12 +3164,13 @@ namespace Java.Interop {
 			var args = stackalloc JValue [0];
 
 			try {
-				return CallSByteMethod (encodedMember, self, args);
+				return peer.CallSByteMethod (encodedMember, self, args);
 			} finally {
 			}
 		}
 
-		public unsafe sbyte CallSByteMethod<T> (
+		public static unsafe sbyte CallGenericSByteMethod<T> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T value
@@ -3159,13 +3182,14 @@ namespace Java.Interop {
 			args [0] = arg.JValue;
 
 			try {
-				return CallSByteMethod (encodedMember, self, args);
+				return peer.CallSByteMethod (encodedMember, self, args);
 			} finally {
 				arg.Cleanup (value);
 			}
 		}
 
-		public unsafe sbyte CallSByteMethod<T1, T2> (
+		public static unsafe sbyte CallGenericSByteMethod<T1, T2> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2
@@ -3179,14 +3203,15 @@ namespace Java.Interop {
 			args [1] = arg2.JValue;
 
 			try {
-				return CallSByteMethod (encodedMember, self, args);
+				return peer.CallSByteMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
 			}
 		}
 
-		public unsafe sbyte CallSByteMethod<T1, T2, T3> (
+		public static unsafe sbyte CallGenericSByteMethod<T1, T2, T3> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3
@@ -3202,7 +3227,7 @@ namespace Java.Interop {
 			args [2] = arg3.JValue;
 
 			try {
-				return CallSByteMethod (encodedMember, self, args);
+				return peer.CallSByteMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -3210,7 +3235,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe sbyte CallSByteMethod<T1, T2, T3, T4> (
+		public static unsafe sbyte CallGenericSByteMethod<T1, T2, T3, T4> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4
@@ -3228,7 +3254,7 @@ namespace Java.Interop {
 			args [3] = arg4.JValue;
 
 			try {
-				return CallSByteMethod (encodedMember, self, args);
+				return peer.CallSByteMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -3237,7 +3263,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe sbyte CallSByteMethod<T1, T2, T3, T4, T5> (
+		public static unsafe sbyte CallGenericSByteMethod<T1, T2, T3, T4, T5> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
@@ -3257,7 +3284,7 @@ namespace Java.Interop {
 			args [4] = arg5.JValue;
 
 			try {
-				return CallSByteMethod (encodedMember, self, args);
+				return peer.CallSByteMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -3267,7 +3294,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe sbyte CallSByteMethod<T1, T2, T3, T4, T5, T6> (
+		public static unsafe sbyte CallGenericSByteMethod<T1, T2, T3, T4, T5, T6> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
@@ -3289,7 +3317,7 @@ namespace Java.Interop {
 			args [5] = arg6.JValue;
 
 			try {
-				return CallSByteMethod (encodedMember, self, args);
+				return peer.CallSByteMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -3300,7 +3328,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe sbyte CallSByteMethod<T1, T2, T3, T4, T5, T6, T7> (
+		public static unsafe sbyte CallGenericSByteMethod<T1, T2, T3, T4, T5, T6, T7> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
@@ -3324,7 +3353,7 @@ namespace Java.Interop {
 			args [6] = arg7.JValue;
 
 			try {
-				return CallSByteMethod (encodedMember, self, args);
+				return peer.CallSByteMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -3336,7 +3365,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe sbyte CallSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8> (
+		public static unsafe sbyte CallGenericSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
@@ -3362,7 +3392,7 @@ namespace Java.Interop {
 			args [7] = arg8.JValue;
 
 			try {
-				return CallSByteMethod (encodedMember, self, args);
+				return peer.CallSByteMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -3375,7 +3405,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe sbyte CallSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+		public static unsafe sbyte CallGenericSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
@@ -3403,7 +3434,7 @@ namespace Java.Interop {
 			args [8] = arg9.JValue;
 
 			try {
-				return CallSByteMethod (encodedMember, self, args);
+				return peer.CallSByteMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -3417,7 +3448,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe sbyte CallSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+		public static unsafe sbyte CallGenericSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
@@ -3447,7 +3479,7 @@ namespace Java.Interop {
 			args [9] = arg10.JValue;
 
 			try {
-				return CallSByteMethod (encodedMember, self, args);
+				return peer.CallSByteMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -3462,7 +3494,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe sbyte CallSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+		public static unsafe sbyte CallGenericSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
@@ -3494,7 +3527,7 @@ namespace Java.Interop {
 			args [10] = arg11.JValue;
 
 			try {
-				return CallSByteMethod (encodedMember, self, args);
+				return peer.CallSByteMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -3510,7 +3543,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe sbyte CallSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+		public static unsafe sbyte CallGenericSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
@@ -3544,7 +3578,7 @@ namespace Java.Interop {
 			args [11] = arg12.JValue;
 
 			try {
-				return CallSByteMethod (encodedMember, self, args);
+				return peer.CallSByteMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -3561,7 +3595,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe sbyte CallSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+		public static unsafe sbyte CallGenericSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
@@ -3597,7 +3632,7 @@ namespace Java.Interop {
 			args [12] = arg13.JValue;
 
 			try {
-				return CallSByteMethod (encodedMember, self, args);
+				return peer.CallSByteMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -3615,7 +3650,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe sbyte CallSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+		public static unsafe sbyte CallGenericSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
@@ -3653,7 +3689,7 @@ namespace Java.Interop {
 			args [13] = arg14.JValue;
 
 			try {
-				return CallSByteMethod (encodedMember, self, args);
+				return peer.CallSByteMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -3672,7 +3708,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe sbyte CallSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+		public static unsafe sbyte CallGenericSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
@@ -3712,7 +3749,7 @@ namespace Java.Interop {
 			args [14] = arg15.JValue;
 
 			try {
-				return CallSByteMethod (encodedMember, self, args);
+				return peer.CallSByteMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -3732,7 +3769,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe sbyte CallSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+		public static unsafe sbyte CallGenericSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
@@ -3774,7 +3812,7 @@ namespace Java.Interop {
 			args [15] = arg16.JValue;
 
 			try {
-				return CallSByteMethod (encodedMember, self, args);
+				return peer.CallSByteMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -3794,23 +3832,9 @@ namespace Java.Interop {
 				arg16.Cleanup (value16);
 			}
 		}
-		public unsafe char CallCharMethod (
-			string encodedMember,
-			IJavaObject self,
-			JValue* parameters)
-		{
-			JniPeerMembers.AssertSelf (self);
 
-			if (self.GetType () == DeclaringType || DeclaringType == null) {
-				var m = GetMethodID (encodedMember);
-				return m.CallVirtualCharMethod (self.SafeHandle, parameters);
-			}
-			var j = self.JniPeerMembers;
-			var n = j.InstanceMethods.GetMethodID (encodedMember);
-			return n.CallNonvirtualCharMethod (self.SafeHandle, j.JniPeerType.SafeHandle, parameters);
-		}
-
-		public unsafe char CallCharMethod (
+		public static unsafe char CallGenericCharMethod (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self
 		)
@@ -3819,12 +3843,13 @@ namespace Java.Interop {
 			var args = stackalloc JValue [0];
 
 			try {
-				return CallCharMethod (encodedMember, self, args);
+				return peer.CallCharMethod (encodedMember, self, args);
 			} finally {
 			}
 		}
 
-		public unsafe char CallCharMethod<T> (
+		public static unsafe char CallGenericCharMethod<T> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T value
@@ -3836,13 +3861,14 @@ namespace Java.Interop {
 			args [0] = arg.JValue;
 
 			try {
-				return CallCharMethod (encodedMember, self, args);
+				return peer.CallCharMethod (encodedMember, self, args);
 			} finally {
 				arg.Cleanup (value);
 			}
 		}
 
-		public unsafe char CallCharMethod<T1, T2> (
+		public static unsafe char CallGenericCharMethod<T1, T2> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2
@@ -3856,14 +3882,15 @@ namespace Java.Interop {
 			args [1] = arg2.JValue;
 
 			try {
-				return CallCharMethod (encodedMember, self, args);
+				return peer.CallCharMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
 			}
 		}
 
-		public unsafe char CallCharMethod<T1, T2, T3> (
+		public static unsafe char CallGenericCharMethod<T1, T2, T3> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3
@@ -3879,7 +3906,7 @@ namespace Java.Interop {
 			args [2] = arg3.JValue;
 
 			try {
-				return CallCharMethod (encodedMember, self, args);
+				return peer.CallCharMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -3887,7 +3914,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe char CallCharMethod<T1, T2, T3, T4> (
+		public static unsafe char CallGenericCharMethod<T1, T2, T3, T4> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4
@@ -3905,7 +3933,7 @@ namespace Java.Interop {
 			args [3] = arg4.JValue;
 
 			try {
-				return CallCharMethod (encodedMember, self, args);
+				return peer.CallCharMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -3914,7 +3942,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe char CallCharMethod<T1, T2, T3, T4, T5> (
+		public static unsafe char CallGenericCharMethod<T1, T2, T3, T4, T5> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
@@ -3934,7 +3963,7 @@ namespace Java.Interop {
 			args [4] = arg5.JValue;
 
 			try {
-				return CallCharMethod (encodedMember, self, args);
+				return peer.CallCharMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -3944,7 +3973,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe char CallCharMethod<T1, T2, T3, T4, T5, T6> (
+		public static unsafe char CallGenericCharMethod<T1, T2, T3, T4, T5, T6> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
@@ -3966,7 +3996,7 @@ namespace Java.Interop {
 			args [5] = arg6.JValue;
 
 			try {
-				return CallCharMethod (encodedMember, self, args);
+				return peer.CallCharMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -3977,7 +4007,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe char CallCharMethod<T1, T2, T3, T4, T5, T6, T7> (
+		public static unsafe char CallGenericCharMethod<T1, T2, T3, T4, T5, T6, T7> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
@@ -4001,7 +4032,7 @@ namespace Java.Interop {
 			args [6] = arg7.JValue;
 
 			try {
-				return CallCharMethod (encodedMember, self, args);
+				return peer.CallCharMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -4013,7 +4044,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe char CallCharMethod<T1, T2, T3, T4, T5, T6, T7, T8> (
+		public static unsafe char CallGenericCharMethod<T1, T2, T3, T4, T5, T6, T7, T8> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
@@ -4039,7 +4071,7 @@ namespace Java.Interop {
 			args [7] = arg8.JValue;
 
 			try {
-				return CallCharMethod (encodedMember, self, args);
+				return peer.CallCharMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -4052,7 +4084,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe char CallCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+		public static unsafe char CallGenericCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
@@ -4080,7 +4113,7 @@ namespace Java.Interop {
 			args [8] = arg9.JValue;
 
 			try {
-				return CallCharMethod (encodedMember, self, args);
+				return peer.CallCharMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -4094,7 +4127,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe char CallCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+		public static unsafe char CallGenericCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
@@ -4124,7 +4158,7 @@ namespace Java.Interop {
 			args [9] = arg10.JValue;
 
 			try {
-				return CallCharMethod (encodedMember, self, args);
+				return peer.CallCharMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -4139,7 +4173,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe char CallCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+		public static unsafe char CallGenericCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
@@ -4171,7 +4206,7 @@ namespace Java.Interop {
 			args [10] = arg11.JValue;
 
 			try {
-				return CallCharMethod (encodedMember, self, args);
+				return peer.CallCharMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -4187,7 +4222,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe char CallCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+		public static unsafe char CallGenericCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
@@ -4221,7 +4257,7 @@ namespace Java.Interop {
 			args [11] = arg12.JValue;
 
 			try {
-				return CallCharMethod (encodedMember, self, args);
+				return peer.CallCharMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -4238,7 +4274,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe char CallCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+		public static unsafe char CallGenericCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
@@ -4274,7 +4311,7 @@ namespace Java.Interop {
 			args [12] = arg13.JValue;
 
 			try {
-				return CallCharMethod (encodedMember, self, args);
+				return peer.CallCharMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -4292,7 +4329,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe char CallCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+		public static unsafe char CallGenericCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
@@ -4330,7 +4368,7 @@ namespace Java.Interop {
 			args [13] = arg14.JValue;
 
 			try {
-				return CallCharMethod (encodedMember, self, args);
+				return peer.CallCharMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -4349,7 +4387,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe char CallCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+		public static unsafe char CallGenericCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
@@ -4389,7 +4428,7 @@ namespace Java.Interop {
 			args [14] = arg15.JValue;
 
 			try {
-				return CallCharMethod (encodedMember, self, args);
+				return peer.CallCharMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -4409,7 +4448,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe char CallCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+		public static unsafe char CallGenericCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
@@ -4451,7 +4491,7 @@ namespace Java.Interop {
 			args [15] = arg16.JValue;
 
 			try {
-				return CallCharMethod (encodedMember, self, args);
+				return peer.CallCharMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -4471,23 +4511,9 @@ namespace Java.Interop {
 				arg16.Cleanup (value16);
 			}
 		}
-		public unsafe short CallInt16Method (
-			string encodedMember,
-			IJavaObject self,
-			JValue* parameters)
-		{
-			JniPeerMembers.AssertSelf (self);
 
-			if (self.GetType () == DeclaringType || DeclaringType == null) {
-				var m = GetMethodID (encodedMember);
-				return m.CallVirtualInt16Method (self.SafeHandle, parameters);
-			}
-			var j = self.JniPeerMembers;
-			var n = j.InstanceMethods.GetMethodID (encodedMember);
-			return n.CallNonvirtualInt16Method (self.SafeHandle, j.JniPeerType.SafeHandle, parameters);
-		}
-
-		public unsafe short CallInt16Method (
+		public static unsafe short CallGenericInt16Method (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self
 		)
@@ -4496,12 +4522,13 @@ namespace Java.Interop {
 			var args = stackalloc JValue [0];
 
 			try {
-				return CallInt16Method (encodedMember, self, args);
+				return peer.CallInt16Method (encodedMember, self, args);
 			} finally {
 			}
 		}
 
-		public unsafe short CallInt16Method<T> (
+		public static unsafe short CallGenericInt16Method<T> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T value
@@ -4513,13 +4540,14 @@ namespace Java.Interop {
 			args [0] = arg.JValue;
 
 			try {
-				return CallInt16Method (encodedMember, self, args);
+				return peer.CallInt16Method (encodedMember, self, args);
 			} finally {
 				arg.Cleanup (value);
 			}
 		}
 
-		public unsafe short CallInt16Method<T1, T2> (
+		public static unsafe short CallGenericInt16Method<T1, T2> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2
@@ -4533,14 +4561,15 @@ namespace Java.Interop {
 			args [1] = arg2.JValue;
 
 			try {
-				return CallInt16Method (encodedMember, self, args);
+				return peer.CallInt16Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
 			}
 		}
 
-		public unsafe short CallInt16Method<T1, T2, T3> (
+		public static unsafe short CallGenericInt16Method<T1, T2, T3> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3
@@ -4556,7 +4585,7 @@ namespace Java.Interop {
 			args [2] = arg3.JValue;
 
 			try {
-				return CallInt16Method (encodedMember, self, args);
+				return peer.CallInt16Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -4564,7 +4593,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe short CallInt16Method<T1, T2, T3, T4> (
+		public static unsafe short CallGenericInt16Method<T1, T2, T3, T4> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4
@@ -4582,7 +4612,7 @@ namespace Java.Interop {
 			args [3] = arg4.JValue;
 
 			try {
-				return CallInt16Method (encodedMember, self, args);
+				return peer.CallInt16Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -4591,7 +4621,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe short CallInt16Method<T1, T2, T3, T4, T5> (
+		public static unsafe short CallGenericInt16Method<T1, T2, T3, T4, T5> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
@@ -4611,7 +4642,7 @@ namespace Java.Interop {
 			args [4] = arg5.JValue;
 
 			try {
-				return CallInt16Method (encodedMember, self, args);
+				return peer.CallInt16Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -4621,7 +4652,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe short CallInt16Method<T1, T2, T3, T4, T5, T6> (
+		public static unsafe short CallGenericInt16Method<T1, T2, T3, T4, T5, T6> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
@@ -4643,7 +4675,7 @@ namespace Java.Interop {
 			args [5] = arg6.JValue;
 
 			try {
-				return CallInt16Method (encodedMember, self, args);
+				return peer.CallInt16Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -4654,7 +4686,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe short CallInt16Method<T1, T2, T3, T4, T5, T6, T7> (
+		public static unsafe short CallGenericInt16Method<T1, T2, T3, T4, T5, T6, T7> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
@@ -4678,7 +4711,7 @@ namespace Java.Interop {
 			args [6] = arg7.JValue;
 
 			try {
-				return CallInt16Method (encodedMember, self, args);
+				return peer.CallInt16Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -4690,7 +4723,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe short CallInt16Method<T1, T2, T3, T4, T5, T6, T7, T8> (
+		public static unsafe short CallGenericInt16Method<T1, T2, T3, T4, T5, T6, T7, T8> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
@@ -4716,7 +4750,7 @@ namespace Java.Interop {
 			args [7] = arg8.JValue;
 
 			try {
-				return CallInt16Method (encodedMember, self, args);
+				return peer.CallInt16Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -4729,7 +4763,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe short CallInt16Method<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+		public static unsafe short CallGenericInt16Method<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
@@ -4757,7 +4792,7 @@ namespace Java.Interop {
 			args [8] = arg9.JValue;
 
 			try {
-				return CallInt16Method (encodedMember, self, args);
+				return peer.CallInt16Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -4771,7 +4806,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe short CallInt16Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+		public static unsafe short CallGenericInt16Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
@@ -4801,7 +4837,7 @@ namespace Java.Interop {
 			args [9] = arg10.JValue;
 
 			try {
-				return CallInt16Method (encodedMember, self, args);
+				return peer.CallInt16Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -4816,7 +4852,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe short CallInt16Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+		public static unsafe short CallGenericInt16Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
@@ -4848,7 +4885,7 @@ namespace Java.Interop {
 			args [10] = arg11.JValue;
 
 			try {
-				return CallInt16Method (encodedMember, self, args);
+				return peer.CallInt16Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -4864,7 +4901,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe short CallInt16Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+		public static unsafe short CallGenericInt16Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
@@ -4898,7 +4936,7 @@ namespace Java.Interop {
 			args [11] = arg12.JValue;
 
 			try {
-				return CallInt16Method (encodedMember, self, args);
+				return peer.CallInt16Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -4915,7 +4953,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe short CallInt16Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+		public static unsafe short CallGenericInt16Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
@@ -4951,7 +4990,7 @@ namespace Java.Interop {
 			args [12] = arg13.JValue;
 
 			try {
-				return CallInt16Method (encodedMember, self, args);
+				return peer.CallInt16Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -4969,7 +5008,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe short CallInt16Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+		public static unsafe short CallGenericInt16Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
@@ -5007,7 +5047,7 @@ namespace Java.Interop {
 			args [13] = arg14.JValue;
 
 			try {
-				return CallInt16Method (encodedMember, self, args);
+				return peer.CallInt16Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -5026,7 +5066,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe short CallInt16Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+		public static unsafe short CallGenericInt16Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
@@ -5066,7 +5107,7 @@ namespace Java.Interop {
 			args [14] = arg15.JValue;
 
 			try {
-				return CallInt16Method (encodedMember, self, args);
+				return peer.CallInt16Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -5086,7 +5127,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe short CallInt16Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+		public static unsafe short CallGenericInt16Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
@@ -5128,7 +5170,7 @@ namespace Java.Interop {
 			args [15] = arg16.JValue;
 
 			try {
-				return CallInt16Method (encodedMember, self, args);
+				return peer.CallInt16Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -5148,23 +5190,9 @@ namespace Java.Interop {
 				arg16.Cleanup (value16);
 			}
 		}
-		public unsafe int CallInt32Method (
-			string encodedMember,
-			IJavaObject self,
-			JValue* parameters)
-		{
-			JniPeerMembers.AssertSelf (self);
 
-			if (self.GetType () == DeclaringType || DeclaringType == null) {
-				var m = GetMethodID (encodedMember);
-				return m.CallVirtualInt32Method (self.SafeHandle, parameters);
-			}
-			var j = self.JniPeerMembers;
-			var n = j.InstanceMethods.GetMethodID (encodedMember);
-			return n.CallNonvirtualInt32Method (self.SafeHandle, j.JniPeerType.SafeHandle, parameters);
-		}
-
-		public unsafe int CallInt32Method (
+		public static unsafe int CallGenericInt32Method (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self
 		)
@@ -5173,12 +5201,13 @@ namespace Java.Interop {
 			var args = stackalloc JValue [0];
 
 			try {
-				return CallInt32Method (encodedMember, self, args);
+				return peer.CallInt32Method (encodedMember, self, args);
 			} finally {
 			}
 		}
 
-		public unsafe int CallInt32Method<T> (
+		public static unsafe int CallGenericInt32Method<T> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T value
@@ -5190,13 +5219,14 @@ namespace Java.Interop {
 			args [0] = arg.JValue;
 
 			try {
-				return CallInt32Method (encodedMember, self, args);
+				return peer.CallInt32Method (encodedMember, self, args);
 			} finally {
 				arg.Cleanup (value);
 			}
 		}
 
-		public unsafe int CallInt32Method<T1, T2> (
+		public static unsafe int CallGenericInt32Method<T1, T2> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2
@@ -5210,14 +5240,15 @@ namespace Java.Interop {
 			args [1] = arg2.JValue;
 
 			try {
-				return CallInt32Method (encodedMember, self, args);
+				return peer.CallInt32Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
 			}
 		}
 
-		public unsafe int CallInt32Method<T1, T2, T3> (
+		public static unsafe int CallGenericInt32Method<T1, T2, T3> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3
@@ -5233,7 +5264,7 @@ namespace Java.Interop {
 			args [2] = arg3.JValue;
 
 			try {
-				return CallInt32Method (encodedMember, self, args);
+				return peer.CallInt32Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -5241,7 +5272,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe int CallInt32Method<T1, T2, T3, T4> (
+		public static unsafe int CallGenericInt32Method<T1, T2, T3, T4> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4
@@ -5259,7 +5291,7 @@ namespace Java.Interop {
 			args [3] = arg4.JValue;
 
 			try {
-				return CallInt32Method (encodedMember, self, args);
+				return peer.CallInt32Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -5268,7 +5300,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe int CallInt32Method<T1, T2, T3, T4, T5> (
+		public static unsafe int CallGenericInt32Method<T1, T2, T3, T4, T5> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
@@ -5288,7 +5321,7 @@ namespace Java.Interop {
 			args [4] = arg5.JValue;
 
 			try {
-				return CallInt32Method (encodedMember, self, args);
+				return peer.CallInt32Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -5298,7 +5331,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe int CallInt32Method<T1, T2, T3, T4, T5, T6> (
+		public static unsafe int CallGenericInt32Method<T1, T2, T3, T4, T5, T6> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
@@ -5320,7 +5354,7 @@ namespace Java.Interop {
 			args [5] = arg6.JValue;
 
 			try {
-				return CallInt32Method (encodedMember, self, args);
+				return peer.CallInt32Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -5331,7 +5365,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe int CallInt32Method<T1, T2, T3, T4, T5, T6, T7> (
+		public static unsafe int CallGenericInt32Method<T1, T2, T3, T4, T5, T6, T7> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
@@ -5355,7 +5390,7 @@ namespace Java.Interop {
 			args [6] = arg7.JValue;
 
 			try {
-				return CallInt32Method (encodedMember, self, args);
+				return peer.CallInt32Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -5367,7 +5402,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe int CallInt32Method<T1, T2, T3, T4, T5, T6, T7, T8> (
+		public static unsafe int CallGenericInt32Method<T1, T2, T3, T4, T5, T6, T7, T8> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
@@ -5393,7 +5429,7 @@ namespace Java.Interop {
 			args [7] = arg8.JValue;
 
 			try {
-				return CallInt32Method (encodedMember, self, args);
+				return peer.CallInt32Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -5406,7 +5442,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe int CallInt32Method<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+		public static unsafe int CallGenericInt32Method<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
@@ -5434,7 +5471,7 @@ namespace Java.Interop {
 			args [8] = arg9.JValue;
 
 			try {
-				return CallInt32Method (encodedMember, self, args);
+				return peer.CallInt32Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -5448,7 +5485,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe int CallInt32Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+		public static unsafe int CallGenericInt32Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
@@ -5478,7 +5516,7 @@ namespace Java.Interop {
 			args [9] = arg10.JValue;
 
 			try {
-				return CallInt32Method (encodedMember, self, args);
+				return peer.CallInt32Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -5493,7 +5531,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe int CallInt32Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+		public static unsafe int CallGenericInt32Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
@@ -5525,7 +5564,7 @@ namespace Java.Interop {
 			args [10] = arg11.JValue;
 
 			try {
-				return CallInt32Method (encodedMember, self, args);
+				return peer.CallInt32Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -5541,7 +5580,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe int CallInt32Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+		public static unsafe int CallGenericInt32Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
@@ -5575,7 +5615,7 @@ namespace Java.Interop {
 			args [11] = arg12.JValue;
 
 			try {
-				return CallInt32Method (encodedMember, self, args);
+				return peer.CallInt32Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -5592,7 +5632,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe int CallInt32Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+		public static unsafe int CallGenericInt32Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
@@ -5628,7 +5669,7 @@ namespace Java.Interop {
 			args [12] = arg13.JValue;
 
 			try {
-				return CallInt32Method (encodedMember, self, args);
+				return peer.CallInt32Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -5646,7 +5687,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe int CallInt32Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+		public static unsafe int CallGenericInt32Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
@@ -5684,7 +5726,7 @@ namespace Java.Interop {
 			args [13] = arg14.JValue;
 
 			try {
-				return CallInt32Method (encodedMember, self, args);
+				return peer.CallInt32Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -5703,7 +5745,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe int CallInt32Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+		public static unsafe int CallGenericInt32Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
@@ -5743,7 +5786,7 @@ namespace Java.Interop {
 			args [14] = arg15.JValue;
 
 			try {
-				return CallInt32Method (encodedMember, self, args);
+				return peer.CallInt32Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -5763,7 +5806,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe int CallInt32Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+		public static unsafe int CallGenericInt32Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
@@ -5805,7 +5849,7 @@ namespace Java.Interop {
 			args [15] = arg16.JValue;
 
 			try {
-				return CallInt32Method (encodedMember, self, args);
+				return peer.CallInt32Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -5825,23 +5869,9 @@ namespace Java.Interop {
 				arg16.Cleanup (value16);
 			}
 		}
-		public unsafe long CallInt64Method (
-			string encodedMember,
-			IJavaObject self,
-			JValue* parameters)
-		{
-			JniPeerMembers.AssertSelf (self);
 
-			if (self.GetType () == DeclaringType || DeclaringType == null) {
-				var m = GetMethodID (encodedMember);
-				return m.CallVirtualInt64Method (self.SafeHandle, parameters);
-			}
-			var j = self.JniPeerMembers;
-			var n = j.InstanceMethods.GetMethodID (encodedMember);
-			return n.CallNonvirtualInt64Method (self.SafeHandle, j.JniPeerType.SafeHandle, parameters);
-		}
-
-		public unsafe long CallInt64Method (
+		public static unsafe long CallGenericInt64Method (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self
 		)
@@ -5850,12 +5880,13 @@ namespace Java.Interop {
 			var args = stackalloc JValue [0];
 
 			try {
-				return CallInt64Method (encodedMember, self, args);
+				return peer.CallInt64Method (encodedMember, self, args);
 			} finally {
 			}
 		}
 
-		public unsafe long CallInt64Method<T> (
+		public static unsafe long CallGenericInt64Method<T> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T value
@@ -5867,13 +5898,14 @@ namespace Java.Interop {
 			args [0] = arg.JValue;
 
 			try {
-				return CallInt64Method (encodedMember, self, args);
+				return peer.CallInt64Method (encodedMember, self, args);
 			} finally {
 				arg.Cleanup (value);
 			}
 		}
 
-		public unsafe long CallInt64Method<T1, T2> (
+		public static unsafe long CallGenericInt64Method<T1, T2> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2
@@ -5887,14 +5919,15 @@ namespace Java.Interop {
 			args [1] = arg2.JValue;
 
 			try {
-				return CallInt64Method (encodedMember, self, args);
+				return peer.CallInt64Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
 			}
 		}
 
-		public unsafe long CallInt64Method<T1, T2, T3> (
+		public static unsafe long CallGenericInt64Method<T1, T2, T3> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3
@@ -5910,7 +5943,7 @@ namespace Java.Interop {
 			args [2] = arg3.JValue;
 
 			try {
-				return CallInt64Method (encodedMember, self, args);
+				return peer.CallInt64Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -5918,7 +5951,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe long CallInt64Method<T1, T2, T3, T4> (
+		public static unsafe long CallGenericInt64Method<T1, T2, T3, T4> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4
@@ -5936,7 +5970,7 @@ namespace Java.Interop {
 			args [3] = arg4.JValue;
 
 			try {
-				return CallInt64Method (encodedMember, self, args);
+				return peer.CallInt64Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -5945,7 +5979,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe long CallInt64Method<T1, T2, T3, T4, T5> (
+		public static unsafe long CallGenericInt64Method<T1, T2, T3, T4, T5> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
@@ -5965,7 +6000,7 @@ namespace Java.Interop {
 			args [4] = arg5.JValue;
 
 			try {
-				return CallInt64Method (encodedMember, self, args);
+				return peer.CallInt64Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -5975,7 +6010,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe long CallInt64Method<T1, T2, T3, T4, T5, T6> (
+		public static unsafe long CallGenericInt64Method<T1, T2, T3, T4, T5, T6> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
@@ -5997,7 +6033,7 @@ namespace Java.Interop {
 			args [5] = arg6.JValue;
 
 			try {
-				return CallInt64Method (encodedMember, self, args);
+				return peer.CallInt64Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -6008,7 +6044,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe long CallInt64Method<T1, T2, T3, T4, T5, T6, T7> (
+		public static unsafe long CallGenericInt64Method<T1, T2, T3, T4, T5, T6, T7> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
@@ -6032,7 +6069,7 @@ namespace Java.Interop {
 			args [6] = arg7.JValue;
 
 			try {
-				return CallInt64Method (encodedMember, self, args);
+				return peer.CallInt64Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -6044,7 +6081,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe long CallInt64Method<T1, T2, T3, T4, T5, T6, T7, T8> (
+		public static unsafe long CallGenericInt64Method<T1, T2, T3, T4, T5, T6, T7, T8> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
@@ -6070,7 +6108,7 @@ namespace Java.Interop {
 			args [7] = arg8.JValue;
 
 			try {
-				return CallInt64Method (encodedMember, self, args);
+				return peer.CallInt64Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -6083,7 +6121,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe long CallInt64Method<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+		public static unsafe long CallGenericInt64Method<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
@@ -6111,7 +6150,7 @@ namespace Java.Interop {
 			args [8] = arg9.JValue;
 
 			try {
-				return CallInt64Method (encodedMember, self, args);
+				return peer.CallInt64Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -6125,7 +6164,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe long CallInt64Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+		public static unsafe long CallGenericInt64Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
@@ -6155,7 +6195,7 @@ namespace Java.Interop {
 			args [9] = arg10.JValue;
 
 			try {
-				return CallInt64Method (encodedMember, self, args);
+				return peer.CallInt64Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -6170,7 +6210,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe long CallInt64Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+		public static unsafe long CallGenericInt64Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
@@ -6202,7 +6243,7 @@ namespace Java.Interop {
 			args [10] = arg11.JValue;
 
 			try {
-				return CallInt64Method (encodedMember, self, args);
+				return peer.CallInt64Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -6218,7 +6259,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe long CallInt64Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+		public static unsafe long CallGenericInt64Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
@@ -6252,7 +6294,7 @@ namespace Java.Interop {
 			args [11] = arg12.JValue;
 
 			try {
-				return CallInt64Method (encodedMember, self, args);
+				return peer.CallInt64Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -6269,7 +6311,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe long CallInt64Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+		public static unsafe long CallGenericInt64Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
@@ -6305,7 +6348,7 @@ namespace Java.Interop {
 			args [12] = arg13.JValue;
 
 			try {
-				return CallInt64Method (encodedMember, self, args);
+				return peer.CallInt64Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -6323,7 +6366,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe long CallInt64Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+		public static unsafe long CallGenericInt64Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
@@ -6361,7 +6405,7 @@ namespace Java.Interop {
 			args [13] = arg14.JValue;
 
 			try {
-				return CallInt64Method (encodedMember, self, args);
+				return peer.CallInt64Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -6380,7 +6424,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe long CallInt64Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+		public static unsafe long CallGenericInt64Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
@@ -6420,7 +6465,7 @@ namespace Java.Interop {
 			args [14] = arg15.JValue;
 
 			try {
-				return CallInt64Method (encodedMember, self, args);
+				return peer.CallInt64Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -6440,7 +6485,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe long CallInt64Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+		public static unsafe long CallGenericInt64Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
@@ -6482,7 +6528,7 @@ namespace Java.Interop {
 			args [15] = arg16.JValue;
 
 			try {
-				return CallInt64Method (encodedMember, self, args);
+				return peer.CallInt64Method (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -6502,23 +6548,9 @@ namespace Java.Interop {
 				arg16.Cleanup (value16);
 			}
 		}
-		public unsafe float CallSingleMethod (
-			string encodedMember,
-			IJavaObject self,
-			JValue* parameters)
-		{
-			JniPeerMembers.AssertSelf (self);
 
-			if (self.GetType () == DeclaringType || DeclaringType == null) {
-				var m = GetMethodID (encodedMember);
-				return m.CallVirtualSingleMethod (self.SafeHandle, parameters);
-			}
-			var j = self.JniPeerMembers;
-			var n = j.InstanceMethods.GetMethodID (encodedMember);
-			return n.CallNonvirtualSingleMethod (self.SafeHandle, j.JniPeerType.SafeHandle, parameters);
-		}
-
-		public unsafe float CallSingleMethod (
+		public static unsafe float CallGenericSingleMethod (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self
 		)
@@ -6527,12 +6559,13 @@ namespace Java.Interop {
 			var args = stackalloc JValue [0];
 
 			try {
-				return CallSingleMethod (encodedMember, self, args);
+				return peer.CallSingleMethod (encodedMember, self, args);
 			} finally {
 			}
 		}
 
-		public unsafe float CallSingleMethod<T> (
+		public static unsafe float CallGenericSingleMethod<T> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T value
@@ -6544,13 +6577,14 @@ namespace Java.Interop {
 			args [0] = arg.JValue;
 
 			try {
-				return CallSingleMethod (encodedMember, self, args);
+				return peer.CallSingleMethod (encodedMember, self, args);
 			} finally {
 				arg.Cleanup (value);
 			}
 		}
 
-		public unsafe float CallSingleMethod<T1, T2> (
+		public static unsafe float CallGenericSingleMethod<T1, T2> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2
@@ -6564,14 +6598,15 @@ namespace Java.Interop {
 			args [1] = arg2.JValue;
 
 			try {
-				return CallSingleMethod (encodedMember, self, args);
+				return peer.CallSingleMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
 			}
 		}
 
-		public unsafe float CallSingleMethod<T1, T2, T3> (
+		public static unsafe float CallGenericSingleMethod<T1, T2, T3> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3
@@ -6587,7 +6622,7 @@ namespace Java.Interop {
 			args [2] = arg3.JValue;
 
 			try {
-				return CallSingleMethod (encodedMember, self, args);
+				return peer.CallSingleMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -6595,7 +6630,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe float CallSingleMethod<T1, T2, T3, T4> (
+		public static unsafe float CallGenericSingleMethod<T1, T2, T3, T4> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4
@@ -6613,7 +6649,7 @@ namespace Java.Interop {
 			args [3] = arg4.JValue;
 
 			try {
-				return CallSingleMethod (encodedMember, self, args);
+				return peer.CallSingleMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -6622,7 +6658,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe float CallSingleMethod<T1, T2, T3, T4, T5> (
+		public static unsafe float CallGenericSingleMethod<T1, T2, T3, T4, T5> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
@@ -6642,7 +6679,7 @@ namespace Java.Interop {
 			args [4] = arg5.JValue;
 
 			try {
-				return CallSingleMethod (encodedMember, self, args);
+				return peer.CallSingleMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -6652,7 +6689,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe float CallSingleMethod<T1, T2, T3, T4, T5, T6> (
+		public static unsafe float CallGenericSingleMethod<T1, T2, T3, T4, T5, T6> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
@@ -6674,7 +6712,7 @@ namespace Java.Interop {
 			args [5] = arg6.JValue;
 
 			try {
-				return CallSingleMethod (encodedMember, self, args);
+				return peer.CallSingleMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -6685,7 +6723,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe float CallSingleMethod<T1, T2, T3, T4, T5, T6, T7> (
+		public static unsafe float CallGenericSingleMethod<T1, T2, T3, T4, T5, T6, T7> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
@@ -6709,7 +6748,7 @@ namespace Java.Interop {
 			args [6] = arg7.JValue;
 
 			try {
-				return CallSingleMethod (encodedMember, self, args);
+				return peer.CallSingleMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -6721,7 +6760,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe float CallSingleMethod<T1, T2, T3, T4, T5, T6, T7, T8> (
+		public static unsafe float CallGenericSingleMethod<T1, T2, T3, T4, T5, T6, T7, T8> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
@@ -6747,7 +6787,7 @@ namespace Java.Interop {
 			args [7] = arg8.JValue;
 
 			try {
-				return CallSingleMethod (encodedMember, self, args);
+				return peer.CallSingleMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -6760,7 +6800,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe float CallSingleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+		public static unsafe float CallGenericSingleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
@@ -6788,7 +6829,7 @@ namespace Java.Interop {
 			args [8] = arg9.JValue;
 
 			try {
-				return CallSingleMethod (encodedMember, self, args);
+				return peer.CallSingleMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -6802,7 +6843,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe float CallSingleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+		public static unsafe float CallGenericSingleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
@@ -6832,7 +6874,7 @@ namespace Java.Interop {
 			args [9] = arg10.JValue;
 
 			try {
-				return CallSingleMethod (encodedMember, self, args);
+				return peer.CallSingleMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -6847,7 +6889,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe float CallSingleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+		public static unsafe float CallGenericSingleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
@@ -6879,7 +6922,7 @@ namespace Java.Interop {
 			args [10] = arg11.JValue;
 
 			try {
-				return CallSingleMethod (encodedMember, self, args);
+				return peer.CallSingleMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -6895,7 +6938,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe float CallSingleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+		public static unsafe float CallGenericSingleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
@@ -6929,7 +6973,7 @@ namespace Java.Interop {
 			args [11] = arg12.JValue;
 
 			try {
-				return CallSingleMethod (encodedMember, self, args);
+				return peer.CallSingleMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -6946,7 +6990,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe float CallSingleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+		public static unsafe float CallGenericSingleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
@@ -6982,7 +7027,7 @@ namespace Java.Interop {
 			args [12] = arg13.JValue;
 
 			try {
-				return CallSingleMethod (encodedMember, self, args);
+				return peer.CallSingleMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -7000,7 +7045,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe float CallSingleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+		public static unsafe float CallGenericSingleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
@@ -7038,7 +7084,7 @@ namespace Java.Interop {
 			args [13] = arg14.JValue;
 
 			try {
-				return CallSingleMethod (encodedMember, self, args);
+				return peer.CallSingleMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -7057,7 +7103,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe float CallSingleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+		public static unsafe float CallGenericSingleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
@@ -7097,7 +7144,7 @@ namespace Java.Interop {
 			args [14] = arg15.JValue;
 
 			try {
-				return CallSingleMethod (encodedMember, self, args);
+				return peer.CallSingleMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -7117,7 +7164,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe float CallSingleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+		public static unsafe float CallGenericSingleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
@@ -7159,7 +7207,7 @@ namespace Java.Interop {
 			args [15] = arg16.JValue;
 
 			try {
-				return CallSingleMethod (encodedMember, self, args);
+				return peer.CallSingleMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -7179,23 +7227,9 @@ namespace Java.Interop {
 				arg16.Cleanup (value16);
 			}
 		}
-		public unsafe double CallDoubleMethod (
-			string encodedMember,
-			IJavaObject self,
-			JValue* parameters)
-		{
-			JniPeerMembers.AssertSelf (self);
 
-			if (self.GetType () == DeclaringType || DeclaringType == null) {
-				var m = GetMethodID (encodedMember);
-				return m.CallVirtualDoubleMethod (self.SafeHandle, parameters);
-			}
-			var j = self.JniPeerMembers;
-			var n = j.InstanceMethods.GetMethodID (encodedMember);
-			return n.CallNonvirtualDoubleMethod (self.SafeHandle, j.JniPeerType.SafeHandle, parameters);
-		}
-
-		public unsafe double CallDoubleMethod (
+		public static unsafe double CallGenericDoubleMethod (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self
 		)
@@ -7204,12 +7238,13 @@ namespace Java.Interop {
 			var args = stackalloc JValue [0];
 
 			try {
-				return CallDoubleMethod (encodedMember, self, args);
+				return peer.CallDoubleMethod (encodedMember, self, args);
 			} finally {
 			}
 		}
 
-		public unsafe double CallDoubleMethod<T> (
+		public static unsafe double CallGenericDoubleMethod<T> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T value
@@ -7221,13 +7256,14 @@ namespace Java.Interop {
 			args [0] = arg.JValue;
 
 			try {
-				return CallDoubleMethod (encodedMember, self, args);
+				return peer.CallDoubleMethod (encodedMember, self, args);
 			} finally {
 				arg.Cleanup (value);
 			}
 		}
 
-		public unsafe double CallDoubleMethod<T1, T2> (
+		public static unsafe double CallGenericDoubleMethod<T1, T2> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2
@@ -7241,14 +7277,15 @@ namespace Java.Interop {
 			args [1] = arg2.JValue;
 
 			try {
-				return CallDoubleMethod (encodedMember, self, args);
+				return peer.CallDoubleMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
 			}
 		}
 
-		public unsafe double CallDoubleMethod<T1, T2, T3> (
+		public static unsafe double CallGenericDoubleMethod<T1, T2, T3> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3
@@ -7264,7 +7301,7 @@ namespace Java.Interop {
 			args [2] = arg3.JValue;
 
 			try {
-				return CallDoubleMethod (encodedMember, self, args);
+				return peer.CallDoubleMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -7272,7 +7309,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe double CallDoubleMethod<T1, T2, T3, T4> (
+		public static unsafe double CallGenericDoubleMethod<T1, T2, T3, T4> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4
@@ -7290,7 +7328,7 @@ namespace Java.Interop {
 			args [3] = arg4.JValue;
 
 			try {
-				return CallDoubleMethod (encodedMember, self, args);
+				return peer.CallDoubleMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -7299,7 +7337,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe double CallDoubleMethod<T1, T2, T3, T4, T5> (
+		public static unsafe double CallGenericDoubleMethod<T1, T2, T3, T4, T5> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
@@ -7319,7 +7358,7 @@ namespace Java.Interop {
 			args [4] = arg5.JValue;
 
 			try {
-				return CallDoubleMethod (encodedMember, self, args);
+				return peer.CallDoubleMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -7329,7 +7368,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe double CallDoubleMethod<T1, T2, T3, T4, T5, T6> (
+		public static unsafe double CallGenericDoubleMethod<T1, T2, T3, T4, T5, T6> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
@@ -7351,7 +7391,7 @@ namespace Java.Interop {
 			args [5] = arg6.JValue;
 
 			try {
-				return CallDoubleMethod (encodedMember, self, args);
+				return peer.CallDoubleMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -7362,7 +7402,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe double CallDoubleMethod<T1, T2, T3, T4, T5, T6, T7> (
+		public static unsafe double CallGenericDoubleMethod<T1, T2, T3, T4, T5, T6, T7> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
@@ -7386,7 +7427,7 @@ namespace Java.Interop {
 			args [6] = arg7.JValue;
 
 			try {
-				return CallDoubleMethod (encodedMember, self, args);
+				return peer.CallDoubleMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -7398,7 +7439,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe double CallDoubleMethod<T1, T2, T3, T4, T5, T6, T7, T8> (
+		public static unsafe double CallGenericDoubleMethod<T1, T2, T3, T4, T5, T6, T7, T8> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
@@ -7424,7 +7466,7 @@ namespace Java.Interop {
 			args [7] = arg8.JValue;
 
 			try {
-				return CallDoubleMethod (encodedMember, self, args);
+				return peer.CallDoubleMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -7437,7 +7479,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe double CallDoubleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+		public static unsafe double CallGenericDoubleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
@@ -7465,7 +7508,7 @@ namespace Java.Interop {
 			args [8] = arg9.JValue;
 
 			try {
-				return CallDoubleMethod (encodedMember, self, args);
+				return peer.CallDoubleMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -7479,7 +7522,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe double CallDoubleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+		public static unsafe double CallGenericDoubleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
@@ -7509,7 +7553,7 @@ namespace Java.Interop {
 			args [9] = arg10.JValue;
 
 			try {
-				return CallDoubleMethod (encodedMember, self, args);
+				return peer.CallDoubleMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -7524,7 +7568,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe double CallDoubleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+		public static unsafe double CallGenericDoubleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
@@ -7556,7 +7601,7 @@ namespace Java.Interop {
 			args [10] = arg11.JValue;
 
 			try {
-				return CallDoubleMethod (encodedMember, self, args);
+				return peer.CallDoubleMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -7572,7 +7617,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe double CallDoubleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+		public static unsafe double CallGenericDoubleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
@@ -7606,7 +7652,7 @@ namespace Java.Interop {
 			args [11] = arg12.JValue;
 
 			try {
-				return CallDoubleMethod (encodedMember, self, args);
+				return peer.CallDoubleMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -7623,7 +7669,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe double CallDoubleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+		public static unsafe double CallGenericDoubleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
@@ -7659,7 +7706,7 @@ namespace Java.Interop {
 			args [12] = arg13.JValue;
 
 			try {
-				return CallDoubleMethod (encodedMember, self, args);
+				return peer.CallDoubleMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -7677,7 +7724,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe double CallDoubleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+		public static unsafe double CallGenericDoubleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
@@ -7715,7 +7763,7 @@ namespace Java.Interop {
 			args [13] = arg14.JValue;
 
 			try {
-				return CallDoubleMethod (encodedMember, self, args);
+				return peer.CallDoubleMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -7734,7 +7782,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe double CallDoubleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+		public static unsafe double CallGenericDoubleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
@@ -7774,7 +7823,7 @@ namespace Java.Interop {
 			args [14] = arg15.JValue;
 
 			try {
-				return CallDoubleMethod (encodedMember, self, args);
+				return peer.CallDoubleMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -7794,7 +7843,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe double CallDoubleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+		public static unsafe double CallGenericDoubleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
@@ -7836,7 +7886,7 @@ namespace Java.Interop {
 			args [15] = arg16.JValue;
 
 			try {
-				return CallDoubleMethod (encodedMember, self, args);
+				return peer.CallDoubleMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -7856,23 +7906,9 @@ namespace Java.Interop {
 				arg16.Cleanup (value16);
 			}
 		}
-		public unsafe JniLocalReference CallObjectMethod (
-			string encodedMember,
-			IJavaObject self,
-			JValue* parameters)
-		{
-			JniPeerMembers.AssertSelf (self);
 
-			if (self.GetType () == DeclaringType || DeclaringType == null) {
-				var m = GetMethodID (encodedMember);
-				return m.CallVirtualObjectMethod (self.SafeHandle, parameters);
-			}
-			var j = self.JniPeerMembers;
-			var n = j.InstanceMethods.GetMethodID (encodedMember);
-			return n.CallNonvirtualObjectMethod (self.SafeHandle, j.JniPeerType.SafeHandle, parameters);
-		}
-
-		public unsafe JniLocalReference CallObjectMethod (
+		public static unsafe JniLocalReference CallGenericObjectMethod (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self
 		)
@@ -7881,12 +7917,13 @@ namespace Java.Interop {
 			var args = stackalloc JValue [0];
 
 			try {
-				return CallObjectMethod (encodedMember, self, args);
+				return peer.CallObjectMethod (encodedMember, self, args);
 			} finally {
 			}
 		}
 
-		public unsafe JniLocalReference CallObjectMethod<T> (
+		public static unsafe JniLocalReference CallGenericObjectMethod<T> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T value
@@ -7898,13 +7935,14 @@ namespace Java.Interop {
 			args [0] = arg.JValue;
 
 			try {
-				return CallObjectMethod (encodedMember, self, args);
+				return peer.CallObjectMethod (encodedMember, self, args);
 			} finally {
 				arg.Cleanup (value);
 			}
 		}
 
-		public unsafe JniLocalReference CallObjectMethod<T1, T2> (
+		public static unsafe JniLocalReference CallGenericObjectMethod<T1, T2> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2
@@ -7918,14 +7956,15 @@ namespace Java.Interop {
 			args [1] = arg2.JValue;
 
 			try {
-				return CallObjectMethod (encodedMember, self, args);
+				return peer.CallObjectMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
 			}
 		}
 
-		public unsafe JniLocalReference CallObjectMethod<T1, T2, T3> (
+		public static unsafe JniLocalReference CallGenericObjectMethod<T1, T2, T3> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3
@@ -7941,7 +7980,7 @@ namespace Java.Interop {
 			args [2] = arg3.JValue;
 
 			try {
-				return CallObjectMethod (encodedMember, self, args);
+				return peer.CallObjectMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -7949,7 +7988,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe JniLocalReference CallObjectMethod<T1, T2, T3, T4> (
+		public static unsafe JniLocalReference CallGenericObjectMethod<T1, T2, T3, T4> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4
@@ -7967,7 +8007,7 @@ namespace Java.Interop {
 			args [3] = arg4.JValue;
 
 			try {
-				return CallObjectMethod (encodedMember, self, args);
+				return peer.CallObjectMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -7976,7 +8016,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe JniLocalReference CallObjectMethod<T1, T2, T3, T4, T5> (
+		public static unsafe JniLocalReference CallGenericObjectMethod<T1, T2, T3, T4, T5> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
@@ -7996,7 +8037,7 @@ namespace Java.Interop {
 			args [4] = arg5.JValue;
 
 			try {
-				return CallObjectMethod (encodedMember, self, args);
+				return peer.CallObjectMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -8006,7 +8047,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe JniLocalReference CallObjectMethod<T1, T2, T3, T4, T5, T6> (
+		public static unsafe JniLocalReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
@@ -8028,7 +8070,7 @@ namespace Java.Interop {
 			args [5] = arg6.JValue;
 
 			try {
-				return CallObjectMethod (encodedMember, self, args);
+				return peer.CallObjectMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -8039,7 +8081,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe JniLocalReference CallObjectMethod<T1, T2, T3, T4, T5, T6, T7> (
+		public static unsafe JniLocalReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
@@ -8063,7 +8106,7 @@ namespace Java.Interop {
 			args [6] = arg7.JValue;
 
 			try {
-				return CallObjectMethod (encodedMember, self, args);
+				return peer.CallObjectMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -8075,7 +8118,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe JniLocalReference CallObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8> (
+		public static unsafe JniLocalReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
@@ -8101,7 +8145,7 @@ namespace Java.Interop {
 			args [7] = arg8.JValue;
 
 			try {
-				return CallObjectMethod (encodedMember, self, args);
+				return peer.CallObjectMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -8114,7 +8158,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe JniLocalReference CallObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+		public static unsafe JniLocalReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
@@ -8142,7 +8187,7 @@ namespace Java.Interop {
 			args [8] = arg9.JValue;
 
 			try {
-				return CallObjectMethod (encodedMember, self, args);
+				return peer.CallObjectMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -8156,7 +8201,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe JniLocalReference CallObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+		public static unsafe JniLocalReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
@@ -8186,7 +8232,7 @@ namespace Java.Interop {
 			args [9] = arg10.JValue;
 
 			try {
-				return CallObjectMethod (encodedMember, self, args);
+				return peer.CallObjectMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -8201,7 +8247,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe JniLocalReference CallObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+		public static unsafe JniLocalReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
@@ -8233,7 +8280,7 @@ namespace Java.Interop {
 			args [10] = arg11.JValue;
 
 			try {
-				return CallObjectMethod (encodedMember, self, args);
+				return peer.CallObjectMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -8249,7 +8296,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe JniLocalReference CallObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+		public static unsafe JniLocalReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
@@ -8283,7 +8331,7 @@ namespace Java.Interop {
 			args [11] = arg12.JValue;
 
 			try {
-				return CallObjectMethod (encodedMember, self, args);
+				return peer.CallObjectMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -8300,7 +8348,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe JniLocalReference CallObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+		public static unsafe JniLocalReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
@@ -8336,7 +8385,7 @@ namespace Java.Interop {
 			args [12] = arg13.JValue;
 
 			try {
-				return CallObjectMethod (encodedMember, self, args);
+				return peer.CallObjectMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -8354,7 +8403,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe JniLocalReference CallObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+		public static unsafe JniLocalReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
@@ -8392,7 +8442,7 @@ namespace Java.Interop {
 			args [13] = arg14.JValue;
 
 			try {
-				return CallObjectMethod (encodedMember, self, args);
+				return peer.CallObjectMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -8411,7 +8461,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe JniLocalReference CallObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+		public static unsafe JniLocalReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
@@ -8451,7 +8502,7 @@ namespace Java.Interop {
 			args [14] = arg15.JValue;
 
 			try {
-				return CallObjectMethod (encodedMember, self, args);
+				return peer.CallObjectMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -8471,7 +8522,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe JniLocalReference CallObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+		public static unsafe JniLocalReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
@@ -8513,7 +8565,7 @@ namespace Java.Interop {
 			args [15] = arg16.JValue;
 
 			try {
-				return CallObjectMethod (encodedMember, self, args);
+				return peer.CallObjectMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -8535,17 +8587,11 @@ namespace Java.Interop {
 		}
 	}
 
-	partial class JniPeerStaticMethods {
+	public static partial class JniPeerStaticMethodsExtensions {
 
-		public unsafe void CallVoidMethod (
-			string encodedMember,
-			JValue* parameters)
-		{
-			var m = GetMethodID (encodedMember);
-			m.CallVoidMethod (Members.JniPeerType.SafeHandle, parameters);
-		}
 
-		public unsafe void CallVoidMethod<T> (
+		public static unsafe void CallGenericVoidMethod<T> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T value
 		)
@@ -8556,13 +8602,14 @@ namespace Java.Interop {
 			args [0] = arg.JValue;
 
 			try {
-				CallVoidMethod (encodedMember, args);
+				peer.CallVoidMethod (encodedMember, args);
 			} finally {
 				arg.Cleanup (value);
 			}
 		}
 
-		public unsafe void CallVoidMethod<T1, T2> (
+		public static unsafe void CallGenericVoidMethod<T1, T2> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2
 		)
@@ -8575,14 +8622,15 @@ namespace Java.Interop {
 			args [1] = arg2.JValue;
 
 			try {
-				CallVoidMethod (encodedMember, args);
+				peer.CallVoidMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
 			}
 		}
 
-		public unsafe void CallVoidMethod<T1, T2, T3> (
+		public static unsafe void CallGenericVoidMethod<T1, T2, T3> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3
 		)
@@ -8597,7 +8645,7 @@ namespace Java.Interop {
 			args [2] = arg3.JValue;
 
 			try {
-				CallVoidMethod (encodedMember, args);
+				peer.CallVoidMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -8605,7 +8653,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe void CallVoidMethod<T1, T2, T3, T4> (
+		public static unsafe void CallGenericVoidMethod<T1, T2, T3, T4> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4
 		)
@@ -8622,7 +8671,7 @@ namespace Java.Interop {
 			args [3] = arg4.JValue;
 
 			try {
-				CallVoidMethod (encodedMember, args);
+				peer.CallVoidMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -8631,7 +8680,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe void CallVoidMethod<T1, T2, T3, T4, T5> (
+		public static unsafe void CallGenericVoidMethod<T1, T2, T3, T4, T5> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
 		)
@@ -8650,7 +8700,7 @@ namespace Java.Interop {
 			args [4] = arg5.JValue;
 
 			try {
-				CallVoidMethod (encodedMember, args);
+				peer.CallVoidMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -8660,7 +8710,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe void CallVoidMethod<T1, T2, T3, T4, T5, T6> (
+		public static unsafe void CallGenericVoidMethod<T1, T2, T3, T4, T5, T6> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
 		)
@@ -8681,7 +8732,7 @@ namespace Java.Interop {
 			args [5] = arg6.JValue;
 
 			try {
-				CallVoidMethod (encodedMember, args);
+				peer.CallVoidMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -8692,7 +8743,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe void CallVoidMethod<T1, T2, T3, T4, T5, T6, T7> (
+		public static unsafe void CallGenericVoidMethod<T1, T2, T3, T4, T5, T6, T7> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
 		)
@@ -8715,7 +8767,7 @@ namespace Java.Interop {
 			args [6] = arg7.JValue;
 
 			try {
-				CallVoidMethod (encodedMember, args);
+				peer.CallVoidMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -8727,7 +8779,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe void CallVoidMethod<T1, T2, T3, T4, T5, T6, T7, T8> (
+		public static unsafe void CallGenericVoidMethod<T1, T2, T3, T4, T5, T6, T7, T8> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
 		)
@@ -8752,7 +8805,7 @@ namespace Java.Interop {
 			args [7] = arg8.JValue;
 
 			try {
-				CallVoidMethod (encodedMember, args);
+				peer.CallVoidMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -8765,7 +8818,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe void CallVoidMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+		public static unsafe void CallGenericVoidMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
 		)
@@ -8792,7 +8846,7 @@ namespace Java.Interop {
 			args [8] = arg9.JValue;
 
 			try {
-				CallVoidMethod (encodedMember, args);
+				peer.CallVoidMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -8806,7 +8860,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe void CallVoidMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+		public static unsafe void CallGenericVoidMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
 		)
@@ -8835,7 +8890,7 @@ namespace Java.Interop {
 			args [9] = arg10.JValue;
 
 			try {
-				CallVoidMethod (encodedMember, args);
+				peer.CallVoidMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -8850,7 +8905,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe void CallVoidMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+		public static unsafe void CallGenericVoidMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
 		)
@@ -8881,7 +8937,7 @@ namespace Java.Interop {
 			args [10] = arg11.JValue;
 
 			try {
-				CallVoidMethod (encodedMember, args);
+				peer.CallVoidMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -8897,7 +8953,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe void CallVoidMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+		public static unsafe void CallGenericVoidMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
 		)
@@ -8930,7 +8987,7 @@ namespace Java.Interop {
 			args [11] = arg12.JValue;
 
 			try {
-				CallVoidMethod (encodedMember, args);
+				peer.CallVoidMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -8947,7 +9004,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe void CallVoidMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+		public static unsafe void CallGenericVoidMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
 		)
@@ -8982,7 +9040,7 @@ namespace Java.Interop {
 			args [12] = arg13.JValue;
 
 			try {
-				CallVoidMethod (encodedMember, args);
+				peer.CallVoidMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -9000,7 +9058,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe void CallVoidMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+		public static unsafe void CallGenericVoidMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
 		)
@@ -9037,7 +9096,7 @@ namespace Java.Interop {
 			args [13] = arg14.JValue;
 
 			try {
-				CallVoidMethod (encodedMember, args);
+				peer.CallVoidMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -9056,7 +9115,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe void CallVoidMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+		public static unsafe void CallGenericVoidMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
 		)
@@ -9095,7 +9155,7 @@ namespace Java.Interop {
 			args [14] = arg15.JValue;
 
 			try {
-				CallVoidMethod (encodedMember, args);
+				peer.CallVoidMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -9115,7 +9175,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe void CallVoidMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+		public static unsafe void CallGenericVoidMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
 		)
@@ -9156,7 +9217,7 @@ namespace Java.Interop {
 			args [15] = arg16.JValue;
 
 			try {
-				CallVoidMethod (encodedMember, args);
+				peer.CallVoidMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -9176,15 +9237,9 @@ namespace Java.Interop {
 				arg16.Cleanup (value16);
 			}
 		}
-		public unsafe bool CallBooleanMethod (
-			string encodedMember,
-			JValue* parameters)
-		{
-			var m = GetMethodID (encodedMember);
-			return m.CallBooleanMethod (Members.JniPeerType.SafeHandle, parameters);
-		}
 
-		public unsafe bool CallBooleanMethod<T> (
+		public static unsafe bool CallGenericBooleanMethod<T> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T value
 		)
@@ -9195,13 +9250,14 @@ namespace Java.Interop {
 			args [0] = arg.JValue;
 
 			try {
-				return CallBooleanMethod (encodedMember, args);
+				return peer.CallBooleanMethod (encodedMember, args);
 			} finally {
 				arg.Cleanup (value);
 			}
 		}
 
-		public unsafe bool CallBooleanMethod<T1, T2> (
+		public static unsafe bool CallGenericBooleanMethod<T1, T2> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2
 		)
@@ -9214,14 +9270,15 @@ namespace Java.Interop {
 			args [1] = arg2.JValue;
 
 			try {
-				return CallBooleanMethod (encodedMember, args);
+				return peer.CallBooleanMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
 			}
 		}
 
-		public unsafe bool CallBooleanMethod<T1, T2, T3> (
+		public static unsafe bool CallGenericBooleanMethod<T1, T2, T3> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3
 		)
@@ -9236,7 +9293,7 @@ namespace Java.Interop {
 			args [2] = arg3.JValue;
 
 			try {
-				return CallBooleanMethod (encodedMember, args);
+				return peer.CallBooleanMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -9244,7 +9301,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe bool CallBooleanMethod<T1, T2, T3, T4> (
+		public static unsafe bool CallGenericBooleanMethod<T1, T2, T3, T4> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4
 		)
@@ -9261,7 +9319,7 @@ namespace Java.Interop {
 			args [3] = arg4.JValue;
 
 			try {
-				return CallBooleanMethod (encodedMember, args);
+				return peer.CallBooleanMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -9270,7 +9328,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe bool CallBooleanMethod<T1, T2, T3, T4, T5> (
+		public static unsafe bool CallGenericBooleanMethod<T1, T2, T3, T4, T5> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
 		)
@@ -9289,7 +9348,7 @@ namespace Java.Interop {
 			args [4] = arg5.JValue;
 
 			try {
-				return CallBooleanMethod (encodedMember, args);
+				return peer.CallBooleanMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -9299,7 +9358,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe bool CallBooleanMethod<T1, T2, T3, T4, T5, T6> (
+		public static unsafe bool CallGenericBooleanMethod<T1, T2, T3, T4, T5, T6> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
 		)
@@ -9320,7 +9380,7 @@ namespace Java.Interop {
 			args [5] = arg6.JValue;
 
 			try {
-				return CallBooleanMethod (encodedMember, args);
+				return peer.CallBooleanMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -9331,7 +9391,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe bool CallBooleanMethod<T1, T2, T3, T4, T5, T6, T7> (
+		public static unsafe bool CallGenericBooleanMethod<T1, T2, T3, T4, T5, T6, T7> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
 		)
@@ -9354,7 +9415,7 @@ namespace Java.Interop {
 			args [6] = arg7.JValue;
 
 			try {
-				return CallBooleanMethod (encodedMember, args);
+				return peer.CallBooleanMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -9366,7 +9427,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe bool CallBooleanMethod<T1, T2, T3, T4, T5, T6, T7, T8> (
+		public static unsafe bool CallGenericBooleanMethod<T1, T2, T3, T4, T5, T6, T7, T8> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
 		)
@@ -9391,7 +9453,7 @@ namespace Java.Interop {
 			args [7] = arg8.JValue;
 
 			try {
-				return CallBooleanMethod (encodedMember, args);
+				return peer.CallBooleanMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -9404,7 +9466,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe bool CallBooleanMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+		public static unsafe bool CallGenericBooleanMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
 		)
@@ -9431,7 +9494,7 @@ namespace Java.Interop {
 			args [8] = arg9.JValue;
 
 			try {
-				return CallBooleanMethod (encodedMember, args);
+				return peer.CallBooleanMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -9445,7 +9508,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe bool CallBooleanMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+		public static unsafe bool CallGenericBooleanMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
 		)
@@ -9474,7 +9538,7 @@ namespace Java.Interop {
 			args [9] = arg10.JValue;
 
 			try {
-				return CallBooleanMethod (encodedMember, args);
+				return peer.CallBooleanMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -9489,7 +9553,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe bool CallBooleanMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+		public static unsafe bool CallGenericBooleanMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
 		)
@@ -9520,7 +9585,7 @@ namespace Java.Interop {
 			args [10] = arg11.JValue;
 
 			try {
-				return CallBooleanMethod (encodedMember, args);
+				return peer.CallBooleanMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -9536,7 +9601,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe bool CallBooleanMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+		public static unsafe bool CallGenericBooleanMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
 		)
@@ -9569,7 +9635,7 @@ namespace Java.Interop {
 			args [11] = arg12.JValue;
 
 			try {
-				return CallBooleanMethod (encodedMember, args);
+				return peer.CallBooleanMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -9586,7 +9652,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe bool CallBooleanMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+		public static unsafe bool CallGenericBooleanMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
 		)
@@ -9621,7 +9688,7 @@ namespace Java.Interop {
 			args [12] = arg13.JValue;
 
 			try {
-				return CallBooleanMethod (encodedMember, args);
+				return peer.CallBooleanMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -9639,7 +9706,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe bool CallBooleanMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+		public static unsafe bool CallGenericBooleanMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
 		)
@@ -9676,7 +9744,7 @@ namespace Java.Interop {
 			args [13] = arg14.JValue;
 
 			try {
-				return CallBooleanMethod (encodedMember, args);
+				return peer.CallBooleanMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -9695,7 +9763,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe bool CallBooleanMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+		public static unsafe bool CallGenericBooleanMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
 		)
@@ -9734,7 +9803,7 @@ namespace Java.Interop {
 			args [14] = arg15.JValue;
 
 			try {
-				return CallBooleanMethod (encodedMember, args);
+				return peer.CallBooleanMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -9754,7 +9823,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe bool CallBooleanMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+		public static unsafe bool CallGenericBooleanMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
 		)
@@ -9795,7 +9865,7 @@ namespace Java.Interop {
 			args [15] = arg16.JValue;
 
 			try {
-				return CallBooleanMethod (encodedMember, args);
+				return peer.CallBooleanMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -9815,15 +9885,9 @@ namespace Java.Interop {
 				arg16.Cleanup (value16);
 			}
 		}
-		public unsafe sbyte CallSByteMethod (
-			string encodedMember,
-			JValue* parameters)
-		{
-			var m = GetMethodID (encodedMember);
-			return m.CallSByteMethod (Members.JniPeerType.SafeHandle, parameters);
-		}
 
-		public unsafe sbyte CallSByteMethod<T> (
+		public static unsafe sbyte CallGenericSByteMethod<T> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T value
 		)
@@ -9834,13 +9898,14 @@ namespace Java.Interop {
 			args [0] = arg.JValue;
 
 			try {
-				return CallSByteMethod (encodedMember, args);
+				return peer.CallSByteMethod (encodedMember, args);
 			} finally {
 				arg.Cleanup (value);
 			}
 		}
 
-		public unsafe sbyte CallSByteMethod<T1, T2> (
+		public static unsafe sbyte CallGenericSByteMethod<T1, T2> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2
 		)
@@ -9853,14 +9918,15 @@ namespace Java.Interop {
 			args [1] = arg2.JValue;
 
 			try {
-				return CallSByteMethod (encodedMember, args);
+				return peer.CallSByteMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
 			}
 		}
 
-		public unsafe sbyte CallSByteMethod<T1, T2, T3> (
+		public static unsafe sbyte CallGenericSByteMethod<T1, T2, T3> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3
 		)
@@ -9875,7 +9941,7 @@ namespace Java.Interop {
 			args [2] = arg3.JValue;
 
 			try {
-				return CallSByteMethod (encodedMember, args);
+				return peer.CallSByteMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -9883,7 +9949,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe sbyte CallSByteMethod<T1, T2, T3, T4> (
+		public static unsafe sbyte CallGenericSByteMethod<T1, T2, T3, T4> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4
 		)
@@ -9900,7 +9967,7 @@ namespace Java.Interop {
 			args [3] = arg4.JValue;
 
 			try {
-				return CallSByteMethod (encodedMember, args);
+				return peer.CallSByteMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -9909,7 +9976,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe sbyte CallSByteMethod<T1, T2, T3, T4, T5> (
+		public static unsafe sbyte CallGenericSByteMethod<T1, T2, T3, T4, T5> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
 		)
@@ -9928,7 +9996,7 @@ namespace Java.Interop {
 			args [4] = arg5.JValue;
 
 			try {
-				return CallSByteMethod (encodedMember, args);
+				return peer.CallSByteMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -9938,7 +10006,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe sbyte CallSByteMethod<T1, T2, T3, T4, T5, T6> (
+		public static unsafe sbyte CallGenericSByteMethod<T1, T2, T3, T4, T5, T6> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
 		)
@@ -9959,7 +10028,7 @@ namespace Java.Interop {
 			args [5] = arg6.JValue;
 
 			try {
-				return CallSByteMethod (encodedMember, args);
+				return peer.CallSByteMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -9970,7 +10039,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe sbyte CallSByteMethod<T1, T2, T3, T4, T5, T6, T7> (
+		public static unsafe sbyte CallGenericSByteMethod<T1, T2, T3, T4, T5, T6, T7> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
 		)
@@ -9993,7 +10063,7 @@ namespace Java.Interop {
 			args [6] = arg7.JValue;
 
 			try {
-				return CallSByteMethod (encodedMember, args);
+				return peer.CallSByteMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -10005,7 +10075,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe sbyte CallSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8> (
+		public static unsafe sbyte CallGenericSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
 		)
@@ -10030,7 +10101,7 @@ namespace Java.Interop {
 			args [7] = arg8.JValue;
 
 			try {
-				return CallSByteMethod (encodedMember, args);
+				return peer.CallSByteMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -10043,7 +10114,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe sbyte CallSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+		public static unsafe sbyte CallGenericSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
 		)
@@ -10070,7 +10142,7 @@ namespace Java.Interop {
 			args [8] = arg9.JValue;
 
 			try {
-				return CallSByteMethod (encodedMember, args);
+				return peer.CallSByteMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -10084,7 +10156,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe sbyte CallSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+		public static unsafe sbyte CallGenericSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
 		)
@@ -10113,7 +10186,7 @@ namespace Java.Interop {
 			args [9] = arg10.JValue;
 
 			try {
-				return CallSByteMethod (encodedMember, args);
+				return peer.CallSByteMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -10128,7 +10201,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe sbyte CallSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+		public static unsafe sbyte CallGenericSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
 		)
@@ -10159,7 +10233,7 @@ namespace Java.Interop {
 			args [10] = arg11.JValue;
 
 			try {
-				return CallSByteMethod (encodedMember, args);
+				return peer.CallSByteMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -10175,7 +10249,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe sbyte CallSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+		public static unsafe sbyte CallGenericSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
 		)
@@ -10208,7 +10283,7 @@ namespace Java.Interop {
 			args [11] = arg12.JValue;
 
 			try {
-				return CallSByteMethod (encodedMember, args);
+				return peer.CallSByteMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -10225,7 +10300,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe sbyte CallSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+		public static unsafe sbyte CallGenericSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
 		)
@@ -10260,7 +10336,7 @@ namespace Java.Interop {
 			args [12] = arg13.JValue;
 
 			try {
-				return CallSByteMethod (encodedMember, args);
+				return peer.CallSByteMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -10278,7 +10354,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe sbyte CallSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+		public static unsafe sbyte CallGenericSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
 		)
@@ -10315,7 +10392,7 @@ namespace Java.Interop {
 			args [13] = arg14.JValue;
 
 			try {
-				return CallSByteMethod (encodedMember, args);
+				return peer.CallSByteMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -10334,7 +10411,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe sbyte CallSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+		public static unsafe sbyte CallGenericSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
 		)
@@ -10373,7 +10451,7 @@ namespace Java.Interop {
 			args [14] = arg15.JValue;
 
 			try {
-				return CallSByteMethod (encodedMember, args);
+				return peer.CallSByteMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -10393,7 +10471,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe sbyte CallSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+		public static unsafe sbyte CallGenericSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
 		)
@@ -10434,7 +10513,7 @@ namespace Java.Interop {
 			args [15] = arg16.JValue;
 
 			try {
-				return CallSByteMethod (encodedMember, args);
+				return peer.CallSByteMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -10454,15 +10533,9 @@ namespace Java.Interop {
 				arg16.Cleanup (value16);
 			}
 		}
-		public unsafe char CallCharMethod (
-			string encodedMember,
-			JValue* parameters)
-		{
-			var m = GetMethodID (encodedMember);
-			return m.CallCharMethod (Members.JniPeerType.SafeHandle, parameters);
-		}
 
-		public unsafe char CallCharMethod<T> (
+		public static unsafe char CallGenericCharMethod<T> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T value
 		)
@@ -10473,13 +10546,14 @@ namespace Java.Interop {
 			args [0] = arg.JValue;
 
 			try {
-				return CallCharMethod (encodedMember, args);
+				return peer.CallCharMethod (encodedMember, args);
 			} finally {
 				arg.Cleanup (value);
 			}
 		}
 
-		public unsafe char CallCharMethod<T1, T2> (
+		public static unsafe char CallGenericCharMethod<T1, T2> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2
 		)
@@ -10492,14 +10566,15 @@ namespace Java.Interop {
 			args [1] = arg2.JValue;
 
 			try {
-				return CallCharMethod (encodedMember, args);
+				return peer.CallCharMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
 			}
 		}
 
-		public unsafe char CallCharMethod<T1, T2, T3> (
+		public static unsafe char CallGenericCharMethod<T1, T2, T3> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3
 		)
@@ -10514,7 +10589,7 @@ namespace Java.Interop {
 			args [2] = arg3.JValue;
 
 			try {
-				return CallCharMethod (encodedMember, args);
+				return peer.CallCharMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -10522,7 +10597,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe char CallCharMethod<T1, T2, T3, T4> (
+		public static unsafe char CallGenericCharMethod<T1, T2, T3, T4> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4
 		)
@@ -10539,7 +10615,7 @@ namespace Java.Interop {
 			args [3] = arg4.JValue;
 
 			try {
-				return CallCharMethod (encodedMember, args);
+				return peer.CallCharMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -10548,7 +10624,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe char CallCharMethod<T1, T2, T3, T4, T5> (
+		public static unsafe char CallGenericCharMethod<T1, T2, T3, T4, T5> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
 		)
@@ -10567,7 +10644,7 @@ namespace Java.Interop {
 			args [4] = arg5.JValue;
 
 			try {
-				return CallCharMethod (encodedMember, args);
+				return peer.CallCharMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -10577,7 +10654,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe char CallCharMethod<T1, T2, T3, T4, T5, T6> (
+		public static unsafe char CallGenericCharMethod<T1, T2, T3, T4, T5, T6> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
 		)
@@ -10598,7 +10676,7 @@ namespace Java.Interop {
 			args [5] = arg6.JValue;
 
 			try {
-				return CallCharMethod (encodedMember, args);
+				return peer.CallCharMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -10609,7 +10687,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe char CallCharMethod<T1, T2, T3, T4, T5, T6, T7> (
+		public static unsafe char CallGenericCharMethod<T1, T2, T3, T4, T5, T6, T7> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
 		)
@@ -10632,7 +10711,7 @@ namespace Java.Interop {
 			args [6] = arg7.JValue;
 
 			try {
-				return CallCharMethod (encodedMember, args);
+				return peer.CallCharMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -10644,7 +10723,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe char CallCharMethod<T1, T2, T3, T4, T5, T6, T7, T8> (
+		public static unsafe char CallGenericCharMethod<T1, T2, T3, T4, T5, T6, T7, T8> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
 		)
@@ -10669,7 +10749,7 @@ namespace Java.Interop {
 			args [7] = arg8.JValue;
 
 			try {
-				return CallCharMethod (encodedMember, args);
+				return peer.CallCharMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -10682,7 +10762,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe char CallCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+		public static unsafe char CallGenericCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
 		)
@@ -10709,7 +10790,7 @@ namespace Java.Interop {
 			args [8] = arg9.JValue;
 
 			try {
-				return CallCharMethod (encodedMember, args);
+				return peer.CallCharMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -10723,7 +10804,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe char CallCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+		public static unsafe char CallGenericCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
 		)
@@ -10752,7 +10834,7 @@ namespace Java.Interop {
 			args [9] = arg10.JValue;
 
 			try {
-				return CallCharMethod (encodedMember, args);
+				return peer.CallCharMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -10767,7 +10849,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe char CallCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+		public static unsafe char CallGenericCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
 		)
@@ -10798,7 +10881,7 @@ namespace Java.Interop {
 			args [10] = arg11.JValue;
 
 			try {
-				return CallCharMethod (encodedMember, args);
+				return peer.CallCharMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -10814,7 +10897,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe char CallCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+		public static unsafe char CallGenericCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
 		)
@@ -10847,7 +10931,7 @@ namespace Java.Interop {
 			args [11] = arg12.JValue;
 
 			try {
-				return CallCharMethod (encodedMember, args);
+				return peer.CallCharMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -10864,7 +10948,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe char CallCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+		public static unsafe char CallGenericCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
 		)
@@ -10899,7 +10984,7 @@ namespace Java.Interop {
 			args [12] = arg13.JValue;
 
 			try {
-				return CallCharMethod (encodedMember, args);
+				return peer.CallCharMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -10917,7 +11002,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe char CallCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+		public static unsafe char CallGenericCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
 		)
@@ -10954,7 +11040,7 @@ namespace Java.Interop {
 			args [13] = arg14.JValue;
 
 			try {
-				return CallCharMethod (encodedMember, args);
+				return peer.CallCharMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -10973,7 +11059,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe char CallCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+		public static unsafe char CallGenericCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
 		)
@@ -11012,7 +11099,7 @@ namespace Java.Interop {
 			args [14] = arg15.JValue;
 
 			try {
-				return CallCharMethod (encodedMember, args);
+				return peer.CallCharMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -11032,7 +11119,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe char CallCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+		public static unsafe char CallGenericCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
 		)
@@ -11073,7 +11161,7 @@ namespace Java.Interop {
 			args [15] = arg16.JValue;
 
 			try {
-				return CallCharMethod (encodedMember, args);
+				return peer.CallCharMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -11093,15 +11181,9 @@ namespace Java.Interop {
 				arg16.Cleanup (value16);
 			}
 		}
-		public unsafe short CallInt16Method (
-			string encodedMember,
-			JValue* parameters)
-		{
-			var m = GetMethodID (encodedMember);
-			return m.CallInt16Method (Members.JniPeerType.SafeHandle, parameters);
-		}
 
-		public unsafe short CallInt16Method<T> (
+		public static unsafe short CallGenericInt16Method<T> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T value
 		)
@@ -11112,13 +11194,14 @@ namespace Java.Interop {
 			args [0] = arg.JValue;
 
 			try {
-				return CallInt16Method (encodedMember, args);
+				return peer.CallInt16Method (encodedMember, args);
 			} finally {
 				arg.Cleanup (value);
 			}
 		}
 
-		public unsafe short CallInt16Method<T1, T2> (
+		public static unsafe short CallGenericInt16Method<T1, T2> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2
 		)
@@ -11131,14 +11214,15 @@ namespace Java.Interop {
 			args [1] = arg2.JValue;
 
 			try {
-				return CallInt16Method (encodedMember, args);
+				return peer.CallInt16Method (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
 			}
 		}
 
-		public unsafe short CallInt16Method<T1, T2, T3> (
+		public static unsafe short CallGenericInt16Method<T1, T2, T3> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3
 		)
@@ -11153,7 +11237,7 @@ namespace Java.Interop {
 			args [2] = arg3.JValue;
 
 			try {
-				return CallInt16Method (encodedMember, args);
+				return peer.CallInt16Method (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -11161,7 +11245,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe short CallInt16Method<T1, T2, T3, T4> (
+		public static unsafe short CallGenericInt16Method<T1, T2, T3, T4> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4
 		)
@@ -11178,7 +11263,7 @@ namespace Java.Interop {
 			args [3] = arg4.JValue;
 
 			try {
-				return CallInt16Method (encodedMember, args);
+				return peer.CallInt16Method (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -11187,7 +11272,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe short CallInt16Method<T1, T2, T3, T4, T5> (
+		public static unsafe short CallGenericInt16Method<T1, T2, T3, T4, T5> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
 		)
@@ -11206,7 +11292,7 @@ namespace Java.Interop {
 			args [4] = arg5.JValue;
 
 			try {
-				return CallInt16Method (encodedMember, args);
+				return peer.CallInt16Method (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -11216,7 +11302,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe short CallInt16Method<T1, T2, T3, T4, T5, T6> (
+		public static unsafe short CallGenericInt16Method<T1, T2, T3, T4, T5, T6> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
 		)
@@ -11237,7 +11324,7 @@ namespace Java.Interop {
 			args [5] = arg6.JValue;
 
 			try {
-				return CallInt16Method (encodedMember, args);
+				return peer.CallInt16Method (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -11248,7 +11335,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe short CallInt16Method<T1, T2, T3, T4, T5, T6, T7> (
+		public static unsafe short CallGenericInt16Method<T1, T2, T3, T4, T5, T6, T7> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
 		)
@@ -11271,7 +11359,7 @@ namespace Java.Interop {
 			args [6] = arg7.JValue;
 
 			try {
-				return CallInt16Method (encodedMember, args);
+				return peer.CallInt16Method (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -11283,7 +11371,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe short CallInt16Method<T1, T2, T3, T4, T5, T6, T7, T8> (
+		public static unsafe short CallGenericInt16Method<T1, T2, T3, T4, T5, T6, T7, T8> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
 		)
@@ -11308,7 +11397,7 @@ namespace Java.Interop {
 			args [7] = arg8.JValue;
 
 			try {
-				return CallInt16Method (encodedMember, args);
+				return peer.CallInt16Method (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -11321,7 +11410,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe short CallInt16Method<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+		public static unsafe short CallGenericInt16Method<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
 		)
@@ -11348,7 +11438,7 @@ namespace Java.Interop {
 			args [8] = arg9.JValue;
 
 			try {
-				return CallInt16Method (encodedMember, args);
+				return peer.CallInt16Method (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -11362,7 +11452,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe short CallInt16Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+		public static unsafe short CallGenericInt16Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
 		)
@@ -11391,7 +11482,7 @@ namespace Java.Interop {
 			args [9] = arg10.JValue;
 
 			try {
-				return CallInt16Method (encodedMember, args);
+				return peer.CallInt16Method (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -11406,7 +11497,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe short CallInt16Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+		public static unsafe short CallGenericInt16Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
 		)
@@ -11437,7 +11529,7 @@ namespace Java.Interop {
 			args [10] = arg11.JValue;
 
 			try {
-				return CallInt16Method (encodedMember, args);
+				return peer.CallInt16Method (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -11453,7 +11545,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe short CallInt16Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+		public static unsafe short CallGenericInt16Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
 		)
@@ -11486,7 +11579,7 @@ namespace Java.Interop {
 			args [11] = arg12.JValue;
 
 			try {
-				return CallInt16Method (encodedMember, args);
+				return peer.CallInt16Method (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -11503,7 +11596,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe short CallInt16Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+		public static unsafe short CallGenericInt16Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
 		)
@@ -11538,7 +11632,7 @@ namespace Java.Interop {
 			args [12] = arg13.JValue;
 
 			try {
-				return CallInt16Method (encodedMember, args);
+				return peer.CallInt16Method (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -11556,7 +11650,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe short CallInt16Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+		public static unsafe short CallGenericInt16Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
 		)
@@ -11593,7 +11688,7 @@ namespace Java.Interop {
 			args [13] = arg14.JValue;
 
 			try {
-				return CallInt16Method (encodedMember, args);
+				return peer.CallInt16Method (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -11612,7 +11707,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe short CallInt16Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+		public static unsafe short CallGenericInt16Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
 		)
@@ -11651,7 +11747,7 @@ namespace Java.Interop {
 			args [14] = arg15.JValue;
 
 			try {
-				return CallInt16Method (encodedMember, args);
+				return peer.CallInt16Method (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -11671,7 +11767,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe short CallInt16Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+		public static unsafe short CallGenericInt16Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
 		)
@@ -11712,7 +11809,7 @@ namespace Java.Interop {
 			args [15] = arg16.JValue;
 
 			try {
-				return CallInt16Method (encodedMember, args);
+				return peer.CallInt16Method (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -11732,15 +11829,9 @@ namespace Java.Interop {
 				arg16.Cleanup (value16);
 			}
 		}
-		public unsafe int CallInt32Method (
-			string encodedMember,
-			JValue* parameters)
-		{
-			var m = GetMethodID (encodedMember);
-			return m.CallInt32Method (Members.JniPeerType.SafeHandle, parameters);
-		}
 
-		public unsafe int CallInt32Method<T> (
+		public static unsafe int CallGenericInt32Method<T> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T value
 		)
@@ -11751,13 +11842,14 @@ namespace Java.Interop {
 			args [0] = arg.JValue;
 
 			try {
-				return CallInt32Method (encodedMember, args);
+				return peer.CallInt32Method (encodedMember, args);
 			} finally {
 				arg.Cleanup (value);
 			}
 		}
 
-		public unsafe int CallInt32Method<T1, T2> (
+		public static unsafe int CallGenericInt32Method<T1, T2> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2
 		)
@@ -11770,14 +11862,15 @@ namespace Java.Interop {
 			args [1] = arg2.JValue;
 
 			try {
-				return CallInt32Method (encodedMember, args);
+				return peer.CallInt32Method (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
 			}
 		}
 
-		public unsafe int CallInt32Method<T1, T2, T3> (
+		public static unsafe int CallGenericInt32Method<T1, T2, T3> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3
 		)
@@ -11792,7 +11885,7 @@ namespace Java.Interop {
 			args [2] = arg3.JValue;
 
 			try {
-				return CallInt32Method (encodedMember, args);
+				return peer.CallInt32Method (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -11800,7 +11893,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe int CallInt32Method<T1, T2, T3, T4> (
+		public static unsafe int CallGenericInt32Method<T1, T2, T3, T4> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4
 		)
@@ -11817,7 +11911,7 @@ namespace Java.Interop {
 			args [3] = arg4.JValue;
 
 			try {
-				return CallInt32Method (encodedMember, args);
+				return peer.CallInt32Method (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -11826,7 +11920,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe int CallInt32Method<T1, T2, T3, T4, T5> (
+		public static unsafe int CallGenericInt32Method<T1, T2, T3, T4, T5> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
 		)
@@ -11845,7 +11940,7 @@ namespace Java.Interop {
 			args [4] = arg5.JValue;
 
 			try {
-				return CallInt32Method (encodedMember, args);
+				return peer.CallInt32Method (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -11855,7 +11950,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe int CallInt32Method<T1, T2, T3, T4, T5, T6> (
+		public static unsafe int CallGenericInt32Method<T1, T2, T3, T4, T5, T6> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
 		)
@@ -11876,7 +11972,7 @@ namespace Java.Interop {
 			args [5] = arg6.JValue;
 
 			try {
-				return CallInt32Method (encodedMember, args);
+				return peer.CallInt32Method (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -11887,7 +11983,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe int CallInt32Method<T1, T2, T3, T4, T5, T6, T7> (
+		public static unsafe int CallGenericInt32Method<T1, T2, T3, T4, T5, T6, T7> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
 		)
@@ -11910,7 +12007,7 @@ namespace Java.Interop {
 			args [6] = arg7.JValue;
 
 			try {
-				return CallInt32Method (encodedMember, args);
+				return peer.CallInt32Method (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -11922,7 +12019,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe int CallInt32Method<T1, T2, T3, T4, T5, T6, T7, T8> (
+		public static unsafe int CallGenericInt32Method<T1, T2, T3, T4, T5, T6, T7, T8> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
 		)
@@ -11947,7 +12045,7 @@ namespace Java.Interop {
 			args [7] = arg8.JValue;
 
 			try {
-				return CallInt32Method (encodedMember, args);
+				return peer.CallInt32Method (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -11960,7 +12058,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe int CallInt32Method<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+		public static unsafe int CallGenericInt32Method<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
 		)
@@ -11987,7 +12086,7 @@ namespace Java.Interop {
 			args [8] = arg9.JValue;
 
 			try {
-				return CallInt32Method (encodedMember, args);
+				return peer.CallInt32Method (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -12001,7 +12100,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe int CallInt32Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+		public static unsafe int CallGenericInt32Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
 		)
@@ -12030,7 +12130,7 @@ namespace Java.Interop {
 			args [9] = arg10.JValue;
 
 			try {
-				return CallInt32Method (encodedMember, args);
+				return peer.CallInt32Method (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -12045,7 +12145,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe int CallInt32Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+		public static unsafe int CallGenericInt32Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
 		)
@@ -12076,7 +12177,7 @@ namespace Java.Interop {
 			args [10] = arg11.JValue;
 
 			try {
-				return CallInt32Method (encodedMember, args);
+				return peer.CallInt32Method (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -12092,7 +12193,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe int CallInt32Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+		public static unsafe int CallGenericInt32Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
 		)
@@ -12125,7 +12227,7 @@ namespace Java.Interop {
 			args [11] = arg12.JValue;
 
 			try {
-				return CallInt32Method (encodedMember, args);
+				return peer.CallInt32Method (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -12142,7 +12244,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe int CallInt32Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+		public static unsafe int CallGenericInt32Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
 		)
@@ -12177,7 +12280,7 @@ namespace Java.Interop {
 			args [12] = arg13.JValue;
 
 			try {
-				return CallInt32Method (encodedMember, args);
+				return peer.CallInt32Method (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -12195,7 +12298,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe int CallInt32Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+		public static unsafe int CallGenericInt32Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
 		)
@@ -12232,7 +12336,7 @@ namespace Java.Interop {
 			args [13] = arg14.JValue;
 
 			try {
-				return CallInt32Method (encodedMember, args);
+				return peer.CallInt32Method (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -12251,7 +12355,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe int CallInt32Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+		public static unsafe int CallGenericInt32Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
 		)
@@ -12290,7 +12395,7 @@ namespace Java.Interop {
 			args [14] = arg15.JValue;
 
 			try {
-				return CallInt32Method (encodedMember, args);
+				return peer.CallInt32Method (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -12310,7 +12415,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe int CallInt32Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+		public static unsafe int CallGenericInt32Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
 		)
@@ -12351,7 +12457,7 @@ namespace Java.Interop {
 			args [15] = arg16.JValue;
 
 			try {
-				return CallInt32Method (encodedMember, args);
+				return peer.CallInt32Method (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -12371,15 +12477,9 @@ namespace Java.Interop {
 				arg16.Cleanup (value16);
 			}
 		}
-		public unsafe long CallInt64Method (
-			string encodedMember,
-			JValue* parameters)
-		{
-			var m = GetMethodID (encodedMember);
-			return m.CallInt64Method (Members.JniPeerType.SafeHandle, parameters);
-		}
 
-		public unsafe long CallInt64Method<T> (
+		public static unsafe long CallGenericInt64Method<T> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T value
 		)
@@ -12390,13 +12490,14 @@ namespace Java.Interop {
 			args [0] = arg.JValue;
 
 			try {
-				return CallInt64Method (encodedMember, args);
+				return peer.CallInt64Method (encodedMember, args);
 			} finally {
 				arg.Cleanup (value);
 			}
 		}
 
-		public unsafe long CallInt64Method<T1, T2> (
+		public static unsafe long CallGenericInt64Method<T1, T2> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2
 		)
@@ -12409,14 +12510,15 @@ namespace Java.Interop {
 			args [1] = arg2.JValue;
 
 			try {
-				return CallInt64Method (encodedMember, args);
+				return peer.CallInt64Method (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
 			}
 		}
 
-		public unsafe long CallInt64Method<T1, T2, T3> (
+		public static unsafe long CallGenericInt64Method<T1, T2, T3> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3
 		)
@@ -12431,7 +12533,7 @@ namespace Java.Interop {
 			args [2] = arg3.JValue;
 
 			try {
-				return CallInt64Method (encodedMember, args);
+				return peer.CallInt64Method (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -12439,7 +12541,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe long CallInt64Method<T1, T2, T3, T4> (
+		public static unsafe long CallGenericInt64Method<T1, T2, T3, T4> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4
 		)
@@ -12456,7 +12559,7 @@ namespace Java.Interop {
 			args [3] = arg4.JValue;
 
 			try {
-				return CallInt64Method (encodedMember, args);
+				return peer.CallInt64Method (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -12465,7 +12568,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe long CallInt64Method<T1, T2, T3, T4, T5> (
+		public static unsafe long CallGenericInt64Method<T1, T2, T3, T4, T5> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
 		)
@@ -12484,7 +12588,7 @@ namespace Java.Interop {
 			args [4] = arg5.JValue;
 
 			try {
-				return CallInt64Method (encodedMember, args);
+				return peer.CallInt64Method (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -12494,7 +12598,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe long CallInt64Method<T1, T2, T3, T4, T5, T6> (
+		public static unsafe long CallGenericInt64Method<T1, T2, T3, T4, T5, T6> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
 		)
@@ -12515,7 +12620,7 @@ namespace Java.Interop {
 			args [5] = arg6.JValue;
 
 			try {
-				return CallInt64Method (encodedMember, args);
+				return peer.CallInt64Method (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -12526,7 +12631,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe long CallInt64Method<T1, T2, T3, T4, T5, T6, T7> (
+		public static unsafe long CallGenericInt64Method<T1, T2, T3, T4, T5, T6, T7> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
 		)
@@ -12549,7 +12655,7 @@ namespace Java.Interop {
 			args [6] = arg7.JValue;
 
 			try {
-				return CallInt64Method (encodedMember, args);
+				return peer.CallInt64Method (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -12561,7 +12667,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe long CallInt64Method<T1, T2, T3, T4, T5, T6, T7, T8> (
+		public static unsafe long CallGenericInt64Method<T1, T2, T3, T4, T5, T6, T7, T8> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
 		)
@@ -12586,7 +12693,7 @@ namespace Java.Interop {
 			args [7] = arg8.JValue;
 
 			try {
-				return CallInt64Method (encodedMember, args);
+				return peer.CallInt64Method (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -12599,7 +12706,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe long CallInt64Method<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+		public static unsafe long CallGenericInt64Method<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
 		)
@@ -12626,7 +12734,7 @@ namespace Java.Interop {
 			args [8] = arg9.JValue;
 
 			try {
-				return CallInt64Method (encodedMember, args);
+				return peer.CallInt64Method (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -12640,7 +12748,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe long CallInt64Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+		public static unsafe long CallGenericInt64Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
 		)
@@ -12669,7 +12778,7 @@ namespace Java.Interop {
 			args [9] = arg10.JValue;
 
 			try {
-				return CallInt64Method (encodedMember, args);
+				return peer.CallInt64Method (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -12684,7 +12793,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe long CallInt64Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+		public static unsafe long CallGenericInt64Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
 		)
@@ -12715,7 +12825,7 @@ namespace Java.Interop {
 			args [10] = arg11.JValue;
 
 			try {
-				return CallInt64Method (encodedMember, args);
+				return peer.CallInt64Method (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -12731,7 +12841,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe long CallInt64Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+		public static unsafe long CallGenericInt64Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
 		)
@@ -12764,7 +12875,7 @@ namespace Java.Interop {
 			args [11] = arg12.JValue;
 
 			try {
-				return CallInt64Method (encodedMember, args);
+				return peer.CallInt64Method (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -12781,7 +12892,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe long CallInt64Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+		public static unsafe long CallGenericInt64Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
 		)
@@ -12816,7 +12928,7 @@ namespace Java.Interop {
 			args [12] = arg13.JValue;
 
 			try {
-				return CallInt64Method (encodedMember, args);
+				return peer.CallInt64Method (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -12834,7 +12946,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe long CallInt64Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+		public static unsafe long CallGenericInt64Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
 		)
@@ -12871,7 +12984,7 @@ namespace Java.Interop {
 			args [13] = arg14.JValue;
 
 			try {
-				return CallInt64Method (encodedMember, args);
+				return peer.CallInt64Method (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -12890,7 +13003,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe long CallInt64Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+		public static unsafe long CallGenericInt64Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
 		)
@@ -12929,7 +13043,7 @@ namespace Java.Interop {
 			args [14] = arg15.JValue;
 
 			try {
-				return CallInt64Method (encodedMember, args);
+				return peer.CallInt64Method (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -12949,7 +13063,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe long CallInt64Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+		public static unsafe long CallGenericInt64Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
 		)
@@ -12990,7 +13105,7 @@ namespace Java.Interop {
 			args [15] = arg16.JValue;
 
 			try {
-				return CallInt64Method (encodedMember, args);
+				return peer.CallInt64Method (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -13010,15 +13125,9 @@ namespace Java.Interop {
 				arg16.Cleanup (value16);
 			}
 		}
-		public unsafe float CallSingleMethod (
-			string encodedMember,
-			JValue* parameters)
-		{
-			var m = GetMethodID (encodedMember);
-			return m.CallSingleMethod (Members.JniPeerType.SafeHandle, parameters);
-		}
 
-		public unsafe float CallSingleMethod<T> (
+		public static unsafe float CallGenericSingleMethod<T> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T value
 		)
@@ -13029,13 +13138,14 @@ namespace Java.Interop {
 			args [0] = arg.JValue;
 
 			try {
-				return CallSingleMethod (encodedMember, args);
+				return peer.CallSingleMethod (encodedMember, args);
 			} finally {
 				arg.Cleanup (value);
 			}
 		}
 
-		public unsafe float CallSingleMethod<T1, T2> (
+		public static unsafe float CallGenericSingleMethod<T1, T2> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2
 		)
@@ -13048,14 +13158,15 @@ namespace Java.Interop {
 			args [1] = arg2.JValue;
 
 			try {
-				return CallSingleMethod (encodedMember, args);
+				return peer.CallSingleMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
 			}
 		}
 
-		public unsafe float CallSingleMethod<T1, T2, T3> (
+		public static unsafe float CallGenericSingleMethod<T1, T2, T3> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3
 		)
@@ -13070,7 +13181,7 @@ namespace Java.Interop {
 			args [2] = arg3.JValue;
 
 			try {
-				return CallSingleMethod (encodedMember, args);
+				return peer.CallSingleMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -13078,7 +13189,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe float CallSingleMethod<T1, T2, T3, T4> (
+		public static unsafe float CallGenericSingleMethod<T1, T2, T3, T4> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4
 		)
@@ -13095,7 +13207,7 @@ namespace Java.Interop {
 			args [3] = arg4.JValue;
 
 			try {
-				return CallSingleMethod (encodedMember, args);
+				return peer.CallSingleMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -13104,7 +13216,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe float CallSingleMethod<T1, T2, T3, T4, T5> (
+		public static unsafe float CallGenericSingleMethod<T1, T2, T3, T4, T5> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
 		)
@@ -13123,7 +13236,7 @@ namespace Java.Interop {
 			args [4] = arg5.JValue;
 
 			try {
-				return CallSingleMethod (encodedMember, args);
+				return peer.CallSingleMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -13133,7 +13246,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe float CallSingleMethod<T1, T2, T3, T4, T5, T6> (
+		public static unsafe float CallGenericSingleMethod<T1, T2, T3, T4, T5, T6> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
 		)
@@ -13154,7 +13268,7 @@ namespace Java.Interop {
 			args [5] = arg6.JValue;
 
 			try {
-				return CallSingleMethod (encodedMember, args);
+				return peer.CallSingleMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -13165,7 +13279,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe float CallSingleMethod<T1, T2, T3, T4, T5, T6, T7> (
+		public static unsafe float CallGenericSingleMethod<T1, T2, T3, T4, T5, T6, T7> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
 		)
@@ -13188,7 +13303,7 @@ namespace Java.Interop {
 			args [6] = arg7.JValue;
 
 			try {
-				return CallSingleMethod (encodedMember, args);
+				return peer.CallSingleMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -13200,7 +13315,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe float CallSingleMethod<T1, T2, T3, T4, T5, T6, T7, T8> (
+		public static unsafe float CallGenericSingleMethod<T1, T2, T3, T4, T5, T6, T7, T8> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
 		)
@@ -13225,7 +13341,7 @@ namespace Java.Interop {
 			args [7] = arg8.JValue;
 
 			try {
-				return CallSingleMethod (encodedMember, args);
+				return peer.CallSingleMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -13238,7 +13354,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe float CallSingleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+		public static unsafe float CallGenericSingleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
 		)
@@ -13265,7 +13382,7 @@ namespace Java.Interop {
 			args [8] = arg9.JValue;
 
 			try {
-				return CallSingleMethod (encodedMember, args);
+				return peer.CallSingleMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -13279,7 +13396,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe float CallSingleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+		public static unsafe float CallGenericSingleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
 		)
@@ -13308,7 +13426,7 @@ namespace Java.Interop {
 			args [9] = arg10.JValue;
 
 			try {
-				return CallSingleMethod (encodedMember, args);
+				return peer.CallSingleMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -13323,7 +13441,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe float CallSingleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+		public static unsafe float CallGenericSingleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
 		)
@@ -13354,7 +13473,7 @@ namespace Java.Interop {
 			args [10] = arg11.JValue;
 
 			try {
-				return CallSingleMethod (encodedMember, args);
+				return peer.CallSingleMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -13370,7 +13489,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe float CallSingleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+		public static unsafe float CallGenericSingleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
 		)
@@ -13403,7 +13523,7 @@ namespace Java.Interop {
 			args [11] = arg12.JValue;
 
 			try {
-				return CallSingleMethod (encodedMember, args);
+				return peer.CallSingleMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -13420,7 +13540,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe float CallSingleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+		public static unsafe float CallGenericSingleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
 		)
@@ -13455,7 +13576,7 @@ namespace Java.Interop {
 			args [12] = arg13.JValue;
 
 			try {
-				return CallSingleMethod (encodedMember, args);
+				return peer.CallSingleMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -13473,7 +13594,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe float CallSingleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+		public static unsafe float CallGenericSingleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
 		)
@@ -13510,7 +13632,7 @@ namespace Java.Interop {
 			args [13] = arg14.JValue;
 
 			try {
-				return CallSingleMethod (encodedMember, args);
+				return peer.CallSingleMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -13529,7 +13651,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe float CallSingleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+		public static unsafe float CallGenericSingleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
 		)
@@ -13568,7 +13691,7 @@ namespace Java.Interop {
 			args [14] = arg15.JValue;
 
 			try {
-				return CallSingleMethod (encodedMember, args);
+				return peer.CallSingleMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -13588,7 +13711,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe float CallSingleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+		public static unsafe float CallGenericSingleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
 		)
@@ -13629,7 +13753,7 @@ namespace Java.Interop {
 			args [15] = arg16.JValue;
 
 			try {
-				return CallSingleMethod (encodedMember, args);
+				return peer.CallSingleMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -13649,15 +13773,9 @@ namespace Java.Interop {
 				arg16.Cleanup (value16);
 			}
 		}
-		public unsafe double CallDoubleMethod (
-			string encodedMember,
-			JValue* parameters)
-		{
-			var m = GetMethodID (encodedMember);
-			return m.CallDoubleMethod (Members.JniPeerType.SafeHandle, parameters);
-		}
 
-		public unsafe double CallDoubleMethod<T> (
+		public static unsafe double CallGenericDoubleMethod<T> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T value
 		)
@@ -13668,13 +13786,14 @@ namespace Java.Interop {
 			args [0] = arg.JValue;
 
 			try {
-				return CallDoubleMethod (encodedMember, args);
+				return peer.CallDoubleMethod (encodedMember, args);
 			} finally {
 				arg.Cleanup (value);
 			}
 		}
 
-		public unsafe double CallDoubleMethod<T1, T2> (
+		public static unsafe double CallGenericDoubleMethod<T1, T2> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2
 		)
@@ -13687,14 +13806,15 @@ namespace Java.Interop {
 			args [1] = arg2.JValue;
 
 			try {
-				return CallDoubleMethod (encodedMember, args);
+				return peer.CallDoubleMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
 			}
 		}
 
-		public unsafe double CallDoubleMethod<T1, T2, T3> (
+		public static unsafe double CallGenericDoubleMethod<T1, T2, T3> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3
 		)
@@ -13709,7 +13829,7 @@ namespace Java.Interop {
 			args [2] = arg3.JValue;
 
 			try {
-				return CallDoubleMethod (encodedMember, args);
+				return peer.CallDoubleMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -13717,7 +13837,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe double CallDoubleMethod<T1, T2, T3, T4> (
+		public static unsafe double CallGenericDoubleMethod<T1, T2, T3, T4> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4
 		)
@@ -13734,7 +13855,7 @@ namespace Java.Interop {
 			args [3] = arg4.JValue;
 
 			try {
-				return CallDoubleMethod (encodedMember, args);
+				return peer.CallDoubleMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -13743,7 +13864,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe double CallDoubleMethod<T1, T2, T3, T4, T5> (
+		public static unsafe double CallGenericDoubleMethod<T1, T2, T3, T4, T5> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
 		)
@@ -13762,7 +13884,7 @@ namespace Java.Interop {
 			args [4] = arg5.JValue;
 
 			try {
-				return CallDoubleMethod (encodedMember, args);
+				return peer.CallDoubleMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -13772,7 +13894,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe double CallDoubleMethod<T1, T2, T3, T4, T5, T6> (
+		public static unsafe double CallGenericDoubleMethod<T1, T2, T3, T4, T5, T6> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
 		)
@@ -13793,7 +13916,7 @@ namespace Java.Interop {
 			args [5] = arg6.JValue;
 
 			try {
-				return CallDoubleMethod (encodedMember, args);
+				return peer.CallDoubleMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -13804,7 +13927,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe double CallDoubleMethod<T1, T2, T3, T4, T5, T6, T7> (
+		public static unsafe double CallGenericDoubleMethod<T1, T2, T3, T4, T5, T6, T7> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
 		)
@@ -13827,7 +13951,7 @@ namespace Java.Interop {
 			args [6] = arg7.JValue;
 
 			try {
-				return CallDoubleMethod (encodedMember, args);
+				return peer.CallDoubleMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -13839,7 +13963,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe double CallDoubleMethod<T1, T2, T3, T4, T5, T6, T7, T8> (
+		public static unsafe double CallGenericDoubleMethod<T1, T2, T3, T4, T5, T6, T7, T8> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
 		)
@@ -13864,7 +13989,7 @@ namespace Java.Interop {
 			args [7] = arg8.JValue;
 
 			try {
-				return CallDoubleMethod (encodedMember, args);
+				return peer.CallDoubleMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -13877,7 +14002,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe double CallDoubleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+		public static unsafe double CallGenericDoubleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
 		)
@@ -13904,7 +14030,7 @@ namespace Java.Interop {
 			args [8] = arg9.JValue;
 
 			try {
-				return CallDoubleMethod (encodedMember, args);
+				return peer.CallDoubleMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -13918,7 +14044,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe double CallDoubleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+		public static unsafe double CallGenericDoubleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
 		)
@@ -13947,7 +14074,7 @@ namespace Java.Interop {
 			args [9] = arg10.JValue;
 
 			try {
-				return CallDoubleMethod (encodedMember, args);
+				return peer.CallDoubleMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -13962,7 +14089,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe double CallDoubleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+		public static unsafe double CallGenericDoubleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
 		)
@@ -13993,7 +14121,7 @@ namespace Java.Interop {
 			args [10] = arg11.JValue;
 
 			try {
-				return CallDoubleMethod (encodedMember, args);
+				return peer.CallDoubleMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -14009,7 +14137,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe double CallDoubleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+		public static unsafe double CallGenericDoubleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
 		)
@@ -14042,7 +14171,7 @@ namespace Java.Interop {
 			args [11] = arg12.JValue;
 
 			try {
-				return CallDoubleMethod (encodedMember, args);
+				return peer.CallDoubleMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -14059,7 +14188,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe double CallDoubleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+		public static unsafe double CallGenericDoubleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
 		)
@@ -14094,7 +14224,7 @@ namespace Java.Interop {
 			args [12] = arg13.JValue;
 
 			try {
-				return CallDoubleMethod (encodedMember, args);
+				return peer.CallDoubleMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -14112,7 +14242,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe double CallDoubleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+		public static unsafe double CallGenericDoubleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
 		)
@@ -14149,7 +14280,7 @@ namespace Java.Interop {
 			args [13] = arg14.JValue;
 
 			try {
-				return CallDoubleMethod (encodedMember, args);
+				return peer.CallDoubleMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -14168,7 +14299,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe double CallDoubleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+		public static unsafe double CallGenericDoubleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
 		)
@@ -14207,7 +14339,7 @@ namespace Java.Interop {
 			args [14] = arg15.JValue;
 
 			try {
-				return CallDoubleMethod (encodedMember, args);
+				return peer.CallDoubleMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -14227,7 +14359,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe double CallDoubleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+		public static unsafe double CallGenericDoubleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
 		)
@@ -14268,7 +14401,7 @@ namespace Java.Interop {
 			args [15] = arg16.JValue;
 
 			try {
-				return CallDoubleMethod (encodedMember, args);
+				return peer.CallDoubleMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -14288,15 +14421,9 @@ namespace Java.Interop {
 				arg16.Cleanup (value16);
 			}
 		}
-		public unsafe JniLocalReference CallObjectMethod (
-			string encodedMember,
-			JValue* parameters)
-		{
-			var m = GetMethodID (encodedMember);
-			return m.CallObjectMethod (Members.JniPeerType.SafeHandle, parameters);
-		}
 
-		public unsafe JniLocalReference CallObjectMethod<T> (
+		public static unsafe JniLocalReference CallGenericObjectMethod<T> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T value
 		)
@@ -14307,13 +14434,14 @@ namespace Java.Interop {
 			args [0] = arg.JValue;
 
 			try {
-				return CallObjectMethod (encodedMember, args);
+				return peer.CallObjectMethod (encodedMember, args);
 			} finally {
 				arg.Cleanup (value);
 			}
 		}
 
-		public unsafe JniLocalReference CallObjectMethod<T1, T2> (
+		public static unsafe JniLocalReference CallGenericObjectMethod<T1, T2> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2
 		)
@@ -14326,14 +14454,15 @@ namespace Java.Interop {
 			args [1] = arg2.JValue;
 
 			try {
-				return CallObjectMethod (encodedMember, args);
+				return peer.CallObjectMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
 			}
 		}
 
-		public unsafe JniLocalReference CallObjectMethod<T1, T2, T3> (
+		public static unsafe JniLocalReference CallGenericObjectMethod<T1, T2, T3> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3
 		)
@@ -14348,7 +14477,7 @@ namespace Java.Interop {
 			args [2] = arg3.JValue;
 
 			try {
-				return CallObjectMethod (encodedMember, args);
+				return peer.CallObjectMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -14356,7 +14485,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe JniLocalReference CallObjectMethod<T1, T2, T3, T4> (
+		public static unsafe JniLocalReference CallGenericObjectMethod<T1, T2, T3, T4> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4
 		)
@@ -14373,7 +14503,7 @@ namespace Java.Interop {
 			args [3] = arg4.JValue;
 
 			try {
-				return CallObjectMethod (encodedMember, args);
+				return peer.CallObjectMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -14382,7 +14512,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe JniLocalReference CallObjectMethod<T1, T2, T3, T4, T5> (
+		public static unsafe JniLocalReference CallGenericObjectMethod<T1, T2, T3, T4, T5> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
 		)
@@ -14401,7 +14532,7 @@ namespace Java.Interop {
 			args [4] = arg5.JValue;
 
 			try {
-				return CallObjectMethod (encodedMember, args);
+				return peer.CallObjectMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -14411,7 +14542,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe JniLocalReference CallObjectMethod<T1, T2, T3, T4, T5, T6> (
+		public static unsafe JniLocalReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
 		)
@@ -14432,7 +14564,7 @@ namespace Java.Interop {
 			args [5] = arg6.JValue;
 
 			try {
-				return CallObjectMethod (encodedMember, args);
+				return peer.CallObjectMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -14443,7 +14575,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe JniLocalReference CallObjectMethod<T1, T2, T3, T4, T5, T6, T7> (
+		public static unsafe JniLocalReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
 		)
@@ -14466,7 +14599,7 @@ namespace Java.Interop {
 			args [6] = arg7.JValue;
 
 			try {
-				return CallObjectMethod (encodedMember, args);
+				return peer.CallObjectMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -14478,7 +14611,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe JniLocalReference CallObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8> (
+		public static unsafe JniLocalReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
 		)
@@ -14503,7 +14637,7 @@ namespace Java.Interop {
 			args [7] = arg8.JValue;
 
 			try {
-				return CallObjectMethod (encodedMember, args);
+				return peer.CallObjectMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -14516,7 +14650,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe JniLocalReference CallObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+		public static unsafe JniLocalReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
 		)
@@ -14543,7 +14678,7 @@ namespace Java.Interop {
 			args [8] = arg9.JValue;
 
 			try {
-				return CallObjectMethod (encodedMember, args);
+				return peer.CallObjectMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -14557,7 +14692,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe JniLocalReference CallObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+		public static unsafe JniLocalReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
 		)
@@ -14586,7 +14722,7 @@ namespace Java.Interop {
 			args [9] = arg10.JValue;
 
 			try {
-				return CallObjectMethod (encodedMember, args);
+				return peer.CallObjectMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -14601,7 +14737,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe JniLocalReference CallObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+		public static unsafe JniLocalReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
 		)
@@ -14632,7 +14769,7 @@ namespace Java.Interop {
 			args [10] = arg11.JValue;
 
 			try {
-				return CallObjectMethod (encodedMember, args);
+				return peer.CallObjectMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -14648,7 +14785,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe JniLocalReference CallObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+		public static unsafe JniLocalReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
 		)
@@ -14681,7 +14819,7 @@ namespace Java.Interop {
 			args [11] = arg12.JValue;
 
 			try {
-				return CallObjectMethod (encodedMember, args);
+				return peer.CallObjectMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -14698,7 +14836,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe JniLocalReference CallObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+		public static unsafe JniLocalReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
 		)
@@ -14733,7 +14872,7 @@ namespace Java.Interop {
 			args [12] = arg13.JValue;
 
 			try {
-				return CallObjectMethod (encodedMember, args);
+				return peer.CallObjectMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -14751,7 +14890,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe JniLocalReference CallObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+		public static unsafe JniLocalReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
 		)
@@ -14788,7 +14928,7 @@ namespace Java.Interop {
 			args [13] = arg14.JValue;
 
 			try {
-				return CallObjectMethod (encodedMember, args);
+				return peer.CallObjectMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -14807,7 +14947,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe JniLocalReference CallObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+		public static unsafe JniLocalReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
 		)
@@ -14846,7 +14987,7 @@ namespace Java.Interop {
 			args [14] = arg15.JValue;
 
 			try {
-				return CallObjectMethod (encodedMember, args);
+				return peer.CallObjectMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -14866,7 +15007,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public unsafe JniLocalReference CallObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+		public static unsafe JniLocalReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
 		)
@@ -14907,7 +15049,7 @@ namespace Java.Interop {
 			args [15] = arg16.JValue;
 
 			try {
-				return CallObjectMethod (encodedMember, args);
+				return peer.CallObjectMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);

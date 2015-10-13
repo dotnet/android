@@ -10,7 +10,7 @@ namespace Java.Interop
 			Members = members;
 		}
 
-		readonly JniPeerMembers                             Members;
+		internal    readonly    JniPeerMembers              Members;
 
 		Dictionary<string, JniStaticMethodID>               StaticMethods   = new Dictionary<string, JniStaticMethodID>();
 
@@ -36,6 +36,66 @@ namespace Java.Interop
 				}
 				return m;
 			}
+		}
+
+		public unsafe void CallVoidMethod (string encodedMember, JValue* parameters)
+		{
+			var m = GetMethodID (encodedMember);
+			m.CallVoidMethod (Members.JniPeerType.SafeHandle, parameters);
+		}
+
+		public unsafe bool CallBooleanMethod (string encodedMember, JValue* parameters)
+		{
+			var m = GetMethodID (encodedMember);
+			return m.CallBooleanMethod (Members.JniPeerType.SafeHandle, parameters);
+		}
+
+		public unsafe sbyte CallSByteMethod (string encodedMember, JValue* parameters)
+		{
+			var m = GetMethodID (encodedMember);
+			return m.CallSByteMethod (Members.JniPeerType.SafeHandle, parameters);
+		}
+
+		public unsafe char CallCharMethod (string encodedMember, JValue* parameters)
+		{
+			var m = GetMethodID (encodedMember);
+			return m.CallCharMethod (Members.JniPeerType.SafeHandle, parameters);
+		}
+
+		public unsafe short CallInt16Method (string encodedMember, JValue* parameters)
+		{
+			var m = GetMethodID (encodedMember);
+			return m.CallInt16Method (Members.JniPeerType.SafeHandle, parameters);
+		}
+
+		public unsafe int CallInt32Method (string encodedMember, JValue* parameters)
+		{
+			var m = GetMethodID (encodedMember);
+			return m.CallInt32Method (Members.JniPeerType.SafeHandle, parameters);
+		}
+
+		public unsafe long CallInt64Method (string encodedMember, JValue* parameters)
+		{
+			var m = GetMethodID (encodedMember);
+			return m.CallInt64Method (Members.JniPeerType.SafeHandle, parameters);
+		}
+
+		public unsafe float CallSingleMethod (string encodedMember, JValue* parameters)
+		{
+			var m = GetMethodID (encodedMember);
+			return m.CallSingleMethod (Members.JniPeerType.SafeHandle, parameters);
+		}
+
+		public unsafe double CallDoubleMethod (string encodedMember, JValue* parameters)
+		{
+			var m = GetMethodID (encodedMember);
+			return m.CallDoubleMethod (Members.JniPeerType.SafeHandle, parameters);
+		}
+
+		public unsafe JniLocalReference CallObjectMethod (string encodedMember, JValue* parameters)
+		{
+			var m = GetMethodID (encodedMember);
+			return m.CallObjectMethod (Members.JniPeerType.SafeHandle, parameters);
 		}
 	}
 }

@@ -20,9 +20,9 @@
 #>
 using System;
 
-namespace Java.Interop {
+namespace Java.Interop.GenericMarshaler {
 
-	partial class JniPeerInstanceMethods {
+	public static partial class JniPeerInstanceMethodsExtensions {
 <#
 	for (int i = 1; i <= 16; ++i ) {
 		string typeParams   = i == 1
@@ -45,22 +45,22 @@ namespace Java.Interop {
 		}
 #>
 
-		public JniLocalReference StartCreateInstance<#= typeParams #> (
+		public static JniLocalReference StartGenericCreateInstance<#= typeParams #> (
+			this    JniPeerInstanceMethods peer,
 			string  constructorSignature,
 			Type    declaringType,
 			<#= methodParams #>
 		)
 		{
 			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
-				return NewObject (constructorSignature, declaringType, <#= methodArgs #>);
+				return NewObject (peer, constructorSignature, declaringType, <#= methodArgs #>);
 			}
-			using (var lref = GetConstructorsForType (declaringType)
-					.JniPeerType
-					.AllocObject ())
+			using (var lref = peer.AllocObject (declaringType))
 				return lref.ToAllocObjectRef ();
 		}
 
-		unsafe JniLocalReference NewObject<#= typeParams #> (
+		static unsafe JniLocalReference NewObject<#= typeParams #> (
+			JniPeerInstanceMethods  peer,
 		    string  constructorSignature,
 		    Type    declaringType,
 		    <#= methodParams #>
@@ -82,7 +82,7 @@ namespace Java.Interop {
 		WriteLine ("");
 #>
 			try {
-			    return NewObject (constructorSignature, declaringType, args);
+			    return peer.NewObject (constructorSignature, declaringType, args);
 			} finally {
 <#
 		for (int a = 1; a <= i; ++a) {
@@ -93,7 +93,8 @@ namespace Java.Interop {
 			}
 		}
 
-		public void FinishCreateInstance<#= typeParams #> (
+		public static void FinishGenericCreateInstance<#= typeParams #> (
+			this        JniPeerInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaObject self,
 		    <#= methodParams #>
@@ -102,10 +103,11 @@ namespace Java.Interop {
 			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
 				return;
 			}
-			_InvokeConstructor (constructorSignature, self, <#= methodArgs #>);
+			_InvokeConstructor (peer, constructorSignature, self, <#= methodArgs #>);
 		}
 
-		unsafe void _InvokeConstructor<#= typeParams #> (
+		static unsafe void _InvokeConstructor<#= typeParams #> (
+			JniPeerInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaObject self,
 		    <#= methodParams #>
@@ -127,7 +129,7 @@ namespace Java.Interop {
 		WriteLine ("");
 #>
 			try {
-				var methods = GetConstructorsForType (self.GetType ());
+				var methods = peer.GetConstructorsForType (self.GetType ());
 				var ctor    = methods.GetConstructor (constructorSignature);
 				ctor.CallNonvirtualVoidMethod (self.SafeHandle, methods.JniPeerType.SafeHandle, args);
 			} finally {
@@ -159,21 +161,6 @@ namespace Java.Interop {
 		}
 
 #>
-		public unsafe <#= info.ReturnType #> Call<#= info.JniCallType #>Method (
-			string encodedMember,
-			IJavaObject self,
-			JValue* parameters)
-		{
-			JniPeerMembers.AssertSelf (self);
-
-			if (self.GetType () == DeclaringType || DeclaringType == null) {
-				var m = GetMethodID (encodedMember);
-				<#= ret #>m.CallVirtual<#= info.JniCallType #>Method (self.SafeHandle, parameters);
-			}
-			var j = self.JniPeerMembers;
-			var n = j.InstanceMethods.GetMethodID (encodedMember);
-			<#= ret #>n.CallNonvirtual<#= info.JniCallType #>Method (self.SafeHandle, j.JniPeerType.SafeHandle, parameters);
-		}
 <#
 		for (int i = 0; i <= 16; ++i ) {
 			string typeParams   = i == 1
@@ -192,7 +179,8 @@ namespace Java.Interop {
 			}
 #>
 
-		public unsafe <#= info.ReturnType #> Call<#= info.JniCallType #>Method<#= typeParams #> (
+		public static unsafe <#= info.ReturnType #> CallGeneric<#= info.JniCallType #>Method<#= typeParams #> (
+			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self<#= i == 0 ? "" : ",\n\t\t\t" + methodParams #>
 		)
@@ -213,7 +201,7 @@ namespace Java.Interop {
 			WriteLine ("");
 #>
 			try {
-				<#= ret #>Call<#= info.JniCallType #>Method (encodedMember, self, args);
+				<#= ret #>peer.Call<#= info.JniCallType #>Method (encodedMember, self, args);
 			} finally {
 <#
 			for (int a = 1; a <= i; ++a) {
@@ -229,7 +217,7 @@ namespace Java.Interop {
 #>
 	}
 
-	partial class JniPeerStaticMethods {
+	public static partial class JniPeerStaticMethodsExtensions {
 
 <#
 	foreach (var info in jniReturnTypes) {
@@ -239,13 +227,6 @@ namespace Java.Interop {
 		}
 
 #>
-		public unsafe <#= info.ReturnType #> Call<#= info.JniCallType #>Method (
-			string encodedMember,
-			JValue* parameters)
-		{
-			var m = GetMethodID (encodedMember);
-			<#= ret #>m.Call<#= info.JniCallType #>Method (Members.JniPeerType.SafeHandle, parameters);
-		}
 <#
 		for (int i = 1; i <= 16; ++i ) {
 			string typeParams   = i == 1
@@ -264,7 +245,8 @@ namespace Java.Interop {
 			}
 #>
 
-		public unsafe <#= info.ReturnType #> Call<#= info.JniCallType #>Method<#= typeParams #> (
+		public static unsafe <#= info.ReturnType #> CallGeneric<#= info.JniCallType #>Method<#= typeParams #> (
+		    this    JniPeerStaticMethods    peer,
 			string encodedMember<#= i == 0 ? "" : ",\n\t\t\t" + methodParams #>
 		)
 		{
@@ -284,7 +266,7 @@ namespace Java.Interop {
 			WriteLine ("");
 #>
 			try {
-				<#= ret #>Call<#= info.JniCallType #>Method (encodedMember, args);
+				<#= ret #>peer.Call<#= info.JniCallType #>Method (encodedMember, args);
 			} finally {
 <#
 			for (int a = 1; a <= i; ++a) {
