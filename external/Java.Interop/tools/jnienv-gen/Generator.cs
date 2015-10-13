@@ -27,7 +27,9 @@ namespace Xamarin.Java.Interop
 					w.NewLine = "\n";
 					GenerateFile (w);
 					string content = w.ToString ();
-					if (!File.Exists (jnienv_g_cs) || !string.Equals (content, File.ReadAllText (jnienv_g_cs)))
+					if (jnienv_g_cs == "-")
+						Console.WriteLine (content);
+					else if (!File.Exists (jnienv_g_cs) || !string.Equals (content, File.ReadAllText (jnienv_g_cs)))
 						File.WriteAllText (jnienv_g_cs, content);
 				}
 				return 0;
