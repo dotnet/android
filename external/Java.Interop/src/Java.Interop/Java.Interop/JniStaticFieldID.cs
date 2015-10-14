@@ -5,96 +5,97 @@ namespace Java.Interop {
 
 	public sealed class JniStaticFieldID : JniFieldID
 	{
-		JniStaticFieldID ()
+		internal JniStaticFieldID (IntPtr fieldID)
+			: base (fieldID)
 		{
 		}
 
-		public JniLocalReference GetObjectValue (JniReferenceSafeHandle @class)
+		public JniObjectReference GetObjectValue (JniObjectReference @class)
 		{
 			return JniEnvironment.Members.GetStaticObjectField (@class, this);
 		}
 
-		public bool GetBooleanValue (JniReferenceSafeHandle @class)
+		public bool GetBooleanValue (JniObjectReference @class)
 		{
 			return JniEnvironment.Members.GetStaticBooleanField (@class, this);
 		}
 
-		public sbyte GetByteValue (JniReferenceSafeHandle @class)
+		public sbyte GetByteValue (JniObjectReference @class)
 		{
 			return JniEnvironment.Members.GetStaticByteField (@class, this);
 		}
 
-		public char GetCharValue (JniReferenceSafeHandle @class)
+		public char GetCharValue (JniObjectReference @class)
 		{
 			return JniEnvironment.Members.GetStaticCharField (@class, this);
 		}
 
-		public short GetInt16Value (JniReferenceSafeHandle @class)
+		public short GetInt16Value (JniObjectReference @class)
 		{
 			return JniEnvironment.Members.GetStaticShortField (@class, this);
 		}
 
-		public int GetInt32Value (JniReferenceSafeHandle @class)
+		public int GetInt32Value (JniObjectReference @class)
 		{
 			return JniEnvironment.Members.GetStaticIntField (@class, this);
 		}
 
-		public long GetInt64Value (JniReferenceSafeHandle @class)
+		public long GetInt64Value (JniObjectReference @class)
 		{
 			return JniEnvironment.Members.GetStaticLongField (@class, this);
 		}
 
-		public float GetSingleValue (JniReferenceSafeHandle @class)
+		public float GetSingleValue (JniObjectReference @class)
 		{
 			return JniEnvironment.Members.GetStaticFloatField (@class, this);
 		}
 
-		public double GetDoubleValue (JniReferenceSafeHandle @class)
+		public double GetDoubleValue (JniObjectReference @class)
 		{
 			return JniEnvironment.Members.GetStaticDoubleField (@class, this);
 		}
 
-		public void SetValue (JniReferenceSafeHandle @class, JniReferenceSafeHandle value)
+		public void SetValue (JniObjectReference @class, JniObjectReference value)
 		{
 			JniEnvironment.Members.SetStaticField (@class, this, value);
 		}
 
-		public void SetValue (JniReferenceSafeHandle @class, bool value)
+		public void SetValue (JniObjectReference @class, bool value)
 		{
 			JniEnvironment.Members.SetStaticField (@class, this, value);
 		}
 
-		public void SetValue (JniReferenceSafeHandle @class, sbyte value)
+		public void SetValue (JniObjectReference @class, sbyte value)
 		{
 			JniEnvironment.Members.SetStaticField (@class, this, value);
 		}
 
-		public void SetValue (JniReferenceSafeHandle @class, char value)
+		public void SetValue (JniObjectReference @class, char value)
 		{
 			JniEnvironment.Members.SetStaticField (@class, this, value);
 		}
 
-		public void SetValue (JniReferenceSafeHandle @class, short value)
+		public void SetValue (JniObjectReference @class, short value)
 		{
 			JniEnvironment.Members.SetStaticField (@class, this, value);
 		}
 
-		public void SetValue (JniReferenceSafeHandle @class, int value)
+		public void SetValue (JniObjectReference @class, int value)
 		{
 			JniEnvironment.Members.SetStaticField (@class, this, value);
 		}
 
-		public void SetValue (JniReferenceSafeHandle @class, long value)
+		public void SetValue (JniObjectReference @class, long value)
 		{
 			JniEnvironment.Members.SetStaticField (@class, this, value);
 		}
 
-		public void SetValue (JniReferenceSafeHandle @class, float value)
+		public void SetValue (JniObjectReference @class, float value)
 		{
 			JniEnvironment.Members.SetStaticField (@class, this, value);
 		}
 
-		public void SetValue (JniReferenceSafeHandle @class, double value)
+		public void SetValue (JniObjectReference @class, double value)
 		{
 			JniEnvironment.Members.SetStaticField (@class, this, value);
 		}

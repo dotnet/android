@@ -17,24 +17,24 @@ namespace Java.Interop {
 
 		void                    WriteLocalReferenceLine (string format, params object[] args);
 
-		JniLocalReference       CreateLocalReference (JniEnvironment environment, JniReferenceSafeHandle value);
-		void                    DeleteLocalReference (JniEnvironment environment, IntPtr value);
+		JniObjectReference      CreateLocalReference (JniEnvironment environment, JniObjectReference value);
+		void                    DeleteLocalReference (JniEnvironment environment, ref JniObjectReference value);
 
 		// JniLocalReference was created as a result of another JNI call,
 		// e.g. JniEnvironment.Array.NewByteArray()
-		void                    CreatedLocalReference (JniEnvironment environment, JniLocalReference value);
+		void                    CreatedLocalReference (JniEnvironment environment, JniObjectReference value);
 
 		// "Release" doesn't destroy the local ref; this is an "accounting" method
 		// to give the VM to update local reference counts. The IntPtr returned
 		// will be passed to the JVM as a JNI return value.
-		IntPtr                  ReleaseLocalReference (JniEnvironment environment, JniLocalReference value);
+		IntPtr                  ReleaseLocalReference (JniEnvironment environment, ref JniObjectReference value);
 
 		void                    WriteGlobalReferenceLine (string format, params object[] args);
 
-		JniGlobalReference      CreateGlobalReference (JniReferenceSafeHandle value);
-		void                    DeleteGlobalReference (IntPtr value);
+		JniObjectReference      CreateGlobalReference (JniObjectReference value);
+		void                    DeleteGlobalReference (ref JniObjectReference value);
 
-		JniWeakGlobalReference  CreateWeakGlobalReference (JniReferenceSafeHandle value);
-		void                    DeleteWeakGlobalReference (IntPtr value);
+		JniObjectReference      CreateWeakGlobalReference (JniObjectReference value);
+		void                    DeleteWeakGlobalReference (ref JniObjectReference value);
 	}
 }

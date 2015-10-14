@@ -2,7 +2,7 @@
 
 namespace Java.Interop {
 
-	class JniAllocObjectRef : JniLocalReference
+	sealed class JniAllocObjectRef : JniLocalReference
 	{
 		public JniAllocObjectRef (IntPtr handle)
 		{

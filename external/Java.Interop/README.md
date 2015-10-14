@@ -66,7 +66,7 @@ If you fail to re-install the runtime package, then `jar` will fail to run:
 
 ## Type Safety
 
-The start of the reboot is to use strongly typed [`SafeHandle`][SafeHandle]
+The start of the reboot was to use strongly typed [`SafeHandle`][SafeHandle]
 subclasses everywhere instead of `IntPtr`. This allows a local reference to be
 type-checked and distinct from a global ref, complete with compiler
 type checking.
@@ -75,6 +75,72 @@ type checking.
 
 Since we now have actual types in more places, we can move the current `JNIEnv`
 methods into more semantically meaningful types.
+
+Unfortunately, various tests demonstrated that while `SafeHandle`s provided
+increased type safety, they did so at a large runtime cost:
+
+1. `SafeHandle`s are reference types, increasing GC heap allocations and pressure.
+2. [`SafeHandle`s are *thread-safe* in order to prevent race conditions and handle recycling attacks][reliability].
+
+[reliability]: http://blogs.msdn.com/b/bclteam/archive/2005/03/16/396900.aspx
+
+Compared to a Xamarin.Android-like "use `IntPtr`s for *everything*" binding
+approach, the overhread is significant: to *just* invoke
+`JNIEnv::CallObjectMethod()`, using `SafeHandle`s for everything causes
+execution time to take ~1.4x longer than a comparable struct-oriented approach.
+
+Make the test more realistic -- compared to current Xamarin.Android and
+current Java.Interop -- so that `JniEnvironment.Members.CallObjectMethod()`
+also calls `JniEnvironment.Errors.ExceptionOccurred()`, which also returns
+a JNI local reference -- and runtime execution time *jumped to ~3.6x*:
+
+    # SafeHandle timing: 00:00:09.9393493
+    #	Average Invocation: 0.00099393493ms
+    # JniObjectReference timing: 00:00:02.7254572
+    #	Average Invocation: 0.00027254572ms
+
+(See the [tests/invocation-overhead](tests/invocation-overhead) directory
+for the invocation comparison sourcecode.)
+
+*This is not acceptable*. Performance is a known issue with Xamarin.Android;
+we can't be making it *worse*.
+
+Meanwhile, I *really* dislike using `IntPtr`s everywhere, as it doesn't let you
+know what the value actually represents.
+
+To solve this issue, *avoid `SafeHandle` types* in the public API.
+
+Downside: this means we can't have the GC collect our garbage JNI references.
+
+Upside: the Java.Interop effort will actually be usable.
+
+Instead of using `SafeHandle` types, we introduce a
+`JniObjectReference` struct type. This represents a JNI Local, Global, or
+WeakGlobal object reference. The `JniObjectReference` struct also contains
+the *reference type* as `JniObjectReferenceType`, formerly `JniReferenceType`.
+`jmethodID` and `jfieldID` become "normal" class types, permitting type safety,
+but lose their `SafeHandle` status, which was never really necessary because
+they don't require cleanup *anyway*. Furthermore, these values should be
+*cached* -- see `JniPeerMembers` -- so making them GC objects shouldn't be
+a long-term problem.
+
+By doing so, we allow Java.Interop to have *two separate implementations*,
+controlled by build-time `#define`s:
+
+* `FEATURE_HANDLES_ARE_SAFE_HANDLES`: Causes `JniObjectReference` to
+    contain a `SafeHandle` wrapping the underlying JNI handle.
+* `FEATURE_HANDLES_ARE_INTPTRS`: Causes `JniObjectReference` to contain
+    an `IntPtr` for the underlying JNI handle.
+
+The rationale for this is twofold:
+
+1. It allows swapping out "safer" `SafeHandle` and "less safe" `IntPtr`
+    implementations, permitting easier performance comparisons.
+2. It allows migrating the existing code, as some of the existing
+    tests may assume that JNI handles are garbage collected, which
+    won't be the case when `FEATURE_HANDLES_ARE_INTPTRS` is set.
+
+`FEATURE_HANDLES_ARE_INTPTRS` support is still in-progresss.
 
 ## Naming Conventions
 

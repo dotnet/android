@@ -5,12 +5,12 @@ namespace Java.Interop
 {
 	public class JavaObjectArray<T> : JavaArray<T>
 	{
-		public JavaObjectArray (JniReferenceSafeHandle handle, JniHandleOwnership transfer)
-			: base (handle, transfer)
+		public JavaObjectArray (ref JniObjectReference handle, JniHandleOwnership transfer)
+			: base (ref handle, transfer)
 		{
 		}
 
-		static JniLocalReference _NewArray (int length)
+		static JniObjectReference _NewArray (int length)
 		{
 			var info = JniEnvironment.Current.JavaVM.GetJniTypeInfoForType (typeof (T));
 			if (info.JniTypeName == null)
@@ -20,13 +20,16 @@ namespace Java.Interop
 					info.JniTypeName = JniInteger.JniTypeName;
 			}
 			using (var t = new JniType (info.ToString ())) {
-				return JniEnvironment.Arrays.NewObjectArray (length, t.SafeHandle, JniReferenceSafeHandle.Null);
+				return JniEnvironment.Arrays.NewObjectArray (length, t.PeerReference, new JniObjectReference ());
 			}
 		}
 
-		public JavaObjectArray (int length)
-			: this (_NewArray (CheckLength (length)), JniHandleOwnership.Transfer)
+		public unsafe JavaObjectArray (int length)
+			: this (ref *InvalidJniObjectReference, JniHandleOwnership.Invalid)
 		{
+			var peer    = _NewArray (CheckLength (length));
+			using (SetPeerReference (ref peer, JniHandleOwnership.Transfer)) {
+			}
 		}
 
 		public JavaObjectArray (IList<T> value)
@@ -56,14 +59,15 @@ namespace Java.Interop
 
 		T GetElementAt (int index)
 		{
-			var lref = JniEnvironment.Arrays.GetObjectArrayElement (SafeHandle, index);
-			return JniMarshal.GetValue<T> (lref, JniHandleOwnership.Transfer);
+			var lref = JniEnvironment.Arrays.GetObjectArrayElement (PeerReference, index);
+			return JniMarshal.GetValue<T> (ref lref, JniHandleOwnership.Transfer);
 		}
 
 		void SetElementAt (int index, T value)
 		{
-			using (var h = JniMarshal.CreateLocalRef (value))
-				JniEnvironment.Arrays.SetObjectArrayElement (SafeHandle, index, h);
+			var h = JniMarshal.CreateLocalRef (value);
+			JniEnvironment.Arrays.SetObjectArrayElement (PeerReference, index, h);
+			JniEnvironment.Handles.Dispose (ref h, JniHandleOwnership.Transfer);
 		}
 
 		public override IEnumerator<T> GetEnumerator ()
@@ -77,11 +81,11 @@ namespace Java.Interop
 		public override void Clear ()
 		{
 			int len = Length;
-			using (var v = JniMarshal.CreateLocalRef (default (T))) {
-				for (int i = 0; i < len; i++) {
-					JniEnvironment.Arrays.SetObjectArrayElement (SafeHandle, i, v);
-				}
+			var v = JniMarshal.CreateLocalRef (default (T));
+			for (int i = 0; i < len; i++) {
+				JniEnvironment.Arrays.SetObjectArrayElement (PeerReference, i, v);
 			}
+			JniEnvironment.Handles.Dispose (ref v, JniHandleOwnership.Transfer);
 		}
 
 		public override int IndexOf (T item)
@@ -129,14 +133,14 @@ namespace Java.Interop
 				targetType == typeof (JavaObjectArray<T>);
 		}
 
-		internal static object GetValue (JniReferenceSafeHandle handle, JniHandleOwnership transfer, Type targetType)
+		internal static object GetValue (ref JniObjectReference handle, JniHandleOwnership transfer, Type targetType)
 		{
-			return JavaArray<T>.GetValueFromJni (handle, transfer, targetType, (h, T) => new JavaObjectArray<T> (h, T) {
+			return JavaArray<T>.GetValueFromJni (ref handle, transfer, targetType, (ref JniObjectReference h, JniHandleOwnership t) => new JavaObjectArray<T> (ref h, t) {
 				forMarshalCollection    = true,
 			});
 		}
 
-		internal static JniLocalReference CreateLocalRef (object value)
+		internal static JniObjectReference CreateLocalRef (object value)
 		{
 			return JavaArray<T>.CreateLocalRef (value, list => new JavaObjectArray<T>(list));
 		}

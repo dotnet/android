@@ -9,14 +9,14 @@ namespace Java.Interop
 		}
 
 		static JniStaticMethodID _getRuntime;
-		internal static JniLocalReference GetRuntime ()
+		internal static JniObjectReference GetRuntime ()
 		{
 			return TypeRef.GetCachedStaticMethod (ref _getRuntime, "getRuntime", "()Ljava/lang/Runtime;")
-				.CallObjectMethod (TypeRef.SafeHandle);
+				.CallObjectMethod (TypeRef.PeerReference);
 		}
 
 		static JniInstanceMethodID _gc;
-		internal static void GC (JniLocalReference runtime)
+		internal static void GC (JniObjectReference runtime)
 		{
 			TypeRef.GetCachedInstanceMethod (ref _gc, "gc", "()V")
 				.CallVirtualVoidMethod (runtime);

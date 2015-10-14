@@ -1,4 +1,5 @@
 using System;
+using System.Reflection;
 using System.Threading;
 
 using Java.Interop;
@@ -20,7 +21,7 @@ namespace Java.InteropTests
 				array.RegisterWithVM ();
 				var w = new Thread (() => {
 						var v       = new JavaObject ();
-						oldHandle   = v.SafeHandle.DangerousGetHandle ();
+						oldHandle   = v.PeerReference.Handle;
 						v.RegisterWithVM ();
 						array [0] = v;
 				});
@@ -30,9 +31,10 @@ namespace Java.InteropTests
 				GC.WaitForPendingFinalizers ();
 				GC.WaitForPendingFinalizers ();
 				var first = array [0];
-				Assert.IsNotNull (JavaVM.Current.PeekObject (first.SafeHandle));
-				var o = (JavaObject) JavaVM.Current.GetObject (first.SafeHandle, JniHandleOwnership.DoNotTransfer);
-				if (oldHandle != o.SafeHandle.DangerousGetHandle ()) {
+				Assert.IsNotNull (JavaVM.Current.PeekObject (first.PeerReference));
+				var f = first.PeerReference;
+				var o = (JavaObject) JavaVM.Current.GetObject (ref f, JniHandleOwnership.DoNotTransfer);
+				if (oldHandle != o.PeerReference.Handle) {
 					Console.WriteLine ("Yay, object handle changed; value survived a GC!");
 				} else {
 					Console.WriteLine ("What is this, Android pre-ICS?!");
@@ -46,24 +48,24 @@ namespace Java.InteropTests
 		public void RegisterWithVM ()
 		{
 			int registeredCount = JavaVM.Current.GetSurfacedObjects ().Count;
-			JniLocalReference l;
+			JniObjectReference l;
 			JavaObject o;
 			using (o = new JavaObject ()) {
-				l   = o.SafeHandle.NewLocalRef ();
-				Assert.AreEqual (JniReferenceType.Local, o.SafeHandle.ReferenceType);
+				l   = o.PeerReference.NewLocalRef ();
+				Assert.AreEqual (JniObjectReferenceType.Local, o.PeerReference.Type);
 				Assert.AreEqual (registeredCount, JavaVM.Current.GetSurfacedObjects ().Count);
 				Assert.IsNull (JavaVM.Current.PeekObject (l));
 				o.RegisterWithVM ();
-				Assert.AreNotSame (l, o.SafeHandle);
-				Assert.AreEqual (JniReferenceType.Global, o.SafeHandle.ReferenceType);
-				l.Dispose ();
-				l = o.SafeHandle.NewLocalRef ();
+				Assert.AreNotSame (l, o.PeerReference);
+				Assert.AreEqual (JniObjectReferenceType.Global, o.PeerReference.Type);
+				JniEnvironment.Handles.Dispose (ref l);
+				l = o.PeerReference.NewLocalRef ();
 				Assert.AreEqual (registeredCount + 1, JavaVM.Current.GetSurfacedObjects ().Count);
 				Assert.AreSame (o, JavaVM.Current.PeekObject (l));
 			}
 			Assert.AreEqual (registeredCount, JavaVM.Current.GetSurfacedObjects ().Count);
 			Assert.IsNull (JavaVM.Current.PeekObject (l));
-			l.Dispose ();
+			JniEnvironment.Handles.Dispose (ref l);
 			Assert.Throws<ObjectDisposedException> (() => o.RegisterWithVM ());
 		}
 
@@ -72,20 +74,21 @@ namespace Java.InteropTests
 		{
 			using (var original = new JavaObject ()) {
 				original.RegisterWithVM ();
-				using (var alias    = new JavaObject (original.SafeHandle, JniHandleOwnership.DoNotTransfer)) {
-					Assert.Throws<NotSupportedException> (() => alias.RegisterWithVM ());
-				}
+				var p       = original.PeerReference;
+				var alias   = new JavaObject (ref p, JniHandleOwnership.DoNotTransfer);
+				Assert.Throws<NotSupportedException> (() => alias.RegisterWithVM ());
+				alias.Dispose ();
 			}
 		}
 
 		[Test]
 		public void UnreferencedInstanceIsCollected ()
 		{
-			JniWeakGlobalReference  oldHandle = null;
+			JniObjectReference  oldHandle = new JniObjectReference ();
 			WeakReference r = null;
 			var t = new Thread (() => {
 					var v     = new JavaObject ();
-					oldHandle = v.SafeHandle.NewWeakGlobalRef ();
+					oldHandle = v.PeerReference.NewWeakGlobalRef ();
 					r         = new WeakReference (v);
 					v.RegisterWithVM ();
 			});
@@ -97,7 +100,7 @@ namespace Java.InteropTests
 			Assert.IsFalse (r.IsAlive);
 			Assert.IsNull (r.Target);
 			Assert.IsNull (JavaVM.Current.PeekObject (oldHandle));
-			oldHandle.Dispose ();
+			JniEnvironment.Handles.Dispose (ref oldHandle);
 		}
 
 		[Test]
@@ -136,7 +139,7 @@ namespace Java.InteropTests
 			o.Dispose ();
 
 			// These should not throw
-			var h = o.SafeHandle;
+			var h = o.PeerReference;
 			var p = o.JniPeerMembers;
 
 			// These should throw
@@ -149,16 +152,17 @@ namespace Java.InteropTests
 		[Test]
 		public unsafe void Ctor ()
 		{
-			using (var t = new JniType ("java/lang/Object"))
-			using (var c = t.GetConstructor ("()V")) {
+			using (var t = new JniType ("java/lang/Object")) {
+				var c = t.GetConstructor ("()V");
 				var lref = t.NewObject (c, null);
-				using (var o = new JavaObject (lref, JniHandleOwnership.DoNotTransfer)) {
-					Assert.IsFalse (lref.IsInvalid);
-					Assert.AreNotSame (lref, o.SafeHandle);
+				Assert.IsTrue (lref.IsValid);
+				using (var o = new JavaObject (ref lref, JniHandleOwnership.DoNotTransfer)) {
+					Assert.IsTrue (lref.IsValid);
+					Assert.AreNotSame (lref, o.PeerReference);
 				}
-				using (var o = new JavaObject (lref, JniHandleOwnership.Transfer)) {
-					Assert.IsTrue (lref.IsClosed);
-					Assert.AreNotSame (lref, o.SafeHandle);
+				using (var o = new JavaObject (ref lref, JniHandleOwnership.Transfer)) {
+					Assert.IsFalse (lref.IsValid);
+					Assert.AreNotSame (lref, o.PeerReference);
 				}
 			}
 		}
@@ -166,7 +170,8 @@ namespace Java.InteropTests
 		[Test]
 		public void Ctor_Exceptions ()
 		{
-			Assert.Throws<ArgumentException> (() => new JavaObject (new JniInvocationHandle (IntPtr.Zero), JniHandleOwnership.Transfer));
+			var r   = new JniObjectReference ();
+			Assert.Throws<ArgumentException> (() => new JavaObject (ref r, JniHandleOwnership.Transfer));
 
 			// Note: This may break if/when JavaVM provides "default"
 			Assert.Throws<NotSupportedException> (() => new JavaObjectWithNoJavaPeer ());
@@ -190,6 +195,11 @@ namespace Java.InteropTests
 		[Test]
 		public void CrossThreadSharingNotSupported ()
 		{
+			if (!HaveSafeHandles) {
+				Assert.Ignore ("SafeHandles not used. Cross-thread sharing can't be checked.");
+				return;
+			}
+
 			JavaObject o = null;
 			var t = new Thread (() => o = new JavaObject ());
 			t.Start ();

@@ -9,7 +9,7 @@
 			JniPeerMembers.AssertSelf (self);
 
 			return GetFieldID (encodedMember)
-				.GetBooleanValue (self.SafeHandle);
+				.GetBooleanValue (self.PeerReference);
 		}
 
 		public void SetValue (string encodedMember, IJavaObject self, bool value)
@@ -17,7 +17,7 @@
 			JniPeerMembers.AssertSelf (self);
 
 			GetFieldID (encodedMember)
-				.SetValue (self.SafeHandle, value);
+				.SetValue (self.PeerReference, value);
 		}
 
 		public sbyte GetByteValue (
@@ -27,7 +27,7 @@
 			JniPeerMembers.AssertSelf (self);
 
 			return GetFieldID (encodedMember)
-				.GetByteValue (self.SafeHandle);
+				.GetByteValue (self.PeerReference);
 		}
 
 		public void SetValue (string encodedMember, IJavaObject self, sbyte value)
@@ -35,7 +35,7 @@
 			JniPeerMembers.AssertSelf (self);
 
 			GetFieldID (encodedMember)
-				.SetValue (self.SafeHandle, value);
+				.SetValue (self.PeerReference, value);
 		}
 
 		public char GetCharValue (
@@ -45,7 +45,7 @@
 			JniPeerMembers.AssertSelf (self);
 
 			return GetFieldID (encodedMember)
-				.GetCharValue (self.SafeHandle);
+				.GetCharValue (self.PeerReference);
 		}
 
 		public void SetValue (string encodedMember, IJavaObject self, char value)
@@ -53,7 +53,7 @@
 			JniPeerMembers.AssertSelf (self);
 
 			GetFieldID (encodedMember)
-				.SetValue (self.SafeHandle, value);
+				.SetValue (self.PeerReference, value);
 		}
 
 		public short GetInt16Value (
@@ -63,7 +63,7 @@
 			JniPeerMembers.AssertSelf (self);
 
 			return GetFieldID (encodedMember)
-				.GetInt16Value (self.SafeHandle);
+				.GetInt16Value (self.PeerReference);
 		}
 
 		public void SetValue (string encodedMember, IJavaObject self, short value)
@@ -71,7 +71,7 @@
 			JniPeerMembers.AssertSelf (self);
 
 			GetFieldID (encodedMember)
-				.SetValue (self.SafeHandle, value);
+				.SetValue (self.PeerReference, value);
 		}
 
 		public int GetInt32Value (
@@ -81,7 +81,7 @@
 			JniPeerMembers.AssertSelf (self);
 
 			return GetFieldID (encodedMember)
-				.GetInt32Value (self.SafeHandle);
+				.GetInt32Value (self.PeerReference);
 		}
 
 		public void SetValue (string encodedMember, IJavaObject self, int value)
@@ -89,7 +89,7 @@
 			JniPeerMembers.AssertSelf (self);
 
 			GetFieldID (encodedMember)
-				.SetValue (self.SafeHandle, value);
+				.SetValue (self.PeerReference, value);
 		}
 
 		public long GetInt64Value (
@@ -99,7 +99,7 @@
 			JniPeerMembers.AssertSelf (self);
 
 			return GetFieldID (encodedMember)
-				.GetInt64Value (self.SafeHandle);
+				.GetInt64Value (self.PeerReference);
 		}
 
 		public void SetValue (string encodedMember, IJavaObject self, long value)
@@ -107,7 +107,7 @@
 			JniPeerMembers.AssertSelf (self);
 
 			GetFieldID (encodedMember)
-				.SetValue (self.SafeHandle, value);
+				.SetValue (self.PeerReference, value);
 		}
 
 		public float GetSingleValue (
@@ -117,7 +117,7 @@
 			JniPeerMembers.AssertSelf (self);
 
 			return GetFieldID (encodedMember)
-				.GetSingleValue (self.SafeHandle);
+				.GetSingleValue (self.PeerReference);
 		}
 
 		public void SetValue (string encodedMember, IJavaObject self, float value)
@@ -125,7 +125,7 @@
 			JniPeerMembers.AssertSelf (self);
 
 			GetFieldID (encodedMember)
-				.SetValue (self.SafeHandle, value);
+				.SetValue (self.PeerReference, value);
 		}
 
 		public double GetDoubleValue (
@@ -135,7 +135,7 @@
 			JniPeerMembers.AssertSelf (self);
 
 			return GetFieldID (encodedMember)
-				.GetDoubleValue (self.SafeHandle);
+				.GetDoubleValue (self.PeerReference);
 		}
 
 		public void SetValue (string encodedMember, IJavaObject self, double value)
@@ -143,25 +143,25 @@
 			JniPeerMembers.AssertSelf (self);
 
 			GetFieldID (encodedMember)
-				.SetValue (self.SafeHandle, value);
+				.SetValue (self.PeerReference, value);
 		}
 
-		public JniLocalReference GetObjectValue (
+		public JniObjectReference GetObjectValue (
 			string encodedMember,
 			IJavaObject self)
 		{
 			JniPeerMembers.AssertSelf (self);
 
 			return GetFieldID (encodedMember)
-				.GetObjectValue (self.SafeHandle);
+				.GetObjectValue (self.PeerReference);
 		}
 
-		public void SetValue (string encodedMember, IJavaObject self, JniReferenceSafeHandle value)
+		public void SetValue (string encodedMember, IJavaObject self, JniObjectReference value)
 		{
 			JniPeerMembers.AssertSelf (self);
 
 			GetFieldID (encodedMember)
-				.SetValue (self.SafeHandle, value);
+				.SetValue (self.PeerReference, value);
 		}
 	}
 
@@ -170,109 +170,109 @@
 		public bool GetBooleanValue (string encodedMember)
 		{
 			return GetFieldID (encodedMember)
-				.GetBooleanValue (Members.JniPeerType.SafeHandle);
+				.GetBooleanValue (Members.JniPeerType.PeerReference);
 		}
 
 		public void SetValue (string encodedMember, bool value)
 		{
 			GetFieldID (encodedMember)
-				.SetValue (Members.JniPeerType.SafeHandle, value);
+				.SetValue (Members.JniPeerType.PeerReference, value);
 		}
 
 		public sbyte GetByteValue (string encodedMember)
 		{
 			return GetFieldID (encodedMember)
-				.GetByteValue (Members.JniPeerType.SafeHandle);
+				.GetByteValue (Members.JniPeerType.PeerReference);
 		}
 
 		public void SetValue (string encodedMember, sbyte value)
 		{
 			GetFieldID (encodedMember)
-				.SetValue (Members.JniPeerType.SafeHandle, value);
+				.SetValue (Members.JniPeerType.PeerReference, value);
 		}
 
 		public char GetCharValue (string encodedMember)
 		{
 			return GetFieldID (encodedMember)
-				.GetCharValue (Members.JniPeerType.SafeHandle);
+				.GetCharValue (Members.JniPeerType.PeerReference);
 		}
 
 		public void SetValue (string encodedMember, char value)
 		{
 			GetFieldID (encodedMember)
-				.SetValue (Members.JniPeerType.SafeHandle, value);
+				.SetValue (Members.JniPeerType.PeerReference, value);
 		}
 
 		public short GetInt16Value (string encodedMember)
 		{
 			return GetFieldID (encodedMember)
-				.GetInt16Value (Members.JniPeerType.SafeHandle);
+				.GetInt16Value (Members.JniPeerType.PeerReference);
 		}
 
 		public void SetValue (string encodedMember, short value)
 		{
 			GetFieldID (encodedMember)
-				.SetValue (Members.JniPeerType.SafeHandle, value);
+				.SetValue (Members.JniPeerType.PeerReference, value);
 		}
 
 		public int GetInt32Value (string encodedMember)
 		{
 			return GetFieldID (encodedMember)
-				.GetInt32Value (Members.JniPeerType.SafeHandle);
+				.GetInt32Value (Members.JniPeerType.PeerReference);
 		}
 
 		public void SetValue (string encodedMember, int value)
 		{
 			GetFieldID (encodedMember)
-				.SetValue (Members.JniPeerType.SafeHandle, value);
+				.SetValue (Members.JniPeerType.PeerReference, value);
 		}
 
 		public long GetInt64Value (string encodedMember)
 		{
 			return GetFieldID (encodedMember)
-				.GetInt64Value (Members.JniPeerType.SafeHandle);
+				.GetInt64Value (Members.JniPeerType.PeerReference);
 		}
 
 		public void SetValue (string encodedMember, long value)
 		{
 			GetFieldID (encodedMember)
-				.SetValue (Members.JniPeerType.SafeHandle, value);
+				.SetValue (Members.JniPeerType.PeerReference, value);
 		}
 
 		public float GetSingleValue (string encodedMember)
 		{
 			return GetFieldID (encodedMember)
-				.GetSingleValue (Members.JniPeerType.SafeHandle);
+				.GetSingleValue (Members.JniPeerType.PeerReference);
 		}
 
 		public void SetValue (string encodedMember, float value)
 		{
 			GetFieldID (encodedMember)
-				.SetValue (Members.JniPeerType.SafeHandle, value);
+				.SetValue (Members.JniPeerType.PeerReference, value);
 		}
 
 		public double GetDoubleValue (string encodedMember)
 		{
 			return GetFieldID (encodedMember)
-				.GetDoubleValue (Members.JniPeerType.SafeHandle);
+				.GetDoubleValue (Members.JniPeerType.PeerReference);
 		}
 
 		public void SetValue (string encodedMember, double value)
 		{
 			GetFieldID (encodedMember)
-				.SetValue (Members.JniPeerType.SafeHandle, value);
+				.SetValue (Members.JniPeerType.PeerReference, value);
 		}
 
-		public JniLocalReference GetObjectValue (string encodedMember)
+		public JniObjectReference GetObjectValue (string encodedMember)
 		{
 			return GetFieldID (encodedMember)
-				.GetObjectValue (Members.JniPeerType.SafeHandle);
+				.GetObjectValue (Members.JniPeerType.PeerReference);
 		}
 
-		public void SetValue (string encodedMember, JniReferenceSafeHandle value)
+		public void SetValue (string encodedMember, JniObjectReference value)
 		{
 			GetFieldID (encodedMember)
-				.SetValue (Members.JniPeerType.SafeHandle, value);
+				.SetValue (Members.JniPeerType.PeerReference, value);
 		}
 	}
 }

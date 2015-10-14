@@ -3,30 +3,22 @@ using System.Runtime.InteropServices;
 
 namespace Java.Interop
 {
-	public abstract class JniMethodID : SafeHandle
+	public abstract class JniMethodID
 	{
-		internal JniMethodID ()
-			: base (IntPtr.Zero, true)
-		{
-			JniEnvironment.Current.JavaVM.TrackID (this, this);
+		public      IntPtr  ID      {get; private set;}
+
+		internal    bool    IsValid {
+			get {return ID != IntPtr.Zero;}
 		}
 
-		protected override bool ReleaseHandle ()
+		internal JniMethodID (IntPtr methodID)
 		{
-			if (JniEnvironment.HasCurrent)
-				JniEnvironment.Current.JavaVM.UnTrack (this);
-			return true;
-		}
-
-		public override bool IsInvalid {
-			get {
-				return handle == IntPtr.Zero;
-			}
+			ID  = methodID;
 		}
 
 		public override string ToString ()
 		{
-			return string.Format ("{0}(0x{1})", GetType ().FullName, handle.ToString ("x"));
+			return string.Format ("{0}(0x{1})", GetType ().FullName, ID.ToString ("x"));
 		}
 	}
 }

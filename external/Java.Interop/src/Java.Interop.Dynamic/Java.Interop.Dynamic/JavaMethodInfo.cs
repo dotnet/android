@@ -22,7 +22,7 @@ namespace Java.Interop.Dynamic {
 		string  name;
 		bool    isStatic;
 
-		public JavaMethodInfo (JniPeerMembers members, JniReferenceSafeHandle method, string name, bool isStatic)
+		public JavaMethodInfo (JniPeerMembers members, JniObjectReference method, string name, bool isStatic)
 			: base (members, method)
 		{
 			this.name       = name;
@@ -94,7 +94,7 @@ namespace Java.Interop.Dynamic {
 			case 'L':
 			case '[':
 				var lref = members.InstanceMethods.CallObjectMethod (JniSignature, self, arguments);
-				return ToReturnValue (lref, JniSignature, e + 1);
+				return ToReturnValue (ref lref, JniSignature, e + 1);
 			case 'V':
 				members.InstanceMethods.CallVoidMethod (JniSignature, self, arguments);
 				return null;
@@ -118,7 +118,7 @@ namespace Java.Interop.Dynamic {
 			case 'L':
 			case '[':
 				var lref = members.StaticMethods.CallObjectMethod (JniSignature, arguments);
-				return ToReturnValue (lref, JniSignature, e + 1);
+				return ToReturnValue (ref lref, JniSignature, e + 1);
 			case 'V':
 				members.StaticMethods.CallVoidMethod (JniSignature, arguments);
 				return null;

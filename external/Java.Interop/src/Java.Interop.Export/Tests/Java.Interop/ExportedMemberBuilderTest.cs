@@ -34,13 +34,13 @@ namespace Java.InteropTests
 
 				t.RegisterNativeMethods (methods.ToArray ());
 
-				t.GetStaticMethod ("testStaticMethods", "()V").CallVoidMethod (t.SafeHandle);
+				t.GetStaticMethod ("testStaticMethods", "()V").CallVoidMethod (t.PeerReference);
 				Assert.IsTrue (ExportTest.StaticHelloCalled);
 				Assert.IsTrue (ExportTest.StaticActionInt32StringCalled);
 
 				using (var o = CreateExportTest (t)) {
 					o.RegisterWithVM ();
-					t.GetInstanceMethod ("testMethods", "()V").CallVirtualVoidMethod (o.SafeHandle);
+					t.GetInstanceMethod ("testMethods", "()V").CallVirtualVoidMethod (o.PeerReference);
 					Assert.IsTrue (o.HelloCalled);
 					o.Dispose ();
 				}
@@ -60,7 +60,8 @@ namespace Java.InteropTests
 		static unsafe ExportTest CreateExportTest (JniType type)
 		{
 			var c = type.GetConstructor ("()V");
-			return new ExportTest (type.NewObject (c, null), JniHandleOwnership.Transfer);
+			var p = type.NewObject (c, null);
+			return new ExportTest (ref p, JniHandleOwnership.Transfer);
 		}
 
 		[Test]

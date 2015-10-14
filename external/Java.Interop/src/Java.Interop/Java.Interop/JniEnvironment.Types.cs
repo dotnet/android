@@ -20,25 +20,29 @@ namespace Java.Interop
 			};
 
 
-			public static JniType GetTypeFromInstance (JniReferenceSafeHandle value)
+			public static JniType GetTypeFromInstance (JniObjectReference reference)
 			{
-				var lref = JniEnvironment.Types.GetObjectClass (value);
-				if (!lref.IsInvalid)
-					return new JniType (lref, JniHandleOwnership.Transfer);
+				var lref = JniEnvironment.Types.GetObjectClass (reference);
+				if (lref.IsValid)
+					return new JniType (ref lref, JniHandleOwnership.Transfer);
 				return null;
 			}
 
-			public static string GetJniTypeNameFromInstance (JniReferenceSafeHandle handle)
+			public static string GetJniTypeNameFromInstance (JniObjectReference reference)
 			{
-				using (var c = GetObjectClass (handle)) {
-					return GetJniTypeNameFromClass (c);
+				var lref = GetObjectClass (reference);
+				try {
+					return GetJniTypeNameFromClass (lref);
+				}
+				finally {
+					JniEnvironment.Handles.Dispose (ref lref, JniHandleOwnership.Transfer);
 				}
 			}
 
-			public static string GetJniTypeNameFromClass (JniReferenceSafeHandle handle)
+			public static string GetJniTypeNameFromClass (JniObjectReference reference)
 			{
-				var s = JniEnvironment.Current.Class_getName.CallVirtualObjectMethod (handle);
-				return JavaClassToJniType (Strings.ToString (s, JniHandleOwnership.Transfer));
+				var s = JniEnvironment.Current.Class_getName.CallVirtualObjectMethod (reference);
+				return JavaClassToJniType (Strings.ToString (ref s, JniHandleOwnership.Transfer));
 			}
 
 			static string JavaClassToJniType (string value)

@@ -20,9 +20,9 @@ namespace Java.Interop.Dynamic {
 		{
 		}
 
-		protected static object ToReturnValue (JniLocalReference handle, string signature, int n)
+		protected static object ToReturnValue (ref JniObjectReference handle, string signature, int n)
 		{
-			var instance    = JniEnvironment.Current.JavaVM.GetObject (handle, JniHandleOwnership.Transfer);
+			var instance    = JniEnvironment.Current.JavaVM.GetObject (ref handle, JniHandleOwnership.Transfer);
 			switch (signature [n]) {
 			case 'L':
 				return new DynamicJavaInstance (instance);

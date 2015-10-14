@@ -12,22 +12,22 @@ namespace Java.InteropTests {
 		[Test]
 		public void RefType ()
 		{
-			JniReferenceSafeHandle h;
+			JniObjectReference h;
 			using (var t = new JniType ("java/lang/Object")) {
-				h = t.SafeHandle;
-				Assert.AreEqual (JniReferenceType.Local, h.ReferenceType);
+				h = t.PeerReference;
+				Assert.AreEqual (JniObjectReferenceType.Local, h.Type);
 			}
 		}
 
 		[Test]
 		public void RefType_ThrowsObjectDisposedException ()
 		{
-			JniReferenceSafeHandle h;
+			JniObjectReference h;
 			using (var t = new JniType ("java/lang/Object")) {
-				h = t.SafeHandle;
+				h = t.PeerReference;
 			}
 			Assert.Throws<ObjectDisposedException> (() => {
-					var ignore  = h.ReferenceType;
+					var ignore  = h.Type;
 					GC.KeepAlive (ignore);
 			});
 		}

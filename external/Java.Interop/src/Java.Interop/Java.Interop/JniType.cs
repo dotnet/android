@@ -11,33 +11,40 @@ namespace Java.Interop {
 
 	public sealed class JniType : IDisposable {
 
-		public static unsafe JniType DefineClass (string name, JniReferenceSafeHandle loader, byte[] classFileData)
+		public static unsafe JniType DefineClass (string name, JniObjectReference loader, byte[] classFileData)
 		{
 			fixed (byte* buf = classFileData) {
 				var lref = JniEnvironment.Types.DefineClass (name, loader, (IntPtr) buf, classFileData.Length);
-				return new JniType (lref, JniHandleOwnership.Transfer);
+				return new JniType (ref lref, JniHandleOwnership.Transfer);
 			}
 		}
 
 		bool    registered;
+		JniObjectReference  peer;
 
-		public  JniReferenceSafeHandle  SafeHandle {get; private set;}
-
-		public JniType (string classname)
-			: this (JniEnvironment.Types.FindClass (classname), JniHandleOwnership.Transfer)
-		{
+		public  JniObjectReference  PeerReference   {
+			get {return peer;}
 		}
 
-		public JniType (JniReferenceSafeHandle safeHandle, JniHandleOwnership transfer)
+		public JniType (string classname)
 		{
-			if (safeHandle == null)
-				throw new ArgumentNullException ("safeHandle");
-			if (safeHandle.IsInvalid)
-				throw new ArgumentException ("safeHandle must be valid.", "safeHandle");
+			var peer    = JniEnvironment.Types.FindClass (classname);
+			Initialize (ref peer, JniHandleOwnership.Transfer);
+		}
+
+		public JniType (ref JniObjectReference handle, JniHandleOwnership transfer)
+		{
+			Initialize (ref handle, transfer);
+		}
+
+		void Initialize (ref JniObjectReference handle, JniHandleOwnership transfer)
+		{
+			if (handle.Handle == IntPtr.Zero)
+				throw new ArgumentException ("handle must be valid.", nameof (handle));
 			try {
-				SafeHandle = safeHandle.NewLocalRef ();
+				peer    = handle.NewLocalRef ();
 			} finally {
-				JniEnvironment.Handles.Dispose (safeHandle, transfer);
+				JniEnvironment.Handles.Dispose (ref handle, transfer);
 			}
 		}
 
@@ -45,7 +52,7 @@ namespace Java.Interop {
 			get {
 				AssertValid ();
 
-				return JniEnvironment.Types.GetJniTypeNameFromClass (SafeHandle);
+				return JniEnvironment.Types.GetJniTypeNameFromClass (PeerReference);
 			}
 		}
 
@@ -57,10 +64,10 @@ namespace Java.Interop {
 				return;
 
 			lock (this) {
-				if (SafeHandle.ReferenceType != JniReferenceType.Global) {
-					var o = SafeHandle;
-					SafeHandle = o.NewGlobalRef ();
-					o.Dispose ();
+				if (peer.Type != JniObjectReferenceType.Global) {
+					var o           = peer;
+					peer            = o.NewGlobalRef ();
+					JniEnvironment.Handles.Dispose (ref o, JniHandleOwnership.Transfer);
 				}
 				JniEnvironment.Current.JavaVM.Track (this);
 				registered = true;
@@ -69,13 +76,13 @@ namespace Java.Interop {
 
 		void AssertValid ()
 		{
-			if (SafeHandle == null || SafeHandle.IsInvalid)
+			if (PeerReference.Handle == IntPtr.Zero)
 				throw new ObjectDisposedException (GetType ().FullName);
 		}
 
 		public static JniType GetCachedJniType (ref JniType cachedType, string classname)
 		{
-			if (cachedType != null && !cachedType.SafeHandle.IsInvalid)
+			if (cachedType != null && cachedType.PeerReference.Handle != IntPtr.Zero)
 				return cachedType;
 			var t = new JniType (classname);
 			if (Interlocked.CompareExchange (ref cachedType, t, null) != null)
@@ -86,23 +93,22 @@ namespace Java.Interop {
 
 		public void Dispose ()
 		{
-			if (SafeHandle == null || SafeHandle.IsInvalid)
+			if (!PeerReference.IsValid)
 				return;
 			if (registered)
-				JniEnvironment.Current.JavaVM.UnTrack (SafeHandle);
+				JniEnvironment.Current.JavaVM.UnTrack (PeerReference.Handle);
 			if (methods != null)
 				UnregisterNativeMethods ();
-			SafeHandle.Dispose ();
-			SafeHandle = null;
+			JniEnvironment.Handles.Dispose (ref peer);
 		}
 
 		public JniType GetSuperclass ()
 		{
 			AssertValid ();
 
-			var lref = JniEnvironment.Types.GetSuperclass (SafeHandle);
-			if (!lref.IsInvalid)
-				return new JniType (lref, JniHandleOwnership.Transfer);
+			var lref = JniEnvironment.Types.GetSuperclass (PeerReference);
+			if (lref.IsValid)
+				return new JniType (ref lref, JniHandleOwnership.Transfer);
 			return null;
 		}
 
@@ -112,17 +118,17 @@ namespace Java.Interop {
 
 			if (c == null)
 				throw new ArgumentNullException ("c");
-			if (c.SafeHandle == null || c.SafeHandle.IsInvalid)
+			if (!c.PeerReference.IsValid)
 				throw new ArgumentException ("'c' has an invalid handle.", "c");
 
-			return JniEnvironment.Types.IsAssignableFrom (c.SafeHandle, SafeHandle);
+			return JniEnvironment.Types.IsAssignableFrom (c.PeerReference, PeerReference);
 		}
 
-		public bool IsInstanceOfType (JniReferenceSafeHandle value)
+		public bool IsInstanceOfType (JniObjectReference value)
 		{
 			AssertValid ();
 
-			return JniEnvironment.Types.IsInstanceOf (value, SafeHandle);
+			return JniEnvironment.Types.IsInstanceOf (value, PeerReference);
 		}
 
 #pragma warning disable 0414
@@ -141,7 +147,7 @@ namespace Java.Interop {
 				methods [i].Marshaler = JniMarshalMethod.Wrap  (methods [i].Marshaler);
 			}
 
-			int r = JniEnvironment.Types.RegisterNatives (SafeHandle, methods, checked ((int)methods.Length));
+			int r = JniEnvironment.Types.RegisterNatives (PeerReference, methods, checked ((int)methods.Length));
 			if (r != 0)
 				throw new JavaException ("Unable to register native methods.");
 			// Prevents method delegates from being GC'd so long as this type remains
@@ -153,14 +159,14 @@ namespace Java.Interop {
 		{
 			AssertValid ();
 
-			JniEnvironment.Types.UnregisterNatives (SafeHandle);
+			JniEnvironment.Types.UnregisterNatives (PeerReference);
 		}
 
 		public JniInstanceMethodID GetConstructor (string signature)
 		{
 			AssertValid ();
 
-			return JniEnvironment.Members.GetMethodID (SafeHandle, "<init>", signature);
+			return JniEnvironment.Members.GetMethodID (PeerReference, "<init>", signature);
 		}
 
 		public JniInstanceMethodID GetCachedConstructor (ref JniInstanceMethodID cachedMethod, string signature)
@@ -170,36 +176,37 @@ namespace Java.Interop {
 			return GetCachedInstanceMethod (ref cachedMethod, "<init>", signature);
 		}
 
-		public JniLocalReference AllocObject ()
+		public JniObjectReference AllocObject ()
 		{
 			AssertValid ();
 
-			return JniEnvironment.Activator.AllocObject (SafeHandle);
+			return JniEnvironment.Activator.AllocObject (PeerReference);
 		}
 
-		public unsafe JniLocalReference NewObject (JniInstanceMethodID constructor, JValue* @parameters)
+		public unsafe JniObjectReference NewObject (JniInstanceMethodID constructor, JValue* @parameters)
 		{
 			AssertValid ();
 
-			return JniEnvironment.Activator.NewObject (SafeHandle, constructor, parameters);
+			return JniEnvironment.Activator.NewObject (PeerReference, constructor, parameters);
 		}
 
 		public JniInstanceFieldID GetInstanceField (string name, string signature)
 		{
 			AssertValid ();
 
-			return JniEnvironment.Members.GetFieldID (SafeHandle, name, signature);
+			return JniEnvironment.Members.GetFieldID (PeerReference, name, signature);
 		}
 
 		public JniInstanceFieldID GetCachedInstanceField (ref JniInstanceFieldID cachedField, string name, string signature)
 		{
 			AssertValid ();
 
-			if (cachedField != null && !cachedField.IsInvalid)
+			if (cachedField != null && cachedField.IsValid)
 				return cachedField;
 			var m = GetInstanceField (name, signature);
-			if (Interlocked.CompareExchange (ref cachedField, m, null) != null)
-				m.Dispose ();
+			if (Interlocked.CompareExchange (ref cachedField, m, null) != null) {
+				// No cleanup required; let the GC collect the unused instance
+			}
 			return cachedField;
 		}
 
@@ -207,18 +214,19 @@ namespace Java.Interop {
 		{
 			AssertValid ();
 
-			return JniEnvironment.Members.GetStaticFieldID (SafeHandle, name, signature);
+			return JniEnvironment.Members.GetStaticFieldID (PeerReference, name, signature);
 		}
 
 		public JniStaticFieldID GetCachedStaticField (ref JniStaticFieldID cachedField, string name, string signature)
 		{
 			AssertValid ();
 
-			if (cachedField != null && !cachedField.IsInvalid)
+			if (cachedField != null && cachedField.IsValid)
 				return cachedField;
 			var m = GetStaticField (name, signature);
-			if (Interlocked.CompareExchange (ref cachedField, m, null) != null)
-				m.Dispose ();
+			if (Interlocked.CompareExchange (ref cachedField, m, null) != null) {
+				// No cleanup required; let the GC collect the unused instance
+			}
 			return cachedField;
 		}
 
@@ -226,18 +234,19 @@ namespace Java.Interop {
 		{
 			AssertValid ();
 
-			return JniEnvironment.Members.GetMethodID (SafeHandle, name, signature);
+			return JniEnvironment.Members.GetMethodID (PeerReference, name, signature);
 		}
 
 		public JniInstanceMethodID GetCachedInstanceMethod (ref JniInstanceMethodID cachedMethod, string name, string signature)
 		{
 			AssertValid ();
 
-			if (cachedMethod != null && !cachedMethod.IsInvalid)
+			if (cachedMethod != null && cachedMethod.IsValid)
 				return cachedMethod;
 			var m = GetInstanceMethod (name, signature);
-			if (Interlocked.CompareExchange (ref cachedMethod, m, null) != null)
-				m.Dispose ();
+			if (Interlocked.CompareExchange (ref cachedMethod, m, null) != null) {
+				// No cleanup required; let the GC collect the unused instance
+			}
 			return cachedMethod;
 		}
 
@@ -245,18 +254,19 @@ namespace Java.Interop {
 		{
 			AssertValid ();
 
-			return JniEnvironment.Members.GetStaticMethodID (SafeHandle, name, signature);
+			return JniEnvironment.Members.GetStaticMethodID (PeerReference, name, signature);
 		}
 
 		public JniStaticMethodID GetCachedStaticMethod (ref JniStaticMethodID cachedMethod, string name, string signature)
 		{
 			AssertValid ();
 
-			if (cachedMethod != null && !cachedMethod.IsInvalid)
+			if (cachedMethod != null && cachedMethod.IsValid)
 				return cachedMethod;
 			var m = GetStaticMethod (name, signature);
-			if (Interlocked.CompareExchange (ref cachedMethod, m, null) != null)
-				m.Dispose ();
+			if (Interlocked.CompareExchange (ref cachedMethod, m, null) != null) {
+				// No cleanup required; let the GC collect the unused instance
+			}
 			return cachedMethod;
 		}
 	}

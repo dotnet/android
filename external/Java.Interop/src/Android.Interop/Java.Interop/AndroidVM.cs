@@ -6,21 +6,21 @@ using Android.Runtime;
 namespace Java.Interop {
 
 	// FOR TEST PURPOSES ONLY
-	public  delegate    JniLocalReference   SafeHandleDelegate_CallObjectMethodA    (JniEnvironmentSafeHandle   env,    JniReferenceSafeHandle  instance,   JniInstanceMethodID method, JValue[]    args);
-	public  delegate    void                SafeHandleDelegate_DeleteLocalRef       (JniEnvironmentSafeHandle   env,    IntPtr handle);
+	public  delegate    IntPtr              SafeHandleDelegate_CallObjectMethodA    (IntPtr   env,    IntPtr    instance,   IntPtr method, JValue[]    args);
+	public  delegate    void                SafeHandleDelegate_DeleteLocalRef       (IntPtr   env,    IntPtr    handle);
 
 	class AndroidVMBuilder : JavaVMOptions {
 
 		public AndroidVMBuilder ()
 		{
-			EnvironmentHandle   = new JniEnvironmentSafeHandle (JNIEnv.Handle);
+			EnvironmentPointer   = JNIEnv.Handle;
 			NewObjectRequired   = ((int) Android.OS.Build.VERSION.SdkInt) <= 10;
 			using (var env = new JniEnvironment (JNIEnv.Handle)) {
-				JavaVMSafeHandle vm;
+				IntPtr vm;
 				int r = JniEnvironment.Handles.GetJavaVM (out vm);
 				if (r < 0)
 					throw new InvalidOperationException ("JNIEnv::GetJavaVM() returned: " + r);
-				VMHandle    = vm;
+				InvocationPointer    = vm;
 			}
 			JniHandleManager    = Java.InteropTests.LoggingJniHandleManagerDecorator.GetHandleManager (new JniHandleManager ());
 		}
@@ -44,18 +44,16 @@ namespace Java.Interop {
 			get {return current;}
 		}
 
-		protected override bool TryGC (IJavaObject value, ref JniReferenceSafeHandle handle)
+		protected override bool TryGC (IJavaObject value, ref JniObjectReference handle)
 		{
-			System.Diagnostics.Debug.WriteLine ("# AndroidVM.TryGC");
-			if (handle == null || handle.IsInvalid)
+			if (!handle.IsValid)
 				return true;
 			var wgref = handle.NewWeakGlobalRef ();
-			System.Diagnostics.Debug.WriteLine ("# AndroidVM.TryGC: wgref=0x{0}", wgref.DangerousGetHandle().ToString ("x"));;
-			handle.Dispose ();
+			JniEnvironment.Handles.Dispose (ref handle);
 			Java.Lang.Runtime.GetRuntime ().Gc ();
 			handle = wgref.NewGlobalRef ();
-			System.Diagnostics.Debug.WriteLine ("# AndroidVM.TryGC: handle.IsInvalid={0}", handle.IsInvalid);
-			return handle == null || handle.IsInvalid;
+			JniEnvironment.Handles.Dispose (ref wgref);
+			return handle.IsValid;
 		}
 
 		Dictionary<string, Type> typeMappings   = new Dictionary<string, Type> ();

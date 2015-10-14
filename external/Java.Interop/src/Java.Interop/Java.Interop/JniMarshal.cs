@@ -38,40 +38,40 @@ namespace Java.Interop {
 			return false;
 		}
 
-		internal static T GetValue<T> (JniReferenceSafeHandle handle, JniHandleOwnership transfer)
+		internal static T GetValue<T> (ref JniObjectReference reference, JniHandleOwnership transfer)
 		{
-			if (handle == null || handle.IsInvalid)
+			if (!reference.IsValid)
 				return default (T);
 
 			var jvm     = JniEnvironment.Current.JavaVM;
-			var target  = jvm.PeekObject (handle);
+			var target  = jvm.PeekObject (reference);
 			var proxy   = target as JavaProxyObject;
 			if (proxy != null) {
-				JniEnvironment.Handles.Dispose (handle, transfer);
+				JniEnvironment.Handles.Dispose (ref reference, transfer);
 				return (T) proxy.Value;
 			}
 
 			if (target is T) {
-				JniEnvironment.Handles.Dispose (handle, transfer);
+				JniEnvironment.Handles.Dispose (ref reference, transfer);
 				return (T) target;
 			}
 
 			var info = jvm.GetJniMarshalInfoForType (typeof (T));
 			if (info.GetValueFromJni != null) {
-				return (T) info.GetValueFromJni (handle, transfer, typeof (T));
+				return (T) info.GetValueFromJni (ref reference, transfer, typeof (T));
 			}
 
-			var targetType = jvm.GetTypeForJniTypeRefererence (handle.GetJniTypeName ());
+			var targetType = jvm.GetTypeForJniTypeRefererence (JniEnvironment.Types.GetJniTypeNameFromInstance (reference));
 			if (targetType != null &&
 					typeof (T).IsAssignableFrom (targetType) &&
 					(info = jvm.GetJniMarshalInfoForType (targetType)).GetValueFromJni != null) {
-				return (T) info.GetValueFromJni (handle, transfer, targetType);
+				return (T) info.GetValueFromJni (ref reference, transfer, targetType);
 			}
 
-			return (T) jvm.GetObject (handle, transfer, typeof (T));
+			return (T) jvm.GetObject (ref reference, transfer, typeof (T));
 		}
 
-		public  static JniLocalReference CreateLocalRef<T> (T value)
+		public  static JniObjectReference CreateLocalRef<T> (T value)
 		{
 			var jvm     = JniEnvironment.Current.JavaVM;
 

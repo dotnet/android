@@ -222,9 +222,9 @@ namespace Java.Interop {
 	}
 	public sealed class JniBooleanArrayElements : JniArrayElements {
 
-		JniReferenceSafeHandle arrayHandle;
+		JniObjectReference      arrayHandle;
 
-		internal JniBooleanArrayElements (JniReferenceSafeHandle arrayHandle, IntPtr elements)
+		internal JniBooleanArrayElements (JniObjectReference arrayHandle, IntPtr elements)
 			: base (elements)
 		{
 			this.arrayHandle = arrayHandle;
@@ -243,14 +243,17 @@ namespace Java.Interop {
 	[JniTypeInfo ("Z", ArrayRank=1, TypeIsKeyword=true)]
 	public sealed partial class JavaBooleanArray : JavaPrimitiveArray<Boolean> {
 
-		public JavaBooleanArray (JniReferenceSafeHandle handle, JniHandleOwnership transfer)
-			: base (handle, transfer)
+		public JavaBooleanArray (ref JniObjectReference handle, JniHandleOwnership transfer)
+			: base (ref handle, transfer)
 		{
 		}
 
-		public JavaBooleanArray (int length)
-			: base (JniEnvironment.Arrays.NewBooleanArray (CheckLength (length)), JniHandleOwnership.Transfer)
+		public unsafe JavaBooleanArray (int length)
+			: base (ref *InvalidJniObjectReference, JniHandleOwnership.Invalid)
 		{
+		    var peer    = JniEnvironment.Arrays.NewBooleanArray (CheckLength (length));
+		    using (SetPeerReference (ref peer, JniHandleOwnership.Transfer)) {
+		    }
 		}
 
 		public JavaBooleanArray (System.Collections.Generic.IList<Boolean> value)
@@ -271,8 +274,8 @@ namespace Java.Interop {
 
 		public new JniBooleanArrayElements GetElements ()
 		{
-			IntPtr elements = JniEnvironment.Arrays.GetBooleanArrayElements (SafeHandle, IntPtr.Zero);
-			return elements == IntPtr.Zero ? null : new JniBooleanArrayElements (SafeHandle, elements);
+			IntPtr elements = JniEnvironment.Arrays.GetBooleanArrayElements (PeerReference, IntPtr.Zero);
+			return elements == IntPtr.Zero ? null : new JniBooleanArrayElements (PeerReference, elements);
 		}
 
 		public override unsafe int IndexOf (Boolean item)
@@ -312,7 +315,7 @@ namespace Java.Interop {
 				return;
 
 			fixed (Boolean* b = destinationArray)
-				JniEnvironment.Arrays.GetBooleanArrayRegion (SafeHandle, sourceIndex, length, (IntPtr) (b+destinationIndex));
+				JniEnvironment.Arrays.GetBooleanArrayRegion (PeerReference, sourceIndex, length, (IntPtr) (b+destinationIndex));
 		}
 
 		public override unsafe void CopyFrom (Boolean[] sourceArray, int sourceIndex, int destinationIndex, int length)
@@ -324,7 +327,7 @@ namespace Java.Interop {
 				return;
 
 			fixed (Boolean* b = sourceArray)
-				JniEnvironment.Arrays.SetBooleanArrayRegion (SafeHandle, destinationIndex, length, (IntPtr) (b+sourceIndex));
+				JniEnvironment.Arrays.SetBooleanArrayRegion (PeerReference, destinationIndex, length, (IntPtr) (b+sourceIndex));
 		}
 
 		internal override bool TargetTypeIsCurrentType (Type targetType)
@@ -334,20 +337,20 @@ namespace Java.Interop {
 				typeof (JavaBooleanArray) == targetType;
 		}
 
-		internal static JniLocalReference CreateLocalRef (object value)
+		internal static JniObjectReference CreateLocalRef (object value)
 		{
 		    return JavaArray<Boolean>.CreateLocalRef<JavaBooleanArray> (
 		            value,
 		            list => new JavaBooleanArray (list));
 		}
 
-		internal static IList<Boolean> GetValueFromJni (JniReferenceSafeHandle handle, JniHandleOwnership transfer, Type targetType)
+		internal static IList<Boolean> GetValueFromJni (ref JniObjectReference reference, JniHandleOwnership transfer, Type targetType)
 		{
 		    return JavaArray<Boolean>.GetValueFromJni (
-		            handle,
+		            ref reference,
 		            transfer,
 		            targetType,
-		            (h, t) => new JavaBooleanArray (h, t));
+		            (ref JniObjectReference h, JniHandleOwnership t) => new JavaBooleanArray (ref h, t));
 		}
 
 		internal static IJavaObject CreateMarshalCollection (object value)
@@ -365,9 +368,9 @@ namespace Java.Interop {
 
 	public sealed class JniSByteArrayElements : JniArrayElements {
 
-		JniReferenceSafeHandle arrayHandle;
+		JniObjectReference      arrayHandle;
 
-		internal JniSByteArrayElements (JniReferenceSafeHandle arrayHandle, IntPtr elements)
+		internal JniSByteArrayElements (JniObjectReference arrayHandle, IntPtr elements)
 			: base (elements)
 		{
 			this.arrayHandle = arrayHandle;
@@ -386,14 +389,17 @@ namespace Java.Interop {
 	[JniTypeInfo ("B", ArrayRank=1, TypeIsKeyword=true)]
 	public sealed partial class JavaSByteArray : JavaPrimitiveArray<SByte> {
 
-		public JavaSByteArray (JniReferenceSafeHandle handle, JniHandleOwnership transfer)
-			: base (handle, transfer)
+		public JavaSByteArray (ref JniObjectReference handle, JniHandleOwnership transfer)
+			: base (ref handle, transfer)
 		{
 		}
 
-		public JavaSByteArray (int length)
-			: base (JniEnvironment.Arrays.NewByteArray (CheckLength (length)), JniHandleOwnership.Transfer)
+		public unsafe JavaSByteArray (int length)
+			: base (ref *InvalidJniObjectReference, JniHandleOwnership.Invalid)
 		{
+		    var peer    = JniEnvironment.Arrays.NewByteArray (CheckLength (length));
+		    using (SetPeerReference (ref peer, JniHandleOwnership.Transfer)) {
+		    }
 		}
 
 		public JavaSByteArray (System.Collections.Generic.IList<SByte> value)
@@ -414,8 +420,8 @@ namespace Java.Interop {
 
 		public new JniSByteArrayElements GetElements ()
 		{
-			IntPtr elements = JniEnvironment.Arrays.GetByteArrayElements (SafeHandle, IntPtr.Zero);
-			return elements == IntPtr.Zero ? null : new JniSByteArrayElements (SafeHandle, elements);
+			IntPtr elements = JniEnvironment.Arrays.GetByteArrayElements (PeerReference, IntPtr.Zero);
+			return elements == IntPtr.Zero ? null : new JniSByteArrayElements (PeerReference, elements);
 		}
 
 		public override unsafe int IndexOf (SByte item)
@@ -455,7 +461,7 @@ namespace Java.Interop {
 				return;
 
 			fixed (SByte* b = destinationArray)
-				JniEnvironment.Arrays.GetByteArrayRegion (SafeHandle, sourceIndex, length, (IntPtr) (b+destinationIndex));
+				JniEnvironment.Arrays.GetByteArrayRegion (PeerReference, sourceIndex, length, (IntPtr) (b+destinationIndex));
 		}
 
 		public override unsafe void CopyFrom (SByte[] sourceArray, int sourceIndex, int destinationIndex, int length)
@@ -467,7 +473,7 @@ namespace Java.Interop {
 				return;
 
 			fixed (SByte* b = sourceArray)
-				JniEnvironment.Arrays.SetByteArrayRegion (SafeHandle, destinationIndex, length, (IntPtr) (b+sourceIndex));
+				JniEnvironment.Arrays.SetByteArrayRegion (PeerReference, destinationIndex, length, (IntPtr) (b+sourceIndex));
 		}
 
 		internal override bool TargetTypeIsCurrentType (Type targetType)
@@ -477,20 +483,20 @@ namespace Java.Interop {
 				typeof (JavaSByteArray) == targetType;
 		}
 
-		internal static JniLocalReference CreateLocalRef (object value)
+		internal static JniObjectReference CreateLocalRef (object value)
 		{
 		    return JavaArray<SByte>.CreateLocalRef<JavaSByteArray> (
 		            value,
 		            list => new JavaSByteArray (list));
 		}
 
-		internal static IList<SByte> GetValueFromJni (JniReferenceSafeHandle handle, JniHandleOwnership transfer, Type targetType)
+		internal static IList<SByte> GetValueFromJni (ref JniObjectReference reference, JniHandleOwnership transfer, Type targetType)
 		{
 		    return JavaArray<SByte>.GetValueFromJni (
-		            handle,
+		            ref reference,
 		            transfer,
 		            targetType,
-		            (h, t) => new JavaSByteArray (h, t));
+		            (ref JniObjectReference h, JniHandleOwnership t) => new JavaSByteArray (ref h, t));
 		}
 
 		internal static IJavaObject CreateMarshalCollection (object value)
@@ -508,9 +514,9 @@ namespace Java.Interop {
 
 	public sealed class JniCharArrayElements : JniArrayElements {
 
-		JniReferenceSafeHandle arrayHandle;
+		JniObjectReference      arrayHandle;
 
-		internal JniCharArrayElements (JniReferenceSafeHandle arrayHandle, IntPtr elements)
+		internal JniCharArrayElements (JniObjectReference arrayHandle, IntPtr elements)
 			: base (elements)
 		{
 			this.arrayHandle = arrayHandle;
@@ -529,14 +535,17 @@ namespace Java.Interop {
 	[JniTypeInfo ("C", ArrayRank=1, TypeIsKeyword=true)]
 	public sealed partial class JavaCharArray : JavaPrimitiveArray<Char> {
 
-		public JavaCharArray (JniReferenceSafeHandle handle, JniHandleOwnership transfer)
-			: base (handle, transfer)
+		public JavaCharArray (ref JniObjectReference handle, JniHandleOwnership transfer)
+			: base (ref handle, transfer)
 		{
 		}
 
-		public JavaCharArray (int length)
-			: base (JniEnvironment.Arrays.NewCharArray (CheckLength (length)), JniHandleOwnership.Transfer)
+		public unsafe JavaCharArray (int length)
+			: base (ref *InvalidJniObjectReference, JniHandleOwnership.Invalid)
 		{
+		    var peer    = JniEnvironment.Arrays.NewCharArray (CheckLength (length));
+		    using (SetPeerReference (ref peer, JniHandleOwnership.Transfer)) {
+		    }
 		}
 
 		public JavaCharArray (System.Collections.Generic.IList<Char> value)
@@ -557,8 +566,8 @@ namespace Java.Interop {
 
 		public new JniCharArrayElements GetElements ()
 		{
-			IntPtr elements = JniEnvironment.Arrays.GetCharArrayElements (SafeHandle, IntPtr.Zero);
-			return elements == IntPtr.Zero ? null : new JniCharArrayElements (SafeHandle, elements);
+			IntPtr elements = JniEnvironment.Arrays.GetCharArrayElements (PeerReference, IntPtr.Zero);
+			return elements == IntPtr.Zero ? null : new JniCharArrayElements (PeerReference, elements);
 		}
 
 		public override unsafe int IndexOf (Char item)
@@ -598,7 +607,7 @@ namespace Java.Interop {
 				return;
 
 			fixed (Char* b = destinationArray)
-				JniEnvironment.Arrays.GetCharArrayRegion (SafeHandle, sourceIndex, length, (IntPtr) (b+destinationIndex));
+				JniEnvironment.Arrays.GetCharArrayRegion (PeerReference, sourceIndex, length, (IntPtr) (b+destinationIndex));
 		}
 
 		public override unsafe void CopyFrom (Char[] sourceArray, int sourceIndex, int destinationIndex, int length)
@@ -610,7 +619,7 @@ namespace Java.Interop {
 				return;
 
 			fixed (Char* b = sourceArray)
-				JniEnvironment.Arrays.SetCharArrayRegion (SafeHandle, destinationIndex, length, (IntPtr) (b+sourceIndex));
+				JniEnvironment.Arrays.SetCharArrayRegion (PeerReference, destinationIndex, length, (IntPtr) (b+sourceIndex));
 		}
 
 		internal override bool TargetTypeIsCurrentType (Type targetType)
@@ -620,20 +629,20 @@ namespace Java.Interop {
 				typeof (JavaCharArray) == targetType;
 		}
 
-		internal static JniLocalReference CreateLocalRef (object value)
+		internal static JniObjectReference CreateLocalRef (object value)
 		{
 		    return JavaArray<Char>.CreateLocalRef<JavaCharArray> (
 		            value,
 		            list => new JavaCharArray (list));
 		}
 
-		internal static IList<Char> GetValueFromJni (JniReferenceSafeHandle handle, JniHandleOwnership transfer, Type targetType)
+		internal static IList<Char> GetValueFromJni (ref JniObjectReference reference, JniHandleOwnership transfer, Type targetType)
 		{
 		    return JavaArray<Char>.GetValueFromJni (
-		            handle,
+		            ref reference,
 		            transfer,
 		            targetType,
-		            (h, t) => new JavaCharArray (h, t));
+		            (ref JniObjectReference h, JniHandleOwnership t) => new JavaCharArray (ref h, t));
 		}
 
 		internal static IJavaObject CreateMarshalCollection (object value)
@@ -651,9 +660,9 @@ namespace Java.Interop {
 
 	public sealed class JniInt16ArrayElements : JniArrayElements {
 
-		JniReferenceSafeHandle arrayHandle;
+		JniObjectReference      arrayHandle;
 
-		internal JniInt16ArrayElements (JniReferenceSafeHandle arrayHandle, IntPtr elements)
+		internal JniInt16ArrayElements (JniObjectReference arrayHandle, IntPtr elements)
 			: base (elements)
 		{
 			this.arrayHandle = arrayHandle;
@@ -672,14 +681,17 @@ namespace Java.Interop {
 	[JniTypeInfo ("S", ArrayRank=1, TypeIsKeyword=true)]
 	public sealed partial class JavaInt16Array : JavaPrimitiveArray<Int16> {
 
-		public JavaInt16Array (JniReferenceSafeHandle handle, JniHandleOwnership transfer)
-			: base (handle, transfer)
+		public JavaInt16Array (ref JniObjectReference handle, JniHandleOwnership transfer)
+			: base (ref handle, transfer)
 		{
 		}
 
-		public JavaInt16Array (int length)
-			: base (JniEnvironment.Arrays.NewShortArray (CheckLength (length)), JniHandleOwnership.Transfer)
+		public unsafe JavaInt16Array (int length)
+			: base (ref *InvalidJniObjectReference, JniHandleOwnership.Invalid)
 		{
+		    var peer    = JniEnvironment.Arrays.NewShortArray (CheckLength (length));
+		    using (SetPeerReference (ref peer, JniHandleOwnership.Transfer)) {
+		    }
 		}
 
 		public JavaInt16Array (System.Collections.Generic.IList<Int16> value)
@@ -700,8 +712,8 @@ namespace Java.Interop {
 
 		public new JniInt16ArrayElements GetElements ()
 		{
-			IntPtr elements = JniEnvironment.Arrays.GetShortArrayElements (SafeHandle, IntPtr.Zero);
-			return elements == IntPtr.Zero ? null : new JniInt16ArrayElements (SafeHandle, elements);
+			IntPtr elements = JniEnvironment.Arrays.GetShortArrayElements (PeerReference, IntPtr.Zero);
+			return elements == IntPtr.Zero ? null : new JniInt16ArrayElements (PeerReference, elements);
 		}
 
 		public override unsafe int IndexOf (Int16 item)
@@ -741,7 +753,7 @@ namespace Java.Interop {
 				return;
 
 			fixed (Int16* b = destinationArray)
-				JniEnvironment.Arrays.GetShortArrayRegion (SafeHandle, sourceIndex, length, (IntPtr) (b+destinationIndex));
+				JniEnvironment.Arrays.GetShortArrayRegion (PeerReference, sourceIndex, length, (IntPtr) (b+destinationIndex));
 		}
 
 		public override unsafe void CopyFrom (Int16[] sourceArray, int sourceIndex, int destinationIndex, int length)
@@ -753,7 +765,7 @@ namespace Java.Interop {
 				return;
 
 			fixed (Int16* b = sourceArray)
-				JniEnvironment.Arrays.SetShortArrayRegion (SafeHandle, destinationIndex, length, (IntPtr) (b+sourceIndex));
+				JniEnvironment.Arrays.SetShortArrayRegion (PeerReference, destinationIndex, length, (IntPtr) (b+sourceIndex));
 		}
 
 		internal override bool TargetTypeIsCurrentType (Type targetType)
@@ -763,20 +775,20 @@ namespace Java.Interop {
 				typeof (JavaInt16Array) == targetType;
 		}
 
-		internal static JniLocalReference CreateLocalRef (object value)
+		internal static JniObjectReference CreateLocalRef (object value)
 		{
 		    return JavaArray<Int16>.CreateLocalRef<JavaInt16Array> (
 		            value,
 		            list => new JavaInt16Array (list));
 		}
 
-		internal static IList<Int16> GetValueFromJni (JniReferenceSafeHandle handle, JniHandleOwnership transfer, Type targetType)
+		internal static IList<Int16> GetValueFromJni (ref JniObjectReference reference, JniHandleOwnership transfer, Type targetType)
 		{
 		    return JavaArray<Int16>.GetValueFromJni (
-		            handle,
+		            ref reference,
 		            transfer,
 		            targetType,
-		            (h, t) => new JavaInt16Array (h, t));
+		            (ref JniObjectReference h, JniHandleOwnership t) => new JavaInt16Array (ref h, t));
 		}
 
 		internal static IJavaObject CreateMarshalCollection (object value)
@@ -794,9 +806,9 @@ namespace Java.Interop {
 
 	public sealed class JniInt32ArrayElements : JniArrayElements {
 
-		JniReferenceSafeHandle arrayHandle;
+		JniObjectReference      arrayHandle;
 
-		internal JniInt32ArrayElements (JniReferenceSafeHandle arrayHandle, IntPtr elements)
+		internal JniInt32ArrayElements (JniObjectReference arrayHandle, IntPtr elements)
 			: base (elements)
 		{
 			this.arrayHandle = arrayHandle;
@@ -815,14 +827,17 @@ namespace Java.Interop {
 	[JniTypeInfo ("I", ArrayRank=1, TypeIsKeyword=true)]
 	public sealed partial class JavaInt32Array : JavaPrimitiveArray<Int32> {
 
-		public JavaInt32Array (JniReferenceSafeHandle handle, JniHandleOwnership transfer)
-			: base (handle, transfer)
+		public JavaInt32Array (ref JniObjectReference handle, JniHandleOwnership transfer)
+			: base (ref handle, transfer)
 		{
 		}
 
-		public JavaInt32Array (int length)
-			: base (JniEnvironment.Arrays.NewIntArray (CheckLength (length)), JniHandleOwnership.Transfer)
+		public unsafe JavaInt32Array (int length)
+			: base (ref *InvalidJniObjectReference, JniHandleOwnership.Invalid)
 		{
+		    var peer    = JniEnvironment.Arrays.NewIntArray (CheckLength (length));
+		    using (SetPeerReference (ref peer, JniHandleOwnership.Transfer)) {
+		    }
 		}
 
 		public JavaInt32Array (System.Collections.Generic.IList<Int32> value)
@@ -843,8 +858,8 @@ namespace Java.Interop {
 
 		public new JniInt32ArrayElements GetElements ()
 		{
-			IntPtr elements = JniEnvironment.Arrays.GetIntArrayElements (SafeHandle, IntPtr.Zero);
-			return elements == IntPtr.Zero ? null : new JniInt32ArrayElements (SafeHandle, elements);
+			IntPtr elements = JniEnvironment.Arrays.GetIntArrayElements (PeerReference, IntPtr.Zero);
+			return elements == IntPtr.Zero ? null : new JniInt32ArrayElements (PeerReference, elements);
 		}
 
 		public override unsafe int IndexOf (Int32 item)
@@ -884,7 +899,7 @@ namespace Java.Interop {
 				return;
 
 			fixed (Int32* b = destinationArray)
-				JniEnvironment.Arrays.GetIntArrayRegion (SafeHandle, sourceIndex, length, (IntPtr) (b+destinationIndex));
+				JniEnvironment.Arrays.GetIntArrayRegion (PeerReference, sourceIndex, length, (IntPtr) (b+destinationIndex));
 		}
 
 		public override unsafe void CopyFrom (Int32[] sourceArray, int sourceIndex, int destinationIndex, int length)
@@ -896,7 +911,7 @@ namespace Java.Interop {
 				return;
 
 			fixed (Int32* b = sourceArray)
-				JniEnvironment.Arrays.SetIntArrayRegion (SafeHandle, destinationIndex, length, (IntPtr) (b+sourceIndex));
+				JniEnvironment.Arrays.SetIntArrayRegion (PeerReference, destinationIndex, length, (IntPtr) (b+sourceIndex));
 		}
 
 		internal override bool TargetTypeIsCurrentType (Type targetType)
@@ -906,20 +921,20 @@ namespace Java.Interop {
 				typeof (JavaInt32Array) == targetType;
 		}
 
-		internal static JniLocalReference CreateLocalRef (object value)
+		internal static JniObjectReference CreateLocalRef (object value)
 		{
 		    return JavaArray<Int32>.CreateLocalRef<JavaInt32Array> (
 		            value,
 		            list => new JavaInt32Array (list));
 		}
 
-		internal static IList<Int32> GetValueFromJni (JniReferenceSafeHandle handle, JniHandleOwnership transfer, Type targetType)
+		internal static IList<Int32> GetValueFromJni (ref JniObjectReference reference, JniHandleOwnership transfer, Type targetType)
 		{
 		    return JavaArray<Int32>.GetValueFromJni (
-		            handle,
+		            ref reference,
 		            transfer,
 		            targetType,
-		            (h, t) => new JavaInt32Array (h, t));
+		            (ref JniObjectReference h, JniHandleOwnership t) => new JavaInt32Array (ref h, t));
 		}
 
 		internal static IJavaObject CreateMarshalCollection (object value)
@@ -937,9 +952,9 @@ namespace Java.Interop {
 
 	public sealed class JniInt64ArrayElements : JniArrayElements {
 
-		JniReferenceSafeHandle arrayHandle;
+		JniObjectReference      arrayHandle;
 
-		internal JniInt64ArrayElements (JniReferenceSafeHandle arrayHandle, IntPtr elements)
+		internal JniInt64ArrayElements (JniObjectReference arrayHandle, IntPtr elements)
 			: base (elements)
 		{
 			this.arrayHandle = arrayHandle;
@@ -958,14 +973,17 @@ namespace Java.Interop {
 	[JniTypeInfo ("J", ArrayRank=1, TypeIsKeyword=true)]
 	public sealed partial class JavaInt64Array : JavaPrimitiveArray<Int64> {
 
-		public JavaInt64Array (JniReferenceSafeHandle handle, JniHandleOwnership transfer)
-			: base (handle, transfer)
+		public JavaInt64Array (ref JniObjectReference handle, JniHandleOwnership transfer)
+			: base (ref handle, transfer)
 		{
 		}
 
-		public JavaInt64Array (int length)
-			: base (JniEnvironment.Arrays.NewLongArray (CheckLength (length)), JniHandleOwnership.Transfer)
+		public unsafe JavaInt64Array (int length)
+			: base (ref *InvalidJniObjectReference, JniHandleOwnership.Invalid)
 		{
+		    var peer    = JniEnvironment.Arrays.NewLongArray (CheckLength (length));
+		    using (SetPeerReference (ref peer, JniHandleOwnership.Transfer)) {
+		    }
 		}
 
 		public JavaInt64Array (System.Collections.Generic.IList<Int64> value)
@@ -986,8 +1004,8 @@ namespace Java.Interop {
 
 		public new JniInt64ArrayElements GetElements ()
 		{
-			IntPtr elements = JniEnvironment.Arrays.GetLongArrayElements (SafeHandle, IntPtr.Zero);
-			return elements == IntPtr.Zero ? null : new JniInt64ArrayElements (SafeHandle, elements);
+			IntPtr elements = JniEnvironment.Arrays.GetLongArrayElements (PeerReference, IntPtr.Zero);
+			return elements == IntPtr.Zero ? null : new JniInt64ArrayElements (PeerReference, elements);
 		}
 
 		public override unsafe int IndexOf (Int64 item)
@@ -1027,7 +1045,7 @@ namespace Java.Interop {
 				return;
 
 			fixed (Int64* b = destinationArray)
-				JniEnvironment.Arrays.GetLongArrayRegion (SafeHandle, sourceIndex, length, (IntPtr) (b+destinationIndex));
+				JniEnvironment.Arrays.GetLongArrayRegion (PeerReference, sourceIndex, length, (IntPtr) (b+destinationIndex));
 		}
 
 		public override unsafe void CopyFrom (Int64[] sourceArray, int sourceIndex, int destinationIndex, int length)
@@ -1039,7 +1057,7 @@ namespace Java.Interop {
 				return;
 
 			fixed (Int64* b = sourceArray)
-				JniEnvironment.Arrays.SetLongArrayRegion (SafeHandle, destinationIndex, length, (IntPtr) (b+sourceIndex));
+				JniEnvironment.Arrays.SetLongArrayRegion (PeerReference, destinationIndex, length, (IntPtr) (b+sourceIndex));
 		}
 
 		internal override bool TargetTypeIsCurrentType (Type targetType)
@@ -1049,20 +1067,20 @@ namespace Java.Interop {
 				typeof (JavaInt64Array) == targetType;
 		}
 
-		internal static JniLocalReference CreateLocalRef (object value)
+		internal static JniObjectReference CreateLocalRef (object value)
 		{
 		    return JavaArray<Int64>.CreateLocalRef<JavaInt64Array> (
 		            value,
 		            list => new JavaInt64Array (list));
 		}
 
-		internal static IList<Int64> GetValueFromJni (JniReferenceSafeHandle handle, JniHandleOwnership transfer, Type targetType)
+		internal static IList<Int64> GetValueFromJni (ref JniObjectReference reference, JniHandleOwnership transfer, Type targetType)
 		{
 		    return JavaArray<Int64>.GetValueFromJni (
-		            handle,
+		            ref reference,
 		            transfer,
 		            targetType,
-		            (h, t) => new JavaInt64Array (h, t));
+		            (ref JniObjectReference h, JniHandleOwnership t) => new JavaInt64Array (ref h, t));
 		}
 
 		internal static IJavaObject CreateMarshalCollection (object value)
@@ -1080,9 +1098,9 @@ namespace Java.Interop {
 
 	public sealed class JniSingleArrayElements : JniArrayElements {
 
-		JniReferenceSafeHandle arrayHandle;
+		JniObjectReference      arrayHandle;
 
-		internal JniSingleArrayElements (JniReferenceSafeHandle arrayHandle, IntPtr elements)
+		internal JniSingleArrayElements (JniObjectReference arrayHandle, IntPtr elements)
 			: base (elements)
 		{
 			this.arrayHandle = arrayHandle;
@@ -1101,14 +1119,17 @@ namespace Java.Interop {
 	[JniTypeInfo ("F", ArrayRank=1, TypeIsKeyword=true)]
 	public sealed partial class JavaSingleArray : JavaPrimitiveArray<Single> {
 
-		public JavaSingleArray (JniReferenceSafeHandle handle, JniHandleOwnership transfer)
-			: base (handle, transfer)
+		public JavaSingleArray (ref JniObjectReference handle, JniHandleOwnership transfer)
+			: base (ref handle, transfer)
 		{
 		}
 
-		public JavaSingleArray (int length)
-			: base (JniEnvironment.Arrays.NewFloatArray (CheckLength (length)), JniHandleOwnership.Transfer)
+		public unsafe JavaSingleArray (int length)
+			: base (ref *InvalidJniObjectReference, JniHandleOwnership.Invalid)
 		{
+		    var peer    = JniEnvironment.Arrays.NewFloatArray (CheckLength (length));
+		    using (SetPeerReference (ref peer, JniHandleOwnership.Transfer)) {
+		    }
 		}
 
 		public JavaSingleArray (System.Collections.Generic.IList<Single> value)
@@ -1129,8 +1150,8 @@ namespace Java.Interop {
 
 		public new JniSingleArrayElements GetElements ()
 		{
-			IntPtr elements = JniEnvironment.Arrays.GetFloatArrayElements (SafeHandle, IntPtr.Zero);
-			return elements == IntPtr.Zero ? null : new JniSingleArrayElements (SafeHandle, elements);
+			IntPtr elements = JniEnvironment.Arrays.GetFloatArrayElements (PeerReference, IntPtr.Zero);
+			return elements == IntPtr.Zero ? null : new JniSingleArrayElements (PeerReference, elements);
 		}
 
 		public override unsafe int IndexOf (Single item)
@@ -1170,7 +1191,7 @@ namespace Java.Interop {
 				return;
 
 			fixed (Single* b = destinationArray)
-				JniEnvironment.Arrays.GetFloatArrayRegion (SafeHandle, sourceIndex, length, (IntPtr) (b+destinationIndex));
+				JniEnvironment.Arrays.GetFloatArrayRegion (PeerReference, sourceIndex, length, (IntPtr) (b+destinationIndex));
 		}
 
 		public override unsafe void CopyFrom (Single[] sourceArray, int sourceIndex, int destinationIndex, int length)
@@ -1182,7 +1203,7 @@ namespace Java.Interop {
 				return;
 
 			fixed (Single* b = sourceArray)
-				JniEnvironment.Arrays.SetFloatArrayRegion (SafeHandle, destinationIndex, length, (IntPtr) (b+sourceIndex));
+				JniEnvironment.Arrays.SetFloatArrayRegion (PeerReference, destinationIndex, length, (IntPtr) (b+sourceIndex));
 		}
 
 		internal override bool TargetTypeIsCurrentType (Type targetType)
@@ -1192,20 +1213,20 @@ namespace Java.Interop {
 				typeof (JavaSingleArray) == targetType;
 		}
 
-		internal static JniLocalReference CreateLocalRef (object value)
+		internal static JniObjectReference CreateLocalRef (object value)
 		{
 		    return JavaArray<Single>.CreateLocalRef<JavaSingleArray> (
 		            value,
 		            list => new JavaSingleArray (list));
 		}
 
-		internal static IList<Single> GetValueFromJni (JniReferenceSafeHandle handle, JniHandleOwnership transfer, Type targetType)
+		internal static IList<Single> GetValueFromJni (ref JniObjectReference reference, JniHandleOwnership transfer, Type targetType)
 		{
 		    return JavaArray<Single>.GetValueFromJni (
-		            handle,
+		            ref reference,
 		            transfer,
 		            targetType,
-		            (h, t) => new JavaSingleArray (h, t));
+		            (ref JniObjectReference h, JniHandleOwnership t) => new JavaSingleArray (ref h, t));
 		}
 
 		internal static IJavaObject CreateMarshalCollection (object value)
@@ -1223,9 +1244,9 @@ namespace Java.Interop {
 
 	public sealed class JniDoubleArrayElements : JniArrayElements {
 
-		JniReferenceSafeHandle arrayHandle;
+		JniObjectReference      arrayHandle;
 
-		internal JniDoubleArrayElements (JniReferenceSafeHandle arrayHandle, IntPtr elements)
+		internal JniDoubleArrayElements (JniObjectReference arrayHandle, IntPtr elements)
 			: base (elements)
 		{
 			this.arrayHandle = arrayHandle;
@@ -1244,14 +1265,17 @@ namespace Java.Interop {
 	[JniTypeInfo ("D", ArrayRank=1, TypeIsKeyword=true)]
 	public sealed partial class JavaDoubleArray : JavaPrimitiveArray<Double> {
 
-		public JavaDoubleArray (JniReferenceSafeHandle handle, JniHandleOwnership transfer)
-			: base (handle, transfer)
+		public JavaDoubleArray (ref JniObjectReference handle, JniHandleOwnership transfer)
+			: base (ref handle, transfer)
 		{
 		}
 
-		public JavaDoubleArray (int length)
-			: base (JniEnvironment.Arrays.NewDoubleArray (CheckLength (length)), JniHandleOwnership.Transfer)
+		public unsafe JavaDoubleArray (int length)
+			: base (ref *InvalidJniObjectReference, JniHandleOwnership.Invalid)
 		{
+		    var peer    = JniEnvironment.Arrays.NewDoubleArray (CheckLength (length));
+		    using (SetPeerReference (ref peer, JniHandleOwnership.Transfer)) {
+		    }
 		}
 
 		public JavaDoubleArray (System.Collections.Generic.IList<Double> value)
@@ -1272,8 +1296,8 @@ namespace Java.Interop {
 
 		public new JniDoubleArrayElements GetElements ()
 		{
-			IntPtr elements = JniEnvironment.Arrays.GetDoubleArrayElements (SafeHandle, IntPtr.Zero);
-			return elements == IntPtr.Zero ? null : new JniDoubleArrayElements (SafeHandle, elements);
+			IntPtr elements = JniEnvironment.Arrays.GetDoubleArrayElements (PeerReference, IntPtr.Zero);
+			return elements == IntPtr.Zero ? null : new JniDoubleArrayElements (PeerReference, elements);
 		}
 
 		public override unsafe int IndexOf (Double item)
@@ -1313,7 +1337,7 @@ namespace Java.Interop {
 				return;
 
 			fixed (Double* b = destinationArray)
-				JniEnvironment.Arrays.GetDoubleArrayRegion (SafeHandle, sourceIndex, length, (IntPtr) (b+destinationIndex));
+				JniEnvironment.Arrays.GetDoubleArrayRegion (PeerReference, sourceIndex, length, (IntPtr) (b+destinationIndex));
 		}
 
 		public override unsafe void CopyFrom (Double[] sourceArray, int sourceIndex, int destinationIndex, int length)
@@ -1325,7 +1349,7 @@ namespace Java.Interop {
 				return;
 
 			fixed (Double* b = sourceArray)
-				JniEnvironment.Arrays.SetDoubleArrayRegion (SafeHandle, destinationIndex, length, (IntPtr) (b+sourceIndex));
+				JniEnvironment.Arrays.SetDoubleArrayRegion (PeerReference, destinationIndex, length, (IntPtr) (b+sourceIndex));
 		}
 
 		internal override bool TargetTypeIsCurrentType (Type targetType)
@@ -1335,20 +1359,20 @@ namespace Java.Interop {
 				typeof (JavaDoubleArray) == targetType;
 		}
 
-		internal static JniLocalReference CreateLocalRef (object value)
+		internal static JniObjectReference CreateLocalRef (object value)
 		{
 		    return JavaArray<Double>.CreateLocalRef<JavaDoubleArray> (
 		            value,
 		            list => new JavaDoubleArray (list));
 		}
 
-		internal static IList<Double> GetValueFromJni (JniReferenceSafeHandle handle, JniHandleOwnership transfer, Type targetType)
+		internal static IList<Double> GetValueFromJni (ref JniObjectReference reference, JniHandleOwnership transfer, Type targetType)
 		{
 		    return JavaArray<Double>.GetValueFromJni (
-		            handle,
+		            ref reference,
 		            transfer,
 		            targetType,
-		            (h, t) => new JavaDoubleArray (h, t));
+		            (ref JniObjectReference h, JniHandleOwnership t) => new JavaDoubleArray (ref h, t));
 		}
 
 		internal static IJavaObject CreateMarshalCollection (object value)

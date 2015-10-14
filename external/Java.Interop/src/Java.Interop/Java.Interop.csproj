@@ -18,7 +18,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>..\..\bin\Debug</OutputPath>
-    <DefineConstants>DEBUG;INTEROP</DefineConstants>
+    <DefineConstants>DEBUG;INTEROP;FEATURE_HANDLES_ARE_SAFE_HANDLES</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <ConsolePause>false</ConsolePause>
@@ -49,7 +49,6 @@
     <Compile Include="Java.Interop\JniHandleManager.cs" />
     <Compile Include="Java.Interop\JniType.cs" />
     <Compile Include="Java.Interop\JValue.cs" />
-    <Compile Include="Java.Interop\JniReferenceType.cs" />
     <Compile Include="Java.Interop\JniInstanceFieldID.cs" />
     <Compile Include="Java.Interop\JniStaticFieldID.cs" />
     <Compile Include="Java.Interop\JniStaticMethodID.cs" />
@@ -74,6 +73,8 @@
     <Compile Include="Java.Interop\JavaProxyObject.cs" />
     <Compile Include="Java.Interop\JniMarshal.cs" />
     <Compile Include="Java.Interop\JniMarshalInfo.cs" />
+    <Compile Include="Java.Interop\JniObjectReference.cs" />
+    <Compile Include="Java.Interop\JniObjectReferenceType.cs" />
     <Compile Include="Java.Interop\JniPeerInstanceMethods.cs" />
     <Compile Include="Java.Interop\JniPeerInstanceFields.cs" />
     <Compile Include="Java.Interop\JniPeerStaticMethods.cs" />

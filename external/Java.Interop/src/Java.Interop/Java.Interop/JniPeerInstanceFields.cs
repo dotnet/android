@@ -19,8 +19,6 @@ namespace Java.Interop
 			if (InstanceFields == null)
 				return;
 
-			foreach (var f in InstanceFields.Values)
-				f.Dispose ();
 			InstanceFields  = null;
 		}
 

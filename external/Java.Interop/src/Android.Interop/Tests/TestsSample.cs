@@ -48,17 +48,19 @@ namespace Android.InteropTests {
 
 		unsafe TimeSpan GetJIMethodCallTiming ()
 		{
-			using (var k = new JniType ("java/lang/Object"))
-			using (var c = k.GetConstructor ("()V"))
-			using (var o = k.NewObject (c, null))
-			using (var t = k.GetInstanceMethod ("toString", "()Ljava/lang/String;")) {
+			using (var k = new JniType ("java/lang/Object")) {
+				var c = k.GetConstructor ("()V");
+				var o = k.NewObject (c, null);
+				var t = k.GetInstanceMethod ("toString", "()Ljava/lang/String;");
 
 				var sw = Stopwatch.StartNew ();
 				for (int i = 0; i < Unified_ToString_Iterations; ++i) {
-					using (var r = t.CallVirtualObjectMethod (o)) {
-					}
+					var r = t.CallVirtualObjectMethod (o);
+					JniEnvironment.Handles.Dispose (ref r);
 				}
 				sw.Stop ();
+
+				JniEnvironment.Handles.Dispose (ref o);
 				return sw.Elapsed;
 			}
 		}
@@ -98,15 +100,15 @@ namespace Android.InteropTests {
 				out TimeSpan unsafeCallObjectMethodTime, out TimeSpan unsafeDeleteLocalRefTime)
 		{
 
-			using (var k = new JniType ("java/lang/Object"))
-			using (var c = k.GetConstructor ("()V"))
-			using (var o = k.NewObject (c, null))
-			using (var t = k.GetInstanceMethod ("toString", "()Ljava/lang/String;")) {
+			using (var k = new JniType ("java/lang/Object")) {
+				var c = k.GetConstructor ("()V");
+				var o = k.NewObject (c, null);
+				var t = k.GetInstanceMethod ("toString", "()Ljava/lang/String;");
 
-				using (var r = t.CallVirtualObjectMethod (o)) {
-				}
+				var r = t.CallVirtualObjectMethod (o);
+				JniEnvironment.Handles.Dispose (ref r);
 
-				var rs = new JniLocalReference [MaxLocalRefs];
+				var rs = new JniObjectReference [MaxLocalRefs];
 
 				var sw = Stopwatch.StartNew ();
 				for (int i = 0; i < rs.Length; ++i) {
@@ -117,7 +119,7 @@ namespace Android.InteropTests {
 
 				sw.Restart ();
 				for (int i = 0; i < rs.Length; ++i) {
-					rs [i].Dispose ();
+					JniEnvironment.Handles.Dispose (ref rs [i]);
 				}
 				sw.Stop ();
 				disposeTime   = sw.Elapsed;
@@ -134,28 +136,27 @@ namespace Android.InteropTests {
 				var usafeDel = (IntPtrDelegate_DeleteLocalRef)
 						Marshal.GetDelegateForFunctionPointer (JNIEnv_DeleteLocalRef, typeof (IntPtrDelegate_DeleteLocalRef));
 
-				var sh = JniEnvironment.Current.SafeHandle;
-				var uh = sh.DangerousGetHandle ();
+				var uh = JniEnvironment.Current.EnvironmentPointer;
 				var args = new JValue [0];
 
 				sw.Restart ();
 				for (int i = 0; i < rs.Length; ++i) {
-					rs [i] = safeCall (sh, o, t, args);
+					rs [i] = new JniObjectReference (safeCall (uh, o.Handle, t.ID, args), JniObjectReferenceType.Local);
 				}
 				sw.Stop ();
 				safeCallObjectMethodTime  = sw.Elapsed;
 
 				sw.Restart ();
 				for (int i = 0; i < rs.Length; ++i) {
-					safeDel (sh, rs [i].DangerousGetHandle ());
-					rs [i].SetHandleAsInvalid ();
+					safeDel (uh, rs [i].Handle);
+					rs [i] = new JniObjectReference ();
 				}
 				sw.Stop ();
 				safeDeleteLocalRefTime    = sw.Elapsed;
 
 				var urs = new IntPtr [MaxLocalRefs];
-				var ut = t.DangerousGetHandle ();
-				var uo = o.DangerousGetHandle ();
+				var ut = t.ID;
+				var uo = o.Handle;
 
 				sw.Restart ();
 				for (int i = 0; i < urs.Length; ++i) {

@@ -85,8 +85,12 @@ namespace Java.Interop {
 		{
 			var self    = JniEnvironment.Current.JavaVM.GetObject<JavaProxyObject> (n_self);
 			var s       = self.ToString ();
-			using (var r = JniEnvironment.Strings.NewString (s))
+			var r       = JniEnvironment.Strings.NewString (s);
+			try {
 				return JniEnvironment.Handles.NewReturnToJniRef (r);
+			} finally {
+				JniEnvironment.Handles.Dispose (ref r);
+			}
 		}
 	}
 }

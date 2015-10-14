@@ -40,9 +40,9 @@ namespace Java.Interop.DynamicTests {
 			Assert.AreEqual (-1,    JavaClassInfo.GetClassInfoCount ("java/lang/Object"));
 
 			if (register) {
-				Assert.IsFalse (native.SafeHandle.IsClosed || native.SafeHandle.IsInvalid);
+				Assert.IsTrue (native.PeerReference.IsValid);
 			} else {
-				Assert.IsTrue (native.SafeHandle == null || native.SafeHandle.IsClosed || native.SafeHandle.IsInvalid);
+				Assert.IsFalse (native.PeerReference.IsValid);
 			}
 		}
 

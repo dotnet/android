@@ -85,9 +85,9 @@ namespace Java.Interop.Dynamic {
 				get {return klass.disposed;}
 			}
 
-			protected override JniReferenceSafeHandle ConversionTarget {
+			protected override JniObjectReference   ConversionTarget {
 				get {
-					return klass.info.Members.JniPeerType.SafeHandle;
+					return klass.info.Members.JniPeerType.PeerReference;
 				}
 			}
 
@@ -139,15 +139,15 @@ namespace Java.Interop.Dynamic {
 		static JavaModifiers ()
 		{
 			using (var t = new JniType ("java/lang/reflect/Modifier")) {
-				using (var s = t.GetStaticField ("STATIC", "I"))
-					Static  = s.GetInt32Value (t.SafeHandle);
+				var s   = t.GetStaticField ("STATIC", "I");
+				Static  = s.GetInt32Value (t.PeerReference);
 			}
 		}
 	}
 
 	struct JniArgumentMarshalInfo {
 		JValue                          jvalue;
-		JniLocalReference               lref;
+		JniObjectReference              lref;
 		IJavaObject                     obj;
 		Action<IJavaObject, object>     cleanup;
 
@@ -177,8 +177,7 @@ namespace Java.Interop.Dynamic {
 		{
 			if (cleanup != null && obj != null)
 				cleanup (obj, value);
-			if (lref != null)
-				lref.Dispose ();
+			JniEnvironment.Handles.Dispose (ref lref);
 		}
 	}
 }

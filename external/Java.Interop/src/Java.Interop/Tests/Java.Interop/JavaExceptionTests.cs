@@ -33,7 +33,7 @@ namespace Java.InteropTests
 			using (var t = new JniType ("java/lang/Throwable")) {
 				var outer = CreateThrowable (t, "Outer Exception");
 				SetThrowableCause (t, outer, "Inner Exception");
-				using (var e = new JavaException (outer, JniHandleOwnership.Transfer)) {
+				using (var e = new JavaException (ref outer, JniHandleOwnership.Transfer)) {
 					Assert.IsNotNull (e.InnerException);
 					Assert.AreEqual ("Inner Exception", e.InnerException.Message);
 					Assert.AreEqual ("Outer Exception", e.Message);
@@ -41,31 +41,34 @@ namespace Java.InteropTests
 			}
 		}
 
-		static unsafe JniLocalReference CreateThrowable (JniType type, string message)
+		static unsafe JniObjectReference CreateThrowable (JniType type, string message)
 		{
 			var c = type.GetConstructor ("(Ljava/lang/String;)V");
-			using (var s = JniEnvironment.Strings.NewString (message)) {
+			var s = JniEnvironment.Strings.NewString (message);
+			try {
 				var args = stackalloc JValue [1];
 				args [0] = new JValue (s);
 				return type.NewObject (c, args);
+			} finally {
+				JniEnvironment.Handles.Dispose (ref s);
 			}
 		}
 
-		static void SetThrowableCause (JniType type, JniLocalReference outer, string message)
+		static void SetThrowableCause (JniType type, JniObjectReference outer, string message)
 		{
-			using (var cause = CreateThrowable (type, message)) {
-				SetThrowableCause (type, outer, cause);
-			}
+			var cause = CreateThrowable (type, message);
+			SetThrowableCause (type, outer, cause);
+			JniEnvironment.Handles.Dispose (ref cause);
 		}
 
-		static unsafe void SetThrowableCause (JniType type, JniLocalReference outer, JniReferenceSafeHandle inner)
+		static unsafe void SetThrowableCause (JniType type, JniObjectReference outer, JniObjectReference inner)
 		{
 			var a = stackalloc JValue [1];
 			a [0] = new JValue (inner);
 
 			var i = type.GetInstanceMethod ("initCause", "(Ljava/lang/Throwable;)Ljava/lang/Throwable;");
-			i.CallVirtualObjectMethod (outer, a)
-				.Dispose ();
+			var l = i.CallVirtualObjectMethod (outer, a);
+			JniEnvironment.Handles.Dispose (ref l);
 		}
 
 		[Test]
@@ -75,8 +78,8 @@ namespace Java.InteropTests
 				var outer = CreateThrowable (t, "Outer Exception");
 				var ex    = new InvalidOperationException ("Managed Exception!");
 				var exp   = CreateJavaProxyThrowable (ex);
-				SetThrowableCause (t, outer, exp.SafeHandle);
-				using (var e = new JavaException (outer, JniHandleOwnership.Transfer)) {
+				SetThrowableCause (t, outer, exp.PeerReference);
+				using (var e = new JavaException (ref outer, JniHandleOwnership.Transfer)) {
 					Assert.IsNotNull (e.InnerException);
 					Assert.AreSame (ex, e.InnerException);
 				}

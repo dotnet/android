@@ -3,7 +3,7 @@ using System;
 namespace Java.Interop
 {
 	[JniTypeInfo (JavaException.JniTypeName)]
-	public class JavaException : Exception, IJavaObject, IJavaObjectEx
+	unsafe public class JavaException : Exception, IJavaObject, IJavaObjectEx
 	{
 		internal    const   string          JniTypeName = "java/lang/Throwable";
 		readonly    static  JniPeerMembers  _members    = new JniPeerMembers (JniTypeName, typeof (JavaException));
@@ -12,56 +12,78 @@ namespace Java.Interop
 		bool    registered;
 		string  javaStackTrace;
 
+#if FEATURE_HANDLES_ARE_SAFE_HANDLES
+		JniObjectReference  reference;
+#endif  // FEATURE_HANDLES_ARE_INTPTRS
+#if FEATURE_HANDLES_ARE_INTPTRS
+		IntPtr                  handle;
+		JniObjectReferenceType  handle_type;
+#endif  // FEATURE_HANDLES_ARE_INTPTRS
+
+		protected   static  readonly    JniObjectReference*     InvalidJniObjectReference = null;
+
 		public unsafe JavaException ()
 		{
-			using (SetSafeHandle (
-						JniPeerMembers.InstanceMethods.StartCreateInstance ("()V", GetType (), null),
-						JniHandleOwnership.Transfer)) {
+			var peer = JniPeerMembers.InstanceMethods.StartCreateInstance ("()V", GetType (), null);
+			using (SetPeerReference (
+					ref peer,
+					JniHandleOwnership.Transfer)) {
 				JniPeerMembers.InstanceMethods.FinishCreateInstance ("()V", this, null);
 			}
-			javaStackTrace    = _GetJavaStack (SafeHandle);
+			javaStackTrace    = _GetJavaStack (PeerReference);
 		}
 
 		public unsafe JavaException (string message)
 			: base (message)
 		{
 			const string signature  = "(Ljava/lang/String;)V";
-			using (var native_message  = JniEnvironment.Strings.NewString (message)) {
+			var native_message = JniEnvironment.Strings.NewString (message);
+			try {
 				var args = stackalloc JValue [1];
 				args [0] = new JValue (native_message);
-				using (SetSafeHandle (
-						JniPeerMembers.InstanceMethods.StartCreateInstance (signature, GetType (), args),
+				var peer = JniPeerMembers.InstanceMethods.StartCreateInstance (signature, GetType (), args);
+				using (SetPeerReference (
+						ref peer,
 						JniHandleOwnership.Transfer)) {
 					JniPeerMembers.InstanceMethods.FinishCreateInstance (signature, this, args);
 				}
+			} finally {
+				JniEnvironment.Handles.Dispose (ref native_message, JniHandleOwnership.Transfer);
 			}
-			javaStackTrace    = _GetJavaStack (SafeHandle);
+			javaStackTrace    = _GetJavaStack (PeerReference);
 		}
 
 		public unsafe JavaException (string message, Exception innerException)
 			: base (message, innerException)
 		{
 			const string signature  = "(Ljava/lang/String;)V";
-			using (var native_message = JniEnvironment.Strings.NewString (message)) {
+			var native_message  = JniEnvironment.Strings.NewString (message);
+			try {
 				var args = stackalloc JValue [1];
 				args [0] = new JValue (native_message);
-				using (SetSafeHandle (
-						JniPeerMembers.InstanceMethods.StartCreateInstance (signature, GetType (), args),
+				var peer = JniPeerMembers.InstanceMethods.StartCreateInstance (signature, GetType (), args);
+				using (SetPeerReference (
+						ref peer,
 						JniHandleOwnership.Transfer)) {
 					JniPeerMembers.InstanceMethods.FinishCreateInstance (signature, this, args);
 				}
+			} finally {
+				JniEnvironment.Handles.Dispose (ref native_message, JniHandleOwnership.Transfer);
 			}
-			javaStackTrace    = _GetJavaStack (SafeHandle);
+			javaStackTrace    = _GetJavaStack (PeerReference);
 		}
 
-		public JavaException (JniReferenceSafeHandle handle, JniHandleOwnership transfer)
-			: base (_GetMessage (handle), _GetCause (handle))
+		public JavaException (ref JniObjectReference reference, JniHandleOwnership transfer)
+			: base (_GetMessage (ref reference, transfer), _GetCause (ref reference, transfer))
 		{
-			if (handle == null || handle.IsInvalid)
+			if ((transfer & JniHandleOwnership.Invalid) == JniHandleOwnership.Invalid)
 				return;
-			using (SetSafeHandle (handle, transfer)) {
+
+			if (!reference.IsValid)
+				return;
+			using (SetPeerReference (ref reference, transfer)) {
 			}
-			javaStackTrace    = _GetJavaStack (SafeHandle);
+			javaStackTrace    = _GetJavaStack (PeerReference);
 		}
 
 		~JavaException ()
@@ -69,7 +91,16 @@ namespace Java.Interop
 			JniEnvironment.Current.JavaVM.TryCollectObject (this);
 		}
 
-		public  JniReferenceSafeHandle  SafeHandle {get; private set;}
+		public          JniObjectReference          PeerReference {
+			get {
+#if FEATURE_HANDLES_ARE_SAFE_HANDLES
+				return reference;
+#endif  // FEATURE_HANDLES_ARE_INTPTRS
+#if FEATURE_HANDLES_ARE_INTPTRS
+				return new JniObjectReference (handle, handle_type);
+#endif  // FEATURE_HANDLES_ARE_INTPTRS
+			}
+		}
 
 		// Note: JniPeerMembers is invoked virtually from the constructor;
 		// it MUST be valid before the derived constructor executes!
@@ -90,11 +121,11 @@ namespace Java.Interop
 			}
 		}
 
-		protected SetSafeHandleCompletion SetSafeHandle (JniReferenceSafeHandle handle, JniHandleOwnership transfer)
+		protected SetSafeHandleCompletion SetPeerReference (ref JniObjectReference handle, JniHandleOwnership transfer)
 		{
-			return JniEnvironment.Current.JavaVM.SetObjectSafeHandle (
+			return JniEnvironment.Current.JavaVM.SetObjectPeerReference (
 					this,
-					handle,
+					ref handle,
 					transfer,
 					a => new SetSafeHandleCompletion (a));
 		}
@@ -106,7 +137,7 @@ namespace Java.Interop
 
 		public void Dispose ()
 		{
-			if (SafeHandle == null || SafeHandle.IsInvalid)
+			if (PeerReference.Handle == IntPtr.Zero)
 				return;
 			JniEnvironment.Current.JavaVM.DisposeObject (this);
 			var inner = InnerException as JavaException;
@@ -134,7 +165,7 @@ namespace Java.Interop
 				return true;
 			var o = obj as IJavaObject;
 			if (o != null)
-				return JniEnvironment.Types.IsSameObject (SafeHandle, o.SafeHandle);
+				return JniEnvironment.Types.IsSameObject (PeerReference, o.PeerReference);
 			return false;
 		}
 
@@ -143,36 +174,49 @@ namespace Java.Interop
 			return _members.InstanceMethods.CallInt32Method ("hashCode\u0000()I", this, null);
 		}
 
-		static string _GetMessage (JniReferenceSafeHandle handle)
+		static string _GetMessage (ref JniObjectReference reference, JniHandleOwnership transfer)
 		{
+			if ((transfer & JniHandleOwnership.Invalid) == JniHandleOwnership.Invalid)
+				return null;
+
 			var m = _members.InstanceMethods.GetMethodID ("getMessage\u0000()Ljava/lang/String;");
-			var s = m.CallVirtualObjectMethod (handle);
-			return JniEnvironment.Strings.ToString (s, JniHandleOwnership.Transfer);
+			var s = m.CallVirtualObjectMethod (reference);
+			return JniEnvironment.Strings.ToString (ref s, JniHandleOwnership.Transfer);
 		}
 
-		static Exception _GetCause (JniReferenceSafeHandle handle)
+		static Exception _GetCause (ref JniObjectReference reference, JniHandleOwnership transfer)
 		{
+			if ((transfer & JniHandleOwnership.Invalid) == JniHandleOwnership.Invalid)
+				return null;
+
 			var m = _members.InstanceMethods.GetMethodID ("getCause\u0000()Ljava/lang/Throwable;");
-			var e = m.CallVirtualObjectMethod (handle);
-			return JniEnvironment.Current.JavaVM.GetExceptionForThrowable (e, JniHandleOwnership.Transfer);
+			var e = m.CallVirtualObjectMethod (reference);
+			return JniEnvironment.Current.JavaVM.GetExceptionForThrowable (ref e, JniHandleOwnership.Transfer);
 		}
 
-		unsafe string _GetJavaStack (JniReferenceSafeHandle handle)
+		unsafe string _GetJavaStack (JniObjectReference handle)
 		{
 			using (var StringWriter_class   = new JniType ("java/io/StringWriter"))
-			using (var StringWriter_init    = StringWriter_class.GetConstructor ("()V"))
-			using (var swriter              = StringWriter_class.NewObject (StringWriter_init, null))
-			using (var PrintWriter_class    = new JniType ("java/io/PrintWriter"))
-			using (var PrintWriter_init     = PrintWriter_class.GetConstructor ("(Ljava/io/Writer;)V")) {
-				var pwriter_args = stackalloc JValue [1];
-				pwriter_args [0] = new JValue (swriter);
-				using (var pwriter = PrintWriter_class.NewObject (PrintWriter_init, pwriter_args)) {
-					var pst = _members.InstanceMethods.GetMethodID ("printStackTrace\u0000(Ljava/io/PrintWriter;)V");
-					var pst_args = stackalloc JValue [1];
-					pst_args [0] = new JValue (pwriter);
-					pst.CallVirtualVoidMethod (handle, pst_args);
-					var s = JniEnvironment.Current.Object_toString.CallVirtualObjectMethod (swriter);
-					return JniEnvironment.Strings.ToString (s, JniHandleOwnership.Transfer);
+			using (var PrintWriter_class    = new JniType ("java/io/PrintWriter")) {
+				var StringWriter_init       = StringWriter_class.GetConstructor ("()V");
+				var PrintWriter_init        = PrintWriter_class.GetConstructor ("(Ljava/io/Writer;)V");
+				var swriter                 = StringWriter_class.NewObject (StringWriter_init, null);
+				try {
+					var pwriter_args = stackalloc JValue [1];
+					pwriter_args [0] = new JValue (swriter);
+					var pwriter = PrintWriter_class.NewObject (PrintWriter_init, pwriter_args);
+					try {
+						var pst = _members.InstanceMethods.GetMethodID ("printStackTrace\u0000(Ljava/io/PrintWriter;)V");
+						var pst_args = stackalloc JValue [1];
+						pst_args [0] = new JValue (pwriter);
+						pst.CallVirtualVoidMethod (handle, pst_args);
+						var s = JniEnvironment.Current.Object_toString.CallVirtualObjectMethod (swriter);
+						return JniEnvironment.Strings.ToString (ref s, JniHandleOwnership.Transfer);
+					} finally {
+						JniEnvironment.Handles.Dispose (ref pwriter, JniHandleOwnership.Transfer);
+					}
+				} finally {
+					JniEnvironment.Handles.Dispose (ref swriter, JniHandleOwnership.Transfer);
 				}
 			}
 		}
@@ -192,9 +236,15 @@ namespace Java.Interop
 			Dispose (disposing);
 		}
 
-		void IJavaObjectEx.SetSafeHandle (JniReferenceSafeHandle handle)
+		void IJavaObjectEx.SetPeerReference (JniObjectReference reference)
 		{
-			SafeHandle = handle;
+#if FEATURE_HANDLES_ARE_SAFE_HANDLES
+			this.reference  = reference;
+#endif  // FEATURE_HANDLES_ARE_INTPTRS
+#if FEATURE_HANDLES_ARE_INTPTRS
+			this.handle         = reference.Handle;
+			this.handle_type    = reference.Type;
+#endif  // FEATURE_HANDLES_ARE_INTPTRS
 		}
 
 		protected struct SetSafeHandleCompletion : IDisposable {

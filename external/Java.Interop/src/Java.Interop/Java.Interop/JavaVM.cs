@@ -9,11 +9,11 @@ using System.Threading;
 
 namespace Java.Interop
 {
-	delegate int DestroyJavaVMDelegate (JavaVMSafeHandle javavm);
-	delegate int GetEnvDelegate (JavaVMSafeHandle javavm, out IntPtr envptr, int version);
-	delegate int AttachCurrentThreadDelegate (JavaVMSafeHandle javavm, out IntPtr env, ref JavaVMThreadAttachArgs args);
-	delegate int DetachCurrentThreadDelegate (JavaVMSafeHandle javavm);
-	delegate int AttachCurrentThreadAsDaemonDelegate (JavaVMSafeHandle javavm, out IntPtr env, IntPtr args);
+	delegate int DestroyJavaVMDelegate (IntPtr javavm);
+	delegate int GetEnvDelegate (IntPtr javavm, out IntPtr envptr, int version);
+	delegate int AttachCurrentThreadDelegate (IntPtr javavm, out IntPtr env, ref JavaVMThreadAttachArgs args);
+	delegate int DetachCurrentThreadDelegate (IntPtr javavm);
+	delegate int AttachCurrentThreadAsDaemonDelegate (IntPtr javavm, out IntPtr env, IntPtr args);
 
 	struct JavaVMInterface {
 		public IntPtr reserved0;
@@ -40,43 +40,6 @@ namespace Java.Interop
 		public  IntPtr              group;      /*		 global ref of a ThreadGroup object, or NULL */
 	}
 
-	public sealed class JavaVMSafeHandle : SafeHandle {
-
-		JavaVMSafeHandle ()
-			: base (IntPtr.Zero, ownsHandle:false)
-		{
-		}
-
-		public JavaVMSafeHandle (IntPtr handle)
-			: this ()
-		{
-			SetHandle (handle);
-		}
-
-		public override bool IsInvalid {
-			get {return handle == IntPtr.Zero;}
-		}
-
-		internal IntPtr Handle {
-			get {return base.handle;}
-		}
-
-		protected override bool ReleaseHandle ()
-		{
-			return false;
-		}
-
-		internal unsafe JavaVMInterface CreateInvoker ()
-		{
-			IntPtr p = Marshal.ReadIntPtr (handle);
-			return (JavaVMInterface) Marshal.PtrToStructure (p, typeof(JavaVMInterface));
-		}
-
-		public override string ToString ()
-		{
-			return string.Format ("{0}(0x{1})", GetType ().FullName, handle.ToString ("x"));
-		}
-	}
 
 	public class JavaVMOptions {
 
@@ -86,8 +49,8 @@ namespace Java.Interop
 		// Prefer JNIEnv::NewObject() over JNIEnv::AllocObject() + JNIEnv::CallNonvirtualVoidMethod()
 		public  bool        NewObjectRequired           {get; set;}
 
-		public  JavaVMSafeHandle            VMHandle            {get; set;}
-		public  JniEnvironmentSafeHandle    EnvironmentHandle   {get; set;}
+		public  IntPtr                      InvocationPointer   {get; set;}
+		public  IntPtr                      EnvironmentPointer  {get; set;}
 		public  IJniHandleManager           JniHandleManager    {get; set;}
 
 		public JavaVMOptions ()
@@ -105,10 +68,10 @@ namespace Java.Interop
 			return JavaVMs.Values;
 		}
 
-		public static JavaVM GetRegisteredJavaVM (JavaVMSafeHandle handle)
+		public static JavaVM GetRegisteredJavaVM (IntPtr handle)
 		{
 			JavaVM vm;
-			return JavaVMs.TryGetValue (handle.DangerousGetHandle (), out vm)
+			return JavaVMs.TryGetValue (handle, out vm)
 				? vm
 				: null;
 		}
@@ -136,16 +99,16 @@ namespace Java.Interop
 		{
 			if (newCurrent == null)
 				throw new ArgumentNullException ("newCurrent");
-			JavaVMs.TryAdd (newCurrent.SafeHandle.DangerousGetHandle (), newCurrent);
+			JavaVMs.TryAdd (newCurrent.InvocationPointer, newCurrent);
 			current = newCurrent;
 		}
 
-		ConcurrentDictionary<SafeHandle, IDisposable>   TrackedInstances    = new ConcurrentDictionary<SafeHandle, IDisposable> ();
+		ConcurrentDictionary<IntPtr, IDisposable>       TrackedInstances    = new ConcurrentDictionary<IntPtr, IDisposable> ();
 
 		JavaVMInterface                                 Invoker;
 		bool                                            DestroyVM;
 
-		public  JavaVMSafeHandle                        SafeHandle      {get; private set;}
+		public  IntPtr                                  InvocationPointer   {get; private set;}
 
 		public  bool                                    NewObjectRequired   {get; private set;}
 
@@ -153,10 +116,8 @@ namespace Java.Interop
 		{
 			if (options == null)
 				throw new ArgumentNullException ("options");
-			if (options.VMHandle == null)
-				throw new ArgumentException ("options.VMHandle is null", "options");
-			if (options.VMHandle.IsInvalid)
-				throw new ArgumentException ("options.VMHandle is not valid.", "options");
+			if (options.InvocationPointer == IntPtr.Zero)
+				throw new ArgumentException ("options.InvocationPointer is null", "options");
 
 			TrackIDs     = options.TrackIDs;
 			DestroyVM    = options.DestroyVMOnDispose;
@@ -164,20 +125,26 @@ namespace Java.Interop
 			JniHandleManager    = options.JniHandleManager ?? new JniHandleManager ();
 			NewObjectRequired   = options.NewObjectRequired;
 
-			SafeHandle  = options.VMHandle;
-			Invoker     = SafeHandle.CreateInvoker ();
+			InvocationPointer   = options.InvocationPointer;
+			Invoker             = CreateInvoker (InvocationPointer);
 
 			if (current == null)
 				current = this;
 
-			if (options.EnvironmentHandle != null) {
-				var env = new JniEnvironment (options.EnvironmentHandle, this);
+			if (options.EnvironmentPointer != IntPtr.Zero) {
+				var env = new JniEnvironment (options.EnvironmentPointer, this);
 				JniEnvironment.SetRootEnvironment (env);
 			}
 
-			JavaVMs.TryAdd (SafeHandle.DangerousGetHandle (), this);
+			JavaVMs.TryAdd (InvocationPointer, this);
 
 			ManagedPeer.Init ();
+		}
+
+		static unsafe JavaVMInterface CreateInvoker (IntPtr handle)
+		{
+			IntPtr p = Marshal.ReadIntPtr (handle);
+			return (JavaVMInterface) Marshal.PtrToStructure (p, typeof (JavaVMInterface));
 		}
 
 		~JavaVM ()
@@ -194,7 +161,7 @@ namespace Java.Interop
 
 		public override string ToString ()
 		{
-			return string.Format ("{0}(0x{1})", GetType ().FullName, SafeHandle.DangerousGetHandle ().ToString ("x"));
+			return string.Format ("{0}(0x{1})", GetType ().FullName, InvocationPointer.ToString ("x"));
 		}
 
 		public void Dispose ()
@@ -204,7 +171,7 @@ namespace Java.Interop
 
 		protected virtual void Dispose (bool disposing)
 		{
-			if (SafeHandle == null || SafeHandle.IsInvalid)
+			if (InvocationPointer == IntPtr.Zero)
 				return;
 
 			if (current == this)
@@ -217,18 +184,17 @@ namespace Java.Interop
 			RegisteredInstances.Clear ();
 			ClearTrackedReferences ();
 			JavaVM _;
-			JavaVMs.TryRemove (SafeHandle.DangerousGetHandle (), out _);
+			JavaVMs.TryRemove (InvocationPointer, out _);
 			JniHandleManager.Dispose ();
 			// TODO: Dispose JniEnvironment.RootEnvironments
 			// Requires .NET 4.5+
 			JniEnvironment.RootEnvironments.Dispose ();
 			if (DestroyVM)
 				DestroyJavaVM ();
-			SafeHandle.Dispose ();
-			SafeHandle = null;
+			InvocationPointer    = IntPtr.Zero;
 		}
 
-		public JniEnvironment AttachCurrentThread (string name = null, JniReferenceSafeHandle group = null)
+		public JniEnvironment AttachCurrentThread (string name = null, JniObjectReference group = default (JniObjectReference))
 		{
 			var threadArgs = new JavaVMThreadAttachArgs () {
 				version = JniVersion.v1_2,
@@ -236,13 +202,13 @@ namespace Java.Interop
 			try {
 				if (name != null)
 					threadArgs.name = Marshal.StringToHGlobalAnsi (name);
-				if (group != null)
-					threadArgs.group = group.DangerousGetHandle ();
+				if (group.IsValid)
+					threadArgs.group = group.Handle;
 				IntPtr jnienv;
-				int r = Invoker.AttachCurrentThread (SafeHandle, out jnienv, ref threadArgs);
+				int r = Invoker.AttachCurrentThread (InvocationPointer, out jnienv, ref threadArgs);
 				if (r != 0)
 					throw new NotSupportedException ("AttachCurrentThread returned " + r);
-				var env = new JniEnvironment (new JniEnvironmentSafeHandle (jnienv), this);
+				var env = new JniEnvironment (jnienv, this);
 				return env;
 			} finally {
 				Marshal.FreeHGlobal (threadArgs.name);
@@ -251,21 +217,21 @@ namespace Java.Interop
 
 		public void DestroyJavaVM ()
 		{
-			Invoker.DestroyJavaVM (SafeHandle);
+			Invoker.DestroyJavaVM (InvocationPointer);
 		}
 
-		public virtual Exception GetExceptionForThrowable (JniLocalReference value, JniHandleOwnership transfer)
+		public virtual Exception GetExceptionForThrowable (ref JniObjectReference value, JniHandleOwnership transfer)
 		{
 			var o   = PeekObject (value);
 			var e   = o as JavaException;
 			if (e != null) {
-				JniEnvironment.Handles.Dispose (value, transfer);
+				JniEnvironment.Handles.Dispose (ref value, transfer);
 				var p   = e as JavaProxyThrowable;
 				if (p != null)
 					return p.Exception;
 				return e;
 			}
-			return GetObject<JavaException> (value, transfer);
+			return GetObject<JavaException> (ref value, transfer);
 		}
 
 		public int GlobalReferenceCount {
@@ -280,7 +246,7 @@ namespace Java.Interop
 
 		public bool TrackIDs {get; private set;}
 
-		internal void TrackID (SafeHandle key, IDisposable value)
+		internal void TrackID (IntPtr key, IDisposable value)
 		{
 			if (TrackIDs)
 				TrackedInstances.TryAdd (key, value);
@@ -288,10 +254,10 @@ namespace Java.Interop
 
 		internal void Track (JniType value)
 		{
-			TrackedInstances.TryAdd (value.SafeHandle, value);
+			TrackedInstances.TryAdd (value.PeerReference.Handle, value);
 		}
 
-		internal void UnTrack (SafeHandle key)
+		internal void UnTrack (IntPtr key)
 		{
 			IDisposable _;
 			TrackedInstances.TryRemove (key, out _);
@@ -322,15 +288,15 @@ namespace Java.Interop
 		internal void RegisterObject<T> (T value)
 			where T : IJavaObject, IJavaObjectEx
 		{
-			if (value.SafeHandle == null || value.SafeHandle.IsInvalid)
+			var r = value.PeerReference;
+			if (!r.IsValid)
 				throw new ObjectDisposedException (value.GetType ().FullName);
 			if (value.Registered)
 				return;
 
-			if (value.SafeHandle.ReferenceType != JniReferenceType.Global) {
-				var o = value.SafeHandle;
-				value.SetSafeHandle (o.NewGlobalRef ());
-				o.Dispose ();
+			if (r.Type != JniObjectReferenceType.Global) {
+				value.SetPeerReference (r.NewGlobalRef ());
+				JniEnvironment.Handles.Dispose (ref r, JniHandleOwnership.Transfer);
 			}
 			int key = value.IdentityHashCode;
 			lock (RegisteredInstances) {
@@ -339,8 +305,8 @@ namespace Java.Interop
 				if (RegisteredInstances.TryGetValue (key, out existing) && (target = (IJavaObject) existing.Target) != null)
 					throw new NotSupportedException (
 							string.Format ("Cannot register instance {0}(0x{1}), as an instance with the same handle {2}(0x{3}) has already been registered.",
-								value.GetType ().FullName, value.SafeHandle.DangerousGetHandle ().ToString ("x"),
-								target.GetType ().FullName, target.SafeHandle.DangerousGetHandle ().ToString ("x")));
+								value.GetType ().FullName, value.PeerReference.ToString (),
+								target.GetType ().FullName, target.PeerReference.ToString ()));
 				RegisteredInstances [key] = new WeakReference (value, trackResurrection: true);
 			}
 			value.Registered = true;
@@ -360,28 +326,27 @@ namespace Java.Interop
 			}
 		}
 
-		internal TCleanup SetObjectSafeHandle<T, TCleanup> (T value, JniReferenceSafeHandle handle, JniHandleOwnership transfer, Func<Action, TCleanup> createCleanup)
+		internal TCleanup SetObjectPeerReference<T, TCleanup> (T value, ref JniObjectReference reference, JniHandleOwnership transfer, Func<Action, TCleanup> createCleanup)
 			where T : IJavaObject, IJavaObjectEx
 			where TCleanup : IDisposable
 		{
-			if (handle == null)
-				throw new ArgumentNullException ("handle");
-			if (handle.IsInvalid)
-				throw new ArgumentException ("handle is invalid.", "handle");
+			if (!reference.IsValid)
+				throw new ArgumentException ("handle is invalid.", nameof (reference));
 
-			bool register   = handle is JniAllocObjectRef;
+			bool register   = reference.Flags == JniObjectReferenceFlags.Alloc;
 
-			value.SetSafeHandle (handle.NewLocalRef ());
-			JniEnvironment.Handles.Dispose (handle, transfer);
+			value.SetPeerReference (reference.NewLocalRef ());
+			JniEnvironment.Handles.Dispose (ref reference, transfer);
 
-			value.IdentityHashCode = JniSystem.IdentityHashCode (value.SafeHandle);
+			value.IdentityHashCode = JniSystem.IdentityHashCode (value.PeerReference);
 
 			if (register) {
 				RegisterObject (value);
 				Action unregister = () => {
 					UnRegisterObject (value);
-					using (var g = value.SafeHandle)
-						value.SetSafeHandle (g.NewLocalRef ());
+					var o = value.PeerReference;
+					value.SetPeerReference (o.NewLocalRef ());
+					JniEnvironment.Handles.Dispose (ref o);
 				};
 				return createCleanup (unregister);
 			}
@@ -391,45 +356,49 @@ namespace Java.Interop
 		internal void DisposeObject<T> (T value)
 			where T : IJavaObject, IJavaObjectEx
 		{
-			if (value.SafeHandle == null || value.SafeHandle.IsInvalid)
+			var h = value.PeerReference;
+			if (!h.IsValid)
 				return;
 
 			if (value.Registered)
 				UnRegisterObject (value);
 			value.Dispose (disposing: true);
-			value.SafeHandle.Dispose ();
-			value.SetSafeHandle (null);
+#if FEATURE_HANDLES_ARE_SAFE_HANDLES
+			var lref = value.PeerReference.SafeHandle as JniLocalReference;
+			if (lref != null && !JniEnvironment.IsHandleValid (lref)) {
+				// `lref` was created on another thread, and CANNOT be disposed on this thread.
+				// Just invalidate the reference and move on.
+				lref.SetHandleAsInvalid ();
+			}
+#endif  // FEATURE_HANDLES_ARE_SAFE_HANDLES
+			JniEnvironment.Handles.Dispose (ref h);
+			value.SetPeerReference (new JniObjectReference ());
 			GC.SuppressFinalize (value);
 		}
 
 		internal void TryCollectObject<T> (T value)
 			where T : IJavaObject, IJavaObjectEx
 		{
+			var h = value.PeerReference;
 			// MUST NOT use SafeHandle.ReferenceType: local refs are tied to a JniEnvironment
 			// and the JniEnvironment's corresponding thread; it's a thread-local value.
 			// Accessing SafeHandle.ReferenceType won't kill anything (so far...), but
 			// instead it always returns JniReferenceType.Invalid.
-			if (value.SafeHandle == null || value.SafeHandle.IsInvalid || value.SafeHandle is JniLocalReference) {
-
-				if (value.SafeHandle != null) {
-					value.SafeHandle.Dispose ();
-					value.SetSafeHandle (null);
-				}
-
+			if (!h.IsValid || h.Type == JniObjectReferenceType.Local) {
 				value.Dispose (disposing: false);
+				value.SetPeerReference (new JniObjectReference ());
 				return;
 			}
 
 			try {
-				var  h          = value.SafeHandle;
-				bool collected = TryGC (value, ref h);;
+				bool collected  = TryGC (value, ref h);
 				if (collected) {
-					value.SetSafeHandle (null);
+					value.SetPeerReference (new JniObjectReference ());
 					if (value.Registered)
 						UnRegisterObject (value);
 					value.Dispose (disposing: false);
 				} else {
-					value.SetSafeHandle (h);
+					value.SetPeerReference (h);
 					GC.ReRegisterForFinalize (value);
 				}
 			} catch (Exception e) {
@@ -448,17 +417,17 @@ namespace Java.Interop
 		///   The <see cref="T:Java.Interop.IJavaObject"/> instance to collect.
 		/// </param>
 		/// <param name="handle">
-		///   The <see cref="T:Java.Interop.JniReferenceSafeHandle"/> of <paramref name="value"/>.
-		///   This value may be updated, and <see cref="P:Java.Interop.IJavaObject.SafeHandle"/>
+		///   The <see cref="T:Java.Interop.JniObjectReference"/> of <paramref name="value"/>.
+		///   This value may be updated, and <see cref="P:Java.Interop.IJavaObject.PeerReference"/>
 		///   will be updated with this value.
 		/// </param>
-		internal protected abstract bool TryGC (IJavaObject value, ref JniReferenceSafeHandle handle);
+		internal protected abstract bool TryGC (IJavaObject value, ref JniObjectReference handle);
 
-		public IJavaObject PeekObject (JniReferenceSafeHandle handle)
+		public IJavaObject PeekObject (JniObjectReference reference)
 		{
-			if (handle == null || handle.IsInvalid)
+			if (!reference.IsValid)
 				return null;
-			int key = JniSystem.IdentityHashCode (handle);
+			int key = JniSystem.IdentityHashCode (reference);
 			lock (RegisteredInstances) {
 				WeakReference               wv;
 				if (RegisteredInstances.TryGetValue (key, out wv)) {
@@ -471,32 +440,45 @@ namespace Java.Interop
 			return null;
 		}
 
-		public IJavaObject GetObject (JniReferenceSafeHandle handle, JniHandleOwnership transfer, Type targetType = null)
+		public IJavaObject GetObject (ref JniObjectReference reference, JniHandleOwnership transfer, Type targetType = null)
 		{
-			if (handle == null || handle.IsInvalid)
+			if (!reference.IsValid)
 				return null;
 
-			var existing = PeekObject (handle);
-			if (existing != null && targetType != null && targetType.IsInstanceOfType (existing))
+			var existing = PeekObject (reference);
+			if (existing != null && targetType != null && targetType.IsInstanceOfType (existing)) {
+				JniEnvironment.Handles.Dispose (ref reference, transfer);
 				return existing;
+			}
 
-			return CreateObjectWrapper (handle, transfer, targetType);
+			return CreateObjectWrapper (ref reference, transfer, targetType);
 		}
 
-		protected virtual IJavaObject CreateObjectWrapper (JniReferenceSafeHandle handle, JniHandleOwnership transfer, Type targetType)
+		protected virtual IJavaObject CreateObjectWrapper (ref JniObjectReference reference, JniHandleOwnership transfer, Type targetType)
 		{
 			targetType  = targetType ?? typeof (JavaObject);
 			if (!typeof (IJavaObject).IsAssignableFrom (targetType))
 				throw new ArgumentException ("targetType must implement IJavaObject!", "targetType");
 
-			var bestType = GetWrapperType (handle);
-			if (targetType != null && targetType.IsAssignableFrom (bestType))
-				targetType = bestType;
+			var ctor = GetWrapperConstructor (reference, targetType);
+			if (ctor == null)
+				throw new NotSupportedException (string.Format ("Could not find an appropriate constructable wrapper type for Java type '{0}', targetType='{1}'.",
+						JniEnvironment.Types.GetJniTypeNameFromInstance (reference), targetType));
 
-			return (IJavaObject)Activator.CreateInstance (targetType, handle, transfer);
+			var acts = new object[] {
+				reference,
+				transfer,
+			};
+			try {
+				return (IJavaObject) ctor.Invoke (acts);
+			} finally {
+				reference   = (JniObjectReference) acts [0];
+			}
 		}
 
-		Type GetWrapperType (JniReferenceSafeHandle instance)
+		static  readonly    Type    ByRefJniObjectReference = typeof (JniObjectReference).MakeByRefType ();
+
+		ConstructorInfo GetWrapperConstructor (JniObjectReference instance, Type fallbackType)
 		{
 			var klass       = JniEnvironment.Types.GetObjectClass (instance);
 			var jniTypeName = JniEnvironment.Types.GetJniTypeNameFromClass (klass);
@@ -506,45 +488,45 @@ namespace Java.Interop
 				type = GetTypeForJniTypeRefererence (jniTypeName);
 
 				if (type != null) {
-					const BindingFlags bindingFlags = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance;
-					var ctors =
-						from    c in type.GetConstructors (bindingFlags)
-						let     p = c.GetParameters ()
-						where   p.Length == 2
-						where   p [0].ParameterType == typeof(JniReferenceSafeHandle) &&
-						    p [1].ParameterType == typeof(JniHandleOwnership)
-						select  c;
-					if (ctors.Any ()) {
-						klass.Dispose ();
-						return type;
+					var ctor    = type.GetConstructor (new[] {
+						ByRefJniObjectReference,
+						typeof(JniHandleOwnership)
+					});
+
+					if (ctor != null) {
+						JniEnvironment.Handles.Dispose (ref klass);
+						return ctor;
 					}
 				}
 
 				var super   = JniEnvironment.Types.GetSuperclass (klass);
-				jniTypeName = (super == null || super.IsClosed || super.IsInvalid)
-					? null
-					: JniEnvironment.Types.GetJniTypeNameFromClass (super);
+				jniTypeName = super.IsValid
+					? JniEnvironment.Types.GetJniTypeNameFromClass (super)
+					: null;
 
-				klass.Dispose ();
+				JniEnvironment.Handles.Dispose (ref klass, JniHandleOwnership.Transfer);
 				klass      = super;
 			}
-			if (klass != null)
-				klass.Dispose ();
-			return null;
+			JniEnvironment.Handles.Dispose (ref klass, JniHandleOwnership.Transfer);
+
+			return fallbackType.GetConstructor (new[] {
+				ByRefJniObjectReference,
+				typeof(JniHandleOwnership)
+			});
 		}
 
-		public T GetObject<T> (JniReferenceSafeHandle jniHandle, JniHandleOwnership transfer)
+		public T GetObject<T> (ref JniObjectReference reference, JniHandleOwnership transfer)
 			where T : IJavaObject
 		{
-			return (T) GetObject (jniHandle, transfer, typeof (T));
+			return (T) GetObject (ref reference, transfer, typeof (T));
 		}
 
 		public IJavaObject GetObject (IntPtr jniHandle, Type targetType = null)
 		{
 			if (jniHandle == IntPtr.Zero)
 				return null;
-			using (var h = new JniInvocationHandle (jniHandle))
-				return GetObject (h, JniHandleOwnership.DoNotTransfer, targetType);
+			var h = new JniObjectReference (jniHandle);
+			return GetObject (ref h, JniHandleOwnership.DoNotTransfer, targetType);
 		}
 
 		public T GetObject<T> (IntPtr jniHandle)
@@ -746,8 +728,8 @@ namespace Java.Interop
 					}
 				}
 				var arrayType   = typeof (JavaObjectArray<>).MakeGenericType (elementType);
-				var getValue    = CreateMethodDelegate<Func<JniReferenceSafeHandle, JniHandleOwnership, Type, object>> (arrayType, "GetValue");
-				var createLRef  = CreateMethodDelegate<Func<object, JniLocalReference>> (arrayType, "CreateLocalRef");
+				var getValue    = CreateMethodDelegate<CreateValueFromJni> (arrayType, "GetValue");
+				var createLRef  = CreateMethodDelegate<Func<object, JniObjectReference>> (arrayType, "CreateLocalRef");
 				var createObj   = CreateMethodDelegate<Func<object, IJavaObject>> (arrayType, "CreateMarshalCollection");
 				var cleanup     = CreateMethodDelegate<Action<IJavaObject, object>> (arrayType, "CleanupMarshalCollection");
 

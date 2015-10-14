@@ -33,8 +33,8 @@ namespace Java.InteropTests
 		{
 		}
 
-		public TestType (JniReferenceSafeHandle handle, JniHandleOwnership transfer)
-			: base (handle, transfer)
+		public TestType (ref JniObjectReference reference, JniHandleOwnership transfer)
+			: base (ref reference, transfer)
 		{
 		}
 
@@ -123,8 +123,12 @@ namespace Java.InteropTests
 			var self = JniEnvironment.Current.JavaVM.GetObject<TestType>(n_self);
 			try {
 				var s = self.GetStringValue (value);
-				using (var r = JniEnvironment.Strings.NewString (s))
+				var r = JniEnvironment.Strings.NewString (s);
+				try {
 					return JniEnvironment.Handles.NewReturnToJniRef (r);
+				} finally {
+					JniEnvironment.Handles.Dispose (ref r);
+				}
 			} finally {
 				self.DisposeUnlessRegistered ();
 			}
@@ -144,9 +148,9 @@ namespace Java.InteropTests
 		{
 			Assert.IsNotNull (value);
 			Assert.AreNotSame (this, value);
-			Assert.IsTrue (JniEnvironment.Types.IsSameObject (SafeHandle, value.SafeHandle));
+			Assert.IsTrue (JniEnvironment.Types.IsSameObject (PeerReference, value.PeerReference));
 			return value != null && !object.ReferenceEquals (value, this) &&
-				JniEnvironment.Types.IsSameObject (SafeHandle, value.SafeHandle);
+				JniEnvironment.Types.IsSameObject (PeerReference, value.PeerReference);
 		}
 
 		public int GetInt32Value ()

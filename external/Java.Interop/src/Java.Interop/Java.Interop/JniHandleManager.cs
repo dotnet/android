@@ -25,79 +25,87 @@ namespace Java.Interop {
 		{
 		}
 
-		public JniLocalReference CreateLocalReference (JniEnvironment environment, JniReferenceSafeHandle value)
+		public JniObjectReference CreateLocalReference (JniEnvironment environment, JniObjectReference reference)
 		{
-			if (value == null || value.IsInvalid)
-				return null;
-			AssertCount (environment.LrefCount, "LREF", value.DangerousGetHandle ());
+			if (!reference.IsValid)
+				return reference;
+			AssertCount (environment.LrefCount, "LREF", reference.ToString ());
 			environment.LrefCount++;
-			return JniEnvironment.Handles.NewLocalRef (value);
+			return JniEnvironment.Handles.NewLocalRef (reference);
 		}
 
-		public void DeleteLocalReference (JniEnvironment environment, IntPtr value)
+		public void DeleteLocalReference (JniEnvironment environment, ref JniObjectReference reference)
 		{
-			if (value == IntPtr.Zero)
+			if (!reference.IsValid)
 				return;
-			AssertCount (environment.LrefCount, "LREF", value);
+			AssertReferenceType (ref reference, JniObjectReferenceType.Local);
+			AssertCount (environment.LrefCount, "LREF", reference.ToString ());
 			environment.LrefCount--;
-			JniEnvironment.Handles.DeleteLocalRef (value);
+			JniEnvironment.Handles.DeleteLocalRef (reference.Handle);
+			reference.Invalidate ();
 		}
 
-		public void CreatedLocalReference (JniEnvironment environment, JniLocalReference value)
+		public void CreatedLocalReference (JniEnvironment environment, JniObjectReference reference)
 		{
-			if (value == null || value.IsInvalid)
+			if (!reference.IsValid)
 				return;
-			AssertCount (environment.LrefCount, "LREF", value.DangerousGetHandle ());
+			AssertCount (environment.LrefCount, "LREF", reference.ToString ());
 			environment.LrefCount++ ;
 		}
 
-		public IntPtr ReleaseLocalReference (JniEnvironment environment, JniLocalReference value)
+		public IntPtr ReleaseLocalReference (JniEnvironment environment, ref JniObjectReference reference)
 		{
-			if (value == null || value.IsInvalid)
+			if (!reference.IsValid)
 				return IntPtr.Zero;
-			AssertCount (environment.LrefCount, "LREF", value.DangerousGetHandle ());
+			AssertCount (environment.LrefCount, "LREF", reference.ToString ());
 			environment.LrefCount--;
-			return value._GetAndClearHandle ();
+			var h           = reference.Handle;
+			reference.Invalidate ();
+			return h;
 		}
 
 		public void WriteGlobalReferenceLine (string format, params object[] args)
 		{
 		}
 
-		public JniGlobalReference CreateGlobalReference (JniReferenceSafeHandle value)
+		public JniObjectReference CreateGlobalReference (JniObjectReference reference)
 		{
-			if (value == null || value.IsInvalid)
-				return null;
-			AssertCount (grefc, "GREF", value.DangerousGetHandle ());
+			if (!reference.IsValid)
+				return reference;
+			AssertCount (grefc, "GREF", reference.ToString ());
 			Interlocked.Increment (ref grefc);
-			return JniEnvironment.Handles.NewGlobalRef (value);
+			return JniEnvironment.Handles.NewGlobalRef (reference);
 		}
 
-		public void DeleteGlobalReference (IntPtr value)
+		public void DeleteGlobalReference (ref JniObjectReference reference)
 		{
-			if (value == IntPtr.Zero)
+			if (!reference.IsValid)
 				return;
-			AssertCount (grefc, "GREF", value);
+			AssertReferenceType (ref reference, JniObjectReferenceType.Global);
+			AssertCount (grefc, "GREF", reference.ToString ());
 			Interlocked.Decrement (ref grefc);
-			JniEnvironment.Handles.DeleteGlobalRef (value);
+			JniEnvironment.Handles.DeleteGlobalRef (reference.Handle);
+			reference.Invalidate ();
 		}
 
-		public JniWeakGlobalReference CreateWeakGlobalReference (JniReferenceSafeHandle value)
+		public JniObjectReference CreateWeakGlobalReference (JniObjectReference reference)
 		{
-			if (value == null || value.IsInvalid)
-				return null;
-			AssertCount (wgrefc, "WGREF", value.DangerousGetHandle ());
+			if (!reference.IsValid)
+				return reference;
+			AssertCount (wgrefc, "WGREF", reference.ToString ());
 			Interlocked.Increment (ref wgrefc);
-			return JniEnvironment.Handles.NewWeakGlobalRef (value);
+			return JniEnvironment.Handles.NewWeakGlobalRef (reference);
 		}
 
-		public void DeleteWeakGlobalReference (IntPtr value)
+		public void DeleteWeakGlobalReference (ref JniObjectReference reference)
 		{
-			if (value == IntPtr.Zero)
+			if (!reference.IsValid)
 				return;
-			AssertCount (wgrefc, "WGREF", value);
+			AssertReferenceType (ref reference, JniObjectReferenceType.WeakGlobal);
+			AssertCount (wgrefc, "WGREF", reference.ToString ());
 			Interlocked.Decrement (ref wgrefc);
-			JniEnvironment.Handles.DeleteWeakGlobalRef (value);
+			JniEnvironment.Handles.DeleteWeakGlobalRef (reference.Handle);
+			reference.Invalidate ();
 		}
 
 		public void Dispose ()
@@ -105,11 +113,19 @@ namespace Java.Interop {
 		}
 
 		[Conditional ("DEBUG")]
-		static void AssertCount (int count, string type, IntPtr value)
+		static void AssertReferenceType (ref JniObjectReference reference, JniObjectReferenceType type)
+		{
+			Debug.Assert (reference.Type == type,
+					string.Format ("Object reference {0} should be of type {1}, is instead {2}!",
+						reference.ToString (), type, reference.Type));
+		}
+
+		[Conditional ("DEBUG")]
+		static void AssertCount (int count, string type, string value)
 		{
 			Debug.Assert (count >= 0,
-					string.Format ("{0} count is {1}, expected to be >= 0 when dealing with handle 0x{2} on thread {3}",
-						type, count, value.ToString ("x"), Thread.CurrentThread.ManagedThreadId));
+					string.Format ("{0} count is {1}, expected to be >= 0 when dealing with handle {2} on thread {3}",
+						type, count, value, Thread.CurrentThread.ManagedThreadId));
 		}
 	}
 }

@@ -22,7 +22,7 @@ namespace Android.Runtime
 		[FieldOffset(0)] IntPtr l;
 #pragma warning restore 0414
 
-		public static JValue Zero = new JValue ((JniReferenceSafeHandle) null);
+		public static JValue Zero = new JValue (IntPtr.Zero);
 
 		public JValue (bool value)
 		{
@@ -72,17 +72,23 @@ namespace Android.Runtime
 			d = value;
 		}
 
-		public JValue (JniReferenceSafeHandle value)
+		JValue (IntPtr value)
 		{
 			this = new JValue ();
-			l = value == null ? IntPtr.Zero : value.DangerousGetHandle ();
+			l = value;
+		}
+
+		public JValue (JniObjectReference value)
+		{
+			this = new JValue ();
+			l = value.Handle;
 		}
 
 		public JValue (IJavaObject value)
 		{
 			this = new JValue ();
-			if (value != null && value.SafeHandle != null && !value.SafeHandle.IsInvalid)
-				l = value.SafeHandle.DangerousGetHandle ();
+			if (value != null)
+				l = value.PeerReference.Handle;
 			else
 				l = IntPtr.Zero;
 		}

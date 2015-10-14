@@ -33,8 +33,6 @@ namespace Java.Interop
 			if (StaticFields == null)
 				return;
 
-			foreach (var f in StaticFields.Values)
-				f.Dispose ();
 			StaticFields = null;
 		}
 	}

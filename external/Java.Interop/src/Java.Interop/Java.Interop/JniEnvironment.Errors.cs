@@ -16,7 +16,7 @@ namespace Java.Interop {
 					// We'll need to rely on the GC to cleanup
 					je.RegisterWithVM ();
 				}
-				Throw (je.SafeHandle);
+				Throw (je.PeerReference);
 			}
 		}
 	}

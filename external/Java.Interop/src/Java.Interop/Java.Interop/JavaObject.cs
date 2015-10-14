@@ -3,19 +3,38 @@ using System;
 namespace Java.Interop
 {
 	[JniTypeInfo ("java/lang/Object")]
-	public class JavaObject : IJavaObject, IJavaObjectEx
+	unsafe public class JavaObject : IJavaObject, IJavaObjectEx
 	{
 		readonly static JniPeerMembers _members = new JniPeerMembers ("java/lang/Object", typeof (JavaObject));
 
 		int     keyHandle;
 		bool    registered;
 
+#if FEATURE_HANDLES_ARE_SAFE_HANDLES
+		JniObjectReference  reference;
+#endif  // FEATURE_HANDLES_ARE_INTPTRS
+#if FEATURE_HANDLES_ARE_INTPTRS
+		IntPtr                  handle;
+		JniObjectReferenceType  handle_type;
+#endif  // FEATURE_HANDLES_ARE_INTPTRS
+
+		protected   static  readonly    JniObjectReference*     InvalidJniObjectReference  = null;
+
 		~JavaObject ()
 		{
 			JniEnvironment.Current.JavaVM.TryCollectObject (this);
 		}
 
-		public          JniReferenceSafeHandle      SafeHandle {get; private set;}
+		public          JniObjectReference          PeerReference {
+			get {
+#if FEATURE_HANDLES_ARE_SAFE_HANDLES
+				return reference;
+#endif  // FEATURE_HANDLES_ARE_INTPTRS
+#if FEATURE_HANDLES_ARE_INTPTRS
+				return new JniObjectReference (handle, handle_type);
+#endif  // FEATURE_HANDLES_ARE_INTPTRS
+			}
+		}
 
 		// Note: JniPeerMembers is invoked virtually from the constructor;
 		// it MUST be valid before the derived constructor executes!
@@ -24,30 +43,32 @@ namespace Java.Interop
 			get {return _members;}
 		}
 
-		public JavaObject (JniReferenceSafeHandle handle, JniHandleOwnership transfer)
+		public JavaObject (ref JniObjectReference reference, JniHandleOwnership transfer)
 		{
-			if (handle == null)
+			if ((transfer & JniHandleOwnership.Invalid) == JniHandleOwnership.Invalid)
 				return;
-			using (SetSafeHandle (handle, transfer)) {
+
+			using (SetPeerReference (ref reference, transfer)) {
 			}
 		}
 
 		public unsafe JavaObject ()
 		{
-			using (SetSafeHandle (
-						JniPeerMembers.InstanceMethods.StartCreateInstance ("()V", GetType (), null),
-						JniHandleOwnership.Transfer)) {
+			var peer = JniPeerMembers.InstanceMethods.StartCreateInstance ("()V", GetType (), null);
+			using (SetPeerReference (
+					ref peer,
+					JniHandleOwnership.Transfer)) {
 				JniPeerMembers.InstanceMethods.FinishCreateInstance ("()V", this, null);
 			}
 		}
 
-		protected SetSafeHandleCompletion SetSafeHandle (JniReferenceSafeHandle handle, JniHandleOwnership transfer)
+		protected SetPeerReferenceCompletion SetPeerReference (ref JniObjectReference handle, JniHandleOwnership transfer)
 		{
-			return JniEnvironment.Current.JavaVM.SetObjectSafeHandle (
+			return JniEnvironment.Current.JavaVM.SetObjectPeerReference (
 					this,
-					handle,
+					ref handle,
 					transfer,
-					a => new SetSafeHandleCompletion (a));
+					a => new SetPeerReferenceCompletion (a));
 		}
 
 		public void RegisterWithVM ()
@@ -79,7 +100,7 @@ namespace Java.Interop
 				return true;
 			var o = obj as IJavaObject;
 			if (o != null)
-				return JniEnvironment.Types.IsSameObject (SafeHandle, o.SafeHandle);
+				return JniEnvironment.Types.IsSameObject (PeerReference, o.PeerReference);
 			return false;
 		}
 
@@ -94,7 +115,7 @@ namespace Java.Interop
 					"toString\u0000()Ljava/lang/String;",
 					this,
 					null);
-			return JniEnvironment.Strings.ToString (lref, JniHandleOwnership.Transfer);
+			return JniEnvironment.Strings.ToString (ref lref, JniHandleOwnership.Transfer);
 		}
 
 		int IJavaObjectEx.IdentityHashCode {
@@ -112,16 +133,22 @@ namespace Java.Interop
 			Dispose (disposing);
 		}
 
-		void IJavaObjectEx.SetSafeHandle (JniReferenceSafeHandle handle)
+		void IJavaObjectEx.SetPeerReference (JniObjectReference reference)
 		{
-			SafeHandle = handle;
+#if FEATURE_HANDLES_ARE_SAFE_HANDLES
+			this.reference  = reference;
+#endif  // FEATURE_HANDLES_ARE_INTPTRS
+#if FEATURE_HANDLES_ARE_INTPTRS
+			this.handle         = reference.Handle;
+			this.handle_type    = reference.Type;
+#endif  // FEATURE_HANDLES_ARE_INTPTRS
 		}
 
-		protected struct SetSafeHandleCompletion : IDisposable {
+		protected struct SetPeerReferenceCompletion : IDisposable {
 
 			readonly    Action  action;
 
-			public SetSafeHandleCompletion (Action action)
+			public SetPeerReferenceCompletion (Action action)
 			{
 				this.action = action;
 			}

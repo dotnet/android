@@ -94,21 +94,24 @@ namespace Java.InteropTests {
 			if (lrefLog == null)
 				return;
 			var message = string.Format (format, args);
-			lrefLog.WriteLine (message);
+			lock (lrefLog) {
+				lrefLog.WriteLine (message);
+				lrefLog.Flush ();
+			}
 		}
 
-		public JniLocalReference CreateLocalReference (JniEnvironment environment, JniReferenceSafeHandle value)
+		public JniObjectReference CreateLocalReference (JniEnvironment environment, JniObjectReference value)
 		{
 			var newValue    = manager.CreateLocalReference (environment, value);
-			if (lrefLog == null || newValue == null || newValue.IsClosed || newValue.IsInvalid)
+			if (lrefLog == null || !newValue.IsValid)
 				return newValue;
 			var t = Thread.CurrentThread;
 			LogLref ("+l+ lrefc {0} obj-handle 0x{1}/{2} -> new-handle 0x{3}/{4} from thread '{5}'({6}){7}{8}",
 					environment.LocalReferenceCount,
-					value.DangerousGetHandle ().ToString ("x"),
-					ToChar (value.ReferenceType),
-					newValue.DangerousGetHandle ().ToString ("x"),
-					ToChar (newValue.ReferenceType),
+					value.Handle.ToString ("x"),
+					ToChar (value.Type),
+					newValue.Handle.ToString ("x"),
+					ToChar (newValue.Type),
 					t.Name,
 					t.ManagedThreadId,
 					Environment.NewLine,
@@ -116,12 +119,12 @@ namespace Java.InteropTests {
 			return newValue;
 		}
 
-		public void DeleteLocalReference (JniEnvironment environment, IntPtr value)
+		public void DeleteLocalReference (JniEnvironment environment, ref JniObjectReference value)
 		{
-			if (lrefLog != null && value != IntPtr.Zero) {
-				LogDeleteLocalRef (environment, value);
+			if (lrefLog != null && value.IsValid) {
+				LogDeleteLocalRef (environment, value.Handle);
 			}
-			manager.DeleteLocalReference (environment, value);
+			manager.DeleteLocalReference (environment, ref value);
 		}
 
 		void LogDeleteLocalRef (JniEnvironment environment, IntPtr value)
@@ -137,28 +140,28 @@ namespace Java.InteropTests {
 					new StackTrace (true));
 		}
 
-		public void CreatedLocalReference (JniEnvironment environment, JniLocalReference value)
+		public void CreatedLocalReference (JniEnvironment environment, JniObjectReference value)
 		{
 			manager.CreatedLocalReference (environment, value);
-			if (lrefLog == null || value == null || value.IsClosed || value.IsInvalid)
+			if (lrefLog == null || !value.IsValid)
 				return;
 			var t = Thread.CurrentThread;
 			LogLref ("+l+ lrefc {0} -> new-handle 0x{1}/{2} from thread '{3}'({4}){5}{6}",
 					environment.LocalReferenceCount,
-					value.DangerousGetHandle ().ToString ("x"),
-					ToChar (value.ReferenceType),
+					value.Handle.ToString ("x"),
+					ToChar (value.Type),
 					t.Name,
 					t.ManagedThreadId,
 					Environment.NewLine,
 					new StackTrace (true));
 		}
 
-		public IntPtr ReleaseLocalReference (JniEnvironment environment, JniLocalReference value)
+		public IntPtr ReleaseLocalReference (JniEnvironment environment, ref JniObjectReference value)
 		{
-			if (lrefLog != null && value != null && !value.IsClosed && !value.IsInvalid) {
-				LogDeleteLocalRef (environment, value.DangerousGetHandle ());
+			if (lrefLog != null && value.IsValid) {
+				LogDeleteLocalRef (environment, value.Handle);
 			}
-			return manager.ReleaseLocalReference (environment, value);
+			return manager.ReleaseLocalReference (environment, ref value);
 		}
 
 		public void WriteGlobalReferenceLine (string format, params object[] args)
@@ -166,22 +169,25 @@ namespace Java.InteropTests {
 			if (grefLog == null)
 				return;
 			var message = string.Format (format, args);
-			grefLog.WriteLine (message);
+			lock (grefLog) {
+				grefLog.WriteLine (message);
+				grefLog.Flush ();
+			}
 		}
 
-		public JniGlobalReference CreateGlobalReference (JniReferenceSafeHandle value)
+		public JniObjectReference CreateGlobalReference (JniObjectReference value)
 		{
 			var newValue    = manager.CreateGlobalReference (value);
-			if (grefLog == null || newValue == null || newValue.IsClosed || newValue.IsInvalid)
+			if (grefLog == null || !newValue.IsValid)
 				return newValue;
 			var t = Thread.CurrentThread;
 			LogGref ("+g+ grefc {0} gwrefc {1} obj-handle 0x{2}/{3} -> new-handle 0x{4}/{5} from thread '{6}'({7}){8}{9}",
 					GlobalReferenceCount,
 					WeakGlobalReferenceCount,
-					value.DangerousGetHandle ().ToString ("x"),
-					ToChar (value.ReferenceType),
-					newValue.DangerousGetHandle ().ToString ("x"),
-					ToChar (newValue.ReferenceType),
+					value.Handle.ToString ("x"),
+					ToChar (value.Type),
+					newValue.Handle.ToString ("x"),
+					ToChar (newValue.Type),
 					t.Name,
 					t.ManagedThreadId,
 					Environment.NewLine,
@@ -189,37 +195,37 @@ namespace Java.InteropTests {
 			return newValue;
 		}
 
-		public void DeleteGlobalReference (IntPtr value)
+		public void DeleteGlobalReference (ref JniObjectReference value)
 		{
-			if (grefLog != null && value != IntPtr.Zero) {
+			if (grefLog != null && value.IsValid) {
 				var t = Thread.CurrentThread;
 				LogGref ("-g- grefc {0} gwrefc {1} handle 0x{2}/{3} from thread '{4}'({5}){6}{7}",
 						GlobalReferenceCount,
 						WeakGlobalReferenceCount,
-						value.ToString ("x"),
+						value.Handle.ToString ("x"),
 						'G',
 						t.Name,
 						t.ManagedThreadId,
 						Environment.NewLine,
 						new StackTrace (true));
 			}
-			manager.DeleteGlobalReference (value);
+			manager.DeleteGlobalReference (ref value);
 		}
 
-		public JniWeakGlobalReference CreateWeakGlobalReference (JniReferenceSafeHandle value)
+		public JniObjectReference CreateWeakGlobalReference (JniObjectReference value)
 		{
 			var newValue    = manager.CreateWeakGlobalReference (value);
-			if (grefLog == null || newValue != null || newValue.IsClosed || newValue.IsInvalid) {
+			if (grefLog == null || !newValue.IsValid) {
 				return newValue;
 			}
 			var t = Thread.CurrentThread;
 			LogGref ("+w+ grefc {0} gwrefc {1} obj-handle 0x{2}/{3} -> new-handle 0x{4}/{5} from thread '{6}'({7}){8}{9}",
 					GlobalReferenceCount,
 					WeakGlobalReferenceCount,
-					value.DangerousGetHandle ().ToString ("x"),
-					ToChar (value.ReferenceType),
-					newValue.DangerousGetHandle ().ToString ("x"),
-					ToChar (newValue.ReferenceType),
+					value.Handle.ToString ("x"),
+					ToChar (value.Type),
+					newValue.Handle.ToString ("x"),
+					ToChar (newValue.Type),
 					t.Name,
 					t.ManagedThreadId,
 					Environment.NewLine,
@@ -227,21 +233,21 @@ namespace Java.InteropTests {
 			return newValue;
 		}
 
-		public void DeleteWeakGlobalReference (IntPtr value)
+		public void DeleteWeakGlobalReference (ref JniObjectReference value)
 		{
-			if (grefLog != null && value != IntPtr.Zero) {
+			if (grefLog != null && value.IsValid) {
 				var t = Thread.CurrentThread;
 				LogGref ("-w- grefc {0} gwrefc {1} handle 0x{2}/{3} from thread '{4}'({5}){6}{7}",
 						GlobalReferenceCount,
 						WeakGlobalReferenceCount,
-						value.ToString ("x"),
+						value.Handle.ToString ("x"),
 						'W',
 						t.Name,
 						t.ManagedThreadId,
 						Environment.NewLine,
 						new StackTrace (true));
 			}
-			manager.DeleteWeakGlobalReference (value);
+			manager.DeleteWeakGlobalReference (ref value);
 		}
 
 		public void Dispose ()
@@ -276,13 +282,13 @@ namespace Java.InteropTests {
 			}
 		}
 
-		static char ToChar (JniReferenceType type)
+		static char ToChar (JniObjectReferenceType type)
 		{
 			switch (type) {
-			case JniReferenceType.Global:       return 'G';
-			case JniReferenceType.Invalid:      return 'I';
-			case JniReferenceType.Local:        return 'L';
-			case JniReferenceType.WeakGlobal:   return 'W';
+			case JniObjectReferenceType.Global:         return 'G';
+			case JniObjectReferenceType.Invalid:        return 'I';
+			case JniObjectReferenceType.Local:          return 'L';
+			case JniObjectReferenceType.WeakGlobal:     return 'W';
 			}
 			return '*';
 		}

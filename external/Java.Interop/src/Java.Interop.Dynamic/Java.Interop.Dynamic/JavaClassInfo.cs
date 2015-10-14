@@ -163,12 +163,12 @@ namespace Java.Interop.Dynamic {
 			}
 		}
 
-		internal static JniReferenceSafeHandle GetMethodParameters (JniReferenceSafeHandle method)
+		internal static JniObjectReference GetMethodParameters (JniObjectReference method)
 		{
 			return Method_getParameterTypes.CallVirtualObjectMethod (method);
 		}
 
-		internal static JniReferenceSafeHandle GetConstructorParameters (JniReferenceSafeHandle method)
+		internal static JniObjectReference GetConstructorParameters (JniObjectReference method)
 		{
 			return Constructor_getParameterTypes.CallVirtualObjectMethod (method);
 		}
@@ -184,14 +184,17 @@ namespace Java.Interop.Dynamic {
 
 				constructors    = new List<JavaConstructorInfo> ();
 
-				using (var ctors = Class_getConstructors.CallVirtualObjectMethod (Members.JniPeerType.SafeHandle)) {
+				var ctors = Class_getConstructors.CallVirtualObjectMethod (Members.JniPeerType.PeerReference);
+				try {
 					int len     = JniEnvironment.Arrays.GetArrayLength (ctors);
 					for (int i  = 0; i < len; ++i) {
 						var ctor    = JniEnvironment.Arrays.GetObjectArrayElement (ctors, i);
 						var m       = new JavaConstructorInfo (Members, ctor);
 						constructors.Add (m);
-						ctor.Dispose ();
+						JniEnvironment.Handles.Dispose (ref ctor);
 					}
+				} finally {
+					JniEnvironment.Handles.Dispose (ref ctors);
 				}
 
 				return constructors;
@@ -204,29 +207,34 @@ namespace Java.Interop.Dynamic {
 				return null;
 
 			lock (Members) {
-				if (fields != null || Disposed)
+				if (this.fields != null || Disposed)
 					return this.fields;
 
 				this.fields = new Dictionary<string, List<JavaFieldInfo>> ();
 
-				using (var fields = Class_getFields.CallVirtualObjectMethod (Members.JniPeerType.SafeHandle)) {
+				var fields = Class_getFields.CallVirtualObjectMethod (Members.JniPeerType.PeerReference);
+				try {
 					int len     = JniEnvironment.Arrays.GetArrayLength (fields);
 					for (int i  = 0; i < len; ++i) {
 						var field       = JniEnvironment.Arrays.GetObjectArrayElement (fields, i);
-						var name        = JniEnvironment.Strings.ToString (Field_getName.CallVirtualObjectMethod (field), JniHandleOwnership.Transfer);
+						var n_name      = Field_getName.CallVirtualObjectMethod (field);
+						var name        = JniEnvironment.Strings.ToString (ref n_name, JniHandleOwnership.Transfer);
 						var isStatic    = IsStatic (field);
 
 						List<JavaFieldInfo> overloads;
 						if (!Fields.TryGetValue (name, out overloads))
 							Fields.Add (name, overloads = new List<JavaFieldInfo> ());
 
-						using (var type = new JniType (Field_getType.CallVirtualObjectMethod (field), JniHandleOwnership.Transfer)) {
+						var n_type      = Field_getType.CallVirtualObjectMethod (field);
+						using (var type = new JniType (ref n_type, JniHandleOwnership.Transfer)) {
 							var info = JniEnvironment.Current.JavaVM.GetJniTypeInfoForJniTypeReference (type.Name);
 							overloads.Add (new JavaFieldInfo (Members, name + "\u0000" + info.JniTypeReference, isStatic));
 						}
 
-						field.Dispose ();
+						JniEnvironment.Handles.Dispose (ref field);
 					}
+				} finally {
+					JniEnvironment.Handles.Dispose (ref fields);
 				}
 
 				return this.fields;
@@ -239,36 +247,41 @@ namespace Java.Interop.Dynamic {
 				return null;
 
 			lock (Members) {
-				if (methods != null || Disposed)
+				if (this.methods != null || Disposed)
 					return this.methods;
 
 				this.methods = new Dictionary<string, List<JavaMethodInfo>> ();
 
-				using (var methods = Class_getMethods.CallVirtualObjectMethod (Members.JniPeerType.SafeHandle)) {
+				var methods  = Class_getMethods.CallVirtualObjectMethod (Members.JniPeerType.PeerReference);
+				try {
 					int len     = JniEnvironment.Arrays.GetArrayLength (methods);
 					for (int i  = 0; i < len; ++i) {
 						var method      = JniEnvironment.Arrays.GetObjectArrayElement (methods, i);
-						var name        = JniEnvironment.Strings.ToString (Method_getName.CallVirtualObjectMethod (method), JniHandleOwnership.Transfer);
+						var n_name      = Method_getName.CallVirtualObjectMethod (method);
+						var name        = JniEnvironment.Strings.ToString (ref n_name, JniHandleOwnership.Transfer);
 						var isStatic    = IsStatic (method);
 
 						List<JavaMethodInfo> overloads;
 						if (!Methods.TryGetValue (name, out overloads))
 							Methods.Add (name, overloads = new List<JavaMethodInfo> ());
 
-						var rt  = new JniType (Method_getReturnType.CallVirtualObjectMethod (method), JniHandleOwnership.Transfer);
+						var nrt = Method_getReturnType.CallVirtualObjectMethod (method);
+						var rt  = new JniType (ref nrt, JniHandleOwnership.Transfer);
 						var m   = new JavaMethodInfo (Members, method, name, isStatic) {
 							ReturnType  = rt,
 						};
 						overloads.Add (m);
-						method.Dispose ();
+						JniEnvironment.Handles.Dispose (ref method);
 					}
+				} finally {
+					JniEnvironment.Handles.Dispose (ref methods);
 				}
 
 				return this.methods;
 			}
 		}
 
-		static bool IsStatic (JniReferenceSafeHandle member)
+		static bool IsStatic (JniObjectReference member)
 		{
 			var s   = Member_getModifiers.CallVirtualInt32Method (member);
 

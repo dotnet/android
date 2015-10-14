@@ -13,7 +13,7 @@ namespace Java.InteropTests
 		public void CreateJavaVM ()
 		{
 			Assert.AreSame (JavaVM.Current, JavaVM.Current);
-			Assert.IsNotNull (JavaVM.Current.SafeHandle);
+			Assert.IsTrue (JavaVM.Current.InvocationPointer != IntPtr.Zero);
 			Assert.IsNotNull (JniEnvironment.Current);
 		}
 
@@ -45,7 +45,7 @@ namespace Java.InteropTests
 			{
 			}
 
-			protected override bool TryGC (IJavaObject value, ref JniReferenceSafeHandle handle)
+			protected override bool TryGC (IJavaObject value, ref JniObjectReference handle)
 			{
 				throw new NotImplementedException ();
 			}
@@ -54,21 +54,22 @@ namespace Java.InteropTests
 		[Test]
 		public void GetRegisteredJavaVM_ExistingInstance ()
 		{
-			Assert.AreEqual (JavaVM.Current, JavaVM.GetRegisteredJavaVM (JavaVM.Current.SafeHandle));
+			Assert.AreEqual (JavaVM.Current, JavaVM.GetRegisteredJavaVM (JavaVM.Current.InvocationPointer));
 		}
 
 		[Test]
 		public void GetObject_ReturnsAlias ()
 		{
 			var local   = new JavaObject ();
-			Assert.IsNull (JavaVM.Current.PeekObject (local.SafeHandle));
+			Assert.IsNull (JavaVM.Current.PeekObject (local.PeerReference));
 			// GetObject must always return a value (unless handle is null, etc.).
 			// However, since we didn't call local.RegisterWithVM(),
 			// JavaVM.PeekObject() is null (asserted above), but GetObject() must
 			// **still** return _something_.
 			// In this case, it returns an _alias_.
 			// TODO: "most derived type" alias generation. (Not relevant here, but...)
-			var alias   = JavaVM.Current.GetObject (local.SafeHandle, JniHandleOwnership.DoNotTransfer);
+			var p       = local.PeerReference;
+			var alias   = JavaVM.Current.GetObject (ref p, JniHandleOwnership.DoNotTransfer);
 			Assert.AreNotSame (local, alias);
 			alias.Dispose ();
 			local.Dispose ();
@@ -84,9 +85,9 @@ namespace Java.InteropTests
 		[Test]
 		public void GetObject_ReturnsRegisteredInstance ()
 		{
-			JniLocalReference lref;
+			JniObjectReference lref;
 			using (var o = new JavaObject ()) {
-				lref = o.SafeHandle.NewLocalRef ();
+				lref = o.PeerReference.NewLocalRef ();
 				Assert.IsNull (JavaVM.Current.PeekObject (lref));
 				o.RegisterWithVM ();
 				Assert.AreSame (o, JavaVM.Current.PeekObject (lref));
@@ -95,24 +96,25 @@ namespace Java.InteropTests
 			// but the wrapper instance has been disposed, and thus should
 			// be unregistered, and thus unfindable.
 			Assert.IsNull (JavaVM.Current.PeekObject (lref));
-			lref.Dispose ();
+			JniEnvironment.Handles.Dispose (ref lref);
 		}
 
 		[Test]
 		public void GetObject_ReturnsNullWithInvalidSafeHandle ()
 		{
-			var invalid = JniReferenceSafeHandle.Null;
-			Assert.IsNull (JavaVM.Current.GetObject (invalid, JniHandleOwnership.Transfer));
+			var invalid = new JniObjectReference ();
+			Assert.IsNull (JavaVM.Current.GetObject (ref invalid, JniHandleOwnership.Transfer));
 		}
 
 		[Test]
 		public unsafe void GetObject_FindBestMatchType ()
 		{
-			using (var t = new JniType (TestType.JniTypeName))
-			using (var c = t.GetConstructor ("()V"))
-			using (var o = t.NewObject (c, null))
-			using (var w = JavaVM.Current.GetObject (o, JniHandleOwnership.DoNotTransfer)) {
-				Assert.AreEqual (typeof (TestType), w.GetType ());
+			using (var t = new JniType (TestType.JniTypeName)) {
+				var c = t.GetConstructor ("()V");
+				var o = t.NewObject (c, null);
+				using (var w = JavaVM.Current.GetObject (ref o, JniHandleOwnership.Transfer)) {
+					Assert.AreEqual (typeof (TestType), w.GetType ());
+				}
 			}
 		}
 
@@ -289,8 +291,9 @@ namespace Java.InteropTests
 					createLocalRef: type + ".CreateLocalRef");
 			var info = JavaVM.Current.GetJniMarshalInfoForType (typeof(T));
 			info.CreateJValue (default (T));
-			using (var lref = info.CreateLocalRef (default (T)))
-				Assert.AreEqual (default (T), info.GetValueFromJni (lref, JniHandleOwnership.DoNotTransfer, null));
+			var lref = info.CreateLocalRef (default (T));
+			Assert.AreEqual (default (T), info.GetValueFromJni (ref lref, JniHandleOwnership.DoNotTransfer, null));
+			JniEnvironment.Handles.Dispose (ref lref);
 		}
 
 		static void AssertGetJniMarshalInfoForPrimitiveArray<TArray, TElement> ()

@@ -2,9 +2,10 @@ using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
+#if FEATURE_HANDLES_ARE_SAFE_HANDLES
 namespace Java.Interop
 {
-	public abstract class JniReferenceSafeHandle : SafeHandle
+	abstract class JniReferenceSafeHandle : SafeHandle
 	{
 		public static readonly JniReferenceSafeHandle Null = new JniInvocationHandle (IntPtr.Zero);
 
@@ -22,11 +23,11 @@ namespace Java.Interop
 			get {return base.handle == IntPtr.Zero;}
 		}
 
-		public JniReferenceType ReferenceType {
+		public JniObjectReferenceType ReferenceType {
 			get {
 				if (IsInvalid)
 					throw new ObjectDisposedException (GetType ().FullName);
-				return JniEnvironment.Handles.GetObjectRefType (this);
+				return JniEnvironment.Handles.GetObjectRefType (new JniObjectReference (this));
 			}
 		}
 
@@ -37,24 +38,33 @@ namespace Java.Interop
 			return h;
 		}
 
+		internal void Invalidate ()
+		{
+			handle = IntPtr.Zero;
+		}
+
 		public JniGlobalReference NewGlobalRef ()
 		{
-			return JniEnvironment.Current.JavaVM.JniHandleManager.CreateGlobalReference (this);
+			var r = new JniObjectReference (DangerousGetHandle (), ReferenceType);
+			return new JniGlobalReference (r.NewGlobalRef ().Handle);
 		}
 
 		public JniLocalReference NewLocalRef ()
 		{
-			return JniEnvironment.Current.JavaVM.JniHandleManager.CreateLocalReference (JniEnvironment.Current, this);
+			var r = new JniObjectReference (DangerousGetHandle (), ReferenceType);
+			return new JniLocalReference (r.NewLocalRef ().Handle);
 		}
 
 		public JniWeakGlobalReference NewWeakGlobalRef ()
 		{
-			return JniEnvironment.Current.JavaVM.JniHandleManager.CreateWeakGlobalReference (this);
+			var r = new JniObjectReference (DangerousGetHandle (), ReferenceType);
+			return new JniWeakGlobalReference (r.NewWeakGlobalRef ().Handle);
 		}
 
 		internal string GetJniTypeName ()
 		{
-			return JniEnvironment.Types.GetJniTypeNameFromInstance (this);
+			var r = new JniObjectReference (DangerousGetHandle (), ReferenceType);
+			return JniEnvironment.Types.GetJniTypeNameFromInstance (r);
 		}
 
 		public override string ToString ()
@@ -63,7 +73,7 @@ namespace Java.Interop
 		}
 	}
 
-	public class JniInvocationHandle : JniReferenceSafeHandle {
+	class JniInvocationHandle : JniReferenceSafeHandle {
 
 		public JniInvocationHandle (IntPtr handle)
 			: base (ownsHandle:false)
@@ -77,4 +87,5 @@ namespace Java.Interop
 		}
 	}
 }
+#endif  // FEATURE_HANDLES_ARE_SAFE_HANDLES
 

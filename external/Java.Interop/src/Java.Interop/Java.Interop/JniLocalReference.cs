@@ -4,12 +4,16 @@ using System.Runtime.InteropServices;
 
 namespace Java.Interop
 {
-
-	public class JniLocalReference : JniReferenceSafeHandle {
+	class JniLocalReference : JniReferenceSafeHandle {
 
 		internal JniLocalReference ()
 		{
 			JniEnvironment.Current.LocalReferences.Add (this);
+		}
+
+		public JniLocalReference (IntPtr handle)
+		{
+			SetHandle (handle);
 		}
 
 		protected override bool ReleaseHandle ()
@@ -20,7 +24,8 @@ namespace Java.Interop
 
 		internal IntPtr ReturnToJniRef ()
 		{
-			return JniEnvironment.Current.JavaVM.JniHandleManager.ReleaseLocalReference (JniEnvironment.Current, this);
+			var r = new JniObjectReference (this, JniObjectReferenceType.Local);
+			return JniEnvironment.Current.JavaVM.JniHandleManager.ReleaseLocalReference (JniEnvironment.Current, ref r);
 		}
 
 		internal JniAllocObjectRef ToAllocObjectRef ()

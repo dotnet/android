@@ -4,7 +4,7 @@ namespace Java.Interop.GenericMarshaler {
 
 	public static partial class JniPeerInstanceMethodsExtensions {
 
-		public static JniLocalReference StartGenericCreateInstance<T> (
+		public static JniObjectReference StartGenericCreateInstance<T> (
 			this    JniPeerInstanceMethods peer,
 			string  constructorSignature,
 			Type    declaringType,
@@ -14,11 +14,10 @@ namespace Java.Interop.GenericMarshaler {
 			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
 				return NewObject (peer, constructorSignature, declaringType, value);
 			}
-			using (var lref = peer.AllocObject (declaringType))
-				return lref.ToAllocObjectRef ();
+			return peer.AllocObject (declaringType);
 		}
 
-		static unsafe JniLocalReference NewObject<T> (
+		static unsafe JniObjectReference NewObject<T> (
 			JniPeerInstanceMethods  peer,
 		    string  constructorSignature,
 		    Type    declaringType,
@@ -65,13 +64,13 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				var methods = peer.GetConstructorsForType (self.GetType ());
 				var ctor    = methods.GetConstructor (constructorSignature);
-				ctor.CallNonvirtualVoidMethod (self.SafeHandle, methods.JniPeerType.SafeHandle, args);
+				ctor.CallNonvirtualVoidMethod (self.PeerReference, methods.JniPeerType.PeerReference, args);
 			} finally {
 				arg.Cleanup (value);
 			}
 		}
 
-		public static JniLocalReference StartGenericCreateInstance<T1, T2> (
+		public static JniObjectReference StartGenericCreateInstance<T1, T2> (
 			this    JniPeerInstanceMethods peer,
 			string  constructorSignature,
 			Type    declaringType,
@@ -81,11 +80,10 @@ namespace Java.Interop.GenericMarshaler {
 			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
 				return NewObject (peer, constructorSignature, declaringType, value1, value2);
 			}
-			using (var lref = peer.AllocObject (declaringType))
-				return lref.ToAllocObjectRef ();
+			return peer.AllocObject (declaringType);
 		}
 
-		static unsafe JniLocalReference NewObject<T1, T2> (
+		static unsafe JniObjectReference NewObject<T1, T2> (
 			JniPeerInstanceMethods  peer,
 		    string  constructorSignature,
 		    Type    declaringType,
@@ -137,14 +135,14 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				var methods = peer.GetConstructorsForType (self.GetType ());
 				var ctor    = methods.GetConstructor (constructorSignature);
-				ctor.CallNonvirtualVoidMethod (self.SafeHandle, methods.JniPeerType.SafeHandle, args);
+				ctor.CallNonvirtualVoidMethod (self.PeerReference, methods.JniPeerType.PeerReference, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
 			}
 		}
 
-		public static JniLocalReference StartGenericCreateInstance<T1, T2, T3> (
+		public static JniObjectReference StartGenericCreateInstance<T1, T2, T3> (
 			this    JniPeerInstanceMethods peer,
 			string  constructorSignature,
 			Type    declaringType,
@@ -154,11 +152,10 @@ namespace Java.Interop.GenericMarshaler {
 			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
 				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3);
 			}
-			using (var lref = peer.AllocObject (declaringType))
-				return lref.ToAllocObjectRef ();
+			return peer.AllocObject (declaringType);
 		}
 
-		static unsafe JniLocalReference NewObject<T1, T2, T3> (
+		static unsafe JniObjectReference NewObject<T1, T2, T3> (
 			JniPeerInstanceMethods  peer,
 		    string  constructorSignature,
 		    Type    declaringType,
@@ -215,7 +212,7 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				var methods = peer.GetConstructorsForType (self.GetType ());
 				var ctor    = methods.GetConstructor (constructorSignature);
-				ctor.CallNonvirtualVoidMethod (self.SafeHandle, methods.JniPeerType.SafeHandle, args);
+				ctor.CallNonvirtualVoidMethod (self.PeerReference, methods.JniPeerType.PeerReference, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -223,7 +220,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static JniLocalReference StartGenericCreateInstance<T1, T2, T3, T4> (
+		public static JniObjectReference StartGenericCreateInstance<T1, T2, T3, T4> (
 			this    JniPeerInstanceMethods peer,
 			string  constructorSignature,
 			Type    declaringType,
@@ -233,11 +230,10 @@ namespace Java.Interop.GenericMarshaler {
 			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
 				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3, value4);
 			}
-			using (var lref = peer.AllocObject (declaringType))
-				return lref.ToAllocObjectRef ();
+			return peer.AllocObject (declaringType);
 		}
 
-		static unsafe JniLocalReference NewObject<T1, T2, T3, T4> (
+		static unsafe JniObjectReference NewObject<T1, T2, T3, T4> (
 			JniPeerInstanceMethods  peer,
 		    string  constructorSignature,
 		    Type    declaringType,
@@ -299,7 +295,7 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				var methods = peer.GetConstructorsForType (self.GetType ());
 				var ctor    = methods.GetConstructor (constructorSignature);
-				ctor.CallNonvirtualVoidMethod (self.SafeHandle, methods.JniPeerType.SafeHandle, args);
+				ctor.CallNonvirtualVoidMethod (self.PeerReference, methods.JniPeerType.PeerReference, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -308,7 +304,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static JniLocalReference StartGenericCreateInstance<T1, T2, T3, T4, T5> (
+		public static JniObjectReference StartGenericCreateInstance<T1, T2, T3, T4, T5> (
 			this    JniPeerInstanceMethods peer,
 			string  constructorSignature,
 			Type    declaringType,
@@ -318,11 +314,10 @@ namespace Java.Interop.GenericMarshaler {
 			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
 				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3, value4, value5);
 			}
-			using (var lref = peer.AllocObject (declaringType))
-				return lref.ToAllocObjectRef ();
+			return peer.AllocObject (declaringType);
 		}
 
-		static unsafe JniLocalReference NewObject<T1, T2, T3, T4, T5> (
+		static unsafe JniObjectReference NewObject<T1, T2, T3, T4, T5> (
 			JniPeerInstanceMethods  peer,
 		    string  constructorSignature,
 		    Type    declaringType,
@@ -389,7 +384,7 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				var methods = peer.GetConstructorsForType (self.GetType ());
 				var ctor    = methods.GetConstructor (constructorSignature);
-				ctor.CallNonvirtualVoidMethod (self.SafeHandle, methods.JniPeerType.SafeHandle, args);
+				ctor.CallNonvirtualVoidMethod (self.PeerReference, methods.JniPeerType.PeerReference, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -399,7 +394,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static JniLocalReference StartGenericCreateInstance<T1, T2, T3, T4, T5, T6> (
+		public static JniObjectReference StartGenericCreateInstance<T1, T2, T3, T4, T5, T6> (
 			this    JniPeerInstanceMethods peer,
 			string  constructorSignature,
 			Type    declaringType,
@@ -409,11 +404,10 @@ namespace Java.Interop.GenericMarshaler {
 			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
 				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3, value4, value5, value6);
 			}
-			using (var lref = peer.AllocObject (declaringType))
-				return lref.ToAllocObjectRef ();
+			return peer.AllocObject (declaringType);
 		}
 
-		static unsafe JniLocalReference NewObject<T1, T2, T3, T4, T5, T6> (
+		static unsafe JniObjectReference NewObject<T1, T2, T3, T4, T5, T6> (
 			JniPeerInstanceMethods  peer,
 		    string  constructorSignature,
 		    Type    declaringType,
@@ -485,7 +479,7 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				var methods = peer.GetConstructorsForType (self.GetType ());
 				var ctor    = methods.GetConstructor (constructorSignature);
-				ctor.CallNonvirtualVoidMethod (self.SafeHandle, methods.JniPeerType.SafeHandle, args);
+				ctor.CallNonvirtualVoidMethod (self.PeerReference, methods.JniPeerType.PeerReference, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -496,7 +490,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static JniLocalReference StartGenericCreateInstance<T1, T2, T3, T4, T5, T6, T7> (
+		public static JniObjectReference StartGenericCreateInstance<T1, T2, T3, T4, T5, T6, T7> (
 			this    JniPeerInstanceMethods peer,
 			string  constructorSignature,
 			Type    declaringType,
@@ -506,11 +500,10 @@ namespace Java.Interop.GenericMarshaler {
 			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
 				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7);
 			}
-			using (var lref = peer.AllocObject (declaringType))
-				return lref.ToAllocObjectRef ();
+			return peer.AllocObject (declaringType);
 		}
 
-		static unsafe JniLocalReference NewObject<T1, T2, T3, T4, T5, T6, T7> (
+		static unsafe JniObjectReference NewObject<T1, T2, T3, T4, T5, T6, T7> (
 			JniPeerInstanceMethods  peer,
 		    string  constructorSignature,
 		    Type    declaringType,
@@ -587,7 +580,7 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				var methods = peer.GetConstructorsForType (self.GetType ());
 				var ctor    = methods.GetConstructor (constructorSignature);
-				ctor.CallNonvirtualVoidMethod (self.SafeHandle, methods.JniPeerType.SafeHandle, args);
+				ctor.CallNonvirtualVoidMethod (self.PeerReference, methods.JniPeerType.PeerReference, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -599,7 +592,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static JniLocalReference StartGenericCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8> (
+		public static JniObjectReference StartGenericCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8> (
 			this    JniPeerInstanceMethods peer,
 			string  constructorSignature,
 			Type    declaringType,
@@ -609,11 +602,10 @@ namespace Java.Interop.GenericMarshaler {
 			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
 				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7, value8);
 			}
-			using (var lref = peer.AllocObject (declaringType))
-				return lref.ToAllocObjectRef ();
+			return peer.AllocObject (declaringType);
 		}
 
-		static unsafe JniLocalReference NewObject<T1, T2, T3, T4, T5, T6, T7, T8> (
+		static unsafe JniObjectReference NewObject<T1, T2, T3, T4, T5, T6, T7, T8> (
 			JniPeerInstanceMethods  peer,
 		    string  constructorSignature,
 		    Type    declaringType,
@@ -695,7 +687,7 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				var methods = peer.GetConstructorsForType (self.GetType ());
 				var ctor    = methods.GetConstructor (constructorSignature);
-				ctor.CallNonvirtualVoidMethod (self.SafeHandle, methods.JniPeerType.SafeHandle, args);
+				ctor.CallNonvirtualVoidMethod (self.PeerReference, methods.JniPeerType.PeerReference, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -708,7 +700,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static JniLocalReference StartGenericCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+		public static JniObjectReference StartGenericCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
 			this    JniPeerInstanceMethods peer,
 			string  constructorSignature,
 			Type    declaringType,
@@ -718,11 +710,10 @@ namespace Java.Interop.GenericMarshaler {
 			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
 				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7, value8, value9);
 			}
-			using (var lref = peer.AllocObject (declaringType))
-				return lref.ToAllocObjectRef ();
+			return peer.AllocObject (declaringType);
 		}
 
-		static unsafe JniLocalReference NewObject<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+		static unsafe JniObjectReference NewObject<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
 			JniPeerInstanceMethods  peer,
 		    string  constructorSignature,
 		    Type    declaringType,
@@ -809,7 +800,7 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				var methods = peer.GetConstructorsForType (self.GetType ());
 				var ctor    = methods.GetConstructor (constructorSignature);
-				ctor.CallNonvirtualVoidMethod (self.SafeHandle, methods.JniPeerType.SafeHandle, args);
+				ctor.CallNonvirtualVoidMethod (self.PeerReference, methods.JniPeerType.PeerReference, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -823,7 +814,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static JniLocalReference StartGenericCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+		public static JniObjectReference StartGenericCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
 			this    JniPeerInstanceMethods peer,
 			string  constructorSignature,
 			Type    declaringType,
@@ -833,11 +824,10 @@ namespace Java.Interop.GenericMarshaler {
 			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
 				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10);
 			}
-			using (var lref = peer.AllocObject (declaringType))
-				return lref.ToAllocObjectRef ();
+			return peer.AllocObject (declaringType);
 		}
 
-		static unsafe JniLocalReference NewObject<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+		static unsafe JniObjectReference NewObject<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
 			JniPeerInstanceMethods  peer,
 		    string  constructorSignature,
 		    Type    declaringType,
@@ -929,7 +919,7 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				var methods = peer.GetConstructorsForType (self.GetType ());
 				var ctor    = methods.GetConstructor (constructorSignature);
-				ctor.CallNonvirtualVoidMethod (self.SafeHandle, methods.JniPeerType.SafeHandle, args);
+				ctor.CallNonvirtualVoidMethod (self.PeerReference, methods.JniPeerType.PeerReference, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -944,7 +934,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static JniLocalReference StartGenericCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+		public static JniObjectReference StartGenericCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
 			this    JniPeerInstanceMethods peer,
 			string  constructorSignature,
 			Type    declaringType,
@@ -954,11 +944,10 @@ namespace Java.Interop.GenericMarshaler {
 			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
 				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11);
 			}
-			using (var lref = peer.AllocObject (declaringType))
-				return lref.ToAllocObjectRef ();
+			return peer.AllocObject (declaringType);
 		}
 
-		static unsafe JniLocalReference NewObject<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+		static unsafe JniObjectReference NewObject<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
 			JniPeerInstanceMethods  peer,
 		    string  constructorSignature,
 		    Type    declaringType,
@@ -1055,7 +1044,7 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				var methods = peer.GetConstructorsForType (self.GetType ());
 				var ctor    = methods.GetConstructor (constructorSignature);
-				ctor.CallNonvirtualVoidMethod (self.SafeHandle, methods.JniPeerType.SafeHandle, args);
+				ctor.CallNonvirtualVoidMethod (self.PeerReference, methods.JniPeerType.PeerReference, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -1071,7 +1060,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static JniLocalReference StartGenericCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+		public static JniObjectReference StartGenericCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
 			this    JniPeerInstanceMethods peer,
 			string  constructorSignature,
 			Type    declaringType,
@@ -1081,11 +1070,10 @@ namespace Java.Interop.GenericMarshaler {
 			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
 				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12);
 			}
-			using (var lref = peer.AllocObject (declaringType))
-				return lref.ToAllocObjectRef ();
+			return peer.AllocObject (declaringType);
 		}
 
-		static unsafe JniLocalReference NewObject<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+		static unsafe JniObjectReference NewObject<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
 			JniPeerInstanceMethods  peer,
 		    string  constructorSignature,
 		    Type    declaringType,
@@ -1187,7 +1175,7 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				var methods = peer.GetConstructorsForType (self.GetType ());
 				var ctor    = methods.GetConstructor (constructorSignature);
-				ctor.CallNonvirtualVoidMethod (self.SafeHandle, methods.JniPeerType.SafeHandle, args);
+				ctor.CallNonvirtualVoidMethod (self.PeerReference, methods.JniPeerType.PeerReference, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -1204,7 +1192,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static JniLocalReference StartGenericCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+		public static JniObjectReference StartGenericCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
 			this    JniPeerInstanceMethods peer,
 			string  constructorSignature,
 			Type    declaringType,
@@ -1214,11 +1202,10 @@ namespace Java.Interop.GenericMarshaler {
 			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
 				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13);
 			}
-			using (var lref = peer.AllocObject (declaringType))
-				return lref.ToAllocObjectRef ();
+			return peer.AllocObject (declaringType);
 		}
 
-		static unsafe JniLocalReference NewObject<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+		static unsafe JniObjectReference NewObject<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
 			JniPeerInstanceMethods  peer,
 		    string  constructorSignature,
 		    Type    declaringType,
@@ -1325,7 +1312,7 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				var methods = peer.GetConstructorsForType (self.GetType ());
 				var ctor    = methods.GetConstructor (constructorSignature);
-				ctor.CallNonvirtualVoidMethod (self.SafeHandle, methods.JniPeerType.SafeHandle, args);
+				ctor.CallNonvirtualVoidMethod (self.PeerReference, methods.JniPeerType.PeerReference, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -1343,7 +1330,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static JniLocalReference StartGenericCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+		public static JniObjectReference StartGenericCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
 			this    JniPeerInstanceMethods peer,
 			string  constructorSignature,
 			Type    declaringType,
@@ -1353,11 +1340,10 @@ namespace Java.Interop.GenericMarshaler {
 			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
 				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13, value14);
 			}
-			using (var lref = peer.AllocObject (declaringType))
-				return lref.ToAllocObjectRef ();
+			return peer.AllocObject (declaringType);
 		}
 
-		static unsafe JniLocalReference NewObject<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+		static unsafe JniObjectReference NewObject<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
 			JniPeerInstanceMethods  peer,
 		    string  constructorSignature,
 		    Type    declaringType,
@@ -1469,7 +1455,7 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				var methods = peer.GetConstructorsForType (self.GetType ());
 				var ctor    = methods.GetConstructor (constructorSignature);
-				ctor.CallNonvirtualVoidMethod (self.SafeHandle, methods.JniPeerType.SafeHandle, args);
+				ctor.CallNonvirtualVoidMethod (self.PeerReference, methods.JniPeerType.PeerReference, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -1488,7 +1474,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static JniLocalReference StartGenericCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+		public static JniObjectReference StartGenericCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
 			this    JniPeerInstanceMethods peer,
 			string  constructorSignature,
 			Type    declaringType,
@@ -1498,11 +1484,10 @@ namespace Java.Interop.GenericMarshaler {
 			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
 				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13, value14, value15);
 			}
-			using (var lref = peer.AllocObject (declaringType))
-				return lref.ToAllocObjectRef ();
+			return peer.AllocObject (declaringType);
 		}
 
-		static unsafe JniLocalReference NewObject<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+		static unsafe JniObjectReference NewObject<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
 			JniPeerInstanceMethods  peer,
 		    string  constructorSignature,
 		    Type    declaringType,
@@ -1619,7 +1604,7 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				var methods = peer.GetConstructorsForType (self.GetType ());
 				var ctor    = methods.GetConstructor (constructorSignature);
-				ctor.CallNonvirtualVoidMethod (self.SafeHandle, methods.JniPeerType.SafeHandle, args);
+				ctor.CallNonvirtualVoidMethod (self.PeerReference, methods.JniPeerType.PeerReference, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -1639,7 +1624,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static JniLocalReference StartGenericCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+		public static JniObjectReference StartGenericCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
 			this    JniPeerInstanceMethods peer,
 			string  constructorSignature,
 			Type    declaringType,
@@ -1649,11 +1634,10 @@ namespace Java.Interop.GenericMarshaler {
 			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
 				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13, value14, value15, value16);
 			}
-			using (var lref = peer.AllocObject (declaringType))
-				return lref.ToAllocObjectRef ();
+			return peer.AllocObject (declaringType);
 		}
 
-		static unsafe JniLocalReference NewObject<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+		static unsafe JniObjectReference NewObject<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
 			JniPeerInstanceMethods  peer,
 		    string  constructorSignature,
 		    Type    declaringType,
@@ -1775,7 +1759,7 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				var methods = peer.GetConstructorsForType (self.GetType ());
 				var ctor    = methods.GetConstructor (constructorSignature);
-				ctor.CallNonvirtualVoidMethod (self.SafeHandle, methods.JniPeerType.SafeHandle, args);
+				ctor.CallNonvirtualVoidMethod (self.PeerReference, methods.JniPeerType.PeerReference, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -7907,7 +7891,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe JniLocalReference CallGenericObjectMethod (
+		public static unsafe JniObjectReference CallGenericObjectMethod (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self
@@ -7922,7 +7906,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe JniLocalReference CallGenericObjectMethod<T> (
+		public static unsafe JniObjectReference CallGenericObjectMethod<T> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
@@ -7941,7 +7925,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe JniLocalReference CallGenericObjectMethod<T1, T2> (
+		public static unsafe JniObjectReference CallGenericObjectMethod<T1, T2> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
@@ -7963,7 +7947,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe JniLocalReference CallGenericObjectMethod<T1, T2, T3> (
+		public static unsafe JniObjectReference CallGenericObjectMethod<T1, T2, T3> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
@@ -7988,7 +7972,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe JniLocalReference CallGenericObjectMethod<T1, T2, T3, T4> (
+		public static unsafe JniObjectReference CallGenericObjectMethod<T1, T2, T3, T4> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
@@ -8016,7 +8000,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe JniLocalReference CallGenericObjectMethod<T1, T2, T3, T4, T5> (
+		public static unsafe JniObjectReference CallGenericObjectMethod<T1, T2, T3, T4, T5> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
@@ -8047,7 +8031,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe JniLocalReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6> (
+		public static unsafe JniObjectReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
@@ -8081,7 +8065,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe JniLocalReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7> (
+		public static unsafe JniObjectReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
@@ -8118,7 +8102,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe JniLocalReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8> (
+		public static unsafe JniObjectReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
@@ -8158,7 +8142,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe JniLocalReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+		public static unsafe JniObjectReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
@@ -8201,7 +8185,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe JniLocalReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+		public static unsafe JniObjectReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
@@ -8247,7 +8231,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe JniLocalReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+		public static unsafe JniObjectReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
@@ -8296,7 +8280,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe JniLocalReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+		public static unsafe JniObjectReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
@@ -8348,7 +8332,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe JniLocalReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+		public static unsafe JniObjectReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
@@ -8403,7 +8387,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe JniLocalReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+		public static unsafe JniObjectReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
@@ -8461,7 +8445,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe JniLocalReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+		public static unsafe JniObjectReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
@@ -8522,7 +8506,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe JniLocalReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+		public static unsafe JniObjectReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaObject self,
@@ -14422,7 +14406,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe JniLocalReference CallGenericObjectMethod<T> (
+		public static unsafe JniObjectReference CallGenericObjectMethod<T> (
 		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T value
@@ -14440,7 +14424,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe JniLocalReference CallGenericObjectMethod<T1, T2> (
+		public static unsafe JniObjectReference CallGenericObjectMethod<T1, T2> (
 		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2
@@ -14461,7 +14445,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe JniLocalReference CallGenericObjectMethod<T1, T2, T3> (
+		public static unsafe JniObjectReference CallGenericObjectMethod<T1, T2, T3> (
 		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3
@@ -14485,7 +14469,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe JniLocalReference CallGenericObjectMethod<T1, T2, T3, T4> (
+		public static unsafe JniObjectReference CallGenericObjectMethod<T1, T2, T3, T4> (
 		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4
@@ -14512,7 +14496,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe JniLocalReference CallGenericObjectMethod<T1, T2, T3, T4, T5> (
+		public static unsafe JniObjectReference CallGenericObjectMethod<T1, T2, T3, T4, T5> (
 		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
@@ -14542,7 +14526,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe JniLocalReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6> (
+		public static unsafe JniObjectReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6> (
 		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
@@ -14575,7 +14559,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe JniLocalReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7> (
+		public static unsafe JniObjectReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7> (
 		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
@@ -14611,7 +14595,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe JniLocalReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8> (
+		public static unsafe JniObjectReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8> (
 		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
@@ -14650,7 +14634,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe JniLocalReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+		public static unsafe JniObjectReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
 		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
@@ -14692,7 +14676,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe JniLocalReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+		public static unsafe JniObjectReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
 		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
@@ -14737,7 +14721,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe JniLocalReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+		public static unsafe JniObjectReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
 		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
@@ -14785,7 +14769,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe JniLocalReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+		public static unsafe JniObjectReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
 		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
@@ -14836,7 +14820,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe JniLocalReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+		public static unsafe JniObjectReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
 		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
@@ -14890,7 +14874,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe JniLocalReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+		public static unsafe JniObjectReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
 		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
@@ -14947,7 +14931,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe JniLocalReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+		public static unsafe JniObjectReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
 		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
@@ -15007,7 +14991,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe JniLocalReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+		public static unsafe JniObjectReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
 		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16

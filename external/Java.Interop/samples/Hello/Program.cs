@@ -21,7 +21,7 @@ namespace Hello
 			Console.WriteLine ("Part 2!");
 			using (var vm = new JreVMBuilder ().CreateJreVM ()) {
 				Console.WriteLine ("# JniEnvironment.Current={0}", JniEnvironment.Current);
-				Console.WriteLine ("vm.SafeHandle={0}", vm.SafeHandle);
+				Console.WriteLine ("vm.SafeHandle={0}", vm.InvocationPointer);
 				var t = new JniType ("java/lang/Object");
 				var c = t.GetConstructor ("()V");
 				var o = t.NewObject (c, null);
@@ -29,7 +29,7 @@ namespace Hello
 				int i = m.CallVirtualInt32Method (o);
 				Console.WriteLine ("java.lang.Object={0}", o);
 				Console.WriteLine ("hashcode={0}", i);
-				o.Dispose ();
+				JniEnvironment.Handles.Dispose (ref o);
 				t.Dispose ();
 				// var o = JniTypes.FindClass ("java/lang/Object");
 				/*

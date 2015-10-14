@@ -5,206 +5,207 @@ namespace Java.Interop
 {
 	public sealed class JniInstanceMethodID : JniMethodID
 	{
-		JniInstanceMethodID ()
+		internal JniInstanceMethodID (IntPtr methodID)
+			: base (methodID)
 		{
 		}
 
-		public void CallVirtualVoidMethod (JniReferenceSafeHandle @this)
+		public void CallVirtualVoidMethod (JniObjectReference @this)
 		{
 			JniEnvironment.Members.CallVoidMethod (@this, this);
 		}
 
-		public unsafe void CallVirtualVoidMethod (JniReferenceSafeHandle @this, JValue* parameters)
+		public unsafe void CallVirtualVoidMethod (JniObjectReference @this, JValue* parameters)
 		{
 			JniEnvironment.Members.CallVoidMethod (@this, this, parameters);
 		}
 
-		public JniLocalReference CallVirtualObjectMethod (JniReferenceSafeHandle @this)
+		public JniObjectReference CallVirtualObjectMethod (JniObjectReference @this)
 		{
 			return JniEnvironment.Members.CallObjectMethod (@this, this);
 		}
 
-		public unsafe JniLocalReference CallVirtualObjectMethod (JniReferenceSafeHandle @this, JValue* parameters)
+		public unsafe JniObjectReference CallVirtualObjectMethod (JniObjectReference @this, JValue* parameters)
 		{
 			return JniEnvironment.Members.CallObjectMethod (@this, this, parameters);
 		}
 
-		public bool CallVirtualBooleanMethod (JniReferenceSafeHandle @this)
+		public bool CallVirtualBooleanMethod (JniObjectReference @this)
 		{
 			return JniEnvironment.Members.CallBooleanMethod (@this, this);
 		}
 
-		public unsafe bool CallVirtualBooleanMethod (JniReferenceSafeHandle @this, JValue* parameters)
+		public unsafe bool CallVirtualBooleanMethod (JniObjectReference @this, JValue* parameters)
 		{
 			return JniEnvironment.Members.CallBooleanMethod (@this, this, parameters);
 		}
 
-		public sbyte CallVirtualSByteMethod (JniReferenceSafeHandle @this)
+		public sbyte CallVirtualSByteMethod (JniObjectReference @this)
 		{
 			return JniEnvironment.Members.CallSByteMethod (@this, this);
 		}
 
-		public unsafe sbyte CallVirtualSByteMethod (JniReferenceSafeHandle @this, JValue* parameters)
+		public unsafe sbyte CallVirtualSByteMethod (JniObjectReference @this, JValue* parameters)
 		{
 			return JniEnvironment.Members.CallSByteMethod (@this, this, parameters);
 		}
 
-		public char CallVirtualCharMethod (JniReferenceSafeHandle @this)
+		public char CallVirtualCharMethod (JniObjectReference @this)
 		{
 			return JniEnvironment.Members.CallCharMethod (@this, this);
 		}
 
-		public unsafe char CallVirtualCharMethod (JniReferenceSafeHandle @this, JValue* parameters)
+		public unsafe char CallVirtualCharMethod (JniObjectReference @this, JValue* parameters)
 		{
 			return JniEnvironment.Members.CallCharMethod (@this, this, parameters);
 		}
 
-		public short CallVirtualInt16Method (JniReferenceSafeHandle @this)
+		public short CallVirtualInt16Method (JniObjectReference @this)
 		{
 			return JniEnvironment.Members.CallShortMethod (@this, this);
 		}
 
-		public unsafe short CallVirtualInt16Method (JniReferenceSafeHandle @this, JValue* parameters)
+		public unsafe short CallVirtualInt16Method (JniObjectReference @this, JValue* parameters)
 		{
 			return JniEnvironment.Members.CallShortMethod (@this, this, parameters);
 		}
 
-		public int CallVirtualInt32Method (JniReferenceSafeHandle @this)
+		public int CallVirtualInt32Method (JniObjectReference @this)
 		{
 			return JniEnvironment.Members.CallIntMethod (@this, this);
 		}
 
-		public unsafe int CallVirtualInt32Method (JniReferenceSafeHandle @this, JValue* parameters)
+		public unsafe int CallVirtualInt32Method (JniObjectReference @this, JValue* parameters)
 		{
 			return JniEnvironment.Members.CallIntMethod (@this, this, parameters);
 		}
 
-		public long CallVirtualInt64Method (JniReferenceSafeHandle @this)
+		public long CallVirtualInt64Method (JniObjectReference @this)
 		{
 			return JniEnvironment.Members.CallLongMethod (@this, this);
 		}
 
-		public unsafe long CallVirtualInt64Method (JniReferenceSafeHandle @this, JValue* parameters)
+		public unsafe long CallVirtualInt64Method (JniObjectReference @this, JValue* parameters)
 		{
 			return JniEnvironment.Members.CallLongMethod (@this, this, parameters);
 		}
 
-		public float CallVirtualSingleMethod (JniReferenceSafeHandle @this)
+		public float CallVirtualSingleMethod (JniObjectReference @this)
 		{
 			return JniEnvironment.Members.CallFloatMethod (@this, this);
 		}
 
-		public unsafe float CallVirtualSingleMethod (JniReferenceSafeHandle @this, JValue* parameters)
+		public unsafe float CallVirtualSingleMethod (JniObjectReference @this, JValue* parameters)
 		{
 			return JniEnvironment.Members.CallFloatMethod (@this, this, parameters);
 		}
 
-		public double CallVirtualDoubleMethod (JniReferenceSafeHandle @this)
+		public double CallVirtualDoubleMethod (JniObjectReference @this)
 		{
 			return JniEnvironment.Members.CallDoubleMethod (@this, this);
 		}
 
-		public unsafe double CallVirtualDoubleMethod (JniReferenceSafeHandle @this, JValue* parameters)
+		public unsafe double CallVirtualDoubleMethod (JniObjectReference @this, JValue* parameters)
 		{
 			return JniEnvironment.Members.CallDoubleMethod (@this, this, parameters);
 		}
 
-		public void CallNonvirtualVoidMethod (JniReferenceSafeHandle @this, JniReferenceSafeHandle declaringType)
+		public void CallNonvirtualVoidMethod (JniObjectReference @this, JniObjectReference declaringType)
 		{
 			JniEnvironment.Members.CallNonvirtualVoidMethod (@this, declaringType, this);
 		}
 
-		public unsafe void CallNonvirtualVoidMethod (JniReferenceSafeHandle @this, JniReferenceSafeHandle declaringType, JValue* parameters)
+		public unsafe void CallNonvirtualVoidMethod (JniObjectReference @this, JniObjectReference declaringType, JValue* parameters)
 		{
 			JniEnvironment.Members.CallNonvirtualVoidMethod (@this, declaringType, this, parameters);
 		}
 
-		public JniLocalReference CallNonvirtualObjectMethod (JniReferenceSafeHandle @this, JniReferenceSafeHandle declaringType)
+		public JniObjectReference CallNonvirtualObjectMethod (JniObjectReference @this, JniObjectReference declaringType)
 		{
 			return JniEnvironment.Members.CallNonvirtualObjectMethod (@this, declaringType, this);
 		}
 
-		public unsafe JniLocalReference CallNonvirtualObjectMethod (JniReferenceSafeHandle @this, JniReferenceSafeHandle declaringType, JValue* parameters)
+		public unsafe JniObjectReference CallNonvirtualObjectMethod (JniObjectReference @this, JniObjectReference declaringType, JValue* parameters)
 		{
 			return JniEnvironment.Members.CallNonvirtualObjectMethod (@this, declaringType, this, parameters);
 		}
 
-		public bool CallNonvirtualBooleanMethod (JniReferenceSafeHandle @this, JniReferenceSafeHandle declaringType)
+		public bool CallNonvirtualBooleanMethod (JniObjectReference @this, JniObjectReference declaringType)
 		{
 			return JniEnvironment.Members.CallNonvirtualBooleanMethod (@this, declaringType, this);
 		}
 
-		public unsafe bool CallNonvirtualBooleanMethod (JniReferenceSafeHandle @this, JniReferenceSafeHandle declaringType, JValue* parameters)
+		public unsafe bool CallNonvirtualBooleanMethod (JniObjectReference @this, JniObjectReference declaringType, JValue* parameters)
 		{
 			return JniEnvironment.Members.CallNonvirtualBooleanMethod (@this, declaringType, this, parameters);
 		}
 
-		public sbyte CallNonvirtualSByteMethod (JniReferenceSafeHandle @this, JniReferenceSafeHandle declaringType)
+		public sbyte CallNonvirtualSByteMethod (JniObjectReference @this, JniObjectReference declaringType)
 		{
 			return JniEnvironment.Members.CallNonvirtualSByteMethod (@this, declaringType, this);
 		}
 
-		public unsafe sbyte CallNonvirtualSByteMethod (JniReferenceSafeHandle @this, JniReferenceSafeHandle declaringType, JValue* parameters)
+		public unsafe sbyte CallNonvirtualSByteMethod (JniObjectReference @this, JniObjectReference declaringType, JValue* parameters)
 		{
 			return JniEnvironment.Members.CallNonvirtualSByteMethod (@this, declaringType, this, parameters);
 		}
 
-		public char CallNonvirtualCharMethod (JniReferenceSafeHandle @this, JniReferenceSafeHandle declaringType)
+		public char CallNonvirtualCharMethod (JniObjectReference @this, JniObjectReference declaringType)
 		{
 			return JniEnvironment.Members.CallNonvirtualCharMethod (@this, declaringType, this);
 		}
 
-		public unsafe char CallNonvirtualCharMethod (JniReferenceSafeHandle @this, JniReferenceSafeHandle declaringType, JValue* parameters)
+		public unsafe char CallNonvirtualCharMethod (JniObjectReference @this, JniObjectReference declaringType, JValue* parameters)
 		{
 			return JniEnvironment.Members.CallNonvirtualCharMethod (@this, declaringType, this, parameters);
 		}
 
-		public short CallNonvirtualInt16Method (JniReferenceSafeHandle @this, JniReferenceSafeHandle declaringType)
+		public short CallNonvirtualInt16Method (JniObjectReference @this, JniObjectReference declaringType)
 		{
 			return JniEnvironment.Members.CallNonvirtualShortMethod (@this, declaringType, this);
 		}
 
-		public unsafe short CallNonvirtualInt16Method (JniReferenceSafeHandle @this, JniReferenceSafeHandle declaringType, JValue* parameters)
+		public unsafe short CallNonvirtualInt16Method (JniObjectReference @this, JniObjectReference declaringType, JValue* parameters)
 		{
 			return JniEnvironment.Members.CallNonvirtualShortMethod (@this, declaringType, this, parameters);
 		}
 
-		public int CallNonvirtualInt32Method (JniReferenceSafeHandle @this, JniReferenceSafeHandle declaringType)
+		public int CallNonvirtualInt32Method (JniObjectReference @this, JniObjectReference declaringType)
 		{
 			return JniEnvironment.Members.CallNonvirtualIntMethod (@this, declaringType, this);
 		}
 
-		public unsafe int CallNonvirtualInt32Method (JniReferenceSafeHandle @this, JniReferenceSafeHandle declaringType, JValue* parameters)
+		public unsafe int CallNonvirtualInt32Method (JniObjectReference @this, JniObjectReference declaringType, JValue* parameters)
 		{
 			return JniEnvironment.Members.CallNonvirtualIntMethod (@this, declaringType, this, parameters);
 		}
 
-		public long CallNonvirtualInt64Method (JniReferenceSafeHandle @this, JniReferenceSafeHandle declaringType)
+		public long CallNonvirtualInt64Method (JniObjectReference @this, JniObjectReference declaringType)
 		{
 			return JniEnvironment.Members.CallNonvirtualLongMethod (@this, declaringType, this);
 		}
 
-		public unsafe long CallNonvirtualInt64Method (JniReferenceSafeHandle @this, JniReferenceSafeHandle declaringType, JValue* parameters)
+		public unsafe long CallNonvirtualInt64Method (JniObjectReference @this, JniObjectReference declaringType, JValue* parameters)
 		{
 			return JniEnvironment.Members.CallNonvirtualLongMethod (@this, declaringType, this, parameters);
 		}
 
-		public float CallNonvirtualSingleMethod (JniReferenceSafeHandle @this, JniReferenceSafeHandle declaringType)
+		public float CallNonvirtualSingleMethod (JniObjectReference @this, JniObjectReference declaringType)
 		{
 			return JniEnvironment.Members.CallNonvirtualFloatMethod (@this, declaringType, this);
 		}
 
-		public unsafe float CallNonvirtualSingleMethod (JniReferenceSafeHandle @this, JniReferenceSafeHandle declaringType, JValue* parameters)
+		public unsafe float CallNonvirtualSingleMethod (JniObjectReference @this, JniObjectReference declaringType, JValue* parameters)
 		{
 			return JniEnvironment.Members.CallNonvirtualFloatMethod (@this, declaringType, this, parameters);
 		}
 
-		public double CallNonvirtualDoubleMethod (JniReferenceSafeHandle @this, JniReferenceSafeHandle declaringType)
+		public double CallNonvirtualDoubleMethod (JniObjectReference @this, JniObjectReference declaringType)
 		{
 			return JniEnvironment.Members.CallNonvirtualDoubleMethod (@this, declaringType, this);
 		}
 
-		public unsafe double CallNonvirtualDoubleMethod (JniReferenceSafeHandle @this, JniReferenceSafeHandle declaringType, JValue* parameters)
+		public unsafe double CallNonvirtualDoubleMethod (JniObjectReference @this, JniObjectReference declaringType, JValue* parameters)
 		{
 			return JniEnvironment.Members.CallNonvirtualDoubleMethod (@this, declaringType, this, parameters);
 		}

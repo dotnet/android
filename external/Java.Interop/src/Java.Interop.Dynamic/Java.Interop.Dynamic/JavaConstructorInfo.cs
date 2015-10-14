@@ -17,7 +17,7 @@ namespace Java.Interop.Dynamic {
 
 	class JavaConstructorInfo : JavaMethodBase {
 
-		public JavaConstructorInfo (JniPeerMembers members, JniReferenceSafeHandle method)
+		public JavaConstructorInfo (JniPeerMembers members, JniObjectReference method)
 			: base (members, method)
 		{
 		}
@@ -42,7 +42,7 @@ namespace Java.Interop.Dynamic {
 		{
 			if (self == null) {
 				var h   = members.InstanceMethods.StartCreateInstance (JniSignature, typeof (JavaInstanceProxy), arguments);
-				self    = JniEnvironment.Current.JavaVM.GetObject<JavaInstanceProxy> (h, JniHandleOwnership.Transfer);
+				self    = JniEnvironment.Current.JavaVM.GetObject<JavaInstanceProxy> (ref h, JniHandleOwnership.Transfer);
 			}
 			members.InstanceMethods.FinishCreateInstance (JniSignature, self, arguments);
 			return new DynamicJavaInstance (self);

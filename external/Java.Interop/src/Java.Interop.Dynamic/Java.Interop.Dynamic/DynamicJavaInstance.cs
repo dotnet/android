@@ -25,7 +25,7 @@ namespace Java.Interop.Dynamic {
 
 			Value   = value;
 
-			var type    = JniEnvironment.Types.GetJniTypeNameFromInstance (value.SafeHandle);
+			var type    = JniEnvironment.Types.GetJniTypeNameFromInstance (value.PeerReference);
 			klass       = JavaClassInfo.GetClassInfo (type);
 		}
 
@@ -78,9 +78,9 @@ namespace Java.Interop.Dynamic {
 				get {return instance.disposed;}
 			}
 
-			protected override JniReferenceSafeHandle ConversionTarget {
+			protected override JniObjectReference   ConversionTarget {
 				get {
-					return instance.Value.SafeHandle;
+					return instance.Value.PeerReference;
 				}
 			}
 

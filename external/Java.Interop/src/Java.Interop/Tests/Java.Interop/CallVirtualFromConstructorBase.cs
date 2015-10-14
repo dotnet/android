@@ -15,11 +15,12 @@ namespace Java.InteropTests {
 			get {return _members;}
 		}
 
-		public CallVirtualFromConstructorBase (int value)
-			: base (null, 0)
+		public unsafe CallVirtualFromConstructorBase (int value)
+			: base (ref *InvalidJniObjectReference, JniHandleOwnership.Invalid)
 		{
-			using (SetSafeHandle (
-						JniPeerMembers.InstanceMethods.StartGenericCreateInstance ("(I)V", GetType (), value),
+			var peer    = JniPeerMembers.InstanceMethods.StartGenericCreateInstance ("(I)V", GetType (), value);
+			using (SetPeerReference (
+						ref peer,
 						JniHandleOwnership.Transfer)) {
 				JniPeerMembers.InstanceMethods.FinishGenericCreateInstance ("(I)V", this, value);
 			}

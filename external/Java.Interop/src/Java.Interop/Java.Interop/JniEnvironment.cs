@@ -7,44 +7,10 @@ using System.Threading;
 
 namespace Java.Interop {
 
-	public sealed class JniEnvironmentSafeHandle : SafeHandle
-	{
-		JniEnvironmentSafeHandle ()
-			: base (IntPtr.Zero, ownsHandle:false)
-		{
-		}
-
-		public JniEnvironmentSafeHandle (IntPtr handle)
-			: this ()
-		{
-			SetHandle (handle);
-		}
-
-		public override bool IsInvalid {
-			get {return handle == IntPtr.Zero;}
-		}
-
-		protected override bool ReleaseHandle ()
-		{
-			return false;
-		}
-
-		internal unsafe JniEnvironmentInvoker CreateInvoker ()
-		{
-			IntPtr p = Marshal.ReadIntPtr (handle);
-			return new JniEnvironmentInvoker ((JniNativeInterfaceStruct*) p);
-		}
-
-		public override string ToString ()
-		{
-			return string.Format ("{0}(0x{1})", GetType ().FullName, handle.ToString ("x"));
-		}
-	}
-
 	public sealed partial class JniEnvironment : IDisposable {
 
 		[ThreadStatic]
-		static  JniEnvironmentSafeHandle    handle;
+		static  IntPtr                      envHandle;
 
 		[ThreadStatic]
 		static JniEnvironment               current;
@@ -54,11 +20,12 @@ namespace Java.Interop {
 		bool                                disposed;
 		Exception                           pendingException;
 
-		internal JniEnvironment (JniEnvironmentSafeHandle safeHandle, JavaVM javaVM)
+		internal JniEnvironment (IntPtr handle, JavaVM javaVM)
 		{
-			handle  = safeHandle;
+			envHandle   = handle;
+
 			vm      = javaVM;
-			Invoker = SafeHandle.CreateInvoker ();
+			Invoker = CreateInvoker (handle);
 
 			previous    = current;
 			current     = this;
@@ -69,23 +36,21 @@ namespace Java.Interop {
 		{
 		}
 
-		static JniEnvironmentSafeHandle GetCurrentHandle (IntPtr jniEnvironmentHandle)
+		static IntPtr GetCurrentHandle (IntPtr jniEnvironmentHandle)
 		{
-			if (handle == null)
-				return new JniEnvironmentSafeHandle (jniEnvironmentHandle);
-
-			if (handle.DangerousGetHandle () == jniEnvironmentHandle)
-				return handle;
-
-			handle.Dispose ();
-			handle = null;
-			return new JniEnvironmentSafeHandle (jniEnvironmentHandle);
+			return jniEnvironmentHandle;
 		}
 
 		internal JniEnvironmentInvoker Invoker;
 
-		public JniEnvironmentSafeHandle SafeHandle  {
-			get {return handle ?? RootEnvironment.SafeHandle;}
+		static unsafe JniEnvironmentInvoker CreateInvoker (IntPtr handle)
+		{
+			IntPtr p = Marshal.ReadIntPtr (handle);
+			return new JniEnvironmentInvoker ((JniNativeInterfaceStruct*) p);
+		}
+
+		public IntPtr EnvironmentPointer  {
+			get {return envHandle != IntPtr.Zero ? envHandle : RootEnvironment.EnvironmentPointer;}
 		}
 
 		public JavaVM JavaVM {
@@ -93,8 +58,8 @@ namespace Java.Interop {
 				if (vm != null)
 					return vm;
 
-				JavaVMSafeHandle vmh;
-				int r = Invoker.GetJavaVM (SafeHandle, out vmh);
+				IntPtr vmh;
+				int r = Invoker.GetJavaVM (EnvironmentPointer, out vmh);
 				if (r < 0)
 					throw new InvalidOperationException ("JNIEnv::GetJavaVM() returned: " + r);
 
@@ -102,7 +67,7 @@ namespace Java.Interop {
 				if (vm == null)
 					throw new NotSupportedException (
 							string.Format ("No JavaVM registered with handle 0x{0}.",
-								vmh.DangerousGetHandle ().ToString ("x")));
+								vmh.ToString ("x")));
 
 				return vm;
 			}
@@ -115,7 +80,7 @@ namespace Java.Interop {
 
 		internal static bool IsHandleValid (JniLocalReference lref)
 		{
-			if (lref == null)
+			if (lref == null || lref.IsInvalid || lref.IsClosed)
 				return false;
 
 			var e = JniEnvironment.Current;
@@ -161,11 +126,12 @@ namespace Java.Interop {
 
 		public void Dispose ()
 		{
-			if (disposed || handle == null || handle.IsInvalid)
+			if (disposed || envHandle == IntPtr.Zero)
 				return;
 
 			disposed    = true;
 
+#if FEATURE_HANDLES_ARE_SAFE_HANDLES
 			if (lrefs != null) {
 				// Copy required as lref.Dispose() calls DeleteLocalReference(), alters lrefs.
 				var refs    = lrefs.ToList ();
@@ -176,19 +142,17 @@ namespace Java.Interop {
 				}
 				lrefs       = null;
 			}
+#endif  // FEATURE_HANDLES_ARE_SAFE_HANDLES
 
 			if (pendingException != null)
 				Errors.Throw (pendingException);
 
-			if (Obj_toS != null)
-				Obj_toS.Dispose ();
-			if (Cls_getN != null)
-				Cls_getN.Dispose ();
+			Obj_toS     = null;
+			Cls_getN    = null;
 
 			if ((previous == null && !RootEnvironments.IsValueCreated) ||
 					(RootEnvironments.IsValueCreated && RootEnvironment == this)) {
-				handle.Dispose ();
-				handle                  = null;
+				envHandle               = IntPtr.Zero;
 				RootEnvironments.Value  = null;
 			}
 
@@ -211,11 +175,20 @@ namespace Java.Interop {
 			}
 		}
 
-		internal void LogCreateLocalRef (JniLocalReference value)
+		internal void LogCreateLocalRef (JniObjectReference value)
 		{
-			if (value == null || value.IsInvalid)
+			if (!value.IsValid)
 				return;
 			JavaVM.JniHandleManager.CreatedLocalReference (this, value);
+		}
+
+#if FEATURE_HANDLES_ARE_SAFE_HANDLES
+		internal void LogCreateLocalRef (JniLocalReference value)
+		{
+			if (value == null || value.IsInvalid || value.IsClosed)
+				return;
+			var r = new JniObjectReference (value, JniObjectReferenceType.Local);
+			LogCreateLocalRef (r);
 		}
 
 		internal void DeleteLocalReference (JniLocalReference value, IntPtr handle)
@@ -235,8 +208,11 @@ namespace Java.Interop {
 				return;
 			}
 			c.lrefs.Remove (value);
-			JniEnvironment.Current.JavaVM.JniHandleManager.DeleteLocalReference (this, handle);
+			var r = new JniObjectReference (value, JniObjectReferenceType.Local);
+			JniEnvironment.Current.JavaVM.JniHandleManager.DeleteLocalReference (this, ref r);
+			value.SetHandleAsInvalid ();
 		}
+#endif  // FEATURE_HANDLES_ARE_SAFE_HANDLES
 
 		JniInstanceMethodID Obj_toS;
 		internal    JniInstanceMethodID Object_toString {
@@ -265,14 +241,13 @@ namespace Java.Interop {
 
 		public Exception GetExceptionForLastThrowable ()
 		{
-			using (var e = JniEnvironment.Errors.ExceptionOccurred ()) {
-				if (e == null || e.IsInvalid)
-					return null;
-				// JniEnvironment.Errors.ExceptionDescribe ();
-				JniEnvironment.Errors.ExceptionClear ();
-				JniEnvironment.Current.LogCreateLocalRef (e);
-				return JavaVM.GetExceptionForThrowable (e, JniHandleOwnership.Transfer);
-			}
+			var e = JniEnvironment.Errors.ExceptionOccurred ();
+			if (!e.IsValid)
+				return null;
+			// JniEnvironment.Errors.ExceptionDescribe ();
+			JniEnvironment.Errors.ExceptionClear ();
+			JniEnvironment.Current.LogCreateLocalRef (e);
+			return JavaVM.GetExceptionForThrowable (ref e, JniHandleOwnership.Transfer);
 		}
 	}
 }

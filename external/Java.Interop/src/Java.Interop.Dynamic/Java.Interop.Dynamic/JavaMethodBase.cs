@@ -23,13 +23,13 @@ namespace Java.Interop.Dynamic {
 
 		protected   abstract    string      JniReturnType   {get;}
 
-		public      JniGlobalReference      SafeHandle      {get; private set;}
+		public      JniObjectReference      PeerReference   {get; private set;}
 		public      string                  JniSignature    {get; private set;}
 
 		protected   JniPeerMembers          members;
 
-		List<JniGlobalReference>    arguments;
-		public  List<JniGlobalReference>    ArgumentTypes {
+		List<JniObjectReference>            arguments;
+		public  List<JniObjectReference>    ArgumentTypes {
 			get {
 				LookupArguments ();
 				return arguments;
@@ -40,19 +40,20 @@ namespace Java.Interop.Dynamic {
 			get { return members == null ? "" : members.JniPeerTypeName; }
 		}
 
-		public JavaMethodBase (JniPeerMembers members, JniReferenceSafeHandle method)
+		public JavaMethodBase (JniPeerMembers members, JniObjectReference method)
 		{
 			this.members    = members;
-			SafeHandle      = method.NewGlobalRef ();
+			PeerReference   = method.NewGlobalRef ();
 		}
 
 		protected override void Dispose (bool disposing)
 		{
-			if (!disposing || SafeHandle == null)
+			if (!disposing || !PeerReference.IsValid)
 				return;
 
-			SafeHandle.Dispose ();
-			SafeHandle  = null;
+			var pr          = PeerReference;
+			JniEnvironment.Handles.Dispose (ref pr);
+			PeerReference   = pr;
 
 			members     = null;
 
@@ -60,8 +61,9 @@ namespace Java.Interop.Dynamic {
 				return;
 
 			for (int i = 0; i < arguments.Count; ++i) {
-				arguments [i].Dispose ();
-				arguments [i] = null;
+				var a = arguments [i];
+				JniEnvironment.Handles.Dispose (ref a);
+				arguments [i] = a;
 			}
 			arguments   = null;
 		}
@@ -81,17 +83,22 @@ namespace Java.Interop.Dynamic {
 			sb.Append ("(");
 
 			var parameters = IsConstructor
-				? JavaClassInfo.GetConstructorParameters (SafeHandle)
-				: JavaClassInfo.GetMethodParameters (SafeHandle);
-			using (parameters) {
+				? JavaClassInfo.GetConstructorParameters (PeerReference)
+				: JavaClassInfo.GetMethodParameters (PeerReference);
+			try {
 				int len     = JniEnvironment.Arrays.GetArrayLength (parameters);
-				arguments   = new List<JniGlobalReference> (len);
+				arguments   = new List<JniObjectReference> (len);
 				for (int i = 0; i < len; ++i) {
-					using (var p = JniEnvironment.Arrays.GetObjectArrayElement (parameters, i)) {
+					var p = JniEnvironment.Arrays.GetObjectArrayElement (parameters, i);
+					try {
 						sb.Append (JniEnvironment.Types.GetJniTypeNameFromClass (p));
 						arguments.Add (p.NewGlobalRef ());
+					} finally {
+						JniEnvironment.Handles.Dispose (ref p);
 					}
 				}
+			} finally {
+				JniEnvironment.Handles.Dispose (ref parameters);
 			}
 			sb.Append (")").Append (JniReturnType);
 			JniSignature    = sb.ToString ();
@@ -107,14 +114,12 @@ namespace Java.Interop.Dynamic {
 			var vm = JniEnvironment.Current.JavaVM;
 
 			for (int i = 0; i < arguments.Count; ++i) {
-				Debug.WriteLine ("# jonp: JavaMethodBase.CompatibleWith: arguments[{0}]={1} == {2} {3}",
-					i, JniEnvironment.Types.GetJniTypeNameFromClass (arguments [i]), args [i], dargs [i].LimitType);
 				if (args [i] == null) {
 					// Builtin type -- JNIEnv.FindClass("I") throws!
 					if (JniEnvironment.Types.GetJniTypeNameFromClass (arguments [i]) != vm.GetJniTypeInfoForType (dargs [i].LimitType).JniTypeReference)
 						return false;
 				}
-				else if (!JniEnvironment.Types.IsAssignableFrom (arguments [i], args [i].SafeHandle))
+				else if (!JniEnvironment.Types.IsAssignableFrom (arguments [i], args [i].PeerReference))
 					return false;
 			}
 			return true;

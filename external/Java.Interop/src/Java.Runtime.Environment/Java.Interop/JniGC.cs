@@ -6,8 +6,12 @@ namespace Java.Interop
 
 		internal static void Collect ()
 		{
-			using (var runtime = JniRuntime.GetRuntime ())
+			var runtime = JniRuntime.GetRuntime ();
+			try {
 				JniRuntime.GC (runtime);
+			} finally {
+				JniEnvironment.Handles.Dispose (ref runtime);
+			}
 		}
 	}
 }

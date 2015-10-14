@@ -20,16 +20,19 @@ namespace Java.InteropTests
 
 				var c = d.GetConstructor ("()V");
 				var g = d.GetInstanceField ("methodInvoked", "Z");
-				using (var o = d.NewObject (c, null)) {
+				var o = d.NewObject (c, null);
+				try {
 					if (JavaVMFixture.CallNonvirtualVoidMethodSupportsDeclaringClassMismatch) {
-						m.CallNonvirtualVoidMethod (o, d.SafeHandle);
+						m.CallNonvirtualVoidMethod (o, d.PeerReference);
 						Assert.IsFalse (f.GetBooleanValue (o));
 						Assert.IsTrue (g.GetBooleanValue (o));
 					} else {
-						m.CallNonvirtualVoidMethod (o, d.SafeHandle);
+						m.CallNonvirtualVoidMethod (o, d.PeerReference);
 						Assert.IsTrue (f.GetBooleanValue (o));
 						Assert.IsFalse (g.GetBooleanValue (o));
 					}
+				} finally {
+					JniEnvironment.Handles.Dispose (ref o);
 				}
 			}
 		}

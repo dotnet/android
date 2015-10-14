@@ -14,7 +14,7 @@
 		new { JniCallType   = "Int64",      ReturnType  = "long" },
 		new { JniCallType   = "Single",     ReturnType  = "float" },
 		new { JniCallType   = "Double",     ReturnType  = "double" },
-		new { JniCallType   = "Object",     ReturnType  = "JniLocalReference" },
+		new { JniCallType   = "Object",     ReturnType  = "JniObjectReference" },
 	};
 
 #>
@@ -45,7 +45,7 @@ namespace Java.Interop.GenericMarshaler {
 		}
 #>
 
-		public static JniLocalReference StartGenericCreateInstance<#= typeParams #> (
+		public static JniObjectReference StartGenericCreateInstance<#= typeParams #> (
 			this    JniPeerInstanceMethods peer,
 			string  constructorSignature,
 			Type    declaringType,
@@ -55,11 +55,10 @@ namespace Java.Interop.GenericMarshaler {
 			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
 				return NewObject (peer, constructorSignature, declaringType, <#= methodArgs #>);
 			}
-			using (var lref = peer.AllocObject (declaringType))
-				return lref.ToAllocObjectRef ();
+			return peer.AllocObject (declaringType);
 		}
 
-		static unsafe JniLocalReference NewObject<#= typeParams #> (
+		static unsafe JniObjectReference NewObject<#= typeParams #> (
 			JniPeerInstanceMethods  peer,
 		    string  constructorSignature,
 		    Type    declaringType,
@@ -131,7 +130,7 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				var methods = peer.GetConstructorsForType (self.GetType ());
 				var ctor    = methods.GetConstructor (constructorSignature);
-				ctor.CallNonvirtualVoidMethod (self.SafeHandle, methods.JniPeerType.SafeHandle, args);
+				ctor.CallNonvirtualVoidMethod (self.PeerReference, methods.JniPeerType.PeerReference, args);
 			} finally {
 <#
 		for (int a = 1; a <= i; ++a) {

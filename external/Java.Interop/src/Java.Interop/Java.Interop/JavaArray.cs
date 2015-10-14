@@ -8,17 +8,20 @@ namespace Java.Interop
 {
 	public abstract class JavaArray<T> : JavaObject, IList, IList<T>
 	{
+		internal delegate TArray ArrayCreator<TArray> (ref JniObjectReference reference, JniHandleOwnership transfer)
+			where TArray : JavaArray<T>;
+
 		// Value was created via CreateMarshalCollection, and thus can
 		// be disposed of with impunity when no longer needed.
 		protected bool forMarshalCollection;
 
-		internal JavaArray (JniReferenceSafeHandle handle, JniHandleOwnership transfer)
-			: base (handle, transfer)
+		internal JavaArray (ref JniObjectReference handle, JniHandleOwnership transfer)
+			: base (ref handle, transfer)
 		{
 		}
 
 		public int Length {
-			get {return JniEnvironment.Arrays.GetArrayLength (SafeHandle);}
+			get {return JniEnvironment.Arrays.GetArrayLength (PeerReference);}
 		}
 
 		public abstract T this [int index] {
@@ -122,31 +125,31 @@ namespace Java.Interop
 						sourceType.FullName, targetType.FullName));
 		}
 
-		internal static JniLocalReference CreateLocalRef<TArray> (object value, Func<IList<T>, TArray> creator)
+		internal static JniObjectReference CreateLocalRef<TArray> (object value, Func<IList<T>, TArray> creator)
 			where TArray : JavaArray<T>
 		{
 			if (value == null)
-				return new JniLocalReference ();
+				return new JniObjectReference ();
 			var array = value as TArray;
 			if (array != null)
-				return array.SafeHandle.NewLocalRef ();
+				return array.PeerReference.NewLocalRef ();
 			var items = value as IList<T>;
 			if (items == null)
 				throw CreateMarshalNotSupportedException (value.GetType (), typeof (TArray));
 			using (array = creator (items))
-				return array.SafeHandle.NewLocalRef ();
+				return array.PeerReference.NewLocalRef ();
 		}
 
-		internal static IList<T> GetValueFromJni<TArray> (JniReferenceSafeHandle handle, JniHandleOwnership transfer, Type targetType, Func<JniReferenceSafeHandle, JniHandleOwnership, TArray> creator)
+		internal static IList<T> GetValueFromJni<TArray> (ref JniObjectReference reference, JniHandleOwnership transfer, Type targetType, ArrayCreator<TArray> creator)
 			where TArray : JavaArray<T>
 		{
-			var value = JniEnvironment.Current.JavaVM.PeekObject (handle);
+			var value = JniEnvironment.Current.JavaVM.PeekObject (reference);
 			var array = value as TArray;
 			if (array != null) {
-				JniEnvironment.Handles.Dispose (handle, transfer);
+				JniEnvironment.Handles.Dispose (ref reference, transfer);
 				return array.ToTargetType (targetType, dispose: false);
 			}
-			return creator (handle, transfer)
+			return creator (ref reference, transfer)
 				.ToTargetType (targetType, dispose: true);
 		}
 
@@ -347,8 +350,8 @@ namespace Java.Interop
 	
 	public abstract class JavaPrimitiveArray<T> : JavaArray<T> {
 
-		internal JavaPrimitiveArray (JniReferenceSafeHandle handle, JniHandleOwnership transfer)
-			: base (handle, transfer)
+		internal JavaPrimitiveArray (ref JniObjectReference reference, JniHandleOwnership transfer)
+			: base (ref reference, transfer)
 		{
 		}
 

@@ -7,6 +7,6 @@ namespace Java.Interop {
 		bool    Registered          {get; set;}
 
 		void    Dispose (bool disposing);
-		void    SetSafeHandle (JniReferenceSafeHandle handle);
+		void    SetPeerReference (JniObjectReference handle);
 	}
 }

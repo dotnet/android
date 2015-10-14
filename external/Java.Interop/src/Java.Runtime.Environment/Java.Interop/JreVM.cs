@@ -68,7 +68,7 @@ namespace Java.Interop {
 		const string LibraryName = "jvm.dll";
 
 		[DllImport (LibraryName)]
-		static extern int JNI_CreateJavaVM (out JavaVMSafeHandle javavm, out JniEnvironmentSafeHandle jnienv, ref JavaVMInitArgs args);
+		static extern int JNI_CreateJavaVM (out IntPtr javavm, out IntPtr jnienv, ref JavaVMInitArgs args);
 
 		[DllImport (LibraryName)]
 		static extern int JNI_GetCreatedJavaVMs ([Out] IntPtr[] handles, int bufLen, out int nVMs);
@@ -77,7 +77,7 @@ namespace Java.Interop {
 			get {
 				if (JavaVM.Current != null)
 					return JavaVM.Current;
-				JavaVMSafeHandle    h       = null;
+				IntPtr              h       = IntPtr.Zero;
 				int                 count   = 0;
 				foreach (var vmh in GetCreatedJavaVMHandles ()) {
 					if (count++ == 0)
@@ -91,12 +91,12 @@ namespace Java.Interop {
 				if (r != null)
 					return r;
 				return new JreVM (new JreVMBuilder () {
-						VMHandle = h,
+						InvocationPointer = h,
 				});
 			}
 		}
 
-		public static IEnumerable<JavaVMSafeHandle> GetCreatedJavaVMHandles ()
+		public static IEnumerable<IntPtr> GetCreatedJavaVMHandles ()
 		{
 			int nVMs;
 			int r = JNI_GetCreatedJavaVMs (null, 0, out nVMs);
@@ -106,7 +106,7 @@ namespace Java.Interop {
 			r = JNI_GetCreatedJavaVMs (handles, handles.Length, out nVMs);
 			if (r != 0)
 				throw new InvalidOperationException ("JNI_GetCreatedJavaVMs() [take 2!] returned: " + r);
-			return handles.Select (h => new JavaVMSafeHandle (h));
+			return handles;
 		}
 
 		static unsafe JreVMBuilder CreateJreVM (JreVMBuilder builder)
@@ -114,7 +114,7 @@ namespace Java.Interop {
 			if (builder == null)
 				throw new ArgumentNullException ("builder");
 
-			if (builder.VMHandle != null && !builder.VMHandle.IsInvalid)
+			if (builder.InvocationPointer != IntPtr.Zero)
 				return builder;
 
 			var args = new JavaVMInitArgs () {
@@ -130,8 +130,8 @@ namespace Java.Interop {
 				options [builder.Options.Count].optionString = classPath;
 				fixed (JavaVMOption* popts = options) {
 					args.options = (IntPtr) popts;
-					JavaVMSafeHandle            javavm;
-					JniEnvironmentSafeHandle    jnienv;
+					IntPtr      javavm;
+					IntPtr      jnienv;
 					int r = JNI_CreateJavaVM (out javavm, out jnienv, ref args);
 					if (r != 0) {
 						var message = string.Format (
@@ -141,8 +141,8 @@ namespace Java.Interop {
 								r);
 						throw new NotSupportedException (message);
 					}
-					builder.VMHandle            = javavm;
-					builder.EnvironmentHandle   = jnienv;
+					builder.InvocationPointer            = javavm;
+					builder.EnvironmentPointer   = jnienv;
 					builder.DestroyVMOnDispose  = true;
 					return builder;
 				}
@@ -157,18 +157,16 @@ namespace Java.Interop {
 		{
 		}
 
-		protected override bool TryGC (IJavaObject value, ref JniReferenceSafeHandle handle)
+		protected override bool TryGC (IJavaObject value, ref JniObjectReference handle)
 		{
-			System.Diagnostics.Debug.WriteLine ("# JreVM.TryGC");
-			if (handle == null || handle.IsInvalid)
+			if (!handle.IsValid)
 				return true;
 			var wgref = handle.NewWeakGlobalRef ();
-			System.Diagnostics.Debug.WriteLine ("# JreVM.TryGC: wgref=0x{0}", wgref.DangerousGetHandle().ToString ("x"));;
-			handle.Dispose ();
+			JniEnvironment.Handles.Dispose (ref handle);
 			JniGC.Collect ();
 			handle = wgref.NewGlobalRef ();
-			System.Diagnostics.Debug.WriteLine ("# JreVM.TryGC: handle.IsInvalid={0}", handle.IsInvalid);
-			return handle == null || handle.IsInvalid;
+			JniEnvironment.Handles.Dispose (ref wgref);
+			return !handle.IsValid;
 		}
 	}
 }

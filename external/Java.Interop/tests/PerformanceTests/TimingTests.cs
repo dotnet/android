@@ -27,10 +27,10 @@ namespace Java.Interop.PerformanceTests {
 		static extern IntPtr foo_ptr_timing ();
 
 		[DllImport (LibName)]
-		static extern void foo_init (JniEnvironmentSafeHandle env);
+		static extern void foo_init (IntPtr env);
 
 		[DllImport (LibName)]
-		static extern void foo_get_native_jni_timings (JniEnvironmentSafeHandle env, int count, JniReferenceSafeHandle klass, JniReferenceSafeHandle self, long[] jniTimes);
+		static extern void foo_get_native_jni_timings (IntPtr env, int count, IntPtr klass, IntPtr self, long[] jniTimes);
 
 		struct FooMethods {
 			public IntPtr instance_void;
@@ -85,9 +85,9 @@ namespace Java.Interop.PerformanceTests {
 
 			var transfer    = JniHandleOwnership.Transfer;
 
-			var jobj1 = new JavaObject (Object_class.NewObject (Object_init, null), transfer);
-			var jobj2 = new JavaObject (Object_class.NewObject (Object_init, null), transfer);
-			var jobj3 = new JavaObject (Object_class.NewObject (Object_init, null), transfer);
+			var jobj1 = CreateJavaObject (Object_class.NewObject (Object_init, null), transfer);
+			var jobj2 = CreateJavaObject (Object_class.NewObject (Object_init, null), transfer);
+			var jobj3 = CreateJavaObject (Object_class.NewObject (Object_init, null), transfer);
 
 			var obj1 = new SomeClass ();
 			var obj2 = new SomeClass ();
@@ -229,10 +229,10 @@ namespace Java.Interop.PerformanceTests {
 
 			var total   = Stopwatch.StartNew ();
 
-			foo_init (JniEnvironment.Current.SafeHandle);
+			foo_init (JniEnvironment.Current.EnvironmentPointer);
 
 			var jniTimes = new long [comparisons.Length];
-			foo_get_native_jni_timings (JniEnvironment.Current.SafeHandle, count, JavaTiming.TypeRef.SafeHandle, j.SafeHandle, jniTimes);
+			foo_get_native_jni_timings (JniEnvironment.Current.EnvironmentPointer, count, JavaTiming.TypeRef.PeerReference.Handle, j.PeerReference.Handle, jniTimes);
 
 			int jniTimeIndex = 0;
 			foreach (var c in comparisons) {
@@ -280,6 +280,11 @@ namespace Java.Interop.PerformanceTests {
 			Console.WriteLine ("## {0} Timing: {1}", nameof (MethodInvocationTiming), total.Elapsed);
 		}
 
+		static JavaObject CreateJavaObject (JniObjectReference value, JniHandleOwnership transfer)
+		{
+			return new JavaObject (ref value, transfer);
+		}
+
 		static Action A (Action a)
 		{
 			return a;
@@ -318,23 +323,31 @@ namespace Java.Interop.PerformanceTests {
 
 			using (var o = new JavaTiming ()) {
 				var tt = Stopwatch.StartNew ();
-				for (int i = 0; i < count; ++i)
-					o.Timing_ToString_Traditional ().Dispose ();
+				for (int i = 0; i < count; ++i) {
+					var s = o.Timing_ToString_Traditional ();
+					JniEnvironment.Handles.Dispose (ref s);
+				}
 				tt.Stop ();
 
 				var ta = Stopwatch.StartNew ();
-				for (int i = 0; i < count; ++i)
-					o.Timing_ToString_NoCache ().Dispose ();
+				for (int i = 0; i < count; ++i) {
+					var s = o.Timing_ToString_NoCache ();
+					JniEnvironment.Handles.Dispose (ref s);
+				}
 				ta.Stop ();
 
 				var td = Stopwatch.StartNew ();
-				for (int i = 0; i < count; ++i)
-					o.Timing_ToString_DictWithLock ().Dispose ();
+				for (int i = 0; i < count; ++i) {
+					var s = o.Timing_ToString_DictWithLock ();;
+					JniEnvironment.Handles.Dispose (ref s);
+				}
 				td.Stop ();
 
 				var tc = Stopwatch.StartNew ();
-				for (int i = 0; i < count; ++i)
-					o.Timing_ToString_DictWithNoLock ().Dispose ();
+				for (int i = 0; i < count; ++i) {
+					var s = o.Timing_ToString_DictWithNoLock ();
+					JniEnvironment.Handles.Dispose (ref s);
+				}
 				tc.Stop ();
 
 				Console.WriteLine ("Method Lookup + Invoke Timing:");
@@ -417,11 +430,11 @@ namespace Java.Interop.PerformanceTests {
 			var methodHandles   = new List<JavaObject> ();
 
 			using (var Arrays_class = new JniType ("java/util/Arrays")) {
-				var lrefMethods = Class_getMethods.CallVirtualObjectMethod (Arrays_class.SafeHandle);
+				var lrefMethods = Class_getMethods.CallVirtualObjectMethod (Arrays_class.PeerReference);
 				Console.WriteLine ("# {0}: java.util.Arrays.class.getMethods() Timing: {1}", nameof (ObjectArrayEnumerationTiming), total.Elapsed);
 
 				var methodsTiming   = Stopwatch.StartNew ();
-				using (var methods  = new JavaObjectArray<JavaObject> (lrefMethods, JniHandleOwnership.DoNotTransfer)) {
+				using (var methods  = new JavaObjectArray<JavaObject> (ref lrefMethods, JniHandleOwnership.DoNotTransfer)) {
 					foreach (var method in methods) {
 						methodHandles.Add (method);
 					}
@@ -435,7 +448,7 @@ namespace Java.Interop.PerformanceTests {
 				int len             = JniEnvironment.Arrays.GetArrayLength (lrefMethods);
 				for (int i = 0; i < len; ++i) {
 					var v = JniEnvironment.Arrays.GetObjectArrayElement (lrefMethods, i);
-					methodHandlesGO.Add (vm.GetObject<JavaObject> (v, JniHandleOwnership.Transfer));
+					methodHandlesGO.Add (vm.GetObject<JavaObject> (ref v, JniHandleOwnership.Transfer));
 				}
 				methodsTiming.Stop ();
 				Console.WriteLine ("# methodHandles(JavaVM.GetObject) creation timing: {0} Count={1}", methodsTiming.Elapsed, methodHandles.Count);
@@ -448,7 +461,7 @@ namespace Java.Interop.PerformanceTests {
 				len                 = JniEnvironment.Arrays.GetArrayLength (lrefMethods);
 				for (int i = 0; i < len; ++i) {
 					var v = JniEnvironment.Arrays.GetObjectArrayElement (lrefMethods, i);
-					methodHandlesAr.Add (new JavaObject (v, JniHandleOwnership.Transfer));
+					methodHandlesAr.Add (new JavaObject (ref v, JniHandleOwnership.Transfer));
 				}
 				methodsTiming.Stop ();
 				Console.WriteLine ("# methodHandles(JavaObject[]) creation timing: {0} Count={1}", methodsTiming.Elapsed, methodHandles.Count);
@@ -458,35 +471,42 @@ namespace Java.Interop.PerformanceTests {
 
 
 				methodsTiming       = Stopwatch.StartNew ();
-				var methodHandlesGR = new List<JniGlobalReference> ();
+				var methodHandlesGR = new List<JniObjectReference> ();
 				len                 = JniEnvironment.Arrays.GetArrayLength (lrefMethods);
 				for (int i = 0; i < len; ++i) {
-					using (var v = JniEnvironment.Arrays.GetObjectArrayElement (lrefMethods, i))
-						methodHandlesGR.Add (v.NewGlobalRef ());
+					var v = JniEnvironment.Arrays.GetObjectArrayElement (lrefMethods, i);
+					methodHandlesGR.Add (v.NewGlobalRef ());
+					JniEnvironment.Handles.Dispose (ref v);
 				}
 				methodsTiming.Stop ();
 				Console.WriteLine ("# methodHandles(JniGlobalReference) creation timing: {0} Count={1}", methodsTiming.Elapsed, methodHandles.Count);
 
-				foreach (var h in methodHandlesGR)
-					h.Dispose ();
+				for (int i = 0; i < methodHandlesGR.Count; ++i) {
+					var h = methodHandlesGR [i];
+					JniEnvironment.Handles.Dispose (ref h);
+					methodHandlesGR [i] = h;
+				}
 
-				lrefMethods.Dispose ();
+				JniEnvironment.Handles.Dispose (ref lrefMethods);
 			}
 
 
 			foreach (var method in methodHandles) {
 				var lookupTiming    = Stopwatch.StartNew ();
-				var name            = JniEnvironment.Strings.ToString (Method_getName.CallVirtualObjectMethod (method.SafeHandle), JniHandleOwnership.Transfer);
-				using (var rt       = new JniType (Method_getReturnType.CallVirtualObjectMethod (method.SafeHandle), JniHandleOwnership.Transfer)) {
+				var n_name          = Method_getName.CallVirtualObjectMethod (method.PeerReference);
+				var name            = JniEnvironment.Strings.ToString (ref n_name, JniHandleOwnership.Transfer);
+				var n_rt            = Method_getReturnType.CallVirtualObjectMethod (method.PeerReference);
+				using (var rt       = new JniType (ref n_rt, JniHandleOwnership.Transfer)) {
 				}
 				var parameterTiming = Stopwatch.StartNew ();
 				var enumTime        = new TimeSpan ();
-				var lrefPs          = Method_getParameterTypes.CallVirtualObjectMethod (method.SafeHandle);
+				var lrefPs          = Method_getParameterTypes.CallVirtualObjectMethod (method.PeerReference);
 				Stopwatch cleanup;
-				using (var ps = new JavaObjectArray<JavaObject>(lrefPs, JniHandleOwnership.Transfer)) {
+				using (var ps = new JavaObjectArray<JavaObject>(ref lrefPs, JniHandleOwnership.Transfer)) {
 					var enumSw  = Stopwatch.StartNew ();
 					foreach (var p in ps) {
-						using (var pt = new JniType (p.SafeHandle, JniHandleOwnership.DoNotTransfer)) {
+						var h = p.PeerReference;
+						using (var pt = new JniType (ref h, JniHandleOwnership.DoNotTransfer)) {
 						}
 					}
 					enumSw.Stop ();
@@ -571,20 +591,19 @@ namespace Java.Interop.PerformanceTests {
 
 			Stopwatch   allocTime, newObjectTime, newTime, getObjectTime;
 
-			using (var Object_class = new JniType ("java/lang/Object"))
-			using (var Object_init  = Object_class.GetConstructor ("()V"))
-			{
+			using (var Object_class = new JniType ("java/lang/Object")) {
+				var Object_init = Object_class.GetConstructor ("()V");
 				allocTime   = Stopwatch.StartNew ();
 				for (int i = 0; i < C; ++i) {
-					using (var h = Object_class.AllocObject ()) {
-					}
+					var h = Object_class.AllocObject ();
+					JniEnvironment.Handles.Dispose (ref h);
 				}
 				allocTime.Stop ();
 
 				newObjectTime   = Stopwatch.StartNew ();
 				for (int i = 0; i < C; ++i) {
-					using (var h = Object_class.NewObject (Object_init, null)) {
-					}
+					var h = Object_class.NewObject (Object_init, null);
+					JniEnvironment.Handles.Dispose (ref h);
 				}
 				newObjectTime.Stop ();
 
@@ -607,8 +626,8 @@ namespace Java.Interop.PerformanceTests {
 					var rlist       = new List<JavaObject> (C);
 					getObjectTime   = Stopwatch.StartNew ();
 					for (int i  = 0; i < C; ++i) {
-						var h   = JniEnvironment.Arrays.GetObjectArrayElement (strings.SafeHandle, i);
-						var o   = vm.GetObject<JavaObject> (h, JniHandleOwnership.Transfer);
+						var h   = JniEnvironment.Arrays.GetObjectArrayElement (strings.PeerReference, i);
+						var o   = vm.GetObject<JavaObject> (ref h, JniHandleOwnership.Transfer);
 						rlist.Add (o);
 					}
 					getObjectTime.Stop ();

@@ -18,8 +18,8 @@ namespace Java.Interop.Dynamic {
 	[JniTypeInfoAttribute ("java/lang/Object")]
 	class JavaInstanceProxy : JavaObject {
 
-		public JavaInstanceProxy (JniReferenceSafeHandle handle, JniHandleOwnership transfer)
-			: base (handle, transfer)
+		public JavaInstanceProxy (ref JniObjectReference reference, JniHandleOwnership transfer)
+			: base (ref reference, transfer)
 		{
 		}
 	}

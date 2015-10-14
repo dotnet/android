@@ -13,7 +13,7 @@
 		new { JniCallType   = "Int64",      ReturnType  = "long",               ParameterType = "long" },
 		new { JniCallType   = "Single",     ReturnType  = "float",              ParameterType = "float" },
 		new { JniCallType   = "Double",     ReturnType  = "double",             ParameterType = "double" },
-		new { JniCallType   = "Object",     ReturnType  = "JniLocalReference",  ParameterType = "JniReferenceSafeHandle" },
+		new { JniCallType   = "Object",     ReturnType  = "JniObjectReference", ParameterType = "JniObjectReference" },
 	};
 
 #>
@@ -31,7 +31,7 @@ namespace Java.Interop {
 			JniPeerMembers.AssertSelf (self);
 
 			return GetFieldID (encodedMember)
-				.Get<#= info.JniCallType #>Value (self.SafeHandle);
+				.Get<#= info.JniCallType #>Value (self.PeerReference);
 		}
 
 		public void SetValue (string encodedMember, IJavaObject self, <#= info.ParameterType #> value)
@@ -39,7 +39,7 @@ namespace Java.Interop {
 			JniPeerMembers.AssertSelf (self);
 
 			GetFieldID (encodedMember)
-				.SetValue (self.SafeHandle, value);
+				.SetValue (self.PeerReference, value);
 		}
 <#
 	}
@@ -54,13 +54,13 @@ namespace Java.Interop {
 		public <#= info.ReturnType #> Get<#= info.JniCallType #>Value (string encodedMember)
 		{
 			return GetFieldID (encodedMember)
-				.Get<#= info.JniCallType #>Value (Members.JniPeerType.SafeHandle);
+				.Get<#= info.JniCallType #>Value (Members.JniPeerType.PeerReference);
 		}
 
 		public void SetValue (string encodedMember, <#= info.ParameterType #> value)
 		{
 			GetFieldID (encodedMember)
-				.SetValue (Members.JniPeerType.SafeHandle, value);
+				.SetValue (Members.JniPeerType.PeerReference, value);
 		}
 <#
 	}

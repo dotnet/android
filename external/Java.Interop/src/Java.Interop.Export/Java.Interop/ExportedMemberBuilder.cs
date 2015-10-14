@@ -278,7 +278,7 @@ namespace Java.Interop {
 		static readonly Dictionary<Type, MarshalInfo> Marshalers = new Dictionary<Type, MarshalInfo> () {
 			{ typeof (string), new MarshalInfo {
 					FromJni = (vm, t, p) => Expression.Call (F<IntPtr, string> (JniEnvironment.Strings.ToString).Method, p),
-					ToJni   = p => Expression.Call (F<string, JniLocalReference> (JniEnvironment.Strings.NewString).Method, p)
+					ToJni   = p => Expression.Call (F<string, JniObjectReference> (JniEnvironment.Strings.NewString).Method, p)
 			} },
 			{ typeof (IJavaObject), new MarshalInfo {
 					FromJni = (vm, t, p) => GetThis (vm, t, p),

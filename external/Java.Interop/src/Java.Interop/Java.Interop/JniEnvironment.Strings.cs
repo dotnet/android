@@ -7,15 +7,15 @@ namespace Java.Interop
 
 		partial class Strings {
 
-			public static unsafe JniLocalReference NewString (string value)
+			public static unsafe JniObjectReference NewString (string value)
 			{
 				if (value == null)
-					return new JniLocalReference ();
+					return new JniObjectReference ();
 				fixed (char* s = value)
 					return NewString ((IntPtr) s, value.Length);
 			}
 
-			internal static JniLocalReference NewString (object value)
+			internal static JniObjectReference NewString (object value)
 			{
 				Debug.Assert (value == null || (value is string), "Expected value==null or string; was: " + (value ?? "").GetType ().FullName);
 				return NewString ((string) value);
@@ -23,13 +23,17 @@ namespace Java.Interop
 
 			public static string ToString (IntPtr handle)
 			{
-				using (var r = new JniInvocationHandle (handle))
-					return ToString (r);
+				return ToString (new JniObjectReference (handle));
 			}
 
-			public static unsafe string ToString (JniReferenceSafeHandle value, JniHandleOwnership transfer = JniHandleOwnership.DoNotTransfer)
+			public static unsafe string ToString (JniObjectReference value)
 			{
-				if (value == null || value.IsInvalid)
+				return ToString (ref value, JniHandleOwnership.DoNotTransfer);
+			}
+
+			public static unsafe string ToString (ref JniObjectReference value, JniHandleOwnership transfer)
+			{
+				if (!value.IsValid)
 					return null;
 				int len = JniEnvironment.Strings.GetStringLength (value);
 				var p   = JniEnvironment.Strings.GetStringChars (value, IntPtr.Zero);
@@ -37,14 +41,14 @@ namespace Java.Interop
 					return new string ((char*) p, 0, len);
 				} finally {
 					JniEnvironment.Strings.ReleaseStringChars (value, p);
-					JniEnvironment.Handles.Dispose (value, transfer);
+					JniEnvironment.Handles.Dispose (ref value, transfer);
 				}
 			}
 
-			internal static unsafe string ToString (JniReferenceSafeHandle value, JniHandleOwnership transfer, Type targetType)
+			internal static unsafe string ToString (ref JniObjectReference value, JniHandleOwnership transfer, Type targetType)
 			{
 				Debug.Assert (targetType == typeof (string), "Expected targetType==typeof(string); was: " + targetType);
-				return ToString (value, transfer);
+				return ToString (ref value, transfer);
 			}
 		}
 	}

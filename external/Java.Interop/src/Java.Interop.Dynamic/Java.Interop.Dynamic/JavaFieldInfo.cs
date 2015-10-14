@@ -76,7 +76,7 @@ namespace Java.Interop.Dynamic {
 			case 'L':
 			case '[':
 				var lref = members.StaticFields.GetObjectValue (JniSignature);
-				return ToReturnValue (lref, JniSignature, n + 1);
+				return ToReturnValue (ref lref, JniSignature, n + 1);
 			default:
 				throw new NotSupportedException ("Unsupported argument type: " + JniSignature.Substring (n + 1));
 			}
@@ -97,7 +97,7 @@ namespace Java.Interop.Dynamic {
 			case 'L':
 			case '[':
 				var lref = members.InstanceFields.GetObjectValue (JniSignature, self);
-				return ToReturnValue (lref, JniSignature, n + 1);
+				return ToReturnValue (ref lref, JniSignature, n + 1);
 			default:
 				throw new NotSupportedException ("Unsupported argument type: " + JniSignature.Substring (n + 1));
 			}
@@ -137,8 +137,11 @@ namespace Java.Interop.Dynamic {
 			case 'D':   members.StaticFields.SetValue (JniSignature, (double) value);   break;
 			case 'L':
 			case '[':
-				using (var lref = JniMarshal.CreateLocalRef (value)) {
+				var lref = JniMarshal.CreateLocalRef (value);
+				try {
 					members.StaticFields.SetValue (JniSignature, lref);
+				} finally {
+					JniEnvironment.Handles.Dispose (ref lref);
 				}
 				return;
 			default:
@@ -160,8 +163,11 @@ namespace Java.Interop.Dynamic {
 			case 'D':   members.InstanceFields.SetValue (JniSignature, self,    (double) value);   break;
 			case 'L':
 			case '[':
-				using (var lref = JniMarshal.CreateLocalRef (value)) {
+				var lref = JniMarshal.CreateLocalRef (value);
+				try {
 					members.InstanceFields.SetValue (JniSignature, self, lref);
+				} finally {
+					JniEnvironment.Handles.Dispose (ref lref);
 				}
 				return;
 			default:

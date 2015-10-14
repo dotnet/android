@@ -1,4 +1,5 @@
 using System;
+using System.Reflection;
 
 using Java.Interop;
 
@@ -20,9 +21,12 @@ namespace Java.InteropTests
 
 				var Integer_ctor        = Integer_class.GetConstructor ("(I)V");
 				var Integer_intValue    = Integer_class.GetInstanceMethod ("intValue", "()I");
-				using (var o = Integer_class.NewObject (Integer_ctor, ctor_args)) {
+				var o                   = Integer_class.NewObject (Integer_ctor, ctor_args);
+				try {
 					int v = Integer_intValue.CallVirtualInt32Method (o);
 					Assert.AreEqual (42, v);
+				} finally {
+					JniEnvironment.Handles.Dispose (ref o);
 				}
 			}
 		}
@@ -47,7 +51,7 @@ namespace Java.InteropTests
 			Assert.Throws<ObjectDisposedException> (() => t.GetStaticMethod (null, null));
 			Assert.Throws<ObjectDisposedException> (() => t.GetSuperclass ());
 			Assert.Throws<ObjectDisposedException> (() => t.IsAssignableFrom (null));
-			Assert.Throws<ObjectDisposedException> (() => t.IsInstanceOfType (null));
+			Assert.Throws<ObjectDisposedException> (() => t.IsInstanceOfType (new JniObjectReference ()));
 			Assert.Throws<ObjectDisposedException> (() => t.RegisterWithVM ());
 			Assert.Throws<ObjectDisposedException> (() => t.RegisterNativeMethods (null));
 			Assert.Throws<ObjectDisposedException> (() => t.UnregisterNativeMethods ());
@@ -72,7 +76,7 @@ namespace Java.InteropTests
 				using (var s = new JniType ("java/lang/String")) {
 					using (var st = s.GetSuperclass ()) {
 						Assert.IsFalse (object.ReferenceEquals (t, st));
-						Assert.IsTrue (JniEnvironment.Types.IsSameObject (t.SafeHandle, st.SafeHandle));
+						Assert.IsTrue (JniEnvironment.Types.IsSameObject (t.PeerReference, st.PeerReference));
 					}
 				}
 			}
@@ -93,7 +97,7 @@ namespace Java.InteropTests
 		{
 			using (var t = new JniType ("java/lang/Object"))
 			using (var b = new TestType ()) {
-				Assert.IsTrue (t.IsInstanceOfType (b.SafeHandle));
+				Assert.IsTrue (t.IsInstanceOfType (b.PeerReference));
 			}
 		}
 
@@ -127,18 +131,23 @@ namespace Java.InteropTests
 		{
 			using (var Object_class         = new JniType ("java/lang/Object"))
 			using (var Class_class          = new JniType ("java/lang/Class"))
-			using (var Class_getMethod      = Class_class.GetInstanceMethod ("getMethod", "(Ljava/lang/String;[Ljava/lang/Class;)Ljava/lang/reflect/Method;"))
-			using (var Method_class         = new JniType ("java/lang/reflect/Method"))
-			using (var Method_getReturnType = Method_class.GetInstanceMethod ("getReturnType", "()Ljava/lang/Class;"))
-			using (var hashCode_str         = JniEnvironment.Strings.NewString ("hashCode")) {
+			using (var Method_class         = new JniType ("java/lang/reflect/Method")) {
+				var Class_getMethod         = Class_class.GetInstanceMethod ("getMethod", "(Ljava/lang/String;[Ljava/lang/Class;)Ljava/lang/reflect/Method;");
+				var Method_getReturnType    = Method_class.GetInstanceMethod ("getReturnType", "()Ljava/lang/Class;");
+				var hashCode_str            = JniEnvironment.Strings.NewString ("hashCode");
 				var hashCode_args           = stackalloc JValue [1];
 				hashCode_args [0]           = new JValue (hashCode_str);
-				using (var Object_hashCode = Class_getMethod.CallVirtualObjectMethod (Object_class.SafeHandle, hashCode_args))
-				using (var Object_hashCode_rt = Method_getReturnType.CallVirtualObjectMethod (Object_hashCode, null)) {
+				var Object_hashCode         = Class_getMethod.CallVirtualObjectMethod (Object_class.PeerReference, hashCode_args);
+				var Object_hashCode_rt      = Method_getReturnType.CallVirtualObjectMethod (Object_hashCode, null);
+				try {
 					Assert.AreEqual ("java/lang/Object", Object_class.Name);
 
-					using (var t = new JniType (Object_hashCode_rt, JniHandleOwnership.DoNotTransfer))
+					using (var t = new JniType (ref Object_hashCode_rt, JniHandleOwnership.DoNotTransfer))
 						Assert.AreEqual ("I", t.Name);
+				} finally {
+					JniEnvironment.Handles.Dispose (ref hashCode_str);
+					JniEnvironment.Handles.Dispose (ref Object_hashCode);
+					JniEnvironment.Handles.Dispose (ref Object_hashCode_rt);
 				}
 			}
 		}
@@ -147,11 +156,16 @@ namespace Java.InteropTests
 		public void RegisterWithVM ()
 		{
 			using (var Object_class = new JniType ("java/lang/Object")) {
-				Assert.AreEqual (JniReferenceType.Local, Object_class.SafeHandle.ReferenceType);
-				var cur = Object_class.SafeHandle;
+				Assert.AreEqual (JniObjectReferenceType.Local, Object_class.PeerReference.Type);
+				var cur = Object_class.PeerReference;
 				Object_class.RegisterWithVM ();
-				Assert.AreEqual (JniReferenceType.Global, Object_class.SafeHandle.ReferenceType);
-				Assert.IsTrue (cur.IsClosed);
+				Assert.AreEqual (JniObjectReferenceType.Global, Object_class.PeerReference.Type);
+				if (HaveSafeHandles) {
+					Assert.IsFalse (cur.IsValid);
+				} else {
+					Assert.IsTrue (cur.IsValid);    // because struct+copy semantics; is actually no longer valid
+				}
+				Assert.IsTrue (Object_class.PeerReference.IsValid);
 			}
 		}
 
@@ -159,9 +173,9 @@ namespace Java.InteropTests
 		public void RegisterNativeMethods ()
 		{
 			using (var TestType_class = new JniType ("com/xamarin/interop/CallNonvirtualBase")) {
-				Assert.AreEqual (JniReferenceType.Local, TestType_class.SafeHandle.ReferenceType);
+				Assert.AreEqual (JniObjectReferenceType.Local, TestType_class.PeerReference.Type);
 				TestType_class.RegisterNativeMethods ();
-				Assert.AreEqual (JniReferenceType.Global, TestType_class.SafeHandle.ReferenceType);
+				Assert.AreEqual (JniObjectReferenceType.Global, TestType_class.PeerReference.Type);
 			}
 		}
 	}
