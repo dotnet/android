@@ -97,7 +97,7 @@ namespace Java.Interop
 					if (EqualityComparer<T>.Default.Equals (item, at) || JniMarshal.RecursiveEquals (item, at))
 						return i;
 				} finally {
-					var j = at as IJavaObject;
+					var j = at as IJavaPeerable;
 					if (j != null)
 						j.DisposeUnlessRegistered ();
 				}
@@ -120,7 +120,7 @@ namespace Java.Interop
 				var item         = GetElementAt (i);
 				list [index + i] = item;
 				if (forMarshalCollection) {
-					var d = item as IJavaObject;
+					var d = item as IJavaPeerable;
 					if (d != null)
 						d.DisposeUnlessRegistered ();
 				}
@@ -145,14 +145,14 @@ namespace Java.Interop
 			return JavaArray<T>.CreateLocalRef (value, list => new JavaObjectArray<T>(list));
 		}
 
-		internal static IJavaObject CreateMarshalCollection (object value)
+		internal static IJavaPeerable CreateMarshalCollection (object value)
 		{
 			return JavaArray<T>.CreateMarshalCollection (value, list => new JavaObjectArray<T> (list) {
 				forMarshalCollection    = true,
 			});
 		}
 
-		internal static void CleanupMarshalCollection (IJavaObject marshalObject, object value)
+		internal static void CleanupMarshalCollection (IJavaPeerable marshalObject, object value)
 		{
 			JavaArray<T>.CleanupMarshalCollection<JavaObjectArray<T>> (marshalObject, value);
 		}

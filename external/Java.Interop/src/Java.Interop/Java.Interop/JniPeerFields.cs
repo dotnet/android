@@ -4,7 +4,7 @@
 
 		public bool GetBooleanValue (
 			string encodedMember,
-			IJavaObject self)
+			IJavaPeerable   self)
 		{
 			JniPeerMembers.AssertSelf (self);
 
@@ -12,7 +12,7 @@
 				.GetBooleanValue (self.PeerReference);
 		}
 
-		public void SetValue (string encodedMember, IJavaObject self, bool value)
+		public void SetValue (string encodedMember, IJavaPeerable self, bool value)
 		{
 			JniPeerMembers.AssertSelf (self);
 
@@ -22,7 +22,7 @@
 
 		public sbyte GetByteValue (
 			string encodedMember,
-			IJavaObject self)
+			IJavaPeerable   self)
 		{
 			JniPeerMembers.AssertSelf (self);
 
@@ -30,7 +30,7 @@
 				.GetByteValue (self.PeerReference);
 		}
 
-		public void SetValue (string encodedMember, IJavaObject self, sbyte value)
+		public void SetValue (string encodedMember, IJavaPeerable self, sbyte value)
 		{
 			JniPeerMembers.AssertSelf (self);
 
@@ -40,7 +40,7 @@
 
 		public char GetCharValue (
 			string encodedMember,
-			IJavaObject self)
+			IJavaPeerable   self)
 		{
 			JniPeerMembers.AssertSelf (self);
 
@@ -48,7 +48,7 @@
 				.GetCharValue (self.PeerReference);
 		}
 
-		public void SetValue (string encodedMember, IJavaObject self, char value)
+		public void SetValue (string encodedMember, IJavaPeerable self, char value)
 		{
 			JniPeerMembers.AssertSelf (self);
 
@@ -58,7 +58,7 @@
 
 		public short GetInt16Value (
 			string encodedMember,
-			IJavaObject self)
+			IJavaPeerable   self)
 		{
 			JniPeerMembers.AssertSelf (self);
 
@@ -66,7 +66,7 @@
 				.GetInt16Value (self.PeerReference);
 		}
 
-		public void SetValue (string encodedMember, IJavaObject self, short value)
+		public void SetValue (string encodedMember, IJavaPeerable self, short value)
 		{
 			JniPeerMembers.AssertSelf (self);
 
@@ -76,7 +76,7 @@
 
 		public int GetInt32Value (
 			string encodedMember,
-			IJavaObject self)
+			IJavaPeerable   self)
 		{
 			JniPeerMembers.AssertSelf (self);
 
@@ -84,7 +84,7 @@
 				.GetInt32Value (self.PeerReference);
 		}
 
-		public void SetValue (string encodedMember, IJavaObject self, int value)
+		public void SetValue (string encodedMember, IJavaPeerable self, int value)
 		{
 			JniPeerMembers.AssertSelf (self);
 
@@ -94,7 +94,7 @@
 
 		public long GetInt64Value (
 			string encodedMember,
-			IJavaObject self)
+			IJavaPeerable   self)
 		{
 			JniPeerMembers.AssertSelf (self);
 
@@ -102,7 +102,7 @@
 				.GetInt64Value (self.PeerReference);
 		}
 
-		public void SetValue (string encodedMember, IJavaObject self, long value)
+		public void SetValue (string encodedMember, IJavaPeerable self, long value)
 		{
 			JniPeerMembers.AssertSelf (self);
 
@@ -112,7 +112,7 @@
 
 		public float GetSingleValue (
 			string encodedMember,
-			IJavaObject self)
+			IJavaPeerable   self)
 		{
 			JniPeerMembers.AssertSelf (self);
 
@@ -120,7 +120,7 @@
 				.GetSingleValue (self.PeerReference);
 		}
 
-		public void SetValue (string encodedMember, IJavaObject self, float value)
+		public void SetValue (string encodedMember, IJavaPeerable self, float value)
 		{
 			JniPeerMembers.AssertSelf (self);
 
@@ -130,7 +130,7 @@
 
 		public double GetDoubleValue (
 			string encodedMember,
-			IJavaObject self)
+			IJavaPeerable   self)
 		{
 			JniPeerMembers.AssertSelf (self);
 
@@ -138,7 +138,7 @@
 				.GetDoubleValue (self.PeerReference);
 		}
 
-		public void SetValue (string encodedMember, IJavaObject self, double value)
+		public void SetValue (string encodedMember, IJavaPeerable self, double value)
 		{
 			JniPeerMembers.AssertSelf (self);
 
@@ -148,7 +148,7 @@
 
 		public JniObjectReference GetObjectValue (
 			string encodedMember,
-			IJavaObject self)
+			IJavaPeerable   self)
 		{
 			JniPeerMembers.AssertSelf (self);
 
@@ -156,7 +156,7 @@
 				.GetObjectValue (self.PeerReference);
 		}
 
-		public void SetValue (string encodedMember, IJavaObject self, JniObjectReference value)
+		public void SetValue (string encodedMember, IJavaPeerable self, JniObjectReference value)
 		{
 			JniPeerMembers.AssertSelf (self);
 

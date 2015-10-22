@@ -45,7 +45,7 @@ namespace Java.InteropTests
 			{
 			}
 
-			protected override bool TryGC (IJavaObject value, ref JniObjectReference handle)
+			protected override bool TryGC (IJavaPeerable value, ref JniObjectReference handle)
 			{
 				throw new NotImplementedException ();
 			}
@@ -225,11 +225,11 @@ namespace Java.InteropTests
 					createLocalRef:             "Strings.NewString");
 
 			AssertGetJniMarshalInfoForType (typeof (JavaObject),
-					getValue:                   "JavaObjectExtensions.GetValue",
-					createLocalRef:             "JavaObjectExtensions.CreateLocalRef");
+					getValue:                   "JavaPeerableExtensions.GetValue",
+					createLocalRef:             "JavaPeerableExtensions.CreateLocalRef");
 			AssertGetJniMarshalInfoForType (typeof (JavaException),
-					getValue:                   "JavaObjectExtensions.GetValue",
-					createLocalRef:             "JavaObjectExtensions.CreateLocalRef");
+					getValue:                   "JavaPeerableExtensions.GetValue",
+					createLocalRef:             "JavaPeerableExtensions.CreateLocalRef");
 
 			AssertGetJniMarshalInfoForPrimitiveArray<JavaBooleanArray, bool> ();
 			AssertGetJniMarshalInfoForPrimitiveArray<JavaSByteArray, sbyte> ();

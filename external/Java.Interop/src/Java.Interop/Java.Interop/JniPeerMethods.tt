@@ -95,7 +95,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static void FinishGenericCreateInstance<#= typeParams #> (
 			this        JniPeerInstanceMethods  peer,
 		    string      constructorSignature,
-		    IJavaObject self,
+		    IJavaPeerable   self,
 		    <#= methodParams #>
 		)
 		{
@@ -108,7 +108,7 @@ namespace Java.Interop.GenericMarshaler {
 		static unsafe void _InvokeConstructor<#= typeParams #> (
 			JniPeerInstanceMethods  peer,
 		    string      constructorSignature,
-		    IJavaObject self,
+		    IJavaPeerable   self,
 		    <#= methodParams #>
 		)
 		{
@@ -181,7 +181,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe <#= info.ReturnType #> CallGeneric<#= info.JniCallType #>Method<#= typeParams #> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self<#= i == 0 ? "" : ",\n\t\t\t" + methodParams #>
+			IJavaPeerable   self<#= i == 0 ? "" : ",\n\t\t\t" + methodParams #>
 		)
 		{
 <#

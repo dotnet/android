@@ -17,7 +17,7 @@ namespace Java.Interop.Dynamic {
 
 	abstract class JniMetaObject : DynamicMetaObject
 	{
-		protected   delegate    bool    TryInvokeMember     (IJavaObject self, JavaMethodBase[] overloads, DynamicMetaObject[] args, out object value);
+		protected   delegate    bool    TryInvokeMember     (IJavaPeerable self, JavaMethodBase[] overloads, DynamicMetaObject[] args, out object value);
 
 		JavaClassInfo   info;
 
@@ -73,7 +73,7 @@ namespace Java.Interop.Dynamic {
 
 			var field = overloads.FirstOrDefault (f => f.IsStatic == true);
 
-			Func<IJavaObject, object>   getValue    = field.GetValue;
+			Func<IJavaPeerable, object>   getValue  = field.GetValue;
 
 			var e = Expression.Call (Expression.Constant (field), getValue.Method, GetSelf ());
 			return new DynamicMetaObject (e, BindingRestrictions.GetInstanceRestriction (Expression, Value));
@@ -147,7 +147,7 @@ namespace Java.Interop.Dynamic {
 
 			var field   = overloads.FirstOrDefault (f => f.IsStatic == true);
 
-			Action<IJavaObject, object>  setValue    = field.SetValue;
+			Action<IJavaPeerable, object>  setValue  = field.SetValue;
 			var e = Expression.Block (
 					Expression.Call (Expression.Constant (field), setValue.Method,
 						GetSelf (), Expression.Convert (value.Expression, typeof (object))),

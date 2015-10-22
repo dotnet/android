@@ -3,7 +3,7 @@ using System;
 namespace Java.Interop
 {
 	[JniTypeInfo ("java/lang/Object")]
-	unsafe public class JavaObject : IJavaObject, IJavaObjectEx
+	unsafe public class JavaObject : IJavaPeerable, IJavaPeerableEx
 	{
 		readonly static JniPeerMembers _members = new JniPeerMembers ("java/lang/Object", typeof (JavaObject));
 
@@ -98,7 +98,7 @@ namespace Java.Interop
 
 			if (object.ReferenceEquals (obj, this))
 				return true;
-			var o = obj as IJavaObject;
+			var o = obj as IJavaPeerable;
 			if (o != null)
 				return JniEnvironment.Types.IsSameObject (PeerReference, o.PeerReference);
 			return false;
@@ -118,22 +118,22 @@ namespace Java.Interop
 			return JniEnvironment.Strings.ToString (ref lref, JniHandleOwnership.Transfer);
 		}
 
-		int IJavaObjectEx.IdentityHashCode {
+		int IJavaPeerableEx.IdentityHashCode {
 			get {return keyHandle;}
 			set {keyHandle = value;}
 		}
 
-		bool IJavaObjectEx.Registered {
+		bool IJavaPeerableEx.Registered {
 			get {return registered;}
 			set {registered = value;}
 		}
 
-		void IJavaObjectEx.Dispose (bool disposing)
+		void IJavaPeerableEx.Dispose (bool disposing)
 		{
 			Dispose (disposing);
 		}
 
-		void IJavaObjectEx.SetPeerReference (JniObjectReference reference)
+		void IJavaPeerableEx.SetPeerReference (JniObjectReference reference)
 		{
 #if FEATURE_HANDLES_ARE_SAFE_HANDLES
 			this.reference  = reference;

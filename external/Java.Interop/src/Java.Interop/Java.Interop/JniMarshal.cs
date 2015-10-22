@@ -85,9 +85,9 @@ namespace Java.Interop {
 				return info.CreateLocalRef (value);
 			}
 
-			var o = (value as IJavaObject) ??
+			var o = (value as IJavaPeerable) ??
 				JavaProxyObject.GetProxy (value);
-			return jvm.GetJniMarshalInfoForType (typeof (IJavaObject)).CreateLocalRef (o);
+			return jvm.GetJniMarshalInfoForType (typeof (IJavaPeerable)).CreateLocalRef (o);
 		}
 	}
 }

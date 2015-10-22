@@ -97,7 +97,7 @@ namespace Java.Interop.Dynamic {
 
 			protected override Expression GetSelf ()
 			{
-				return Expression.Constant (null, typeof (IJavaObject));
+				return Expression.Constant (null, typeof (IJavaPeerable));
 			}
 
 			public override DynamicMetaObject BindInvoke (InvokeBinder binder, DynamicMetaObject[] args)
@@ -124,7 +124,7 @@ namespace Java.Interop.Dynamic {
 						new[]{value},
 						Expression.Condition (
 							test:       Expression.Call (Expression.Constant (klass.info), invoke.Method,
-								Expression.Constant (null, typeof (IJavaObject)), Expression.Constant (applicable), Expression.Constant (args), value),
+								Expression.Constant (null, typeof (IJavaPeerable)), Expression.Constant (applicable), Expression.Constant (args), value),
 							ifTrue:     value,
 							ifFalse:    fallback.Expression)
 				);
@@ -148,8 +148,8 @@ namespace Java.Interop.Dynamic {
 	struct JniArgumentMarshalInfo {
 		JValue                          jvalue;
 		JniObjectReference              lref;
-		IJavaObject                     obj;
-		Action<IJavaObject, object>     cleanup;
+		IJavaPeerable                   obj;
+		Action<IJavaPeerable, object>   cleanup;
 
 		internal JniArgumentMarshalInfo (object value, Type valueType)
 		{

@@ -286,7 +286,7 @@ namespace Java.Interop
 		}
 
 		internal void RegisterObject<T> (T value)
-			where T : IJavaObject, IJavaObjectEx
+			where T : IJavaPeerable, IJavaPeerableEx
 		{
 			var r = value.PeerReference;
 			if (!r.IsValid)
@@ -301,8 +301,8 @@ namespace Java.Interop
 			int key = value.IdentityHashCode;
 			lock (RegisteredInstances) {
 				WeakReference   existing;
-				IJavaObject     target;
-				if (RegisteredInstances.TryGetValue (key, out existing) && (target = (IJavaObject) existing.Target) != null)
+				IJavaPeerable     target;
+				if (RegisteredInstances.TryGetValue (key, out existing) && (target = (IJavaPeerable) existing.Target) != null)
 					throw new NotSupportedException (
 							string.Format ("Cannot register instance {0}(0x{1}), as an instance with the same handle {2}(0x{3}) has already been registered.",
 								value.GetType ().FullName, value.PeerReference.ToString (),
@@ -312,14 +312,14 @@ namespace Java.Interop
 			value.Registered = true;
 		}
 
-		internal void UnRegisterObject (IJavaObjectEx value)
+		internal void UnRegisterObject (IJavaPeerableEx value)
 		{
 			int key = value.IdentityHashCode;
 			lock (RegisteredInstances) {
 				WeakReference               wv;
-				IJavaObject                 t;
+				IJavaPeerable                 t;
 				if (RegisteredInstances.TryGetValue (key, out wv) &&
-						(t = (IJavaObject) wv.Target) != null &&
+						(t = (IJavaPeerable) wv.Target) != null &&
 						object.ReferenceEquals (value, t))
 					RegisteredInstances.Remove (key);
 				value.Registered = false;
@@ -327,7 +327,7 @@ namespace Java.Interop
 		}
 
 		internal TCleanup SetObjectPeerReference<T, TCleanup> (T value, ref JniObjectReference reference, JniHandleOwnership transfer, Func<Action, TCleanup> createCleanup)
-			where T : IJavaObject, IJavaObjectEx
+			where T : IJavaPeerable, IJavaPeerableEx
 			where TCleanup : IDisposable
 		{
 			if (!reference.IsValid)
@@ -354,7 +354,7 @@ namespace Java.Interop
 		}
 
 		internal void DisposeObject<T> (T value)
-			where T : IJavaObject, IJavaObjectEx
+			where T : IJavaPeerable, IJavaPeerableEx
 		{
 			var h = value.PeerReference;
 			if (!h.IsValid)
@@ -377,7 +377,7 @@ namespace Java.Interop
 		}
 
 		internal void TryCollectObject<T> (T value)
-			where T : IJavaObject, IJavaObjectEx
+			where T : IJavaPeerable, IJavaPeerableEx
 		{
 			var h = value.PeerReference;
 			// MUST NOT use SafeHandle.ReferenceType: local refs are tied to a JniEnvironment
@@ -414,16 +414,16 @@ namespace Java.Interop
 		///   <paramref name="handle"/> is invalid; otherwise <c>false</c>.
 		/// </returns>
 		/// <param name="value">
-		///   The <see cref="T:Java.Interop.IJavaObject"/> instance to collect.
+		///   The <see cref="T:Java.Interop.IJavaPeerable"/> instance to collect.
 		/// </param>
 		/// <param name="handle">
 		///   The <see cref="T:Java.Interop.JniObjectReference"/> of <paramref name="value"/>.
 		///   This value may be updated, and <see cref="P:Java.Interop.IJavaObject.PeerReference"/>
 		///   will be updated with this value.
 		/// </param>
-		internal protected abstract bool TryGC (IJavaObject value, ref JniObjectReference handle);
+		internal protected abstract bool TryGC (IJavaPeerable value, ref JniObjectReference handle);
 
-		public IJavaObject PeekObject (JniObjectReference reference)
+		public IJavaPeerable PeekObject (JniObjectReference reference)
 		{
 			if (!reference.IsValid)
 				return null;
@@ -431,7 +431,7 @@ namespace Java.Interop
 			lock (RegisteredInstances) {
 				WeakReference               wv;
 				if (RegisteredInstances.TryGetValue (key, out wv)) {
-					IJavaObject   t = (IJavaObject) wv.Target;
+					IJavaPeerable   t = (IJavaPeerable) wv.Target;
 					if (t != null)
 						return t;
 					RegisteredInstances.Remove (key);
@@ -440,7 +440,7 @@ namespace Java.Interop
 			return null;
 		}
 
-		public IJavaObject GetObject (ref JniObjectReference reference, JniHandleOwnership transfer, Type targetType = null)
+		public IJavaPeerable GetObject (ref JniObjectReference reference, JniHandleOwnership transfer, Type targetType = null)
 		{
 			if (!reference.IsValid)
 				return null;
@@ -454,11 +454,11 @@ namespace Java.Interop
 			return CreateObjectWrapper (ref reference, transfer, targetType);
 		}
 
-		protected virtual IJavaObject CreateObjectWrapper (ref JniObjectReference reference, JniHandleOwnership transfer, Type targetType)
+		protected virtual IJavaPeerable CreateObjectWrapper (ref JniObjectReference reference, JniHandleOwnership transfer, Type targetType)
 		{
 			targetType  = targetType ?? typeof (JavaObject);
-			if (!typeof (IJavaObject).IsAssignableFrom (targetType))
-				throw new ArgumentException ("targetType must implement IJavaObject!", "targetType");
+			if (!typeof (IJavaPeerable).IsAssignableFrom (targetType))
+				throw new ArgumentException ("targetType must implement IJavaPeerable!", "targetType");
 
 			var ctor = GetWrapperConstructor (reference, targetType);
 			if (ctor == null)
@@ -470,7 +470,7 @@ namespace Java.Interop
 				transfer,
 			};
 			try {
-				return (IJavaObject) ctor.Invoke (acts);
+				return (IJavaPeerable) ctor.Invoke (acts);
 			} finally {
 				reference   = (JniObjectReference) acts [0];
 			}
@@ -516,12 +516,12 @@ namespace Java.Interop
 		}
 
 		public T GetObject<T> (ref JniObjectReference reference, JniHandleOwnership transfer)
-			where T : IJavaObject
+			where T : IJavaPeerable
 		{
 			return (T) GetObject (ref reference, transfer, typeof (T));
 		}
 
-		public IJavaObject GetObject (IntPtr jniHandle, Type targetType = null)
+		public IJavaPeerable GetObject (IntPtr jniHandle, Type targetType = null)
 		{
 			if (jniHandle == IntPtr.Zero)
 				return null;
@@ -530,7 +530,7 @@ namespace Java.Interop
 		}
 
 		public T GetObject<T> (IntPtr jniHandle)
-			where T : IJavaObject
+			where T : IJavaPeerable
 		{
 			return (T) GetObject (jniHandle, typeof(T));
 		}
@@ -709,7 +709,7 @@ namespace Java.Interop
 			if (type.ContainsGenericParameters)
 				throw new ArgumentException ("Generic type definitions are not supported.", "type");
 
-			if (typeof (IJavaObject) == type)
+			if (typeof (IJavaPeerable) == type)
 				return DefaultObjectMarshaler;
 
 			foreach (var marshaler in JniBuiltinMarshalers) {
@@ -730,8 +730,8 @@ namespace Java.Interop
 				var arrayType   = typeof (JavaObjectArray<>).MakeGenericType (elementType);
 				var getValue    = CreateMethodDelegate<CreateValueFromJni> (arrayType, "GetValue");
 				var createLRef  = CreateMethodDelegate<Func<object, JniObjectReference>> (arrayType, "CreateLocalRef");
-				var createObj   = CreateMethodDelegate<Func<object, IJavaObject>> (arrayType, "CreateMarshalCollection");
-				var cleanup     = CreateMethodDelegate<Action<IJavaObject, object>> (arrayType, "CleanupMarshalCollection");
+				var createObj   = CreateMethodDelegate<Func<object, IJavaPeerable>> (arrayType, "CreateMarshalCollection");
+				var cleanup     = CreateMethodDelegate<Action<IJavaPeerable, object>> (arrayType, "CleanupMarshalCollection");
 
 				return new JniMarshalInfo {
 					GetValueFromJni             = getValue,
@@ -741,7 +741,7 @@ namespace Java.Interop
 				};
 			}
 
-			if (typeof (IJavaObject).IsAssignableFrom (type)) {
+			if (typeof (IJavaPeerable).IsAssignableFrom (type)) {
 				return DefaultObjectMarshaler;
 			}
 			return new JniMarshalInfo ();
@@ -756,8 +756,8 @@ namespace Java.Interop
 		}
 
 		static readonly JniMarshalInfo DefaultObjectMarshaler = new JniMarshalInfo {
-			GetValueFromJni         = JavaObjectExtensions.GetValue,
-			CreateLocalRef          = JavaObjectExtensions.CreateLocalRef,
+			GetValueFromJni         = JavaPeerableExtensions.GetValue,
+			CreateLocalRef          = JavaPeerableExtensions.CreateLocalRef,
 		};
 	}
 

@@ -260,8 +260,8 @@ namespace Java.Interop {
 			MarshalInfo v;
 			if (Marshalers.TryGetValue (targetType, out v))
 				return v.FromJni (jvm, targetType, jniParameter);
-			if (typeof (IJavaObject).IsAssignableFrom (targetType))
-				return Marshalers [typeof (IJavaObject)].FromJni (jvm, targetType, jniParameter);
+			if (typeof (IJavaPeerable).IsAssignableFrom (targetType))
+				return Marshalers [typeof (IJavaPeerable)].FromJni (jvm, targetType, jniParameter);
 			return null;
 		}
 
@@ -270,8 +270,8 @@ namespace Java.Interop {
 			MarshalInfo v;
 			if (Marshalers.TryGetValue (sourceType, out v))
 				return v.ToJni (managedParameter);
-			if (typeof (IJavaObject).IsAssignableFrom (sourceType))
-				return Marshalers [typeof (IJavaObject)].ToJni (managedParameter);
+			if (typeof (IJavaPeerable).IsAssignableFrom (sourceType))
+				return Marshalers [typeof (IJavaPeerable)].ToJni (managedParameter);
 			return null;
 		}
 
@@ -280,9 +280,9 @@ namespace Java.Interop {
 					FromJni = (vm, t, p) => Expression.Call (F<IntPtr, string> (JniEnvironment.Strings.ToString).Method, p),
 					ToJni   = p => Expression.Call (F<string, JniObjectReference> (JniEnvironment.Strings.NewString).Method, p)
 			} },
-			{ typeof (IJavaObject), new MarshalInfo {
+			{ typeof (IJavaPeerable), new MarshalInfo {
 					FromJni = (vm, t, p) => GetThis (vm, t, p),
-					ToJni   = p => Expression.Call (F<IJavaObject, IntPtr> (JniEnvironment.Handles.NewReturnToJniRef).Method, p)
+					ToJni   = p => Expression.Call (F<IJavaPeerable, IntPtr> (JniEnvironment.Handles.NewReturnToJniRef).Method, p)
 			} },
 		};
 

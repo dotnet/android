@@ -144,7 +144,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		public bool EqualsThis (IJavaObject value)
+		public bool EqualsThis (IJavaPeerable value)
 		{
 			Assert.IsNotNull (value);
 			Assert.AreNotSame (this, value);

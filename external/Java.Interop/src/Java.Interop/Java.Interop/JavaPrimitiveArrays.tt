@@ -203,14 +203,14 @@ namespace Java.Interop {
 		            (ref JniObjectReference h, JniHandleOwnership t) => new Java<#= info.TypeModifier #>Array (ref h, t));
 		}
 
-		internal static IJavaObject CreateMarshalCollection (object value)
+		internal static IJavaPeerable CreateMarshalCollection (object value)
 		{
 		    return JavaArray<<#= info.ManagedType #>>.CreateMarshalCollection (value, list => new Java<#= info.TypeModifier #>Array (list) {
 		        forMarshalCollection = true,
 		    });
 		}
 
-		internal static void CleanupMarshalCollection (IJavaObject marshalObject, object value)
+		internal static void CleanupMarshalCollection (IJavaPeerable marshalObject, object value)
 		{
 		    JavaArray<<#= info.ManagedType #>>.CleanupMarshalCollection<Java<#= info.TypeModifier #>Array> (marshalObject, value);
 		}

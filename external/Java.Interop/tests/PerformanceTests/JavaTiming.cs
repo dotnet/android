@@ -48,7 +48,7 @@ namespace Java.Interop.PerformanceTests
 		}
 
 		static JniStaticMethodID som;
-		public static IJavaObject StaticObjectMethod ()
+		public static IJavaPeerable StaticObjectMethod ()
 		{
 			TypeRef.GetCachedStaticMethod (ref som, "StaticObjectMethod", "()Ljava/lang/Object;");
 			var lref = som.CallObjectMethod (TypeRef.PeerReference);
@@ -70,7 +70,7 @@ namespace Java.Interop.PerformanceTests
 		}
 
 		static JniInstanceMethodID vom;
-		public virtual IJavaObject VirtualObjectMethod ()
+		public virtual IJavaPeerable VirtualObjectMethod ()
 		{
 			TypeRef.GetCachedInstanceMethod (ref vom, "VirtualObjectMethod", "()Ljava/lang/Object;");
 			var lref = vom.CallVirtualObjectMethod (PeerReference);
@@ -92,7 +92,7 @@ namespace Java.Interop.PerformanceTests
 		}
 
 		static JniInstanceMethodID fom;
-		public IJavaObject FinalObjectMethod ()
+		public IJavaPeerable FinalObjectMethod ()
 		{
 			TypeRef.GetCachedInstanceMethod (ref fom, "FinalObjectMethod", "()Ljava/lang/Object;");
 			var lref = vom.CallNonvirtualObjectMethod (PeerReference, TypeRef.PeerReference);
@@ -170,7 +170,7 @@ namespace Java.Interop.PerformanceTests
 		}
 
 		static JniStaticMethodID svm1;
-		public static unsafe void StaticVoidMethod1Args (IJavaObject obj1)
+		public static unsafe void StaticVoidMethod1Args (IJavaPeerable obj1)
 		{
 			TypeRef.GetCachedStaticMethod (ref svm1, "StaticVoidMethod1Args",
 					"(Ljava/lang/Object;)V");
@@ -180,7 +180,7 @@ namespace Java.Interop.PerformanceTests
 		}
 
 		static JniStaticMethodID svm2;
-		public static unsafe void StaticVoidMethod2Args (IJavaObject obj1, IJavaObject obj2)
+		public static unsafe void StaticVoidMethod2Args (IJavaPeerable obj1, IJavaPeerable obj2)
 		{
 			TypeRef.GetCachedStaticMethod (ref svm2, "StaticVoidMethod2Args",
 					"(Ljava/lang/Object;Ljava/lang/Object;)V");
@@ -191,7 +191,7 @@ namespace Java.Interop.PerformanceTests
 		}
 
 		static JniStaticMethodID svm3;
-		public static unsafe void StaticVoidMethod3Args (IJavaObject obj1, IJavaObject obj2, IJavaObject obj3)
+		public static unsafe void StaticVoidMethod3Args (IJavaPeerable obj1, IJavaPeerable obj2, IJavaPeerable obj3)
 		{
 			TypeRef.GetCachedStaticMethod (ref svm3, "StaticVoidMethod3Args",
 				"(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)V");

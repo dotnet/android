@@ -288,7 +288,7 @@ namespace Java.Interop.Dynamic {
 			return (s & JavaModifiers.Static) == JavaModifiers.Static;
 		}
 
-		internal unsafe bool TryInvokeMember (IJavaObject self, JavaMethodBase[] overloads, DynamicMetaObject[] args, out object value)
+		internal unsafe bool TryInvokeMember (IJavaPeerable self, JavaMethodBase[] overloads, DynamicMetaObject[] args, out object value)
 		{
 			value       = null;
 			var margs   = (List<JniArgumentMarshalInfo>) null;

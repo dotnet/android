@@ -353,14 +353,14 @@ namespace Java.Interop {
 		            (ref JniObjectReference h, JniHandleOwnership t) => new JavaBooleanArray (ref h, t));
 		}
 
-		internal static IJavaObject CreateMarshalCollection (object value)
+		internal static IJavaPeerable CreateMarshalCollection (object value)
 		{
 		    return JavaArray<Boolean>.CreateMarshalCollection (value, list => new JavaBooleanArray (list) {
 		        forMarshalCollection = true,
 		    });
 		}
 
-		internal static void CleanupMarshalCollection (IJavaObject marshalObject, object value)
+		internal static void CleanupMarshalCollection (IJavaPeerable marshalObject, object value)
 		{
 		    JavaArray<Boolean>.CleanupMarshalCollection<JavaBooleanArray> (marshalObject, value);
 		}
@@ -499,14 +499,14 @@ namespace Java.Interop {
 		            (ref JniObjectReference h, JniHandleOwnership t) => new JavaSByteArray (ref h, t));
 		}
 
-		internal static IJavaObject CreateMarshalCollection (object value)
+		internal static IJavaPeerable CreateMarshalCollection (object value)
 		{
 		    return JavaArray<SByte>.CreateMarshalCollection (value, list => new JavaSByteArray (list) {
 		        forMarshalCollection = true,
 		    });
 		}
 
-		internal static void CleanupMarshalCollection (IJavaObject marshalObject, object value)
+		internal static void CleanupMarshalCollection (IJavaPeerable marshalObject, object value)
 		{
 		    JavaArray<SByte>.CleanupMarshalCollection<JavaSByteArray> (marshalObject, value);
 		}
@@ -645,14 +645,14 @@ namespace Java.Interop {
 		            (ref JniObjectReference h, JniHandleOwnership t) => new JavaCharArray (ref h, t));
 		}
 
-		internal static IJavaObject CreateMarshalCollection (object value)
+		internal static IJavaPeerable CreateMarshalCollection (object value)
 		{
 		    return JavaArray<Char>.CreateMarshalCollection (value, list => new JavaCharArray (list) {
 		        forMarshalCollection = true,
 		    });
 		}
 
-		internal static void CleanupMarshalCollection (IJavaObject marshalObject, object value)
+		internal static void CleanupMarshalCollection (IJavaPeerable marshalObject, object value)
 		{
 		    JavaArray<Char>.CleanupMarshalCollection<JavaCharArray> (marshalObject, value);
 		}
@@ -791,14 +791,14 @@ namespace Java.Interop {
 		            (ref JniObjectReference h, JniHandleOwnership t) => new JavaInt16Array (ref h, t));
 		}
 
-		internal static IJavaObject CreateMarshalCollection (object value)
+		internal static IJavaPeerable CreateMarshalCollection (object value)
 		{
 		    return JavaArray<Int16>.CreateMarshalCollection (value, list => new JavaInt16Array (list) {
 		        forMarshalCollection = true,
 		    });
 		}
 
-		internal static void CleanupMarshalCollection (IJavaObject marshalObject, object value)
+		internal static void CleanupMarshalCollection (IJavaPeerable marshalObject, object value)
 		{
 		    JavaArray<Int16>.CleanupMarshalCollection<JavaInt16Array> (marshalObject, value);
 		}
@@ -937,14 +937,14 @@ namespace Java.Interop {
 		            (ref JniObjectReference h, JniHandleOwnership t) => new JavaInt32Array (ref h, t));
 		}
 
-		internal static IJavaObject CreateMarshalCollection (object value)
+		internal static IJavaPeerable CreateMarshalCollection (object value)
 		{
 		    return JavaArray<Int32>.CreateMarshalCollection (value, list => new JavaInt32Array (list) {
 		        forMarshalCollection = true,
 		    });
 		}
 
-		internal static void CleanupMarshalCollection (IJavaObject marshalObject, object value)
+		internal static void CleanupMarshalCollection (IJavaPeerable marshalObject, object value)
 		{
 		    JavaArray<Int32>.CleanupMarshalCollection<JavaInt32Array> (marshalObject, value);
 		}
@@ -1083,14 +1083,14 @@ namespace Java.Interop {
 		            (ref JniObjectReference h, JniHandleOwnership t) => new JavaInt64Array (ref h, t));
 		}
 
-		internal static IJavaObject CreateMarshalCollection (object value)
+		internal static IJavaPeerable CreateMarshalCollection (object value)
 		{
 		    return JavaArray<Int64>.CreateMarshalCollection (value, list => new JavaInt64Array (list) {
 		        forMarshalCollection = true,
 		    });
 		}
 
-		internal static void CleanupMarshalCollection (IJavaObject marshalObject, object value)
+		internal static void CleanupMarshalCollection (IJavaPeerable marshalObject, object value)
 		{
 		    JavaArray<Int64>.CleanupMarshalCollection<JavaInt64Array> (marshalObject, value);
 		}
@@ -1229,14 +1229,14 @@ namespace Java.Interop {
 		            (ref JniObjectReference h, JniHandleOwnership t) => new JavaSingleArray (ref h, t));
 		}
 
-		internal static IJavaObject CreateMarshalCollection (object value)
+		internal static IJavaPeerable CreateMarshalCollection (object value)
 		{
 		    return JavaArray<Single>.CreateMarshalCollection (value, list => new JavaSingleArray (list) {
 		        forMarshalCollection = true,
 		    });
 		}
 
-		internal static void CleanupMarshalCollection (IJavaObject marshalObject, object value)
+		internal static void CleanupMarshalCollection (IJavaPeerable marshalObject, object value)
 		{
 		    JavaArray<Single>.CleanupMarshalCollection<JavaSingleArray> (marshalObject, value);
 		}
@@ -1375,14 +1375,14 @@ namespace Java.Interop {
 		            (ref JniObjectReference h, JniHandleOwnership t) => new JavaDoubleArray (ref h, t));
 		}
 
-		internal static IJavaObject CreateMarshalCollection (object value)
+		internal static IJavaPeerable CreateMarshalCollection (object value)
 		{
 		    return JavaArray<Double>.CreateMarshalCollection (value, list => new JavaDoubleArray (list) {
 		        forMarshalCollection = true,
 		    });
 		}
 
-		internal static void CleanupMarshalCollection (IJavaObject marshalObject, object value)
+		internal static void CleanupMarshalCollection (IJavaPeerable marshalObject, object value)
 		{
 		    JavaArray<Double>.CleanupMarshalCollection<JavaDoubleArray> (marshalObject, value);
 		}

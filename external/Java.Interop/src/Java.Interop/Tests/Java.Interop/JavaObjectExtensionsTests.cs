@@ -23,7 +23,7 @@ namespace Java.InteropTests {
 		[Test]
 		public void GetJniTypeName_Exceptions ()
 		{
-			IJavaObject o = null;
+			IJavaPeerable o = null;
 			Assert.Throws<ArgumentNullException> (() => o.GetJniTypeName ());
 			o = new JavaObject ();
 			o.Dispose ();

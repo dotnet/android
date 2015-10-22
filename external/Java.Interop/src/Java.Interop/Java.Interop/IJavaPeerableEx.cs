@@ -2,7 +2,7 @@
 
 namespace Java.Interop {
 
-	interface IJavaObjectEx {
+	interface IJavaPeerableEx {
 		int     IdentityHashCode    {get; set;}
 		bool    Registered          {get; set;}
 

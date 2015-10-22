@@ -2,7 +2,7 @@ using System;
 
 namespace Java.Interop
 {
-	public interface IJavaObject : IDisposable
+	public interface IJavaPeerable : IDisposable
 	{
 		JniObjectReference      PeerReference  {get;}
 		JniPeerMembers          JniPeerMembers {get;}

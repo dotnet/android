@@ -11,8 +11,8 @@ namespace Java.Interop {
 		{
 			if (managedPeerType == null)
 				throw new ArgumentNullException ("managedPeerType");
-			if (!typeof (IJavaObject).IsAssignableFrom (managedPeerType))
-				throw new ArgumentException ("'managedPeerType' must implement the IJavaObject interface.", "managedPeerType");
+			if (!typeof (IJavaPeerable).IsAssignableFrom (managedPeerType))
+				throw new ArgumentException ("'managedPeerType' must implement the IJavaPeerable interface.", "managedPeerType");
 
 			Debug.Assert (
 					JniEnvironment.Current.JavaVM.GetJniTypeInfoForType (managedPeerType).JniTypeName == jniPeerType,
@@ -32,8 +32,8 @@ namespace Java.Interop {
 			if (checkManagedPeerType) {
 				if (managedPeerType == null)
 					throw new ArgumentNullException ("managedPeerType");
-				if (!typeof (IJavaObject).IsAssignableFrom (managedPeerType))
-					throw new ArgumentException ("'managedPeerType' must implement the IJavaObject interface.", "managedPeerType");
+				if (!typeof (IJavaPeerable).IsAssignableFrom (managedPeerType))
+					throw new ArgumentException ("'managedPeerType' must implement the IJavaPeerable interface.", "managedPeerType");
 
 				Debug.Assert (
 					JniEnvironment.Current.JavaVM.GetJniTypeInfoForType (managedPeerType).JniTypeName == jniPeerType,
@@ -119,7 +119,7 @@ namespace Java.Interop {
 			members.jniPeerType     = null;
 		}
 
-		internal static void AssertSelf (IJavaObject self)
+		internal static void AssertSelf (IJavaPeerable self)
 		{
 			if (self == null)
 				throw new ArgumentNullException ("self");
@@ -134,7 +134,7 @@ namespace Java.Interop {
 				var t = self.GetType ().FullName;
 				throw new NotSupportedException (
 						"You've created a " + t + " in one thread and are using it " +
-						"from another thread without calling IJavaObject.Register(). " +
+						"from another thread without calling IJavaPeerable.Register(). " +
 						"Passing JNI local references between threads is not supported; " +
 						"call IJavaObject.RegisterWithVM() if sharing between threads is required.");
 			}

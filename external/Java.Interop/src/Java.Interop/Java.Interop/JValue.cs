@@ -84,7 +84,7 @@ namespace Android.Runtime
 			l = value.Handle;
 		}
 
-		public JValue (IJavaObject value)
+		public JValue (IJavaPeerable value)
 		{
 			this = new JValue ();
 			if (value != null)

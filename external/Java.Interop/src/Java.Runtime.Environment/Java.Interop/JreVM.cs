@@ -157,7 +157,7 @@ namespace Java.Interop {
 		{
 		}
 
-		protected override bool TryGC (IJavaObject value, ref JniObjectReference handle)
+		protected override bool TryGC (IJavaPeerable value, ref JniObjectReference handle)
 		{
 			if (!handle.IsValid)
 				return true;

@@ -46,7 +46,7 @@ namespace Java.Interop
 				return JniSystem.IdentityHashCode (value);
 			}
 
-			public static IntPtr NewReturnToJniRef (IJavaObject value)
+			public static IntPtr NewReturnToJniRef (IJavaPeerable value)
 			{
 				if (value == null || !value.PeerReference.IsValid)
 					return IntPtr.Zero;

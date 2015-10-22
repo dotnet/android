@@ -153,7 +153,7 @@ namespace Java.Interop
 				.ToTargetType (targetType, dispose: true);
 		}
 
-		internal static IJavaObject CreateMarshalCollection<TArray> (object value, Func<IList<T>, TArray> creator)
+		internal static IJavaPeerable CreateMarshalCollection<TArray> (object value, Func<IList<T>, TArray> creator)
 			where TArray : JavaArray<T>
 		{
 			if (value == null)
@@ -167,7 +167,7 @@ namespace Java.Interop
 			return creator (list);
 		}
 
-		internal static void CleanupMarshalCollection<TArray> (IJavaObject marshalObject, object value)
+		internal static void CleanupMarshalCollection<TArray> (IJavaPeerable marshalObject, object value)
 			where TArray : JavaArray<T>
 		{
 			var source = (TArray) marshalObject;

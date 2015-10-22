@@ -18,7 +18,7 @@ namespace Java.Interop.Dynamic {
 
 		JavaClassInfo   klass;
 
-		public DynamicJavaInstance (IJavaObject value)
+		public DynamicJavaInstance (IJavaPeerable value)
 		{
 			if (value == null)
 				throw new ArgumentNullException ("value");
@@ -31,7 +31,7 @@ namespace Java.Interop.Dynamic {
 
 		bool    disposed;
 
-		public  IJavaObject     Value       {get; private set;}
+		public  IJavaPeerable   Value       {get; private set;}
 
 		public void Dispose ()
 		{
@@ -45,7 +45,7 @@ namespace Java.Interop.Dynamic {
 				return;
 
 			if (disposing) {
-				var java    = Value as IJavaObject;
+				var java    = Value as IJavaPeerable;
 				if (java != null) {
 					java.DisposeUnlessRegistered ();
 				}
@@ -85,12 +85,12 @@ namespace Java.Interop.Dynamic {
 			}
 
 			protected override bool HasSelf {
-				get {return (instance.Value as IJavaObject) != null;}
+				get {return (instance.Value as IJavaPeerable) != null;}
 			}
 
 			protected override Expression GetSelf ()
 			{
-				return Expression.Constant (instance.Value as IJavaObject, typeof (IJavaObject));
+				return Expression.Constant (instance.Value as IJavaPeerable, typeof (IJavaPeerable));
 			}
 		}
 	}

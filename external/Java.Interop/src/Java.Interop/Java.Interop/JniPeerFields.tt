@@ -26,7 +26,7 @@ namespace Java.Interop {
 
 		public <#= info.ReturnType #> Get<#= info.JniCallType #>Value (
 			string encodedMember,
-			IJavaObject self)
+			IJavaPeerable   self)
 		{
 			JniPeerMembers.AssertSelf (self);
 
@@ -34,7 +34,7 @@ namespace Java.Interop {
 				.Get<#= info.JniCallType #>Value (self.PeerReference);
 		}
 
-		public void SetValue (string encodedMember, IJavaObject self, <#= info.ParameterType #> value)
+		public void SetValue (string encodedMember, IJavaPeerable self, <#= info.ParameterType #> value)
 		{
 			JniPeerMembers.AssertSelf (self);
 

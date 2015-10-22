@@ -118,7 +118,7 @@ namespace Java.Interop
 			return methods.JniPeerType.NewObject (ctor, parameters);
 		}
 
-		public unsafe void FinishCreateInstance (string constructorSignature, IJavaObject self, JValue* parameters)
+		public unsafe void FinishCreateInstance (string constructorSignature, IJavaPeerable self, JValue* parameters)
 		{
 			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
 				return;
@@ -128,7 +128,7 @@ namespace Java.Interop
 			ctor.CallNonvirtualVoidMethod (self.PeerReference, methods.JniPeerType.PeerReference, parameters);
 		}
 
-		public unsafe void CallVoidMethod (string encodedMember, IJavaObject self, JValue* parameters)
+		public unsafe void CallVoidMethod (string encodedMember, IJavaPeerable self, JValue* parameters)
 		{
 			JniPeerMembers.AssertSelf (self);
 
@@ -142,7 +142,7 @@ namespace Java.Interop
 			n.CallNonvirtualVoidMethod (self.PeerReference, j.JniPeerType.PeerReference, parameters);
 		}
 
-		public unsafe bool CallBooleanMethod (string encodedMember, IJavaObject self, JValue* parameters)
+		public unsafe bool CallBooleanMethod (string encodedMember, IJavaPeerable self, JValue* parameters)
 		{
 			JniPeerMembers.AssertSelf (self);
 
@@ -155,7 +155,7 @@ namespace Java.Interop
 			return n.CallNonvirtualBooleanMethod (self.PeerReference, j.JniPeerType.PeerReference, parameters);
 		}
 
-		public unsafe sbyte CallSByteMethod (string encodedMember, IJavaObject self, JValue* parameters)
+		public unsafe sbyte CallSByteMethod (string encodedMember, IJavaPeerable self, JValue* parameters)
 		{
 			JniPeerMembers.AssertSelf (self);
 
@@ -168,7 +168,7 @@ namespace Java.Interop
 			return n.CallNonvirtualSByteMethod (self.PeerReference, j.JniPeerType.PeerReference, parameters);
 		}
 
-		public unsafe char CallCharMethod (string encodedMember, IJavaObject self, JValue* parameters)
+		public unsafe char CallCharMethod (string encodedMember, IJavaPeerable self, JValue* parameters)
 		{
 			JniPeerMembers.AssertSelf (self);
 
@@ -181,7 +181,7 @@ namespace Java.Interop
 			return n.CallNonvirtualCharMethod (self.PeerReference, j.JniPeerType.PeerReference, parameters);
 		}
 
-		public unsafe short CallInt16Method (string encodedMember, IJavaObject self, JValue* parameters)
+		public unsafe short CallInt16Method (string encodedMember, IJavaPeerable self, JValue* parameters)
 		{
 			JniPeerMembers.AssertSelf (self);
 
@@ -194,7 +194,7 @@ namespace Java.Interop
 			return n.CallNonvirtualInt16Method (self.PeerReference, j.JniPeerType.PeerReference, parameters);
 		}
 
-		public unsafe int CallInt32Method (string encodedMember, IJavaObject self, JValue* parameters)
+		public unsafe int CallInt32Method (string encodedMember, IJavaPeerable self, JValue* parameters)
 		{
 			JniPeerMembers.AssertSelf (self);
 
@@ -207,7 +207,7 @@ namespace Java.Interop
 			return n.CallNonvirtualInt32Method (self.PeerReference, j.JniPeerType.PeerReference, parameters);
 		}
 
-		public unsafe long CallInt64Method (string encodedMember, IJavaObject self, JValue* parameters)
+		public unsafe long CallInt64Method (string encodedMember, IJavaPeerable self, JValue* parameters)
 		{
 			JniPeerMembers.AssertSelf (self);
 
@@ -220,7 +220,7 @@ namespace Java.Interop
 			return n.CallNonvirtualInt64Method (self.PeerReference, j.JniPeerType.PeerReference, parameters);
 		}
 
-		public unsafe float CallSingleMethod (string encodedMember, IJavaObject self, JValue* parameters)
+		public unsafe float CallSingleMethod (string encodedMember, IJavaPeerable self, JValue* parameters)
 		{
 			JniPeerMembers.AssertSelf (self);
 
@@ -233,7 +233,7 @@ namespace Java.Interop
 			return n.CallNonvirtualSingleMethod (self.PeerReference, j.JniPeerType.PeerReference, parameters);
 		}
 
-		public unsafe double CallDoubleMethod (string encodedMember, IJavaObject self, JValue* parameters)
+		public unsafe double CallDoubleMethod (string encodedMember, IJavaPeerable self, JValue* parameters)
 		{
 			JniPeerMembers.AssertSelf (self);
 
@@ -246,7 +246,7 @@ namespace Java.Interop
 			return n.CallNonvirtualDoubleMethod (self.PeerReference, j.JniPeerType.PeerReference, parameters);
 		}
 
-		public unsafe JniObjectReference CallObjectMethod (string encodedMember, IJavaObject self, JValue* parameters)
+		public unsafe JniObjectReference CallObjectMethod (string encodedMember, IJavaPeerable self, JValue* parameters)
 		{
 			JniPeerMembers.AssertSelf (self);
 
@@ -263,8 +263,8 @@ namespace Java.Interop
 	struct JniArgumentMarshalInfo<T> {
 		JValue                          jvalue;
 		JniObjectReference              lref;
-		IJavaObject                     obj;
-		Action<IJavaObject, object>     cleanup;
+		IJavaPeerable                     obj;
+		Action<IJavaPeerable, object>     cleanup;
 
 		internal JniArgumentMarshalInfo (T value)
 		{

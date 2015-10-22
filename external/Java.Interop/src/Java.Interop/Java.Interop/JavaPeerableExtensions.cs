@@ -2,9 +2,9 @@ using System;
 
 namespace Java.Interop {
 
-	public static class JavaObjectExtensions {
+	public static class JavaPeerableExtensions {
 
-		public static string GetJniTypeName (this IJavaObject self)
+		public static string GetJniTypeName (this IJavaPeerable self)
 		{
 			JniPeerMembers.AssertSelf (self);
 			return JniEnvironment.Types.GetJniTypeNameFromInstance (self.PeerReference);
@@ -17,7 +17,7 @@ namespace Java.Interop {
 
 		internal static JniObjectReference CreateLocalRef (object value)
 		{
-			var o = value as IJavaObject;
+			var o = value as IJavaPeerable;
 			if (o == null || !o.PeerReference.IsValid)
 				return new JniObjectReference ();
 			return o.PeerReference.NewLocalRef ();

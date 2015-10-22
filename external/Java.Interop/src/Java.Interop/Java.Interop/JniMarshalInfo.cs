@@ -4,8 +4,8 @@ namespace Java.Interop {
 
 	using CreateJValueHandler               = Func<object /* value */, JValue>;
 	using CreateLocalRefHandler             = Func<object /* value */, JniObjectReference>;
-	using CreateMarshalCollectionHandler    = Func<object /* value */, IJavaObject>;
-	using CleanupMarshalCollectionHandler   = Action<IJavaObject /* sourceValue */, object /* destValue */>;
+	using CreateMarshalCollectionHandler    = Func<object /* value */, IJavaPeerable>;
+	using CleanupMarshalCollectionHandler   = Action<IJavaPeerable /* sourceValue */, object /* destValue */>;
 
 	public  delegate    object  CreateValueFromJni (ref JniObjectReference reference, JniHandleOwnership transfer, Type targetType);
 

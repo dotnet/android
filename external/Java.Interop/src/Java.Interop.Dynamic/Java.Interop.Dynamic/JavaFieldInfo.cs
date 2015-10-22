@@ -40,7 +40,7 @@ namespace Java.Interop.Dynamic {
 			}
 		}
 
-		public object GetValue (IJavaObject self)
+		public object GetValue (IJavaPeerable self)
 		{
 			AssertSelf (self);
 
@@ -49,7 +49,7 @@ namespace Java.Interop.Dynamic {
 			return GetInstanceValue (self);
 		}
 
-		void AssertSelf (IJavaObject self)
+		void AssertSelf (IJavaPeerable self)
 		{
 			if (IsStatic && self != null)
 				throw new ArgumentException (
@@ -82,7 +82,7 @@ namespace Java.Interop.Dynamic {
 			}
 		}
 
-		object GetInstanceValue (IJavaObject self)
+		object GetInstanceValue (IJavaPeerable self)
 		{
 			var n   = GetSignatureStartIndex ();
 			switch (JniSignature [n + 1]) {
@@ -112,7 +112,7 @@ namespace Java.Interop.Dynamic {
 			return n;
 		}
 
-		public void SetValue (IJavaObject self, object value)
+		public void SetValue (IJavaPeerable self, object value)
 		{
 			AssertSelf (self);
 
@@ -149,7 +149,7 @@ namespace Java.Interop.Dynamic {
 			}
 		}
 
-		void SetInstanceValue (IJavaObject self, object value)
+		void SetInstanceValue (IJavaPeerable self, object value)
 		{
 			var n   = GetSignatureStartIndex ();
 			switch (JniSignature [n + 1]) {

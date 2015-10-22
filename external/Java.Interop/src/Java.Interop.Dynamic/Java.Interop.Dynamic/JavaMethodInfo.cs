@@ -58,7 +58,7 @@ namespace Java.Interop.Dynamic {
 			}
 		}
 
-		public override unsafe object Invoke (IJavaObject self, JValue* arguments)
+		public override unsafe object Invoke (IJavaPeerable self, JValue* arguments)
 		{
 			AssertSelf (self);
 
@@ -67,7 +67,7 @@ namespace Java.Interop.Dynamic {
 			return InvokeInstanceMethod (self, arguments);
 		}
 
-		void AssertSelf (IJavaObject self)
+		void AssertSelf (IJavaPeerable self)
 		{
 			if (IsStatic && self != null)
 				throw new ArgumentException (
@@ -79,7 +79,7 @@ namespace Java.Interop.Dynamic {
 						"self");
 		}
 
-		unsafe object InvokeInstanceMethod (IJavaObject self, JValue* arguments)
+		unsafe object InvokeInstanceMethod (IJavaPeerable self, JValue* arguments)
 		{
 			var e   = GetSignatureReturnTypeStartIndex ();
 			switch (JniSignature [e + 1]) {

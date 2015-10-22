@@ -46,7 +46,7 @@ namespace Java.InteropTests
 		public void ObjectArrayType ()
 		{
 			var c = CreateCollection (new JavaObject [0]);
-			Assert.AreEqual ("[Ljava/lang/Object;", ((IJavaObject) c).GetJniTypeName ());
+			Assert.AreEqual ("[Ljava/lang/Object;", ((IJavaPeerable) c).GetJniTypeName ());
 			Dispose (c);
 		}
 	}
@@ -60,7 +60,7 @@ namespace Java.InteropTests
 		public void ObjectArrayType ()
 		{
 			var c = CreateCollection (new int[0]);
-			Assert.AreEqual ("[Ljava/lang/Integer;", ((IJavaObject) c).GetJniTypeName ());
+			Assert.AreEqual ("[Ljava/lang/Integer;", ((IJavaPeerable) c).GetJniTypeName ());
 			Dispose (c);
 		}
 	}
@@ -74,7 +74,7 @@ namespace Java.InteropTests
 		public void ObjectArrayType ()
 		{
 			var c = CreateCollection (new int[0][]);
-			Assert.AreEqual ("[[I", ((IJavaObject) c).GetJniTypeName ());
+			Assert.AreEqual ("[[I", ((IJavaPeerable) c).GetJniTypeName ());
 			Dispose (c);
 		}
 	}
@@ -88,7 +88,7 @@ namespace Java.InteropTests
 		public void ObjectArrayType ()
 		{
 			var c = CreateCollection (new int[0][][]);
-			Assert.AreEqual ("[[[I", ((IJavaObject) c).GetJniTypeName ());
+			Assert.AreEqual ("[[[I", ((IJavaPeerable) c).GetJniTypeName ());
 			Dispose (c);
 		}
 	}
@@ -102,7 +102,7 @@ namespace Java.InteropTests
 		public void ObjectArrayType ()
 		{
 			var c = CreateCollection (new JavaInt32Array [0]);
-			Assert.AreEqual ("[[I", ((IJavaObject) c).GetJniTypeName ());
+			Assert.AreEqual ("[[I", ((IJavaPeerable) c).GetJniTypeName ());
 			Dispose (c);
 		}
 	}
@@ -116,7 +116,7 @@ namespace Java.InteropTests
 		public void ObjectArrayType ()
 		{
 			var c = CreateCollection (new string[0]);
-			Assert.AreEqual ("[Ljava/lang/String;", ((IJavaObject) c).GetJniTypeName ());
+			Assert.AreEqual ("[Ljava/lang/String;", ((IJavaPeerable) c).GetJniTypeName ());
 			Dispose (c);
 		}
 	}
@@ -152,7 +152,7 @@ namespace Java.InteropTests
 		public void ObjectArrayType ()
 		{
 			var c = CreateCollection (new object[0]);
-			Assert.AreEqual ("[Ljava/lang/Object;", ((IJavaObject) c).GetJniTypeName ());
+			Assert.AreEqual ("[Ljava/lang/Object;", ((IJavaPeerable) c).GetJniTypeName ());
 			Dispose (c);
 		}
 	}

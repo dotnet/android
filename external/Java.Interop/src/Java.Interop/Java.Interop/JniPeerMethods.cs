@@ -39,7 +39,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static void FinishGenericCreateInstance<T> (
 			this        JniPeerInstanceMethods  peer,
 		    string      constructorSignature,
-		    IJavaObject self,
+		    IJavaPeerable   self,
 		    T value
 		)
 		{
@@ -52,7 +52,7 @@ namespace Java.Interop.GenericMarshaler {
 		static unsafe void _InvokeConstructor<T> (
 			JniPeerInstanceMethods  peer,
 		    string      constructorSignature,
-		    IJavaObject self,
+		    IJavaPeerable   self,
 		    T value
 		)
 		{
@@ -108,7 +108,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static void FinishGenericCreateInstance<T1, T2> (
 			this        JniPeerInstanceMethods  peer,
 		    string      constructorSignature,
-		    IJavaObject self,
+		    IJavaPeerable   self,
 		    T1 value1, T2 value2
 		)
 		{
@@ -121,7 +121,7 @@ namespace Java.Interop.GenericMarshaler {
 		static unsafe void _InvokeConstructor<T1, T2> (
 			JniPeerInstanceMethods  peer,
 		    string      constructorSignature,
-		    IJavaObject self,
+		    IJavaPeerable   self,
 		    T1 value1, T2 value2
 		)
 		{
@@ -183,7 +183,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static void FinishGenericCreateInstance<T1, T2, T3> (
 			this        JniPeerInstanceMethods  peer,
 		    string      constructorSignature,
-		    IJavaObject self,
+		    IJavaPeerable   self,
 		    T1 value1, T2 value2, T3 value3
 		)
 		{
@@ -196,7 +196,7 @@ namespace Java.Interop.GenericMarshaler {
 		static unsafe void _InvokeConstructor<T1, T2, T3> (
 			JniPeerInstanceMethods  peer,
 		    string      constructorSignature,
-		    IJavaObject self,
+		    IJavaPeerable   self,
 		    T1 value1, T2 value2, T3 value3
 		)
 		{
@@ -264,7 +264,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static void FinishGenericCreateInstance<T1, T2, T3, T4> (
 			this        JniPeerInstanceMethods  peer,
 		    string      constructorSignature,
-		    IJavaObject self,
+		    IJavaPeerable   self,
 		    T1 value1, T2 value2, T3 value3, T4 value4
 		)
 		{
@@ -277,7 +277,7 @@ namespace Java.Interop.GenericMarshaler {
 		static unsafe void _InvokeConstructor<T1, T2, T3, T4> (
 			JniPeerInstanceMethods  peer,
 		    string      constructorSignature,
-		    IJavaObject self,
+		    IJavaPeerable   self,
 		    T1 value1, T2 value2, T3 value3, T4 value4
 		)
 		{
@@ -351,7 +351,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static void FinishGenericCreateInstance<T1, T2, T3, T4, T5> (
 			this        JniPeerInstanceMethods  peer,
 		    string      constructorSignature,
-		    IJavaObject self,
+		    IJavaPeerable   self,
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
 		)
 		{
@@ -364,7 +364,7 @@ namespace Java.Interop.GenericMarshaler {
 		static unsafe void _InvokeConstructor<T1, T2, T3, T4, T5> (
 			JniPeerInstanceMethods  peer,
 		    string      constructorSignature,
-		    IJavaObject self,
+		    IJavaPeerable   self,
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
 		)
 		{
@@ -444,7 +444,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static void FinishGenericCreateInstance<T1, T2, T3, T4, T5, T6> (
 			this        JniPeerInstanceMethods  peer,
 		    string      constructorSignature,
-		    IJavaObject self,
+		    IJavaPeerable   self,
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
 		)
 		{
@@ -457,7 +457,7 @@ namespace Java.Interop.GenericMarshaler {
 		static unsafe void _InvokeConstructor<T1, T2, T3, T4, T5, T6> (
 			JniPeerInstanceMethods  peer,
 		    string      constructorSignature,
-		    IJavaObject self,
+		    IJavaPeerable   self,
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
 		)
 		{
@@ -543,7 +543,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static void FinishGenericCreateInstance<T1, T2, T3, T4, T5, T6, T7> (
 			this        JniPeerInstanceMethods  peer,
 		    string      constructorSignature,
-		    IJavaObject self,
+		    IJavaPeerable   self,
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
 		)
 		{
@@ -556,7 +556,7 @@ namespace Java.Interop.GenericMarshaler {
 		static unsafe void _InvokeConstructor<T1, T2, T3, T4, T5, T6, T7> (
 			JniPeerInstanceMethods  peer,
 		    string      constructorSignature,
-		    IJavaObject self,
+		    IJavaPeerable   self,
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
 		)
 		{
@@ -648,7 +648,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static void FinishGenericCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8> (
 			this        JniPeerInstanceMethods  peer,
 		    string      constructorSignature,
-		    IJavaObject self,
+		    IJavaPeerable   self,
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
 		)
 		{
@@ -661,7 +661,7 @@ namespace Java.Interop.GenericMarshaler {
 		static unsafe void _InvokeConstructor<T1, T2, T3, T4, T5, T6, T7, T8> (
 			JniPeerInstanceMethods  peer,
 		    string      constructorSignature,
-		    IJavaObject self,
+		    IJavaPeerable   self,
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
 		)
 		{
@@ -759,7 +759,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static void FinishGenericCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
 			this        JniPeerInstanceMethods  peer,
 		    string      constructorSignature,
-		    IJavaObject self,
+		    IJavaPeerable   self,
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
 		)
 		{
@@ -772,7 +772,7 @@ namespace Java.Interop.GenericMarshaler {
 		static unsafe void _InvokeConstructor<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
 			JniPeerInstanceMethods  peer,
 		    string      constructorSignature,
-		    IJavaObject self,
+		    IJavaPeerable   self,
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
 		)
 		{
@@ -876,7 +876,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static void FinishGenericCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
 			this        JniPeerInstanceMethods  peer,
 		    string      constructorSignature,
-		    IJavaObject self,
+		    IJavaPeerable   self,
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
 		)
 		{
@@ -889,7 +889,7 @@ namespace Java.Interop.GenericMarshaler {
 		static unsafe void _InvokeConstructor<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
 			JniPeerInstanceMethods  peer,
 		    string      constructorSignature,
-		    IJavaObject self,
+		    IJavaPeerable   self,
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
 		)
 		{
@@ -999,7 +999,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static void FinishGenericCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
 			this        JniPeerInstanceMethods  peer,
 		    string      constructorSignature,
-		    IJavaObject self,
+		    IJavaPeerable   self,
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
 		)
 		{
@@ -1012,7 +1012,7 @@ namespace Java.Interop.GenericMarshaler {
 		static unsafe void _InvokeConstructor<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
 			JniPeerInstanceMethods  peer,
 		    string      constructorSignature,
-		    IJavaObject self,
+		    IJavaPeerable   self,
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
 		)
 		{
@@ -1128,7 +1128,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static void FinishGenericCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
 			this        JniPeerInstanceMethods  peer,
 		    string      constructorSignature,
-		    IJavaObject self,
+		    IJavaPeerable   self,
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
 		)
 		{
@@ -1141,7 +1141,7 @@ namespace Java.Interop.GenericMarshaler {
 		static unsafe void _InvokeConstructor<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
 			JniPeerInstanceMethods  peer,
 		    string      constructorSignature,
-		    IJavaObject self,
+		    IJavaPeerable   self,
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
 		)
 		{
@@ -1263,7 +1263,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static void FinishGenericCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
 			this        JniPeerInstanceMethods  peer,
 		    string      constructorSignature,
-		    IJavaObject self,
+		    IJavaPeerable   self,
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
 		)
 		{
@@ -1276,7 +1276,7 @@ namespace Java.Interop.GenericMarshaler {
 		static unsafe void _InvokeConstructor<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
 			JniPeerInstanceMethods  peer,
 		    string      constructorSignature,
-		    IJavaObject self,
+		    IJavaPeerable   self,
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
 		)
 		{
@@ -1404,7 +1404,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static void FinishGenericCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
 			this        JniPeerInstanceMethods  peer,
 		    string      constructorSignature,
-		    IJavaObject self,
+		    IJavaPeerable   self,
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
 		)
 		{
@@ -1417,7 +1417,7 @@ namespace Java.Interop.GenericMarshaler {
 		static unsafe void _InvokeConstructor<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
 			JniPeerInstanceMethods  peer,
 		    string      constructorSignature,
-		    IJavaObject self,
+		    IJavaPeerable   self,
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
 		)
 		{
@@ -1551,7 +1551,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static void FinishGenericCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
 			this        JniPeerInstanceMethods  peer,
 		    string      constructorSignature,
-		    IJavaObject self,
+		    IJavaPeerable   self,
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
 		)
 		{
@@ -1564,7 +1564,7 @@ namespace Java.Interop.GenericMarshaler {
 		static unsafe void _InvokeConstructor<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
 			JniPeerInstanceMethods  peer,
 		    string      constructorSignature,
-		    IJavaObject self,
+		    IJavaPeerable   self,
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
 		)
 		{
@@ -1704,7 +1704,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static void FinishGenericCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
 			this        JniPeerInstanceMethods  peer,
 		    string      constructorSignature,
-		    IJavaObject self,
+		    IJavaPeerable   self,
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
 		)
 		{
@@ -1717,7 +1717,7 @@ namespace Java.Interop.GenericMarshaler {
 		static unsafe void _InvokeConstructor<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
 			JniPeerInstanceMethods  peer,
 		    string      constructorSignature,
-		    IJavaObject self,
+		    IJavaPeerable   self,
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
 		)
 		{
@@ -1783,7 +1783,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe void CallGenericVoidMethod (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self
+			IJavaPeerable   self
 		)
 		{
 
@@ -1798,7 +1798,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe void CallGenericVoidMethod<T> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T value
 		)
 		{
@@ -1817,7 +1817,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe void CallGenericVoidMethod<T1, T2> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2
 		)
 		{
@@ -1839,7 +1839,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe void CallGenericVoidMethod<T1, T2, T3> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3
 		)
 		{
@@ -1864,7 +1864,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe void CallGenericVoidMethod<T1, T2, T3, T4> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4
 		)
 		{
@@ -1892,7 +1892,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe void CallGenericVoidMethod<T1, T2, T3, T4, T5> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
 		)
 		{
@@ -1923,7 +1923,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe void CallGenericVoidMethod<T1, T2, T3, T4, T5, T6> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
 		)
 		{
@@ -1957,7 +1957,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe void CallGenericVoidMethod<T1, T2, T3, T4, T5, T6, T7> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
 		)
 		{
@@ -1994,7 +1994,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe void CallGenericVoidMethod<T1, T2, T3, T4, T5, T6, T7, T8> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
 		)
 		{
@@ -2034,7 +2034,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe void CallGenericVoidMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
 		)
 		{
@@ -2077,7 +2077,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe void CallGenericVoidMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
 		)
 		{
@@ -2123,7 +2123,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe void CallGenericVoidMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
 		)
 		{
@@ -2172,7 +2172,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe void CallGenericVoidMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
 		)
 		{
@@ -2224,7 +2224,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe void CallGenericVoidMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
 		)
 		{
@@ -2279,7 +2279,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe void CallGenericVoidMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
 		)
 		{
@@ -2337,7 +2337,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe void CallGenericVoidMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
 		)
 		{
@@ -2398,7 +2398,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe void CallGenericVoidMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
 		)
 		{
@@ -2462,7 +2462,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe bool CallGenericBooleanMethod (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self
+			IJavaPeerable   self
 		)
 		{
 
@@ -2477,7 +2477,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe bool CallGenericBooleanMethod<T> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T value
 		)
 		{
@@ -2496,7 +2496,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe bool CallGenericBooleanMethod<T1, T2> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2
 		)
 		{
@@ -2518,7 +2518,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe bool CallGenericBooleanMethod<T1, T2, T3> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3
 		)
 		{
@@ -2543,7 +2543,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe bool CallGenericBooleanMethod<T1, T2, T3, T4> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4
 		)
 		{
@@ -2571,7 +2571,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe bool CallGenericBooleanMethod<T1, T2, T3, T4, T5> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
 		)
 		{
@@ -2602,7 +2602,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe bool CallGenericBooleanMethod<T1, T2, T3, T4, T5, T6> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
 		)
 		{
@@ -2636,7 +2636,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe bool CallGenericBooleanMethod<T1, T2, T3, T4, T5, T6, T7> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
 		)
 		{
@@ -2673,7 +2673,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe bool CallGenericBooleanMethod<T1, T2, T3, T4, T5, T6, T7, T8> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
 		)
 		{
@@ -2713,7 +2713,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe bool CallGenericBooleanMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
 		)
 		{
@@ -2756,7 +2756,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe bool CallGenericBooleanMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
 		)
 		{
@@ -2802,7 +2802,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe bool CallGenericBooleanMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
 		)
 		{
@@ -2851,7 +2851,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe bool CallGenericBooleanMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
 		)
 		{
@@ -2903,7 +2903,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe bool CallGenericBooleanMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
 		)
 		{
@@ -2958,7 +2958,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe bool CallGenericBooleanMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
 		)
 		{
@@ -3016,7 +3016,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe bool CallGenericBooleanMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
 		)
 		{
@@ -3077,7 +3077,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe bool CallGenericBooleanMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
 		)
 		{
@@ -3141,7 +3141,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe sbyte CallGenericSByteMethod (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self
+			IJavaPeerable   self
 		)
 		{
 
@@ -3156,7 +3156,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe sbyte CallGenericSByteMethod<T> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T value
 		)
 		{
@@ -3175,7 +3175,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe sbyte CallGenericSByteMethod<T1, T2> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2
 		)
 		{
@@ -3197,7 +3197,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe sbyte CallGenericSByteMethod<T1, T2, T3> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3
 		)
 		{
@@ -3222,7 +3222,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe sbyte CallGenericSByteMethod<T1, T2, T3, T4> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4
 		)
 		{
@@ -3250,7 +3250,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe sbyte CallGenericSByteMethod<T1, T2, T3, T4, T5> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
 		)
 		{
@@ -3281,7 +3281,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe sbyte CallGenericSByteMethod<T1, T2, T3, T4, T5, T6> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
 		)
 		{
@@ -3315,7 +3315,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe sbyte CallGenericSByteMethod<T1, T2, T3, T4, T5, T6, T7> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
 		)
 		{
@@ -3352,7 +3352,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe sbyte CallGenericSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
 		)
 		{
@@ -3392,7 +3392,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe sbyte CallGenericSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
 		)
 		{
@@ -3435,7 +3435,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe sbyte CallGenericSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
 		)
 		{
@@ -3481,7 +3481,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe sbyte CallGenericSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
 		)
 		{
@@ -3530,7 +3530,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe sbyte CallGenericSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
 		)
 		{
@@ -3582,7 +3582,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe sbyte CallGenericSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
 		)
 		{
@@ -3637,7 +3637,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe sbyte CallGenericSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
 		)
 		{
@@ -3695,7 +3695,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe sbyte CallGenericSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
 		)
 		{
@@ -3756,7 +3756,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe sbyte CallGenericSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
 		)
 		{
@@ -3820,7 +3820,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe char CallGenericCharMethod (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self
+			IJavaPeerable   self
 		)
 		{
 
@@ -3835,7 +3835,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe char CallGenericCharMethod<T> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T value
 		)
 		{
@@ -3854,7 +3854,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe char CallGenericCharMethod<T1, T2> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2
 		)
 		{
@@ -3876,7 +3876,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe char CallGenericCharMethod<T1, T2, T3> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3
 		)
 		{
@@ -3901,7 +3901,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe char CallGenericCharMethod<T1, T2, T3, T4> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4
 		)
 		{
@@ -3929,7 +3929,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe char CallGenericCharMethod<T1, T2, T3, T4, T5> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
 		)
 		{
@@ -3960,7 +3960,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe char CallGenericCharMethod<T1, T2, T3, T4, T5, T6> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
 		)
 		{
@@ -3994,7 +3994,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe char CallGenericCharMethod<T1, T2, T3, T4, T5, T6, T7> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
 		)
 		{
@@ -4031,7 +4031,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe char CallGenericCharMethod<T1, T2, T3, T4, T5, T6, T7, T8> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
 		)
 		{
@@ -4071,7 +4071,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe char CallGenericCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
 		)
 		{
@@ -4114,7 +4114,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe char CallGenericCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
 		)
 		{
@@ -4160,7 +4160,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe char CallGenericCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
 		)
 		{
@@ -4209,7 +4209,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe char CallGenericCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
 		)
 		{
@@ -4261,7 +4261,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe char CallGenericCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
 		)
 		{
@@ -4316,7 +4316,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe char CallGenericCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
 		)
 		{
@@ -4374,7 +4374,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe char CallGenericCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
 		)
 		{
@@ -4435,7 +4435,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe char CallGenericCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
 		)
 		{
@@ -4499,7 +4499,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe short CallGenericInt16Method (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self
+			IJavaPeerable   self
 		)
 		{
 
@@ -4514,7 +4514,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe short CallGenericInt16Method<T> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T value
 		)
 		{
@@ -4533,7 +4533,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe short CallGenericInt16Method<T1, T2> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2
 		)
 		{
@@ -4555,7 +4555,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe short CallGenericInt16Method<T1, T2, T3> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3
 		)
 		{
@@ -4580,7 +4580,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe short CallGenericInt16Method<T1, T2, T3, T4> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4
 		)
 		{
@@ -4608,7 +4608,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe short CallGenericInt16Method<T1, T2, T3, T4, T5> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
 		)
 		{
@@ -4639,7 +4639,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe short CallGenericInt16Method<T1, T2, T3, T4, T5, T6> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
 		)
 		{
@@ -4673,7 +4673,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe short CallGenericInt16Method<T1, T2, T3, T4, T5, T6, T7> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
 		)
 		{
@@ -4710,7 +4710,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe short CallGenericInt16Method<T1, T2, T3, T4, T5, T6, T7, T8> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
 		)
 		{
@@ -4750,7 +4750,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe short CallGenericInt16Method<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
 		)
 		{
@@ -4793,7 +4793,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe short CallGenericInt16Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
 		)
 		{
@@ -4839,7 +4839,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe short CallGenericInt16Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
 		)
 		{
@@ -4888,7 +4888,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe short CallGenericInt16Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
 		)
 		{
@@ -4940,7 +4940,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe short CallGenericInt16Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
 		)
 		{
@@ -4995,7 +4995,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe short CallGenericInt16Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
 		)
 		{
@@ -5053,7 +5053,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe short CallGenericInt16Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
 		)
 		{
@@ -5114,7 +5114,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe short CallGenericInt16Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
 		)
 		{
@@ -5178,7 +5178,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe int CallGenericInt32Method (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self
+			IJavaPeerable   self
 		)
 		{
 
@@ -5193,7 +5193,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe int CallGenericInt32Method<T> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T value
 		)
 		{
@@ -5212,7 +5212,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe int CallGenericInt32Method<T1, T2> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2
 		)
 		{
@@ -5234,7 +5234,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe int CallGenericInt32Method<T1, T2, T3> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3
 		)
 		{
@@ -5259,7 +5259,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe int CallGenericInt32Method<T1, T2, T3, T4> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4
 		)
 		{
@@ -5287,7 +5287,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe int CallGenericInt32Method<T1, T2, T3, T4, T5> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
 		)
 		{
@@ -5318,7 +5318,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe int CallGenericInt32Method<T1, T2, T3, T4, T5, T6> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
 		)
 		{
@@ -5352,7 +5352,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe int CallGenericInt32Method<T1, T2, T3, T4, T5, T6, T7> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
 		)
 		{
@@ -5389,7 +5389,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe int CallGenericInt32Method<T1, T2, T3, T4, T5, T6, T7, T8> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
 		)
 		{
@@ -5429,7 +5429,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe int CallGenericInt32Method<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
 		)
 		{
@@ -5472,7 +5472,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe int CallGenericInt32Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
 		)
 		{
@@ -5518,7 +5518,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe int CallGenericInt32Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
 		)
 		{
@@ -5567,7 +5567,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe int CallGenericInt32Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
 		)
 		{
@@ -5619,7 +5619,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe int CallGenericInt32Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
 		)
 		{
@@ -5674,7 +5674,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe int CallGenericInt32Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
 		)
 		{
@@ -5732,7 +5732,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe int CallGenericInt32Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
 		)
 		{
@@ -5793,7 +5793,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe int CallGenericInt32Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
 		)
 		{
@@ -5857,7 +5857,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe long CallGenericInt64Method (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self
+			IJavaPeerable   self
 		)
 		{
 
@@ -5872,7 +5872,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe long CallGenericInt64Method<T> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T value
 		)
 		{
@@ -5891,7 +5891,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe long CallGenericInt64Method<T1, T2> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2
 		)
 		{
@@ -5913,7 +5913,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe long CallGenericInt64Method<T1, T2, T3> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3
 		)
 		{
@@ -5938,7 +5938,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe long CallGenericInt64Method<T1, T2, T3, T4> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4
 		)
 		{
@@ -5966,7 +5966,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe long CallGenericInt64Method<T1, T2, T3, T4, T5> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
 		)
 		{
@@ -5997,7 +5997,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe long CallGenericInt64Method<T1, T2, T3, T4, T5, T6> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
 		)
 		{
@@ -6031,7 +6031,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe long CallGenericInt64Method<T1, T2, T3, T4, T5, T6, T7> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
 		)
 		{
@@ -6068,7 +6068,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe long CallGenericInt64Method<T1, T2, T3, T4, T5, T6, T7, T8> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
 		)
 		{
@@ -6108,7 +6108,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe long CallGenericInt64Method<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
 		)
 		{
@@ -6151,7 +6151,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe long CallGenericInt64Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
 		)
 		{
@@ -6197,7 +6197,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe long CallGenericInt64Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
 		)
 		{
@@ -6246,7 +6246,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe long CallGenericInt64Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
 		)
 		{
@@ -6298,7 +6298,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe long CallGenericInt64Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
 		)
 		{
@@ -6353,7 +6353,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe long CallGenericInt64Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
 		)
 		{
@@ -6411,7 +6411,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe long CallGenericInt64Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
 		)
 		{
@@ -6472,7 +6472,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe long CallGenericInt64Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
 		)
 		{
@@ -6536,7 +6536,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe float CallGenericSingleMethod (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self
+			IJavaPeerable   self
 		)
 		{
 
@@ -6551,7 +6551,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe float CallGenericSingleMethod<T> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T value
 		)
 		{
@@ -6570,7 +6570,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe float CallGenericSingleMethod<T1, T2> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2
 		)
 		{
@@ -6592,7 +6592,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe float CallGenericSingleMethod<T1, T2, T3> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3
 		)
 		{
@@ -6617,7 +6617,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe float CallGenericSingleMethod<T1, T2, T3, T4> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4
 		)
 		{
@@ -6645,7 +6645,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe float CallGenericSingleMethod<T1, T2, T3, T4, T5> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
 		)
 		{
@@ -6676,7 +6676,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe float CallGenericSingleMethod<T1, T2, T3, T4, T5, T6> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
 		)
 		{
@@ -6710,7 +6710,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe float CallGenericSingleMethod<T1, T2, T3, T4, T5, T6, T7> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
 		)
 		{
@@ -6747,7 +6747,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe float CallGenericSingleMethod<T1, T2, T3, T4, T5, T6, T7, T8> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
 		)
 		{
@@ -6787,7 +6787,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe float CallGenericSingleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
 		)
 		{
@@ -6830,7 +6830,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe float CallGenericSingleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
 		)
 		{
@@ -6876,7 +6876,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe float CallGenericSingleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
 		)
 		{
@@ -6925,7 +6925,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe float CallGenericSingleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
 		)
 		{
@@ -6977,7 +6977,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe float CallGenericSingleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
 		)
 		{
@@ -7032,7 +7032,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe float CallGenericSingleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
 		)
 		{
@@ -7090,7 +7090,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe float CallGenericSingleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
 		)
 		{
@@ -7151,7 +7151,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe float CallGenericSingleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
 		)
 		{
@@ -7215,7 +7215,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe double CallGenericDoubleMethod (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self
+			IJavaPeerable   self
 		)
 		{
 
@@ -7230,7 +7230,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe double CallGenericDoubleMethod<T> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T value
 		)
 		{
@@ -7249,7 +7249,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe double CallGenericDoubleMethod<T1, T2> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2
 		)
 		{
@@ -7271,7 +7271,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe double CallGenericDoubleMethod<T1, T2, T3> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3
 		)
 		{
@@ -7296,7 +7296,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe double CallGenericDoubleMethod<T1, T2, T3, T4> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4
 		)
 		{
@@ -7324,7 +7324,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe double CallGenericDoubleMethod<T1, T2, T3, T4, T5> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
 		)
 		{
@@ -7355,7 +7355,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe double CallGenericDoubleMethod<T1, T2, T3, T4, T5, T6> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
 		)
 		{
@@ -7389,7 +7389,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe double CallGenericDoubleMethod<T1, T2, T3, T4, T5, T6, T7> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
 		)
 		{
@@ -7426,7 +7426,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe double CallGenericDoubleMethod<T1, T2, T3, T4, T5, T6, T7, T8> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
 		)
 		{
@@ -7466,7 +7466,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe double CallGenericDoubleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
 		)
 		{
@@ -7509,7 +7509,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe double CallGenericDoubleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
 		)
 		{
@@ -7555,7 +7555,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe double CallGenericDoubleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
 		)
 		{
@@ -7604,7 +7604,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe double CallGenericDoubleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
 		)
 		{
@@ -7656,7 +7656,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe double CallGenericDoubleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
 		)
 		{
@@ -7711,7 +7711,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe double CallGenericDoubleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
 		)
 		{
@@ -7769,7 +7769,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe double CallGenericDoubleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
 		)
 		{
@@ -7830,7 +7830,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe double CallGenericDoubleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
 		)
 		{
@@ -7894,7 +7894,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe JniObjectReference CallGenericObjectMethod (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self
+			IJavaPeerable   self
 		)
 		{
 
@@ -7909,7 +7909,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe JniObjectReference CallGenericObjectMethod<T> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T value
 		)
 		{
@@ -7928,7 +7928,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe JniObjectReference CallGenericObjectMethod<T1, T2> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2
 		)
 		{
@@ -7950,7 +7950,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe JniObjectReference CallGenericObjectMethod<T1, T2, T3> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3
 		)
 		{
@@ -7975,7 +7975,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe JniObjectReference CallGenericObjectMethod<T1, T2, T3, T4> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4
 		)
 		{
@@ -8003,7 +8003,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe JniObjectReference CallGenericObjectMethod<T1, T2, T3, T4, T5> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
 		)
 		{
@@ -8034,7 +8034,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe JniObjectReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
 		)
 		{
@@ -8068,7 +8068,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe JniObjectReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
 		)
 		{
@@ -8105,7 +8105,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe JniObjectReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
 		)
 		{
@@ -8145,7 +8145,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe JniObjectReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
 		)
 		{
@@ -8188,7 +8188,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe JniObjectReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
 		)
 		{
@@ -8234,7 +8234,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe JniObjectReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
 		)
 		{
@@ -8283,7 +8283,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe JniObjectReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
 		)
 		{
@@ -8335,7 +8335,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe JniObjectReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
 		)
 		{
@@ -8390,7 +8390,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe JniObjectReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
 		)
 		{
@@ -8448,7 +8448,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe JniObjectReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
 		)
 		{
@@ -8509,7 +8509,7 @@ namespace Java.Interop.GenericMarshaler {
 		public static unsafe JniObjectReference CallGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
-			IJavaObject self,
+			IJavaPeerable   self,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
 		)
 		{
