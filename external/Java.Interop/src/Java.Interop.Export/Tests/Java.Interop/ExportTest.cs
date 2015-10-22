@@ -7,7 +7,7 @@ namespace Java.InteropTests
 	[JniTypeInfo ("com/xamarin/interop/export/ExportType")]
 	public class ExportTest : JavaObject
 	{
-		public ExportTest (ref JniObjectReference reference, JniHandleOwnership transfer)
+		public ExportTest (ref JniObjectReference reference, JniObjectReferenceOptions transfer)
 			: base (ref reference, transfer)
 		{
 		}

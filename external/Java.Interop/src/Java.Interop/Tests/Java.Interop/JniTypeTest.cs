@@ -142,7 +142,7 @@ namespace Java.InteropTests
 				try {
 					Assert.AreEqual ("java/lang/Object", Object_class.Name);
 
-					using (var t = new JniType (ref Object_hashCode_rt, JniHandleOwnership.DoNotTransfer))
+					using (var t = new JniType (ref Object_hashCode_rt, JniObjectReferenceOptions.CreateNewReference))
 						Assert.AreEqual ("I", t.Name);
 				} finally {
 					JniEnvironment.References.Dispose (ref hashCode_str);

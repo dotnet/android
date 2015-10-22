@@ -33,7 +33,7 @@ namespace Java.InteropTests
 		{
 		}
 
-		public TestType (ref JniObjectReference reference, JniHandleOwnership transfer)
+		public TestType (ref JniObjectReference reference, JniObjectReferenceOptions transfer)
 			: base (ref reference, transfer)
 		{
 		}

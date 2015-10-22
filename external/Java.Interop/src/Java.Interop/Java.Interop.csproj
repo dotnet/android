@@ -57,7 +57,6 @@
     <Compile Include="Java.Interop\JniWeakGlobalReference.cs" />
     <Compile Include="Java.Interop\JniLocalReference.cs" />
     <Compile Include="Java.Interop\JavaException.cs" />
-    <Compile Include="Java.Interop\JniHandleOwnership.cs" />
     <Compile Include="Java.Interop\JniNativeMethodRegistration.cs" />
     <Compile Include="Java.Interop\JavaObject.cs" />
     <Compile Include="Java.Interop\JniSystem.cs" />
@@ -74,6 +73,7 @@
     <Compile Include="Java.Interop\JniMarshalInfo.cs" />
     <Compile Include="Java.Interop\JniObjectReference.cs" />
     <Compile Include="Java.Interop\JniObjectReferenceManager.cs" />
+    <Compile Include="Java.Interop\JniObjectReferenceOptions.cs" />
     <Compile Include="Java.Interop\JniObjectReferenceType.cs" />
     <Compile Include="Java.Interop\JniPeerInstanceMethods.cs" />
     <Compile Include="Java.Interop\JniPeerInstanceFields.cs" />

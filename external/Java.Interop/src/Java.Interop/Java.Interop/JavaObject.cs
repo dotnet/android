@@ -43,9 +43,9 @@ namespace Java.Interop
 			get {return _members;}
 		}
 
-		public JavaObject (ref JniObjectReference reference, JniHandleOwnership transfer)
+		public JavaObject (ref JniObjectReference reference, JniObjectReferenceOptions transfer)
 		{
-			if ((transfer & JniHandleOwnership.Invalid) == JniHandleOwnership.Invalid)
+			if (transfer == JniObjectReferenceOptions.Invalid)
 				return;
 
 			using (SetPeerReference (ref reference, transfer)) {
@@ -57,12 +57,12 @@ namespace Java.Interop
 			var peer = JniPeerMembers.InstanceMethods.StartCreateInstance ("()V", GetType (), null);
 			using (SetPeerReference (
 					ref peer,
-					JniHandleOwnership.Transfer)) {
+					JniObjectReferenceOptions.DisposeSourceReference)) {
 				JniPeerMembers.InstanceMethods.FinishCreateInstance ("()V", this, null);
 			}
 		}
 
-		protected SetPeerReferenceCompletion SetPeerReference (ref JniObjectReference handle, JniHandleOwnership transfer)
+		protected SetPeerReferenceCompletion SetPeerReference (ref JniObjectReference handle, JniObjectReferenceOptions transfer)
 		{
 			return JniEnvironment.Current.JavaVM.SetObjectPeerReference (
 					this,
@@ -115,7 +115,7 @@ namespace Java.Interop
 					"toString\u0000()Ljava/lang/String;",
 					this,
 					null);
-			return JniEnvironment.Strings.ToString (ref lref, JniHandleOwnership.Transfer);
+			return JniEnvironment.Strings.ToString (ref lref, JniObjectReferenceOptions.DisposeSourceReference);
 		}
 
 		int IJavaPeerableEx.IdentityHashCode {

@@ -15,7 +15,7 @@ namespace Java.Interop {
 		{
 			fixed (byte* buf = classFileData) {
 				var lref = JniEnvironment.Types.DefineClass (name, loader, (IntPtr) buf, classFileData.Length);
-				return new JniType (ref lref, JniHandleOwnership.Transfer);
+				return new JniType (ref lref, JniObjectReferenceOptions.DisposeSourceReference);
 			}
 		}
 
@@ -29,15 +29,15 @@ namespace Java.Interop {
 		public JniType (string classname)
 		{
 			var peer    = JniEnvironment.Types.FindClass (classname);
-			Initialize (ref peer, JniHandleOwnership.Transfer);
+			Initialize (ref peer, JniObjectReferenceOptions.DisposeSourceReference);
 		}
 
-		public JniType (ref JniObjectReference handle, JniHandleOwnership transfer)
+		public JniType (ref JniObjectReference handle, JniObjectReferenceOptions transfer)
 		{
 			Initialize (ref handle, transfer);
 		}
 
-		void Initialize (ref JniObjectReference handle, JniHandleOwnership transfer)
+		void Initialize (ref JniObjectReference handle, JniObjectReferenceOptions transfer)
 		{
 			if (handle.Handle == IntPtr.Zero)
 				throw new ArgumentException ("handle must be valid.", nameof (handle));
@@ -67,7 +67,7 @@ namespace Java.Interop {
 				if (peer.Type != JniObjectReferenceType.Global) {
 					var o           = peer;
 					peer            = o.NewGlobalRef ();
-					JniEnvironment.References.Dispose (ref o, JniHandleOwnership.Transfer);
+					JniEnvironment.References.Dispose (ref o, JniObjectReferenceOptions.DisposeSourceReference);
 				}
 				JniEnvironment.Current.JavaVM.Track (this);
 				registered = true;
@@ -108,7 +108,7 @@ namespace Java.Interop {
 
 			var lref = JniEnvironment.Types.GetSuperclass (PeerReference);
 			if (lref.IsValid)
-				return new JniType (ref lref, JniHandleOwnership.Transfer);
+				return new JniType (ref lref, JniObjectReferenceOptions.DisposeSourceReference);
 			return null;
 		}
 

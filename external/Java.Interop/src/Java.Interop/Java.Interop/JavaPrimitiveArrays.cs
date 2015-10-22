@@ -243,16 +243,16 @@ namespace Java.Interop {
 	[JniTypeInfo ("Z", ArrayRank=1, TypeIsKeyword=true)]
 	public sealed partial class JavaBooleanArray : JavaPrimitiveArray<Boolean> {
 
-		public JavaBooleanArray (ref JniObjectReference handle, JniHandleOwnership transfer)
+		public JavaBooleanArray (ref JniObjectReference handle, JniObjectReferenceOptions transfer)
 			: base (ref handle, transfer)
 		{
 		}
 
 		public unsafe JavaBooleanArray (int length)
-			: base (ref *InvalidJniObjectReference, JniHandleOwnership.Invalid)
+			: base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.Invalid)
 		{
 		    var peer    = JniEnvironment.Arrays.NewBooleanArray (CheckLength (length));
-		    using (SetPeerReference (ref peer, JniHandleOwnership.Transfer)) {
+		    using (SetPeerReference (ref peer, JniObjectReferenceOptions.DisposeSourceReference)) {
 		    }
 		}
 
@@ -344,13 +344,13 @@ namespace Java.Interop {
 		            list => new JavaBooleanArray (list));
 		}
 
-		internal static IList<Boolean> GetValueFromJni (ref JniObjectReference reference, JniHandleOwnership transfer, Type targetType)
+		internal static IList<Boolean> GetValueFromJni (ref JniObjectReference reference, JniObjectReferenceOptions transfer, Type targetType)
 		{
 		    return JavaArray<Boolean>.GetValueFromJni (
 		            ref reference,
 		            transfer,
 		            targetType,
-		            (ref JniObjectReference h, JniHandleOwnership t) => new JavaBooleanArray (ref h, t));
+		            (ref JniObjectReference h, JniObjectReferenceOptions t) => new JavaBooleanArray (ref h, t));
 		}
 
 		internal static IJavaPeerable CreateMarshalCollection (object value)
@@ -389,16 +389,16 @@ namespace Java.Interop {
 	[JniTypeInfo ("B", ArrayRank=1, TypeIsKeyword=true)]
 	public sealed partial class JavaSByteArray : JavaPrimitiveArray<SByte> {
 
-		public JavaSByteArray (ref JniObjectReference handle, JniHandleOwnership transfer)
+		public JavaSByteArray (ref JniObjectReference handle, JniObjectReferenceOptions transfer)
 			: base (ref handle, transfer)
 		{
 		}
 
 		public unsafe JavaSByteArray (int length)
-			: base (ref *InvalidJniObjectReference, JniHandleOwnership.Invalid)
+			: base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.Invalid)
 		{
 		    var peer    = JniEnvironment.Arrays.NewByteArray (CheckLength (length));
-		    using (SetPeerReference (ref peer, JniHandleOwnership.Transfer)) {
+		    using (SetPeerReference (ref peer, JniObjectReferenceOptions.DisposeSourceReference)) {
 		    }
 		}
 
@@ -490,13 +490,13 @@ namespace Java.Interop {
 		            list => new JavaSByteArray (list));
 		}
 
-		internal static IList<SByte> GetValueFromJni (ref JniObjectReference reference, JniHandleOwnership transfer, Type targetType)
+		internal static IList<SByte> GetValueFromJni (ref JniObjectReference reference, JniObjectReferenceOptions transfer, Type targetType)
 		{
 		    return JavaArray<SByte>.GetValueFromJni (
 		            ref reference,
 		            transfer,
 		            targetType,
-		            (ref JniObjectReference h, JniHandleOwnership t) => new JavaSByteArray (ref h, t));
+		            (ref JniObjectReference h, JniObjectReferenceOptions t) => new JavaSByteArray (ref h, t));
 		}
 
 		internal static IJavaPeerable CreateMarshalCollection (object value)
@@ -535,16 +535,16 @@ namespace Java.Interop {
 	[JniTypeInfo ("C", ArrayRank=1, TypeIsKeyword=true)]
 	public sealed partial class JavaCharArray : JavaPrimitiveArray<Char> {
 
-		public JavaCharArray (ref JniObjectReference handle, JniHandleOwnership transfer)
+		public JavaCharArray (ref JniObjectReference handle, JniObjectReferenceOptions transfer)
 			: base (ref handle, transfer)
 		{
 		}
 
 		public unsafe JavaCharArray (int length)
-			: base (ref *InvalidJniObjectReference, JniHandleOwnership.Invalid)
+			: base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.Invalid)
 		{
 		    var peer    = JniEnvironment.Arrays.NewCharArray (CheckLength (length));
-		    using (SetPeerReference (ref peer, JniHandleOwnership.Transfer)) {
+		    using (SetPeerReference (ref peer, JniObjectReferenceOptions.DisposeSourceReference)) {
 		    }
 		}
 
@@ -636,13 +636,13 @@ namespace Java.Interop {
 		            list => new JavaCharArray (list));
 		}
 
-		internal static IList<Char> GetValueFromJni (ref JniObjectReference reference, JniHandleOwnership transfer, Type targetType)
+		internal static IList<Char> GetValueFromJni (ref JniObjectReference reference, JniObjectReferenceOptions transfer, Type targetType)
 		{
 		    return JavaArray<Char>.GetValueFromJni (
 		            ref reference,
 		            transfer,
 		            targetType,
-		            (ref JniObjectReference h, JniHandleOwnership t) => new JavaCharArray (ref h, t));
+		            (ref JniObjectReference h, JniObjectReferenceOptions t) => new JavaCharArray (ref h, t));
 		}
 
 		internal static IJavaPeerable CreateMarshalCollection (object value)
@@ -681,16 +681,16 @@ namespace Java.Interop {
 	[JniTypeInfo ("S", ArrayRank=1, TypeIsKeyword=true)]
 	public sealed partial class JavaInt16Array : JavaPrimitiveArray<Int16> {
 
-		public JavaInt16Array (ref JniObjectReference handle, JniHandleOwnership transfer)
+		public JavaInt16Array (ref JniObjectReference handle, JniObjectReferenceOptions transfer)
 			: base (ref handle, transfer)
 		{
 		}
 
 		public unsafe JavaInt16Array (int length)
-			: base (ref *InvalidJniObjectReference, JniHandleOwnership.Invalid)
+			: base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.Invalid)
 		{
 		    var peer    = JniEnvironment.Arrays.NewShortArray (CheckLength (length));
-		    using (SetPeerReference (ref peer, JniHandleOwnership.Transfer)) {
+		    using (SetPeerReference (ref peer, JniObjectReferenceOptions.DisposeSourceReference)) {
 		    }
 		}
 
@@ -782,13 +782,13 @@ namespace Java.Interop {
 		            list => new JavaInt16Array (list));
 		}
 
-		internal static IList<Int16> GetValueFromJni (ref JniObjectReference reference, JniHandleOwnership transfer, Type targetType)
+		internal static IList<Int16> GetValueFromJni (ref JniObjectReference reference, JniObjectReferenceOptions transfer, Type targetType)
 		{
 		    return JavaArray<Int16>.GetValueFromJni (
 		            ref reference,
 		            transfer,
 		            targetType,
-		            (ref JniObjectReference h, JniHandleOwnership t) => new JavaInt16Array (ref h, t));
+		            (ref JniObjectReference h, JniObjectReferenceOptions t) => new JavaInt16Array (ref h, t));
 		}
 
 		internal static IJavaPeerable CreateMarshalCollection (object value)
@@ -827,16 +827,16 @@ namespace Java.Interop {
 	[JniTypeInfo ("I", ArrayRank=1, TypeIsKeyword=true)]
 	public sealed partial class JavaInt32Array : JavaPrimitiveArray<Int32> {
 
-		public JavaInt32Array (ref JniObjectReference handle, JniHandleOwnership transfer)
+		public JavaInt32Array (ref JniObjectReference handle, JniObjectReferenceOptions transfer)
 			: base (ref handle, transfer)
 		{
 		}
 
 		public unsafe JavaInt32Array (int length)
-			: base (ref *InvalidJniObjectReference, JniHandleOwnership.Invalid)
+			: base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.Invalid)
 		{
 		    var peer    = JniEnvironment.Arrays.NewIntArray (CheckLength (length));
-		    using (SetPeerReference (ref peer, JniHandleOwnership.Transfer)) {
+		    using (SetPeerReference (ref peer, JniObjectReferenceOptions.DisposeSourceReference)) {
 		    }
 		}
 
@@ -928,13 +928,13 @@ namespace Java.Interop {
 		            list => new JavaInt32Array (list));
 		}
 
-		internal static IList<Int32> GetValueFromJni (ref JniObjectReference reference, JniHandleOwnership transfer, Type targetType)
+		internal static IList<Int32> GetValueFromJni (ref JniObjectReference reference, JniObjectReferenceOptions transfer, Type targetType)
 		{
 		    return JavaArray<Int32>.GetValueFromJni (
 		            ref reference,
 		            transfer,
 		            targetType,
-		            (ref JniObjectReference h, JniHandleOwnership t) => new JavaInt32Array (ref h, t));
+		            (ref JniObjectReference h, JniObjectReferenceOptions t) => new JavaInt32Array (ref h, t));
 		}
 
 		internal static IJavaPeerable CreateMarshalCollection (object value)
@@ -973,16 +973,16 @@ namespace Java.Interop {
 	[JniTypeInfo ("J", ArrayRank=1, TypeIsKeyword=true)]
 	public sealed partial class JavaInt64Array : JavaPrimitiveArray<Int64> {
 
-		public JavaInt64Array (ref JniObjectReference handle, JniHandleOwnership transfer)
+		public JavaInt64Array (ref JniObjectReference handle, JniObjectReferenceOptions transfer)
 			: base (ref handle, transfer)
 		{
 		}
 
 		public unsafe JavaInt64Array (int length)
-			: base (ref *InvalidJniObjectReference, JniHandleOwnership.Invalid)
+			: base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.Invalid)
 		{
 		    var peer    = JniEnvironment.Arrays.NewLongArray (CheckLength (length));
-		    using (SetPeerReference (ref peer, JniHandleOwnership.Transfer)) {
+		    using (SetPeerReference (ref peer, JniObjectReferenceOptions.DisposeSourceReference)) {
 		    }
 		}
 
@@ -1074,13 +1074,13 @@ namespace Java.Interop {
 		            list => new JavaInt64Array (list));
 		}
 
-		internal static IList<Int64> GetValueFromJni (ref JniObjectReference reference, JniHandleOwnership transfer, Type targetType)
+		internal static IList<Int64> GetValueFromJni (ref JniObjectReference reference, JniObjectReferenceOptions transfer, Type targetType)
 		{
 		    return JavaArray<Int64>.GetValueFromJni (
 		            ref reference,
 		            transfer,
 		            targetType,
-		            (ref JniObjectReference h, JniHandleOwnership t) => new JavaInt64Array (ref h, t));
+		            (ref JniObjectReference h, JniObjectReferenceOptions t) => new JavaInt64Array (ref h, t));
 		}
 
 		internal static IJavaPeerable CreateMarshalCollection (object value)
@@ -1119,16 +1119,16 @@ namespace Java.Interop {
 	[JniTypeInfo ("F", ArrayRank=1, TypeIsKeyword=true)]
 	public sealed partial class JavaSingleArray : JavaPrimitiveArray<Single> {
 
-		public JavaSingleArray (ref JniObjectReference handle, JniHandleOwnership transfer)
+		public JavaSingleArray (ref JniObjectReference handle, JniObjectReferenceOptions transfer)
 			: base (ref handle, transfer)
 		{
 		}
 
 		public unsafe JavaSingleArray (int length)
-			: base (ref *InvalidJniObjectReference, JniHandleOwnership.Invalid)
+			: base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.Invalid)
 		{
 		    var peer    = JniEnvironment.Arrays.NewFloatArray (CheckLength (length));
-		    using (SetPeerReference (ref peer, JniHandleOwnership.Transfer)) {
+		    using (SetPeerReference (ref peer, JniObjectReferenceOptions.DisposeSourceReference)) {
 		    }
 		}
 
@@ -1220,13 +1220,13 @@ namespace Java.Interop {
 		            list => new JavaSingleArray (list));
 		}
 
-		internal static IList<Single> GetValueFromJni (ref JniObjectReference reference, JniHandleOwnership transfer, Type targetType)
+		internal static IList<Single> GetValueFromJni (ref JniObjectReference reference, JniObjectReferenceOptions transfer, Type targetType)
 		{
 		    return JavaArray<Single>.GetValueFromJni (
 		            ref reference,
 		            transfer,
 		            targetType,
-		            (ref JniObjectReference h, JniHandleOwnership t) => new JavaSingleArray (ref h, t));
+		            (ref JniObjectReference h, JniObjectReferenceOptions t) => new JavaSingleArray (ref h, t));
 		}
 
 		internal static IJavaPeerable CreateMarshalCollection (object value)
@@ -1265,16 +1265,16 @@ namespace Java.Interop {
 	[JniTypeInfo ("D", ArrayRank=1, TypeIsKeyword=true)]
 	public sealed partial class JavaDoubleArray : JavaPrimitiveArray<Double> {
 
-		public JavaDoubleArray (ref JniObjectReference handle, JniHandleOwnership transfer)
+		public JavaDoubleArray (ref JniObjectReference handle, JniObjectReferenceOptions transfer)
 			: base (ref handle, transfer)
 		{
 		}
 
 		public unsafe JavaDoubleArray (int length)
-			: base (ref *InvalidJniObjectReference, JniHandleOwnership.Invalid)
+			: base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.Invalid)
 		{
 		    var peer    = JniEnvironment.Arrays.NewDoubleArray (CheckLength (length));
-		    using (SetPeerReference (ref peer, JniHandleOwnership.Transfer)) {
+		    using (SetPeerReference (ref peer, JniObjectReferenceOptions.DisposeSourceReference)) {
 		    }
 		}
 
@@ -1366,13 +1366,13 @@ namespace Java.Interop {
 		            list => new JavaDoubleArray (list));
 		}
 
-		internal static IList<Double> GetValueFromJni (ref JniObjectReference reference, JniHandleOwnership transfer, Type targetType)
+		internal static IList<Double> GetValueFromJni (ref JniObjectReference reference, JniObjectReferenceOptions transfer, Type targetType)
 		{
 		    return JavaArray<Double>.GetValueFromJni (
 		            ref reference,
 		            transfer,
 		            targetType,
-		            (ref JniObjectReference h, JniHandleOwnership t) => new JavaDoubleArray (ref h, t));
+		            (ref JniObjectReference h, JniObjectReferenceOptions t) => new JavaDoubleArray (ref h, t));
 		}
 
 		internal static IJavaPeerable CreateMarshalCollection (object value)

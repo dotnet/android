@@ -33,7 +33,7 @@ namespace Java.InteropTests
 			using (var t = new JniType ("java/lang/Throwable")) {
 				var outer = CreateThrowable (t, "Outer Exception");
 				SetThrowableCause (t, outer, "Inner Exception");
-				using (var e = new JavaException (ref outer, JniHandleOwnership.Transfer)) {
+				using (var e = new JavaException (ref outer, JniObjectReferenceOptions.DisposeSourceReference)) {
 					Assert.IsNotNull (e.InnerException);
 					Assert.AreEqual ("Inner Exception", e.InnerException.Message);
 					Assert.AreEqual ("Outer Exception", e.Message);
@@ -79,7 +79,7 @@ namespace Java.InteropTests
 				var ex    = new InvalidOperationException ("Managed Exception!");
 				var exp   = CreateJavaProxyThrowable (ex);
 				SetThrowableCause (t, outer, exp.PeerReference);
-				using (var e = new JavaException (ref outer, JniHandleOwnership.Transfer)) {
+				using (var e = new JavaException (ref outer, JniObjectReferenceOptions.DisposeSourceReference)) {
 					Assert.IsNotNull (e.InnerException);
 					Assert.AreSame (ex, e.InnerException);
 				}

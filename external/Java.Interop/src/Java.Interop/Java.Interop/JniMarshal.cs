@@ -38,7 +38,7 @@ namespace Java.Interop {
 			return false;
 		}
 
-		internal static T GetValue<T> (ref JniObjectReference reference, JniHandleOwnership transfer)
+		internal static T GetValue<T> (ref JniObjectReference reference, JniObjectReferenceOptions transfer)
 		{
 			if (!reference.IsValid)
 				return default (T);

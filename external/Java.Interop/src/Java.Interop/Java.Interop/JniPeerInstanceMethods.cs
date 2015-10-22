@@ -292,7 +292,7 @@ namespace Java.Interop
 		{
 			if (cleanup != null && obj != null)
 				cleanup (obj, value);
-			JniEnvironment.References.Dispose (ref lref, JniHandleOwnership.Transfer);
+			JniEnvironment.References.Dispose (ref lref, JniObjectReferenceOptions.DisposeSourceReference);
 		}
 	}
 }

@@ -61,7 +61,7 @@ namespace Java.InteropTests
 		{
 			var c = type.GetConstructor ("()V");
 			var p = type.NewObject (c, null);
-			return new ExportTest (ref p, JniHandleOwnership.Transfer);
+			return new ExportTest (ref p, JniObjectReferenceOptions.DisposeSourceReference);
 		}
 
 		[Test]

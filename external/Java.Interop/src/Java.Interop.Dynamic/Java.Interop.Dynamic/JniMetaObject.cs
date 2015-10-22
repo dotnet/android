@@ -56,7 +56,7 @@ namespace Java.Interop.Dynamic {
 				return binder.FallbackConvert (this);
 
 			var r       = ConversionTarget;
-			var value   = marshalInfo.GetValueFromJni (ref r, JniHandleOwnership.DoNotTransfer, binder.Type);
+			var value   = marshalInfo.GetValueFromJni (ref r, JniObjectReferenceOptions.CreateNewReference, binder.Type);
 			var valueE  = Expression.Convert (Expression.Constant (value), binder.Type);
 			return new DynamicMetaObject (valueE, BindingRestrictions.GetTypeRestriction (valueE, binder.Type), value);
 		}

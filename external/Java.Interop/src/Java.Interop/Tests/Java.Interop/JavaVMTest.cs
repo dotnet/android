@@ -69,7 +69,7 @@ namespace Java.InteropTests
 			// In this case, it returns an _alias_.
 			// TODO: "most derived type" alias generation. (Not relevant here, but...)
 			var p       = local.PeerReference;
-			var alias   = JavaVM.Current.GetObject (ref p, JniHandleOwnership.DoNotTransfer);
+			var alias   = JavaVM.Current.GetObject (ref p, JniObjectReferenceOptions.CreateNewReference);
 			Assert.AreNotSame (local, alias);
 			alias.Dispose ();
 			local.Dispose ();
@@ -103,7 +103,7 @@ namespace Java.InteropTests
 		public void GetObject_ReturnsNullWithInvalidSafeHandle ()
 		{
 			var invalid = new JniObjectReference ();
-			Assert.IsNull (JavaVM.Current.GetObject (ref invalid, JniHandleOwnership.Transfer));
+			Assert.IsNull (JavaVM.Current.GetObject (ref invalid, JniObjectReferenceOptions.DisposeSourceReference));
 		}
 
 		[Test]
@@ -112,7 +112,7 @@ namespace Java.InteropTests
 			using (var t = new JniType (TestType.JniTypeName)) {
 				var c = t.GetConstructor ("()V");
 				var o = t.NewObject (c, null);
-				using (var w = JavaVM.Current.GetObject (ref o, JniHandleOwnership.Transfer)) {
+				using (var w = JavaVM.Current.GetObject (ref o, JniObjectReferenceOptions.DisposeSourceReference)) {
 					Assert.AreEqual (typeof (TestType), w.GetType ());
 				}
 			}
@@ -292,7 +292,7 @@ namespace Java.InteropTests
 			var info = JavaVM.Current.GetJniMarshalInfoForType (typeof(T));
 			info.CreateJValue (default (T));
 			var lref = info.CreateLocalRef (default (T));
-			Assert.AreEqual (default (T), info.GetValueFromJni (ref lref, JniHandleOwnership.DoNotTransfer, null));
+			Assert.AreEqual (default (T), info.GetValueFromJni (ref lref, JniObjectReferenceOptions.CreateNewReference, null));
 			JniEnvironment.References.Dispose (ref lref);
 		}
 

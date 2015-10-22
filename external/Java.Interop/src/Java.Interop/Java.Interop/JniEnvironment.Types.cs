@@ -24,7 +24,7 @@ namespace Java.Interop
 			{
 				var lref = JniEnvironment.Types.GetObjectClass (reference);
 				if (lref.IsValid)
-					return new JniType (ref lref, JniHandleOwnership.Transfer);
+					return new JniType (ref lref, JniObjectReferenceOptions.DisposeSourceReference);
 				return null;
 			}
 
@@ -35,14 +35,14 @@ namespace Java.Interop
 					return GetJniTypeNameFromClass (lref);
 				}
 				finally {
-					JniEnvironment.References.Dispose (ref lref, JniHandleOwnership.Transfer);
+					JniEnvironment.References.Dispose (ref lref, JniObjectReferenceOptions.DisposeSourceReference);
 				}
 			}
 
 			public static string GetJniTypeNameFromClass (JniObjectReference reference)
 			{
 				var s = JniEnvironment.Current.Class_getName.CallVirtualObjectMethod (reference);
-				return JavaClassToJniType (Strings.ToString (ref s, JniHandleOwnership.Transfer));
+				return JavaClassToJniType (Strings.ToString (ref s, JniObjectReferenceOptions.DisposeSourceReference));
 			}
 
 			static string JavaClassToJniType (string value)

@@ -10,7 +10,7 @@ namespace Java.Interop {
 			return JniEnvironment.Types.GetJniTypeNameFromInstance (self.PeerReference);
 		}
 
-		internal static object GetValue (ref JniObjectReference handle, JniHandleOwnership transfer, Type targetType)
+		internal static object GetValue (ref JniObjectReference handle, JniObjectReferenceOptions transfer, Type targetType)
 		{
 			return JniEnvironment.Current.JavaVM.GetObject (ref handle, transfer, targetType);
 		}

@@ -9,18 +9,20 @@ namespace Java.Interop
 		{
 			public static void Dispose (ref JniObjectReference reference)
 			{
-				Dispose (ref reference, JniHandleOwnership.Transfer);
+				Dispose (ref reference, JniObjectReferenceOptions.DisposeSourceReference);
 			}
 
-			public static void Dispose (ref JniObjectReference reference, JniHandleOwnership transfer)
+			const JniObjectReferenceOptions TransferMask    = JniObjectReferenceOptions.CreateNewReference | JniObjectReferenceOptions.DisposeSourceReference;
+
+			public static void Dispose (ref JniObjectReference reference, JniObjectReferenceOptions transfer)
 			{
 				if (!reference.IsValid)
 					return;
 
-				switch (transfer) {
-				case JniHandleOwnership.DoNotTransfer:
+				switch (transfer & TransferMask) {
+				case JniObjectReferenceOptions.CreateNewReference:
 					break;
-				case JniHandleOwnership.Transfer:
+				case JniObjectReferenceOptions.DisposeSourceReference:
 					switch (reference.Type) {
 					case JniObjectReferenceType.Global:
 						JniEnvironment.Current.JavaVM.JniObjectReferenceManager.DeleteGlobalReference (ref reference);

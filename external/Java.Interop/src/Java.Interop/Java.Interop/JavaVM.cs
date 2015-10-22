@@ -222,7 +222,7 @@ namespace Java.Interop
 			Invoker.DestroyJavaVM (InvocationPointer);
 		}
 
-		public virtual Exception GetExceptionForThrowable (ref JniObjectReference value, JniHandleOwnership transfer)
+		public virtual Exception GetExceptionForThrowable (ref JniObjectReference value, JniObjectReferenceOptions transfer)
 		{
 			var o   = PeekObject (value);
 			var e   = o as JavaException;
@@ -298,7 +298,7 @@ namespace Java.Interop
 
 			if (r.Type != JniObjectReferenceType.Global) {
 				value.SetPeerReference (r.NewGlobalRef ());
-				JniEnvironment.References.Dispose (ref r, JniHandleOwnership.Transfer);
+				JniEnvironment.References.Dispose (ref r, JniObjectReferenceOptions.DisposeSourceReference);
 			}
 			int key = value.IdentityHashCode;
 			lock (RegisteredInstances) {
@@ -328,7 +328,7 @@ namespace Java.Interop
 			}
 		}
 
-		internal TCleanup SetObjectPeerReference<T, TCleanup> (T value, ref JniObjectReference reference, JniHandleOwnership transfer, Func<Action, TCleanup> createCleanup)
+		internal TCleanup SetObjectPeerReference<T, TCleanup> (T value, ref JniObjectReference reference, JniObjectReferenceOptions transfer, Func<Action, TCleanup> createCleanup)
 			where T : IJavaPeerable, IJavaPeerableEx
 			where TCleanup : IDisposable
 		{
@@ -442,7 +442,7 @@ namespace Java.Interop
 			return null;
 		}
 
-		public IJavaPeerable GetObject (ref JniObjectReference reference, JniHandleOwnership transfer, Type targetType = null)
+		public IJavaPeerable GetObject (ref JniObjectReference reference, JniObjectReferenceOptions transfer, Type targetType = null)
 		{
 			if (!reference.IsValid)
 				return null;
@@ -456,7 +456,7 @@ namespace Java.Interop
 			return CreateObjectWrapper (ref reference, transfer, targetType);
 		}
 
-		protected virtual IJavaPeerable CreateObjectWrapper (ref JniObjectReference reference, JniHandleOwnership transfer, Type targetType)
+		protected virtual IJavaPeerable CreateObjectWrapper (ref JniObjectReference reference, JniObjectReferenceOptions transfer, Type targetType)
 		{
 			targetType  = targetType ?? typeof (JavaObject);
 			if (!typeof (IJavaPeerable).IsAssignableFrom (targetType))
@@ -492,7 +492,7 @@ namespace Java.Interop
 				if (type != null) {
 					var ctor    = type.GetConstructor (new[] {
 						ByRefJniObjectReference,
-						typeof(JniHandleOwnership)
+						typeof(JniObjectReferenceOptions)
 					});
 
 					if (ctor != null) {
@@ -506,18 +506,18 @@ namespace Java.Interop
 					? JniEnvironment.Types.GetJniTypeNameFromClass (super)
 					: null;
 
-				JniEnvironment.References.Dispose (ref klass, JniHandleOwnership.Transfer);
+				JniEnvironment.References.Dispose (ref klass, JniObjectReferenceOptions.DisposeSourceReference);
 				klass      = super;
 			}
-			JniEnvironment.References.Dispose (ref klass, JniHandleOwnership.Transfer);
+			JniEnvironment.References.Dispose (ref klass, JniObjectReferenceOptions.DisposeSourceReference);
 
 			return fallbackType.GetConstructor (new[] {
 				ByRefJniObjectReference,
-				typeof(JniHandleOwnership)
+				typeof(JniObjectReferenceOptions)
 			});
 		}
 
-		public T GetObject<T> (ref JniObjectReference reference, JniHandleOwnership transfer)
+		public T GetObject<T> (ref JniObjectReference reference, JniObjectReferenceOptions transfer)
 			where T : IJavaPeerable
 		{
 			return (T) GetObject (ref reference, transfer, typeof (T));
@@ -528,7 +528,7 @@ namespace Java.Interop
 			if (jniHandle == IntPtr.Zero)
 				return null;
 			var h = new JniObjectReference (jniHandle);
-			return GetObject (ref h, JniHandleOwnership.DoNotTransfer, targetType);
+			return GetObject (ref h, JniObjectReferenceOptions.CreateNewReference, targetType);
 		}
 
 		public T GetObject<T> (IntPtr jniHandle)

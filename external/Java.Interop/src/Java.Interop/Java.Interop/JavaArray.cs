@@ -8,14 +8,14 @@ namespace Java.Interop
 {
 	public abstract class JavaArray<T> : JavaObject, IList, IList<T>
 	{
-		internal delegate TArray ArrayCreator<TArray> (ref JniObjectReference reference, JniHandleOwnership transfer)
+		internal delegate TArray ArrayCreator<TArray> (ref JniObjectReference reference, JniObjectReferenceOptions transfer)
 			where TArray : JavaArray<T>;
 
 		// Value was created via CreateMarshalCollection, and thus can
 		// be disposed of with impunity when no longer needed.
 		protected bool forMarshalCollection;
 
-		internal JavaArray (ref JniObjectReference handle, JniHandleOwnership transfer)
+		internal JavaArray (ref JniObjectReference handle, JniObjectReferenceOptions transfer)
 			: base (ref handle, transfer)
 		{
 		}
@@ -140,7 +140,7 @@ namespace Java.Interop
 				return array.PeerReference.NewLocalRef ();
 		}
 
-		internal static IList<T> GetValueFromJni<TArray> (ref JniObjectReference reference, JniHandleOwnership transfer, Type targetType, ArrayCreator<TArray> creator)
+		internal static IList<T> GetValueFromJni<TArray> (ref JniObjectReference reference, JniObjectReferenceOptions transfer, Type targetType, ArrayCreator<TArray> creator)
 			where TArray : JavaArray<T>
 		{
 			var value = JniEnvironment.Current.JavaVM.PeekObject (reference);
@@ -350,7 +350,7 @@ namespace Java.Interop
 	
 	public abstract class JavaPrimitiveArray<T> : JavaArray<T> {
 
-		internal JavaPrimitiveArray (ref JniObjectReference reference, JniHandleOwnership transfer)
+		internal JavaPrimitiveArray (ref JniObjectReference reference, JniObjectReferenceOptions transfer)
 			: base (ref reference, transfer)
 		{
 		}

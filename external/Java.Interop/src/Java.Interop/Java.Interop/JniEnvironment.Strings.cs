@@ -28,10 +28,10 @@ namespace Java.Interop
 
 			public static unsafe string ToString (JniObjectReference value)
 			{
-				return ToString (ref value, JniHandleOwnership.DoNotTransfer);
+				return ToString (ref value, JniObjectReferenceOptions.CreateNewReference);
 			}
 
-			public static unsafe string ToString (ref JniObjectReference value, JniHandleOwnership transfer)
+			public static unsafe string ToString (ref JniObjectReference value, JniObjectReferenceOptions transfer)
 			{
 				if (!value.IsValid)
 					return null;
@@ -45,7 +45,7 @@ namespace Java.Interop
 				}
 			}
 
-			internal static unsafe string ToString (ref JniObjectReference value, JniHandleOwnership transfer, Type targetType)
+			internal static unsafe string ToString (ref JniObjectReference value, JniObjectReferenceOptions transfer, Type targetType)
 			{
 				Debug.Assert (targetType == typeof (string), "Expected targetType==typeof(string); was: " + targetType);
 				return ToString (ref value, transfer);

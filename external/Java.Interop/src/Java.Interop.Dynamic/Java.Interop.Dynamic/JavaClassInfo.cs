@@ -218,7 +218,7 @@ namespace Java.Interop.Dynamic {
 					for (int i  = 0; i < len; ++i) {
 						var field       = JniEnvironment.Arrays.GetObjectArrayElement (fields, i);
 						var n_name      = Field_getName.CallVirtualObjectMethod (field);
-						var name        = JniEnvironment.Strings.ToString (ref n_name, JniHandleOwnership.Transfer);
+						var name        = JniEnvironment.Strings.ToString (ref n_name, JniObjectReferenceOptions.DisposeSourceReference);
 						var isStatic    = IsStatic (field);
 
 						List<JavaFieldInfo> overloads;
@@ -226,7 +226,7 @@ namespace Java.Interop.Dynamic {
 							Fields.Add (name, overloads = new List<JavaFieldInfo> ());
 
 						var n_type      = Field_getType.CallVirtualObjectMethod (field);
-						using (var type = new JniType (ref n_type, JniHandleOwnership.Transfer)) {
+						using (var type = new JniType (ref n_type, JniObjectReferenceOptions.DisposeSourceReference)) {
 							var info = JniEnvironment.Current.JavaVM.GetJniTypeInfoForJniTypeReference (type.Name);
 							overloads.Add (new JavaFieldInfo (Members, name + "\u0000" + info.JniTypeReference, isStatic));
 						}
@@ -258,7 +258,7 @@ namespace Java.Interop.Dynamic {
 					for (int i  = 0; i < len; ++i) {
 						var method      = JniEnvironment.Arrays.GetObjectArrayElement (methods, i);
 						var n_name      = Method_getName.CallVirtualObjectMethod (method);
-						var name        = JniEnvironment.Strings.ToString (ref n_name, JniHandleOwnership.Transfer);
+						var name        = JniEnvironment.Strings.ToString (ref n_name, JniObjectReferenceOptions.DisposeSourceReference);
 						var isStatic    = IsStatic (method);
 
 						List<JavaMethodInfo> overloads;
@@ -266,7 +266,7 @@ namespace Java.Interop.Dynamic {
 							Methods.Add (name, overloads = new List<JavaMethodInfo> ());
 
 						var nrt = Method_getReturnType.CallVirtualObjectMethod (method);
-						var rt  = new JniType (ref nrt, JniHandleOwnership.Transfer);
+						var rt  = new JniType (ref nrt, JniObjectReferenceOptions.DisposeSourceReference);
 						var m   = new JavaMethodInfo (Members, method, name, isStatic) {
 							ReturnType  = rt,
 						};

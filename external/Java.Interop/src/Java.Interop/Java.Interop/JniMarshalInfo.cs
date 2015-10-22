@@ -7,7 +7,7 @@ namespace Java.Interop {
 	using CreateMarshalCollectionHandler    = Func<object /* value */, IJavaPeerable>;
 	using CleanupMarshalCollectionHandler   = Action<IJavaPeerable /* sourceValue */, object /* destValue */>;
 
-	public  delegate    object  CreateValueFromJni (ref JniObjectReference reference, JniHandleOwnership transfer, Type targetType);
+	public  delegate    object  CreateValueFromJni (ref JniObjectReference reference, JniObjectReferenceOptions transfer, Type targetType);
 
 	public struct JniMarshalInfo {
 

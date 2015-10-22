@@ -26,10 +26,10 @@ namespace Java.Interop.PerformanceTests
 		}
 
 		public unsafe JavaTiming ()
-			: base (ref *InvalidJniObjectReference, JniHandleOwnership.Invalid)
+			: base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.Invalid)
 		{
 			var peer    = _NewObject ();
-			using (SetPeerReference (ref peer, JniHandleOwnership.Transfer)) {
+			using (SetPeerReference (ref peer, JniObjectReferenceOptions.DisposeSourceReference)) {
 			}
 		}
 
@@ -52,7 +52,7 @@ namespace Java.Interop.PerformanceTests
 		{
 			TypeRef.GetCachedStaticMethod (ref som, "StaticObjectMethod", "()Ljava/lang/Object;");
 			var lref = som.CallObjectMethod (TypeRef.PeerReference);
-			return JniEnvironment.Current.JavaVM.GetObject (ref lref, JniHandleOwnership.Transfer);
+			return JniEnvironment.Current.JavaVM.GetObject (ref lref, JniObjectReferenceOptions.DisposeSourceReference);
 		}
 
 		static JniInstanceMethodInfo vvm;
@@ -74,7 +74,7 @@ namespace Java.Interop.PerformanceTests
 		{
 			TypeRef.GetCachedInstanceMethod (ref vom, "VirtualObjectMethod", "()Ljava/lang/Object;");
 			var lref = vom.CallVirtualObjectMethod (PeerReference);
-			return JniEnvironment.Current.JavaVM.GetObject (ref lref, JniHandleOwnership.Transfer);
+			return JniEnvironment.Current.JavaVM.GetObject (ref lref, JniObjectReferenceOptions.DisposeSourceReference);
 		}
 
 		static JniInstanceMethodInfo fvm;
@@ -96,7 +96,7 @@ namespace Java.Interop.PerformanceTests
 		{
 			TypeRef.GetCachedInstanceMethod (ref fom, "FinalObjectMethod", "()Ljava/lang/Object;");
 			var lref = vom.CallNonvirtualObjectMethod (PeerReference, TypeRef.PeerReference);
-			return JniEnvironment.Current.JavaVM.GetObject (ref lref, JniHandleOwnership.Transfer);
+			return JniEnvironment.Current.JavaVM.GetObject (ref lref, JniObjectReferenceOptions.DisposeSourceReference);
 		}
 
 		static JniInstanceMethodInfo vim1;

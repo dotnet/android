@@ -33,7 +33,7 @@ namespace Java.InteropTests
 				var first = array [0];
 				Assert.IsNotNull (JavaVM.Current.PeekObject (first.PeerReference));
 				var f = first.PeerReference;
-				var o = (JavaObject) JavaVM.Current.GetObject (ref f, JniHandleOwnership.DoNotTransfer);
+				var o = (JavaObject) JavaVM.Current.GetObject (ref f, JniObjectReferenceOptions.CreateNewReference);
 				if (oldHandle != o.PeerReference.Handle) {
 					Console.WriteLine ("Yay, object handle changed; value survived a GC!");
 				} else {
@@ -75,7 +75,7 @@ namespace Java.InteropTests
 			using (var original = new JavaObject ()) {
 				original.RegisterWithVM ();
 				var p       = original.PeerReference;
-				var alias   = new JavaObject (ref p, JniHandleOwnership.DoNotTransfer);
+				var alias   = new JavaObject (ref p, JniObjectReferenceOptions.CreateNewReference);
 				Assert.Throws<NotSupportedException> (() => alias.RegisterWithVM ());
 				alias.Dispose ();
 			}
@@ -156,11 +156,11 @@ namespace Java.InteropTests
 				var c = t.GetConstructor ("()V");
 				var lref = t.NewObject (c, null);
 				Assert.IsTrue (lref.IsValid);
-				using (var o = new JavaObject (ref lref, JniHandleOwnership.DoNotTransfer)) {
+				using (var o = new JavaObject (ref lref, JniObjectReferenceOptions.CreateNewReference)) {
 					Assert.IsTrue (lref.IsValid);
 					Assert.AreNotSame (lref, o.PeerReference);
 				}
-				using (var o = new JavaObject (ref lref, JniHandleOwnership.Transfer)) {
+				using (var o = new JavaObject (ref lref, JniObjectReferenceOptions.DisposeSourceReference)) {
 					Assert.IsFalse (lref.IsValid);
 					Assert.AreNotSame (lref, o.PeerReference);
 				}
@@ -171,7 +171,7 @@ namespace Java.InteropTests
 		public void Ctor_Exceptions ()
 		{
 			var r   = new JniObjectReference ();
-			Assert.Throws<ArgumentException> (() => new JavaObject (ref r, JniHandleOwnership.Transfer));
+			Assert.Throws<ArgumentException> (() => new JavaObject (ref r, JniObjectReferenceOptions.DisposeSourceReference));
 
 			// Note: This may break if/when JavaVM provides "default"
 			Assert.Throws<NotSupportedException> (() => new JavaObjectWithNoJavaPeer ());
