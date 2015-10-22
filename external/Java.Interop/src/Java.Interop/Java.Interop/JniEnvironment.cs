@@ -181,7 +181,7 @@ namespace Java.Interop {
 		{
 			if (!value.IsValid)
 				return;
-			JavaVM.JniHandleManager.CreatedLocalReference (this, value);
+			JavaVM.JniObjectReferenceManager.CreatedLocalReference (this, value);
 		}
 
 #if FEATURE_HANDLES_ARE_SAFE_HANDLES
@@ -202,16 +202,16 @@ namespace Java.Interop {
 				break;
 			}
 			if (c == null) {
-				JavaVM.JniHandleManager.WriteLocalReferenceLine (
+				JavaVM.JniObjectReferenceManager.WriteLocalReferenceLine (
 						"Deleting JNI local reference handle 0x{0} from wrong thread id={1}! Ignoring...",
 						handle.ToString ("x"), Thread.CurrentThread.ManagedThreadId);
-				JavaVM.JniHandleManager.WriteLocalReferenceLine ("{0}",
+				JavaVM.JniObjectReferenceManager.WriteLocalReferenceLine ("{0}",
 						System.Activator.CreateInstance (Type.GetType ("System.Diagnostics.StackTrace")));
 				return;
 			}
 			c.lrefs.Remove (value);
 			var r = new JniObjectReference (value, JniObjectReferenceType.Local);
-			JniEnvironment.Current.JavaVM.JniHandleManager.DeleteLocalReference (this, ref r);
+			JniEnvironment.Current.JavaVM.JniObjectReferenceManager.DeleteLocalReference (this, ref r);
 			value.SetHandleAsInvalid ();
 		}
 #endif  // FEATURE_HANDLES_ARE_SAFE_HANDLES
