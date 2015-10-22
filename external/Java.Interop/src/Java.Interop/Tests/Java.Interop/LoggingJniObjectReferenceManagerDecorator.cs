@@ -8,13 +8,14 @@ using Java.Interop;
 
 namespace Java.InteropTests {
 
-	class LoggingJniHandleManagerDecorator : IJniHandleManager {
+	class LoggingJniObjectReferenceManagerDecorator : IJniObjectReferenceManager {
 
 		TextWriter          grefLog;
 		TextWriter          lrefLog;
-		IJniHandleManager   manager;
 
-		public LoggingJniHandleManagerDecorator (IJniHandleManager manager, TextWriter lrefOutput = null, TextWriter grefOutput = null)
+		IJniObjectReferenceManager      manager;
+
+		public LoggingJniObjectReferenceManagerDecorator (IJniObjectReferenceManager manager, TextWriter lrefOutput = null, TextWriter grefOutput = null)
 		{
 			if (manager == null)
 				throw new ArgumentNullException ("manager");
@@ -32,7 +33,7 @@ namespace Java.InteropTests {
 			get {return manager.WeakGlobalReferenceCount;}
 		}
 
-		public static IJniHandleManager GetHandleManager (IJniHandleManager manager)
+		public static IJniObjectReferenceManager GetObjectReferenceManager (IJniObjectReferenceManager manager)
 		{
 			TextWriter  grefLog = null;
 			TextWriter  lrefLog = null;;
@@ -59,7 +60,7 @@ namespace Java.InteropTests {
 
 			if (grefLog == null && lrefLog == null)
 				return manager;
-			return new LoggingJniHandleManagerDecorator (manager, lrefLog, grefLog);
+			return new LoggingJniObjectReferenceManagerDecorator (manager, lrefLog, grefLog);
 		}
 
 		static string GetLogPath (string value)

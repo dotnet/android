@@ -42,10 +42,10 @@
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JniTypeInfoAttributeTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JniTypeInfoTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JniTypeTest.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\LoggingJniHandleManagerDecorator.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\MethodBindingTests.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\TestType.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\TestTypeTests.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\LoggingJniObjectReferenceManagerDecorator.cs" />
   </ItemGroup>
   <ItemGroup>
     <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\com\xamarin\interop\CallNonvirtualBase.java" />

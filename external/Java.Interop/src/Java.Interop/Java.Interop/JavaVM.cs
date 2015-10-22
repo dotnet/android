@@ -51,7 +51,7 @@ namespace Java.Interop
 
 		public  IntPtr                      InvocationPointer   {get; set;}
 		public  IntPtr                      EnvironmentPointer  {get; set;}
-		public  IJniHandleManager           JniHandleManager    {get; set;}
+		public  IJniObjectReferenceManager           JniHandleManager    {get; set;}
 
 		public JavaVMOptions ()
 		{
@@ -122,7 +122,7 @@ namespace Java.Interop
 			TrackIDs     = options.TrackIDs;
 			DestroyVM    = options.DestroyVMOnDispose;
 
-			JniHandleManager    = options.JniHandleManager ?? new JniHandleManager ();
+			JniHandleManager    = options.JniHandleManager ?? new JniObjectReferenceManager ();
 			NewObjectRequired   = options.NewObjectRequired;
 
 			InvocationPointer   = options.InvocationPointer;
@@ -242,7 +242,7 @@ namespace Java.Interop
 			get {return JniHandleManager.WeakGlobalReferenceCount;}
 		}
 
-		public IJniHandleManager JniHandleManager   {get; private set;}
+		public IJniObjectReferenceManager JniHandleManager   {get; private set;}
 
 		public bool TrackIDs {get; private set;}
 

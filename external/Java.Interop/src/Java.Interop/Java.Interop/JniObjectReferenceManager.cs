@@ -9,7 +9,7 @@ using System.Threading;
 
 namespace Java.Interop {
 
-	public class JniHandleManager : IJniHandleManager {
+	public class JniObjectReferenceManager : IJniObjectReferenceManager {
 
 		int grefc;
 		public int GlobalReferenceCount {

@@ -19,7 +19,7 @@ namespace Java.InteropTests
 					builder.ClassPath.Add (jar);
 			}
 			builder.AddOption ("-Xcheck:jni");
-			builder.JniHandleManager = LoggingJniHandleManagerDecorator.GetHandleManager (new Java.Interop.JniHandleManager ());
+			builder.JniHandleManager = LoggingJniObjectReferenceManagerDecorator.GetObjectReferenceManager (new Java.Interop.JniObjectReferenceManager ());
 
 			return builder;
 		}

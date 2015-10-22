@@ -10,7 +10,7 @@ using System.Threading;
 namespace Java.Interop {
 
 	// Implementations MUST be thread safe!
-	public interface IJniHandleManager : IDisposable {
+	public interface IJniObjectReferenceManager : IDisposable {
 
 		int                     GlobalReferenceCount        {get;}
 		int                     WeakGlobalReferenceCount    {get;}
