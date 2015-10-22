@@ -1,5 +1,6 @@
 ﻿using System;
 
+#if FEATURE_HANDLES_ARE_SAFE_HANDLES
 namespace Java.Interop {
 
 	sealed class JniAllocObjectRef : JniLocalReference
@@ -10,4 +11,4 @@ namespace Java.Interop {
 		}
 	}
 }
-
+#endif  // FEATURE_HANDLES_ARE_SAFE_HANDLES

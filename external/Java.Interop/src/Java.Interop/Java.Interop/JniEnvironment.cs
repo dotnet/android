@@ -73,6 +73,7 @@ namespace Java.Interop {
 			}
 		}
 
+#if FEATURE_HANDLES_ARE_SAFE_HANDLES
 		List<JniLocalReference> lrefs;
 		internal List<JniLocalReference> LocalReferences {
 			get {return lrefs ?? (lrefs = new List<JniLocalReference> ());}
@@ -92,6 +93,7 @@ namespace Java.Interop {
 			}
 			return false;
 		}
+#endif  // FEATURE_HANDLES_ARE_SAFE_HANDLES
 
 		internal    static  bool    HasCurrent {
 			get {return current != null;}
@@ -213,6 +215,15 @@ namespace Java.Interop {
 			value.SetHandleAsInvalid ();
 		}
 #endif  // FEATURE_HANDLES_ARE_SAFE_HANDLES
+#if FEATURE_HANDLES_ARE_INTPTRS
+		internal void LogCreateLocalRef (IntPtr value)
+		{
+			if (value == IntPtr.Zero)
+				return;
+			var r = new JniObjectReference (value, JniObjectReferenceType.Local);
+			LogCreateLocalRef (r);
+		}
+#endif  // FEATURE_HANDLES_ARE_INTPTRS
 
 		JniInstanceMethodInfo Obj_toS;
 		internal    JniInstanceMethodInfo Object_toString {

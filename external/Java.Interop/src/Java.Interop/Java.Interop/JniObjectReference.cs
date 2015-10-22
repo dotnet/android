@@ -48,7 +48,7 @@ namespace Java.Interop
 				return SafeHandle != null && !SafeHandle.IsInvalid && !SafeHandle.IsClosed;
 #endif  // FEATURE_HANDLES_ARE_SAFE_HANDLES
 #if FEATURE_HANDLES_ARE_INTPTRS
-				return Handle == IntPtr.Zero;
+				return Handle != IntPtr.Zero;
 #endif  // FEATURE_HANDLES_ARE_SAFE_HANDLES
 			}
 		}
