@@ -42,12 +42,12 @@ namespace Java.Interop
 
 		public sbyte CallVirtualSByteMethod (JniObjectReference @this)
 		{
-			return JniEnvironment.InstanceMethods.CallSByteMethod (@this, this);
+			return JniEnvironment.InstanceMethods.CallByteMethod (@this, this);
 		}
 
 		public unsafe sbyte CallVirtualSByteMethod (JniObjectReference @this, JValue* parameters)
 		{
-			return JniEnvironment.InstanceMethods.CallSByteMethod (@this, this, parameters);
+			return JniEnvironment.InstanceMethods.CallByteMethod (@this, this, parameters);
 		}
 
 		public char CallVirtualCharMethod (JniObjectReference @this)
@@ -142,12 +142,12 @@ namespace Java.Interop
 
 		public sbyte CallNonvirtualSByteMethod (JniObjectReference @this, JniObjectReference declaringType)
 		{
-			return JniEnvironment.InstanceMethods.CallNonvirtualSByteMethod (@this, declaringType, this);
+			return JniEnvironment.InstanceMethods.CallNonvirtualByteMethod (@this, declaringType, this);
 		}
 
 		public unsafe sbyte CallNonvirtualSByteMethod (JniObjectReference @this, JniObjectReference declaringType, JValue* parameters)
 		{
-			return JniEnvironment.InstanceMethods.CallNonvirtualSByteMethod (@this, declaringType, this, parameters);
+			return JniEnvironment.InstanceMethods.CallNonvirtualByteMethod (@this, declaringType, this, parameters);
 		}
 
 		public char CallNonvirtualCharMethod (JniObjectReference @this, JniObjectReference declaringType)

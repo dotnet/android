@@ -43,12 +43,12 @@ namespace Java.Interop
 
 		public sbyte CallSByteMethod (JniObjectReference type)
 		{
-			return JniEnvironment.StaticMethods.CallStaticSByteMethod (type, this);
+			return JniEnvironment.StaticMethods.CallStaticByteMethod (type, this);
 		}
 
 		public unsafe sbyte CallSByteMethod (JniObjectReference type, JValue* parameters)
 		{
-			return JniEnvironment.StaticMethods.CallStaticSByteMethod (type, this, parameters);
+			return JniEnvironment.StaticMethods.CallStaticByteMethod (type, this, parameters);
 		}
 
 		public char CallCharMethod (JniObjectReference type)
