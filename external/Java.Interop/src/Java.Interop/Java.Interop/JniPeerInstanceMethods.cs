@@ -29,7 +29,7 @@ namespace Java.Interop
 
 		readonly Type                                       DeclaringType;
 
-		Dictionary<string, JniInstanceMethodID>             InstanceMethods = new Dictionary<string, JniInstanceMethodID>();
+		Dictionary<string, JniInstanceMethodInfo>           InstanceMethods = new Dictionary<string, JniInstanceMethodInfo>();
 		Dictionary<Type, JniPeerInstanceMethods>            SubclassConstructors = new Dictionary<Type, JniPeerInstanceMethods> ();
 
 		internal void Dispose ()
@@ -47,12 +47,12 @@ namespace Java.Interop
 			JniPeerType = null;
 		}
 
-		public JniInstanceMethodID GetConstructor (string signature)
+		public JniInstanceMethodInfo GetConstructor (string signature)
 		{
 			if (signature == null)
 				throw new ArgumentNullException ("signature");
 			lock (InstanceMethods) {
-				JniInstanceMethodID m;
+				JniInstanceMethodInfo m;
 				if (!InstanceMethods.TryGetValue (signature, out m)) {
 					m = JniPeerType.GetConstructor (signature);
 					InstanceMethods.Add (signature, m);
@@ -76,10 +76,10 @@ namespace Java.Interop
 			return methods;
 		}
 
-		public JniInstanceMethodID GetMethodID (string encodedMember)
+		public JniInstanceMethodInfo GetMethodID (string encodedMember)
 		{
 			lock (InstanceMethods) {
-				JniInstanceMethodID m;
+				JniInstanceMethodInfo m;
 				if (!InstanceMethods.TryGetValue (encodedMember, out m)) {
 					string method, signature;
 					JniPeerMembers.GetNameAndSignature (encodedMember, out method, out signature);

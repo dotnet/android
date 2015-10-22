@@ -19,20 +19,20 @@ namespace Java.Interop.Dynamic {
 
 		static  readonly    Func<string, Type, JniPeerMembers>  CreatePeerMembers;
 
-		static  readonly    JniInstanceMethodID                 Class_getConstructors;
-		static  readonly    JniInstanceMethodID                 Class_getFields;
-		static  readonly    JniInstanceMethodID                 Class_getMethods;
+		static  readonly    JniInstanceMethodInfo               Class_getConstructors;
+		static  readonly    JniInstanceMethodInfo               Class_getFields;
+		static  readonly    JniInstanceMethodInfo               Class_getMethods;
 
-		static  readonly    JniInstanceMethodID                 Constructor_getParameterTypes;
+		static  readonly    JniInstanceMethodInfo               Constructor_getParameterTypes;
 
-		static  readonly    JniInstanceMethodID                 Field_getName;
-		static  readonly    JniInstanceMethodID                 Field_getType;
+		static  readonly    JniInstanceMethodInfo               Field_getName;
+		static  readonly    JniInstanceMethodInfo               Field_getType;
 
-		static  readonly    JniInstanceMethodID                 Method_getName;
-		static  readonly    JniInstanceMethodID                 Method_getReturnType;
-		static  readonly    JniInstanceMethodID                 Method_getParameterTypes;
+		static  readonly    JniInstanceMethodInfo               Method_getName;
+		static  readonly    JniInstanceMethodInfo               Method_getReturnType;
+		static  readonly    JniInstanceMethodInfo               Method_getParameterTypes;
 
-		static  readonly    JniInstanceMethodID                 Member_getModifiers;
+		static  readonly    JniInstanceMethodInfo               Member_getModifiers;
 
 		static  readonly    Dictionary<string, WeakReference>   Classes = new Dictionary<string, WeakReference> ();
 

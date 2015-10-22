@@ -214,8 +214,8 @@ namespace Java.Interop {
 		}
 #endif  // FEATURE_HANDLES_ARE_SAFE_HANDLES
 
-		JniInstanceMethodID Obj_toS;
-		internal    JniInstanceMethodID Object_toString {
+		JniInstanceMethodInfo Obj_toS;
+		internal    JniInstanceMethodInfo Object_toString {
 			get {
 				if (Obj_toS != null)
 					return Obj_toS;
@@ -227,8 +227,8 @@ namespace Java.Interop {
 			}
 		}
 
-		JniInstanceMethodID Cls_getN;
-		internal    JniInstanceMethodID Class_getName {
+		JniInstanceMethodInfo Cls_getN;
+		internal    JniInstanceMethodInfo Class_getName {
 			get {
 				if (Cls_getN != null)
 					return Cls_getN;

@@ -4,9 +4,9 @@ using System.Runtime.InteropServices;
 namespace Java.Interop
 {
 
-	public sealed class JniStaticMethodID : JniMethodID
+	public sealed class JniStaticMethodInfo : JniMethodInfo
 	{
-		internal JniStaticMethodID (IntPtr methodID)
+		internal JniStaticMethodInfo (IntPtr methodID)
 			: base (methodID)
 		{
 		}

@@ -8,7 +8,7 @@ namespace Java.Interop
 			get {return JniType.GetCachedJniType (ref _typeRef, "java/lang/System");}
 		}
 
-		static JniStaticMethodID _identityHashCode;
+		static JniStaticMethodInfo _identityHashCode;
 		internal static unsafe int IdentityHashCode (JniObjectReference value)
 		{
 			var args = stackalloc JValue [1];

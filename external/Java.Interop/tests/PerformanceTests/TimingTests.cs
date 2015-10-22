@@ -412,14 +412,14 @@ namespace Java.Interop.PerformanceTests {
 
 			var total   = Stopwatch.StartNew ();
 
-			JniInstanceMethodID Class_getMethods;
+			JniInstanceMethodInfo Class_getMethods;
 			using (var t = new JniType ("java/lang/Class")) {
 				Class_getMethods        = t.GetInstanceMethod ("getMethods", "()[Ljava/lang/reflect/Method;");
 			}
 
-			JniInstanceMethodID Method_getName;
-			JniInstanceMethodID Method_getParameterTypes;
-			JniInstanceMethodID Method_getReturnType;
+			JniInstanceMethodInfo Method_getName;
+			JniInstanceMethodInfo Method_getParameterTypes;
+			JniInstanceMethodInfo Method_getReturnType;
 			using (var t = new JniType ("java/lang/reflect/Method")) {
 				Method_getName              = t.GetInstanceMethod ("getName", "()Ljava/lang/String;");
 				Method_getParameterTypes    = t.GetInstanceMethod ("getParameterTypes", "()[Ljava/lang/Class;");

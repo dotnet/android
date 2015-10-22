@@ -12,12 +12,12 @@ namespace Java.Interop
 
 		readonly JniPeerMembers                             Members;
 
-		Dictionary<string, JniStaticFieldID>                StaticFields  = new Dictionary<string, JniStaticFieldID>();
+		Dictionary<string, JniStaticFieldInfo>              StaticFields  = new Dictionary<string, JniStaticFieldInfo>();
 
-		public JniStaticFieldID GetFieldID (string encodedMember)
+		public JniStaticFieldInfo GetFieldID (string encodedMember)
 		{
 			lock (StaticFields) {
-				JniStaticFieldID f;
+				JniStaticFieldInfo f;
 				if (!StaticFields.TryGetValue (encodedMember, out f)) {
 					string field, signature;
 					JniPeerMembers.GetNameAndSignature (encodedMember, out field, out signature);

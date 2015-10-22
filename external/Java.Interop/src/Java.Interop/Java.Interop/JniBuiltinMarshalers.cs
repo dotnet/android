@@ -91,7 +91,7 @@ namespace Java.Interop {
 			return new JValue ((Boolean) value);
 		}
 
-		static JniInstanceMethodID init;
+		static JniInstanceMethodInfo init;
 		internal static unsafe JniObjectReference CreateLocalRef (object value)
 		{
 			Debug.Assert (value is Boolean, "Expected value of type `Boolean`; was: " + (value == null ? "<null>" : value.GetType ().FullName));
@@ -103,7 +103,7 @@ namespace Java.Interop {
 			return TypeRef.NewObject (init, args);
 		}
 
-		static JniInstanceMethodID booleanValue;
+		static JniInstanceMethodInfo booleanValue;
 		internal static object GetValueFromJni (ref JniObjectReference self, JniHandleOwnership transfer, Type targetType)
 		{
 			Debug.Assert (targetType == null || targetType == typeof (Boolean), "Expected targetType==typeof(Boolean); was: " + targetType);
@@ -129,7 +129,7 @@ namespace Java.Interop {
 			return new JValue ((SByte) value);
 		}
 
-		static JniInstanceMethodID init;
+		static JniInstanceMethodInfo init;
 		internal static unsafe JniObjectReference CreateLocalRef (object value)
 		{
 			Debug.Assert (value is SByte, "Expected value of type `SByte`; was: " + (value == null ? "<null>" : value.GetType ().FullName));
@@ -141,7 +141,7 @@ namespace Java.Interop {
 			return TypeRef.NewObject (init, args);
 		}
 
-		static JniInstanceMethodID byteValue;
+		static JniInstanceMethodInfo byteValue;
 		internal static object GetValueFromJni (ref JniObjectReference self, JniHandleOwnership transfer, Type targetType)
 		{
 			Debug.Assert (targetType == null || targetType == typeof (SByte), "Expected targetType==typeof(SByte); was: " + targetType);
@@ -167,7 +167,7 @@ namespace Java.Interop {
 			return new JValue ((Char) value);
 		}
 
-		static JniInstanceMethodID init;
+		static JniInstanceMethodInfo init;
 		internal static unsafe JniObjectReference CreateLocalRef (object value)
 		{
 			Debug.Assert (value is Char, "Expected value of type `Char`; was: " + (value == null ? "<null>" : value.GetType ().FullName));
@@ -179,7 +179,7 @@ namespace Java.Interop {
 			return TypeRef.NewObject (init, args);
 		}
 
-		static JniInstanceMethodID charValue;
+		static JniInstanceMethodInfo charValue;
 		internal static object GetValueFromJni (ref JniObjectReference self, JniHandleOwnership transfer, Type targetType)
 		{
 			Debug.Assert (targetType == null || targetType == typeof (Char), "Expected targetType==typeof(Char); was: " + targetType);
@@ -205,7 +205,7 @@ namespace Java.Interop {
 			return new JValue ((Int16) value);
 		}
 
-		static JniInstanceMethodID init;
+		static JniInstanceMethodInfo init;
 		internal static unsafe JniObjectReference CreateLocalRef (object value)
 		{
 			Debug.Assert (value is Int16, "Expected value of type `Int16`; was: " + (value == null ? "<null>" : value.GetType ().FullName));
@@ -217,7 +217,7 @@ namespace Java.Interop {
 			return TypeRef.NewObject (init, args);
 		}
 
-		static JniInstanceMethodID shortValue;
+		static JniInstanceMethodInfo shortValue;
 		internal static object GetValueFromJni (ref JniObjectReference self, JniHandleOwnership transfer, Type targetType)
 		{
 			Debug.Assert (targetType == null || targetType == typeof (Int16), "Expected targetType==typeof(Int16); was: " + targetType);
@@ -243,7 +243,7 @@ namespace Java.Interop {
 			return new JValue ((Int32) value);
 		}
 
-		static JniInstanceMethodID init;
+		static JniInstanceMethodInfo init;
 		internal static unsafe JniObjectReference CreateLocalRef (object value)
 		{
 			Debug.Assert (value is Int32, "Expected value of type `Int32`; was: " + (value == null ? "<null>" : value.GetType ().FullName));
@@ -255,7 +255,7 @@ namespace Java.Interop {
 			return TypeRef.NewObject (init, args);
 		}
 
-		static JniInstanceMethodID intValue;
+		static JniInstanceMethodInfo intValue;
 		internal static object GetValueFromJni (ref JniObjectReference self, JniHandleOwnership transfer, Type targetType)
 		{
 			Debug.Assert (targetType == null || targetType == typeof (Int32), "Expected targetType==typeof(Int32); was: " + targetType);
@@ -281,7 +281,7 @@ namespace Java.Interop {
 			return new JValue ((Int64) value);
 		}
 
-		static JniInstanceMethodID init;
+		static JniInstanceMethodInfo init;
 		internal static unsafe JniObjectReference CreateLocalRef (object value)
 		{
 			Debug.Assert (value is Int64, "Expected value of type `Int64`; was: " + (value == null ? "<null>" : value.GetType ().FullName));
@@ -293,7 +293,7 @@ namespace Java.Interop {
 			return TypeRef.NewObject (init, args);
 		}
 
-		static JniInstanceMethodID longValue;
+		static JniInstanceMethodInfo longValue;
 		internal static object GetValueFromJni (ref JniObjectReference self, JniHandleOwnership transfer, Type targetType)
 		{
 			Debug.Assert (targetType == null || targetType == typeof (Int64), "Expected targetType==typeof(Int64); was: " + targetType);
@@ -319,7 +319,7 @@ namespace Java.Interop {
 			return new JValue ((Single) value);
 		}
 
-		static JniInstanceMethodID init;
+		static JniInstanceMethodInfo init;
 		internal static unsafe JniObjectReference CreateLocalRef (object value)
 		{
 			Debug.Assert (value is Single, "Expected value of type `Single`; was: " + (value == null ? "<null>" : value.GetType ().FullName));
@@ -331,7 +331,7 @@ namespace Java.Interop {
 			return TypeRef.NewObject (init, args);
 		}
 
-		static JniInstanceMethodID floatValue;
+		static JniInstanceMethodInfo floatValue;
 		internal static object GetValueFromJni (ref JniObjectReference self, JniHandleOwnership transfer, Type targetType)
 		{
 			Debug.Assert (targetType == null || targetType == typeof (Single), "Expected targetType==typeof(Single); was: " + targetType);
@@ -357,7 +357,7 @@ namespace Java.Interop {
 			return new JValue ((Double) value);
 		}
 
-		static JniInstanceMethodID init;
+		static JniInstanceMethodInfo init;
 		internal static unsafe JniObjectReference CreateLocalRef (object value)
 		{
 			Debug.Assert (value is Double, "Expected value of type `Double`; was: " + (value == null ? "<null>" : value.GetType ().FullName));
@@ -369,7 +369,7 @@ namespace Java.Interop {
 			return TypeRef.NewObject (init, args);
 		}
 
-		static JniInstanceMethodID doubleValue;
+		static JniInstanceMethodInfo doubleValue;
 		internal static object GetValueFromJni (ref JniObjectReference self, JniHandleOwnership transfer, Type targetType)
 		{
 			Debug.Assert (targetType == null || targetType == typeof (Double), "Expected targetType==typeof(Double); was: " + targetType);

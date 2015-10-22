@@ -12,7 +12,7 @@ namespace Java.Interop
 
 		internal    readonly    JniPeerMembers              Members;
 
-		Dictionary<string, JniStaticMethodID>               StaticMethods   = new Dictionary<string, JniStaticMethodID>();
+		Dictionary<string, JniStaticMethodInfo>             StaticMethods   = new Dictionary<string, JniStaticMethodInfo>();
 
 		internal void Dispose ()
 		{
@@ -22,10 +22,10 @@ namespace Java.Interop
 			StaticMethods   = null;
 		}
 
-		public JniStaticMethodID GetMethodID (string encodedMember)
+		public JniStaticMethodInfo GetMethodID (string encodedMember)
 		{
 			lock (StaticMethods) {
-				JniStaticMethodID m;
+				JniStaticMethodInfo m;
 				if (!StaticMethods.TryGetValue (encodedMember, out m)) {
 					string method, signature;
 					JniPeerMembers.GetNameAndSignature (encodedMember, out method, out signature);

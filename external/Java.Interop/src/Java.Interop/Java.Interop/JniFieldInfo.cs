@@ -2,7 +2,7 @@ using System;
 
 namespace Java.Interop
 {
-	public abstract class JniFieldID
+	public abstract class JniFieldInfo
 	{
 		public      IntPtr      ID      {get; private set;}
 
@@ -10,7 +10,7 @@ namespace Java.Interop
 			get {return ID != IntPtr.Zero;}
 		}
 
-		internal JniFieldID (IntPtr fieldID)
+		internal JniFieldInfo (IntPtr fieldID)
 		{
 			ID  = fieldID;
 		}

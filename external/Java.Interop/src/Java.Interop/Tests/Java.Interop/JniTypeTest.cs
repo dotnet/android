@@ -56,14 +56,14 @@ namespace Java.InteropTests
 			Assert.Throws<ObjectDisposedException> (() => t.RegisterNativeMethods (null));
 			Assert.Throws<ObjectDisposedException> (() => t.UnregisterNativeMethods ());
 
-			JniInstanceFieldID jif = null;
+			JniInstanceFieldInfo jif = null;
 			Assert.Throws<ObjectDisposedException> (() => t.GetCachedInstanceField (ref jif, null, null));
-			JniInstanceMethodID jim = null;
+			JniInstanceMethodInfo jim = null;
 			Assert.Throws<ObjectDisposedException> (() => t.GetCachedConstructor (ref jim, null));
 			Assert.Throws<ObjectDisposedException> (() => t.GetCachedInstanceMethod (ref jim, null, null));
-			JniStaticFieldID jsf = null;
+			JniStaticFieldInfo jsf = null;
 			Assert.Throws<ObjectDisposedException> (() => t.GetCachedStaticField (ref jsf, null, null));
-			JniStaticMethodID jsm = null;
+			JniStaticMethodInfo jsm = null;
 			Assert.Throws<ObjectDisposedException> (() => t.GetCachedStaticMethod (ref jsm, null, null));
 		}
 

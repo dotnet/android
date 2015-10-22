@@ -12,7 +12,7 @@ namespace Java.Interop
 
 		readonly JniPeerMembers                             Members;
 
-		Dictionary<string, JniInstanceFieldID>              InstanceFields  = new Dictionary<string, JniInstanceFieldID>();
+		Dictionary<string, JniInstanceFieldInfo>            InstanceFields  = new Dictionary<string, JniInstanceFieldInfo>();
 
 		internal void Dispose ()
 		{
@@ -22,10 +22,10 @@ namespace Java.Interop
 			InstanceFields  = null;
 		}
 
-		public JniInstanceFieldID GetFieldID (string encodedMember)
+		public JniInstanceFieldInfo GetFieldID (string encodedMember)
 		{
 			lock (InstanceFields) {
-				JniInstanceFieldID f;
+				JniInstanceFieldInfo f;
 				if (!InstanceFields.TryGetValue (encodedMember, out f)) {
 					string field, signature;
 					JniPeerMembers.GetNameAndSignature (encodedMember, out field, out signature);

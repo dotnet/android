@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace Java.Interop
 {
-	public abstract class JniMethodID
+	public abstract class JniMethodInfo
 	{
 		public      IntPtr  ID      {get; private set;}
 
@@ -11,7 +11,7 @@ namespace Java.Interop
 			get {return ID != IntPtr.Zero;}
 		}
 
-		internal JniMethodID (IntPtr methodID)
+		internal JniMethodInfo (IntPtr methodID)
 		{
 			ID  = methodID;
 		}

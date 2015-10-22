@@ -3,9 +3,9 @@ using System.Runtime.InteropServices;
 
 namespace Java.Interop
 {
-	public sealed class JniInstanceMethodID : JniMethodID
+	public sealed class JniInstanceMethodInfo : JniMethodInfo
 	{
-		internal JniInstanceMethodID (IntPtr methodID)
+		internal JniInstanceMethodInfo (IntPtr methodID)
 			: base (methodID)
 		{
 		}

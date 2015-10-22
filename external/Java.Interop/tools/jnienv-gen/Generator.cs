@@ -652,7 +652,7 @@ namespace Xamarin.Java.Interop
 	class InstanceFieldTypeInfo : IdTypeInfo {
 
 		public InstanceFieldTypeInfo (string jni)
-			: base (jni, "JniInstanceFieldID")
+			: base (jni, "JniInstanceFieldInfo")
 		{
 		}
 	}
@@ -660,7 +660,7 @@ namespace Xamarin.Java.Interop
 	class InstanceMethodTypeInfo : IdTypeInfo {
 
 		public InstanceMethodTypeInfo (string jni)
-			: base (jni, "JniInstanceMethodID")
+			: base (jni, "JniInstanceMethodInfo")
 		{
 		}
 	}
@@ -668,7 +668,7 @@ namespace Xamarin.Java.Interop
 	class StaticFieldTypeInfo : IdTypeInfo {
 
 		public StaticFieldTypeInfo (string jni)
-			: base (jni, "JniStaticFieldID")
+			: base (jni, "JniStaticFieldInfo")
 		{
 		}
 	}
@@ -676,7 +676,7 @@ namespace Xamarin.Java.Interop
 	class StaticMethodTypeInfo : IdTypeInfo {
 
 		public StaticMethodTypeInfo (string jni)
-			: base (jni, "JniStaticMethodID")
+			: base (jni, "JniStaticMethodInfo")
 		{
 		}
 	}

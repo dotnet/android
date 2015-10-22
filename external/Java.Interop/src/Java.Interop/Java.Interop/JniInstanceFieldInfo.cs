@@ -3,9 +3,9 @@ using System.Runtime.InteropServices;
 
 namespace Java.Interop
 {
-	public sealed class JniInstanceFieldID : JniFieldID
+	public sealed class JniInstanceFieldInfo : JniFieldInfo
 	{
-		internal JniInstanceFieldID (IntPtr fieldID)
+		internal JniInstanceFieldInfo (IntPtr fieldID)
 			: base (fieldID)
 		{
 		}
