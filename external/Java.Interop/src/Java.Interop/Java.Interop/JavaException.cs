@@ -48,7 +48,7 @@ namespace Java.Interop
 					JniPeerMembers.InstanceMethods.FinishCreateInstance (signature, this, args);
 				}
 			} finally {
-				JniEnvironment.Handles.Dispose (ref native_message, JniHandleOwnership.Transfer);
+				JniEnvironment.References.Dispose (ref native_message, JniHandleOwnership.Transfer);
 			}
 			javaStackTrace    = _GetJavaStack (PeerReference);
 		}
@@ -68,7 +68,7 @@ namespace Java.Interop
 					JniPeerMembers.InstanceMethods.FinishCreateInstance (signature, this, args);
 				}
 			} finally {
-				JniEnvironment.Handles.Dispose (ref native_message, JniHandleOwnership.Transfer);
+				JniEnvironment.References.Dispose (ref native_message, JniHandleOwnership.Transfer);
 			}
 			javaStackTrace    = _GetJavaStack (PeerReference);
 		}
@@ -213,10 +213,10 @@ namespace Java.Interop
 						var s = JniEnvironment.Current.Object_toString.CallVirtualObjectMethod (swriter);
 						return JniEnvironment.Strings.ToString (ref s, JniHandleOwnership.Transfer);
 					} finally {
-						JniEnvironment.Handles.Dispose (ref pwriter, JniHandleOwnership.Transfer);
+						JniEnvironment.References.Dispose (ref pwriter, JniHandleOwnership.Transfer);
 					}
 				} finally {
-					JniEnvironment.Handles.Dispose (ref swriter, JniHandleOwnership.Transfer);
+					JniEnvironment.References.Dispose (ref swriter, JniHandleOwnership.Transfer);
 				}
 			}
 		}

@@ -29,7 +29,7 @@ namespace Hello
 				int i = m.CallVirtualInt32Method (o);
 				Console.WriteLine ("java.lang.Object={0}", o);
 				Console.WriteLine ("hashcode={0}", i);
-				JniEnvironment.Handles.Dispose (ref o);
+				JniEnvironment.References.Dispose (ref o);
 				t.Dispose ();
 				// var o = JniTypes.FindClass ("java/lang/Object");
 				/*

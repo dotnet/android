@@ -43,7 +43,7 @@
     <Compile Include="Java.Interop\JniInstanceMethodID.cs" />
     <Compile Include="Java.Interop\JniEnvironment.cs" />
     <Compile Include="Java.Interop\JniEnvironment.g.cs" />
-    <Compile Include="Java.Interop\JniEnvironment.Handles.cs" />
+    <Compile Include="Java.Interop\JniEnvironment.References.cs" />
     <Compile Include="Java.Interop\JniEnvironment.Strings.cs" />
     <Compile Include="Java.Interop\JniEnvironment.Types.cs" />
     <Compile Include="Java.Interop\JniPeerMembers.cs" />

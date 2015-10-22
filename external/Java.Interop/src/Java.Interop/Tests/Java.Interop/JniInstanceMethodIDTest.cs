@@ -32,7 +32,7 @@ namespace Java.InteropTests
 						Assert.IsFalse (g.GetBooleanValue (o));
 					}
 				} finally {
-					JniEnvironment.Handles.Dispose (ref o);
+					JniEnvironment.References.Dispose (ref o);
 				}
 			}
 		}

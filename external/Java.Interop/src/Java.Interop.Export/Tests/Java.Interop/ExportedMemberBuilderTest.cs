@@ -344,7 +344,7 @@ namespace Java.InteropTests
 		__jvm = JniEnvironment.Current.JavaVM;
 		__this = __jvm.GetObject<ExportTest>(__context);
 		__mret = __this.FuncIJavaObject();
-		__jret = Handles.NewReturnToJniRef(__mret);
+		__jret = References.NewReturnToJniRef(__mret);
 		return __jret;
 	}
 	catch (Exception __e)

@@ -225,7 +225,7 @@ namespace Java.Interop
 			var o   = PeekObject (value);
 			var e   = o as JavaException;
 			if (e != null) {
-				JniEnvironment.Handles.Dispose (ref value, transfer);
+				JniEnvironment.References.Dispose (ref value, transfer);
 				var p   = e as JavaProxyThrowable;
 				if (p != null)
 					return p.Exception;
@@ -296,7 +296,7 @@ namespace Java.Interop
 
 			if (r.Type != JniObjectReferenceType.Global) {
 				value.SetPeerReference (r.NewGlobalRef ());
-				JniEnvironment.Handles.Dispose (ref r, JniHandleOwnership.Transfer);
+				JniEnvironment.References.Dispose (ref r, JniHandleOwnership.Transfer);
 			}
 			int key = value.IdentityHashCode;
 			lock (RegisteredInstances) {
@@ -336,7 +336,7 @@ namespace Java.Interop
 			bool register   = reference.Flags == JniObjectReferenceFlags.Alloc;
 
 			value.SetPeerReference (reference.NewLocalRef ());
-			JniEnvironment.Handles.Dispose (ref reference, transfer);
+			JniEnvironment.References.Dispose (ref reference, transfer);
 
 			value.IdentityHashCode = JniSystem.IdentityHashCode (value.PeerReference);
 
@@ -346,7 +346,7 @@ namespace Java.Interop
 					UnRegisterObject (value);
 					var o = value.PeerReference;
 					value.SetPeerReference (o.NewLocalRef ());
-					JniEnvironment.Handles.Dispose (ref o);
+					JniEnvironment.References.Dispose (ref o);
 				};
 				return createCleanup (unregister);
 			}
@@ -371,7 +371,7 @@ namespace Java.Interop
 				lref.SetHandleAsInvalid ();
 			}
 #endif  // FEATURE_HANDLES_ARE_SAFE_HANDLES
-			JniEnvironment.Handles.Dispose (ref h);
+			JniEnvironment.References.Dispose (ref h);
 			value.SetPeerReference (new JniObjectReference ());
 			GC.SuppressFinalize (value);
 		}
@@ -447,7 +447,7 @@ namespace Java.Interop
 
 			var existing = PeekObject (reference);
 			if (existing != null && targetType != null && targetType.IsInstanceOfType (existing)) {
-				JniEnvironment.Handles.Dispose (ref reference, transfer);
+				JniEnvironment.References.Dispose (ref reference, transfer);
 				return existing;
 			}
 
@@ -494,7 +494,7 @@ namespace Java.Interop
 					});
 
 					if (ctor != null) {
-						JniEnvironment.Handles.Dispose (ref klass);
+						JniEnvironment.References.Dispose (ref klass);
 						return ctor;
 					}
 				}
@@ -504,10 +504,10 @@ namespace Java.Interop
 					? JniEnvironment.Types.GetJniTypeNameFromClass (super)
 					: null;
 
-				JniEnvironment.Handles.Dispose (ref klass, JniHandleOwnership.Transfer);
+				JniEnvironment.References.Dispose (ref klass, JniHandleOwnership.Transfer);
 				klass      = super;
 			}
-			JniEnvironment.Handles.Dispose (ref klass, JniHandleOwnership.Transfer);
+			JniEnvironment.References.Dispose (ref klass, JniHandleOwnership.Transfer);
 
 			return fallbackType.GetConstructor (new[] {
 				ByRefJniObjectReference,

@@ -35,7 +35,7 @@ namespace Java.Interop
 					return GetJniTypeNameFromClass (lref);
 				}
 				finally {
-					JniEnvironment.Handles.Dispose (ref lref, JniHandleOwnership.Transfer);
+					JniEnvironment.References.Dispose (ref lref, JniHandleOwnership.Transfer);
 				}
 			}
 

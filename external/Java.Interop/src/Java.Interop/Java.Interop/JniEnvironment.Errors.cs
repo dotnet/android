@@ -3,7 +3,7 @@
 namespace Java.Interop {
 	partial class JniEnvironment {
 
-		partial class Errors {
+		partial class Exceptions {
 
 			public static void Throw (Exception e)
 			{

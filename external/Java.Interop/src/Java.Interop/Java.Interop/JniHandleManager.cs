@@ -31,7 +31,7 @@ namespace Java.Interop {
 				return reference;
 			AssertCount (environment.LrefCount, "LREF", reference.ToString ());
 			environment.LrefCount++;
-			return JniEnvironment.Handles.NewLocalRef (reference);
+			return JniEnvironment.References.NewLocalRef (reference);
 		}
 
 		public void DeleteLocalReference (JniEnvironment environment, ref JniObjectReference reference)
@@ -41,7 +41,7 @@ namespace Java.Interop {
 			AssertReferenceType (ref reference, JniObjectReferenceType.Local);
 			AssertCount (environment.LrefCount, "LREF", reference.ToString ());
 			environment.LrefCount--;
-			JniEnvironment.Handles.DeleteLocalRef (reference.Handle);
+			JniEnvironment.References.DeleteLocalRef (reference.Handle);
 			reference.Invalidate ();
 		}
 
@@ -74,7 +74,7 @@ namespace Java.Interop {
 				return reference;
 			AssertCount (grefc, "GREF", reference.ToString ());
 			Interlocked.Increment (ref grefc);
-			return JniEnvironment.Handles.NewGlobalRef (reference);
+			return JniEnvironment.References.NewGlobalRef (reference);
 		}
 
 		public void DeleteGlobalReference (ref JniObjectReference reference)
@@ -84,7 +84,7 @@ namespace Java.Interop {
 			AssertReferenceType (ref reference, JniObjectReferenceType.Global);
 			AssertCount (grefc, "GREF", reference.ToString ());
 			Interlocked.Decrement (ref grefc);
-			JniEnvironment.Handles.DeleteGlobalRef (reference.Handle);
+			JniEnvironment.References.DeleteGlobalRef (reference.Handle);
 			reference.Invalidate ();
 		}
 
@@ -94,7 +94,7 @@ namespace Java.Interop {
 				return reference;
 			AssertCount (wgrefc, "WGREF", reference.ToString ());
 			Interlocked.Increment (ref wgrefc);
-			return JniEnvironment.Handles.NewWeakGlobalRef (reference);
+			return JniEnvironment.References.NewWeakGlobalRef (reference);
 		}
 
 		public void DeleteWeakGlobalReference (ref JniObjectReference reference)
@@ -104,7 +104,7 @@ namespace Java.Interop {
 			AssertReferenceType (ref reference, JniObjectReferenceType.WeakGlobal);
 			AssertCount (wgrefc, "WGREF", reference.ToString ());
 			Interlocked.Decrement (ref wgrefc);
-			JniEnvironment.Handles.DeleteWeakGlobalRef (reference.Handle);
+			JniEnvironment.References.DeleteWeakGlobalRef (reference.Handle);
 			reference.Invalidate ();
 		}
 

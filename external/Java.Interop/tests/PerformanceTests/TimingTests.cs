@@ -325,28 +325,28 @@ namespace Java.Interop.PerformanceTests {
 				var tt = Stopwatch.StartNew ();
 				for (int i = 0; i < count; ++i) {
 					var s = o.Timing_ToString_Traditional ();
-					JniEnvironment.Handles.Dispose (ref s);
+					JniEnvironment.References.Dispose (ref s);
 				}
 				tt.Stop ();
 
 				var ta = Stopwatch.StartNew ();
 				for (int i = 0; i < count; ++i) {
 					var s = o.Timing_ToString_NoCache ();
-					JniEnvironment.Handles.Dispose (ref s);
+					JniEnvironment.References.Dispose (ref s);
 				}
 				ta.Stop ();
 
 				var td = Stopwatch.StartNew ();
 				for (int i = 0; i < count; ++i) {
 					var s = o.Timing_ToString_DictWithLock ();;
-					JniEnvironment.Handles.Dispose (ref s);
+					JniEnvironment.References.Dispose (ref s);
 				}
 				td.Stop ();
 
 				var tc = Stopwatch.StartNew ();
 				for (int i = 0; i < count; ++i) {
 					var s = o.Timing_ToString_DictWithNoLock ();
-					JniEnvironment.Handles.Dispose (ref s);
+					JniEnvironment.References.Dispose (ref s);
 				}
 				tc.Stop ();
 
@@ -476,18 +476,18 @@ namespace Java.Interop.PerformanceTests {
 				for (int i = 0; i < len; ++i) {
 					var v = JniEnvironment.Arrays.GetObjectArrayElement (lrefMethods, i);
 					methodHandlesGR.Add (v.NewGlobalRef ());
-					JniEnvironment.Handles.Dispose (ref v);
+					JniEnvironment.References.Dispose (ref v);
 				}
 				methodsTiming.Stop ();
 				Console.WriteLine ("# methodHandles(JniGlobalReference) creation timing: {0} Count={1}", methodsTiming.Elapsed, methodHandles.Count);
 
 				for (int i = 0; i < methodHandlesGR.Count; ++i) {
 					var h = methodHandlesGR [i];
-					JniEnvironment.Handles.Dispose (ref h);
+					JniEnvironment.References.Dispose (ref h);
 					methodHandlesGR [i] = h;
 				}
 
-				JniEnvironment.Handles.Dispose (ref lrefMethods);
+				JniEnvironment.References.Dispose (ref lrefMethods);
 			}
 
 
@@ -596,14 +596,14 @@ namespace Java.Interop.PerformanceTests {
 				allocTime   = Stopwatch.StartNew ();
 				for (int i = 0; i < C; ++i) {
 					var h = Object_class.AllocObject ();
-					JniEnvironment.Handles.Dispose (ref h);
+					JniEnvironment.References.Dispose (ref h);
 				}
 				allocTime.Stop ();
 
 				newObjectTime   = Stopwatch.StartNew ();
 				for (int i = 0; i < C; ++i) {
 					var h = Object_class.NewObject (Object_init, null);
-					JniEnvironment.Handles.Dispose (ref h);
+					JniEnvironment.References.Dispose (ref h);
 				}
 				newObjectTime.Stop ();
 

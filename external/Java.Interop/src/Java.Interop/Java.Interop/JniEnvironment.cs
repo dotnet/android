@@ -145,7 +145,7 @@ namespace Java.Interop {
 #endif  // FEATURE_HANDLES_ARE_SAFE_HANDLES
 
 			if (pendingException != null)
-				Errors.Throw (pendingException);
+				Exceptions.Throw (pendingException);
 
 			Obj_toS     = null;
 			Cls_getN    = null;
@@ -241,11 +241,11 @@ namespace Java.Interop {
 
 		public Exception GetExceptionForLastThrowable ()
 		{
-			var e = JniEnvironment.Errors.ExceptionOccurred ();
+			var e = JniEnvironment.Exceptions.ExceptionOccurred ();
 			if (!e.IsValid)
 				return null;
 			// JniEnvironment.Errors.ExceptionDescribe ();
-			JniEnvironment.Errors.ExceptionClear ();
+			JniEnvironment.Exceptions.ExceptionClear ();
 			JniEnvironment.Current.LogCreateLocalRef (e);
 			return JavaVM.GetExceptionForThrowable (ref e, JniHandleOwnership.Transfer);
 		}

@@ -146,7 +146,7 @@ namespace Java.Interop
 			var value = JniEnvironment.Current.JavaVM.PeekObject (reference);
 			var array = value as TArray;
 			if (array != null) {
-				JniEnvironment.Handles.Dispose (ref reference, transfer);
+				JniEnvironment.References.Dispose (ref reference, transfer);
 				return array.ToTargetType (targetType, dispose: false);
 			}
 			return creator (ref reference, transfer)

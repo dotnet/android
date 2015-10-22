@@ -87,9 +87,9 @@ namespace Java.Interop {
 			var s       = self.ToString ();
 			var r       = JniEnvironment.Strings.NewString (s);
 			try {
-				return JniEnvironment.Handles.NewReturnToJniRef (r);
+				return JniEnvironment.References.NewReturnToJniRef (r);
 			} finally {
-				JniEnvironment.Handles.Dispose (ref r);
+				JniEnvironment.References.Dispose (ref r);
 			}
 		}
 	}

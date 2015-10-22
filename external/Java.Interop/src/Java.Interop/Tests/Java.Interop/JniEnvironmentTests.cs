@@ -67,7 +67,7 @@ namespace Java.InteropTests
 						Assert.IsTrue (JniEnvironment.Types.IsSameObject (t.PeerReference, ot.PeerReference));
 					}
 				} finally {
-					JniEnvironment.Handles.Dispose (ref o);
+					JniEnvironment.References.Dispose (ref o);
 				}
 			}
 		}
@@ -89,13 +89,13 @@ namespace Java.InteropTests
 				var o = t.NewObject (c, null);
 				try {
 					var n = o.NewLocalRef ();
-					JniEnvironment.Handles.Dispose (ref n);
+					JniEnvironment.References.Dispose (ref n);
 					// warning: lref 'leak'
-					var r = JniEnvironment.Handles.NewReturnToJniRef (o);
+					var r = JniEnvironment.References.NewReturnToJniRef (o);
 					var h = new JniObjectReference (r);
-					Assert.AreEqual (JniEnvironment.Handles.GetIdentityHashCode (o), JniEnvironment.Handles.GetIdentityHashCode (h));
+					Assert.AreEqual (JniEnvironment.References.GetIdentityHashCode (o), JniEnvironment.References.GetIdentityHashCode (h));
 				} finally {
-					JniEnvironment.Handles.Dispose (ref o);
+					JniEnvironment.References.Dispose (ref o);
 				}
 			}
 		}

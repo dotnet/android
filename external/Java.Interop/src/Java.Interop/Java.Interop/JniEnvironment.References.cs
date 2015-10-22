@@ -5,7 +5,7 @@ namespace Java.Interop
 {
 	partial class JniEnvironment {
 
-		static partial class Handles
+		static partial class References
 		{
 			public static void Dispose (ref JniObjectReference reference)
 			{

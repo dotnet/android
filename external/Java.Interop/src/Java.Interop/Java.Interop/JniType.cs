@@ -44,7 +44,7 @@ namespace Java.Interop {
 			try {
 				peer    = handle.NewLocalRef ();
 			} finally {
-				JniEnvironment.Handles.Dispose (ref handle, transfer);
+				JniEnvironment.References.Dispose (ref handle, transfer);
 			}
 		}
 
@@ -67,7 +67,7 @@ namespace Java.Interop {
 				if (peer.Type != JniObjectReferenceType.Global) {
 					var o           = peer;
 					peer            = o.NewGlobalRef ();
-					JniEnvironment.Handles.Dispose (ref o, JniHandleOwnership.Transfer);
+					JniEnvironment.References.Dispose (ref o, JniHandleOwnership.Transfer);
 				}
 				JniEnvironment.Current.JavaVM.Track (this);
 				registered = true;
@@ -99,7 +99,7 @@ namespace Java.Interop {
 				JniEnvironment.Current.JavaVM.UnTrack (PeerReference.Handle);
 			if (methods != null)
 				UnregisterNativeMethods ();
-			JniEnvironment.Handles.Dispose (ref peer);
+			JniEnvironment.References.Dispose (ref peer);
 		}
 
 		public JniType GetSuperclass ()
@@ -166,7 +166,7 @@ namespace Java.Interop {
 		{
 			AssertValid ();
 
-			return JniEnvironment.Members.GetMethodID (PeerReference, "<init>", signature);
+			return JniEnvironment.InstanceMethods.GetMethodID (PeerReference, "<init>", signature);
 		}
 
 		public JniInstanceMethodID GetCachedConstructor (ref JniInstanceMethodID cachedMethod, string signature)
@@ -194,7 +194,7 @@ namespace Java.Interop {
 		{
 			AssertValid ();
 
-			return JniEnvironment.Members.GetFieldID (PeerReference, name, signature);
+			return JniEnvironment.InstanceFields.GetFieldID (PeerReference, name, signature);
 		}
 
 		public JniInstanceFieldID GetCachedInstanceField (ref JniInstanceFieldID cachedField, string name, string signature)
@@ -214,7 +214,7 @@ namespace Java.Interop {
 		{
 			AssertValid ();
 
-			return JniEnvironment.Members.GetStaticFieldID (PeerReference, name, signature);
+			return JniEnvironment.StaticFields.GetStaticFieldID (PeerReference, name, signature);
 		}
 
 		public JniStaticFieldID GetCachedStaticField (ref JniStaticFieldID cachedField, string name, string signature)
@@ -234,7 +234,7 @@ namespace Java.Interop {
 		{
 			AssertValid ();
 
-			return JniEnvironment.Members.GetMethodID (PeerReference, name, signature);
+			return JniEnvironment.InstanceMethods.GetMethodID (PeerReference, name, signature);
 		}
 
 		public JniInstanceMethodID GetCachedInstanceMethod (ref JniInstanceMethodID cachedMethod, string name, string signature)
@@ -254,7 +254,7 @@ namespace Java.Interop {
 		{
 			AssertValid ();
 
-			return JniEnvironment.Members.GetStaticMethodID (PeerReference, name, signature);
+			return JniEnvironment.StaticMethods.GetStaticMethodID (PeerReference, name, signature);
 		}
 
 		public JniStaticMethodID GetCachedStaticMethod (ref JniStaticMethodID cachedMethod, string name, string signature)

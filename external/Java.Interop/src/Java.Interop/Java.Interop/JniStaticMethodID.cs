@@ -13,102 +13,102 @@ namespace Java.Interop
 
 		public void CallVoidMethod (JniObjectReference type)
 		{
-			JniEnvironment.Members.CallStaticVoidMethod (type, this);
+			JniEnvironment.StaticMethods.CallStaticVoidMethod (type, this);
 		}
 
 		public unsafe void CallVoidMethod (JniObjectReference type, JValue* parameters)
 		{
-			JniEnvironment.Members.CallStaticVoidMethod (type, this, parameters);
+			JniEnvironment.StaticMethods.CallStaticVoidMethod (type, this, parameters);
 		}
 
 		public JniObjectReference CallObjectMethod (JniObjectReference type)
 		{
-			return JniEnvironment.Members.CallStaticObjectMethod (type, this);
+			return JniEnvironment.StaticMethods.CallStaticObjectMethod (type, this);
 		}
 
 		public unsafe JniObjectReference CallObjectMethod (JniObjectReference type, JValue* parameters)
 		{
-			return JniEnvironment.Members.CallStaticObjectMethod (type, this, parameters);
+			return JniEnvironment.StaticMethods.CallStaticObjectMethod (type, this, parameters);
 		}
 
 		public bool CallBooleanMethod (JniObjectReference type)
 		{
-			return JniEnvironment.Members.CallStaticBooleanMethod (type, this);
+			return JniEnvironment.StaticMethods.CallStaticBooleanMethod (type, this);
 		}
 
 		public unsafe bool CallBooleanMethod (JniObjectReference type, JValue* parameters)
 		{
-			return JniEnvironment.Members.CallStaticBooleanMethod (type, this, parameters);
+			return JniEnvironment.StaticMethods.CallStaticBooleanMethod (type, this, parameters);
 		}
 
 		public sbyte CallSByteMethod (JniObjectReference type)
 		{
-			return JniEnvironment.Members.CallStaticSByteMethod (type, this);
+			return JniEnvironment.StaticMethods.CallStaticSByteMethod (type, this);
 		}
 
 		public unsafe sbyte CallSByteMethod (JniObjectReference type, JValue* parameters)
 		{
-			return JniEnvironment.Members.CallStaticSByteMethod (type, this, parameters);
+			return JniEnvironment.StaticMethods.CallStaticSByteMethod (type, this, parameters);
 		}
 
 		public char CallCharMethod (JniObjectReference type)
 		{
-			return JniEnvironment.Members.CallStaticCharMethod (type, this);
+			return JniEnvironment.StaticMethods.CallStaticCharMethod (type, this);
 		}
 
 		public unsafe char CallCharMethod (JniObjectReference type, JValue* parameters)
 		{
-			return JniEnvironment.Members.CallStaticCharMethod (type, this, parameters);
+			return JniEnvironment.StaticMethods.CallStaticCharMethod (type, this, parameters);
 		}
 
 		public short CallInt16Method (JniObjectReference type)
 		{
-			return JniEnvironment.Members.CallStaticShortMethod (type, this);
+			return JniEnvironment.StaticMethods.CallStaticShortMethod (type, this);
 		}
 
 		public unsafe short CallInt16Method (JniObjectReference type, JValue* parameters)
 		{
-			return JniEnvironment.Members.CallStaticShortMethod (type, this, parameters);
+			return JniEnvironment.StaticMethods.CallStaticShortMethod (type, this, parameters);
 		}
 
 		public int CallInt32Method (JniObjectReference type)
 		{
-			return JniEnvironment.Members.CallStaticIntMethod (type, this);
+			return JniEnvironment.StaticMethods.CallStaticIntMethod (type, this);
 		}
 
 		public unsafe int CallInt32Method (JniObjectReference type, JValue* parameters)
 		{
-			return JniEnvironment.Members.CallStaticIntMethod (type, this, parameters);
+			return JniEnvironment.StaticMethods.CallStaticIntMethod (type, this, parameters);
 		}
 
 		public long CallInt64Method (JniObjectReference type)
 		{
-			return JniEnvironment.Members.CallStaticLongMethod (type, this);
+			return JniEnvironment.StaticMethods.CallStaticLongMethod (type, this);
 		}
 
 		public unsafe long CallInt64Method (JniObjectReference type, JValue* parameters)
 		{
-			return JniEnvironment.Members.CallStaticLongMethod (type, this, parameters);
+			return JniEnvironment.StaticMethods.CallStaticLongMethod (type, this, parameters);
 		}
 
 		public float CallSingleMethod (JniObjectReference type)
 		{
-			return JniEnvironment.Members.CallStaticFloatMethod (type, this);
+			return JniEnvironment.StaticMethods.CallStaticFloatMethod (type, this);
 		}
 
 		public unsafe float CallSingleMethod (JniObjectReference type, JValue* parameters)
 		{
-			return JniEnvironment.Members.CallStaticFloatMethod (type, this, parameters);
+			return JniEnvironment.StaticMethods.CallStaticFloatMethod (type, this, parameters);
 		}
 
 		public double CallDoubleMethod (JniObjectReference type)
 		{
-			return JniEnvironment.Members.CallStaticDoubleMethod (type, this);
+			return JniEnvironment.StaticMethods.CallStaticDoubleMethod (type, this);
 		}
 
 		public unsafe double CallDoubleMethod (JniObjectReference type, JValue* parameters)
 		{
-			return JniEnvironment.Members.CallStaticDoubleMethod (type, this, parameters);
+			return JniEnvironment.StaticMethods.CallStaticDoubleMethod (type, this, parameters);
 		}
 	}
 }

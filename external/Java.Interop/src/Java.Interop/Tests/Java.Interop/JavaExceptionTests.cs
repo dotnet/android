@@ -50,7 +50,7 @@ namespace Java.InteropTests
 				args [0] = new JValue (s);
 				return type.NewObject (c, args);
 			} finally {
-				JniEnvironment.Handles.Dispose (ref s);
+				JniEnvironment.References.Dispose (ref s);
 			}
 		}
 
@@ -58,7 +58,7 @@ namespace Java.InteropTests
 		{
 			var cause = CreateThrowable (type, message);
 			SetThrowableCause (type, outer, cause);
-			JniEnvironment.Handles.Dispose (ref cause);
+			JniEnvironment.References.Dispose (ref cause);
 		}
 
 		static unsafe void SetThrowableCause (JniType type, JniObjectReference outer, JniObjectReference inner)
@@ -68,7 +68,7 @@ namespace Java.InteropTests
 
 			var i = type.GetInstanceMethod ("initCause", "(Ljava/lang/Throwable;)Ljava/lang/Throwable;");
 			var l = i.CallVirtualObjectMethod (outer, a);
-			JniEnvironment.Handles.Dispose (ref l);
+			JniEnvironment.References.Dispose (ref l);
 		}
 
 		[Test]

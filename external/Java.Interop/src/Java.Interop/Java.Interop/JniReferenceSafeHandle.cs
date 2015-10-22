@@ -27,7 +27,7 @@ namespace Java.Interop
 			get {
 				if (IsInvalid)
 					throw new ObjectDisposedException (GetType ().FullName);
-				return JniEnvironment.Handles.GetObjectRefType (new JniObjectReference (this));
+				return JniEnvironment.References.GetObjectRefType (new JniObjectReference (this));
 			}
 		}
 

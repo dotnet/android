@@ -17,7 +17,7 @@ namespace Java.Interop {
 			NewObjectRequired   = ((int) Android.OS.Build.VERSION.SdkInt) <= 10;
 			using (var env = new JniEnvironment (JNIEnv.Handle)) {
 				IntPtr vm;
-				int r = JniEnvironment.Handles.GetJavaVM (out vm);
+				int r = JniEnvironment.References.GetJavaVM (out vm);
 				if (r < 0)
 					throw new InvalidOperationException ("JNIEnv::GetJavaVM() returned: " + r);
 				InvocationPointer    = vm;
@@ -49,10 +49,10 @@ namespace Java.Interop {
 			if (!handle.IsValid)
 				return true;
 			var wgref = handle.NewWeakGlobalRef ();
-			JniEnvironment.Handles.Dispose (ref handle);
+			JniEnvironment.References.Dispose (ref handle);
 			Java.Lang.Runtime.GetRuntime ().Gc ();
 			handle = wgref.NewGlobalRef ();
-			JniEnvironment.Handles.Dispose (ref wgref);
+			JniEnvironment.References.Dispose (ref wgref);
 			return handle.IsValid;
 		}
 

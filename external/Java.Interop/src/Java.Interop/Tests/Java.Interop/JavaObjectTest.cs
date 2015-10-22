@@ -58,14 +58,14 @@ namespace Java.InteropTests
 				o.RegisterWithVM ();
 				Assert.AreNotSame (l, o.PeerReference);
 				Assert.AreEqual (JniObjectReferenceType.Global, o.PeerReference.Type);
-				JniEnvironment.Handles.Dispose (ref l);
+				JniEnvironment.References.Dispose (ref l);
 				l = o.PeerReference.NewLocalRef ();
 				Assert.AreEqual (registeredCount + 1, JavaVM.Current.GetSurfacedObjects ().Count);
 				Assert.AreSame (o, JavaVM.Current.PeekObject (l));
 			}
 			Assert.AreEqual (registeredCount, JavaVM.Current.GetSurfacedObjects ().Count);
 			Assert.IsNull (JavaVM.Current.PeekObject (l));
-			JniEnvironment.Handles.Dispose (ref l);
+			JniEnvironment.References.Dispose (ref l);
 			Assert.Throws<ObjectDisposedException> (() => o.RegisterWithVM ());
 		}
 
@@ -100,7 +100,7 @@ namespace Java.InteropTests
 			Assert.IsFalse (r.IsAlive);
 			Assert.IsNull (r.Target);
 			Assert.IsNull (JavaVM.Current.PeekObject (oldHandle));
-			JniEnvironment.Handles.Dispose (ref oldHandle);
+			JniEnvironment.References.Dispose (ref oldHandle);
 		}
 
 		[Test]

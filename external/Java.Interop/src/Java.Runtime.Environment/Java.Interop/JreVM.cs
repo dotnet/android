@@ -162,10 +162,10 @@ namespace Java.Interop {
 			if (!handle.IsValid)
 				return true;
 			var wgref = handle.NewWeakGlobalRef ();
-			JniEnvironment.Handles.Dispose (ref handle);
+			JniEnvironment.References.Dispose (ref handle);
 			JniGC.Collect ();
 			handle = wgref.NewGlobalRef ();
-			JniEnvironment.Handles.Dispose (ref wgref);
+			JniEnvironment.References.Dispose (ref wgref);
 			return !handle.IsValid;
 		}
 	}

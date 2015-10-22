@@ -41,7 +41,7 @@ namespace Java.Interop
 					return new string ((char*) p, 0, len);
 				} finally {
 					JniEnvironment.Strings.ReleaseStringChars (value, p);
-					JniEnvironment.Handles.Dispose (ref value, transfer);
+					JniEnvironment.References.Dispose (ref value, transfer);
 				}
 			}
 

@@ -52,7 +52,7 @@ namespace Java.Interop.Dynamic {
 				return;
 
 			var pr          = PeerReference;
-			JniEnvironment.Handles.Dispose (ref pr);
+			JniEnvironment.References.Dispose (ref pr);
 			PeerReference   = pr;
 
 			members     = null;
@@ -62,7 +62,7 @@ namespace Java.Interop.Dynamic {
 
 			for (int i = 0; i < arguments.Count; ++i) {
 				var a = arguments [i];
-				JniEnvironment.Handles.Dispose (ref a);
+				JniEnvironment.References.Dispose (ref a);
 				arguments [i] = a;
 			}
 			arguments   = null;
@@ -94,11 +94,11 @@ namespace Java.Interop.Dynamic {
 						sb.Append (JniEnvironment.Types.GetJniTypeNameFromClass (p));
 						arguments.Add (p.NewGlobalRef ());
 					} finally {
-						JniEnvironment.Handles.Dispose (ref p);
+						JniEnvironment.References.Dispose (ref p);
 					}
 				}
 			} finally {
-				JniEnvironment.Handles.Dispose (ref parameters);
+				JniEnvironment.References.Dispose (ref parameters);
 			}
 			sb.Append (")").Append (JniReturnType);
 			JniSignature    = sb.ToString ();

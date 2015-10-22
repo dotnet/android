@@ -12,92 +12,92 @@ namespace Java.Interop
 
 		public JniObjectReference GetObjectValue (JniObjectReference @this)
 		{
-			return JniEnvironment.Members.GetObjectField (@this, this);
+			return JniEnvironment.InstanceFields.GetObjectField (@this, this);
 		}
 
 		public bool GetBooleanValue (JniObjectReference @this)
 		{
-			return JniEnvironment.Members.GetBooleanField (@this, this);
+			return JniEnvironment.InstanceFields.GetBooleanField (@this, this);
 		}
 
 		public sbyte GetByteValue (JniObjectReference @this)
 		{
-			return JniEnvironment.Members.GetByteField (@this, this);
+			return JniEnvironment.InstanceFields.GetByteField (@this, this);
 		}
 
 		public char GetCharValue (JniObjectReference @this)
 		{
-			return JniEnvironment.Members.GetCharField (@this, this);
+			return JniEnvironment.InstanceFields.GetCharField (@this, this);
 		}
 
 		public short GetInt16Value (JniObjectReference @this)
 		{
-			return JniEnvironment.Members.GetShortField (@this, this);
+			return JniEnvironment.InstanceFields.GetShortField (@this, this);
 		}
 
 		public int GetInt32Value (JniObjectReference @this)
 		{
-			return JniEnvironment.Members.GetIntField (@this, this);
+			return JniEnvironment.InstanceFields.GetIntField (@this, this);
 		}
 
 		public long GetInt64Value (JniObjectReference @this)
 		{
-			return JniEnvironment.Members.GetLongField (@this, this);
+			return JniEnvironment.InstanceFields.GetLongField (@this, this);
 		}
 
 		public float GetSingleValue (JniObjectReference @this)
 		{
-			return JniEnvironment.Members.GetFloatField (@this, this);
+			return JniEnvironment.InstanceFields.GetFloatField (@this, this);
 		}
 
 		public double GetDoubleValue (JniObjectReference @this)
 		{
-			return JniEnvironment.Members.GetDoubleField (@this, this);
+			return JniEnvironment.InstanceFields.GetDoubleField (@this, this);
 		}
 
 		public void SetValue (JniObjectReference @this, JniObjectReference value)
 		{
-			JniEnvironment.Members.SetField (@this, this, value);
+			JniEnvironment.InstanceFields.SetField (@this, this, value);
 		}
 
 		public void SetValue (JniObjectReference @this, bool value)
 		{
-			JniEnvironment.Members.SetField (@this, this, value);
+			JniEnvironment.InstanceFields.SetField (@this, this, value);
 		}
 
 		public void SetValue (JniObjectReference @this, sbyte value)
 		{
-			JniEnvironment.Members.SetField (@this, this, value);
+			JniEnvironment.InstanceFields.SetField (@this, this, value);
 		}
 
 		public void SetValue (JniObjectReference @this, char value)
 		{
-			JniEnvironment.Members.SetField (@this, this, value);
+			JniEnvironment.InstanceFields.SetField (@this, this, value);
 		}
 
 		public void SetValue (JniObjectReference @this, short value)
 		{
-			JniEnvironment.Members.SetField (@this, this, value);
+			JniEnvironment.InstanceFields.SetField (@this, this, value);
 		}
 
 		public void SetValue (JniObjectReference @this, int value)
 		{
-			JniEnvironment.Members.SetField (@this, this, value);
+			JniEnvironment.InstanceFields.SetField (@this, this, value);
 		}
 
 		public void SetValue (JniObjectReference @this, long value)
 		{
-			JniEnvironment.Members.SetField (@this, this, value);
+			JniEnvironment.InstanceFields.SetField (@this, this, value);
 		}
 
 		public void SetValue (JniObjectReference @this, float value)
 		{
-			JniEnvironment.Members.SetField (@this, this, value);
+			JniEnvironment.InstanceFields.SetField (@this, this, value);
 		}
 
 		public void SetValue (JniObjectReference @this, double value)
 		{
-			JniEnvironment.Members.SetField (@this, this, value);
+			JniEnvironment.InstanceFields.SetField (@this, this, value);
 		}
 	}
 }

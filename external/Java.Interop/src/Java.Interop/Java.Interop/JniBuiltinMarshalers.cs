@@ -111,7 +111,7 @@ namespace Java.Interop {
 			try {
 				return booleanValue.CallVirtualBooleanMethod (self);
 			} finally {
-				JniEnvironment.Handles.Dispose (ref self, transfer);
+				JniEnvironment.References.Dispose (ref self, transfer);
 			}
 		}
 	}
@@ -149,7 +149,7 @@ namespace Java.Interop {
 			try {
 				return byteValue.CallVirtualSByteMethod (self);
 			} finally {
-				JniEnvironment.Handles.Dispose (ref self, transfer);
+				JniEnvironment.References.Dispose (ref self, transfer);
 			}
 		}
 	}
@@ -187,7 +187,7 @@ namespace Java.Interop {
 			try {
 				return charValue.CallVirtualCharMethod (self);
 			} finally {
-				JniEnvironment.Handles.Dispose (ref self, transfer);
+				JniEnvironment.References.Dispose (ref self, transfer);
 			}
 		}
 	}
@@ -225,7 +225,7 @@ namespace Java.Interop {
 			try {
 				return shortValue.CallVirtualInt16Method (self);
 			} finally {
-				JniEnvironment.Handles.Dispose (ref self, transfer);
+				JniEnvironment.References.Dispose (ref self, transfer);
 			}
 		}
 	}
@@ -263,7 +263,7 @@ namespace Java.Interop {
 			try {
 				return intValue.CallVirtualInt32Method (self);
 			} finally {
-				JniEnvironment.Handles.Dispose (ref self, transfer);
+				JniEnvironment.References.Dispose (ref self, transfer);
 			}
 		}
 	}
@@ -301,7 +301,7 @@ namespace Java.Interop {
 			try {
 				return longValue.CallVirtualInt64Method (self);
 			} finally {
-				JniEnvironment.Handles.Dispose (ref self, transfer);
+				JniEnvironment.References.Dispose (ref self, transfer);
 			}
 		}
 	}
@@ -339,7 +339,7 @@ namespace Java.Interop {
 			try {
 				return floatValue.CallVirtualSingleMethod (self);
 			} finally {
-				JniEnvironment.Handles.Dispose (ref self, transfer);
+				JniEnvironment.References.Dispose (ref self, transfer);
 			}
 		}
 	}
@@ -377,7 +377,7 @@ namespace Java.Interop {
 			try {
 				return doubleValue.CallVirtualDoubleMethod (self);
 			} finally {
-				JniEnvironment.Handles.Dispose (ref self, transfer);
+				JniEnvironment.References.Dispose (ref self, transfer);
 			}
 		}
 	}

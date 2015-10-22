@@ -282,7 +282,7 @@ namespace Java.Interop {
 			} },
 			{ typeof (IJavaPeerable), new MarshalInfo {
 					FromJni = (vm, t, p) => GetThis (vm, t, p),
-					ToJni   = p => Expression.Call (F<IJavaPeerable, IntPtr> (JniEnvironment.Handles.NewReturnToJniRef).Method, p)
+					ToJni   = p => Expression.Call (F<IJavaPeerable, IntPtr> (JniEnvironment.References.NewReturnToJniRef).Method, p)
 			} },
 		};
 
