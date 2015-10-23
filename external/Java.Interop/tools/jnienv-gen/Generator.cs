@@ -15,13 +15,17 @@ namespace Xamarin.Java.Interop
 
 	partial class Generator
 	{
+		static string jnienv_g_c;
 		static string jnienv_g_cs;
 
 		public static int Main (string [] args)
 		{
+			jnienv_g_c  = "JniEnvironment.g.c";
 			jnienv_g_cs = "JniEnvironment.g.cs";
 			if (args.Length > 0)
 				jnienv_g_cs = args [0];
+			if (args.Length > 1)
+				jnienv_g_c = args [1];
 			try {
 				using (TextWriter w = new StringWriter ()) {
 					w.NewLine = "\n";
@@ -31,6 +35,15 @@ namespace Xamarin.Java.Interop
 						Console.WriteLine (content);
 					else if (!File.Exists (jnienv_g_cs) || !string.Equals (content, File.ReadAllText (jnienv_g_cs)))
 						File.WriteAllText (jnienv_g_cs, content);
+				}
+				using (TextWriter w = new StringWriter ()) {
+					w.NewLine = "\n";
+					GenerateNativeLibSource (w);
+					string content = w.ToString ();
+					if (jnienv_g_c == "-" || jnienv_g_cs == "-")
+						Console.WriteLine (content);
+					else if (!File.Exists (jnienv_g_c) || !string.Equals (content, File.ReadAllText (jnienv_g_c)))
+						File.WriteAllText (jnienv_g_c, content);
 				}
 				return 0;
 			} catch (Exception ex) {
@@ -42,6 +55,7 @@ namespace Xamarin.Java.Interop
 		static string Escape (string value)
 		{
 			switch (value) {
+			case "object":
 			case "string":
 			case "ref":
 				return "@" + value;
@@ -55,13 +69,19 @@ namespace Xamarin.Java.Interop
 			o.WriteLine ("//");
 			o.WriteLine ("// To make changes, edit monodroid/tools/jnienv-gen-interop and rerun");
 			o.WriteLine ();
-			o.WriteLine ("#if !FEATURE_HANDLES_ARE_SAFE_HANDLES && !FEATURE_HANDLES_ARE_INTPTRS");
+			o.WriteLine ("#if !FEATURE_HANDLES_ARE_SAFE_HANDLES && !FEATURE_HANDLES_ARE_INTPTRS && !FEATURE_HANDLES_ARE_INTPTRS_WITH_PINVOKES_EX && !FEATURE_HANDLES_ARE_XA_INTPTRS");
 			o.WriteLine ("#define FEATURE_HANDLES_ARE_SAFE_HANDLES");
-			o.WriteLine ("#endif  // !FEATURE_HANDLES_ARE_SAFE_HANDLES && !FEATURE_HANDLES_ARE_INTPTRS");
+			o.WriteLine ("#endif  // !FEATURE_HANDLES_ARE_SAFE_HANDLES && !FEATURE_HANDLES_ARE_INTPTRS && !FEATURE_HANDLES_ARE_INTPTRS_WITH_PINVOKES_EX && !FEATURE_HANDLES_ARE_XA_INTPTRS");
 			o.WriteLine ();
 			o.WriteLine ("#if FEATURE_HANDLES_ARE_SAFE_HANDLES && FEATURE_HANDLES_ARE_INTPTRS");
 			o.WriteLine ("#define _NAMESPACE_PER_HANDLE");
 			o.WriteLine ("#endif  // FEATURE_HANDLES_ARE_SAFE_HANDLES && FEATURE_HANDLES_ARE_INTPTRS");
+			o.WriteLine ("#if FEATURE_HANDLES_ARE_SAFE_HANDLES && FEATURE_HANDLES_ARE_INTPTRS_WITH_PINVOKES_EX");
+			o.WriteLine ("#define _NAMESPACE_PER_HANDLE");
+			o.WriteLine ("#endif  // FEATURE_HANDLES_ARE_SAFE_HANDLES && FEATURE_HANDLES_ARE_INTPTRS_WITH_PINVOKES_EX");
+			o.WriteLine ("#if FEATURE_HANDLES_ARE_SAFE_HANDLES && FEATURE_HANDLES_ARE_XA_INTPTRS");
+			o.WriteLine ("#define _NAMESPACE_PER_HANDLE");
+			o.WriteLine ("#endif  // FEATURE_HANDLES_ARE_SAFE_HANDLES && FEATURE_HANDLES_ARE_XA_INTPTRS");
 			o.WriteLine ();
 			o.WriteLine ("using System;");
 			o.WriteLine ("using System.Linq;");
@@ -72,7 +92,7 @@ namespace Xamarin.Java.Interop
 			o.WriteLine ();
 			o.WriteLine ("using JNIEnvPtr          = System.IntPtr;");
 			o.WriteLine ();
-			o.WriteLine ("#if FEATURE_HANDLES_ARE_INTPTRS");
+			o.WriteLine ("#if FEATURE_HANDLES_ARE_INTPTRS || FEATURE_HANDLES_ARE_INTPTRS_WITH_PINVOKES_EX");
 			o.WriteLine ("\tusing jinstanceFieldID   = System.IntPtr;");
 			o.WriteLine ("\tusing jstaticFieldID     = System.IntPtr;");
 			o.WriteLine ("\tusing jinstanceMethodID  = System.IntPtr;");
@@ -83,39 +103,36 @@ namespace Xamarin.Java.Interop
 			o.WriteLine ("namespace Java.Interop {");
 			GenerateJniNativeInterface (o);
 			o.WriteLine ("}");
-			o.WriteLine ("#if FEATURE_HANDLES_ARE_SAFE_HANDLES");
+			WriteSection (o, HandleStyle.SafeHandle,                "FEATURE_HANDLES_ARE_SAFE_HANDLES",                 "Java.Interop.SafeHandles");
+			WriteSection (o, HandleStyle.JIIntPtr,                  "FEATURE_HANDLES_ARE_INTPTRS",                      "Java.Interop.JIIntPtrs");
+			WriteSection (o, HandleStyle.JIIntPtrPinvokeWithErrors, "FEATURE_HANDLES_ARE_INTPTRS_WITH_PINVOKES_EX",     "Java.Interop.JIPinvokes");
+			WriteSection (o, HandleStyle.XAIntPtr,                  "FEATURE_HANDLES_ARE_XA_INTPTRS",                   "Java.Interop.XAIntPtrs");
+		}
+
+		static void WriteSection (TextWriter o, HandleStyle style, string define, string specificNamespace)
+		{
+			o.WriteLine ("#if {0}", define);
 			o.WriteLine ("namespace");
 			o.WriteLine ("#if _NAMESPACE_PER_HANDLE");
-			o.WriteLine ("\tJava.Interop.SafeHandles");
+			o.WriteLine ("\t{0}", specificNamespace);
 			o.WriteLine ("#else");
 			o.WriteLine ("\tJava.Interop");
 			o.WriteLine ("#endif");
 			o.WriteLine ("{");
 			o.WriteLine ();
-			GenerateDelegates (o, HandleStyle.SafeHandle);
+			GenerateDelegates (o, style);
 			o.WriteLine ();
-			GenerateTypes (o, HandleStyle.SafeHandle);
+			GenerateTypes (o, style);
 			o.WriteLine ();
-			GenerateJniNativeInterfaceInvoker (o, HandleStyle.SafeHandle);
+			switch (style) {
+			case HandleStyle.JIIntPtr:
+			case HandleStyle.SafeHandle:
+			case HandleStyle.XAIntPtr:
+				GenerateJniNativeInterfaceInvoker (o, style);
+				break;
+			}
 			o.WriteLine ("}");
-			o.WriteLine ("#endif  // FEATURE_HANDLES_ARE_SAFE_HANDLES");
-			o.WriteLine ("#if FEATURE_HANDLES_ARE_INTPTRS");
-			o.WriteLine ("namespace");
-			o.WriteLine ("#if _NAMESPACE_PER_HANDLE");
-			o.WriteLine ("\tJava.Interop.IntPtrs");
-			o.WriteLine ("#else");
-			o.WriteLine ("\tJava.Interop");
-			o.WriteLine ("#endif");
-			o.WriteLine ("{");
-			o.WriteLine ();
-			GenerateDelegates (o, HandleStyle.IntPtr);
-			o.WriteLine ();
-			GenerateTypes (o, HandleStyle.IntPtr);
-			o.WriteLine ();
-			GenerateJniNativeInterfaceInvoker (o, HandleStyle.IntPtr);
-			o.WriteLine ("}");
-			o.WriteLine ("#endif // FEATURE_HANDLES_ARE_INTPTRS");
-			// GenerateJniNativeInterfaceInvoker2 (o);
+			o.WriteLine ("#endif  // {0}", define);
 		}
 		
 		static void GenerateDelegates (TextWriter o, HandleStyle style)
@@ -214,7 +231,7 @@ namespace Xamarin.Java.Interop
 					builder.Append (", ");
 					builder.AppendFormat ("{0} {1}",
 							entry.Parameters [i].Type.GetMarshalType (style, isReturn: false),
-							entry.Parameters [i].Name);
+							Escape (entry.Parameters [i].Name));
 				} 
 				
 				var ptype   = entry.Parameters [i].Type.GetManagedType (style, isReturn: false);
@@ -236,13 +253,7 @@ namespace Xamarin.Java.Interop
 
 		static string GetJniEnvironmentPointerType (HandleStyle style)
 		{
-			switch (style) {
-			case HandleStyle.SafeHandle:
-				return "JNIEnvPtr";
-			case HandleStyle.IntPtr:
-				return "JNIEnvPtr";
-			}
-			return null;
+			return "JNIEnvPtr";
 		}
 
 		static void GenerateTypes (TextWriter o, HandleStyle style)
@@ -256,6 +267,10 @@ namespace Xamarin.Java.Interop
 				{ "Types",      "public" },
 			};
 			o.WriteLine ("\tpartial class JniEnvironment {");
+			if (style == HandleStyle.JIIntPtrPinvokeWithErrors) {
+				o.WriteLine ("\t\tconst string JavaInteropLib = \"JavaInterop\";");
+				o.WriteLine ();
+			}
 			foreach (var t in JNIEnvEntries
 					.Select (e => e.DeclaringType ?? "JniEnvironment")
 					.Distinct ()
@@ -281,6 +296,16 @@ namespace Xamarin.Java.Interop
 					continue;
 
 				o.WriteLine ();
+				if (style == HandleStyle.JIIntPtrPinvokeWithErrors) {
+					o.WriteLine ("\t\t[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]");
+					o.WriteLine ("\t\tstatic extern unsafe {0} JavaInterop_{1} (IntPtr jnienv{2}{3}{4});",
+							entry.ReturnType.GetMarshalType (style, isReturn: true),
+							entry.Name,
+							entry.Throws ? ", out IntPtr thrown" : "",
+							entry.Parameters.Length != 0 ? ", " : "",
+							string.Join (", ", entry.Parameters.Select (p => string.Format ("{0} {1}", p.Type.GetMarshalType (style, isReturn: false), Escape (p.Name)))));
+					o.WriteLine ();
+				}
 				o.Write ("\t\t{2} static unsafe {0} {1} (", entry.GetManagedReturnType (style), entry.ApiName, entry.Visibility);
 				switch (entry.ApiName) {
 				default:
@@ -293,10 +318,16 @@ namespace Xamarin.Java.Interop
 					o.WriteLine (")");
 					o.WriteLine ("\t\t{");
 					NullCheckParameters (o, entry.Parameters, style);
+					if (style == HandleStyle.JIIntPtrPinvokeWithErrors && entry.Throws)
+						o.WriteLine ("\t\t\tIntPtr thrown;");
 					o.Write ("\t\t\t");
-					if (!is_void) 
+					if (!is_void)
 						o.Write ("var tmp = ");
-					o.Write ("JniEnvironment.Current.Invoker.{0} (JniEnvironment.Current.EnvironmentPointer", entry.Name);
+					if (style == HandleStyle.JIIntPtrPinvokeWithErrors) {
+						o.Write ("JavaInterop_{0} (JniEnvironment.Current.EnvironmentPointer{1}", entry.Name, entry.Throws ? ", out thrown" : "");
+					} else {
+						o.Write ("JniEnvironment.Current.Invoker.{0} (JniEnvironment.Current.EnvironmentPointer", entry.Name);
+					}
 					for (int i = 0; i < entry.Parameters.Length; i++) {
 						var p = entry.Parameters [i];
 						o.Write (", ");
@@ -305,7 +336,7 @@ namespace Xamarin.Java.Interop
 						o.Write (p.Type.GetManagedToMarshalExpression (style, Escape (entry.Parameters [i].Name)));
 					}
 					o.WriteLine (");");
-					RaiseException (o, entry);
+					RaiseException (o, entry, style);
 					if (is_void) {
 					} else {
 						foreach (var line in entry.ReturnType.GetHandleCreationLogStatements (style, entry.Name, "tmp"))
@@ -338,18 +369,60 @@ namespace Xamarin.Java.Interop
 				o.WriteLine ();
 		}
 
-		static void RaiseException (TextWriter o, JniFunction entry)
+		static void RaiseException (TextWriter o, JniFunction entry, HandleStyle style)
 		{
 			if (!entry.Throws)
 				return;
 
 			o.WriteLine ();
-			o.WriteLine ("\t\t\tException __e = JniEnvironment.Current.GetExceptionForLastThrowable ();");
+			o.WriteLine ("\t\t\tException __e = JniEnvironment.Current.GetExceptionForLastThrowable ({0});",
+					style == HandleStyle.JIIntPtrPinvokeWithErrors ? "thrown" : "");
 			o.WriteLine ("\t\t\tif (__e != null)");
 			o.WriteLine ("\t\t\t\tthrow __e;");
 			o.WriteLine ();
 		}
 
+		static void GenerateNativeLibSource (TextWriter o)
+		{
+			o.WriteLine ("/*");
+			o.WriteLine (" * Generated file; DO NOT EDIT!");
+			o.WriteLine (" *");
+			o.WriteLine (" * To make changes, edit Java.Interop/tools/jnienv-gen and rerun");
+			o.WriteLine (" */");
+			o.WriteLine ();
+			o.WriteLine ("#include <jni.h>");
+			o.WriteLine ();
+			o.WriteLine ("typedef jmethodID jstaticmethodID;");
+			o.WriteLine ("typedef jfieldID  jstaticfieldID;");
+			o.WriteLine ("typedef jobject   jglobal;");
+			foreach (JniFunction entry in JNIEnvEntries) {
+				if (entry.IsPrivate || entry.CustomWrapper)
+					continue;
+				o.WriteLine ();
+				o.WriteLine (entry.ReturnType.JniType);
+				o.WriteLine ("JavaInterop_{0} (JNIEnv *env{1}{2}{3})",
+					entry.Name,
+					entry.Throws ? ", jthrowable *_thrown" : "",
+					entry.Parameters.Length != 0 ? ", " : "",
+					string.Join (", ", entry.Parameters.Select (p => string.Format ("{0} {1}", p.Type.JniType, p.Name))));
+				o.WriteLine ("{");
+				bool isVoid = entry.ReturnType.JniType == "void";
+				if (entry.Throws)
+					o.WriteLine ("\t*_thrown = NULL;");
+				o.Write ("\t");
+				if (!isVoid)
+					o.Write ("{0} _r_ = ", entry.ReturnType.JniType);
+				o.WriteLine ("(*env)->{0} (env{1}{2});",
+					entry.Name,
+					entry.Parameters.Length != 0 ? ", " : "",
+					string.Join (", ", entry.Parameters.Select (p => p.Name)));
+				if (entry.Throws)
+					o.WriteLine ("\t*_thrown = (*env)->ExceptionOccurred (env);");
+				if (!isVoid)
+					o.WriteLine ("\treturn _r_;");
+				o.WriteLine ("}");
+			}
+		}
 	}
 
 	class JniFunction {
@@ -574,11 +647,13 @@ namespace Xamarin.Java.Interop
 		{
 			switch (style) {
 			case HandleStyle.SafeHandle:
+			case HandleStyle.XAIntPtr:
 				return new [] {
 					string.Format ("JniEnvironment.Current.LogCreateLocalRef ({0});", variable),
 					string.Format ("return {0};", variable),
 				};
-			case HandleStyle.IntPtr:
+			case HandleStyle.JIIntPtr:
+			case HandleStyle.JIIntPtrPinvokeWithErrors:
 				return new [] {
 					string.Format ("JniEnvironment.Current.LogCreateLocalRef ({0});", variable),
 					string.Format ("return new JniObjectReference ({0}, JniObjectReferenceType.Local);", variable),
@@ -621,31 +696,66 @@ namespace Xamarin.Java.Interop
 
 		public override string GetManagedType (HandleStyle style, bool isReturn)
 		{
-			return type;
+			switch (style) {
+			case HandleStyle.SafeHandle:
+			case HandleStyle.JIIntPtr:
+			case HandleStyle.JIIntPtrPinvokeWithErrors:
+				return type;
+			case HandleStyle.XAIntPtr:
+				return "IntPtr";
+			}
+			return "TODO_" + style;;
 		}
 
 		public override string GetManagedToMarshalExpression (HandleStyle style, string variable)
 		{
-			return string.Format ("{0}.ID", variable);
+			switch (style) {
+			case HandleStyle.SafeHandle:
+			case HandleStyle.JIIntPtr:
+			case HandleStyle.JIIntPtrPinvokeWithErrors:
+				return string.Format ("{0}.ID", variable);
+			}
+			return variable;
 		}
 
 		public override string[] VerifyParameter (HandleStyle style, string variable)
 		{
-			return new [] {
-				string.Format ("if ({0} == null)", variable),
-				string.Format ("\tthrow new ArgumentNullException (\"{0}\");", variable),
-				string.Format ("if ({0}.ID == IntPtr.Zero)", variable),
-				string.Format ("\tthrow new ArgumentException (\"Handle value cannot be null.\", \"{0}\");", variable),
-			};
+			switch (style) {
+			case HandleStyle.SafeHandle:
+			case HandleStyle.JIIntPtr:
+			case HandleStyle.JIIntPtrPinvokeWithErrors:
+				return new [] {
+					string.Format ("if ({0} == null)", variable),
+					string.Format ("\tthrow new ArgumentNullException (\"{0}\");", variable),
+					string.Format ("if ({0}.ID == IntPtr.Zero)", variable),
+					string.Format ("\tthrow new ArgumentException (\"Handle value cannot be null.\", \"{0}\");", variable),
+				};
+			case HandleStyle.XAIntPtr:
+				return new[] {
+					string.Format ("if ({0} == IntPtr.Zero)", variable),
+					string.Format ("\tthrow new ArgumentException (\"Handle value cannot be null.\", \"{0}\");", variable),
+				};
+			}
+			return new string [0];
 		}
 
 		public override string[] GetMarshalToManagedStatements (HandleStyle style, string variable)
 		{
-			return new[] {
-				string.Format ("if ({0} == IntPtr.Zero)", variable),
-				string.Format ("\treturn null;"),
-				string.Format ("return new {0} ({1});", type, variable),
-			};
+			switch (style) {
+			case HandleStyle.SafeHandle:
+			case HandleStyle.JIIntPtr:
+			case HandleStyle.JIIntPtrPinvokeWithErrors:
+				return new[] {
+					string.Format ("if ({0} == IntPtr.Zero)", variable),
+					string.Format ("\treturn null;"),
+					string.Format ("return new {0} ({1});", type, variable),
+				};
+			case HandleStyle.XAIntPtr:
+				return new[]{
+					string.Format ("return {0};", variable),
+				};
+			}
+			return new string [0];
 		}
 	}
 
@@ -697,7 +807,9 @@ namespace Xamarin.Java.Interop
 			switch (style) {
 			case HandleStyle.SafeHandle:
 				return isReturn ? safeType : "JniReferenceSafeHandle";
-			case HandleStyle.IntPtr:
+			case HandleStyle.JIIntPtr:
+			case HandleStyle.JIIntPtrPinvokeWithErrors:
+			case HandleStyle.XAIntPtr:
 				return "jobject";
 			}
 			return null;
@@ -705,7 +817,15 @@ namespace Xamarin.Java.Interop
 
 		public override string GetManagedType (HandleStyle style, bool isReturn)
 		{
-			return "JniObjectReference";
+			switch (style) {
+			case HandleStyle.SafeHandle:
+			case HandleStyle.JIIntPtr:
+			case HandleStyle.JIIntPtrPinvokeWithErrors:
+				return "JniObjectReference";
+			case HandleStyle.XAIntPtr:
+				return "IntPtr";
+			}
+			return "TODO";
 		}
 
 		public override string GetManagedToMarshalExpression (HandleStyle style, string variable)
@@ -713,8 +833,11 @@ namespace Xamarin.Java.Interop
 			switch (style) {
 			case HandleStyle.SafeHandle:
 				return string.Format ("{0}.SafeHandle", variable);
-			case HandleStyle.IntPtr:
+			case HandleStyle.JIIntPtr:
+			case HandleStyle.JIIntPtrPinvokeWithErrors:
 				return string.Format ("{0}.Handle", variable);
+			case HandleStyle.XAIntPtr:
+				return variable;
 			}
 			return null;
 		}
@@ -723,15 +846,17 @@ namespace Xamarin.Java.Interop
 		{
 			switch (style) {
 			case HandleStyle.SafeHandle:
+			case HandleStyle.JIIntPtr:
+			case HandleStyle.JIIntPtrPinvokeWithErrors:
 				return new [] {
 					string.Format ("return new JniObjectReference ({0}, {1});", variable, refType),
 				};
-			case HandleStyle.IntPtr:
-				return new [] {
-					string.Format ("return new JniObjectReference ({0}, {1});", variable, refType),
+			case HandleStyle.XAIntPtr:
+				return new[] {
+					string.Format ("return {0};", variable),
 				};
 			}
-			return null;
+			return new string [0];
 		}
 
 		public override string[] VerifyParameter (HandleStyle style, string variable)
@@ -744,9 +869,15 @@ namespace Xamarin.Java.Interop
 					string.Format ("if ({0}.SafeHandle.IsInvalid)", variable),
 					string.Format ("\tthrow new ArgumentException (\"{0}\");", variable),
 				};
-			case HandleStyle.IntPtr:
+			case HandleStyle.JIIntPtr:
+			case HandleStyle.JIIntPtrPinvokeWithErrors:
 				return new [] {
 					string.Format ("if ({0}.Handle == IntPtr.Zero)", variable),
+					string.Format ("\tthrow new ArgumentException (\"`{0}` must not be IntPtr.Zero.\", \"{0}\");", variable),
+				};
+			case HandleStyle.XAIntPtr:
+				return new [] {
+					string.Format ("if ({0} == IntPtr.Zero)", variable),
 					string.Format ("\tthrow new ArgumentException (\"`{0}` must not be IntPtr.Zero.\", \"{0}\");", variable),
 				};
 			}
@@ -837,7 +968,9 @@ namespace Xamarin.Java.Interop
 
 	enum HandleStyle {
 		SafeHandle,
-		IntPtr,
+		JIIntPtr,
+		JIIntPtrPinvokeWithErrors,
+		XAIntPtr,
 	}
 }
 

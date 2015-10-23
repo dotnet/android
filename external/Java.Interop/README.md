@@ -43,25 +43,17 @@ At the time of this writing, this links to
 
 [osx-jdk6]: http://adcdownload.apple.com/Developer_Tools/java_for_os_x_2013005_developer_package/java_for_os_x_2013005_dp__11m4609.dmg
 
-*Furthermore*, if running on Yosemite you must *also* download the latest
-[Java for OS X package](http://support.apple.com/downloads/#java), currently
-[JavaForOSX2014-001.dmg](http://support.apple.com/downloads/DL1572/en_US/JavaForOSX2014-001.dmg).
+Unfortunately, you can't *install* it on El Capitan. It'll install...but it
+won't *do* anything, probably because of [System Integrity Protection][sip].
 
-Once download, you need to "remove" any previously installed Java packages, as
-the Developer package won't install over a newer runtime packages:
+[sip]: https://en.wikipedia.org/wiki/System_Integrity_Protection
 
-    sudo mv /System/Library/Frameworks/JavaVM.framework /System/Library/Frameworks/JavaVM.framework-Yosemite
+To develop on El Capitan, download the above
+`java_for_os_x_2013005_dp__11m4609.dmg` file, open it within Finder,
+copy the contained `JavaDeveloper.pkg` file into this directory,
+then run the `osx-setup` target:
 
-Then install the Developer Package `java_for_os_x_2013005_dp__11m4609.dmg`,
-then install the runtime package `JavaForOSX2014-001.dmg`.
-
-If you fail to re-install the runtime package, then `jar` will fail to run:
-
-    $ jar cf "../../bin/Debug/java-interop.jar" -C "../../bin/Debug/ji-classes" .
-    java.lang.AssertionError: Platform not recognized
-            at sun.nio.fs.DefaultFileSystemProvider.create(DefaultFileSystemProvider.java:73)
-            at java.nio.file.FileSystems$DefaultFileSystemHolder.getDefaultProvider(FileSystems.java:108)
-    ...
+    $ make osx-setup JDK=JavaDeveloper.pkg
 
 
 ## Type Safety

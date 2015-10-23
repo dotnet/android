@@ -22,9 +22,30 @@ clean:
 	$(XBUILD) /t:Clean
 	rm -Rf bin/$(CONFIGURATION)
 
-bin/$(CONFIGURATION)/libNativeTiming.dylib: tests/NativeTiming/timing.c
+JDK     = JavaDeveloper.pkg
+JDK_URL = http://adcdownload.apple.com/Developer_Tools/java_for_os_x_2013005_developer_package/java_for_os_x_2013005_dp__11m4609.dmg
+
+LOCAL_JDK_HEADERS = LocalJDK/System/Library/Frameworks/JavaVM.framework/Versions/A/Headers
+
+osx-setup: $(LOCAL_JDK_HEADERS)/jni.h
+
+$(LOCAL_JDK_HEADERS)/jni.h:
+	@if [ ! -f $(JDK) ]; then \
+		echo "Please download '$(JDK)', from: $(JDK_URL)" ; \
+		exit 1; \
+	fi
+	-mkdir LocalJDK
+	_jdk="$$(cd `dirname "$(JDK)"`; pwd)/`basename "$(JDK)"`" ; \
+	(cd LocalJDK; xar -xf $$_jdk)
+	(cd LocalJDK; gunzip -c JavaEssentialsDev.pkg/Payload | cpio -i)
+
+bin/$(CONFIGURATION)/libNativeTiming.dylib: tests/NativeTiming/timing.c $(LOCAL_JDK_HEADERS)/jni.h
 	mkdir -p `dirname "$@"`
-	gcc -g -shared -o $@ $< -m32 -I /System/Library/Frameworks/JavaVM.framework/Headers
+	gcc -g -shared -o $@ $< -m32 -I $(LOCAL_JDK_HEADERS)
+
+bin/$(CONFIGURATION)/libJavaInterop.dylib: JniEnvironment.g.c $(LOCAL_JDK_HEADERS)/jni.h
+	mkdir -p `dirname "$@"`
+	gcc -g -shared -o $@ $< -m32 -I $(LOCAL_JDK_HEADERS)
 
 bin/$(CONFIGURATION)/Java.Interop-Tests.dll: $(wildcard src/Java.Interop/*/*.cs src/Java.Interop/Tests/*/*.cs)
 	$(XBUILD)

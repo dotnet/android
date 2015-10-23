@@ -2,11 +2,11 @@ using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Java.Interop;
-using Java.Interop.SafeHandles;
-using Java.Interop.IntPtrs;
 
-using SafeEnv = Java.Interop.SafeHandles.JniEnvironment;
-using IntPtrEnv = Java.Interop.IntPtrs.JniEnvironment;
+using SafeEnv       = Java.Interop.SafeHandles.JniEnvironment;
+using JIIntPtrEnv   = Java.Interop.JIIntPtrs.JniEnvironment;
+using PinvokeEnv    = Java.Interop.JIPinvokes.JniEnvironment;
+using XAIntPtrEnv   = Java.Interop.XAIntPtrs.JniEnvironment;
 
 namespace Java.Interop {
 	public enum JniObjectReferenceType {
@@ -18,11 +18,21 @@ namespace Java.Interop {
 
 	public struct JniObjectReference
 	{
+		public  JniReferenceSafeHandle      SafeHandle  {get; private set;}
 		public  IntPtr                      Handle  {get; private set;}
 		public  JniObjectReferenceType      Type    {get; private set;}
 
+
+		public JniObjectReference (JniReferenceSafeHandle handle, JniObjectReferenceType type = JniObjectReferenceType.Invalid)
+		{
+			SafeHandle = handle;
+			Handle  = IntPtr.Zero;
+			Type    = type;
+		}
+
 		public JniObjectReference (IntPtr handle, JniObjectReferenceType type = JniObjectReferenceType.Invalid)
 		{
+			SafeHandle = null;
 			Handle  = handle;
 			Type    = type;
 		}
@@ -91,17 +101,19 @@ namespace Java.Interop {
 			this = new JValue ();
 			d = value;
 		}
-#if XA
 		public JValue (IntPtr value)
 		{
 			this = new JValue ();
 			l = value;
 		}
-#endif
 		public JValue (JniObjectReference value)
 		{
 			this = new JValue ();
-			l = value.Handle;
+			var sh = value.SafeHandle;
+			if (sh != null)
+				l = value.SafeHandle.DangerousGetHandle ();
+			else
+				l = value.Handle;
 		}
 
 		public JValue (JniReferenceSafeHandle value)
@@ -116,76 +128,58 @@ namespace Java.Interop {
 					z, b, c, s, i, f, d, l.ToString ("x"));
 		}
 	}
-	public abstract class JniFieldID : SafeHandle
+	public abstract class JniFieldInfo
 	{
-		internal JniFieldID ()
-			: base (IntPtr.Zero, true)
-		{
-		}
+		public IntPtr ID;
 
-		protected override bool ReleaseHandle ()
+		protected JniFieldInfo (IntPtr id)
 		{
-			Console.WriteLine ("# {0}.ReleaseHandle()", GetType ().FullName);
-			return true;
-		}
-
-		public override bool IsInvalid {
-			get {
-				return handle == IntPtr.Zero;
-			}
+			ID = id;
 		}
 
 		public override string ToString ()
 		{
-			return string.Format ("{0}(0x{1})", GetType ().FullName, handle.ToString ("x"));
+			return string.Format ("{0}(0x{1})", GetType ().FullName, ID.ToString ("x"));
 		}
 	}
 
-	public sealed class JniStaticFieldID : JniFieldID
+	public sealed class JniStaticFieldInfo : JniFieldInfo
 	{
-		JniStaticFieldID ()
+		public JniStaticFieldInfo (IntPtr id)
+			: base (id)
 		{
 		}
 	}
-	public sealed class JniInstanceFieldID : JniFieldID
+	public sealed class JniInstanceFieldInfo : JniFieldInfo
 	{
-		JniInstanceFieldID ()
+		public JniInstanceFieldInfo (IntPtr id)
+			: base (id)
 		{
 		}
 	}
-	public abstract class JniMethodID : SafeHandle
+	public abstract class JniMethodInfo
 	{
-		internal JniMethodID ()
-			: base (IntPtr.Zero, true)
+		public IntPtr ID;
+		protected JniMethodInfo (IntPtr id)
 		{
+			ID = id;
 		}
-
-		protected override bool ReleaseHandle ()
-		{
-			Console.WriteLine ("# {0}.ReleaseHandle()", GetType ().FullName);
-			return true;
-		}
-
-		public override bool IsInvalid {
-			get {
-				return handle == IntPtr.Zero;
-			}
-		}
-
 		public override string ToString ()
 		{
-			return string.Format ("{0}(0x{1})", GetType ().FullName, handle.ToString ("x"));
+			return string.Format ("{0}(0x{1})", GetType ().FullName, ID.ToString ("x"));
 		}
 	}
-	public sealed class JniStaticMethodID : JniMethodID
+	public sealed class JniStaticMethodInfo : JniMethodInfo
 	{
-		JniStaticMethodID ()
+		public JniStaticMethodInfo (IntPtr id)
+			: base (id)
 		{
 		}
 	}
-	public sealed class JniInstanceMethodID : JniMethodID
+	public sealed class JniInstanceMethodInfo : JniMethodInfo
 	{
-		JniInstanceMethodID ()
+		public JniInstanceMethodInfo (IntPtr id)
+			: base (id)
 		{
 		}
 	}
@@ -223,7 +217,7 @@ namespace Java.Interop {
 			get {
 				if (IsInvalid)
 					throw new ObjectDisposedException (GetType ().FullName);
-				return SafeHandles.JniEnvironment.Handles.GetObjectRefType (this);
+				return SafeHandles.JniEnvironment.References.GetObjectRefType (new JniObjectReference (this));
 			}
 		}
 
@@ -247,8 +241,7 @@ namespace Java.Interop {
 
 		protected override bool ReleaseHandle ()
 		{
-			Console.WriteLine ("# {0}.ReleaseHandle()", GetType ().FullName);
-			SafeHandles.JniEnvironment.Handles.DeleteLocalRef (handle);
+			SafeHandles.JniEnvironment.References.DeleteLocalRef (handle);
 			return true;
 		}
 	}
@@ -256,7 +249,7 @@ namespace Java.Interop {
 		protected override bool ReleaseHandle ()
 		{
 			Console.WriteLine ("# {0}.ReleaseHandle()", GetType ().FullName);
-			SafeHandles.JniEnvironment.Handles.DeleteWeakGlobalRef (handle);
+			SafeHandles.JniEnvironment.References.DeleteWeakGlobalRef (handle);
 			return true;
 		}
 	}
@@ -264,7 +257,7 @@ namespace Java.Interop {
 		protected override bool ReleaseHandle ()
 		{
 			Console.WriteLine ("# {0}.ReleaseHandle()", GetType ().FullName);
-			SafeHandles.JniEnvironment.Handles.DeleteGlobalRef (handle);
+			SafeHandles.JniEnvironment.References.DeleteGlobalRef (handle);
 			return true;
 		}
 	}
@@ -359,11 +352,11 @@ namespace Java.Interop.SafeHandles {
 		public static JniEnvironment Current;
 
 		internal JniEnvironmentInvoker Invoker;
-		public JniEnvironmentSafeHandle SafeHandle;
+		public IntPtr EnvironmentPointer;
 
 		public unsafe JniEnvironment (IntPtr v) {
 			Current = this;
-			SafeHandle = new JniEnvironmentSafeHandle (v);
+			EnvironmentPointer = v;
 			IntPtr p = Marshal.ReadIntPtr (v);
 			Invoker = new JniEnvironmentInvoker ((JniNativeInterfaceStruct*) p);
 		}
@@ -372,27 +365,29 @@ namespace Java.Interop.SafeHandles {
 		}
 		public Exception GetExceptionForLastThrowable ()
 		{
-			var v = SafeEnv.Errors.ExceptionOccurred ();
-			if (v == null || v.IsInvalid)
+			var v = SafeEnv.Exceptions.ExceptionOccurred ();
+			if (v.SafeHandle == null || v.SafeHandle.IsInvalid || v.SafeHandle.IsClosed)
 				return null;
-			SafeEnv.Errors.ExceptionClear ();
-			LogCreateLocalRef (v);
-			v.Dispose ();
+			Console.WriteLine ("exception?!");
+			SafeEnv.Exceptions.ExceptionDescribe();
+			SafeEnv.Exceptions.ExceptionClear ();
+			LogCreateLocalRef ((JniLocalReference) v.SafeHandle);
+			v.SafeHandle.Dispose ();
 			return new Exception ("yada yada yada");
 		}
 	}
 }
 
-namespace Java.Interop.IntPtrs {
+namespace Java.Interop.JIIntPtrs {
 	public partial class JniEnvironment {
 		public static JniEnvironment Current;
 
 		internal JniEnvironmentInvoker Invoker;
-		public IntPtr SafeHandle;
+		public IntPtr EnvironmentPointer;
 
 		public unsafe JniEnvironment (IntPtr v) {
 			Current = this;
-			SafeHandle = v;
+			EnvironmentPointer = v;
 			IntPtr p = Marshal.ReadIntPtr (v);
 			Invoker = new JniEnvironmentInvoker ((JniNativeInterfaceStruct*) p);
 		}
@@ -401,21 +396,84 @@ namespace Java.Interop.IntPtrs {
 		}
 		public Exception GetExceptionForLastThrowable ()
 		{
-			var v = IntPtrEnv.Errors.ExceptionOccurred ();
-			#if XA
-			var h = v;
-			#else
+			var v = JIIntPtrEnv.Exceptions.ExceptionOccurred ();
 			var h = v.Handle;
-			#endif
 			if (h == IntPtr.Zero)
 				return null;
-			SafeEnv.Errors.ExceptionClear ();
+			JIIntPtrEnv.Exceptions.ExceptionClear ();
 			LogCreateLocalRef (h);
-			IntPtrEnv.Handles.DeleteLocalRef (h);
+			JIIntPtrEnv.References.DeleteLocalRef (h);
 			return new Exception ("yada yada yada");
 		}
 	}
 }
+
+namespace Java.Interop.JIPinvokes {
+	public partial class JniEnvironment {
+		public static JniEnvironment Current;
+
+		public IntPtr EnvironmentPointer;
+
+		public unsafe JniEnvironment (IntPtr v) {
+			Current = this;
+			EnvironmentPointer = v;
+			IntPtr p = Marshal.ReadIntPtr (v);
+		}
+		internal void LogCreateLocalRef (IntPtr value)
+		{
+		}
+		public Exception GetExceptionForLastThrowable (IntPtr h)
+		{
+			if (h == IntPtr.Zero)
+				return null;
+			PinvokeEnv.Exceptions.ExceptionClear ();
+			LogCreateLocalRef (h);
+			var r = new JniObjectReference (h, JniObjectReferenceType.Local);
+			PinvokeEnv.References.DeleteLocalRef (r.Handle);
+			return new Exception ("yada yada yada");
+		}
+		public Exception GetExceptionForLastThrowable ()
+		{
+			var v = JIIntPtrEnv.Exceptions.ExceptionOccurred ();
+			var h = v.Handle;
+			if (h == IntPtr.Zero)
+				return null;
+			SafeEnv.Exceptions.ExceptionClear ();
+			LogCreateLocalRef (h);
+			JIIntPtrEnv.References.DeleteLocalRef (h);
+			return new Exception ("yada yada yada");
+		}
+	}
+}
+namespace Java.Interop.XAIntPtrs {
+	public partial class JniEnvironment {
+		public static JniEnvironment Current;
+
+		internal JniEnvironmentInvoker Invoker;
+		public IntPtr EnvironmentPointer;
+
+		public unsafe JniEnvironment (IntPtr v) {
+			Current = this;
+			EnvironmentPointer = v;
+			IntPtr p = Marshal.ReadIntPtr (v);
+			Invoker = new JniEnvironmentInvoker ((JniNativeInterfaceStruct*) p);
+		}
+		internal void LogCreateLocalRef (IntPtr value)
+		{
+		}
+		public Exception GetExceptionForLastThrowable ()
+		{
+			var h = XAIntPtrEnv.Exceptions.ExceptionOccurred ();
+			if (h == IntPtr.Zero)
+				return null;
+			XAIntPtrEnv.Exceptions.ExceptionClear ();
+			LogCreateLocalRef (h);
+			XAIntPtrEnv.References.DeleteLocalRef (h);
+			return new Exception ("yada yada yada");
+		}
+	}
+}
+
 
 class App {
 	const string LibraryName = "jvm.dll";
@@ -427,11 +485,11 @@ class App {
 	{
 		IntPtr _jvm, _env;
 		CreateJavaVM (out _jvm, out _env);
-		Console.WriteLine ("# _jvm: {0}", _jvm.ToString ("x"));
-		Console.WriteLine ("# _env: {0}", _env.ToString ("x"));
 
 		SafeTiming (_env);
-		IntPtrTiming (_env);
+		JIIntPtrTiming (_env);
+		JIPinvokeTiming (_env);
+		XAIntPtrTiming (_env);
 	}
 
 	static void CreateJavaVM (out IntPtr jvm, out IntPtr jnienv)
@@ -452,7 +510,7 @@ class App {
 	{
 		var se = new SafeEnv (_env);
 		var Arrays_class = SafeEnv.Types.FindClass ("java/util/Arrays");
-		var Arrays_binarySearch = SafeEnv.Members.GetStaticMethodID (Arrays_class, "binarySearch", "([II)I");
+		var Arrays_binarySearch = SafeEnv.StaticMethods.GetStaticMethodID (Arrays_class, "binarySearch", "([II)I");
 		var intArray = SafeEnv.Arrays.NewIntArray (3);
 		fixed (int* p = new int[]{1,2,3})
 			SafeEnv.Arrays.SetIntArrayRegion (intArray, 0, 3, (IntPtr) p);
@@ -462,12 +520,10 @@ class App {
 		args [0] = new JValue (intArray);
 		args [1] = new JValue (2);
 		for (int i = 0; i < C; ++i) {
-			if (SafeEnv.Current.SafeHandle.DangerousGetHandle () == IntPtr.Zero)
-				Console.WriteLine("wat?!");
-			int r = SafeEnv.Members.CallStaticIntMethod (Arrays_class, Arrays_binarySearch, args);
+			int r = SafeEnv.StaticMethods.CallStaticIntMethod (Arrays_class, Arrays_binarySearch, args);
 		}
 		t.Stop ();
-		Console.WriteLine ("# SafeHandle timing: {0}", t.Elapsed);
+		Console.WriteLine ("# {0} timing: {1}", nameof (SafeTiming), t.Elapsed);
 		Console.WriteLine ("#\tAverage Invocation: {0}ms", t.Elapsed.TotalMilliseconds / C);
 		GC.KeepAlive (se);
 		GC.KeepAlive (intArray);
@@ -475,24 +531,66 @@ class App {
 		GC.KeepAlive (Arrays_binarySearch);
 	}
 
-	static unsafe void IntPtrTiming (IntPtr _env)
+	static unsafe void JIIntPtrTiming (IntPtr _env)
 	{
-		var pe = new IntPtrEnv (_env);
-		var Arrays_class = IntPtrEnv.Types.FindClass ("java/util/Arrays");
-		var Arrays_binarySearch = IntPtrEnv.Members.GetStaticMethodID (Arrays_class, "binarySearch", "([II)I");
-		var intArray = IntPtrEnv.Arrays.NewIntArray (3);
+		var pe = new JIIntPtrEnv (_env);
+		var Arrays_class = JIIntPtrEnv.Types.FindClass ("java/util/Arrays");
+		var Arrays_binarySearch = JIIntPtrEnv.StaticMethods.GetStaticMethodID (Arrays_class, "binarySearch", "([II)I");
+		var intArray = JIIntPtrEnv.Arrays.NewIntArray (3);
 		fixed (int* p = new int[]{1,2,3})
-			IntPtrEnv.Arrays.SetIntArrayRegion (intArray, 0, 3, (IntPtr) p);
+			JIIntPtrEnv.Arrays.SetIntArrayRegion (intArray, 0, 3, (IntPtr) p);
 
 		var t = Stopwatch.StartNew ();
 		var args = stackalloc JValue [2];
 		args [0] = new JValue (intArray);
 		args [1] = new JValue (2);
 		for (int i = 0; i < C; ++i) {
-			int r = IntPtrEnv.Members.CallStaticIntMethod (Arrays_class, Arrays_binarySearch, args);
+			int r = JIIntPtrEnv.StaticMethods.CallStaticIntMethod (Arrays_class, Arrays_binarySearch, args);
 		}
 		t.Stop ();
-		Console.WriteLine ("# JniObjectReference timing: {0}", t.Elapsed);
+		Console.WriteLine ("# {0} timing: {1}", nameof (JIIntPtrTiming), t.Elapsed);
+		Console.WriteLine ("#\tAverage Invocation: {0}ms", t.Elapsed.TotalMilliseconds / C);
+	}
+
+	static unsafe void JIPinvokeTiming (IntPtr _env)
+	{
+		var pe = new PinvokeEnv (_env);
+		var Arrays_class = PinvokeEnv.Types.FindClass ("java/util/Arrays");
+		var Arrays_binarySearch = PinvokeEnv.StaticMethods.GetStaticMethodID (Arrays_class, "binarySearch", "([II)I");
+		var intArray = PinvokeEnv.Arrays.NewIntArray (3);
+		fixed (int* p = new int[]{1,2,3})
+			PinvokeEnv.Arrays.SetIntArrayRegion (intArray, 0, 3, (IntPtr) p);
+
+		var t = Stopwatch.StartNew ();
+		var args = stackalloc JValue [2];
+		args [0] = new JValue (intArray);
+		args [1] = new JValue (2);
+		for (int i = 0; i < C; ++i) {
+			int r = PinvokeEnv.StaticMethods.CallStaticIntMethod (Arrays_class, Arrays_binarySearch, args);
+		}
+		t.Stop ();
+		Console.WriteLine ("# {0} timing: {1}", nameof (JIPinvokeTiming), t.Elapsed);
+		Console.WriteLine ("#\tAverage Invocation: {0}ms", t.Elapsed.TotalMilliseconds / C);
+	}
+
+	static unsafe void XAIntPtrTiming (IntPtr _env)
+	{
+		var pe = new XAIntPtrEnv (_env);
+		var Arrays_class = XAIntPtrEnv.Types.FindClass ("java/util/Arrays");
+		var Arrays_binarySearch = XAIntPtrEnv.StaticMethods.GetStaticMethodID (Arrays_class, "binarySearch", "([II)I");
+		var intArray = XAIntPtrEnv.Arrays.NewIntArray (3);
+		fixed (int* p = new int[]{1,2,3})
+			XAIntPtrEnv.Arrays.SetIntArrayRegion (intArray, 0, 3, (IntPtr) p);
+
+		var t = Stopwatch.StartNew ();
+		var args = stackalloc JValue [2];
+		args [0] = new JValue (intArray);
+		args [1] = new JValue (2);
+		for (int i = 0; i < C; ++i) {
+			int r = XAIntPtrEnv.StaticMethods.CallStaticIntMethod (Arrays_class, Arrays_binarySearch, args);
+		}
+		t.Stop ();
+		Console.WriteLine ("# {0} timing: {1}", nameof (XAIntPtrTiming), t.Elapsed);
 		Console.WriteLine ("#\tAverage Invocation: {0}ms", t.Elapsed.TotalMilliseconds / C);
 	}
 }

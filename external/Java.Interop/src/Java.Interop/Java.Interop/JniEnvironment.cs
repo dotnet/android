@@ -260,6 +260,17 @@ namespace Java.Interop {
 			JniEnvironment.Current.LogCreateLocalRef (e);
 			return JavaVM.GetExceptionForThrowable (ref e, JniObjectReferenceOptions.DisposeSourceReference);
 		}
+
+		public Exception GetExceptionForLastThrowable (IntPtr thrown)
+		{
+			if (thrown == IntPtr.Zero)
+				return null;
+			var e   = new JniObjectReference (thrown, JniObjectReferenceType.Local);
+			// JniEnvironment.Errors.ExceptionDescribe ();
+			JniEnvironment.Exceptions.ExceptionClear ();
+			JniEnvironment.Current.LogCreateLocalRef (e);
+			return JavaVM.GetExceptionForThrowable (ref e, JniObjectReferenceOptions.DisposeSourceReference);
+		}
 	}
 }
 
