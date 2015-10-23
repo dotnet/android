@@ -2,7 +2,7 @@ using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
-#if FEATURE_HANDLES_ARE_SAFE_HANDLES
+#if FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
 namespace Java.Interop
 {
 	class JniLocalReference : JniReferenceSafeHandle {
@@ -37,4 +37,4 @@ namespace Java.Interop
 		}
 	}
 }
-#endif  // FEATURE_HANDLES_ARE_SAFE_HANDLES
+#endif  // FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES

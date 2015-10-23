@@ -12,13 +12,13 @@ namespace Java.Interop
 		bool    registered;
 		string  javaStackTrace;
 
-#if FEATURE_HANDLES_ARE_SAFE_HANDLES
+#if FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
 		JniObjectReference  reference;
-#endif  // FEATURE_HANDLES_ARE_INTPTRS
-#if FEATURE_HANDLES_ARE_INTPTRS
+#endif  // FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
+#if FEATURE_JNIOBJECTREFERENCE_INTPTRS
 		IntPtr                  handle;
 		JniObjectReferenceType  handle_type;
-#endif  // FEATURE_HANDLES_ARE_INTPTRS
+#endif  // FEATURE_JNIOBJECTREFERENCE_INTPTRS
 
 		protected   static  readonly    JniObjectReference*     InvalidJniObjectReference = null;
 
@@ -93,12 +93,12 @@ namespace Java.Interop
 
 		public          JniObjectReference          PeerReference {
 			get {
-#if FEATURE_HANDLES_ARE_SAFE_HANDLES
+#if FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
 				return reference;
-#endif  // FEATURE_HANDLES_ARE_INTPTRS
-#if FEATURE_HANDLES_ARE_INTPTRS
+#endif  // FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
+#if FEATURE_JNIOBJECTREFERENCE_INTPTRS
 				return new JniObjectReference (handle, handle_type);
-#endif  // FEATURE_HANDLES_ARE_INTPTRS
+#endif  // FEATURE_JNIOBJECTREFERENCE_INTPTRS
 			}
 		}
 
@@ -238,13 +238,13 @@ namespace Java.Interop
 
 		void IJavaPeerableEx.SetPeerReference (JniObjectReference reference)
 		{
-#if FEATURE_HANDLES_ARE_SAFE_HANDLES
+#if FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
 			this.reference  = reference;
-#endif  // FEATURE_HANDLES_ARE_INTPTRS
-#if FEATURE_HANDLES_ARE_INTPTRS
+#endif  // FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
+#if FEATURE_JNIOBJECTREFERENCE_INTPTRS
 			this.handle         = reference.Handle;
 			this.handle_type    = reference.Type;
-#endif  // FEATURE_HANDLES_ARE_INTPTRS
+#endif  // FEATURE_JNIOBJECTREFERENCE_INTPTRS
 		}
 
 		protected struct SetSafeHandleCompletion : IDisposable {

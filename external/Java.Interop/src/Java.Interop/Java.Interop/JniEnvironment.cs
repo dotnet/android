@@ -73,7 +73,7 @@ namespace Java.Interop {
 			}
 		}
 
-#if FEATURE_HANDLES_ARE_SAFE_HANDLES
+#if FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
 		List<JniLocalReference> lrefs;
 		internal List<JniLocalReference> LocalReferences {
 			get {return lrefs ?? (lrefs = new List<JniLocalReference> ());}
@@ -93,7 +93,7 @@ namespace Java.Interop {
 			}
 			return false;
 		}
-#endif  // FEATURE_HANDLES_ARE_SAFE_HANDLES
+#endif  // FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
 
 		internal    static  bool    HasCurrent {
 			get {return current != null;}
@@ -133,7 +133,7 @@ namespace Java.Interop {
 
 			disposed    = true;
 
-#if FEATURE_HANDLES_ARE_SAFE_HANDLES
+#if FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
 			if (lrefs != null) {
 				// Copy required as lref.Dispose() calls DeleteLocalReference(), alters lrefs.
 				var refs    = lrefs.ToList ();
@@ -144,7 +144,7 @@ namespace Java.Interop {
 				}
 				lrefs       = null;
 			}
-#endif  // FEATURE_HANDLES_ARE_SAFE_HANDLES
+#endif  // FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
 
 			if (pendingException != null)
 				Exceptions.Throw (pendingException);
@@ -184,7 +184,7 @@ namespace Java.Interop {
 			JavaVM.JniObjectReferenceManager.CreatedLocalReference (this, value);
 		}
 
-#if FEATURE_HANDLES_ARE_SAFE_HANDLES
+#if FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
 		internal void LogCreateLocalRef (JniLocalReference value)
 		{
 			if (value == null || value.IsInvalid || value.IsClosed)
@@ -214,8 +214,8 @@ namespace Java.Interop {
 			JniEnvironment.Current.JavaVM.JniObjectReferenceManager.DeleteLocalReference (this, ref r);
 			value.SetHandleAsInvalid ();
 		}
-#endif  // FEATURE_HANDLES_ARE_SAFE_HANDLES
-#if FEATURE_HANDLES_ARE_INTPTRS
+#endif  // FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
+#if FEATURE_JNIOBJECTREFERENCE_INTPTRS
 		internal void LogCreateLocalRef (IntPtr value)
 		{
 			if (value == IntPtr.Zero)
@@ -223,7 +223,7 @@ namespace Java.Interop {
 			var r = new JniObjectReference (value, JniObjectReferenceType.Local);
 			LogCreateLocalRef (r);
 		}
-#endif  // FEATURE_HANDLES_ARE_INTPTRS
+#endif  // FEATURE_JNIOBJECTREFERENCE_INTPTRS
 
 		JniInstanceMethodInfo Obj_toS;
 		internal    JniInstanceMethodInfo Object_toString {

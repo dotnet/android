@@ -18,7 +18,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>..\..\bin\Debug</OutputPath>
-    <DefineConstants>DEBUG;INTEROP;FEATURE_HANDLES_ARE_SAFE_HANDLES</DefineConstants>
+    <DefineConstants>DEBUG;INTEROP;FEATURE_JNIENVIRONMENT_SAFEHANDLES;FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <ConsolePause>false</ConsolePause>
@@ -31,7 +31,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <ConsolePause>false</ConsolePause>
-    <DefineConstants>INTEROP</DefineConstants>
+    <DefineConstants>INTEROP;FEATURE_JNIENVIRONMENT_SAFEHANDLES;FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES</DefineConstants>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <JNIEnvGenPath>$(OutputPath)</JNIEnvGenPath>
   </PropertyGroup>
@@ -40,7 +40,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>..\..\bin\XAIntegrationDebug</OutputPath>
-    <DefineConstants>DEBUG;INTEROP;FEATURE_HANDLES_ARE_INTPTRS</DefineConstants>
+    <DefineConstants>DEBUG;INTEROP;FEATURE_JNIENVIRONMENT_JI_INTPTRS;FEATURE_JNIOBJECTREFERENCE_INTPTRS</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <ConsolePause>false</ConsolePause>

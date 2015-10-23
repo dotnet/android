@@ -69,19 +69,19 @@ namespace Xamarin.Java.Interop
 			o.WriteLine ("//");
 			o.WriteLine ("// To make changes, edit monodroid/tools/jnienv-gen-interop and rerun");
 			o.WriteLine ();
-			o.WriteLine ("#if !FEATURE_HANDLES_ARE_SAFE_HANDLES && !FEATURE_HANDLES_ARE_INTPTRS && !FEATURE_HANDLES_ARE_INTPTRS_WITH_PINVOKES_EX && !FEATURE_HANDLES_ARE_XA_INTPTRS");
-			o.WriteLine ("#define FEATURE_HANDLES_ARE_SAFE_HANDLES");
-			o.WriteLine ("#endif  // !FEATURE_HANDLES_ARE_SAFE_HANDLES && !FEATURE_HANDLES_ARE_INTPTRS && !FEATURE_HANDLES_ARE_INTPTRS_WITH_PINVOKES_EX && !FEATURE_HANDLES_ARE_XA_INTPTRS");
+			o.WriteLine ("#if !FEATURE_JNIENVIRONMENT_SAFEHANDLES && !FEATURE_JNIENVIRONMENT_JI_INTPTRS && !FEATURE_JNIENVIRONMENT_JI_PINVOKES && !FEATURE_JNIENVIRONMENT_XA_INTPTRS");
+			o.WriteLine ("#define FEATURE_JNIENVIRONMENT_SAFEHANDLES");
+			o.WriteLine ("#endif  // !FEATURE_JNIENVIRONMENT_SAFEHANDLES && !FEATURE_JNIENVIRONMENT_JI_INTPTRS && !FEATURE_JNIENVIRONMENT_JI_PINVOKES && !FEATURE_JNIENVIRONMENT_XA_INTPTRS");
 			o.WriteLine ();
-			o.WriteLine ("#if FEATURE_HANDLES_ARE_SAFE_HANDLES && FEATURE_HANDLES_ARE_INTPTRS");
+			o.WriteLine ("#if FEATURE_JNIENVIRONMENT_SAFEHANDLES && FEATURE_JNIENVIRONMENT_JI_INTPTRS");
 			o.WriteLine ("#define _NAMESPACE_PER_HANDLE");
-			o.WriteLine ("#endif  // FEATURE_HANDLES_ARE_SAFE_HANDLES && FEATURE_HANDLES_ARE_INTPTRS");
-			o.WriteLine ("#if FEATURE_HANDLES_ARE_SAFE_HANDLES && FEATURE_HANDLES_ARE_INTPTRS_WITH_PINVOKES_EX");
+			o.WriteLine ("#endif  // FEATURE_JNIENVIRONMENT_SAFEHANDLES && FEATURE_JNIENVIRONMENT_JI_INTPTRS");
+			o.WriteLine ("#if FEATURE_JNIENVIRONMENT_SAFEHANDLES && FEATURE_JNIENVIRONMENT_JI_PINVOKES");
 			o.WriteLine ("#define _NAMESPACE_PER_HANDLE");
-			o.WriteLine ("#endif  // FEATURE_HANDLES_ARE_SAFE_HANDLES && FEATURE_HANDLES_ARE_INTPTRS_WITH_PINVOKES_EX");
-			o.WriteLine ("#if FEATURE_HANDLES_ARE_SAFE_HANDLES && FEATURE_HANDLES_ARE_XA_INTPTRS");
+			o.WriteLine ("#endif  // FEATURE_JNIENVIRONMENT_SAFEHANDLES && FEATURE_JNIENVIRONMENT_JI_PINVOKES");
+			o.WriteLine ("#if FEATURE_JNIENVIRONMENT_SAFEHANDLES && FEATURE_JNIENVIRONMENT_XA_INTPTRS");
 			o.WriteLine ("#define _NAMESPACE_PER_HANDLE");
-			o.WriteLine ("#endif  // FEATURE_HANDLES_ARE_SAFE_HANDLES && FEATURE_HANDLES_ARE_XA_INTPTRS");
+			o.WriteLine ("#endif  // FEATURE_JNIENVIRONMENT_SAFEHANDLES && FEATURE_JNIENVIRONMENT_XA_INTPTRS");
 			o.WriteLine ();
 			o.WriteLine ("using System;");
 			o.WriteLine ("using System.Linq;");
@@ -92,21 +92,21 @@ namespace Xamarin.Java.Interop
 			o.WriteLine ();
 			o.WriteLine ("using JNIEnvPtr          = System.IntPtr;");
 			o.WriteLine ();
-			o.WriteLine ("#if FEATURE_HANDLES_ARE_INTPTRS || FEATURE_HANDLES_ARE_INTPTRS_WITH_PINVOKES_EX");
+			o.WriteLine ("#if FEATURE_JNIENVIRONMENT_JI_INTPTRS || FEATURE_JNIENVIRONMENT_JI_PINVOKES");
 			o.WriteLine ("\tusing jinstanceFieldID   = System.IntPtr;");
 			o.WriteLine ("\tusing jstaticFieldID     = System.IntPtr;");
 			o.WriteLine ("\tusing jinstanceMethodID  = System.IntPtr;");
 			o.WriteLine ("\tusing jstaticMethodID    = System.IntPtr;");
 			o.WriteLine ("\tusing jobject            = System.IntPtr;");
-			o.WriteLine ("#endif  // FEATURE_HANDLES_ARE_INTPTRS");
+			o.WriteLine ("#endif  // FEATURE_JNIENVIRONMENT_JI_INTPTRS || FEATURE_JNIENVIRONMENT_JI_PINVOKES");
 			o.WriteLine ();
 			o.WriteLine ("namespace Java.Interop {");
 			GenerateJniNativeInterface (o);
 			o.WriteLine ("}");
-			WriteSection (o, HandleStyle.SafeHandle,                "FEATURE_HANDLES_ARE_SAFE_HANDLES",                 "Java.Interop.SafeHandles");
-			WriteSection (o, HandleStyle.JIIntPtr,                  "FEATURE_HANDLES_ARE_INTPTRS",                      "Java.Interop.JIIntPtrs");
-			WriteSection (o, HandleStyle.JIIntPtrPinvokeWithErrors, "FEATURE_HANDLES_ARE_INTPTRS_WITH_PINVOKES_EX",     "Java.Interop.JIPinvokes");
-			WriteSection (o, HandleStyle.XAIntPtr,                  "FEATURE_HANDLES_ARE_XA_INTPTRS",                   "Java.Interop.XAIntPtrs");
+			WriteSection (o, HandleStyle.SafeHandle,                "FEATURE_JNIENVIRONMENT_SAFEHANDLES",               "Java.Interop.SafeHandles");
+			WriteSection (o, HandleStyle.JIIntPtr,                  "FEATURE_JNIENVIRONMENT_JI_INTPTRS",                "Java.Interop.JIIntPtrs");
+			WriteSection (o, HandleStyle.JIIntPtrPinvokeWithErrors, "FEATURE_JNIENVIRONMENT_JI_PINVOKES",               "Java.Interop.JIPinvokes");
+			WriteSection (o, HandleStyle.XAIntPtr,                  "FEATURE_JNIENVIRONMENT_XA_INTPTRS",                "Java.Interop.XAIntPtrs");
 		}
 
 		static void WriteSection (TextWriter o, HandleStyle style, string define, string specificNamespace)

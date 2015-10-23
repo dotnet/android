@@ -365,14 +365,14 @@ namespace Java.Interop
 			if (value.Registered)
 				UnRegisterObject (value);
 			value.Dispose (disposing: true);
-#if FEATURE_HANDLES_ARE_SAFE_HANDLES
+#if FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
 			var lref = value.PeerReference.SafeHandle as JniLocalReference;
 			if (lref != null && !JniEnvironment.IsHandleValid (lref)) {
 				// `lref` was created on another thread, and CANNOT be disposed on this thread.
 				// Just invalidate the reference and move on.
 				lref.SetHandleAsInvalid ();
 			}
-#endif  // FEATURE_HANDLES_ARE_SAFE_HANDLES
+#endif  // FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
 			JniEnvironment.References.Dispose (ref h);
 			value.SetPeerReference (new JniObjectReference ());
 			GC.SuppressFinalize (value);

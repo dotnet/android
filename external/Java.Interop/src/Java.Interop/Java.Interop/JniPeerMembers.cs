@@ -128,7 +128,7 @@ namespace Java.Interop {
 			if (!peer.IsValid)
 				throw new ObjectDisposedException (self.GetType ().FullName);
 
-#if FEATURE_HANDLES_ARE_SAFE_HANDLES
+#if FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
 			var lref    = peer.SafeHandle as JniLocalReference;
 			if (lref != null && !JniEnvironment.IsHandleValid (lref)) {
 				var t = self.GetType ().FullName;
@@ -138,7 +138,7 @@ namespace Java.Interop {
 						"Passing JNI local references between threads is not supported; " +
 						"call IJavaObject.RegisterWithVM() if sharing between threads is required.");
 			}
-#endif
+#endif  // FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
 		}
 
 		internal static int GetSignatureSeparatorIndex (string encodedMember)

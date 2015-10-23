@@ -1,6 +1,10 @@
 using System;
 using System.Runtime.InteropServices;
 
+#if FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES && FEATURE_JNIOBJECTREFERENCE_INTPTRS
+#error  JniObjectReference cannot support both SafeHandles and IntPtrs.
+#endif  // FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES && FEATURE_JNIOBJECTREFERENCE_INTPTRS
+
 namespace Java.Interop
 {
 	enum JniObjectReferenceFlags : uint {
@@ -13,7 +17,7 @@ namespace Java.Interop
 		const   uint    FlagsMask   = 0xFFFF0000;
 		const   uint    TypeMask    = 0x0000FFFF;
 
-#if FEATURE_HANDLES_ARE_SAFE_HANDLES
+#if FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
 		JniReferenceSafeHandle  safeHandle;
 		internal    JniReferenceSafeHandle  SafeHandle  {
 			get {return safeHandle ?? JniReferenceSafeHandle.Null;}
@@ -26,7 +30,7 @@ namespace Java.Interop
 					: h.DangerousGetHandle ();
 			}
 		}
-#elif FEATURE_HANDLES_ARE_INTPTRS
+#elif FEATURE_JNIOBJECTREFERENCE_INTPTRS
 		public      IntPtr                  Handle  {get; private set;}
 #endif
 
@@ -44,28 +48,28 @@ namespace Java.Interop
 
 		public  bool                        IsValid {
 			get {
-#if FEATURE_HANDLES_ARE_SAFE_HANDLES
+#if FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
 				return SafeHandle != null && !SafeHandle.IsInvalid && !SafeHandle.IsClosed;
-#endif  // FEATURE_HANDLES_ARE_SAFE_HANDLES
-#if FEATURE_HANDLES_ARE_INTPTRS
+#endif  // FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
+#if FEATURE_JNIOBJECTREFERENCE_INTPTRS
 				return Handle != IntPtr.Zero;
-#endif  // FEATURE_HANDLES_ARE_SAFE_HANDLES
+#endif  // FEATURE_JNIOBJECTREFERENCE_INTPTRS
 			}
 		}
 
-#if FEATURE_HANDLES_ARE_SAFE_HANDLES
+#if FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
 		internal JniObjectReference (JniReferenceSafeHandle handle, JniObjectReferenceType type = JniObjectReferenceType.Invalid)
 		{
 			safeHandle      = handle;
 			referenceInfo   = (uint) type;
 		}
-#endif  // FEATURE_HANDLES_ARE_SAFE_HANDLES
+#endif  // FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
 
 		public JniObjectReference (IntPtr handle, JniObjectReferenceType type = JniObjectReferenceType.Invalid)
 		{
 			referenceInfo   = (uint) type;
 
-#if FEATURE_HANDLES_ARE_SAFE_HANDLES
+#if FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
 			if (handle == IntPtr.Zero) {
 				safeHandle = JniReferenceSafeHandle.Null;
 				return;
@@ -84,9 +88,10 @@ namespace Java.Interop
 				safeHandle  = new JniInvocationHandle (handle);
 				break;
 			}
-#elif FEATURE_HANDLES_ARE_INTPTRS
+#endif  // FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
+#if FEATURE_JNIOBJECTREFERENCE_INTPTRS
 			Handle  = handle;
-#endif
+#endif  // FEATURE_JNIOBJECTREFERENCE_INTPTRS
 		}
 
 		public override int GetHashCode ()
@@ -104,12 +109,12 @@ namespace Java.Interop
 
 		public bool Equals (JniObjectReference value)
 		{
-#if FEATURE_HANDLES_ARE_SAFE_HANDLES
+#if FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
 			return object.ReferenceEquals (SafeHandle, value.SafeHandle);
-#endif  // FEATURE_HANDLES_ARE_SAFE_HANDLES
-#if FEATURE_HANDLES_ARE_INTPTRS
+#endif  // FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
+#if FEATURE_JNIOBJECTREFERENCE_INTPTRS
 			return Handle == value.Handle;
-#endif  // FEATURE_HANDLES_ARE_INTPTRS
+#endif  // FEATURE_JNIOBJECTREFERENCE_INTPTRS
 		}
 
 		public JniObjectReference NewGlobalRef ()
@@ -129,15 +134,15 @@ namespace Java.Interop
 
 		internal void Invalidate ()
 		{
-#if FEATURE_HANDLES_ARE_SAFE_HANDLES
+#if FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
 			if (safeHandle != null)
 				safeHandle.Invalidate ();
 			safeHandle  = null;
-#endif  // FEATURE_HANDLES_ARE_SAFE_HANDLES
+#endif  // FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
 
-#if FEATURE_HANDLES_ARE_INTPTRS
+#if FEATURE_JNIOBJECTREFERENCE_INTPTRS
 			Handle      = IntPtr.Zero;
-#endif  // FEATURE_HANDLES_ARE_SAFE_HANDLES
+#endif  // FEATURE_JNIOBJECTREFERENCE_INTPTRS
 
 			referenceInfo   = 0;
 		}
