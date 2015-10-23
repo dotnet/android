@@ -109,7 +109,7 @@ namespace Java.Interop {
 			Debug.Assert (targetType == null || targetType == typeof (Boolean), "Expected targetType==typeof(Boolean); was: " + targetType);
 			TypeRef.GetCachedInstanceMethod (ref booleanValue, "booleanValue", "()Z");
 			try {
-				return booleanValue.CallVirtualBooleanMethod (self);
+				return booleanValue.InvokeVirtualBooleanMethod (self);
 			} finally {
 				JniEnvironment.References.Dispose (ref self, transfer);
 			}
@@ -147,7 +147,7 @@ namespace Java.Interop {
 			Debug.Assert (targetType == null || targetType == typeof (SByte), "Expected targetType==typeof(SByte); was: " + targetType);
 			TypeRef.GetCachedInstanceMethod (ref byteValue, "byteValue", "()B");
 			try {
-				return byteValue.CallVirtualSByteMethod (self);
+				return byteValue.InvokeVirtualSByteMethod (self);
 			} finally {
 				JniEnvironment.References.Dispose (ref self, transfer);
 			}
@@ -185,7 +185,7 @@ namespace Java.Interop {
 			Debug.Assert (targetType == null || targetType == typeof (Char), "Expected targetType==typeof(Char); was: " + targetType);
 			TypeRef.GetCachedInstanceMethod (ref charValue, "charValue", "()C");
 			try {
-				return charValue.CallVirtualCharMethod (self);
+				return charValue.InvokeVirtualCharMethod (self);
 			} finally {
 				JniEnvironment.References.Dispose (ref self, transfer);
 			}
@@ -223,7 +223,7 @@ namespace Java.Interop {
 			Debug.Assert (targetType == null || targetType == typeof (Int16), "Expected targetType==typeof(Int16); was: " + targetType);
 			TypeRef.GetCachedInstanceMethod (ref shortValue, "shortValue", "()S");
 			try {
-				return shortValue.CallVirtualInt16Method (self);
+				return shortValue.InvokeVirtualInt16Method (self);
 			} finally {
 				JniEnvironment.References.Dispose (ref self, transfer);
 			}
@@ -261,7 +261,7 @@ namespace Java.Interop {
 			Debug.Assert (targetType == null || targetType == typeof (Int32), "Expected targetType==typeof(Int32); was: " + targetType);
 			TypeRef.GetCachedInstanceMethod (ref intValue, "intValue", "()I");
 			try {
-				return intValue.CallVirtualInt32Method (self);
+				return intValue.InvokeVirtualInt32Method (self);
 			} finally {
 				JniEnvironment.References.Dispose (ref self, transfer);
 			}
@@ -299,7 +299,7 @@ namespace Java.Interop {
 			Debug.Assert (targetType == null || targetType == typeof (Int64), "Expected targetType==typeof(Int64); was: " + targetType);
 			TypeRef.GetCachedInstanceMethod (ref longValue, "longValue", "()J");
 			try {
-				return longValue.CallVirtualInt64Method (self);
+				return longValue.InvokeVirtualInt64Method (self);
 			} finally {
 				JniEnvironment.References.Dispose (ref self, transfer);
 			}
@@ -337,7 +337,7 @@ namespace Java.Interop {
 			Debug.Assert (targetType == null || targetType == typeof (Single), "Expected targetType==typeof(Single); was: " + targetType);
 			TypeRef.GetCachedInstanceMethod (ref floatValue, "floatValue", "()F");
 			try {
-				return floatValue.CallVirtualSingleMethod (self);
+				return floatValue.InvokeVirtualSingleMethod (self);
 			} finally {
 				JniEnvironment.References.Dispose (ref self, transfer);
 			}
@@ -375,7 +375,7 @@ namespace Java.Interop {
 			Debug.Assert (targetType == null || targetType == typeof (Double), "Expected targetType==typeof(Double); was: " + targetType);
 			TypeRef.GetCachedInstanceMethod (ref doubleValue, "doubleValue", "()D");
 			try {
-				return doubleValue.CallVirtualDoubleMethod (self);
+				return doubleValue.InvokeVirtualDoubleMethod (self);
 			} finally {
 				JniEnvironment.References.Dispose (ref self, transfer);
 			}

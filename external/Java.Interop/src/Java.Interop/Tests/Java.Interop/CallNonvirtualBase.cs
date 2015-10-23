@@ -21,7 +21,7 @@ namespace Java.InteropTests
 
 		public virtual unsafe void Method ()
 		{
-			_members.InstanceMethods.CallVoidMethod ("method\u0000()V", this, null);
+			_members.InstanceMethods.InvokeVirtualVoidMethod ("method\u0000()V", this, null);
 		}
 
 		public bool MethodInvoked {

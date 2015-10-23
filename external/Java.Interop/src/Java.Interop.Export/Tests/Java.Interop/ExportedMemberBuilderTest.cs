@@ -40,7 +40,7 @@ namespace Java.InteropTests
 
 				using (var o = CreateExportTest (t)) {
 					o.RegisterWithVM ();
-					t.GetInstanceMethod ("testMethods", "()V").CallVirtualVoidMethod (o.PeerReference);
+					t.GetInstanceMethod ("testMethods", "()V").InvokeVirtualVoidMethod (o.PeerReference);
 					Assert.IsTrue (o.HelloCalled);
 					o.Dispose ();
 				}

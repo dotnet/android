@@ -76,7 +76,7 @@ namespace Java.Interop
 			return methods;
 		}
 
-		public JniInstanceMethodInfo GetMethodID (string encodedMember)
+		public JniInstanceMethodInfo GetMethodInfo (string encodedMember)
 		{
 			lock (InstanceMethods) {
 				JniInstanceMethodInfo m;
@@ -125,138 +125,7 @@ namespace Java.Interop
 			}
 			var methods = GetConstructorsForType (self.GetType ());
 			var ctor    = methods.GetConstructor (constructorSignature);
-			ctor.CallNonvirtualVoidMethod (self.PeerReference, methods.JniPeerType.PeerReference, parameters);
-		}
-
-		public unsafe void CallVoidMethod (string encodedMember, IJavaPeerable self, JValue* parameters)
-		{
-			JniPeerMembers.AssertSelf (self);
-
-			if (self.GetType () == DeclaringType || DeclaringType == null) {
-				var m = GetMethodID (encodedMember);
-				m.CallVirtualVoidMethod (self.PeerReference, parameters);
-				return;
-			}
-			var j = self.JniPeerMembers;
-			var n = j.InstanceMethods.GetMethodID (encodedMember);
-			n.CallNonvirtualVoidMethod (self.PeerReference, j.JniPeerType.PeerReference, parameters);
-		}
-
-		public unsafe bool CallBooleanMethod (string encodedMember, IJavaPeerable self, JValue* parameters)
-		{
-			JniPeerMembers.AssertSelf (self);
-
-			if (self.GetType () == DeclaringType || DeclaringType == null) {
-				var m = GetMethodID (encodedMember);
-				return m.CallVirtualBooleanMethod (self.PeerReference, parameters);
-			}
-			var j = self.JniPeerMembers;
-			var n = j.InstanceMethods.GetMethodID (encodedMember);
-			return n.CallNonvirtualBooleanMethod (self.PeerReference, j.JniPeerType.PeerReference, parameters);
-		}
-
-		public unsafe sbyte CallSByteMethod (string encodedMember, IJavaPeerable self, JValue* parameters)
-		{
-			JniPeerMembers.AssertSelf (self);
-
-			if (self.GetType () == DeclaringType || DeclaringType == null) {
-				var m = GetMethodID (encodedMember);
-				return m.CallVirtualSByteMethod (self.PeerReference, parameters);
-			}
-			var j = self.JniPeerMembers;
-			var n = j.InstanceMethods.GetMethodID (encodedMember);
-			return n.CallNonvirtualSByteMethod (self.PeerReference, j.JniPeerType.PeerReference, parameters);
-		}
-
-		public unsafe char CallCharMethod (string encodedMember, IJavaPeerable self, JValue* parameters)
-		{
-			JniPeerMembers.AssertSelf (self);
-
-			if (self.GetType () == DeclaringType || DeclaringType == null) {
-				var m = GetMethodID (encodedMember);
-				return m.CallVirtualCharMethod (self.PeerReference, parameters);
-			}
-			var j = self.JniPeerMembers;
-			var n = j.InstanceMethods.GetMethodID (encodedMember);
-			return n.CallNonvirtualCharMethod (self.PeerReference, j.JniPeerType.PeerReference, parameters);
-		}
-
-		public unsafe short CallInt16Method (string encodedMember, IJavaPeerable self, JValue* parameters)
-		{
-			JniPeerMembers.AssertSelf (self);
-
-			if (self.GetType () == DeclaringType || DeclaringType == null) {
-				var m = GetMethodID (encodedMember);
-				return m.CallVirtualInt16Method (self.PeerReference, parameters);
-			}
-			var j = self.JniPeerMembers;
-			var n = j.InstanceMethods.GetMethodID (encodedMember);
-			return n.CallNonvirtualInt16Method (self.PeerReference, j.JniPeerType.PeerReference, parameters);
-		}
-
-		public unsafe int CallInt32Method (string encodedMember, IJavaPeerable self, JValue* parameters)
-		{
-			JniPeerMembers.AssertSelf (self);
-
-			if (self.GetType () == DeclaringType || DeclaringType == null) {
-				var m = GetMethodID (encodedMember);
-				return m.CallVirtualInt32Method (self.PeerReference, parameters);
-			}
-			var j = self.JniPeerMembers;
-			var n = j.InstanceMethods.GetMethodID (encodedMember);
-			return n.CallNonvirtualInt32Method (self.PeerReference, j.JniPeerType.PeerReference, parameters);
-		}
-
-		public unsafe long CallInt64Method (string encodedMember, IJavaPeerable self, JValue* parameters)
-		{
-			JniPeerMembers.AssertSelf (self);
-
-			if (self.GetType () == DeclaringType || DeclaringType == null) {
-				var m = GetMethodID (encodedMember);
-				return m.CallVirtualInt64Method (self.PeerReference, parameters);
-			}
-			var j = self.JniPeerMembers;
-			var n = j.InstanceMethods.GetMethodID (encodedMember);
-			return n.CallNonvirtualInt64Method (self.PeerReference, j.JniPeerType.PeerReference, parameters);
-		}
-
-		public unsafe float CallSingleMethod (string encodedMember, IJavaPeerable self, JValue* parameters)
-		{
-			JniPeerMembers.AssertSelf (self);
-
-			if (self.GetType () == DeclaringType || DeclaringType == null) {
-				var m = GetMethodID (encodedMember);
-				return m.CallVirtualSingleMethod (self.PeerReference, parameters);
-			}
-			var j = self.JniPeerMembers;
-			var n = j.InstanceMethods.GetMethodID (encodedMember);
-			return n.CallNonvirtualSingleMethod (self.PeerReference, j.JniPeerType.PeerReference, parameters);
-		}
-
-		public unsafe double CallDoubleMethod (string encodedMember, IJavaPeerable self, JValue* parameters)
-		{
-			JniPeerMembers.AssertSelf (self);
-
-			if (self.GetType () == DeclaringType || DeclaringType == null) {
-				var m = GetMethodID (encodedMember);
-				return m.CallVirtualDoubleMethod (self.PeerReference, parameters);
-			}
-			var j = self.JniPeerMembers;
-			var n = j.InstanceMethods.GetMethodID (encodedMember);
-			return n.CallNonvirtualDoubleMethod (self.PeerReference, j.JniPeerType.PeerReference, parameters);
-		}
-
-		public unsafe JniObjectReference CallObjectMethod (string encodedMember, IJavaPeerable self, JValue* parameters)
-		{
-			JniPeerMembers.AssertSelf (self);
-
-			if (self.GetType () == DeclaringType || DeclaringType == null) {
-				var m = GetMethodID (encodedMember);
-				return m.CallVirtualObjectMethod (self.PeerReference, parameters);
-			}
-			var j = self.JniPeerMembers;
-			var n = j.InstanceMethods.GetMethodID (encodedMember);
-			return n.CallNonvirtualObjectMethod (self.PeerReference, j.JniPeerType.PeerReference, parameters);
+			ctor.InvokeNonvirtualVoidMethod (self.PeerReference, methods.JniPeerType.PeerReference, parameters);
 		}
 	}
 

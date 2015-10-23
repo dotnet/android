@@ -74,7 +74,7 @@ namespace Java.Interop {
 			return new JValue ((<#= type.Type #>) value);
 		}
 
-		static JniInstanceMethodID init;
+		static JniInstanceMethodInfo init;
 		internal static unsafe JniObjectReference CreateLocalRef (object value)
 		{
 			Debug.Assert (value is <#= type.Type #>, "Expected value of type `<#= type.Type #>`; was: " + (value == null ? "<null>" : value.GetType ().FullName));
@@ -86,15 +86,15 @@ namespace Java.Interop {
 			return TypeRef.NewObject (init, args);
 		}
 
-		static JniInstanceMethodID <#= type.GetValue #>;
-		internal static object GetValueFromJni (ref JniObjectReference self, JniHandleOwnership transfer, Type targetType)
+		static JniInstanceMethodInfo <#= type.GetValue #>;
+		internal static object GetValueFromJni (ref JniObjectReference self, JniObjectReferenceOptions transfer, Type targetType)
 		{
 			Debug.Assert (targetType == null || targetType == typeof (<#= type.Type #>), "Expected targetType==typeof(<#= type.Type #>); was: " + targetType);
 			TypeRef.GetCachedInstanceMethod (ref <#= type.GetValue #>, "<#= type.GetValue #>", "()<#= type.JniType #>");
 			try {
-				return <#= type.GetValue #>.CallVirtual<#= type.Type #>Method (self);
+				return <#= type.GetValue #>.InvokeVirtual<#= type.Type #>Method (self);
 			} finally {
-				JniEnvironment.Handles.Dispose (ref self, transfer);
+				JniEnvironment.References.Dispose (ref self, transfer);
 			}
 		}
 	}

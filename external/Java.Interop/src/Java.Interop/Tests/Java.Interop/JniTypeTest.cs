@@ -23,7 +23,7 @@ namespace Java.InteropTests
 				var Integer_intValue    = Integer_class.GetInstanceMethod ("intValue", "()I");
 				var o                   = Integer_class.NewObject (Integer_ctor, ctor_args);
 				try {
-					int v = Integer_intValue.CallVirtualInt32Method (o);
+					int v = Integer_intValue.InvokeVirtualInt32Method (o);
 					Assert.AreEqual (42, v);
 				} finally {
 					JniEnvironment.References.Dispose (ref o);
@@ -137,8 +137,8 @@ namespace Java.InteropTests
 				var hashCode_str            = JniEnvironment.Strings.NewString ("hashCode");
 				var hashCode_args           = stackalloc JValue [1];
 				hashCode_args [0]           = new JValue (hashCode_str);
-				var Object_hashCode         = Class_getMethod.CallVirtualObjectMethod (Object_class.PeerReference, hashCode_args);
-				var Object_hashCode_rt      = Method_getReturnType.CallVirtualObjectMethod (Object_hashCode, null);
+				var Object_hashCode         = Class_getMethod.InvokeVirtualObjectMethod (Object_class.PeerReference, hashCode_args);
+				var Object_hashCode_rt      = Method_getReturnType.InvokeVirtualObjectMethod (Object_hashCode, null);
 				try {
 					Assert.AreEqual ("java/lang/Object", Object_class.Name);
 

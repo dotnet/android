@@ -23,11 +23,11 @@ namespace Java.InteropTests
 				var o = d.NewObject (c, null);
 				try {
 					if (JavaVMFixture.CallNonvirtualVoidMethodSupportsDeclaringClassMismatch) {
-						m.CallNonvirtualVoidMethod (o, d.PeerReference);
+						m.InvokeNonvirtualVoidMethod (o, d.PeerReference);
 						Assert.IsFalse (f.GetBooleanValue (o));
 						Assert.IsTrue (g.GetBooleanValue (o));
 					} else {
-						m.CallNonvirtualVoidMethod (o, d.PeerReference);
+						m.InvokeNonvirtualVoidMethod (o, d.PeerReference);
 						Assert.IsTrue (f.GetBooleanValue (o));
 						Assert.IsFalse (g.GetBooleanValue (o));
 					}

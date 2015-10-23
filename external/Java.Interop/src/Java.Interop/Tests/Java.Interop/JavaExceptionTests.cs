@@ -67,7 +67,7 @@ namespace Java.InteropTests
 			a [0] = new JValue (inner);
 
 			var i = type.GetInstanceMethod ("initCause", "(Ljava/lang/Throwable;)Ljava/lang/Throwable;");
-			var l = i.CallVirtualObjectMethod (outer, a);
+			var l = i.InvokeVirtualObjectMethod (outer, a);
 			JniEnvironment.References.Dispose (ref l);
 		}
 

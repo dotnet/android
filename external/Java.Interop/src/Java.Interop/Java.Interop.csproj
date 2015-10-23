@@ -76,6 +76,9 @@
     <Compile Include="Java.Interop\JniObjectReferenceOptions.cs" />
     <Compile Include="Java.Interop\JniObjectReferenceType.cs" />
     <Compile Include="Java.Interop\JniPeerInstanceMethods.cs" />
+    <Compile Include="Java.Interop\JniPeerInstanceMethods_Invoke.cs">
+      <DependentUpon>JniPeerInstanceMethods_Invoke.tt</DependentUpon>
+    </Compile>
     <Compile Include="Java.Interop\JniPeerInstanceFields.cs" />
     <Compile Include="Java.Interop\JniPeerStaticMethods.cs" />
     <Compile Include="Java.Interop\JniPeerStaticFields.cs" />
@@ -131,6 +134,10 @@
     <None Include="Java.Interop\JniPeerMethods.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>JniPeerMethods.cs</LastGenOutput>
+    </None>
+    <None Include="Java.Interop\JniPeerInstanceMethods_Invoke.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>JniPeerInstanceMethods_Invoke.cs</LastGenOutput>
     </None>
     <None Include="Java.Interop\JniPeerFields.tt">
       <Generator>TextTemplatingFileGenerator</Generator>

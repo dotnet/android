@@ -83,20 +83,20 @@ namespace Java.Interop.Dynamic {
 		{
 			var e   = GetSignatureReturnTypeStartIndex ();
 			switch (JniSignature [e + 1]) {
-			case 'Z':	return members.InstanceMethods.CallBooleanMethod (JniSignature, self, arguments);
-			case 'B':   return members.InstanceMethods.CallSByteMethod (JniSignature, self, arguments);
-			case 'C':   return members.InstanceMethods.CallCharMethod (JniSignature, self, arguments);
-			case 'S':   return members.InstanceMethods.CallInt16Method (JniSignature, self, arguments);
-			case 'I':   return members.InstanceMethods.CallInt32Method (JniSignature, self, arguments);
-			case 'J':   return members.InstanceMethods.CallInt64Method (JniSignature, self, arguments);
-			case 'F':   return members.InstanceMethods.CallSingleMethod (JniSignature, self, arguments);
-			case 'D':   return members.InstanceMethods.CallDoubleMethod (JniSignature, self, arguments);
+			case 'Z':   return members.InstanceMethods.InvokeVirtualBooleanMethod (JniSignature, self, arguments);
+			case 'B':   return members.InstanceMethods.InvokeVirtualSByteMethod (JniSignature, self, arguments);
+			case 'C':   return members.InstanceMethods.InvokeVirtualCharMethod (JniSignature, self, arguments);
+			case 'S':   return members.InstanceMethods.InvokeVirtualInt16Method (JniSignature, self, arguments);
+			case 'I':   return members.InstanceMethods.InvokeVirtualInt32Method (JniSignature, self, arguments);
+			case 'J':   return members.InstanceMethods.InvokeVirtualInt64Method (JniSignature, self, arguments);
+			case 'F':   return members.InstanceMethods.InvokeVirtualSingleMethod (JniSignature, self, arguments);
+			case 'D':   return members.InstanceMethods.InvokeVirtualDoubleMethod (JniSignature, self, arguments);
 			case 'L':
 			case '[':
-				var lref = members.InstanceMethods.CallObjectMethod (JniSignature, self, arguments);
+				var lref = members.InstanceMethods.InvokeVirtualObjectMethod (JniSignature, self, arguments);
 				return ToReturnValue (ref lref, JniSignature, e + 1);
 			case 'V':
-				members.InstanceMethods.CallVoidMethod (JniSignature, self, arguments);
+				members.InstanceMethods.InvokeVirtualVoidMethod (JniSignature, self, arguments);
 				return null;
 			default:
 				throw new NotSupportedException ("Unsupported argument type: " + JniSignature.Substring (e + 1));
@@ -107,20 +107,20 @@ namespace Java.Interop.Dynamic {
 		{
 			var e   = GetSignatureReturnTypeStartIndex ();
 			switch (JniSignature [e + 1]) {
-			case 'Z':   return members.StaticMethods.CallBooleanMethod (JniSignature, arguments);
-			case 'B':   return members.StaticMethods.CallSByteMethod (JniSignature, arguments);
-			case 'C':   return members.StaticMethods.CallCharMethod (JniSignature, arguments);
-			case 'S':   return members.StaticMethods.CallInt16Method (JniSignature, arguments);
-			case 'I':   return members.StaticMethods.CallInt32Method (JniSignature, arguments);
-			case 'J':   return members.StaticMethods.CallInt64Method (JniSignature, arguments);
-			case 'F':   return members.StaticMethods.CallSingleMethod (JniSignature, arguments);
-			case 'D':   return members.StaticMethods.CallDoubleMethod (JniSignature, arguments);
+			case 'Z':   return members.StaticMethods.InvokeBooleanMethod (JniSignature, arguments);
+			case 'B':   return members.StaticMethods.InvokeSByteMethod (JniSignature, arguments);
+			case 'C':   return members.StaticMethods.InvokeCharMethod (JniSignature, arguments);
+			case 'S':   return members.StaticMethods.InvokeInt16Method (JniSignature, arguments);
+			case 'I':   return members.StaticMethods.InvokeInt32Method (JniSignature, arguments);
+			case 'J':   return members.StaticMethods.InvokeInt64Method (JniSignature, arguments);
+			case 'F':   return members.StaticMethods.InvokeSingleMethod (JniSignature, arguments);
+			case 'D':   return members.StaticMethods.InvokeDoubleMethod (JniSignature, arguments);
 			case 'L':
 			case '[':
-				var lref = members.StaticMethods.CallObjectMethod (JniSignature, arguments);
+				var lref = members.StaticMethods.InvokeObjectMethod (JniSignature, arguments);
 				return ToReturnValue (ref lref, JniSignature, e + 1);
 			case 'V':
-				members.StaticMethods.CallVoidMethod (JniSignature, arguments);
+				members.StaticMethods.InvokeVoidMethod (JniSignature, arguments);
 				return null;
 			default:
 				throw new NotSupportedException ("Unsupported argument type: " + JniSignature.Substring (e + 1));

@@ -171,7 +171,7 @@ namespace Java.Interop
 
 		public override unsafe int GetHashCode ()
 		{
-			return _members.InstanceMethods.CallInt32Method ("hashCode\u0000()I", this, null);
+			return _members.InstanceMethods.InvokeVirtualInt32Method ("hashCode\u0000()I", this, null);
 		}
 
 		static string _GetMessage (ref JniObjectReference reference, JniObjectReferenceOptions transfer)
@@ -179,8 +179,8 @@ namespace Java.Interop
 			if (transfer == JniObjectReferenceOptions.Invalid)
 				return null;
 
-			var m = _members.InstanceMethods.GetMethodID ("getMessage\u0000()Ljava/lang/String;");
-			var s = m.CallVirtualObjectMethod (reference);
+			var m = _members.InstanceMethods.GetMethodInfo ("getMessage\u0000()Ljava/lang/String;");
+			var s = m.InvokeVirtualObjectMethod (reference);
 			return JniEnvironment.Strings.ToString (ref s, JniObjectReferenceOptions.DisposeSourceReference);
 		}
 
@@ -189,8 +189,8 @@ namespace Java.Interop
 			if (transfer == JniObjectReferenceOptions.Invalid)
 				return null;
 
-			var m = _members.InstanceMethods.GetMethodID ("getCause\u0000()Ljava/lang/Throwable;");
-			var e = m.CallVirtualObjectMethod (reference);
+			var m = _members.InstanceMethods.GetMethodInfo ("getCause\u0000()Ljava/lang/Throwable;");
+			var e = m.InvokeVirtualObjectMethod (reference);
 			return JniEnvironment.Current.JavaVM.GetExceptionForThrowable (ref e, JniObjectReferenceOptions.DisposeSourceReference);
 		}
 
@@ -206,11 +206,11 @@ namespace Java.Interop
 					pwriter_args [0] = new JValue (swriter);
 					var pwriter = PrintWriter_class.NewObject (PrintWriter_init, pwriter_args);
 					try {
-						var pst = _members.InstanceMethods.GetMethodID ("printStackTrace\u0000(Ljava/io/PrintWriter;)V");
+						var pst = _members.InstanceMethods.GetMethodInfo ("printStackTrace\u0000(Ljava/io/PrintWriter;)V");
 						var pst_args = stackalloc JValue [1];
 						pst_args [0] = new JValue (pwriter);
-						pst.CallVirtualVoidMethod (handle, pst_args);
-						var s = JniEnvironment.Current.Object_toString.CallVirtualObjectMethod (swriter);
+						pst.InvokeVirtualVoidMethod (handle, pst_args);
+						var s = JniEnvironment.Current.Object_toString.InvokeVirtualObjectMethod (swriter);
 						return JniEnvironment.Strings.ToString (ref s, JniObjectReferenceOptions.DisposeSourceReference);
 					} finally {
 						JniEnvironment.References.Dispose (ref pwriter, JniObjectReferenceOptions.DisposeSourceReference);

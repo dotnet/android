@@ -19,7 +19,7 @@ namespace Java.Interop
 		internal static void GC (JniObjectReference runtime)
 		{
 			TypeRef.GetCachedInstanceMethod (ref _gc, "gc", "()V")
-				.CallVirtualVoidMethod (runtime);
+				.InvokeVirtualVoidMethod (runtime);
 		}
 	}
 }

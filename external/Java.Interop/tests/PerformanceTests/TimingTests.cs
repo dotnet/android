@@ -430,7 +430,7 @@ namespace Java.Interop.PerformanceTests {
 			var methodHandles   = new List<JavaObject> ();
 
 			using (var Arrays_class = new JniType ("java/util/Arrays")) {
-				var lrefMethods = Class_getMethods.CallVirtualObjectMethod (Arrays_class.PeerReference);
+				var lrefMethods = Class_getMethods.InvokeVirtualObjectMethod (Arrays_class.PeerReference);
 				Console.WriteLine ("# {0}: java.util.Arrays.class.getMethods() Timing: {1}", nameof (ObjectArrayEnumerationTiming), total.Elapsed);
 
 				var methodsTiming   = Stopwatch.StartNew ();
@@ -493,14 +493,14 @@ namespace Java.Interop.PerformanceTests {
 
 			foreach (var method in methodHandles) {
 				var lookupTiming    = Stopwatch.StartNew ();
-				var n_name          = Method_getName.CallVirtualObjectMethod (method.PeerReference);
+				var n_name          = Method_getName.InvokeVirtualObjectMethod (method.PeerReference);
 				var name            = JniEnvironment.Strings.ToString (ref n_name, JniObjectReferenceOptions.DisposeSourceReference);
-				var n_rt            = Method_getReturnType.CallVirtualObjectMethod (method.PeerReference);
+				var n_rt            = Method_getReturnType.InvokeVirtualObjectMethod (method.PeerReference);
 				using (var rt       = new JniType (ref n_rt, JniObjectReferenceOptions.DisposeSourceReference)) {
 				}
 				var parameterTiming = Stopwatch.StartNew ();
 				var enumTime        = new TimeSpan ();
-				var lrefPs          = Method_getParameterTypes.CallVirtualObjectMethod (method.PeerReference);
+				var lrefPs          = Method_getParameterTypes.InvokeVirtualObjectMethod (method.PeerReference);
 				Stopwatch cleanup;
 				using (var ps = new JavaObjectArray<JavaObject>(ref lrefPs, JniObjectReferenceOptions.DisposeSourceReference)) {
 					var enumSw  = Stopwatch.StartNew ();

@@ -41,7 +41,7 @@ namespace Java.Interop
 
 			public static string GetJniTypeNameFromClass (JniObjectReference reference)
 			{
-				var s = JniEnvironment.Current.Class_getName.CallVirtualObjectMethod (reference);
+				var s = JniEnvironment.Current.Class_getName.InvokeVirtualObjectMethod (reference);
 				return JavaClassToJniType (Strings.ToString (ref s, JniObjectReferenceOptions.DisposeSourceReference));
 			}
 

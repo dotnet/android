@@ -165,12 +165,12 @@ namespace Java.Interop.Dynamic {
 
 		internal static JniObjectReference GetMethodParameters (JniObjectReference method)
 		{
-			return Method_getParameterTypes.CallVirtualObjectMethod (method);
+			return Method_getParameterTypes.InvokeVirtualObjectMethod (method);
 		}
 
 		internal static JniObjectReference GetConstructorParameters (JniObjectReference method)
 		{
-			return Constructor_getParameterTypes.CallVirtualObjectMethod (method);
+			return Constructor_getParameterTypes.InvokeVirtualObjectMethod (method);
 		}
 
 		List<JavaConstructorInfo> LookupConstructors ()
@@ -184,7 +184,7 @@ namespace Java.Interop.Dynamic {
 
 				constructors    = new List<JavaConstructorInfo> ();
 
-				var ctors = Class_getConstructors.CallVirtualObjectMethod (Members.JniPeerType.PeerReference);
+				var ctors = Class_getConstructors.InvokeVirtualObjectMethod (Members.JniPeerType.PeerReference);
 				try {
 					int len     = JniEnvironment.Arrays.GetArrayLength (ctors);
 					for (int i  = 0; i < len; ++i) {
@@ -212,12 +212,12 @@ namespace Java.Interop.Dynamic {
 
 				this.fields = new Dictionary<string, List<JavaFieldInfo>> ();
 
-				var fields = Class_getFields.CallVirtualObjectMethod (Members.JniPeerType.PeerReference);
+				var fields = Class_getFields.InvokeVirtualObjectMethod (Members.JniPeerType.PeerReference);
 				try {
 					int len     = JniEnvironment.Arrays.GetArrayLength (fields);
 					for (int i  = 0; i < len; ++i) {
 						var field       = JniEnvironment.Arrays.GetObjectArrayElement (fields, i);
-						var n_name      = Field_getName.CallVirtualObjectMethod (field);
+						var n_name      = Field_getName.InvokeVirtualObjectMethod (field);
 						var name        = JniEnvironment.Strings.ToString (ref n_name, JniObjectReferenceOptions.DisposeSourceReference);
 						var isStatic    = IsStatic (field);
 
@@ -225,7 +225,7 @@ namespace Java.Interop.Dynamic {
 						if (!Fields.TryGetValue (name, out overloads))
 							Fields.Add (name, overloads = new List<JavaFieldInfo> ());
 
-						var n_type      = Field_getType.CallVirtualObjectMethod (field);
+						var n_type      = Field_getType.InvokeVirtualObjectMethod (field);
 						using (var type = new JniType (ref n_type, JniObjectReferenceOptions.DisposeSourceReference)) {
 							var info = JniEnvironment.Current.JavaVM.GetJniTypeInfoForJniTypeReference (type.Name);
 							overloads.Add (new JavaFieldInfo (Members, name + "\u0000" + info.JniTypeReference, isStatic));
@@ -252,12 +252,12 @@ namespace Java.Interop.Dynamic {
 
 				this.methods = new Dictionary<string, List<JavaMethodInfo>> ();
 
-				var methods  = Class_getMethods.CallVirtualObjectMethod (Members.JniPeerType.PeerReference);
+				var methods  = Class_getMethods.InvokeVirtualObjectMethod (Members.JniPeerType.PeerReference);
 				try {
 					int len     = JniEnvironment.Arrays.GetArrayLength (methods);
 					for (int i  = 0; i < len; ++i) {
 						var method      = JniEnvironment.Arrays.GetObjectArrayElement (methods, i);
-						var n_name      = Method_getName.CallVirtualObjectMethod (method);
+						var n_name      = Method_getName.InvokeVirtualObjectMethod (method);
 						var name        = JniEnvironment.Strings.ToString (ref n_name, JniObjectReferenceOptions.DisposeSourceReference);
 						var isStatic    = IsStatic (method);
 
@@ -265,7 +265,7 @@ namespace Java.Interop.Dynamic {
 						if (!Methods.TryGetValue (name, out overloads))
 							Methods.Add (name, overloads = new List<JavaMethodInfo> ());
 
-						var nrt = Method_getReturnType.CallVirtualObjectMethod (method);
+						var nrt = Method_getReturnType.InvokeVirtualObjectMethod (method);
 						var rt  = new JniType (ref nrt, JniObjectReferenceOptions.DisposeSourceReference);
 						var m   = new JavaMethodInfo (Members, method, name, isStatic) {
 							ReturnType  = rt,
@@ -283,7 +283,7 @@ namespace Java.Interop.Dynamic {
 
 		static bool IsStatic (JniObjectReference member)
 		{
-			var s   = Member_getModifiers.CallVirtualInt32Method (member);
+			var s   = Member_getModifiers.InvokeVirtualInt32Method (member);
 
 			return (s & JavaModifiers.Static) == JavaModifiers.Static;
 		}

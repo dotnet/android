@@ -130,7 +130,7 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				var methods = peer.GetConstructorsForType (self.GetType ());
 				var ctor    = methods.GetConstructor (constructorSignature);
-				ctor.CallNonvirtualVoidMethod (self.PeerReference, methods.JniPeerType.PeerReference, args);
+				ctor.InvokeNonvirtualVoidMethod (self.PeerReference, methods.JniPeerType.PeerReference, args);
 			} finally {
 <#
 		for (int a = 1; a <= i; ++a) {
@@ -178,7 +178,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 #>
 
-		public static unsafe <#= info.ReturnType #> CallGeneric<#= info.JniCallType #>Method<#= typeParams #> (
+		public static unsafe <#= info.ReturnType #> InvokeGenericVirtual<#= info.JniCallType #>Method<#= typeParams #> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self<#= i == 0 ? "" : ",\n\t\t\t" + methodParams #>
@@ -200,7 +200,7 @@ namespace Java.Interop.GenericMarshaler {
 			WriteLine ("");
 #>
 			try {
-				<#= ret #>peer.Call<#= info.JniCallType #>Method (encodedMember, self, args);
+				<#= ret #>peer.InvokeVirtual<#= info.JniCallType #>Method (encodedMember, self, args);
 			} finally {
 <#
 			for (int a = 1; a <= i; ++a) {
@@ -244,7 +244,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 #>
 
-		public static unsafe <#= info.ReturnType #> CallGeneric<#= info.JniCallType #>Method<#= typeParams #> (
+		public static unsafe <#= info.ReturnType #> InvokeGeneric<#= info.JniCallType #>Method<#= typeParams #> (
 		    this    JniPeerStaticMethods    peer,
 			string encodedMember<#= i == 0 ? "" : ",\n\t\t\t" + methodParams #>
 		)
@@ -265,7 +265,7 @@ namespace Java.Interop.GenericMarshaler {
 			WriteLine ("");
 #>
 			try {
-				<#= ret #>peer.Call<#= info.JniCallType #>Method (encodedMember, args);
+				<#= ret #>peer.Invoke<#= info.JniCallType #>Method (encodedMember, args);
 			} finally {
 <#
 			for (int a = 1; a <= i; ++a) {

@@ -55,7 +55,7 @@ namespace Android.InteropTests {
 
 				var sw = Stopwatch.StartNew ();
 				for (int i = 0; i < Unified_ToString_Iterations; ++i) {
-					var r = t.CallVirtualObjectMethod (o);
+					var r = t.InvokeVirtualObjectMethod (o);
 					JniEnvironment.References.Dispose (ref r);
 				}
 				sw.Stop ();
@@ -105,14 +105,14 @@ namespace Android.InteropTests {
 				var o = k.NewObject (c, null);
 				var t = k.GetInstanceMethod ("toString", "()Ljava/lang/String;");
 
-				var r = t.CallVirtualObjectMethod (o);
+				var r = t.InvokeVirtualObjectMethod (o);
 				JniEnvironment.References.Dispose (ref r);
 
 				var rs = new JniObjectReference [MaxLocalRefs];
 
 				var sw = Stopwatch.StartNew ();
 				for (int i = 0; i < rs.Length; ++i) {
-					rs [i] = t.CallVirtualObjectMethod (o);
+					rs [i] = t.InvokeVirtualObjectMethod (o);
 				}
 				sw.Stop ();
 				callVirtualObjectMethodTime   = sw.Elapsed;

@@ -40,32 +40,32 @@ namespace Java.InteropTests
 
 		public unsafe void RunTests ()
 		{
-			_members.InstanceMethods.CallVoidMethod ("runTests\u0000()V", this, null);
+			_members.InstanceMethods.InvokeVirtualVoidMethod ("runTests\u0000()V", this, null);
 		}
 
 		public int UpdateInt32Array (int[] value)
 		{
-			return _members.InstanceMethods.CallGenericInt32Method ("updateInt32Array\u0000([I)I", this, value);
+			return _members.InstanceMethods.InvokeGenericVirtualInt32Method ("updateInt32Array\u0000([I)I", this, value);
 		}
 
 		public int UpdateInt32ArrayArray (int[][] value)
 		{
-			return _members.InstanceMethods.CallGenericInt32Method ("updateInt32ArrayArray\u0000([[I)I", this, value);
+			return _members.InstanceMethods.InvokeGenericVirtualInt32Method ("updateInt32ArrayArray\u0000([[I)I", this, value);
 		}
 
 		public int UpdateInt32ArrayArrayArray (int[][][] value)
 		{
-			return _members.InstanceMethods.CallGenericInt32Method ("updateInt32ArrayArrayArray\u0000([[[I)I", this, value);
+			return _members.InstanceMethods.InvokeGenericVirtualInt32Method ("updateInt32ArrayArrayArray\u0000([[[I)I", this, value);
 		}
 
 		public int Identity (int value)
 		{
-			return _members.InstanceMethods.CallGenericInt32Method ("identity\u0000(I)I", this, value);
+			return _members.InstanceMethods.InvokeGenericVirtualInt32Method ("identity\u0000(I)I", this, value);
 		}
 
 		public static int StaticIdentity (int value)
 		{
-			return _members.StaticMethods.CallGenericInt32Method ("staticIdentity\u0000(I)I", value);
+			return _members.StaticMethods.InvokeGenericInt32Method ("staticIdentity\u0000(I)I", value);
 		}
 
 		public void MethodThrows ()
@@ -75,7 +75,7 @@ namespace Java.InteropTests
 
 		public unsafe void PropogateException ()
 		{
-			_members.InstanceMethods.CallVoidMethod ("propogateException\u0000()V", this, null);
+			_members.InstanceMethods.InvokeVirtualVoidMethod ("propogateException\u0000()V", this, null);
 		}
 
 		public bool PropogateFinallyBlockExecuted {
