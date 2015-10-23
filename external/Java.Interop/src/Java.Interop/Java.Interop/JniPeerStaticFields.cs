@@ -14,7 +14,7 @@ namespace Java.Interop
 
 		Dictionary<string, JniStaticFieldInfo>              StaticFields  = new Dictionary<string, JniStaticFieldInfo>();
 
-		public JniStaticFieldInfo GetFieldID (string encodedMember)
+		public JniStaticFieldInfo GetFieldInfo (string encodedMember)
 		{
 			lock (StaticFields) {
 				JniStaticFieldInfo f;

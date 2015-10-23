@@ -22,7 +22,7 @@ namespace Java.Interop
 			InstanceFields  = null;
 		}
 
-		public JniInstanceFieldInfo GetFieldID (string encodedMember)
+		public JniInstanceFieldInfo GetFieldInfo (string encodedMember)
 		{
 			lock (InstanceFields) {
 				JniInstanceFieldInfo f;

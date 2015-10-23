@@ -30,7 +30,7 @@ namespace Java.Interop {
 		{
 			JniPeerMembers.AssertSelf (self);
 
-			return GetFieldID (encodedMember)
+			return GetFieldInfo (encodedMember)
 				.Get<#= info.JniCallType #>Value (self.PeerReference);
 		}
 
@@ -38,7 +38,7 @@ namespace Java.Interop {
 		{
 			JniPeerMembers.AssertSelf (self);
 
-			GetFieldID (encodedMember)
+			GetFieldInfo (encodedMember)
 				.SetValue (self.PeerReference, value);
 		}
 <#
@@ -53,13 +53,13 @@ namespace Java.Interop {
 
 		public <#= info.ReturnType #> Get<#= info.JniCallType #>Value (string encodedMember)
 		{
-			return GetFieldID (encodedMember)
+			return GetFieldInfo (encodedMember)
 				.Get<#= info.JniCallType #>Value (Members.JniPeerType.PeerReference);
 		}
 
 		public void SetValue (string encodedMember, <#= info.ParameterType #> value)
 		{
-			GetFieldID (encodedMember)
+			GetFieldInfo (encodedMember)
 				.SetValue (Members.JniPeerType.PeerReference, value);
 		}
 <#
