@@ -25,7 +25,7 @@ namespace Java.Interop {
 			return JniEnvironment.StaticFields.GetStaticByteField (@class, this);
 		}
 
-		public char GetCharValue (JniObjectReference @class)
+		public char GetCharacterValue (JniObjectReference @class)
 		{
 			return JniEnvironment.StaticFields.GetStaticCharField (@class, this);
 		}

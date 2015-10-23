@@ -25,7 +25,7 @@ namespace Java.Interop
 			return JniEnvironment.InstanceFields.GetByteField (@this, this);
 		}
 
-		public char GetCharValue (JniObjectReference @this)
+		public char GetCharacterValue (JniObjectReference @this)
 		{
 			return JniEnvironment.InstanceFields.GetCharField (@this, this);
 		}

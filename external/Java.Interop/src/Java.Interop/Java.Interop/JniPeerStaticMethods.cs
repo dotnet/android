@@ -54,10 +54,10 @@ namespace Java.Interop
 			return m.CallSByteMethod (Members.JniPeerType.PeerReference, parameters);
 		}
 
-		public unsafe char InvokeCharMethod (string encodedMember, JValue* parameters)
+		public unsafe char InvokeCharacterMethod (string encodedMember, JValue* parameters)
 		{
 			var m = GetMethodInfo (encodedMember);
-			return m.CallCharMethod (Members.JniPeerType.PeerReference, parameters);
+			return m.CallCharacterMethod (Members.JniPeerType.PeerReference, parameters);
 		}
 
 		public unsafe short InvokeInt16Method (string encodedMember, JValue* parameters)

@@ -185,7 +185,7 @@ namespace Java.Interop {
 			Debug.Assert (targetType == null || targetType == typeof (Char), "Expected targetType==typeof(Char); was: " + targetType);
 			TypeRef.GetCachedInstanceMethod (ref charValue, "charValue", "()C");
 			try {
-				return charValue.InvokeVirtualCharMethod (self);
+				return charValue.InvokeVirtualCharacterMethod (self);
 			} finally {
 				JniEnvironment.References.Dispose (ref self, transfer);
 			}

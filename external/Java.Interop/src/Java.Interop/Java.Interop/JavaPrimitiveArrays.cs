@@ -75,28 +75,28 @@ namespace Java.Interop {
 				CleanupMarshalCollection    = JavaSByteArray.CleanupMarshalCollection,
 			}),
 			new KeyValuePair<Type, JniMarshalInfo>(typeof (Char[]), new JniMarshalInfo {
-				GetValueFromJni             = JavaCharArray.GetValueFromJni,
-				CreateLocalRef              = JavaCharArray.CreateLocalRef,
-				CreateMarshalCollection     = JavaCharArray.CreateMarshalCollection,
-				CleanupMarshalCollection    = JavaCharArray.CleanupMarshalCollection,
+				GetValueFromJni             = JavaCharacterArray.GetValueFromJni,
+				CreateLocalRef              = JavaCharacterArray.CreateLocalRef,
+				CreateMarshalCollection     = JavaCharacterArray.CreateMarshalCollection,
+				CleanupMarshalCollection    = JavaCharacterArray.CleanupMarshalCollection,
 			}),
 			new KeyValuePair<Type, JniMarshalInfo>(typeof (JavaArray<Char>), new JniMarshalInfo {
-				GetValueFromJni             = JavaCharArray.GetValueFromJni,
-				CreateLocalRef              = JavaCharArray.CreateLocalRef,
-				CreateMarshalCollection     = JavaCharArray.CreateMarshalCollection,
-				CleanupMarshalCollection    = JavaCharArray.CleanupMarshalCollection,
+				GetValueFromJni             = JavaCharacterArray.GetValueFromJni,
+				CreateLocalRef              = JavaCharacterArray.CreateLocalRef,
+				CreateMarshalCollection     = JavaCharacterArray.CreateMarshalCollection,
+				CleanupMarshalCollection    = JavaCharacterArray.CleanupMarshalCollection,
 			}),
 			new KeyValuePair<Type, JniMarshalInfo>(typeof (JavaPrimitiveArray<Char>), new JniMarshalInfo {
-				GetValueFromJni             = JavaCharArray.GetValueFromJni,
-				CreateLocalRef              = JavaCharArray.CreateLocalRef,
-				CreateMarshalCollection     = JavaCharArray.CreateMarshalCollection,
-				CleanupMarshalCollection    = JavaCharArray.CleanupMarshalCollection,
+				GetValueFromJni             = JavaCharacterArray.GetValueFromJni,
+				CreateLocalRef              = JavaCharacterArray.CreateLocalRef,
+				CreateMarshalCollection     = JavaCharacterArray.CreateMarshalCollection,
+				CleanupMarshalCollection    = JavaCharacterArray.CleanupMarshalCollection,
 			}),
-			new KeyValuePair<Type, JniMarshalInfo>(typeof (JavaCharArray), new JniMarshalInfo {
-				GetValueFromJni             = JavaCharArray.GetValueFromJni,
-				CreateLocalRef              = JavaCharArray.CreateLocalRef,
-				CreateMarshalCollection     = JavaCharArray.CreateMarshalCollection,
-				CleanupMarshalCollection    = JavaCharArray.CleanupMarshalCollection,
+			new KeyValuePair<Type, JniMarshalInfo>(typeof (JavaCharacterArray), new JniMarshalInfo {
+				GetValueFromJni             = JavaCharacterArray.GetValueFromJni,
+				CreateLocalRef              = JavaCharacterArray.CreateLocalRef,
+				CreateMarshalCollection     = JavaCharacterArray.CreateMarshalCollection,
+				CleanupMarshalCollection    = JavaCharacterArray.CleanupMarshalCollection,
 			}),
 			new KeyValuePair<Type, JniMarshalInfo>(typeof (Int16[]), new JniMarshalInfo {
 				GetValueFromJni             = JavaInt16Array.GetValueFromJni,
@@ -512,11 +512,11 @@ namespace Java.Interop {
 		}
 	}
 
-	public sealed class JniCharArrayElements : JniArrayElements {
+	public sealed class JniCharacterArrayElements : JniArrayElements {
 
 		JniObjectReference      arrayHandle;
 
-		internal JniCharArrayElements (JniObjectReference arrayHandle, IntPtr elements)
+		internal JniCharacterArrayElements (JniObjectReference arrayHandle, IntPtr elements)
 			: base (elements)
 		{
 			this.arrayHandle = arrayHandle;
@@ -533,14 +533,14 @@ namespace Java.Interop {
 	}
 
 	[JniTypeInfo ("C", ArrayRank=1, TypeIsKeyword=true)]
-	public sealed partial class JavaCharArray : JavaPrimitiveArray<Char> {
+	public sealed partial class JavaCharacterArray : JavaPrimitiveArray<Char> {
 
-		public JavaCharArray (ref JniObjectReference handle, JniObjectReferenceOptions transfer)
+		public JavaCharacterArray (ref JniObjectReference handle, JniObjectReferenceOptions transfer)
 			: base (ref handle, transfer)
 		{
 		}
 
-		public unsafe JavaCharArray (int length)
+		public unsafe JavaCharacterArray (int length)
 			: base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.Invalid)
 		{
 		    var peer    = JniEnvironment.Arrays.NewCharArray (CheckLength (length));
@@ -548,13 +548,13 @@ namespace Java.Interop {
 		    }
 		}
 
-		public JavaCharArray (System.Collections.Generic.IList<Char> value)
+		public JavaCharacterArray (System.Collections.Generic.IList<Char> value)
 			: this (CheckLength (value))
 		{
 			CopyFrom (_ToArray (value), 0, 0, value.Count);
 		}
 
-		public JavaCharArray (System.Collections.Generic.IEnumerable<Char> value)
+		public JavaCharacterArray (System.Collections.Generic.IEnumerable<Char> value)
 			: this (_ToArray (value))
 		{
 		}
@@ -564,10 +564,10 @@ namespace Java.Interop {
 			return GetElements ();
 		}
 
-		public new JniCharArrayElements GetElements ()
+		public new JniCharacterArrayElements GetElements ()
 		{
 			IntPtr elements = JniEnvironment.Arrays.GetCharArrayElements (PeerReference, IntPtr.Zero);
-			return elements == IntPtr.Zero ? null : new JniCharArrayElements (PeerReference, elements);
+			return elements == IntPtr.Zero ? null : new JniCharacterArrayElements (PeerReference, elements);
 		}
 
 		public override unsafe int IndexOf (Char item)
@@ -576,7 +576,7 @@ namespace Java.Interop {
 			if (len == 0)
 				return -1;
 			using (var e = GetElements ()) {
-				Debug.Assert (e != null, "Java.Char.Array.GetElements() returned null! OOM?");
+				Debug.Assert (e != null, "Java.Character.Array.GetElements() returned null! OOM?");
 				if (e == null)
 					return -1;      // IList<T>.IndexOf() documents no exceptions. :-/
 
@@ -626,14 +626,14 @@ namespace Java.Interop {
 		{
 			return base.TargetTypeIsCurrentType (targetType) ||
 				typeof (JavaPrimitiveArray<Char>) == targetType ||
-				typeof (JavaCharArray) == targetType;
+				typeof (JavaCharacterArray) == targetType;
 		}
 
 		internal static JniObjectReference CreateLocalRef (object value)
 		{
-		    return JavaArray<Char>.CreateLocalRef<JavaCharArray> (
+		    return JavaArray<Char>.CreateLocalRef<JavaCharacterArray> (
 		            value,
-		            list => new JavaCharArray (list));
+		            list => new JavaCharacterArray (list));
 		}
 
 		internal static IList<Char> GetValueFromJni (ref JniObjectReference reference, JniObjectReferenceOptions transfer, Type targetType)
@@ -642,19 +642,19 @@ namespace Java.Interop {
 		            ref reference,
 		            transfer,
 		            targetType,
-		            (ref JniObjectReference h, JniObjectReferenceOptions t) => new JavaCharArray (ref h, t));
+		            (ref JniObjectReference h, JniObjectReferenceOptions t) => new JavaCharacterArray (ref h, t));
 		}
 
 		internal static IJavaPeerable CreateMarshalCollection (object value)
 		{
-		    return JavaArray<Char>.CreateMarshalCollection (value, list => new JavaCharArray (list) {
+		    return JavaArray<Char>.CreateMarshalCollection (value, list => new JavaCharacterArray (list) {
 		        forMarshalCollection = true,
 		    });
 		}
 
 		internal static void CleanupMarshalCollection (IJavaPeerable marshalObject, object value)
 		{
-		    JavaArray<Char>.CleanupMarshalCollection<JavaCharArray> (marshalObject, value);
+		    JavaArray<Char>.CleanupMarshalCollection<JavaCharacterArray> (marshalObject, value);
 		}
 	}
 

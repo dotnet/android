@@ -38,14 +38,14 @@
 				.SetValue (self.PeerReference, value);
 		}
 
-		public char GetCharValue (
+		public char GetCharacterValue (
 			string encodedMember,
 			IJavaPeerable   self)
 		{
 			JniPeerMembers.AssertSelf (self);
 
 			return GetFieldID (encodedMember)
-				.GetCharValue (self.PeerReference);
+				.GetCharacterValue (self.PeerReference);
 		}
 
 		public void SetValue (string encodedMember, IJavaPeerable self, char value)
@@ -191,10 +191,10 @@
 				.SetValue (Members.JniPeerType.PeerReference, value);
 		}
 
-		public char GetCharValue (string encodedMember)
+		public char GetCharacterValue (string encodedMember)
 		{
 			return GetFieldID (encodedMember)
-				.GetCharValue (Members.JniPeerType.PeerReference);
+				.GetCharacterValue (Members.JniPeerType.PeerReference);
 		}
 
 		public void SetValue (string encodedMember, char value)

@@ -85,7 +85,7 @@ namespace Java.Interop.Dynamic {
 			switch (JniSignature [e + 1]) {
 			case 'Z':   return members.InstanceMethods.InvokeVirtualBooleanMethod (JniSignature, self, arguments);
 			case 'B':   return members.InstanceMethods.InvokeVirtualSByteMethod (JniSignature, self, arguments);
-			case 'C':   return members.InstanceMethods.InvokeVirtualCharMethod (JniSignature, self, arguments);
+			case 'C':   return members.InstanceMethods.InvokeVirtualCharacterMethod (JniSignature, self, arguments);
 			case 'S':   return members.InstanceMethods.InvokeVirtualInt16Method (JniSignature, self, arguments);
 			case 'I':   return members.InstanceMethods.InvokeVirtualInt32Method (JniSignature, self, arguments);
 			case 'J':   return members.InstanceMethods.InvokeVirtualInt64Method (JniSignature, self, arguments);
@@ -109,7 +109,7 @@ namespace Java.Interop.Dynamic {
 			switch (JniSignature [e + 1]) {
 			case 'Z':   return members.StaticMethods.InvokeBooleanMethod (JniSignature, arguments);
 			case 'B':   return members.StaticMethods.InvokeSByteMethod (JniSignature, arguments);
-			case 'C':   return members.StaticMethods.InvokeCharMethod (JniSignature, arguments);
+			case 'C':   return members.StaticMethods.InvokeCharacterMethod (JniSignature, arguments);
 			case 'S':   return members.StaticMethods.InvokeInt16Method (JniSignature, arguments);
 			case 'I':   return members.StaticMethods.InvokeInt32Method (JniSignature, arguments);
 			case 'J':   return members.StaticMethods.InvokeInt64Method (JniSignature, arguments);
