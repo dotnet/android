@@ -57,6 +57,7 @@ Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
+		XAIntegrationDebug|Any CPU = XAIntegrationDebug|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{04E28441-36FF-4964-ADD7-EFBB47CCE406}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -83,6 +84,8 @@ Global
 		{6410DA0F-5E14-4FC0-9AEE-F4C542C96C7A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6410DA0F-5E14-4FC0-9AEE-F4C542C96C7A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6410DA0F-5E14-4FC0-9AEE-F4C542C96C7A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6410DA0F-5E14-4FC0-9AEE-F4C542C96C7A}.XAIntegrationDebug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6410DA0F-5E14-4FC0-9AEE-F4C542C96C7A}.XAIntegrationDebug|Any CPU.Build.0 = Debug|Any CPU
 		{6970466B-F6D1-417A-8A27-4FED8555EBD0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{6970466B-F6D1-417A-8A27-4FED8555EBD0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6970466B-F6D1-417A-8A27-4FED8555EBD0}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -95,6 +98,8 @@ Global
 		{94BD81F7-B06F-4295-9636-F8A3B6BDC762}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{94BD81F7-B06F-4295-9636-F8A3B6BDC762}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{94BD81F7-B06F-4295-9636-F8A3B6BDC762}.Release|Any CPU.Build.0 = Release|Any CPU
+		{94BD81F7-B06F-4295-9636-F8A3B6BDC762}.XAIntegrationDebug|Any CPU.ActiveCfg = XAIntegrationDebug|Any CPU
+		{94BD81F7-B06F-4295-9636-F8A3B6BDC762}.XAIntegrationDebug|Any CPU.Build.0 = XAIntegrationDebug|Any CPU
 		{A76309AB-98AC-4AE2-BA30-75481420C52F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{A76309AB-98AC-4AE2-BA30-75481420C52F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A76309AB-98AC-4AE2-BA30-75481420C52F}.Release|Any CPU.ActiveCfg = Release|Any CPU

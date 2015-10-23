@@ -1,7 +1,12 @@
 CONFIGURATION = Debug
 
+XA_CONFIGURATION  = XAIntegrationDebug
+
 DEPENDENCIES = \
 	bin/$(CONFIGURATION)/libNativeTiming.dylib
+
+XA_INTEGRATION_OUTPUTS = \
+	bin/$(XA_CONFIGURATION)/Java.Interop.dll
 
 TESTS = \
 	bin/$(CONFIGURATION)/Java.Interop-Tests.dll \
@@ -16,7 +21,9 @@ ATESTS = \
 
 XBUILD = xbuild
 
-all: $(DEPENDENCIES) $(TESTS)
+all: $(DEPENDENCIES) $(TESTS) $(XA_INTEGRATION_OUTPUTS)
+
+xa-all: $(XA_INTEGRATION_OUTPUTS)
 
 clean:
 	$(XBUILD) /t:Clean
@@ -62,6 +69,9 @@ bin/$(CONFIGURATION)/Java.Interop-PerformanceTests.dll: $(wildcard tests/Java.In
 bin/$(CONFIGURATION)/Android.Interop-Tests.dll: $(wildcard src/Android.Interop/*/*.cs src/Android.Interop/Tests/*/*.cs)
 	$(XBUILD)
 	touch $@
+
+bin/$(XA_CONFIGURATION)/Java.Interop.dll:
+	$(XBUILD) /p:Configuration=$(XA_CONFIGURATION)
 
 CSHARP_REFS = \
 	bin/$(CONFIGURATION)/Java.Interop.dll               \
