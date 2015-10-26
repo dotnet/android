@@ -140,7 +140,9 @@ namespace Java.Interop
 
 			JavaVMs.TryAdd (InvocationPointer, this);
 
+#if !XA_INTEGRATION
 			ManagedPeer.Init ();
+#endif  // !XA_INTEGRATION
 		}
 
 		static unsafe JavaVMInterface CreateInvoker (IntPtr handle)
@@ -179,12 +181,14 @@ namespace Java.Interop
 			if (current == this)
 				current = null;
 
+#if !XA_INTEGRATION
 			foreach (var o in RegisteredInstances.Values) {
 				var t = (IDisposable) o.Target;
 				t.Dispose ();
 			}
 			RegisteredInstances.Clear ();
 			ClearTrackedReferences ();
+#endif  // !XA_INTEGRATION
 			JavaVM _;
 			JavaVMs.TryRemove (InvocationPointer, out _);
 			JniObjectReferenceManager.Dispose ();
@@ -224,6 +228,9 @@ namespace Java.Interop
 
 		public virtual Exception GetExceptionForThrowable (ref JniObjectReference value, JniObjectReferenceOptions transfer)
 		{
+#if XA_INTEGRATION
+			throw new NotSupportedException ("Do not know h ow to convert a JniObjectReference to a System.Exception!");
+#else   // !XA_INTEGRATION
 			var o   = PeekObject (value);
 			var e   = o as JavaException;
 			if (e != null) {
@@ -234,6 +241,7 @@ namespace Java.Interop
 				return e;
 			}
 			return GetObject<JavaException> (ref value, transfer);
+#endif  // !̣XA_INTEGRATION
 		}
 
 		public int GlobalReferenceCount {
@@ -276,6 +284,7 @@ namespace Java.Interop
 		}
 	}
 
+#if !XA_INTEGRATION
 	partial class JavaVM {
 
 		Dictionary<int, WeakReference>  RegisteredInstances = new Dictionary<int, WeakReference>();
@@ -537,6 +546,7 @@ namespace Java.Interop
 			return (T) GetObject (jniHandle, typeof(T));
 		}
 	}
+#endif  // !XA_INTEGRATION
 
 	partial class JavaVM {
 
@@ -559,6 +569,7 @@ namespace Java.Interop
 			if (type.IsEnum)
 				type = Enum.GetUnderlyingType (type);
 
+#if !XA_INTEGRATION
 			foreach (var mapping in JniBuiltinTypeNameMappings) {
 				if (mapping.Key == type) {
 					var r = mapping.Value;
@@ -574,11 +585,13 @@ namespace Java.Interop
 					return r;
 				}
 			}
+#endif  // !XA_INTEGRATION
 
 			var names = (JniTypeInfoAttribute[]) type.GetCustomAttributes (typeof (JniTypeInfoAttribute), inherit:false);
 			if (names.Length != 0)
 				return new JniTypeInfo (names [0].JniTypeName, names [0].TypeIsKeyword, names [0].ArrayRank + rank);
 
+#if !XA_INTEGRATION
 			if (type.IsGenericType) {
 				var def = type.GetGenericTypeDefinition ();
 				if (def == typeof(JavaArray<>) || def == typeof(JavaObjectArray<>)) {
@@ -587,6 +600,7 @@ namespace Java.Interop
 					return r;
 				}
 			}
+#endif  // !XA_INTEGRATION
 			return new JniTypeInfo (GetJniSimplifiedTypeReferenceForType (type), false, rank);
 		}
 
@@ -600,7 +614,7 @@ namespace Java.Interop
 			return null;
 		}
 
-		public Type GetTypeForJniTypeRefererence (string jniTypeReference)
+		public virtual Type GetTypeForJniTypeRefererence (string jniTypeReference)
 		{
 			var info    = GetJniTypeInfoForJniTypeReference (jniTypeReference);
 			if (info.JniTypeName == null)
@@ -610,6 +624,11 @@ namespace Java.Interop
 				return null;
 			var rank    = info.ArrayRank;
 			var type    = inner;
+#if XA_INTEGRATION
+			if (rank > 0)
+				throw new NotSupportedException ("Cannot handle arrays at this time.");
+#else   // XA_INTEGRATION
+
 			if (info.TypeIsKeyword && rank > 0) {
 				type = typeof(JavaPrimitiveArray<>).MakeGenericType (type);
 				if (--rank == 0)
@@ -618,6 +637,7 @@ namespace Java.Interop
 			while (rank-- > 0) {
 				type = typeof (JavaObjectArray<>).MakeGenericType (type);
 			}
+#endif  // XA_INTEGRATION
 			return type;
 		}
 
@@ -697,12 +717,39 @@ namespace Java.Interop
 			if (jniTypeReference != null && jniTypeReference.StartsWith ("L", StringComparison.Ordinal) && jniTypeReference.EndsWith (";", StringComparison.Ordinal))
 				throw new ArgumentException ("Only simplified type references are supported.", "jniTypeReference");
 
+#if !XA_INTEGRATION
 			foreach (var mapping in JniBuiltinTypeNameMappings) {
 				if (mapping.Value.JniTypeName == jniTypeReference)
 					return mapping.Key;
 			}
+#endif  // !XA_INTEGRATION
 			return null;
 		}
+	}
+
+	partial class JavaVM {
+
+		public virtual void RaisePendingException (Exception pendingException)
+		{
+			if (pendingException == null)
+				throw new ArgumentNullException (nameof (pendingException));
+#if XA_INTEGRATION
+			throw new NotSupportedException ("Do not know how to marshal System.Exception instances.");
+#else   // XA_INTEGRATION
+			var je  = pendingException as JavaException;
+			if (je == null) {
+				je  = new JavaProxyThrowable (pendingException);
+				// because `je` may cross thread boundaries;
+				// We'll need to rely on the GC to cleanup
+				je.RegisterWithVM ();
+			}
+			JniEnvironment.Exceptions.Throw (je.PeerReference);
+#endif  // !XA_INTEGRATION
+		}
+	}
+
+#if !XA_INTEGRATION
+	partial class JavaVM {
 
 		public virtual JniMarshalInfo GetJniMarshalInfoForType (Type type)
 		{
@@ -780,5 +827,6 @@ namespace Java.Interop
 			}
 		}
 	}
+#endif  // !XA_INTEGRATION
 }
 

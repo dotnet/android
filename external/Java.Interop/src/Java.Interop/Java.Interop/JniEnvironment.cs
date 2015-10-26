@@ -146,8 +146,9 @@ namespace Java.Interop {
 			}
 #endif  // FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
 
-			if (pendingException != null)
-				Exceptions.Throw (pendingException);
+			if (pendingException != null) {
+				JavaVM.RaisePendingException (pendingException);
+			}
 
 			Obj_toS     = null;
 			Cls_getN    = null;

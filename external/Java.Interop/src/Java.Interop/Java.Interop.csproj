@@ -40,7 +40,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>..\..\bin\XAIntegrationDebug</OutputPath>
-    <DefineConstants>DEBUG;INTEROP;FEATURE_JNIENVIRONMENT_JI_INTPTRS;FEATURE_JNIOBJECTREFERENCE_INTPTRS</DefineConstants>
+    <DefineConstants>DEBUG;INTEROP;XA_INTEGRATION;FEATURE_JNIENVIRONMENT_JI_INTPTRS;FEATURE_JNIOBJECTREFERENCE_INTPTRS</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <ConsolePause>false</ConsolePause>
@@ -49,7 +49,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Java.Interop\JavaPeerableExtensions.cs" />
     <Compile Include="Java.Interop\JavaVM.cs" />
     <Compile Include="Java.Interop\JniEnvironment.cs" />
     <Compile Include="Java.Interop\JniEnvironment.g.cs" />
@@ -64,23 +63,13 @@
     <Compile Include="Java.Interop\JniStaticMethodInfo.cs" />
     <Compile Include="Java.Interop\JniStaticFieldInfo.cs" />
     <Compile Include="Java.Interop\JniType.cs" />
+    <Compile Include="Java.Interop\JniTypeInfo.cs" />
+    <Compile Include="Java.Interop\JniTypeInfoAttribute.cs" />
     <Compile Include="Java.Interop\JValue.cs" />
-    <Compile Include="Java.Interop\JavaException.cs" />
     <Compile Include="Java.Interop\JniNativeMethodRegistration.cs" />
-    <Compile Include="Java.Interop\JavaObject.cs" />
-    <Compile Include="Java.Interop\JniSystem.cs" />
-    <Compile Include="Java.Interop\JavaArray.cs" />
     <Compile Include="Java.Interop\IExportedMemberBuilder.cs" />
     <Compile Include="Java.Interop\IJavaPeerable.cs" />
-    <Compile Include="Java.Interop\IJavaPeerableEx.cs" />
     <Compile Include="Java.Interop\IJniObjectReferenceManager.cs" />
-    <Compile Include="Java.Interop\JavaObjectArray.cs" />
-    <Compile Include="Java.Interop\JniTypeInfoAttribute.cs" />
-    <Compile Include="Java.Interop\JniTypeInfo.cs" />
-    <Compile Include="Java.Interop\JavaProxyObject.cs" />
-    <Compile Include="Java.Interop\JniMarshal.cs" />
-    <Compile Include="Java.Interop\JniMarshalInfo.cs" />
-    <Compile Include="Java.Interop\JniObjectReference.cs" />
     <Compile Include="Java.Interop\JniObjectReferenceManager.cs" />
     <Compile Include="Java.Interop\JniObjectReferenceOptions.cs" />
     <Compile Include="Java.Interop\JniObjectReferenceType.cs" />
@@ -91,29 +80,42 @@
     <Compile Include="Java.Interop\JniPeerInstanceFields.cs" />
     <Compile Include="Java.Interop\JniPeerStaticMethods.cs" />
     <Compile Include="Java.Interop\JniPeerStaticFields.cs" />
-    <Compile Include="Java.Interop\JavaPrimitiveArrays.cs">
-      <DependentUpon>JavaPrimitiveArrays.tt</DependentUpon>
-    </Compile>
-    <Compile Include="Java.Interop\JniPeerMethods.cs">
-      <DependentUpon>JniPeerMethods.tt</DependentUpon>
-    </Compile>
     <Compile Include="Java.Interop\JniPeerFields.cs">
       <DependentUpon>JniPeerFields.tt</DependentUpon>
     </Compile>
+  </ItemGroup>
+  <ItemGroup Condition=" !$(Configuration.StartsWith('XAIntegration')) ">
+    <Compile Include="Java.Interop\IJavaPeerableEx.cs" />
+    <Compile Include="Java.Interop\JavaArray.cs" />
+    <Compile Include="Java.Interop\JavaException.cs" />
+    <Compile Include="Java.Interop\JavaObject.cs" />
+    <Compile Include="Java.Interop\JavaObjectArray.cs" />
+    <Compile Include="Java.Interop\JavaPeerableExtensions.cs" />
+    <Compile Include="Java.Interop\JavaPrimitiveArrays.cs">
+      <DependentUpon>JavaPrimitiveArrays.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Java.Interop\JavaProxyObject.cs" />
+    <Compile Include="Java.Interop\JavaProxyThrowable.cs" />
+    <Compile Include="Java.Interop\JniAllocObjectRef.cs" />
     <Compile Include="Java.Interop\JniBuiltinMarshalers.cs">
       <DependentUpon>JniBuiltinMarshalers.tt</DependentUpon>
     </Compile>
-    <Compile Include="Java.Interop\JavaProxyThrowable.cs" />
     <Compile Include="Java.Interop\JniEnvironment.Errors.cs" />
-    <Compile Include="Java.Interop\JniMarshalMethod.cs" />
-    <Compile Include="Java.Interop\ManagedPeer.cs" />
-  </ItemGroup>
-  <ItemGroup Condition=" !$(Configuration.StartsWith('XAIntegration')) ">
-    <Compile Include="Java.Interop\JniAllocObjectRef.cs" />
     <Compile Include="Java.Interop\JniGlobalReference.cs" />
     <Compile Include="Java.Interop\JniLocalReference.cs" />
+    <Compile Include="Java.Interop\JniMarshal.cs" />
+    <Compile Include="Java.Interop\JniMarshalMethod.cs" />
+    <Compile Include="Java.Interop\JniMarshalInfo.cs" />
+    <Compile Include="Java.Interop\JniPeerMethods.cs">
+      <DependentUpon>JniPeerMethods.tt</DependentUpon>
+    </Compile>
     <Compile Include="Java.Interop\JniReferenceSafeHandle.cs" />
+    <Compile Include="Java.Interop\JniSystem.cs" />
     <Compile Include="Java.Interop\JniWeakGlobalReference.cs" />
+    <Compile Include="Java.Interop\ManagedPeer.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Java.Interop\JniObjectReference.cs" />
   </ItemGroup>
   <ItemGroup>
     <CompileJavaInteropJar Include="java\com\xamarin\android\internal\JavaProxyObject.java" />

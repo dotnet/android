@@ -43,10 +43,12 @@ namespace Java.Interop
 				}
 			}
 
+#if !XA_INTEGRATION
 			public static int GetIdentityHashCode (JniObjectReference value)
 			{
 				return JniSystem.IdentityHashCode (value);
 			}
+#endif  // !XA_INTEGRATION
 
 			public static IntPtr NewReturnToJniRef (IJavaPeerable value)
 			{

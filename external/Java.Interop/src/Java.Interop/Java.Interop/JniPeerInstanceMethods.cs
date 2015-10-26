@@ -129,6 +129,7 @@ namespace Java.Interop
 		}
 	}
 
+#if !XA_INTEGRATION
 	struct JniArgumentMarshalInfo<T> {
 		JValue                          jvalue;
 		JniObjectReference              lref;
@@ -164,5 +165,6 @@ namespace Java.Interop
 			JniEnvironment.References.Dispose (ref lref, JniObjectReferenceOptions.DisposeSourceReference);
 		}
 	}
+#endif  // !XA_INTEGRATION
 }
 

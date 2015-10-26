@@ -14,12 +14,14 @@ namespace Java.Interop {
 			if (!typeof (IJavaPeerable).IsAssignableFrom (managedPeerType))
 				throw new ArgumentException ("'managedPeerType' must implement the IJavaPeerable interface.", "managedPeerType");
 
+#if !XA_INTEGRATION
 			Debug.Assert (
 					JniEnvironment.Current.JavaVM.GetJniTypeInfoForType (managedPeerType).JniTypeName == jniPeerType,
 					string.Format ("ManagedPeerType <=> JniTypeName Mismatch! javaVM.GetJniTypeInfoForType(typeof({0})).JniTypeName=\"{1}\" != \"{2}\"",
 						managedPeerType.FullName,
 						JniEnvironment.Current.JavaVM.GetJniTypeInfoForType (managedPeerType).JniTypeName,
 						jniPeerType));
+#endif  // !XA_INTEGRATION
 
 			ManagedPeerType = managedPeerType;
 		}
@@ -35,12 +37,14 @@ namespace Java.Interop {
 				if (!typeof (IJavaPeerable).IsAssignableFrom (managedPeerType))
 					throw new ArgumentException ("'managedPeerType' must implement the IJavaPeerable interface.", "managedPeerType");
 
+#if !XA_INTEGRATION
 				Debug.Assert (
 					JniEnvironment.Current.JavaVM.GetJniTypeInfoForType (managedPeerType).JniTypeName == jniPeerType,
 					string.Format ("ManagedPeerType <=> JniTypeName Mismatch! javaVM.GetJniTypeInfoForType(typeof({0})).JniTypeName=\"{1}\" != \"{2}\"",
 						managedPeerType.FullName,
 						JniEnvironment.Current.JavaVM.GetJniTypeInfoForType (managedPeerType).JniTypeName,
 						jniPeerType));
+#endif  // !XA_INTEGRATION
 			}
 
 			JniPeerTypeName = jniPeerType;

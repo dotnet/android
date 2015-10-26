@@ -143,13 +143,15 @@ namespace Java.Interop {
 			if (methods == null)
 				throw new ArgumentNullException ("methods");
 
+#if !XA_INTEGRATION
 			for (int i = 0; i < methods.Length; ++i) {
 				methods [i].Marshaler = JniMarshalMethod.Wrap  (methods [i].Marshaler);
 			}
+#endif  // !XA_INTEGRATION
 
 			int r = JniEnvironment.Types.RegisterNatives (PeerReference, methods, checked ((int)methods.Length));
 			if (r != 0)
-				throw new JavaException ("Unable to register native methods.");
+				throw new InvalidOperationException ("Unable to register native methods.");
 			// Prevents method delegates from being GC'd so long as this type remains
 			this.methods = methods;
 			RegisterWithVM ();
