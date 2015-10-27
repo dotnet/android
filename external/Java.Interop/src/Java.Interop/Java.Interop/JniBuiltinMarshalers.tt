@@ -23,17 +23,17 @@ namespace Java.Interop {
 
 	partial class JavaVM {
 
-		static readonly KeyValuePair<Type, JniTypeInfo>[] JniBuiltinTypeNameMappings = new []{
-			new KeyValuePair<Type, JniTypeInfo>(typeof (string),    new JniTypeInfo ("java/lang/String")),
+		static readonly KeyValuePair<Type, JniTypeSignature>[] JniBuiltinTypeNameMappings = new []{
+			new KeyValuePair<Type, JniTypeSignature>(typeof (string),    new JniTypeSignature ("java/lang/String")),
 
-			new KeyValuePair<Type, JniTypeInfo>(typeof (void),      new JniTypeInfo ("V",   typeIsKeyword: true)),
-			new KeyValuePair<Type, JniTypeInfo>(typeof (void),      new JniTypeInfo ("java/lang/Void")),
+			new KeyValuePair<Type, JniTypeSignature>(typeof (void),      new JniTypeSignature ("V", arrayRank: 0, keyword: true)),
+			new KeyValuePair<Type, JniTypeSignature>(typeof (void),      new JniTypeSignature ("java/lang/Void")),
 
 <#
 	foreach (var type in types) {
 #>
-			new KeyValuePair<Type, JniTypeInfo>(typeof (<#= type.Type #>),  new JniTypeInfo ("<#= type.JniType #>", typeIsKeyword: true)),
-			new KeyValuePair<Type, JniTypeInfo>(typeof (<#= type.Type #>),  new JniTypeInfo ("java/lang/<#= type.Name #>")),
+			new KeyValuePair<Type, JniTypeSignature>(typeof (<#= type.Type #>),     new JniTypeSignature ("<#= type.JniType #>", 0, keyword: true)),
+			new KeyValuePair<Type, JniTypeSignature>(typeof (<#= type.Type #>),     new JniTypeSignature ("java/lang/<#= type.Name #>")),
 <#
 	}
 #>

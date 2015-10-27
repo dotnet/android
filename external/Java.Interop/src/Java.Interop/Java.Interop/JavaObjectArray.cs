@@ -13,13 +13,12 @@ namespace Java.Interop
 		static JniObjectReference _NewArray (int length)
 		{
 			var info = JniEnvironment.Current.JavaVM.GetJniTypeInfoForType (typeof (T));
-			if (info.JniTypeName == null)
-				info.JniTypeName = "java/lang/Object";
-			if (info.TypeIsKeyword && info.ArrayRank == 0) {
-				if (info.JniTypeName == "I")
-					info.JniTypeName = JniInteger.JniTypeName;
+			if (info.SimpleReference == null)
+				info = new JniTypeSignature ("java/lang/Object", info.ArrayRank);
+			if (info.IsKeyword && info.ArrayRank == 0) {
+				info = info.GetPrimitiveWrapper ();
 			}
-			using (var t = new JniType (info.ToString ())) {
+			using (var t = new JniType (info.Name)) {
 				return JniEnvironment.Arrays.NewObjectArray (length, t.PeerReference, new JniObjectReference ());
 			}
 		}

@@ -40,7 +40,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JniMarshalMethodTests.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JniMarshalTests.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JniTypeInfoAttributeTest.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JniTypeInfoTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JniTypeSignatureTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JniTypeTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\MethodBindingTests.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\TestType.cs" />

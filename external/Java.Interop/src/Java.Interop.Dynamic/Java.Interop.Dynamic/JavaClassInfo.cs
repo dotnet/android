@@ -228,7 +228,7 @@ namespace Java.Interop.Dynamic {
 						var n_type      = Field_getType.InvokeVirtualObjectMethod (field);
 						using (var type = new JniType (ref n_type, JniObjectReferenceOptions.DisposeSourceReference)) {
 							var info = JniEnvironment.Current.JavaVM.GetJniTypeInfoForJniTypeReference (type.Name);
-							overloads.Add (new JavaFieldInfo (Members, name + "\u0000" + info.JniTypeReference, isStatic));
+							overloads.Add (new JavaFieldInfo (Members, name + "\u0000" + info.QualifiedReference, isStatic));
 						}
 
 						JniEnvironment.References.Dispose (ref field);
@@ -324,7 +324,7 @@ namespace Java.Interop.Dynamic {
 			var vm  = JniEnvironment.Current.JavaVM;
 			foreach (var a in args) {
 				try {
-					var at  = new JniType (vm.GetJniTypeInfoForType (a.LimitType).JniTypeReference);
+					var at  = new JniType (vm.GetJniTypeInfoForType (a.LimitType).QualifiedReference);
 					r.Add (at);
 				} catch (JavaException e) {
 					e.Dispose ();

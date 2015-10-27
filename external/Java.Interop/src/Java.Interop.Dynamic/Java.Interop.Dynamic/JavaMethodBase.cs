@@ -116,7 +116,7 @@ namespace Java.Interop.Dynamic {
 			for (int i = 0; i < arguments.Count; ++i) {
 				if (args [i] == null) {
 					// Builtin type -- JNIEnv.FindClass("I") throws!
-					if (JniEnvironment.Types.GetJniTypeNameFromClass (arguments [i]) != vm.GetJniTypeInfoForType (dargs [i].LimitType).JniTypeReference)
+					if (JniEnvironment.Types.GetJniTypeNameFromClass (arguments [i]) != vm.GetJniTypeInfoForType (dargs [i].LimitType).QualifiedReference)
 						return false;
 				}
 				else if (!JniEnvironment.Types.IsAssignableFrom (arguments [i], args [i].PeerReference))

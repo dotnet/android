@@ -63,8 +63,8 @@
     <Compile Include="Java.Interop\JniStaticMethodInfo.cs" />
     <Compile Include="Java.Interop\JniStaticFieldInfo.cs" />
     <Compile Include="Java.Interop\JniType.cs" />
-    <Compile Include="Java.Interop\JniTypeInfo.cs" />
     <Compile Include="Java.Interop\JniTypeInfoAttribute.cs" />
+    <Compile Include="Java.Interop\JniTypeSignature.cs" />
     <Compile Include="Java.Interop\JValue.cs" />
     <Compile Include="Java.Interop\JniNativeMethodRegistration.cs" />
     <Compile Include="Java.Interop\IExportedMemberBuilder.cs" />

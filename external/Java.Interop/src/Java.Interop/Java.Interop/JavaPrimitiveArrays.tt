@@ -23,12 +23,12 @@ namespace Java.Interop {
 	};
 #>
 	partial class JavaVM {
-		static readonly KeyValuePair<Type, JniTypeInfo>[] JniBuiltinArrayMappings = new[]{
+		static readonly KeyValuePair<Type, JniTypeSignature>[] JniBuiltinArrayMappings = new[]{
 <#
 	foreach (var info in arrayTypeInfo) {
 #>
-			new KeyValuePair<Type, JniTypeInfo>(typeof (JavaPrimitiveArray<<#= info.ManagedType #>>),   new JniTypeInfo ("<#= info.JniType #>", true, 1)),
-			new KeyValuePair<Type, JniTypeInfo>(typeof (JavaArray<<#= info.ManagedType #>>),            new JniTypeInfo ("<#= info.JniType #>", true, 1)),
+			new KeyValuePair<Type, JniTypeSignature>(typeof (JavaPrimitiveArray<<#= info.ManagedType #>>),  new JniTypeSignature ("<#= info.JniType #>", arrayRank: 1, keyword: true)),
+			new KeyValuePair<Type, JniTypeSignature>(typeof (JavaArray<<#= info.ManagedType #>>),           new JniTypeSignature ("<#= info.JniType #>", arrayRank: 1, keyword: true)),
 <#
 	}
 #>

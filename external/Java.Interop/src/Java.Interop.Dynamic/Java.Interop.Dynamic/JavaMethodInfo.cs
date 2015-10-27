@@ -54,7 +54,7 @@ namespace Java.Interop.Dynamic {
 			get {
 				if (ReturnType == null)
 					return "V";
-				return JniEnvironment.Current.JavaVM.GetJniTypeInfoForJniTypeReference (ReturnType.Name).JniTypeReference;
+				return JniEnvironment.Current.JavaVM.GetJniTypeInfoForJniTypeReference (ReturnType.Name).QualifiedReference;
 			}
 		}
 

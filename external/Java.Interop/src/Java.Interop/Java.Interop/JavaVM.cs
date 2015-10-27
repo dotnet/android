@@ -550,7 +550,7 @@ namespace Java.Interop
 
 	partial class JavaVM {
 
-		public JniTypeInfo GetJniTypeInfoForType (Type type)
+		public JniTypeSignature GetJniTypeInfoForType (Type type)
 		{
 			if (type == null)
 				throw new ArgumentNullException ("type");
@@ -573,35 +573,32 @@ namespace Java.Interop
 			foreach (var mapping in JniBuiltinTypeNameMappings) {
 				if (mapping.Key == type) {
 					var r = mapping.Value;
-					r.ArrayRank += rank;
-					return r;
+					return r.AddArrayRank (rank);
 				}
 			}
 
 			foreach (var mapping in JniBuiltinArrayMappings) {
 				if (mapping.Key == type) {
 					var r = mapping.Value;
-					r.ArrayRank += rank;
-					return r;
+					return r.AddArrayRank (rank);
 				}
 			}
 #endif  // !XA_INTEGRATION
 
 			var names = (JniTypeInfoAttribute[]) type.GetCustomAttributes (typeof (JniTypeInfoAttribute), inherit:false);
 			if (names.Length != 0)
-				return new JniTypeInfo (names [0].JniTypeName, names [0].TypeIsKeyword, names [0].ArrayRank + rank);
+				return new JniTypeSignature (names [0].JniTypeName, names [0].ArrayRank + rank, names [0].TypeIsKeyword);
 
 #if !XA_INTEGRATION
 			if (type.IsGenericType) {
 				var def = type.GetGenericTypeDefinition ();
 				if (def == typeof(JavaArray<>) || def == typeof(JavaObjectArray<>)) {
 					var r = GetJniTypeInfoForType (type.GetGenericArguments () [0]);
-					r.ArrayRank += rank + 1;
-					return r;
+					return r.AddArrayRank (rank + 1);
 				}
 			}
 #endif  // !XA_INTEGRATION
-			return new JniTypeInfo (GetJniSimplifiedTypeReferenceForType (type), false, rank);
+			return new JniTypeSignature (GetJniSimplifiedTypeReferenceForType (type), rank, false);
 		}
 
 		// Should be protected, but how then would we test?
@@ -617,9 +614,9 @@ namespace Java.Interop
 		public virtual Type GetTypeForJniTypeRefererence (string jniTypeReference)
 		{
 			var info    = GetJniTypeInfoForJniTypeReference (jniTypeReference);
-			if (info.JniTypeName == null)
+			if (info.SimpleReference == null)
 				return null;
-			var inner   = GetTypeForJniSimplifiedTypeReference (info.JniTypeName);
+			var inner   = GetTypeForJniSimplifiedTypeReference (info.SimpleReference);
 			if (inner == null)
 				return null;
 			var rank    = info.ArrayRank;
@@ -629,7 +626,7 @@ namespace Java.Interop
 				throw new NotSupportedException ("Cannot handle arrays at this time.");
 #else   // XA_INTEGRATION
 
-			if (info.TypeIsKeyword && rank > 0) {
+			if (info.IsKeyword && rank > 0) {
 				type = typeof(JavaPrimitiveArray<>).MakeGenericType (type);
 				if (--rank == 0)
 					return type;
@@ -641,15 +638,17 @@ namespace Java.Interop
 			return type;
 		}
 
-		public JniTypeInfo GetJniTypeInfoForJniTypeReference (string jniTypeReference)
+		public JniTypeSignature GetJniTypeInfoForJniTypeReference (string jniTypeReference)
 		{
 			if (jniTypeReference == null)
 				throw new ArgumentNullException ("jniTypeReference");
-			var info = new JniTypeInfo ();
 			int i = 0;
+			int r = 0;
+			var n = (string) null;
+			var k = false;
 			while (i < jniTypeReference.Length && jniTypeReference [i] == '[') {
 				i++;
-				info.ArrayRank++;
+				r++;
 			}
 			switch (jniTypeReference [i]) {
 			case 'B':
@@ -661,10 +660,10 @@ namespace Java.Interop
 			case 'S':
 			case 'Z':
 				if (jniTypeReference.Length - i > 1)
-					info.JniTypeName    = jniTypeReference.Substring (i);
+					n   = jniTypeReference.Substring (i);
 				else {
-					info.JniTypeName    = jniTypeReference [i].ToString ();
-					info.TypeIsKeyword  = true;
+					n   = jniTypeReference [i].ToString ();
+					k   = true;
 				}
 				break;
 			case 'L':
@@ -674,7 +673,7 @@ namespace Java.Interop
 							string.Format ("Malformed JNI type reference: trailing text after ';' in '{0}'.", jniTypeReference),
 							"jniTypeReference");
 				if (i == 0) {
-					info.JniTypeName = s > i
+					n   = s > i
 						? jniTypeReference.Substring (i + 1, s - i - 1)
 						: jniTypeReference;
 				} else {
@@ -686,7 +685,7 @@ namespace Java.Interop
 						throw new ArgumentException (
 								string.Format ("Malformed jNI type reference: invalid trailing text: '{0}'.", jniTypeReference.Substring (i)),
 								"jniTypeReference");
-					info.JniTypeName = jniTypeReference.Substring (i + 1, s - i - 1);
+					n   = jniTypeReference.Substring (i + 1, s - i - 1);
 				}
 				break;
 			default:
@@ -695,15 +694,15 @@ namespace Java.Interop
 							string.Format ("Malformed JNI type reference: found unrecognized char '{0}' in '{1}'.",
 								jniTypeReference [i], jniTypeReference),
 							"jniTypeReference");
-				info.JniTypeName = jniTypeReference;
+				n   = jniTypeReference;
 				break;
 			}
-			int bad = info.JniTypeName.IndexOfAny (new[]{ '.', ';' });
+			int bad = n.IndexOfAny (new[]{ '.', ';' });
 			if (bad >= 0)
 				throw new ArgumentException (
-						string.Format ("Malformed JNI type reference: contains '{0}': {1}", info.JniTypeName [bad], jniTypeReference),
+						string.Format ("Malformed JNI type reference: contains '{0}': {1}", n [bad], jniTypeReference),
 						"jniTypeReference");
-			return info;
+			return new JniTypeSignature (n, r, k);
 		}
 
 		public virtual Type GetTypeForJniSimplifiedTypeReference (string jniTypeReference)
@@ -719,7 +718,7 @@ namespace Java.Interop
 
 #if !XA_INTEGRATION
 			foreach (var mapping in JniBuiltinTypeNameMappings) {
-				if (mapping.Value.JniTypeName == jniTypeReference)
+				if (mapping.Value.SimpleReference == jniTypeReference)
 					return mapping.Key;
 			}
 #endif  // !XA_INTEGRATION

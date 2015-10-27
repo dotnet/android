@@ -15,13 +15,13 @@ namespace Java.Interop
 		{
 			var jvm     = JniEnvironment.Current.JavaVM;
 			var info    = jvm.GetJniTypeInfoForType (declaringType);
-			if (info.JniTypeName == null)
+			if (info.SimpleReference == null)
 				throw new NotSupportedException (
 						string.Format ("Cannot create instance of type '{0}': no Java peer type found.",
 							declaringType.FullName));
 
 			DeclaringType   = declaringType;
-			JniPeerType     = new JniType (info.ToString ());
+			JniPeerType     = new JniType (info.Name);
 			JniPeerType.RegisterWithVM ();
 		}
 

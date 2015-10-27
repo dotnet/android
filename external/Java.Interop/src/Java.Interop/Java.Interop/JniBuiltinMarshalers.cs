@@ -6,28 +6,28 @@ namespace Java.Interop {
 
 	partial class JavaVM {
 
-		static readonly KeyValuePair<Type, JniTypeInfo>[] JniBuiltinTypeNameMappings = new []{
-			new KeyValuePair<Type, JniTypeInfo>(typeof (string),    new JniTypeInfo ("java/lang/String")),
+		static readonly KeyValuePair<Type, JniTypeSignature>[] JniBuiltinTypeNameMappings = new []{
+			new KeyValuePair<Type, JniTypeSignature>(typeof (string),    new JniTypeSignature ("java/lang/String")),
 
-			new KeyValuePair<Type, JniTypeInfo>(typeof (void),      new JniTypeInfo ("V",   typeIsKeyword: true)),
-			new KeyValuePair<Type, JniTypeInfo>(typeof (void),      new JniTypeInfo ("java/lang/Void")),
+			new KeyValuePair<Type, JniTypeSignature>(typeof (void),      new JniTypeSignature ("V", arrayRank: 0, keyword: true)),
+			new KeyValuePair<Type, JniTypeSignature>(typeof (void),      new JniTypeSignature ("java/lang/Void")),
 
-			new KeyValuePair<Type, JniTypeInfo>(typeof (Boolean),  new JniTypeInfo ("Z", typeIsKeyword: true)),
-			new KeyValuePair<Type, JniTypeInfo>(typeof (Boolean),  new JniTypeInfo ("java/lang/Boolean")),
-			new KeyValuePair<Type, JniTypeInfo>(typeof (SByte),  new JniTypeInfo ("B", typeIsKeyword: true)),
-			new KeyValuePair<Type, JniTypeInfo>(typeof (SByte),  new JniTypeInfo ("java/lang/Byte")),
-			new KeyValuePair<Type, JniTypeInfo>(typeof (Char),  new JniTypeInfo ("C", typeIsKeyword: true)),
-			new KeyValuePair<Type, JniTypeInfo>(typeof (Char),  new JniTypeInfo ("java/lang/Character")),
-			new KeyValuePair<Type, JniTypeInfo>(typeof (Int16),  new JniTypeInfo ("S", typeIsKeyword: true)),
-			new KeyValuePair<Type, JniTypeInfo>(typeof (Int16),  new JniTypeInfo ("java/lang/Short")),
-			new KeyValuePair<Type, JniTypeInfo>(typeof (Int32),  new JniTypeInfo ("I", typeIsKeyword: true)),
-			new KeyValuePair<Type, JniTypeInfo>(typeof (Int32),  new JniTypeInfo ("java/lang/Integer")),
-			new KeyValuePair<Type, JniTypeInfo>(typeof (Int64),  new JniTypeInfo ("J", typeIsKeyword: true)),
-			new KeyValuePair<Type, JniTypeInfo>(typeof (Int64),  new JniTypeInfo ("java/lang/Long")),
-			new KeyValuePair<Type, JniTypeInfo>(typeof (Single),  new JniTypeInfo ("F", typeIsKeyword: true)),
-			new KeyValuePair<Type, JniTypeInfo>(typeof (Single),  new JniTypeInfo ("java/lang/Float")),
-			new KeyValuePair<Type, JniTypeInfo>(typeof (Double),  new JniTypeInfo ("D", typeIsKeyword: true)),
-			new KeyValuePair<Type, JniTypeInfo>(typeof (Double),  new JniTypeInfo ("java/lang/Double")),
+			new KeyValuePair<Type, JniTypeSignature>(typeof (Boolean),     new JniTypeSignature ("Z", 0, keyword: true)),
+			new KeyValuePair<Type, JniTypeSignature>(typeof (Boolean),     new JniTypeSignature ("java/lang/Boolean")),
+			new KeyValuePair<Type, JniTypeSignature>(typeof (SByte),     new JniTypeSignature ("B", 0, keyword: true)),
+			new KeyValuePair<Type, JniTypeSignature>(typeof (SByte),     new JniTypeSignature ("java/lang/Byte")),
+			new KeyValuePair<Type, JniTypeSignature>(typeof (Char),     new JniTypeSignature ("C", 0, keyword: true)),
+			new KeyValuePair<Type, JniTypeSignature>(typeof (Char),     new JniTypeSignature ("java/lang/Character")),
+			new KeyValuePair<Type, JniTypeSignature>(typeof (Int16),     new JniTypeSignature ("S", 0, keyword: true)),
+			new KeyValuePair<Type, JniTypeSignature>(typeof (Int16),     new JniTypeSignature ("java/lang/Short")),
+			new KeyValuePair<Type, JniTypeSignature>(typeof (Int32),     new JniTypeSignature ("I", 0, keyword: true)),
+			new KeyValuePair<Type, JniTypeSignature>(typeof (Int32),     new JniTypeSignature ("java/lang/Integer")),
+			new KeyValuePair<Type, JniTypeSignature>(typeof (Int64),     new JniTypeSignature ("J", 0, keyword: true)),
+			new KeyValuePair<Type, JniTypeSignature>(typeof (Int64),     new JniTypeSignature ("java/lang/Long")),
+			new KeyValuePair<Type, JniTypeSignature>(typeof (Single),     new JniTypeSignature ("F", 0, keyword: true)),
+			new KeyValuePair<Type, JniTypeSignature>(typeof (Single),     new JniTypeSignature ("java/lang/Float")),
+			new KeyValuePair<Type, JniTypeSignature>(typeof (Double),     new JniTypeSignature ("D", 0, keyword: true)),
+			new KeyValuePair<Type, JniTypeSignature>(typeof (Double),     new JniTypeSignature ("java/lang/Double")),
 		};
 
 		static readonly KeyValuePair<Type, JniMarshalInfo>[] JniBuiltinMarshalers = new []{

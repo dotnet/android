@@ -187,8 +187,7 @@ namespace Java.InteropTests
 		static void AssertGetJniTypeInfoForType (Type type, string jniType, bool isKeyword, int arrayRank)
 		{
 			var info = JavaVM.Current.GetJniTypeInfoForType (type);
-			Assert.AreEqual (jniType,   info.ToString ());
-			Assert.AreEqual (isKeyword, info.TypeIsKeyword);
+			Assert.AreEqual (jniType,   info.Name);
 			Assert.AreEqual (arrayRank, info.ArrayRank);
 		}
 
@@ -393,8 +392,7 @@ namespace Java.InteropTests
 		static void AssertGetJniTypeInfoForJniTypeReference (string jniTypeReference, string jniTypeName, bool typeIsKeyword = false, int arrayRank = 0)
 		{
 			var info = JavaVM.Current.GetJniTypeInfoForJniTypeReference (jniTypeReference);
-			Assert.AreEqual (jniTypeName,   info.JniTypeName,   "JniTypeName for: " + jniTypeReference);
-			Assert.AreEqual (typeIsKeyword, info.TypeIsKeyword, "TypeIsKeyword for: " + jniTypeReference);
+			Assert.AreEqual (jniTypeName,   info.SimpleReference,   "JniTypeName for: " + jniTypeReference);
 			Assert.AreEqual (arrayRank,     info.ArrayRank,     "ArrayRank for: " + jniTypeReference);
 		}
 
