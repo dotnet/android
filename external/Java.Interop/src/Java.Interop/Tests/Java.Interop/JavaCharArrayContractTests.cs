@@ -9,7 +9,7 @@ using NUnit.Framework;
 namespace Java.InteropTests
 {
 	[TestFixture]
-	public class JavaChararacterArrayContractTests : JavaPrimitiveArrayContract<JavaCharacterArray, char>
+	public class JavaCharArrayContractTests : JavaPrimitiveArrayContract<JavaCharArray, char>
 	{
 	}
 }

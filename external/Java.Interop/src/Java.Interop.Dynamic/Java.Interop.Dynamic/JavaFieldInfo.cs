@@ -67,7 +67,7 @@ namespace Java.Interop.Dynamic {
 			switch (JniSignature [n + 1]) {
 			case 'Z':   return members.StaticFields.GetBooleanValue (JniSignature);
 			case 'B':   return members.StaticFields.GetByteValue (JniSignature);
-			case 'C':   return members.StaticFields.GetCharacterValue (JniSignature);
+			case 'C':   return members.StaticFields.GetCharValue (JniSignature);
 			case 'S':   return members.StaticFields.GetInt16Value (JniSignature);
 			case 'I':   return members.StaticFields.GetInt32Value (JniSignature);
 			case 'J':   return members.StaticFields.GetInt64Value (JniSignature);
@@ -88,7 +88,7 @@ namespace Java.Interop.Dynamic {
 			switch (JniSignature [n + 1]) {
 			case 'Z':   return members.InstanceFields.GetBooleanValue (JniSignature, self);
 			case 'B':   return members.InstanceFields.GetByteValue (JniSignature, self);
-			case 'C':   return members.InstanceFields.GetCharacterValue (JniSignature, self);
+			case 'C':   return members.InstanceFields.GetCharValue (JniSignature, self);
 			case 'S':   return members.InstanceFields.GetInt16Value (JniSignature, self);
 			case 'I':   return members.InstanceFields.GetInt32Value (JniSignature, self);
 			case 'J':   return members.InstanceFields.GetInt64Value (JniSignature, self);

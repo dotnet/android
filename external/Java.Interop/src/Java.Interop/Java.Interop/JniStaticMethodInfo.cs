@@ -51,12 +51,12 @@ namespace Java.Interop
 			return JniEnvironment.StaticMethods.CallStaticByteMethod (type, this, parameters);
 		}
 
-		public char CallCharacterMethod (JniObjectReference type)
+		public char CallCharMethod (JniObjectReference type)
 		{
 			return JniEnvironment.StaticMethods.CallStaticCharMethod (type, this);
 		}
 
-		public unsafe char CallCharacterMethod (JniObjectReference type, JValue* parameters)
+		public unsafe char CallCharMethod (JniObjectReference type, JValue* parameters)
 		{
 			return JniEnvironment.StaticMethods.CallStaticCharMethod (type, this, parameters);
 		}

@@ -85,30 +85,30 @@ namespace Java.Interop {
 			
 		}
 
-		public unsafe char InvokeVirtualCharacterMethod (string encodedMember, IJavaPeerable self, JValue* parameters)
+		public unsafe char InvokeVirtualCharMethod (string encodedMember, IJavaPeerable self, JValue* parameters)
 		{
 			JniPeerMembers.AssertSelf (self);
 
 			var declaringType   = DeclaringType;
 			if (self.GetType () == declaringType || declaringType == null) {
 				var m   = GetMethodInfo (encodedMember);
-				return m.InvokeVirtualCharacterMethod (self.PeerReference, parameters);
+				return m.InvokeVirtualCharMethod (self.PeerReference, parameters);
 				
 			}
 			var j = self.JniPeerMembers;
 			var n = j.InstanceMethods.GetMethodInfo (encodedMember);
-			return n.InvokeNonvirtualCharacterMethod (self.PeerReference, j.JniPeerType.PeerReference, parameters);
+			return n.InvokeNonvirtualCharMethod (self.PeerReference, j.JniPeerType.PeerReference, parameters);
 			
 		}
 
-		public unsafe char InvokeNonvirtualCharacterMethod (string encodedMember, IJavaPeerable self, JValue* parameters)
+		public unsafe char InvokeNonvirtualCharMethod (string encodedMember, IJavaPeerable self, JValue* parameters)
 		{
 			JniPeerMembers.AssertSelf (self);
 
 			var j   = self.JniPeerMembers;
 			var m   = GetMethodInfo (encodedMember);
 
-			return m.InvokeNonvirtualCharacterMethod (self.PeerReference, j.JniPeerType.PeerReference, parameters);
+			return m.InvokeNonvirtualCharMethod (self.PeerReference, j.JniPeerType.PeerReference, parameters);
 			
 		}
 

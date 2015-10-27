@@ -156,7 +156,7 @@ namespace Java.InteropTests
 			AssertGetJniTypeInfoForType (typeof (JavaInt64Array),       "[J",   true,   1);
 			AssertGetJniTypeInfoForType (typeof (JavaSingleArray),      "[F",   true,   1);
 			AssertGetJniTypeInfoForType (typeof (JavaDoubleArray),      "[D",   true,   1);
-			AssertGetJniTypeInfoForType (typeof (JavaCharacterArray),   "[C",   true,   1);
+			AssertGetJniTypeInfoForType (typeof (JavaCharArray),        "[C",   true,   1);
 			AssertGetJniTypeInfoForType (typeof (JavaBooleanArray),     "[Z",   true,   1);
 
 			AssertGetJniTypeInfoForType (typeof (JavaPrimitiveArray<SByte>),    "[B",   true,   1);
@@ -232,7 +232,7 @@ namespace Java.InteropTests
 
 			AssertGetJniMarshalInfoForPrimitiveArray<JavaBooleanArray, bool> ();
 			AssertGetJniMarshalInfoForPrimitiveArray<JavaSByteArray, sbyte> ();
-			AssertGetJniMarshalInfoForPrimitiveArray<JavaCharacterArray, char> ();
+			AssertGetJniMarshalInfoForPrimitiveArray<JavaCharArray, char> ();
 			AssertGetJniMarshalInfoForPrimitiveArray<JavaInt16Array, short> ();
 			AssertGetJniMarshalInfoForPrimitiveArray<JavaInt32Array, int> ();
 			AssertGetJniMarshalInfoForPrimitiveArray<JavaInt64Array, long> ();

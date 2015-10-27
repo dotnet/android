@@ -3817,7 +3817,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe char InvokeGenericVirtualCharacterMethod (
+		public static unsafe char InvokeGenericVirtualCharMethod (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self
@@ -3827,12 +3827,12 @@ namespace Java.Interop.GenericMarshaler {
 			var args = stackalloc JValue [0];
 
 			try {
-				return peer.InvokeVirtualCharacterMethod (encodedMember, self, args);
+				return peer.InvokeVirtualCharMethod (encodedMember, self, args);
 			} finally {
 			}
 		}
 
-		public static unsafe char InvokeGenericVirtualCharacterMethod<T> (
+		public static unsafe char InvokeGenericVirtualCharMethod<T> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -3845,13 +3845,13 @@ namespace Java.Interop.GenericMarshaler {
 			args [0] = arg.JValue;
 
 			try {
-				return peer.InvokeVirtualCharacterMethod (encodedMember, self, args);
+				return peer.InvokeVirtualCharMethod (encodedMember, self, args);
 			} finally {
 				arg.Cleanup (value);
 			}
 		}
 
-		public static unsafe char InvokeGenericVirtualCharacterMethod<T1, T2> (
+		public static unsafe char InvokeGenericVirtualCharMethod<T1, T2> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -3866,14 +3866,14 @@ namespace Java.Interop.GenericMarshaler {
 			args [1] = arg2.JValue;
 
 			try {
-				return peer.InvokeVirtualCharacterMethod (encodedMember, self, args);
+				return peer.InvokeVirtualCharMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
 			}
 		}
 
-		public static unsafe char InvokeGenericVirtualCharacterMethod<T1, T2, T3> (
+		public static unsafe char InvokeGenericVirtualCharMethod<T1, T2, T3> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -3890,7 +3890,7 @@ namespace Java.Interop.GenericMarshaler {
 			args [2] = arg3.JValue;
 
 			try {
-				return peer.InvokeVirtualCharacterMethod (encodedMember, self, args);
+				return peer.InvokeVirtualCharMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -3898,7 +3898,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe char InvokeGenericVirtualCharacterMethod<T1, T2, T3, T4> (
+		public static unsafe char InvokeGenericVirtualCharMethod<T1, T2, T3, T4> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -3917,7 +3917,7 @@ namespace Java.Interop.GenericMarshaler {
 			args [3] = arg4.JValue;
 
 			try {
-				return peer.InvokeVirtualCharacterMethod (encodedMember, self, args);
+				return peer.InvokeVirtualCharMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -3926,7 +3926,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe char InvokeGenericVirtualCharacterMethod<T1, T2, T3, T4, T5> (
+		public static unsafe char InvokeGenericVirtualCharMethod<T1, T2, T3, T4, T5> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -3947,7 +3947,7 @@ namespace Java.Interop.GenericMarshaler {
 			args [4] = arg5.JValue;
 
 			try {
-				return peer.InvokeVirtualCharacterMethod (encodedMember, self, args);
+				return peer.InvokeVirtualCharMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -3957,7 +3957,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe char InvokeGenericVirtualCharacterMethod<T1, T2, T3, T4, T5, T6> (
+		public static unsafe char InvokeGenericVirtualCharMethod<T1, T2, T3, T4, T5, T6> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -3980,7 +3980,7 @@ namespace Java.Interop.GenericMarshaler {
 			args [5] = arg6.JValue;
 
 			try {
-				return peer.InvokeVirtualCharacterMethod (encodedMember, self, args);
+				return peer.InvokeVirtualCharMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -3991,7 +3991,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe char InvokeGenericVirtualCharacterMethod<T1, T2, T3, T4, T5, T6, T7> (
+		public static unsafe char InvokeGenericVirtualCharMethod<T1, T2, T3, T4, T5, T6, T7> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -4016,7 +4016,7 @@ namespace Java.Interop.GenericMarshaler {
 			args [6] = arg7.JValue;
 
 			try {
-				return peer.InvokeVirtualCharacterMethod (encodedMember, self, args);
+				return peer.InvokeVirtualCharMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -4028,7 +4028,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe char InvokeGenericVirtualCharacterMethod<T1, T2, T3, T4, T5, T6, T7, T8> (
+		public static unsafe char InvokeGenericVirtualCharMethod<T1, T2, T3, T4, T5, T6, T7, T8> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -4055,7 +4055,7 @@ namespace Java.Interop.GenericMarshaler {
 			args [7] = arg8.JValue;
 
 			try {
-				return peer.InvokeVirtualCharacterMethod (encodedMember, self, args);
+				return peer.InvokeVirtualCharMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -4068,7 +4068,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe char InvokeGenericVirtualCharacterMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+		public static unsafe char InvokeGenericVirtualCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -4097,7 +4097,7 @@ namespace Java.Interop.GenericMarshaler {
 			args [8] = arg9.JValue;
 
 			try {
-				return peer.InvokeVirtualCharacterMethod (encodedMember, self, args);
+				return peer.InvokeVirtualCharMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -4111,7 +4111,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe char InvokeGenericVirtualCharacterMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+		public static unsafe char InvokeGenericVirtualCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -4142,7 +4142,7 @@ namespace Java.Interop.GenericMarshaler {
 			args [9] = arg10.JValue;
 
 			try {
-				return peer.InvokeVirtualCharacterMethod (encodedMember, self, args);
+				return peer.InvokeVirtualCharMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -4157,7 +4157,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe char InvokeGenericVirtualCharacterMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+		public static unsafe char InvokeGenericVirtualCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -4190,7 +4190,7 @@ namespace Java.Interop.GenericMarshaler {
 			args [10] = arg11.JValue;
 
 			try {
-				return peer.InvokeVirtualCharacterMethod (encodedMember, self, args);
+				return peer.InvokeVirtualCharMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -4206,7 +4206,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe char InvokeGenericVirtualCharacterMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+		public static unsafe char InvokeGenericVirtualCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -4241,7 +4241,7 @@ namespace Java.Interop.GenericMarshaler {
 			args [11] = arg12.JValue;
 
 			try {
-				return peer.InvokeVirtualCharacterMethod (encodedMember, self, args);
+				return peer.InvokeVirtualCharMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -4258,7 +4258,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe char InvokeGenericVirtualCharacterMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+		public static unsafe char InvokeGenericVirtualCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -4295,7 +4295,7 @@ namespace Java.Interop.GenericMarshaler {
 			args [12] = arg13.JValue;
 
 			try {
-				return peer.InvokeVirtualCharacterMethod (encodedMember, self, args);
+				return peer.InvokeVirtualCharMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -4313,7 +4313,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe char InvokeGenericVirtualCharacterMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+		public static unsafe char InvokeGenericVirtualCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -4352,7 +4352,7 @@ namespace Java.Interop.GenericMarshaler {
 			args [13] = arg14.JValue;
 
 			try {
-				return peer.InvokeVirtualCharacterMethod (encodedMember, self, args);
+				return peer.InvokeVirtualCharMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -4371,7 +4371,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe char InvokeGenericVirtualCharacterMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+		public static unsafe char InvokeGenericVirtualCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -4412,7 +4412,7 @@ namespace Java.Interop.GenericMarshaler {
 			args [14] = arg15.JValue;
 
 			try {
-				return peer.InvokeVirtualCharacterMethod (encodedMember, self, args);
+				return peer.InvokeVirtualCharMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -4432,7 +4432,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe char InvokeGenericVirtualCharacterMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+		public static unsafe char InvokeGenericVirtualCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
 			this    JniPeerInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -4475,7 +4475,7 @@ namespace Java.Interop.GenericMarshaler {
 			args [15] = arg16.JValue;
 
 			try {
-				return peer.InvokeVirtualCharacterMethod (encodedMember, self, args);
+				return peer.InvokeVirtualCharMethod (encodedMember, self, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -10518,7 +10518,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe char InvokeGenericCharacterMethod<T> (
+		public static unsafe char InvokeGenericCharMethod<T> (
 		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T value
@@ -10530,13 +10530,13 @@ namespace Java.Interop.GenericMarshaler {
 			args [0] = arg.JValue;
 
 			try {
-				return peer.InvokeCharacterMethod (encodedMember, args);
+				return peer.InvokeCharMethod (encodedMember, args);
 			} finally {
 				arg.Cleanup (value);
 			}
 		}
 
-		public static unsafe char InvokeGenericCharacterMethod<T1, T2> (
+		public static unsafe char InvokeGenericCharMethod<T1, T2> (
 		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2
@@ -10550,14 +10550,14 @@ namespace Java.Interop.GenericMarshaler {
 			args [1] = arg2.JValue;
 
 			try {
-				return peer.InvokeCharacterMethod (encodedMember, args);
+				return peer.InvokeCharMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
 			}
 		}
 
-		public static unsafe char InvokeGenericCharacterMethod<T1, T2, T3> (
+		public static unsafe char InvokeGenericCharMethod<T1, T2, T3> (
 		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3
@@ -10573,7 +10573,7 @@ namespace Java.Interop.GenericMarshaler {
 			args [2] = arg3.JValue;
 
 			try {
-				return peer.InvokeCharacterMethod (encodedMember, args);
+				return peer.InvokeCharMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -10581,7 +10581,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe char InvokeGenericCharacterMethod<T1, T2, T3, T4> (
+		public static unsafe char InvokeGenericCharMethod<T1, T2, T3, T4> (
 		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4
@@ -10599,7 +10599,7 @@ namespace Java.Interop.GenericMarshaler {
 			args [3] = arg4.JValue;
 
 			try {
-				return peer.InvokeCharacterMethod (encodedMember, args);
+				return peer.InvokeCharMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -10608,7 +10608,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe char InvokeGenericCharacterMethod<T1, T2, T3, T4, T5> (
+		public static unsafe char InvokeGenericCharMethod<T1, T2, T3, T4, T5> (
 		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
@@ -10628,7 +10628,7 @@ namespace Java.Interop.GenericMarshaler {
 			args [4] = arg5.JValue;
 
 			try {
-				return peer.InvokeCharacterMethod (encodedMember, args);
+				return peer.InvokeCharMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -10638,7 +10638,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe char InvokeGenericCharacterMethod<T1, T2, T3, T4, T5, T6> (
+		public static unsafe char InvokeGenericCharMethod<T1, T2, T3, T4, T5, T6> (
 		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
@@ -10660,7 +10660,7 @@ namespace Java.Interop.GenericMarshaler {
 			args [5] = arg6.JValue;
 
 			try {
-				return peer.InvokeCharacterMethod (encodedMember, args);
+				return peer.InvokeCharMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -10671,7 +10671,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe char InvokeGenericCharacterMethod<T1, T2, T3, T4, T5, T6, T7> (
+		public static unsafe char InvokeGenericCharMethod<T1, T2, T3, T4, T5, T6, T7> (
 		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
@@ -10695,7 +10695,7 @@ namespace Java.Interop.GenericMarshaler {
 			args [6] = arg7.JValue;
 
 			try {
-				return peer.InvokeCharacterMethod (encodedMember, args);
+				return peer.InvokeCharMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -10707,7 +10707,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe char InvokeGenericCharacterMethod<T1, T2, T3, T4, T5, T6, T7, T8> (
+		public static unsafe char InvokeGenericCharMethod<T1, T2, T3, T4, T5, T6, T7, T8> (
 		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
@@ -10733,7 +10733,7 @@ namespace Java.Interop.GenericMarshaler {
 			args [7] = arg8.JValue;
 
 			try {
-				return peer.InvokeCharacterMethod (encodedMember, args);
+				return peer.InvokeCharMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -10746,7 +10746,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe char InvokeGenericCharacterMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+		public static unsafe char InvokeGenericCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
 		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
@@ -10774,7 +10774,7 @@ namespace Java.Interop.GenericMarshaler {
 			args [8] = arg9.JValue;
 
 			try {
-				return peer.InvokeCharacterMethod (encodedMember, args);
+				return peer.InvokeCharMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -10788,7 +10788,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe char InvokeGenericCharacterMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+		public static unsafe char InvokeGenericCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
 		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
@@ -10818,7 +10818,7 @@ namespace Java.Interop.GenericMarshaler {
 			args [9] = arg10.JValue;
 
 			try {
-				return peer.InvokeCharacterMethod (encodedMember, args);
+				return peer.InvokeCharMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -10833,7 +10833,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe char InvokeGenericCharacterMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+		public static unsafe char InvokeGenericCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
 		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
@@ -10865,7 +10865,7 @@ namespace Java.Interop.GenericMarshaler {
 			args [10] = arg11.JValue;
 
 			try {
-				return peer.InvokeCharacterMethod (encodedMember, args);
+				return peer.InvokeCharMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -10881,7 +10881,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe char InvokeGenericCharacterMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+		public static unsafe char InvokeGenericCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
 		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
@@ -10915,7 +10915,7 @@ namespace Java.Interop.GenericMarshaler {
 			args [11] = arg12.JValue;
 
 			try {
-				return peer.InvokeCharacterMethod (encodedMember, args);
+				return peer.InvokeCharMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -10932,7 +10932,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe char InvokeGenericCharacterMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+		public static unsafe char InvokeGenericCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
 		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
@@ -10968,7 +10968,7 @@ namespace Java.Interop.GenericMarshaler {
 			args [12] = arg13.JValue;
 
 			try {
-				return peer.InvokeCharacterMethod (encodedMember, args);
+				return peer.InvokeCharMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -10986,7 +10986,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe char InvokeGenericCharacterMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+		public static unsafe char InvokeGenericCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
 		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
@@ -11024,7 +11024,7 @@ namespace Java.Interop.GenericMarshaler {
 			args [13] = arg14.JValue;
 
 			try {
-				return peer.InvokeCharacterMethod (encodedMember, args);
+				return peer.InvokeCharMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -11043,7 +11043,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe char InvokeGenericCharacterMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+		public static unsafe char InvokeGenericCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
 		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
@@ -11083,7 +11083,7 @@ namespace Java.Interop.GenericMarshaler {
 			args [14] = arg15.JValue;
 
 			try {
-				return peer.InvokeCharacterMethod (encodedMember, args);
+				return peer.InvokeCharMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -11103,7 +11103,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe char InvokeGenericCharacterMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+		public static unsafe char InvokeGenericCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
 		    this    JniPeerStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
@@ -11145,7 +11145,7 @@ namespace Java.Interop.GenericMarshaler {
 			args [15] = arg16.JValue;
 
 			try {
-				return peer.InvokeCharacterMethod (encodedMember, args);
+				return peer.InvokeCharMethod (encodedMember, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);

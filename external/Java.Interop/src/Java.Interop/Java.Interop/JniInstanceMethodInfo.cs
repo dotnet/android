@@ -50,12 +50,12 @@ namespace Java.Interop
 			return JniEnvironment.InstanceMethods.CallByteMethod (@this, this, parameters);
 		}
 
-		public char InvokeVirtualCharacterMethod (JniObjectReference @this)
+		public char InvokeVirtualCharMethod (JniObjectReference @this)
 		{
 			return JniEnvironment.InstanceMethods.CallCharMethod (@this, this);
 		}
 
-		public unsafe char InvokeVirtualCharacterMethod (JniObjectReference @this, JValue* parameters)
+		public unsafe char InvokeVirtualCharMethod (JniObjectReference @this, JValue* parameters)
 		{
 			return JniEnvironment.InstanceMethods.CallCharMethod (@this, this, parameters);
 		}
@@ -150,12 +150,12 @@ namespace Java.Interop
 			return JniEnvironment.InstanceMethods.CallNonvirtualByteMethod (@this, declaringType, this, parameters);
 		}
 
-		public char InvokeNonvirtualCharacterMethod (JniObjectReference @this, JniObjectReference declaringType)
+		public char InvokeNonvirtualCharMethod (JniObjectReference @this, JniObjectReference declaringType)
 		{
 			return JniEnvironment.InstanceMethods.CallNonvirtualCharMethod (@this, declaringType, this);
 		}
 
-		public unsafe char InvokeNonvirtualCharacterMethod (JniObjectReference @this, JniObjectReference declaringType, JValue* parameters)
+		public unsafe char InvokeNonvirtualCharMethod (JniObjectReference @this, JniObjectReference declaringType, JValue* parameters)
 		{
 			return JniEnvironment.InstanceMethods.CallNonvirtualCharMethod (@this, declaringType, this, parameters);
 		}
