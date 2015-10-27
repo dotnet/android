@@ -52,7 +52,7 @@ namespace Java.Interop
 		public  IntPtr                      InvocationPointer   {get; set;}
 		public  IntPtr                      EnvironmentPointer  {get; set;}
 
-		public  IJniObjectReferenceManager  JniObjectReferenceManager   {get; set;}
+		public  JniObjectReferenceManager   ObjectReferenceManager      {get; set;}
 
 		public JavaVMOptions ()
 		{
@@ -123,7 +123,7 @@ namespace Java.Interop
 			TrackIDs     = options.TrackIDs;
 			DestroyVM    = options.DestroyVMOnDispose;
 
-			JniObjectReferenceManager   = options.JniObjectReferenceManager ?? new JniObjectReferenceManager ();
+			ObjectReferenceManager      = options.ObjectReferenceManager ?? new JniObjectReferenceManager ();
 
 			NewObjectRequired   = options.NewObjectRequired;
 
@@ -191,7 +191,7 @@ namespace Java.Interop
 #endif  // !XA_INTEGRATION
 			JavaVM _;
 			JavaVMs.TryRemove (InvocationPointer, out _);
-			JniObjectReferenceManager.Dispose ();
+			ObjectReferenceManager.Dispose ();
 			// TODO: Dispose JniEnvironment.RootEnvironments
 			// Requires .NET 4.5+
 			JniEnvironment.RootEnvironments.Dispose ();
@@ -245,14 +245,14 @@ namespace Java.Interop
 		}
 
 		public int GlobalReferenceCount {
-			get {return JniObjectReferenceManager.GlobalReferenceCount;}
+			get {return ObjectReferenceManager.GlobalReferenceCount;}
 		}
 
 		public int WeakGlobalReferenceCount {
-			get {return JniObjectReferenceManager.WeakGlobalReferenceCount;}
+			get {return ObjectReferenceManager.WeakGlobalReferenceCount;}
 		}
 
-		public IJniObjectReferenceManager   JniObjectReferenceManager   {get; private set;}
+		public JniObjectReferenceManager    ObjectReferenceManager      {get; private set;}
 
 		public bool TrackIDs {get; private set;}
 

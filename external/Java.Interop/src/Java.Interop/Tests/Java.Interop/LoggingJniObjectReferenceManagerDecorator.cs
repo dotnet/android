@@ -8,14 +8,14 @@ using Java.Interop;
 
 namespace Java.InteropTests {
 
-	class LoggingJniObjectReferenceManagerDecorator : IJniObjectReferenceManager {
+	class LoggingJniObjectReferenceManagerDecorator : JniObjectReferenceManager {
 
 		TextWriter          grefLog;
 		TextWriter          lrefLog;
 
-		IJniObjectReferenceManager      manager;
+		JniObjectReferenceManager       manager;
 
-		public LoggingJniObjectReferenceManagerDecorator (IJniObjectReferenceManager manager, TextWriter lrefOutput = null, TextWriter grefOutput = null)
+		public LoggingJniObjectReferenceManagerDecorator (JniObjectReferenceManager manager, TextWriter lrefOutput = null, TextWriter grefOutput = null)
 		{
 			if (manager == null)
 				throw new ArgumentNullException ("manager");
@@ -25,15 +25,15 @@ namespace Java.InteropTests {
 			grefLog         = grefOutput;
 		}
 
-		public int GlobalReferenceCount {
+		public override int GlobalReferenceCount {
 			get {return manager.GlobalReferenceCount;}
 		}
 
-		public int WeakGlobalReferenceCount {
+		public override int WeakGlobalReferenceCount {
 			get {return manager.WeakGlobalReferenceCount;}
 		}
 
-		public static IJniObjectReferenceManager GetObjectReferenceManager (IJniObjectReferenceManager manager)
+		public static JniObjectReferenceManager GetObjectReferenceManager (JniObjectReferenceManager manager)
 		{
 			TextWriter  grefLog = null;
 			TextWriter  lrefLog = null;;
@@ -90,7 +90,7 @@ namespace Java.InteropTests {
 #endif
 		}
 
-		public void WriteLocalReferenceLine (string format, params object[] args)
+		public override void WriteLocalReferenceLine (string format, params object[] args)
 		{
 			if (lrefLog == null)
 				return;
@@ -101,7 +101,7 @@ namespace Java.InteropTests {
 			}
 		}
 
-		public JniObjectReference CreateLocalReference (JniEnvironment environment, JniObjectReference value)
+		public override JniObjectReference CreateLocalReference (JniEnvironment environment, JniObjectReference value)
 		{
 			var newValue    = manager.CreateLocalReference (environment, value);
 			if (lrefLog == null || !newValue.IsValid)
@@ -120,7 +120,7 @@ namespace Java.InteropTests {
 			return newValue;
 		}
 
-		public void DeleteLocalReference (JniEnvironment environment, ref JniObjectReference value)
+		public override void DeleteLocalReference (JniEnvironment environment, ref JniObjectReference value)
 		{
 			if (lrefLog != null && value.IsValid) {
 				LogDeleteLocalRef (environment, value.Handle);
@@ -141,7 +141,7 @@ namespace Java.InteropTests {
 					new StackTrace (true));
 		}
 
-		public void CreatedLocalReference (JniEnvironment environment, JniObjectReference value)
+		public override void CreatedLocalReference (JniEnvironment environment, JniObjectReference value)
 		{
 			manager.CreatedLocalReference (environment, value);
 			if (lrefLog == null || !value.IsValid)
@@ -157,7 +157,7 @@ namespace Java.InteropTests {
 					new StackTrace (true));
 		}
 
-		public IntPtr ReleaseLocalReference (JniEnvironment environment, ref JniObjectReference value)
+		public override IntPtr ReleaseLocalReference (JniEnvironment environment, ref JniObjectReference value)
 		{
 			if (lrefLog != null && value.IsValid) {
 				LogDeleteLocalRef (environment, value.Handle);
@@ -165,7 +165,7 @@ namespace Java.InteropTests {
 			return manager.ReleaseLocalReference (environment, ref value);
 		}
 
-		public void WriteGlobalReferenceLine (string format, params object[] args)
+		public override void WriteGlobalReferenceLine (string format, params object[] args)
 		{
 			if (grefLog == null)
 				return;
@@ -176,7 +176,7 @@ namespace Java.InteropTests {
 			}
 		}
 
-		public JniObjectReference CreateGlobalReference (JniObjectReference value)
+		public override JniObjectReference CreateGlobalReference (JniObjectReference value)
 		{
 			var newValue    = manager.CreateGlobalReference (value);
 			if (grefLog == null || !newValue.IsValid)
@@ -196,7 +196,7 @@ namespace Java.InteropTests {
 			return newValue;
 		}
 
-		public void DeleteGlobalReference (ref JniObjectReference value)
+		public override void DeleteGlobalReference (ref JniObjectReference value)
 		{
 			if (grefLog != null && value.IsValid) {
 				var t = Thread.CurrentThread;
@@ -213,7 +213,7 @@ namespace Java.InteropTests {
 			manager.DeleteGlobalReference (ref value);
 		}
 
-		public JniObjectReference CreateWeakGlobalReference (JniObjectReference value)
+		public override JniObjectReference CreateWeakGlobalReference (JniObjectReference value)
 		{
 			var newValue    = manager.CreateWeakGlobalReference (value);
 			if (grefLog == null || !newValue.IsValid) {
@@ -234,7 +234,7 @@ namespace Java.InteropTests {
 			return newValue;
 		}
 
-		public void DeleteWeakGlobalReference (ref JniObjectReference value)
+		public override void DeleteWeakGlobalReference (ref JniObjectReference value)
 		{
 			if (grefLog != null && value.IsValid) {
 				var t = Thread.CurrentThread;
@@ -251,8 +251,11 @@ namespace Java.InteropTests {
 			manager.DeleteWeakGlobalReference (ref value);
 		}
 
-		public void Dispose ()
+		protected override void Dispose (bool disposing)
 		{
+			if (!disposing)
+				return;
+
 			if (lrefLog != null)
 				lrefLog.Dispose ();
 			if (grefLog != null)

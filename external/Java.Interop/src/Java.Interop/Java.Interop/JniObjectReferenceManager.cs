@@ -9,23 +9,23 @@ using System.Threading;
 
 namespace Java.Interop {
 
-	public class JniObjectReferenceManager : IJniObjectReferenceManager {
+	public class JniObjectReferenceManager : IDisposable {
 
 		int grefc;
-		public int GlobalReferenceCount {
+		public virtual int GlobalReferenceCount {
 			get {return grefc;}
 		}
 
 		int wgrefc;
-		public int WeakGlobalReferenceCount {
+		public virtual int WeakGlobalReferenceCount {
 			 get {return wgrefc;}
 		}
 
-		public void WriteLocalReferenceLine (string format, params object[] args)
+		public virtual void WriteLocalReferenceLine (string format, params object[] args)
 		{
 		}
 
-		public JniObjectReference CreateLocalReference (JniEnvironment environment, JniObjectReference reference)
+		public virtual JniObjectReference CreateLocalReference (JniEnvironment environment, JniObjectReference reference)
 		{
 			if (!reference.IsValid)
 				return reference;
@@ -34,7 +34,7 @@ namespace Java.Interop {
 			return JniEnvironment.References.NewLocalRef (reference);
 		}
 
-		public void DeleteLocalReference (JniEnvironment environment, ref JniObjectReference reference)
+		public virtual void DeleteLocalReference (JniEnvironment environment, ref JniObjectReference reference)
 		{
 			if (!reference.IsValid)
 				return;
@@ -45,7 +45,7 @@ namespace Java.Interop {
 			reference.Invalidate ();
 		}
 
-		public void CreatedLocalReference (JniEnvironment environment, JniObjectReference reference)
+		public virtual void CreatedLocalReference (JniEnvironment environment, JniObjectReference reference)
 		{
 			if (!reference.IsValid)
 				return;
@@ -53,7 +53,7 @@ namespace Java.Interop {
 			environment.LrefCount++ ;
 		}
 
-		public IntPtr ReleaseLocalReference (JniEnvironment environment, ref JniObjectReference reference)
+		public virtual IntPtr ReleaseLocalReference (JniEnvironment environment, ref JniObjectReference reference)
 		{
 			if (!reference.IsValid)
 				return IntPtr.Zero;
@@ -64,11 +64,11 @@ namespace Java.Interop {
 			return h;
 		}
 
-		public void WriteGlobalReferenceLine (string format, params object[] args)
+		public virtual void WriteGlobalReferenceLine (string format, params object[] args)
 		{
 		}
 
-		public JniObjectReference CreateGlobalReference (JniObjectReference reference)
+		public virtual JniObjectReference CreateGlobalReference (JniObjectReference reference)
 		{
 			if (!reference.IsValid)
 				return reference;
@@ -77,7 +77,7 @@ namespace Java.Interop {
 			return JniEnvironment.References.NewGlobalRef (reference);
 		}
 
-		public void DeleteGlobalReference (ref JniObjectReference reference)
+		public virtual void DeleteGlobalReference (ref JniObjectReference reference)
 		{
 			if (!reference.IsValid)
 				return;
@@ -88,7 +88,7 @@ namespace Java.Interop {
 			reference.Invalidate ();
 		}
 
-		public JniObjectReference CreateWeakGlobalReference (JniObjectReference reference)
+		public virtual JniObjectReference CreateWeakGlobalReference (JniObjectReference reference)
 		{
 			if (!reference.IsValid)
 				return reference;
@@ -97,7 +97,7 @@ namespace Java.Interop {
 			return JniEnvironment.References.NewWeakGlobalRef (reference);
 		}
 
-		public void DeleteWeakGlobalReference (ref JniObjectReference reference)
+		public virtual void DeleteWeakGlobalReference (ref JniObjectReference reference)
 		{
 			if (!reference.IsValid)
 				return;
@@ -109,6 +109,11 @@ namespace Java.Interop {
 		}
 
 		public void Dispose ()
+		{
+			Dispose (false);
+		}
+
+		protected virtual void Dispose (bool disposing)
 		{
 		}
 

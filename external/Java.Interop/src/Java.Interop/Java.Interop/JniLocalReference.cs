@@ -26,7 +26,7 @@ namespace Java.Interop
 		internal IntPtr ReturnToJniRef ()
 		{
 			var r = new JniObjectReference (this, JniObjectReferenceType.Local);
-			return JniEnvironment.Current.JavaVM.JniObjectReferenceManager.ReleaseLocalReference (JniEnvironment.Current, ref r);
+			return JniEnvironment.Current.JavaVM.ObjectReferenceManager.ReleaseLocalReference (JniEnvironment.Current, ref r);
 		}
 
 		internal JniAllocObjectRef ToAllocObjectRef ()

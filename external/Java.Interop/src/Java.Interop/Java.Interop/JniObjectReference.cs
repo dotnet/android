@@ -119,17 +119,17 @@ namespace Java.Interop
 
 		public JniObjectReference NewGlobalRef ()
 		{
-			return JniEnvironment.Current.JavaVM.JniObjectReferenceManager.CreateGlobalReference (this);
+			return JniEnvironment.Current.JavaVM.ObjectReferenceManager.CreateGlobalReference (this);
 		}
 
 		public JniObjectReference NewLocalRef ()
 		{
-			return JniEnvironment.Current.JavaVM.JniObjectReferenceManager.CreateLocalReference (JniEnvironment.Current, this);
+			return JniEnvironment.Current.JavaVM.ObjectReferenceManager.CreateLocalReference (JniEnvironment.Current, this);
 		}
 
 		public JniObjectReference NewWeakGlobalRef ()
 		{
-			return JniEnvironment.Current.JavaVM.JniObjectReferenceManager.CreateWeakGlobalReference (this);
+			return JniEnvironment.Current.JavaVM.ObjectReferenceManager.CreateWeakGlobalReference (this);
 		}
 
 		internal void Invalidate ()

@@ -69,7 +69,6 @@
     <Compile Include="Java.Interop\JniNativeMethodRegistration.cs" />
     <Compile Include="Java.Interop\IExportedMemberBuilder.cs" />
     <Compile Include="Java.Interop\IJavaPeerable.cs" />
-    <Compile Include="Java.Interop\IJniObjectReferenceManager.cs" />
     <Compile Include="Java.Interop\JniObjectReferenceManager.cs" />
     <Compile Include="Java.Interop\JniObjectReferenceOptions.cs" />
     <Compile Include="Java.Interop\JniObjectReferenceType.cs" />

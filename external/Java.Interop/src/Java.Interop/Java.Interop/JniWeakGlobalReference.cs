@@ -21,7 +21,7 @@ namespace Java.Interop
 		{
 			if (JniEnvironment.HasCurrent) {
 				var r = new JniObjectReference (this, JniObjectReferenceType.WeakGlobal);
-				JniEnvironment.Current.JavaVM.JniObjectReferenceManager.DeleteWeakGlobalReference (ref r);
+				JniEnvironment.Current.JavaVM.ObjectReferenceManager.DeleteWeakGlobalReference (ref r);
 			}
 			return true;
 		}

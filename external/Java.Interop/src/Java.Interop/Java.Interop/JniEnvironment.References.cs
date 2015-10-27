@@ -25,13 +25,13 @@ namespace Java.Interop
 				case JniObjectReferenceOptions.DisposeSourceReference:
 					switch (reference.Type) {
 					case JniObjectReferenceType.Global:
-						JniEnvironment.Current.JavaVM.JniObjectReferenceManager.DeleteGlobalReference (ref reference);
+						JniEnvironment.Current.JavaVM.ObjectReferenceManager.DeleteGlobalReference (ref reference);
 						break;
 					case JniObjectReferenceType.Local:
-						JniEnvironment.Current.JavaVM.JniObjectReferenceManager.DeleteLocalReference (JniEnvironment.Current, ref reference);
+						JniEnvironment.Current.JavaVM.ObjectReferenceManager.DeleteLocalReference (JniEnvironment.Current, ref reference);
 						break;
 					case JniObjectReferenceType.WeakGlobal:
-						JniEnvironment.Current.JavaVM.JniObjectReferenceManager.DeleteWeakGlobalReference (ref reference);
+						JniEnvironment.Current.JavaVM.ObjectReferenceManager.DeleteWeakGlobalReference (ref reference);
 						break;
 					default:
 						throw new NotImplementedException ("Do not know how to dispose: " + reference.Type + ".");
@@ -62,7 +62,7 @@ namespace Java.Interop
 				if (!value.IsValid)
 					return IntPtr.Zero;
 				var l = value.NewLocalRef ();
-				return JniEnvironment.Current.JavaVM.JniObjectReferenceManager.ReleaseLocalReference (JniEnvironment.Current, ref l);
+				return JniEnvironment.Current.JavaVM.ObjectReferenceManager.ReleaseLocalReference (JniEnvironment.Current, ref l);
 			}
 		}
 	}
