@@ -67,7 +67,6 @@
     <Compile Include="Java.Interop\JniTypeSignature.cs" />
     <Compile Include="Java.Interop\JValue.cs" />
     <Compile Include="Java.Interop\JniNativeMethodRegistration.cs" />
-    <Compile Include="Java.Interop\IExportedMemberBuilder.cs" />
     <Compile Include="Java.Interop\IJavaPeerable.cs" />
     <Compile Include="Java.Interop\JniObjectReferenceManager.cs" />
     <Compile Include="Java.Interop\JniObjectReferenceOptions.cs" />
@@ -84,6 +83,7 @@
     </Compile>
   </ItemGroup>
   <ItemGroup Condition=" !$(Configuration.StartsWith('XAIntegration')) ">
+    <Compile Include="Java.Interop\IExportedMemberBuilder.cs" />
     <Compile Include="Java.Interop\IJavaPeerableEx.cs" />
     <Compile Include="Java.Interop\JavaArray.cs" />
     <Compile Include="Java.Interop\JavaException.cs" />
