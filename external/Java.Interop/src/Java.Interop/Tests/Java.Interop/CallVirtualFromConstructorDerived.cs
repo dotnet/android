@@ -4,7 +4,7 @@ using Java.Interop;
 
 namespace Java.InteropTests
 {
-	[JniTypeInfo (CallVirtualFromConstructorDerived.JniTypeName)]
+	[JniTypeSignature (CallVirtualFromConstructorDerived.JniTypeName)]
 	public class CallVirtualFromConstructorDerived : CallVirtualFromConstructorBase {
 		new internal    const   string          JniTypeName = "com/xamarin/interop/CallVirtualFromConstructorDerived";
 		static  readonly        JniPeerMembers  _members    = new JniPeerMembers (JniTypeName, typeof (CallVirtualFromConstructorDerived));

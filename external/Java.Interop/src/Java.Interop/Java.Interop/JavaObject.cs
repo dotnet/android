@@ -2,7 +2,7 @@ using System;
 
 namespace Java.Interop
 {
-	[JniTypeInfo ("java/lang/Object")]
+	[JniTypeSignature ("java/lang/Object")]
 	unsafe public class JavaObject : IJavaPeerable, IJavaPeerableEx
 	{
 		readonly static JniPeerMembers _members = new JniPeerMembers ("java/lang/Object", typeof (JavaObject));

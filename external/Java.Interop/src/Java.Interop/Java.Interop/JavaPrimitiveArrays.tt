@@ -90,19 +90,19 @@ namespace Java.Interop {
 		}
 	}
 
-	[JniTypeInfo ("<#= info.JniType #>", ArrayRank=1, TypeIsKeyword=true)]
+	[JniTypeSignature ("<#= info.JniType #>", ArrayRank=1, IsKeyword=true)]
 	public sealed partial class Java<#= info.TypeModifier #>Array : JavaPrimitiveArray<<#= info.ManagedType #>> {
 
-		public Java<#= info.TypeModifier #>Array (ref JniObjectReference handle, JniHandleOwnership transfer)
-			: base (ref handle, transfer)
+		public Java<#= info.TypeModifier #>Array (ref JniObjectReference handle, JniObjectReferenceOptions options)
+			: base (ref handle, options)
 		{
 		}
 
 		public unsafe Java<#= info.TypeModifier #>Array (int length)
-			: base (ref *InvalidJniObjectReference, JniHandleOwnership.Invalid)
+			: base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.Invalid)
 		{
 		    var peer    = JniEnvironment.Arrays.New<#= info.JniMarshalType #>Array (CheckLength (length));
-		    using (SetPeerReference (ref peer, JniHandleOwnership.Transfer)) {
+		    using (SetPeerReference (ref peer, JniObjectReferenceOptions.DisposeSourceReference)) {
 		    }
 		}
 
@@ -194,13 +194,13 @@ namespace Java.Interop {
 		            list => new Java<#= info.TypeModifier #>Array (list));
 		}
 
-		internal static IList<<#= info.ManagedType #>> GetValueFromJni (ref JniObjectReference reference, JniHandleOwnership transfer, Type targetType)
+		internal static IList<<#= info.ManagedType #>> GetValueFromJni (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
 		{
 		    return JavaArray<<#= info.ManagedType #>>.GetValueFromJni (
 		            ref reference,
-		            transfer,
+		            options,
 		            targetType,
-		            (ref JniObjectReference h, JniHandleOwnership t) => new Java<#= info.TypeModifier #>Array (ref h, t));
+		            (ref JniObjectReference h, JniObjectReferenceOptions o) => new Java<#= info.TypeModifier #>Array (ref h, o));
 		}
 
 		internal static IJavaPeerable CreateMarshalCollection (object value)

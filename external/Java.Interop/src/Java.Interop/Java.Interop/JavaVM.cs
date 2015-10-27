@@ -585,9 +585,9 @@ namespace Java.Interop
 			}
 #endif  // !XA_INTEGRATION
 
-			var names = (JniTypeInfoAttribute[]) type.GetCustomAttributes (typeof (JniTypeInfoAttribute), inherit:false);
+			var names = (JniTypeSignatureAttribute[]) type.GetCustomAttributes (typeof (JniTypeSignatureAttribute), inherit:false);
 			if (names.Length != 0)
-				return new JniTypeSignature (names [0].JniTypeName, names [0].ArrayRank + rank, names [0].TypeIsKeyword);
+				return new JniTypeSignature (names [0].SimpleReference, names [0].ArrayRank + rank, names [0].IsKeyword);
 
 #if !XA_INTEGRATION
 			if (type.IsGenericType) {

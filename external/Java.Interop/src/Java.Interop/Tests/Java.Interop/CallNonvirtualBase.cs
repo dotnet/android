@@ -4,7 +4,7 @@ using Java.Interop;
 
 namespace Java.InteropTests
 {
-	[JniTypeInfo (CallNonvirtualBase.JniTypeName)]
+	[JniTypeSignature (CallNonvirtualBase.JniTypeName)]
 	public class CallNonvirtualBase : JavaObject
 	{
 		internal const string JniTypeName = "com/xamarin/interop/CallNonvirtualBase";

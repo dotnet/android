@@ -4,7 +4,7 @@ using Java.Interop;
 
 namespace Java.InteropTests
 {
-	[JniTypeInfo ("com/xamarin/interop/export/ExportType")]
+	[JniTypeSignature ("com/xamarin/interop/export/ExportType")]
 	public class ExportTest : JavaObject
 	{
 		public ExportTest (ref JniObjectReference reference, JniObjectReferenceOptions transfer)

@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Java.Interop {
 
-	[JniTypeInfo (ManagedPeer.JniTypeName)]
+	[JniTypeSignature (JniTypeName)]
 	/* static */ class ManagedPeer : JavaObject {
 
 		internal const string JniTypeName = "com/xamarin/android/ManagedPeer";

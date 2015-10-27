@@ -5,7 +5,7 @@ using Java.Interop.GenericMarshaler;
 
 namespace Java.InteropTests {
 
-	[JniTypeInfo (CallVirtualFromConstructorBase.JniTypeName)]
+	[JniTypeSignature (CallVirtualFromConstructorBase.JniTypeName)]
 	public class CallVirtualFromConstructorBase : JavaObject {
 
 		internal    const   string          JniTypeName = "com/xamarin/interop/CallVirtualFromConstructorBase";

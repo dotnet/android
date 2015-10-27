@@ -212,11 +212,11 @@ namespace Java.InteropTests
 	class JavaObjectWithNoJavaPeer : JavaObject {
 	}
 
-	[JniTypeInfo ("__this__/__type__/__had__/__better__/__not__/__Exist__")]
+	[JniTypeSignature ("__this__/__type__/__had__/__better__/__not__/__Exist__")]
 	class JavaObjectWithMissingJavaPeer : JavaObject {
 	}
 
-	[JniTypeInfo ("java/lang/Object")]
+	[JniTypeSignature ("java/lang/Object")]
 	class JavaDisposedObject : JavaObject {
 
 		public Action   OnDisposed;

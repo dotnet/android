@@ -2,7 +2,7 @@ using System;
 
 namespace Java.Interop
 {
-	[JniTypeInfo (JavaException.JniTypeName)]
+	[JniTypeSignature (JniTypeName)]
 	unsafe public class JavaException : Exception, IJavaPeerable, IJavaPeerableEx
 	{
 		internal    const   string          JniTypeName = "java/lang/Throwable";

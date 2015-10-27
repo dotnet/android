@@ -8,7 +8,7 @@ using NUnit.Framework;
 
 namespace Java.InteropTests
 {
-	[JniTypeInfo (TestType.JniTypeName)]
+	[JniTypeSignature (TestType.JniTypeName)]
 	public partial class TestType : JavaObject
 	{
 		internal    const    string         JniTypeName = "com/xamarin/interop/TestType";

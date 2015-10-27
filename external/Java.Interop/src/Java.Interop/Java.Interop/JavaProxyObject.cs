@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 
 namespace Java.Interop {
 
-	[JniTypeInfo (JavaProxyObject.JniTypeName)]
+	[JniTypeSignature (JniTypeName)]
 	sealed class JavaProxyObject : JavaObject
 	{
 		internal const string JniTypeName = "com/xamarin/android/internal/JavaProxyObject";

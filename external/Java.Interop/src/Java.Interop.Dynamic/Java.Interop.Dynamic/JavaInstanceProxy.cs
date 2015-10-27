@@ -15,7 +15,7 @@ using Java.Interop;
 
 namespace Java.Interop.Dynamic {
 
-	[JniTypeInfoAttribute ("java/lang/Object")]
+	[JniTypeSignature ("java/lang/Object")]
 	class JavaInstanceProxy : JavaObject {
 
 		public JavaInstanceProxy (ref JniObjectReference reference, JniObjectReferenceOptions transfer)

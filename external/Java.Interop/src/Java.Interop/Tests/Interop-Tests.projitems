@@ -39,13 +39,13 @@
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JniInstanceMethodIDTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JniMarshalMethodTests.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JniMarshalTests.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JniTypeInfoAttributeTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JniTypeSignatureTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JniTypeTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\MethodBindingTests.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\TestType.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\TestTypeTests.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\LoggingJniObjectReferenceManagerDecorator.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JniTypeSignatureAttributeTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\com\xamarin\interop\CallNonvirtualBase.java" />

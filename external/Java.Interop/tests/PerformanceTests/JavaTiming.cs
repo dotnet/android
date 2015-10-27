@@ -7,7 +7,7 @@ using Java.Interop.GenericMarshaler;
 
 namespace Java.Interop.PerformanceTests
 {
-	[JniTypeInfoAttribute (JniTypeName)]
+	[JniTypeSignature (JniTypeName)]
 	public class JavaTiming : JavaObject
 	{
 		const               string          JniTypeName = "com/xamarin/interop/performance/JavaTiming";
