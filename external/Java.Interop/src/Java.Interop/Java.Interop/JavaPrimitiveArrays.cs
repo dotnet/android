@@ -5,7 +5,7 @@ using System.Diagnostics;
 
 namespace Java.Interop {
 
-	partial class JavaVM {
+	partial class JniRuntime {
 		static readonly KeyValuePair<Type, JniTypeSignature>[] JniBuiltinArrayMappings = new[]{
 			new KeyValuePair<Type, JniTypeSignature>(typeof (JavaPrimitiveArray<Boolean>),  new JniTypeSignature ("Z", arrayRank: 1, keyword: true)),
 			new KeyValuePair<Type, JniTypeSignature>(typeof (JavaArray<Boolean>),           new JniTypeSignature ("Z", arrayRank: 1, keyword: true)),

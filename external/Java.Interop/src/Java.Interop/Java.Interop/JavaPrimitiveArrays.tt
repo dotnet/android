@@ -22,7 +22,7 @@ namespace Java.Interop {
 		new { JniType = "D",    JniMarshalType  = "Double",     ManagedType = "Double", TypeModifier    = "Double" },
 	};
 #>
-	partial class JavaVM {
+	partial class JniRuntime {
 		static readonly KeyValuePair<Type, JniTypeSignature>[] JniBuiltinArrayMappings = new[]{
 <#
 	foreach (var info in arrayTypeInfo) {

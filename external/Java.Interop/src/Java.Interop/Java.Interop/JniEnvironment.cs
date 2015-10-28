@@ -19,7 +19,7 @@ namespace Java.Interop {
 			get {return Info.Value.Invoker;}
 		}
 
-		public      static  JavaVM                  Runtime {
+		public      static  JniRuntime              Runtime {
 			get {return Info.Value.Runtime;}
 		}
 
@@ -40,7 +40,7 @@ namespace Java.Interop {
 			Info.Value.EnvironmentPointer   = environmentPointer;
 		}
 
-		internal    static  void    SetEnvironmentPointer (IntPtr environmentPointer, JavaVM runtime)
+		internal    static  void    SetEnvironmentPointer (IntPtr environmentPointer, JniRuntime runtime)
 		{
 			if (!Info.IsValueCreated) {
 				Info.Value = new JniEnvironmentInfo (environmentPointer, runtime);
@@ -159,7 +159,7 @@ namespace Java.Interop {
 
 		IntPtr                  environmentPointer;
 
-		public      JavaVM                  Runtime                 {get; private set;}
+		public      JniRuntime              Runtime                 {get; private set;}
 		internal    JniEnvironmentInvoker   Invoker                 {get; private set;}
 		public      int                     LocalReferenceCount     {get; internal set;}
 
@@ -178,7 +178,7 @@ namespace Java.Interop {
 					throw new InvalidOperationException ("JNIEnv::GetJavaVM() returned: " + r);
 				Debug.WriteLine ("# jonp: JniEnvironmentInfo.EnvironmentPointer: invocationPointer={0}", vmh.ToString ("x"));
 
-				var vm = JavaVM.GetRegisteredJavaVM (vmh);
+				var vm = JniRuntime.GetRegisteredRuntime (vmh);
 				if (vm == null)
 					throw new NotSupportedException (
 							string.Format ("No JavaVM registered with handle 0x{0}.",
@@ -189,11 +189,11 @@ namespace Java.Interop {
 
 		public JniEnvironmentInfo ()
 		{
-			Runtime             = JavaVM.Current;
+			Runtime             = JniRuntime.Current;
 			EnvironmentPointer  = Runtime._AttachCurrentThread ();
 		}
 
-		internal    JniEnvironmentInfo (IntPtr environmentPointer, JavaVM runtime)
+		internal    JniEnvironmentInfo (IntPtr environmentPointer, JniRuntime runtime)
 		{
 			EnvironmentPointer  = environmentPointer;
 			Runtime             = runtime;

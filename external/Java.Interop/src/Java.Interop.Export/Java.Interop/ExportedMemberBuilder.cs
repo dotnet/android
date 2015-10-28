@@ -10,14 +10,14 @@ namespace Java.Interop {
 
 	public class ExportedMemberBuilder : IExportedMemberBuilder
 	{
-		public ExportedMemberBuilder (JavaVM javaVM)
+		public ExportedMemberBuilder (JniRuntime runtime)
 		{
-			if (javaVM == null)
+			if (runtime == null)
 				throw new ArgumentNullException ("javaVM");
-			JavaVM = javaVM;
+			Runtime = runtime;
 		}
 
-		public JavaVM JavaVM {get; private set;}
+		public      JniRuntime      Runtime     {get; private set;}
 
 		public IEnumerable<JniNativeMethodRegistration> GetExportedMemberRegistrations (Type declaringType)
 		{
@@ -72,13 +72,13 @@ namespace Java.Interop {
 
 			var signature = new StringBuilder ().Append ("(");
 			foreach (var p in method.GetParameters ()) {
-				var info = JavaVM.GetJniTypeInfoForType (p.ParameterType);
+				var info = Runtime.GetJniTypeInfoForType (p.ParameterType);
 				if (info.SimpleReference == null)
 					throw new NotSupportedException ("Don't know how to determine JNI signature for parameter type: " + p.ParameterType.FullName + ".");
 				signature.Append (info.QualifiedReference);
 			}
 			signature.Append (")");
-			var ret = JavaVM.GetJniTypeInfoForType (method.ReturnType);
+			var ret = Runtime.GetJniTypeInfoForType (method.ReturnType);
 			if (ret.SimpleReference == null)
 				throw new NotSupportedException ("Don't know how to determine JNI signature for return type: " + method.ReturnType.FullName + ".");
 			signature.Append (ret.QualifiedReference);
@@ -117,7 +117,7 @@ namespace Java.Interop {
 				Expression.Assign (envp, CreateJniTransition (jnienv)),
 			};
 
-			var jvm         = Expression.Variable (typeof (JavaVM), "__jvm");
+			var jvm         = Expression.Variable (typeof (JniRuntime), "__jvm");
 			var variables   = new List<ParameterExpression> () {
 				jvm,
 			};

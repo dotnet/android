@@ -140,9 +140,6 @@ Types with a `Java` prefix are "high-level" types which participate in cross-VM
 object-reference semantics, e.g. you could add a `JavaObject` subclass to a
 Java-side collection, perform a GC, and the instance will survive the GC.
 
-The exception to this rule is the `JavaVM` type, which is the entrypoint
-to doing lots of interesting things.
-
 Types with a `Jni` prefix are "low-level" types and do *not* participate in
 object-reference semantics.
 
@@ -285,7 +282,7 @@ all these shims with *real* method bodies:
     {
         JniTransition __envp = new JniTransition (jnienv);
         try {
-            var __jvm = __envp.JavaVM;
+            var __jvm = __envp.Runtime;
             var __this = __jvm.GetObject<ExportTest>(native__this);
             var __mret = __this.Clone ();
             __jret = Handles.NewReturnToJniRef(__mret);

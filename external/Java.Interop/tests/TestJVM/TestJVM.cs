@@ -9,11 +9,11 @@ using Java.Interop;
 
 namespace Java.InteropTests
 {
-	public class TestJVM : JreVM {
+	public class TestJVM : JreRuntime {
 
-		static JreVMBuilder CreateBuilder (string[] jars)
+		static JreRuntimeOptions CreateBuilder (string[] jars)
 		{
-			var builder = new JreVMBuilder ();
+			var builder = new JreRuntimeOptions ();
 			if (jars != null) {
 				foreach (var jar in jars)
 					builder.ClassPath.Add (jar);

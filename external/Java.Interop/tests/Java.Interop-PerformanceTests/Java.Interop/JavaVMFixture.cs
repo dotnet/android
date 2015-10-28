@@ -14,7 +14,7 @@ namespace Java.InteropTests {
 			var c = new TestJVM (
 				jars:           new[]{ "performance-test.jar" }
 			);
-			JavaVM.SetCurrent (c);
+			JniRuntime.SetCurrent (c);
 		}
 
 		protected JavaVMFixture ()

@@ -4,7 +4,7 @@ using System.Diagnostics;
 
 namespace Java.Interop {
 
-	partial class JavaVM {
+	partial class JniRuntime {
 
 		static readonly KeyValuePair<Type, JniTypeSignature>[] JniBuiltinTypeNameMappings = new []{
 			new KeyValuePair<Type, JniTypeSignature>(typeof (string),    new JniTypeSignature ("java/lang/String")),

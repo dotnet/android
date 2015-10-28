@@ -41,79 +41,81 @@ namespace Java.Interop
 	}
 
 
-	public class JavaVMOptions {
+	partial class JniRuntime {
+		public class CreationOptions {
 
-		public  bool        TrackIDs                    {get; set;}
-		public  bool        DestroyVMOnDispose          {get; set;}
+			public  bool                        TrackIDs                    {get; set;}
+			public  bool                        DestroyRuntimeOnDispose     {get; set;}
 
-		// Prefer JNIEnv::NewObject() over JNIEnv::AllocObject() + JNIEnv::CallNonvirtualVoidMethod()
-		public  bool        NewObjectRequired           {get; set;}
+			// Prefer JNIEnv::NewObject() over JNIEnv::AllocObject() + JNIEnv::CallNonvirtualVoidMethod()
+			public  bool                        NewObjectRequired           {get; set;}
 
-		public  IntPtr                      InvocationPointer   {get; set;}
-		public  IntPtr                      EnvironmentPointer  {get; set;}
+			public  IntPtr                      InvocationPointer           {get; set;}
+			public  IntPtr                      EnvironmentPointer          {get; set;}
 
-		public  JniObjectReferenceManager   ObjectReferenceManager      {get; set;}
+			public  JniObjectReferenceManager   ObjectReferenceManager      {get; set;}
 
-		public JavaVMOptions ()
-		{
+			public CreationOptions ()
+			{
+			}
 		}
 	}
 
-	public abstract partial class JavaVM : IDisposable
+	public abstract partial class JniRuntime : IDisposable
 	{
 
-		static ConcurrentDictionary<IntPtr, JavaVM>     JavaVMs = new ConcurrentDictionary<IntPtr, JavaVM> ();
+		static ConcurrentDictionary<IntPtr, JniRuntime>     Runtimes = new ConcurrentDictionary<IntPtr, JniRuntime> ();
 
-		public static IEnumerable<JavaVM> GetRegisteredJavaVMs ()
+		public static IEnumerable<JniRuntime> GetRegisteredRuntimes ()
 		{
-			return JavaVMs.Values;
+			return Runtimes.Values;
 		}
 
-		public static JavaVM GetRegisteredJavaVM (IntPtr handle)
+		public static JniRuntime GetRegisteredRuntime (IntPtr handle)
 		{
-			JavaVM vm;
-			return JavaVMs.TryGetValue (handle, out vm)
+			JniRuntime vm;
+			return Runtimes.TryGetValue (handle, out vm)
 				? vm
 				: null;
 		}
 
-		static JavaVM current;
-		public static JavaVM Current {
+		static JniRuntime current;
+		public static JniRuntime Current {
 			get {
 				if (current != null)
 					return current;
-				JavaVM  c       = null;
+				JniRuntime  c       = null;
 				int     count   = 0;
-				foreach (var vm in JavaVMs.Values) {
+				foreach (var vm in Runtimes.Values) {
 					if (count++ == 0)
 						c = vm;
 				}
 				if (count == 0)
-					throw new InvalidOperationException ("No JavaVM has been created. Please use Java.Interop.JreVMBuilder.CreateJreVM().");
+					throw new InvalidOperationException ("No JavaVM has been created. Please use Java.Interop.JreRuntimeBuilder.CreateJreRuntime().");
 				if (count > 1)
-					throw new NotSupportedException (string.Format ("Found {0} JavaVMs. Don't know which to use. Use JavaVM.SetCurrent().", count));
+					throw new NotSupportedException (string.Format ("Found {0} Java Runtimes. Don't know which to use. Use JniRuntime.SetCurrent().", count));
 				return current = c;
 			}
 		}
 
-		public static void SetCurrent (JavaVM newCurrent)
+		public static void SetCurrent (JniRuntime newCurrent)
 		{
 			if (newCurrent == null)
 				throw new ArgumentNullException ("newCurrent");
-			JavaVMs.TryAdd (newCurrent.InvocationPointer, newCurrent);
+			Runtimes.TryAdd (newCurrent.InvocationPointer, newCurrent);
 			current = newCurrent;
 		}
 
 		ConcurrentDictionary<IntPtr, IDisposable>       TrackedInstances    = new ConcurrentDictionary<IntPtr, IDisposable> ();
 
 		JavaVMInterface                                 Invoker;
-		bool                                            DestroyVM;
+		bool                                            DestroyRuntimeOnDispose;
 
 		public  IntPtr                                  InvocationPointer   {get; private set;}
 
 		public  bool                                    NewObjectRequired   {get; private set;}
 
-		protected JavaVM (JavaVMOptions options)
+		protected JniRuntime (CreationOptions options)
 		{
 			if (options == null)
 				throw new ArgumentNullException ("options");
@@ -121,7 +123,7 @@ namespace Java.Interop
 				throw new ArgumentException ("options.InvocationPointer is null", "options");
 
 			TrackIDs     = options.TrackIDs;
-			DestroyVM    = options.DestroyVMOnDispose;
+			DestroyRuntimeOnDispose     = options.DestroyRuntimeOnDispose;
 
 			ObjectReferenceManager      = options.ObjectReferenceManager ?? new JniObjectReferenceManager ();
 
@@ -133,7 +135,7 @@ namespace Java.Interop
 			if (current == null)
 				current = this;
 
-			JavaVMs.TryAdd (InvocationPointer, this);
+			Runtimes.TryAdd (InvocationPointer, this);
 
 			if (options.EnvironmentPointer != IntPtr.Zero) {
 				var env = new JniEnvironmentInfo (options.EnvironmentPointer, this);
@@ -151,7 +153,7 @@ namespace Java.Interop
 			return (JavaVMInterface) Marshal.PtrToStructure (p, typeof (JavaVMInterface));
 		}
 
-		~JavaVM ()
+		~JniRuntime ()
 		{
 			Dispose (false);
 		}
@@ -189,11 +191,11 @@ namespace Java.Interop
 			RegisteredInstances.Clear ();
 			ClearTrackedReferences ();
 #endif  // !XA_INTEGRATION
-			JavaVM _;
-			JavaVMs.TryRemove (InvocationPointer, out _);
+			JniRuntime _;
+			Runtimes.TryRemove (InvocationPointer, out _);
 			ObjectReferenceManager.Dispose ();
-			if (DestroyVM)
-				DestroyJavaVM ();
+			if (DestroyRuntimeOnDispose)
+				DestroyRuntime ();
 			InvocationPointer    = IntPtr.Zero;
 		}
 
@@ -223,7 +225,7 @@ namespace Java.Interop
 			}
 		}
 
-		public void DestroyJavaVM ()
+		public void DestroyRuntime ()
 		{
 			Invoker.DestroyJavaVM (InvocationPointer);
 		}
@@ -287,7 +289,7 @@ namespace Java.Interop
 	}
 
 #if !XA_INTEGRATION
-	partial class JavaVM {
+	partial class JniRuntime {
 
 		Dictionary<int, WeakReference>  RegisteredInstances = new Dictionary<int, WeakReference>();
 
@@ -550,7 +552,7 @@ namespace Java.Interop
 	}
 #endif  // !XA_INTEGRATION
 
-	partial class JavaVM {
+	partial class JniRuntime {
 
 		public JniTypeSignature GetJniTypeInfoForType (Type type)
 		{
@@ -728,7 +730,7 @@ namespace Java.Interop
 		}
 	}
 
-	partial class JavaVM {
+	partial class JniRuntime {
 
 		public virtual void RaisePendingException (Exception pendingException)
 		{
@@ -750,7 +752,7 @@ namespace Java.Interop
 	}
 
 #if !XA_INTEGRATION
-	partial class JavaVM {
+	partial class JniRuntime {
 
 		public virtual JniMarshalInfo GetJniMarshalInfoForType (Type type)
 		{
@@ -811,7 +813,7 @@ namespace Java.Interop
 		};
 	}
 
-	partial class JavaVM {
+	partial class JniRuntime {
 
 		static IExportedMemberBuilder memberBuilder;
 		public virtual IExportedMemberBuilder ExportedMemberBuilder {

@@ -34,9 +34,9 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 			jvm.Dispose ();
 		}
 
-		static JavaVM CreateJavaVM ()
+		static JniRuntime CreateJavaVM ()
 		{
-			var builder = new JreVMBuilder ();
+			var builder = new JreRuntimeOptions ();
 			return builder.CreateJreVM ();
 		}
 

@@ -49,7 +49,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Java.Interop\JavaVM.cs" />
     <Compile Include="Java.Interop\JniEnvironment.cs" />
     <Compile Include="Java.Interop\JniEnvironment.g.cs" />
     <Compile Include="Java.Interop\JniEnvironment.Object.cs" />
@@ -61,6 +60,7 @@
     <Compile Include="Java.Interop\JniInstanceMethodInfo.cs" />
     <Compile Include="Java.Interop\JniMethodInfo.cs" />
     <Compile Include="Java.Interop\JniPeerMembers.cs" />
+    <Compile Include="Java.Interop\JniRuntime.cs" />
     <Compile Include="Java.Interop\JniStaticMethodInfo.cs" />
     <Compile Include="Java.Interop\JniStaticFieldInfo.cs" />
     <Compile Include="Java.Interop\JniTransition.cs" />

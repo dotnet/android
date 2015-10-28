@@ -22,7 +22,7 @@ namespace Java.Interop
 
 			DeclaringType   = declaringType;
 			JniPeerType     = new JniType (info.Name);
-			JniPeerType.RegisterWithVM ();
+			JniPeerType.RegisterWithRuntime ();
 		}
 
 		internal    JniType                                 JniPeerType;

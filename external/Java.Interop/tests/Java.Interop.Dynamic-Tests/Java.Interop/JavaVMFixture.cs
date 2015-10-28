@@ -13,7 +13,7 @@ namespace Java.InteropTests {
 		{
 			var c = new TestJVM (
 			);
-			JavaVM.SetCurrent (c);
+			JniRuntime.SetCurrent (c);
 		}
 
 		protected JavaVMFixture ()

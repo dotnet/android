@@ -56,7 +56,12 @@ namespace Java.Interop {
 			}
 		}
 
-		public void RegisterWithVM ()
+#if XA_INTEGRATION
+		internal
+#else   // !XA_INTEGRATION
+		public
+#endif  // !XA_INTEGRATION
+		void RegisterWithRuntime ()
 		{
 			AssertValid ();
 
@@ -87,7 +92,7 @@ namespace Java.Interop {
 			var t = new JniType (classname);
 			if (Interlocked.CompareExchange (ref cachedType, t, null) != null)
 				t.Dispose ();
-			cachedType.RegisterWithVM ();
+			cachedType.RegisterWithRuntime ();
 			return cachedType;
 		}
 
@@ -154,7 +159,7 @@ namespace Java.Interop {
 				throw new InvalidOperationException ("Unable to register native methods.");
 			// Prevents method delegates from being GC'd so long as this type remains
 			this.methods = methods;
-			RegisterWithVM ();
+			RegisterWithRuntime ();
 		}
 
 		public void UnregisterNativeMethods ()

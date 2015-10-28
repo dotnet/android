@@ -12,7 +12,7 @@ namespace Android.InteropTests {
 	public class MainActivity : TestSuiteActivity {
 
 		#pragma warning disable 0414
-		static readonly JavaVM current  = AndroidVM.Current;
+		static readonly JniRuntime current  = AndroidVM.Current;
 		#pragma warning restore 0414
 
 		protected override void OnCreate (Bundle bundle)

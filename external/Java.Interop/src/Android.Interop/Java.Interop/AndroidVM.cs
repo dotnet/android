@@ -13,7 +13,7 @@ namespace Java.Interop {
 	delegate int JNIEnv_GetJavaVM (IntPtr jnienv, out IntPtr vm);
 
 
-	class AndroidVMBuilder : JavaVMOptions {
+	class AndroidVMBuilder : JniRuntime.CreationOptions {
 
 		public AndroidVMBuilder ()
 		{
@@ -35,7 +35,7 @@ namespace Java.Interop {
 		}
 	}
 
-	public class AndroidVM : JavaVM {
+	public class AndroidVM : JniRuntime {
 
 		internal AndroidVM (AndroidVMBuilder builder)
 			: base (builder)

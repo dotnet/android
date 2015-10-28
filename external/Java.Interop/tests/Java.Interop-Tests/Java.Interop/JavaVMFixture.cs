@@ -18,7 +18,7 @@ namespace Java.InteropTests {
 						{ TestType.JniTypeName, typeof (TestType) },
 					}
 			);
-			JavaVM.SetCurrent (c);
+			JniRuntime.SetCurrent (c);
 		}
 
 	}

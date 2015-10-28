@@ -49,7 +49,7 @@ namespace Java.InteropTests
 
 		static ExportedMemberBuilder CreateBuilder ()
 		{
-			return new ExportedMemberBuilder (JavaVM.Current);
+			return new ExportedMemberBuilder (JniRuntime.Current);
 		}
 
 		static JniType CreateExportTestType ()
@@ -173,7 +173,7 @@ namespace Java.InteropTests
 	__envp = new JniTransition(__jnienv);
 	try
 	{
-		JavaVM __jvm;
+		JniRuntime __jvm;
 		ExportTest __this;
 
 		__jvm = JniEnvironment.Runtime;
@@ -231,7 +231,7 @@ namespace Java.InteropTests
 	__envp = new JniTransition(__jnienv);
 	try
 	{
-		JavaVM __jvm;
+		JniRuntime __jvm;
 
 		__jvm = JniEnvironment.Runtime;
 		ExportTest.StaticAction();
@@ -263,7 +263,7 @@ namespace Java.InteropTests
 	__envp = new JniTransition(__jnienv);
 	try
 	{
-		JavaVM __jvm;
+		JniRuntime __jvm;
 		string v;
 
 		__jvm = JniEnvironment.Runtime;
@@ -298,7 +298,7 @@ namespace Java.InteropTests
 	__envp = new JniTransition(__jnienv);
 	try
 	{
-		JavaVM __jvm;
+		JniRuntime __jvm;
 		ExportTest __this;
 		long __mret;
 
@@ -337,7 +337,7 @@ namespace Java.InteropTests
 	__envp = new JniTransition(__jnienv);
 	try
 	{
-		JavaVM __jvm;
+		JniRuntime __jvm;
 		ExportTest __this;
 		JavaObject __mret;
 

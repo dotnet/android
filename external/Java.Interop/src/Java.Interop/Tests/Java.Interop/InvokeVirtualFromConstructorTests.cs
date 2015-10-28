@@ -14,7 +14,7 @@ namespace Java.InteropTests {
 		{
 			using (var t = new CallVirtualFromConstructorDerived (42)) {
 				Assert.IsTrue (t.Called);
-				Assert.IsNull (JavaVM.Current.PeekObject (t.PeerReference));
+				Assert.IsNull (JniRuntime.Current.PeekObject (t.PeerReference));
 			}
 		}
 	}

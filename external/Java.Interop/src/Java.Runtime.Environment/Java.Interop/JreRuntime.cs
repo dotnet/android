@@ -20,7 +20,7 @@ namespace Java.Interop {
 		public  IntPtr /* void * */         extraInfo;
 	}
 
-	public class JreVMBuilder : JavaVMOptions {
+	public class JreRuntimeOptions : JniRuntime.CreationOptions {
 
 		internal    List<string>    Options = new List<string> ();
 
@@ -29,23 +29,23 @@ namespace Java.Interop {
 
 		public  Collection<string>  ClassPath           {get; private set;}
 
-		public JreVMBuilder ()
+		public JreRuntimeOptions ()
 		{
 			JniVersion  = JniVersion.v1_2;
 			ClassPath   = new Collection<string> () {
 				Path.Combine (
-					Path.GetDirectoryName (typeof (JreVMBuilder).Assembly.Location),
+					Path.GetDirectoryName (typeof (JreRuntimeOptions).Assembly.Location),
 					"java-interop.jar"),
 			};
 		}
 
-		public JreVMBuilder AddOption (string option)
+		public JreRuntimeOptions AddOption (string option)
 		{
 			Options.Add (option);
 			return this;
 		}
 
-		public JreVMBuilder AddSystemProperty (string name, string value)
+		public JreRuntimeOptions AddSystemProperty (string name, string value)
 		{
 			if (name == null)
 				throw new ArgumentNullException ("name");
@@ -57,13 +57,13 @@ namespace Java.Interop {
 			return this;
 		}
 
-		public JreVM CreateJreVM ()
+		public JreRuntime CreateJreVM ()
 		{
-			return new JreVM (this);
+			return new JreRuntime (this);
 		}
 	}
 
-	public class JreVM : JavaVM
+	public class JreRuntime : JniRuntime
 	{
 		const string LibraryName = "jvm.dll";
 
@@ -73,10 +73,10 @@ namespace Java.Interop {
 		[DllImport (LibraryName)]
 		static extern int JNI_GetCreatedJavaVMs ([Out] IntPtr[] handles, int bufLen, out int nVMs);
 
-		public static new JavaVM Current {
+		public static new JniRuntime Current {
 			get {
-				if (JavaVM.Current != null)
-					return JavaVM.Current;
+				if (JniRuntime.Current != null)
+					return JniRuntime.Current;
 				IntPtr              h       = IntPtr.Zero;
 				int                 count   = 0;
 				foreach (var vmh in GetCreatedJavaVMHandles ()) {
@@ -87,10 +87,10 @@ namespace Java.Interop {
 					throw new InvalidOperationException ("No JavaVM has been created. Please use JreVMBuilder.CreateJreVM().");
 				if (count > 1)
 					throw new NotSupportedException (string.Format ("Found {0} JavaVMs. Don't know which to use. Use JavaVM.SetCurrent().", count));
-				JavaVM r = GetRegisteredJavaVM (h);
+				JniRuntime r = GetRegisteredRuntime (h);
 				if (r != null)
 					return r;
-				return new JreVM (new JreVMBuilder () {
+				return new JreRuntime (new JreRuntimeOptions () {
 						InvocationPointer = h,
 				});
 			}
@@ -109,7 +109,7 @@ namespace Java.Interop {
 			return handles;
 		}
 
-		static unsafe JreVMBuilder CreateJreVM (JreVMBuilder builder)
+		static unsafe JreRuntimeOptions CreateJreVM (JreRuntimeOptions builder)
 		{
 			if (builder == null)
 				throw new ArgumentNullException ("builder");
@@ -143,7 +143,7 @@ namespace Java.Interop {
 					}
 					builder.InvocationPointer            = javavm;
 					builder.EnvironmentPointer   = jnienv;
-					builder.DestroyVMOnDispose  = true;
+					builder.DestroyRuntimeOnDispose  = true;
 					return builder;
 				}
 			} finally {
@@ -152,7 +152,7 @@ namespace Java.Interop {
 			}
 		}
 
-		internal protected JreVM (JreVMBuilder builder)
+		internal protected JreRuntime (JreRuntimeOptions builder)
 			: base (CreateJreVM (builder))
 		{
 		}
