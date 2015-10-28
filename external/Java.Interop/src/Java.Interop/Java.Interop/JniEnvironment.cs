@@ -176,7 +176,6 @@ namespace Java.Interop {
 				int r   = Invoker.GetJavaVM (EnvironmentPointer, out vmh);
 				if (r < 0)
 					throw new InvalidOperationException ("JNIEnv::GetJavaVM() returned: " + r);
-				Debug.WriteLine ("# jonp: JniEnvironmentInfo.EnvironmentPointer: invocationPointer={0}", vmh.ToString ("x"));
 
 				var vm = JniRuntime.GetRegisteredRuntime (vmh);
 				if (vm == null)
