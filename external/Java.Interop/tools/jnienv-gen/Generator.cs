@@ -324,9 +324,9 @@ namespace Xamarin.Java.Interop
 					if (!is_void)
 						o.Write ("var tmp = ");
 					if (style == HandleStyle.JIIntPtrPinvokeWithErrors) {
-						o.Write ("JavaInterop_{0} (JniEnvironment.Current.EnvironmentPointer{1}", entry.Name, entry.Throws ? ", out thrown" : "");
+						o.Write ("JavaInterop_{0} (JniEnvironment.EnvironmentPointer{1}", entry.Name, entry.Throws ? ", out thrown" : "");
 					} else {
-						o.Write ("JniEnvironment.Current.Invoker.{0} (JniEnvironment.Current.EnvironmentPointer", entry.Name);
+						o.Write ("JniEnvironment.Invoker.{0} (JniEnvironment.EnvironmentPointer", entry.Name);
 					}
 					for (int i = 0; i < entry.Parameters.Length; i++) {
 						var p = entry.Parameters [i];
@@ -375,7 +375,7 @@ namespace Xamarin.Java.Interop
 				return;
 
 			o.WriteLine ();
-			o.WriteLine ("\t\t\tException __e = JniEnvironment.Current.GetExceptionForLastThrowable ({0});",
+			o.WriteLine ("\t\t\tException __e = JniEnvironment.GetExceptionForLastThrowable ({0});",
 					style == HandleStyle.JIIntPtrPinvokeWithErrors ? "thrown" : "");
 			o.WriteLine ("\t\t\tif (__e != null)");
 			o.WriteLine ("\t\t\t\tthrow __e;");
@@ -649,13 +649,13 @@ namespace Xamarin.Java.Interop
 			case HandleStyle.SafeHandle:
 			case HandleStyle.XAIntPtr:
 				return new [] {
-					string.Format ("JniEnvironment.Current.LogCreateLocalRef ({0});", variable),
+					string.Format ("JniEnvironment.LogCreateLocalRef ({0});", variable),
 					string.Format ("return {0};", variable),
 				};
 			case HandleStyle.JIIntPtr:
 			case HandleStyle.JIIntPtrPinvokeWithErrors:
 				return new [] {
-					string.Format ("JniEnvironment.Current.LogCreateLocalRef ({0});", variable),
+					string.Format ("JniEnvironment.LogCreateLocalRef ({0});", variable),
 					string.Format ("return new JniObjectReference ({0}, JniObjectReferenceType.Local);", variable),
 				};
 			}
@@ -897,7 +897,7 @@ namespace Xamarin.Java.Interop
 			if (method == "NewLocalRef" || method == "ExceptionOccurred")
 				return base.GetHandleCreationLogStatements (style, method, variable);
 			return new[] {
-				string.Format ("JniEnvironment.Current.LogCreateLocalRef ({0});", variable),
+				string.Format ("JniEnvironment.LogCreateLocalRef ({0});", variable),
 			};
 		}
 	}

@@ -52,7 +52,7 @@ namespace Java.Interop.GenericMarshaler {
 			<#= methodParams #>
 		)
 		{
-			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return NewObject (peer, constructorSignature, declaringType, <#= methodArgs #>);
 			}
 			return peer.AllocObject (declaringType);
@@ -99,7 +99,7 @@ namespace Java.Interop.GenericMarshaler {
 		    <#= methodParams #>
 		)
 		{
-			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return;
 			}
 			_InvokeConstructor (peer, constructorSignature, self, <#= methodArgs #>);

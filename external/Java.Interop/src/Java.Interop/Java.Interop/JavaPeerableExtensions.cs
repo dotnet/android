@@ -12,7 +12,7 @@ namespace Java.Interop {
 
 		internal static object GetValue (ref JniObjectReference handle, JniObjectReferenceOptions transfer, Type targetType)
 		{
-			return JniEnvironment.Current.JavaVM.GetObject (ref handle, transfer, targetType);
+			return JniEnvironment.Runtime.GetObject (ref handle, transfer, targetType);
 		}
 
 		internal static JniObjectReference CreateLocalRef (object value)

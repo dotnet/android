@@ -69,7 +69,7 @@ namespace Java.Interop {
 					peer            = o.NewGlobalRef ();
 					JniEnvironment.References.Dispose (ref o, JniObjectReferenceOptions.DisposeSourceReference);
 				}
-				JniEnvironment.Current.JavaVM.Track (this);
+				JniEnvironment.Runtime.Track (this);
 				registered = true;
 			}
 		}
@@ -96,7 +96,7 @@ namespace Java.Interop {
 			if (!PeerReference.IsValid)
 				return;
 			if (registered)
-				JniEnvironment.Current.JavaVM.UnTrack (PeerReference.Handle);
+				JniEnvironment.Runtime.UnTrack (PeerReference.Handle);
 			if (methods != null)
 				UnregisterNativeMethods ();
 			JniEnvironment.References.Dispose (ref peer);

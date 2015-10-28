@@ -85,7 +85,7 @@ namespace Java.InteropTests
 		static Delegate GetEqualsThisHandler ()
 		{
 			Func<IntPtr, IntPtr, IntPtr, bool> h = (jnienv, n_self, n_value) => {
-				var jvm     = JniEnvironment.Current.JavaVM;
+				var jvm     = JniEnvironment.Runtime;
 				var self    = jvm.GetObject<TestType>(n_self);
 				var value   = jvm.GetObject (n_value);
 
@@ -102,7 +102,7 @@ namespace Java.InteropTests
 		static Delegate GetInt32ValueHandler ()
 		{
 			Func<IntPtr, IntPtr, int> h = (jnienv, n_self) => {
-				var self = JniEnvironment.Current.JavaVM.GetObject<TestType>(n_self);
+				var self = JniEnvironment.Runtime.GetObject<TestType>(n_self);
 				try {
 					return self.GetInt32Value ();
 				} finally {
@@ -120,7 +120,7 @@ namespace Java.InteropTests
 
 		static IntPtr GetStringValueHandler (IntPtr jnienv, IntPtr n_self, int value)
 		{
-			var self = JniEnvironment.Current.JavaVM.GetObject<TestType>(n_self);
+			var self = JniEnvironment.Runtime.GetObject<TestType>(n_self);
 			try {
 				var s = self.GetStringValue (value);
 				var r = JniEnvironment.Strings.NewString (s);
@@ -136,7 +136,7 @@ namespace Java.InteropTests
 
 		static void MethodThrowsHandler (IntPtr jnienv, IntPtr n_self)
 		{
-			var self = JniEnvironment.Current.JavaVM.GetObject<TestType> (n_self);
+			var self = JniEnvironment.Runtime.GetObject<TestType> (n_self);
 			try {
 				self.MethodThrows ();
 			} finally {

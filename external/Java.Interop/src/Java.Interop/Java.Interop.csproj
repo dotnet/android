@@ -52,6 +52,7 @@
     <Compile Include="Java.Interop\JavaVM.cs" />
     <Compile Include="Java.Interop\JniEnvironment.cs" />
     <Compile Include="Java.Interop\JniEnvironment.g.cs" />
+    <Compile Include="Java.Interop\JniEnvironment.Object.cs" />
     <Compile Include="Java.Interop\JniEnvironment.References.cs" />
     <Compile Include="Java.Interop\JniEnvironment.Strings.cs" />
     <Compile Include="Java.Interop\JniEnvironment.Types.cs" />
@@ -62,6 +63,7 @@
     <Compile Include="Java.Interop\JniPeerMembers.cs" />
     <Compile Include="Java.Interop\JniStaticMethodInfo.cs" />
     <Compile Include="Java.Interop\JniStaticFieldInfo.cs" />
+    <Compile Include="Java.Interop\JniTransition.cs" />
     <Compile Include="Java.Interop\JniType.cs" />
     <Compile Include="Java.Interop\JniTypeSignature.cs" />
     <Compile Include="Java.Interop\JniTypeSignatureAttribute.cs" />

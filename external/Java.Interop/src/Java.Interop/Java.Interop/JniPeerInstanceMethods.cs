@@ -13,7 +13,7 @@ namespace Java.Interop
 
 		JniPeerInstanceMethods (Type declaringType)
 		{
-			var jvm     = JniEnvironment.Current.JavaVM;
+			var jvm     = JniEnvironment.Runtime;
 			var info    = jvm.GetJniTypeInfoForType (declaringType);
 			if (info.SimpleReference == null)
 				throw new NotSupportedException (
@@ -92,7 +92,7 @@ namespace Java.Interop
 
 		public unsafe JniObjectReference StartCreateInstance (string constructorSignature, Type declaringType, JValue* parameters)
 		{
-			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return NewObject (constructorSignature, declaringType, parameters);
 			}
 			var r   = GetConstructorsForType (declaringType)
@@ -120,7 +120,7 @@ namespace Java.Interop
 
 		public unsafe void FinishCreateInstance (string constructorSignature, IJavaPeerable self, JValue* parameters)
 		{
-			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return;
 			}
 			var methods = GetConstructorsForType (self.GetType ());
@@ -139,7 +139,7 @@ namespace Java.Interop
 		internal JniArgumentMarshalInfo (T value)
 		{
 			this        = new JniArgumentMarshalInfo<T> ();
-			var jvm     = JniEnvironment.Current.JavaVM;
+			var jvm     = JniEnvironment.Runtime;
 			var info    = jvm.GetJniMarshalInfoForType (typeof (T));
 			if (info.CreateJValue != null)
 				jvalue = info.CreateJValue (value);

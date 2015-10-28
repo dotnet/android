@@ -229,10 +229,10 @@ namespace Java.Interop.PerformanceTests {
 
 			var total   = Stopwatch.StartNew ();
 
-			foo_init (JniEnvironment.Current.EnvironmentPointer);
+			foo_init (JniEnvironment.EnvironmentPointer);
 
 			var jniTimes = new long [comparisons.Length];
-			foo_get_native_jni_timings (JniEnvironment.Current.EnvironmentPointer, count, JavaTiming.TypeRef.PeerReference.Handle, j.PeerReference.Handle, jniTimes);
+			foo_get_native_jni_timings (JniEnvironment.EnvironmentPointer, count, JavaTiming.TypeRef.PeerReference.Handle, j.PeerReference.Handle, jniTimes);
 
 			int jniTimeIndex = 0;
 			foreach (var c in comparisons) {
@@ -444,7 +444,7 @@ namespace Java.Interop.PerformanceTests {
 
 				methodsTiming       = Stopwatch.StartNew ();
 				var methodHandlesGO = new List<JavaObject> ();
-				var vm              = JniEnvironment.Current.JavaVM;
+				var vm              = JniEnvironment.Runtime;
 				int len             = JniEnvironment.Arrays.GetArrayLength (lrefMethods);
 				for (int i = 0; i < len; ++i) {
 					var v = JniEnvironment.Arrays.GetObjectArrayElement (lrefMethods, i);
@@ -622,7 +622,7 @@ namespace Java.Interop.PerformanceTests {
 				}
 
 				using (strings) {
-					var vm          = JniEnvironment.Current.JavaVM;
+					var vm          = JniEnvironment.Runtime;
 					var rlist       = new List<JavaObject> (C);
 					getObjectTime   = Stopwatch.StartNew ();
 					for (int i  = 0; i < C; ++i) {

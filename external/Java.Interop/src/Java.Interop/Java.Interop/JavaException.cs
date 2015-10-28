@@ -88,7 +88,7 @@ namespace Java.Interop
 
 		~JavaException ()
 		{
-			JniEnvironment.Current.JavaVM.TryCollectObject (this);
+			JniEnvironment.Runtime.TryCollectObject (this);
 		}
 
 		public          JniObjectReference          PeerReference {
@@ -123,7 +123,7 @@ namespace Java.Interop
 
 		protected SetSafeHandleCompletion SetPeerReference (ref JniObjectReference handle, JniObjectReferenceOptions transfer)
 		{
-			return JniEnvironment.Current.JavaVM.SetObjectPeerReference (
+			return JniEnvironment.Runtime.SetObjectPeerReference (
 					this,
 					ref handle,
 					transfer,
@@ -132,14 +132,14 @@ namespace Java.Interop
 
 		public void RegisterWithVM ()
 		{
-			JniEnvironment.Current.JavaVM.RegisterObject (this);
+			JniEnvironment.Runtime.RegisterObject (this);
 		}
 
 		public void Dispose ()
 		{
 			if (PeerReference.Handle == IntPtr.Zero)
 				return;
-			JniEnvironment.Current.JavaVM.DisposeObject (this);
+			JniEnvironment.Runtime.DisposeObject (this);
 			var inner = InnerException as JavaException;
 			if (inner != null) {
 				inner.Dispose ();
@@ -191,7 +191,7 @@ namespace Java.Interop
 
 			var m = _members.InstanceMethods.GetMethodInfo ("getCause\u0000()Ljava/lang/Throwable;");
 			var e = m.InvokeVirtualObjectMethod (reference);
-			return JniEnvironment.Current.JavaVM.GetExceptionForThrowable (ref e, JniObjectReferenceOptions.DisposeSourceReference);
+			return JniEnvironment.Runtime.GetExceptionForThrowable (ref e, JniObjectReferenceOptions.DisposeSourceReference);
 		}
 
 		unsafe string _GetJavaStack (JniObjectReference handle)
@@ -210,7 +210,7 @@ namespace Java.Interop
 						var pst_args = stackalloc JValue [1];
 						pst_args [0] = new JValue (pwriter);
 						pst.InvokeVirtualVoidMethod (handle, pst_args);
-						var s = JniEnvironment.Current.Object_toString.InvokeVirtualObjectMethod (swriter);
+						var s = JniEnvironment.Object.ToString (swriter);
 						return JniEnvironment.Strings.ToString (ref s, JniObjectReferenceOptions.DisposeSourceReference);
 					} finally {
 						JniEnvironment.References.Dispose (ref pwriter, JniObjectReferenceOptions.DisposeSourceReference);

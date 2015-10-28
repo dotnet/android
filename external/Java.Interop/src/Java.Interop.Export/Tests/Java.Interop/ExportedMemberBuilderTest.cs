@@ -168,15 +168,15 @@ namespace Java.InteropTests
 			CheckCreateInvocationExpression (null, t, m, typeof (Action<IntPtr, IntPtr>),
 					@"void (IntPtr __jnienv, IntPtr __context)
 {
-	JniEnvironment __envp;
+	JniTransition __envp;
 
-	__envp = new JniEnvironment(__jnienv);
+	__envp = new JniTransition(__jnienv);
 	try
 	{
 		JavaVM __jvm;
 		ExportTest __this;
 
-		__jvm = JniEnvironment.Current.JavaVM;
+		__jvm = JniEnvironment.Runtime;
 		__this = __jvm.GetObject<ExportTest>(__context);
 		__this.InstanceAction();
 	}
@@ -226,14 +226,14 @@ namespace Java.InteropTests
 			CheckCreateInvocationExpression (null, t, a.Method, typeof(Action<IntPtr, IntPtr>),
 					@"void (IntPtr __jnienv, IntPtr __context)
 {
-	JniEnvironment __envp;
+	JniTransition __envp;
 
-	__envp = new JniEnvironment(__jnienv);
+	__envp = new JniTransition(__jnienv);
 	try
 	{
 		JavaVM __jvm;
 
-		__jvm = JniEnvironment.Current.JavaVM;
+		__jvm = JniEnvironment.Runtime;
 		ExportTest.StaticAction();
 	}
 	catch (Exception __e)
@@ -258,15 +258,15 @@ namespace Java.InteropTests
 			CheckCreateInvocationExpression (e, t, m.Method, typeof (Action<IntPtr, IntPtr, int, IntPtr>),
 					@"void (IntPtr __jnienv, IntPtr __context, int i, IntPtr native_v)
 {
-	JniEnvironment __envp;
+	JniTransition __envp;
 
-	__envp = new JniEnvironment(__jnienv);
+	__envp = new JniTransition(__jnienv);
 	try
 	{
 		JavaVM __jvm;
 		string v;
 
-		__jvm = JniEnvironment.Current.JavaVM;
+		__jvm = JniEnvironment.Runtime;
 		v = Strings.ToString(native_v);
 		ExportTest.StaticActionInt32String(i, v);
 	}
@@ -292,17 +292,17 @@ namespace Java.InteropTests
 			CheckCreateInvocationExpression (e, t, m, typeof (Func<IntPtr, IntPtr, long>),
 					@"long (IntPtr __jnienv, IntPtr __context)
 {
-	JniEnvironment __envp;
+	JniTransition __envp;
 	long __jret;
 
-	__envp = new JniEnvironment(__jnienv);
+	__envp = new JniTransition(__jnienv);
 	try
 	{
 		JavaVM __jvm;
 		ExportTest __this;
 		long __mret;
 
-		__jvm = JniEnvironment.Current.JavaVM;
+		__jvm = JniEnvironment.Runtime;
 		__this = __jvm.GetObject<ExportTest>(__context);
 		__mret = __this.FuncInt64();
 		__jret = __mret;
@@ -331,17 +331,17 @@ namespace Java.InteropTests
 			CheckCreateInvocationExpression (e, t, m, typeof (Func<IntPtr, IntPtr, IntPtr>),
 					@"IntPtr (IntPtr __jnienv, IntPtr __context)
 {
-	JniEnvironment __envp;
+	JniTransition __envp;
 	IntPtr __jret;
 
-	__envp = new JniEnvironment(__jnienv);
+	__envp = new JniTransition(__jnienv);
 	try
 	{
 		JavaVM __jvm;
 		ExportTest __this;
 		JavaObject __mret;
 
-		__jvm = JniEnvironment.Current.JavaVM;
+		__jvm = JniEnvironment.Runtime;
 		__this = __jvm.GetObject<ExportTest>(__context);
 		__mret = __this.FuncIJavaObject();
 		__jret = References.NewReturnToJniRef(__mret);

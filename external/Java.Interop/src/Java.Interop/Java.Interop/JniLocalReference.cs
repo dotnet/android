@@ -9,7 +9,7 @@ namespace Java.Interop
 
 		internal JniLocalReference ()
 		{
-			JniEnvironment.Current.LocalReferences.Add (this);
+			JniEnvironment.AddLocalReference (this);
 		}
 
 		public JniLocalReference (IntPtr handle)
@@ -19,14 +19,14 @@ namespace Java.Interop
 
 		protected override bool ReleaseHandle ()
 		{
-			JniEnvironment.Current.DeleteLocalReference (this, handle);
+			JniEnvironment.DeleteLocalReference (this, handle);
 			return true;
 		}
 
 		internal IntPtr ReturnToJniRef ()
 		{
 			var r = new JniObjectReference (this, JniObjectReferenceType.Local);
-			return JniEnvironment.Current.JavaVM.ObjectReferenceManager.ReleaseLocalReference (JniEnvironment.Current, ref r);
+			return JniEnvironment.Runtime.ObjectReferenceManager.ReleaseLocalReference (JniEnvironment.CurrentInfo, ref r);
 		}
 
 		internal JniAllocObjectRef ToAllocObjectRef ()

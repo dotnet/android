@@ -44,7 +44,7 @@ namespace Java.Interop.Dynamic {
 
 		public override DynamicMetaObject BindConvert (ConvertBinder binder)
 		{
-			var vm = JniEnvironment.Current.JavaVM;
+			var vm = JniEnvironment.Runtime;
 			if (binder.Type == typeof (Type)) {
 				var type    = vm.GetTypeForJniTypeRefererence (info.JniClassName);
 				var typeE   = Expression.Convert (Expression.Constant (type), binder.Type);

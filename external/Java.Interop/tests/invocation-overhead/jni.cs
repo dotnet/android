@@ -379,13 +379,13 @@ namespace
 			if (klass.SafeHandle.IsInvalid)
 				throw new ArgumentException ("klass");
 
-			var tmp = JniEnvironment.Current.Invoker.AllocObject (JniEnvironment.Current.EnvironmentPointer, klass.SafeHandle);
+			var tmp = JniEnvironment.Invoker.AllocObject (JniEnvironment.EnvironmentPointer, klass.SafeHandle);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -400,13 +400,13 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.NewObject (JniEnvironment.Current.EnvironmentPointer, klass.SafeHandle, method.ID);
+			var tmp = JniEnvironment.Invoker.NewObject (JniEnvironment.EnvironmentPointer, klass.SafeHandle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -421,13 +421,13 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.NewObjectA (JniEnvironment.Current.EnvironmentPointer, klass.SafeHandle, method.ID, args);
+			var tmp = JniEnvironment.Invoker.NewObjectA (JniEnvironment.EnvironmentPointer, klass.SafeHandle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 	}
@@ -441,7 +441,7 @@ namespace
 			if (array_ptr.SafeHandle.IsInvalid)
 				throw new ArgumentException ("array_ptr");
 
-			var tmp = JniEnvironment.Current.Invoker.GetArrayLength (JniEnvironment.Current.EnvironmentPointer, array_ptr.SafeHandle);
+			var tmp = JniEnvironment.Invoker.GetArrayLength (JniEnvironment.EnvironmentPointer, array_ptr.SafeHandle);
 			return tmp;
 		}
 
@@ -452,13 +452,13 @@ namespace
 			if (elementClass.SafeHandle.IsInvalid)
 				throw new ArgumentException ("elementClass");
 
-			var tmp = JniEnvironment.Current.Invoker.NewObjectArray (JniEnvironment.Current.EnvironmentPointer, length, elementClass.SafeHandle, initialElement.SafeHandle);
+			var tmp = JniEnvironment.Invoker.NewObjectArray (JniEnvironment.EnvironmentPointer, length, elementClass.SafeHandle, initialElement.SafeHandle);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -469,13 +469,13 @@ namespace
 			if (array.SafeHandle.IsInvalid)
 				throw new ArgumentException ("array");
 
-			var tmp = JniEnvironment.Current.Invoker.GetObjectArrayElement (JniEnvironment.Current.EnvironmentPointer, array.SafeHandle, index);
+			var tmp = JniEnvironment.Invoker.GetObjectArrayElement (JniEnvironment.EnvironmentPointer, array.SafeHandle, index);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -486,9 +486,9 @@ namespace
 			if (array.SafeHandle.IsInvalid)
 				throw new ArgumentException ("array");
 
-			JniEnvironment.Current.Invoker.SetObjectArrayElement (JniEnvironment.Current.EnvironmentPointer, array.SafeHandle, index, value.SafeHandle);
+			JniEnvironment.Invoker.SetObjectArrayElement (JniEnvironment.EnvironmentPointer, array.SafeHandle, index, value.SafeHandle);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -496,57 +496,57 @@ namespace
 
 		public static unsafe JniObjectReference NewBooleanArray (int length)
 		{
-			var tmp = JniEnvironment.Current.Invoker.NewBooleanArray (JniEnvironment.Current.EnvironmentPointer, length);
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			var tmp = JniEnvironment.Invoker.NewBooleanArray (JniEnvironment.EnvironmentPointer, length);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
 		public static unsafe JniObjectReference NewByteArray (int length)
 		{
-			var tmp = JniEnvironment.Current.Invoker.NewByteArray (JniEnvironment.Current.EnvironmentPointer, length);
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			var tmp = JniEnvironment.Invoker.NewByteArray (JniEnvironment.EnvironmentPointer, length);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
 		public static unsafe JniObjectReference NewCharArray (int length)
 		{
-			var tmp = JniEnvironment.Current.Invoker.NewCharArray (JniEnvironment.Current.EnvironmentPointer, length);
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			var tmp = JniEnvironment.Invoker.NewCharArray (JniEnvironment.EnvironmentPointer, length);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
 		public static unsafe JniObjectReference NewShortArray (int length)
 		{
-			var tmp = JniEnvironment.Current.Invoker.NewShortArray (JniEnvironment.Current.EnvironmentPointer, length);
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			var tmp = JniEnvironment.Invoker.NewShortArray (JniEnvironment.EnvironmentPointer, length);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
 		public static unsafe JniObjectReference NewIntArray (int length)
 		{
-			var tmp = JniEnvironment.Current.Invoker.NewIntArray (JniEnvironment.Current.EnvironmentPointer, length);
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			var tmp = JniEnvironment.Invoker.NewIntArray (JniEnvironment.EnvironmentPointer, length);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
 		public static unsafe JniObjectReference NewLongArray (int length)
 		{
-			var tmp = JniEnvironment.Current.Invoker.NewLongArray (JniEnvironment.Current.EnvironmentPointer, length);
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			var tmp = JniEnvironment.Invoker.NewLongArray (JniEnvironment.EnvironmentPointer, length);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
 		public static unsafe JniObjectReference NewFloatArray (int length)
 		{
-			var tmp = JniEnvironment.Current.Invoker.NewFloatArray (JniEnvironment.Current.EnvironmentPointer, length);
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			var tmp = JniEnvironment.Invoker.NewFloatArray (JniEnvironment.EnvironmentPointer, length);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
 		public static unsafe JniObjectReference NewDoubleArray (int length)
 		{
-			var tmp = JniEnvironment.Current.Invoker.NewDoubleArray (JniEnvironment.Current.EnvironmentPointer, length);
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			var tmp = JniEnvironment.Invoker.NewDoubleArray (JniEnvironment.EnvironmentPointer, length);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -557,7 +557,7 @@ namespace
 			if (array.SafeHandle.IsInvalid)
 				throw new ArgumentException ("array");
 
-			var tmp = JniEnvironment.Current.Invoker.GetBooleanArrayElements (JniEnvironment.Current.EnvironmentPointer, array.SafeHandle, isCopy);
+			var tmp = JniEnvironment.Invoker.GetBooleanArrayElements (JniEnvironment.EnvironmentPointer, array.SafeHandle, isCopy);
 			return tmp;
 		}
 
@@ -568,7 +568,7 @@ namespace
 			if (array.SafeHandle.IsInvalid)
 				throw new ArgumentException ("array");
 
-			var tmp = JniEnvironment.Current.Invoker.GetByteArrayElements (JniEnvironment.Current.EnvironmentPointer, array.SafeHandle, isCopy);
+			var tmp = JniEnvironment.Invoker.GetByteArrayElements (JniEnvironment.EnvironmentPointer, array.SafeHandle, isCopy);
 			return tmp;
 		}
 
@@ -579,7 +579,7 @@ namespace
 			if (array.SafeHandle.IsInvalid)
 				throw new ArgumentException ("array");
 
-			var tmp = JniEnvironment.Current.Invoker.GetCharArrayElements (JniEnvironment.Current.EnvironmentPointer, array.SafeHandle, isCopy);
+			var tmp = JniEnvironment.Invoker.GetCharArrayElements (JniEnvironment.EnvironmentPointer, array.SafeHandle, isCopy);
 			return tmp;
 		}
 
@@ -590,7 +590,7 @@ namespace
 			if (array.SafeHandle.IsInvalid)
 				throw new ArgumentException ("array");
 
-			var tmp = JniEnvironment.Current.Invoker.GetShortArrayElements (JniEnvironment.Current.EnvironmentPointer, array.SafeHandle, isCopy);
+			var tmp = JniEnvironment.Invoker.GetShortArrayElements (JniEnvironment.EnvironmentPointer, array.SafeHandle, isCopy);
 			return tmp;
 		}
 
@@ -601,7 +601,7 @@ namespace
 			if (array.SafeHandle.IsInvalid)
 				throw new ArgumentException ("array");
 
-			var tmp = JniEnvironment.Current.Invoker.GetIntArrayElements (JniEnvironment.Current.EnvironmentPointer, array.SafeHandle, isCopy);
+			var tmp = JniEnvironment.Invoker.GetIntArrayElements (JniEnvironment.EnvironmentPointer, array.SafeHandle, isCopy);
 			return tmp;
 		}
 
@@ -612,7 +612,7 @@ namespace
 			if (array.SafeHandle.IsInvalid)
 				throw new ArgumentException ("array");
 
-			var tmp = JniEnvironment.Current.Invoker.GetLongArrayElements (JniEnvironment.Current.EnvironmentPointer, array.SafeHandle, isCopy);
+			var tmp = JniEnvironment.Invoker.GetLongArrayElements (JniEnvironment.EnvironmentPointer, array.SafeHandle, isCopy);
 			return tmp;
 		}
 
@@ -623,7 +623,7 @@ namespace
 			if (array.SafeHandle.IsInvalid)
 				throw new ArgumentException ("array");
 
-			var tmp = JniEnvironment.Current.Invoker.GetFloatArrayElements (JniEnvironment.Current.EnvironmentPointer, array.SafeHandle, isCopy);
+			var tmp = JniEnvironment.Invoker.GetFloatArrayElements (JniEnvironment.EnvironmentPointer, array.SafeHandle, isCopy);
 			return tmp;
 		}
 
@@ -634,7 +634,7 @@ namespace
 			if (array.SafeHandle.IsInvalid)
 				throw new ArgumentException ("array");
 
-			var tmp = JniEnvironment.Current.Invoker.GetDoubleArrayElements (JniEnvironment.Current.EnvironmentPointer, array.SafeHandle, isCopy);
+			var tmp = JniEnvironment.Invoker.GetDoubleArrayElements (JniEnvironment.EnvironmentPointer, array.SafeHandle, isCopy);
 			return tmp;
 		}
 
@@ -647,7 +647,7 @@ namespace
 			if (elements == IntPtr.Zero)
 				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", "elements");
 
-			JniEnvironment.Current.Invoker.ReleaseBooleanArrayElements (JniEnvironment.Current.EnvironmentPointer, array.SafeHandle, elements, mode);
+			JniEnvironment.Invoker.ReleaseBooleanArrayElements (JniEnvironment.EnvironmentPointer, array.SafeHandle, elements, mode);
 		}
 
 		public static unsafe void ReleaseByteArrayElements (JniObjectReference array, IntPtr elements, int mode)
@@ -659,7 +659,7 @@ namespace
 			if (elements == IntPtr.Zero)
 				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", "elements");
 
-			JniEnvironment.Current.Invoker.ReleaseByteArrayElements (JniEnvironment.Current.EnvironmentPointer, array.SafeHandle, elements, mode);
+			JniEnvironment.Invoker.ReleaseByteArrayElements (JniEnvironment.EnvironmentPointer, array.SafeHandle, elements, mode);
 		}
 
 		public static unsafe void ReleaseCharArrayElements (JniObjectReference array, IntPtr elements, int mode)
@@ -671,7 +671,7 @@ namespace
 			if (elements == IntPtr.Zero)
 				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", "elements");
 
-			JniEnvironment.Current.Invoker.ReleaseCharArrayElements (JniEnvironment.Current.EnvironmentPointer, array.SafeHandle, elements, mode);
+			JniEnvironment.Invoker.ReleaseCharArrayElements (JniEnvironment.EnvironmentPointer, array.SafeHandle, elements, mode);
 		}
 
 		public static unsafe void ReleaseShortArrayElements (JniObjectReference array, IntPtr elements, int mode)
@@ -683,7 +683,7 @@ namespace
 			if (elements == IntPtr.Zero)
 				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", "elements");
 
-			JniEnvironment.Current.Invoker.ReleaseShortArrayElements (JniEnvironment.Current.EnvironmentPointer, array.SafeHandle, elements, mode);
+			JniEnvironment.Invoker.ReleaseShortArrayElements (JniEnvironment.EnvironmentPointer, array.SafeHandle, elements, mode);
 		}
 
 		public static unsafe void ReleaseIntArrayElements (JniObjectReference array, IntPtr elements, int mode)
@@ -695,7 +695,7 @@ namespace
 			if (elements == IntPtr.Zero)
 				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", "elements");
 
-			JniEnvironment.Current.Invoker.ReleaseIntArrayElements (JniEnvironment.Current.EnvironmentPointer, array.SafeHandle, elements, mode);
+			JniEnvironment.Invoker.ReleaseIntArrayElements (JniEnvironment.EnvironmentPointer, array.SafeHandle, elements, mode);
 		}
 
 		public static unsafe void ReleaseLongArrayElements (JniObjectReference array, IntPtr elements, int mode)
@@ -707,7 +707,7 @@ namespace
 			if (elements == IntPtr.Zero)
 				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", "elements");
 
-			JniEnvironment.Current.Invoker.ReleaseLongArrayElements (JniEnvironment.Current.EnvironmentPointer, array.SafeHandle, elements, mode);
+			JniEnvironment.Invoker.ReleaseLongArrayElements (JniEnvironment.EnvironmentPointer, array.SafeHandle, elements, mode);
 		}
 
 		public static unsafe void ReleaseFloatArrayElements (JniObjectReference array, IntPtr elements, int mode)
@@ -719,7 +719,7 @@ namespace
 			if (elements == IntPtr.Zero)
 				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", "elements");
 
-			JniEnvironment.Current.Invoker.ReleaseFloatArrayElements (JniEnvironment.Current.EnvironmentPointer, array.SafeHandle, elements, mode);
+			JniEnvironment.Invoker.ReleaseFloatArrayElements (JniEnvironment.EnvironmentPointer, array.SafeHandle, elements, mode);
 		}
 
 		public static unsafe void ReleaseDoubleArrayElements (JniObjectReference array, IntPtr elements, int mode)
@@ -731,7 +731,7 @@ namespace
 			if (elements == IntPtr.Zero)
 				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", "elements");
 
-			JniEnvironment.Current.Invoker.ReleaseDoubleArrayElements (JniEnvironment.Current.EnvironmentPointer, array.SafeHandle, elements, mode);
+			JniEnvironment.Invoker.ReleaseDoubleArrayElements (JniEnvironment.EnvironmentPointer, array.SafeHandle, elements, mode);
 		}
 
 		internal static unsafe void GetBooleanArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
@@ -743,9 +743,9 @@ namespace
 			if (buffer == IntPtr.Zero)
 				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
-			JniEnvironment.Current.Invoker.GetBooleanArrayRegion (JniEnvironment.Current.EnvironmentPointer, array.SafeHandle, start, length, buffer);
+			JniEnvironment.Invoker.GetBooleanArrayRegion (JniEnvironment.EnvironmentPointer, array.SafeHandle, start, length, buffer);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -760,9 +760,9 @@ namespace
 			if (buffer == IntPtr.Zero)
 				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
-			JniEnvironment.Current.Invoker.GetByteArrayRegion (JniEnvironment.Current.EnvironmentPointer, array.SafeHandle, start, length, buffer);
+			JniEnvironment.Invoker.GetByteArrayRegion (JniEnvironment.EnvironmentPointer, array.SafeHandle, start, length, buffer);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -777,9 +777,9 @@ namespace
 			if (buffer == IntPtr.Zero)
 				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
-			JniEnvironment.Current.Invoker.GetCharArrayRegion (JniEnvironment.Current.EnvironmentPointer, array.SafeHandle, start, length, buffer);
+			JniEnvironment.Invoker.GetCharArrayRegion (JniEnvironment.EnvironmentPointer, array.SafeHandle, start, length, buffer);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -794,9 +794,9 @@ namespace
 			if (buffer == IntPtr.Zero)
 				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
-			JniEnvironment.Current.Invoker.GetShortArrayRegion (JniEnvironment.Current.EnvironmentPointer, array.SafeHandle, start, length, buffer);
+			JniEnvironment.Invoker.GetShortArrayRegion (JniEnvironment.EnvironmentPointer, array.SafeHandle, start, length, buffer);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -811,9 +811,9 @@ namespace
 			if (buffer == IntPtr.Zero)
 				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
-			JniEnvironment.Current.Invoker.GetIntArrayRegion (JniEnvironment.Current.EnvironmentPointer, array.SafeHandle, start, length, buffer);
+			JniEnvironment.Invoker.GetIntArrayRegion (JniEnvironment.EnvironmentPointer, array.SafeHandle, start, length, buffer);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -828,9 +828,9 @@ namespace
 			if (buffer == IntPtr.Zero)
 				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
-			JniEnvironment.Current.Invoker.GetLongArrayRegion (JniEnvironment.Current.EnvironmentPointer, array.SafeHandle, start, length, buffer);
+			JniEnvironment.Invoker.GetLongArrayRegion (JniEnvironment.EnvironmentPointer, array.SafeHandle, start, length, buffer);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -845,9 +845,9 @@ namespace
 			if (buffer == IntPtr.Zero)
 				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
-			JniEnvironment.Current.Invoker.GetFloatArrayRegion (JniEnvironment.Current.EnvironmentPointer, array.SafeHandle, start, length, buffer);
+			JniEnvironment.Invoker.GetFloatArrayRegion (JniEnvironment.EnvironmentPointer, array.SafeHandle, start, length, buffer);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -862,9 +862,9 @@ namespace
 			if (buffer == IntPtr.Zero)
 				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
-			JniEnvironment.Current.Invoker.GetDoubleArrayRegion (JniEnvironment.Current.EnvironmentPointer, array.SafeHandle, start, length, buffer);
+			JniEnvironment.Invoker.GetDoubleArrayRegion (JniEnvironment.EnvironmentPointer, array.SafeHandle, start, length, buffer);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -879,9 +879,9 @@ namespace
 			if (buffer == IntPtr.Zero)
 				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
-			JniEnvironment.Current.Invoker.SetBooleanArrayRegion (JniEnvironment.Current.EnvironmentPointer, array.SafeHandle, start, length, buffer);
+			JniEnvironment.Invoker.SetBooleanArrayRegion (JniEnvironment.EnvironmentPointer, array.SafeHandle, start, length, buffer);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -896,9 +896,9 @@ namespace
 			if (buffer == IntPtr.Zero)
 				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
-			JniEnvironment.Current.Invoker.SetByteArrayRegion (JniEnvironment.Current.EnvironmentPointer, array.SafeHandle, start, length, buffer);
+			JniEnvironment.Invoker.SetByteArrayRegion (JniEnvironment.EnvironmentPointer, array.SafeHandle, start, length, buffer);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -913,9 +913,9 @@ namespace
 			if (buffer == IntPtr.Zero)
 				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
-			JniEnvironment.Current.Invoker.SetCharArrayRegion (JniEnvironment.Current.EnvironmentPointer, array.SafeHandle, start, length, buffer);
+			JniEnvironment.Invoker.SetCharArrayRegion (JniEnvironment.EnvironmentPointer, array.SafeHandle, start, length, buffer);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -930,9 +930,9 @@ namespace
 			if (buffer == IntPtr.Zero)
 				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
-			JniEnvironment.Current.Invoker.SetShortArrayRegion (JniEnvironment.Current.EnvironmentPointer, array.SafeHandle, start, length, buffer);
+			JniEnvironment.Invoker.SetShortArrayRegion (JniEnvironment.EnvironmentPointer, array.SafeHandle, start, length, buffer);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -947,9 +947,9 @@ namespace
 			if (buffer == IntPtr.Zero)
 				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
-			JniEnvironment.Current.Invoker.SetIntArrayRegion (JniEnvironment.Current.EnvironmentPointer, array.SafeHandle, start, length, buffer);
+			JniEnvironment.Invoker.SetIntArrayRegion (JniEnvironment.EnvironmentPointer, array.SafeHandle, start, length, buffer);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -964,9 +964,9 @@ namespace
 			if (buffer == IntPtr.Zero)
 				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
-			JniEnvironment.Current.Invoker.SetLongArrayRegion (JniEnvironment.Current.EnvironmentPointer, array.SafeHandle, start, length, buffer);
+			JniEnvironment.Invoker.SetLongArrayRegion (JniEnvironment.EnvironmentPointer, array.SafeHandle, start, length, buffer);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -981,9 +981,9 @@ namespace
 			if (buffer == IntPtr.Zero)
 				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
-			JniEnvironment.Current.Invoker.SetFloatArrayRegion (JniEnvironment.Current.EnvironmentPointer, array.SafeHandle, start, length, buffer);
+			JniEnvironment.Invoker.SetFloatArrayRegion (JniEnvironment.EnvironmentPointer, array.SafeHandle, start, length, buffer);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -998,9 +998,9 @@ namespace
 			if (buffer == IntPtr.Zero)
 				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
-			JniEnvironment.Current.Invoker.SetDoubleArrayRegion (JniEnvironment.Current.EnvironmentPointer, array.SafeHandle, start, length, buffer);
+			JniEnvironment.Invoker.SetDoubleArrayRegion (JniEnvironment.EnvironmentPointer, array.SafeHandle, start, length, buffer);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -1016,7 +1016,7 @@ namespace
 			if (toThrow.SafeHandle.IsInvalid)
 				throw new ArgumentException ("toThrow");
 
-			var tmp = JniEnvironment.Current.Invoker.Throw (JniEnvironment.Current.EnvironmentPointer, toThrow.SafeHandle);
+			var tmp = JniEnvironment.Invoker.Throw (JniEnvironment.EnvironmentPointer, toThrow.SafeHandle);
 			return tmp;
 		}
 
@@ -1029,24 +1029,24 @@ namespace
 			if (message == null)
 				throw new ArgumentNullException ("message");
 
-			var tmp = JniEnvironment.Current.Invoker.ThrowNew (JniEnvironment.Current.EnvironmentPointer, klass.SafeHandle, message);
+			var tmp = JniEnvironment.Invoker.ThrowNew (JniEnvironment.EnvironmentPointer, klass.SafeHandle, message);
 			return tmp;
 		}
 
 		internal static unsafe JniObjectReference ExceptionOccurred ()
 		{
-			var tmp = JniEnvironment.Current.Invoker.ExceptionOccurred (JniEnvironment.Current.EnvironmentPointer);
+			var tmp = JniEnvironment.Invoker.ExceptionOccurred (JniEnvironment.EnvironmentPointer);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
 		internal static unsafe void ExceptionDescribe ()
 		{
-			JniEnvironment.Current.Invoker.ExceptionDescribe (JniEnvironment.Current.EnvironmentPointer);
+			JniEnvironment.Invoker.ExceptionDescribe (JniEnvironment.EnvironmentPointer);
 		}
 
 		internal static unsafe void ExceptionClear ()
 		{
-			JniEnvironment.Current.Invoker.ExceptionClear (JniEnvironment.Current.EnvironmentPointer);
+			JniEnvironment.Invoker.ExceptionClear (JniEnvironment.EnvironmentPointer);
 		}
 
 		public static unsafe void FatalError (string message)
@@ -1054,12 +1054,12 @@ namespace
 			if (message == null)
 				throw new ArgumentNullException ("message");
 
-			JniEnvironment.Current.Invoker.FatalError (JniEnvironment.Current.EnvironmentPointer, message);
+			JniEnvironment.Invoker.FatalError (JniEnvironment.EnvironmentPointer, message);
 		}
 
 		internal static unsafe bool ExceptionCheck ()
 		{
-			var tmp = JniEnvironment.Current.Invoker.ExceptionCheck (JniEnvironment.Current.EnvironmentPointer);
+			var tmp = JniEnvironment.Invoker.ExceptionCheck (JniEnvironment.EnvironmentPointer);
 			return tmp;
 		}
 	}
@@ -1077,9 +1077,9 @@ namespace
 			if (signature == null)
 				throw new ArgumentNullException ("signature");
 
-			var tmp = JniEnvironment.Current.Invoker.GetFieldID (JniEnvironment.Current.EnvironmentPointer, klass.SafeHandle, name, signature);
+			var tmp = JniEnvironment.Invoker.GetFieldID (JniEnvironment.EnvironmentPointer, klass.SafeHandle, name, signature);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -1099,8 +1099,8 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JniEnvironment.Current.Invoker.GetObjectField (JniEnvironment.Current.EnvironmentPointer, @object.SafeHandle, field.ID);
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			var tmp = JniEnvironment.Invoker.GetObjectField (JniEnvironment.EnvironmentPointer, @object.SafeHandle, field.ID);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -1115,7 +1115,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JniEnvironment.Current.Invoker.GetBooleanField (JniEnvironment.Current.EnvironmentPointer, @object.SafeHandle, field.ID);
+			var tmp = JniEnvironment.Invoker.GetBooleanField (JniEnvironment.EnvironmentPointer, @object.SafeHandle, field.ID);
 			return tmp;
 		}
 
@@ -1130,7 +1130,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JniEnvironment.Current.Invoker.GetByteField (JniEnvironment.Current.EnvironmentPointer, @object.SafeHandle, field.ID);
+			var tmp = JniEnvironment.Invoker.GetByteField (JniEnvironment.EnvironmentPointer, @object.SafeHandle, field.ID);
 			return tmp;
 		}
 
@@ -1145,7 +1145,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JniEnvironment.Current.Invoker.GetCharField (JniEnvironment.Current.EnvironmentPointer, @object.SafeHandle, field.ID);
+			var tmp = JniEnvironment.Invoker.GetCharField (JniEnvironment.EnvironmentPointer, @object.SafeHandle, field.ID);
 			return tmp;
 		}
 
@@ -1160,7 +1160,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JniEnvironment.Current.Invoker.GetShortField (JniEnvironment.Current.EnvironmentPointer, @object.SafeHandle, field.ID);
+			var tmp = JniEnvironment.Invoker.GetShortField (JniEnvironment.EnvironmentPointer, @object.SafeHandle, field.ID);
 			return tmp;
 		}
 
@@ -1175,7 +1175,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JniEnvironment.Current.Invoker.GetIntField (JniEnvironment.Current.EnvironmentPointer, @object.SafeHandle, field.ID);
+			var tmp = JniEnvironment.Invoker.GetIntField (JniEnvironment.EnvironmentPointer, @object.SafeHandle, field.ID);
 			return tmp;
 		}
 
@@ -1190,7 +1190,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JniEnvironment.Current.Invoker.GetLongField (JniEnvironment.Current.EnvironmentPointer, @object.SafeHandle, field.ID);
+			var tmp = JniEnvironment.Invoker.GetLongField (JniEnvironment.EnvironmentPointer, @object.SafeHandle, field.ID);
 			return tmp;
 		}
 
@@ -1205,7 +1205,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JniEnvironment.Current.Invoker.GetFloatField (JniEnvironment.Current.EnvironmentPointer, @object.SafeHandle, field.ID);
+			var tmp = JniEnvironment.Invoker.GetFloatField (JniEnvironment.EnvironmentPointer, @object.SafeHandle, field.ID);
 			return tmp;
 		}
 
@@ -1220,7 +1220,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JniEnvironment.Current.Invoker.GetDoubleField (JniEnvironment.Current.EnvironmentPointer, @object.SafeHandle, field.ID);
+			var tmp = JniEnvironment.Invoker.GetDoubleField (JniEnvironment.EnvironmentPointer, @object.SafeHandle, field.ID);
 			return tmp;
 		}
 
@@ -1235,7 +1235,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JniEnvironment.Current.Invoker.SetObjectField (JniEnvironment.Current.EnvironmentPointer, @object.SafeHandle, field.ID, value.SafeHandle);
+			JniEnvironment.Invoker.SetObjectField (JniEnvironment.EnvironmentPointer, @object.SafeHandle, field.ID, value.SafeHandle);
 		}
 
 		internal static unsafe void SetField (JniObjectReference @object, JniInstanceFieldInfo field, bool value)
@@ -1249,7 +1249,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JniEnvironment.Current.Invoker.SetBooleanField (JniEnvironment.Current.EnvironmentPointer, @object.SafeHandle, field.ID, value);
+			JniEnvironment.Invoker.SetBooleanField (JniEnvironment.EnvironmentPointer, @object.SafeHandle, field.ID, value);
 		}
 
 		internal static unsafe void SetField (JniObjectReference @object, JniInstanceFieldInfo field, sbyte value)
@@ -1263,7 +1263,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JniEnvironment.Current.Invoker.SetByteField (JniEnvironment.Current.EnvironmentPointer, @object.SafeHandle, field.ID, value);
+			JniEnvironment.Invoker.SetByteField (JniEnvironment.EnvironmentPointer, @object.SafeHandle, field.ID, value);
 		}
 
 		internal static unsafe void SetField (JniObjectReference @object, JniInstanceFieldInfo field, char value)
@@ -1277,7 +1277,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JniEnvironment.Current.Invoker.SetCharField (JniEnvironment.Current.EnvironmentPointer, @object.SafeHandle, field.ID, value);
+			JniEnvironment.Invoker.SetCharField (JniEnvironment.EnvironmentPointer, @object.SafeHandle, field.ID, value);
 		}
 
 		internal static unsafe void SetField (JniObjectReference @object, JniInstanceFieldInfo field, short value)
@@ -1291,7 +1291,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JniEnvironment.Current.Invoker.SetShortField (JniEnvironment.Current.EnvironmentPointer, @object.SafeHandle, field.ID, value);
+			JniEnvironment.Invoker.SetShortField (JniEnvironment.EnvironmentPointer, @object.SafeHandle, field.ID, value);
 		}
 
 		internal static unsafe void SetField (JniObjectReference @object, JniInstanceFieldInfo field, int value)
@@ -1305,7 +1305,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JniEnvironment.Current.Invoker.SetIntField (JniEnvironment.Current.EnvironmentPointer, @object.SafeHandle, field.ID, value);
+			JniEnvironment.Invoker.SetIntField (JniEnvironment.EnvironmentPointer, @object.SafeHandle, field.ID, value);
 		}
 
 		internal static unsafe void SetField (JniObjectReference @object, JniInstanceFieldInfo field, long value)
@@ -1319,7 +1319,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JniEnvironment.Current.Invoker.SetLongField (JniEnvironment.Current.EnvironmentPointer, @object.SafeHandle, field.ID, value);
+			JniEnvironment.Invoker.SetLongField (JniEnvironment.EnvironmentPointer, @object.SafeHandle, field.ID, value);
 		}
 
 		internal static unsafe void SetField (JniObjectReference @object, JniInstanceFieldInfo field, float value)
@@ -1333,7 +1333,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JniEnvironment.Current.Invoker.SetFloatField (JniEnvironment.Current.EnvironmentPointer, @object.SafeHandle, field.ID, value);
+			JniEnvironment.Invoker.SetFloatField (JniEnvironment.EnvironmentPointer, @object.SafeHandle, field.ID, value);
 		}
 
 		internal static unsafe void SetField (JniObjectReference @object, JniInstanceFieldInfo field, double value)
@@ -1347,7 +1347,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JniEnvironment.Current.Invoker.SetDoubleField (JniEnvironment.Current.EnvironmentPointer, @object.SafeHandle, field.ID, value);
+			JniEnvironment.Invoker.SetDoubleField (JniEnvironment.EnvironmentPointer, @object.SafeHandle, field.ID, value);
 		}
 	}
 
@@ -1364,9 +1364,9 @@ namespace
 			if (signature == null)
 				throw new ArgumentNullException ("signature");
 
-			var tmp = JniEnvironment.Current.Invoker.GetMethodID (JniEnvironment.Current.EnvironmentPointer, klass.SafeHandle, name, signature);
+			var tmp = JniEnvironment.Invoker.GetMethodID (JniEnvironment.EnvironmentPointer, klass.SafeHandle, name, signature);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -1386,13 +1386,13 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallObjectMethod (JniEnvironment.Current.EnvironmentPointer, @object.SafeHandle, method.ID);
+			var tmp = JniEnvironment.Invoker.CallObjectMethod (JniEnvironment.EnvironmentPointer, @object.SafeHandle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -1407,13 +1407,13 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallObjectMethodA (JniEnvironment.Current.EnvironmentPointer, @object.SafeHandle, method.ID, args);
+			var tmp = JniEnvironment.Invoker.CallObjectMethodA (JniEnvironment.EnvironmentPointer, @object.SafeHandle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -1428,9 +1428,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallBooleanMethod (JniEnvironment.Current.EnvironmentPointer, @object.SafeHandle, method.ID);
+			var tmp = JniEnvironment.Invoker.CallBooleanMethod (JniEnvironment.EnvironmentPointer, @object.SafeHandle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -1448,9 +1448,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallBooleanMethodA (JniEnvironment.Current.EnvironmentPointer, @object.SafeHandle, method.ID, args);
+			var tmp = JniEnvironment.Invoker.CallBooleanMethodA (JniEnvironment.EnvironmentPointer, @object.SafeHandle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -1468,9 +1468,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallByteMethod (JniEnvironment.Current.EnvironmentPointer, @object.SafeHandle, method.ID);
+			var tmp = JniEnvironment.Invoker.CallByteMethod (JniEnvironment.EnvironmentPointer, @object.SafeHandle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -1488,9 +1488,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallByteMethodA (JniEnvironment.Current.EnvironmentPointer, @object.SafeHandle, method.ID, args);
+			var tmp = JniEnvironment.Invoker.CallByteMethodA (JniEnvironment.EnvironmentPointer, @object.SafeHandle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -1508,9 +1508,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallCharMethod (JniEnvironment.Current.EnvironmentPointer, @object.SafeHandle, method.ID);
+			var tmp = JniEnvironment.Invoker.CallCharMethod (JniEnvironment.EnvironmentPointer, @object.SafeHandle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -1528,9 +1528,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallCharMethodA (JniEnvironment.Current.EnvironmentPointer, @object.SafeHandle, method.ID, args);
+			var tmp = JniEnvironment.Invoker.CallCharMethodA (JniEnvironment.EnvironmentPointer, @object.SafeHandle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -1548,9 +1548,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallShortMethod (JniEnvironment.Current.EnvironmentPointer, @object.SafeHandle, method.ID);
+			var tmp = JniEnvironment.Invoker.CallShortMethod (JniEnvironment.EnvironmentPointer, @object.SafeHandle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -1568,9 +1568,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallShortMethodA (JniEnvironment.Current.EnvironmentPointer, @object.SafeHandle, method.ID, args);
+			var tmp = JniEnvironment.Invoker.CallShortMethodA (JniEnvironment.EnvironmentPointer, @object.SafeHandle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -1588,9 +1588,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallIntMethod (JniEnvironment.Current.EnvironmentPointer, @object.SafeHandle, method.ID);
+			var tmp = JniEnvironment.Invoker.CallIntMethod (JniEnvironment.EnvironmentPointer, @object.SafeHandle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -1608,9 +1608,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallIntMethodA (JniEnvironment.Current.EnvironmentPointer, @object.SafeHandle, method.ID, args);
+			var tmp = JniEnvironment.Invoker.CallIntMethodA (JniEnvironment.EnvironmentPointer, @object.SafeHandle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -1628,9 +1628,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallLongMethod (JniEnvironment.Current.EnvironmentPointer, @object.SafeHandle, method.ID);
+			var tmp = JniEnvironment.Invoker.CallLongMethod (JniEnvironment.EnvironmentPointer, @object.SafeHandle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -1648,9 +1648,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallLongMethodA (JniEnvironment.Current.EnvironmentPointer, @object.SafeHandle, method.ID, args);
+			var tmp = JniEnvironment.Invoker.CallLongMethodA (JniEnvironment.EnvironmentPointer, @object.SafeHandle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -1668,9 +1668,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallFloatMethod (JniEnvironment.Current.EnvironmentPointer, @object.SafeHandle, method.ID);
+			var tmp = JniEnvironment.Invoker.CallFloatMethod (JniEnvironment.EnvironmentPointer, @object.SafeHandle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -1688,9 +1688,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallFloatMethodA (JniEnvironment.Current.EnvironmentPointer, @object.SafeHandle, method.ID, args);
+			var tmp = JniEnvironment.Invoker.CallFloatMethodA (JniEnvironment.EnvironmentPointer, @object.SafeHandle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -1708,9 +1708,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallDoubleMethod (JniEnvironment.Current.EnvironmentPointer, @object.SafeHandle, method.ID);
+			var tmp = JniEnvironment.Invoker.CallDoubleMethod (JniEnvironment.EnvironmentPointer, @object.SafeHandle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -1728,9 +1728,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallDoubleMethodA (JniEnvironment.Current.EnvironmentPointer, @object.SafeHandle, method.ID, args);
+			var tmp = JniEnvironment.Invoker.CallDoubleMethodA (JniEnvironment.EnvironmentPointer, @object.SafeHandle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -1748,9 +1748,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			JniEnvironment.Current.Invoker.CallVoidMethod (JniEnvironment.Current.EnvironmentPointer, @object.SafeHandle, method.ID);
+			JniEnvironment.Invoker.CallVoidMethod (JniEnvironment.EnvironmentPointer, @object.SafeHandle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -1767,9 +1767,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			JniEnvironment.Current.Invoker.CallVoidMethodA (JniEnvironment.Current.EnvironmentPointer, @object.SafeHandle, method.ID, args);
+			JniEnvironment.Invoker.CallVoidMethodA (JniEnvironment.EnvironmentPointer, @object.SafeHandle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -1790,13 +1790,13 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallNonvirtualObjectMethod (JniEnvironment.Current.EnvironmentPointer, @object.SafeHandle, klass.SafeHandle, method.ID);
+			var tmp = JniEnvironment.Invoker.CallNonvirtualObjectMethod (JniEnvironment.EnvironmentPointer, @object.SafeHandle, klass.SafeHandle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -1815,13 +1815,13 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallNonvirtualObjectMethodA (JniEnvironment.Current.EnvironmentPointer, @object.SafeHandle, klass.SafeHandle, method.ID, args);
+			var tmp = JniEnvironment.Invoker.CallNonvirtualObjectMethodA (JniEnvironment.EnvironmentPointer, @object.SafeHandle, klass.SafeHandle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -1840,9 +1840,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallNonvirtualBooleanMethod (JniEnvironment.Current.EnvironmentPointer, @object.SafeHandle, klass.SafeHandle, method.ID);
+			var tmp = JniEnvironment.Invoker.CallNonvirtualBooleanMethod (JniEnvironment.EnvironmentPointer, @object.SafeHandle, klass.SafeHandle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -1864,9 +1864,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallNonvirtualBooleanMethodA (JniEnvironment.Current.EnvironmentPointer, @object.SafeHandle, klass.SafeHandle, method.ID, args);
+			var tmp = JniEnvironment.Invoker.CallNonvirtualBooleanMethodA (JniEnvironment.EnvironmentPointer, @object.SafeHandle, klass.SafeHandle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -1888,9 +1888,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallNonvirtualByteMethod (JniEnvironment.Current.EnvironmentPointer, @object.SafeHandle, klass.SafeHandle, method.ID);
+			var tmp = JniEnvironment.Invoker.CallNonvirtualByteMethod (JniEnvironment.EnvironmentPointer, @object.SafeHandle, klass.SafeHandle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -1912,9 +1912,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallNonvirtualByteMethodA (JniEnvironment.Current.EnvironmentPointer, @object.SafeHandle, klass.SafeHandle, method.ID, args);
+			var tmp = JniEnvironment.Invoker.CallNonvirtualByteMethodA (JniEnvironment.EnvironmentPointer, @object.SafeHandle, klass.SafeHandle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -1936,9 +1936,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallNonvirtualCharMethod (JniEnvironment.Current.EnvironmentPointer, @object.SafeHandle, klass.SafeHandle, method.ID);
+			var tmp = JniEnvironment.Invoker.CallNonvirtualCharMethod (JniEnvironment.EnvironmentPointer, @object.SafeHandle, klass.SafeHandle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -1960,9 +1960,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallNonvirtualCharMethodA (JniEnvironment.Current.EnvironmentPointer, @object.SafeHandle, klass.SafeHandle, method.ID, args);
+			var tmp = JniEnvironment.Invoker.CallNonvirtualCharMethodA (JniEnvironment.EnvironmentPointer, @object.SafeHandle, klass.SafeHandle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -1984,9 +1984,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallNonvirtualShortMethod (JniEnvironment.Current.EnvironmentPointer, @object.SafeHandle, klass.SafeHandle, method.ID);
+			var tmp = JniEnvironment.Invoker.CallNonvirtualShortMethod (JniEnvironment.EnvironmentPointer, @object.SafeHandle, klass.SafeHandle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -2008,9 +2008,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallNonvirtualShortMethodA (JniEnvironment.Current.EnvironmentPointer, @object.SafeHandle, klass.SafeHandle, method.ID, args);
+			var tmp = JniEnvironment.Invoker.CallNonvirtualShortMethodA (JniEnvironment.EnvironmentPointer, @object.SafeHandle, klass.SafeHandle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -2032,9 +2032,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallNonvirtualIntMethod (JniEnvironment.Current.EnvironmentPointer, @object.SafeHandle, klass.SafeHandle, method.ID);
+			var tmp = JniEnvironment.Invoker.CallNonvirtualIntMethod (JniEnvironment.EnvironmentPointer, @object.SafeHandle, klass.SafeHandle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -2056,9 +2056,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallNonvirtualIntMethodA (JniEnvironment.Current.EnvironmentPointer, @object.SafeHandle, klass.SafeHandle, method.ID, args);
+			var tmp = JniEnvironment.Invoker.CallNonvirtualIntMethodA (JniEnvironment.EnvironmentPointer, @object.SafeHandle, klass.SafeHandle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -2080,9 +2080,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallNonvirtualLongMethod (JniEnvironment.Current.EnvironmentPointer, @object.SafeHandle, klass.SafeHandle, method.ID);
+			var tmp = JniEnvironment.Invoker.CallNonvirtualLongMethod (JniEnvironment.EnvironmentPointer, @object.SafeHandle, klass.SafeHandle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -2104,9 +2104,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallNonvirtualLongMethodA (JniEnvironment.Current.EnvironmentPointer, @object.SafeHandle, klass.SafeHandle, method.ID, args);
+			var tmp = JniEnvironment.Invoker.CallNonvirtualLongMethodA (JniEnvironment.EnvironmentPointer, @object.SafeHandle, klass.SafeHandle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -2128,9 +2128,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallNonvirtualFloatMethod (JniEnvironment.Current.EnvironmentPointer, @object.SafeHandle, klass.SafeHandle, method.ID);
+			var tmp = JniEnvironment.Invoker.CallNonvirtualFloatMethod (JniEnvironment.EnvironmentPointer, @object.SafeHandle, klass.SafeHandle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -2152,9 +2152,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallNonvirtualFloatMethodA (JniEnvironment.Current.EnvironmentPointer, @object.SafeHandle, klass.SafeHandle, method.ID, args);
+			var tmp = JniEnvironment.Invoker.CallNonvirtualFloatMethodA (JniEnvironment.EnvironmentPointer, @object.SafeHandle, klass.SafeHandle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -2176,9 +2176,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallNonvirtualDoubleMethod (JniEnvironment.Current.EnvironmentPointer, @object.SafeHandle, klass.SafeHandle, method.ID);
+			var tmp = JniEnvironment.Invoker.CallNonvirtualDoubleMethod (JniEnvironment.EnvironmentPointer, @object.SafeHandle, klass.SafeHandle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -2200,9 +2200,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallNonvirtualDoubleMethodA (JniEnvironment.Current.EnvironmentPointer, @object.SafeHandle, klass.SafeHandle, method.ID, args);
+			var tmp = JniEnvironment.Invoker.CallNonvirtualDoubleMethodA (JniEnvironment.EnvironmentPointer, @object.SafeHandle, klass.SafeHandle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -2224,9 +2224,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			JniEnvironment.Current.Invoker.CallNonvirtualVoidMethod (JniEnvironment.Current.EnvironmentPointer, @object.SafeHandle, klass.SafeHandle, method.ID);
+			JniEnvironment.Invoker.CallNonvirtualVoidMethod (JniEnvironment.EnvironmentPointer, @object.SafeHandle, klass.SafeHandle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -2247,9 +2247,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			JniEnvironment.Current.Invoker.CallNonvirtualVoidMethodA (JniEnvironment.Current.EnvironmentPointer, @object.SafeHandle, klass.SafeHandle, method.ID, args);
+			JniEnvironment.Invoker.CallNonvirtualVoidMethodA (JniEnvironment.EnvironmentPointer, @object.SafeHandle, klass.SafeHandle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -2263,13 +2263,13 @@ namespace
 			if (address == IntPtr.Zero)
 				throw new ArgumentException ("'address' must not be IntPtr.Zero.", "address");
 
-			var tmp = JniEnvironment.Current.Invoker.NewDirectByteBuffer (JniEnvironment.Current.EnvironmentPointer, address, capacity);
+			var tmp = JniEnvironment.Invoker.NewDirectByteBuffer (JniEnvironment.EnvironmentPointer, address, capacity);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -2280,7 +2280,7 @@ namespace
 			if (buffer.SafeHandle.IsInvalid)
 				throw new ArgumentException ("buffer");
 
-			var tmp = JniEnvironment.Current.Invoker.GetDirectBufferAddress (JniEnvironment.Current.EnvironmentPointer, buffer.SafeHandle);
+			var tmp = JniEnvironment.Invoker.GetDirectBufferAddress (JniEnvironment.EnvironmentPointer, buffer.SafeHandle);
 			return tmp;
 		}
 
@@ -2291,7 +2291,7 @@ namespace
 			if (buffer.SafeHandle.IsInvalid)
 				throw new ArgumentException ("buffer");
 
-			var tmp = JniEnvironment.Current.Invoker.GetDirectBufferCapacity (JniEnvironment.Current.EnvironmentPointer, buffer.SafeHandle);
+			var tmp = JniEnvironment.Invoker.GetDirectBufferCapacity (JniEnvironment.EnvironmentPointer, buffer.SafeHandle);
 			return tmp;
 		}
 	}
@@ -2305,7 +2305,7 @@ namespace
 			if (@object.SafeHandle.IsInvalid)
 				throw new ArgumentException ("@object");
 
-			var tmp = JniEnvironment.Current.Invoker.MonitorEnter (JniEnvironment.Current.EnvironmentPointer, @object.SafeHandle);
+			var tmp = JniEnvironment.Invoker.MonitorEnter (JniEnvironment.EnvironmentPointer, @object.SafeHandle);
 			return tmp;
 		}
 
@@ -2316,7 +2316,7 @@ namespace
 			if (@object.SafeHandle.IsInvalid)
 				throw new ArgumentException ("@object");
 
-			var tmp = JniEnvironment.Current.Invoker.MonitorExit (JniEnvironment.Current.EnvironmentPointer, @object.SafeHandle);
+			var tmp = JniEnvironment.Invoker.MonitorExit (JniEnvironment.EnvironmentPointer, @object.SafeHandle);
 			return tmp;
 		}
 	}
@@ -2325,60 +2325,60 @@ namespace
 
 		public static unsafe int PushLocalFrame (int capacity)
 		{
-			var tmp = JniEnvironment.Current.Invoker.PushLocalFrame (JniEnvironment.Current.EnvironmentPointer, capacity);
+			var tmp = JniEnvironment.Invoker.PushLocalFrame (JniEnvironment.EnvironmentPointer, capacity);
 			return tmp;
 		}
 
 		public static unsafe JniObjectReference PopLocalFrame (JniObjectReference result)
 		{
-			var tmp = JniEnvironment.Current.Invoker.PopLocalFrame (JniEnvironment.Current.EnvironmentPointer, result.SafeHandle);
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			var tmp = JniEnvironment.Invoker.PopLocalFrame (JniEnvironment.EnvironmentPointer, result.SafeHandle);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
 		internal static unsafe JniObjectReference NewGlobalRef (JniObjectReference @object)
 		{
-			var tmp = JniEnvironment.Current.Invoker.NewGlobalRef (JniEnvironment.Current.EnvironmentPointer, @object.SafeHandle);
+			var tmp = JniEnvironment.Invoker.NewGlobalRef (JniEnvironment.EnvironmentPointer, @object.SafeHandle);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Global);
 		}
 
 		internal static unsafe void DeleteGlobalRef (IntPtr @object)
 		{
-			JniEnvironment.Current.Invoker.DeleteGlobalRef (JniEnvironment.Current.EnvironmentPointer, @object);
+			JniEnvironment.Invoker.DeleteGlobalRef (JniEnvironment.EnvironmentPointer, @object);
 		}
 
 		internal static unsafe void DeleteLocalRef (IntPtr @object)
 		{
-			JniEnvironment.Current.Invoker.DeleteLocalRef (JniEnvironment.Current.EnvironmentPointer, @object);
+			JniEnvironment.Invoker.DeleteLocalRef (JniEnvironment.EnvironmentPointer, @object);
 		}
 
 		internal static unsafe JniObjectReference NewLocalRef (JniObjectReference @object)
 		{
-			var tmp = JniEnvironment.Current.Invoker.NewLocalRef (JniEnvironment.Current.EnvironmentPointer, @object.SafeHandle);
+			var tmp = JniEnvironment.Invoker.NewLocalRef (JniEnvironment.EnvironmentPointer, @object.SafeHandle);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
 		public static unsafe int EnsureLocalCapacity (int capacity)
 		{
-			var tmp = JniEnvironment.Current.Invoker.EnsureLocalCapacity (JniEnvironment.Current.EnvironmentPointer, capacity);
+			var tmp = JniEnvironment.Invoker.EnsureLocalCapacity (JniEnvironment.EnvironmentPointer, capacity);
 			return tmp;
 		}
 
 		public static unsafe int GetJavaVM (out IntPtr vm)
 		{
-			var tmp = JniEnvironment.Current.Invoker.GetJavaVM (JniEnvironment.Current.EnvironmentPointer, out vm);
+			var tmp = JniEnvironment.Invoker.GetJavaVM (JniEnvironment.EnvironmentPointer, out vm);
 			return tmp;
 		}
 
 		internal static unsafe JniObjectReference NewWeakGlobalRef (JniObjectReference @object)
 		{
-			var tmp = JniEnvironment.Current.Invoker.NewWeakGlobalRef (JniEnvironment.Current.EnvironmentPointer, @object.SafeHandle);
+			var tmp = JniEnvironment.Invoker.NewWeakGlobalRef (JniEnvironment.EnvironmentPointer, @object.SafeHandle);
 			return new JniObjectReference (tmp, JniObjectReferenceType.WeakGlobal);
 		}
 
 		internal static unsafe void DeleteWeakGlobalRef (IntPtr @object)
 		{
-			JniEnvironment.Current.Invoker.DeleteWeakGlobalRef (JniEnvironment.Current.EnvironmentPointer, @object);
+			JniEnvironment.Invoker.DeleteWeakGlobalRef (JniEnvironment.EnvironmentPointer, @object);
 		}
 
 		internal static unsafe JniObjectReferenceType GetObjectRefType (JniObjectReference @object)
@@ -2388,7 +2388,7 @@ namespace
 			if (@object.SafeHandle.IsInvalid)
 				throw new ArgumentException ("@object");
 
-			var tmp = JniEnvironment.Current.Invoker.GetObjectRefType (JniEnvironment.Current.EnvironmentPointer, @object.SafeHandle);
+			var tmp = JniEnvironment.Invoker.GetObjectRefType (JniEnvironment.EnvironmentPointer, @object.SafeHandle);
 			return tmp;
 		}
 	}
@@ -2406,8 +2406,8 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.ToReflectedMethod (JniEnvironment.Current.EnvironmentPointer, klass.SafeHandle, method.ID, isStatic);
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			var tmp = JniEnvironment.Invoker.ToReflectedMethod (JniEnvironment.EnvironmentPointer, klass.SafeHandle, method.ID, isStatic);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -2422,8 +2422,8 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JniEnvironment.Current.Invoker.ToReflectedField (JniEnvironment.Current.EnvironmentPointer, klass.SafeHandle, field.ID, isStatic);
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			var tmp = JniEnvironment.Invoker.ToReflectedField (JniEnvironment.EnvironmentPointer, klass.SafeHandle, field.ID, isStatic);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 	}
@@ -2441,9 +2441,9 @@ namespace
 			if (signature == null)
 				throw new ArgumentNullException ("signature");
 
-			var tmp = JniEnvironment.Current.Invoker.GetStaticFieldID (JniEnvironment.Current.EnvironmentPointer, klass.SafeHandle, name, signature);
+			var tmp = JniEnvironment.Invoker.GetStaticFieldID (JniEnvironment.EnvironmentPointer, klass.SafeHandle, name, signature);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -2463,8 +2463,8 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JniEnvironment.Current.Invoker.GetStaticObjectField (JniEnvironment.Current.EnvironmentPointer, klass.SafeHandle, field.ID);
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			var tmp = JniEnvironment.Invoker.GetStaticObjectField (JniEnvironment.EnvironmentPointer, klass.SafeHandle, field.ID);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -2479,7 +2479,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JniEnvironment.Current.Invoker.GetStaticBooleanField (JniEnvironment.Current.EnvironmentPointer, klass.SafeHandle, field.ID);
+			var tmp = JniEnvironment.Invoker.GetStaticBooleanField (JniEnvironment.EnvironmentPointer, klass.SafeHandle, field.ID);
 			return tmp;
 		}
 
@@ -2494,7 +2494,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JniEnvironment.Current.Invoker.GetStaticByteField (JniEnvironment.Current.EnvironmentPointer, klass.SafeHandle, field.ID);
+			var tmp = JniEnvironment.Invoker.GetStaticByteField (JniEnvironment.EnvironmentPointer, klass.SafeHandle, field.ID);
 			return tmp;
 		}
 
@@ -2509,7 +2509,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JniEnvironment.Current.Invoker.GetStaticCharField (JniEnvironment.Current.EnvironmentPointer, klass.SafeHandle, field.ID);
+			var tmp = JniEnvironment.Invoker.GetStaticCharField (JniEnvironment.EnvironmentPointer, klass.SafeHandle, field.ID);
 			return tmp;
 		}
 
@@ -2524,7 +2524,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JniEnvironment.Current.Invoker.GetStaticShortField (JniEnvironment.Current.EnvironmentPointer, klass.SafeHandle, field.ID);
+			var tmp = JniEnvironment.Invoker.GetStaticShortField (JniEnvironment.EnvironmentPointer, klass.SafeHandle, field.ID);
 			return tmp;
 		}
 
@@ -2539,7 +2539,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JniEnvironment.Current.Invoker.GetStaticIntField (JniEnvironment.Current.EnvironmentPointer, klass.SafeHandle, field.ID);
+			var tmp = JniEnvironment.Invoker.GetStaticIntField (JniEnvironment.EnvironmentPointer, klass.SafeHandle, field.ID);
 			return tmp;
 		}
 
@@ -2554,7 +2554,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JniEnvironment.Current.Invoker.GetStaticLongField (JniEnvironment.Current.EnvironmentPointer, klass.SafeHandle, field.ID);
+			var tmp = JniEnvironment.Invoker.GetStaticLongField (JniEnvironment.EnvironmentPointer, klass.SafeHandle, field.ID);
 			return tmp;
 		}
 
@@ -2569,7 +2569,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JniEnvironment.Current.Invoker.GetStaticFloatField (JniEnvironment.Current.EnvironmentPointer, klass.SafeHandle, field.ID);
+			var tmp = JniEnvironment.Invoker.GetStaticFloatField (JniEnvironment.EnvironmentPointer, klass.SafeHandle, field.ID);
 			return tmp;
 		}
 
@@ -2584,7 +2584,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JniEnvironment.Current.Invoker.GetStaticDoubleField (JniEnvironment.Current.EnvironmentPointer, klass.SafeHandle, field.ID);
+			var tmp = JniEnvironment.Invoker.GetStaticDoubleField (JniEnvironment.EnvironmentPointer, klass.SafeHandle, field.ID);
 			return tmp;
 		}
 
@@ -2599,7 +2599,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JniEnvironment.Current.Invoker.SetStaticObjectField (JniEnvironment.Current.EnvironmentPointer, klass.SafeHandle, field.ID, value.SafeHandle);
+			JniEnvironment.Invoker.SetStaticObjectField (JniEnvironment.EnvironmentPointer, klass.SafeHandle, field.ID, value.SafeHandle);
 		}
 
 		internal static unsafe void SetStaticField (JniObjectReference klass, JniStaticFieldInfo field, bool value)
@@ -2613,7 +2613,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JniEnvironment.Current.Invoker.SetStaticBooleanField (JniEnvironment.Current.EnvironmentPointer, klass.SafeHandle, field.ID, value);
+			JniEnvironment.Invoker.SetStaticBooleanField (JniEnvironment.EnvironmentPointer, klass.SafeHandle, field.ID, value);
 		}
 
 		internal static unsafe void SetStaticField (JniObjectReference klass, JniStaticFieldInfo field, sbyte value)
@@ -2627,7 +2627,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JniEnvironment.Current.Invoker.SetStaticByteField (JniEnvironment.Current.EnvironmentPointer, klass.SafeHandle, field.ID, value);
+			JniEnvironment.Invoker.SetStaticByteField (JniEnvironment.EnvironmentPointer, klass.SafeHandle, field.ID, value);
 		}
 
 		internal static unsafe void SetStaticField (JniObjectReference klass, JniStaticFieldInfo field, char value)
@@ -2641,7 +2641,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JniEnvironment.Current.Invoker.SetStaticCharField (JniEnvironment.Current.EnvironmentPointer, klass.SafeHandle, field.ID, value);
+			JniEnvironment.Invoker.SetStaticCharField (JniEnvironment.EnvironmentPointer, klass.SafeHandle, field.ID, value);
 		}
 
 		internal static unsafe void SetStaticField (JniObjectReference klass, JniStaticFieldInfo field, short value)
@@ -2655,7 +2655,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JniEnvironment.Current.Invoker.SetStaticShortField (JniEnvironment.Current.EnvironmentPointer, klass.SafeHandle, field.ID, value);
+			JniEnvironment.Invoker.SetStaticShortField (JniEnvironment.EnvironmentPointer, klass.SafeHandle, field.ID, value);
 		}
 
 		internal static unsafe void SetStaticField (JniObjectReference klass, JniStaticFieldInfo field, int value)
@@ -2669,7 +2669,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JniEnvironment.Current.Invoker.SetStaticIntField (JniEnvironment.Current.EnvironmentPointer, klass.SafeHandle, field.ID, value);
+			JniEnvironment.Invoker.SetStaticIntField (JniEnvironment.EnvironmentPointer, klass.SafeHandle, field.ID, value);
 		}
 
 		internal static unsafe void SetStaticField (JniObjectReference klass, JniStaticFieldInfo field, long value)
@@ -2683,7 +2683,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JniEnvironment.Current.Invoker.SetStaticLongField (JniEnvironment.Current.EnvironmentPointer, klass.SafeHandle, field.ID, value);
+			JniEnvironment.Invoker.SetStaticLongField (JniEnvironment.EnvironmentPointer, klass.SafeHandle, field.ID, value);
 		}
 
 		internal static unsafe void SetStaticField (JniObjectReference klass, JniStaticFieldInfo field, float value)
@@ -2697,7 +2697,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JniEnvironment.Current.Invoker.SetStaticFloatField (JniEnvironment.Current.EnvironmentPointer, klass.SafeHandle, field.ID, value);
+			JniEnvironment.Invoker.SetStaticFloatField (JniEnvironment.EnvironmentPointer, klass.SafeHandle, field.ID, value);
 		}
 
 		internal static unsafe void SetStaticField (JniObjectReference klass, JniStaticFieldInfo field, double value)
@@ -2711,7 +2711,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JniEnvironment.Current.Invoker.SetStaticDoubleField (JniEnvironment.Current.EnvironmentPointer, klass.SafeHandle, field.ID, value);
+			JniEnvironment.Invoker.SetStaticDoubleField (JniEnvironment.EnvironmentPointer, klass.SafeHandle, field.ID, value);
 		}
 	}
 
@@ -2728,9 +2728,9 @@ namespace
 			if (signature == null)
 				throw new ArgumentNullException ("signature");
 
-			var tmp = JniEnvironment.Current.Invoker.GetStaticMethodID (JniEnvironment.Current.EnvironmentPointer, klass.SafeHandle, name, signature);
+			var tmp = JniEnvironment.Invoker.GetStaticMethodID (JniEnvironment.EnvironmentPointer, klass.SafeHandle, name, signature);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -2750,13 +2750,13 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallStaticObjectMethod (JniEnvironment.Current.EnvironmentPointer, klass.SafeHandle, method.ID);
+			var tmp = JniEnvironment.Invoker.CallStaticObjectMethod (JniEnvironment.EnvironmentPointer, klass.SafeHandle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -2771,13 +2771,13 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallStaticObjectMethodA (JniEnvironment.Current.EnvironmentPointer, klass.SafeHandle, method.ID, args);
+			var tmp = JniEnvironment.Invoker.CallStaticObjectMethodA (JniEnvironment.EnvironmentPointer, klass.SafeHandle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -2792,9 +2792,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallStaticBooleanMethod (JniEnvironment.Current.EnvironmentPointer, klass.SafeHandle, method.ID);
+			var tmp = JniEnvironment.Invoker.CallStaticBooleanMethod (JniEnvironment.EnvironmentPointer, klass.SafeHandle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -2812,9 +2812,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallStaticBooleanMethodA (JniEnvironment.Current.EnvironmentPointer, klass.SafeHandle, method.ID, args);
+			var tmp = JniEnvironment.Invoker.CallStaticBooleanMethodA (JniEnvironment.EnvironmentPointer, klass.SafeHandle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -2832,9 +2832,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallStaticByteMethod (JniEnvironment.Current.EnvironmentPointer, klass.SafeHandle, method.ID);
+			var tmp = JniEnvironment.Invoker.CallStaticByteMethod (JniEnvironment.EnvironmentPointer, klass.SafeHandle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -2852,9 +2852,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallStaticByteMethodA (JniEnvironment.Current.EnvironmentPointer, klass.SafeHandle, method.ID, args);
+			var tmp = JniEnvironment.Invoker.CallStaticByteMethodA (JniEnvironment.EnvironmentPointer, klass.SafeHandle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -2872,9 +2872,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallStaticCharMethod (JniEnvironment.Current.EnvironmentPointer, klass.SafeHandle, method.ID);
+			var tmp = JniEnvironment.Invoker.CallStaticCharMethod (JniEnvironment.EnvironmentPointer, klass.SafeHandle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -2892,9 +2892,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallStaticCharMethodA (JniEnvironment.Current.EnvironmentPointer, klass.SafeHandle, method.ID, args);
+			var tmp = JniEnvironment.Invoker.CallStaticCharMethodA (JniEnvironment.EnvironmentPointer, klass.SafeHandle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -2912,9 +2912,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallStaticShortMethod (JniEnvironment.Current.EnvironmentPointer, klass.SafeHandle, method.ID);
+			var tmp = JniEnvironment.Invoker.CallStaticShortMethod (JniEnvironment.EnvironmentPointer, klass.SafeHandle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -2932,9 +2932,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallStaticShortMethodA (JniEnvironment.Current.EnvironmentPointer, klass.SafeHandle, method.ID, args);
+			var tmp = JniEnvironment.Invoker.CallStaticShortMethodA (JniEnvironment.EnvironmentPointer, klass.SafeHandle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -2952,9 +2952,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallStaticIntMethod (JniEnvironment.Current.EnvironmentPointer, klass.SafeHandle, method.ID);
+			var tmp = JniEnvironment.Invoker.CallStaticIntMethod (JniEnvironment.EnvironmentPointer, klass.SafeHandle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -2972,9 +2972,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallStaticIntMethodA (JniEnvironment.Current.EnvironmentPointer, klass.SafeHandle, method.ID, args);
+			var tmp = JniEnvironment.Invoker.CallStaticIntMethodA (JniEnvironment.EnvironmentPointer, klass.SafeHandle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -2992,9 +2992,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallStaticLongMethod (JniEnvironment.Current.EnvironmentPointer, klass.SafeHandle, method.ID);
+			var tmp = JniEnvironment.Invoker.CallStaticLongMethod (JniEnvironment.EnvironmentPointer, klass.SafeHandle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -3012,9 +3012,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallStaticLongMethodA (JniEnvironment.Current.EnvironmentPointer, klass.SafeHandle, method.ID, args);
+			var tmp = JniEnvironment.Invoker.CallStaticLongMethodA (JniEnvironment.EnvironmentPointer, klass.SafeHandle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -3032,9 +3032,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallStaticFloatMethod (JniEnvironment.Current.EnvironmentPointer, klass.SafeHandle, method.ID);
+			var tmp = JniEnvironment.Invoker.CallStaticFloatMethod (JniEnvironment.EnvironmentPointer, klass.SafeHandle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -3052,9 +3052,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallStaticFloatMethodA (JniEnvironment.Current.EnvironmentPointer, klass.SafeHandle, method.ID, args);
+			var tmp = JniEnvironment.Invoker.CallStaticFloatMethodA (JniEnvironment.EnvironmentPointer, klass.SafeHandle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -3072,9 +3072,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallStaticDoubleMethod (JniEnvironment.Current.EnvironmentPointer, klass.SafeHandle, method.ID);
+			var tmp = JniEnvironment.Invoker.CallStaticDoubleMethod (JniEnvironment.EnvironmentPointer, klass.SafeHandle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -3092,9 +3092,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallStaticDoubleMethodA (JniEnvironment.Current.EnvironmentPointer, klass.SafeHandle, method.ID, args);
+			var tmp = JniEnvironment.Invoker.CallStaticDoubleMethodA (JniEnvironment.EnvironmentPointer, klass.SafeHandle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -3112,9 +3112,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			JniEnvironment.Current.Invoker.CallStaticVoidMethod (JniEnvironment.Current.EnvironmentPointer, klass.SafeHandle, method.ID);
+			JniEnvironment.Invoker.CallStaticVoidMethod (JniEnvironment.EnvironmentPointer, klass.SafeHandle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -3131,9 +3131,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			JniEnvironment.Current.Invoker.CallStaticVoidMethodA (JniEnvironment.Current.EnvironmentPointer, klass.SafeHandle, method.ID, args);
+			JniEnvironment.Invoker.CallStaticVoidMethodA (JniEnvironment.EnvironmentPointer, klass.SafeHandle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -3147,13 +3147,13 @@ namespace
 			if (unicodeChars == IntPtr.Zero)
 				throw new ArgumentException ("'unicodeChars' must not be IntPtr.Zero.", "unicodeChars");
 
-			var tmp = JniEnvironment.Current.Invoker.NewString (JniEnvironment.Current.EnvironmentPointer, unicodeChars, length);
+			var tmp = JniEnvironment.Invoker.NewString (JniEnvironment.EnvironmentPointer, unicodeChars, length);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -3164,7 +3164,7 @@ namespace
 			if (@string.SafeHandle.IsInvalid)
 				throw new ArgumentException ("@string");
 
-			var tmp = JniEnvironment.Current.Invoker.GetStringLength (JniEnvironment.Current.EnvironmentPointer, @string.SafeHandle);
+			var tmp = JniEnvironment.Invoker.GetStringLength (JniEnvironment.EnvironmentPointer, @string.SafeHandle);
 			return tmp;
 		}
 
@@ -3175,7 +3175,7 @@ namespace
 			if (@string.SafeHandle.IsInvalid)
 				throw new ArgumentException ("@string");
 
-			var tmp = JniEnvironment.Current.Invoker.GetStringChars (JniEnvironment.Current.EnvironmentPointer, @string.SafeHandle, isCopy);
+			var tmp = JniEnvironment.Invoker.GetStringChars (JniEnvironment.EnvironmentPointer, @string.SafeHandle, isCopy);
 			return tmp;
 		}
 
@@ -3188,7 +3188,7 @@ namespace
 			if (chars == IntPtr.Zero)
 				throw new ArgumentException ("'chars' must not be IntPtr.Zero.", "chars");
 
-			JniEnvironment.Current.Invoker.ReleaseStringChars (JniEnvironment.Current.EnvironmentPointer, @string.SafeHandle, chars);
+			JniEnvironment.Invoker.ReleaseStringChars (JniEnvironment.EnvironmentPointer, @string.SafeHandle, chars);
 		}
 	}
 
@@ -3205,13 +3205,13 @@ namespace
 			if (buffer == IntPtr.Zero)
 				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
-			var tmp = JniEnvironment.Current.Invoker.DefineClass (JniEnvironment.Current.EnvironmentPointer, name, loader.SafeHandle, buffer, bufferLength);
+			var tmp = JniEnvironment.Invoker.DefineClass (JniEnvironment.EnvironmentPointer, name, loader.SafeHandle, buffer, bufferLength);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -3220,13 +3220,13 @@ namespace
 			if (classname == null)
 				throw new ArgumentNullException ("classname");
 
-			var tmp = JniEnvironment.Current.Invoker.FindClass (JniEnvironment.Current.EnvironmentPointer, classname);
+			var tmp = JniEnvironment.Invoker.FindClass (JniEnvironment.EnvironmentPointer, classname);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -3237,8 +3237,8 @@ namespace
 			if (klass.SafeHandle.IsInvalid)
 				throw new ArgumentException ("klass");
 
-			var tmp = JniEnvironment.Current.Invoker.GetSuperclass (JniEnvironment.Current.EnvironmentPointer, klass.SafeHandle);
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			var tmp = JniEnvironment.Invoker.GetSuperclass (JniEnvironment.EnvironmentPointer, klass.SafeHandle);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -3253,13 +3253,13 @@ namespace
 			if (class2.SafeHandle.IsInvalid)
 				throw new ArgumentException ("class2");
 
-			var tmp = JniEnvironment.Current.Invoker.IsAssignableFrom (JniEnvironment.Current.EnvironmentPointer, class1.SafeHandle, class2.SafeHandle);
+			var tmp = JniEnvironment.Invoker.IsAssignableFrom (JniEnvironment.EnvironmentPointer, class1.SafeHandle, class2.SafeHandle);
 			return tmp;
 		}
 
 		public static unsafe bool IsSameObject (JniObjectReference object1, JniObjectReference object2)
 		{
-			var tmp = JniEnvironment.Current.Invoker.IsSameObject (JniEnvironment.Current.EnvironmentPointer, object1.SafeHandle, object2.SafeHandle);
+			var tmp = JniEnvironment.Invoker.IsSameObject (JniEnvironment.EnvironmentPointer, object1.SafeHandle, object2.SafeHandle);
 			return tmp;
 		}
 
@@ -3270,8 +3270,8 @@ namespace
 			if (@object.SafeHandle.IsInvalid)
 				throw new ArgumentException ("@object");
 
-			var tmp = JniEnvironment.Current.Invoker.GetObjectClass (JniEnvironment.Current.EnvironmentPointer, @object.SafeHandle);
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			var tmp = JniEnvironment.Invoker.GetObjectClass (JniEnvironment.EnvironmentPointer, @object.SafeHandle);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -3286,7 +3286,7 @@ namespace
 			if (klass.SafeHandle.IsInvalid)
 				throw new ArgumentException ("klass");
 
-			var tmp = JniEnvironment.Current.Invoker.IsInstanceOf (JniEnvironment.Current.EnvironmentPointer, @object.SafeHandle, klass.SafeHandle);
+			var tmp = JniEnvironment.Invoker.IsInstanceOf (JniEnvironment.EnvironmentPointer, @object.SafeHandle, klass.SafeHandle);
 			return tmp;
 		}
 
@@ -3297,9 +3297,9 @@ namespace
 			if (klass.SafeHandle.IsInvalid)
 				throw new ArgumentException ("klass");
 
-			var tmp = JniEnvironment.Current.Invoker.RegisterNatives (JniEnvironment.Current.EnvironmentPointer, klass.SafeHandle, methods, numMethods);
+			var tmp = JniEnvironment.Invoker.RegisterNatives (JniEnvironment.EnvironmentPointer, klass.SafeHandle, methods, numMethods);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -3313,7 +3313,7 @@ namespace
 			if (klass.SafeHandle.IsInvalid)
 				throw new ArgumentException ("klass");
 
-			var tmp = JniEnvironment.Current.Invoker.UnregisterNatives (JniEnvironment.Current.EnvironmentPointer, klass.SafeHandle);
+			var tmp = JniEnvironment.Invoker.UnregisterNatives (JniEnvironment.EnvironmentPointer, klass.SafeHandle);
 			return tmp;
 		}
 	}
@@ -3322,7 +3322,7 @@ namespace
 
 		internal static unsafe int GetVersion ()
 		{
-			var tmp = JniEnvironment.Current.Invoker.GetVersion (JniEnvironment.Current.EnvironmentPointer);
+			var tmp = JniEnvironment.Invoker.GetVersion (JniEnvironment.EnvironmentPointer);
 			return tmp;
 		}
 	}
@@ -5221,13 +5221,13 @@ namespace
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
 
-			var tmp = JniEnvironment.Current.Invoker.AllocObject (JniEnvironment.Current.EnvironmentPointer, klass.Handle);
+			var tmp = JniEnvironment.Invoker.AllocObject (JniEnvironment.EnvironmentPointer, klass.Handle);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -5240,13 +5240,13 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.NewObject (JniEnvironment.Current.EnvironmentPointer, klass.Handle, method.ID);
+			var tmp = JniEnvironment.Invoker.NewObject (JniEnvironment.EnvironmentPointer, klass.Handle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -5259,13 +5259,13 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.NewObjectA (JniEnvironment.Current.EnvironmentPointer, klass.Handle, method.ID, args);
+			var tmp = JniEnvironment.Invoker.NewObjectA (JniEnvironment.EnvironmentPointer, klass.Handle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 	}
@@ -5277,7 +5277,7 @@ namespace
 			if (array_ptr.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array_ptr` must not be IntPtr.Zero.", "array_ptr");
 
-			var tmp = JniEnvironment.Current.Invoker.GetArrayLength (JniEnvironment.Current.EnvironmentPointer, array_ptr.Handle);
+			var tmp = JniEnvironment.Invoker.GetArrayLength (JniEnvironment.EnvironmentPointer, array_ptr.Handle);
 			return tmp;
 		}
 
@@ -5286,13 +5286,13 @@ namespace
 			if (elementClass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`elementClass` must not be IntPtr.Zero.", "elementClass");
 
-			var tmp = JniEnvironment.Current.Invoker.NewObjectArray (JniEnvironment.Current.EnvironmentPointer, length, elementClass.Handle, initialElement.Handle);
+			var tmp = JniEnvironment.Invoker.NewObjectArray (JniEnvironment.EnvironmentPointer, length, elementClass.Handle, initialElement.Handle);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -5301,13 +5301,13 @@ namespace
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
 
-			var tmp = JniEnvironment.Current.Invoker.GetObjectArrayElement (JniEnvironment.Current.EnvironmentPointer, array.Handle, index);
+			var tmp = JniEnvironment.Invoker.GetObjectArrayElement (JniEnvironment.EnvironmentPointer, array.Handle, index);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -5316,9 +5316,9 @@ namespace
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
 
-			JniEnvironment.Current.Invoker.SetObjectArrayElement (JniEnvironment.Current.EnvironmentPointer, array.Handle, index, value.Handle);
+			JniEnvironment.Invoker.SetObjectArrayElement (JniEnvironment.EnvironmentPointer, array.Handle, index, value.Handle);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -5326,57 +5326,57 @@ namespace
 
 		public static unsafe JniObjectReference NewBooleanArray (int length)
 		{
-			var tmp = JniEnvironment.Current.Invoker.NewBooleanArray (JniEnvironment.Current.EnvironmentPointer, length);
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			var tmp = JniEnvironment.Invoker.NewBooleanArray (JniEnvironment.EnvironmentPointer, length);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
 		public static unsafe JniObjectReference NewByteArray (int length)
 		{
-			var tmp = JniEnvironment.Current.Invoker.NewByteArray (JniEnvironment.Current.EnvironmentPointer, length);
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			var tmp = JniEnvironment.Invoker.NewByteArray (JniEnvironment.EnvironmentPointer, length);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
 		public static unsafe JniObjectReference NewCharArray (int length)
 		{
-			var tmp = JniEnvironment.Current.Invoker.NewCharArray (JniEnvironment.Current.EnvironmentPointer, length);
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			var tmp = JniEnvironment.Invoker.NewCharArray (JniEnvironment.EnvironmentPointer, length);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
 		public static unsafe JniObjectReference NewShortArray (int length)
 		{
-			var tmp = JniEnvironment.Current.Invoker.NewShortArray (JniEnvironment.Current.EnvironmentPointer, length);
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			var tmp = JniEnvironment.Invoker.NewShortArray (JniEnvironment.EnvironmentPointer, length);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
 		public static unsafe JniObjectReference NewIntArray (int length)
 		{
-			var tmp = JniEnvironment.Current.Invoker.NewIntArray (JniEnvironment.Current.EnvironmentPointer, length);
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			var tmp = JniEnvironment.Invoker.NewIntArray (JniEnvironment.EnvironmentPointer, length);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
 		public static unsafe JniObjectReference NewLongArray (int length)
 		{
-			var tmp = JniEnvironment.Current.Invoker.NewLongArray (JniEnvironment.Current.EnvironmentPointer, length);
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			var tmp = JniEnvironment.Invoker.NewLongArray (JniEnvironment.EnvironmentPointer, length);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
 		public static unsafe JniObjectReference NewFloatArray (int length)
 		{
-			var tmp = JniEnvironment.Current.Invoker.NewFloatArray (JniEnvironment.Current.EnvironmentPointer, length);
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			var tmp = JniEnvironment.Invoker.NewFloatArray (JniEnvironment.EnvironmentPointer, length);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
 		public static unsafe JniObjectReference NewDoubleArray (int length)
 		{
-			var tmp = JniEnvironment.Current.Invoker.NewDoubleArray (JniEnvironment.Current.EnvironmentPointer, length);
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			var tmp = JniEnvironment.Invoker.NewDoubleArray (JniEnvironment.EnvironmentPointer, length);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -5385,7 +5385,7 @@ namespace
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
 
-			var tmp = JniEnvironment.Current.Invoker.GetBooleanArrayElements (JniEnvironment.Current.EnvironmentPointer, array.Handle, isCopy);
+			var tmp = JniEnvironment.Invoker.GetBooleanArrayElements (JniEnvironment.EnvironmentPointer, array.Handle, isCopy);
 			return tmp;
 		}
 
@@ -5394,7 +5394,7 @@ namespace
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
 
-			var tmp = JniEnvironment.Current.Invoker.GetByteArrayElements (JniEnvironment.Current.EnvironmentPointer, array.Handle, isCopy);
+			var tmp = JniEnvironment.Invoker.GetByteArrayElements (JniEnvironment.EnvironmentPointer, array.Handle, isCopy);
 			return tmp;
 		}
 
@@ -5403,7 +5403,7 @@ namespace
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
 
-			var tmp = JniEnvironment.Current.Invoker.GetCharArrayElements (JniEnvironment.Current.EnvironmentPointer, array.Handle, isCopy);
+			var tmp = JniEnvironment.Invoker.GetCharArrayElements (JniEnvironment.EnvironmentPointer, array.Handle, isCopy);
 			return tmp;
 		}
 
@@ -5412,7 +5412,7 @@ namespace
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
 
-			var tmp = JniEnvironment.Current.Invoker.GetShortArrayElements (JniEnvironment.Current.EnvironmentPointer, array.Handle, isCopy);
+			var tmp = JniEnvironment.Invoker.GetShortArrayElements (JniEnvironment.EnvironmentPointer, array.Handle, isCopy);
 			return tmp;
 		}
 
@@ -5421,7 +5421,7 @@ namespace
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
 
-			var tmp = JniEnvironment.Current.Invoker.GetIntArrayElements (JniEnvironment.Current.EnvironmentPointer, array.Handle, isCopy);
+			var tmp = JniEnvironment.Invoker.GetIntArrayElements (JniEnvironment.EnvironmentPointer, array.Handle, isCopy);
 			return tmp;
 		}
 
@@ -5430,7 +5430,7 @@ namespace
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
 
-			var tmp = JniEnvironment.Current.Invoker.GetLongArrayElements (JniEnvironment.Current.EnvironmentPointer, array.Handle, isCopy);
+			var tmp = JniEnvironment.Invoker.GetLongArrayElements (JniEnvironment.EnvironmentPointer, array.Handle, isCopy);
 			return tmp;
 		}
 
@@ -5439,7 +5439,7 @@ namespace
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
 
-			var tmp = JniEnvironment.Current.Invoker.GetFloatArrayElements (JniEnvironment.Current.EnvironmentPointer, array.Handle, isCopy);
+			var tmp = JniEnvironment.Invoker.GetFloatArrayElements (JniEnvironment.EnvironmentPointer, array.Handle, isCopy);
 			return tmp;
 		}
 
@@ -5448,7 +5448,7 @@ namespace
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
 
-			var tmp = JniEnvironment.Current.Invoker.GetDoubleArrayElements (JniEnvironment.Current.EnvironmentPointer, array.Handle, isCopy);
+			var tmp = JniEnvironment.Invoker.GetDoubleArrayElements (JniEnvironment.EnvironmentPointer, array.Handle, isCopy);
 			return tmp;
 		}
 
@@ -5459,7 +5459,7 @@ namespace
 			if (elements == IntPtr.Zero)
 				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", "elements");
 
-			JniEnvironment.Current.Invoker.ReleaseBooleanArrayElements (JniEnvironment.Current.EnvironmentPointer, array.Handle, elements, mode);
+			JniEnvironment.Invoker.ReleaseBooleanArrayElements (JniEnvironment.EnvironmentPointer, array.Handle, elements, mode);
 		}
 
 		public static unsafe void ReleaseByteArrayElements (JniObjectReference array, IntPtr elements, int mode)
@@ -5469,7 +5469,7 @@ namespace
 			if (elements == IntPtr.Zero)
 				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", "elements");
 
-			JniEnvironment.Current.Invoker.ReleaseByteArrayElements (JniEnvironment.Current.EnvironmentPointer, array.Handle, elements, mode);
+			JniEnvironment.Invoker.ReleaseByteArrayElements (JniEnvironment.EnvironmentPointer, array.Handle, elements, mode);
 		}
 
 		public static unsafe void ReleaseCharArrayElements (JniObjectReference array, IntPtr elements, int mode)
@@ -5479,7 +5479,7 @@ namespace
 			if (elements == IntPtr.Zero)
 				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", "elements");
 
-			JniEnvironment.Current.Invoker.ReleaseCharArrayElements (JniEnvironment.Current.EnvironmentPointer, array.Handle, elements, mode);
+			JniEnvironment.Invoker.ReleaseCharArrayElements (JniEnvironment.EnvironmentPointer, array.Handle, elements, mode);
 		}
 
 		public static unsafe void ReleaseShortArrayElements (JniObjectReference array, IntPtr elements, int mode)
@@ -5489,7 +5489,7 @@ namespace
 			if (elements == IntPtr.Zero)
 				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", "elements");
 
-			JniEnvironment.Current.Invoker.ReleaseShortArrayElements (JniEnvironment.Current.EnvironmentPointer, array.Handle, elements, mode);
+			JniEnvironment.Invoker.ReleaseShortArrayElements (JniEnvironment.EnvironmentPointer, array.Handle, elements, mode);
 		}
 
 		public static unsafe void ReleaseIntArrayElements (JniObjectReference array, IntPtr elements, int mode)
@@ -5499,7 +5499,7 @@ namespace
 			if (elements == IntPtr.Zero)
 				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", "elements");
 
-			JniEnvironment.Current.Invoker.ReleaseIntArrayElements (JniEnvironment.Current.EnvironmentPointer, array.Handle, elements, mode);
+			JniEnvironment.Invoker.ReleaseIntArrayElements (JniEnvironment.EnvironmentPointer, array.Handle, elements, mode);
 		}
 
 		public static unsafe void ReleaseLongArrayElements (JniObjectReference array, IntPtr elements, int mode)
@@ -5509,7 +5509,7 @@ namespace
 			if (elements == IntPtr.Zero)
 				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", "elements");
 
-			JniEnvironment.Current.Invoker.ReleaseLongArrayElements (JniEnvironment.Current.EnvironmentPointer, array.Handle, elements, mode);
+			JniEnvironment.Invoker.ReleaseLongArrayElements (JniEnvironment.EnvironmentPointer, array.Handle, elements, mode);
 		}
 
 		public static unsafe void ReleaseFloatArrayElements (JniObjectReference array, IntPtr elements, int mode)
@@ -5519,7 +5519,7 @@ namespace
 			if (elements == IntPtr.Zero)
 				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", "elements");
 
-			JniEnvironment.Current.Invoker.ReleaseFloatArrayElements (JniEnvironment.Current.EnvironmentPointer, array.Handle, elements, mode);
+			JniEnvironment.Invoker.ReleaseFloatArrayElements (JniEnvironment.EnvironmentPointer, array.Handle, elements, mode);
 		}
 
 		public static unsafe void ReleaseDoubleArrayElements (JniObjectReference array, IntPtr elements, int mode)
@@ -5529,7 +5529,7 @@ namespace
 			if (elements == IntPtr.Zero)
 				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", "elements");
 
-			JniEnvironment.Current.Invoker.ReleaseDoubleArrayElements (JniEnvironment.Current.EnvironmentPointer, array.Handle, elements, mode);
+			JniEnvironment.Invoker.ReleaseDoubleArrayElements (JniEnvironment.EnvironmentPointer, array.Handle, elements, mode);
 		}
 
 		internal static unsafe void GetBooleanArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
@@ -5539,9 +5539,9 @@ namespace
 			if (buffer == IntPtr.Zero)
 				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
-			JniEnvironment.Current.Invoker.GetBooleanArrayRegion (JniEnvironment.Current.EnvironmentPointer, array.Handle, start, length, buffer);
+			JniEnvironment.Invoker.GetBooleanArrayRegion (JniEnvironment.EnvironmentPointer, array.Handle, start, length, buffer);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -5554,9 +5554,9 @@ namespace
 			if (buffer == IntPtr.Zero)
 				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
-			JniEnvironment.Current.Invoker.GetByteArrayRegion (JniEnvironment.Current.EnvironmentPointer, array.Handle, start, length, buffer);
+			JniEnvironment.Invoker.GetByteArrayRegion (JniEnvironment.EnvironmentPointer, array.Handle, start, length, buffer);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -5569,9 +5569,9 @@ namespace
 			if (buffer == IntPtr.Zero)
 				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
-			JniEnvironment.Current.Invoker.GetCharArrayRegion (JniEnvironment.Current.EnvironmentPointer, array.Handle, start, length, buffer);
+			JniEnvironment.Invoker.GetCharArrayRegion (JniEnvironment.EnvironmentPointer, array.Handle, start, length, buffer);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -5584,9 +5584,9 @@ namespace
 			if (buffer == IntPtr.Zero)
 				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
-			JniEnvironment.Current.Invoker.GetShortArrayRegion (JniEnvironment.Current.EnvironmentPointer, array.Handle, start, length, buffer);
+			JniEnvironment.Invoker.GetShortArrayRegion (JniEnvironment.EnvironmentPointer, array.Handle, start, length, buffer);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -5599,9 +5599,9 @@ namespace
 			if (buffer == IntPtr.Zero)
 				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
-			JniEnvironment.Current.Invoker.GetIntArrayRegion (JniEnvironment.Current.EnvironmentPointer, array.Handle, start, length, buffer);
+			JniEnvironment.Invoker.GetIntArrayRegion (JniEnvironment.EnvironmentPointer, array.Handle, start, length, buffer);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -5614,9 +5614,9 @@ namespace
 			if (buffer == IntPtr.Zero)
 				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
-			JniEnvironment.Current.Invoker.GetLongArrayRegion (JniEnvironment.Current.EnvironmentPointer, array.Handle, start, length, buffer);
+			JniEnvironment.Invoker.GetLongArrayRegion (JniEnvironment.EnvironmentPointer, array.Handle, start, length, buffer);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -5629,9 +5629,9 @@ namespace
 			if (buffer == IntPtr.Zero)
 				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
-			JniEnvironment.Current.Invoker.GetFloatArrayRegion (JniEnvironment.Current.EnvironmentPointer, array.Handle, start, length, buffer);
+			JniEnvironment.Invoker.GetFloatArrayRegion (JniEnvironment.EnvironmentPointer, array.Handle, start, length, buffer);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -5644,9 +5644,9 @@ namespace
 			if (buffer == IntPtr.Zero)
 				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
-			JniEnvironment.Current.Invoker.GetDoubleArrayRegion (JniEnvironment.Current.EnvironmentPointer, array.Handle, start, length, buffer);
+			JniEnvironment.Invoker.GetDoubleArrayRegion (JniEnvironment.EnvironmentPointer, array.Handle, start, length, buffer);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -5659,9 +5659,9 @@ namespace
 			if (buffer == IntPtr.Zero)
 				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
-			JniEnvironment.Current.Invoker.SetBooleanArrayRegion (JniEnvironment.Current.EnvironmentPointer, array.Handle, start, length, buffer);
+			JniEnvironment.Invoker.SetBooleanArrayRegion (JniEnvironment.EnvironmentPointer, array.Handle, start, length, buffer);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -5674,9 +5674,9 @@ namespace
 			if (buffer == IntPtr.Zero)
 				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
-			JniEnvironment.Current.Invoker.SetByteArrayRegion (JniEnvironment.Current.EnvironmentPointer, array.Handle, start, length, buffer);
+			JniEnvironment.Invoker.SetByteArrayRegion (JniEnvironment.EnvironmentPointer, array.Handle, start, length, buffer);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -5689,9 +5689,9 @@ namespace
 			if (buffer == IntPtr.Zero)
 				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
-			JniEnvironment.Current.Invoker.SetCharArrayRegion (JniEnvironment.Current.EnvironmentPointer, array.Handle, start, length, buffer);
+			JniEnvironment.Invoker.SetCharArrayRegion (JniEnvironment.EnvironmentPointer, array.Handle, start, length, buffer);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -5704,9 +5704,9 @@ namespace
 			if (buffer == IntPtr.Zero)
 				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
-			JniEnvironment.Current.Invoker.SetShortArrayRegion (JniEnvironment.Current.EnvironmentPointer, array.Handle, start, length, buffer);
+			JniEnvironment.Invoker.SetShortArrayRegion (JniEnvironment.EnvironmentPointer, array.Handle, start, length, buffer);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -5719,9 +5719,9 @@ namespace
 			if (buffer == IntPtr.Zero)
 				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
-			JniEnvironment.Current.Invoker.SetIntArrayRegion (JniEnvironment.Current.EnvironmentPointer, array.Handle, start, length, buffer);
+			JniEnvironment.Invoker.SetIntArrayRegion (JniEnvironment.EnvironmentPointer, array.Handle, start, length, buffer);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -5734,9 +5734,9 @@ namespace
 			if (buffer == IntPtr.Zero)
 				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
-			JniEnvironment.Current.Invoker.SetLongArrayRegion (JniEnvironment.Current.EnvironmentPointer, array.Handle, start, length, buffer);
+			JniEnvironment.Invoker.SetLongArrayRegion (JniEnvironment.EnvironmentPointer, array.Handle, start, length, buffer);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -5749,9 +5749,9 @@ namespace
 			if (buffer == IntPtr.Zero)
 				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
-			JniEnvironment.Current.Invoker.SetFloatArrayRegion (JniEnvironment.Current.EnvironmentPointer, array.Handle, start, length, buffer);
+			JniEnvironment.Invoker.SetFloatArrayRegion (JniEnvironment.EnvironmentPointer, array.Handle, start, length, buffer);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -5764,9 +5764,9 @@ namespace
 			if (buffer == IntPtr.Zero)
 				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
-			JniEnvironment.Current.Invoker.SetDoubleArrayRegion (JniEnvironment.Current.EnvironmentPointer, array.Handle, start, length, buffer);
+			JniEnvironment.Invoker.SetDoubleArrayRegion (JniEnvironment.EnvironmentPointer, array.Handle, start, length, buffer);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -5780,7 +5780,7 @@ namespace
 			if (toThrow.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`toThrow` must not be IntPtr.Zero.", "toThrow");
 
-			var tmp = JniEnvironment.Current.Invoker.Throw (JniEnvironment.Current.EnvironmentPointer, toThrow.Handle);
+			var tmp = JniEnvironment.Invoker.Throw (JniEnvironment.EnvironmentPointer, toThrow.Handle);
 			return tmp;
 		}
 
@@ -5791,24 +5791,24 @@ namespace
 			if (message == null)
 				throw new ArgumentNullException ("message");
 
-			var tmp = JniEnvironment.Current.Invoker.ThrowNew (JniEnvironment.Current.EnvironmentPointer, klass.Handle, message);
+			var tmp = JniEnvironment.Invoker.ThrowNew (JniEnvironment.EnvironmentPointer, klass.Handle, message);
 			return tmp;
 		}
 
 		internal static unsafe JniObjectReference ExceptionOccurred ()
 		{
-			var tmp = JniEnvironment.Current.Invoker.ExceptionOccurred (JniEnvironment.Current.EnvironmentPointer);
+			var tmp = JniEnvironment.Invoker.ExceptionOccurred (JniEnvironment.EnvironmentPointer);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
 		internal static unsafe void ExceptionDescribe ()
 		{
-			JniEnvironment.Current.Invoker.ExceptionDescribe (JniEnvironment.Current.EnvironmentPointer);
+			JniEnvironment.Invoker.ExceptionDescribe (JniEnvironment.EnvironmentPointer);
 		}
 
 		internal static unsafe void ExceptionClear ()
 		{
-			JniEnvironment.Current.Invoker.ExceptionClear (JniEnvironment.Current.EnvironmentPointer);
+			JniEnvironment.Invoker.ExceptionClear (JniEnvironment.EnvironmentPointer);
 		}
 
 		public static unsafe void FatalError (string message)
@@ -5816,12 +5816,12 @@ namespace
 			if (message == null)
 				throw new ArgumentNullException ("message");
 
-			JniEnvironment.Current.Invoker.FatalError (JniEnvironment.Current.EnvironmentPointer, message);
+			JniEnvironment.Invoker.FatalError (JniEnvironment.EnvironmentPointer, message);
 		}
 
 		internal static unsafe bool ExceptionCheck ()
 		{
-			var tmp = JniEnvironment.Current.Invoker.ExceptionCheck (JniEnvironment.Current.EnvironmentPointer);
+			var tmp = JniEnvironment.Invoker.ExceptionCheck (JniEnvironment.EnvironmentPointer);
 			return tmp;
 		}
 	}
@@ -5837,9 +5837,9 @@ namespace
 			if (signature == null)
 				throw new ArgumentNullException ("signature");
 
-			var tmp = JniEnvironment.Current.Invoker.GetFieldID (JniEnvironment.Current.EnvironmentPointer, klass.Handle, name, signature);
+			var tmp = JniEnvironment.Invoker.GetFieldID (JniEnvironment.EnvironmentPointer, klass.Handle, name, signature);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -5857,8 +5857,8 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JniEnvironment.Current.Invoker.GetObjectField (JniEnvironment.Current.EnvironmentPointer, @object.Handle, field.ID);
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			var tmp = JniEnvironment.Invoker.GetObjectField (JniEnvironment.EnvironmentPointer, @object.Handle, field.ID);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -5871,7 +5871,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JniEnvironment.Current.Invoker.GetBooleanField (JniEnvironment.Current.EnvironmentPointer, @object.Handle, field.ID);
+			var tmp = JniEnvironment.Invoker.GetBooleanField (JniEnvironment.EnvironmentPointer, @object.Handle, field.ID);
 			return tmp;
 		}
 
@@ -5884,7 +5884,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JniEnvironment.Current.Invoker.GetByteField (JniEnvironment.Current.EnvironmentPointer, @object.Handle, field.ID);
+			var tmp = JniEnvironment.Invoker.GetByteField (JniEnvironment.EnvironmentPointer, @object.Handle, field.ID);
 			return tmp;
 		}
 
@@ -5897,7 +5897,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JniEnvironment.Current.Invoker.GetCharField (JniEnvironment.Current.EnvironmentPointer, @object.Handle, field.ID);
+			var tmp = JniEnvironment.Invoker.GetCharField (JniEnvironment.EnvironmentPointer, @object.Handle, field.ID);
 			return tmp;
 		}
 
@@ -5910,7 +5910,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JniEnvironment.Current.Invoker.GetShortField (JniEnvironment.Current.EnvironmentPointer, @object.Handle, field.ID);
+			var tmp = JniEnvironment.Invoker.GetShortField (JniEnvironment.EnvironmentPointer, @object.Handle, field.ID);
 			return tmp;
 		}
 
@@ -5923,7 +5923,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JniEnvironment.Current.Invoker.GetIntField (JniEnvironment.Current.EnvironmentPointer, @object.Handle, field.ID);
+			var tmp = JniEnvironment.Invoker.GetIntField (JniEnvironment.EnvironmentPointer, @object.Handle, field.ID);
 			return tmp;
 		}
 
@@ -5936,7 +5936,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JniEnvironment.Current.Invoker.GetLongField (JniEnvironment.Current.EnvironmentPointer, @object.Handle, field.ID);
+			var tmp = JniEnvironment.Invoker.GetLongField (JniEnvironment.EnvironmentPointer, @object.Handle, field.ID);
 			return tmp;
 		}
 
@@ -5949,7 +5949,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JniEnvironment.Current.Invoker.GetFloatField (JniEnvironment.Current.EnvironmentPointer, @object.Handle, field.ID);
+			var tmp = JniEnvironment.Invoker.GetFloatField (JniEnvironment.EnvironmentPointer, @object.Handle, field.ID);
 			return tmp;
 		}
 
@@ -5962,7 +5962,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JniEnvironment.Current.Invoker.GetDoubleField (JniEnvironment.Current.EnvironmentPointer, @object.Handle, field.ID);
+			var tmp = JniEnvironment.Invoker.GetDoubleField (JniEnvironment.EnvironmentPointer, @object.Handle, field.ID);
 			return tmp;
 		}
 
@@ -5975,7 +5975,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JniEnvironment.Current.Invoker.SetObjectField (JniEnvironment.Current.EnvironmentPointer, @object.Handle, field.ID, value.Handle);
+			JniEnvironment.Invoker.SetObjectField (JniEnvironment.EnvironmentPointer, @object.Handle, field.ID, value.Handle);
 		}
 
 		internal static unsafe void SetField (JniObjectReference @object, JniInstanceFieldInfo field, bool value)
@@ -5987,7 +5987,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JniEnvironment.Current.Invoker.SetBooleanField (JniEnvironment.Current.EnvironmentPointer, @object.Handle, field.ID, value);
+			JniEnvironment.Invoker.SetBooleanField (JniEnvironment.EnvironmentPointer, @object.Handle, field.ID, value);
 		}
 
 		internal static unsafe void SetField (JniObjectReference @object, JniInstanceFieldInfo field, sbyte value)
@@ -5999,7 +5999,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JniEnvironment.Current.Invoker.SetByteField (JniEnvironment.Current.EnvironmentPointer, @object.Handle, field.ID, value);
+			JniEnvironment.Invoker.SetByteField (JniEnvironment.EnvironmentPointer, @object.Handle, field.ID, value);
 		}
 
 		internal static unsafe void SetField (JniObjectReference @object, JniInstanceFieldInfo field, char value)
@@ -6011,7 +6011,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JniEnvironment.Current.Invoker.SetCharField (JniEnvironment.Current.EnvironmentPointer, @object.Handle, field.ID, value);
+			JniEnvironment.Invoker.SetCharField (JniEnvironment.EnvironmentPointer, @object.Handle, field.ID, value);
 		}
 
 		internal static unsafe void SetField (JniObjectReference @object, JniInstanceFieldInfo field, short value)
@@ -6023,7 +6023,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JniEnvironment.Current.Invoker.SetShortField (JniEnvironment.Current.EnvironmentPointer, @object.Handle, field.ID, value);
+			JniEnvironment.Invoker.SetShortField (JniEnvironment.EnvironmentPointer, @object.Handle, field.ID, value);
 		}
 
 		internal static unsafe void SetField (JniObjectReference @object, JniInstanceFieldInfo field, int value)
@@ -6035,7 +6035,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JniEnvironment.Current.Invoker.SetIntField (JniEnvironment.Current.EnvironmentPointer, @object.Handle, field.ID, value);
+			JniEnvironment.Invoker.SetIntField (JniEnvironment.EnvironmentPointer, @object.Handle, field.ID, value);
 		}
 
 		internal static unsafe void SetField (JniObjectReference @object, JniInstanceFieldInfo field, long value)
@@ -6047,7 +6047,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JniEnvironment.Current.Invoker.SetLongField (JniEnvironment.Current.EnvironmentPointer, @object.Handle, field.ID, value);
+			JniEnvironment.Invoker.SetLongField (JniEnvironment.EnvironmentPointer, @object.Handle, field.ID, value);
 		}
 
 		internal static unsafe void SetField (JniObjectReference @object, JniInstanceFieldInfo field, float value)
@@ -6059,7 +6059,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JniEnvironment.Current.Invoker.SetFloatField (JniEnvironment.Current.EnvironmentPointer, @object.Handle, field.ID, value);
+			JniEnvironment.Invoker.SetFloatField (JniEnvironment.EnvironmentPointer, @object.Handle, field.ID, value);
 		}
 
 		internal static unsafe void SetField (JniObjectReference @object, JniInstanceFieldInfo field, double value)
@@ -6071,7 +6071,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JniEnvironment.Current.Invoker.SetDoubleField (JniEnvironment.Current.EnvironmentPointer, @object.Handle, field.ID, value);
+			JniEnvironment.Invoker.SetDoubleField (JniEnvironment.EnvironmentPointer, @object.Handle, field.ID, value);
 		}
 	}
 
@@ -6086,9 +6086,9 @@ namespace
 			if (signature == null)
 				throw new ArgumentNullException ("signature");
 
-			var tmp = JniEnvironment.Current.Invoker.GetMethodID (JniEnvironment.Current.EnvironmentPointer, klass.Handle, name, signature);
+			var tmp = JniEnvironment.Invoker.GetMethodID (JniEnvironment.EnvironmentPointer, klass.Handle, name, signature);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -6106,13 +6106,13 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallObjectMethod (JniEnvironment.Current.EnvironmentPointer, @object.Handle, method.ID);
+			var tmp = JniEnvironment.Invoker.CallObjectMethod (JniEnvironment.EnvironmentPointer, @object.Handle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -6125,13 +6125,13 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallObjectMethodA (JniEnvironment.Current.EnvironmentPointer, @object.Handle, method.ID, args);
+			var tmp = JniEnvironment.Invoker.CallObjectMethodA (JniEnvironment.EnvironmentPointer, @object.Handle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -6144,9 +6144,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallBooleanMethod (JniEnvironment.Current.EnvironmentPointer, @object.Handle, method.ID);
+			var tmp = JniEnvironment.Invoker.CallBooleanMethod (JniEnvironment.EnvironmentPointer, @object.Handle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -6162,9 +6162,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallBooleanMethodA (JniEnvironment.Current.EnvironmentPointer, @object.Handle, method.ID, args);
+			var tmp = JniEnvironment.Invoker.CallBooleanMethodA (JniEnvironment.EnvironmentPointer, @object.Handle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -6180,9 +6180,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallByteMethod (JniEnvironment.Current.EnvironmentPointer, @object.Handle, method.ID);
+			var tmp = JniEnvironment.Invoker.CallByteMethod (JniEnvironment.EnvironmentPointer, @object.Handle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -6198,9 +6198,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallByteMethodA (JniEnvironment.Current.EnvironmentPointer, @object.Handle, method.ID, args);
+			var tmp = JniEnvironment.Invoker.CallByteMethodA (JniEnvironment.EnvironmentPointer, @object.Handle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -6216,9 +6216,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallCharMethod (JniEnvironment.Current.EnvironmentPointer, @object.Handle, method.ID);
+			var tmp = JniEnvironment.Invoker.CallCharMethod (JniEnvironment.EnvironmentPointer, @object.Handle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -6234,9 +6234,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallCharMethodA (JniEnvironment.Current.EnvironmentPointer, @object.Handle, method.ID, args);
+			var tmp = JniEnvironment.Invoker.CallCharMethodA (JniEnvironment.EnvironmentPointer, @object.Handle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -6252,9 +6252,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallShortMethod (JniEnvironment.Current.EnvironmentPointer, @object.Handle, method.ID);
+			var tmp = JniEnvironment.Invoker.CallShortMethod (JniEnvironment.EnvironmentPointer, @object.Handle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -6270,9 +6270,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallShortMethodA (JniEnvironment.Current.EnvironmentPointer, @object.Handle, method.ID, args);
+			var tmp = JniEnvironment.Invoker.CallShortMethodA (JniEnvironment.EnvironmentPointer, @object.Handle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -6288,9 +6288,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallIntMethod (JniEnvironment.Current.EnvironmentPointer, @object.Handle, method.ID);
+			var tmp = JniEnvironment.Invoker.CallIntMethod (JniEnvironment.EnvironmentPointer, @object.Handle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -6306,9 +6306,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallIntMethodA (JniEnvironment.Current.EnvironmentPointer, @object.Handle, method.ID, args);
+			var tmp = JniEnvironment.Invoker.CallIntMethodA (JniEnvironment.EnvironmentPointer, @object.Handle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -6324,9 +6324,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallLongMethod (JniEnvironment.Current.EnvironmentPointer, @object.Handle, method.ID);
+			var tmp = JniEnvironment.Invoker.CallLongMethod (JniEnvironment.EnvironmentPointer, @object.Handle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -6342,9 +6342,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallLongMethodA (JniEnvironment.Current.EnvironmentPointer, @object.Handle, method.ID, args);
+			var tmp = JniEnvironment.Invoker.CallLongMethodA (JniEnvironment.EnvironmentPointer, @object.Handle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -6360,9 +6360,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallFloatMethod (JniEnvironment.Current.EnvironmentPointer, @object.Handle, method.ID);
+			var tmp = JniEnvironment.Invoker.CallFloatMethod (JniEnvironment.EnvironmentPointer, @object.Handle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -6378,9 +6378,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallFloatMethodA (JniEnvironment.Current.EnvironmentPointer, @object.Handle, method.ID, args);
+			var tmp = JniEnvironment.Invoker.CallFloatMethodA (JniEnvironment.EnvironmentPointer, @object.Handle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -6396,9 +6396,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallDoubleMethod (JniEnvironment.Current.EnvironmentPointer, @object.Handle, method.ID);
+			var tmp = JniEnvironment.Invoker.CallDoubleMethod (JniEnvironment.EnvironmentPointer, @object.Handle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -6414,9 +6414,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallDoubleMethodA (JniEnvironment.Current.EnvironmentPointer, @object.Handle, method.ID, args);
+			var tmp = JniEnvironment.Invoker.CallDoubleMethodA (JniEnvironment.EnvironmentPointer, @object.Handle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -6432,9 +6432,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			JniEnvironment.Current.Invoker.CallVoidMethod (JniEnvironment.Current.EnvironmentPointer, @object.Handle, method.ID);
+			JniEnvironment.Invoker.CallVoidMethod (JniEnvironment.EnvironmentPointer, @object.Handle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -6449,9 +6449,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			JniEnvironment.Current.Invoker.CallVoidMethodA (JniEnvironment.Current.EnvironmentPointer, @object.Handle, method.ID, args);
+			JniEnvironment.Invoker.CallVoidMethodA (JniEnvironment.EnvironmentPointer, @object.Handle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -6468,13 +6468,13 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallNonvirtualObjectMethod (JniEnvironment.Current.EnvironmentPointer, @object.Handle, klass.Handle, method.ID);
+			var tmp = JniEnvironment.Invoker.CallNonvirtualObjectMethod (JniEnvironment.EnvironmentPointer, @object.Handle, klass.Handle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -6489,13 +6489,13 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallNonvirtualObjectMethodA (JniEnvironment.Current.EnvironmentPointer, @object.Handle, klass.Handle, method.ID, args);
+			var tmp = JniEnvironment.Invoker.CallNonvirtualObjectMethodA (JniEnvironment.EnvironmentPointer, @object.Handle, klass.Handle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -6510,9 +6510,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallNonvirtualBooleanMethod (JniEnvironment.Current.EnvironmentPointer, @object.Handle, klass.Handle, method.ID);
+			var tmp = JniEnvironment.Invoker.CallNonvirtualBooleanMethod (JniEnvironment.EnvironmentPointer, @object.Handle, klass.Handle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -6530,9 +6530,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallNonvirtualBooleanMethodA (JniEnvironment.Current.EnvironmentPointer, @object.Handle, klass.Handle, method.ID, args);
+			var tmp = JniEnvironment.Invoker.CallNonvirtualBooleanMethodA (JniEnvironment.EnvironmentPointer, @object.Handle, klass.Handle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -6550,9 +6550,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallNonvirtualByteMethod (JniEnvironment.Current.EnvironmentPointer, @object.Handle, klass.Handle, method.ID);
+			var tmp = JniEnvironment.Invoker.CallNonvirtualByteMethod (JniEnvironment.EnvironmentPointer, @object.Handle, klass.Handle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -6570,9 +6570,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallNonvirtualByteMethodA (JniEnvironment.Current.EnvironmentPointer, @object.Handle, klass.Handle, method.ID, args);
+			var tmp = JniEnvironment.Invoker.CallNonvirtualByteMethodA (JniEnvironment.EnvironmentPointer, @object.Handle, klass.Handle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -6590,9 +6590,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallNonvirtualCharMethod (JniEnvironment.Current.EnvironmentPointer, @object.Handle, klass.Handle, method.ID);
+			var tmp = JniEnvironment.Invoker.CallNonvirtualCharMethod (JniEnvironment.EnvironmentPointer, @object.Handle, klass.Handle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -6610,9 +6610,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallNonvirtualCharMethodA (JniEnvironment.Current.EnvironmentPointer, @object.Handle, klass.Handle, method.ID, args);
+			var tmp = JniEnvironment.Invoker.CallNonvirtualCharMethodA (JniEnvironment.EnvironmentPointer, @object.Handle, klass.Handle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -6630,9 +6630,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallNonvirtualShortMethod (JniEnvironment.Current.EnvironmentPointer, @object.Handle, klass.Handle, method.ID);
+			var tmp = JniEnvironment.Invoker.CallNonvirtualShortMethod (JniEnvironment.EnvironmentPointer, @object.Handle, klass.Handle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -6650,9 +6650,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallNonvirtualShortMethodA (JniEnvironment.Current.EnvironmentPointer, @object.Handle, klass.Handle, method.ID, args);
+			var tmp = JniEnvironment.Invoker.CallNonvirtualShortMethodA (JniEnvironment.EnvironmentPointer, @object.Handle, klass.Handle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -6670,9 +6670,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallNonvirtualIntMethod (JniEnvironment.Current.EnvironmentPointer, @object.Handle, klass.Handle, method.ID);
+			var tmp = JniEnvironment.Invoker.CallNonvirtualIntMethod (JniEnvironment.EnvironmentPointer, @object.Handle, klass.Handle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -6690,9 +6690,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallNonvirtualIntMethodA (JniEnvironment.Current.EnvironmentPointer, @object.Handle, klass.Handle, method.ID, args);
+			var tmp = JniEnvironment.Invoker.CallNonvirtualIntMethodA (JniEnvironment.EnvironmentPointer, @object.Handle, klass.Handle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -6710,9 +6710,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallNonvirtualLongMethod (JniEnvironment.Current.EnvironmentPointer, @object.Handle, klass.Handle, method.ID);
+			var tmp = JniEnvironment.Invoker.CallNonvirtualLongMethod (JniEnvironment.EnvironmentPointer, @object.Handle, klass.Handle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -6730,9 +6730,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallNonvirtualLongMethodA (JniEnvironment.Current.EnvironmentPointer, @object.Handle, klass.Handle, method.ID, args);
+			var tmp = JniEnvironment.Invoker.CallNonvirtualLongMethodA (JniEnvironment.EnvironmentPointer, @object.Handle, klass.Handle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -6750,9 +6750,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallNonvirtualFloatMethod (JniEnvironment.Current.EnvironmentPointer, @object.Handle, klass.Handle, method.ID);
+			var tmp = JniEnvironment.Invoker.CallNonvirtualFloatMethod (JniEnvironment.EnvironmentPointer, @object.Handle, klass.Handle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -6770,9 +6770,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallNonvirtualFloatMethodA (JniEnvironment.Current.EnvironmentPointer, @object.Handle, klass.Handle, method.ID, args);
+			var tmp = JniEnvironment.Invoker.CallNonvirtualFloatMethodA (JniEnvironment.EnvironmentPointer, @object.Handle, klass.Handle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -6790,9 +6790,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallNonvirtualDoubleMethod (JniEnvironment.Current.EnvironmentPointer, @object.Handle, klass.Handle, method.ID);
+			var tmp = JniEnvironment.Invoker.CallNonvirtualDoubleMethod (JniEnvironment.EnvironmentPointer, @object.Handle, klass.Handle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -6810,9 +6810,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallNonvirtualDoubleMethodA (JniEnvironment.Current.EnvironmentPointer, @object.Handle, klass.Handle, method.ID, args);
+			var tmp = JniEnvironment.Invoker.CallNonvirtualDoubleMethodA (JniEnvironment.EnvironmentPointer, @object.Handle, klass.Handle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -6830,9 +6830,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			JniEnvironment.Current.Invoker.CallNonvirtualVoidMethod (JniEnvironment.Current.EnvironmentPointer, @object.Handle, klass.Handle, method.ID);
+			JniEnvironment.Invoker.CallNonvirtualVoidMethod (JniEnvironment.EnvironmentPointer, @object.Handle, klass.Handle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -6849,9 +6849,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			JniEnvironment.Current.Invoker.CallNonvirtualVoidMethodA (JniEnvironment.Current.EnvironmentPointer, @object.Handle, klass.Handle, method.ID, args);
+			JniEnvironment.Invoker.CallNonvirtualVoidMethodA (JniEnvironment.EnvironmentPointer, @object.Handle, klass.Handle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -6865,13 +6865,13 @@ namespace
 			if (address == IntPtr.Zero)
 				throw new ArgumentException ("'address' must not be IntPtr.Zero.", "address");
 
-			var tmp = JniEnvironment.Current.Invoker.NewDirectByteBuffer (JniEnvironment.Current.EnvironmentPointer, address, capacity);
+			var tmp = JniEnvironment.Invoker.NewDirectByteBuffer (JniEnvironment.EnvironmentPointer, address, capacity);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -6880,7 +6880,7 @@ namespace
 			if (buffer.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`buffer` must not be IntPtr.Zero.", "buffer");
 
-			var tmp = JniEnvironment.Current.Invoker.GetDirectBufferAddress (JniEnvironment.Current.EnvironmentPointer, buffer.Handle);
+			var tmp = JniEnvironment.Invoker.GetDirectBufferAddress (JniEnvironment.EnvironmentPointer, buffer.Handle);
 			return tmp;
 		}
 
@@ -6889,7 +6889,7 @@ namespace
 			if (buffer.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`buffer` must not be IntPtr.Zero.", "buffer");
 
-			var tmp = JniEnvironment.Current.Invoker.GetDirectBufferCapacity (JniEnvironment.Current.EnvironmentPointer, buffer.Handle);
+			var tmp = JniEnvironment.Invoker.GetDirectBufferCapacity (JniEnvironment.EnvironmentPointer, buffer.Handle);
 			return tmp;
 		}
 	}
@@ -6901,7 +6901,7 @@ namespace
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
 
-			var tmp = JniEnvironment.Current.Invoker.MonitorEnter (JniEnvironment.Current.EnvironmentPointer, @object.Handle);
+			var tmp = JniEnvironment.Invoker.MonitorEnter (JniEnvironment.EnvironmentPointer, @object.Handle);
 			return tmp;
 		}
 
@@ -6910,7 +6910,7 @@ namespace
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
 
-			var tmp = JniEnvironment.Current.Invoker.MonitorExit (JniEnvironment.Current.EnvironmentPointer, @object.Handle);
+			var tmp = JniEnvironment.Invoker.MonitorExit (JniEnvironment.EnvironmentPointer, @object.Handle);
 			return tmp;
 		}
 	}
@@ -6919,60 +6919,60 @@ namespace
 
 		public static unsafe int PushLocalFrame (int capacity)
 		{
-			var tmp = JniEnvironment.Current.Invoker.PushLocalFrame (JniEnvironment.Current.EnvironmentPointer, capacity);
+			var tmp = JniEnvironment.Invoker.PushLocalFrame (JniEnvironment.EnvironmentPointer, capacity);
 			return tmp;
 		}
 
 		public static unsafe JniObjectReference PopLocalFrame (JniObjectReference result)
 		{
-			var tmp = JniEnvironment.Current.Invoker.PopLocalFrame (JniEnvironment.Current.EnvironmentPointer, result.Handle);
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			var tmp = JniEnvironment.Invoker.PopLocalFrame (JniEnvironment.EnvironmentPointer, result.Handle);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
 		internal static unsafe JniObjectReference NewGlobalRef (JniObjectReference @object)
 		{
-			var tmp = JniEnvironment.Current.Invoker.NewGlobalRef (JniEnvironment.Current.EnvironmentPointer, @object.Handle);
+			var tmp = JniEnvironment.Invoker.NewGlobalRef (JniEnvironment.EnvironmentPointer, @object.Handle);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Global);
 		}
 
 		internal static unsafe void DeleteGlobalRef (IntPtr @object)
 		{
-			JniEnvironment.Current.Invoker.DeleteGlobalRef (JniEnvironment.Current.EnvironmentPointer, @object);
+			JniEnvironment.Invoker.DeleteGlobalRef (JniEnvironment.EnvironmentPointer, @object);
 		}
 
 		internal static unsafe void DeleteLocalRef (IntPtr @object)
 		{
-			JniEnvironment.Current.Invoker.DeleteLocalRef (JniEnvironment.Current.EnvironmentPointer, @object);
+			JniEnvironment.Invoker.DeleteLocalRef (JniEnvironment.EnvironmentPointer, @object);
 		}
 
 		internal static unsafe JniObjectReference NewLocalRef (JniObjectReference @object)
 		{
-			var tmp = JniEnvironment.Current.Invoker.NewLocalRef (JniEnvironment.Current.EnvironmentPointer, @object.Handle);
+			var tmp = JniEnvironment.Invoker.NewLocalRef (JniEnvironment.EnvironmentPointer, @object.Handle);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
 		public static unsafe int EnsureLocalCapacity (int capacity)
 		{
-			var tmp = JniEnvironment.Current.Invoker.EnsureLocalCapacity (JniEnvironment.Current.EnvironmentPointer, capacity);
+			var tmp = JniEnvironment.Invoker.EnsureLocalCapacity (JniEnvironment.EnvironmentPointer, capacity);
 			return tmp;
 		}
 
 		public static unsafe int GetJavaVM (out IntPtr vm)
 		{
-			var tmp = JniEnvironment.Current.Invoker.GetJavaVM (JniEnvironment.Current.EnvironmentPointer, out vm);
+			var tmp = JniEnvironment.Invoker.GetJavaVM (JniEnvironment.EnvironmentPointer, out vm);
 			return tmp;
 		}
 
 		internal static unsafe JniObjectReference NewWeakGlobalRef (JniObjectReference @object)
 		{
-			var tmp = JniEnvironment.Current.Invoker.NewWeakGlobalRef (JniEnvironment.Current.EnvironmentPointer, @object.Handle);
+			var tmp = JniEnvironment.Invoker.NewWeakGlobalRef (JniEnvironment.EnvironmentPointer, @object.Handle);
 			return new JniObjectReference (tmp, JniObjectReferenceType.WeakGlobal);
 		}
 
 		internal static unsafe void DeleteWeakGlobalRef (IntPtr @object)
 		{
-			JniEnvironment.Current.Invoker.DeleteWeakGlobalRef (JniEnvironment.Current.EnvironmentPointer, @object);
+			JniEnvironment.Invoker.DeleteWeakGlobalRef (JniEnvironment.EnvironmentPointer, @object);
 		}
 
 		internal static unsafe JniObjectReferenceType GetObjectRefType (JniObjectReference @object)
@@ -6980,7 +6980,7 @@ namespace
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
 
-			var tmp = JniEnvironment.Current.Invoker.GetObjectRefType (JniEnvironment.Current.EnvironmentPointer, @object.Handle);
+			var tmp = JniEnvironment.Invoker.GetObjectRefType (JniEnvironment.EnvironmentPointer, @object.Handle);
 			return tmp;
 		}
 	}
@@ -6996,8 +6996,8 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.ToReflectedMethod (JniEnvironment.Current.EnvironmentPointer, klass.Handle, method.ID, isStatic);
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			var tmp = JniEnvironment.Invoker.ToReflectedMethod (JniEnvironment.EnvironmentPointer, klass.Handle, method.ID, isStatic);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -7010,8 +7010,8 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JniEnvironment.Current.Invoker.ToReflectedField (JniEnvironment.Current.EnvironmentPointer, klass.Handle, field.ID, isStatic);
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			var tmp = JniEnvironment.Invoker.ToReflectedField (JniEnvironment.EnvironmentPointer, klass.Handle, field.ID, isStatic);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 	}
@@ -7027,9 +7027,9 @@ namespace
 			if (signature == null)
 				throw new ArgumentNullException ("signature");
 
-			var tmp = JniEnvironment.Current.Invoker.GetStaticFieldID (JniEnvironment.Current.EnvironmentPointer, klass.Handle, name, signature);
+			var tmp = JniEnvironment.Invoker.GetStaticFieldID (JniEnvironment.EnvironmentPointer, klass.Handle, name, signature);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -7047,8 +7047,8 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JniEnvironment.Current.Invoker.GetStaticObjectField (JniEnvironment.Current.EnvironmentPointer, klass.Handle, field.ID);
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			var tmp = JniEnvironment.Invoker.GetStaticObjectField (JniEnvironment.EnvironmentPointer, klass.Handle, field.ID);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -7061,7 +7061,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JniEnvironment.Current.Invoker.GetStaticBooleanField (JniEnvironment.Current.EnvironmentPointer, klass.Handle, field.ID);
+			var tmp = JniEnvironment.Invoker.GetStaticBooleanField (JniEnvironment.EnvironmentPointer, klass.Handle, field.ID);
 			return tmp;
 		}
 
@@ -7074,7 +7074,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JniEnvironment.Current.Invoker.GetStaticByteField (JniEnvironment.Current.EnvironmentPointer, klass.Handle, field.ID);
+			var tmp = JniEnvironment.Invoker.GetStaticByteField (JniEnvironment.EnvironmentPointer, klass.Handle, field.ID);
 			return tmp;
 		}
 
@@ -7087,7 +7087,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JniEnvironment.Current.Invoker.GetStaticCharField (JniEnvironment.Current.EnvironmentPointer, klass.Handle, field.ID);
+			var tmp = JniEnvironment.Invoker.GetStaticCharField (JniEnvironment.EnvironmentPointer, klass.Handle, field.ID);
 			return tmp;
 		}
 
@@ -7100,7 +7100,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JniEnvironment.Current.Invoker.GetStaticShortField (JniEnvironment.Current.EnvironmentPointer, klass.Handle, field.ID);
+			var tmp = JniEnvironment.Invoker.GetStaticShortField (JniEnvironment.EnvironmentPointer, klass.Handle, field.ID);
 			return tmp;
 		}
 
@@ -7113,7 +7113,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JniEnvironment.Current.Invoker.GetStaticIntField (JniEnvironment.Current.EnvironmentPointer, klass.Handle, field.ID);
+			var tmp = JniEnvironment.Invoker.GetStaticIntField (JniEnvironment.EnvironmentPointer, klass.Handle, field.ID);
 			return tmp;
 		}
 
@@ -7126,7 +7126,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JniEnvironment.Current.Invoker.GetStaticLongField (JniEnvironment.Current.EnvironmentPointer, klass.Handle, field.ID);
+			var tmp = JniEnvironment.Invoker.GetStaticLongField (JniEnvironment.EnvironmentPointer, klass.Handle, field.ID);
 			return tmp;
 		}
 
@@ -7139,7 +7139,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JniEnvironment.Current.Invoker.GetStaticFloatField (JniEnvironment.Current.EnvironmentPointer, klass.Handle, field.ID);
+			var tmp = JniEnvironment.Invoker.GetStaticFloatField (JniEnvironment.EnvironmentPointer, klass.Handle, field.ID);
 			return tmp;
 		}
 
@@ -7152,7 +7152,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JniEnvironment.Current.Invoker.GetStaticDoubleField (JniEnvironment.Current.EnvironmentPointer, klass.Handle, field.ID);
+			var tmp = JniEnvironment.Invoker.GetStaticDoubleField (JniEnvironment.EnvironmentPointer, klass.Handle, field.ID);
 			return tmp;
 		}
 
@@ -7165,7 +7165,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JniEnvironment.Current.Invoker.SetStaticObjectField (JniEnvironment.Current.EnvironmentPointer, klass.Handle, field.ID, value.Handle);
+			JniEnvironment.Invoker.SetStaticObjectField (JniEnvironment.EnvironmentPointer, klass.Handle, field.ID, value.Handle);
 		}
 
 		internal static unsafe void SetStaticField (JniObjectReference klass, JniStaticFieldInfo field, bool value)
@@ -7177,7 +7177,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JniEnvironment.Current.Invoker.SetStaticBooleanField (JniEnvironment.Current.EnvironmentPointer, klass.Handle, field.ID, value);
+			JniEnvironment.Invoker.SetStaticBooleanField (JniEnvironment.EnvironmentPointer, klass.Handle, field.ID, value);
 		}
 
 		internal static unsafe void SetStaticField (JniObjectReference klass, JniStaticFieldInfo field, sbyte value)
@@ -7189,7 +7189,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JniEnvironment.Current.Invoker.SetStaticByteField (JniEnvironment.Current.EnvironmentPointer, klass.Handle, field.ID, value);
+			JniEnvironment.Invoker.SetStaticByteField (JniEnvironment.EnvironmentPointer, klass.Handle, field.ID, value);
 		}
 
 		internal static unsafe void SetStaticField (JniObjectReference klass, JniStaticFieldInfo field, char value)
@@ -7201,7 +7201,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JniEnvironment.Current.Invoker.SetStaticCharField (JniEnvironment.Current.EnvironmentPointer, klass.Handle, field.ID, value);
+			JniEnvironment.Invoker.SetStaticCharField (JniEnvironment.EnvironmentPointer, klass.Handle, field.ID, value);
 		}
 
 		internal static unsafe void SetStaticField (JniObjectReference klass, JniStaticFieldInfo field, short value)
@@ -7213,7 +7213,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JniEnvironment.Current.Invoker.SetStaticShortField (JniEnvironment.Current.EnvironmentPointer, klass.Handle, field.ID, value);
+			JniEnvironment.Invoker.SetStaticShortField (JniEnvironment.EnvironmentPointer, klass.Handle, field.ID, value);
 		}
 
 		internal static unsafe void SetStaticField (JniObjectReference klass, JniStaticFieldInfo field, int value)
@@ -7225,7 +7225,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JniEnvironment.Current.Invoker.SetStaticIntField (JniEnvironment.Current.EnvironmentPointer, klass.Handle, field.ID, value);
+			JniEnvironment.Invoker.SetStaticIntField (JniEnvironment.EnvironmentPointer, klass.Handle, field.ID, value);
 		}
 
 		internal static unsafe void SetStaticField (JniObjectReference klass, JniStaticFieldInfo field, long value)
@@ -7237,7 +7237,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JniEnvironment.Current.Invoker.SetStaticLongField (JniEnvironment.Current.EnvironmentPointer, klass.Handle, field.ID, value);
+			JniEnvironment.Invoker.SetStaticLongField (JniEnvironment.EnvironmentPointer, klass.Handle, field.ID, value);
 		}
 
 		internal static unsafe void SetStaticField (JniObjectReference klass, JniStaticFieldInfo field, float value)
@@ -7249,7 +7249,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JniEnvironment.Current.Invoker.SetStaticFloatField (JniEnvironment.Current.EnvironmentPointer, klass.Handle, field.ID, value);
+			JniEnvironment.Invoker.SetStaticFloatField (JniEnvironment.EnvironmentPointer, klass.Handle, field.ID, value);
 		}
 
 		internal static unsafe void SetStaticField (JniObjectReference klass, JniStaticFieldInfo field, double value)
@@ -7261,7 +7261,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JniEnvironment.Current.Invoker.SetStaticDoubleField (JniEnvironment.Current.EnvironmentPointer, klass.Handle, field.ID, value);
+			JniEnvironment.Invoker.SetStaticDoubleField (JniEnvironment.EnvironmentPointer, klass.Handle, field.ID, value);
 		}
 	}
 
@@ -7276,9 +7276,9 @@ namespace
 			if (signature == null)
 				throw new ArgumentNullException ("signature");
 
-			var tmp = JniEnvironment.Current.Invoker.GetStaticMethodID (JniEnvironment.Current.EnvironmentPointer, klass.Handle, name, signature);
+			var tmp = JniEnvironment.Invoker.GetStaticMethodID (JniEnvironment.EnvironmentPointer, klass.Handle, name, signature);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -7296,13 +7296,13 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallStaticObjectMethod (JniEnvironment.Current.EnvironmentPointer, klass.Handle, method.ID);
+			var tmp = JniEnvironment.Invoker.CallStaticObjectMethod (JniEnvironment.EnvironmentPointer, klass.Handle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -7315,13 +7315,13 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallStaticObjectMethodA (JniEnvironment.Current.EnvironmentPointer, klass.Handle, method.ID, args);
+			var tmp = JniEnvironment.Invoker.CallStaticObjectMethodA (JniEnvironment.EnvironmentPointer, klass.Handle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -7334,9 +7334,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallStaticBooleanMethod (JniEnvironment.Current.EnvironmentPointer, klass.Handle, method.ID);
+			var tmp = JniEnvironment.Invoker.CallStaticBooleanMethod (JniEnvironment.EnvironmentPointer, klass.Handle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -7352,9 +7352,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallStaticBooleanMethodA (JniEnvironment.Current.EnvironmentPointer, klass.Handle, method.ID, args);
+			var tmp = JniEnvironment.Invoker.CallStaticBooleanMethodA (JniEnvironment.EnvironmentPointer, klass.Handle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -7370,9 +7370,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallStaticByteMethod (JniEnvironment.Current.EnvironmentPointer, klass.Handle, method.ID);
+			var tmp = JniEnvironment.Invoker.CallStaticByteMethod (JniEnvironment.EnvironmentPointer, klass.Handle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -7388,9 +7388,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallStaticByteMethodA (JniEnvironment.Current.EnvironmentPointer, klass.Handle, method.ID, args);
+			var tmp = JniEnvironment.Invoker.CallStaticByteMethodA (JniEnvironment.EnvironmentPointer, klass.Handle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -7406,9 +7406,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallStaticCharMethod (JniEnvironment.Current.EnvironmentPointer, klass.Handle, method.ID);
+			var tmp = JniEnvironment.Invoker.CallStaticCharMethod (JniEnvironment.EnvironmentPointer, klass.Handle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -7424,9 +7424,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallStaticCharMethodA (JniEnvironment.Current.EnvironmentPointer, klass.Handle, method.ID, args);
+			var tmp = JniEnvironment.Invoker.CallStaticCharMethodA (JniEnvironment.EnvironmentPointer, klass.Handle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -7442,9 +7442,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallStaticShortMethod (JniEnvironment.Current.EnvironmentPointer, klass.Handle, method.ID);
+			var tmp = JniEnvironment.Invoker.CallStaticShortMethod (JniEnvironment.EnvironmentPointer, klass.Handle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -7460,9 +7460,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallStaticShortMethodA (JniEnvironment.Current.EnvironmentPointer, klass.Handle, method.ID, args);
+			var tmp = JniEnvironment.Invoker.CallStaticShortMethodA (JniEnvironment.EnvironmentPointer, klass.Handle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -7478,9 +7478,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallStaticIntMethod (JniEnvironment.Current.EnvironmentPointer, klass.Handle, method.ID);
+			var tmp = JniEnvironment.Invoker.CallStaticIntMethod (JniEnvironment.EnvironmentPointer, klass.Handle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -7496,9 +7496,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallStaticIntMethodA (JniEnvironment.Current.EnvironmentPointer, klass.Handle, method.ID, args);
+			var tmp = JniEnvironment.Invoker.CallStaticIntMethodA (JniEnvironment.EnvironmentPointer, klass.Handle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -7514,9 +7514,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallStaticLongMethod (JniEnvironment.Current.EnvironmentPointer, klass.Handle, method.ID);
+			var tmp = JniEnvironment.Invoker.CallStaticLongMethod (JniEnvironment.EnvironmentPointer, klass.Handle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -7532,9 +7532,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallStaticLongMethodA (JniEnvironment.Current.EnvironmentPointer, klass.Handle, method.ID, args);
+			var tmp = JniEnvironment.Invoker.CallStaticLongMethodA (JniEnvironment.EnvironmentPointer, klass.Handle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -7550,9 +7550,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallStaticFloatMethod (JniEnvironment.Current.EnvironmentPointer, klass.Handle, method.ID);
+			var tmp = JniEnvironment.Invoker.CallStaticFloatMethod (JniEnvironment.EnvironmentPointer, klass.Handle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -7568,9 +7568,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallStaticFloatMethodA (JniEnvironment.Current.EnvironmentPointer, klass.Handle, method.ID, args);
+			var tmp = JniEnvironment.Invoker.CallStaticFloatMethodA (JniEnvironment.EnvironmentPointer, klass.Handle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -7586,9 +7586,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallStaticDoubleMethod (JniEnvironment.Current.EnvironmentPointer, klass.Handle, method.ID);
+			var tmp = JniEnvironment.Invoker.CallStaticDoubleMethod (JniEnvironment.EnvironmentPointer, klass.Handle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -7604,9 +7604,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallStaticDoubleMethodA (JniEnvironment.Current.EnvironmentPointer, klass.Handle, method.ID, args);
+			var tmp = JniEnvironment.Invoker.CallStaticDoubleMethodA (JniEnvironment.EnvironmentPointer, klass.Handle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -7622,9 +7622,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			JniEnvironment.Current.Invoker.CallStaticVoidMethod (JniEnvironment.Current.EnvironmentPointer, klass.Handle, method.ID);
+			JniEnvironment.Invoker.CallStaticVoidMethod (JniEnvironment.EnvironmentPointer, klass.Handle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -7639,9 +7639,9 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			JniEnvironment.Current.Invoker.CallStaticVoidMethodA (JniEnvironment.Current.EnvironmentPointer, klass.Handle, method.ID, args);
+			JniEnvironment.Invoker.CallStaticVoidMethodA (JniEnvironment.EnvironmentPointer, klass.Handle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -7655,13 +7655,13 @@ namespace
 			if (unicodeChars == IntPtr.Zero)
 				throw new ArgumentException ("'unicodeChars' must not be IntPtr.Zero.", "unicodeChars");
 
-			var tmp = JniEnvironment.Current.Invoker.NewString (JniEnvironment.Current.EnvironmentPointer, unicodeChars, length);
+			var tmp = JniEnvironment.Invoker.NewString (JniEnvironment.EnvironmentPointer, unicodeChars, length);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -7670,7 +7670,7 @@ namespace
 			if (@string.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@string` must not be IntPtr.Zero.", "@string");
 
-			var tmp = JniEnvironment.Current.Invoker.GetStringLength (JniEnvironment.Current.EnvironmentPointer, @string.Handle);
+			var tmp = JniEnvironment.Invoker.GetStringLength (JniEnvironment.EnvironmentPointer, @string.Handle);
 			return tmp;
 		}
 
@@ -7679,7 +7679,7 @@ namespace
 			if (@string.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@string` must not be IntPtr.Zero.", "@string");
 
-			var tmp = JniEnvironment.Current.Invoker.GetStringChars (JniEnvironment.Current.EnvironmentPointer, @string.Handle, isCopy);
+			var tmp = JniEnvironment.Invoker.GetStringChars (JniEnvironment.EnvironmentPointer, @string.Handle, isCopy);
 			return tmp;
 		}
 
@@ -7690,7 +7690,7 @@ namespace
 			if (chars == IntPtr.Zero)
 				throw new ArgumentException ("'chars' must not be IntPtr.Zero.", "chars");
 
-			JniEnvironment.Current.Invoker.ReleaseStringChars (JniEnvironment.Current.EnvironmentPointer, @string.Handle, chars);
+			JniEnvironment.Invoker.ReleaseStringChars (JniEnvironment.EnvironmentPointer, @string.Handle, chars);
 		}
 	}
 
@@ -7705,13 +7705,13 @@ namespace
 			if (buffer == IntPtr.Zero)
 				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
-			var tmp = JniEnvironment.Current.Invoker.DefineClass (JniEnvironment.Current.EnvironmentPointer, name, loader.Handle, buffer, bufferLength);
+			var tmp = JniEnvironment.Invoker.DefineClass (JniEnvironment.EnvironmentPointer, name, loader.Handle, buffer, bufferLength);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -7720,13 +7720,13 @@ namespace
 			if (classname == null)
 				throw new ArgumentNullException ("classname");
 
-			var tmp = JniEnvironment.Current.Invoker.FindClass (JniEnvironment.Current.EnvironmentPointer, classname);
+			var tmp = JniEnvironment.Invoker.FindClass (JniEnvironment.EnvironmentPointer, classname);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -7735,8 +7735,8 @@ namespace
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
 
-			var tmp = JniEnvironment.Current.Invoker.GetSuperclass (JniEnvironment.Current.EnvironmentPointer, klass.Handle);
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			var tmp = JniEnvironment.Invoker.GetSuperclass (JniEnvironment.EnvironmentPointer, klass.Handle);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -7747,13 +7747,13 @@ namespace
 			if (class2.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`class2` must not be IntPtr.Zero.", "class2");
 
-			var tmp = JniEnvironment.Current.Invoker.IsAssignableFrom (JniEnvironment.Current.EnvironmentPointer, class1.Handle, class2.Handle);
+			var tmp = JniEnvironment.Invoker.IsAssignableFrom (JniEnvironment.EnvironmentPointer, class1.Handle, class2.Handle);
 			return tmp;
 		}
 
 		public static unsafe bool IsSameObject (JniObjectReference object1, JniObjectReference object2)
 		{
-			var tmp = JniEnvironment.Current.Invoker.IsSameObject (JniEnvironment.Current.EnvironmentPointer, object1.Handle, object2.Handle);
+			var tmp = JniEnvironment.Invoker.IsSameObject (JniEnvironment.EnvironmentPointer, object1.Handle, object2.Handle);
 			return tmp;
 		}
 
@@ -7762,8 +7762,8 @@ namespace
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
 
-			var tmp = JniEnvironment.Current.Invoker.GetObjectClass (JniEnvironment.Current.EnvironmentPointer, @object.Handle);
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			var tmp = JniEnvironment.Invoker.GetObjectClass (JniEnvironment.EnvironmentPointer, @object.Handle);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -7774,7 +7774,7 @@ namespace
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
 
-			var tmp = JniEnvironment.Current.Invoker.IsInstanceOf (JniEnvironment.Current.EnvironmentPointer, @object.Handle, klass.Handle);
+			var tmp = JniEnvironment.Invoker.IsInstanceOf (JniEnvironment.EnvironmentPointer, @object.Handle, klass.Handle);
 			return tmp;
 		}
 
@@ -7783,9 +7783,9 @@ namespace
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
 
-			var tmp = JniEnvironment.Current.Invoker.RegisterNatives (JniEnvironment.Current.EnvironmentPointer, klass.Handle, methods, numMethods);
+			var tmp = JniEnvironment.Invoker.RegisterNatives (JniEnvironment.EnvironmentPointer, klass.Handle, methods, numMethods);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -7797,7 +7797,7 @@ namespace
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
 
-			var tmp = JniEnvironment.Current.Invoker.UnregisterNatives (JniEnvironment.Current.EnvironmentPointer, klass.Handle);
+			var tmp = JniEnvironment.Invoker.UnregisterNatives (JniEnvironment.EnvironmentPointer, klass.Handle);
 			return tmp;
 		}
 	}
@@ -7806,7 +7806,7 @@ namespace
 
 		internal static unsafe int GetVersion ()
 		{
-			var tmp = JniEnvironment.Current.Invoker.GetVersion (JniEnvironment.Current.EnvironmentPointer);
+			var tmp = JniEnvironment.Invoker.GetVersion (JniEnvironment.EnvironmentPointer);
 			return tmp;
 		}
 	}
@@ -9711,13 +9711,13 @@ namespace
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
 
 			IntPtr thrown;
-			var tmp = JavaInterop_AllocObject (JniEnvironment.Current.EnvironmentPointer, out thrown, klass.Handle);
+			var tmp = JavaInterop_AllocObject (JniEnvironment.EnvironmentPointer, out thrown, klass.Handle);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -9734,13 +9734,13 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			IntPtr thrown;
-			var tmp = JavaInterop_NewObject (JniEnvironment.Current.EnvironmentPointer, out thrown, klass.Handle, method.ID);
+			var tmp = JavaInterop_NewObject (JniEnvironment.EnvironmentPointer, out thrown, klass.Handle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -9757,13 +9757,13 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			IntPtr thrown;
-			var tmp = JavaInterop_NewObjectA (JniEnvironment.Current.EnvironmentPointer, out thrown, klass.Handle, method.ID, args);
+			var tmp = JavaInterop_NewObjectA (JniEnvironment.EnvironmentPointer, out thrown, klass.Handle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 	}
@@ -9778,7 +9778,7 @@ namespace
 			if (array_ptr.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array_ptr` must not be IntPtr.Zero.", "array_ptr");
 
-			var tmp = JavaInterop_GetArrayLength (JniEnvironment.Current.EnvironmentPointer, array_ptr.Handle);
+			var tmp = JavaInterop_GetArrayLength (JniEnvironment.EnvironmentPointer, array_ptr.Handle);
 			return tmp;
 		}
 
@@ -9791,13 +9791,13 @@ namespace
 				throw new ArgumentException ("`elementClass` must not be IntPtr.Zero.", "elementClass");
 
 			IntPtr thrown;
-			var tmp = JavaInterop_NewObjectArray (JniEnvironment.Current.EnvironmentPointer, out thrown, length, elementClass.Handle, initialElement.Handle);
+			var tmp = JavaInterop_NewObjectArray (JniEnvironment.EnvironmentPointer, out thrown, length, elementClass.Handle, initialElement.Handle);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -9810,13 +9810,13 @@ namespace
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
 
 			IntPtr thrown;
-			var tmp = JavaInterop_GetObjectArrayElement (JniEnvironment.Current.EnvironmentPointer, out thrown, array.Handle, index);
+			var tmp = JavaInterop_GetObjectArrayElement (JniEnvironment.EnvironmentPointer, out thrown, array.Handle, index);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -9829,9 +9829,9 @@ namespace
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
 
 			IntPtr thrown;
-			JavaInterop_SetObjectArrayElement (JniEnvironment.Current.EnvironmentPointer, out thrown, array.Handle, index, value.Handle);
+			JavaInterop_SetObjectArrayElement (JniEnvironment.EnvironmentPointer, out thrown, array.Handle, index, value.Handle);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -9842,8 +9842,8 @@ namespace
 
 		public static unsafe JniObjectReference NewBooleanArray (int length)
 		{
-			var tmp = JavaInterop_NewBooleanArray (JniEnvironment.Current.EnvironmentPointer, length);
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			var tmp = JavaInterop_NewBooleanArray (JniEnvironment.EnvironmentPointer, length);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -9852,8 +9852,8 @@ namespace
 
 		public static unsafe JniObjectReference NewByteArray (int length)
 		{
-			var tmp = JavaInterop_NewByteArray (JniEnvironment.Current.EnvironmentPointer, length);
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			var tmp = JavaInterop_NewByteArray (JniEnvironment.EnvironmentPointer, length);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -9862,8 +9862,8 @@ namespace
 
 		public static unsafe JniObjectReference NewCharArray (int length)
 		{
-			var tmp = JavaInterop_NewCharArray (JniEnvironment.Current.EnvironmentPointer, length);
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			var tmp = JavaInterop_NewCharArray (JniEnvironment.EnvironmentPointer, length);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -9872,8 +9872,8 @@ namespace
 
 		public static unsafe JniObjectReference NewShortArray (int length)
 		{
-			var tmp = JavaInterop_NewShortArray (JniEnvironment.Current.EnvironmentPointer, length);
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			var tmp = JavaInterop_NewShortArray (JniEnvironment.EnvironmentPointer, length);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -9882,8 +9882,8 @@ namespace
 
 		public static unsafe JniObjectReference NewIntArray (int length)
 		{
-			var tmp = JavaInterop_NewIntArray (JniEnvironment.Current.EnvironmentPointer, length);
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			var tmp = JavaInterop_NewIntArray (JniEnvironment.EnvironmentPointer, length);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -9892,8 +9892,8 @@ namespace
 
 		public static unsafe JniObjectReference NewLongArray (int length)
 		{
-			var tmp = JavaInterop_NewLongArray (JniEnvironment.Current.EnvironmentPointer, length);
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			var tmp = JavaInterop_NewLongArray (JniEnvironment.EnvironmentPointer, length);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -9902,8 +9902,8 @@ namespace
 
 		public static unsafe JniObjectReference NewFloatArray (int length)
 		{
-			var tmp = JavaInterop_NewFloatArray (JniEnvironment.Current.EnvironmentPointer, length);
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			var tmp = JavaInterop_NewFloatArray (JniEnvironment.EnvironmentPointer, length);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -9912,8 +9912,8 @@ namespace
 
 		public static unsafe JniObjectReference NewDoubleArray (int length)
 		{
-			var tmp = JavaInterop_NewDoubleArray (JniEnvironment.Current.EnvironmentPointer, length);
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			var tmp = JavaInterop_NewDoubleArray (JniEnvironment.EnvironmentPointer, length);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -9925,7 +9925,7 @@ namespace
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
 
-			var tmp = JavaInterop_GetBooleanArrayElements (JniEnvironment.Current.EnvironmentPointer, array.Handle, isCopy);
+			var tmp = JavaInterop_GetBooleanArrayElements (JniEnvironment.EnvironmentPointer, array.Handle, isCopy);
 			return tmp;
 		}
 
@@ -9937,7 +9937,7 @@ namespace
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
 
-			var tmp = JavaInterop_GetByteArrayElements (JniEnvironment.Current.EnvironmentPointer, array.Handle, isCopy);
+			var tmp = JavaInterop_GetByteArrayElements (JniEnvironment.EnvironmentPointer, array.Handle, isCopy);
 			return tmp;
 		}
 
@@ -9949,7 +9949,7 @@ namespace
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
 
-			var tmp = JavaInterop_GetCharArrayElements (JniEnvironment.Current.EnvironmentPointer, array.Handle, isCopy);
+			var tmp = JavaInterop_GetCharArrayElements (JniEnvironment.EnvironmentPointer, array.Handle, isCopy);
 			return tmp;
 		}
 
@@ -9961,7 +9961,7 @@ namespace
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
 
-			var tmp = JavaInterop_GetShortArrayElements (JniEnvironment.Current.EnvironmentPointer, array.Handle, isCopy);
+			var tmp = JavaInterop_GetShortArrayElements (JniEnvironment.EnvironmentPointer, array.Handle, isCopy);
 			return tmp;
 		}
 
@@ -9973,7 +9973,7 @@ namespace
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
 
-			var tmp = JavaInterop_GetIntArrayElements (JniEnvironment.Current.EnvironmentPointer, array.Handle, isCopy);
+			var tmp = JavaInterop_GetIntArrayElements (JniEnvironment.EnvironmentPointer, array.Handle, isCopy);
 			return tmp;
 		}
 
@@ -9985,7 +9985,7 @@ namespace
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
 
-			var tmp = JavaInterop_GetLongArrayElements (JniEnvironment.Current.EnvironmentPointer, array.Handle, isCopy);
+			var tmp = JavaInterop_GetLongArrayElements (JniEnvironment.EnvironmentPointer, array.Handle, isCopy);
 			return tmp;
 		}
 
@@ -9997,7 +9997,7 @@ namespace
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
 
-			var tmp = JavaInterop_GetFloatArrayElements (JniEnvironment.Current.EnvironmentPointer, array.Handle, isCopy);
+			var tmp = JavaInterop_GetFloatArrayElements (JniEnvironment.EnvironmentPointer, array.Handle, isCopy);
 			return tmp;
 		}
 
@@ -10009,7 +10009,7 @@ namespace
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
 
-			var tmp = JavaInterop_GetDoubleArrayElements (JniEnvironment.Current.EnvironmentPointer, array.Handle, isCopy);
+			var tmp = JavaInterop_GetDoubleArrayElements (JniEnvironment.EnvironmentPointer, array.Handle, isCopy);
 			return tmp;
 		}
 
@@ -10023,7 +10023,7 @@ namespace
 			if (elements == IntPtr.Zero)
 				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", "elements");
 
-			JavaInterop_ReleaseBooleanArrayElements (JniEnvironment.Current.EnvironmentPointer, array.Handle, elements, mode);
+			JavaInterop_ReleaseBooleanArrayElements (JniEnvironment.EnvironmentPointer, array.Handle, elements, mode);
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
@@ -10036,7 +10036,7 @@ namespace
 			if (elements == IntPtr.Zero)
 				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", "elements");
 
-			JavaInterop_ReleaseByteArrayElements (JniEnvironment.Current.EnvironmentPointer, array.Handle, elements, mode);
+			JavaInterop_ReleaseByteArrayElements (JniEnvironment.EnvironmentPointer, array.Handle, elements, mode);
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
@@ -10049,7 +10049,7 @@ namespace
 			if (elements == IntPtr.Zero)
 				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", "elements");
 
-			JavaInterop_ReleaseCharArrayElements (JniEnvironment.Current.EnvironmentPointer, array.Handle, elements, mode);
+			JavaInterop_ReleaseCharArrayElements (JniEnvironment.EnvironmentPointer, array.Handle, elements, mode);
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
@@ -10062,7 +10062,7 @@ namespace
 			if (elements == IntPtr.Zero)
 				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", "elements");
 
-			JavaInterop_ReleaseShortArrayElements (JniEnvironment.Current.EnvironmentPointer, array.Handle, elements, mode);
+			JavaInterop_ReleaseShortArrayElements (JniEnvironment.EnvironmentPointer, array.Handle, elements, mode);
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
@@ -10075,7 +10075,7 @@ namespace
 			if (elements == IntPtr.Zero)
 				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", "elements");
 
-			JavaInterop_ReleaseIntArrayElements (JniEnvironment.Current.EnvironmentPointer, array.Handle, elements, mode);
+			JavaInterop_ReleaseIntArrayElements (JniEnvironment.EnvironmentPointer, array.Handle, elements, mode);
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
@@ -10088,7 +10088,7 @@ namespace
 			if (elements == IntPtr.Zero)
 				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", "elements");
 
-			JavaInterop_ReleaseLongArrayElements (JniEnvironment.Current.EnvironmentPointer, array.Handle, elements, mode);
+			JavaInterop_ReleaseLongArrayElements (JniEnvironment.EnvironmentPointer, array.Handle, elements, mode);
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
@@ -10101,7 +10101,7 @@ namespace
 			if (elements == IntPtr.Zero)
 				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", "elements");
 
-			JavaInterop_ReleaseFloatArrayElements (JniEnvironment.Current.EnvironmentPointer, array.Handle, elements, mode);
+			JavaInterop_ReleaseFloatArrayElements (JniEnvironment.EnvironmentPointer, array.Handle, elements, mode);
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
@@ -10114,7 +10114,7 @@ namespace
 			if (elements == IntPtr.Zero)
 				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", "elements");
 
-			JavaInterop_ReleaseDoubleArrayElements (JniEnvironment.Current.EnvironmentPointer, array.Handle, elements, mode);
+			JavaInterop_ReleaseDoubleArrayElements (JniEnvironment.EnvironmentPointer, array.Handle, elements, mode);
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
@@ -10128,9 +10128,9 @@ namespace
 				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			IntPtr thrown;
-			JavaInterop_GetBooleanArrayRegion (JniEnvironment.Current.EnvironmentPointer, out thrown, array.Handle, start, length, buffer);
+			JavaInterop_GetBooleanArrayRegion (JniEnvironment.EnvironmentPointer, out thrown, array.Handle, start, length, buffer);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -10147,9 +10147,9 @@ namespace
 				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			IntPtr thrown;
-			JavaInterop_GetByteArrayRegion (JniEnvironment.Current.EnvironmentPointer, out thrown, array.Handle, start, length, buffer);
+			JavaInterop_GetByteArrayRegion (JniEnvironment.EnvironmentPointer, out thrown, array.Handle, start, length, buffer);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -10166,9 +10166,9 @@ namespace
 				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			IntPtr thrown;
-			JavaInterop_GetCharArrayRegion (JniEnvironment.Current.EnvironmentPointer, out thrown, array.Handle, start, length, buffer);
+			JavaInterop_GetCharArrayRegion (JniEnvironment.EnvironmentPointer, out thrown, array.Handle, start, length, buffer);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -10185,9 +10185,9 @@ namespace
 				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			IntPtr thrown;
-			JavaInterop_GetShortArrayRegion (JniEnvironment.Current.EnvironmentPointer, out thrown, array.Handle, start, length, buffer);
+			JavaInterop_GetShortArrayRegion (JniEnvironment.EnvironmentPointer, out thrown, array.Handle, start, length, buffer);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -10204,9 +10204,9 @@ namespace
 				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			IntPtr thrown;
-			JavaInterop_GetIntArrayRegion (JniEnvironment.Current.EnvironmentPointer, out thrown, array.Handle, start, length, buffer);
+			JavaInterop_GetIntArrayRegion (JniEnvironment.EnvironmentPointer, out thrown, array.Handle, start, length, buffer);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -10223,9 +10223,9 @@ namespace
 				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			IntPtr thrown;
-			JavaInterop_GetLongArrayRegion (JniEnvironment.Current.EnvironmentPointer, out thrown, array.Handle, start, length, buffer);
+			JavaInterop_GetLongArrayRegion (JniEnvironment.EnvironmentPointer, out thrown, array.Handle, start, length, buffer);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -10242,9 +10242,9 @@ namespace
 				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			IntPtr thrown;
-			JavaInterop_GetFloatArrayRegion (JniEnvironment.Current.EnvironmentPointer, out thrown, array.Handle, start, length, buffer);
+			JavaInterop_GetFloatArrayRegion (JniEnvironment.EnvironmentPointer, out thrown, array.Handle, start, length, buffer);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -10261,9 +10261,9 @@ namespace
 				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			IntPtr thrown;
-			JavaInterop_GetDoubleArrayRegion (JniEnvironment.Current.EnvironmentPointer, out thrown, array.Handle, start, length, buffer);
+			JavaInterop_GetDoubleArrayRegion (JniEnvironment.EnvironmentPointer, out thrown, array.Handle, start, length, buffer);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -10280,9 +10280,9 @@ namespace
 				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			IntPtr thrown;
-			JavaInterop_SetBooleanArrayRegion (JniEnvironment.Current.EnvironmentPointer, out thrown, array.Handle, start, length, buffer);
+			JavaInterop_SetBooleanArrayRegion (JniEnvironment.EnvironmentPointer, out thrown, array.Handle, start, length, buffer);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -10299,9 +10299,9 @@ namespace
 				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			IntPtr thrown;
-			JavaInterop_SetByteArrayRegion (JniEnvironment.Current.EnvironmentPointer, out thrown, array.Handle, start, length, buffer);
+			JavaInterop_SetByteArrayRegion (JniEnvironment.EnvironmentPointer, out thrown, array.Handle, start, length, buffer);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -10318,9 +10318,9 @@ namespace
 				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			IntPtr thrown;
-			JavaInterop_SetCharArrayRegion (JniEnvironment.Current.EnvironmentPointer, out thrown, array.Handle, start, length, buffer);
+			JavaInterop_SetCharArrayRegion (JniEnvironment.EnvironmentPointer, out thrown, array.Handle, start, length, buffer);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -10337,9 +10337,9 @@ namespace
 				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			IntPtr thrown;
-			JavaInterop_SetShortArrayRegion (JniEnvironment.Current.EnvironmentPointer, out thrown, array.Handle, start, length, buffer);
+			JavaInterop_SetShortArrayRegion (JniEnvironment.EnvironmentPointer, out thrown, array.Handle, start, length, buffer);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -10356,9 +10356,9 @@ namespace
 				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			IntPtr thrown;
-			JavaInterop_SetIntArrayRegion (JniEnvironment.Current.EnvironmentPointer, out thrown, array.Handle, start, length, buffer);
+			JavaInterop_SetIntArrayRegion (JniEnvironment.EnvironmentPointer, out thrown, array.Handle, start, length, buffer);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -10375,9 +10375,9 @@ namespace
 				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			IntPtr thrown;
-			JavaInterop_SetLongArrayRegion (JniEnvironment.Current.EnvironmentPointer, out thrown, array.Handle, start, length, buffer);
+			JavaInterop_SetLongArrayRegion (JniEnvironment.EnvironmentPointer, out thrown, array.Handle, start, length, buffer);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -10394,9 +10394,9 @@ namespace
 				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			IntPtr thrown;
-			JavaInterop_SetFloatArrayRegion (JniEnvironment.Current.EnvironmentPointer, out thrown, array.Handle, start, length, buffer);
+			JavaInterop_SetFloatArrayRegion (JniEnvironment.EnvironmentPointer, out thrown, array.Handle, start, length, buffer);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -10413,9 +10413,9 @@ namespace
 				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			IntPtr thrown;
-			JavaInterop_SetDoubleArrayRegion (JniEnvironment.Current.EnvironmentPointer, out thrown, array.Handle, start, length, buffer);
+			JavaInterop_SetDoubleArrayRegion (JniEnvironment.EnvironmentPointer, out thrown, array.Handle, start, length, buffer);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -10432,7 +10432,7 @@ namespace
 			if (toThrow.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`toThrow` must not be IntPtr.Zero.", "toThrow");
 
-			var tmp = JavaInterop_Throw (JniEnvironment.Current.EnvironmentPointer, toThrow.Handle);
+			var tmp = JavaInterop_Throw (JniEnvironment.EnvironmentPointer, toThrow.Handle);
 			return tmp;
 		}
 
@@ -10446,7 +10446,7 @@ namespace
 			if (message == null)
 				throw new ArgumentNullException ("message");
 
-			var tmp = JavaInterop_ThrowNew (JniEnvironment.Current.EnvironmentPointer, klass.Handle, message);
+			var tmp = JavaInterop_ThrowNew (JniEnvironment.EnvironmentPointer, klass.Handle, message);
 			return tmp;
 		}
 
@@ -10455,7 +10455,7 @@ namespace
 
 		internal static unsafe JniObjectReference ExceptionOccurred ()
 		{
-			var tmp = JavaInterop_ExceptionOccurred (JniEnvironment.Current.EnvironmentPointer);
+			var tmp = JavaInterop_ExceptionOccurred (JniEnvironment.EnvironmentPointer);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -10464,7 +10464,7 @@ namespace
 
 		internal static unsafe void ExceptionDescribe ()
 		{
-			JavaInterop_ExceptionDescribe (JniEnvironment.Current.EnvironmentPointer);
+			JavaInterop_ExceptionDescribe (JniEnvironment.EnvironmentPointer);
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
@@ -10472,7 +10472,7 @@ namespace
 
 		internal static unsafe void ExceptionClear ()
 		{
-			JavaInterop_ExceptionClear (JniEnvironment.Current.EnvironmentPointer);
+			JavaInterop_ExceptionClear (JniEnvironment.EnvironmentPointer);
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
@@ -10483,7 +10483,7 @@ namespace
 			if (message == null)
 				throw new ArgumentNullException ("message");
 
-			JavaInterop_FatalError (JniEnvironment.Current.EnvironmentPointer, message);
+			JavaInterop_FatalError (JniEnvironment.EnvironmentPointer, message);
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
@@ -10491,7 +10491,7 @@ namespace
 
 		internal static unsafe bool ExceptionCheck ()
 		{
-			var tmp = JavaInterop_ExceptionCheck (JniEnvironment.Current.EnvironmentPointer);
+			var tmp = JavaInterop_ExceptionCheck (JniEnvironment.EnvironmentPointer);
 			return tmp;
 		}
 	}
@@ -10511,9 +10511,9 @@ namespace
 				throw new ArgumentNullException ("signature");
 
 			IntPtr thrown;
-			var tmp = JavaInterop_GetFieldID (JniEnvironment.Current.EnvironmentPointer, out thrown, klass.Handle, name, signature);
+			var tmp = JavaInterop_GetFieldID (JniEnvironment.EnvironmentPointer, out thrown, klass.Handle, name, signature);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -10534,8 +10534,8 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JavaInterop_GetObjectField (JniEnvironment.Current.EnvironmentPointer, @object.Handle, field.ID);
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			var tmp = JavaInterop_GetObjectField (JniEnvironment.EnvironmentPointer, @object.Handle, field.ID);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -10551,7 +10551,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JavaInterop_GetBooleanField (JniEnvironment.Current.EnvironmentPointer, @object.Handle, field.ID);
+			var tmp = JavaInterop_GetBooleanField (JniEnvironment.EnvironmentPointer, @object.Handle, field.ID);
 			return tmp;
 		}
 
@@ -10567,7 +10567,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JavaInterop_GetByteField (JniEnvironment.Current.EnvironmentPointer, @object.Handle, field.ID);
+			var tmp = JavaInterop_GetByteField (JniEnvironment.EnvironmentPointer, @object.Handle, field.ID);
 			return tmp;
 		}
 
@@ -10583,7 +10583,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JavaInterop_GetCharField (JniEnvironment.Current.EnvironmentPointer, @object.Handle, field.ID);
+			var tmp = JavaInterop_GetCharField (JniEnvironment.EnvironmentPointer, @object.Handle, field.ID);
 			return tmp;
 		}
 
@@ -10599,7 +10599,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JavaInterop_GetShortField (JniEnvironment.Current.EnvironmentPointer, @object.Handle, field.ID);
+			var tmp = JavaInterop_GetShortField (JniEnvironment.EnvironmentPointer, @object.Handle, field.ID);
 			return tmp;
 		}
 
@@ -10615,7 +10615,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JavaInterop_GetIntField (JniEnvironment.Current.EnvironmentPointer, @object.Handle, field.ID);
+			var tmp = JavaInterop_GetIntField (JniEnvironment.EnvironmentPointer, @object.Handle, field.ID);
 			return tmp;
 		}
 
@@ -10631,7 +10631,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JavaInterop_GetLongField (JniEnvironment.Current.EnvironmentPointer, @object.Handle, field.ID);
+			var tmp = JavaInterop_GetLongField (JniEnvironment.EnvironmentPointer, @object.Handle, field.ID);
 			return tmp;
 		}
 
@@ -10647,7 +10647,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JavaInterop_GetFloatField (JniEnvironment.Current.EnvironmentPointer, @object.Handle, field.ID);
+			var tmp = JavaInterop_GetFloatField (JniEnvironment.EnvironmentPointer, @object.Handle, field.ID);
 			return tmp;
 		}
 
@@ -10663,7 +10663,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JavaInterop_GetDoubleField (JniEnvironment.Current.EnvironmentPointer, @object.Handle, field.ID);
+			var tmp = JavaInterop_GetDoubleField (JniEnvironment.EnvironmentPointer, @object.Handle, field.ID);
 			return tmp;
 		}
 
@@ -10679,7 +10679,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JavaInterop_SetObjectField (JniEnvironment.Current.EnvironmentPointer, @object.Handle, field.ID, value.Handle);
+			JavaInterop_SetObjectField (JniEnvironment.EnvironmentPointer, @object.Handle, field.ID, value.Handle);
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
@@ -10694,7 +10694,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JavaInterop_SetBooleanField (JniEnvironment.Current.EnvironmentPointer, @object.Handle, field.ID, value);
+			JavaInterop_SetBooleanField (JniEnvironment.EnvironmentPointer, @object.Handle, field.ID, value);
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
@@ -10709,7 +10709,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JavaInterop_SetByteField (JniEnvironment.Current.EnvironmentPointer, @object.Handle, field.ID, value);
+			JavaInterop_SetByteField (JniEnvironment.EnvironmentPointer, @object.Handle, field.ID, value);
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
@@ -10724,7 +10724,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JavaInterop_SetCharField (JniEnvironment.Current.EnvironmentPointer, @object.Handle, field.ID, value);
+			JavaInterop_SetCharField (JniEnvironment.EnvironmentPointer, @object.Handle, field.ID, value);
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
@@ -10739,7 +10739,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JavaInterop_SetShortField (JniEnvironment.Current.EnvironmentPointer, @object.Handle, field.ID, value);
+			JavaInterop_SetShortField (JniEnvironment.EnvironmentPointer, @object.Handle, field.ID, value);
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
@@ -10754,7 +10754,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JavaInterop_SetIntField (JniEnvironment.Current.EnvironmentPointer, @object.Handle, field.ID, value);
+			JavaInterop_SetIntField (JniEnvironment.EnvironmentPointer, @object.Handle, field.ID, value);
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
@@ -10769,7 +10769,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JavaInterop_SetLongField (JniEnvironment.Current.EnvironmentPointer, @object.Handle, field.ID, value);
+			JavaInterop_SetLongField (JniEnvironment.EnvironmentPointer, @object.Handle, field.ID, value);
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
@@ -10784,7 +10784,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JavaInterop_SetFloatField (JniEnvironment.Current.EnvironmentPointer, @object.Handle, field.ID, value);
+			JavaInterop_SetFloatField (JniEnvironment.EnvironmentPointer, @object.Handle, field.ID, value);
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
@@ -10799,7 +10799,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JavaInterop_SetDoubleField (JniEnvironment.Current.EnvironmentPointer, @object.Handle, field.ID, value);
+			JavaInterop_SetDoubleField (JniEnvironment.EnvironmentPointer, @object.Handle, field.ID, value);
 		}
 	}
 
@@ -10818,9 +10818,9 @@ namespace
 				throw new ArgumentNullException ("signature");
 
 			IntPtr thrown;
-			var tmp = JavaInterop_GetMethodID (JniEnvironment.Current.EnvironmentPointer, out thrown, klass.Handle, name, signature);
+			var tmp = JavaInterop_GetMethodID (JniEnvironment.EnvironmentPointer, out thrown, klass.Handle, name, signature);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -10842,13 +10842,13 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			IntPtr thrown;
-			var tmp = JavaInterop_CallObjectMethod (JniEnvironment.Current.EnvironmentPointer, out thrown, @object.Handle, method.ID);
+			var tmp = JavaInterop_CallObjectMethod (JniEnvironment.EnvironmentPointer, out thrown, @object.Handle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -10865,13 +10865,13 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			IntPtr thrown;
-			var tmp = JavaInterop_CallObjectMethodA (JniEnvironment.Current.EnvironmentPointer, out thrown, @object.Handle, method.ID, args);
+			var tmp = JavaInterop_CallObjectMethodA (JniEnvironment.EnvironmentPointer, out thrown, @object.Handle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -10888,9 +10888,9 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			IntPtr thrown;
-			var tmp = JavaInterop_CallBooleanMethod (JniEnvironment.Current.EnvironmentPointer, out thrown, @object.Handle, method.ID);
+			var tmp = JavaInterop_CallBooleanMethod (JniEnvironment.EnvironmentPointer, out thrown, @object.Handle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -10910,9 +10910,9 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			IntPtr thrown;
-			var tmp = JavaInterop_CallBooleanMethodA (JniEnvironment.Current.EnvironmentPointer, out thrown, @object.Handle, method.ID, args);
+			var tmp = JavaInterop_CallBooleanMethodA (JniEnvironment.EnvironmentPointer, out thrown, @object.Handle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -10932,9 +10932,9 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			IntPtr thrown;
-			var tmp = JavaInterop_CallByteMethod (JniEnvironment.Current.EnvironmentPointer, out thrown, @object.Handle, method.ID);
+			var tmp = JavaInterop_CallByteMethod (JniEnvironment.EnvironmentPointer, out thrown, @object.Handle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -10954,9 +10954,9 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			IntPtr thrown;
-			var tmp = JavaInterop_CallByteMethodA (JniEnvironment.Current.EnvironmentPointer, out thrown, @object.Handle, method.ID, args);
+			var tmp = JavaInterop_CallByteMethodA (JniEnvironment.EnvironmentPointer, out thrown, @object.Handle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -10976,9 +10976,9 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			IntPtr thrown;
-			var tmp = JavaInterop_CallCharMethod (JniEnvironment.Current.EnvironmentPointer, out thrown, @object.Handle, method.ID);
+			var tmp = JavaInterop_CallCharMethod (JniEnvironment.EnvironmentPointer, out thrown, @object.Handle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -10998,9 +10998,9 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			IntPtr thrown;
-			var tmp = JavaInterop_CallCharMethodA (JniEnvironment.Current.EnvironmentPointer, out thrown, @object.Handle, method.ID, args);
+			var tmp = JavaInterop_CallCharMethodA (JniEnvironment.EnvironmentPointer, out thrown, @object.Handle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -11020,9 +11020,9 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			IntPtr thrown;
-			var tmp = JavaInterop_CallShortMethod (JniEnvironment.Current.EnvironmentPointer, out thrown, @object.Handle, method.ID);
+			var tmp = JavaInterop_CallShortMethod (JniEnvironment.EnvironmentPointer, out thrown, @object.Handle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -11042,9 +11042,9 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			IntPtr thrown;
-			var tmp = JavaInterop_CallShortMethodA (JniEnvironment.Current.EnvironmentPointer, out thrown, @object.Handle, method.ID, args);
+			var tmp = JavaInterop_CallShortMethodA (JniEnvironment.EnvironmentPointer, out thrown, @object.Handle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -11064,9 +11064,9 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			IntPtr thrown;
-			var tmp = JavaInterop_CallIntMethod (JniEnvironment.Current.EnvironmentPointer, out thrown, @object.Handle, method.ID);
+			var tmp = JavaInterop_CallIntMethod (JniEnvironment.EnvironmentPointer, out thrown, @object.Handle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -11086,9 +11086,9 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			IntPtr thrown;
-			var tmp = JavaInterop_CallIntMethodA (JniEnvironment.Current.EnvironmentPointer, out thrown, @object.Handle, method.ID, args);
+			var tmp = JavaInterop_CallIntMethodA (JniEnvironment.EnvironmentPointer, out thrown, @object.Handle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -11108,9 +11108,9 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			IntPtr thrown;
-			var tmp = JavaInterop_CallLongMethod (JniEnvironment.Current.EnvironmentPointer, out thrown, @object.Handle, method.ID);
+			var tmp = JavaInterop_CallLongMethod (JniEnvironment.EnvironmentPointer, out thrown, @object.Handle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -11130,9 +11130,9 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			IntPtr thrown;
-			var tmp = JavaInterop_CallLongMethodA (JniEnvironment.Current.EnvironmentPointer, out thrown, @object.Handle, method.ID, args);
+			var tmp = JavaInterop_CallLongMethodA (JniEnvironment.EnvironmentPointer, out thrown, @object.Handle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -11152,9 +11152,9 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			IntPtr thrown;
-			var tmp = JavaInterop_CallFloatMethod (JniEnvironment.Current.EnvironmentPointer, out thrown, @object.Handle, method.ID);
+			var tmp = JavaInterop_CallFloatMethod (JniEnvironment.EnvironmentPointer, out thrown, @object.Handle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -11174,9 +11174,9 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			IntPtr thrown;
-			var tmp = JavaInterop_CallFloatMethodA (JniEnvironment.Current.EnvironmentPointer, out thrown, @object.Handle, method.ID, args);
+			var tmp = JavaInterop_CallFloatMethodA (JniEnvironment.EnvironmentPointer, out thrown, @object.Handle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -11196,9 +11196,9 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			IntPtr thrown;
-			var tmp = JavaInterop_CallDoubleMethod (JniEnvironment.Current.EnvironmentPointer, out thrown, @object.Handle, method.ID);
+			var tmp = JavaInterop_CallDoubleMethod (JniEnvironment.EnvironmentPointer, out thrown, @object.Handle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -11218,9 +11218,9 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			IntPtr thrown;
-			var tmp = JavaInterop_CallDoubleMethodA (JniEnvironment.Current.EnvironmentPointer, out thrown, @object.Handle, method.ID, args);
+			var tmp = JavaInterop_CallDoubleMethodA (JniEnvironment.EnvironmentPointer, out thrown, @object.Handle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -11240,9 +11240,9 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			IntPtr thrown;
-			JavaInterop_CallVoidMethod (JniEnvironment.Current.EnvironmentPointer, out thrown, @object.Handle, method.ID);
+			JavaInterop_CallVoidMethod (JniEnvironment.EnvironmentPointer, out thrown, @object.Handle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -11261,9 +11261,9 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			IntPtr thrown;
-			JavaInterop_CallVoidMethodA (JniEnvironment.Current.EnvironmentPointer, out thrown, @object.Handle, method.ID, args);
+			JavaInterop_CallVoidMethodA (JniEnvironment.EnvironmentPointer, out thrown, @object.Handle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -11284,13 +11284,13 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			IntPtr thrown;
-			var tmp = JavaInterop_CallNonvirtualObjectMethod (JniEnvironment.Current.EnvironmentPointer, out thrown, @object.Handle, klass.Handle, method.ID);
+			var tmp = JavaInterop_CallNonvirtualObjectMethod (JniEnvironment.EnvironmentPointer, out thrown, @object.Handle, klass.Handle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -11309,13 +11309,13 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			IntPtr thrown;
-			var tmp = JavaInterop_CallNonvirtualObjectMethodA (JniEnvironment.Current.EnvironmentPointer, out thrown, @object.Handle, klass.Handle, method.ID, args);
+			var tmp = JavaInterop_CallNonvirtualObjectMethodA (JniEnvironment.EnvironmentPointer, out thrown, @object.Handle, klass.Handle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -11334,9 +11334,9 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			IntPtr thrown;
-			var tmp = JavaInterop_CallNonvirtualBooleanMethod (JniEnvironment.Current.EnvironmentPointer, out thrown, @object.Handle, klass.Handle, method.ID);
+			var tmp = JavaInterop_CallNonvirtualBooleanMethod (JniEnvironment.EnvironmentPointer, out thrown, @object.Handle, klass.Handle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -11358,9 +11358,9 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			IntPtr thrown;
-			var tmp = JavaInterop_CallNonvirtualBooleanMethodA (JniEnvironment.Current.EnvironmentPointer, out thrown, @object.Handle, klass.Handle, method.ID, args);
+			var tmp = JavaInterop_CallNonvirtualBooleanMethodA (JniEnvironment.EnvironmentPointer, out thrown, @object.Handle, klass.Handle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -11382,9 +11382,9 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			IntPtr thrown;
-			var tmp = JavaInterop_CallNonvirtualByteMethod (JniEnvironment.Current.EnvironmentPointer, out thrown, @object.Handle, klass.Handle, method.ID);
+			var tmp = JavaInterop_CallNonvirtualByteMethod (JniEnvironment.EnvironmentPointer, out thrown, @object.Handle, klass.Handle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -11406,9 +11406,9 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			IntPtr thrown;
-			var tmp = JavaInterop_CallNonvirtualByteMethodA (JniEnvironment.Current.EnvironmentPointer, out thrown, @object.Handle, klass.Handle, method.ID, args);
+			var tmp = JavaInterop_CallNonvirtualByteMethodA (JniEnvironment.EnvironmentPointer, out thrown, @object.Handle, klass.Handle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -11430,9 +11430,9 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			IntPtr thrown;
-			var tmp = JavaInterop_CallNonvirtualCharMethod (JniEnvironment.Current.EnvironmentPointer, out thrown, @object.Handle, klass.Handle, method.ID);
+			var tmp = JavaInterop_CallNonvirtualCharMethod (JniEnvironment.EnvironmentPointer, out thrown, @object.Handle, klass.Handle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -11454,9 +11454,9 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			IntPtr thrown;
-			var tmp = JavaInterop_CallNonvirtualCharMethodA (JniEnvironment.Current.EnvironmentPointer, out thrown, @object.Handle, klass.Handle, method.ID, args);
+			var tmp = JavaInterop_CallNonvirtualCharMethodA (JniEnvironment.EnvironmentPointer, out thrown, @object.Handle, klass.Handle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -11478,9 +11478,9 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			IntPtr thrown;
-			var tmp = JavaInterop_CallNonvirtualShortMethod (JniEnvironment.Current.EnvironmentPointer, out thrown, @object.Handle, klass.Handle, method.ID);
+			var tmp = JavaInterop_CallNonvirtualShortMethod (JniEnvironment.EnvironmentPointer, out thrown, @object.Handle, klass.Handle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -11502,9 +11502,9 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			IntPtr thrown;
-			var tmp = JavaInterop_CallNonvirtualShortMethodA (JniEnvironment.Current.EnvironmentPointer, out thrown, @object.Handle, klass.Handle, method.ID, args);
+			var tmp = JavaInterop_CallNonvirtualShortMethodA (JniEnvironment.EnvironmentPointer, out thrown, @object.Handle, klass.Handle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -11526,9 +11526,9 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			IntPtr thrown;
-			var tmp = JavaInterop_CallNonvirtualIntMethod (JniEnvironment.Current.EnvironmentPointer, out thrown, @object.Handle, klass.Handle, method.ID);
+			var tmp = JavaInterop_CallNonvirtualIntMethod (JniEnvironment.EnvironmentPointer, out thrown, @object.Handle, klass.Handle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -11550,9 +11550,9 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			IntPtr thrown;
-			var tmp = JavaInterop_CallNonvirtualIntMethodA (JniEnvironment.Current.EnvironmentPointer, out thrown, @object.Handle, klass.Handle, method.ID, args);
+			var tmp = JavaInterop_CallNonvirtualIntMethodA (JniEnvironment.EnvironmentPointer, out thrown, @object.Handle, klass.Handle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -11574,9 +11574,9 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			IntPtr thrown;
-			var tmp = JavaInterop_CallNonvirtualLongMethod (JniEnvironment.Current.EnvironmentPointer, out thrown, @object.Handle, klass.Handle, method.ID);
+			var tmp = JavaInterop_CallNonvirtualLongMethod (JniEnvironment.EnvironmentPointer, out thrown, @object.Handle, klass.Handle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -11598,9 +11598,9 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			IntPtr thrown;
-			var tmp = JavaInterop_CallNonvirtualLongMethodA (JniEnvironment.Current.EnvironmentPointer, out thrown, @object.Handle, klass.Handle, method.ID, args);
+			var tmp = JavaInterop_CallNonvirtualLongMethodA (JniEnvironment.EnvironmentPointer, out thrown, @object.Handle, klass.Handle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -11622,9 +11622,9 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			IntPtr thrown;
-			var tmp = JavaInterop_CallNonvirtualFloatMethod (JniEnvironment.Current.EnvironmentPointer, out thrown, @object.Handle, klass.Handle, method.ID);
+			var tmp = JavaInterop_CallNonvirtualFloatMethod (JniEnvironment.EnvironmentPointer, out thrown, @object.Handle, klass.Handle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -11646,9 +11646,9 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			IntPtr thrown;
-			var tmp = JavaInterop_CallNonvirtualFloatMethodA (JniEnvironment.Current.EnvironmentPointer, out thrown, @object.Handle, klass.Handle, method.ID, args);
+			var tmp = JavaInterop_CallNonvirtualFloatMethodA (JniEnvironment.EnvironmentPointer, out thrown, @object.Handle, klass.Handle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -11670,9 +11670,9 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			IntPtr thrown;
-			var tmp = JavaInterop_CallNonvirtualDoubleMethod (JniEnvironment.Current.EnvironmentPointer, out thrown, @object.Handle, klass.Handle, method.ID);
+			var tmp = JavaInterop_CallNonvirtualDoubleMethod (JniEnvironment.EnvironmentPointer, out thrown, @object.Handle, klass.Handle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -11694,9 +11694,9 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			IntPtr thrown;
-			var tmp = JavaInterop_CallNonvirtualDoubleMethodA (JniEnvironment.Current.EnvironmentPointer, out thrown, @object.Handle, klass.Handle, method.ID, args);
+			var tmp = JavaInterop_CallNonvirtualDoubleMethodA (JniEnvironment.EnvironmentPointer, out thrown, @object.Handle, klass.Handle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -11718,9 +11718,9 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			IntPtr thrown;
-			JavaInterop_CallNonvirtualVoidMethod (JniEnvironment.Current.EnvironmentPointer, out thrown, @object.Handle, klass.Handle, method.ID);
+			JavaInterop_CallNonvirtualVoidMethod (JniEnvironment.EnvironmentPointer, out thrown, @object.Handle, klass.Handle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -11741,9 +11741,9 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			IntPtr thrown;
-			JavaInterop_CallNonvirtualVoidMethodA (JniEnvironment.Current.EnvironmentPointer, out thrown, @object.Handle, klass.Handle, method.ID, args);
+			JavaInterop_CallNonvirtualVoidMethodA (JniEnvironment.EnvironmentPointer, out thrown, @object.Handle, klass.Handle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -11761,13 +11761,13 @@ namespace
 				throw new ArgumentException ("'address' must not be IntPtr.Zero.", "address");
 
 			IntPtr thrown;
-			var tmp = JavaInterop_NewDirectByteBuffer (JniEnvironment.Current.EnvironmentPointer, out thrown, address, capacity);
+			var tmp = JavaInterop_NewDirectByteBuffer (JniEnvironment.EnvironmentPointer, out thrown, address, capacity);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -11779,7 +11779,7 @@ namespace
 			if (buffer.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`buffer` must not be IntPtr.Zero.", "buffer");
 
-			var tmp = JavaInterop_GetDirectBufferAddress (JniEnvironment.Current.EnvironmentPointer, buffer.Handle);
+			var tmp = JavaInterop_GetDirectBufferAddress (JniEnvironment.EnvironmentPointer, buffer.Handle);
 			return tmp;
 		}
 
@@ -11791,7 +11791,7 @@ namespace
 			if (buffer.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`buffer` must not be IntPtr.Zero.", "buffer");
 
-			var tmp = JavaInterop_GetDirectBufferCapacity (JniEnvironment.Current.EnvironmentPointer, buffer.Handle);
+			var tmp = JavaInterop_GetDirectBufferCapacity (JniEnvironment.EnvironmentPointer, buffer.Handle);
 			return tmp;
 		}
 	}
@@ -11806,7 +11806,7 @@ namespace
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
 
-			var tmp = JavaInterop_MonitorEnter (JniEnvironment.Current.EnvironmentPointer, @object.Handle);
+			var tmp = JavaInterop_MonitorEnter (JniEnvironment.EnvironmentPointer, @object.Handle);
 			return tmp;
 		}
 
@@ -11818,7 +11818,7 @@ namespace
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
 
-			var tmp = JavaInterop_MonitorExit (JniEnvironment.Current.EnvironmentPointer, @object.Handle);
+			var tmp = JavaInterop_MonitorExit (JniEnvironment.EnvironmentPointer, @object.Handle);
 			return tmp;
 		}
 	}
@@ -11830,7 +11830,7 @@ namespace
 
 		public static unsafe int PushLocalFrame (int capacity)
 		{
-			var tmp = JavaInterop_PushLocalFrame (JniEnvironment.Current.EnvironmentPointer, capacity);
+			var tmp = JavaInterop_PushLocalFrame (JniEnvironment.EnvironmentPointer, capacity);
 			return tmp;
 		}
 
@@ -11839,8 +11839,8 @@ namespace
 
 		public static unsafe JniObjectReference PopLocalFrame (JniObjectReference result)
 		{
-			var tmp = JavaInterop_PopLocalFrame (JniEnvironment.Current.EnvironmentPointer, result.Handle);
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			var tmp = JavaInterop_PopLocalFrame (JniEnvironment.EnvironmentPointer, result.Handle);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -11849,7 +11849,7 @@ namespace
 
 		internal static unsafe JniObjectReference NewGlobalRef (JniObjectReference @object)
 		{
-			var tmp = JavaInterop_NewGlobalRef (JniEnvironment.Current.EnvironmentPointer, @object.Handle);
+			var tmp = JavaInterop_NewGlobalRef (JniEnvironment.EnvironmentPointer, @object.Handle);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Global);
 		}
 
@@ -11858,7 +11858,7 @@ namespace
 
 		internal static unsafe void DeleteGlobalRef (IntPtr @object)
 		{
-			JavaInterop_DeleteGlobalRef (JniEnvironment.Current.EnvironmentPointer, @object);
+			JavaInterop_DeleteGlobalRef (JniEnvironment.EnvironmentPointer, @object);
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
@@ -11866,7 +11866,7 @@ namespace
 
 		internal static unsafe void DeleteLocalRef (IntPtr @object)
 		{
-			JavaInterop_DeleteLocalRef (JniEnvironment.Current.EnvironmentPointer, @object);
+			JavaInterop_DeleteLocalRef (JniEnvironment.EnvironmentPointer, @object);
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
@@ -11874,7 +11874,7 @@ namespace
 
 		internal static unsafe JniObjectReference NewLocalRef (JniObjectReference @object)
 		{
-			var tmp = JavaInterop_NewLocalRef (JniEnvironment.Current.EnvironmentPointer, @object.Handle);
+			var tmp = JavaInterop_NewLocalRef (JniEnvironment.EnvironmentPointer, @object.Handle);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -11883,7 +11883,7 @@ namespace
 
 		public static unsafe int EnsureLocalCapacity (int capacity)
 		{
-			var tmp = JavaInterop_EnsureLocalCapacity (JniEnvironment.Current.EnvironmentPointer, capacity);
+			var tmp = JavaInterop_EnsureLocalCapacity (JniEnvironment.EnvironmentPointer, capacity);
 			return tmp;
 		}
 
@@ -11892,7 +11892,7 @@ namespace
 
 		public static unsafe int GetJavaVM (out IntPtr vm)
 		{
-			var tmp = JavaInterop_GetJavaVM (JniEnvironment.Current.EnvironmentPointer, out vm);
+			var tmp = JavaInterop_GetJavaVM (JniEnvironment.EnvironmentPointer, out vm);
 			return tmp;
 		}
 
@@ -11901,7 +11901,7 @@ namespace
 
 		internal static unsafe JniObjectReference NewWeakGlobalRef (JniObjectReference @object)
 		{
-			var tmp = JavaInterop_NewWeakGlobalRef (JniEnvironment.Current.EnvironmentPointer, @object.Handle);
+			var tmp = JavaInterop_NewWeakGlobalRef (JniEnvironment.EnvironmentPointer, @object.Handle);
 			return new JniObjectReference (tmp, JniObjectReferenceType.WeakGlobal);
 		}
 
@@ -11910,7 +11910,7 @@ namespace
 
 		internal static unsafe void DeleteWeakGlobalRef (IntPtr @object)
 		{
-			JavaInterop_DeleteWeakGlobalRef (JniEnvironment.Current.EnvironmentPointer, @object);
+			JavaInterop_DeleteWeakGlobalRef (JniEnvironment.EnvironmentPointer, @object);
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
@@ -11921,7 +11921,7 @@ namespace
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
 
-			var tmp = JavaInterop_GetObjectRefType (JniEnvironment.Current.EnvironmentPointer, @object.Handle);
+			var tmp = JavaInterop_GetObjectRefType (JniEnvironment.EnvironmentPointer, @object.Handle);
 			return tmp;
 		}
 	}
@@ -11940,8 +11940,8 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JavaInterop_ToReflectedMethod (JniEnvironment.Current.EnvironmentPointer, klass.Handle, method.ID, isStatic);
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			var tmp = JavaInterop_ToReflectedMethod (JniEnvironment.EnvironmentPointer, klass.Handle, method.ID, isStatic);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -11957,8 +11957,8 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JavaInterop_ToReflectedField (JniEnvironment.Current.EnvironmentPointer, klass.Handle, field.ID, isStatic);
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			var tmp = JavaInterop_ToReflectedField (JniEnvironment.EnvironmentPointer, klass.Handle, field.ID, isStatic);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 	}
@@ -11978,9 +11978,9 @@ namespace
 				throw new ArgumentNullException ("signature");
 
 			IntPtr thrown;
-			var tmp = JavaInterop_GetStaticFieldID (JniEnvironment.Current.EnvironmentPointer, out thrown, klass.Handle, name, signature);
+			var tmp = JavaInterop_GetStaticFieldID (JniEnvironment.EnvironmentPointer, out thrown, klass.Handle, name, signature);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -12001,8 +12001,8 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JavaInterop_GetStaticObjectField (JniEnvironment.Current.EnvironmentPointer, klass.Handle, field.ID);
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			var tmp = JavaInterop_GetStaticObjectField (JniEnvironment.EnvironmentPointer, klass.Handle, field.ID);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -12018,7 +12018,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JavaInterop_GetStaticBooleanField (JniEnvironment.Current.EnvironmentPointer, klass.Handle, field.ID);
+			var tmp = JavaInterop_GetStaticBooleanField (JniEnvironment.EnvironmentPointer, klass.Handle, field.ID);
 			return tmp;
 		}
 
@@ -12034,7 +12034,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JavaInterop_GetStaticByteField (JniEnvironment.Current.EnvironmentPointer, klass.Handle, field.ID);
+			var tmp = JavaInterop_GetStaticByteField (JniEnvironment.EnvironmentPointer, klass.Handle, field.ID);
 			return tmp;
 		}
 
@@ -12050,7 +12050,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JavaInterop_GetStaticCharField (JniEnvironment.Current.EnvironmentPointer, klass.Handle, field.ID);
+			var tmp = JavaInterop_GetStaticCharField (JniEnvironment.EnvironmentPointer, klass.Handle, field.ID);
 			return tmp;
 		}
 
@@ -12066,7 +12066,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JavaInterop_GetStaticShortField (JniEnvironment.Current.EnvironmentPointer, klass.Handle, field.ID);
+			var tmp = JavaInterop_GetStaticShortField (JniEnvironment.EnvironmentPointer, klass.Handle, field.ID);
 			return tmp;
 		}
 
@@ -12082,7 +12082,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JavaInterop_GetStaticIntField (JniEnvironment.Current.EnvironmentPointer, klass.Handle, field.ID);
+			var tmp = JavaInterop_GetStaticIntField (JniEnvironment.EnvironmentPointer, klass.Handle, field.ID);
 			return tmp;
 		}
 
@@ -12098,7 +12098,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JavaInterop_GetStaticLongField (JniEnvironment.Current.EnvironmentPointer, klass.Handle, field.ID);
+			var tmp = JavaInterop_GetStaticLongField (JniEnvironment.EnvironmentPointer, klass.Handle, field.ID);
 			return tmp;
 		}
 
@@ -12114,7 +12114,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JavaInterop_GetStaticFloatField (JniEnvironment.Current.EnvironmentPointer, klass.Handle, field.ID);
+			var tmp = JavaInterop_GetStaticFloatField (JniEnvironment.EnvironmentPointer, klass.Handle, field.ID);
 			return tmp;
 		}
 
@@ -12130,7 +12130,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JavaInterop_GetStaticDoubleField (JniEnvironment.Current.EnvironmentPointer, klass.Handle, field.ID);
+			var tmp = JavaInterop_GetStaticDoubleField (JniEnvironment.EnvironmentPointer, klass.Handle, field.ID);
 			return tmp;
 		}
 
@@ -12146,7 +12146,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JavaInterop_SetStaticObjectField (JniEnvironment.Current.EnvironmentPointer, klass.Handle, field.ID, value.Handle);
+			JavaInterop_SetStaticObjectField (JniEnvironment.EnvironmentPointer, klass.Handle, field.ID, value.Handle);
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
@@ -12161,7 +12161,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JavaInterop_SetStaticBooleanField (JniEnvironment.Current.EnvironmentPointer, klass.Handle, field.ID, value);
+			JavaInterop_SetStaticBooleanField (JniEnvironment.EnvironmentPointer, klass.Handle, field.ID, value);
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
@@ -12176,7 +12176,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JavaInterop_SetStaticByteField (JniEnvironment.Current.EnvironmentPointer, klass.Handle, field.ID, value);
+			JavaInterop_SetStaticByteField (JniEnvironment.EnvironmentPointer, klass.Handle, field.ID, value);
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
@@ -12191,7 +12191,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JavaInterop_SetStaticCharField (JniEnvironment.Current.EnvironmentPointer, klass.Handle, field.ID, value);
+			JavaInterop_SetStaticCharField (JniEnvironment.EnvironmentPointer, klass.Handle, field.ID, value);
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
@@ -12206,7 +12206,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JavaInterop_SetStaticShortField (JniEnvironment.Current.EnvironmentPointer, klass.Handle, field.ID, value);
+			JavaInterop_SetStaticShortField (JniEnvironment.EnvironmentPointer, klass.Handle, field.ID, value);
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
@@ -12221,7 +12221,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JavaInterop_SetStaticIntField (JniEnvironment.Current.EnvironmentPointer, klass.Handle, field.ID, value);
+			JavaInterop_SetStaticIntField (JniEnvironment.EnvironmentPointer, klass.Handle, field.ID, value);
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
@@ -12236,7 +12236,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JavaInterop_SetStaticLongField (JniEnvironment.Current.EnvironmentPointer, klass.Handle, field.ID, value);
+			JavaInterop_SetStaticLongField (JniEnvironment.EnvironmentPointer, klass.Handle, field.ID, value);
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
@@ -12251,7 +12251,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JavaInterop_SetStaticFloatField (JniEnvironment.Current.EnvironmentPointer, klass.Handle, field.ID, value);
+			JavaInterop_SetStaticFloatField (JniEnvironment.EnvironmentPointer, klass.Handle, field.ID, value);
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
@@ -12266,7 +12266,7 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JavaInterop_SetStaticDoubleField (JniEnvironment.Current.EnvironmentPointer, klass.Handle, field.ID, value);
+			JavaInterop_SetStaticDoubleField (JniEnvironment.EnvironmentPointer, klass.Handle, field.ID, value);
 		}
 	}
 
@@ -12285,9 +12285,9 @@ namespace
 				throw new ArgumentNullException ("signature");
 
 			IntPtr thrown;
-			var tmp = JavaInterop_GetStaticMethodID (JniEnvironment.Current.EnvironmentPointer, out thrown, klass.Handle, name, signature);
+			var tmp = JavaInterop_GetStaticMethodID (JniEnvironment.EnvironmentPointer, out thrown, klass.Handle, name, signature);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -12309,13 +12309,13 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			IntPtr thrown;
-			var tmp = JavaInterop_CallStaticObjectMethod (JniEnvironment.Current.EnvironmentPointer, out thrown, klass.Handle, method.ID);
+			var tmp = JavaInterop_CallStaticObjectMethod (JniEnvironment.EnvironmentPointer, out thrown, klass.Handle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -12332,13 +12332,13 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			IntPtr thrown;
-			var tmp = JavaInterop_CallStaticObjectMethodA (JniEnvironment.Current.EnvironmentPointer, out thrown, klass.Handle, method.ID, args);
+			var tmp = JavaInterop_CallStaticObjectMethodA (JniEnvironment.EnvironmentPointer, out thrown, klass.Handle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -12355,9 +12355,9 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			IntPtr thrown;
-			var tmp = JavaInterop_CallStaticBooleanMethod (JniEnvironment.Current.EnvironmentPointer, out thrown, klass.Handle, method.ID);
+			var tmp = JavaInterop_CallStaticBooleanMethod (JniEnvironment.EnvironmentPointer, out thrown, klass.Handle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -12377,9 +12377,9 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			IntPtr thrown;
-			var tmp = JavaInterop_CallStaticBooleanMethodA (JniEnvironment.Current.EnvironmentPointer, out thrown, klass.Handle, method.ID, args);
+			var tmp = JavaInterop_CallStaticBooleanMethodA (JniEnvironment.EnvironmentPointer, out thrown, klass.Handle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -12399,9 +12399,9 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			IntPtr thrown;
-			var tmp = JavaInterop_CallStaticByteMethod (JniEnvironment.Current.EnvironmentPointer, out thrown, klass.Handle, method.ID);
+			var tmp = JavaInterop_CallStaticByteMethod (JniEnvironment.EnvironmentPointer, out thrown, klass.Handle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -12421,9 +12421,9 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			IntPtr thrown;
-			var tmp = JavaInterop_CallStaticByteMethodA (JniEnvironment.Current.EnvironmentPointer, out thrown, klass.Handle, method.ID, args);
+			var tmp = JavaInterop_CallStaticByteMethodA (JniEnvironment.EnvironmentPointer, out thrown, klass.Handle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -12443,9 +12443,9 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			IntPtr thrown;
-			var tmp = JavaInterop_CallStaticCharMethod (JniEnvironment.Current.EnvironmentPointer, out thrown, klass.Handle, method.ID);
+			var tmp = JavaInterop_CallStaticCharMethod (JniEnvironment.EnvironmentPointer, out thrown, klass.Handle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -12465,9 +12465,9 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			IntPtr thrown;
-			var tmp = JavaInterop_CallStaticCharMethodA (JniEnvironment.Current.EnvironmentPointer, out thrown, klass.Handle, method.ID, args);
+			var tmp = JavaInterop_CallStaticCharMethodA (JniEnvironment.EnvironmentPointer, out thrown, klass.Handle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -12487,9 +12487,9 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			IntPtr thrown;
-			var tmp = JavaInterop_CallStaticShortMethod (JniEnvironment.Current.EnvironmentPointer, out thrown, klass.Handle, method.ID);
+			var tmp = JavaInterop_CallStaticShortMethod (JniEnvironment.EnvironmentPointer, out thrown, klass.Handle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -12509,9 +12509,9 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			IntPtr thrown;
-			var tmp = JavaInterop_CallStaticShortMethodA (JniEnvironment.Current.EnvironmentPointer, out thrown, klass.Handle, method.ID, args);
+			var tmp = JavaInterop_CallStaticShortMethodA (JniEnvironment.EnvironmentPointer, out thrown, klass.Handle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -12531,9 +12531,9 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			IntPtr thrown;
-			var tmp = JavaInterop_CallStaticIntMethod (JniEnvironment.Current.EnvironmentPointer, out thrown, klass.Handle, method.ID);
+			var tmp = JavaInterop_CallStaticIntMethod (JniEnvironment.EnvironmentPointer, out thrown, klass.Handle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -12553,9 +12553,9 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			IntPtr thrown;
-			var tmp = JavaInterop_CallStaticIntMethodA (JniEnvironment.Current.EnvironmentPointer, out thrown, klass.Handle, method.ID, args);
+			var tmp = JavaInterop_CallStaticIntMethodA (JniEnvironment.EnvironmentPointer, out thrown, klass.Handle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -12575,9 +12575,9 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			IntPtr thrown;
-			var tmp = JavaInterop_CallStaticLongMethod (JniEnvironment.Current.EnvironmentPointer, out thrown, klass.Handle, method.ID);
+			var tmp = JavaInterop_CallStaticLongMethod (JniEnvironment.EnvironmentPointer, out thrown, klass.Handle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -12597,9 +12597,9 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			IntPtr thrown;
-			var tmp = JavaInterop_CallStaticLongMethodA (JniEnvironment.Current.EnvironmentPointer, out thrown, klass.Handle, method.ID, args);
+			var tmp = JavaInterop_CallStaticLongMethodA (JniEnvironment.EnvironmentPointer, out thrown, klass.Handle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -12619,9 +12619,9 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			IntPtr thrown;
-			var tmp = JavaInterop_CallStaticFloatMethod (JniEnvironment.Current.EnvironmentPointer, out thrown, klass.Handle, method.ID);
+			var tmp = JavaInterop_CallStaticFloatMethod (JniEnvironment.EnvironmentPointer, out thrown, klass.Handle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -12641,9 +12641,9 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			IntPtr thrown;
-			var tmp = JavaInterop_CallStaticFloatMethodA (JniEnvironment.Current.EnvironmentPointer, out thrown, klass.Handle, method.ID, args);
+			var tmp = JavaInterop_CallStaticFloatMethodA (JniEnvironment.EnvironmentPointer, out thrown, klass.Handle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -12663,9 +12663,9 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			IntPtr thrown;
-			var tmp = JavaInterop_CallStaticDoubleMethod (JniEnvironment.Current.EnvironmentPointer, out thrown, klass.Handle, method.ID);
+			var tmp = JavaInterop_CallStaticDoubleMethod (JniEnvironment.EnvironmentPointer, out thrown, klass.Handle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -12685,9 +12685,9 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			IntPtr thrown;
-			var tmp = JavaInterop_CallStaticDoubleMethodA (JniEnvironment.Current.EnvironmentPointer, out thrown, klass.Handle, method.ID, args);
+			var tmp = JavaInterop_CallStaticDoubleMethodA (JniEnvironment.EnvironmentPointer, out thrown, klass.Handle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -12707,9 +12707,9 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			IntPtr thrown;
-			JavaInterop_CallStaticVoidMethod (JniEnvironment.Current.EnvironmentPointer, out thrown, klass.Handle, method.ID);
+			JavaInterop_CallStaticVoidMethod (JniEnvironment.EnvironmentPointer, out thrown, klass.Handle, method.ID);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -12728,9 +12728,9 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			IntPtr thrown;
-			JavaInterop_CallStaticVoidMethodA (JniEnvironment.Current.EnvironmentPointer, out thrown, klass.Handle, method.ID, args);
+			JavaInterop_CallStaticVoidMethodA (JniEnvironment.EnvironmentPointer, out thrown, klass.Handle, method.ID, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -12748,13 +12748,13 @@ namespace
 				throw new ArgumentException ("'unicodeChars' must not be IntPtr.Zero.", "unicodeChars");
 
 			IntPtr thrown;
-			var tmp = JavaInterop_NewString (JniEnvironment.Current.EnvironmentPointer, out thrown, unicodeChars, length);
+			var tmp = JavaInterop_NewString (JniEnvironment.EnvironmentPointer, out thrown, unicodeChars, length);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -12766,7 +12766,7 @@ namespace
 			if (@string.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@string` must not be IntPtr.Zero.", "@string");
 
-			var tmp = JavaInterop_GetStringLength (JniEnvironment.Current.EnvironmentPointer, @string.Handle);
+			var tmp = JavaInterop_GetStringLength (JniEnvironment.EnvironmentPointer, @string.Handle);
 			return tmp;
 		}
 
@@ -12778,7 +12778,7 @@ namespace
 			if (@string.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@string` must not be IntPtr.Zero.", "@string");
 
-			var tmp = JavaInterop_GetStringChars (JniEnvironment.Current.EnvironmentPointer, @string.Handle, isCopy);
+			var tmp = JavaInterop_GetStringChars (JniEnvironment.EnvironmentPointer, @string.Handle, isCopy);
 			return tmp;
 		}
 
@@ -12792,7 +12792,7 @@ namespace
 			if (chars == IntPtr.Zero)
 				throw new ArgumentException ("'chars' must not be IntPtr.Zero.", "chars");
 
-			JavaInterop_ReleaseStringChars (JniEnvironment.Current.EnvironmentPointer, @string.Handle, chars);
+			JavaInterop_ReleaseStringChars (JniEnvironment.EnvironmentPointer, @string.Handle, chars);
 		}
 	}
 
@@ -12811,13 +12811,13 @@ namespace
 				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			IntPtr thrown;
-			var tmp = JavaInterop_DefineClass (JniEnvironment.Current.EnvironmentPointer, out thrown, name, loader.Handle, buffer, bufferLength);
+			var tmp = JavaInterop_DefineClass (JniEnvironment.EnvironmentPointer, out thrown, name, loader.Handle, buffer, bufferLength);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -12830,13 +12830,13 @@ namespace
 				throw new ArgumentNullException ("classname");
 
 			IntPtr thrown;
-			var tmp = JavaInterop_FindClass (JniEnvironment.Current.EnvironmentPointer, out thrown, classname);
+			var tmp = JavaInterop_FindClass (JniEnvironment.EnvironmentPointer, out thrown, classname);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -12848,8 +12848,8 @@ namespace
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
 
-			var tmp = JavaInterop_GetSuperclass (JniEnvironment.Current.EnvironmentPointer, klass.Handle);
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			var tmp = JavaInterop_GetSuperclass (JniEnvironment.EnvironmentPointer, klass.Handle);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -12863,7 +12863,7 @@ namespace
 			if (class2.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`class2` must not be IntPtr.Zero.", "class2");
 
-			var tmp = JavaInterop_IsAssignableFrom (JniEnvironment.Current.EnvironmentPointer, class1.Handle, class2.Handle);
+			var tmp = JavaInterop_IsAssignableFrom (JniEnvironment.EnvironmentPointer, class1.Handle, class2.Handle);
 			return tmp;
 		}
 
@@ -12872,7 +12872,7 @@ namespace
 
 		public static unsafe bool IsSameObject (JniObjectReference object1, JniObjectReference object2)
 		{
-			var tmp = JavaInterop_IsSameObject (JniEnvironment.Current.EnvironmentPointer, object1.Handle, object2.Handle);
+			var tmp = JavaInterop_IsSameObject (JniEnvironment.EnvironmentPointer, object1.Handle, object2.Handle);
 			return tmp;
 		}
 
@@ -12884,8 +12884,8 @@ namespace
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
 
-			var tmp = JavaInterop_GetObjectClass (JniEnvironment.Current.EnvironmentPointer, @object.Handle);
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			var tmp = JavaInterop_GetObjectClass (JniEnvironment.EnvironmentPointer, @object.Handle);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
@@ -12899,7 +12899,7 @@ namespace
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
 
-			var tmp = JavaInterop_IsInstanceOf (JniEnvironment.Current.EnvironmentPointer, @object.Handle, klass.Handle);
+			var tmp = JavaInterop_IsInstanceOf (JniEnvironment.EnvironmentPointer, @object.Handle, klass.Handle);
 			return tmp;
 		}
 
@@ -12912,9 +12912,9 @@ namespace
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
 
 			IntPtr thrown;
-			var tmp = JavaInterop_RegisterNatives (JniEnvironment.Current.EnvironmentPointer, out thrown, klass.Handle, methods, numMethods);
+			var tmp = JavaInterop_RegisterNatives (JniEnvironment.EnvironmentPointer, out thrown, klass.Handle, methods, numMethods);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable (thrown);
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				throw __e;
 
@@ -12929,7 +12929,7 @@ namespace
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
 
-			var tmp = JavaInterop_UnregisterNatives (JniEnvironment.Current.EnvironmentPointer, klass.Handle);
+			var tmp = JavaInterop_UnregisterNatives (JniEnvironment.EnvironmentPointer, klass.Handle);
 			return tmp;
 		}
 	}
@@ -12941,7 +12941,7 @@ namespace
 
 		internal static unsafe int GetVersion ()
 		{
-			var tmp = JavaInterop_GetVersion (JniEnvironment.Current.EnvironmentPointer);
+			var tmp = JavaInterop_GetVersion (JniEnvironment.EnvironmentPointer);
 			return tmp;
 		}
 	}
@@ -13048,13 +13048,13 @@ namespace
 			if (klass == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
 
-			var tmp = JniEnvironment.Current.Invoker.AllocObject (JniEnvironment.Current.EnvironmentPointer, klass);
+			var tmp = JniEnvironment.Invoker.AllocObject (JniEnvironment.EnvironmentPointer, klass);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return tmp;
 		}
 
@@ -13065,13 +13065,13 @@ namespace
 			if (method == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.NewObject (JniEnvironment.Current.EnvironmentPointer, klass, method);
+			var tmp = JniEnvironment.Invoker.NewObject (JniEnvironment.EnvironmentPointer, klass, method);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return tmp;
 		}
 
@@ -13082,13 +13082,13 @@ namespace
 			if (method == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.NewObjectA (JniEnvironment.Current.EnvironmentPointer, klass, method, args);
+			var tmp = JniEnvironment.Invoker.NewObjectA (JniEnvironment.EnvironmentPointer, klass, method, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return tmp;
 		}
 	}
@@ -13100,7 +13100,7 @@ namespace
 			if (array_ptr == IntPtr.Zero)
 				throw new ArgumentException ("`array_ptr` must not be IntPtr.Zero.", "array_ptr");
 
-			var tmp = JniEnvironment.Current.Invoker.GetArrayLength (JniEnvironment.Current.EnvironmentPointer, array_ptr);
+			var tmp = JniEnvironment.Invoker.GetArrayLength (JniEnvironment.EnvironmentPointer, array_ptr);
 			return tmp;
 		}
 
@@ -13109,13 +13109,13 @@ namespace
 			if (elementClass == IntPtr.Zero)
 				throw new ArgumentException ("`elementClass` must not be IntPtr.Zero.", "elementClass");
 
-			var tmp = JniEnvironment.Current.Invoker.NewObjectArray (JniEnvironment.Current.EnvironmentPointer, length, elementClass, initialElement);
+			var tmp = JniEnvironment.Invoker.NewObjectArray (JniEnvironment.EnvironmentPointer, length, elementClass, initialElement);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return tmp;
 		}
 
@@ -13124,13 +13124,13 @@ namespace
 			if (array == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
 
-			var tmp = JniEnvironment.Current.Invoker.GetObjectArrayElement (JniEnvironment.Current.EnvironmentPointer, array, index);
+			var tmp = JniEnvironment.Invoker.GetObjectArrayElement (JniEnvironment.EnvironmentPointer, array, index);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return tmp;
 		}
 
@@ -13139,9 +13139,9 @@ namespace
 			if (array == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
 
-			JniEnvironment.Current.Invoker.SetObjectArrayElement (JniEnvironment.Current.EnvironmentPointer, array, index, value);
+			JniEnvironment.Invoker.SetObjectArrayElement (JniEnvironment.EnvironmentPointer, array, index, value);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -13149,57 +13149,57 @@ namespace
 
 		public static unsafe IntPtr NewBooleanArray (int length)
 		{
-			var tmp = JniEnvironment.Current.Invoker.NewBooleanArray (JniEnvironment.Current.EnvironmentPointer, length);
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			var tmp = JniEnvironment.Invoker.NewBooleanArray (JniEnvironment.EnvironmentPointer, length);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return tmp;
 		}
 
 		public static unsafe IntPtr NewByteArray (int length)
 		{
-			var tmp = JniEnvironment.Current.Invoker.NewByteArray (JniEnvironment.Current.EnvironmentPointer, length);
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			var tmp = JniEnvironment.Invoker.NewByteArray (JniEnvironment.EnvironmentPointer, length);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return tmp;
 		}
 
 		public static unsafe IntPtr NewCharArray (int length)
 		{
-			var tmp = JniEnvironment.Current.Invoker.NewCharArray (JniEnvironment.Current.EnvironmentPointer, length);
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			var tmp = JniEnvironment.Invoker.NewCharArray (JniEnvironment.EnvironmentPointer, length);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return tmp;
 		}
 
 		public static unsafe IntPtr NewShortArray (int length)
 		{
-			var tmp = JniEnvironment.Current.Invoker.NewShortArray (JniEnvironment.Current.EnvironmentPointer, length);
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			var tmp = JniEnvironment.Invoker.NewShortArray (JniEnvironment.EnvironmentPointer, length);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return tmp;
 		}
 
 		public static unsafe IntPtr NewIntArray (int length)
 		{
-			var tmp = JniEnvironment.Current.Invoker.NewIntArray (JniEnvironment.Current.EnvironmentPointer, length);
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			var tmp = JniEnvironment.Invoker.NewIntArray (JniEnvironment.EnvironmentPointer, length);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return tmp;
 		}
 
 		public static unsafe IntPtr NewLongArray (int length)
 		{
-			var tmp = JniEnvironment.Current.Invoker.NewLongArray (JniEnvironment.Current.EnvironmentPointer, length);
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			var tmp = JniEnvironment.Invoker.NewLongArray (JniEnvironment.EnvironmentPointer, length);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return tmp;
 		}
 
 		public static unsafe IntPtr NewFloatArray (int length)
 		{
-			var tmp = JniEnvironment.Current.Invoker.NewFloatArray (JniEnvironment.Current.EnvironmentPointer, length);
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			var tmp = JniEnvironment.Invoker.NewFloatArray (JniEnvironment.EnvironmentPointer, length);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return tmp;
 		}
 
 		public static unsafe IntPtr NewDoubleArray (int length)
 		{
-			var tmp = JniEnvironment.Current.Invoker.NewDoubleArray (JniEnvironment.Current.EnvironmentPointer, length);
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			var tmp = JniEnvironment.Invoker.NewDoubleArray (JniEnvironment.EnvironmentPointer, length);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return tmp;
 		}
 
@@ -13208,7 +13208,7 @@ namespace
 			if (array == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
 
-			var tmp = JniEnvironment.Current.Invoker.GetBooleanArrayElements (JniEnvironment.Current.EnvironmentPointer, array, isCopy);
+			var tmp = JniEnvironment.Invoker.GetBooleanArrayElements (JniEnvironment.EnvironmentPointer, array, isCopy);
 			return tmp;
 		}
 
@@ -13217,7 +13217,7 @@ namespace
 			if (array == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
 
-			var tmp = JniEnvironment.Current.Invoker.GetByteArrayElements (JniEnvironment.Current.EnvironmentPointer, array, isCopy);
+			var tmp = JniEnvironment.Invoker.GetByteArrayElements (JniEnvironment.EnvironmentPointer, array, isCopy);
 			return tmp;
 		}
 
@@ -13226,7 +13226,7 @@ namespace
 			if (array == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
 
-			var tmp = JniEnvironment.Current.Invoker.GetCharArrayElements (JniEnvironment.Current.EnvironmentPointer, array, isCopy);
+			var tmp = JniEnvironment.Invoker.GetCharArrayElements (JniEnvironment.EnvironmentPointer, array, isCopy);
 			return tmp;
 		}
 
@@ -13235,7 +13235,7 @@ namespace
 			if (array == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
 
-			var tmp = JniEnvironment.Current.Invoker.GetShortArrayElements (JniEnvironment.Current.EnvironmentPointer, array, isCopy);
+			var tmp = JniEnvironment.Invoker.GetShortArrayElements (JniEnvironment.EnvironmentPointer, array, isCopy);
 			return tmp;
 		}
 
@@ -13244,7 +13244,7 @@ namespace
 			if (array == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
 
-			var tmp = JniEnvironment.Current.Invoker.GetIntArrayElements (JniEnvironment.Current.EnvironmentPointer, array, isCopy);
+			var tmp = JniEnvironment.Invoker.GetIntArrayElements (JniEnvironment.EnvironmentPointer, array, isCopy);
 			return tmp;
 		}
 
@@ -13253,7 +13253,7 @@ namespace
 			if (array == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
 
-			var tmp = JniEnvironment.Current.Invoker.GetLongArrayElements (JniEnvironment.Current.EnvironmentPointer, array, isCopy);
+			var tmp = JniEnvironment.Invoker.GetLongArrayElements (JniEnvironment.EnvironmentPointer, array, isCopy);
 			return tmp;
 		}
 
@@ -13262,7 +13262,7 @@ namespace
 			if (array == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
 
-			var tmp = JniEnvironment.Current.Invoker.GetFloatArrayElements (JniEnvironment.Current.EnvironmentPointer, array, isCopy);
+			var tmp = JniEnvironment.Invoker.GetFloatArrayElements (JniEnvironment.EnvironmentPointer, array, isCopy);
 			return tmp;
 		}
 
@@ -13271,7 +13271,7 @@ namespace
 			if (array == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
 
-			var tmp = JniEnvironment.Current.Invoker.GetDoubleArrayElements (JniEnvironment.Current.EnvironmentPointer, array, isCopy);
+			var tmp = JniEnvironment.Invoker.GetDoubleArrayElements (JniEnvironment.EnvironmentPointer, array, isCopy);
 			return tmp;
 		}
 
@@ -13282,7 +13282,7 @@ namespace
 			if (elements == IntPtr.Zero)
 				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", "elements");
 
-			JniEnvironment.Current.Invoker.ReleaseBooleanArrayElements (JniEnvironment.Current.EnvironmentPointer, array, elements, mode);
+			JniEnvironment.Invoker.ReleaseBooleanArrayElements (JniEnvironment.EnvironmentPointer, array, elements, mode);
 		}
 
 		public static unsafe void ReleaseByteArrayElements (IntPtr array, IntPtr elements, int mode)
@@ -13292,7 +13292,7 @@ namespace
 			if (elements == IntPtr.Zero)
 				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", "elements");
 
-			JniEnvironment.Current.Invoker.ReleaseByteArrayElements (JniEnvironment.Current.EnvironmentPointer, array, elements, mode);
+			JniEnvironment.Invoker.ReleaseByteArrayElements (JniEnvironment.EnvironmentPointer, array, elements, mode);
 		}
 
 		public static unsafe void ReleaseCharArrayElements (IntPtr array, IntPtr elements, int mode)
@@ -13302,7 +13302,7 @@ namespace
 			if (elements == IntPtr.Zero)
 				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", "elements");
 
-			JniEnvironment.Current.Invoker.ReleaseCharArrayElements (JniEnvironment.Current.EnvironmentPointer, array, elements, mode);
+			JniEnvironment.Invoker.ReleaseCharArrayElements (JniEnvironment.EnvironmentPointer, array, elements, mode);
 		}
 
 		public static unsafe void ReleaseShortArrayElements (IntPtr array, IntPtr elements, int mode)
@@ -13312,7 +13312,7 @@ namespace
 			if (elements == IntPtr.Zero)
 				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", "elements");
 
-			JniEnvironment.Current.Invoker.ReleaseShortArrayElements (JniEnvironment.Current.EnvironmentPointer, array, elements, mode);
+			JniEnvironment.Invoker.ReleaseShortArrayElements (JniEnvironment.EnvironmentPointer, array, elements, mode);
 		}
 
 		public static unsafe void ReleaseIntArrayElements (IntPtr array, IntPtr elements, int mode)
@@ -13322,7 +13322,7 @@ namespace
 			if (elements == IntPtr.Zero)
 				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", "elements");
 
-			JniEnvironment.Current.Invoker.ReleaseIntArrayElements (JniEnvironment.Current.EnvironmentPointer, array, elements, mode);
+			JniEnvironment.Invoker.ReleaseIntArrayElements (JniEnvironment.EnvironmentPointer, array, elements, mode);
 		}
 
 		public static unsafe void ReleaseLongArrayElements (IntPtr array, IntPtr elements, int mode)
@@ -13332,7 +13332,7 @@ namespace
 			if (elements == IntPtr.Zero)
 				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", "elements");
 
-			JniEnvironment.Current.Invoker.ReleaseLongArrayElements (JniEnvironment.Current.EnvironmentPointer, array, elements, mode);
+			JniEnvironment.Invoker.ReleaseLongArrayElements (JniEnvironment.EnvironmentPointer, array, elements, mode);
 		}
 
 		public static unsafe void ReleaseFloatArrayElements (IntPtr array, IntPtr elements, int mode)
@@ -13342,7 +13342,7 @@ namespace
 			if (elements == IntPtr.Zero)
 				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", "elements");
 
-			JniEnvironment.Current.Invoker.ReleaseFloatArrayElements (JniEnvironment.Current.EnvironmentPointer, array, elements, mode);
+			JniEnvironment.Invoker.ReleaseFloatArrayElements (JniEnvironment.EnvironmentPointer, array, elements, mode);
 		}
 
 		public static unsafe void ReleaseDoubleArrayElements (IntPtr array, IntPtr elements, int mode)
@@ -13352,7 +13352,7 @@ namespace
 			if (elements == IntPtr.Zero)
 				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", "elements");
 
-			JniEnvironment.Current.Invoker.ReleaseDoubleArrayElements (JniEnvironment.Current.EnvironmentPointer, array, elements, mode);
+			JniEnvironment.Invoker.ReleaseDoubleArrayElements (JniEnvironment.EnvironmentPointer, array, elements, mode);
 		}
 
 		internal static unsafe void GetBooleanArrayRegion (IntPtr array, int start, int length, IntPtr buffer)
@@ -13362,9 +13362,9 @@ namespace
 			if (buffer == IntPtr.Zero)
 				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
-			JniEnvironment.Current.Invoker.GetBooleanArrayRegion (JniEnvironment.Current.EnvironmentPointer, array, start, length, buffer);
+			JniEnvironment.Invoker.GetBooleanArrayRegion (JniEnvironment.EnvironmentPointer, array, start, length, buffer);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -13377,9 +13377,9 @@ namespace
 			if (buffer == IntPtr.Zero)
 				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
-			JniEnvironment.Current.Invoker.GetByteArrayRegion (JniEnvironment.Current.EnvironmentPointer, array, start, length, buffer);
+			JniEnvironment.Invoker.GetByteArrayRegion (JniEnvironment.EnvironmentPointer, array, start, length, buffer);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -13392,9 +13392,9 @@ namespace
 			if (buffer == IntPtr.Zero)
 				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
-			JniEnvironment.Current.Invoker.GetCharArrayRegion (JniEnvironment.Current.EnvironmentPointer, array, start, length, buffer);
+			JniEnvironment.Invoker.GetCharArrayRegion (JniEnvironment.EnvironmentPointer, array, start, length, buffer);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -13407,9 +13407,9 @@ namespace
 			if (buffer == IntPtr.Zero)
 				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
-			JniEnvironment.Current.Invoker.GetShortArrayRegion (JniEnvironment.Current.EnvironmentPointer, array, start, length, buffer);
+			JniEnvironment.Invoker.GetShortArrayRegion (JniEnvironment.EnvironmentPointer, array, start, length, buffer);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -13422,9 +13422,9 @@ namespace
 			if (buffer == IntPtr.Zero)
 				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
-			JniEnvironment.Current.Invoker.GetIntArrayRegion (JniEnvironment.Current.EnvironmentPointer, array, start, length, buffer);
+			JniEnvironment.Invoker.GetIntArrayRegion (JniEnvironment.EnvironmentPointer, array, start, length, buffer);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -13437,9 +13437,9 @@ namespace
 			if (buffer == IntPtr.Zero)
 				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
-			JniEnvironment.Current.Invoker.GetLongArrayRegion (JniEnvironment.Current.EnvironmentPointer, array, start, length, buffer);
+			JniEnvironment.Invoker.GetLongArrayRegion (JniEnvironment.EnvironmentPointer, array, start, length, buffer);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -13452,9 +13452,9 @@ namespace
 			if (buffer == IntPtr.Zero)
 				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
-			JniEnvironment.Current.Invoker.GetFloatArrayRegion (JniEnvironment.Current.EnvironmentPointer, array, start, length, buffer);
+			JniEnvironment.Invoker.GetFloatArrayRegion (JniEnvironment.EnvironmentPointer, array, start, length, buffer);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -13467,9 +13467,9 @@ namespace
 			if (buffer == IntPtr.Zero)
 				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
-			JniEnvironment.Current.Invoker.GetDoubleArrayRegion (JniEnvironment.Current.EnvironmentPointer, array, start, length, buffer);
+			JniEnvironment.Invoker.GetDoubleArrayRegion (JniEnvironment.EnvironmentPointer, array, start, length, buffer);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -13482,9 +13482,9 @@ namespace
 			if (buffer == IntPtr.Zero)
 				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
-			JniEnvironment.Current.Invoker.SetBooleanArrayRegion (JniEnvironment.Current.EnvironmentPointer, array, start, length, buffer);
+			JniEnvironment.Invoker.SetBooleanArrayRegion (JniEnvironment.EnvironmentPointer, array, start, length, buffer);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -13497,9 +13497,9 @@ namespace
 			if (buffer == IntPtr.Zero)
 				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
-			JniEnvironment.Current.Invoker.SetByteArrayRegion (JniEnvironment.Current.EnvironmentPointer, array, start, length, buffer);
+			JniEnvironment.Invoker.SetByteArrayRegion (JniEnvironment.EnvironmentPointer, array, start, length, buffer);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -13512,9 +13512,9 @@ namespace
 			if (buffer == IntPtr.Zero)
 				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
-			JniEnvironment.Current.Invoker.SetCharArrayRegion (JniEnvironment.Current.EnvironmentPointer, array, start, length, buffer);
+			JniEnvironment.Invoker.SetCharArrayRegion (JniEnvironment.EnvironmentPointer, array, start, length, buffer);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -13527,9 +13527,9 @@ namespace
 			if (buffer == IntPtr.Zero)
 				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
-			JniEnvironment.Current.Invoker.SetShortArrayRegion (JniEnvironment.Current.EnvironmentPointer, array, start, length, buffer);
+			JniEnvironment.Invoker.SetShortArrayRegion (JniEnvironment.EnvironmentPointer, array, start, length, buffer);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -13542,9 +13542,9 @@ namespace
 			if (buffer == IntPtr.Zero)
 				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
-			JniEnvironment.Current.Invoker.SetIntArrayRegion (JniEnvironment.Current.EnvironmentPointer, array, start, length, buffer);
+			JniEnvironment.Invoker.SetIntArrayRegion (JniEnvironment.EnvironmentPointer, array, start, length, buffer);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -13557,9 +13557,9 @@ namespace
 			if (buffer == IntPtr.Zero)
 				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
-			JniEnvironment.Current.Invoker.SetLongArrayRegion (JniEnvironment.Current.EnvironmentPointer, array, start, length, buffer);
+			JniEnvironment.Invoker.SetLongArrayRegion (JniEnvironment.EnvironmentPointer, array, start, length, buffer);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -13572,9 +13572,9 @@ namespace
 			if (buffer == IntPtr.Zero)
 				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
-			JniEnvironment.Current.Invoker.SetFloatArrayRegion (JniEnvironment.Current.EnvironmentPointer, array, start, length, buffer);
+			JniEnvironment.Invoker.SetFloatArrayRegion (JniEnvironment.EnvironmentPointer, array, start, length, buffer);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -13587,9 +13587,9 @@ namespace
 			if (buffer == IntPtr.Zero)
 				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
-			JniEnvironment.Current.Invoker.SetDoubleArrayRegion (JniEnvironment.Current.EnvironmentPointer, array, start, length, buffer);
+			JniEnvironment.Invoker.SetDoubleArrayRegion (JniEnvironment.EnvironmentPointer, array, start, length, buffer);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -13603,7 +13603,7 @@ namespace
 			if (toThrow == IntPtr.Zero)
 				throw new ArgumentException ("`toThrow` must not be IntPtr.Zero.", "toThrow");
 
-			var tmp = JniEnvironment.Current.Invoker.Throw (JniEnvironment.Current.EnvironmentPointer, toThrow);
+			var tmp = JniEnvironment.Invoker.Throw (JniEnvironment.EnvironmentPointer, toThrow);
 			return tmp;
 		}
 
@@ -13614,24 +13614,24 @@ namespace
 			if (message == null)
 				throw new ArgumentNullException ("message");
 
-			var tmp = JniEnvironment.Current.Invoker.ThrowNew (JniEnvironment.Current.EnvironmentPointer, klass, message);
+			var tmp = JniEnvironment.Invoker.ThrowNew (JniEnvironment.EnvironmentPointer, klass, message);
 			return tmp;
 		}
 
 		internal static unsafe IntPtr ExceptionOccurred ()
 		{
-			var tmp = JniEnvironment.Current.Invoker.ExceptionOccurred (JniEnvironment.Current.EnvironmentPointer);
+			var tmp = JniEnvironment.Invoker.ExceptionOccurred (JniEnvironment.EnvironmentPointer);
 			return tmp;
 		}
 
 		internal static unsafe void ExceptionDescribe ()
 		{
-			JniEnvironment.Current.Invoker.ExceptionDescribe (JniEnvironment.Current.EnvironmentPointer);
+			JniEnvironment.Invoker.ExceptionDescribe (JniEnvironment.EnvironmentPointer);
 		}
 
 		internal static unsafe void ExceptionClear ()
 		{
-			JniEnvironment.Current.Invoker.ExceptionClear (JniEnvironment.Current.EnvironmentPointer);
+			JniEnvironment.Invoker.ExceptionClear (JniEnvironment.EnvironmentPointer);
 		}
 
 		public static unsafe void FatalError (string message)
@@ -13639,12 +13639,12 @@ namespace
 			if (message == null)
 				throw new ArgumentNullException ("message");
 
-			JniEnvironment.Current.Invoker.FatalError (JniEnvironment.Current.EnvironmentPointer, message);
+			JniEnvironment.Invoker.FatalError (JniEnvironment.EnvironmentPointer, message);
 		}
 
 		internal static unsafe bool ExceptionCheck ()
 		{
-			var tmp = JniEnvironment.Current.Invoker.ExceptionCheck (JniEnvironment.Current.EnvironmentPointer);
+			var tmp = JniEnvironment.Invoker.ExceptionCheck (JniEnvironment.EnvironmentPointer);
 			return tmp;
 		}
 	}
@@ -13660,9 +13660,9 @@ namespace
 			if (signature == null)
 				throw new ArgumentNullException ("signature");
 
-			var tmp = JniEnvironment.Current.Invoker.GetFieldID (JniEnvironment.Current.EnvironmentPointer, klass, name, signature);
+			var tmp = JniEnvironment.Invoker.GetFieldID (JniEnvironment.EnvironmentPointer, klass, name, signature);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -13676,8 +13676,8 @@ namespace
 			if (field == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JniEnvironment.Current.Invoker.GetObjectField (JniEnvironment.Current.EnvironmentPointer, @object, field);
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			var tmp = JniEnvironment.Invoker.GetObjectField (JniEnvironment.EnvironmentPointer, @object, field);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return tmp;
 		}
 
@@ -13688,7 +13688,7 @@ namespace
 			if (field == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JniEnvironment.Current.Invoker.GetBooleanField (JniEnvironment.Current.EnvironmentPointer, @object, field);
+			var tmp = JniEnvironment.Invoker.GetBooleanField (JniEnvironment.EnvironmentPointer, @object, field);
 			return tmp;
 		}
 
@@ -13699,7 +13699,7 @@ namespace
 			if (field == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JniEnvironment.Current.Invoker.GetByteField (JniEnvironment.Current.EnvironmentPointer, @object, field);
+			var tmp = JniEnvironment.Invoker.GetByteField (JniEnvironment.EnvironmentPointer, @object, field);
 			return tmp;
 		}
 
@@ -13710,7 +13710,7 @@ namespace
 			if (field == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JniEnvironment.Current.Invoker.GetCharField (JniEnvironment.Current.EnvironmentPointer, @object, field);
+			var tmp = JniEnvironment.Invoker.GetCharField (JniEnvironment.EnvironmentPointer, @object, field);
 			return tmp;
 		}
 
@@ -13721,7 +13721,7 @@ namespace
 			if (field == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JniEnvironment.Current.Invoker.GetShortField (JniEnvironment.Current.EnvironmentPointer, @object, field);
+			var tmp = JniEnvironment.Invoker.GetShortField (JniEnvironment.EnvironmentPointer, @object, field);
 			return tmp;
 		}
 
@@ -13732,7 +13732,7 @@ namespace
 			if (field == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JniEnvironment.Current.Invoker.GetIntField (JniEnvironment.Current.EnvironmentPointer, @object, field);
+			var tmp = JniEnvironment.Invoker.GetIntField (JniEnvironment.EnvironmentPointer, @object, field);
 			return tmp;
 		}
 
@@ -13743,7 +13743,7 @@ namespace
 			if (field == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JniEnvironment.Current.Invoker.GetLongField (JniEnvironment.Current.EnvironmentPointer, @object, field);
+			var tmp = JniEnvironment.Invoker.GetLongField (JniEnvironment.EnvironmentPointer, @object, field);
 			return tmp;
 		}
 
@@ -13754,7 +13754,7 @@ namespace
 			if (field == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JniEnvironment.Current.Invoker.GetFloatField (JniEnvironment.Current.EnvironmentPointer, @object, field);
+			var tmp = JniEnvironment.Invoker.GetFloatField (JniEnvironment.EnvironmentPointer, @object, field);
 			return tmp;
 		}
 
@@ -13765,7 +13765,7 @@ namespace
 			if (field == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JniEnvironment.Current.Invoker.GetDoubleField (JniEnvironment.Current.EnvironmentPointer, @object, field);
+			var tmp = JniEnvironment.Invoker.GetDoubleField (JniEnvironment.EnvironmentPointer, @object, field);
 			return tmp;
 		}
 
@@ -13776,7 +13776,7 @@ namespace
 			if (field == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JniEnvironment.Current.Invoker.SetObjectField (JniEnvironment.Current.EnvironmentPointer, @object, field, value);
+			JniEnvironment.Invoker.SetObjectField (JniEnvironment.EnvironmentPointer, @object, field, value);
 		}
 
 		internal static unsafe void SetField (IntPtr @object, IntPtr field, bool value)
@@ -13786,7 +13786,7 @@ namespace
 			if (field == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JniEnvironment.Current.Invoker.SetBooleanField (JniEnvironment.Current.EnvironmentPointer, @object, field, value);
+			JniEnvironment.Invoker.SetBooleanField (JniEnvironment.EnvironmentPointer, @object, field, value);
 		}
 
 		internal static unsafe void SetField (IntPtr @object, IntPtr field, sbyte value)
@@ -13796,7 +13796,7 @@ namespace
 			if (field == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JniEnvironment.Current.Invoker.SetByteField (JniEnvironment.Current.EnvironmentPointer, @object, field, value);
+			JniEnvironment.Invoker.SetByteField (JniEnvironment.EnvironmentPointer, @object, field, value);
 		}
 
 		internal static unsafe void SetField (IntPtr @object, IntPtr field, char value)
@@ -13806,7 +13806,7 @@ namespace
 			if (field == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JniEnvironment.Current.Invoker.SetCharField (JniEnvironment.Current.EnvironmentPointer, @object, field, value);
+			JniEnvironment.Invoker.SetCharField (JniEnvironment.EnvironmentPointer, @object, field, value);
 		}
 
 		internal static unsafe void SetField (IntPtr @object, IntPtr field, short value)
@@ -13816,7 +13816,7 @@ namespace
 			if (field == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JniEnvironment.Current.Invoker.SetShortField (JniEnvironment.Current.EnvironmentPointer, @object, field, value);
+			JniEnvironment.Invoker.SetShortField (JniEnvironment.EnvironmentPointer, @object, field, value);
 		}
 
 		internal static unsafe void SetField (IntPtr @object, IntPtr field, int value)
@@ -13826,7 +13826,7 @@ namespace
 			if (field == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JniEnvironment.Current.Invoker.SetIntField (JniEnvironment.Current.EnvironmentPointer, @object, field, value);
+			JniEnvironment.Invoker.SetIntField (JniEnvironment.EnvironmentPointer, @object, field, value);
 		}
 
 		internal static unsafe void SetField (IntPtr @object, IntPtr field, long value)
@@ -13836,7 +13836,7 @@ namespace
 			if (field == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JniEnvironment.Current.Invoker.SetLongField (JniEnvironment.Current.EnvironmentPointer, @object, field, value);
+			JniEnvironment.Invoker.SetLongField (JniEnvironment.EnvironmentPointer, @object, field, value);
 		}
 
 		internal static unsafe void SetField (IntPtr @object, IntPtr field, float value)
@@ -13846,7 +13846,7 @@ namespace
 			if (field == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JniEnvironment.Current.Invoker.SetFloatField (JniEnvironment.Current.EnvironmentPointer, @object, field, value);
+			JniEnvironment.Invoker.SetFloatField (JniEnvironment.EnvironmentPointer, @object, field, value);
 		}
 
 		internal static unsafe void SetField (IntPtr @object, IntPtr field, double value)
@@ -13856,7 +13856,7 @@ namespace
 			if (field == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JniEnvironment.Current.Invoker.SetDoubleField (JniEnvironment.Current.EnvironmentPointer, @object, field, value);
+			JniEnvironment.Invoker.SetDoubleField (JniEnvironment.EnvironmentPointer, @object, field, value);
 		}
 	}
 
@@ -13871,9 +13871,9 @@ namespace
 			if (signature == null)
 				throw new ArgumentNullException ("signature");
 
-			var tmp = JniEnvironment.Current.Invoker.GetMethodID (JniEnvironment.Current.EnvironmentPointer, klass, name, signature);
+			var tmp = JniEnvironment.Invoker.GetMethodID (JniEnvironment.EnvironmentPointer, klass, name, signature);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -13887,13 +13887,13 @@ namespace
 			if (method == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallObjectMethod (JniEnvironment.Current.EnvironmentPointer, @object, method);
+			var tmp = JniEnvironment.Invoker.CallObjectMethod (JniEnvironment.EnvironmentPointer, @object, method);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return tmp;
 		}
 
@@ -13904,13 +13904,13 @@ namespace
 			if (method == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallObjectMethodA (JniEnvironment.Current.EnvironmentPointer, @object, method, args);
+			var tmp = JniEnvironment.Invoker.CallObjectMethodA (JniEnvironment.EnvironmentPointer, @object, method, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return tmp;
 		}
 
@@ -13921,9 +13921,9 @@ namespace
 			if (method == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallBooleanMethod (JniEnvironment.Current.EnvironmentPointer, @object, method);
+			var tmp = JniEnvironment.Invoker.CallBooleanMethod (JniEnvironment.EnvironmentPointer, @object, method);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -13937,9 +13937,9 @@ namespace
 			if (method == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallBooleanMethodA (JniEnvironment.Current.EnvironmentPointer, @object, method, args);
+			var tmp = JniEnvironment.Invoker.CallBooleanMethodA (JniEnvironment.EnvironmentPointer, @object, method, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -13953,9 +13953,9 @@ namespace
 			if (method == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallByteMethod (JniEnvironment.Current.EnvironmentPointer, @object, method);
+			var tmp = JniEnvironment.Invoker.CallByteMethod (JniEnvironment.EnvironmentPointer, @object, method);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -13969,9 +13969,9 @@ namespace
 			if (method == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallByteMethodA (JniEnvironment.Current.EnvironmentPointer, @object, method, args);
+			var tmp = JniEnvironment.Invoker.CallByteMethodA (JniEnvironment.EnvironmentPointer, @object, method, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -13985,9 +13985,9 @@ namespace
 			if (method == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallCharMethod (JniEnvironment.Current.EnvironmentPointer, @object, method);
+			var tmp = JniEnvironment.Invoker.CallCharMethod (JniEnvironment.EnvironmentPointer, @object, method);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -14001,9 +14001,9 @@ namespace
 			if (method == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallCharMethodA (JniEnvironment.Current.EnvironmentPointer, @object, method, args);
+			var tmp = JniEnvironment.Invoker.CallCharMethodA (JniEnvironment.EnvironmentPointer, @object, method, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -14017,9 +14017,9 @@ namespace
 			if (method == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallShortMethod (JniEnvironment.Current.EnvironmentPointer, @object, method);
+			var tmp = JniEnvironment.Invoker.CallShortMethod (JniEnvironment.EnvironmentPointer, @object, method);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -14033,9 +14033,9 @@ namespace
 			if (method == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallShortMethodA (JniEnvironment.Current.EnvironmentPointer, @object, method, args);
+			var tmp = JniEnvironment.Invoker.CallShortMethodA (JniEnvironment.EnvironmentPointer, @object, method, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -14049,9 +14049,9 @@ namespace
 			if (method == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallIntMethod (JniEnvironment.Current.EnvironmentPointer, @object, method);
+			var tmp = JniEnvironment.Invoker.CallIntMethod (JniEnvironment.EnvironmentPointer, @object, method);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -14065,9 +14065,9 @@ namespace
 			if (method == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallIntMethodA (JniEnvironment.Current.EnvironmentPointer, @object, method, args);
+			var tmp = JniEnvironment.Invoker.CallIntMethodA (JniEnvironment.EnvironmentPointer, @object, method, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -14081,9 +14081,9 @@ namespace
 			if (method == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallLongMethod (JniEnvironment.Current.EnvironmentPointer, @object, method);
+			var tmp = JniEnvironment.Invoker.CallLongMethod (JniEnvironment.EnvironmentPointer, @object, method);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -14097,9 +14097,9 @@ namespace
 			if (method == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallLongMethodA (JniEnvironment.Current.EnvironmentPointer, @object, method, args);
+			var tmp = JniEnvironment.Invoker.CallLongMethodA (JniEnvironment.EnvironmentPointer, @object, method, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -14113,9 +14113,9 @@ namespace
 			if (method == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallFloatMethod (JniEnvironment.Current.EnvironmentPointer, @object, method);
+			var tmp = JniEnvironment.Invoker.CallFloatMethod (JniEnvironment.EnvironmentPointer, @object, method);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -14129,9 +14129,9 @@ namespace
 			if (method == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallFloatMethodA (JniEnvironment.Current.EnvironmentPointer, @object, method, args);
+			var tmp = JniEnvironment.Invoker.CallFloatMethodA (JniEnvironment.EnvironmentPointer, @object, method, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -14145,9 +14145,9 @@ namespace
 			if (method == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallDoubleMethod (JniEnvironment.Current.EnvironmentPointer, @object, method);
+			var tmp = JniEnvironment.Invoker.CallDoubleMethod (JniEnvironment.EnvironmentPointer, @object, method);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -14161,9 +14161,9 @@ namespace
 			if (method == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallDoubleMethodA (JniEnvironment.Current.EnvironmentPointer, @object, method, args);
+			var tmp = JniEnvironment.Invoker.CallDoubleMethodA (JniEnvironment.EnvironmentPointer, @object, method, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -14177,9 +14177,9 @@ namespace
 			if (method == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			JniEnvironment.Current.Invoker.CallVoidMethod (JniEnvironment.Current.EnvironmentPointer, @object, method);
+			JniEnvironment.Invoker.CallVoidMethod (JniEnvironment.EnvironmentPointer, @object, method);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -14192,9 +14192,9 @@ namespace
 			if (method == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			JniEnvironment.Current.Invoker.CallVoidMethodA (JniEnvironment.Current.EnvironmentPointer, @object, method, args);
+			JniEnvironment.Invoker.CallVoidMethodA (JniEnvironment.EnvironmentPointer, @object, method, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -14209,13 +14209,13 @@ namespace
 			if (method == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallNonvirtualObjectMethod (JniEnvironment.Current.EnvironmentPointer, @object, klass, method);
+			var tmp = JniEnvironment.Invoker.CallNonvirtualObjectMethod (JniEnvironment.EnvironmentPointer, @object, klass, method);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return tmp;
 		}
 
@@ -14228,13 +14228,13 @@ namespace
 			if (method == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallNonvirtualObjectMethodA (JniEnvironment.Current.EnvironmentPointer, @object, klass, method, args);
+			var tmp = JniEnvironment.Invoker.CallNonvirtualObjectMethodA (JniEnvironment.EnvironmentPointer, @object, klass, method, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return tmp;
 		}
 
@@ -14247,9 +14247,9 @@ namespace
 			if (method == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallNonvirtualBooleanMethod (JniEnvironment.Current.EnvironmentPointer, @object, klass, method);
+			var tmp = JniEnvironment.Invoker.CallNonvirtualBooleanMethod (JniEnvironment.EnvironmentPointer, @object, klass, method);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -14265,9 +14265,9 @@ namespace
 			if (method == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallNonvirtualBooleanMethodA (JniEnvironment.Current.EnvironmentPointer, @object, klass, method, args);
+			var tmp = JniEnvironment.Invoker.CallNonvirtualBooleanMethodA (JniEnvironment.EnvironmentPointer, @object, klass, method, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -14283,9 +14283,9 @@ namespace
 			if (method == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallNonvirtualByteMethod (JniEnvironment.Current.EnvironmentPointer, @object, klass, method);
+			var tmp = JniEnvironment.Invoker.CallNonvirtualByteMethod (JniEnvironment.EnvironmentPointer, @object, klass, method);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -14301,9 +14301,9 @@ namespace
 			if (method == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallNonvirtualByteMethodA (JniEnvironment.Current.EnvironmentPointer, @object, klass, method, args);
+			var tmp = JniEnvironment.Invoker.CallNonvirtualByteMethodA (JniEnvironment.EnvironmentPointer, @object, klass, method, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -14319,9 +14319,9 @@ namespace
 			if (method == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallNonvirtualCharMethod (JniEnvironment.Current.EnvironmentPointer, @object, klass, method);
+			var tmp = JniEnvironment.Invoker.CallNonvirtualCharMethod (JniEnvironment.EnvironmentPointer, @object, klass, method);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -14337,9 +14337,9 @@ namespace
 			if (method == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallNonvirtualCharMethodA (JniEnvironment.Current.EnvironmentPointer, @object, klass, method, args);
+			var tmp = JniEnvironment.Invoker.CallNonvirtualCharMethodA (JniEnvironment.EnvironmentPointer, @object, klass, method, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -14355,9 +14355,9 @@ namespace
 			if (method == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallNonvirtualShortMethod (JniEnvironment.Current.EnvironmentPointer, @object, klass, method);
+			var tmp = JniEnvironment.Invoker.CallNonvirtualShortMethod (JniEnvironment.EnvironmentPointer, @object, klass, method);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -14373,9 +14373,9 @@ namespace
 			if (method == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallNonvirtualShortMethodA (JniEnvironment.Current.EnvironmentPointer, @object, klass, method, args);
+			var tmp = JniEnvironment.Invoker.CallNonvirtualShortMethodA (JniEnvironment.EnvironmentPointer, @object, klass, method, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -14391,9 +14391,9 @@ namespace
 			if (method == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallNonvirtualIntMethod (JniEnvironment.Current.EnvironmentPointer, @object, klass, method);
+			var tmp = JniEnvironment.Invoker.CallNonvirtualIntMethod (JniEnvironment.EnvironmentPointer, @object, klass, method);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -14409,9 +14409,9 @@ namespace
 			if (method == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallNonvirtualIntMethodA (JniEnvironment.Current.EnvironmentPointer, @object, klass, method, args);
+			var tmp = JniEnvironment.Invoker.CallNonvirtualIntMethodA (JniEnvironment.EnvironmentPointer, @object, klass, method, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -14427,9 +14427,9 @@ namespace
 			if (method == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallNonvirtualLongMethod (JniEnvironment.Current.EnvironmentPointer, @object, klass, method);
+			var tmp = JniEnvironment.Invoker.CallNonvirtualLongMethod (JniEnvironment.EnvironmentPointer, @object, klass, method);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -14445,9 +14445,9 @@ namespace
 			if (method == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallNonvirtualLongMethodA (JniEnvironment.Current.EnvironmentPointer, @object, klass, method, args);
+			var tmp = JniEnvironment.Invoker.CallNonvirtualLongMethodA (JniEnvironment.EnvironmentPointer, @object, klass, method, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -14463,9 +14463,9 @@ namespace
 			if (method == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallNonvirtualFloatMethod (JniEnvironment.Current.EnvironmentPointer, @object, klass, method);
+			var tmp = JniEnvironment.Invoker.CallNonvirtualFloatMethod (JniEnvironment.EnvironmentPointer, @object, klass, method);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -14481,9 +14481,9 @@ namespace
 			if (method == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallNonvirtualFloatMethodA (JniEnvironment.Current.EnvironmentPointer, @object, klass, method, args);
+			var tmp = JniEnvironment.Invoker.CallNonvirtualFloatMethodA (JniEnvironment.EnvironmentPointer, @object, klass, method, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -14499,9 +14499,9 @@ namespace
 			if (method == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallNonvirtualDoubleMethod (JniEnvironment.Current.EnvironmentPointer, @object, klass, method);
+			var tmp = JniEnvironment.Invoker.CallNonvirtualDoubleMethod (JniEnvironment.EnvironmentPointer, @object, klass, method);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -14517,9 +14517,9 @@ namespace
 			if (method == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallNonvirtualDoubleMethodA (JniEnvironment.Current.EnvironmentPointer, @object, klass, method, args);
+			var tmp = JniEnvironment.Invoker.CallNonvirtualDoubleMethodA (JniEnvironment.EnvironmentPointer, @object, klass, method, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -14535,9 +14535,9 @@ namespace
 			if (method == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			JniEnvironment.Current.Invoker.CallNonvirtualVoidMethod (JniEnvironment.Current.EnvironmentPointer, @object, klass, method);
+			JniEnvironment.Invoker.CallNonvirtualVoidMethod (JniEnvironment.EnvironmentPointer, @object, klass, method);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -14552,9 +14552,9 @@ namespace
 			if (method == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			JniEnvironment.Current.Invoker.CallNonvirtualVoidMethodA (JniEnvironment.Current.EnvironmentPointer, @object, klass, method, args);
+			JniEnvironment.Invoker.CallNonvirtualVoidMethodA (JniEnvironment.EnvironmentPointer, @object, klass, method, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -14568,13 +14568,13 @@ namespace
 			if (address == IntPtr.Zero)
 				throw new ArgumentException ("'address' must not be IntPtr.Zero.", "address");
 
-			var tmp = JniEnvironment.Current.Invoker.NewDirectByteBuffer (JniEnvironment.Current.EnvironmentPointer, address, capacity);
+			var tmp = JniEnvironment.Invoker.NewDirectByteBuffer (JniEnvironment.EnvironmentPointer, address, capacity);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return tmp;
 		}
 
@@ -14583,7 +14583,7 @@ namespace
 			if (buffer == IntPtr.Zero)
 				throw new ArgumentException ("`buffer` must not be IntPtr.Zero.", "buffer");
 
-			var tmp = JniEnvironment.Current.Invoker.GetDirectBufferAddress (JniEnvironment.Current.EnvironmentPointer, buffer);
+			var tmp = JniEnvironment.Invoker.GetDirectBufferAddress (JniEnvironment.EnvironmentPointer, buffer);
 			return tmp;
 		}
 
@@ -14592,7 +14592,7 @@ namespace
 			if (buffer == IntPtr.Zero)
 				throw new ArgumentException ("`buffer` must not be IntPtr.Zero.", "buffer");
 
-			var tmp = JniEnvironment.Current.Invoker.GetDirectBufferCapacity (JniEnvironment.Current.EnvironmentPointer, buffer);
+			var tmp = JniEnvironment.Invoker.GetDirectBufferCapacity (JniEnvironment.EnvironmentPointer, buffer);
 			return tmp;
 		}
 	}
@@ -14604,7 +14604,7 @@ namespace
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
 
-			var tmp = JniEnvironment.Current.Invoker.MonitorEnter (JniEnvironment.Current.EnvironmentPointer, @object);
+			var tmp = JniEnvironment.Invoker.MonitorEnter (JniEnvironment.EnvironmentPointer, @object);
 			return tmp;
 		}
 
@@ -14613,7 +14613,7 @@ namespace
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
 
-			var tmp = JniEnvironment.Current.Invoker.MonitorExit (JniEnvironment.Current.EnvironmentPointer, @object);
+			var tmp = JniEnvironment.Invoker.MonitorExit (JniEnvironment.EnvironmentPointer, @object);
 			return tmp;
 		}
 	}
@@ -14622,60 +14622,60 @@ namespace
 
 		public static unsafe int PushLocalFrame (int capacity)
 		{
-			var tmp = JniEnvironment.Current.Invoker.PushLocalFrame (JniEnvironment.Current.EnvironmentPointer, capacity);
+			var tmp = JniEnvironment.Invoker.PushLocalFrame (JniEnvironment.EnvironmentPointer, capacity);
 			return tmp;
 		}
 
 		public static unsafe IntPtr PopLocalFrame (IntPtr result)
 		{
-			var tmp = JniEnvironment.Current.Invoker.PopLocalFrame (JniEnvironment.Current.EnvironmentPointer, result);
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			var tmp = JniEnvironment.Invoker.PopLocalFrame (JniEnvironment.EnvironmentPointer, result);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return tmp;
 		}
 
 		internal static unsafe IntPtr NewGlobalRef (IntPtr @object)
 		{
-			var tmp = JniEnvironment.Current.Invoker.NewGlobalRef (JniEnvironment.Current.EnvironmentPointer, @object);
+			var tmp = JniEnvironment.Invoker.NewGlobalRef (JniEnvironment.EnvironmentPointer, @object);
 			return tmp;
 		}
 
 		internal static unsafe void DeleteGlobalRef (IntPtr @object)
 		{
-			JniEnvironment.Current.Invoker.DeleteGlobalRef (JniEnvironment.Current.EnvironmentPointer, @object);
+			JniEnvironment.Invoker.DeleteGlobalRef (JniEnvironment.EnvironmentPointer, @object);
 		}
 
 		internal static unsafe void DeleteLocalRef (IntPtr @object)
 		{
-			JniEnvironment.Current.Invoker.DeleteLocalRef (JniEnvironment.Current.EnvironmentPointer, @object);
+			JniEnvironment.Invoker.DeleteLocalRef (JniEnvironment.EnvironmentPointer, @object);
 		}
 
 		internal static unsafe IntPtr NewLocalRef (IntPtr @object)
 		{
-			var tmp = JniEnvironment.Current.Invoker.NewLocalRef (JniEnvironment.Current.EnvironmentPointer, @object);
+			var tmp = JniEnvironment.Invoker.NewLocalRef (JniEnvironment.EnvironmentPointer, @object);
 			return tmp;
 		}
 
 		public static unsafe int EnsureLocalCapacity (int capacity)
 		{
-			var tmp = JniEnvironment.Current.Invoker.EnsureLocalCapacity (JniEnvironment.Current.EnvironmentPointer, capacity);
+			var tmp = JniEnvironment.Invoker.EnsureLocalCapacity (JniEnvironment.EnvironmentPointer, capacity);
 			return tmp;
 		}
 
 		public static unsafe int GetJavaVM (out IntPtr vm)
 		{
-			var tmp = JniEnvironment.Current.Invoker.GetJavaVM (JniEnvironment.Current.EnvironmentPointer, out vm);
+			var tmp = JniEnvironment.Invoker.GetJavaVM (JniEnvironment.EnvironmentPointer, out vm);
 			return tmp;
 		}
 
 		internal static unsafe IntPtr NewWeakGlobalRef (IntPtr @object)
 		{
-			var tmp = JniEnvironment.Current.Invoker.NewWeakGlobalRef (JniEnvironment.Current.EnvironmentPointer, @object);
+			var tmp = JniEnvironment.Invoker.NewWeakGlobalRef (JniEnvironment.EnvironmentPointer, @object);
 			return tmp;
 		}
 
 		internal static unsafe void DeleteWeakGlobalRef (IntPtr @object)
 		{
-			JniEnvironment.Current.Invoker.DeleteWeakGlobalRef (JniEnvironment.Current.EnvironmentPointer, @object);
+			JniEnvironment.Invoker.DeleteWeakGlobalRef (JniEnvironment.EnvironmentPointer, @object);
 		}
 
 		internal static unsafe JniObjectReferenceType GetObjectRefType (IntPtr @object)
@@ -14683,7 +14683,7 @@ namespace
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
 
-			var tmp = JniEnvironment.Current.Invoker.GetObjectRefType (JniEnvironment.Current.EnvironmentPointer, @object);
+			var tmp = JniEnvironment.Invoker.GetObjectRefType (JniEnvironment.EnvironmentPointer, @object);
 			return tmp;
 		}
 	}
@@ -14697,8 +14697,8 @@ namespace
 			if (method == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.ToReflectedMethod (JniEnvironment.Current.EnvironmentPointer, klass, method, isStatic);
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			var tmp = JniEnvironment.Invoker.ToReflectedMethod (JniEnvironment.EnvironmentPointer, klass, method, isStatic);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return tmp;
 		}
 
@@ -14709,8 +14709,8 @@ namespace
 			if (field == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JniEnvironment.Current.Invoker.ToReflectedField (JniEnvironment.Current.EnvironmentPointer, klass, field, isStatic);
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			var tmp = JniEnvironment.Invoker.ToReflectedField (JniEnvironment.EnvironmentPointer, klass, field, isStatic);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return tmp;
 		}
 	}
@@ -14726,9 +14726,9 @@ namespace
 			if (signature == null)
 				throw new ArgumentNullException ("signature");
 
-			var tmp = JniEnvironment.Current.Invoker.GetStaticFieldID (JniEnvironment.Current.EnvironmentPointer, klass, name, signature);
+			var tmp = JniEnvironment.Invoker.GetStaticFieldID (JniEnvironment.EnvironmentPointer, klass, name, signature);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -14742,8 +14742,8 @@ namespace
 			if (field == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JniEnvironment.Current.Invoker.GetStaticObjectField (JniEnvironment.Current.EnvironmentPointer, klass, field);
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			var tmp = JniEnvironment.Invoker.GetStaticObjectField (JniEnvironment.EnvironmentPointer, klass, field);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return tmp;
 		}
 
@@ -14754,7 +14754,7 @@ namespace
 			if (field == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JniEnvironment.Current.Invoker.GetStaticBooleanField (JniEnvironment.Current.EnvironmentPointer, klass, field);
+			var tmp = JniEnvironment.Invoker.GetStaticBooleanField (JniEnvironment.EnvironmentPointer, klass, field);
 			return tmp;
 		}
 
@@ -14765,7 +14765,7 @@ namespace
 			if (field == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JniEnvironment.Current.Invoker.GetStaticByteField (JniEnvironment.Current.EnvironmentPointer, klass, field);
+			var tmp = JniEnvironment.Invoker.GetStaticByteField (JniEnvironment.EnvironmentPointer, klass, field);
 			return tmp;
 		}
 
@@ -14776,7 +14776,7 @@ namespace
 			if (field == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JniEnvironment.Current.Invoker.GetStaticCharField (JniEnvironment.Current.EnvironmentPointer, klass, field);
+			var tmp = JniEnvironment.Invoker.GetStaticCharField (JniEnvironment.EnvironmentPointer, klass, field);
 			return tmp;
 		}
 
@@ -14787,7 +14787,7 @@ namespace
 			if (field == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JniEnvironment.Current.Invoker.GetStaticShortField (JniEnvironment.Current.EnvironmentPointer, klass, field);
+			var tmp = JniEnvironment.Invoker.GetStaticShortField (JniEnvironment.EnvironmentPointer, klass, field);
 			return tmp;
 		}
 
@@ -14798,7 +14798,7 @@ namespace
 			if (field == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JniEnvironment.Current.Invoker.GetStaticIntField (JniEnvironment.Current.EnvironmentPointer, klass, field);
+			var tmp = JniEnvironment.Invoker.GetStaticIntField (JniEnvironment.EnvironmentPointer, klass, field);
 			return tmp;
 		}
 
@@ -14809,7 +14809,7 @@ namespace
 			if (field == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JniEnvironment.Current.Invoker.GetStaticLongField (JniEnvironment.Current.EnvironmentPointer, klass, field);
+			var tmp = JniEnvironment.Invoker.GetStaticLongField (JniEnvironment.EnvironmentPointer, klass, field);
 			return tmp;
 		}
 
@@ -14820,7 +14820,7 @@ namespace
 			if (field == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JniEnvironment.Current.Invoker.GetStaticFloatField (JniEnvironment.Current.EnvironmentPointer, klass, field);
+			var tmp = JniEnvironment.Invoker.GetStaticFloatField (JniEnvironment.EnvironmentPointer, klass, field);
 			return tmp;
 		}
 
@@ -14831,7 +14831,7 @@ namespace
 			if (field == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = JniEnvironment.Current.Invoker.GetStaticDoubleField (JniEnvironment.Current.EnvironmentPointer, klass, field);
+			var tmp = JniEnvironment.Invoker.GetStaticDoubleField (JniEnvironment.EnvironmentPointer, klass, field);
 			return tmp;
 		}
 
@@ -14842,7 +14842,7 @@ namespace
 			if (field == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JniEnvironment.Current.Invoker.SetStaticObjectField (JniEnvironment.Current.EnvironmentPointer, klass, field, value);
+			JniEnvironment.Invoker.SetStaticObjectField (JniEnvironment.EnvironmentPointer, klass, field, value);
 		}
 
 		internal static unsafe void SetStaticField (IntPtr klass, IntPtr field, bool value)
@@ -14852,7 +14852,7 @@ namespace
 			if (field == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JniEnvironment.Current.Invoker.SetStaticBooleanField (JniEnvironment.Current.EnvironmentPointer, klass, field, value);
+			JniEnvironment.Invoker.SetStaticBooleanField (JniEnvironment.EnvironmentPointer, klass, field, value);
 		}
 
 		internal static unsafe void SetStaticField (IntPtr klass, IntPtr field, sbyte value)
@@ -14862,7 +14862,7 @@ namespace
 			if (field == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JniEnvironment.Current.Invoker.SetStaticByteField (JniEnvironment.Current.EnvironmentPointer, klass, field, value);
+			JniEnvironment.Invoker.SetStaticByteField (JniEnvironment.EnvironmentPointer, klass, field, value);
 		}
 
 		internal static unsafe void SetStaticField (IntPtr klass, IntPtr field, char value)
@@ -14872,7 +14872,7 @@ namespace
 			if (field == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JniEnvironment.Current.Invoker.SetStaticCharField (JniEnvironment.Current.EnvironmentPointer, klass, field, value);
+			JniEnvironment.Invoker.SetStaticCharField (JniEnvironment.EnvironmentPointer, klass, field, value);
 		}
 
 		internal static unsafe void SetStaticField (IntPtr klass, IntPtr field, short value)
@@ -14882,7 +14882,7 @@ namespace
 			if (field == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JniEnvironment.Current.Invoker.SetStaticShortField (JniEnvironment.Current.EnvironmentPointer, klass, field, value);
+			JniEnvironment.Invoker.SetStaticShortField (JniEnvironment.EnvironmentPointer, klass, field, value);
 		}
 
 		internal static unsafe void SetStaticField (IntPtr klass, IntPtr field, int value)
@@ -14892,7 +14892,7 @@ namespace
 			if (field == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JniEnvironment.Current.Invoker.SetStaticIntField (JniEnvironment.Current.EnvironmentPointer, klass, field, value);
+			JniEnvironment.Invoker.SetStaticIntField (JniEnvironment.EnvironmentPointer, klass, field, value);
 		}
 
 		internal static unsafe void SetStaticField (IntPtr klass, IntPtr field, long value)
@@ -14902,7 +14902,7 @@ namespace
 			if (field == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JniEnvironment.Current.Invoker.SetStaticLongField (JniEnvironment.Current.EnvironmentPointer, klass, field, value);
+			JniEnvironment.Invoker.SetStaticLongField (JniEnvironment.EnvironmentPointer, klass, field, value);
 		}
 
 		internal static unsafe void SetStaticField (IntPtr klass, IntPtr field, float value)
@@ -14912,7 +14912,7 @@ namespace
 			if (field == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JniEnvironment.Current.Invoker.SetStaticFloatField (JniEnvironment.Current.EnvironmentPointer, klass, field, value);
+			JniEnvironment.Invoker.SetStaticFloatField (JniEnvironment.EnvironmentPointer, klass, field, value);
 		}
 
 		internal static unsafe void SetStaticField (IntPtr klass, IntPtr field, double value)
@@ -14922,7 +14922,7 @@ namespace
 			if (field == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			JniEnvironment.Current.Invoker.SetStaticDoubleField (JniEnvironment.Current.EnvironmentPointer, klass, field, value);
+			JniEnvironment.Invoker.SetStaticDoubleField (JniEnvironment.EnvironmentPointer, klass, field, value);
 		}
 	}
 
@@ -14937,9 +14937,9 @@ namespace
 			if (signature == null)
 				throw new ArgumentNullException ("signature");
 
-			var tmp = JniEnvironment.Current.Invoker.GetStaticMethodID (JniEnvironment.Current.EnvironmentPointer, klass, name, signature);
+			var tmp = JniEnvironment.Invoker.GetStaticMethodID (JniEnvironment.EnvironmentPointer, klass, name, signature);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -14953,13 +14953,13 @@ namespace
 			if (method == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallStaticObjectMethod (JniEnvironment.Current.EnvironmentPointer, klass, method);
+			var tmp = JniEnvironment.Invoker.CallStaticObjectMethod (JniEnvironment.EnvironmentPointer, klass, method);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return tmp;
 		}
 
@@ -14970,13 +14970,13 @@ namespace
 			if (method == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallStaticObjectMethodA (JniEnvironment.Current.EnvironmentPointer, klass, method, args);
+			var tmp = JniEnvironment.Invoker.CallStaticObjectMethodA (JniEnvironment.EnvironmentPointer, klass, method, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return tmp;
 		}
 
@@ -14987,9 +14987,9 @@ namespace
 			if (method == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallStaticBooleanMethod (JniEnvironment.Current.EnvironmentPointer, klass, method);
+			var tmp = JniEnvironment.Invoker.CallStaticBooleanMethod (JniEnvironment.EnvironmentPointer, klass, method);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -15003,9 +15003,9 @@ namespace
 			if (method == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallStaticBooleanMethodA (JniEnvironment.Current.EnvironmentPointer, klass, method, args);
+			var tmp = JniEnvironment.Invoker.CallStaticBooleanMethodA (JniEnvironment.EnvironmentPointer, klass, method, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -15019,9 +15019,9 @@ namespace
 			if (method == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallStaticByteMethod (JniEnvironment.Current.EnvironmentPointer, klass, method);
+			var tmp = JniEnvironment.Invoker.CallStaticByteMethod (JniEnvironment.EnvironmentPointer, klass, method);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -15035,9 +15035,9 @@ namespace
 			if (method == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallStaticByteMethodA (JniEnvironment.Current.EnvironmentPointer, klass, method, args);
+			var tmp = JniEnvironment.Invoker.CallStaticByteMethodA (JniEnvironment.EnvironmentPointer, klass, method, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -15051,9 +15051,9 @@ namespace
 			if (method == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallStaticCharMethod (JniEnvironment.Current.EnvironmentPointer, klass, method);
+			var tmp = JniEnvironment.Invoker.CallStaticCharMethod (JniEnvironment.EnvironmentPointer, klass, method);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -15067,9 +15067,9 @@ namespace
 			if (method == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallStaticCharMethodA (JniEnvironment.Current.EnvironmentPointer, klass, method, args);
+			var tmp = JniEnvironment.Invoker.CallStaticCharMethodA (JniEnvironment.EnvironmentPointer, klass, method, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -15083,9 +15083,9 @@ namespace
 			if (method == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallStaticShortMethod (JniEnvironment.Current.EnvironmentPointer, klass, method);
+			var tmp = JniEnvironment.Invoker.CallStaticShortMethod (JniEnvironment.EnvironmentPointer, klass, method);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -15099,9 +15099,9 @@ namespace
 			if (method == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallStaticShortMethodA (JniEnvironment.Current.EnvironmentPointer, klass, method, args);
+			var tmp = JniEnvironment.Invoker.CallStaticShortMethodA (JniEnvironment.EnvironmentPointer, klass, method, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -15115,9 +15115,9 @@ namespace
 			if (method == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallStaticIntMethod (JniEnvironment.Current.EnvironmentPointer, klass, method);
+			var tmp = JniEnvironment.Invoker.CallStaticIntMethod (JniEnvironment.EnvironmentPointer, klass, method);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -15131,9 +15131,9 @@ namespace
 			if (method == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallStaticIntMethodA (JniEnvironment.Current.EnvironmentPointer, klass, method, args);
+			var tmp = JniEnvironment.Invoker.CallStaticIntMethodA (JniEnvironment.EnvironmentPointer, klass, method, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -15147,9 +15147,9 @@ namespace
 			if (method == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallStaticLongMethod (JniEnvironment.Current.EnvironmentPointer, klass, method);
+			var tmp = JniEnvironment.Invoker.CallStaticLongMethod (JniEnvironment.EnvironmentPointer, klass, method);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -15163,9 +15163,9 @@ namespace
 			if (method == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallStaticLongMethodA (JniEnvironment.Current.EnvironmentPointer, klass, method, args);
+			var tmp = JniEnvironment.Invoker.CallStaticLongMethodA (JniEnvironment.EnvironmentPointer, klass, method, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -15179,9 +15179,9 @@ namespace
 			if (method == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallStaticFloatMethod (JniEnvironment.Current.EnvironmentPointer, klass, method);
+			var tmp = JniEnvironment.Invoker.CallStaticFloatMethod (JniEnvironment.EnvironmentPointer, klass, method);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -15195,9 +15195,9 @@ namespace
 			if (method == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallStaticFloatMethodA (JniEnvironment.Current.EnvironmentPointer, klass, method, args);
+			var tmp = JniEnvironment.Invoker.CallStaticFloatMethodA (JniEnvironment.EnvironmentPointer, klass, method, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -15211,9 +15211,9 @@ namespace
 			if (method == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallStaticDoubleMethod (JniEnvironment.Current.EnvironmentPointer, klass, method);
+			var tmp = JniEnvironment.Invoker.CallStaticDoubleMethod (JniEnvironment.EnvironmentPointer, klass, method);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -15227,9 +15227,9 @@ namespace
 			if (method == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = JniEnvironment.Current.Invoker.CallStaticDoubleMethodA (JniEnvironment.Current.EnvironmentPointer, klass, method, args);
+			var tmp = JniEnvironment.Invoker.CallStaticDoubleMethodA (JniEnvironment.EnvironmentPointer, klass, method, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -15243,9 +15243,9 @@ namespace
 			if (method == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			JniEnvironment.Current.Invoker.CallStaticVoidMethod (JniEnvironment.Current.EnvironmentPointer, klass, method);
+			JniEnvironment.Invoker.CallStaticVoidMethod (JniEnvironment.EnvironmentPointer, klass, method);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -15258,9 +15258,9 @@ namespace
 			if (method == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			JniEnvironment.Current.Invoker.CallStaticVoidMethodA (JniEnvironment.Current.EnvironmentPointer, klass, method, args);
+			JniEnvironment.Invoker.CallStaticVoidMethodA (JniEnvironment.EnvironmentPointer, klass, method, args);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -15274,13 +15274,13 @@ namespace
 			if (unicodeChars == IntPtr.Zero)
 				throw new ArgumentException ("'unicodeChars' must not be IntPtr.Zero.", "unicodeChars");
 
-			var tmp = JniEnvironment.Current.Invoker.NewString (JniEnvironment.Current.EnvironmentPointer, unicodeChars, length);
+			var tmp = JniEnvironment.Invoker.NewString (JniEnvironment.EnvironmentPointer, unicodeChars, length);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return tmp;
 		}
 
@@ -15289,7 +15289,7 @@ namespace
 			if (@string == IntPtr.Zero)
 				throw new ArgumentException ("`@string` must not be IntPtr.Zero.", "@string");
 
-			var tmp = JniEnvironment.Current.Invoker.GetStringLength (JniEnvironment.Current.EnvironmentPointer, @string);
+			var tmp = JniEnvironment.Invoker.GetStringLength (JniEnvironment.EnvironmentPointer, @string);
 			return tmp;
 		}
 
@@ -15298,7 +15298,7 @@ namespace
 			if (@string == IntPtr.Zero)
 				throw new ArgumentException ("`@string` must not be IntPtr.Zero.", "@string");
 
-			var tmp = JniEnvironment.Current.Invoker.GetStringChars (JniEnvironment.Current.EnvironmentPointer, @string, isCopy);
+			var tmp = JniEnvironment.Invoker.GetStringChars (JniEnvironment.EnvironmentPointer, @string, isCopy);
 			return tmp;
 		}
 
@@ -15309,7 +15309,7 @@ namespace
 			if (chars == IntPtr.Zero)
 				throw new ArgumentException ("'chars' must not be IntPtr.Zero.", "chars");
 
-			JniEnvironment.Current.Invoker.ReleaseStringChars (JniEnvironment.Current.EnvironmentPointer, @string, chars);
+			JniEnvironment.Invoker.ReleaseStringChars (JniEnvironment.EnvironmentPointer, @string, chars);
 		}
 	}
 
@@ -15324,13 +15324,13 @@ namespace
 			if (buffer == IntPtr.Zero)
 				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
-			var tmp = JniEnvironment.Current.Invoker.DefineClass (JniEnvironment.Current.EnvironmentPointer, name, loader, buffer, bufferLength);
+			var tmp = JniEnvironment.Invoker.DefineClass (JniEnvironment.EnvironmentPointer, name, loader, buffer, bufferLength);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return tmp;
 		}
 
@@ -15339,13 +15339,13 @@ namespace
 			if (classname == null)
 				throw new ArgumentNullException ("classname");
 
-			var tmp = JniEnvironment.Current.Invoker.FindClass (JniEnvironment.Current.EnvironmentPointer, classname);
+			var tmp = JniEnvironment.Invoker.FindClass (JniEnvironment.EnvironmentPointer, classname);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return tmp;
 		}
 
@@ -15354,8 +15354,8 @@ namespace
 			if (klass == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
 
-			var tmp = JniEnvironment.Current.Invoker.GetSuperclass (JniEnvironment.Current.EnvironmentPointer, klass);
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			var tmp = JniEnvironment.Invoker.GetSuperclass (JniEnvironment.EnvironmentPointer, klass);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return tmp;
 		}
 
@@ -15366,13 +15366,13 @@ namespace
 			if (class2 == IntPtr.Zero)
 				throw new ArgumentException ("`class2` must not be IntPtr.Zero.", "class2");
 
-			var tmp = JniEnvironment.Current.Invoker.IsAssignableFrom (JniEnvironment.Current.EnvironmentPointer, class1, class2);
+			var tmp = JniEnvironment.Invoker.IsAssignableFrom (JniEnvironment.EnvironmentPointer, class1, class2);
 			return tmp;
 		}
 
 		public static unsafe bool IsSameObject (IntPtr object1, IntPtr object2)
 		{
-			var tmp = JniEnvironment.Current.Invoker.IsSameObject (JniEnvironment.Current.EnvironmentPointer, object1, object2);
+			var tmp = JniEnvironment.Invoker.IsSameObject (JniEnvironment.EnvironmentPointer, object1, object2);
 			return tmp;
 		}
 
@@ -15381,8 +15381,8 @@ namespace
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
 
-			var tmp = JniEnvironment.Current.Invoker.GetObjectClass (JniEnvironment.Current.EnvironmentPointer, @object);
-			JniEnvironment.Current.LogCreateLocalRef (tmp);
+			var tmp = JniEnvironment.Invoker.GetObjectClass (JniEnvironment.EnvironmentPointer, @object);
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return tmp;
 		}
 
@@ -15393,7 +15393,7 @@ namespace
 			if (klass == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
 
-			var tmp = JniEnvironment.Current.Invoker.IsInstanceOf (JniEnvironment.Current.EnvironmentPointer, @object, klass);
+			var tmp = JniEnvironment.Invoker.IsInstanceOf (JniEnvironment.EnvironmentPointer, @object, klass);
 			return tmp;
 		}
 
@@ -15402,9 +15402,9 @@ namespace
 			if (klass == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
 
-			var tmp = JniEnvironment.Current.Invoker.RegisterNatives (JniEnvironment.Current.EnvironmentPointer, klass, methods, numMethods);
+			var tmp = JniEnvironment.Invoker.RegisterNatives (JniEnvironment.EnvironmentPointer, klass, methods, numMethods);
 
-			Exception __e = JniEnvironment.Current.GetExceptionForLastThrowable ();
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				throw __e;
 
@@ -15416,7 +15416,7 @@ namespace
 			if (klass == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
 
-			var tmp = JniEnvironment.Current.Invoker.UnregisterNatives (JniEnvironment.Current.EnvironmentPointer, klass);
+			var tmp = JniEnvironment.Invoker.UnregisterNatives (JniEnvironment.EnvironmentPointer, klass);
 			return tmp;
 		}
 	}
@@ -15425,7 +15425,7 @@ namespace
 
 		internal static unsafe int GetVersion ()
 		{
-			var tmp = JniEnvironment.Current.Invoker.GetVersion (JniEnvironment.Current.EnvironmentPointer);
+			var tmp = JniEnvironment.Invoker.GetVersion (JniEnvironment.EnvironmentPointer);
 			return tmp;
 		}
 	}

@@ -19,10 +19,8 @@ namespace Java.Interop
 
 		protected override bool ReleaseHandle ()
 		{
-			if (JniEnvironment.HasCurrent) {
-				var r = new JniObjectReference (this, JniObjectReferenceType.WeakGlobal);
-				JniEnvironment.Current.JavaVM.ObjectReferenceManager.DeleteWeakGlobalReference (ref r);
-			}
+			var r = new JniObjectReference (this, JniObjectReferenceType.WeakGlobal);
+			JniEnvironment.Runtime.ObjectReferenceManager.DeleteWeakGlobalReference (ref r);
 			return true;
 		}
 	}

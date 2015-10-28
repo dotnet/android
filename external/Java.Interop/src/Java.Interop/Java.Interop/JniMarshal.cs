@@ -43,7 +43,7 @@ namespace Java.Interop {
 			if (!reference.IsValid)
 				return default (T);
 
-			var jvm     = JniEnvironment.Current.JavaVM;
+			var jvm     = JniEnvironment.Runtime;
 			var target  = jvm.PeekObject (reference);
 			var proxy   = target as JavaProxyObject;
 			if (proxy != null) {
@@ -73,7 +73,7 @@ namespace Java.Interop {
 
 		public  static JniObjectReference CreateLocalRef<T> (T value)
 		{
-			var jvm     = JniEnvironment.Current.JavaVM;
+			var jvm     = JniEnvironment.Runtime;
 
 			var info    = new JniMarshalInfo ();
 			if (value != null)

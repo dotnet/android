@@ -257,9 +257,9 @@ have it call into a runtime method that performs the work *at runtime*:
     [Dynamic]
     static IntPtr n_Clone (IntPtr jnienv, IntPtr native__this)
     {
-        JniEnvironment __envp = new JniEnvironment (jnienv);
+        JniTransition __envp = new JniTransition (jnienv);
         try {
-            var __jvm = __envp.JavaVM;
+            var __jvm = JniEnvironment.Runtime;
             return __jvm.CallObjectMethod (native__this, "Clone");
         }
         catch (Exception __e) {
@@ -283,7 +283,7 @@ all these shims with *real* method bodies:
     // Post-build generated code
     static IntPtr n_Clone (IntPtr jnienv, IntPtr native__this)
     {
-        JniEnvironment __envp = new JniEnvironment (jnienv);
+        JniTransition __envp = new JniTransition (jnienv);
         try {
             var __jvm = __envp.JavaVM;
             var __this = __jvm.GetObject<ExportTest>(native__this);

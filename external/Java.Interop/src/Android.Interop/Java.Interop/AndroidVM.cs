@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 
 using Android.Runtime;
 
@@ -9,19 +10,22 @@ namespace Java.Interop {
 	public  delegate    IntPtr              SafeHandleDelegate_CallObjectMethodA    (IntPtr   env,    IntPtr    instance,   IntPtr method, JValue[]    args);
 	public  delegate    void                SafeHandleDelegate_DeleteLocalRef       (IntPtr   env,    IntPtr    handle);
 
+	delegate int JNIEnv_GetJavaVM (IntPtr jnienv, out IntPtr vm);
+
+
 	class AndroidVMBuilder : JavaVMOptions {
 
 		public AndroidVMBuilder ()
 		{
+			var GetJavaVM = (JNIEnv_GetJavaVM) Delegate.CreateDelegate (
+					typeof(JNIEnv_GetJavaVM),
+					typeof(JNIEnv).GetMethod ("GetJavaVM", BindingFlags.NonPublic | BindingFlags.Static));
+			IntPtr invocationPointer;
+			GetJavaVM (JNIEnv.Handle, out invocationPointer);
+
 			EnvironmentPointer   = JNIEnv.Handle;
 			NewObjectRequired   = ((int) Android.OS.Build.VERSION.SdkInt) <= 10;
-			using (var env = new JniEnvironment (JNIEnv.Handle)) {
-				IntPtr vm;
-				int r = JniEnvironment.References.GetJavaVM (out vm);
-				if (r < 0)
-					throw new InvalidOperationException ("JNIEnv::GetJavaVM() returned: " + r);
-				InvocationPointer    = vm;
-			}
+			InvocationPointer   = invocationPointer;
 			ObjectReferenceManager      = Java.InteropTests.LoggingJniObjectReferenceManagerDecorator.GetObjectReferenceManager (new JniObjectReferenceManager ());
 		}
 

@@ -108,13 +108,13 @@ namespace Java.Interop {
 			var jnienv  = Expression.Parameter (typeof (IntPtr), "__jnienv");
 			var context = Expression.Parameter (typeof (IntPtr), "__context");
 
-			var envp        = Expression.Variable (typeof (JniEnvironment), "__envp");
+			var envp        = Expression.Variable (typeof (JniTransition), "__envp");
 			var envpVars    = new List<ParameterExpression> () {
 				envp,
 			};
 
 			var envpBody    = new List<Expression> () {
-				Expression.Assign (envp, CreateJniEnvironment (jnienv)),
+				Expression.Assign (envp, CreateJniTransition (jnienv)),
 			};
 
 			var jvm         = Expression.Variable (typeof (JavaVM), "__jvm");
@@ -123,7 +123,7 @@ namespace Java.Interop {
 			};
 
 			var marshalBody = new List<Expression> () {
-				Expression.Assign (jvm, GetJavaVM ()),
+				Expression.Assign (jvm, GetRuntime ()),
 			};
 
 			ParameterExpression self = null;
@@ -291,16 +291,16 @@ namespace Java.Interop {
 			return func;
 		}
 
-		static Expression CreateJniEnvironment (ParameterExpression jnienv)
+		static Expression CreateJniTransition (ParameterExpression jnienv)
 		{
 			return Expression.New (
-					typeof (JniEnvironment).GetConstructor (new []{typeof (IntPtr)}),
+					typeof (JniTransition).GetConstructor (new []{typeof (IntPtr)}),
 					jnienv);
 		}
 
 		static CatchBlock CreateMarshalException  (ParameterExpression envp, LabelTarget exit)
 		{
-			var spe     = typeof (JniEnvironment).GetMethod ("SetPendingException");
+			var spe     = typeof (JniTransition).GetMethod ("SetPendingException");
 			var ex      = Expression.Variable (typeof (Exception), "__e");
 			var body = new List<Expression> () {
 				Expression.Call (envp, spe, ex),
@@ -313,7 +313,7 @@ namespace Java.Interop {
 
 		static Expression CreateDisposeJniEnvironment (ParameterExpression envp)
 		{
-			return Expression.Call (envp, typeof (JniEnvironment).GetMethod ("Dispose"));
+			return Expression.Call (envp, typeof (JniTransition).GetMethod ("Dispose"));
 		}
 
 		static Expression GetThis (Expression vm, Type targetType, Expression context)
@@ -325,12 +325,11 @@ namespace Java.Interop {
 					context);
 		}
 
-		static Expression GetJavaVM ()
+		static Expression GetRuntime ()
 		{
 			var env     = typeof (JniEnvironment);
-			var cenv    = Expression.Property (null, env, "Current");
-			var vm      = Expression.Property (cenv, "JavaVM");
-			return vm;
+			var runtime = Expression.Property (null, env, "Runtime");
+			return runtime;
 		}
 
 		static readonly ISet<Type> JniBuiltinTypes = new HashSet<Type> {

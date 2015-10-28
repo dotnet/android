@@ -136,13 +136,13 @@ namespace Java.InteropTests
 			// So that the JavaProxyObject.TypeRef GREF isn't counted.
 			using (var o = new JavaObjectArray<object> (1))
 				o [0] = a;
-			grefStartCount  = JniEnvironment.Current.JavaVM.GlobalReferenceCount;
+			grefStartCount  = JniEnvironment.Runtime.GlobalReferenceCount;
 		}
 
 		[TestFixtureTearDown]
 		public void EndCheckGlobalRefCount ()
 		{
-			int gref    = JniEnvironment.Current.JavaVM.GlobalReferenceCount;
+			int gref    = JniEnvironment.Runtime.GlobalReferenceCount;
 			Assert.IsTrue (gref <= (grefStartCount),
 					string.Format ("JNI global references: grefStartCount={0}; gref={1}", grefStartCount, gref));
 			GC.Collect ();

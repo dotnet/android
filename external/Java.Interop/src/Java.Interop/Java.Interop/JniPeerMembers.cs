@@ -16,10 +16,10 @@ namespace Java.Interop {
 
 #if !XA_INTEGRATION
 			Debug.Assert (
-					JniEnvironment.Current.JavaVM.GetJniTypeInfoForType (managedPeerType).SimpleReference == jniPeerType,
+					JniEnvironment.Runtime.GetJniTypeInfoForType (managedPeerType).SimpleReference == jniPeerType,
 					string.Format ("ManagedPeerType <=> JniTypeName Mismatch! javaVM.GetJniTypeInfoForType(typeof({0})).JniTypeName=\"{1}\" != \"{2}\"",
 						managedPeerType.FullName,
-						JniEnvironment.Current.JavaVM.GetJniTypeInfoForType (managedPeerType).SimpleReference,
+						JniEnvironment.Runtime.GetJniTypeInfoForType (managedPeerType).SimpleReference,
 						jniPeerType));
 #endif  // !XA_INTEGRATION
 
@@ -39,10 +39,10 @@ namespace Java.Interop {
 
 #if !XA_INTEGRATION
 				Debug.Assert (
-					JniEnvironment.Current.JavaVM.GetJniTypeInfoForType (managedPeerType).SimpleReference == jniPeerType,
+					JniEnvironment.Runtime.GetJniTypeInfoForType (managedPeerType).SimpleReference == jniPeerType,
 					string.Format ("ManagedPeerType <=> JniTypeName Mismatch! javaVM.GetJniTypeInfoForType(typeof({0})).JniTypeName=\"{1}\" != \"{2}\"",
 						managedPeerType.FullName,
-						JniEnvironment.Current.JavaVM.GetJniTypeInfoForType (managedPeerType).SimpleReference,
+						JniEnvironment.Runtime.GetJniTypeInfoForType (managedPeerType).SimpleReference,
 						jniPeerType));
 #endif  // !XA_INTEGRATION
 			}

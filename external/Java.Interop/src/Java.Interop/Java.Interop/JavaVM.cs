@@ -133,12 +133,12 @@ namespace Java.Interop
 			if (current == null)
 				current = this;
 
-			if (options.EnvironmentPointer != IntPtr.Zero) {
-				var env = new JniEnvironment (options.EnvironmentPointer, this);
-				JniEnvironment.SetRootEnvironment (env);
-			}
-
 			JavaVMs.TryAdd (InvocationPointer, this);
+
+			if (options.EnvironmentPointer != IntPtr.Zero) {
+				var env = new JniEnvironmentInfo (options.EnvironmentPointer, this);
+				JniEnvironment.SetEnvironmentInfo (env);
+			}
 
 #if !XA_INTEGRATION
 			ManagedPeer.Init ();
@@ -192,15 +192,18 @@ namespace Java.Interop
 			JavaVM _;
 			JavaVMs.TryRemove (InvocationPointer, out _);
 			ObjectReferenceManager.Dispose ();
-			// TODO: Dispose JniEnvironment.RootEnvironments
-			// Requires .NET 4.5+
-			JniEnvironment.RootEnvironments.Dispose ();
 			if (DestroyVM)
 				DestroyJavaVM ();
 			InvocationPointer    = IntPtr.Zero;
 		}
 
-		public JniEnvironment AttachCurrentThread (string name = null, JniObjectReference group = default (JniObjectReference))
+		public void AttachCurrentThread (string name = null, JniObjectReference group = default (JniObjectReference))
+		{
+			var jnienv  = _AttachCurrentThread (name, group);
+			JniEnvironment.SetEnvironmentPointer (jnienv, this);
+		}
+
+		internal    IntPtr  _AttachCurrentThread (string name = null, JniObjectReference group = default (JniObjectReference))
 		{
 			var threadArgs = new JavaVMThreadAttachArgs () {
 				version = JniVersion.v1_2,
@@ -214,8 +217,7 @@ namespace Java.Interop
 				int r = Invoker.AttachCurrentThread (InvocationPointer, out jnienv, ref threadArgs);
 				if (r != 0)
 					throw new NotSupportedException ("AttachCurrentThread returned " + r);
-				var env = new JniEnvironment (jnienv, this);
-				return env;
+				return jnienv;
 			} finally {
 				Marshal.FreeHGlobal (threadArgs.name);
 			}

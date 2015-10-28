@@ -143,7 +143,7 @@ namespace Java.Interop
 		internal static IList<T> GetValueFromJni<TArray> (ref JniObjectReference reference, JniObjectReferenceOptions transfer, Type targetType, ArrayCreator<TArray> creator)
 			where TArray : JavaArray<T>
 		{
-			var value = JniEnvironment.Current.JavaVM.PeekObject (reference);
+			var value = JniEnvironment.Runtime.PeekObject (reference);
 			var array = value as TArray;
 			if (array != null) {
 				JniEnvironment.References.Dispose (ref reference, transfer);

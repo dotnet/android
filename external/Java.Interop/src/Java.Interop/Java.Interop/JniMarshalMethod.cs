@@ -45,7 +45,7 @@ namespace Java.Interop {
 			var parameters  = methodParameters
 				.Select (p => Expression.Parameter (p.ParameterType, p.Name))
 				.ToList ();
-			var envp        = Expression.Variable (typeof (JniEnvironment), "__envp");
+			var envp        = Expression.Variable (typeof (JniTransition), "__envp");
 			var variables   = new List<ParameterExpression> () {
 				envp,
 			};
@@ -62,20 +62,20 @@ namespace Java.Interop {
 				invoke = Expression.Call (value.Method, delArgs);
 			}
 			var body    = new List<Expression> () {
-				Expression.Assign (envp, CreateJniEnvironment (jnienv)),
+				Expression.Assign (envp, CreateJniTransition (jnienv)),
 			};
 
 			if (delegateType.ReturnType == typeof (void)) {
 				body.Add (Expression.TryCatchFinally (
 					invoke,
-					CreateDisposeJniEnvironment (envp),
+					CreateDisposeJniTransition (envp),
 					CreateMarshalException (envp, delegateType, null)));
 			} else {
 				var jniRType    = delegateType.ReturnType;
 				var exit        = Expression.Label (jniRType, "__exit");
 				body.Add (Expression.TryCatchFinally (
 					Expression.Return (exit, invoke),
-					CreateDisposeJniEnvironment (envp),
+					CreateDisposeJniTransition (envp),
 					CreateMarshalException (envp, delegateType, exit)));
 				body.Add (Expression.Label (exit, Expression.Default (jniRType)));
 			}
@@ -87,16 +87,16 @@ namespace Java.Interop {
 			return Expression.Lambda (marshalerType, block, parameters);
 		}
 
-		static Expression CreateJniEnvironment (ParameterExpression jnienv)
+		static Expression CreateJniTransition (ParameterExpression jnienv)
 		{
 			return Expression.New (
-					typeof (JniEnvironment).GetConstructor (new []{typeof (IntPtr)}),
+					typeof (JniTransition).GetConstructor (new []{typeof (IntPtr)}),
 					jnienv);
 		}
 
 		static CatchBlock CreateMarshalException  (ParameterExpression envp, MethodInfo method, LabelTarget exit)
 		{
-			var spe     = typeof (JniEnvironment).GetMethod ("SetPendingException");
+			var spe     = typeof (JniTransition).GetMethod ("SetPendingException");
 			var ex      = Expression.Variable (typeof (Exception), "__e");
 			var body = new List<Expression> () {
 				Expression.Call (envp, spe, ex),
@@ -107,9 +107,9 @@ namespace Java.Interop {
 			return Expression.Catch (ex, Expression.Block (body));
 		}
 
-		static Expression CreateDisposeJniEnvironment (ParameterExpression envp)
+		static Expression CreateDisposeJniTransition (ParameterExpression envp)
 		{
-			return Expression.Call (envp, typeof (JniEnvironment).GetMethod ("Dispose"));
+			return Expression.Call (envp, typeof (JniTransition).GetMethod ("Dispose"));
 		}
 	}
 }

@@ -14,7 +14,7 @@ namespace Java.InteropTests
 		{
 			Assert.AreSame (JavaVM.Current, JavaVM.Current);
 			Assert.IsTrue (JavaVM.Current.InvocationPointer != IntPtr.Zero);
-			Assert.IsNotNull (JniEnvironment.Current);
+			Assert.IsTrue (JniEnvironment.EnvironmentPointer != IntPtr.Zero);
 		}
 
 #if !__ANDROID__

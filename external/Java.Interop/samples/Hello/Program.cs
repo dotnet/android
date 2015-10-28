@@ -20,7 +20,7 @@ namespace Hello
 			}
 			Console.WriteLine ("Part 2!");
 			using (var vm = new JreVMBuilder ().CreateJreVM ()) {
-				Console.WriteLine ("# JniEnvironment.Current={0}", JniEnvironment.Current);
+				Console.WriteLine ("# JniEnvironment.EnvironmentPointer={0}", JniEnvironment.EnvironmentPointer);
 				Console.WriteLine ("vm.SafeHandle={0}", vm.InvocationPointer);
 				var t = new JniType ("java/lang/Object");
 				var c = t.GetConstructor ("()V");

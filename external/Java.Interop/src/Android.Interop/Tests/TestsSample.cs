@@ -136,7 +136,7 @@ namespace Android.InteropTests {
 				var usafeDel = (IntPtrDelegate_DeleteLocalRef)
 						Marshal.GetDelegateForFunctionPointer (JNIEnv_DeleteLocalRef, typeof (IntPtrDelegate_DeleteLocalRef));
 
-				var uh = JniEnvironment.Current.EnvironmentPointer;
+				var uh = JniEnvironment.EnvironmentPointer;
 				var args = new JValue [0];
 
 				sw.Restart ();

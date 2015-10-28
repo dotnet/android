@@ -154,7 +154,7 @@ namespace Java.Interop.Dynamic {
 		internal JniArgumentMarshalInfo (object value, Type valueType)
 		{
 			this        = new JniArgumentMarshalInfo ();
-			var jvm     = JniEnvironment.Current.JavaVM;
+			var jvm     = JniEnvironment.Runtime;
 			var info    = jvm.GetJniMarshalInfoForType (valueType);
 			if (info.CreateJValue != null)
 				jvalue = info.CreateJValue (value);

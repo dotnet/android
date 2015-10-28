@@ -11,52 +11,6 @@ namespace Java.InteropTests
 	public class JniEnvironmentTests : JavaVMFixture
 	{
 		[Test]
-		public void Constructor_SetsCurrent ()
-		{
-			var f = typeof (JniEnvironment).GetField ("current", BindingFlags.NonPublic | BindingFlags.Static);
-			var e = JniEnvironment.Current;
-
-			var c = f.GetValue (null);
-			Assert.IsNotNull (c);
-			Assert.AreSame (c, JniEnvironment.Current);
-			Assert.AreSame (c, JniEnvironment.RootEnvironment);
-
-			using (var envp = new JniEnvironment (e.EnvironmentPointer)) {
-				Assert.AreSame (envp, f.GetValue (null));
-				Assert.AreNotSame (envp, JniEnvironment.RootEnvironment);
-			}
-
-			Assert.AreSame (c, JniEnvironment.Current);
-		}
-
-		[Test]
-		public void Dispose_ClearsLocalReferences ()
-		{
-			if (!HaveSafeHandles) {
-				Assert.Ignore ("SafeHandles aren't used, so magical disposal from a distance isn't supported.");
-				return;
-			}
-			JniObjectReference lref;
-			using (var envp = new JniEnvironment (JniEnvironment.Current.EnvironmentPointer)) {
-				lref    = new JavaObject ().PeerReference;
-				Assert.IsTrue (lref.IsValid);
-			}
-			Assert.IsFalse (lref.IsValid);
-		}
-
-		[Test]
-		public void Dispose_ClearsCurrentField ()
-		{
-			var f = typeof (JniEnvironment).GetField ("current", BindingFlags.NonPublic | BindingFlags.Static);
-			var e = JniEnvironment.Current;
-			var h = e.EnvironmentPointer;
-			e.Dispose ();
-			Assert.IsNull (f.GetValue (null));
-			Assert.IsNotNull (JniEnvironment.Current);
-			Assert.AreEqual (h, JniEnvironment.Current.EnvironmentPointer);
-		}
-
-		[Test]
 		public unsafe void Types_IsSameObject ()
 		{
 			using (var t = new JniType ("java/lang/Object")) {

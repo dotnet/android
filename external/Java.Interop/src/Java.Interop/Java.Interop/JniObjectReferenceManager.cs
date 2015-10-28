@@ -25,40 +25,40 @@ namespace Java.Interop {
 		{
 		}
 
-		public virtual JniObjectReference CreateLocalReference (JniEnvironment environment, JniObjectReference reference)
+		public virtual JniObjectReference CreateLocalReference (JniEnvironmentInfo environment, JniObjectReference reference)
 		{
 			if (!reference.IsValid)
 				return reference;
-			AssertCount (environment.LrefCount, "LREF", reference.ToString ());
-			environment.LrefCount++;
+			AssertCount (environment.LocalReferenceCount, "LREF", reference.ToString ());
+			environment.LocalReferenceCount++;
 			return JniEnvironment.References.NewLocalRef (reference);
 		}
 
-		public virtual void DeleteLocalReference (JniEnvironment environment, ref JniObjectReference reference)
+		public virtual void DeleteLocalReference (JniEnvironmentInfo environment, ref JniObjectReference reference)
 		{
 			if (!reference.IsValid)
 				return;
 			AssertReferenceType (ref reference, JniObjectReferenceType.Local);
-			AssertCount (environment.LrefCount, "LREF", reference.ToString ());
-			environment.LrefCount--;
+			AssertCount (environment.LocalReferenceCount, "LREF", reference.ToString ());
+			environment.LocalReferenceCount--;
 			JniEnvironment.References.DeleteLocalRef (reference.Handle);
 			reference.Invalidate ();
 		}
 
-		public virtual void CreatedLocalReference (JniEnvironment environment, JniObjectReference reference)
+		public virtual void CreatedLocalReference (JniEnvironmentInfo environment, JniObjectReference reference)
 		{
 			if (!reference.IsValid)
 				return;
-			AssertCount (environment.LrefCount, "LREF", reference.ToString ());
-			environment.LrefCount++ ;
+			AssertCount (environment.LocalReferenceCount, "LREF", reference.ToString ());
+			environment.LocalReferenceCount++ ;
 		}
 
-		public virtual IntPtr ReleaseLocalReference (JniEnvironment environment, ref JniObjectReference reference)
+		public virtual IntPtr ReleaseLocalReference (JniEnvironmentInfo environment, ref JniObjectReference reference)
 		{
 			if (!reference.IsValid)
 				return IntPtr.Zero;
-			AssertCount (environment.LrefCount, "LREF", reference.ToString ());
-			environment.LrefCount--;
+			AssertCount (environment.LocalReferenceCount, "LREF", reference.ToString ());
+			environment.LocalReferenceCount--;
 			var h           = reference.Handle;
 			reference.Invalidate ();
 			return h;

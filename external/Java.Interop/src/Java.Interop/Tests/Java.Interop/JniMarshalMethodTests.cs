@@ -27,9 +27,9 @@ namespace Java.InteropTests {
 			CheckCreateMarshalMethodExpression (d, t,
 					@"void (IntPtr arg1, IntPtr arg2)
 {
-	JniEnvironment __envp;
+	JniTransition __envp;
 
-	__envp = new JniEnvironment(arg1);
+	__envp = new JniTransition(arg1);
 	try
 	{
 		TestType.MethodThrowsHandler(arg1, arg2);
@@ -54,9 +54,9 @@ namespace Java.InteropTests {
 			CheckCreateMarshalMethodExpression (d, t,
 					@"IntPtr (IntPtr arg1, IntPtr arg2, int arg3)
 {
-	JniEnvironment __envp;
+	JniTransition __envp;
 
-	__envp = new JniEnvironment(arg1);
+	__envp = new JniTransition(arg1);
 	try
 	{
 		return TestType.GetStringValueHandler(arg1, arg2, arg3);

@@ -348,22 +348,14 @@ namespace Java.Interop {
 }
 
 namespace Java.Interop.SafeHandles {
-	public partial class JniEnvironment {
-		public static JniEnvironment Current;
+	public static partial class JniEnvironment {
+		internal static JniEnvironmentInvoker Invoker;
+		public static IntPtr EnvironmentPointer;
 
-		internal JniEnvironmentInvoker Invoker;
-		public IntPtr EnvironmentPointer;
-
-		public unsafe JniEnvironment (IntPtr v) {
-			Current = this;
-			EnvironmentPointer = v;
-			IntPtr p = Marshal.ReadIntPtr (v);
-			Invoker = new JniEnvironmentInvoker ((JniNativeInterfaceStruct*) p);
-		}
-		internal void LogCreateLocalRef (JniLocalReference value)
+		internal static void LogCreateLocalRef (JniLocalReference value)
 		{
 		}
-		public Exception GetExceptionForLastThrowable ()
+		public static Exception GetExceptionForLastThrowable ()
 		{
 			var v = SafeEnv.Exceptions.ExceptionOccurred ();
 			if (v.SafeHandle == null || v.SafeHandle.IsInvalid || v.SafeHandle.IsClosed)
@@ -379,22 +371,14 @@ namespace Java.Interop.SafeHandles {
 }
 
 namespace Java.Interop.JIIntPtrs {
-	public partial class JniEnvironment {
-		public static JniEnvironment Current;
+	public static partial class JniEnvironment {
+		internal static JniEnvironmentInvoker Invoker;
+		public static IntPtr EnvironmentPointer;
 
-		internal JniEnvironmentInvoker Invoker;
-		public IntPtr EnvironmentPointer;
-
-		public unsafe JniEnvironment (IntPtr v) {
-			Current = this;
-			EnvironmentPointer = v;
-			IntPtr p = Marshal.ReadIntPtr (v);
-			Invoker = new JniEnvironmentInvoker ((JniNativeInterfaceStruct*) p);
-		}
-		internal void LogCreateLocalRef (IntPtr value)
+		internal static void LogCreateLocalRef (IntPtr value)
 		{
 		}
-		public Exception GetExceptionForLastThrowable ()
+		public static Exception GetExceptionForLastThrowable ()
 		{
 			var v = JIIntPtrEnv.Exceptions.ExceptionOccurred ();
 			var h = v.Handle;
@@ -409,20 +393,13 @@ namespace Java.Interop.JIIntPtrs {
 }
 
 namespace Java.Interop.JIPinvokes {
-	public partial class JniEnvironment {
-		public static JniEnvironment Current;
+	public static partial class JniEnvironment {
+		public static IntPtr EnvironmentPointer;
 
-		public IntPtr EnvironmentPointer;
-
-		public unsafe JniEnvironment (IntPtr v) {
-			Current = this;
-			EnvironmentPointer = v;
-			IntPtr p = Marshal.ReadIntPtr (v);
-		}
-		internal void LogCreateLocalRef (IntPtr value)
+		internal static void LogCreateLocalRef (IntPtr value)
 		{
 		}
-		public Exception GetExceptionForLastThrowable (IntPtr h)
+		public static Exception GetExceptionForLastThrowable (IntPtr h)
 		{
 			if (h == IntPtr.Zero)
 				return null;
@@ -432,7 +409,7 @@ namespace Java.Interop.JIPinvokes {
 			PinvokeEnv.References.DeleteLocalRef (r.Handle);
 			return new Exception ("yada yada yada");
 		}
-		public Exception GetExceptionForLastThrowable ()
+		public static Exception GetExceptionForLastThrowable ()
 		{
 			var v = JIIntPtrEnv.Exceptions.ExceptionOccurred ();
 			var h = v.Handle;
@@ -447,21 +424,13 @@ namespace Java.Interop.JIPinvokes {
 }
 namespace Java.Interop.XAIntPtrs {
 	public partial class JniEnvironment {
-		public static JniEnvironment Current;
+		internal static JniEnvironmentInvoker Invoker;
+		public static IntPtr EnvironmentPointer;
 
-		internal JniEnvironmentInvoker Invoker;
-		public IntPtr EnvironmentPointer;
-
-		public unsafe JniEnvironment (IntPtr v) {
-			Current = this;
-			EnvironmentPointer = v;
-			IntPtr p = Marshal.ReadIntPtr (v);
-			Invoker = new JniEnvironmentInvoker ((JniNativeInterfaceStruct*) p);
-		}
-		internal void LogCreateLocalRef (IntPtr value)
+		internal static void LogCreateLocalRef (IntPtr value)
 		{
 		}
-		public Exception GetExceptionForLastThrowable ()
+		public static Exception GetExceptionForLastThrowable ()
 		{
 			var h = XAIntPtrEnv.Exceptions.ExceptionOccurred ();
 			if (h == IntPtr.Zero)
@@ -508,7 +477,8 @@ class App {
 
 	static unsafe void SafeTiming (IntPtr _env)
 	{
-		var se = new SafeEnv (_env);
+		SafeEnv.EnvironmentPointer = _env;
+		SafeEnv.Invoker = new Java.Interop.SafeHandles.JniEnvironmentInvoker ((JniNativeInterfaceStruct*) Marshal.ReadIntPtr (_env));
 		var Arrays_class = SafeEnv.Types.FindClass ("java/util/Arrays");
 		var Arrays_binarySearch = SafeEnv.StaticMethods.GetStaticMethodID (Arrays_class, "binarySearch", "([II)I");
 		var intArray = SafeEnv.Arrays.NewIntArray (3);
@@ -525,7 +495,6 @@ class App {
 		t.Stop ();
 		Console.WriteLine ("# {0} timing: {1}", nameof (SafeTiming), t.Elapsed);
 		Console.WriteLine ("#\tAverage Invocation: {0}ms", t.Elapsed.TotalMilliseconds / C);
-		GC.KeepAlive (se);
 		GC.KeepAlive (intArray);
 		GC.KeepAlive (Arrays_class);
 		GC.KeepAlive (Arrays_binarySearch);
@@ -533,7 +502,8 @@ class App {
 
 	static unsafe void JIIntPtrTiming (IntPtr _env)
 	{
-		var pe = new JIIntPtrEnv (_env);
+		JIIntPtrEnv.EnvironmentPointer = _env;
+		JIIntPtrEnv.Invoker = new Java.Interop.JIIntPtrs.JniEnvironmentInvoker ((JniNativeInterfaceStruct*) Marshal.ReadIntPtr (_env));
 		var Arrays_class = JIIntPtrEnv.Types.FindClass ("java/util/Arrays");
 		var Arrays_binarySearch = JIIntPtrEnv.StaticMethods.GetStaticMethodID (Arrays_class, "binarySearch", "([II)I");
 		var intArray = JIIntPtrEnv.Arrays.NewIntArray (3);
@@ -554,7 +524,7 @@ class App {
 
 	static unsafe void JIPinvokeTiming (IntPtr _env)
 	{
-		var pe = new PinvokeEnv (_env);
+		PinvokeEnv.EnvironmentPointer = _env;
 		var Arrays_class = PinvokeEnv.Types.FindClass ("java/util/Arrays");
 		var Arrays_binarySearch = PinvokeEnv.StaticMethods.GetStaticMethodID (Arrays_class, "binarySearch", "([II)I");
 		var intArray = PinvokeEnv.Arrays.NewIntArray (3);
@@ -575,7 +545,8 @@ class App {
 
 	static unsafe void XAIntPtrTiming (IntPtr _env)
 	{
-		var pe = new XAIntPtrEnv (_env);
+		XAIntPtrEnv.EnvironmentPointer = _env;
+		XAIntPtrEnv.Invoker = new Java.Interop.XAIntPtrs.JniEnvironmentInvoker ((JniNativeInterfaceStruct*) Marshal.ReadIntPtr (_env));
 		var Arrays_class = XAIntPtrEnv.Types.FindClass ("java/util/Arrays");
 		var Arrays_binarySearch = XAIntPtrEnv.StaticMethods.GetStaticMethodID (Arrays_class, "binarySearch", "([II)I");
 		var intArray = XAIntPtrEnv.Arrays.NewIntArray (3);

@@ -73,7 +73,7 @@ namespace Java.Interop.Dynamic {
 			if (arguments != null)
 				return;
 
-			var vm  = JniEnvironment.Current.JavaVM;
+			var vm  = JniEnvironment.Runtime;
 			var sb  = new StringBuilder ();
 
 			if (!IsConstructor) {
@@ -111,7 +111,7 @@ namespace Java.Interop.Dynamic {
 			if (args.Count != arguments.Count)
 				return false;
 
-			var vm = JniEnvironment.Current.JavaVM;
+			var vm = JniEnvironment.Runtime;
 
 			for (int i = 0; i < arguments.Count; ++i) {
 				if (args [i] == null) {

@@ -101,7 +101,7 @@ namespace Java.InteropTests {
 			}
 		}
 
-		public override JniObjectReference CreateLocalReference (JniEnvironment environment, JniObjectReference value)
+		public override JniObjectReference CreateLocalReference (JniEnvironmentInfo environment, JniObjectReference value)
 		{
 			var newValue    = manager.CreateLocalReference (environment, value);
 			if (lrefLog == null || !newValue.IsValid)
@@ -120,7 +120,7 @@ namespace Java.InteropTests {
 			return newValue;
 		}
 
-		public override void DeleteLocalReference (JniEnvironment environment, ref JniObjectReference value)
+		public override void DeleteLocalReference (JniEnvironmentInfo environment, ref JniObjectReference value)
 		{
 			if (lrefLog != null && value.IsValid) {
 				LogDeleteLocalRef (environment, value.Handle);
@@ -128,7 +128,7 @@ namespace Java.InteropTests {
 			manager.DeleteLocalReference (environment, ref value);
 		}
 
-		void LogDeleteLocalRef (JniEnvironment environment, IntPtr value)
+		void LogDeleteLocalRef (JniEnvironmentInfo environment, IntPtr value)
 		{
 			var t = Thread.CurrentThread;
 			LogLref ("-l- lrefc {0} handle 0x{1}/{2} from thread '{3}'({4}){5}{6}",
@@ -141,7 +141,7 @@ namespace Java.InteropTests {
 					new StackTrace (true));
 		}
 
-		public override void CreatedLocalReference (JniEnvironment environment, JniObjectReference value)
+		public override void CreatedLocalReference (JniEnvironmentInfo environment, JniObjectReference value)
 		{
 			manager.CreatedLocalReference (environment, value);
 			if (lrefLog == null || !value.IsValid)
@@ -157,7 +157,7 @@ namespace Java.InteropTests {
 					new StackTrace (true));
 		}
 
-		public override IntPtr ReleaseLocalReference (JniEnvironment environment, ref JniObjectReference value)
+		public override IntPtr ReleaseLocalReference (JniEnvironmentInfo environment, ref JniObjectReference value)
 		{
 			if (lrefLog != null && value.IsValid) {
 				LogDeleteLocalRef (environment, value.Handle);

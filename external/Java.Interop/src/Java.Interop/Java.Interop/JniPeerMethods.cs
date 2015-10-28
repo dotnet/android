@@ -11,7 +11,7 @@ namespace Java.Interop.GenericMarshaler {
 			T value
 		)
 		{
-			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return NewObject (peer, constructorSignature, declaringType, value);
 			}
 			return peer.AllocObject (declaringType);
@@ -43,7 +43,7 @@ namespace Java.Interop.GenericMarshaler {
 		    T value
 		)
 		{
-			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return;
 			}
 			_InvokeConstructor (peer, constructorSignature, self, value);
@@ -77,7 +77,7 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2
 		)
 		{
-			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return NewObject (peer, constructorSignature, declaringType, value1, value2);
 			}
 			return peer.AllocObject (declaringType);
@@ -112,7 +112,7 @@ namespace Java.Interop.GenericMarshaler {
 		    T1 value1, T2 value2
 		)
 		{
-			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return;
 			}
 			_InvokeConstructor (peer, constructorSignature, self, value1, value2);
@@ -149,7 +149,7 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3
 		)
 		{
-			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3);
 			}
 			return peer.AllocObject (declaringType);
@@ -187,7 +187,7 @@ namespace Java.Interop.GenericMarshaler {
 		    T1 value1, T2 value2, T3 value3
 		)
 		{
-			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return;
 			}
 			_InvokeConstructor (peer, constructorSignature, self, value1, value2, value3);
@@ -227,7 +227,7 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4
 		)
 		{
-			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3, value4);
 			}
 			return peer.AllocObject (declaringType);
@@ -268,7 +268,7 @@ namespace Java.Interop.GenericMarshaler {
 		    T1 value1, T2 value2, T3 value3, T4 value4
 		)
 		{
-			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return;
 			}
 			_InvokeConstructor (peer, constructorSignature, self, value1, value2, value3, value4);
@@ -311,7 +311,7 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
 		)
 		{
-			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3, value4, value5);
 			}
 			return peer.AllocObject (declaringType);
@@ -355,7 +355,7 @@ namespace Java.Interop.GenericMarshaler {
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
 		)
 		{
-			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return;
 			}
 			_InvokeConstructor (peer, constructorSignature, self, value1, value2, value3, value4, value5);
@@ -401,7 +401,7 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
 		)
 		{
-			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3, value4, value5, value6);
 			}
 			return peer.AllocObject (declaringType);
@@ -448,7 +448,7 @@ namespace Java.Interop.GenericMarshaler {
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
 		)
 		{
-			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return;
 			}
 			_InvokeConstructor (peer, constructorSignature, self, value1, value2, value3, value4, value5, value6);
@@ -497,7 +497,7 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
 		)
 		{
-			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7);
 			}
 			return peer.AllocObject (declaringType);
@@ -547,7 +547,7 @@ namespace Java.Interop.GenericMarshaler {
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
 		)
 		{
-			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return;
 			}
 			_InvokeConstructor (peer, constructorSignature, self, value1, value2, value3, value4, value5, value6, value7);
@@ -599,7 +599,7 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
 		)
 		{
-			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7, value8);
 			}
 			return peer.AllocObject (declaringType);
@@ -652,7 +652,7 @@ namespace Java.Interop.GenericMarshaler {
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
 		)
 		{
-			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return;
 			}
 			_InvokeConstructor (peer, constructorSignature, self, value1, value2, value3, value4, value5, value6, value7, value8);
@@ -707,7 +707,7 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
 		)
 		{
-			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7, value8, value9);
 			}
 			return peer.AllocObject (declaringType);
@@ -763,7 +763,7 @@ namespace Java.Interop.GenericMarshaler {
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
 		)
 		{
-			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return;
 			}
 			_InvokeConstructor (peer, constructorSignature, self, value1, value2, value3, value4, value5, value6, value7, value8, value9);
@@ -821,7 +821,7 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
 		)
 		{
-			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10);
 			}
 			return peer.AllocObject (declaringType);
@@ -880,7 +880,7 @@ namespace Java.Interop.GenericMarshaler {
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
 		)
 		{
-			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return;
 			}
 			_InvokeConstructor (peer, constructorSignature, self, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10);
@@ -941,7 +941,7 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
 		)
 		{
-			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11);
 			}
 			return peer.AllocObject (declaringType);
@@ -1003,7 +1003,7 @@ namespace Java.Interop.GenericMarshaler {
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
 		)
 		{
-			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return;
 			}
 			_InvokeConstructor (peer, constructorSignature, self, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11);
@@ -1067,7 +1067,7 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
 		)
 		{
-			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12);
 			}
 			return peer.AllocObject (declaringType);
@@ -1132,7 +1132,7 @@ namespace Java.Interop.GenericMarshaler {
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
 		)
 		{
-			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return;
 			}
 			_InvokeConstructor (peer, constructorSignature, self, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12);
@@ -1199,7 +1199,7 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
 		)
 		{
-			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13);
 			}
 			return peer.AllocObject (declaringType);
@@ -1267,7 +1267,7 @@ namespace Java.Interop.GenericMarshaler {
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
 		)
 		{
-			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return;
 			}
 			_InvokeConstructor (peer, constructorSignature, self, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13);
@@ -1337,7 +1337,7 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
 		)
 		{
-			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13, value14);
 			}
 			return peer.AllocObject (declaringType);
@@ -1408,7 +1408,7 @@ namespace Java.Interop.GenericMarshaler {
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
 		)
 		{
-			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return;
 			}
 			_InvokeConstructor (peer, constructorSignature, self, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13, value14);
@@ -1481,7 +1481,7 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
 		)
 		{
-			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13, value14, value15);
 			}
 			return peer.AllocObject (declaringType);
@@ -1555,7 +1555,7 @@ namespace Java.Interop.GenericMarshaler {
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
 		)
 		{
-			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return;
 			}
 			_InvokeConstructor (peer, constructorSignature, self, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13, value14, value15);
@@ -1631,7 +1631,7 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
 		)
 		{
-			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13, value14, value15, value16);
 			}
 			return peer.AllocObject (declaringType);
@@ -1708,7 +1708,7 @@ namespace Java.Interop.GenericMarshaler {
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
 		)
 		{
-			if (JniEnvironment.Current.JavaVM.NewObjectRequired) {
+			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return;
 			}
 			_InvokeConstructor (peer, constructorSignature, self, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13, value14, value15, value16);
