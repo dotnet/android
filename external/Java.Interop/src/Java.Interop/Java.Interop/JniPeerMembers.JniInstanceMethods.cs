@@ -3,15 +3,16 @@ using System.Collections.Generic;
 
 namespace Java.Interop
 {
-	public sealed partial class JniPeerInstanceMethods
+	partial class JniPeerMembers {
+	public sealed partial class JniInstanceMethods
 	{
-		internal JniPeerInstanceMethods (JniPeerMembers members)
+		internal JniInstanceMethods (JniPeerMembers members)
 		{
 			DeclaringType   = members.ManagedPeerType;
 			JniPeerType     = members.JniPeerType;
 		}
 
-		JniPeerInstanceMethods (Type declaringType)
+		JniInstanceMethods (Type declaringType)
 		{
 			var jvm     = JniEnvironment.Runtime;
 			var info    = jvm.GetJniTypeInfoForType (declaringType);
@@ -30,7 +31,7 @@ namespace Java.Interop
 		readonly Type                                       DeclaringType;
 
 		Dictionary<string, JniInstanceMethodInfo>           InstanceMethods = new Dictionary<string, JniInstanceMethodInfo>();
-		Dictionary<Type, JniPeerInstanceMethods>            SubclassConstructors = new Dictionary<Type, JniPeerInstanceMethods> ();
+		Dictionary<Type, JniInstanceMethods>                SubclassConstructors = new Dictionary<Type, JniInstanceMethods> ();
 
 		internal void Dispose ()
 		{
@@ -61,15 +62,15 @@ namespace Java.Interop
 			}
 		}
 
-		internal JniPeerInstanceMethods GetConstructorsForType (Type declaringType)
+		internal JniInstanceMethods GetConstructorsForType (Type declaringType)
 		{
 			if (declaringType == DeclaringType)
 				return this;
 
-			JniPeerInstanceMethods methods;
+			JniInstanceMethods methods;
 			lock (SubclassConstructors) {
 				if (!SubclassConstructors.TryGetValue (declaringType, out methods)) {
-					methods = new JniPeerInstanceMethods (declaringType);
+					methods = new JniInstanceMethods (declaringType);
 					SubclassConstructors.Add (declaringType, methods);
 				}
 			}
@@ -127,6 +128,7 @@ namespace Java.Interop
 			var ctor    = methods.GetConstructor (constructorSignature);
 			ctor.InvokeNonvirtualVoidMethod (self.PeerReference, methods.JniPeerType.PeerReference, parameters);
 		}
+	}
 	}
 
 #if !XA_INTEGRATION

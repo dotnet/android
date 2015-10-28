@@ -3,9 +3,10 @@ using System.Collections.Generic;
 
 namespace Java.Interop
 {
-	public sealed partial class JniPeerStaticFields
+	partial class JniPeerMembers {
+	public sealed partial class JniStaticFields
 	{
-		internal JniPeerStaticFields (JniPeerMembers members)
+		internal JniStaticFields (JniPeerMembers members)
 		{
 			Members = members;
 		}
@@ -35,6 +36,6 @@ namespace Java.Interop
 
 			StaticFields = null;
 		}
-	}
+	}}
 }
 

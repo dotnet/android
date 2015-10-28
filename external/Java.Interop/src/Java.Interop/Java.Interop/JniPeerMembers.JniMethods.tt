@@ -46,7 +46,7 @@ namespace Java.Interop.GenericMarshaler {
 #>
 
 		public static JniObjectReference StartGenericCreateInstance<#= typeParams #> (
-			this    JniPeerInstanceMethods peer,
+			this    JniPeerMembers.JniInstanceMethods peer,
 			string  constructorSignature,
 			Type    declaringType,
 			<#= methodParams #>
@@ -59,7 +59,7 @@ namespace Java.Interop.GenericMarshaler {
 		}
 
 		static unsafe JniObjectReference NewObject<#= typeParams #> (
-			JniPeerInstanceMethods  peer,
+			JniPeerMembers.JniInstanceMethods  peer,
 		    string  constructorSignature,
 		    Type    declaringType,
 		    <#= methodParams #>
@@ -93,7 +93,7 @@ namespace Java.Interop.GenericMarshaler {
 		}
 
 		public static void FinishGenericCreateInstance<#= typeParams #> (
-			this        JniPeerInstanceMethods  peer,
+			this        JniPeerMembers.JniInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaPeerable   self,
 		    <#= methodParams #>
@@ -106,7 +106,7 @@ namespace Java.Interop.GenericMarshaler {
 		}
 
 		static unsafe void _InvokeConstructor<#= typeParams #> (
-			JniPeerInstanceMethods  peer,
+			JniPeerMembers.JniInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaPeerable   self,
 		    <#= methodParams #>
@@ -179,7 +179,7 @@ namespace Java.Interop.GenericMarshaler {
 #>
 
 		public static unsafe <#= info.ReturnType #> InvokeGenericVirtual<#= info.JniCallType #>Method<#= typeParams #> (
-			this    JniPeerInstanceMethods peer,
+			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self<#= i == 0 ? "" : ",\n\t\t\t" + methodParams #>
 		)
@@ -245,7 +245,7 @@ namespace Java.Interop.GenericMarshaler {
 #>
 
 		public static unsafe <#= info.ReturnType #> InvokeGeneric<#= info.JniCallType #>Method<#= typeParams #> (
-		    this    JniPeerStaticMethods    peer,
+		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember<#= i == 0 ? "" : ",\n\t\t\t" + methodParams #>
 		)
 		{

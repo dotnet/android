@@ -73,16 +73,16 @@
     <Compile Include="Java.Interop\JniObjectReferenceManager.cs" />
     <Compile Include="Java.Interop\JniObjectReferenceOptions.cs" />
     <Compile Include="Java.Interop\JniObjectReferenceType.cs" />
-    <Compile Include="Java.Interop\JniPeerInstanceMethods.cs" />
     <Compile Include="Java.Interop\JniPeerInstanceMethods_Invoke.cs">
-      <DependentUpon>JniPeerInstanceMethods_Invoke.tt</DependentUpon>
+      <DependentUpon>JniPeerMembers.JniInstanceMethods_Invoke.tt</DependentUpon>
     </Compile>
-    <Compile Include="Java.Interop\JniPeerInstanceFields.cs" />
-    <Compile Include="Java.Interop\JniPeerStaticMethods.cs" />
-    <Compile Include="Java.Interop\JniPeerStaticFields.cs" />
-    <Compile Include="Java.Interop\JniPeerFields.cs">
-      <DependentUpon>JniPeerFields.tt</DependentUpon>
+    <Compile Include="Java.Interop\JniPeerMembers.JniStaticMethods.cs" />
+    <Compile Include="Java.Interop\JniPeerMembers.JniInstanceMethods.cs" />
+    <Compile Include="Java.Interop\JniPeerMembers.JniInstanceFields.cs" />
+    <Compile Include="Java.Interop\JniPeerMembers.JniFields.cs">
+      <DependentUpon>JniPeerMembers.JniFields.tt</DependentUpon>
     </Compile>
+    <Compile Include="Java.Interop\JniPeerMembers.JniStaticFields.cs" />
   </ItemGroup>
   <ItemGroup Condition=" !$(Configuration.StartsWith('XAIntegration')) ">
     <Compile Include="Java.Interop\IExportedMemberBuilder.cs" />
@@ -107,8 +107,8 @@
     <Compile Include="Java.Interop\JniMarshal.cs" />
     <Compile Include="Java.Interop\JniMarshalMethod.cs" />
     <Compile Include="Java.Interop\JniMarshalInfo.cs" />
-    <Compile Include="Java.Interop\JniPeerMethods.cs">
-      <DependentUpon>JniPeerMethods.tt</DependentUpon>
+    <Compile Include="Java.Interop\JniPeerMembers.JniMethods.cs">
+      <DependentUpon>JniPeerMembers.JniMethods.tt</DependentUpon>
     </Compile>
     <Compile Include="Java.Interop\JniReferenceSafeHandle.cs" />
     <Compile Include="Java.Interop\JniSystem.cs" />
@@ -138,7 +138,7 @@
     <Exec Command="$(Runtime) &quot;$(JNIEnvGenPath)\jnienv-gen.exe&quot; Java.Interop\JniEnvironment.g.cs $(OutputPath)\jni.c" />
   </Target>
   <ItemGroup>
-    <JavaInteropJar Include="$(OutputPath)java-interop.jar" />
+    <JavaInteropJar Include="%24%28OutputPath%29java-interop.jar" />
   </ItemGroup>
   <Target Name="BuildInteropJar" Inputs="@(CompileJavaInteropJar)" Outputs="@(JavaInteropJar)">
     <MakeDir Directories="$(OutputPath)ji-classes" />
@@ -150,21 +150,21 @@
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>JavaPrimitiveArrays.cs</LastGenOutput>
     </None>
-    <None Include="Java.Interop\JniPeerMethods.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>JniPeerMethods.cs</LastGenOutput>
-    </None>
-    <None Include="Java.Interop\JniPeerInstanceMethods_Invoke.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>JniPeerInstanceMethods_Invoke.cs</LastGenOutput>
-    </None>
-    <None Include="Java.Interop\JniPeerFields.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>JniPeerFields.cs</LastGenOutput>
-    </None>
     <None Include="Java.Interop\JniBuiltinMarshalers.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>JniBuiltinMarshalers.cs</LastGenOutput>
+    </None>
+    <None Include="Java.Interop\JniPeerMembers.JniInstanceMethods_Invoke.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>JniPeerInstanceMethods_Invoke.cs</LastGenOutput>
+    </None>
+    <None Include="Java.Interop\JniPeerMembers.JniFields.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>JniPeerMembers.JniFields.cs</LastGenOutput>
+    </None>
+    <None Include="Java.Interop\JniPeerMembers.JniMethods.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>JniPeerMembers.JniMethods.cs</LastGenOutput>
     </None>
   </ItemGroup>
 </Project>

@@ -50,10 +50,10 @@ namespace Java.Interop {
 			JniPeerTypeName = jniPeerType;
 			ManagedPeerType = managedPeerType;
 
-			instanceMethods = new JniPeerInstanceMethods (this);
-			instanceFields  = new JniPeerInstanceFields (this);
-			staticMethods   = new JniPeerStaticMethods (this);
-			staticFields    = new JniPeerStaticFields (this);
+			instanceMethods = new JniInstanceMethods (this);
+			instanceFields  = new JniInstanceFields (this);
+			staticMethods   = new JniStaticMethods (this);
+			staticFields    = new JniStaticFields (this);
 		}
 
 		static JniPeerMembers CreatePeerMembers (string jniPeerType, Type managedPeerType)
@@ -63,10 +63,10 @@ namespace Java.Interop {
 
 		JniType     jniPeerType;
 
-		JniPeerInstanceMethods  instanceMethods;
-		JniPeerInstanceFields   instanceFields;
-		JniPeerStaticMethods    staticMethods;
-		JniPeerStaticFields     staticFields;
+		JniInstanceMethods  instanceMethods;
+		JniInstanceFields   instanceFields;
+		JniStaticMethods    staticMethods;
+		JniStaticFields     staticFields;
 
 		public      Type        ManagedPeerType {get; private set;}
 		public      string      JniPeerTypeName {get; private set;}
@@ -78,19 +78,19 @@ namespace Java.Interop {
 			}
 		}
 
-		public  JniPeerInstanceMethods  InstanceMethods {
+		public  JniInstanceMethods  InstanceMethods {
 			get {return Assert (instanceMethods);}
 		}
 
-		public  JniPeerInstanceFields   InstanceFields {
+		public  JniInstanceFields   InstanceFields {
 			get {return Assert (instanceFields);}
 		}
 
-		public  JniPeerStaticMethods    StaticMethods {
+		public  JniStaticMethods    StaticMethods {
 			get {return Assert (staticMethods);}
 		}
 
-		public  JniPeerStaticFields     StaticFields {
+		public  JniStaticFields     StaticFields {
 			get {return Assert (staticFields);}
 		}
 

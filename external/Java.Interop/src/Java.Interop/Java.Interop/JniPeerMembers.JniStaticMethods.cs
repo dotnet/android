@@ -3,9 +3,10 @@ using System.Collections.Generic;
 
 namespace Java.Interop
 {
-	public sealed partial class JniPeerStaticMethods {
+	partial class JniPeerMembers {
+	public sealed partial class JniStaticMethods {
 
-		internal JniPeerStaticMethods (JniPeerMembers members)
+		internal JniStaticMethods (JniPeerMembers members)
 		{
 			Members = members;
 		}
@@ -95,6 +96,6 @@ namespace Java.Interop
 			var m = GetMethodInfo (encodedMember);
 			return m.CallObjectMethod (Members.JniPeerType.PeerReference, parameters);
 		}
-	}
+	}}
 }
 

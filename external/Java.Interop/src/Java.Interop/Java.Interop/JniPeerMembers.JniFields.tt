@@ -19,7 +19,8 @@
 #>
 namespace Java.Interop {
 
-	partial class JniPeerInstanceFields {
+	partial class JniPeerMembers {
+	partial class JniInstanceFields {
 <#
 	foreach (var info in jniReturnTypes) {
 #>
@@ -46,7 +47,7 @@ namespace Java.Interop {
 #>
 	}
 
-	partial class JniPeerStaticFields {
+	partial class JniStaticFields {
 <#
 	foreach (var info in jniReturnTypes) {
 #>
@@ -65,5 +66,5 @@ namespace Java.Interop {
 <#
 	}
 #>
-	}
+	}}
 }

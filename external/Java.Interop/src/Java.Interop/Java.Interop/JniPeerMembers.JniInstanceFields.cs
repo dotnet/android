@@ -3,9 +3,10 @@ using System.Collections.Generic;
 
 namespace Java.Interop
 {
-	public sealed partial class JniPeerInstanceFields
+	partial class JniPeerMembers {
+	public sealed partial class JniInstanceFields
 	{
-		internal JniPeerInstanceFields (JniPeerMembers members)
+		internal JniInstanceFields (JniPeerMembers members)
 		{
 			Members = members;
 		}
@@ -35,6 +36,6 @@ namespace Java.Interop
 				return f;
 			}
 		}
-	}
+	}}
 }
 
