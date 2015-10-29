@@ -1,6 +1,7 @@
 ﻿namespace Java.Interop {
 
-	partial class JniPeerInstanceFields {
+	partial class JniPeerMembers {
+	partial class JniInstanceFields {
 
 		public bool GetBooleanValue (
 			string encodedMember,
@@ -165,7 +166,7 @@
 		}
 	}
 
-	partial class JniPeerStaticFields {
+	partial class JniStaticFields {
 
 		public bool GetBooleanValue (string encodedMember)
 		{
@@ -274,5 +275,5 @@
 			GetFieldInfo (encodedMember)
 				.SetValue (Members.JniPeerType.PeerReference, value);
 		}
-	}
+	}}
 }
