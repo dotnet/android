@@ -27,11 +27,24 @@ namespace Java.Interop {
 			NewObjectRequired   = ((int) Android.OS.Build.VERSION.SdkInt) <= 10;
 			InvocationPointer   = invocationPointer;
 			ObjectReferenceManager      = Java.InteropTests.LoggingJniObjectReferenceManagerDecorator.GetObjectReferenceManager (new JniObjectReferenceManager ());
+			TypeManager                 = new AndroidTypeManager ();
 		}
 
 		public AndroidVM CreateAndroidVM ()
 		{
 			return new AndroidVM (this);
+		}
+	}
+
+	class AndroidTypeManager : JniRuntime.JniTypeManager {
+
+		protected override IEnumerable<Type> GetTypesForSimpleReference (string jniSimpleReference)
+		{
+			foreach (var t in base.GetTypesForSimpleReference (jniSimpleReference))
+				yield return t;
+			Type target = ((AndroidVM) Runtime).GetTypeMapping (jniSimpleReference);
+			if (target != null)
+				yield return target;
 		}
 	}
 
@@ -69,13 +82,11 @@ namespace Java.Interop {
 			}
 		}
 
-		public override Type GetTypeForJniSimplifiedTypeReference (string jniTypeReference)
+		internal Type GetTypeMapping (string jniSimpleReference)
 		{
-			Type target = base.GetTypeForJniSimplifiedTypeReference (jniTypeReference);
-			if (target != null)
-				return target;
+			Type target;
 			lock (typeMappings) {
-				if (typeMappings != null && typeMappings.TryGetValue (jniTypeReference, out target))
+				if (typeMappings.TryGetValue (jniSimpleReference, out target))
 					return target;
 			}
 			return null;

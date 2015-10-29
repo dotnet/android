@@ -9,7 +9,15 @@ using System.Threading;
 
 namespace Java.Interop {
 
-	public class JniObjectReferenceManager : IDisposable {
+	public class JniObjectReferenceManager : IDisposable, JniRuntime.ISetRuntime {
+
+
+		protected   JniRuntime  Runtime { get; private set; }
+
+		void JniRuntime.ISetRuntime.SetRuntime (JniRuntime runtime)
+		{
+			Runtime = runtime;
+		}
 
 		int grefc;
 		public virtual int GlobalReferenceCount {

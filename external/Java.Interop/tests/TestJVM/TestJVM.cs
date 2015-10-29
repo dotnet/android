@@ -20,6 +20,7 @@ namespace Java.InteropTests
 			}
 			builder.AddOption ("-Xcheck:jni");
 			builder.ObjectReferenceManager      = LoggingJniObjectReferenceManagerDecorator.GetObjectReferenceManager (new Java.Interop.JniObjectReferenceManager ());
+			builder.TypeManager                 = new JreTypeManager ();
 
 			return builder;
 		}
@@ -32,14 +33,17 @@ namespace Java.InteropTests
 			this.typeMappings = typeMappings;
 		}
 
-		public override Type GetTypeForJniSimplifiedTypeReference (string jniTypeReference)
-		{
-			Type target = base.GetTypeForJniSimplifiedTypeReference (jniTypeReference);
-			if (target != null)
-				return target;
-			if (typeMappings != null && typeMappings.TryGetValue (jniTypeReference, out target))
-				return target;
-			return null;
+		class JreTypeManager : JniTypeManager {
+
+			protected override IEnumerable<Type> GetTypesForSimpleReference (string jniSimpleReference)
+			{
+				foreach (var t in base.GetTypesForSimpleReference (jniSimpleReference))
+					yield return t;
+				var mappings = ((TestJVM) Runtime).typeMappings;
+				Type target;
+				if (mappings != null && mappings.TryGetValue (jniSimpleReference, out target))
+					yield return target;
+			}
 		}
 	}
 }

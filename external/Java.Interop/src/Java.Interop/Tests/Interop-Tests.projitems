@@ -34,7 +34,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JavaSByteArrayContractTests.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JavaSingleArrayContractTests.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JavaVMFixture.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JavaVMTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JniEnvironmentTests.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JniInstanceMethodIDTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JniMarshalMethodTests.cs" />
@@ -47,6 +46,8 @@
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\TestTypeTests.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\LoggingJniObjectReferenceManagerDecorator.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JniTypeSignatureAttributeTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JniRuntimeTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JniTypeManagerTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\com\xamarin\interop\CallNonvirtualBase.java" />

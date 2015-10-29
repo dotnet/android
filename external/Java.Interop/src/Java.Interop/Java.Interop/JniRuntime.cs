@@ -54,10 +54,18 @@ namespace Java.Interop
 			public  IntPtr                      EnvironmentPointer          {get; set;}
 
 			public  JniObjectReferenceManager   ObjectReferenceManager      {get; set;}
+			public  JniTypeManager              TypeManager                 {get; set;}
 
 			public CreationOptions ()
 			{
 			}
+		}
+	}
+
+	partial class JniRuntime {
+
+		internal interface ISetRuntime {
+			void SetRuntime (JniRuntime runtime);
 		}
 	}
 
@@ -125,7 +133,8 @@ namespace Java.Interop
 			TrackIDs     = options.TrackIDs;
 			DestroyRuntimeOnDispose     = options.DestroyRuntimeOnDispose;
 
-			ObjectReferenceManager      = options.ObjectReferenceManager ?? new JniObjectReferenceManager ();
+			ObjectReferenceManager      = SetRuntime (options.ObjectReferenceManager ?? new JniObjectReferenceManager ());
+			TypeManager                 = SetRuntime (options.TypeManager ?? new JniTypeManager ());
 
 			NewObjectRequired   = options.NewObjectRequired;
 
@@ -145,6 +154,13 @@ namespace Java.Interop
 #if !XA_INTEGRATION
 			ManagedPeer.Init ();
 #endif  // !XA_INTEGRATION
+		}
+
+		T SetRuntime<T> (T value)
+			where T : ISetRuntime
+		{
+			value.SetRuntime (this);
+			return value;
 		}
 
 		static unsafe JavaVMInterface CreateInvoker (IntPtr handle)
@@ -257,6 +273,7 @@ namespace Java.Interop
 		}
 
 		public JniObjectReferenceManager    ObjectReferenceManager      {get; private set;}
+		public JniTypeManager               TypeManager                 {get; private set;}
 
 		public bool TrackIDs {get; private set;}
 
@@ -497,7 +514,7 @@ namespace Java.Interop
 
 			Type type = null;
 			while (jniTypeName != null) {
-				type = GetTypeForJniTypeRefererence (jniTypeName);
+				type = TypeManager.GetType (TypeManager.GetTypeSignature (jniTypeName));
 
 				if (type != null) {
 					var ctor    = type.GetConstructor (new[] {
@@ -548,184 +565,6 @@ namespace Java.Interop
 		}
 	}
 #endif  // !XA_INTEGRATION
-
-	partial class JniRuntime {
-
-		public JniTypeSignature GetJniTypeInfoForType (Type type)
-		{
-			if (type == null)
-				throw new ArgumentNullException ("type");
-			if (type.ContainsGenericParameters)
-				throw new ArgumentException ("Generic type definitions are not supported.", "type");
-
-			var originalType    = type;
-			int rank            = 0;
-			while (type.IsArray) {
-				if (type.IsArray && type.GetArrayRank () > 1)
-					throw new ArgumentException ("Multidimensional array '" + originalType.FullName + "' is not supported.", "type");
-				rank++;
-				type    = type.GetElementType ();
-			}
-
-			if (type.IsEnum)
-				type = Enum.GetUnderlyingType (type);
-
-#if !XA_INTEGRATION
-			foreach (var mapping in JniBuiltinTypeNameMappings) {
-				if (mapping.Key == type) {
-					var r = mapping.Value;
-					return r.AddArrayRank (rank);
-				}
-			}
-
-			foreach (var mapping in JniBuiltinArrayMappings) {
-				if (mapping.Key == type) {
-					var r = mapping.Value;
-					return r.AddArrayRank (rank);
-				}
-			}
-#endif  // !XA_INTEGRATION
-
-			var names = (JniTypeSignatureAttribute[]) type.GetCustomAttributes (typeof (JniTypeSignatureAttribute), inherit:false);
-			if (names.Length != 0)
-				return new JniTypeSignature (names [0].SimpleReference, names [0].ArrayRank + rank, names [0].IsKeyword);
-
-#if !XA_INTEGRATION
-			if (type.IsGenericType) {
-				var def = type.GetGenericTypeDefinition ();
-				if (def == typeof(JavaArray<>) || def == typeof(JavaObjectArray<>)) {
-					var r = GetJniTypeInfoForType (type.GetGenericArguments () [0]);
-					return r.AddArrayRank (rank + 1);
-				}
-			}
-#endif  // !XA_INTEGRATION
-			return new JniTypeSignature (GetJniSimplifiedTypeReferenceForType (type), rank, false);
-		}
-
-		// Should be protected, but how then would we test?
-		public virtual string GetJniSimplifiedTypeReferenceForType (Type type)
-		{
-			if (type == null)
-				throw new ArgumentNullException ("type");
-			if (type.IsArray)
-				throw new ArgumentException ("Array type '" + type.FullName + "' is not supported.", "type");
-			return null;
-		}
-
-		public virtual Type GetTypeForJniTypeRefererence (string jniTypeReference)
-		{
-			var info    = GetJniTypeInfoForJniTypeReference (jniTypeReference);
-			if (info.SimpleReference == null)
-				return null;
-			var inner   = GetTypeForJniSimplifiedTypeReference (info.SimpleReference);
-			if (inner == null)
-				return null;
-			var rank    = info.ArrayRank;
-			var type    = inner;
-#if XA_INTEGRATION
-			if (rank > 0)
-				throw new NotSupportedException ("Cannot handle arrays at this time.");
-#else   // XA_INTEGRATION
-
-			if (info.IsKeyword && rank > 0) {
-				type = typeof(JavaPrimitiveArray<>).MakeGenericType (type);
-				if (--rank == 0)
-					return type;
-			}
-			while (rank-- > 0) {
-				type = typeof (JavaObjectArray<>).MakeGenericType (type);
-			}
-#endif  // XA_INTEGRATION
-			return type;
-		}
-
-		public JniTypeSignature GetJniTypeInfoForJniTypeReference (string jniTypeReference)
-		{
-			if (jniTypeReference == null)
-				throw new ArgumentNullException ("jniTypeReference");
-			int i = 0;
-			int r = 0;
-			var n = (string) null;
-			var k = false;
-			while (i < jniTypeReference.Length && jniTypeReference [i] == '[') {
-				i++;
-				r++;
-			}
-			switch (jniTypeReference [i]) {
-			case 'B':
-			case 'C':
-			case 'D':
-			case 'I':
-			case 'F':
-			case 'J':
-			case 'S':
-			case 'Z':
-				if (jniTypeReference.Length - i > 1)
-					n   = jniTypeReference.Substring (i);
-				else {
-					n   = jniTypeReference [i].ToString ();
-					k   = true;
-				}
-				break;
-			case 'L':
-				int s = jniTypeReference.IndexOf (';', i);
-				if (s >= i && s != jniTypeReference.Length-1)
-					throw new ArgumentException (
-							string.Format ("Malformed JNI type reference: trailing text after ';' in '{0}'.", jniTypeReference),
-							"jniTypeReference");
-				if (i == 0) {
-					n   = s > i
-						? jniTypeReference.Substring (i + 1, s - i - 1)
-						: jniTypeReference;
-				} else {
-					if (s < i)
-						throw new ArgumentException (
-								string.Format ("Malformed JNI type reference; no terminating ';' for type ref: '{0}'.", jniTypeReference.Substring (i)),
-								"jniTypeReference");
-					if (s != jniTypeReference.Length - 1)
-						throw new ArgumentException (
-								string.Format ("Malformed jNI type reference: invalid trailing text: '{0}'.", jniTypeReference.Substring (i)),
-								"jniTypeReference");
-					n   = jniTypeReference.Substring (i + 1, s - i - 1);
-				}
-				break;
-			default:
-				if (i != 0)
-					throw new ArgumentException (
-							string.Format ("Malformed JNI type reference: found unrecognized char '{0}' in '{1}'.",
-								jniTypeReference [i], jniTypeReference),
-							"jniTypeReference");
-				n   = jniTypeReference;
-				break;
-			}
-			int bad = n.IndexOfAny (new[]{ '.', ';' });
-			if (bad >= 0)
-				throw new ArgumentException (
-						string.Format ("Malformed JNI type reference: contains '{0}': {1}", n [bad], jniTypeReference),
-						"jniTypeReference");
-			return new JniTypeSignature (n, r, k);
-		}
-
-		public virtual Type GetTypeForJniSimplifiedTypeReference (string jniTypeReference)
-		{
-			if (jniTypeReference == null)
-				throw new ArgumentNullException ("jniTypeReference");
-			if (jniTypeReference != null && jniTypeReference.Contains ("."))
-				throw new ArgumentException ("JNI type names do not contain '.', they use '/'. Are you sure you're using a JNI type name?", "jniTypeReference");
-			if (jniTypeReference != null && jniTypeReference.StartsWith ("[", StringComparison.Ordinal))
-				throw new ArgumentException ("Only simplified type references are supported.", "jniTypeReference");
-			if (jniTypeReference != null && jniTypeReference.StartsWith ("L", StringComparison.Ordinal) && jniTypeReference.EndsWith (";", StringComparison.Ordinal))
-				throw new ArgumentException ("Only simplified type references are supported.", "jniTypeReference");
-
-#if !XA_INTEGRATION
-			foreach (var mapping in JniBuiltinTypeNameMappings) {
-				if (mapping.Value.SimpleReference == jniTypeReference)
-					return mapping.Key;
-			}
-#endif  // !XA_INTEGRATION
-			return null;
-		}
-	}
 
 	partial class JniRuntime {
 

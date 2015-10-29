@@ -15,7 +15,7 @@ namespace Java.Interop
 		JniInstanceMethods (Type declaringType)
 		{
 			var jvm     = JniEnvironment.Runtime;
-			var info    = jvm.GetJniTypeInfoForType (declaringType);
+			var info    = jvm.TypeManager.GetTypeSignature (declaringType);
 			if (info.SimpleReference == null)
 				throw new NotSupportedException (
 						string.Format ("Cannot create instance of type '{0}': no Java peer type found.",

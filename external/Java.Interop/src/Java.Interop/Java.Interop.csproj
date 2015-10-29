@@ -61,6 +61,7 @@
     <Compile Include="Java.Interop\JniMethodInfo.cs" />
     <Compile Include="Java.Interop\JniPeerMembers.cs" />
     <Compile Include="Java.Interop\JniRuntime.cs" />
+    <Compile Include="Java.Interop\JniRuntime.JniTypeManager.cs" />
     <Compile Include="Java.Interop\JniStaticMethodInfo.cs" />
     <Compile Include="Java.Interop\JniStaticFieldInfo.cs" />
     <Compile Include="Java.Interop\JniTransition.cs" />

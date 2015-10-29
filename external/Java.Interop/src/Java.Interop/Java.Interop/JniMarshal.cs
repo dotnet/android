@@ -61,7 +61,8 @@ namespace Java.Interop {
 				return (T) info.GetValueFromJni (ref reference, transfer, typeof (T));
 			}
 
-			var targetType = jvm.GetTypeForJniTypeRefererence (JniEnvironment.Types.GetJniTypeNameFromInstance (reference));
+			var signature   = jvm.TypeManager.GetTypeSignature (JniEnvironment.Types.GetJniTypeNameFromInstance (reference));
+			var targetType  = jvm.TypeManager.GetType (signature);
 			if (targetType != null &&
 					typeof (T).IsAssignableFrom (targetType) &&
 					(info = jvm.GetJniMarshalInfoForType (targetType)).GetValueFromJni != null) {

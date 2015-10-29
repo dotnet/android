@@ -12,7 +12,7 @@ namespace Java.Interop
 
 		static JniObjectReference _NewArray (int length)
 		{
-			var info = JniEnvironment.Runtime.GetJniTypeInfoForType (typeof (T));
+			var info = JniEnvironment.Runtime.TypeManager.GetTypeSignature (typeof (T));
 			if (info.SimpleReference == null)
 				info = new JniTypeSignature ("java/lang/Object", info.ArrayRank);
 			if (info.IsKeyword && info.ArrayRank == 0) {

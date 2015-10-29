@@ -72,13 +72,13 @@ namespace Java.Interop {
 
 			var signature = new StringBuilder ().Append ("(");
 			foreach (var p in method.GetParameters ()) {
-				var info = Runtime.GetJniTypeInfoForType (p.ParameterType);
+				var info = Runtime.TypeManager.GetTypeSignature (p.ParameterType);
 				if (info.SimpleReference == null)
 					throw new NotSupportedException ("Don't know how to determine JNI signature for parameter type: " + p.ParameterType.FullName + ".");
 				signature.Append (info.QualifiedReference);
 			}
 			signature.Append (")");
-			var ret = Runtime.GetJniTypeInfoForType (method.ReturnType);
+			var ret = Runtime.TypeManager.GetTypeSignature (method.ReturnType);
 			if (ret.SimpleReference == null)
 				throw new NotSupportedException ("Don't know how to determine JNI signature for return type: " + method.ReturnType.FullName + ".");
 			signature.Append (ret.QualifiedReference);
