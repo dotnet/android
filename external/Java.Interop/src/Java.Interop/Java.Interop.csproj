@@ -40,7 +40,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>..\..\bin\XAIntegrationDebug</OutputPath>
-    <DefineConstants>DEBUG;INTEROP;XA_INTEGRATION;FEATURE_JNIENVIRONMENT_JI_INTPTRS;FEATURE_JNIOBJECTREFERENCE_INTPTRS</DefineConstants>
+    <DefineConstants>DEBUG;INTEROP;XA_INTEGRATION;FEATURE_JNIENVIRONMENT_JI_PINVOKES;FEATURE_JNIOBJECTREFERENCE_INTPTRS</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <ConsolePause>false</ConsolePause>

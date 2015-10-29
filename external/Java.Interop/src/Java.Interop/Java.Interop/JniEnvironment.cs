@@ -15,10 +15,6 @@ namespace Java.Interop {
 			get {return Info.Value;}
 		}
 
-		static              JniEnvironmentInvoker   Invoker {
-			get {return Info.Value.Invoker;}
-		}
-
 		public      static  JniRuntime              Runtime {
 			get {return Info.Value.Runtime;}
 		}
@@ -81,6 +77,12 @@ namespace Java.Interop {
 				return;
 			Runtime.ObjectReferenceManager.CreatedLocalReference (Info.Value, value);
 		}
+
+#if !FEATURE_JNIENVIRONMENT_JI_PINVOKES
+		static              JniEnvironmentInvoker   Invoker {
+			get {return Info.Value.Invoker;}
+		}
+#endif  // !FEATURE_JNIENVIRONMENT_JI_PINVOKES
 
 #if FEATURE_JNIENVIRONMENT_SAFEHANDLES
 		internal    static  void    PushLocalReferenceFrame ()
@@ -153,6 +155,15 @@ namespace Java.Interop {
 			LogCreateLocalRef (r);
 		}
 #endif  // FEATURE_JNIOBJECTREFERENCE_INTPTRS
+
+#if FEATURE_JNIENVIRONMENT_JI_PINVOKES
+		partial class References {
+			internal static int GetJavaVM (IntPtr jnienv, out IntPtr vm)
+			{
+				return JavaInterop_GetJavaVM (jnienv, out vm);
+			}
+		}
+#endif  // !FEATURE_JNIENVIRONMENT_JI_PINVOKES
 	}
 
 	public  class JniEnvironmentInfo {
@@ -160,7 +171,6 @@ namespace Java.Interop {
 		IntPtr                  environmentPointer;
 
 		public      JniRuntime              Runtime                 {get; private set;}
-		internal    JniEnvironmentInvoker   Invoker                 {get; private set;}
 		public      int                     LocalReferenceCount     {get; internal set;}
 
 		public      IntPtr                  EnvironmentPointer {
@@ -170,10 +180,14 @@ namespace Java.Interop {
 					return;
 
 				environmentPointer  = value;
-				Invoker             = CreateInvoker (environmentPointer);
-
-				IntPtr  vmh;
-				int r   = Invoker.GetJavaVM (EnvironmentPointer, out vmh);
+				IntPtr  vmh = IntPtr.Zero;
+				int     r   = 0;
+#if FEATURE_JNIENVIRONMENT_JI_PINVOKES
+				r           = JniEnvironment.References.GetJavaVM (EnvironmentPointer, out vmh);
+#else
+				Invoker     = CreateInvoker (environmentPointer);
+				r           = Invoker.GetJavaVM (EnvironmentPointer, out vmh);
+#endif  // #if !FEATURE_JNIENVIRONMENT_JI_PINVOKES
 				if (r < 0)
 					throw new InvalidOperationException ("JNIEnv::GetJavaVM() returned: " + r);
 
@@ -204,11 +218,15 @@ namespace Java.Interop {
 		};
 #endif  // FEATURE_JNIENVIRONMENT_SAFEHANDLES
 
+#if !FEATURE_JNIENVIRONMENT_JI_PINVOKES
+		internal    JniEnvironmentInvoker   Invoker                 {get; private set;}
+
 		static unsafe JniEnvironmentInvoker CreateInvoker (IntPtr handle)
 		{
 			IntPtr p = Marshal.ReadIntPtr (handle);
 			return new JniEnvironmentInvoker ((JniNativeInterfaceStruct*) p);
 		}
+#endif  // !FEATURE_JNIENVIRONMENT_JI_PINVOKES
 	}
 }
 

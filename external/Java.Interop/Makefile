@@ -70,7 +70,7 @@ bin/$(CONFIGURATION)/Android.Interop-Tests.dll: $(wildcard src/Android.Interop/*
 	$(XBUILD)
 	touch $@
 
-bin/$(XA_CONFIGURATION)/Java.Interop.dll: $(wildcard src/Java.Interop/*/*.cs)
+bin/$(XA_CONFIGURATION)/Java.Interop.dll: $(wildcard src/Java.Interop/*/*.cs) src/Java.Interop/Java.Interop.csproj
 	$(XBUILD) /p:Configuration=$(XA_CONFIGURATION)
 
 CSHARP_REFS = \
