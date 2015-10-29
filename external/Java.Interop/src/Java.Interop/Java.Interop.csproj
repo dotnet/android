@@ -138,7 +138,7 @@
     <Exec Command="$(Runtime) &quot;$(JNIEnvGenPath)\jnienv-gen.exe&quot; Java.Interop\JniEnvironment.g.cs $(OutputPath)\jni.c" />
   </Target>
   <ItemGroup>
-    <JavaInteropJar Include="%24%28OutputPath%29java-interop.jar" />
+    <JavaInteropJar Include="$(OutputPath)java-interop.jar" />
   </ItemGroup>
   <Target Name="BuildInteropJar" Inputs="@(CompileJavaInteropJar)" Outputs="@(JavaInteropJar)">
     <MakeDir Directories="$(OutputPath)ji-classes" />
