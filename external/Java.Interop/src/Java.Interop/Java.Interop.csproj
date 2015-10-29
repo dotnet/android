@@ -61,6 +61,7 @@
     <Compile Include="Java.Interop\JniMethodInfo.cs" />
     <Compile Include="Java.Interop\JniPeerMembers.cs" />
     <Compile Include="Java.Interop\JniRuntime.cs" />
+    <Compile Include="Java.Interop\JniRuntime.JniObjectReferenceManager.cs" />
     <Compile Include="Java.Interop\JniRuntime.JniTypeManager.cs" />
     <Compile Include="Java.Interop\JniStaticMethodInfo.cs" />
     <Compile Include="Java.Interop\JniStaticFieldInfo.cs" />
@@ -71,7 +72,6 @@
     <Compile Include="Java.Interop\JValue.cs" />
     <Compile Include="Java.Interop\JniNativeMethodRegistration.cs" />
     <Compile Include="Java.Interop\IJavaPeerable.cs" />
-    <Compile Include="Java.Interop\JniObjectReferenceManager.cs" />
     <Compile Include="Java.Interop\JniObjectReferenceOptions.cs" />
     <Compile Include="Java.Interop\JniObjectReferenceType.cs" />
     <Compile Include="Java.Interop\JniPeerInstanceMethods_Invoke.cs">

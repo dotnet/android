@@ -8,14 +8,14 @@ using Java.Interop;
 
 namespace Java.InteropTests {
 
-	class LoggingJniObjectReferenceManagerDecorator : JniObjectReferenceManager {
+	class LoggingJniObjectReferenceManagerDecorator : JniRuntime.JniObjectReferenceManager {
 
 		TextWriter          grefLog;
 		TextWriter          lrefLog;
 
-		JniObjectReferenceManager       manager;
+		JniRuntime.JniObjectReferenceManager       manager;
 
-		public LoggingJniObjectReferenceManagerDecorator (JniObjectReferenceManager manager, TextWriter lrefOutput = null, TextWriter grefOutput = null)
+		public LoggingJniObjectReferenceManagerDecorator (JniRuntime.JniObjectReferenceManager manager, TextWriter lrefOutput = null, TextWriter grefOutput = null)
 		{
 			if (manager == null)
 				throw new ArgumentNullException ("manager");
@@ -33,7 +33,7 @@ namespace Java.InteropTests {
 			get {return manager.WeakGlobalReferenceCount;}
 		}
 
-		public static JniObjectReferenceManager GetObjectReferenceManager (JniObjectReferenceManager manager)
+		public static JniRuntime.JniObjectReferenceManager GetObjectReferenceManager (JniRuntime.JniObjectReferenceManager manager)
 		{
 			TextWriter  grefLog = null;
 			TextWriter  lrefLog = null;;

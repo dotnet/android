@@ -64,7 +64,7 @@ namespace Java.Interop
 
 	partial class JniRuntime {
 
-		internal interface ISetRuntime {
+		interface ISetRuntime {
 			void SetRuntime (JniRuntime runtime);
 		}
 	}
@@ -272,7 +272,7 @@ namespace Java.Interop
 			get {return ObjectReferenceManager.WeakGlobalReferenceCount;}
 		}
 
-		public JniObjectReferenceManager    ObjectReferenceManager      {get; private set;}
+		public JniRuntime.JniObjectReferenceManager    ObjectReferenceManager      {get; private set;}
 		public JniTypeManager               TypeManager                 {get; private set;}
 
 		public bool TrackIDs {get; private set;}

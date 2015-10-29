@@ -26,7 +26,7 @@ namespace Java.Interop {
 			EnvironmentPointer   = JNIEnv.Handle;
 			NewObjectRequired   = ((int) Android.OS.Build.VERSION.SdkInt) <= 10;
 			InvocationPointer   = invocationPointer;
-			ObjectReferenceManager      = Java.InteropTests.LoggingJniObjectReferenceManagerDecorator.GetObjectReferenceManager (new JniObjectReferenceManager ());
+			ObjectReferenceManager      = Java.InteropTests.LoggingJniObjectReferenceManagerDecorator.GetObjectReferenceManager (new JniRuntime.JniObjectReferenceManager ());
 			TypeManager                 = new AndroidTypeManager ();
 		}
 
