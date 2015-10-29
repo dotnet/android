@@ -34,40 +34,70 @@ namespace Java.Interop {
 			{
 			}
 
-			public virtual JniObjectReference CreateLocalReference (JniEnvironmentInfo environment, JniObjectReference reference)
+			internal       JniObjectReference CreateLocalReference (JniEnvironmentInfo environment, JniObjectReference reference)
+			{
+				var lrefc   = environment.LocalReferenceCount;
+				var r       = CreateLocalReference (reference, ref lrefc);
+				environment.LocalReferenceCount = lrefc;
+				return r;
+			}
+
+			public virtual JniObjectReference CreateLocalReference (JniObjectReference reference, ref int localReferenceCount)
 			{
 				if (!reference.IsValid)
 					return reference;
-				AssertCount (environment.LocalReferenceCount, "LREF", reference.ToString ());
-				environment.LocalReferenceCount++;
+				AssertCount (localReferenceCount, "LREF", reference.ToString ());
+				localReferenceCount++;
 				return JniEnvironment.References.NewLocalRef (reference);
 			}
 
-			public virtual void DeleteLocalReference (JniEnvironmentInfo environment, ref JniObjectReference reference)
+			internal       void DeleteLocalReference (JniEnvironmentInfo environment, ref JniObjectReference reference)
+			{
+				var lrefc   = environment.LocalReferenceCount;
+				DeleteLocalReference (ref reference, ref lrefc);
+				environment.LocalReferenceCount = lrefc;
+			}
+
+			public virtual void DeleteLocalReference (ref JniObjectReference reference, ref int localReferenceCount)
 			{
 				if (!reference.IsValid)
 					return;
 				AssertReferenceType (ref reference, JniObjectReferenceType.Local);
-				AssertCount (environment.LocalReferenceCount, "LREF", reference.ToString ());
-				environment.LocalReferenceCount--;
+				AssertCount (localReferenceCount, "LREF", reference.ToString ());
+				localReferenceCount--;
 				JniEnvironment.References.DeleteLocalRef (reference.Handle);
 				reference.Invalidate ();
 			}
 
-			public virtual void CreatedLocalReference (JniEnvironmentInfo environment, JniObjectReference reference)
+			internal       void CreatedLocalReference (JniEnvironmentInfo environment, JniObjectReference reference)
+			{
+				var lrefc   = environment.LocalReferenceCount;
+				CreatedLocalReference (reference, ref lrefc);
+				environment.LocalReferenceCount = lrefc;
+			}
+
+			public virtual void CreatedLocalReference (JniObjectReference reference, ref int localReferenceCount)
 			{
 				if (!reference.IsValid)
 					return;
-				AssertCount (environment.LocalReferenceCount, "LREF", reference.ToString ());
-				environment.LocalReferenceCount++ ;
+				AssertCount (localReferenceCount, "LREF", reference.ToString ());
+				localReferenceCount++ ;
 			}
 
-			public virtual IntPtr ReleaseLocalReference (JniEnvironmentInfo environment, ref JniObjectReference reference)
+			internal       IntPtr ReleaseLocalReference (JniEnvironmentInfo environment, ref JniObjectReference reference)
+			{
+				var lrefc   = environment.LocalReferenceCount;
+				var r       = ReleaseLocalReference (ref reference, ref lrefc);
+				environment.LocalReferenceCount = lrefc;
+				return r;
+			}
+
+			public virtual IntPtr ReleaseLocalReference (ref JniObjectReference reference, ref int localReferenceCount)
 			{
 				if (!reference.IsValid)
 					return IntPtr.Zero;
-				AssertCount (environment.LocalReferenceCount, "LREF", reference.ToString ());
-				environment.LocalReferenceCount--;
+				AssertCount (localReferenceCount, "LREF", reference.ToString ());
+				localReferenceCount--;
 				var h           = reference.Handle;
 				reference.Invalidate ();
 				return h;

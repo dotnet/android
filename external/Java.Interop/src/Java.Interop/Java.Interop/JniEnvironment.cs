@@ -166,7 +166,7 @@ namespace Java.Interop {
 #endif  // !FEATURE_JNIENVIRONMENT_JI_PINVOKES
 	}
 
-	public  class JniEnvironmentInfo {
+	class JniEnvironmentInfo {
 
 		IntPtr                  environmentPointer;
 

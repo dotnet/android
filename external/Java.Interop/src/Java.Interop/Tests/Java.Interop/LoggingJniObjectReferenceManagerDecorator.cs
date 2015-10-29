@@ -101,14 +101,14 @@ namespace Java.InteropTests {
 			}
 		}
 
-		public override JniObjectReference CreateLocalReference (JniEnvironmentInfo environment, JniObjectReference value)
+		public override JniObjectReference CreateLocalReference (JniObjectReference value, ref int localReferenceCount)
 		{
-			var newValue    = manager.CreateLocalReference (environment, value);
+			var newValue    = manager.CreateLocalReference (value, ref localReferenceCount);
 			if (lrefLog == null || !newValue.IsValid)
 				return newValue;
 			var t = Thread.CurrentThread;
 			LogLref ("+l+ lrefc {0} obj-handle 0x{1}/{2} -> new-handle 0x{3}/{4} from thread '{5}'({6}){7}{8}",
-					environment.LocalReferenceCount,
+					localReferenceCount,
 					value.Handle.ToString ("x"),
 					ToChar (value.Type),
 					newValue.Handle.ToString ("x"),
@@ -120,19 +120,19 @@ namespace Java.InteropTests {
 			return newValue;
 		}
 
-		public override void DeleteLocalReference (JniEnvironmentInfo environment, ref JniObjectReference value)
+		public override void DeleteLocalReference (ref JniObjectReference value, ref int localReferenceCount)
 		{
 			if (lrefLog != null && value.IsValid) {
-				LogDeleteLocalRef (environment, value.Handle);
+				LogDeleteLocalRef (localReferenceCount, value.Handle);
 			}
-			manager.DeleteLocalReference (environment, ref value);
+			manager.DeleteLocalReference (ref value, ref localReferenceCount);
 		}
 
-		void LogDeleteLocalRef (JniEnvironmentInfo environment, IntPtr value)
+		void LogDeleteLocalRef (int localReferenceCount, IntPtr value)
 		{
 			var t = Thread.CurrentThread;
 			LogLref ("-l- lrefc {0} handle 0x{1}/{2} from thread '{3}'({4}){5}{6}",
-					environment.LocalReferenceCount,
+					localReferenceCount,
 					value.ToString ("x"),
 					'L',
 					t.Name,
@@ -141,14 +141,14 @@ namespace Java.InteropTests {
 					new StackTrace (true));
 		}
 
-		public override void CreatedLocalReference (JniEnvironmentInfo environment, JniObjectReference value)
+		public override void CreatedLocalReference (JniObjectReference value, ref int localReferenceCount)
 		{
-			manager.CreatedLocalReference (environment, value);
+			manager.CreatedLocalReference (value, ref localReferenceCount);
 			if (lrefLog == null || !value.IsValid)
 				return;
 			var t = Thread.CurrentThread;
 			LogLref ("+l+ lrefc {0} -> new-handle 0x{1}/{2} from thread '{3}'({4}){5}{6}",
-					environment.LocalReferenceCount,
+					localReferenceCount,
 					value.Handle.ToString ("x"),
 					ToChar (value.Type),
 					t.Name,
@@ -157,12 +157,12 @@ namespace Java.InteropTests {
 					new StackTrace (true));
 		}
 
-		public override IntPtr ReleaseLocalReference (JniEnvironmentInfo environment, ref JniObjectReference value)
+		public override IntPtr ReleaseLocalReference (ref JniObjectReference value, ref int localReferenceCount)
 		{
 			if (lrefLog != null && value.IsValid) {
-				LogDeleteLocalRef (environment, value.Handle);
+				LogDeleteLocalRef (localReferenceCount, value.Handle);
 			}
-			return manager.ReleaseLocalReference (environment, ref value);
+			return manager.ReleaseLocalReference (ref value, ref localReferenceCount);
 		}
 
 		public override void WriteGlobalReferenceLine (string format, params object[] args)
