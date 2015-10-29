@@ -121,7 +121,8 @@ namespace Java.Interop
 
 		public  IntPtr                                  InvocationPointer   {get; private set;}
 
-		public  bool                                    NewObjectRequired   {get; private set;}
+		internal    bool                                TrackIDs            {get; private set;}
+		internal    bool                                NewObjectRequired   {get; private set;}
 
 		protected JniRuntime (CreationOptions options)
 		{
@@ -274,8 +275,6 @@ namespace Java.Interop
 
 		public JniRuntime.JniObjectReferenceManager    ObjectReferenceManager      {get; private set;}
 		public JniTypeManager               TypeManager                 {get; private set;}
-
-		public bool TrackIDs {get; private set;}
 
 		internal void TrackID (IntPtr key, IDisposable value)
 		{
