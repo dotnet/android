@@ -263,6 +263,7 @@ namespace Xamarin.Java.Interop
 				{ "Exceptions", "public" },
 				{ "References", "public" },
 				{ "IO",         "public" },
+				{ "Object",     "public" },
 				{ "Strings",    "public" },
 				{ "Types",      "public" },
 			};

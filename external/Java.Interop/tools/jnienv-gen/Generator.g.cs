@@ -6,7 +6,7 @@ namespace Xamarin.Java.Interop
 		const   string          ClassesCategory                 = "Types";
 		const   string          ExceptionsCategory              = "Exceptions";
 		const   string          ReferencesCatgeory              = "References";
-		const   string          ObjectOperationsCategory        = "Activator";
+		const   string          ObjectOperationsCategory        = "Object";
 		const   string          InstanceFieldsCategory          = "InstanceFields";
 		const   string          StaticFieldsCategory            = "StaticFields";
 		const   string          InstanceMethodsCategory         = "InstanceMethods";

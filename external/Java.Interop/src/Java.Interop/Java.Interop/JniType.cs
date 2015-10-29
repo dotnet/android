@@ -187,14 +187,14 @@ namespace Java.Interop {
 		{
 			AssertValid ();
 
-			return JniEnvironment.Activator.AllocObject (PeerReference);
+			return JniEnvironment.Object.AllocObject (PeerReference);
 		}
 
 		public unsafe JniObjectReference NewObject (JniInstanceMethodInfo constructor, JValue* @parameters)
 		{
 			AssertValid ();
 
-			return JniEnvironment.Activator.NewObject (PeerReference, constructor, parameters);
+			return JniEnvironment.Object.NewObject (PeerReference, constructor, parameters);
 		}
 
 		public JniInstanceFieldInfo GetInstanceField (string name, string signature)
