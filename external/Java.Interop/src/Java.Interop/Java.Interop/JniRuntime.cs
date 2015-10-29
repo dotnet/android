@@ -79,10 +79,10 @@ namespace Java.Interop
 			return Runtimes.Values;
 		}
 
-		public static JniRuntime GetRegisteredRuntime (IntPtr handle)
+		public static JniRuntime GetRegisteredRuntime (IntPtr invocationPointer)
 		{
 			JniRuntime vm;
-			return Runtimes.TryGetValue (handle, out vm)
+			return Runtimes.TryGetValue (invocationPointer, out vm)
 				? vm
 				: null;
 		}
