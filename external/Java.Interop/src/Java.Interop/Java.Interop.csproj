@@ -136,6 +136,7 @@
     <Runtime Condition="'$(OS)' != 'Windows_NT'">mono</Runtime>
   </PropertyGroup>
   <Target Name="BuildJniEnvironment_g_cs" Inputs="$(JNIEnvGenPath)\jnienv-gen.exe" Outputs="Java.Interop\JniEnvironment.g.cs;$(OutputPath)\jni.c">
+    <MakeDir Directories="$(OutputPath)" />
     <Exec Command="$(Runtime) &quot;$(JNIEnvGenPath)\jnienv-gen.exe&quot; Java.Interop\JniEnvironment.g.cs $(OutputPath)\jni.c" />
   </Target>
   <ItemGroup>
