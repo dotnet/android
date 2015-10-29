@@ -434,7 +434,7 @@ namespace Xamarin.Java.Interop
 				o.WriteLine ("{");
 				bool isVoid = entry.ReturnType.JniType == "void";
 				if (entry.Throws)
-					o.WriteLine ("\t*_thrown = NULL;");
+					o.WriteLine ("\t*_thrown = 0;");
 				o.Write ("\t");
 				if (!isVoid)
 					o.Write ("{0} _r_ = ", entry.ReturnType.JniType);
