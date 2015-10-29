@@ -18,11 +18,9 @@ namespace Java.InteropTests
 			using (var t = new JniType ("java/lang/Object")) {
 				var oldHandle = IntPtr.Zero;
 				var array     = new JavaObjectArray<JavaObject> (1);
-				array.RegisterWithVM ();
 				var w = new Thread (() => {
 						var v       = new JavaObject ();
 						oldHandle   = v.PeerReference.Handle;
-						v.RegisterWithVM ();
 						array [0] = v;
 				});
 				w.Start ();
@@ -34,6 +32,7 @@ namespace Java.InteropTests
 				Assert.IsNotNull (JniRuntime.Current.PeekObject (first.PeerReference));
 				var f = first.PeerReference;
 				var o = (JavaObject) JniRuntime.Current.GetObject (ref f, JniObjectReferenceOptions.CreateNewReference);
+				Assert.AreSame (first, o);
 				if (oldHandle != o.PeerReference.Handle) {
 					Console.WriteLine ("Yay, object handle changed; value survived a GC!");
 				} else {
@@ -45,39 +44,31 @@ namespace Java.InteropTests
 		}
 
 		[Test]
-		public void RegisterWithVM ()
+		public void UnregisterFromRuntime ()
 		{
 			int registeredCount = JniRuntime.Current.GetSurfacedObjects ().Count;
 			JniObjectReference l;
 			JavaObject o;
 			using (o = new JavaObject ()) {
 				l   = o.PeerReference.NewLocalRef ();
-				Assert.AreEqual (JniObjectReferenceType.Local, o.PeerReference.Type);
-				Assert.AreEqual (registeredCount, JniRuntime.Current.GetSurfacedObjects ().Count);
-				Assert.IsNull (JniRuntime.Current.PeekObject (l));
-				o.RegisterWithVM ();
-				Assert.AreNotSame (l, o.PeerReference);
 				Assert.AreEqual (JniObjectReferenceType.Global, o.PeerReference.Type);
-				JniEnvironment.References.Dispose (ref l);
-				l = o.PeerReference.NewLocalRef ();
-				Assert.AreEqual (registeredCount + 1, JniRuntime.Current.GetSurfacedObjects ().Count);
+				Assert.AreEqual (registeredCount+1, JniRuntime.Current.GetSurfacedObjects ().Count);
+				Assert.IsNotNull (JniRuntime.Current.PeekObject (l));
+				Assert.AreNotSame (l, o.PeerReference);
 				Assert.AreSame (o, JniRuntime.Current.PeekObject (l));
 			}
 			Assert.AreEqual (registeredCount, JniRuntime.Current.GetSurfacedObjects ().Count);
 			Assert.IsNull (JniRuntime.Current.PeekObject (l));
 			JniEnvironment.References.Dispose (ref l);
-			Assert.Throws<ObjectDisposedException> (() => o.RegisterWithVM ());
+			Assert.Throws<ObjectDisposedException> (() => o.UnregisterFromRuntime ());
 		}
 
 		[Test]
 		public void RegisterWithVM_ThrowsOnDuplicateEntry ()
 		{
 			using (var original = new JavaObject ()) {
-				original.RegisterWithVM ();
 				var p       = original.PeerReference;
-				var alias   = new JavaObject (ref p, JniObjectReferenceOptions.CreateNewReference);
-				Assert.Throws<NotSupportedException> (() => alias.RegisterWithVM ());
-				alias.Dispose ();
+				Assert.Throws<NotSupportedException> (() => new JavaObject (ref p, JniObjectReferenceOptions.CreateNewReference));
 			}
 		}
 
@@ -90,7 +81,6 @@ namespace Java.InteropTests
 					var v     = new JavaObject ();
 					oldHandle = v.PeerReference.NewWeakGlobalRef ();
 					r         = new WeakReference (v);
-					v.RegisterWithVM ();
 			});
 			t.Start ();
 			t.Join ();
@@ -127,6 +117,7 @@ namespace Java.InteropTests
 			t.Join ();
 			GC.Collect ();
 			GC.WaitForPendingFinalizers ();
+			GC.Collect ();
 			GC.WaitForPendingFinalizers ();
 			Assert.IsFalse (d);
 			Assert.IsTrue (f);
@@ -144,7 +135,7 @@ namespace Java.InteropTests
 
 			// These should throw
 			Assert.Throws<ObjectDisposedException> (() => o.GetHashCode ());
-			Assert.Throws<ObjectDisposedException> (() => o.RegisterWithVM ());
+			Assert.Throws<ObjectDisposedException> (() => o.UnregisterFromRuntime ());
 			Assert.Throws<ObjectDisposedException> (() => o.ToString ());
 			Assert.Throws<ObjectDisposedException> (() => o.Equals (o));
 		}
@@ -184,27 +175,10 @@ namespace Java.InteropTests
 			JavaObject o = null;
 			var t = new Thread (() => {
 					o = new JavaObject ();
-					o.RegisterWithVM ();
 			});
 			t.Start ();
 			t.Join ();
 			o.ToString ();
-			o.Dispose ();
-		}
-
-		[Test]
-		public void CrossThreadSharingNotSupported ()
-		{
-			if (!HaveSafeHandles) {
-				Assert.Ignore ("SafeHandles not used. Cross-thread sharing can't be checked.");
-				return;
-			}
-
-			JavaObject o = null;
-			var t = new Thread (() => o = new JavaObject ());
-			t.Start ();
-			t.Join ();
-			Assert.Throws<NotSupportedException> (() => o.ToString ());
 			o.Dispose ();
 		}
 	}

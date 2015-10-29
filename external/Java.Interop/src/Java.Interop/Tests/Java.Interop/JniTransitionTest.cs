@@ -19,7 +19,7 @@ namespace Java.InteropTests
 			}
 			JniObjectReference lref;
 			using (var envp = new JniTransition (JniEnvironment.EnvironmentPointer)) {
-				lref    = new JavaObject ().PeerReference;
+				lref    = new JavaObject ().PeerReference.NewLocalRef ();
 				Assert.IsTrue (lref.IsValid);
 			}
 			Assert.IsFalse (lref.IsValid);

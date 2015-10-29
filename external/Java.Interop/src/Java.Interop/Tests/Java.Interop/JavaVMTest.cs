@@ -61,10 +61,11 @@ namespace Java.InteropTests
 		public void GetObject_ReturnsAlias ()
 		{
 			var local   = new JavaObject ();
+			local.UnregisterFromRuntime ();
 			Assert.IsNull (JniRuntime.Current.PeekObject (local.PeerReference));
 			// GetObject must always return a value (unless handle is null, etc.).
-			// However, since we didn't call local.RegisterWithVM(),
-			// JavaVM.PeekObject() is null (asserted above), but GetObject() must
+			// However, since we called local.UnregisterFromRuntime(),
+			// JniRuntime.PeekObject() is null (asserted above), but GetObject() must
 			// **still** return _something_.
 			// In this case, it returns an _alias_.
 			// TODO: "most derived type" alias generation. (Not relevant here, but...)
@@ -88,8 +89,6 @@ namespace Java.InteropTests
 			JniObjectReference lref;
 			using (var o = new JavaObject ()) {
 				lref = o.PeerReference.NewLocalRef ();
-				Assert.IsNull (JniRuntime.Current.PeekObject (lref));
-				o.RegisterWithVM ();
 				Assert.AreSame (o, JniRuntime.Current.PeekObject (lref));
 			}
 			// At this point, the Java-side object is kept alive by `lref`,

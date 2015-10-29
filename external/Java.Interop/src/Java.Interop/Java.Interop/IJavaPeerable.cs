@@ -7,7 +7,7 @@ namespace Java.Interop
 		JniObjectReference      PeerReference  {get;}
 		JniPeerMembers          JniPeerMembers {get;}
 
-		void    RegisterWithVM ();
+		void    UnregisterFromRuntime ();
 		void    DisposeUnlessRegistered ();
 	}
 }

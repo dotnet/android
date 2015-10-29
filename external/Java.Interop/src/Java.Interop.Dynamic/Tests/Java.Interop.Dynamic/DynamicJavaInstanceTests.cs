@@ -26,8 +26,8 @@ namespace Java.Interop.DynamicTests {
 		public void DisposeWithJavaObjectDisposesObject ([Values (true, false)] bool register)
 		{
 			var native      = new JavaObject ();
-			if (register) {
-				native.RegisterWithVM ();
+			if (!register) {
+				native.UnregisterFromRuntime ();
 			}
 
 			var instance    = new DynamicJavaInstance (native);

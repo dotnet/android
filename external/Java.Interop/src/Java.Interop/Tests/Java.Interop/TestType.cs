@@ -86,8 +86,11 @@ namespace Java.InteropTests
 		{
 			Func<IntPtr, IntPtr, IntPtr, bool> h = (jnienv, n_self, n_value) => {
 				var jvm     = JniEnvironment.Runtime;
-				var self    = jvm.GetObject<TestType>(n_self);
-				var value   = jvm.GetObject (n_value);
+				var r_self  = new JniObjectReference (n_self);
+				var p = JniEnvironment.Runtime.PeekObject (r_self);
+				var self    = jvm.GetObject<TestType>(ref r_self, JniObjectReferenceOptions.DoNotRegisterWithRuntime);
+				var r_value = new JniObjectReference (n_self);
+				var value   = jvm.GetObject (ref r_value, JniObjectReferenceOptions.DoNotRegisterWithRuntime);
 
 				try {
 					return self.EqualsThis (value);
@@ -102,7 +105,8 @@ namespace Java.InteropTests
 		static Delegate GetInt32ValueHandler ()
 		{
 			Func<IntPtr, IntPtr, int> h = (jnienv, n_self) => {
-				var self = JniEnvironment.Runtime.GetObject<TestType>(n_self);
+				var r_self  = new JniObjectReference (n_self);
+				var self    = JniEnvironment.Runtime.GetObject<TestType>(ref r_self, JniObjectReferenceOptions.DoNotRegisterWithRuntime);
 				try {
 					return self.GetInt32Value ();
 				} finally {
@@ -120,7 +124,8 @@ namespace Java.InteropTests
 
 		static IntPtr GetStringValueHandler (IntPtr jnienv, IntPtr n_self, int value)
 		{
-			var self = JniEnvironment.Runtime.GetObject<TestType>(n_self);
+			var r_self  = new JniObjectReference (n_self);
+			var self    = JniEnvironment.Runtime.GetObject<TestType>(ref r_self, JniObjectReferenceOptions.DoNotRegisterWithRuntime);
 			try {
 				var s = self.GetStringValue (value);
 				var r = JniEnvironment.Strings.NewString (s);
@@ -136,7 +141,8 @@ namespace Java.InteropTests
 
 		static void MethodThrowsHandler (IntPtr jnienv, IntPtr n_self)
 		{
-			var self = JniEnvironment.Runtime.GetObject<TestType> (n_self);
+			var r_self  = new JniObjectReference (n_self);
+			var self    = JniEnvironment.Runtime.GetObject<TestType>(ref r_self, JniObjectReferenceOptions.DoNotRegisterWithRuntime);
 			try {
 				self.MethodThrows ();
 			} finally {

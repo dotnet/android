@@ -93,7 +93,6 @@ namespace Java.InteropTests
 				.Assembly
 				.GetType ("Java.Interop.JavaProxyThrowable", throwOnError :true);
 			var proxy   = (JavaException) Activator.CreateInstance (JavaProxyThrowable_type, value);
-			proxy.RegisterWithVM ();
 			return proxy;
 		}
 	}

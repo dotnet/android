@@ -8,10 +8,7 @@ namespace Java.Interop
 		Invalid                     = 0,
 		CreateNewReference          = 1 << 0,   // DoNotTransfer
 		DisposeSourceReference      = 1 << 1,   // Transfer
-
-		/*
-		Unregistered                = 4,
-		 */
+		DoNotRegisterWithRuntime    = 1 << 2,
 	}
 }
 

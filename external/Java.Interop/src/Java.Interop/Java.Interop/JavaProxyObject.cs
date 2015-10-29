@@ -62,7 +62,6 @@ namespace Java.Interop {
 				if (CachedValues.TryGetValue (value, out proxy))
 					return proxy;
 				proxy = new JavaProxyObject (value);
-				proxy.RegisterWithVM ();
 				CachedValues.Add (value, proxy);
 				return proxy;
 			}

@@ -12,9 +12,6 @@ namespace Java.Interop {
 				var je = e as JavaException;
 				if (je == null) {
 					je  = new JavaProxyThrowable (e);
-					// because `je` may cross thread boundaries;
-					// We'll need to rely on the GC to cleanup
-					je.RegisterWithVM ();
 				}
 				Throw (je.PeerReference);
 			}

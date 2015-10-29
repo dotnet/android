@@ -29,6 +29,7 @@ namespace Java.InteropTests
 		public void TestCase ()
 		{
 			using (var t = new TestType ()) {
+				t.UnregisterFromRuntime ();
 				t.RunTests ();
 			}
 		}

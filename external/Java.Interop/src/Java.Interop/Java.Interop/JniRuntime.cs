@@ -327,7 +327,8 @@ namespace Java.Interop
 			value.Registered = true;
 		}
 
-		internal void UnRegisterObject (IJavaPeerableEx value)
+		internal void UnRegisterObject<T> (T value)
+			where T : IJavaPeerable, IJavaPeerableEx
 		{
 			int key = value.IdentityHashCode;
 			lock (RegisteredInstances) {
@@ -341,27 +342,23 @@ namespace Java.Interop
 			}
 		}
 
-		internal TCleanup SetObjectPeerReference<T, TCleanup> (T value, ref JniObjectReference reference, JniObjectReferenceOptions transfer, Func<Action, TCleanup> createCleanup)
+		internal TCleanup SetObjectPeerReference<T, TCleanup> (T value, ref JniObjectReference reference, JniObjectReferenceOptions options, Func<Action, TCleanup> createCleanup)
 			where T : IJavaPeerable, IJavaPeerableEx
 			where TCleanup : IDisposable
 		{
 			if (!reference.IsValid)
 				throw new ArgumentException ("handle is invalid.", nameof (reference));
 
-			bool register   = reference.Flags == JniObjectReferenceFlags.Alloc;
+			var newRef      = reference.NewGlobalRef ();
+			value.SetPeerReference (newRef);
+			JniEnvironment.References.Dispose (ref reference, options);
 
-			value.SetPeerReference (reference.NewLocalRef ());
-			JniEnvironment.References.Dispose (ref reference, transfer);
+			value.IdentityHashCode = JniSystem.IdentityHashCode (newRef);
 
-			value.IdentityHashCode = JniSystem.IdentityHashCode (value.PeerReference);
-
-			if (register) {
-				RegisterObject (value);
+			RegisterObject (value);
+			if ((options & JniObjectReferenceOptions.DoNotRegisterWithRuntime) == JniObjectReferenceOptions.DoNotRegisterWithRuntime) {
 				Action unregister = () => {
 					UnRegisterObject (value);
-					var o = value.PeerReference;
-					value.SetPeerReference (o.NewLocalRef ());
-					JniEnvironment.References.Dispose (ref o);
 				};
 				return createCleanup (unregister);
 			}
@@ -461,7 +458,7 @@ namespace Java.Interop
 				return null;
 
 			var existing = PeekObject (reference);
-			if (existing != null && targetType != null && targetType.IsInstanceOfType (existing)) {
+			if (existing != null && (targetType == null || targetType.IsInstanceOfType (existing))) {
 				JniEnvironment.References.Dispose (ref reference, transfer);
 				return existing;
 			}
@@ -742,9 +739,6 @@ namespace Java.Interop
 			var je  = pendingException as JavaException;
 			if (je == null) {
 				je  = new JavaProxyThrowable (pendingException);
-				// because `je` may cross thread boundaries;
-				// We'll need to rely on the GC to cleanup
-				je.RegisterWithVM ();
 			}
 			JniEnvironment.Exceptions.Throw (je.PeerReference);
 #endif  // !XA_INTEGRATION

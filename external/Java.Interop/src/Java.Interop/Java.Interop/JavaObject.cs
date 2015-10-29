@@ -71,9 +71,11 @@ namespace Java.Interop
 					a => new SetPeerReferenceCompletion (a));
 		}
 
-		public void RegisterWithVM ()
+		public void UnregisterFromRuntime ()
 		{
-			JniEnvironment.Runtime.RegisterObject (this);
+			if (!PeerReference.IsValid)
+				throw new ObjectDisposedException (GetType ().FullName);
+			JniEnvironment.Runtime.UnRegisterObject (this);
 		}
 
 		public void Dispose ()

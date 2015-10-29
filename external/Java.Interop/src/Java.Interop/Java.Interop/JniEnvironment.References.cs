@@ -38,8 +38,6 @@ namespace Java.Interop
 					}
 					reference.Invalidate ();
 					break;
-				default:
-					throw new NotImplementedException ("Do not know how to transfer: " + transfer);
 				}
 			}
 
