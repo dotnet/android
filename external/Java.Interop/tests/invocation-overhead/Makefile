@@ -20,7 +20,7 @@ jni.c jni.cs: $(JNIENV_GEN)
 	mono $< jni.cs jni.c
 
 libJavaInterop.dylib: jni.c
-	gcc -g -shared -o $@ $< -m32 -I $(LOCAL_JDK_HEADERS)
+	gcc -g -shared -o $@ $< -m32 -DJI_DLL_EXPORT -fvisibility=hidden -I $(LOCAL_JDK_HEADERS)
 
 run:
 	mono --debug test-overheads.exe

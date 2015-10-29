@@ -396,11 +396,36 @@ namespace Xamarin.Java.Interop
 			o.WriteLine ("typedef jmethodID jstaticmethodID;");
 			o.WriteLine ("typedef jfieldID  jstaticfieldID;");
 			o.WriteLine ("typedef jobject   jglobal;");
+			o.WriteLine ();
+			o.WriteLine ("/* VS 2010 and later have stdint.h */");
+			o.WriteLine ("#if defined(_MSC_VER)");
+			o.WriteLine ();
+			o.WriteLine ("	#define JI_API_EXPORT __declspec(dllexport)");
+			o.WriteLine ("	#define JI_API_IMPORT __declspec(dllimport)");
+			o.WriteLine ();
+			o.WriteLine ("#else   /* defined(_MSC_VER */");
+			o.WriteLine ();
+			o.WriteLine ("	#ifdef __GNUC__");
+			o.WriteLine ("		#define JI_API_EXPORT __attribute__ ((visibility (\"default\")))");
+			o.WriteLine ("	#else");
+			o.WriteLine ("		#define JI_API_EXPORT");
+			o.WriteLine ("	#endif");
+			o.WriteLine ("	#define JI_API_IMPORT");
+			o.WriteLine ();
+			o.WriteLine ("#endif  /* !defined(_MSC_VER) */");
+			o.WriteLine ();
+			o.WriteLine ("#if defined(JI_DLL_EXPORT)");
+			o.WriteLine ("	#define JI_API JI_API_EXPORT");
+			o.WriteLine ("#elif defined(JI_DLL_IMPORT)");
+			o.WriteLine ("	#define JI_API JI_API_IMPORT");
+			o.WriteLine ("#else   /* !defined(JI_DLL_IMPORT) && !defined(JI_API_IMPORT) */");
+			o.WriteLine ("	#define JI_API");
+			o.WriteLine ("#endif  /* JI_DLL_EXPORT... */");
 			foreach (JniFunction entry in JNIEnvEntries) {
 				if (entry.IsPrivate || entry.CustomWrapper)
 					continue;
 				o.WriteLine ();
-				o.WriteLine (entry.ReturnType.JniType);
+				o.WriteLine ("JI_API {0}", entry.ReturnType.JniType);
 				o.WriteLine ("JavaInterop_{0} (JNIEnv *env{1}{2}{3})",
 					entry.Name,
 					entry.Throws ? ", jthrowable *_thrown" : "",

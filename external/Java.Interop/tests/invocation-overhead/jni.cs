@@ -370,68 +370,6 @@ namespace
 
 	partial class JniEnvironment {
 
-	internal static partial class Activator {
-
-		public static unsafe JniObjectReference AllocObject (JniObjectReference klass)
-		{
-			if (klass.SafeHandle == null)
-				throw new ArgumentNullException ("klass");
-			if (klass.SafeHandle.IsInvalid)
-				throw new ArgumentException ("klass");
-
-			var tmp = JniEnvironment.Invoker.AllocObject (JniEnvironment.EnvironmentPointer, klass.SafeHandle);
-
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
-			if (__e != null)
-				throw __e;
-
-			JniEnvironment.LogCreateLocalRef (tmp);
-			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
-		}
-
-		public static unsafe JniObjectReference NewObject (JniObjectReference klass, JniInstanceMethodInfo method)
-		{
-			if (klass.SafeHandle == null)
-				throw new ArgumentNullException ("klass");
-			if (klass.SafeHandle.IsInvalid)
-				throw new ArgumentException ("klass");
-			if (method == null)
-				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
-
-			var tmp = JniEnvironment.Invoker.NewObject (JniEnvironment.EnvironmentPointer, klass.SafeHandle, method.ID);
-
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
-			if (__e != null)
-				throw __e;
-
-			JniEnvironment.LogCreateLocalRef (tmp);
-			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
-		}
-
-		public static unsafe JniObjectReference NewObject (JniObjectReference klass, JniInstanceMethodInfo method, JValue* args)
-		{
-			if (klass.SafeHandle == null)
-				throw new ArgumentNullException ("klass");
-			if (klass.SafeHandle.IsInvalid)
-				throw new ArgumentException ("klass");
-			if (method == null)
-				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
-
-			var tmp = JniEnvironment.Invoker.NewObjectA (JniEnvironment.EnvironmentPointer, klass.SafeHandle, method.ID, args);
-
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
-			if (__e != null)
-				throw __e;
-
-			JniEnvironment.LogCreateLocalRef (tmp);
-			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
-		}
-	}
-
 	public static partial class Arrays {
 
 		public static unsafe int GetArrayLength (JniObjectReference array_ptr)
@@ -2318,6 +2256,68 @@ namespace
 
 			var tmp = JniEnvironment.Invoker.MonitorExit (JniEnvironment.EnvironmentPointer, @object.SafeHandle);
 			return tmp;
+		}
+	}
+
+	public static partial class Object {
+
+		public static unsafe JniObjectReference AllocObject (JniObjectReference klass)
+		{
+			if (klass.SafeHandle == null)
+				throw new ArgumentNullException ("klass");
+			if (klass.SafeHandle.IsInvalid)
+				throw new ArgumentException ("klass");
+
+			var tmp = JniEnvironment.Invoker.AllocObject (JniEnvironment.EnvironmentPointer, klass.SafeHandle);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			if (__e != null)
+				throw __e;
+
+			JniEnvironment.LogCreateLocalRef (tmp);
+			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
+		}
+
+		public static unsafe JniObjectReference NewObject (JniObjectReference klass, JniInstanceMethodInfo method)
+		{
+			if (klass.SafeHandle == null)
+				throw new ArgumentNullException ("klass");
+			if (klass.SafeHandle.IsInvalid)
+				throw new ArgumentException ("klass");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (method.ID == IntPtr.Zero)
+				throw new ArgumentException ("Handle value cannot be null.", "method");
+
+			var tmp = JniEnvironment.Invoker.NewObject (JniEnvironment.EnvironmentPointer, klass.SafeHandle, method.ID);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			if (__e != null)
+				throw __e;
+
+			JniEnvironment.LogCreateLocalRef (tmp);
+			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
+		}
+
+		public static unsafe JniObjectReference NewObject (JniObjectReference klass, JniInstanceMethodInfo method, JValue* args)
+		{
+			if (klass.SafeHandle == null)
+				throw new ArgumentNullException ("klass");
+			if (klass.SafeHandle.IsInvalid)
+				throw new ArgumentException ("klass");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (method.ID == IntPtr.Zero)
+				throw new ArgumentException ("Handle value cannot be null.", "method");
+
+			var tmp = JniEnvironment.Invoker.NewObjectA (JniEnvironment.EnvironmentPointer, klass.SafeHandle, method.ID, args);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			if (__e != null)
+				throw __e;
+
+			JniEnvironment.LogCreateLocalRef (tmp);
+			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 	}
 
@@ -5214,62 +5214,6 @@ namespace
 
 	partial class JniEnvironment {
 
-	internal static partial class Activator {
-
-		public static unsafe JniObjectReference AllocObject (JniObjectReference klass)
-		{
-			if (klass.Handle == IntPtr.Zero)
-				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
-
-			var tmp = JniEnvironment.Invoker.AllocObject (JniEnvironment.EnvironmentPointer, klass.Handle);
-
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
-			if (__e != null)
-				throw __e;
-
-			JniEnvironment.LogCreateLocalRef (tmp);
-			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
-		}
-
-		public static unsafe JniObjectReference NewObject (JniObjectReference klass, JniInstanceMethodInfo method)
-		{
-			if (klass.Handle == IntPtr.Zero)
-				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
-			if (method == null)
-				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
-
-			var tmp = JniEnvironment.Invoker.NewObject (JniEnvironment.EnvironmentPointer, klass.Handle, method.ID);
-
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
-			if (__e != null)
-				throw __e;
-
-			JniEnvironment.LogCreateLocalRef (tmp);
-			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
-		}
-
-		public static unsafe JniObjectReference NewObject (JniObjectReference klass, JniInstanceMethodInfo method, JValue* args)
-		{
-			if (klass.Handle == IntPtr.Zero)
-				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
-			if (method == null)
-				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
-
-			var tmp = JniEnvironment.Invoker.NewObjectA (JniEnvironment.EnvironmentPointer, klass.Handle, method.ID, args);
-
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
-			if (__e != null)
-				throw __e;
-
-			JniEnvironment.LogCreateLocalRef (tmp);
-			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
-		}
-	}
-
 	public static partial class Arrays {
 
 		public static unsafe int GetArrayLength (JniObjectReference array_ptr)
@@ -6912,6 +6856,62 @@ namespace
 
 			var tmp = JniEnvironment.Invoker.MonitorExit (JniEnvironment.EnvironmentPointer, @object.Handle);
 			return tmp;
+		}
+	}
+
+	public static partial class Object {
+
+		public static unsafe JniObjectReference AllocObject (JniObjectReference klass)
+		{
+			if (klass.Handle == IntPtr.Zero)
+				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
+
+			var tmp = JniEnvironment.Invoker.AllocObject (JniEnvironment.EnvironmentPointer, klass.Handle);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			if (__e != null)
+				throw __e;
+
+			JniEnvironment.LogCreateLocalRef (tmp);
+			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
+		}
+
+		public static unsafe JniObjectReference NewObject (JniObjectReference klass, JniInstanceMethodInfo method)
+		{
+			if (klass.Handle == IntPtr.Zero)
+				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (method.ID == IntPtr.Zero)
+				throw new ArgumentException ("Handle value cannot be null.", "method");
+
+			var tmp = JniEnvironment.Invoker.NewObject (JniEnvironment.EnvironmentPointer, klass.Handle, method.ID);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			if (__e != null)
+				throw __e;
+
+			JniEnvironment.LogCreateLocalRef (tmp);
+			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
+		}
+
+		public static unsafe JniObjectReference NewObject (JniObjectReference klass, JniInstanceMethodInfo method, JValue* args)
+		{
+			if (klass.Handle == IntPtr.Zero)
+				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (method.ID == IntPtr.Zero)
+				throw new ArgumentException ("Handle value cannot be null.", "method");
+
+			var tmp = JniEnvironment.Invoker.NewObjectA (JniEnvironment.EnvironmentPointer, klass.Handle, method.ID, args);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			if (__e != null)
+				throw __e;
+
+			JniEnvironment.LogCreateLocalRef (tmp);
+			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 	}
 
@@ -9700,74 +9700,6 @@ namespace
 		const string JavaInteropLib = "JavaInterop";
 
 
-	internal static partial class Activator {
-
-		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe jobject JavaInterop_AllocObject (IntPtr jnienv, out IntPtr thrown, jobject klass);
-
-		public static unsafe JniObjectReference AllocObject (JniObjectReference klass)
-		{
-			if (klass.Handle == IntPtr.Zero)
-				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
-
-			IntPtr thrown;
-			var tmp = JavaInterop_AllocObject (JniEnvironment.EnvironmentPointer, out thrown, klass.Handle);
-
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
-			if (__e != null)
-				throw __e;
-
-			JniEnvironment.LogCreateLocalRef (tmp);
-			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
-		}
-
-		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe jobject JavaInterop_NewObject (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method);
-
-		public static unsafe JniObjectReference NewObject (JniObjectReference klass, JniInstanceMethodInfo method)
-		{
-			if (klass.Handle == IntPtr.Zero)
-				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
-			if (method == null)
-				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
-
-			IntPtr thrown;
-			var tmp = JavaInterop_NewObject (JniEnvironment.EnvironmentPointer, out thrown, klass.Handle, method.ID);
-
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
-			if (__e != null)
-				throw __e;
-
-			JniEnvironment.LogCreateLocalRef (tmp);
-			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
-		}
-
-		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe jobject JavaInterop_NewObjectA (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method, JValue* args);
-
-		public static unsafe JniObjectReference NewObject (JniObjectReference klass, JniInstanceMethodInfo method, JValue* args)
-		{
-			if (klass.Handle == IntPtr.Zero)
-				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
-			if (method == null)
-				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
-
-			IntPtr thrown;
-			var tmp = JavaInterop_NewObjectA (JniEnvironment.EnvironmentPointer, out thrown, klass.Handle, method.ID, args);
-
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
-			if (__e != null)
-				throw __e;
-
-			JniEnvironment.LogCreateLocalRef (tmp);
-			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
-		}
-	}
-
 	public static partial class Arrays {
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
@@ -11823,6 +11755,74 @@ namespace
 		}
 	}
 
+	public static partial class Object {
+
+		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
+		static extern unsafe jobject JavaInterop_AllocObject (IntPtr jnienv, out IntPtr thrown, jobject klass);
+
+		public static unsafe JniObjectReference AllocObject (JniObjectReference klass)
+		{
+			if (klass.Handle == IntPtr.Zero)
+				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
+
+			IntPtr thrown;
+			var tmp = JavaInterop_AllocObject (JniEnvironment.EnvironmentPointer, out thrown, klass.Handle);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				throw __e;
+
+			JniEnvironment.LogCreateLocalRef (tmp);
+			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
+		}
+
+		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
+		static extern unsafe jobject JavaInterop_NewObject (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method);
+
+		public static unsafe JniObjectReference NewObject (JniObjectReference klass, JniInstanceMethodInfo method)
+		{
+			if (klass.Handle == IntPtr.Zero)
+				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (method.ID == IntPtr.Zero)
+				throw new ArgumentException ("Handle value cannot be null.", "method");
+
+			IntPtr thrown;
+			var tmp = JavaInterop_NewObject (JniEnvironment.EnvironmentPointer, out thrown, klass.Handle, method.ID);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				throw __e;
+
+			JniEnvironment.LogCreateLocalRef (tmp);
+			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
+		}
+
+		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
+		static extern unsafe jobject JavaInterop_NewObjectA (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method, JValue* args);
+
+		public static unsafe JniObjectReference NewObject (JniObjectReference klass, JniInstanceMethodInfo method, JValue* args)
+		{
+			if (klass.Handle == IntPtr.Zero)
+				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
+			if (method == null)
+				throw new ArgumentNullException ("method");
+			if (method.ID == IntPtr.Zero)
+				throw new ArgumentException ("Handle value cannot be null.", "method");
+
+			IntPtr thrown;
+			var tmp = JavaInterop_NewObjectA (JniEnvironment.EnvironmentPointer, out thrown, klass.Handle, method.ID, args);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				throw __e;
+
+			JniEnvironment.LogCreateLocalRef (tmp);
+			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
+		}
+	}
+
 	public static partial class References {
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
@@ -13040,58 +13040,6 @@ namespace
 	unsafe delegate JniObjectReferenceType JniFunc_JNIEnvPtr_jobject_JniObjectReferenceType (JNIEnvPtr env, jobject @object);
 
 	partial class JniEnvironment {
-
-	internal static partial class Activator {
-
-		public static unsafe IntPtr AllocObject (IntPtr klass)
-		{
-			if (klass == IntPtr.Zero)
-				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
-
-			var tmp = JniEnvironment.Invoker.AllocObject (JniEnvironment.EnvironmentPointer, klass);
-
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
-			if (__e != null)
-				throw __e;
-
-			JniEnvironment.LogCreateLocalRef (tmp);
-			return tmp;
-		}
-
-		public static unsafe IntPtr NewObject (IntPtr klass, IntPtr method)
-		{
-			if (klass == IntPtr.Zero)
-				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
-			if (method == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
-
-			var tmp = JniEnvironment.Invoker.NewObject (JniEnvironment.EnvironmentPointer, klass, method);
-
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
-			if (__e != null)
-				throw __e;
-
-			JniEnvironment.LogCreateLocalRef (tmp);
-			return tmp;
-		}
-
-		public static unsafe IntPtr NewObject (IntPtr klass, IntPtr method, JValue* args)
-		{
-			if (klass == IntPtr.Zero)
-				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
-			if (method == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
-
-			var tmp = JniEnvironment.Invoker.NewObjectA (JniEnvironment.EnvironmentPointer, klass, method, args);
-
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
-			if (__e != null)
-				throw __e;
-
-			JniEnvironment.LogCreateLocalRef (tmp);
-			return tmp;
-		}
-	}
 
 	public static partial class Arrays {
 
@@ -14614,6 +14562,58 @@ namespace
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
 
 			var tmp = JniEnvironment.Invoker.MonitorExit (JniEnvironment.EnvironmentPointer, @object);
+			return tmp;
+		}
+	}
+
+	public static partial class Object {
+
+		public static unsafe IntPtr AllocObject (IntPtr klass)
+		{
+			if (klass == IntPtr.Zero)
+				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
+
+			var tmp = JniEnvironment.Invoker.AllocObject (JniEnvironment.EnvironmentPointer, klass);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			if (__e != null)
+				throw __e;
+
+			JniEnvironment.LogCreateLocalRef (tmp);
+			return tmp;
+		}
+
+		public static unsafe IntPtr NewObject (IntPtr klass, IntPtr method)
+		{
+			if (klass == IntPtr.Zero)
+				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
+			if (method == IntPtr.Zero)
+				throw new ArgumentException ("Handle value cannot be null.", "method");
+
+			var tmp = JniEnvironment.Invoker.NewObject (JniEnvironment.EnvironmentPointer, klass, method);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			if (__e != null)
+				throw __e;
+
+			JniEnvironment.LogCreateLocalRef (tmp);
+			return tmp;
+		}
+
+		public static unsafe IntPtr NewObject (IntPtr klass, IntPtr method, JValue* args)
+		{
+			if (klass == IntPtr.Zero)
+				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
+			if (method == IntPtr.Zero)
+				throw new ArgumentException ("Handle value cannot be null.", "method");
+
+			var tmp = JniEnvironment.Invoker.NewObjectA (JniEnvironment.EnvironmentPointer, klass, method, args);
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			if (__e != null)
+				throw __e;
+
+			JniEnvironment.LogCreateLocalRef (tmp);
 			return tmp;
 		}
 	}
