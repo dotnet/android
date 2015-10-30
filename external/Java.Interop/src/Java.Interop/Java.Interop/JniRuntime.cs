@@ -371,12 +371,8 @@ namespace Java.Interop
 
 			value.IdentityHashCode = JniSystem.IdentityHashCode (newRef);
 
-			RegisterObject (value);
-			if ((options & JniObjectReferenceOptions.DoNotRegisterWithRuntime) == JniObjectReferenceOptions.DoNotRegisterWithRuntime) {
-				Action unregister = () => {
-					UnRegisterObject (value);
-				};
-				return createCleanup (unregister);
+			if ((options & JniObjectReferenceOptions.DoNotRegisterWithRuntime) != JniObjectReferenceOptions.DoNotRegisterWithRuntime) {
+				RegisterObject (value);
 			}
 			return createCleanup (null);
 		}
