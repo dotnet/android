@@ -72,9 +72,9 @@ namespace Java.Interop.GenericMarshaler {
 		            i == 1 ? "" : a.ToString ());
 		}
 		WriteLine ("");
-		WriteLine ("\t\t\tvar args = stackalloc JValue [{0}];", i);
+		WriteLine ("\t\t\tvar args = stackalloc JniArgumentValue [{0}];", i);
 		for (int a = 1; a <= i; ++a) {
-		    WriteLine ("\t\t\targs [{0}] = arg{1}.JValue;",
+		    WriteLine ("\t\t\targs [{0}] = arg{1}.JniArgumentValue;",
 					a - 1,
 		            i == 1 ? "" : a.ToString ());
 		}
@@ -119,9 +119,9 @@ namespace Java.Interop.GenericMarshaler {
 		            i == 1 ? "" : a.ToString ());
 		}
 		WriteLine ("");
-		WriteLine ("\t\t\tvar args = stackalloc JValue [{0}];", i);
+		WriteLine ("\t\t\tvar args = stackalloc JniArgumentValue [{0}];", i);
 		for (int a = 1; a <= i; ++a) {
-		    WriteLine ("\t\t\targs [{0}] = arg{1}.JValue;",
+		    WriteLine ("\t\t\targs [{0}] = arg{1}.JniArgumentValue;",
 					a - 1,
 		            i == 1 ? "" : a.ToString ());
 		}
@@ -191,9 +191,9 @@ namespace Java.Interop.GenericMarshaler {
 			            i == 1 ? "" : a.ToString ());
 			}
 			WriteLine ("");
-			WriteLine ("\t\t\tvar args = stackalloc JValue [{0}];", i);
+			WriteLine ("\t\t\tvar args = stackalloc JniArgumentValue [{0}];", i);
 			for (int a = 1; a <= i; ++a) {
-			    WriteLine ("\t\t\targs [{0}] = arg{1}.JValue;",
+			    WriteLine ("\t\t\targs [{0}] = arg{1}.JniArgumentValue;",
 						a - 1,
 			            i == 1 ? "" : a.ToString ());
 			}
@@ -256,9 +256,9 @@ namespace Java.Interop.GenericMarshaler {
 			            i == 1 ? "" : a.ToString ());
 			}
 			WriteLine ("");
-			WriteLine ("\t\t\tvar args = stackalloc JValue [{0}];", i);
+			WriteLine ("\t\t\tvar args = stackalloc JniArgumentValue [{0}];", i);
 			for (int a = 1; a <= i; ++a) {
-			    WriteLine ("\t\t\targs [{0}] = arg{1}.JValue;",
+			    WriteLine ("\t\t\targs [{0}] = arg{1}.JniArgumentValue;",
 						a - 1,
 			            i == 1 ? "" : a.ToString ());
 			}

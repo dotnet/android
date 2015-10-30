@@ -15,7 +15,7 @@ namespace Java.Interop
 			JniEnvironment.InstanceMethods.CallVoidMethod (@this, this);
 		}
 
-		public unsafe void InvokeVirtualVoidMethod (JniObjectReference @this, JValue* parameters)
+		public unsafe void InvokeVirtualVoidMethod (JniObjectReference @this, JniArgumentValue* parameters)
 		{
 			JniEnvironment.InstanceMethods.CallVoidMethod (@this, this, parameters);
 		}
@@ -25,7 +25,7 @@ namespace Java.Interop
 			return JniEnvironment.InstanceMethods.CallObjectMethod (@this, this);
 		}
 
-		public unsafe JniObjectReference InvokeVirtualObjectMethod (JniObjectReference @this, JValue* parameters)
+		public unsafe JniObjectReference InvokeVirtualObjectMethod (JniObjectReference @this, JniArgumentValue* parameters)
 		{
 			return JniEnvironment.InstanceMethods.CallObjectMethod (@this, this, parameters);
 		}
@@ -35,7 +35,7 @@ namespace Java.Interop
 			return JniEnvironment.InstanceMethods.CallBooleanMethod (@this, this);
 		}
 
-		public unsafe bool InvokeVirtualBooleanMethod (JniObjectReference @this, JValue* parameters)
+		public unsafe bool InvokeVirtualBooleanMethod (JniObjectReference @this, JniArgumentValue* parameters)
 		{
 			return JniEnvironment.InstanceMethods.CallBooleanMethod (@this, this, parameters);
 		}
@@ -45,7 +45,7 @@ namespace Java.Interop
 			return JniEnvironment.InstanceMethods.CallByteMethod (@this, this);
 		}
 
-		public unsafe sbyte InvokeVirtualSByteMethod (JniObjectReference @this, JValue* parameters)
+		public unsafe sbyte InvokeVirtualSByteMethod (JniObjectReference @this, JniArgumentValue* parameters)
 		{
 			return JniEnvironment.InstanceMethods.CallByteMethod (@this, this, parameters);
 		}
@@ -55,7 +55,7 @@ namespace Java.Interop
 			return JniEnvironment.InstanceMethods.CallCharMethod (@this, this);
 		}
 
-		public unsafe char InvokeVirtualCharMethod (JniObjectReference @this, JValue* parameters)
+		public unsafe char InvokeVirtualCharMethod (JniObjectReference @this, JniArgumentValue* parameters)
 		{
 			return JniEnvironment.InstanceMethods.CallCharMethod (@this, this, parameters);
 		}
@@ -65,7 +65,7 @@ namespace Java.Interop
 			return JniEnvironment.InstanceMethods.CallShortMethod (@this, this);
 		}
 
-		public unsafe short InvokeVirtualInt16Method (JniObjectReference @this, JValue* parameters)
+		public unsafe short InvokeVirtualInt16Method (JniObjectReference @this, JniArgumentValue* parameters)
 		{
 			return JniEnvironment.InstanceMethods.CallShortMethod (@this, this, parameters);
 		}
@@ -75,7 +75,7 @@ namespace Java.Interop
 			return JniEnvironment.InstanceMethods.CallIntMethod (@this, this);
 		}
 
-		public unsafe int InvokeVirtualInt32Method (JniObjectReference @this, JValue* parameters)
+		public unsafe int InvokeVirtualInt32Method (JniObjectReference @this, JniArgumentValue* parameters)
 		{
 			return JniEnvironment.InstanceMethods.CallIntMethod (@this, this, parameters);
 		}
@@ -85,7 +85,7 @@ namespace Java.Interop
 			return JniEnvironment.InstanceMethods.CallLongMethod (@this, this);
 		}
 
-		public unsafe long InvokeVirtualInt64Method (JniObjectReference @this, JValue* parameters)
+		public unsafe long InvokeVirtualInt64Method (JniObjectReference @this, JniArgumentValue* parameters)
 		{
 			return JniEnvironment.InstanceMethods.CallLongMethod (@this, this, parameters);
 		}
@@ -95,7 +95,7 @@ namespace Java.Interop
 			return JniEnvironment.InstanceMethods.CallFloatMethod (@this, this);
 		}
 
-		public unsafe float InvokeVirtualSingleMethod (JniObjectReference @this, JValue* parameters)
+		public unsafe float InvokeVirtualSingleMethod (JniObjectReference @this, JniArgumentValue* parameters)
 		{
 			return JniEnvironment.InstanceMethods.CallFloatMethod (@this, this, parameters);
 		}
@@ -105,7 +105,7 @@ namespace Java.Interop
 			return JniEnvironment.InstanceMethods.CallDoubleMethod (@this, this);
 		}
 
-		public unsafe double InvokeVirtualDoubleMethod (JniObjectReference @this, JValue* parameters)
+		public unsafe double InvokeVirtualDoubleMethod (JniObjectReference @this, JniArgumentValue* parameters)
 		{
 			return JniEnvironment.InstanceMethods.CallDoubleMethod (@this, this, parameters);
 		}
@@ -115,7 +115,7 @@ namespace Java.Interop
 			JniEnvironment.InstanceMethods.CallNonvirtualVoidMethod (@this, declaringType, this);
 		}
 
-		public unsafe void InvokeNonvirtualVoidMethod (JniObjectReference @this, JniObjectReference declaringType, JValue* parameters)
+		public unsafe void InvokeNonvirtualVoidMethod (JniObjectReference @this, JniObjectReference declaringType, JniArgumentValue* parameters)
 		{
 			JniEnvironment.InstanceMethods.CallNonvirtualVoidMethod (@this, declaringType, this, parameters);
 		}
@@ -125,7 +125,7 @@ namespace Java.Interop
 			return JniEnvironment.InstanceMethods.CallNonvirtualObjectMethod (@this, declaringType, this);
 		}
 
-		public unsafe JniObjectReference InvokeNonvirtualObjectMethod (JniObjectReference @this, JniObjectReference declaringType, JValue* parameters)
+		public unsafe JniObjectReference InvokeNonvirtualObjectMethod (JniObjectReference @this, JniObjectReference declaringType, JniArgumentValue* parameters)
 		{
 			return JniEnvironment.InstanceMethods.CallNonvirtualObjectMethod (@this, declaringType, this, parameters);
 		}
@@ -135,7 +135,7 @@ namespace Java.Interop
 			return JniEnvironment.InstanceMethods.CallNonvirtualBooleanMethod (@this, declaringType, this);
 		}
 
-		public unsafe bool InvokeNonvirtualBooleanMethod (JniObjectReference @this, JniObjectReference declaringType, JValue* parameters)
+		public unsafe bool InvokeNonvirtualBooleanMethod (JniObjectReference @this, JniObjectReference declaringType, JniArgumentValue* parameters)
 		{
 			return JniEnvironment.InstanceMethods.CallNonvirtualBooleanMethod (@this, declaringType, this, parameters);
 		}
@@ -145,7 +145,7 @@ namespace Java.Interop
 			return JniEnvironment.InstanceMethods.CallNonvirtualByteMethod (@this, declaringType, this);
 		}
 
-		public unsafe sbyte InvokeNonvirtualSByteMethod (JniObjectReference @this, JniObjectReference declaringType, JValue* parameters)
+		public unsafe sbyte InvokeNonvirtualSByteMethod (JniObjectReference @this, JniObjectReference declaringType, JniArgumentValue* parameters)
 		{
 			return JniEnvironment.InstanceMethods.CallNonvirtualByteMethod (@this, declaringType, this, parameters);
 		}
@@ -155,7 +155,7 @@ namespace Java.Interop
 			return JniEnvironment.InstanceMethods.CallNonvirtualCharMethod (@this, declaringType, this);
 		}
 
-		public unsafe char InvokeNonvirtualCharMethod (JniObjectReference @this, JniObjectReference declaringType, JValue* parameters)
+		public unsafe char InvokeNonvirtualCharMethod (JniObjectReference @this, JniObjectReference declaringType, JniArgumentValue* parameters)
 		{
 			return JniEnvironment.InstanceMethods.CallNonvirtualCharMethod (@this, declaringType, this, parameters);
 		}
@@ -165,7 +165,7 @@ namespace Java.Interop
 			return JniEnvironment.InstanceMethods.CallNonvirtualShortMethod (@this, declaringType, this);
 		}
 
-		public unsafe short InvokeNonvirtualInt16Method (JniObjectReference @this, JniObjectReference declaringType, JValue* parameters)
+		public unsafe short InvokeNonvirtualInt16Method (JniObjectReference @this, JniObjectReference declaringType, JniArgumentValue* parameters)
 		{
 			return JniEnvironment.InstanceMethods.CallNonvirtualShortMethod (@this, declaringType, this, parameters);
 		}
@@ -175,7 +175,7 @@ namespace Java.Interop
 			return JniEnvironment.InstanceMethods.CallNonvirtualIntMethod (@this, declaringType, this);
 		}
 
-		public unsafe int InvokeNonvirtualInt32Method (JniObjectReference @this, JniObjectReference declaringType, JValue* parameters)
+		public unsafe int InvokeNonvirtualInt32Method (JniObjectReference @this, JniObjectReference declaringType, JniArgumentValue* parameters)
 		{
 			return JniEnvironment.InstanceMethods.CallNonvirtualIntMethod (@this, declaringType, this, parameters);
 		}
@@ -185,7 +185,7 @@ namespace Java.Interop
 			return JniEnvironment.InstanceMethods.CallNonvirtualLongMethod (@this, declaringType, this);
 		}
 
-		public unsafe long InvokeNonvirtualInt64Method (JniObjectReference @this, JniObjectReference declaringType, JValue* parameters)
+		public unsafe long InvokeNonvirtualInt64Method (JniObjectReference @this, JniObjectReference declaringType, JniArgumentValue* parameters)
 		{
 			return JniEnvironment.InstanceMethods.CallNonvirtualLongMethod (@this, declaringType, this, parameters);
 		}
@@ -195,7 +195,7 @@ namespace Java.Interop
 			return JniEnvironment.InstanceMethods.CallNonvirtualFloatMethod (@this, declaringType, this);
 		}
 
-		public unsafe float InvokeNonvirtualSingleMethod (JniObjectReference @this, JniObjectReference declaringType, JValue* parameters)
+		public unsafe float InvokeNonvirtualSingleMethod (JniObjectReference @this, JniObjectReference declaringType, JniArgumentValue* parameters)
 		{
 			return JniEnvironment.InstanceMethods.CallNonvirtualFloatMethod (@this, declaringType, this, parameters);
 		}
@@ -205,7 +205,7 @@ namespace Java.Interop
 			return JniEnvironment.InstanceMethods.CallNonvirtualDoubleMethod (@this, declaringType, this);
 		}
 
-		public unsafe double InvokeNonvirtualDoubleMethod (JniObjectReference @this, JniObjectReference declaringType, JValue* parameters)
+		public unsafe double InvokeNonvirtualDoubleMethod (JniObjectReference @this, JniObjectReference declaringType, JniArgumentValue* parameters)
 		{
 			return JniEnvironment.InstanceMethods.CallNonvirtualDoubleMethod (@this, declaringType, this, parameters);
 		}

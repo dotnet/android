@@ -36,42 +36,42 @@ namespace Java.Interop {
 				CreateLocalRef              = JniEnvironment.Strings.NewString,
 			}),
 			new KeyValuePair<Type, JniMarshalInfo>(typeof (Boolean), new JniMarshalInfo {
-				CreateJValue                = JniBoolean.CreateJValue,
+				CreateJniArgumentValue      = JniBoolean.CreateJniArgumentValue,
 				GetValueFromJni             = JniBoolean.GetValueFromJni,
 				CreateLocalRef              = JniBoolean.CreateLocalRef,
 			}),
 			new KeyValuePair<Type, JniMarshalInfo>(typeof (SByte), new JniMarshalInfo {
-				CreateJValue                = JniByte.CreateJValue,
+				CreateJniArgumentValue      = JniByte.CreateJniArgumentValue,
 				GetValueFromJni             = JniByte.GetValueFromJni,
 				CreateLocalRef              = JniByte.CreateLocalRef,
 			}),
 			new KeyValuePair<Type, JniMarshalInfo>(typeof (Char), new JniMarshalInfo {
-				CreateJValue                = JniCharacter.CreateJValue,
+				CreateJniArgumentValue      = JniCharacter.CreateJniArgumentValue,
 				GetValueFromJni             = JniCharacter.GetValueFromJni,
 				CreateLocalRef              = JniCharacter.CreateLocalRef,
 			}),
 			new KeyValuePair<Type, JniMarshalInfo>(typeof (Int16), new JniMarshalInfo {
-				CreateJValue                = JniShort.CreateJValue,
+				CreateJniArgumentValue      = JniShort.CreateJniArgumentValue,
 				GetValueFromJni             = JniShort.GetValueFromJni,
 				CreateLocalRef              = JniShort.CreateLocalRef,
 			}),
 			new KeyValuePair<Type, JniMarshalInfo>(typeof (Int32), new JniMarshalInfo {
-				CreateJValue                = JniInteger.CreateJValue,
+				CreateJniArgumentValue      = JniInteger.CreateJniArgumentValue,
 				GetValueFromJni             = JniInteger.GetValueFromJni,
 				CreateLocalRef              = JniInteger.CreateLocalRef,
 			}),
 			new KeyValuePair<Type, JniMarshalInfo>(typeof (Int64), new JniMarshalInfo {
-				CreateJValue                = JniLong.CreateJValue,
+				CreateJniArgumentValue      = JniLong.CreateJniArgumentValue,
 				GetValueFromJni             = JniLong.GetValueFromJni,
 				CreateLocalRef              = JniLong.CreateLocalRef,
 			}),
 			new KeyValuePair<Type, JniMarshalInfo>(typeof (Single), new JniMarshalInfo {
-				CreateJValue                = JniFloat.CreateJValue,
+				CreateJniArgumentValue      = JniFloat.CreateJniArgumentValue,
 				GetValueFromJni             = JniFloat.GetValueFromJni,
 				CreateLocalRef              = JniFloat.CreateLocalRef,
 			}),
 			new KeyValuePair<Type, JniMarshalInfo>(typeof (Double), new JniMarshalInfo {
-				CreateJValue                = JniDouble.CreateJValue,
+				CreateJniArgumentValue      = JniDouble.CreateJniArgumentValue,
 				GetValueFromJni             = JniDouble.GetValueFromJni,
 				CreateLocalRef              = JniDouble.CreateLocalRef,
 			}),
@@ -86,9 +86,9 @@ namespace Java.Interop {
 			get {return JniType.GetCachedJniType (ref _TypeRef, JniTypeName);}
 		}
 
-		internal static JValue CreateJValue (object value)
+		internal static JniArgumentValue CreateJniArgumentValue (object value)
 		{
-			return new JValue ((Boolean) value);
+			return new JniArgumentValue ((Boolean) value);
 		}
 
 		static JniInstanceMethodInfo init;
@@ -96,8 +96,8 @@ namespace Java.Interop {
 		{
 			Debug.Assert (value is Boolean, "Expected value of type `Boolean`; was: " + (value == null ? "<null>" : value.GetType ().FullName));
 
-			var args    = stackalloc JValue [1];
-			args [0]    = new JValue ((Boolean) value);
+			var args    = stackalloc JniArgumentValue [1];
+			args [0]    = new JniArgumentValue ((Boolean) value);
 
 			TypeRef.GetCachedConstructor (ref init, "(Z)V");
 			return TypeRef.NewObject (init, args);
@@ -124,9 +124,9 @@ namespace Java.Interop {
 			get {return JniType.GetCachedJniType (ref _TypeRef, JniTypeName);}
 		}
 
-		internal static JValue CreateJValue (object value)
+		internal static JniArgumentValue CreateJniArgumentValue (object value)
 		{
-			return new JValue ((SByte) value);
+			return new JniArgumentValue ((SByte) value);
 		}
 
 		static JniInstanceMethodInfo init;
@@ -134,8 +134,8 @@ namespace Java.Interop {
 		{
 			Debug.Assert (value is SByte, "Expected value of type `SByte`; was: " + (value == null ? "<null>" : value.GetType ().FullName));
 
-			var args    = stackalloc JValue [1];
-			args [0]    = new JValue ((SByte) value);
+			var args    = stackalloc JniArgumentValue [1];
+			args [0]    = new JniArgumentValue ((SByte) value);
 
 			TypeRef.GetCachedConstructor (ref init, "(B)V");
 			return TypeRef.NewObject (init, args);
@@ -162,9 +162,9 @@ namespace Java.Interop {
 			get {return JniType.GetCachedJniType (ref _TypeRef, JniTypeName);}
 		}
 
-		internal static JValue CreateJValue (object value)
+		internal static JniArgumentValue CreateJniArgumentValue (object value)
 		{
-			return new JValue ((Char) value);
+			return new JniArgumentValue ((Char) value);
 		}
 
 		static JniInstanceMethodInfo init;
@@ -172,8 +172,8 @@ namespace Java.Interop {
 		{
 			Debug.Assert (value is Char, "Expected value of type `Char`; was: " + (value == null ? "<null>" : value.GetType ().FullName));
 
-			var args    = stackalloc JValue [1];
-			args [0]    = new JValue ((Char) value);
+			var args    = stackalloc JniArgumentValue [1];
+			args [0]    = new JniArgumentValue ((Char) value);
 
 			TypeRef.GetCachedConstructor (ref init, "(C)V");
 			return TypeRef.NewObject (init, args);
@@ -200,9 +200,9 @@ namespace Java.Interop {
 			get {return JniType.GetCachedJniType (ref _TypeRef, JniTypeName);}
 		}
 
-		internal static JValue CreateJValue (object value)
+		internal static JniArgumentValue CreateJniArgumentValue (object value)
 		{
-			return new JValue ((Int16) value);
+			return new JniArgumentValue ((Int16) value);
 		}
 
 		static JniInstanceMethodInfo init;
@@ -210,8 +210,8 @@ namespace Java.Interop {
 		{
 			Debug.Assert (value is Int16, "Expected value of type `Int16`; was: " + (value == null ? "<null>" : value.GetType ().FullName));
 
-			var args    = stackalloc JValue [1];
-			args [0]    = new JValue ((Int16) value);
+			var args    = stackalloc JniArgumentValue [1];
+			args [0]    = new JniArgumentValue ((Int16) value);
 
 			TypeRef.GetCachedConstructor (ref init, "(S)V");
 			return TypeRef.NewObject (init, args);
@@ -238,9 +238,9 @@ namespace Java.Interop {
 			get {return JniType.GetCachedJniType (ref _TypeRef, JniTypeName);}
 		}
 
-		internal static JValue CreateJValue (object value)
+		internal static JniArgumentValue CreateJniArgumentValue (object value)
 		{
-			return new JValue ((Int32) value);
+			return new JniArgumentValue ((Int32) value);
 		}
 
 		static JniInstanceMethodInfo init;
@@ -248,8 +248,8 @@ namespace Java.Interop {
 		{
 			Debug.Assert (value is Int32, "Expected value of type `Int32`; was: " + (value == null ? "<null>" : value.GetType ().FullName));
 
-			var args    = stackalloc JValue [1];
-			args [0]    = new JValue ((Int32) value);
+			var args    = stackalloc JniArgumentValue [1];
+			args [0]    = new JniArgumentValue ((Int32) value);
 
 			TypeRef.GetCachedConstructor (ref init, "(I)V");
 			return TypeRef.NewObject (init, args);
@@ -276,9 +276,9 @@ namespace Java.Interop {
 			get {return JniType.GetCachedJniType (ref _TypeRef, JniTypeName);}
 		}
 
-		internal static JValue CreateJValue (object value)
+		internal static JniArgumentValue CreateJniArgumentValue (object value)
 		{
-			return new JValue ((Int64) value);
+			return new JniArgumentValue ((Int64) value);
 		}
 
 		static JniInstanceMethodInfo init;
@@ -286,8 +286,8 @@ namespace Java.Interop {
 		{
 			Debug.Assert (value is Int64, "Expected value of type `Int64`; was: " + (value == null ? "<null>" : value.GetType ().FullName));
 
-			var args    = stackalloc JValue [1];
-			args [0]    = new JValue ((Int64) value);
+			var args    = stackalloc JniArgumentValue [1];
+			args [0]    = new JniArgumentValue ((Int64) value);
 
 			TypeRef.GetCachedConstructor (ref init, "(J)V");
 			return TypeRef.NewObject (init, args);
@@ -314,9 +314,9 @@ namespace Java.Interop {
 			get {return JniType.GetCachedJniType (ref _TypeRef, JniTypeName);}
 		}
 
-		internal static JValue CreateJValue (object value)
+		internal static JniArgumentValue CreateJniArgumentValue (object value)
 		{
-			return new JValue ((Single) value);
+			return new JniArgumentValue ((Single) value);
 		}
 
 		static JniInstanceMethodInfo init;
@@ -324,8 +324,8 @@ namespace Java.Interop {
 		{
 			Debug.Assert (value is Single, "Expected value of type `Single`; was: " + (value == null ? "<null>" : value.GetType ().FullName));
 
-			var args    = stackalloc JValue [1];
-			args [0]    = new JValue ((Single) value);
+			var args    = stackalloc JniArgumentValue [1];
+			args [0]    = new JniArgumentValue ((Single) value);
 
 			TypeRef.GetCachedConstructor (ref init, "(F)V");
 			return TypeRef.NewObject (init, args);
@@ -352,9 +352,9 @@ namespace Java.Interop {
 			get {return JniType.GetCachedJniType (ref _TypeRef, JniTypeName);}
 		}
 
-		internal static JValue CreateJValue (object value)
+		internal static JniArgumentValue CreateJniArgumentValue (object value)
 		{
-			return new JValue ((Double) value);
+			return new JniArgumentValue ((Double) value);
 		}
 
 		static JniInstanceMethodInfo init;
@@ -362,8 +362,8 @@ namespace Java.Interop {
 		{
 			Debug.Assert (value is Double, "Expected value of type `Double`; was: " + (value == null ? "<null>" : value.GetType ().FullName));
 
-			var args    = stackalloc JValue [1];
-			args [0]    = new JValue ((Double) value);
+			var args    = stackalloc JniArgumentValue [1];
+			args [0]    = new JniArgumentValue ((Double) value);
 
 			TypeRef.GetCachedConstructor (ref init, "(D)V");
 			return TypeRef.NewObject (init, args);

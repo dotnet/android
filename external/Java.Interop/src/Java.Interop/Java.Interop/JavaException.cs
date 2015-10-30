@@ -39,8 +39,8 @@ namespace Java.Interop
 			const string signature  = "(Ljava/lang/String;)V";
 			var native_message = JniEnvironment.Strings.NewString (message);
 			try {
-				var args = stackalloc JValue [1];
-				args [0] = new JValue (native_message);
+				var args = stackalloc JniArgumentValue [1];
+				args [0] = new JniArgumentValue (native_message);
 				var peer = JniPeerMembers.InstanceMethods.StartCreateInstance (signature, GetType (), args);
 				using (SetPeerReference (
 						ref peer,
@@ -59,8 +59,8 @@ namespace Java.Interop
 			const string signature  = "(Ljava/lang/String;)V";
 			var native_message  = JniEnvironment.Strings.NewString (message);
 			try {
-				var args = stackalloc JValue [1];
-				args [0] = new JValue (native_message);
+				var args = stackalloc JniArgumentValue [1];
+				args [0] = new JniArgumentValue (native_message);
 				var peer = JniPeerMembers.InstanceMethods.StartCreateInstance (signature, GetType (), args);
 				using (SetPeerReference (
 						ref peer,
@@ -204,13 +204,13 @@ namespace Java.Interop
 				var PrintWriter_init        = PrintWriter_class.GetConstructor ("(Ljava/io/Writer;)V");
 				var swriter                 = StringWriter_class.NewObject (StringWriter_init, null);
 				try {
-					var pwriter_args = stackalloc JValue [1];
-					pwriter_args [0] = new JValue (swriter);
+					var pwriter_args = stackalloc JniArgumentValue [1];
+					pwriter_args [0] = new JniArgumentValue (swriter);
 					var pwriter = PrintWriter_class.NewObject (PrintWriter_init, pwriter_args);
 					try {
 						var pst = _members.InstanceMethods.GetMethodInfo ("printStackTrace\u0000(Ljava/io/PrintWriter;)V");
-						var pst_args = stackalloc JValue [1];
-						pst_args [0] = new JValue (pwriter);
+						var pst_args = stackalloc JniArgumentValue [1];
+						pst_args [0] = new JniArgumentValue (pwriter);
 						pst.InvokeVirtualVoidMethod (handle, pst_args);
 						var s = JniEnvironment.Object.ToString (swriter);
 						return JniEnvironment.Strings.ToString (ref s, JniObjectReferenceOptions.DisposeSourceReference);

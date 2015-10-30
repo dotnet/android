@@ -49,6 +49,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Java.Interop\JniArgumentValue.cs" />
     <Compile Include="Java.Interop\JniEnvironment.cs" />
     <Compile Include="Java.Interop\JniEnvironment.g.cs" />
     <Compile Include="Java.Interop\JniEnvironment.Object.cs" />
@@ -69,12 +70,11 @@
     <Compile Include="Java.Interop\JniType.cs" />
     <Compile Include="Java.Interop\JniTypeSignature.cs" />
     <Compile Include="Java.Interop\JniTypeSignatureAttribute.cs" />
-    <Compile Include="Java.Interop\JValue.cs" />
     <Compile Include="Java.Interop\JniNativeMethodRegistration.cs" />
     <Compile Include="Java.Interop\IJavaPeerable.cs" />
     <Compile Include="Java.Interop\JniObjectReferenceOptions.cs" />
     <Compile Include="Java.Interop\JniObjectReferenceType.cs" />
-    <Compile Include="Java.Interop\JniPeerInstanceMethods_Invoke.cs">
+    <Compile Include="Java.Interop\JniPeerMembers.JniInstanceMethods_Invoke.cs">
       <DependentUpon>JniPeerMembers.JniInstanceMethods_Invoke.tt</DependentUpon>
     </Compile>
     <Compile Include="Java.Interop\JniPeerMembers.JniStaticMethods.cs" />
@@ -158,7 +158,7 @@
     </None>
     <None Include="Java.Interop\JniPeerMembers.JniInstanceMethods_Invoke.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>JniPeerInstanceMethods_Invoke.cs</LastGenOutput>
+      <LastGenOutput>JniPeerMembers.JniInstanceMethods_Invoke.cs</LastGenOutput>
     </None>
     <None Include="Java.Interop\JniPeerMembers.JniFields.tt">
       <Generator>TextTemplatingFileGenerator</Generator>

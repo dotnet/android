@@ -301,46 +301,46 @@ namespace
 	unsafe delegate JniGlobalReference JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniGlobalReference (JNIEnvPtr env, JniReferenceSafeHandle @object);
 	unsafe delegate void JniAction_JNIEnvPtr_IntPtr (JNIEnvPtr env, IntPtr @object);
 	unsafe delegate JniLocalReference JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniLocalReference (JNIEnvPtr env, JniReferenceSafeHandle klass, IntPtr method);
-	unsafe delegate JniLocalReference JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_JniLocalReference (JNIEnvPtr env, JniReferenceSafeHandle klass, IntPtr method, JValue* args);
+	unsafe delegate JniLocalReference JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_JniLocalReference (JNIEnvPtr env, JniReferenceSafeHandle klass, IntPtr method, JniArgumentValue* args);
 	unsafe delegate IntPtr JniFunc_JNIEnvPtr_JniReferenceSafeHandle_string_string_IntPtr (JNIEnvPtr env, JniReferenceSafeHandle klass, string name, string signature);
 	unsafe delegate bool JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_bool (JNIEnvPtr env, JniReferenceSafeHandle @object, IntPtr method);
-	unsafe delegate bool JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_bool (JNIEnvPtr env, JniReferenceSafeHandle @object, IntPtr method, JValue* args);
+	unsafe delegate bool JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_bool (JNIEnvPtr env, JniReferenceSafeHandle @object, IntPtr method, JniArgumentValue* args);
 	unsafe delegate sbyte JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_sbyte (JNIEnvPtr env, JniReferenceSafeHandle @object, IntPtr method);
-	unsafe delegate sbyte JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_sbyte (JNIEnvPtr env, JniReferenceSafeHandle @object, IntPtr method, JValue* args);
+	unsafe delegate sbyte JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_sbyte (JNIEnvPtr env, JniReferenceSafeHandle @object, IntPtr method, JniArgumentValue* args);
 	unsafe delegate char JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_char (JNIEnvPtr env, JniReferenceSafeHandle @object, IntPtr method);
-	unsafe delegate char JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_char (JNIEnvPtr env, JniReferenceSafeHandle @object, IntPtr method, JValue* args);
+	unsafe delegate char JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_char (JNIEnvPtr env, JniReferenceSafeHandle @object, IntPtr method, JniArgumentValue* args);
 	unsafe delegate short JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_short (JNIEnvPtr env, JniReferenceSafeHandle @object, IntPtr method);
-	unsafe delegate short JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_short (JNIEnvPtr env, JniReferenceSafeHandle @object, IntPtr method, JValue* args);
+	unsafe delegate short JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_short (JNIEnvPtr env, JniReferenceSafeHandle @object, IntPtr method, JniArgumentValue* args);
 	unsafe delegate int JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_int (JNIEnvPtr env, JniReferenceSafeHandle @object, IntPtr method);
-	unsafe delegate int JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_int (JNIEnvPtr env, JniReferenceSafeHandle @object, IntPtr method, JValue* args);
+	unsafe delegate int JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_int (JNIEnvPtr env, JniReferenceSafeHandle @object, IntPtr method, JniArgumentValue* args);
 	unsafe delegate long JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_long (JNIEnvPtr env, JniReferenceSafeHandle @object, IntPtr method);
-	unsafe delegate long JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_long (JNIEnvPtr env, JniReferenceSafeHandle @object, IntPtr method, JValue* args);
+	unsafe delegate long JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_long (JNIEnvPtr env, JniReferenceSafeHandle @object, IntPtr method, JniArgumentValue* args);
 	unsafe delegate float JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_float (JNIEnvPtr env, JniReferenceSafeHandle @object, IntPtr method);
-	unsafe delegate float JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_float (JNIEnvPtr env, JniReferenceSafeHandle @object, IntPtr method, JValue* args);
+	unsafe delegate float JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_float (JNIEnvPtr env, JniReferenceSafeHandle @object, IntPtr method, JniArgumentValue* args);
 	unsafe delegate double JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_double (JNIEnvPtr env, JniReferenceSafeHandle @object, IntPtr method);
-	unsafe delegate double JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_double (JNIEnvPtr env, JniReferenceSafeHandle @object, IntPtr method, JValue* args);
+	unsafe delegate double JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_double (JNIEnvPtr env, JniReferenceSafeHandle @object, IntPtr method, JniArgumentValue* args);
 	unsafe delegate void JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr (JNIEnvPtr env, JniReferenceSafeHandle @object, IntPtr method);
-	unsafe delegate void JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef (JNIEnvPtr env, JniReferenceSafeHandle @object, IntPtr method, JValue* args);
+	unsafe delegate void JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef (JNIEnvPtr env, JniReferenceSafeHandle @object, IntPtr method, JniArgumentValue* args);
 	unsafe delegate JniLocalReference JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniLocalReference (JNIEnvPtr env, JniReferenceSafeHandle @object, JniReferenceSafeHandle klass, IntPtr method);
-	unsafe delegate JniLocalReference JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JValueRef_JniLocalReference (JNIEnvPtr env, JniReferenceSafeHandle @object, JniReferenceSafeHandle klass, IntPtr method, JValue* args);
+	unsafe delegate JniLocalReference JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_JniLocalReference (JNIEnvPtr env, JniReferenceSafeHandle @object, JniReferenceSafeHandle klass, IntPtr method, JniArgumentValue* args);
 	unsafe delegate bool JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_bool (JNIEnvPtr env, JniReferenceSafeHandle @object, JniReferenceSafeHandle klass, IntPtr method);
-	unsafe delegate bool JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JValueRef_bool (JNIEnvPtr env, JniReferenceSafeHandle @object, JniReferenceSafeHandle klass, IntPtr method, JValue* args);
+	unsafe delegate bool JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_bool (JNIEnvPtr env, JniReferenceSafeHandle @object, JniReferenceSafeHandle klass, IntPtr method, JniArgumentValue* args);
 	unsafe delegate sbyte JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_sbyte (JNIEnvPtr env, JniReferenceSafeHandle @object, JniReferenceSafeHandle klass, IntPtr method);
-	unsafe delegate sbyte JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JValueRef_sbyte (JNIEnvPtr env, JniReferenceSafeHandle @object, JniReferenceSafeHandle klass, IntPtr method, JValue* args);
+	unsafe delegate sbyte JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_sbyte (JNIEnvPtr env, JniReferenceSafeHandle @object, JniReferenceSafeHandle klass, IntPtr method, JniArgumentValue* args);
 	unsafe delegate char JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_char (JNIEnvPtr env, JniReferenceSafeHandle @object, JniReferenceSafeHandle klass, IntPtr method);
-	unsafe delegate char JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JValueRef_char (JNIEnvPtr env, JniReferenceSafeHandle @object, JniReferenceSafeHandle klass, IntPtr method, JValue* args);
+	unsafe delegate char JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_char (JNIEnvPtr env, JniReferenceSafeHandle @object, JniReferenceSafeHandle klass, IntPtr method, JniArgumentValue* args);
 	unsafe delegate short JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_short (JNIEnvPtr env, JniReferenceSafeHandle @object, JniReferenceSafeHandle klass, IntPtr method);
-	unsafe delegate short JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JValueRef_short (JNIEnvPtr env, JniReferenceSafeHandle @object, JniReferenceSafeHandle klass, IntPtr method, JValue* args);
+	unsafe delegate short JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_short (JNIEnvPtr env, JniReferenceSafeHandle @object, JniReferenceSafeHandle klass, IntPtr method, JniArgumentValue* args);
 	unsafe delegate int JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_int (JNIEnvPtr env, JniReferenceSafeHandle @object, JniReferenceSafeHandle klass, IntPtr method);
-	unsafe delegate int JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JValueRef_int (JNIEnvPtr env, JniReferenceSafeHandle @object, JniReferenceSafeHandle klass, IntPtr method, JValue* args);
+	unsafe delegate int JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_int (JNIEnvPtr env, JniReferenceSafeHandle @object, JniReferenceSafeHandle klass, IntPtr method, JniArgumentValue* args);
 	unsafe delegate long JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_long (JNIEnvPtr env, JniReferenceSafeHandle @object, JniReferenceSafeHandle klass, IntPtr method);
-	unsafe delegate long JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JValueRef_long (JNIEnvPtr env, JniReferenceSafeHandle @object, JniReferenceSafeHandle klass, IntPtr method, JValue* args);
+	unsafe delegate long JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_long (JNIEnvPtr env, JniReferenceSafeHandle @object, JniReferenceSafeHandle klass, IntPtr method, JniArgumentValue* args);
 	unsafe delegate float JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_float (JNIEnvPtr env, JniReferenceSafeHandle @object, JniReferenceSafeHandle klass, IntPtr method);
-	unsafe delegate float JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JValueRef_float (JNIEnvPtr env, JniReferenceSafeHandle @object, JniReferenceSafeHandle klass, IntPtr method, JValue* args);
+	unsafe delegate float JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_float (JNIEnvPtr env, JniReferenceSafeHandle @object, JniReferenceSafeHandle klass, IntPtr method, JniArgumentValue* args);
 	unsafe delegate double JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_double (JNIEnvPtr env, JniReferenceSafeHandle @object, JniReferenceSafeHandle klass, IntPtr method);
-	unsafe delegate double JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JValueRef_double (JNIEnvPtr env, JniReferenceSafeHandle @object, JniReferenceSafeHandle klass, IntPtr method, JValue* args);
+	unsafe delegate double JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_double (JNIEnvPtr env, JniReferenceSafeHandle @object, JniReferenceSafeHandle klass, IntPtr method, JniArgumentValue* args);
 	unsafe delegate void JniAction_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr (JNIEnvPtr env, JniReferenceSafeHandle @object, JniReferenceSafeHandle klass, IntPtr method);
-	unsafe delegate void JniAction_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JValueRef (JNIEnvPtr env, JniReferenceSafeHandle @object, JniReferenceSafeHandle klass, IntPtr method, JValue* args);
+	unsafe delegate void JniAction_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef (JNIEnvPtr env, JniReferenceSafeHandle @object, JniReferenceSafeHandle klass, IntPtr method, JniArgumentValue* args);
 	unsafe delegate void JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniReferenceSafeHandle (JNIEnvPtr env, JniReferenceSafeHandle @object, IntPtr field, JniReferenceSafeHandle value);
 	unsafe delegate void JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_bool (JNIEnvPtr env, JniReferenceSafeHandle @object, IntPtr field, bool value);
 	unsafe delegate void JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_sbyte (JNIEnvPtr env, JniReferenceSafeHandle @object, IntPtr field, sbyte value);
@@ -1334,7 +1334,7 @@ namespace
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		internal static unsafe JniObjectReference CallObjectMethod (JniObjectReference @object, JniInstanceMethodInfo method, JValue* args)
+		internal static unsafe JniObjectReference CallObjectMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -1375,7 +1375,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe bool CallBooleanMethod (JniObjectReference @object, JniInstanceMethodInfo method, JValue* args)
+		internal static unsafe bool CallBooleanMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -1415,7 +1415,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe sbyte CallByteMethod (JniObjectReference @object, JniInstanceMethodInfo method, JValue* args)
+		internal static unsafe sbyte CallByteMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -1455,7 +1455,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe char CallCharMethod (JniObjectReference @object, JniInstanceMethodInfo method, JValue* args)
+		internal static unsafe char CallCharMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -1495,7 +1495,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe short CallShortMethod (JniObjectReference @object, JniInstanceMethodInfo method, JValue* args)
+		internal static unsafe short CallShortMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -1535,7 +1535,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe int CallIntMethod (JniObjectReference @object, JniInstanceMethodInfo method, JValue* args)
+		internal static unsafe int CallIntMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -1575,7 +1575,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe long CallLongMethod (JniObjectReference @object, JniInstanceMethodInfo method, JValue* args)
+		internal static unsafe long CallLongMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -1615,7 +1615,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe float CallFloatMethod (JniObjectReference @object, JniInstanceMethodInfo method, JValue* args)
+		internal static unsafe float CallFloatMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -1655,7 +1655,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe double CallDoubleMethod (JniObjectReference @object, JniInstanceMethodInfo method, JValue* args)
+		internal static unsafe double CallDoubleMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -1694,7 +1694,7 @@ namespace
 
 		}
 
-		internal static unsafe void CallVoidMethod (JniObjectReference @object, JniInstanceMethodInfo method, JValue* args)
+		internal static unsafe void CallVoidMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -1738,7 +1738,7 @@ namespace
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		internal static unsafe JniObjectReference CallNonvirtualObjectMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JValue* args)
+		internal static unsafe JniObjectReference CallNonvirtualObjectMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -1787,7 +1787,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe bool CallNonvirtualBooleanMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JValue* args)
+		internal static unsafe bool CallNonvirtualBooleanMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -1835,7 +1835,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe sbyte CallNonvirtualByteMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JValue* args)
+		internal static unsafe sbyte CallNonvirtualByteMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -1883,7 +1883,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe char CallNonvirtualCharMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JValue* args)
+		internal static unsafe char CallNonvirtualCharMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -1931,7 +1931,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe short CallNonvirtualShortMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JValue* args)
+		internal static unsafe short CallNonvirtualShortMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -1979,7 +1979,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe int CallNonvirtualIntMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JValue* args)
+		internal static unsafe int CallNonvirtualIntMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -2027,7 +2027,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe long CallNonvirtualLongMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JValue* args)
+		internal static unsafe long CallNonvirtualLongMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -2075,7 +2075,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe float CallNonvirtualFloatMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JValue* args)
+		internal static unsafe float CallNonvirtualFloatMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -2123,7 +2123,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe double CallNonvirtualDoubleMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JValue* args)
+		internal static unsafe double CallNonvirtualDoubleMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -2170,7 +2170,7 @@ namespace
 
 		}
 
-		internal static unsafe void CallNonvirtualVoidMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JValue* args)
+		internal static unsafe void CallNonvirtualVoidMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -2299,7 +2299,7 @@ namespace
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		public static unsafe JniObjectReference NewObject (JniObjectReference klass, JniInstanceMethodInfo method, JValue* args)
+		public static unsafe JniObjectReference NewObject (JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (klass.SafeHandle == null)
 				throw new ArgumentNullException ("klass");
@@ -2760,7 +2760,7 @@ namespace
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		internal static unsafe JniObjectReference CallStaticObjectMethod (JniObjectReference klass, JniStaticMethodInfo method, JValue* args)
+		internal static unsafe JniObjectReference CallStaticObjectMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
 		{
 			if (klass.SafeHandle == null)
 				throw new ArgumentNullException ("klass");
@@ -2801,7 +2801,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe bool CallStaticBooleanMethod (JniObjectReference klass, JniStaticMethodInfo method, JValue* args)
+		internal static unsafe bool CallStaticBooleanMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
 		{
 			if (klass.SafeHandle == null)
 				throw new ArgumentNullException ("klass");
@@ -2841,7 +2841,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe sbyte CallStaticByteMethod (JniObjectReference klass, JniStaticMethodInfo method, JValue* args)
+		internal static unsafe sbyte CallStaticByteMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
 		{
 			if (klass.SafeHandle == null)
 				throw new ArgumentNullException ("klass");
@@ -2881,7 +2881,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe char CallStaticCharMethod (JniObjectReference klass, JniStaticMethodInfo method, JValue* args)
+		internal static unsafe char CallStaticCharMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
 		{
 			if (klass.SafeHandle == null)
 				throw new ArgumentNullException ("klass");
@@ -2921,7 +2921,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe short CallStaticShortMethod (JniObjectReference klass, JniStaticMethodInfo method, JValue* args)
+		internal static unsafe short CallStaticShortMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
 		{
 			if (klass.SafeHandle == null)
 				throw new ArgumentNullException ("klass");
@@ -2961,7 +2961,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe int CallStaticIntMethod (JniObjectReference klass, JniStaticMethodInfo method, JValue* args)
+		internal static unsafe int CallStaticIntMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
 		{
 			if (klass.SafeHandle == null)
 				throw new ArgumentNullException ("klass");
@@ -3001,7 +3001,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe long CallStaticLongMethod (JniObjectReference klass, JniStaticMethodInfo method, JValue* args)
+		internal static unsafe long CallStaticLongMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
 		{
 			if (klass.SafeHandle == null)
 				throw new ArgumentNullException ("klass");
@@ -3041,7 +3041,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe float CallStaticFloatMethod (JniObjectReference klass, JniStaticMethodInfo method, JValue* args)
+		internal static unsafe float CallStaticFloatMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
 		{
 			if (klass.SafeHandle == null)
 				throw new ArgumentNullException ("klass");
@@ -3081,7 +3081,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe double CallStaticDoubleMethod (JniObjectReference klass, JniStaticMethodInfo method, JValue* args)
+		internal static unsafe double CallStaticDoubleMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
 		{
 			if (klass.SafeHandle == null)
 				throw new ArgumentNullException ("klass");
@@ -3120,7 +3120,7 @@ namespace
 
 		}
 
-		internal static unsafe void CallStaticVoidMethod (JniObjectReference klass, JniStaticMethodInfo method, JValue* args)
+		internal static unsafe void CallStaticVoidMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
 		{
 			if (klass.SafeHandle == null)
 				throw new ArgumentNullException ("klass");
@@ -3563,11 +3563,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_JniLocalReference _NewObjectA;
-		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_JniLocalReference NewObjectA {
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_JniLocalReference _NewObjectA;
+		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_JniLocalReference NewObjectA {
 			get {
 				if (_NewObjectA == null)
-					_NewObjectA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_JniLocalReference) Marshal.GetDelegateForFunctionPointer (env.NewObjectA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_JniLocalReference));
+					_NewObjectA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_JniLocalReference) Marshal.GetDelegateForFunctionPointer (env.NewObjectA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_JniLocalReference));
 				return _NewObjectA;
 			}
 		}
@@ -3608,11 +3608,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_JniLocalReference _CallObjectMethodA;
-		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_JniLocalReference CallObjectMethodA {
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_JniLocalReference _CallObjectMethodA;
+		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_JniLocalReference CallObjectMethodA {
 			get {
 				if (_CallObjectMethodA == null)
-					_CallObjectMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_JniLocalReference) Marshal.GetDelegateForFunctionPointer (env.CallObjectMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_JniLocalReference));
+					_CallObjectMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_JniLocalReference) Marshal.GetDelegateForFunctionPointer (env.CallObjectMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_JniLocalReference));
 				return _CallObjectMethodA;
 			}
 		}
@@ -3626,11 +3626,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_bool _CallBooleanMethodA;
-		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_bool CallBooleanMethodA {
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_bool _CallBooleanMethodA;
+		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_bool CallBooleanMethodA {
 			get {
 				if (_CallBooleanMethodA == null)
-					_CallBooleanMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_bool) Marshal.GetDelegateForFunctionPointer (env.CallBooleanMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_bool));
+					_CallBooleanMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_bool) Marshal.GetDelegateForFunctionPointer (env.CallBooleanMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_bool));
 				return _CallBooleanMethodA;
 			}
 		}
@@ -3644,11 +3644,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_sbyte _CallByteMethodA;
-		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_sbyte CallByteMethodA {
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_sbyte _CallByteMethodA;
+		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_sbyte CallByteMethodA {
 			get {
 				if (_CallByteMethodA == null)
-					_CallByteMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_sbyte) Marshal.GetDelegateForFunctionPointer (env.CallByteMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_sbyte));
+					_CallByteMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_sbyte) Marshal.GetDelegateForFunctionPointer (env.CallByteMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_sbyte));
 				return _CallByteMethodA;
 			}
 		}
@@ -3662,11 +3662,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_char _CallCharMethodA;
-		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_char CallCharMethodA {
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_char _CallCharMethodA;
+		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_char CallCharMethodA {
 			get {
 				if (_CallCharMethodA == null)
-					_CallCharMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_char) Marshal.GetDelegateForFunctionPointer (env.CallCharMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_char));
+					_CallCharMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_char) Marshal.GetDelegateForFunctionPointer (env.CallCharMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_char));
 				return _CallCharMethodA;
 			}
 		}
@@ -3680,11 +3680,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_short _CallShortMethodA;
-		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_short CallShortMethodA {
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_short _CallShortMethodA;
+		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_short CallShortMethodA {
 			get {
 				if (_CallShortMethodA == null)
-					_CallShortMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_short) Marshal.GetDelegateForFunctionPointer (env.CallShortMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_short));
+					_CallShortMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_short) Marshal.GetDelegateForFunctionPointer (env.CallShortMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_short));
 				return _CallShortMethodA;
 			}
 		}
@@ -3698,11 +3698,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_int _CallIntMethodA;
-		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_int CallIntMethodA {
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_int _CallIntMethodA;
+		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_int CallIntMethodA {
 			get {
 				if (_CallIntMethodA == null)
-					_CallIntMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_int) Marshal.GetDelegateForFunctionPointer (env.CallIntMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_int));
+					_CallIntMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_int) Marshal.GetDelegateForFunctionPointer (env.CallIntMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_int));
 				return _CallIntMethodA;
 			}
 		}
@@ -3716,11 +3716,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_long _CallLongMethodA;
-		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_long CallLongMethodA {
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_long _CallLongMethodA;
+		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_long CallLongMethodA {
 			get {
 				if (_CallLongMethodA == null)
-					_CallLongMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_long) Marshal.GetDelegateForFunctionPointer (env.CallLongMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_long));
+					_CallLongMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_long) Marshal.GetDelegateForFunctionPointer (env.CallLongMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_long));
 				return _CallLongMethodA;
 			}
 		}
@@ -3734,11 +3734,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_float _CallFloatMethodA;
-		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_float CallFloatMethodA {
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_float _CallFloatMethodA;
+		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_float CallFloatMethodA {
 			get {
 				if (_CallFloatMethodA == null)
-					_CallFloatMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_float) Marshal.GetDelegateForFunctionPointer (env.CallFloatMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_float));
+					_CallFloatMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_float) Marshal.GetDelegateForFunctionPointer (env.CallFloatMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_float));
 				return _CallFloatMethodA;
 			}
 		}
@@ -3752,11 +3752,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_double _CallDoubleMethodA;
-		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_double CallDoubleMethodA {
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_double _CallDoubleMethodA;
+		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_double CallDoubleMethodA {
 			get {
 				if (_CallDoubleMethodA == null)
-					_CallDoubleMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_double) Marshal.GetDelegateForFunctionPointer (env.CallDoubleMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_double));
+					_CallDoubleMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_double) Marshal.GetDelegateForFunctionPointer (env.CallDoubleMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_double));
 				return _CallDoubleMethodA;
 			}
 		}
@@ -3770,11 +3770,11 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef _CallVoidMethodA;
-		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef CallVoidMethodA {
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef _CallVoidMethodA;
+		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef CallVoidMethodA {
 			get {
 				if (_CallVoidMethodA == null)
-					_CallVoidMethodA = (JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef) Marshal.GetDelegateForFunctionPointer (env.CallVoidMethodA, typeof (JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef));
+					_CallVoidMethodA = (JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef) Marshal.GetDelegateForFunctionPointer (env.CallVoidMethodA, typeof (JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef));
 				return _CallVoidMethodA;
 			}
 		}
@@ -3788,11 +3788,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JValueRef_JniLocalReference _CallNonvirtualObjectMethodA;
-		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JValueRef_JniLocalReference CallNonvirtualObjectMethodA {
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_JniLocalReference _CallNonvirtualObjectMethodA;
+		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_JniLocalReference CallNonvirtualObjectMethodA {
 			get {
 				if (_CallNonvirtualObjectMethodA == null)
-					_CallNonvirtualObjectMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JValueRef_JniLocalReference) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualObjectMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JValueRef_JniLocalReference));
+					_CallNonvirtualObjectMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_JniLocalReference) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualObjectMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_JniLocalReference));
 				return _CallNonvirtualObjectMethodA;
 			}
 		}
@@ -3806,11 +3806,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JValueRef_bool _CallNonvirtualBooleanMethodA;
-		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JValueRef_bool CallNonvirtualBooleanMethodA {
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_bool _CallNonvirtualBooleanMethodA;
+		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_bool CallNonvirtualBooleanMethodA {
 			get {
 				if (_CallNonvirtualBooleanMethodA == null)
-					_CallNonvirtualBooleanMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JValueRef_bool) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualBooleanMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JValueRef_bool));
+					_CallNonvirtualBooleanMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_bool) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualBooleanMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_bool));
 				return _CallNonvirtualBooleanMethodA;
 			}
 		}
@@ -3824,11 +3824,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JValueRef_sbyte _CallNonvirtualByteMethodA;
-		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JValueRef_sbyte CallNonvirtualByteMethodA {
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_sbyte _CallNonvirtualByteMethodA;
+		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_sbyte CallNonvirtualByteMethodA {
 			get {
 				if (_CallNonvirtualByteMethodA == null)
-					_CallNonvirtualByteMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JValueRef_sbyte) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualByteMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JValueRef_sbyte));
+					_CallNonvirtualByteMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_sbyte) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualByteMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_sbyte));
 				return _CallNonvirtualByteMethodA;
 			}
 		}
@@ -3842,11 +3842,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JValueRef_char _CallNonvirtualCharMethodA;
-		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JValueRef_char CallNonvirtualCharMethodA {
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_char _CallNonvirtualCharMethodA;
+		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_char CallNonvirtualCharMethodA {
 			get {
 				if (_CallNonvirtualCharMethodA == null)
-					_CallNonvirtualCharMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JValueRef_char) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualCharMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JValueRef_char));
+					_CallNonvirtualCharMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_char) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualCharMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_char));
 				return _CallNonvirtualCharMethodA;
 			}
 		}
@@ -3860,11 +3860,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JValueRef_short _CallNonvirtualShortMethodA;
-		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JValueRef_short CallNonvirtualShortMethodA {
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_short _CallNonvirtualShortMethodA;
+		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_short CallNonvirtualShortMethodA {
 			get {
 				if (_CallNonvirtualShortMethodA == null)
-					_CallNonvirtualShortMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JValueRef_short) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualShortMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JValueRef_short));
+					_CallNonvirtualShortMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_short) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualShortMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_short));
 				return _CallNonvirtualShortMethodA;
 			}
 		}
@@ -3878,11 +3878,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JValueRef_int _CallNonvirtualIntMethodA;
-		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JValueRef_int CallNonvirtualIntMethodA {
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_int _CallNonvirtualIntMethodA;
+		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_int CallNonvirtualIntMethodA {
 			get {
 				if (_CallNonvirtualIntMethodA == null)
-					_CallNonvirtualIntMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JValueRef_int) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualIntMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JValueRef_int));
+					_CallNonvirtualIntMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_int) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualIntMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_int));
 				return _CallNonvirtualIntMethodA;
 			}
 		}
@@ -3896,11 +3896,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JValueRef_long _CallNonvirtualLongMethodA;
-		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JValueRef_long CallNonvirtualLongMethodA {
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_long _CallNonvirtualLongMethodA;
+		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_long CallNonvirtualLongMethodA {
 			get {
 				if (_CallNonvirtualLongMethodA == null)
-					_CallNonvirtualLongMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JValueRef_long) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualLongMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JValueRef_long));
+					_CallNonvirtualLongMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_long) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualLongMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_long));
 				return _CallNonvirtualLongMethodA;
 			}
 		}
@@ -3914,11 +3914,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JValueRef_float _CallNonvirtualFloatMethodA;
-		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JValueRef_float CallNonvirtualFloatMethodA {
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_float _CallNonvirtualFloatMethodA;
+		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_float CallNonvirtualFloatMethodA {
 			get {
 				if (_CallNonvirtualFloatMethodA == null)
-					_CallNonvirtualFloatMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JValueRef_float) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualFloatMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JValueRef_float));
+					_CallNonvirtualFloatMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_float) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualFloatMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_float));
 				return _CallNonvirtualFloatMethodA;
 			}
 		}
@@ -3932,11 +3932,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JValueRef_double _CallNonvirtualDoubleMethodA;
-		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JValueRef_double CallNonvirtualDoubleMethodA {
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_double _CallNonvirtualDoubleMethodA;
+		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_double CallNonvirtualDoubleMethodA {
 			get {
 				if (_CallNonvirtualDoubleMethodA == null)
-					_CallNonvirtualDoubleMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JValueRef_double) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualDoubleMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JValueRef_double));
+					_CallNonvirtualDoubleMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_double) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualDoubleMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_double));
 				return _CallNonvirtualDoubleMethodA;
 			}
 		}
@@ -3950,11 +3950,11 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JValueRef _CallNonvirtualVoidMethodA;
-		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JValueRef CallNonvirtualVoidMethodA {
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef _CallNonvirtualVoidMethodA;
+		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef CallNonvirtualVoidMethodA {
 			get {
 				if (_CallNonvirtualVoidMethodA == null)
-					_CallNonvirtualVoidMethodA = (JniAction_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JValueRef) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualVoidMethodA, typeof (JniAction_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JValueRef));
+					_CallNonvirtualVoidMethodA = (JniAction_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualVoidMethodA, typeof (JniAction_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef));
 				return _CallNonvirtualVoidMethodA;
 			}
 		}
@@ -4148,11 +4148,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_JniLocalReference _CallStaticObjectMethodA;
-		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_JniLocalReference CallStaticObjectMethodA {
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_JniLocalReference _CallStaticObjectMethodA;
+		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_JniLocalReference CallStaticObjectMethodA {
 			get {
 				if (_CallStaticObjectMethodA == null)
-					_CallStaticObjectMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_JniLocalReference) Marshal.GetDelegateForFunctionPointer (env.CallStaticObjectMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_JniLocalReference));
+					_CallStaticObjectMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_JniLocalReference) Marshal.GetDelegateForFunctionPointer (env.CallStaticObjectMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_JniLocalReference));
 				return _CallStaticObjectMethodA;
 			}
 		}
@@ -4166,11 +4166,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_bool _CallStaticBooleanMethodA;
-		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_bool CallStaticBooleanMethodA {
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_bool _CallStaticBooleanMethodA;
+		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_bool CallStaticBooleanMethodA {
 			get {
 				if (_CallStaticBooleanMethodA == null)
-					_CallStaticBooleanMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_bool) Marshal.GetDelegateForFunctionPointer (env.CallStaticBooleanMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_bool));
+					_CallStaticBooleanMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_bool) Marshal.GetDelegateForFunctionPointer (env.CallStaticBooleanMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_bool));
 				return _CallStaticBooleanMethodA;
 			}
 		}
@@ -4184,11 +4184,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_sbyte _CallStaticByteMethodA;
-		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_sbyte CallStaticByteMethodA {
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_sbyte _CallStaticByteMethodA;
+		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_sbyte CallStaticByteMethodA {
 			get {
 				if (_CallStaticByteMethodA == null)
-					_CallStaticByteMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_sbyte) Marshal.GetDelegateForFunctionPointer (env.CallStaticByteMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_sbyte));
+					_CallStaticByteMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_sbyte) Marshal.GetDelegateForFunctionPointer (env.CallStaticByteMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_sbyte));
 				return _CallStaticByteMethodA;
 			}
 		}
@@ -4202,11 +4202,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_char _CallStaticCharMethodA;
-		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_char CallStaticCharMethodA {
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_char _CallStaticCharMethodA;
+		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_char CallStaticCharMethodA {
 			get {
 				if (_CallStaticCharMethodA == null)
-					_CallStaticCharMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_char) Marshal.GetDelegateForFunctionPointer (env.CallStaticCharMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_char));
+					_CallStaticCharMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_char) Marshal.GetDelegateForFunctionPointer (env.CallStaticCharMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_char));
 				return _CallStaticCharMethodA;
 			}
 		}
@@ -4220,11 +4220,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_short _CallStaticShortMethodA;
-		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_short CallStaticShortMethodA {
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_short _CallStaticShortMethodA;
+		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_short CallStaticShortMethodA {
 			get {
 				if (_CallStaticShortMethodA == null)
-					_CallStaticShortMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_short) Marshal.GetDelegateForFunctionPointer (env.CallStaticShortMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_short));
+					_CallStaticShortMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_short) Marshal.GetDelegateForFunctionPointer (env.CallStaticShortMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_short));
 				return _CallStaticShortMethodA;
 			}
 		}
@@ -4238,11 +4238,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_int _CallStaticIntMethodA;
-		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_int CallStaticIntMethodA {
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_int _CallStaticIntMethodA;
+		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_int CallStaticIntMethodA {
 			get {
 				if (_CallStaticIntMethodA == null)
-					_CallStaticIntMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_int) Marshal.GetDelegateForFunctionPointer (env.CallStaticIntMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_int));
+					_CallStaticIntMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_int) Marshal.GetDelegateForFunctionPointer (env.CallStaticIntMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_int));
 				return _CallStaticIntMethodA;
 			}
 		}
@@ -4256,11 +4256,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_long _CallStaticLongMethodA;
-		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_long CallStaticLongMethodA {
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_long _CallStaticLongMethodA;
+		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_long CallStaticLongMethodA {
 			get {
 				if (_CallStaticLongMethodA == null)
-					_CallStaticLongMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_long) Marshal.GetDelegateForFunctionPointer (env.CallStaticLongMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_long));
+					_CallStaticLongMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_long) Marshal.GetDelegateForFunctionPointer (env.CallStaticLongMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_long));
 				return _CallStaticLongMethodA;
 			}
 		}
@@ -4274,11 +4274,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_float _CallStaticFloatMethodA;
-		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_float CallStaticFloatMethodA {
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_float _CallStaticFloatMethodA;
+		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_float CallStaticFloatMethodA {
 			get {
 				if (_CallStaticFloatMethodA == null)
-					_CallStaticFloatMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_float) Marshal.GetDelegateForFunctionPointer (env.CallStaticFloatMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_float));
+					_CallStaticFloatMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_float) Marshal.GetDelegateForFunctionPointer (env.CallStaticFloatMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_float));
 				return _CallStaticFloatMethodA;
 			}
 		}
@@ -4292,11 +4292,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_double _CallStaticDoubleMethodA;
-		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_double CallStaticDoubleMethodA {
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_double _CallStaticDoubleMethodA;
+		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_double CallStaticDoubleMethodA {
 			get {
 				if (_CallStaticDoubleMethodA == null)
-					_CallStaticDoubleMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_double) Marshal.GetDelegateForFunctionPointer (env.CallStaticDoubleMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef_double));
+					_CallStaticDoubleMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_double) Marshal.GetDelegateForFunctionPointer (env.CallStaticDoubleMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_double));
 				return _CallStaticDoubleMethodA;
 			}
 		}
@@ -4310,11 +4310,11 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef _CallStaticVoidMethodA;
-		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef CallStaticVoidMethodA {
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef _CallStaticVoidMethodA;
+		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef CallStaticVoidMethodA {
 			get {
 				if (_CallStaticVoidMethodA == null)
-					_CallStaticVoidMethodA = (JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef) Marshal.GetDelegateForFunctionPointer (env.CallStaticVoidMethodA, typeof (JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JValueRef));
+					_CallStaticVoidMethodA = (JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef) Marshal.GetDelegateForFunctionPointer (env.CallStaticVoidMethodA, typeof (JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef));
 				return _CallStaticVoidMethodA;
 			}
 		}
@@ -5146,46 +5146,46 @@ namespace
 	unsafe delegate int JniFunc_JNIEnvPtr_int_int (JNIEnvPtr env, int capacity);
 	unsafe delegate void JniAction_JNIEnvPtr_IntPtr (JNIEnvPtr env, IntPtr @object);
 	unsafe delegate jobject JniFunc_JNIEnvPtr_jobject_IntPtr_jobject (JNIEnvPtr env, jobject klass, IntPtr method);
-	unsafe delegate jobject JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_jobject (JNIEnvPtr env, jobject klass, IntPtr method, JValue* args);
+	unsafe delegate jobject JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_jobject (JNIEnvPtr env, jobject klass, IntPtr method, JniArgumentValue* args);
 	unsafe delegate IntPtr JniFunc_JNIEnvPtr_jobject_string_string_IntPtr (JNIEnvPtr env, jobject klass, string name, string signature);
 	unsafe delegate bool JniFunc_JNIEnvPtr_jobject_IntPtr_bool (JNIEnvPtr env, jobject @object, IntPtr method);
-	unsafe delegate bool JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_bool (JNIEnvPtr env, jobject @object, IntPtr method, JValue* args);
+	unsafe delegate bool JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_bool (JNIEnvPtr env, jobject @object, IntPtr method, JniArgumentValue* args);
 	unsafe delegate sbyte JniFunc_JNIEnvPtr_jobject_IntPtr_sbyte (JNIEnvPtr env, jobject @object, IntPtr method);
-	unsafe delegate sbyte JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_sbyte (JNIEnvPtr env, jobject @object, IntPtr method, JValue* args);
+	unsafe delegate sbyte JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_sbyte (JNIEnvPtr env, jobject @object, IntPtr method, JniArgumentValue* args);
 	unsafe delegate char JniFunc_JNIEnvPtr_jobject_IntPtr_char (JNIEnvPtr env, jobject @object, IntPtr method);
-	unsafe delegate char JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_char (JNIEnvPtr env, jobject @object, IntPtr method, JValue* args);
+	unsafe delegate char JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_char (JNIEnvPtr env, jobject @object, IntPtr method, JniArgumentValue* args);
 	unsafe delegate short JniFunc_JNIEnvPtr_jobject_IntPtr_short (JNIEnvPtr env, jobject @object, IntPtr method);
-	unsafe delegate short JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_short (JNIEnvPtr env, jobject @object, IntPtr method, JValue* args);
+	unsafe delegate short JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_short (JNIEnvPtr env, jobject @object, IntPtr method, JniArgumentValue* args);
 	unsafe delegate int JniFunc_JNIEnvPtr_jobject_IntPtr_int (JNIEnvPtr env, jobject @object, IntPtr method);
-	unsafe delegate int JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_int (JNIEnvPtr env, jobject @object, IntPtr method, JValue* args);
+	unsafe delegate int JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_int (JNIEnvPtr env, jobject @object, IntPtr method, JniArgumentValue* args);
 	unsafe delegate long JniFunc_JNIEnvPtr_jobject_IntPtr_long (JNIEnvPtr env, jobject @object, IntPtr method);
-	unsafe delegate long JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_long (JNIEnvPtr env, jobject @object, IntPtr method, JValue* args);
+	unsafe delegate long JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_long (JNIEnvPtr env, jobject @object, IntPtr method, JniArgumentValue* args);
 	unsafe delegate float JniFunc_JNIEnvPtr_jobject_IntPtr_float (JNIEnvPtr env, jobject @object, IntPtr method);
-	unsafe delegate float JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_float (JNIEnvPtr env, jobject @object, IntPtr method, JValue* args);
+	unsafe delegate float JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_float (JNIEnvPtr env, jobject @object, IntPtr method, JniArgumentValue* args);
 	unsafe delegate double JniFunc_JNIEnvPtr_jobject_IntPtr_double (JNIEnvPtr env, jobject @object, IntPtr method);
-	unsafe delegate double JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_double (JNIEnvPtr env, jobject @object, IntPtr method, JValue* args);
+	unsafe delegate double JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_double (JNIEnvPtr env, jobject @object, IntPtr method, JniArgumentValue* args);
 	unsafe delegate void JniAction_JNIEnvPtr_jobject_IntPtr (JNIEnvPtr env, jobject @object, IntPtr method);
-	unsafe delegate void JniAction_JNIEnvPtr_jobject_IntPtr_JValueRef (JNIEnvPtr env, jobject @object, IntPtr method, JValue* args);
+	unsafe delegate void JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef (JNIEnvPtr env, jobject @object, IntPtr method, JniArgumentValue* args);
 	unsafe delegate jobject JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_jobject (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method);
-	unsafe delegate jobject JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_jobject (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method, JValue* args);
+	unsafe delegate jobject JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_jobject (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method, JniArgumentValue* args);
 	unsafe delegate bool JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_bool (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method);
-	unsafe delegate bool JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_bool (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method, JValue* args);
+	unsafe delegate bool JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_bool (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method, JniArgumentValue* args);
 	unsafe delegate sbyte JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_sbyte (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method);
-	unsafe delegate sbyte JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_sbyte (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method, JValue* args);
+	unsafe delegate sbyte JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_sbyte (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method, JniArgumentValue* args);
 	unsafe delegate char JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_char (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method);
-	unsafe delegate char JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_char (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method, JValue* args);
+	unsafe delegate char JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_char (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method, JniArgumentValue* args);
 	unsafe delegate short JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_short (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method);
-	unsafe delegate short JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_short (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method, JValue* args);
+	unsafe delegate short JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_short (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method, JniArgumentValue* args);
 	unsafe delegate int JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_int (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method);
-	unsafe delegate int JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_int (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method, JValue* args);
+	unsafe delegate int JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_int (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method, JniArgumentValue* args);
 	unsafe delegate long JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_long (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method);
-	unsafe delegate long JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_long (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method, JValue* args);
+	unsafe delegate long JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_long (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method, JniArgumentValue* args);
 	unsafe delegate float JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_float (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method);
-	unsafe delegate float JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_float (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method, JValue* args);
+	unsafe delegate float JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_float (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method, JniArgumentValue* args);
 	unsafe delegate double JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_double (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method);
-	unsafe delegate double JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_double (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method, JValue* args);
+	unsafe delegate double JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_double (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method, JniArgumentValue* args);
 	unsafe delegate void JniAction_JNIEnvPtr_jobject_jobject_IntPtr (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method);
-	unsafe delegate void JniAction_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method, JValue* args);
+	unsafe delegate void JniAction_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method, JniArgumentValue* args);
 	unsafe delegate void JniAction_JNIEnvPtr_jobject_IntPtr_jobject (JNIEnvPtr env, jobject @object, IntPtr field, jobject value);
 	unsafe delegate void JniAction_JNIEnvPtr_jobject_IntPtr_bool (JNIEnvPtr env, jobject @object, IntPtr field, bool value);
 	unsafe delegate void JniAction_JNIEnvPtr_jobject_IntPtr_sbyte (JNIEnvPtr env, jobject @object, IntPtr field, sbyte value);
@@ -6060,7 +6060,7 @@ namespace
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		internal static unsafe JniObjectReference CallObjectMethod (JniObjectReference @object, JniInstanceMethodInfo method, JValue* args)
+		internal static unsafe JniObjectReference CallObjectMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -6097,7 +6097,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe bool CallBooleanMethod (JniObjectReference @object, JniInstanceMethodInfo method, JValue* args)
+		internal static unsafe bool CallBooleanMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -6133,7 +6133,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe sbyte CallByteMethod (JniObjectReference @object, JniInstanceMethodInfo method, JValue* args)
+		internal static unsafe sbyte CallByteMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -6169,7 +6169,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe char CallCharMethod (JniObjectReference @object, JniInstanceMethodInfo method, JValue* args)
+		internal static unsafe char CallCharMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -6205,7 +6205,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe short CallShortMethod (JniObjectReference @object, JniInstanceMethodInfo method, JValue* args)
+		internal static unsafe short CallShortMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -6241,7 +6241,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe int CallIntMethod (JniObjectReference @object, JniInstanceMethodInfo method, JValue* args)
+		internal static unsafe int CallIntMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -6277,7 +6277,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe long CallLongMethod (JniObjectReference @object, JniInstanceMethodInfo method, JValue* args)
+		internal static unsafe long CallLongMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -6313,7 +6313,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe float CallFloatMethod (JniObjectReference @object, JniInstanceMethodInfo method, JValue* args)
+		internal static unsafe float CallFloatMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -6349,7 +6349,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe double CallDoubleMethod (JniObjectReference @object, JniInstanceMethodInfo method, JValue* args)
+		internal static unsafe double CallDoubleMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -6384,7 +6384,7 @@ namespace
 
 		}
 
-		internal static unsafe void CallVoidMethod (JniObjectReference @object, JniInstanceMethodInfo method, JValue* args)
+		internal static unsafe void CallVoidMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -6422,7 +6422,7 @@ namespace
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		internal static unsafe JniObjectReference CallNonvirtualObjectMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JValue* args)
+		internal static unsafe JniObjectReference CallNonvirtualObjectMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -6463,7 +6463,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe bool CallNonvirtualBooleanMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JValue* args)
+		internal static unsafe bool CallNonvirtualBooleanMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -6503,7 +6503,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe sbyte CallNonvirtualByteMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JValue* args)
+		internal static unsafe sbyte CallNonvirtualByteMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -6543,7 +6543,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe char CallNonvirtualCharMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JValue* args)
+		internal static unsafe char CallNonvirtualCharMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -6583,7 +6583,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe short CallNonvirtualShortMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JValue* args)
+		internal static unsafe short CallNonvirtualShortMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -6623,7 +6623,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe int CallNonvirtualIntMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JValue* args)
+		internal static unsafe int CallNonvirtualIntMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -6663,7 +6663,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe long CallNonvirtualLongMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JValue* args)
+		internal static unsafe long CallNonvirtualLongMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -6703,7 +6703,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe float CallNonvirtualFloatMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JValue* args)
+		internal static unsafe float CallNonvirtualFloatMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -6743,7 +6743,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe double CallNonvirtualDoubleMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JValue* args)
+		internal static unsafe double CallNonvirtualDoubleMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -6782,7 +6782,7 @@ namespace
 
 		}
 
-		internal static unsafe void CallNonvirtualVoidMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JValue* args)
+		internal static unsafe void CallNonvirtualVoidMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -6895,7 +6895,7 @@ namespace
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		public static unsafe JniObjectReference NewObject (JniObjectReference klass, JniInstanceMethodInfo method, JValue* args)
+		public static unsafe JniObjectReference NewObject (JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -7306,7 +7306,7 @@ namespace
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		internal static unsafe JniObjectReference CallStaticObjectMethod (JniObjectReference klass, JniStaticMethodInfo method, JValue* args)
+		internal static unsafe JniObjectReference CallStaticObjectMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -7343,7 +7343,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe bool CallStaticBooleanMethod (JniObjectReference klass, JniStaticMethodInfo method, JValue* args)
+		internal static unsafe bool CallStaticBooleanMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -7379,7 +7379,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe sbyte CallStaticByteMethod (JniObjectReference klass, JniStaticMethodInfo method, JValue* args)
+		internal static unsafe sbyte CallStaticByteMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -7415,7 +7415,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe char CallStaticCharMethod (JniObjectReference klass, JniStaticMethodInfo method, JValue* args)
+		internal static unsafe char CallStaticCharMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -7451,7 +7451,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe short CallStaticShortMethod (JniObjectReference klass, JniStaticMethodInfo method, JValue* args)
+		internal static unsafe short CallStaticShortMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -7487,7 +7487,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe int CallStaticIntMethod (JniObjectReference klass, JniStaticMethodInfo method, JValue* args)
+		internal static unsafe int CallStaticIntMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -7523,7 +7523,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe long CallStaticLongMethod (JniObjectReference klass, JniStaticMethodInfo method, JValue* args)
+		internal static unsafe long CallStaticLongMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -7559,7 +7559,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe float CallStaticFloatMethod (JniObjectReference klass, JniStaticMethodInfo method, JValue* args)
+		internal static unsafe float CallStaticFloatMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -7595,7 +7595,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe double CallStaticDoubleMethod (JniObjectReference klass, JniStaticMethodInfo method, JValue* args)
+		internal static unsafe double CallStaticDoubleMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -7630,7 +7630,7 @@ namespace
 
 		}
 
-		internal static unsafe void CallStaticVoidMethod (JniObjectReference klass, JniStaticMethodInfo method, JValue* args)
+		internal static unsafe void CallStaticVoidMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -8047,11 +8047,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_jobject _NewObjectA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_jobject NewObjectA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_jobject _NewObjectA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_jobject NewObjectA {
 			get {
 				if (_NewObjectA == null)
-					_NewObjectA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_jobject) Marshal.GetDelegateForFunctionPointer (env.NewObjectA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_jobject));
+					_NewObjectA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_jobject) Marshal.GetDelegateForFunctionPointer (env.NewObjectA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_jobject));
 				return _NewObjectA;
 			}
 		}
@@ -8092,11 +8092,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_jobject _CallObjectMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_jobject CallObjectMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_jobject _CallObjectMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_jobject CallObjectMethodA {
 			get {
 				if (_CallObjectMethodA == null)
-					_CallObjectMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_jobject) Marshal.GetDelegateForFunctionPointer (env.CallObjectMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_jobject));
+					_CallObjectMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_jobject) Marshal.GetDelegateForFunctionPointer (env.CallObjectMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_jobject));
 				return _CallObjectMethodA;
 			}
 		}
@@ -8110,11 +8110,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_bool _CallBooleanMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_bool CallBooleanMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_bool _CallBooleanMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_bool CallBooleanMethodA {
 			get {
 				if (_CallBooleanMethodA == null)
-					_CallBooleanMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_bool) Marshal.GetDelegateForFunctionPointer (env.CallBooleanMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_bool));
+					_CallBooleanMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_bool) Marshal.GetDelegateForFunctionPointer (env.CallBooleanMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_bool));
 				return _CallBooleanMethodA;
 			}
 		}
@@ -8128,11 +8128,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_sbyte _CallByteMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_sbyte CallByteMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_sbyte _CallByteMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_sbyte CallByteMethodA {
 			get {
 				if (_CallByteMethodA == null)
-					_CallByteMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_sbyte) Marshal.GetDelegateForFunctionPointer (env.CallByteMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_sbyte));
+					_CallByteMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_sbyte) Marshal.GetDelegateForFunctionPointer (env.CallByteMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_sbyte));
 				return _CallByteMethodA;
 			}
 		}
@@ -8146,11 +8146,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_char _CallCharMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_char CallCharMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_char _CallCharMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_char CallCharMethodA {
 			get {
 				if (_CallCharMethodA == null)
-					_CallCharMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_char) Marshal.GetDelegateForFunctionPointer (env.CallCharMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_char));
+					_CallCharMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_char) Marshal.GetDelegateForFunctionPointer (env.CallCharMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_char));
 				return _CallCharMethodA;
 			}
 		}
@@ -8164,11 +8164,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_short _CallShortMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_short CallShortMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_short _CallShortMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_short CallShortMethodA {
 			get {
 				if (_CallShortMethodA == null)
-					_CallShortMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_short) Marshal.GetDelegateForFunctionPointer (env.CallShortMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_short));
+					_CallShortMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_short) Marshal.GetDelegateForFunctionPointer (env.CallShortMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_short));
 				return _CallShortMethodA;
 			}
 		}
@@ -8182,11 +8182,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_int _CallIntMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_int CallIntMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_int _CallIntMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_int CallIntMethodA {
 			get {
 				if (_CallIntMethodA == null)
-					_CallIntMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_int) Marshal.GetDelegateForFunctionPointer (env.CallIntMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_int));
+					_CallIntMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_int) Marshal.GetDelegateForFunctionPointer (env.CallIntMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_int));
 				return _CallIntMethodA;
 			}
 		}
@@ -8200,11 +8200,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_long _CallLongMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_long CallLongMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_long _CallLongMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_long CallLongMethodA {
 			get {
 				if (_CallLongMethodA == null)
-					_CallLongMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_long) Marshal.GetDelegateForFunctionPointer (env.CallLongMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_long));
+					_CallLongMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_long) Marshal.GetDelegateForFunctionPointer (env.CallLongMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_long));
 				return _CallLongMethodA;
 			}
 		}
@@ -8218,11 +8218,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_float _CallFloatMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_float CallFloatMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_float _CallFloatMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_float CallFloatMethodA {
 			get {
 				if (_CallFloatMethodA == null)
-					_CallFloatMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_float) Marshal.GetDelegateForFunctionPointer (env.CallFloatMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_float));
+					_CallFloatMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_float) Marshal.GetDelegateForFunctionPointer (env.CallFloatMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_float));
 				return _CallFloatMethodA;
 			}
 		}
@@ -8236,11 +8236,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_double _CallDoubleMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_double CallDoubleMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_double _CallDoubleMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_double CallDoubleMethodA {
 			get {
 				if (_CallDoubleMethodA == null)
-					_CallDoubleMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_double) Marshal.GetDelegateForFunctionPointer (env.CallDoubleMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_double));
+					_CallDoubleMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_double) Marshal.GetDelegateForFunctionPointer (env.CallDoubleMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_double));
 				return _CallDoubleMethodA;
 			}
 		}
@@ -8254,11 +8254,11 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr_JValueRef _CallVoidMethodA;
-		public JniAction_JNIEnvPtr_jobject_IntPtr_JValueRef CallVoidMethodA {
+		JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef _CallVoidMethodA;
+		public JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef CallVoidMethodA {
 			get {
 				if (_CallVoidMethodA == null)
-					_CallVoidMethodA = (JniAction_JNIEnvPtr_jobject_IntPtr_JValueRef) Marshal.GetDelegateForFunctionPointer (env.CallVoidMethodA, typeof (JniAction_JNIEnvPtr_jobject_IntPtr_JValueRef));
+					_CallVoidMethodA = (JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef) Marshal.GetDelegateForFunctionPointer (env.CallVoidMethodA, typeof (JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef));
 				return _CallVoidMethodA;
 			}
 		}
@@ -8272,11 +8272,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_jobject _CallNonvirtualObjectMethodA;
-		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_jobject CallNonvirtualObjectMethodA {
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_jobject _CallNonvirtualObjectMethodA;
+		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_jobject CallNonvirtualObjectMethodA {
 			get {
 				if (_CallNonvirtualObjectMethodA == null)
-					_CallNonvirtualObjectMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_jobject) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualObjectMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_jobject));
+					_CallNonvirtualObjectMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_jobject) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualObjectMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_jobject));
 				return _CallNonvirtualObjectMethodA;
 			}
 		}
@@ -8290,11 +8290,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_bool _CallNonvirtualBooleanMethodA;
-		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_bool CallNonvirtualBooleanMethodA {
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_bool _CallNonvirtualBooleanMethodA;
+		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_bool CallNonvirtualBooleanMethodA {
 			get {
 				if (_CallNonvirtualBooleanMethodA == null)
-					_CallNonvirtualBooleanMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_bool) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualBooleanMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_bool));
+					_CallNonvirtualBooleanMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_bool) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualBooleanMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_bool));
 				return _CallNonvirtualBooleanMethodA;
 			}
 		}
@@ -8308,11 +8308,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_sbyte _CallNonvirtualByteMethodA;
-		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_sbyte CallNonvirtualByteMethodA {
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_sbyte _CallNonvirtualByteMethodA;
+		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_sbyte CallNonvirtualByteMethodA {
 			get {
 				if (_CallNonvirtualByteMethodA == null)
-					_CallNonvirtualByteMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_sbyte) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualByteMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_sbyte));
+					_CallNonvirtualByteMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_sbyte) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualByteMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_sbyte));
 				return _CallNonvirtualByteMethodA;
 			}
 		}
@@ -8326,11 +8326,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_char _CallNonvirtualCharMethodA;
-		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_char CallNonvirtualCharMethodA {
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_char _CallNonvirtualCharMethodA;
+		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_char CallNonvirtualCharMethodA {
 			get {
 				if (_CallNonvirtualCharMethodA == null)
-					_CallNonvirtualCharMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_char) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualCharMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_char));
+					_CallNonvirtualCharMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_char) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualCharMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_char));
 				return _CallNonvirtualCharMethodA;
 			}
 		}
@@ -8344,11 +8344,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_short _CallNonvirtualShortMethodA;
-		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_short CallNonvirtualShortMethodA {
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_short _CallNonvirtualShortMethodA;
+		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_short CallNonvirtualShortMethodA {
 			get {
 				if (_CallNonvirtualShortMethodA == null)
-					_CallNonvirtualShortMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_short) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualShortMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_short));
+					_CallNonvirtualShortMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_short) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualShortMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_short));
 				return _CallNonvirtualShortMethodA;
 			}
 		}
@@ -8362,11 +8362,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_int _CallNonvirtualIntMethodA;
-		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_int CallNonvirtualIntMethodA {
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_int _CallNonvirtualIntMethodA;
+		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_int CallNonvirtualIntMethodA {
 			get {
 				if (_CallNonvirtualIntMethodA == null)
-					_CallNonvirtualIntMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_int) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualIntMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_int));
+					_CallNonvirtualIntMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_int) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualIntMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_int));
 				return _CallNonvirtualIntMethodA;
 			}
 		}
@@ -8380,11 +8380,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_long _CallNonvirtualLongMethodA;
-		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_long CallNonvirtualLongMethodA {
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_long _CallNonvirtualLongMethodA;
+		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_long CallNonvirtualLongMethodA {
 			get {
 				if (_CallNonvirtualLongMethodA == null)
-					_CallNonvirtualLongMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_long) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualLongMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_long));
+					_CallNonvirtualLongMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_long) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualLongMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_long));
 				return _CallNonvirtualLongMethodA;
 			}
 		}
@@ -8398,11 +8398,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_float _CallNonvirtualFloatMethodA;
-		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_float CallNonvirtualFloatMethodA {
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_float _CallNonvirtualFloatMethodA;
+		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_float CallNonvirtualFloatMethodA {
 			get {
 				if (_CallNonvirtualFloatMethodA == null)
-					_CallNonvirtualFloatMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_float) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualFloatMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_float));
+					_CallNonvirtualFloatMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_float) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualFloatMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_float));
 				return _CallNonvirtualFloatMethodA;
 			}
 		}
@@ -8416,11 +8416,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_double _CallNonvirtualDoubleMethodA;
-		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_double CallNonvirtualDoubleMethodA {
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_double _CallNonvirtualDoubleMethodA;
+		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_double CallNonvirtualDoubleMethodA {
 			get {
 				if (_CallNonvirtualDoubleMethodA == null)
-					_CallNonvirtualDoubleMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_double) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualDoubleMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_double));
+					_CallNonvirtualDoubleMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_double) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualDoubleMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_double));
 				return _CallNonvirtualDoubleMethodA;
 			}
 		}
@@ -8434,11 +8434,11 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef _CallNonvirtualVoidMethodA;
-		public JniAction_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef CallNonvirtualVoidMethodA {
+		JniAction_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef _CallNonvirtualVoidMethodA;
+		public JniAction_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef CallNonvirtualVoidMethodA {
 			get {
 				if (_CallNonvirtualVoidMethodA == null)
-					_CallNonvirtualVoidMethodA = (JniAction_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualVoidMethodA, typeof (JniAction_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef));
+					_CallNonvirtualVoidMethodA = (JniAction_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualVoidMethodA, typeof (JniAction_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef));
 				return _CallNonvirtualVoidMethodA;
 			}
 		}
@@ -8632,11 +8632,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_jobject _CallStaticObjectMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_jobject CallStaticObjectMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_jobject _CallStaticObjectMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_jobject CallStaticObjectMethodA {
 			get {
 				if (_CallStaticObjectMethodA == null)
-					_CallStaticObjectMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_jobject) Marshal.GetDelegateForFunctionPointer (env.CallStaticObjectMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_jobject));
+					_CallStaticObjectMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_jobject) Marshal.GetDelegateForFunctionPointer (env.CallStaticObjectMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_jobject));
 				return _CallStaticObjectMethodA;
 			}
 		}
@@ -8650,11 +8650,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_bool _CallStaticBooleanMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_bool CallStaticBooleanMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_bool _CallStaticBooleanMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_bool CallStaticBooleanMethodA {
 			get {
 				if (_CallStaticBooleanMethodA == null)
-					_CallStaticBooleanMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_bool) Marshal.GetDelegateForFunctionPointer (env.CallStaticBooleanMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_bool));
+					_CallStaticBooleanMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_bool) Marshal.GetDelegateForFunctionPointer (env.CallStaticBooleanMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_bool));
 				return _CallStaticBooleanMethodA;
 			}
 		}
@@ -8668,11 +8668,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_sbyte _CallStaticByteMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_sbyte CallStaticByteMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_sbyte _CallStaticByteMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_sbyte CallStaticByteMethodA {
 			get {
 				if (_CallStaticByteMethodA == null)
-					_CallStaticByteMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_sbyte) Marshal.GetDelegateForFunctionPointer (env.CallStaticByteMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_sbyte));
+					_CallStaticByteMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_sbyte) Marshal.GetDelegateForFunctionPointer (env.CallStaticByteMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_sbyte));
 				return _CallStaticByteMethodA;
 			}
 		}
@@ -8686,11 +8686,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_char _CallStaticCharMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_char CallStaticCharMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_char _CallStaticCharMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_char CallStaticCharMethodA {
 			get {
 				if (_CallStaticCharMethodA == null)
-					_CallStaticCharMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_char) Marshal.GetDelegateForFunctionPointer (env.CallStaticCharMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_char));
+					_CallStaticCharMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_char) Marshal.GetDelegateForFunctionPointer (env.CallStaticCharMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_char));
 				return _CallStaticCharMethodA;
 			}
 		}
@@ -8704,11 +8704,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_short _CallStaticShortMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_short CallStaticShortMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_short _CallStaticShortMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_short CallStaticShortMethodA {
 			get {
 				if (_CallStaticShortMethodA == null)
-					_CallStaticShortMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_short) Marshal.GetDelegateForFunctionPointer (env.CallStaticShortMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_short));
+					_CallStaticShortMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_short) Marshal.GetDelegateForFunctionPointer (env.CallStaticShortMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_short));
 				return _CallStaticShortMethodA;
 			}
 		}
@@ -8722,11 +8722,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_int _CallStaticIntMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_int CallStaticIntMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_int _CallStaticIntMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_int CallStaticIntMethodA {
 			get {
 				if (_CallStaticIntMethodA == null)
-					_CallStaticIntMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_int) Marshal.GetDelegateForFunctionPointer (env.CallStaticIntMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_int));
+					_CallStaticIntMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_int) Marshal.GetDelegateForFunctionPointer (env.CallStaticIntMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_int));
 				return _CallStaticIntMethodA;
 			}
 		}
@@ -8740,11 +8740,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_long _CallStaticLongMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_long CallStaticLongMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_long _CallStaticLongMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_long CallStaticLongMethodA {
 			get {
 				if (_CallStaticLongMethodA == null)
-					_CallStaticLongMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_long) Marshal.GetDelegateForFunctionPointer (env.CallStaticLongMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_long));
+					_CallStaticLongMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_long) Marshal.GetDelegateForFunctionPointer (env.CallStaticLongMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_long));
 				return _CallStaticLongMethodA;
 			}
 		}
@@ -8758,11 +8758,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_float _CallStaticFloatMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_float CallStaticFloatMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_float _CallStaticFloatMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_float CallStaticFloatMethodA {
 			get {
 				if (_CallStaticFloatMethodA == null)
-					_CallStaticFloatMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_float) Marshal.GetDelegateForFunctionPointer (env.CallStaticFloatMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_float));
+					_CallStaticFloatMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_float) Marshal.GetDelegateForFunctionPointer (env.CallStaticFloatMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_float));
 				return _CallStaticFloatMethodA;
 			}
 		}
@@ -8776,11 +8776,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_double _CallStaticDoubleMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_double CallStaticDoubleMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_double _CallStaticDoubleMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_double CallStaticDoubleMethodA {
 			get {
 				if (_CallStaticDoubleMethodA == null)
-					_CallStaticDoubleMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_double) Marshal.GetDelegateForFunctionPointer (env.CallStaticDoubleMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_double));
+					_CallStaticDoubleMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_double) Marshal.GetDelegateForFunctionPointer (env.CallStaticDoubleMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_double));
 				return _CallStaticDoubleMethodA;
 			}
 		}
@@ -8794,11 +8794,11 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr_JValueRef _CallStaticVoidMethodA;
-		public JniAction_JNIEnvPtr_jobject_IntPtr_JValueRef CallStaticVoidMethodA {
+		JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef _CallStaticVoidMethodA;
+		public JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef CallStaticVoidMethodA {
 			get {
 				if (_CallStaticVoidMethodA == null)
-					_CallStaticVoidMethodA = (JniAction_JNIEnvPtr_jobject_IntPtr_JValueRef) Marshal.GetDelegateForFunctionPointer (env.CallStaticVoidMethodA, typeof (JniAction_JNIEnvPtr_jobject_IntPtr_JValueRef));
+					_CallStaticVoidMethodA = (JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef) Marshal.GetDelegateForFunctionPointer (env.CallStaticVoidMethodA, typeof (JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef));
 				return _CallStaticVoidMethodA;
 			}
 		}
@@ -9630,46 +9630,46 @@ namespace
 	unsafe delegate int JniFunc_JNIEnvPtr_int_int (JNIEnvPtr env, int capacity);
 	unsafe delegate void JniAction_JNIEnvPtr_IntPtr (JNIEnvPtr env, IntPtr @object);
 	unsafe delegate jobject JniFunc_JNIEnvPtr_jobject_IntPtr_jobject (JNIEnvPtr env, jobject klass, IntPtr method);
-	unsafe delegate jobject JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_jobject (JNIEnvPtr env, jobject klass, IntPtr method, JValue* args);
+	unsafe delegate jobject JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_jobject (JNIEnvPtr env, jobject klass, IntPtr method, JniArgumentValue* args);
 	unsafe delegate IntPtr JniFunc_JNIEnvPtr_jobject_string_string_IntPtr (JNIEnvPtr env, jobject klass, string name, string signature);
 	unsafe delegate bool JniFunc_JNIEnvPtr_jobject_IntPtr_bool (JNIEnvPtr env, jobject @object, IntPtr method);
-	unsafe delegate bool JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_bool (JNIEnvPtr env, jobject @object, IntPtr method, JValue* args);
+	unsafe delegate bool JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_bool (JNIEnvPtr env, jobject @object, IntPtr method, JniArgumentValue* args);
 	unsafe delegate sbyte JniFunc_JNIEnvPtr_jobject_IntPtr_sbyte (JNIEnvPtr env, jobject @object, IntPtr method);
-	unsafe delegate sbyte JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_sbyte (JNIEnvPtr env, jobject @object, IntPtr method, JValue* args);
+	unsafe delegate sbyte JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_sbyte (JNIEnvPtr env, jobject @object, IntPtr method, JniArgumentValue* args);
 	unsafe delegate char JniFunc_JNIEnvPtr_jobject_IntPtr_char (JNIEnvPtr env, jobject @object, IntPtr method);
-	unsafe delegate char JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_char (JNIEnvPtr env, jobject @object, IntPtr method, JValue* args);
+	unsafe delegate char JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_char (JNIEnvPtr env, jobject @object, IntPtr method, JniArgumentValue* args);
 	unsafe delegate short JniFunc_JNIEnvPtr_jobject_IntPtr_short (JNIEnvPtr env, jobject @object, IntPtr method);
-	unsafe delegate short JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_short (JNIEnvPtr env, jobject @object, IntPtr method, JValue* args);
+	unsafe delegate short JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_short (JNIEnvPtr env, jobject @object, IntPtr method, JniArgumentValue* args);
 	unsafe delegate int JniFunc_JNIEnvPtr_jobject_IntPtr_int (JNIEnvPtr env, jobject @object, IntPtr method);
-	unsafe delegate int JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_int (JNIEnvPtr env, jobject @object, IntPtr method, JValue* args);
+	unsafe delegate int JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_int (JNIEnvPtr env, jobject @object, IntPtr method, JniArgumentValue* args);
 	unsafe delegate long JniFunc_JNIEnvPtr_jobject_IntPtr_long (JNIEnvPtr env, jobject @object, IntPtr method);
-	unsafe delegate long JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_long (JNIEnvPtr env, jobject @object, IntPtr method, JValue* args);
+	unsafe delegate long JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_long (JNIEnvPtr env, jobject @object, IntPtr method, JniArgumentValue* args);
 	unsafe delegate float JniFunc_JNIEnvPtr_jobject_IntPtr_float (JNIEnvPtr env, jobject @object, IntPtr method);
-	unsafe delegate float JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_float (JNIEnvPtr env, jobject @object, IntPtr method, JValue* args);
+	unsafe delegate float JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_float (JNIEnvPtr env, jobject @object, IntPtr method, JniArgumentValue* args);
 	unsafe delegate double JniFunc_JNIEnvPtr_jobject_IntPtr_double (JNIEnvPtr env, jobject @object, IntPtr method);
-	unsafe delegate double JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_double (JNIEnvPtr env, jobject @object, IntPtr method, JValue* args);
+	unsafe delegate double JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_double (JNIEnvPtr env, jobject @object, IntPtr method, JniArgumentValue* args);
 	unsafe delegate void JniAction_JNIEnvPtr_jobject_IntPtr (JNIEnvPtr env, jobject @object, IntPtr method);
-	unsafe delegate void JniAction_JNIEnvPtr_jobject_IntPtr_JValueRef (JNIEnvPtr env, jobject @object, IntPtr method, JValue* args);
+	unsafe delegate void JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef (JNIEnvPtr env, jobject @object, IntPtr method, JniArgumentValue* args);
 	unsafe delegate jobject JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_jobject (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method);
-	unsafe delegate jobject JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_jobject (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method, JValue* args);
+	unsafe delegate jobject JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_jobject (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method, JniArgumentValue* args);
 	unsafe delegate bool JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_bool (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method);
-	unsafe delegate bool JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_bool (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method, JValue* args);
+	unsafe delegate bool JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_bool (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method, JniArgumentValue* args);
 	unsafe delegate sbyte JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_sbyte (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method);
-	unsafe delegate sbyte JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_sbyte (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method, JValue* args);
+	unsafe delegate sbyte JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_sbyte (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method, JniArgumentValue* args);
 	unsafe delegate char JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_char (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method);
-	unsafe delegate char JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_char (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method, JValue* args);
+	unsafe delegate char JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_char (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method, JniArgumentValue* args);
 	unsafe delegate short JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_short (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method);
-	unsafe delegate short JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_short (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method, JValue* args);
+	unsafe delegate short JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_short (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method, JniArgumentValue* args);
 	unsafe delegate int JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_int (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method);
-	unsafe delegate int JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_int (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method, JValue* args);
+	unsafe delegate int JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_int (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method, JniArgumentValue* args);
 	unsafe delegate long JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_long (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method);
-	unsafe delegate long JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_long (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method, JValue* args);
+	unsafe delegate long JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_long (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method, JniArgumentValue* args);
 	unsafe delegate float JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_float (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method);
-	unsafe delegate float JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_float (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method, JValue* args);
+	unsafe delegate float JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_float (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method, JniArgumentValue* args);
 	unsafe delegate double JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_double (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method);
-	unsafe delegate double JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_double (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method, JValue* args);
+	unsafe delegate double JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_double (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method, JniArgumentValue* args);
 	unsafe delegate void JniAction_JNIEnvPtr_jobject_jobject_IntPtr (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method);
-	unsafe delegate void JniAction_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method, JValue* args);
+	unsafe delegate void JniAction_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method, JniArgumentValue* args);
 	unsafe delegate void JniAction_JNIEnvPtr_jobject_IntPtr_jobject (JNIEnvPtr env, jobject @object, IntPtr field, jobject value);
 	unsafe delegate void JniAction_JNIEnvPtr_jobject_IntPtr_bool (JNIEnvPtr env, jobject @object, IntPtr field, bool value);
 	unsafe delegate void JniAction_JNIEnvPtr_jobject_IntPtr_sbyte (JNIEnvPtr env, jobject @object, IntPtr field, sbyte value);
@@ -10785,9 +10785,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe jobject JavaInterop_CallObjectMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, IntPtr method, JValue* args);
+		static extern unsafe jobject JavaInterop_CallObjectMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, IntPtr method, JniArgumentValue* args);
 
-		internal static unsafe JniObjectReference CallObjectMethod (JniObjectReference @object, JniInstanceMethodInfo method, JValue* args)
+		internal static unsafe JniObjectReference CallObjectMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -10830,9 +10830,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe bool JavaInterop_CallBooleanMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, IntPtr method, JValue* args);
+		static extern unsafe bool JavaInterop_CallBooleanMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, IntPtr method, JniArgumentValue* args);
 
-		internal static unsafe bool CallBooleanMethod (JniObjectReference @object, JniInstanceMethodInfo method, JValue* args)
+		internal static unsafe bool CallBooleanMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -10874,9 +10874,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe sbyte JavaInterop_CallByteMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, IntPtr method, JValue* args);
+		static extern unsafe sbyte JavaInterop_CallByteMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, IntPtr method, JniArgumentValue* args);
 
-		internal static unsafe sbyte CallByteMethod (JniObjectReference @object, JniInstanceMethodInfo method, JValue* args)
+		internal static unsafe sbyte CallByteMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -10918,9 +10918,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe char JavaInterop_CallCharMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, IntPtr method, JValue* args);
+		static extern unsafe char JavaInterop_CallCharMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, IntPtr method, JniArgumentValue* args);
 
-		internal static unsafe char CallCharMethod (JniObjectReference @object, JniInstanceMethodInfo method, JValue* args)
+		internal static unsafe char CallCharMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -10962,9 +10962,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe short JavaInterop_CallShortMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, IntPtr method, JValue* args);
+		static extern unsafe short JavaInterop_CallShortMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, IntPtr method, JniArgumentValue* args);
 
-		internal static unsafe short CallShortMethod (JniObjectReference @object, JniInstanceMethodInfo method, JValue* args)
+		internal static unsafe short CallShortMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -11006,9 +11006,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe int JavaInterop_CallIntMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, IntPtr method, JValue* args);
+		static extern unsafe int JavaInterop_CallIntMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, IntPtr method, JniArgumentValue* args);
 
-		internal static unsafe int CallIntMethod (JniObjectReference @object, JniInstanceMethodInfo method, JValue* args)
+		internal static unsafe int CallIntMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -11050,9 +11050,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe long JavaInterop_CallLongMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, IntPtr method, JValue* args);
+		static extern unsafe long JavaInterop_CallLongMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, IntPtr method, JniArgumentValue* args);
 
-		internal static unsafe long CallLongMethod (JniObjectReference @object, JniInstanceMethodInfo method, JValue* args)
+		internal static unsafe long CallLongMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -11094,9 +11094,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe float JavaInterop_CallFloatMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, IntPtr method, JValue* args);
+		static extern unsafe float JavaInterop_CallFloatMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, IntPtr method, JniArgumentValue* args);
 
-		internal static unsafe float CallFloatMethod (JniObjectReference @object, JniInstanceMethodInfo method, JValue* args)
+		internal static unsafe float CallFloatMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -11138,9 +11138,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe double JavaInterop_CallDoubleMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, IntPtr method, JValue* args);
+		static extern unsafe double JavaInterop_CallDoubleMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, IntPtr method, JniArgumentValue* args);
 
-		internal static unsafe double CallDoubleMethod (JniObjectReference @object, JniInstanceMethodInfo method, JValue* args)
+		internal static unsafe double CallDoubleMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -11181,9 +11181,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe void JavaInterop_CallVoidMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, IntPtr method, JValue* args);
+		static extern unsafe void JavaInterop_CallVoidMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, IntPtr method, JniArgumentValue* args);
 
-		internal static unsafe void CallVoidMethod (JniObjectReference @object, JniInstanceMethodInfo method, JValue* args)
+		internal static unsafe void CallVoidMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -11227,9 +11227,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe jobject JavaInterop_CallNonvirtualObjectMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, jobject klass, IntPtr method, JValue* args);
+		static extern unsafe jobject JavaInterop_CallNonvirtualObjectMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, jobject klass, IntPtr method, JniArgumentValue* args);
 
-		internal static unsafe JniObjectReference CallNonvirtualObjectMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JValue* args)
+		internal static unsafe JniObjectReference CallNonvirtualObjectMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -11276,9 +11276,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe bool JavaInterop_CallNonvirtualBooleanMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, jobject klass, IntPtr method, JValue* args);
+		static extern unsafe bool JavaInterop_CallNonvirtualBooleanMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, jobject klass, IntPtr method, JniArgumentValue* args);
 
-		internal static unsafe bool CallNonvirtualBooleanMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JValue* args)
+		internal static unsafe bool CallNonvirtualBooleanMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -11324,9 +11324,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe sbyte JavaInterop_CallNonvirtualByteMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, jobject klass, IntPtr method, JValue* args);
+		static extern unsafe sbyte JavaInterop_CallNonvirtualByteMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, jobject klass, IntPtr method, JniArgumentValue* args);
 
-		internal static unsafe sbyte CallNonvirtualByteMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JValue* args)
+		internal static unsafe sbyte CallNonvirtualByteMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -11372,9 +11372,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe char JavaInterop_CallNonvirtualCharMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, jobject klass, IntPtr method, JValue* args);
+		static extern unsafe char JavaInterop_CallNonvirtualCharMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, jobject klass, IntPtr method, JniArgumentValue* args);
 
-		internal static unsafe char CallNonvirtualCharMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JValue* args)
+		internal static unsafe char CallNonvirtualCharMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -11420,9 +11420,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe short JavaInterop_CallNonvirtualShortMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, jobject klass, IntPtr method, JValue* args);
+		static extern unsafe short JavaInterop_CallNonvirtualShortMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, jobject klass, IntPtr method, JniArgumentValue* args);
 
-		internal static unsafe short CallNonvirtualShortMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JValue* args)
+		internal static unsafe short CallNonvirtualShortMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -11468,9 +11468,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe int JavaInterop_CallNonvirtualIntMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, jobject klass, IntPtr method, JValue* args);
+		static extern unsafe int JavaInterop_CallNonvirtualIntMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, jobject klass, IntPtr method, JniArgumentValue* args);
 
-		internal static unsafe int CallNonvirtualIntMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JValue* args)
+		internal static unsafe int CallNonvirtualIntMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -11516,9 +11516,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe long JavaInterop_CallNonvirtualLongMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, jobject klass, IntPtr method, JValue* args);
+		static extern unsafe long JavaInterop_CallNonvirtualLongMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, jobject klass, IntPtr method, JniArgumentValue* args);
 
-		internal static unsafe long CallNonvirtualLongMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JValue* args)
+		internal static unsafe long CallNonvirtualLongMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -11564,9 +11564,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe float JavaInterop_CallNonvirtualFloatMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, jobject klass, IntPtr method, JValue* args);
+		static extern unsafe float JavaInterop_CallNonvirtualFloatMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, jobject klass, IntPtr method, JniArgumentValue* args);
 
-		internal static unsafe float CallNonvirtualFloatMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JValue* args)
+		internal static unsafe float CallNonvirtualFloatMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -11612,9 +11612,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe double JavaInterop_CallNonvirtualDoubleMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, jobject klass, IntPtr method, JValue* args);
+		static extern unsafe double JavaInterop_CallNonvirtualDoubleMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, jobject klass, IntPtr method, JniArgumentValue* args);
 
-		internal static unsafe double CallNonvirtualDoubleMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JValue* args)
+		internal static unsafe double CallNonvirtualDoubleMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -11659,9 +11659,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe void JavaInterop_CallNonvirtualVoidMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, jobject klass, IntPtr method, JValue* args);
+		static extern unsafe void JavaInterop_CallNonvirtualVoidMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, jobject klass, IntPtr method, JniArgumentValue* args);
 
-		internal static unsafe void CallNonvirtualVoidMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JValue* args)
+		internal static unsafe void CallNonvirtualVoidMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -11800,9 +11800,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe jobject JavaInterop_NewObjectA (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method, JValue* args);
+		static extern unsafe jobject JavaInterop_NewObjectA (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method, JniArgumentValue* args);
 
-		public static unsafe JniObjectReference NewObject (JniObjectReference klass, JniInstanceMethodInfo method, JValue* args)
+		public static unsafe JniObjectReference NewObject (JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -12320,9 +12320,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe jobject JavaInterop_CallStaticObjectMethodA (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method, JValue* args);
+		static extern unsafe jobject JavaInterop_CallStaticObjectMethodA (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method, JniArgumentValue* args);
 
-		internal static unsafe JniObjectReference CallStaticObjectMethod (JniObjectReference klass, JniStaticMethodInfo method, JValue* args)
+		internal static unsafe JniObjectReference CallStaticObjectMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -12365,9 +12365,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe bool JavaInterop_CallStaticBooleanMethodA (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method, JValue* args);
+		static extern unsafe bool JavaInterop_CallStaticBooleanMethodA (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method, JniArgumentValue* args);
 
-		internal static unsafe bool CallStaticBooleanMethod (JniObjectReference klass, JniStaticMethodInfo method, JValue* args)
+		internal static unsafe bool CallStaticBooleanMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -12409,9 +12409,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe sbyte JavaInterop_CallStaticByteMethodA (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method, JValue* args);
+		static extern unsafe sbyte JavaInterop_CallStaticByteMethodA (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method, JniArgumentValue* args);
 
-		internal static unsafe sbyte CallStaticByteMethod (JniObjectReference klass, JniStaticMethodInfo method, JValue* args)
+		internal static unsafe sbyte CallStaticByteMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -12453,9 +12453,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe char JavaInterop_CallStaticCharMethodA (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method, JValue* args);
+		static extern unsafe char JavaInterop_CallStaticCharMethodA (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method, JniArgumentValue* args);
 
-		internal static unsafe char CallStaticCharMethod (JniObjectReference klass, JniStaticMethodInfo method, JValue* args)
+		internal static unsafe char CallStaticCharMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -12497,9 +12497,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe short JavaInterop_CallStaticShortMethodA (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method, JValue* args);
+		static extern unsafe short JavaInterop_CallStaticShortMethodA (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method, JniArgumentValue* args);
 
-		internal static unsafe short CallStaticShortMethod (JniObjectReference klass, JniStaticMethodInfo method, JValue* args)
+		internal static unsafe short CallStaticShortMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -12541,9 +12541,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe int JavaInterop_CallStaticIntMethodA (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method, JValue* args);
+		static extern unsafe int JavaInterop_CallStaticIntMethodA (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method, JniArgumentValue* args);
 
-		internal static unsafe int CallStaticIntMethod (JniObjectReference klass, JniStaticMethodInfo method, JValue* args)
+		internal static unsafe int CallStaticIntMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -12585,9 +12585,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe long JavaInterop_CallStaticLongMethodA (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method, JValue* args);
+		static extern unsafe long JavaInterop_CallStaticLongMethodA (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method, JniArgumentValue* args);
 
-		internal static unsafe long CallStaticLongMethod (JniObjectReference klass, JniStaticMethodInfo method, JValue* args)
+		internal static unsafe long CallStaticLongMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -12629,9 +12629,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe float JavaInterop_CallStaticFloatMethodA (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method, JValue* args);
+		static extern unsafe float JavaInterop_CallStaticFloatMethodA (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method, JniArgumentValue* args);
 
-		internal static unsafe float CallStaticFloatMethod (JniObjectReference klass, JniStaticMethodInfo method, JValue* args)
+		internal static unsafe float CallStaticFloatMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -12673,9 +12673,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe double JavaInterop_CallStaticDoubleMethodA (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method, JValue* args);
+		static extern unsafe double JavaInterop_CallStaticDoubleMethodA (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method, JniArgumentValue* args);
 
-		internal static unsafe double CallStaticDoubleMethod (JniObjectReference klass, JniStaticMethodInfo method, JValue* args)
+		internal static unsafe double CallStaticDoubleMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -12716,9 +12716,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe void JavaInterop_CallStaticVoidMethodA (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method, JValue* args);
+		static extern unsafe void JavaInterop_CallStaticVoidMethodA (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method, JniArgumentValue* args);
 
-		internal static unsafe void CallStaticVoidMethod (JniObjectReference klass, JniStaticMethodInfo method, JValue* args)
+		internal static unsafe void CallStaticVoidMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -12973,46 +12973,46 @@ namespace
 	unsafe delegate int JniFunc_JNIEnvPtr_int_int (JNIEnvPtr env, int capacity);
 	unsafe delegate void JniAction_JNIEnvPtr_IntPtr (JNIEnvPtr env, IntPtr @object);
 	unsafe delegate jobject JniFunc_JNIEnvPtr_jobject_IntPtr_jobject (JNIEnvPtr env, jobject klass, IntPtr method);
-	unsafe delegate jobject JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_jobject (JNIEnvPtr env, jobject klass, IntPtr method, JValue* args);
+	unsafe delegate jobject JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_jobject (JNIEnvPtr env, jobject klass, IntPtr method, JniArgumentValue* args);
 	unsafe delegate IntPtr JniFunc_JNIEnvPtr_jobject_string_string_IntPtr (JNIEnvPtr env, jobject klass, string name, string signature);
 	unsafe delegate bool JniFunc_JNIEnvPtr_jobject_IntPtr_bool (JNIEnvPtr env, jobject @object, IntPtr method);
-	unsafe delegate bool JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_bool (JNIEnvPtr env, jobject @object, IntPtr method, JValue* args);
+	unsafe delegate bool JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_bool (JNIEnvPtr env, jobject @object, IntPtr method, JniArgumentValue* args);
 	unsafe delegate sbyte JniFunc_JNIEnvPtr_jobject_IntPtr_sbyte (JNIEnvPtr env, jobject @object, IntPtr method);
-	unsafe delegate sbyte JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_sbyte (JNIEnvPtr env, jobject @object, IntPtr method, JValue* args);
+	unsafe delegate sbyte JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_sbyte (JNIEnvPtr env, jobject @object, IntPtr method, JniArgumentValue* args);
 	unsafe delegate char JniFunc_JNIEnvPtr_jobject_IntPtr_char (JNIEnvPtr env, jobject @object, IntPtr method);
-	unsafe delegate char JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_char (JNIEnvPtr env, jobject @object, IntPtr method, JValue* args);
+	unsafe delegate char JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_char (JNIEnvPtr env, jobject @object, IntPtr method, JniArgumentValue* args);
 	unsafe delegate short JniFunc_JNIEnvPtr_jobject_IntPtr_short (JNIEnvPtr env, jobject @object, IntPtr method);
-	unsafe delegate short JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_short (JNIEnvPtr env, jobject @object, IntPtr method, JValue* args);
+	unsafe delegate short JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_short (JNIEnvPtr env, jobject @object, IntPtr method, JniArgumentValue* args);
 	unsafe delegate int JniFunc_JNIEnvPtr_jobject_IntPtr_int (JNIEnvPtr env, jobject @object, IntPtr method);
-	unsafe delegate int JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_int (JNIEnvPtr env, jobject @object, IntPtr method, JValue* args);
+	unsafe delegate int JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_int (JNIEnvPtr env, jobject @object, IntPtr method, JniArgumentValue* args);
 	unsafe delegate long JniFunc_JNIEnvPtr_jobject_IntPtr_long (JNIEnvPtr env, jobject @object, IntPtr method);
-	unsafe delegate long JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_long (JNIEnvPtr env, jobject @object, IntPtr method, JValue* args);
+	unsafe delegate long JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_long (JNIEnvPtr env, jobject @object, IntPtr method, JniArgumentValue* args);
 	unsafe delegate float JniFunc_JNIEnvPtr_jobject_IntPtr_float (JNIEnvPtr env, jobject @object, IntPtr method);
-	unsafe delegate float JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_float (JNIEnvPtr env, jobject @object, IntPtr method, JValue* args);
+	unsafe delegate float JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_float (JNIEnvPtr env, jobject @object, IntPtr method, JniArgumentValue* args);
 	unsafe delegate double JniFunc_JNIEnvPtr_jobject_IntPtr_double (JNIEnvPtr env, jobject @object, IntPtr method);
-	unsafe delegate double JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_double (JNIEnvPtr env, jobject @object, IntPtr method, JValue* args);
+	unsafe delegate double JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_double (JNIEnvPtr env, jobject @object, IntPtr method, JniArgumentValue* args);
 	unsafe delegate void JniAction_JNIEnvPtr_jobject_IntPtr (JNIEnvPtr env, jobject @object, IntPtr method);
-	unsafe delegate void JniAction_JNIEnvPtr_jobject_IntPtr_JValueRef (JNIEnvPtr env, jobject @object, IntPtr method, JValue* args);
+	unsafe delegate void JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef (JNIEnvPtr env, jobject @object, IntPtr method, JniArgumentValue* args);
 	unsafe delegate jobject JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_jobject (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method);
-	unsafe delegate jobject JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_jobject (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method, JValue* args);
+	unsafe delegate jobject JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_jobject (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method, JniArgumentValue* args);
 	unsafe delegate bool JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_bool (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method);
-	unsafe delegate bool JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_bool (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method, JValue* args);
+	unsafe delegate bool JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_bool (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method, JniArgumentValue* args);
 	unsafe delegate sbyte JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_sbyte (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method);
-	unsafe delegate sbyte JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_sbyte (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method, JValue* args);
+	unsafe delegate sbyte JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_sbyte (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method, JniArgumentValue* args);
 	unsafe delegate char JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_char (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method);
-	unsafe delegate char JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_char (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method, JValue* args);
+	unsafe delegate char JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_char (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method, JniArgumentValue* args);
 	unsafe delegate short JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_short (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method);
-	unsafe delegate short JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_short (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method, JValue* args);
+	unsafe delegate short JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_short (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method, JniArgumentValue* args);
 	unsafe delegate int JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_int (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method);
-	unsafe delegate int JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_int (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method, JValue* args);
+	unsafe delegate int JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_int (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method, JniArgumentValue* args);
 	unsafe delegate long JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_long (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method);
-	unsafe delegate long JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_long (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method, JValue* args);
+	unsafe delegate long JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_long (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method, JniArgumentValue* args);
 	unsafe delegate float JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_float (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method);
-	unsafe delegate float JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_float (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method, JValue* args);
+	unsafe delegate float JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_float (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method, JniArgumentValue* args);
 	unsafe delegate double JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_double (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method);
-	unsafe delegate double JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_double (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method, JValue* args);
+	unsafe delegate double JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_double (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method, JniArgumentValue* args);
 	unsafe delegate void JniAction_JNIEnvPtr_jobject_jobject_IntPtr (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method);
-	unsafe delegate void JniAction_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method, JValue* args);
+	unsafe delegate void JniAction_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef (JNIEnvPtr env, jobject @object, jobject klass, IntPtr method, JniArgumentValue* args);
 	unsafe delegate void JniAction_JNIEnvPtr_jobject_IntPtr_jobject (JNIEnvPtr env, jobject @object, IntPtr field, jobject value);
 	unsafe delegate void JniAction_JNIEnvPtr_jobject_IntPtr_bool (JNIEnvPtr env, jobject @object, IntPtr field, bool value);
 	unsafe delegate void JniAction_JNIEnvPtr_jobject_IntPtr_sbyte (JNIEnvPtr env, jobject @object, IntPtr field, sbyte value);
@@ -13845,7 +13845,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe IntPtr CallObjectMethod (IntPtr @object, IntPtr method, JValue* args)
+		internal static unsafe IntPtr CallObjectMethod (IntPtr @object, IntPtr method, JniArgumentValue* args)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -13878,7 +13878,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe bool CallBooleanMethod (IntPtr @object, IntPtr method, JValue* args)
+		internal static unsafe bool CallBooleanMethod (IntPtr @object, IntPtr method, JniArgumentValue* args)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -13910,7 +13910,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe sbyte CallByteMethod (IntPtr @object, IntPtr method, JValue* args)
+		internal static unsafe sbyte CallByteMethod (IntPtr @object, IntPtr method, JniArgumentValue* args)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -13942,7 +13942,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe char CallCharMethod (IntPtr @object, IntPtr method, JValue* args)
+		internal static unsafe char CallCharMethod (IntPtr @object, IntPtr method, JniArgumentValue* args)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -13974,7 +13974,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe short CallShortMethod (IntPtr @object, IntPtr method, JValue* args)
+		internal static unsafe short CallShortMethod (IntPtr @object, IntPtr method, JniArgumentValue* args)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -14006,7 +14006,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe int CallIntMethod (IntPtr @object, IntPtr method, JValue* args)
+		internal static unsafe int CallIntMethod (IntPtr @object, IntPtr method, JniArgumentValue* args)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -14038,7 +14038,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe long CallLongMethod (IntPtr @object, IntPtr method, JValue* args)
+		internal static unsafe long CallLongMethod (IntPtr @object, IntPtr method, JniArgumentValue* args)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -14070,7 +14070,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe float CallFloatMethod (IntPtr @object, IntPtr method, JValue* args)
+		internal static unsafe float CallFloatMethod (IntPtr @object, IntPtr method, JniArgumentValue* args)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -14102,7 +14102,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe double CallDoubleMethod (IntPtr @object, IntPtr method, JValue* args)
+		internal static unsafe double CallDoubleMethod (IntPtr @object, IntPtr method, JniArgumentValue* args)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -14133,7 +14133,7 @@ namespace
 
 		}
 
-		internal static unsafe void CallVoidMethod (IntPtr @object, IntPtr method, JValue* args)
+		internal static unsafe void CallVoidMethod (IntPtr @object, IntPtr method, JniArgumentValue* args)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -14167,7 +14167,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe IntPtr CallNonvirtualObjectMethod (IntPtr @object, IntPtr klass, IntPtr method, JValue* args)
+		internal static unsafe IntPtr CallNonvirtualObjectMethod (IntPtr @object, IntPtr klass, IntPtr method, JniArgumentValue* args)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -14204,7 +14204,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe bool CallNonvirtualBooleanMethod (IntPtr @object, IntPtr klass, IntPtr method, JValue* args)
+		internal static unsafe bool CallNonvirtualBooleanMethod (IntPtr @object, IntPtr klass, IntPtr method, JniArgumentValue* args)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -14240,7 +14240,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe sbyte CallNonvirtualByteMethod (IntPtr @object, IntPtr klass, IntPtr method, JValue* args)
+		internal static unsafe sbyte CallNonvirtualByteMethod (IntPtr @object, IntPtr klass, IntPtr method, JniArgumentValue* args)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -14276,7 +14276,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe char CallNonvirtualCharMethod (IntPtr @object, IntPtr klass, IntPtr method, JValue* args)
+		internal static unsafe char CallNonvirtualCharMethod (IntPtr @object, IntPtr klass, IntPtr method, JniArgumentValue* args)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -14312,7 +14312,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe short CallNonvirtualShortMethod (IntPtr @object, IntPtr klass, IntPtr method, JValue* args)
+		internal static unsafe short CallNonvirtualShortMethod (IntPtr @object, IntPtr klass, IntPtr method, JniArgumentValue* args)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -14348,7 +14348,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe int CallNonvirtualIntMethod (IntPtr @object, IntPtr klass, IntPtr method, JValue* args)
+		internal static unsafe int CallNonvirtualIntMethod (IntPtr @object, IntPtr klass, IntPtr method, JniArgumentValue* args)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -14384,7 +14384,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe long CallNonvirtualLongMethod (IntPtr @object, IntPtr klass, IntPtr method, JValue* args)
+		internal static unsafe long CallNonvirtualLongMethod (IntPtr @object, IntPtr klass, IntPtr method, JniArgumentValue* args)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -14420,7 +14420,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe float CallNonvirtualFloatMethod (IntPtr @object, IntPtr klass, IntPtr method, JValue* args)
+		internal static unsafe float CallNonvirtualFloatMethod (IntPtr @object, IntPtr klass, IntPtr method, JniArgumentValue* args)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -14456,7 +14456,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe double CallNonvirtualDoubleMethod (IntPtr @object, IntPtr klass, IntPtr method, JValue* args)
+		internal static unsafe double CallNonvirtualDoubleMethod (IntPtr @object, IntPtr klass, IntPtr method, JniArgumentValue* args)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -14491,7 +14491,7 @@ namespace
 
 		}
 
-		internal static unsafe void CallNonvirtualVoidMethod (IntPtr @object, IntPtr klass, IntPtr method, JValue* args)
+		internal static unsafe void CallNonvirtualVoidMethod (IntPtr @object, IntPtr klass, IntPtr method, JniArgumentValue* args)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -14600,7 +14600,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe IntPtr NewObject (IntPtr klass, IntPtr method, JValue* args)
+		public static unsafe IntPtr NewObject (IntPtr klass, IntPtr method, JniArgumentValue* args)
 		{
 			if (klass == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -14963,7 +14963,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe IntPtr CallStaticObjectMethod (IntPtr klass, IntPtr method, JValue* args)
+		internal static unsafe IntPtr CallStaticObjectMethod (IntPtr klass, IntPtr method, JniArgumentValue* args)
 		{
 			if (klass == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -14996,7 +14996,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe bool CallStaticBooleanMethod (IntPtr klass, IntPtr method, JValue* args)
+		internal static unsafe bool CallStaticBooleanMethod (IntPtr klass, IntPtr method, JniArgumentValue* args)
 		{
 			if (klass == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -15028,7 +15028,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe sbyte CallStaticByteMethod (IntPtr klass, IntPtr method, JValue* args)
+		internal static unsafe sbyte CallStaticByteMethod (IntPtr klass, IntPtr method, JniArgumentValue* args)
 		{
 			if (klass == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -15060,7 +15060,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe char CallStaticCharMethod (IntPtr klass, IntPtr method, JValue* args)
+		internal static unsafe char CallStaticCharMethod (IntPtr klass, IntPtr method, JniArgumentValue* args)
 		{
 			if (klass == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -15092,7 +15092,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe short CallStaticShortMethod (IntPtr klass, IntPtr method, JValue* args)
+		internal static unsafe short CallStaticShortMethod (IntPtr klass, IntPtr method, JniArgumentValue* args)
 		{
 			if (klass == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -15124,7 +15124,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe int CallStaticIntMethod (IntPtr klass, IntPtr method, JValue* args)
+		internal static unsafe int CallStaticIntMethod (IntPtr klass, IntPtr method, JniArgumentValue* args)
 		{
 			if (klass == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -15156,7 +15156,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe long CallStaticLongMethod (IntPtr klass, IntPtr method, JValue* args)
+		internal static unsafe long CallStaticLongMethod (IntPtr klass, IntPtr method, JniArgumentValue* args)
 		{
 			if (klass == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -15188,7 +15188,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe float CallStaticFloatMethod (IntPtr klass, IntPtr method, JValue* args)
+		internal static unsafe float CallStaticFloatMethod (IntPtr klass, IntPtr method, JniArgumentValue* args)
 		{
 			if (klass == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -15220,7 +15220,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe double CallStaticDoubleMethod (IntPtr klass, IntPtr method, JValue* args)
+		internal static unsafe double CallStaticDoubleMethod (IntPtr klass, IntPtr method, JniArgumentValue* args)
 		{
 			if (klass == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -15251,7 +15251,7 @@ namespace
 
 		}
 
-		internal static unsafe void CallStaticVoidMethod (IntPtr klass, IntPtr method, JValue* args)
+		internal static unsafe void CallStaticVoidMethod (IntPtr klass, IntPtr method, JniArgumentValue* args)
 		{
 			if (klass == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -15666,11 +15666,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_jobject _NewObjectA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_jobject NewObjectA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_jobject _NewObjectA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_jobject NewObjectA {
 			get {
 				if (_NewObjectA == null)
-					_NewObjectA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_jobject) Marshal.GetDelegateForFunctionPointer (env.NewObjectA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_jobject));
+					_NewObjectA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_jobject) Marshal.GetDelegateForFunctionPointer (env.NewObjectA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_jobject));
 				return _NewObjectA;
 			}
 		}
@@ -15711,11 +15711,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_jobject _CallObjectMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_jobject CallObjectMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_jobject _CallObjectMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_jobject CallObjectMethodA {
 			get {
 				if (_CallObjectMethodA == null)
-					_CallObjectMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_jobject) Marshal.GetDelegateForFunctionPointer (env.CallObjectMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_jobject));
+					_CallObjectMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_jobject) Marshal.GetDelegateForFunctionPointer (env.CallObjectMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_jobject));
 				return _CallObjectMethodA;
 			}
 		}
@@ -15729,11 +15729,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_bool _CallBooleanMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_bool CallBooleanMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_bool _CallBooleanMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_bool CallBooleanMethodA {
 			get {
 				if (_CallBooleanMethodA == null)
-					_CallBooleanMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_bool) Marshal.GetDelegateForFunctionPointer (env.CallBooleanMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_bool));
+					_CallBooleanMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_bool) Marshal.GetDelegateForFunctionPointer (env.CallBooleanMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_bool));
 				return _CallBooleanMethodA;
 			}
 		}
@@ -15747,11 +15747,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_sbyte _CallByteMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_sbyte CallByteMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_sbyte _CallByteMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_sbyte CallByteMethodA {
 			get {
 				if (_CallByteMethodA == null)
-					_CallByteMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_sbyte) Marshal.GetDelegateForFunctionPointer (env.CallByteMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_sbyte));
+					_CallByteMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_sbyte) Marshal.GetDelegateForFunctionPointer (env.CallByteMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_sbyte));
 				return _CallByteMethodA;
 			}
 		}
@@ -15765,11 +15765,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_char _CallCharMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_char CallCharMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_char _CallCharMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_char CallCharMethodA {
 			get {
 				if (_CallCharMethodA == null)
-					_CallCharMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_char) Marshal.GetDelegateForFunctionPointer (env.CallCharMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_char));
+					_CallCharMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_char) Marshal.GetDelegateForFunctionPointer (env.CallCharMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_char));
 				return _CallCharMethodA;
 			}
 		}
@@ -15783,11 +15783,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_short _CallShortMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_short CallShortMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_short _CallShortMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_short CallShortMethodA {
 			get {
 				if (_CallShortMethodA == null)
-					_CallShortMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_short) Marshal.GetDelegateForFunctionPointer (env.CallShortMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_short));
+					_CallShortMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_short) Marshal.GetDelegateForFunctionPointer (env.CallShortMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_short));
 				return _CallShortMethodA;
 			}
 		}
@@ -15801,11 +15801,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_int _CallIntMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_int CallIntMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_int _CallIntMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_int CallIntMethodA {
 			get {
 				if (_CallIntMethodA == null)
-					_CallIntMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_int) Marshal.GetDelegateForFunctionPointer (env.CallIntMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_int));
+					_CallIntMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_int) Marshal.GetDelegateForFunctionPointer (env.CallIntMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_int));
 				return _CallIntMethodA;
 			}
 		}
@@ -15819,11 +15819,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_long _CallLongMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_long CallLongMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_long _CallLongMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_long CallLongMethodA {
 			get {
 				if (_CallLongMethodA == null)
-					_CallLongMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_long) Marshal.GetDelegateForFunctionPointer (env.CallLongMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_long));
+					_CallLongMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_long) Marshal.GetDelegateForFunctionPointer (env.CallLongMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_long));
 				return _CallLongMethodA;
 			}
 		}
@@ -15837,11 +15837,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_float _CallFloatMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_float CallFloatMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_float _CallFloatMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_float CallFloatMethodA {
 			get {
 				if (_CallFloatMethodA == null)
-					_CallFloatMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_float) Marshal.GetDelegateForFunctionPointer (env.CallFloatMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_float));
+					_CallFloatMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_float) Marshal.GetDelegateForFunctionPointer (env.CallFloatMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_float));
 				return _CallFloatMethodA;
 			}
 		}
@@ -15855,11 +15855,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_double _CallDoubleMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_double CallDoubleMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_double _CallDoubleMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_double CallDoubleMethodA {
 			get {
 				if (_CallDoubleMethodA == null)
-					_CallDoubleMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_double) Marshal.GetDelegateForFunctionPointer (env.CallDoubleMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_double));
+					_CallDoubleMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_double) Marshal.GetDelegateForFunctionPointer (env.CallDoubleMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_double));
 				return _CallDoubleMethodA;
 			}
 		}
@@ -15873,11 +15873,11 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr_JValueRef _CallVoidMethodA;
-		public JniAction_JNIEnvPtr_jobject_IntPtr_JValueRef CallVoidMethodA {
+		JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef _CallVoidMethodA;
+		public JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef CallVoidMethodA {
 			get {
 				if (_CallVoidMethodA == null)
-					_CallVoidMethodA = (JniAction_JNIEnvPtr_jobject_IntPtr_JValueRef) Marshal.GetDelegateForFunctionPointer (env.CallVoidMethodA, typeof (JniAction_JNIEnvPtr_jobject_IntPtr_JValueRef));
+					_CallVoidMethodA = (JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef) Marshal.GetDelegateForFunctionPointer (env.CallVoidMethodA, typeof (JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef));
 				return _CallVoidMethodA;
 			}
 		}
@@ -15891,11 +15891,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_jobject _CallNonvirtualObjectMethodA;
-		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_jobject CallNonvirtualObjectMethodA {
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_jobject _CallNonvirtualObjectMethodA;
+		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_jobject CallNonvirtualObjectMethodA {
 			get {
 				if (_CallNonvirtualObjectMethodA == null)
-					_CallNonvirtualObjectMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_jobject) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualObjectMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_jobject));
+					_CallNonvirtualObjectMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_jobject) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualObjectMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_jobject));
 				return _CallNonvirtualObjectMethodA;
 			}
 		}
@@ -15909,11 +15909,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_bool _CallNonvirtualBooleanMethodA;
-		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_bool CallNonvirtualBooleanMethodA {
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_bool _CallNonvirtualBooleanMethodA;
+		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_bool CallNonvirtualBooleanMethodA {
 			get {
 				if (_CallNonvirtualBooleanMethodA == null)
-					_CallNonvirtualBooleanMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_bool) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualBooleanMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_bool));
+					_CallNonvirtualBooleanMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_bool) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualBooleanMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_bool));
 				return _CallNonvirtualBooleanMethodA;
 			}
 		}
@@ -15927,11 +15927,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_sbyte _CallNonvirtualByteMethodA;
-		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_sbyte CallNonvirtualByteMethodA {
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_sbyte _CallNonvirtualByteMethodA;
+		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_sbyte CallNonvirtualByteMethodA {
 			get {
 				if (_CallNonvirtualByteMethodA == null)
-					_CallNonvirtualByteMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_sbyte) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualByteMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_sbyte));
+					_CallNonvirtualByteMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_sbyte) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualByteMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_sbyte));
 				return _CallNonvirtualByteMethodA;
 			}
 		}
@@ -15945,11 +15945,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_char _CallNonvirtualCharMethodA;
-		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_char CallNonvirtualCharMethodA {
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_char _CallNonvirtualCharMethodA;
+		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_char CallNonvirtualCharMethodA {
 			get {
 				if (_CallNonvirtualCharMethodA == null)
-					_CallNonvirtualCharMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_char) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualCharMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_char));
+					_CallNonvirtualCharMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_char) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualCharMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_char));
 				return _CallNonvirtualCharMethodA;
 			}
 		}
@@ -15963,11 +15963,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_short _CallNonvirtualShortMethodA;
-		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_short CallNonvirtualShortMethodA {
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_short _CallNonvirtualShortMethodA;
+		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_short CallNonvirtualShortMethodA {
 			get {
 				if (_CallNonvirtualShortMethodA == null)
-					_CallNonvirtualShortMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_short) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualShortMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_short));
+					_CallNonvirtualShortMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_short) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualShortMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_short));
 				return _CallNonvirtualShortMethodA;
 			}
 		}
@@ -15981,11 +15981,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_int _CallNonvirtualIntMethodA;
-		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_int CallNonvirtualIntMethodA {
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_int _CallNonvirtualIntMethodA;
+		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_int CallNonvirtualIntMethodA {
 			get {
 				if (_CallNonvirtualIntMethodA == null)
-					_CallNonvirtualIntMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_int) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualIntMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_int));
+					_CallNonvirtualIntMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_int) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualIntMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_int));
 				return _CallNonvirtualIntMethodA;
 			}
 		}
@@ -15999,11 +15999,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_long _CallNonvirtualLongMethodA;
-		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_long CallNonvirtualLongMethodA {
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_long _CallNonvirtualLongMethodA;
+		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_long CallNonvirtualLongMethodA {
 			get {
 				if (_CallNonvirtualLongMethodA == null)
-					_CallNonvirtualLongMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_long) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualLongMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_long));
+					_CallNonvirtualLongMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_long) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualLongMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_long));
 				return _CallNonvirtualLongMethodA;
 			}
 		}
@@ -16017,11 +16017,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_float _CallNonvirtualFloatMethodA;
-		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_float CallNonvirtualFloatMethodA {
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_float _CallNonvirtualFloatMethodA;
+		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_float CallNonvirtualFloatMethodA {
 			get {
 				if (_CallNonvirtualFloatMethodA == null)
-					_CallNonvirtualFloatMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_float) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualFloatMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_float));
+					_CallNonvirtualFloatMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_float) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualFloatMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_float));
 				return _CallNonvirtualFloatMethodA;
 			}
 		}
@@ -16035,11 +16035,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_double _CallNonvirtualDoubleMethodA;
-		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_double CallNonvirtualDoubleMethodA {
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_double _CallNonvirtualDoubleMethodA;
+		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_double CallNonvirtualDoubleMethodA {
 			get {
 				if (_CallNonvirtualDoubleMethodA == null)
-					_CallNonvirtualDoubleMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_double) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualDoubleMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef_double));
+					_CallNonvirtualDoubleMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_double) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualDoubleMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_double));
 				return _CallNonvirtualDoubleMethodA;
 			}
 		}
@@ -16053,11 +16053,11 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef _CallNonvirtualVoidMethodA;
-		public JniAction_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef CallNonvirtualVoidMethodA {
+		JniAction_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef _CallNonvirtualVoidMethodA;
+		public JniAction_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef CallNonvirtualVoidMethodA {
 			get {
 				if (_CallNonvirtualVoidMethodA == null)
-					_CallNonvirtualVoidMethodA = (JniAction_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualVoidMethodA, typeof (JniAction_JNIEnvPtr_jobject_jobject_IntPtr_JValueRef));
+					_CallNonvirtualVoidMethodA = (JniAction_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualVoidMethodA, typeof (JniAction_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef));
 				return _CallNonvirtualVoidMethodA;
 			}
 		}
@@ -16251,11 +16251,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_jobject _CallStaticObjectMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_jobject CallStaticObjectMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_jobject _CallStaticObjectMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_jobject CallStaticObjectMethodA {
 			get {
 				if (_CallStaticObjectMethodA == null)
-					_CallStaticObjectMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_jobject) Marshal.GetDelegateForFunctionPointer (env.CallStaticObjectMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_jobject));
+					_CallStaticObjectMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_jobject) Marshal.GetDelegateForFunctionPointer (env.CallStaticObjectMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_jobject));
 				return _CallStaticObjectMethodA;
 			}
 		}
@@ -16269,11 +16269,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_bool _CallStaticBooleanMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_bool CallStaticBooleanMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_bool _CallStaticBooleanMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_bool CallStaticBooleanMethodA {
 			get {
 				if (_CallStaticBooleanMethodA == null)
-					_CallStaticBooleanMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_bool) Marshal.GetDelegateForFunctionPointer (env.CallStaticBooleanMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_bool));
+					_CallStaticBooleanMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_bool) Marshal.GetDelegateForFunctionPointer (env.CallStaticBooleanMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_bool));
 				return _CallStaticBooleanMethodA;
 			}
 		}
@@ -16287,11 +16287,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_sbyte _CallStaticByteMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_sbyte CallStaticByteMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_sbyte _CallStaticByteMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_sbyte CallStaticByteMethodA {
 			get {
 				if (_CallStaticByteMethodA == null)
-					_CallStaticByteMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_sbyte) Marshal.GetDelegateForFunctionPointer (env.CallStaticByteMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_sbyte));
+					_CallStaticByteMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_sbyte) Marshal.GetDelegateForFunctionPointer (env.CallStaticByteMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_sbyte));
 				return _CallStaticByteMethodA;
 			}
 		}
@@ -16305,11 +16305,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_char _CallStaticCharMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_char CallStaticCharMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_char _CallStaticCharMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_char CallStaticCharMethodA {
 			get {
 				if (_CallStaticCharMethodA == null)
-					_CallStaticCharMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_char) Marshal.GetDelegateForFunctionPointer (env.CallStaticCharMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_char));
+					_CallStaticCharMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_char) Marshal.GetDelegateForFunctionPointer (env.CallStaticCharMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_char));
 				return _CallStaticCharMethodA;
 			}
 		}
@@ -16323,11 +16323,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_short _CallStaticShortMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_short CallStaticShortMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_short _CallStaticShortMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_short CallStaticShortMethodA {
 			get {
 				if (_CallStaticShortMethodA == null)
-					_CallStaticShortMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_short) Marshal.GetDelegateForFunctionPointer (env.CallStaticShortMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_short));
+					_CallStaticShortMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_short) Marshal.GetDelegateForFunctionPointer (env.CallStaticShortMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_short));
 				return _CallStaticShortMethodA;
 			}
 		}
@@ -16341,11 +16341,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_int _CallStaticIntMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_int CallStaticIntMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_int _CallStaticIntMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_int CallStaticIntMethodA {
 			get {
 				if (_CallStaticIntMethodA == null)
-					_CallStaticIntMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_int) Marshal.GetDelegateForFunctionPointer (env.CallStaticIntMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_int));
+					_CallStaticIntMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_int) Marshal.GetDelegateForFunctionPointer (env.CallStaticIntMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_int));
 				return _CallStaticIntMethodA;
 			}
 		}
@@ -16359,11 +16359,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_long _CallStaticLongMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_long CallStaticLongMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_long _CallStaticLongMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_long CallStaticLongMethodA {
 			get {
 				if (_CallStaticLongMethodA == null)
-					_CallStaticLongMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_long) Marshal.GetDelegateForFunctionPointer (env.CallStaticLongMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_long));
+					_CallStaticLongMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_long) Marshal.GetDelegateForFunctionPointer (env.CallStaticLongMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_long));
 				return _CallStaticLongMethodA;
 			}
 		}
@@ -16377,11 +16377,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_float _CallStaticFloatMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_float CallStaticFloatMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_float _CallStaticFloatMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_float CallStaticFloatMethodA {
 			get {
 				if (_CallStaticFloatMethodA == null)
-					_CallStaticFloatMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_float) Marshal.GetDelegateForFunctionPointer (env.CallStaticFloatMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_float));
+					_CallStaticFloatMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_float) Marshal.GetDelegateForFunctionPointer (env.CallStaticFloatMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_float));
 				return _CallStaticFloatMethodA;
 			}
 		}
@@ -16395,11 +16395,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_double _CallStaticDoubleMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_double CallStaticDoubleMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_double _CallStaticDoubleMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_double CallStaticDoubleMethodA {
 			get {
 				if (_CallStaticDoubleMethodA == null)
-					_CallStaticDoubleMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_double) Marshal.GetDelegateForFunctionPointer (env.CallStaticDoubleMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JValueRef_double));
+					_CallStaticDoubleMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_double) Marshal.GetDelegateForFunctionPointer (env.CallStaticDoubleMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_double));
 				return _CallStaticDoubleMethodA;
 			}
 		}
@@ -16413,11 +16413,11 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr_JValueRef _CallStaticVoidMethodA;
-		public JniAction_JNIEnvPtr_jobject_IntPtr_JValueRef CallStaticVoidMethodA {
+		JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef _CallStaticVoidMethodA;
+		public JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef CallStaticVoidMethodA {
 			get {
 				if (_CallStaticVoidMethodA == null)
-					_CallStaticVoidMethodA = (JniAction_JNIEnvPtr_jobject_IntPtr_JValueRef) Marshal.GetDelegateForFunctionPointer (env.CallStaticVoidMethodA, typeof (JniAction_JNIEnvPtr_jobject_IntPtr_JValueRef));
+					_CallStaticVoidMethodA = (JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef) Marshal.GetDelegateForFunctionPointer (env.CallStaticVoidMethodA, typeof (JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef));
 				return _CallStaticVoidMethodA;
 			}
 		}

@@ -29,7 +29,7 @@ namespace Java.Interop {
 	foreach (var returnType in jniReturnTypes) {
 #>
 
-			public unsafe <#= returnType.ReturnType #> InvokeVirtual<#= returnType.JniCallType #>Method (string encodedMember, IJavaPeerable self, JValue* parameters)
+			public unsafe <#= returnType.ReturnType #> InvokeVirtual<#= returnType.JniCallType #>Method (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
@@ -45,7 +45,7 @@ namespace Java.Interop {
 				<#= returnType.ReturnType == "void" ? "return;" : "" #>
 			}
 
-			public unsafe <#= returnType.ReturnType #> InvokeNonvirtual<#= returnType.JniCallType #>Method (string encodedMember, IJavaPeerable self, JValue* parameters)
+			public unsafe <#= returnType.ReturnType #> InvokeNonvirtual<#= returnType.JniCallType #>Method (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 

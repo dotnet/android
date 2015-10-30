@@ -6,7 +6,7 @@ namespace Java.Interop {
 
 		partial class JniInstanceMethods {
 
-			public unsafe void InvokeVirtualVoidMethod (string encodedMember, IJavaPeerable self, JValue* parameters)
+			public unsafe void InvokeVirtualVoidMethod (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
@@ -22,7 +22,7 @@ namespace Java.Interop {
 				return;
 			}
 
-			public unsafe void InvokeNonvirtualVoidMethod (string encodedMember, IJavaPeerable self, JValue* parameters)
+			public unsafe void InvokeNonvirtualVoidMethod (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
@@ -33,7 +33,7 @@ namespace Java.Interop {
 				return;
 		}
 
-			public unsafe bool InvokeVirtualBooleanMethod (string encodedMember, IJavaPeerable self, JValue* parameters)
+			public unsafe bool InvokeVirtualBooleanMethod (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
@@ -49,7 +49,7 @@ namespace Java.Interop {
 				
 			}
 
-			public unsafe bool InvokeNonvirtualBooleanMethod (string encodedMember, IJavaPeerable self, JValue* parameters)
+			public unsafe bool InvokeNonvirtualBooleanMethod (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
@@ -60,7 +60,7 @@ namespace Java.Interop {
 				
 		}
 
-			public unsafe sbyte InvokeVirtualSByteMethod (string encodedMember, IJavaPeerable self, JValue* parameters)
+			public unsafe sbyte InvokeVirtualSByteMethod (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
@@ -76,7 +76,7 @@ namespace Java.Interop {
 				
 			}
 
-			public unsafe sbyte InvokeNonvirtualSByteMethod (string encodedMember, IJavaPeerable self, JValue* parameters)
+			public unsafe sbyte InvokeNonvirtualSByteMethod (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
@@ -87,7 +87,7 @@ namespace Java.Interop {
 				
 		}
 
-			public unsafe char InvokeVirtualCharMethod (string encodedMember, IJavaPeerable self, JValue* parameters)
+			public unsafe char InvokeVirtualCharMethod (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
@@ -103,7 +103,7 @@ namespace Java.Interop {
 				
 			}
 
-			public unsafe char InvokeNonvirtualCharMethod (string encodedMember, IJavaPeerable self, JValue* parameters)
+			public unsafe char InvokeNonvirtualCharMethod (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
@@ -114,7 +114,7 @@ namespace Java.Interop {
 				
 		}
 
-			public unsafe short InvokeVirtualInt16Method (string encodedMember, IJavaPeerable self, JValue* parameters)
+			public unsafe short InvokeVirtualInt16Method (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
@@ -130,7 +130,7 @@ namespace Java.Interop {
 				
 			}
 
-			public unsafe short InvokeNonvirtualInt16Method (string encodedMember, IJavaPeerable self, JValue* parameters)
+			public unsafe short InvokeNonvirtualInt16Method (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
@@ -141,7 +141,7 @@ namespace Java.Interop {
 				
 		}
 
-			public unsafe int InvokeVirtualInt32Method (string encodedMember, IJavaPeerable self, JValue* parameters)
+			public unsafe int InvokeVirtualInt32Method (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
@@ -157,7 +157,7 @@ namespace Java.Interop {
 				
 			}
 
-			public unsafe int InvokeNonvirtualInt32Method (string encodedMember, IJavaPeerable self, JValue* parameters)
+			public unsafe int InvokeNonvirtualInt32Method (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
@@ -168,7 +168,7 @@ namespace Java.Interop {
 				
 		}
 
-			public unsafe long InvokeVirtualInt64Method (string encodedMember, IJavaPeerable self, JValue* parameters)
+			public unsafe long InvokeVirtualInt64Method (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
@@ -184,7 +184,7 @@ namespace Java.Interop {
 				
 			}
 
-			public unsafe long InvokeNonvirtualInt64Method (string encodedMember, IJavaPeerable self, JValue* parameters)
+			public unsafe long InvokeNonvirtualInt64Method (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
@@ -195,7 +195,7 @@ namespace Java.Interop {
 				
 		}
 
-			public unsafe float InvokeVirtualSingleMethod (string encodedMember, IJavaPeerable self, JValue* parameters)
+			public unsafe float InvokeVirtualSingleMethod (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
@@ -211,7 +211,7 @@ namespace Java.Interop {
 				
 			}
 
-			public unsafe float InvokeNonvirtualSingleMethod (string encodedMember, IJavaPeerable self, JValue* parameters)
+			public unsafe float InvokeNonvirtualSingleMethod (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
@@ -222,7 +222,7 @@ namespace Java.Interop {
 				
 		}
 
-			public unsafe double InvokeVirtualDoubleMethod (string encodedMember, IJavaPeerable self, JValue* parameters)
+			public unsafe double InvokeVirtualDoubleMethod (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
@@ -238,7 +238,7 @@ namespace Java.Interop {
 				
 			}
 
-			public unsafe double InvokeNonvirtualDoubleMethod (string encodedMember, IJavaPeerable self, JValue* parameters)
+			public unsafe double InvokeNonvirtualDoubleMethod (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
@@ -249,7 +249,7 @@ namespace Java.Interop {
 				
 		}
 
-			public unsafe JniObjectReference InvokeVirtualObjectMethod (string encodedMember, IJavaPeerable self, JValue* parameters)
+			public unsafe JniObjectReference InvokeVirtualObjectMethod (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
@@ -265,7 +265,7 @@ namespace Java.Interop {
 				
 			}
 
-			public unsafe JniObjectReference InvokeNonvirtualObjectMethod (string encodedMember, IJavaPeerable self, JValue* parameters)
+			public unsafe JniObjectReference InvokeNonvirtualObjectMethod (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 

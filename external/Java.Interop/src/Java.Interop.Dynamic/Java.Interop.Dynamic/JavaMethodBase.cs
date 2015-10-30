@@ -19,7 +19,7 @@ namespace Java.Interop.Dynamic {
 
 		public      abstract    bool        IsConstructor   {get;}
 
-		public      abstract unsafe object  Invoke (IJavaPeerable self, JValue* arguments);
+		public      abstract unsafe object  Invoke (IJavaPeerable self, JniArgumentValue* arguments);
 
 		protected   abstract    string      JniReturnType   {get;}
 

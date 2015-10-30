@@ -191,7 +191,7 @@ namespace Java.InteropTests
 			};
 			var info = JniRuntime.Current.GetJniMarshalInfoForType (type);
 			assertMethod (getValue,                 info.GetValueFromJni,           "GetValueFromJni");
-			assertMethod (createJValue,             info.CreateJValue,              "CreateJValue");
+			assertMethod (createJValue,             info.CreateJniArgumentValue,    "CreateJniArgumentValue");
 			assertMethod (createLocalRef,           info.CreateLocalRef,            "CreateLocalRef");
 			assertMethod (createMarshalCollection,  info.CreateMarshalCollection,   "CreateMarshalCollection");
 			assertMethod (cleanupMarshalCollection, info.CleanupMarshalCollection,  "CleanupMarshalCollection");
@@ -201,10 +201,10 @@ namespace Java.InteropTests
 		{
 			AssertGetJniMarshalInfoForType (typeof (T),
 					getValue:       type + ".GetValueFromJni",
-					createJValue:   type + ".CreateJValue",
+					createJValue:   type + ".CreateJniArgumentValue",
 					createLocalRef: type + ".CreateLocalRef");
 			var info = JniRuntime.Current.GetJniMarshalInfoForType (typeof(T));
-			info.CreateJValue (default (T));
+			info.CreateJniArgumentValue (default (T));
 			var lref = info.CreateLocalRef (default (T));
 			Assert.AreEqual (default (T), info.GetValueFromJni (ref lref, JniObjectReferenceOptions.CreateNewReference, null));
 			JniEnvironment.References.Dispose (ref lref);

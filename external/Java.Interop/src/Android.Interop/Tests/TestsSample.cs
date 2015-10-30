@@ -8,11 +8,9 @@ using Android.Runtime;
 
 using Java.Interop;
 
-using JValue    = Java.Interop.JValue;
-
 namespace Android.InteropTests {
 
-	delegate    IntPtr              IntPtrDelegate_CallObjectMethodA        (IntPtr                     env,    IntPtr                  instance,   IntPtr              method, JValue[]    args);
+	delegate    IntPtr              IntPtrDelegate_CallObjectMethodA        (IntPtr                     env,    IntPtr                  instance,   IntPtr              method, JniArgumentValue[]    args);
 	delegate    void                IntPtrDelegate_DeleteLocalRef           (IntPtr                     env,    IntPtr handle);
 
 	[TestFixture]
@@ -137,7 +135,7 @@ namespace Android.InteropTests {
 						Marshal.GetDelegateForFunctionPointer (JNIEnv_DeleteLocalRef, typeof (IntPtrDelegate_DeleteLocalRef));
 
 				var uh = JniEnvironment.EnvironmentPointer;
-				var args = new JValue [0];
+				var args = new JniArgumentValue [0];
 
 				sw.Restart ();
 				for (int i = 0; i < rs.Length; ++i) {

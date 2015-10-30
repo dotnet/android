@@ -39,7 +39,7 @@ namespace Java.Interop {
 	}
 
 	[StructLayout(LayoutKind.Explicit)]
-	public struct JValue {
+	public struct JniArgumentValue {
 #pragma warning disable 0414
 		[FieldOffset(0)] bool z;
 		[FieldOffset(0)] sbyte b;
@@ -52,63 +52,61 @@ namespace Java.Interop {
 		[FieldOffset(0)] IntPtr l;
 #pragma warning restore 0414
 
-		public static JValue Zero = new JValue ((JniReferenceSafeHandle) null);
-
-		public JValue (bool value)
+		public JniArgumentValue (bool value)
 		{
-			this = new JValue ();
+			this = new JniArgumentValue ();
 			z = value;
 		}
 
-		public JValue (sbyte value)
+		public JniArgumentValue (sbyte value)
 		{
-			this = new JValue ();
+			this = new JniArgumentValue ();
 			b = value;
 		}
 
-		public JValue (char value)
+		public JniArgumentValue (char value)
 		{
-			this = new JValue ();
+			this = new JniArgumentValue ();
 			c = value;
 		}
 
-		public JValue (short value)
+		public JniArgumentValue (short value)
 		{
-			this = new JValue ();
+			this = new JniArgumentValue ();
 			s = value;
 		}
 
-		public JValue (int value)
+		public JniArgumentValue (int value)
 		{
-			this = new JValue ();
+			this = new JniArgumentValue ();
 			i = value;
 		}
 
-		public JValue (long value)
+		public JniArgumentValue (long value)
 		{
-			this = new JValue ();
+			this = new JniArgumentValue ();
 			j = value;
 		}
 
-		public JValue (float value)
+		public JniArgumentValue (float value)
 		{
-			this = new JValue ();
+			this = new JniArgumentValue ();
 			f = value;
 		}
 
-		public JValue (double value)
+		public JniArgumentValue (double value)
 		{
-			this = new JValue ();
+			this = new JniArgumentValue ();
 			d = value;
 		}
-		public JValue (IntPtr value)
+		public JniArgumentValue (IntPtr value)
 		{
-			this = new JValue ();
+			this = new JniArgumentValue ();
 			l = value;
 		}
-		public JValue (JniObjectReference value)
+		public JniArgumentValue (JniObjectReference value)
 		{
-			this = new JValue ();
+			this = new JniArgumentValue ();
 			var sh = value.SafeHandle;
 			if (sh != null)
 				l = value.SafeHandle.DangerousGetHandle ();
@@ -116,15 +114,15 @@ namespace Java.Interop {
 				l = value.Handle;
 		}
 
-		public JValue (JniReferenceSafeHandle value)
+		public JniArgumentValue (JniReferenceSafeHandle value)
 		{
-			this = new JValue ();
+			this = new JniArgumentValue ();
 			l = value == null ? IntPtr.Zero : value.DangerousGetHandle ();
 		}
 
 		public override string ToString ()
 		{
-			return string.Format ("Java.Interop.JValue(z={0},b={1},c={2},s={3},i={4},f={5},d={6},l=0x{7})",
+			return string.Format ("Java.Interop.JniArgumentValue(z={0},b={1},c={2},s={3},i={4},f={5},d={6},l=0x{7})",
 					z, b, c, s, i, f, d, l.ToString ("x"));
 		}
 	}
@@ -486,9 +484,9 @@ class App {
 			SafeEnv.Arrays.SetIntArrayRegion (intArray, 0, 3, (IntPtr) p);
 
 		var t = Stopwatch.StartNew ();
-		var args = stackalloc JValue [2];
-		args [0] = new JValue (intArray);
-		args [1] = new JValue (2);
+		var args = stackalloc JniArgumentValue [2];
+		args [0] = new JniArgumentValue (intArray);
+		args [1] = new JniArgumentValue (2);
 		for (int i = 0; i < C; ++i) {
 			int r = SafeEnv.StaticMethods.CallStaticIntMethod (Arrays_class, Arrays_binarySearch, args);
 		}
@@ -511,9 +509,9 @@ class App {
 			JIIntPtrEnv.Arrays.SetIntArrayRegion (intArray, 0, 3, (IntPtr) p);
 
 		var t = Stopwatch.StartNew ();
-		var args = stackalloc JValue [2];
-		args [0] = new JValue (intArray);
-		args [1] = new JValue (2);
+		var args = stackalloc JniArgumentValue [2];
+		args [0] = new JniArgumentValue (intArray);
+		args [1] = new JniArgumentValue (2);
 		for (int i = 0; i < C; ++i) {
 			int r = JIIntPtrEnv.StaticMethods.CallStaticIntMethod (Arrays_class, Arrays_binarySearch, args);
 		}
@@ -532,9 +530,9 @@ class App {
 			PinvokeEnv.Arrays.SetIntArrayRegion (intArray, 0, 3, (IntPtr) p);
 
 		var t = Stopwatch.StartNew ();
-		var args = stackalloc JValue [2];
-		args [0] = new JValue (intArray);
-		args [1] = new JValue (2);
+		var args = stackalloc JniArgumentValue [2];
+		args [0] = new JniArgumentValue (intArray);
+		args [1] = new JniArgumentValue (2);
 		for (int i = 0; i < C; ++i) {
 			int r = PinvokeEnv.StaticMethods.CallStaticIntMethod (Arrays_class, Arrays_binarySearch, args);
 		}
@@ -554,9 +552,9 @@ class App {
 			XAIntPtrEnv.Arrays.SetIntArrayRegion (intArray, 0, 3, (IntPtr) p);
 
 		var t = Stopwatch.StartNew ();
-		var args = stackalloc JValue [2];
-		args [0] = new JValue (intArray);
-		args [1] = new JValue (2);
+		var args = stackalloc JniArgumentValue [2];
+		args [0] = new JniArgumentValue (intArray);
+		args [1] = new JniArgumentValue (2);
 		for (int i = 0; i < C; ++i) {
 			int r = XAIntPtrEnv.StaticMethods.CallStaticIntMethod (Arrays_class, Arrays_binarySearch, args);
 		}

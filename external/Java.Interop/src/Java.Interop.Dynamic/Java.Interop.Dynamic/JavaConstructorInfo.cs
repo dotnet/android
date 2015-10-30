@@ -38,7 +38,7 @@ namespace Java.Interop.Dynamic {
 			get {return "V";}
 		}
 
-		public override unsafe object Invoke (IJavaPeerable self, JValue* arguments)
+		public override unsafe object Invoke (IJavaPeerable self, JniArgumentValue* arguments)
 		{
 			if (self == null) {
 				var h   = members.InstanceMethods.StartCreateInstance (JniSignature, typeof (JavaInstanceProxy), arguments);

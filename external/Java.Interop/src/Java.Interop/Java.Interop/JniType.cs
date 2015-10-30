@@ -190,7 +190,7 @@ namespace Java.Interop {
 			return JniEnvironment.Object.AllocObject (PeerReference);
 		}
 
-		public unsafe JniObjectReference NewObject (JniInstanceMethodInfo constructor, JValue* @parameters)
+		public unsafe JniObjectReference NewObject (JniInstanceMethodInfo constructor, JniArgumentValue* @parameters)
 		{
 			AssertValid ();
 

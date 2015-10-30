@@ -26,8 +26,8 @@ namespace Java.Interop.GenericMarshaler {
 		{
 			JniArgumentMarshalInfo<T> arg = new JniArgumentMarshalInfo<T>(value);
 
-			var args = stackalloc JValue [1];
-			args [0] = arg.JValue;
+			var args = stackalloc JniArgumentValue [1];
+			args [0] = arg.JniArgumentValue;
 
 			try {
 			    return peer.NewObject (constructorSignature, declaringType, args);
@@ -58,8 +58,8 @@ namespace Java.Interop.GenericMarshaler {
 		{
 			JniArgumentMarshalInfo<T> arg = new JniArgumentMarshalInfo<T>(value);
 
-			var args = stackalloc JValue [1];
-			args [0] = arg.JValue;
+			var args = stackalloc JniArgumentValue [1];
+			args [0] = arg.JniArgumentValue;
 
 			try {
 				var methods = peer.GetConstructorsForType (self.GetType ());
@@ -93,9 +93,9 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 
-			var args = stackalloc JValue [2];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
+			var args = stackalloc JniArgumentValue [2];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
 
 			try {
 			    return peer.NewObject (constructorSignature, declaringType, args);
@@ -128,9 +128,9 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 
-			var args = stackalloc JValue [2];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
+			var args = stackalloc JniArgumentValue [2];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
 
 			try {
 				var methods = peer.GetConstructorsForType (self.GetType ());
@@ -166,10 +166,10 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
 
-			var args = stackalloc JValue [3];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
+			var args = stackalloc JniArgumentValue [3];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
 
 			try {
 			    return peer.NewObject (constructorSignature, declaringType, args);
@@ -204,10 +204,10 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
 
-			var args = stackalloc JValue [3];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
+			var args = stackalloc JniArgumentValue [3];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
 
 			try {
 				var methods = peer.GetConstructorsForType (self.GetType ());
@@ -245,11 +245,11 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
 			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
 
-			var args = stackalloc JValue [4];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
+			var args = stackalloc JniArgumentValue [4];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
 
 			try {
 			    return peer.NewObject (constructorSignature, declaringType, args);
@@ -286,11 +286,11 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
 			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
 
-			var args = stackalloc JValue [4];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
+			var args = stackalloc JniArgumentValue [4];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
 
 			try {
 				var methods = peer.GetConstructorsForType (self.GetType ());
@@ -330,12 +330,12 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
 			JniArgumentMarshalInfo<T5> arg5 = new JniArgumentMarshalInfo<T5>(value5);
 
-			var args = stackalloc JValue [5];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
+			var args = stackalloc JniArgumentValue [5];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
 
 			try {
 			    return peer.NewObject (constructorSignature, declaringType, args);
@@ -374,12 +374,12 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
 			JniArgumentMarshalInfo<T5> arg5 = new JniArgumentMarshalInfo<T5>(value5);
 
-			var args = stackalloc JValue [5];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
+			var args = stackalloc JniArgumentValue [5];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
 
 			try {
 				var methods = peer.GetConstructorsForType (self.GetType ());
@@ -421,13 +421,13 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T5> arg5 = new JniArgumentMarshalInfo<T5>(value5);
 			JniArgumentMarshalInfo<T6> arg6 = new JniArgumentMarshalInfo<T6>(value6);
 
-			var args = stackalloc JValue [6];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
+			var args = stackalloc JniArgumentValue [6];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
 
 			try {
 			    return peer.NewObject (constructorSignature, declaringType, args);
@@ -468,13 +468,13 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T5> arg5 = new JniArgumentMarshalInfo<T5>(value5);
 			JniArgumentMarshalInfo<T6> arg6 = new JniArgumentMarshalInfo<T6>(value6);
 
-			var args = stackalloc JValue [6];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
+			var args = stackalloc JniArgumentValue [6];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
 
 			try {
 				var methods = peer.GetConstructorsForType (self.GetType ());
@@ -518,14 +518,14 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T6> arg6 = new JniArgumentMarshalInfo<T6>(value6);
 			JniArgumentMarshalInfo<T7> arg7 = new JniArgumentMarshalInfo<T7>(value7);
 
-			var args = stackalloc JValue [7];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
+			var args = stackalloc JniArgumentValue [7];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
 
 			try {
 			    return peer.NewObject (constructorSignature, declaringType, args);
@@ -568,14 +568,14 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T6> arg6 = new JniArgumentMarshalInfo<T6>(value6);
 			JniArgumentMarshalInfo<T7> arg7 = new JniArgumentMarshalInfo<T7>(value7);
 
-			var args = stackalloc JValue [7];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
+			var args = stackalloc JniArgumentValue [7];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
 
 			try {
 				var methods = peer.GetConstructorsForType (self.GetType ());
@@ -621,15 +621,15 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T7> arg7 = new JniArgumentMarshalInfo<T7>(value7);
 			JniArgumentMarshalInfo<T8> arg8 = new JniArgumentMarshalInfo<T8>(value8);
 
-			var args = stackalloc JValue [8];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
+			var args = stackalloc JniArgumentValue [8];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
 
 			try {
 			    return peer.NewObject (constructorSignature, declaringType, args);
@@ -674,15 +674,15 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T7> arg7 = new JniArgumentMarshalInfo<T7>(value7);
 			JniArgumentMarshalInfo<T8> arg8 = new JniArgumentMarshalInfo<T8>(value8);
 
-			var args = stackalloc JValue [8];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
+			var args = stackalloc JniArgumentValue [8];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
 
 			try {
 				var methods = peer.GetConstructorsForType (self.GetType ());
@@ -730,16 +730,16 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T8> arg8 = new JniArgumentMarshalInfo<T8>(value8);
 			JniArgumentMarshalInfo<T9> arg9 = new JniArgumentMarshalInfo<T9>(value9);
 
-			var args = stackalloc JValue [9];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
+			var args = stackalloc JniArgumentValue [9];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
 
 			try {
 			    return peer.NewObject (constructorSignature, declaringType, args);
@@ -786,16 +786,16 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T8> arg8 = new JniArgumentMarshalInfo<T8>(value8);
 			JniArgumentMarshalInfo<T9> arg9 = new JniArgumentMarshalInfo<T9>(value9);
 
-			var args = stackalloc JValue [9];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
+			var args = stackalloc JniArgumentValue [9];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
 
 			try {
 				var methods = peer.GetConstructorsForType (self.GetType ());
@@ -845,17 +845,17 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T9> arg9 = new JniArgumentMarshalInfo<T9>(value9);
 			JniArgumentMarshalInfo<T10> arg10 = new JniArgumentMarshalInfo<T10>(value10);
 
-			var args = stackalloc JValue [10];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
+			var args = stackalloc JniArgumentValue [10];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
 
 			try {
 			    return peer.NewObject (constructorSignature, declaringType, args);
@@ -904,17 +904,17 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T9> arg9 = new JniArgumentMarshalInfo<T9>(value9);
 			JniArgumentMarshalInfo<T10> arg10 = new JniArgumentMarshalInfo<T10>(value10);
 
-			var args = stackalloc JValue [10];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
+			var args = stackalloc JniArgumentValue [10];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
 
 			try {
 				var methods = peer.GetConstructorsForType (self.GetType ());
@@ -966,18 +966,18 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T10> arg10 = new JniArgumentMarshalInfo<T10>(value10);
 			JniArgumentMarshalInfo<T11> arg11 = new JniArgumentMarshalInfo<T11>(value11);
 
-			var args = stackalloc JValue [11];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
+			var args = stackalloc JniArgumentValue [11];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
 
 			try {
 			    return peer.NewObject (constructorSignature, declaringType, args);
@@ -1028,18 +1028,18 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T10> arg10 = new JniArgumentMarshalInfo<T10>(value10);
 			JniArgumentMarshalInfo<T11> arg11 = new JniArgumentMarshalInfo<T11>(value11);
 
-			var args = stackalloc JValue [11];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
+			var args = stackalloc JniArgumentValue [11];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
 
 			try {
 				var methods = peer.GetConstructorsForType (self.GetType ());
@@ -1093,19 +1093,19 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T11> arg11 = new JniArgumentMarshalInfo<T11>(value11);
 			JniArgumentMarshalInfo<T12> arg12 = new JniArgumentMarshalInfo<T12>(value12);
 
-			var args = stackalloc JValue [12];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
+			var args = stackalloc JniArgumentValue [12];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
 
 			try {
 			    return peer.NewObject (constructorSignature, declaringType, args);
@@ -1158,19 +1158,19 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T11> arg11 = new JniArgumentMarshalInfo<T11>(value11);
 			JniArgumentMarshalInfo<T12> arg12 = new JniArgumentMarshalInfo<T12>(value12);
 
-			var args = stackalloc JValue [12];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
+			var args = stackalloc JniArgumentValue [12];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
 
 			try {
 				var methods = peer.GetConstructorsForType (self.GetType ());
@@ -1226,20 +1226,20 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T12> arg12 = new JniArgumentMarshalInfo<T12>(value12);
 			JniArgumentMarshalInfo<T13> arg13 = new JniArgumentMarshalInfo<T13>(value13);
 
-			var args = stackalloc JValue [13];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
+			var args = stackalloc JniArgumentValue [13];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
 
 			try {
 			    return peer.NewObject (constructorSignature, declaringType, args);
@@ -1294,20 +1294,20 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T12> arg12 = new JniArgumentMarshalInfo<T12>(value12);
 			JniArgumentMarshalInfo<T13> arg13 = new JniArgumentMarshalInfo<T13>(value13);
 
-			var args = stackalloc JValue [13];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
+			var args = stackalloc JniArgumentValue [13];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
 
 			try {
 				var methods = peer.GetConstructorsForType (self.GetType ());
@@ -1365,21 +1365,21 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T13> arg13 = new JniArgumentMarshalInfo<T13>(value13);
 			JniArgumentMarshalInfo<T14> arg14 = new JniArgumentMarshalInfo<T14>(value14);
 
-			var args = stackalloc JValue [14];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
-			args [13] = arg14.JValue;
+			var args = stackalloc JniArgumentValue [14];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
+			args [13] = arg14.JniArgumentValue;
 
 			try {
 			    return peer.NewObject (constructorSignature, declaringType, args);
@@ -1436,21 +1436,21 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T13> arg13 = new JniArgumentMarshalInfo<T13>(value13);
 			JniArgumentMarshalInfo<T14> arg14 = new JniArgumentMarshalInfo<T14>(value14);
 
-			var args = stackalloc JValue [14];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
-			args [13] = arg14.JValue;
+			var args = stackalloc JniArgumentValue [14];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
+			args [13] = arg14.JniArgumentValue;
 
 			try {
 				var methods = peer.GetConstructorsForType (self.GetType ());
@@ -1510,22 +1510,22 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T14> arg14 = new JniArgumentMarshalInfo<T14>(value14);
 			JniArgumentMarshalInfo<T15> arg15 = new JniArgumentMarshalInfo<T15>(value15);
 
-			var args = stackalloc JValue [15];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
-			args [13] = arg14.JValue;
-			args [14] = arg15.JValue;
+			var args = stackalloc JniArgumentValue [15];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
+			args [13] = arg14.JniArgumentValue;
+			args [14] = arg15.JniArgumentValue;
 
 			try {
 			    return peer.NewObject (constructorSignature, declaringType, args);
@@ -1584,22 +1584,22 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T14> arg14 = new JniArgumentMarshalInfo<T14>(value14);
 			JniArgumentMarshalInfo<T15> arg15 = new JniArgumentMarshalInfo<T15>(value15);
 
-			var args = stackalloc JValue [15];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
-			args [13] = arg14.JValue;
-			args [14] = arg15.JValue;
+			var args = stackalloc JniArgumentValue [15];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
+			args [13] = arg14.JniArgumentValue;
+			args [14] = arg15.JniArgumentValue;
 
 			try {
 				var methods = peer.GetConstructorsForType (self.GetType ());
@@ -1661,23 +1661,23 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T15> arg15 = new JniArgumentMarshalInfo<T15>(value15);
 			JniArgumentMarshalInfo<T16> arg16 = new JniArgumentMarshalInfo<T16>(value16);
 
-			var args = stackalloc JValue [16];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
-			args [13] = arg14.JValue;
-			args [14] = arg15.JValue;
-			args [15] = arg16.JValue;
+			var args = stackalloc JniArgumentValue [16];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
+			args [13] = arg14.JniArgumentValue;
+			args [14] = arg15.JniArgumentValue;
+			args [15] = arg16.JniArgumentValue;
 
 			try {
 			    return peer.NewObject (constructorSignature, declaringType, args);
@@ -1738,23 +1738,23 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T15> arg15 = new JniArgumentMarshalInfo<T15>(value15);
 			JniArgumentMarshalInfo<T16> arg16 = new JniArgumentMarshalInfo<T16>(value16);
 
-			var args = stackalloc JValue [16];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
-			args [13] = arg14.JValue;
-			args [14] = arg15.JValue;
-			args [15] = arg16.JValue;
+			var args = stackalloc JniArgumentValue [16];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
+			args [13] = arg14.JniArgumentValue;
+			args [14] = arg15.JniArgumentValue;
+			args [15] = arg16.JniArgumentValue;
 
 			try {
 				var methods = peer.GetConstructorsForType (self.GetType ());
@@ -1787,7 +1787,7 @@ namespace Java.Interop.GenericMarshaler {
 		)
 		{
 
-			var args = stackalloc JValue [0];
+			var args = stackalloc JniArgumentValue [0];
 
 			try {
 				peer.InvokeVirtualVoidMethod (encodedMember, self, args);
@@ -1804,8 +1804,8 @@ namespace Java.Interop.GenericMarshaler {
 		{
 			JniArgumentMarshalInfo<T> arg = new JniArgumentMarshalInfo<T>(value);
 
-			var args = stackalloc JValue [1];
-			args [0] = arg.JValue;
+			var args = stackalloc JniArgumentValue [1];
+			args [0] = arg.JniArgumentValue;
 
 			try {
 				peer.InvokeVirtualVoidMethod (encodedMember, self, args);
@@ -1824,9 +1824,9 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 
-			var args = stackalloc JValue [2];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
+			var args = stackalloc JniArgumentValue [2];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
 
 			try {
 				peer.InvokeVirtualVoidMethod (encodedMember, self, args);
@@ -1847,10 +1847,10 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
 
-			var args = stackalloc JValue [3];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
+			var args = stackalloc JniArgumentValue [3];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
 
 			try {
 				peer.InvokeVirtualVoidMethod (encodedMember, self, args);
@@ -1873,11 +1873,11 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
 			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
 
-			var args = stackalloc JValue [4];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
+			var args = stackalloc JniArgumentValue [4];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
 
 			try {
 				peer.InvokeVirtualVoidMethod (encodedMember, self, args);
@@ -1902,12 +1902,12 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
 			JniArgumentMarshalInfo<T5> arg5 = new JniArgumentMarshalInfo<T5>(value5);
 
-			var args = stackalloc JValue [5];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
+			var args = stackalloc JniArgumentValue [5];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
 
 			try {
 				peer.InvokeVirtualVoidMethod (encodedMember, self, args);
@@ -1934,13 +1934,13 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T5> arg5 = new JniArgumentMarshalInfo<T5>(value5);
 			JniArgumentMarshalInfo<T6> arg6 = new JniArgumentMarshalInfo<T6>(value6);
 
-			var args = stackalloc JValue [6];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
+			var args = stackalloc JniArgumentValue [6];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
 
 			try {
 				peer.InvokeVirtualVoidMethod (encodedMember, self, args);
@@ -1969,14 +1969,14 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T6> arg6 = new JniArgumentMarshalInfo<T6>(value6);
 			JniArgumentMarshalInfo<T7> arg7 = new JniArgumentMarshalInfo<T7>(value7);
 
-			var args = stackalloc JValue [7];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
+			var args = stackalloc JniArgumentValue [7];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
 
 			try {
 				peer.InvokeVirtualVoidMethod (encodedMember, self, args);
@@ -2007,15 +2007,15 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T7> arg7 = new JniArgumentMarshalInfo<T7>(value7);
 			JniArgumentMarshalInfo<T8> arg8 = new JniArgumentMarshalInfo<T8>(value8);
 
-			var args = stackalloc JValue [8];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
+			var args = stackalloc JniArgumentValue [8];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
 
 			try {
 				peer.InvokeVirtualVoidMethod (encodedMember, self, args);
@@ -2048,16 +2048,16 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T8> arg8 = new JniArgumentMarshalInfo<T8>(value8);
 			JniArgumentMarshalInfo<T9> arg9 = new JniArgumentMarshalInfo<T9>(value9);
 
-			var args = stackalloc JValue [9];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
+			var args = stackalloc JniArgumentValue [9];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
 
 			try {
 				peer.InvokeVirtualVoidMethod (encodedMember, self, args);
@@ -2092,17 +2092,17 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T9> arg9 = new JniArgumentMarshalInfo<T9>(value9);
 			JniArgumentMarshalInfo<T10> arg10 = new JniArgumentMarshalInfo<T10>(value10);
 
-			var args = stackalloc JValue [10];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
+			var args = stackalloc JniArgumentValue [10];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
 
 			try {
 				peer.InvokeVirtualVoidMethod (encodedMember, self, args);
@@ -2139,18 +2139,18 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T10> arg10 = new JniArgumentMarshalInfo<T10>(value10);
 			JniArgumentMarshalInfo<T11> arg11 = new JniArgumentMarshalInfo<T11>(value11);
 
-			var args = stackalloc JValue [11];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
+			var args = stackalloc JniArgumentValue [11];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
 
 			try {
 				peer.InvokeVirtualVoidMethod (encodedMember, self, args);
@@ -2189,19 +2189,19 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T11> arg11 = new JniArgumentMarshalInfo<T11>(value11);
 			JniArgumentMarshalInfo<T12> arg12 = new JniArgumentMarshalInfo<T12>(value12);
 
-			var args = stackalloc JValue [12];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
+			var args = stackalloc JniArgumentValue [12];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
 
 			try {
 				peer.InvokeVirtualVoidMethod (encodedMember, self, args);
@@ -2242,20 +2242,20 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T12> arg12 = new JniArgumentMarshalInfo<T12>(value12);
 			JniArgumentMarshalInfo<T13> arg13 = new JniArgumentMarshalInfo<T13>(value13);
 
-			var args = stackalloc JValue [13];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
+			var args = stackalloc JniArgumentValue [13];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
 
 			try {
 				peer.InvokeVirtualVoidMethod (encodedMember, self, args);
@@ -2298,21 +2298,21 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T13> arg13 = new JniArgumentMarshalInfo<T13>(value13);
 			JniArgumentMarshalInfo<T14> arg14 = new JniArgumentMarshalInfo<T14>(value14);
 
-			var args = stackalloc JValue [14];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
-			args [13] = arg14.JValue;
+			var args = stackalloc JniArgumentValue [14];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
+			args [13] = arg14.JniArgumentValue;
 
 			try {
 				peer.InvokeVirtualVoidMethod (encodedMember, self, args);
@@ -2357,22 +2357,22 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T14> arg14 = new JniArgumentMarshalInfo<T14>(value14);
 			JniArgumentMarshalInfo<T15> arg15 = new JniArgumentMarshalInfo<T15>(value15);
 
-			var args = stackalloc JValue [15];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
-			args [13] = arg14.JValue;
-			args [14] = arg15.JValue;
+			var args = stackalloc JniArgumentValue [15];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
+			args [13] = arg14.JniArgumentValue;
+			args [14] = arg15.JniArgumentValue;
 
 			try {
 				peer.InvokeVirtualVoidMethod (encodedMember, self, args);
@@ -2419,23 +2419,23 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T15> arg15 = new JniArgumentMarshalInfo<T15>(value15);
 			JniArgumentMarshalInfo<T16> arg16 = new JniArgumentMarshalInfo<T16>(value16);
 
-			var args = stackalloc JValue [16];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
-			args [13] = arg14.JValue;
-			args [14] = arg15.JValue;
-			args [15] = arg16.JValue;
+			var args = stackalloc JniArgumentValue [16];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
+			args [13] = arg14.JniArgumentValue;
+			args [14] = arg15.JniArgumentValue;
+			args [15] = arg16.JniArgumentValue;
 
 			try {
 				peer.InvokeVirtualVoidMethod (encodedMember, self, args);
@@ -2466,7 +2466,7 @@ namespace Java.Interop.GenericMarshaler {
 		)
 		{
 
-			var args = stackalloc JValue [0];
+			var args = stackalloc JniArgumentValue [0];
 
 			try {
 				return peer.InvokeVirtualBooleanMethod (encodedMember, self, args);
@@ -2483,8 +2483,8 @@ namespace Java.Interop.GenericMarshaler {
 		{
 			JniArgumentMarshalInfo<T> arg = new JniArgumentMarshalInfo<T>(value);
 
-			var args = stackalloc JValue [1];
-			args [0] = arg.JValue;
+			var args = stackalloc JniArgumentValue [1];
+			args [0] = arg.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualBooleanMethod (encodedMember, self, args);
@@ -2503,9 +2503,9 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 
-			var args = stackalloc JValue [2];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
+			var args = stackalloc JniArgumentValue [2];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualBooleanMethod (encodedMember, self, args);
@@ -2526,10 +2526,10 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
 
-			var args = stackalloc JValue [3];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
+			var args = stackalloc JniArgumentValue [3];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualBooleanMethod (encodedMember, self, args);
@@ -2552,11 +2552,11 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
 			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
 
-			var args = stackalloc JValue [4];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
+			var args = stackalloc JniArgumentValue [4];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualBooleanMethod (encodedMember, self, args);
@@ -2581,12 +2581,12 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
 			JniArgumentMarshalInfo<T5> arg5 = new JniArgumentMarshalInfo<T5>(value5);
 
-			var args = stackalloc JValue [5];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
+			var args = stackalloc JniArgumentValue [5];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualBooleanMethod (encodedMember, self, args);
@@ -2613,13 +2613,13 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T5> arg5 = new JniArgumentMarshalInfo<T5>(value5);
 			JniArgumentMarshalInfo<T6> arg6 = new JniArgumentMarshalInfo<T6>(value6);
 
-			var args = stackalloc JValue [6];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
+			var args = stackalloc JniArgumentValue [6];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualBooleanMethod (encodedMember, self, args);
@@ -2648,14 +2648,14 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T6> arg6 = new JniArgumentMarshalInfo<T6>(value6);
 			JniArgumentMarshalInfo<T7> arg7 = new JniArgumentMarshalInfo<T7>(value7);
 
-			var args = stackalloc JValue [7];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
+			var args = stackalloc JniArgumentValue [7];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualBooleanMethod (encodedMember, self, args);
@@ -2686,15 +2686,15 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T7> arg7 = new JniArgumentMarshalInfo<T7>(value7);
 			JniArgumentMarshalInfo<T8> arg8 = new JniArgumentMarshalInfo<T8>(value8);
 
-			var args = stackalloc JValue [8];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
+			var args = stackalloc JniArgumentValue [8];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualBooleanMethod (encodedMember, self, args);
@@ -2727,16 +2727,16 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T8> arg8 = new JniArgumentMarshalInfo<T8>(value8);
 			JniArgumentMarshalInfo<T9> arg9 = new JniArgumentMarshalInfo<T9>(value9);
 
-			var args = stackalloc JValue [9];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
+			var args = stackalloc JniArgumentValue [9];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualBooleanMethod (encodedMember, self, args);
@@ -2771,17 +2771,17 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T9> arg9 = new JniArgumentMarshalInfo<T9>(value9);
 			JniArgumentMarshalInfo<T10> arg10 = new JniArgumentMarshalInfo<T10>(value10);
 
-			var args = stackalloc JValue [10];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
+			var args = stackalloc JniArgumentValue [10];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualBooleanMethod (encodedMember, self, args);
@@ -2818,18 +2818,18 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T10> arg10 = new JniArgumentMarshalInfo<T10>(value10);
 			JniArgumentMarshalInfo<T11> arg11 = new JniArgumentMarshalInfo<T11>(value11);
 
-			var args = stackalloc JValue [11];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
+			var args = stackalloc JniArgumentValue [11];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualBooleanMethod (encodedMember, self, args);
@@ -2868,19 +2868,19 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T11> arg11 = new JniArgumentMarshalInfo<T11>(value11);
 			JniArgumentMarshalInfo<T12> arg12 = new JniArgumentMarshalInfo<T12>(value12);
 
-			var args = stackalloc JValue [12];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
+			var args = stackalloc JniArgumentValue [12];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualBooleanMethod (encodedMember, self, args);
@@ -2921,20 +2921,20 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T12> arg12 = new JniArgumentMarshalInfo<T12>(value12);
 			JniArgumentMarshalInfo<T13> arg13 = new JniArgumentMarshalInfo<T13>(value13);
 
-			var args = stackalloc JValue [13];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
+			var args = stackalloc JniArgumentValue [13];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualBooleanMethod (encodedMember, self, args);
@@ -2977,21 +2977,21 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T13> arg13 = new JniArgumentMarshalInfo<T13>(value13);
 			JniArgumentMarshalInfo<T14> arg14 = new JniArgumentMarshalInfo<T14>(value14);
 
-			var args = stackalloc JValue [14];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
-			args [13] = arg14.JValue;
+			var args = stackalloc JniArgumentValue [14];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
+			args [13] = arg14.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualBooleanMethod (encodedMember, self, args);
@@ -3036,22 +3036,22 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T14> arg14 = new JniArgumentMarshalInfo<T14>(value14);
 			JniArgumentMarshalInfo<T15> arg15 = new JniArgumentMarshalInfo<T15>(value15);
 
-			var args = stackalloc JValue [15];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
-			args [13] = arg14.JValue;
-			args [14] = arg15.JValue;
+			var args = stackalloc JniArgumentValue [15];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
+			args [13] = arg14.JniArgumentValue;
+			args [14] = arg15.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualBooleanMethod (encodedMember, self, args);
@@ -3098,23 +3098,23 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T15> arg15 = new JniArgumentMarshalInfo<T15>(value15);
 			JniArgumentMarshalInfo<T16> arg16 = new JniArgumentMarshalInfo<T16>(value16);
 
-			var args = stackalloc JValue [16];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
-			args [13] = arg14.JValue;
-			args [14] = arg15.JValue;
-			args [15] = arg16.JValue;
+			var args = stackalloc JniArgumentValue [16];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
+			args [13] = arg14.JniArgumentValue;
+			args [14] = arg15.JniArgumentValue;
+			args [15] = arg16.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualBooleanMethod (encodedMember, self, args);
@@ -3145,7 +3145,7 @@ namespace Java.Interop.GenericMarshaler {
 		)
 		{
 
-			var args = stackalloc JValue [0];
+			var args = stackalloc JniArgumentValue [0];
 
 			try {
 				return peer.InvokeVirtualSByteMethod (encodedMember, self, args);
@@ -3162,8 +3162,8 @@ namespace Java.Interop.GenericMarshaler {
 		{
 			JniArgumentMarshalInfo<T> arg = new JniArgumentMarshalInfo<T>(value);
 
-			var args = stackalloc JValue [1];
-			args [0] = arg.JValue;
+			var args = stackalloc JniArgumentValue [1];
+			args [0] = arg.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualSByteMethod (encodedMember, self, args);
@@ -3182,9 +3182,9 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 
-			var args = stackalloc JValue [2];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
+			var args = stackalloc JniArgumentValue [2];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualSByteMethod (encodedMember, self, args);
@@ -3205,10 +3205,10 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
 
-			var args = stackalloc JValue [3];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
+			var args = stackalloc JniArgumentValue [3];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualSByteMethod (encodedMember, self, args);
@@ -3231,11 +3231,11 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
 			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
 
-			var args = stackalloc JValue [4];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
+			var args = stackalloc JniArgumentValue [4];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualSByteMethod (encodedMember, self, args);
@@ -3260,12 +3260,12 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
 			JniArgumentMarshalInfo<T5> arg5 = new JniArgumentMarshalInfo<T5>(value5);
 
-			var args = stackalloc JValue [5];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
+			var args = stackalloc JniArgumentValue [5];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualSByteMethod (encodedMember, self, args);
@@ -3292,13 +3292,13 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T5> arg5 = new JniArgumentMarshalInfo<T5>(value5);
 			JniArgumentMarshalInfo<T6> arg6 = new JniArgumentMarshalInfo<T6>(value6);
 
-			var args = stackalloc JValue [6];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
+			var args = stackalloc JniArgumentValue [6];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualSByteMethod (encodedMember, self, args);
@@ -3327,14 +3327,14 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T6> arg6 = new JniArgumentMarshalInfo<T6>(value6);
 			JniArgumentMarshalInfo<T7> arg7 = new JniArgumentMarshalInfo<T7>(value7);
 
-			var args = stackalloc JValue [7];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
+			var args = stackalloc JniArgumentValue [7];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualSByteMethod (encodedMember, self, args);
@@ -3365,15 +3365,15 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T7> arg7 = new JniArgumentMarshalInfo<T7>(value7);
 			JniArgumentMarshalInfo<T8> arg8 = new JniArgumentMarshalInfo<T8>(value8);
 
-			var args = stackalloc JValue [8];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
+			var args = stackalloc JniArgumentValue [8];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualSByteMethod (encodedMember, self, args);
@@ -3406,16 +3406,16 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T8> arg8 = new JniArgumentMarshalInfo<T8>(value8);
 			JniArgumentMarshalInfo<T9> arg9 = new JniArgumentMarshalInfo<T9>(value9);
 
-			var args = stackalloc JValue [9];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
+			var args = stackalloc JniArgumentValue [9];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualSByteMethod (encodedMember, self, args);
@@ -3450,17 +3450,17 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T9> arg9 = new JniArgumentMarshalInfo<T9>(value9);
 			JniArgumentMarshalInfo<T10> arg10 = new JniArgumentMarshalInfo<T10>(value10);
 
-			var args = stackalloc JValue [10];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
+			var args = stackalloc JniArgumentValue [10];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualSByteMethod (encodedMember, self, args);
@@ -3497,18 +3497,18 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T10> arg10 = new JniArgumentMarshalInfo<T10>(value10);
 			JniArgumentMarshalInfo<T11> arg11 = new JniArgumentMarshalInfo<T11>(value11);
 
-			var args = stackalloc JValue [11];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
+			var args = stackalloc JniArgumentValue [11];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualSByteMethod (encodedMember, self, args);
@@ -3547,19 +3547,19 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T11> arg11 = new JniArgumentMarshalInfo<T11>(value11);
 			JniArgumentMarshalInfo<T12> arg12 = new JniArgumentMarshalInfo<T12>(value12);
 
-			var args = stackalloc JValue [12];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
+			var args = stackalloc JniArgumentValue [12];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualSByteMethod (encodedMember, self, args);
@@ -3600,20 +3600,20 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T12> arg12 = new JniArgumentMarshalInfo<T12>(value12);
 			JniArgumentMarshalInfo<T13> arg13 = new JniArgumentMarshalInfo<T13>(value13);
 
-			var args = stackalloc JValue [13];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
+			var args = stackalloc JniArgumentValue [13];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualSByteMethod (encodedMember, self, args);
@@ -3656,21 +3656,21 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T13> arg13 = new JniArgumentMarshalInfo<T13>(value13);
 			JniArgumentMarshalInfo<T14> arg14 = new JniArgumentMarshalInfo<T14>(value14);
 
-			var args = stackalloc JValue [14];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
-			args [13] = arg14.JValue;
+			var args = stackalloc JniArgumentValue [14];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
+			args [13] = arg14.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualSByteMethod (encodedMember, self, args);
@@ -3715,22 +3715,22 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T14> arg14 = new JniArgumentMarshalInfo<T14>(value14);
 			JniArgumentMarshalInfo<T15> arg15 = new JniArgumentMarshalInfo<T15>(value15);
 
-			var args = stackalloc JValue [15];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
-			args [13] = arg14.JValue;
-			args [14] = arg15.JValue;
+			var args = stackalloc JniArgumentValue [15];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
+			args [13] = arg14.JniArgumentValue;
+			args [14] = arg15.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualSByteMethod (encodedMember, self, args);
@@ -3777,23 +3777,23 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T15> arg15 = new JniArgumentMarshalInfo<T15>(value15);
 			JniArgumentMarshalInfo<T16> arg16 = new JniArgumentMarshalInfo<T16>(value16);
 
-			var args = stackalloc JValue [16];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
-			args [13] = arg14.JValue;
-			args [14] = arg15.JValue;
-			args [15] = arg16.JValue;
+			var args = stackalloc JniArgumentValue [16];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
+			args [13] = arg14.JniArgumentValue;
+			args [14] = arg15.JniArgumentValue;
+			args [15] = arg16.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualSByteMethod (encodedMember, self, args);
@@ -3824,7 +3824,7 @@ namespace Java.Interop.GenericMarshaler {
 		)
 		{
 
-			var args = stackalloc JValue [0];
+			var args = stackalloc JniArgumentValue [0];
 
 			try {
 				return peer.InvokeVirtualCharMethod (encodedMember, self, args);
@@ -3841,8 +3841,8 @@ namespace Java.Interop.GenericMarshaler {
 		{
 			JniArgumentMarshalInfo<T> arg = new JniArgumentMarshalInfo<T>(value);
 
-			var args = stackalloc JValue [1];
-			args [0] = arg.JValue;
+			var args = stackalloc JniArgumentValue [1];
+			args [0] = arg.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualCharMethod (encodedMember, self, args);
@@ -3861,9 +3861,9 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 
-			var args = stackalloc JValue [2];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
+			var args = stackalloc JniArgumentValue [2];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualCharMethod (encodedMember, self, args);
@@ -3884,10 +3884,10 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
 
-			var args = stackalloc JValue [3];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
+			var args = stackalloc JniArgumentValue [3];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualCharMethod (encodedMember, self, args);
@@ -3910,11 +3910,11 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
 			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
 
-			var args = stackalloc JValue [4];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
+			var args = stackalloc JniArgumentValue [4];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualCharMethod (encodedMember, self, args);
@@ -3939,12 +3939,12 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
 			JniArgumentMarshalInfo<T5> arg5 = new JniArgumentMarshalInfo<T5>(value5);
 
-			var args = stackalloc JValue [5];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
+			var args = stackalloc JniArgumentValue [5];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualCharMethod (encodedMember, self, args);
@@ -3971,13 +3971,13 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T5> arg5 = new JniArgumentMarshalInfo<T5>(value5);
 			JniArgumentMarshalInfo<T6> arg6 = new JniArgumentMarshalInfo<T6>(value6);
 
-			var args = stackalloc JValue [6];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
+			var args = stackalloc JniArgumentValue [6];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualCharMethod (encodedMember, self, args);
@@ -4006,14 +4006,14 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T6> arg6 = new JniArgumentMarshalInfo<T6>(value6);
 			JniArgumentMarshalInfo<T7> arg7 = new JniArgumentMarshalInfo<T7>(value7);
 
-			var args = stackalloc JValue [7];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
+			var args = stackalloc JniArgumentValue [7];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualCharMethod (encodedMember, self, args);
@@ -4044,15 +4044,15 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T7> arg7 = new JniArgumentMarshalInfo<T7>(value7);
 			JniArgumentMarshalInfo<T8> arg8 = new JniArgumentMarshalInfo<T8>(value8);
 
-			var args = stackalloc JValue [8];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
+			var args = stackalloc JniArgumentValue [8];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualCharMethod (encodedMember, self, args);
@@ -4085,16 +4085,16 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T8> arg8 = new JniArgumentMarshalInfo<T8>(value8);
 			JniArgumentMarshalInfo<T9> arg9 = new JniArgumentMarshalInfo<T9>(value9);
 
-			var args = stackalloc JValue [9];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
+			var args = stackalloc JniArgumentValue [9];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualCharMethod (encodedMember, self, args);
@@ -4129,17 +4129,17 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T9> arg9 = new JniArgumentMarshalInfo<T9>(value9);
 			JniArgumentMarshalInfo<T10> arg10 = new JniArgumentMarshalInfo<T10>(value10);
 
-			var args = stackalloc JValue [10];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
+			var args = stackalloc JniArgumentValue [10];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualCharMethod (encodedMember, self, args);
@@ -4176,18 +4176,18 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T10> arg10 = new JniArgumentMarshalInfo<T10>(value10);
 			JniArgumentMarshalInfo<T11> arg11 = new JniArgumentMarshalInfo<T11>(value11);
 
-			var args = stackalloc JValue [11];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
+			var args = stackalloc JniArgumentValue [11];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualCharMethod (encodedMember, self, args);
@@ -4226,19 +4226,19 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T11> arg11 = new JniArgumentMarshalInfo<T11>(value11);
 			JniArgumentMarshalInfo<T12> arg12 = new JniArgumentMarshalInfo<T12>(value12);
 
-			var args = stackalloc JValue [12];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
+			var args = stackalloc JniArgumentValue [12];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualCharMethod (encodedMember, self, args);
@@ -4279,20 +4279,20 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T12> arg12 = new JniArgumentMarshalInfo<T12>(value12);
 			JniArgumentMarshalInfo<T13> arg13 = new JniArgumentMarshalInfo<T13>(value13);
 
-			var args = stackalloc JValue [13];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
+			var args = stackalloc JniArgumentValue [13];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualCharMethod (encodedMember, self, args);
@@ -4335,21 +4335,21 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T13> arg13 = new JniArgumentMarshalInfo<T13>(value13);
 			JniArgumentMarshalInfo<T14> arg14 = new JniArgumentMarshalInfo<T14>(value14);
 
-			var args = stackalloc JValue [14];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
-			args [13] = arg14.JValue;
+			var args = stackalloc JniArgumentValue [14];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
+			args [13] = arg14.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualCharMethod (encodedMember, self, args);
@@ -4394,22 +4394,22 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T14> arg14 = new JniArgumentMarshalInfo<T14>(value14);
 			JniArgumentMarshalInfo<T15> arg15 = new JniArgumentMarshalInfo<T15>(value15);
 
-			var args = stackalloc JValue [15];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
-			args [13] = arg14.JValue;
-			args [14] = arg15.JValue;
+			var args = stackalloc JniArgumentValue [15];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
+			args [13] = arg14.JniArgumentValue;
+			args [14] = arg15.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualCharMethod (encodedMember, self, args);
@@ -4456,23 +4456,23 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T15> arg15 = new JniArgumentMarshalInfo<T15>(value15);
 			JniArgumentMarshalInfo<T16> arg16 = new JniArgumentMarshalInfo<T16>(value16);
 
-			var args = stackalloc JValue [16];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
-			args [13] = arg14.JValue;
-			args [14] = arg15.JValue;
-			args [15] = arg16.JValue;
+			var args = stackalloc JniArgumentValue [16];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
+			args [13] = arg14.JniArgumentValue;
+			args [14] = arg15.JniArgumentValue;
+			args [15] = arg16.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualCharMethod (encodedMember, self, args);
@@ -4503,7 +4503,7 @@ namespace Java.Interop.GenericMarshaler {
 		)
 		{
 
-			var args = stackalloc JValue [0];
+			var args = stackalloc JniArgumentValue [0];
 
 			try {
 				return peer.InvokeVirtualInt16Method (encodedMember, self, args);
@@ -4520,8 +4520,8 @@ namespace Java.Interop.GenericMarshaler {
 		{
 			JniArgumentMarshalInfo<T> arg = new JniArgumentMarshalInfo<T>(value);
 
-			var args = stackalloc JValue [1];
-			args [0] = arg.JValue;
+			var args = stackalloc JniArgumentValue [1];
+			args [0] = arg.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualInt16Method (encodedMember, self, args);
@@ -4540,9 +4540,9 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 
-			var args = stackalloc JValue [2];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
+			var args = stackalloc JniArgumentValue [2];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualInt16Method (encodedMember, self, args);
@@ -4563,10 +4563,10 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
 
-			var args = stackalloc JValue [3];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
+			var args = stackalloc JniArgumentValue [3];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualInt16Method (encodedMember, self, args);
@@ -4589,11 +4589,11 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
 			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
 
-			var args = stackalloc JValue [4];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
+			var args = stackalloc JniArgumentValue [4];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualInt16Method (encodedMember, self, args);
@@ -4618,12 +4618,12 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
 			JniArgumentMarshalInfo<T5> arg5 = new JniArgumentMarshalInfo<T5>(value5);
 
-			var args = stackalloc JValue [5];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
+			var args = stackalloc JniArgumentValue [5];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualInt16Method (encodedMember, self, args);
@@ -4650,13 +4650,13 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T5> arg5 = new JniArgumentMarshalInfo<T5>(value5);
 			JniArgumentMarshalInfo<T6> arg6 = new JniArgumentMarshalInfo<T6>(value6);
 
-			var args = stackalloc JValue [6];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
+			var args = stackalloc JniArgumentValue [6];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualInt16Method (encodedMember, self, args);
@@ -4685,14 +4685,14 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T6> arg6 = new JniArgumentMarshalInfo<T6>(value6);
 			JniArgumentMarshalInfo<T7> arg7 = new JniArgumentMarshalInfo<T7>(value7);
 
-			var args = stackalloc JValue [7];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
+			var args = stackalloc JniArgumentValue [7];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualInt16Method (encodedMember, self, args);
@@ -4723,15 +4723,15 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T7> arg7 = new JniArgumentMarshalInfo<T7>(value7);
 			JniArgumentMarshalInfo<T8> arg8 = new JniArgumentMarshalInfo<T8>(value8);
 
-			var args = stackalloc JValue [8];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
+			var args = stackalloc JniArgumentValue [8];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualInt16Method (encodedMember, self, args);
@@ -4764,16 +4764,16 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T8> arg8 = new JniArgumentMarshalInfo<T8>(value8);
 			JniArgumentMarshalInfo<T9> arg9 = new JniArgumentMarshalInfo<T9>(value9);
 
-			var args = stackalloc JValue [9];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
+			var args = stackalloc JniArgumentValue [9];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualInt16Method (encodedMember, self, args);
@@ -4808,17 +4808,17 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T9> arg9 = new JniArgumentMarshalInfo<T9>(value9);
 			JniArgumentMarshalInfo<T10> arg10 = new JniArgumentMarshalInfo<T10>(value10);
 
-			var args = stackalloc JValue [10];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
+			var args = stackalloc JniArgumentValue [10];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualInt16Method (encodedMember, self, args);
@@ -4855,18 +4855,18 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T10> arg10 = new JniArgumentMarshalInfo<T10>(value10);
 			JniArgumentMarshalInfo<T11> arg11 = new JniArgumentMarshalInfo<T11>(value11);
 
-			var args = stackalloc JValue [11];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
+			var args = stackalloc JniArgumentValue [11];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualInt16Method (encodedMember, self, args);
@@ -4905,19 +4905,19 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T11> arg11 = new JniArgumentMarshalInfo<T11>(value11);
 			JniArgumentMarshalInfo<T12> arg12 = new JniArgumentMarshalInfo<T12>(value12);
 
-			var args = stackalloc JValue [12];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
+			var args = stackalloc JniArgumentValue [12];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualInt16Method (encodedMember, self, args);
@@ -4958,20 +4958,20 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T12> arg12 = new JniArgumentMarshalInfo<T12>(value12);
 			JniArgumentMarshalInfo<T13> arg13 = new JniArgumentMarshalInfo<T13>(value13);
 
-			var args = stackalloc JValue [13];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
+			var args = stackalloc JniArgumentValue [13];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualInt16Method (encodedMember, self, args);
@@ -5014,21 +5014,21 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T13> arg13 = new JniArgumentMarshalInfo<T13>(value13);
 			JniArgumentMarshalInfo<T14> arg14 = new JniArgumentMarshalInfo<T14>(value14);
 
-			var args = stackalloc JValue [14];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
-			args [13] = arg14.JValue;
+			var args = stackalloc JniArgumentValue [14];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
+			args [13] = arg14.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualInt16Method (encodedMember, self, args);
@@ -5073,22 +5073,22 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T14> arg14 = new JniArgumentMarshalInfo<T14>(value14);
 			JniArgumentMarshalInfo<T15> arg15 = new JniArgumentMarshalInfo<T15>(value15);
 
-			var args = stackalloc JValue [15];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
-			args [13] = arg14.JValue;
-			args [14] = arg15.JValue;
+			var args = stackalloc JniArgumentValue [15];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
+			args [13] = arg14.JniArgumentValue;
+			args [14] = arg15.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualInt16Method (encodedMember, self, args);
@@ -5135,23 +5135,23 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T15> arg15 = new JniArgumentMarshalInfo<T15>(value15);
 			JniArgumentMarshalInfo<T16> arg16 = new JniArgumentMarshalInfo<T16>(value16);
 
-			var args = stackalloc JValue [16];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
-			args [13] = arg14.JValue;
-			args [14] = arg15.JValue;
-			args [15] = arg16.JValue;
+			var args = stackalloc JniArgumentValue [16];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
+			args [13] = arg14.JniArgumentValue;
+			args [14] = arg15.JniArgumentValue;
+			args [15] = arg16.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualInt16Method (encodedMember, self, args);
@@ -5182,7 +5182,7 @@ namespace Java.Interop.GenericMarshaler {
 		)
 		{
 
-			var args = stackalloc JValue [0];
+			var args = stackalloc JniArgumentValue [0];
 
 			try {
 				return peer.InvokeVirtualInt32Method (encodedMember, self, args);
@@ -5199,8 +5199,8 @@ namespace Java.Interop.GenericMarshaler {
 		{
 			JniArgumentMarshalInfo<T> arg = new JniArgumentMarshalInfo<T>(value);
 
-			var args = stackalloc JValue [1];
-			args [0] = arg.JValue;
+			var args = stackalloc JniArgumentValue [1];
+			args [0] = arg.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualInt32Method (encodedMember, self, args);
@@ -5219,9 +5219,9 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 
-			var args = stackalloc JValue [2];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
+			var args = stackalloc JniArgumentValue [2];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualInt32Method (encodedMember, self, args);
@@ -5242,10 +5242,10 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
 
-			var args = stackalloc JValue [3];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
+			var args = stackalloc JniArgumentValue [3];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualInt32Method (encodedMember, self, args);
@@ -5268,11 +5268,11 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
 			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
 
-			var args = stackalloc JValue [4];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
+			var args = stackalloc JniArgumentValue [4];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualInt32Method (encodedMember, self, args);
@@ -5297,12 +5297,12 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
 			JniArgumentMarshalInfo<T5> arg5 = new JniArgumentMarshalInfo<T5>(value5);
 
-			var args = stackalloc JValue [5];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
+			var args = stackalloc JniArgumentValue [5];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualInt32Method (encodedMember, self, args);
@@ -5329,13 +5329,13 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T5> arg5 = new JniArgumentMarshalInfo<T5>(value5);
 			JniArgumentMarshalInfo<T6> arg6 = new JniArgumentMarshalInfo<T6>(value6);
 
-			var args = stackalloc JValue [6];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
+			var args = stackalloc JniArgumentValue [6];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualInt32Method (encodedMember, self, args);
@@ -5364,14 +5364,14 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T6> arg6 = new JniArgumentMarshalInfo<T6>(value6);
 			JniArgumentMarshalInfo<T7> arg7 = new JniArgumentMarshalInfo<T7>(value7);
 
-			var args = stackalloc JValue [7];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
+			var args = stackalloc JniArgumentValue [7];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualInt32Method (encodedMember, self, args);
@@ -5402,15 +5402,15 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T7> arg7 = new JniArgumentMarshalInfo<T7>(value7);
 			JniArgumentMarshalInfo<T8> arg8 = new JniArgumentMarshalInfo<T8>(value8);
 
-			var args = stackalloc JValue [8];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
+			var args = stackalloc JniArgumentValue [8];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualInt32Method (encodedMember, self, args);
@@ -5443,16 +5443,16 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T8> arg8 = new JniArgumentMarshalInfo<T8>(value8);
 			JniArgumentMarshalInfo<T9> arg9 = new JniArgumentMarshalInfo<T9>(value9);
 
-			var args = stackalloc JValue [9];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
+			var args = stackalloc JniArgumentValue [9];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualInt32Method (encodedMember, self, args);
@@ -5487,17 +5487,17 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T9> arg9 = new JniArgumentMarshalInfo<T9>(value9);
 			JniArgumentMarshalInfo<T10> arg10 = new JniArgumentMarshalInfo<T10>(value10);
 
-			var args = stackalloc JValue [10];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
+			var args = stackalloc JniArgumentValue [10];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualInt32Method (encodedMember, self, args);
@@ -5534,18 +5534,18 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T10> arg10 = new JniArgumentMarshalInfo<T10>(value10);
 			JniArgumentMarshalInfo<T11> arg11 = new JniArgumentMarshalInfo<T11>(value11);
 
-			var args = stackalloc JValue [11];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
+			var args = stackalloc JniArgumentValue [11];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualInt32Method (encodedMember, self, args);
@@ -5584,19 +5584,19 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T11> arg11 = new JniArgumentMarshalInfo<T11>(value11);
 			JniArgumentMarshalInfo<T12> arg12 = new JniArgumentMarshalInfo<T12>(value12);
 
-			var args = stackalloc JValue [12];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
+			var args = stackalloc JniArgumentValue [12];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualInt32Method (encodedMember, self, args);
@@ -5637,20 +5637,20 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T12> arg12 = new JniArgumentMarshalInfo<T12>(value12);
 			JniArgumentMarshalInfo<T13> arg13 = new JniArgumentMarshalInfo<T13>(value13);
 
-			var args = stackalloc JValue [13];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
+			var args = stackalloc JniArgumentValue [13];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualInt32Method (encodedMember, self, args);
@@ -5693,21 +5693,21 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T13> arg13 = new JniArgumentMarshalInfo<T13>(value13);
 			JniArgumentMarshalInfo<T14> arg14 = new JniArgumentMarshalInfo<T14>(value14);
 
-			var args = stackalloc JValue [14];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
-			args [13] = arg14.JValue;
+			var args = stackalloc JniArgumentValue [14];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
+			args [13] = arg14.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualInt32Method (encodedMember, self, args);
@@ -5752,22 +5752,22 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T14> arg14 = new JniArgumentMarshalInfo<T14>(value14);
 			JniArgumentMarshalInfo<T15> arg15 = new JniArgumentMarshalInfo<T15>(value15);
 
-			var args = stackalloc JValue [15];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
-			args [13] = arg14.JValue;
-			args [14] = arg15.JValue;
+			var args = stackalloc JniArgumentValue [15];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
+			args [13] = arg14.JniArgumentValue;
+			args [14] = arg15.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualInt32Method (encodedMember, self, args);
@@ -5814,23 +5814,23 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T15> arg15 = new JniArgumentMarshalInfo<T15>(value15);
 			JniArgumentMarshalInfo<T16> arg16 = new JniArgumentMarshalInfo<T16>(value16);
 
-			var args = stackalloc JValue [16];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
-			args [13] = arg14.JValue;
-			args [14] = arg15.JValue;
-			args [15] = arg16.JValue;
+			var args = stackalloc JniArgumentValue [16];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
+			args [13] = arg14.JniArgumentValue;
+			args [14] = arg15.JniArgumentValue;
+			args [15] = arg16.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualInt32Method (encodedMember, self, args);
@@ -5861,7 +5861,7 @@ namespace Java.Interop.GenericMarshaler {
 		)
 		{
 
-			var args = stackalloc JValue [0];
+			var args = stackalloc JniArgumentValue [0];
 
 			try {
 				return peer.InvokeVirtualInt64Method (encodedMember, self, args);
@@ -5878,8 +5878,8 @@ namespace Java.Interop.GenericMarshaler {
 		{
 			JniArgumentMarshalInfo<T> arg = new JniArgumentMarshalInfo<T>(value);
 
-			var args = stackalloc JValue [1];
-			args [0] = arg.JValue;
+			var args = stackalloc JniArgumentValue [1];
+			args [0] = arg.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualInt64Method (encodedMember, self, args);
@@ -5898,9 +5898,9 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 
-			var args = stackalloc JValue [2];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
+			var args = stackalloc JniArgumentValue [2];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualInt64Method (encodedMember, self, args);
@@ -5921,10 +5921,10 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
 
-			var args = stackalloc JValue [3];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
+			var args = stackalloc JniArgumentValue [3];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualInt64Method (encodedMember, self, args);
@@ -5947,11 +5947,11 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
 			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
 
-			var args = stackalloc JValue [4];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
+			var args = stackalloc JniArgumentValue [4];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualInt64Method (encodedMember, self, args);
@@ -5976,12 +5976,12 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
 			JniArgumentMarshalInfo<T5> arg5 = new JniArgumentMarshalInfo<T5>(value5);
 
-			var args = stackalloc JValue [5];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
+			var args = stackalloc JniArgumentValue [5];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualInt64Method (encodedMember, self, args);
@@ -6008,13 +6008,13 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T5> arg5 = new JniArgumentMarshalInfo<T5>(value5);
 			JniArgumentMarshalInfo<T6> arg6 = new JniArgumentMarshalInfo<T6>(value6);
 
-			var args = stackalloc JValue [6];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
+			var args = stackalloc JniArgumentValue [6];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualInt64Method (encodedMember, self, args);
@@ -6043,14 +6043,14 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T6> arg6 = new JniArgumentMarshalInfo<T6>(value6);
 			JniArgumentMarshalInfo<T7> arg7 = new JniArgumentMarshalInfo<T7>(value7);
 
-			var args = stackalloc JValue [7];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
+			var args = stackalloc JniArgumentValue [7];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualInt64Method (encodedMember, self, args);
@@ -6081,15 +6081,15 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T7> arg7 = new JniArgumentMarshalInfo<T7>(value7);
 			JniArgumentMarshalInfo<T8> arg8 = new JniArgumentMarshalInfo<T8>(value8);
 
-			var args = stackalloc JValue [8];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
+			var args = stackalloc JniArgumentValue [8];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualInt64Method (encodedMember, self, args);
@@ -6122,16 +6122,16 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T8> arg8 = new JniArgumentMarshalInfo<T8>(value8);
 			JniArgumentMarshalInfo<T9> arg9 = new JniArgumentMarshalInfo<T9>(value9);
 
-			var args = stackalloc JValue [9];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
+			var args = stackalloc JniArgumentValue [9];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualInt64Method (encodedMember, self, args);
@@ -6166,17 +6166,17 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T9> arg9 = new JniArgumentMarshalInfo<T9>(value9);
 			JniArgumentMarshalInfo<T10> arg10 = new JniArgumentMarshalInfo<T10>(value10);
 
-			var args = stackalloc JValue [10];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
+			var args = stackalloc JniArgumentValue [10];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualInt64Method (encodedMember, self, args);
@@ -6213,18 +6213,18 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T10> arg10 = new JniArgumentMarshalInfo<T10>(value10);
 			JniArgumentMarshalInfo<T11> arg11 = new JniArgumentMarshalInfo<T11>(value11);
 
-			var args = stackalloc JValue [11];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
+			var args = stackalloc JniArgumentValue [11];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualInt64Method (encodedMember, self, args);
@@ -6263,19 +6263,19 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T11> arg11 = new JniArgumentMarshalInfo<T11>(value11);
 			JniArgumentMarshalInfo<T12> arg12 = new JniArgumentMarshalInfo<T12>(value12);
 
-			var args = stackalloc JValue [12];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
+			var args = stackalloc JniArgumentValue [12];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualInt64Method (encodedMember, self, args);
@@ -6316,20 +6316,20 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T12> arg12 = new JniArgumentMarshalInfo<T12>(value12);
 			JniArgumentMarshalInfo<T13> arg13 = new JniArgumentMarshalInfo<T13>(value13);
 
-			var args = stackalloc JValue [13];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
+			var args = stackalloc JniArgumentValue [13];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualInt64Method (encodedMember, self, args);
@@ -6372,21 +6372,21 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T13> arg13 = new JniArgumentMarshalInfo<T13>(value13);
 			JniArgumentMarshalInfo<T14> arg14 = new JniArgumentMarshalInfo<T14>(value14);
 
-			var args = stackalloc JValue [14];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
-			args [13] = arg14.JValue;
+			var args = stackalloc JniArgumentValue [14];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
+			args [13] = arg14.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualInt64Method (encodedMember, self, args);
@@ -6431,22 +6431,22 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T14> arg14 = new JniArgumentMarshalInfo<T14>(value14);
 			JniArgumentMarshalInfo<T15> arg15 = new JniArgumentMarshalInfo<T15>(value15);
 
-			var args = stackalloc JValue [15];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
-			args [13] = arg14.JValue;
-			args [14] = arg15.JValue;
+			var args = stackalloc JniArgumentValue [15];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
+			args [13] = arg14.JniArgumentValue;
+			args [14] = arg15.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualInt64Method (encodedMember, self, args);
@@ -6493,23 +6493,23 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T15> arg15 = new JniArgumentMarshalInfo<T15>(value15);
 			JniArgumentMarshalInfo<T16> arg16 = new JniArgumentMarshalInfo<T16>(value16);
 
-			var args = stackalloc JValue [16];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
-			args [13] = arg14.JValue;
-			args [14] = arg15.JValue;
-			args [15] = arg16.JValue;
+			var args = stackalloc JniArgumentValue [16];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
+			args [13] = arg14.JniArgumentValue;
+			args [14] = arg15.JniArgumentValue;
+			args [15] = arg16.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualInt64Method (encodedMember, self, args);
@@ -6540,7 +6540,7 @@ namespace Java.Interop.GenericMarshaler {
 		)
 		{
 
-			var args = stackalloc JValue [0];
+			var args = stackalloc JniArgumentValue [0];
 
 			try {
 				return peer.InvokeVirtualSingleMethod (encodedMember, self, args);
@@ -6557,8 +6557,8 @@ namespace Java.Interop.GenericMarshaler {
 		{
 			JniArgumentMarshalInfo<T> arg = new JniArgumentMarshalInfo<T>(value);
 
-			var args = stackalloc JValue [1];
-			args [0] = arg.JValue;
+			var args = stackalloc JniArgumentValue [1];
+			args [0] = arg.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualSingleMethod (encodedMember, self, args);
@@ -6577,9 +6577,9 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 
-			var args = stackalloc JValue [2];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
+			var args = stackalloc JniArgumentValue [2];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualSingleMethod (encodedMember, self, args);
@@ -6600,10 +6600,10 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
 
-			var args = stackalloc JValue [3];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
+			var args = stackalloc JniArgumentValue [3];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualSingleMethod (encodedMember, self, args);
@@ -6626,11 +6626,11 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
 			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
 
-			var args = stackalloc JValue [4];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
+			var args = stackalloc JniArgumentValue [4];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualSingleMethod (encodedMember, self, args);
@@ -6655,12 +6655,12 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
 			JniArgumentMarshalInfo<T5> arg5 = new JniArgumentMarshalInfo<T5>(value5);
 
-			var args = stackalloc JValue [5];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
+			var args = stackalloc JniArgumentValue [5];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualSingleMethod (encodedMember, self, args);
@@ -6687,13 +6687,13 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T5> arg5 = new JniArgumentMarshalInfo<T5>(value5);
 			JniArgumentMarshalInfo<T6> arg6 = new JniArgumentMarshalInfo<T6>(value6);
 
-			var args = stackalloc JValue [6];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
+			var args = stackalloc JniArgumentValue [6];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualSingleMethod (encodedMember, self, args);
@@ -6722,14 +6722,14 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T6> arg6 = new JniArgumentMarshalInfo<T6>(value6);
 			JniArgumentMarshalInfo<T7> arg7 = new JniArgumentMarshalInfo<T7>(value7);
 
-			var args = stackalloc JValue [7];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
+			var args = stackalloc JniArgumentValue [7];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualSingleMethod (encodedMember, self, args);
@@ -6760,15 +6760,15 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T7> arg7 = new JniArgumentMarshalInfo<T7>(value7);
 			JniArgumentMarshalInfo<T8> arg8 = new JniArgumentMarshalInfo<T8>(value8);
 
-			var args = stackalloc JValue [8];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
+			var args = stackalloc JniArgumentValue [8];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualSingleMethod (encodedMember, self, args);
@@ -6801,16 +6801,16 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T8> arg8 = new JniArgumentMarshalInfo<T8>(value8);
 			JniArgumentMarshalInfo<T9> arg9 = new JniArgumentMarshalInfo<T9>(value9);
 
-			var args = stackalloc JValue [9];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
+			var args = stackalloc JniArgumentValue [9];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualSingleMethod (encodedMember, self, args);
@@ -6845,17 +6845,17 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T9> arg9 = new JniArgumentMarshalInfo<T9>(value9);
 			JniArgumentMarshalInfo<T10> arg10 = new JniArgumentMarshalInfo<T10>(value10);
 
-			var args = stackalloc JValue [10];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
+			var args = stackalloc JniArgumentValue [10];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualSingleMethod (encodedMember, self, args);
@@ -6892,18 +6892,18 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T10> arg10 = new JniArgumentMarshalInfo<T10>(value10);
 			JniArgumentMarshalInfo<T11> arg11 = new JniArgumentMarshalInfo<T11>(value11);
 
-			var args = stackalloc JValue [11];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
+			var args = stackalloc JniArgumentValue [11];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualSingleMethod (encodedMember, self, args);
@@ -6942,19 +6942,19 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T11> arg11 = new JniArgumentMarshalInfo<T11>(value11);
 			JniArgumentMarshalInfo<T12> arg12 = new JniArgumentMarshalInfo<T12>(value12);
 
-			var args = stackalloc JValue [12];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
+			var args = stackalloc JniArgumentValue [12];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualSingleMethod (encodedMember, self, args);
@@ -6995,20 +6995,20 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T12> arg12 = new JniArgumentMarshalInfo<T12>(value12);
 			JniArgumentMarshalInfo<T13> arg13 = new JniArgumentMarshalInfo<T13>(value13);
 
-			var args = stackalloc JValue [13];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
+			var args = stackalloc JniArgumentValue [13];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualSingleMethod (encodedMember, self, args);
@@ -7051,21 +7051,21 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T13> arg13 = new JniArgumentMarshalInfo<T13>(value13);
 			JniArgumentMarshalInfo<T14> arg14 = new JniArgumentMarshalInfo<T14>(value14);
 
-			var args = stackalloc JValue [14];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
-			args [13] = arg14.JValue;
+			var args = stackalloc JniArgumentValue [14];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
+			args [13] = arg14.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualSingleMethod (encodedMember, self, args);
@@ -7110,22 +7110,22 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T14> arg14 = new JniArgumentMarshalInfo<T14>(value14);
 			JniArgumentMarshalInfo<T15> arg15 = new JniArgumentMarshalInfo<T15>(value15);
 
-			var args = stackalloc JValue [15];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
-			args [13] = arg14.JValue;
-			args [14] = arg15.JValue;
+			var args = stackalloc JniArgumentValue [15];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
+			args [13] = arg14.JniArgumentValue;
+			args [14] = arg15.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualSingleMethod (encodedMember, self, args);
@@ -7172,23 +7172,23 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T15> arg15 = new JniArgumentMarshalInfo<T15>(value15);
 			JniArgumentMarshalInfo<T16> arg16 = new JniArgumentMarshalInfo<T16>(value16);
 
-			var args = stackalloc JValue [16];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
-			args [13] = arg14.JValue;
-			args [14] = arg15.JValue;
-			args [15] = arg16.JValue;
+			var args = stackalloc JniArgumentValue [16];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
+			args [13] = arg14.JniArgumentValue;
+			args [14] = arg15.JniArgumentValue;
+			args [15] = arg16.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualSingleMethod (encodedMember, self, args);
@@ -7219,7 +7219,7 @@ namespace Java.Interop.GenericMarshaler {
 		)
 		{
 
-			var args = stackalloc JValue [0];
+			var args = stackalloc JniArgumentValue [0];
 
 			try {
 				return peer.InvokeVirtualDoubleMethod (encodedMember, self, args);
@@ -7236,8 +7236,8 @@ namespace Java.Interop.GenericMarshaler {
 		{
 			JniArgumentMarshalInfo<T> arg = new JniArgumentMarshalInfo<T>(value);
 
-			var args = stackalloc JValue [1];
-			args [0] = arg.JValue;
+			var args = stackalloc JniArgumentValue [1];
+			args [0] = arg.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualDoubleMethod (encodedMember, self, args);
@@ -7256,9 +7256,9 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 
-			var args = stackalloc JValue [2];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
+			var args = stackalloc JniArgumentValue [2];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualDoubleMethod (encodedMember, self, args);
@@ -7279,10 +7279,10 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
 
-			var args = stackalloc JValue [3];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
+			var args = stackalloc JniArgumentValue [3];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualDoubleMethod (encodedMember, self, args);
@@ -7305,11 +7305,11 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
 			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
 
-			var args = stackalloc JValue [4];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
+			var args = stackalloc JniArgumentValue [4];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualDoubleMethod (encodedMember, self, args);
@@ -7334,12 +7334,12 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
 			JniArgumentMarshalInfo<T5> arg5 = new JniArgumentMarshalInfo<T5>(value5);
 
-			var args = stackalloc JValue [5];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
+			var args = stackalloc JniArgumentValue [5];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualDoubleMethod (encodedMember, self, args);
@@ -7366,13 +7366,13 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T5> arg5 = new JniArgumentMarshalInfo<T5>(value5);
 			JniArgumentMarshalInfo<T6> arg6 = new JniArgumentMarshalInfo<T6>(value6);
 
-			var args = stackalloc JValue [6];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
+			var args = stackalloc JniArgumentValue [6];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualDoubleMethod (encodedMember, self, args);
@@ -7401,14 +7401,14 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T6> arg6 = new JniArgumentMarshalInfo<T6>(value6);
 			JniArgumentMarshalInfo<T7> arg7 = new JniArgumentMarshalInfo<T7>(value7);
 
-			var args = stackalloc JValue [7];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
+			var args = stackalloc JniArgumentValue [7];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualDoubleMethod (encodedMember, self, args);
@@ -7439,15 +7439,15 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T7> arg7 = new JniArgumentMarshalInfo<T7>(value7);
 			JniArgumentMarshalInfo<T8> arg8 = new JniArgumentMarshalInfo<T8>(value8);
 
-			var args = stackalloc JValue [8];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
+			var args = stackalloc JniArgumentValue [8];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualDoubleMethod (encodedMember, self, args);
@@ -7480,16 +7480,16 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T8> arg8 = new JniArgumentMarshalInfo<T8>(value8);
 			JniArgumentMarshalInfo<T9> arg9 = new JniArgumentMarshalInfo<T9>(value9);
 
-			var args = stackalloc JValue [9];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
+			var args = stackalloc JniArgumentValue [9];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualDoubleMethod (encodedMember, self, args);
@@ -7524,17 +7524,17 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T9> arg9 = new JniArgumentMarshalInfo<T9>(value9);
 			JniArgumentMarshalInfo<T10> arg10 = new JniArgumentMarshalInfo<T10>(value10);
 
-			var args = stackalloc JValue [10];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
+			var args = stackalloc JniArgumentValue [10];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualDoubleMethod (encodedMember, self, args);
@@ -7571,18 +7571,18 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T10> arg10 = new JniArgumentMarshalInfo<T10>(value10);
 			JniArgumentMarshalInfo<T11> arg11 = new JniArgumentMarshalInfo<T11>(value11);
 
-			var args = stackalloc JValue [11];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
+			var args = stackalloc JniArgumentValue [11];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualDoubleMethod (encodedMember, self, args);
@@ -7621,19 +7621,19 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T11> arg11 = new JniArgumentMarshalInfo<T11>(value11);
 			JniArgumentMarshalInfo<T12> arg12 = new JniArgumentMarshalInfo<T12>(value12);
 
-			var args = stackalloc JValue [12];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
+			var args = stackalloc JniArgumentValue [12];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualDoubleMethod (encodedMember, self, args);
@@ -7674,20 +7674,20 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T12> arg12 = new JniArgumentMarshalInfo<T12>(value12);
 			JniArgumentMarshalInfo<T13> arg13 = new JniArgumentMarshalInfo<T13>(value13);
 
-			var args = stackalloc JValue [13];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
+			var args = stackalloc JniArgumentValue [13];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualDoubleMethod (encodedMember, self, args);
@@ -7730,21 +7730,21 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T13> arg13 = new JniArgumentMarshalInfo<T13>(value13);
 			JniArgumentMarshalInfo<T14> arg14 = new JniArgumentMarshalInfo<T14>(value14);
 
-			var args = stackalloc JValue [14];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
-			args [13] = arg14.JValue;
+			var args = stackalloc JniArgumentValue [14];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
+			args [13] = arg14.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualDoubleMethod (encodedMember, self, args);
@@ -7789,22 +7789,22 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T14> arg14 = new JniArgumentMarshalInfo<T14>(value14);
 			JniArgumentMarshalInfo<T15> arg15 = new JniArgumentMarshalInfo<T15>(value15);
 
-			var args = stackalloc JValue [15];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
-			args [13] = arg14.JValue;
-			args [14] = arg15.JValue;
+			var args = stackalloc JniArgumentValue [15];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
+			args [13] = arg14.JniArgumentValue;
+			args [14] = arg15.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualDoubleMethod (encodedMember, self, args);
@@ -7851,23 +7851,23 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T15> arg15 = new JniArgumentMarshalInfo<T15>(value15);
 			JniArgumentMarshalInfo<T16> arg16 = new JniArgumentMarshalInfo<T16>(value16);
 
-			var args = stackalloc JValue [16];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
-			args [13] = arg14.JValue;
-			args [14] = arg15.JValue;
-			args [15] = arg16.JValue;
+			var args = stackalloc JniArgumentValue [16];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
+			args [13] = arg14.JniArgumentValue;
+			args [14] = arg15.JniArgumentValue;
+			args [15] = arg16.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualDoubleMethod (encodedMember, self, args);
@@ -7898,7 +7898,7 @@ namespace Java.Interop.GenericMarshaler {
 		)
 		{
 
-			var args = stackalloc JValue [0];
+			var args = stackalloc JniArgumentValue [0];
 
 			try {
 				return peer.InvokeVirtualObjectMethod (encodedMember, self, args);
@@ -7915,8 +7915,8 @@ namespace Java.Interop.GenericMarshaler {
 		{
 			JniArgumentMarshalInfo<T> arg = new JniArgumentMarshalInfo<T>(value);
 
-			var args = stackalloc JValue [1];
-			args [0] = arg.JValue;
+			var args = stackalloc JniArgumentValue [1];
+			args [0] = arg.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualObjectMethod (encodedMember, self, args);
@@ -7935,9 +7935,9 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 
-			var args = stackalloc JValue [2];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
+			var args = stackalloc JniArgumentValue [2];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualObjectMethod (encodedMember, self, args);
@@ -7958,10 +7958,10 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
 
-			var args = stackalloc JValue [3];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
+			var args = stackalloc JniArgumentValue [3];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualObjectMethod (encodedMember, self, args);
@@ -7984,11 +7984,11 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
 			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
 
-			var args = stackalloc JValue [4];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
+			var args = stackalloc JniArgumentValue [4];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualObjectMethod (encodedMember, self, args);
@@ -8013,12 +8013,12 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
 			JniArgumentMarshalInfo<T5> arg5 = new JniArgumentMarshalInfo<T5>(value5);
 
-			var args = stackalloc JValue [5];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
+			var args = stackalloc JniArgumentValue [5];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualObjectMethod (encodedMember, self, args);
@@ -8045,13 +8045,13 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T5> arg5 = new JniArgumentMarshalInfo<T5>(value5);
 			JniArgumentMarshalInfo<T6> arg6 = new JniArgumentMarshalInfo<T6>(value6);
 
-			var args = stackalloc JValue [6];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
+			var args = stackalloc JniArgumentValue [6];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualObjectMethod (encodedMember, self, args);
@@ -8080,14 +8080,14 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T6> arg6 = new JniArgumentMarshalInfo<T6>(value6);
 			JniArgumentMarshalInfo<T7> arg7 = new JniArgumentMarshalInfo<T7>(value7);
 
-			var args = stackalloc JValue [7];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
+			var args = stackalloc JniArgumentValue [7];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualObjectMethod (encodedMember, self, args);
@@ -8118,15 +8118,15 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T7> arg7 = new JniArgumentMarshalInfo<T7>(value7);
 			JniArgumentMarshalInfo<T8> arg8 = new JniArgumentMarshalInfo<T8>(value8);
 
-			var args = stackalloc JValue [8];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
+			var args = stackalloc JniArgumentValue [8];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualObjectMethod (encodedMember, self, args);
@@ -8159,16 +8159,16 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T8> arg8 = new JniArgumentMarshalInfo<T8>(value8);
 			JniArgumentMarshalInfo<T9> arg9 = new JniArgumentMarshalInfo<T9>(value9);
 
-			var args = stackalloc JValue [9];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
+			var args = stackalloc JniArgumentValue [9];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualObjectMethod (encodedMember, self, args);
@@ -8203,17 +8203,17 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T9> arg9 = new JniArgumentMarshalInfo<T9>(value9);
 			JniArgumentMarshalInfo<T10> arg10 = new JniArgumentMarshalInfo<T10>(value10);
 
-			var args = stackalloc JValue [10];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
+			var args = stackalloc JniArgumentValue [10];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualObjectMethod (encodedMember, self, args);
@@ -8250,18 +8250,18 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T10> arg10 = new JniArgumentMarshalInfo<T10>(value10);
 			JniArgumentMarshalInfo<T11> arg11 = new JniArgumentMarshalInfo<T11>(value11);
 
-			var args = stackalloc JValue [11];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
+			var args = stackalloc JniArgumentValue [11];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualObjectMethod (encodedMember, self, args);
@@ -8300,19 +8300,19 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T11> arg11 = new JniArgumentMarshalInfo<T11>(value11);
 			JniArgumentMarshalInfo<T12> arg12 = new JniArgumentMarshalInfo<T12>(value12);
 
-			var args = stackalloc JValue [12];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
+			var args = stackalloc JniArgumentValue [12];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualObjectMethod (encodedMember, self, args);
@@ -8353,20 +8353,20 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T12> arg12 = new JniArgumentMarshalInfo<T12>(value12);
 			JniArgumentMarshalInfo<T13> arg13 = new JniArgumentMarshalInfo<T13>(value13);
 
-			var args = stackalloc JValue [13];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
+			var args = stackalloc JniArgumentValue [13];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualObjectMethod (encodedMember, self, args);
@@ -8409,21 +8409,21 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T13> arg13 = new JniArgumentMarshalInfo<T13>(value13);
 			JniArgumentMarshalInfo<T14> arg14 = new JniArgumentMarshalInfo<T14>(value14);
 
-			var args = stackalloc JValue [14];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
-			args [13] = arg14.JValue;
+			var args = stackalloc JniArgumentValue [14];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
+			args [13] = arg14.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualObjectMethod (encodedMember, self, args);
@@ -8468,22 +8468,22 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T14> arg14 = new JniArgumentMarshalInfo<T14>(value14);
 			JniArgumentMarshalInfo<T15> arg15 = new JniArgumentMarshalInfo<T15>(value15);
 
-			var args = stackalloc JValue [15];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
-			args [13] = arg14.JValue;
-			args [14] = arg15.JValue;
+			var args = stackalloc JniArgumentValue [15];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
+			args [13] = arg14.JniArgumentValue;
+			args [14] = arg15.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualObjectMethod (encodedMember, self, args);
@@ -8530,23 +8530,23 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T15> arg15 = new JniArgumentMarshalInfo<T15>(value15);
 			JniArgumentMarshalInfo<T16> arg16 = new JniArgumentMarshalInfo<T16>(value16);
 
-			var args = stackalloc JValue [16];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
-			args [13] = arg14.JValue;
-			args [14] = arg15.JValue;
-			args [15] = arg16.JValue;
+			var args = stackalloc JniArgumentValue [16];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
+			args [13] = arg14.JniArgumentValue;
+			args [14] = arg15.JniArgumentValue;
+			args [15] = arg16.JniArgumentValue;
 
 			try {
 				return peer.InvokeVirtualObjectMethod (encodedMember, self, args);
@@ -8582,8 +8582,8 @@ namespace Java.Interop.GenericMarshaler {
 		{
 			JniArgumentMarshalInfo<T> arg = new JniArgumentMarshalInfo<T>(value);
 
-			var args = stackalloc JValue [1];
-			args [0] = arg.JValue;
+			var args = stackalloc JniArgumentValue [1];
+			args [0] = arg.JniArgumentValue;
 
 			try {
 				peer.InvokeVoidMethod (encodedMember, args);
@@ -8601,9 +8601,9 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 
-			var args = stackalloc JValue [2];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
+			var args = stackalloc JniArgumentValue [2];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
 
 			try {
 				peer.InvokeVoidMethod (encodedMember, args);
@@ -8623,10 +8623,10 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
 
-			var args = stackalloc JValue [3];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
+			var args = stackalloc JniArgumentValue [3];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
 
 			try {
 				peer.InvokeVoidMethod (encodedMember, args);
@@ -8648,11 +8648,11 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
 			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
 
-			var args = stackalloc JValue [4];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
+			var args = stackalloc JniArgumentValue [4];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
 
 			try {
 				peer.InvokeVoidMethod (encodedMember, args);
@@ -8676,12 +8676,12 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
 			JniArgumentMarshalInfo<T5> arg5 = new JniArgumentMarshalInfo<T5>(value5);
 
-			var args = stackalloc JValue [5];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
+			var args = stackalloc JniArgumentValue [5];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
 
 			try {
 				peer.InvokeVoidMethod (encodedMember, args);
@@ -8707,13 +8707,13 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T5> arg5 = new JniArgumentMarshalInfo<T5>(value5);
 			JniArgumentMarshalInfo<T6> arg6 = new JniArgumentMarshalInfo<T6>(value6);
 
-			var args = stackalloc JValue [6];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
+			var args = stackalloc JniArgumentValue [6];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
 
 			try {
 				peer.InvokeVoidMethod (encodedMember, args);
@@ -8741,14 +8741,14 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T6> arg6 = new JniArgumentMarshalInfo<T6>(value6);
 			JniArgumentMarshalInfo<T7> arg7 = new JniArgumentMarshalInfo<T7>(value7);
 
-			var args = stackalloc JValue [7];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
+			var args = stackalloc JniArgumentValue [7];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
 
 			try {
 				peer.InvokeVoidMethod (encodedMember, args);
@@ -8778,15 +8778,15 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T7> arg7 = new JniArgumentMarshalInfo<T7>(value7);
 			JniArgumentMarshalInfo<T8> arg8 = new JniArgumentMarshalInfo<T8>(value8);
 
-			var args = stackalloc JValue [8];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
+			var args = stackalloc JniArgumentValue [8];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
 
 			try {
 				peer.InvokeVoidMethod (encodedMember, args);
@@ -8818,16 +8818,16 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T8> arg8 = new JniArgumentMarshalInfo<T8>(value8);
 			JniArgumentMarshalInfo<T9> arg9 = new JniArgumentMarshalInfo<T9>(value9);
 
-			var args = stackalloc JValue [9];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
+			var args = stackalloc JniArgumentValue [9];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
 
 			try {
 				peer.InvokeVoidMethod (encodedMember, args);
@@ -8861,17 +8861,17 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T9> arg9 = new JniArgumentMarshalInfo<T9>(value9);
 			JniArgumentMarshalInfo<T10> arg10 = new JniArgumentMarshalInfo<T10>(value10);
 
-			var args = stackalloc JValue [10];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
+			var args = stackalloc JniArgumentValue [10];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
 
 			try {
 				peer.InvokeVoidMethod (encodedMember, args);
@@ -8907,18 +8907,18 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T10> arg10 = new JniArgumentMarshalInfo<T10>(value10);
 			JniArgumentMarshalInfo<T11> arg11 = new JniArgumentMarshalInfo<T11>(value11);
 
-			var args = stackalloc JValue [11];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
+			var args = stackalloc JniArgumentValue [11];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
 
 			try {
 				peer.InvokeVoidMethod (encodedMember, args);
@@ -8956,19 +8956,19 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T11> arg11 = new JniArgumentMarshalInfo<T11>(value11);
 			JniArgumentMarshalInfo<T12> arg12 = new JniArgumentMarshalInfo<T12>(value12);
 
-			var args = stackalloc JValue [12];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
+			var args = stackalloc JniArgumentValue [12];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
 
 			try {
 				peer.InvokeVoidMethod (encodedMember, args);
@@ -9008,20 +9008,20 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T12> arg12 = new JniArgumentMarshalInfo<T12>(value12);
 			JniArgumentMarshalInfo<T13> arg13 = new JniArgumentMarshalInfo<T13>(value13);
 
-			var args = stackalloc JValue [13];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
+			var args = stackalloc JniArgumentValue [13];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
 
 			try {
 				peer.InvokeVoidMethod (encodedMember, args);
@@ -9063,21 +9063,21 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T13> arg13 = new JniArgumentMarshalInfo<T13>(value13);
 			JniArgumentMarshalInfo<T14> arg14 = new JniArgumentMarshalInfo<T14>(value14);
 
-			var args = stackalloc JValue [14];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
-			args [13] = arg14.JValue;
+			var args = stackalloc JniArgumentValue [14];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
+			args [13] = arg14.JniArgumentValue;
 
 			try {
 				peer.InvokeVoidMethod (encodedMember, args);
@@ -9121,22 +9121,22 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T14> arg14 = new JniArgumentMarshalInfo<T14>(value14);
 			JniArgumentMarshalInfo<T15> arg15 = new JniArgumentMarshalInfo<T15>(value15);
 
-			var args = stackalloc JValue [15];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
-			args [13] = arg14.JValue;
-			args [14] = arg15.JValue;
+			var args = stackalloc JniArgumentValue [15];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
+			args [13] = arg14.JniArgumentValue;
+			args [14] = arg15.JniArgumentValue;
 
 			try {
 				peer.InvokeVoidMethod (encodedMember, args);
@@ -9182,23 +9182,23 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T15> arg15 = new JniArgumentMarshalInfo<T15>(value15);
 			JniArgumentMarshalInfo<T16> arg16 = new JniArgumentMarshalInfo<T16>(value16);
 
-			var args = stackalloc JValue [16];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
-			args [13] = arg14.JValue;
-			args [14] = arg15.JValue;
-			args [15] = arg16.JValue;
+			var args = stackalloc JniArgumentValue [16];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
+			args [13] = arg14.JniArgumentValue;
+			args [14] = arg15.JniArgumentValue;
+			args [15] = arg16.JniArgumentValue;
 
 			try {
 				peer.InvokeVoidMethod (encodedMember, args);
@@ -9230,8 +9230,8 @@ namespace Java.Interop.GenericMarshaler {
 		{
 			JniArgumentMarshalInfo<T> arg = new JniArgumentMarshalInfo<T>(value);
 
-			var args = stackalloc JValue [1];
-			args [0] = arg.JValue;
+			var args = stackalloc JniArgumentValue [1];
+			args [0] = arg.JniArgumentValue;
 
 			try {
 				return peer.InvokeBooleanMethod (encodedMember, args);
@@ -9249,9 +9249,9 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 
-			var args = stackalloc JValue [2];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
+			var args = stackalloc JniArgumentValue [2];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
 
 			try {
 				return peer.InvokeBooleanMethod (encodedMember, args);
@@ -9271,10 +9271,10 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
 
-			var args = stackalloc JValue [3];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
+			var args = stackalloc JniArgumentValue [3];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
 
 			try {
 				return peer.InvokeBooleanMethod (encodedMember, args);
@@ -9296,11 +9296,11 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
 			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
 
-			var args = stackalloc JValue [4];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
+			var args = stackalloc JniArgumentValue [4];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
 
 			try {
 				return peer.InvokeBooleanMethod (encodedMember, args);
@@ -9324,12 +9324,12 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
 			JniArgumentMarshalInfo<T5> arg5 = new JniArgumentMarshalInfo<T5>(value5);
 
-			var args = stackalloc JValue [5];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
+			var args = stackalloc JniArgumentValue [5];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
 
 			try {
 				return peer.InvokeBooleanMethod (encodedMember, args);
@@ -9355,13 +9355,13 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T5> arg5 = new JniArgumentMarshalInfo<T5>(value5);
 			JniArgumentMarshalInfo<T6> arg6 = new JniArgumentMarshalInfo<T6>(value6);
 
-			var args = stackalloc JValue [6];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
+			var args = stackalloc JniArgumentValue [6];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
 
 			try {
 				return peer.InvokeBooleanMethod (encodedMember, args);
@@ -9389,14 +9389,14 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T6> arg6 = new JniArgumentMarshalInfo<T6>(value6);
 			JniArgumentMarshalInfo<T7> arg7 = new JniArgumentMarshalInfo<T7>(value7);
 
-			var args = stackalloc JValue [7];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
+			var args = stackalloc JniArgumentValue [7];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
 
 			try {
 				return peer.InvokeBooleanMethod (encodedMember, args);
@@ -9426,15 +9426,15 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T7> arg7 = new JniArgumentMarshalInfo<T7>(value7);
 			JniArgumentMarshalInfo<T8> arg8 = new JniArgumentMarshalInfo<T8>(value8);
 
-			var args = stackalloc JValue [8];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
+			var args = stackalloc JniArgumentValue [8];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
 
 			try {
 				return peer.InvokeBooleanMethod (encodedMember, args);
@@ -9466,16 +9466,16 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T8> arg8 = new JniArgumentMarshalInfo<T8>(value8);
 			JniArgumentMarshalInfo<T9> arg9 = new JniArgumentMarshalInfo<T9>(value9);
 
-			var args = stackalloc JValue [9];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
+			var args = stackalloc JniArgumentValue [9];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
 
 			try {
 				return peer.InvokeBooleanMethod (encodedMember, args);
@@ -9509,17 +9509,17 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T9> arg9 = new JniArgumentMarshalInfo<T9>(value9);
 			JniArgumentMarshalInfo<T10> arg10 = new JniArgumentMarshalInfo<T10>(value10);
 
-			var args = stackalloc JValue [10];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
+			var args = stackalloc JniArgumentValue [10];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
 
 			try {
 				return peer.InvokeBooleanMethod (encodedMember, args);
@@ -9555,18 +9555,18 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T10> arg10 = new JniArgumentMarshalInfo<T10>(value10);
 			JniArgumentMarshalInfo<T11> arg11 = new JniArgumentMarshalInfo<T11>(value11);
 
-			var args = stackalloc JValue [11];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
+			var args = stackalloc JniArgumentValue [11];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
 
 			try {
 				return peer.InvokeBooleanMethod (encodedMember, args);
@@ -9604,19 +9604,19 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T11> arg11 = new JniArgumentMarshalInfo<T11>(value11);
 			JniArgumentMarshalInfo<T12> arg12 = new JniArgumentMarshalInfo<T12>(value12);
 
-			var args = stackalloc JValue [12];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
+			var args = stackalloc JniArgumentValue [12];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
 
 			try {
 				return peer.InvokeBooleanMethod (encodedMember, args);
@@ -9656,20 +9656,20 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T12> arg12 = new JniArgumentMarshalInfo<T12>(value12);
 			JniArgumentMarshalInfo<T13> arg13 = new JniArgumentMarshalInfo<T13>(value13);
 
-			var args = stackalloc JValue [13];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
+			var args = stackalloc JniArgumentValue [13];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
 
 			try {
 				return peer.InvokeBooleanMethod (encodedMember, args);
@@ -9711,21 +9711,21 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T13> arg13 = new JniArgumentMarshalInfo<T13>(value13);
 			JniArgumentMarshalInfo<T14> arg14 = new JniArgumentMarshalInfo<T14>(value14);
 
-			var args = stackalloc JValue [14];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
-			args [13] = arg14.JValue;
+			var args = stackalloc JniArgumentValue [14];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
+			args [13] = arg14.JniArgumentValue;
 
 			try {
 				return peer.InvokeBooleanMethod (encodedMember, args);
@@ -9769,22 +9769,22 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T14> arg14 = new JniArgumentMarshalInfo<T14>(value14);
 			JniArgumentMarshalInfo<T15> arg15 = new JniArgumentMarshalInfo<T15>(value15);
 
-			var args = stackalloc JValue [15];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
-			args [13] = arg14.JValue;
-			args [14] = arg15.JValue;
+			var args = stackalloc JniArgumentValue [15];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
+			args [13] = arg14.JniArgumentValue;
+			args [14] = arg15.JniArgumentValue;
 
 			try {
 				return peer.InvokeBooleanMethod (encodedMember, args);
@@ -9830,23 +9830,23 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T15> arg15 = new JniArgumentMarshalInfo<T15>(value15);
 			JniArgumentMarshalInfo<T16> arg16 = new JniArgumentMarshalInfo<T16>(value16);
 
-			var args = stackalloc JValue [16];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
-			args [13] = arg14.JValue;
-			args [14] = arg15.JValue;
-			args [15] = arg16.JValue;
+			var args = stackalloc JniArgumentValue [16];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
+			args [13] = arg14.JniArgumentValue;
+			args [14] = arg15.JniArgumentValue;
+			args [15] = arg16.JniArgumentValue;
 
 			try {
 				return peer.InvokeBooleanMethod (encodedMember, args);
@@ -9878,8 +9878,8 @@ namespace Java.Interop.GenericMarshaler {
 		{
 			JniArgumentMarshalInfo<T> arg = new JniArgumentMarshalInfo<T>(value);
 
-			var args = stackalloc JValue [1];
-			args [0] = arg.JValue;
+			var args = stackalloc JniArgumentValue [1];
+			args [0] = arg.JniArgumentValue;
 
 			try {
 				return peer.InvokeSByteMethod (encodedMember, args);
@@ -9897,9 +9897,9 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 
-			var args = stackalloc JValue [2];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
+			var args = stackalloc JniArgumentValue [2];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
 
 			try {
 				return peer.InvokeSByteMethod (encodedMember, args);
@@ -9919,10 +9919,10 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
 
-			var args = stackalloc JValue [3];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
+			var args = stackalloc JniArgumentValue [3];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
 
 			try {
 				return peer.InvokeSByteMethod (encodedMember, args);
@@ -9944,11 +9944,11 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
 			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
 
-			var args = stackalloc JValue [4];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
+			var args = stackalloc JniArgumentValue [4];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
 
 			try {
 				return peer.InvokeSByteMethod (encodedMember, args);
@@ -9972,12 +9972,12 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
 			JniArgumentMarshalInfo<T5> arg5 = new JniArgumentMarshalInfo<T5>(value5);
 
-			var args = stackalloc JValue [5];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
+			var args = stackalloc JniArgumentValue [5];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
 
 			try {
 				return peer.InvokeSByteMethod (encodedMember, args);
@@ -10003,13 +10003,13 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T5> arg5 = new JniArgumentMarshalInfo<T5>(value5);
 			JniArgumentMarshalInfo<T6> arg6 = new JniArgumentMarshalInfo<T6>(value6);
 
-			var args = stackalloc JValue [6];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
+			var args = stackalloc JniArgumentValue [6];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
 
 			try {
 				return peer.InvokeSByteMethod (encodedMember, args);
@@ -10037,14 +10037,14 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T6> arg6 = new JniArgumentMarshalInfo<T6>(value6);
 			JniArgumentMarshalInfo<T7> arg7 = new JniArgumentMarshalInfo<T7>(value7);
 
-			var args = stackalloc JValue [7];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
+			var args = stackalloc JniArgumentValue [7];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
 
 			try {
 				return peer.InvokeSByteMethod (encodedMember, args);
@@ -10074,15 +10074,15 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T7> arg7 = new JniArgumentMarshalInfo<T7>(value7);
 			JniArgumentMarshalInfo<T8> arg8 = new JniArgumentMarshalInfo<T8>(value8);
 
-			var args = stackalloc JValue [8];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
+			var args = stackalloc JniArgumentValue [8];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
 
 			try {
 				return peer.InvokeSByteMethod (encodedMember, args);
@@ -10114,16 +10114,16 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T8> arg8 = new JniArgumentMarshalInfo<T8>(value8);
 			JniArgumentMarshalInfo<T9> arg9 = new JniArgumentMarshalInfo<T9>(value9);
 
-			var args = stackalloc JValue [9];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
+			var args = stackalloc JniArgumentValue [9];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
 
 			try {
 				return peer.InvokeSByteMethod (encodedMember, args);
@@ -10157,17 +10157,17 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T9> arg9 = new JniArgumentMarshalInfo<T9>(value9);
 			JniArgumentMarshalInfo<T10> arg10 = new JniArgumentMarshalInfo<T10>(value10);
 
-			var args = stackalloc JValue [10];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
+			var args = stackalloc JniArgumentValue [10];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
 
 			try {
 				return peer.InvokeSByteMethod (encodedMember, args);
@@ -10203,18 +10203,18 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T10> arg10 = new JniArgumentMarshalInfo<T10>(value10);
 			JniArgumentMarshalInfo<T11> arg11 = new JniArgumentMarshalInfo<T11>(value11);
 
-			var args = stackalloc JValue [11];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
+			var args = stackalloc JniArgumentValue [11];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
 
 			try {
 				return peer.InvokeSByteMethod (encodedMember, args);
@@ -10252,19 +10252,19 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T11> arg11 = new JniArgumentMarshalInfo<T11>(value11);
 			JniArgumentMarshalInfo<T12> arg12 = new JniArgumentMarshalInfo<T12>(value12);
 
-			var args = stackalloc JValue [12];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
+			var args = stackalloc JniArgumentValue [12];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
 
 			try {
 				return peer.InvokeSByteMethod (encodedMember, args);
@@ -10304,20 +10304,20 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T12> arg12 = new JniArgumentMarshalInfo<T12>(value12);
 			JniArgumentMarshalInfo<T13> arg13 = new JniArgumentMarshalInfo<T13>(value13);
 
-			var args = stackalloc JValue [13];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
+			var args = stackalloc JniArgumentValue [13];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
 
 			try {
 				return peer.InvokeSByteMethod (encodedMember, args);
@@ -10359,21 +10359,21 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T13> arg13 = new JniArgumentMarshalInfo<T13>(value13);
 			JniArgumentMarshalInfo<T14> arg14 = new JniArgumentMarshalInfo<T14>(value14);
 
-			var args = stackalloc JValue [14];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
-			args [13] = arg14.JValue;
+			var args = stackalloc JniArgumentValue [14];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
+			args [13] = arg14.JniArgumentValue;
 
 			try {
 				return peer.InvokeSByteMethod (encodedMember, args);
@@ -10417,22 +10417,22 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T14> arg14 = new JniArgumentMarshalInfo<T14>(value14);
 			JniArgumentMarshalInfo<T15> arg15 = new JniArgumentMarshalInfo<T15>(value15);
 
-			var args = stackalloc JValue [15];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
-			args [13] = arg14.JValue;
-			args [14] = arg15.JValue;
+			var args = stackalloc JniArgumentValue [15];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
+			args [13] = arg14.JniArgumentValue;
+			args [14] = arg15.JniArgumentValue;
 
 			try {
 				return peer.InvokeSByteMethod (encodedMember, args);
@@ -10478,23 +10478,23 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T15> arg15 = new JniArgumentMarshalInfo<T15>(value15);
 			JniArgumentMarshalInfo<T16> arg16 = new JniArgumentMarshalInfo<T16>(value16);
 
-			var args = stackalloc JValue [16];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
-			args [13] = arg14.JValue;
-			args [14] = arg15.JValue;
-			args [15] = arg16.JValue;
+			var args = stackalloc JniArgumentValue [16];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
+			args [13] = arg14.JniArgumentValue;
+			args [14] = arg15.JniArgumentValue;
+			args [15] = arg16.JniArgumentValue;
 
 			try {
 				return peer.InvokeSByteMethod (encodedMember, args);
@@ -10526,8 +10526,8 @@ namespace Java.Interop.GenericMarshaler {
 		{
 			JniArgumentMarshalInfo<T> arg = new JniArgumentMarshalInfo<T>(value);
 
-			var args = stackalloc JValue [1];
-			args [0] = arg.JValue;
+			var args = stackalloc JniArgumentValue [1];
+			args [0] = arg.JniArgumentValue;
 
 			try {
 				return peer.InvokeCharMethod (encodedMember, args);
@@ -10545,9 +10545,9 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 
-			var args = stackalloc JValue [2];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
+			var args = stackalloc JniArgumentValue [2];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
 
 			try {
 				return peer.InvokeCharMethod (encodedMember, args);
@@ -10567,10 +10567,10 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
 
-			var args = stackalloc JValue [3];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
+			var args = stackalloc JniArgumentValue [3];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
 
 			try {
 				return peer.InvokeCharMethod (encodedMember, args);
@@ -10592,11 +10592,11 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
 			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
 
-			var args = stackalloc JValue [4];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
+			var args = stackalloc JniArgumentValue [4];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
 
 			try {
 				return peer.InvokeCharMethod (encodedMember, args);
@@ -10620,12 +10620,12 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
 			JniArgumentMarshalInfo<T5> arg5 = new JniArgumentMarshalInfo<T5>(value5);
 
-			var args = stackalloc JValue [5];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
+			var args = stackalloc JniArgumentValue [5];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
 
 			try {
 				return peer.InvokeCharMethod (encodedMember, args);
@@ -10651,13 +10651,13 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T5> arg5 = new JniArgumentMarshalInfo<T5>(value5);
 			JniArgumentMarshalInfo<T6> arg6 = new JniArgumentMarshalInfo<T6>(value6);
 
-			var args = stackalloc JValue [6];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
+			var args = stackalloc JniArgumentValue [6];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
 
 			try {
 				return peer.InvokeCharMethod (encodedMember, args);
@@ -10685,14 +10685,14 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T6> arg6 = new JniArgumentMarshalInfo<T6>(value6);
 			JniArgumentMarshalInfo<T7> arg7 = new JniArgumentMarshalInfo<T7>(value7);
 
-			var args = stackalloc JValue [7];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
+			var args = stackalloc JniArgumentValue [7];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
 
 			try {
 				return peer.InvokeCharMethod (encodedMember, args);
@@ -10722,15 +10722,15 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T7> arg7 = new JniArgumentMarshalInfo<T7>(value7);
 			JniArgumentMarshalInfo<T8> arg8 = new JniArgumentMarshalInfo<T8>(value8);
 
-			var args = stackalloc JValue [8];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
+			var args = stackalloc JniArgumentValue [8];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
 
 			try {
 				return peer.InvokeCharMethod (encodedMember, args);
@@ -10762,16 +10762,16 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T8> arg8 = new JniArgumentMarshalInfo<T8>(value8);
 			JniArgumentMarshalInfo<T9> arg9 = new JniArgumentMarshalInfo<T9>(value9);
 
-			var args = stackalloc JValue [9];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
+			var args = stackalloc JniArgumentValue [9];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
 
 			try {
 				return peer.InvokeCharMethod (encodedMember, args);
@@ -10805,17 +10805,17 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T9> arg9 = new JniArgumentMarshalInfo<T9>(value9);
 			JniArgumentMarshalInfo<T10> arg10 = new JniArgumentMarshalInfo<T10>(value10);
 
-			var args = stackalloc JValue [10];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
+			var args = stackalloc JniArgumentValue [10];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
 
 			try {
 				return peer.InvokeCharMethod (encodedMember, args);
@@ -10851,18 +10851,18 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T10> arg10 = new JniArgumentMarshalInfo<T10>(value10);
 			JniArgumentMarshalInfo<T11> arg11 = new JniArgumentMarshalInfo<T11>(value11);
 
-			var args = stackalloc JValue [11];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
+			var args = stackalloc JniArgumentValue [11];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
 
 			try {
 				return peer.InvokeCharMethod (encodedMember, args);
@@ -10900,19 +10900,19 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T11> arg11 = new JniArgumentMarshalInfo<T11>(value11);
 			JniArgumentMarshalInfo<T12> arg12 = new JniArgumentMarshalInfo<T12>(value12);
 
-			var args = stackalloc JValue [12];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
+			var args = stackalloc JniArgumentValue [12];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
 
 			try {
 				return peer.InvokeCharMethod (encodedMember, args);
@@ -10952,20 +10952,20 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T12> arg12 = new JniArgumentMarshalInfo<T12>(value12);
 			JniArgumentMarshalInfo<T13> arg13 = new JniArgumentMarshalInfo<T13>(value13);
 
-			var args = stackalloc JValue [13];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
+			var args = stackalloc JniArgumentValue [13];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
 
 			try {
 				return peer.InvokeCharMethod (encodedMember, args);
@@ -11007,21 +11007,21 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T13> arg13 = new JniArgumentMarshalInfo<T13>(value13);
 			JniArgumentMarshalInfo<T14> arg14 = new JniArgumentMarshalInfo<T14>(value14);
 
-			var args = stackalloc JValue [14];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
-			args [13] = arg14.JValue;
+			var args = stackalloc JniArgumentValue [14];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
+			args [13] = arg14.JniArgumentValue;
 
 			try {
 				return peer.InvokeCharMethod (encodedMember, args);
@@ -11065,22 +11065,22 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T14> arg14 = new JniArgumentMarshalInfo<T14>(value14);
 			JniArgumentMarshalInfo<T15> arg15 = new JniArgumentMarshalInfo<T15>(value15);
 
-			var args = stackalloc JValue [15];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
-			args [13] = arg14.JValue;
-			args [14] = arg15.JValue;
+			var args = stackalloc JniArgumentValue [15];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
+			args [13] = arg14.JniArgumentValue;
+			args [14] = arg15.JniArgumentValue;
 
 			try {
 				return peer.InvokeCharMethod (encodedMember, args);
@@ -11126,23 +11126,23 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T15> arg15 = new JniArgumentMarshalInfo<T15>(value15);
 			JniArgumentMarshalInfo<T16> arg16 = new JniArgumentMarshalInfo<T16>(value16);
 
-			var args = stackalloc JValue [16];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
-			args [13] = arg14.JValue;
-			args [14] = arg15.JValue;
-			args [15] = arg16.JValue;
+			var args = stackalloc JniArgumentValue [16];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
+			args [13] = arg14.JniArgumentValue;
+			args [14] = arg15.JniArgumentValue;
+			args [15] = arg16.JniArgumentValue;
 
 			try {
 				return peer.InvokeCharMethod (encodedMember, args);
@@ -11174,8 +11174,8 @@ namespace Java.Interop.GenericMarshaler {
 		{
 			JniArgumentMarshalInfo<T> arg = new JniArgumentMarshalInfo<T>(value);
 
-			var args = stackalloc JValue [1];
-			args [0] = arg.JValue;
+			var args = stackalloc JniArgumentValue [1];
+			args [0] = arg.JniArgumentValue;
 
 			try {
 				return peer.InvokeInt16Method (encodedMember, args);
@@ -11193,9 +11193,9 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 
-			var args = stackalloc JValue [2];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
+			var args = stackalloc JniArgumentValue [2];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
 
 			try {
 				return peer.InvokeInt16Method (encodedMember, args);
@@ -11215,10 +11215,10 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
 
-			var args = stackalloc JValue [3];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
+			var args = stackalloc JniArgumentValue [3];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
 
 			try {
 				return peer.InvokeInt16Method (encodedMember, args);
@@ -11240,11 +11240,11 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
 			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
 
-			var args = stackalloc JValue [4];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
+			var args = stackalloc JniArgumentValue [4];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
 
 			try {
 				return peer.InvokeInt16Method (encodedMember, args);
@@ -11268,12 +11268,12 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
 			JniArgumentMarshalInfo<T5> arg5 = new JniArgumentMarshalInfo<T5>(value5);
 
-			var args = stackalloc JValue [5];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
+			var args = stackalloc JniArgumentValue [5];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
 
 			try {
 				return peer.InvokeInt16Method (encodedMember, args);
@@ -11299,13 +11299,13 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T5> arg5 = new JniArgumentMarshalInfo<T5>(value5);
 			JniArgumentMarshalInfo<T6> arg6 = new JniArgumentMarshalInfo<T6>(value6);
 
-			var args = stackalloc JValue [6];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
+			var args = stackalloc JniArgumentValue [6];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
 
 			try {
 				return peer.InvokeInt16Method (encodedMember, args);
@@ -11333,14 +11333,14 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T6> arg6 = new JniArgumentMarshalInfo<T6>(value6);
 			JniArgumentMarshalInfo<T7> arg7 = new JniArgumentMarshalInfo<T7>(value7);
 
-			var args = stackalloc JValue [7];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
+			var args = stackalloc JniArgumentValue [7];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
 
 			try {
 				return peer.InvokeInt16Method (encodedMember, args);
@@ -11370,15 +11370,15 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T7> arg7 = new JniArgumentMarshalInfo<T7>(value7);
 			JniArgumentMarshalInfo<T8> arg8 = new JniArgumentMarshalInfo<T8>(value8);
 
-			var args = stackalloc JValue [8];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
+			var args = stackalloc JniArgumentValue [8];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
 
 			try {
 				return peer.InvokeInt16Method (encodedMember, args);
@@ -11410,16 +11410,16 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T8> arg8 = new JniArgumentMarshalInfo<T8>(value8);
 			JniArgumentMarshalInfo<T9> arg9 = new JniArgumentMarshalInfo<T9>(value9);
 
-			var args = stackalloc JValue [9];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
+			var args = stackalloc JniArgumentValue [9];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
 
 			try {
 				return peer.InvokeInt16Method (encodedMember, args);
@@ -11453,17 +11453,17 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T9> arg9 = new JniArgumentMarshalInfo<T9>(value9);
 			JniArgumentMarshalInfo<T10> arg10 = new JniArgumentMarshalInfo<T10>(value10);
 
-			var args = stackalloc JValue [10];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
+			var args = stackalloc JniArgumentValue [10];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
 
 			try {
 				return peer.InvokeInt16Method (encodedMember, args);
@@ -11499,18 +11499,18 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T10> arg10 = new JniArgumentMarshalInfo<T10>(value10);
 			JniArgumentMarshalInfo<T11> arg11 = new JniArgumentMarshalInfo<T11>(value11);
 
-			var args = stackalloc JValue [11];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
+			var args = stackalloc JniArgumentValue [11];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
 
 			try {
 				return peer.InvokeInt16Method (encodedMember, args);
@@ -11548,19 +11548,19 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T11> arg11 = new JniArgumentMarshalInfo<T11>(value11);
 			JniArgumentMarshalInfo<T12> arg12 = new JniArgumentMarshalInfo<T12>(value12);
 
-			var args = stackalloc JValue [12];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
+			var args = stackalloc JniArgumentValue [12];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
 
 			try {
 				return peer.InvokeInt16Method (encodedMember, args);
@@ -11600,20 +11600,20 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T12> arg12 = new JniArgumentMarshalInfo<T12>(value12);
 			JniArgumentMarshalInfo<T13> arg13 = new JniArgumentMarshalInfo<T13>(value13);
 
-			var args = stackalloc JValue [13];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
+			var args = stackalloc JniArgumentValue [13];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
 
 			try {
 				return peer.InvokeInt16Method (encodedMember, args);
@@ -11655,21 +11655,21 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T13> arg13 = new JniArgumentMarshalInfo<T13>(value13);
 			JniArgumentMarshalInfo<T14> arg14 = new JniArgumentMarshalInfo<T14>(value14);
 
-			var args = stackalloc JValue [14];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
-			args [13] = arg14.JValue;
+			var args = stackalloc JniArgumentValue [14];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
+			args [13] = arg14.JniArgumentValue;
 
 			try {
 				return peer.InvokeInt16Method (encodedMember, args);
@@ -11713,22 +11713,22 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T14> arg14 = new JniArgumentMarshalInfo<T14>(value14);
 			JniArgumentMarshalInfo<T15> arg15 = new JniArgumentMarshalInfo<T15>(value15);
 
-			var args = stackalloc JValue [15];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
-			args [13] = arg14.JValue;
-			args [14] = arg15.JValue;
+			var args = stackalloc JniArgumentValue [15];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
+			args [13] = arg14.JniArgumentValue;
+			args [14] = arg15.JniArgumentValue;
 
 			try {
 				return peer.InvokeInt16Method (encodedMember, args);
@@ -11774,23 +11774,23 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T15> arg15 = new JniArgumentMarshalInfo<T15>(value15);
 			JniArgumentMarshalInfo<T16> arg16 = new JniArgumentMarshalInfo<T16>(value16);
 
-			var args = stackalloc JValue [16];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
-			args [13] = arg14.JValue;
-			args [14] = arg15.JValue;
-			args [15] = arg16.JValue;
+			var args = stackalloc JniArgumentValue [16];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
+			args [13] = arg14.JniArgumentValue;
+			args [14] = arg15.JniArgumentValue;
+			args [15] = arg16.JniArgumentValue;
 
 			try {
 				return peer.InvokeInt16Method (encodedMember, args);
@@ -11822,8 +11822,8 @@ namespace Java.Interop.GenericMarshaler {
 		{
 			JniArgumentMarshalInfo<T> arg = new JniArgumentMarshalInfo<T>(value);
 
-			var args = stackalloc JValue [1];
-			args [0] = arg.JValue;
+			var args = stackalloc JniArgumentValue [1];
+			args [0] = arg.JniArgumentValue;
 
 			try {
 				return peer.InvokeInt32Method (encodedMember, args);
@@ -11841,9 +11841,9 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 
-			var args = stackalloc JValue [2];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
+			var args = stackalloc JniArgumentValue [2];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
 
 			try {
 				return peer.InvokeInt32Method (encodedMember, args);
@@ -11863,10 +11863,10 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
 
-			var args = stackalloc JValue [3];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
+			var args = stackalloc JniArgumentValue [3];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
 
 			try {
 				return peer.InvokeInt32Method (encodedMember, args);
@@ -11888,11 +11888,11 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
 			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
 
-			var args = stackalloc JValue [4];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
+			var args = stackalloc JniArgumentValue [4];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
 
 			try {
 				return peer.InvokeInt32Method (encodedMember, args);
@@ -11916,12 +11916,12 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
 			JniArgumentMarshalInfo<T5> arg5 = new JniArgumentMarshalInfo<T5>(value5);
 
-			var args = stackalloc JValue [5];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
+			var args = stackalloc JniArgumentValue [5];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
 
 			try {
 				return peer.InvokeInt32Method (encodedMember, args);
@@ -11947,13 +11947,13 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T5> arg5 = new JniArgumentMarshalInfo<T5>(value5);
 			JniArgumentMarshalInfo<T6> arg6 = new JniArgumentMarshalInfo<T6>(value6);
 
-			var args = stackalloc JValue [6];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
+			var args = stackalloc JniArgumentValue [6];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
 
 			try {
 				return peer.InvokeInt32Method (encodedMember, args);
@@ -11981,14 +11981,14 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T6> arg6 = new JniArgumentMarshalInfo<T6>(value6);
 			JniArgumentMarshalInfo<T7> arg7 = new JniArgumentMarshalInfo<T7>(value7);
 
-			var args = stackalloc JValue [7];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
+			var args = stackalloc JniArgumentValue [7];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
 
 			try {
 				return peer.InvokeInt32Method (encodedMember, args);
@@ -12018,15 +12018,15 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T7> arg7 = new JniArgumentMarshalInfo<T7>(value7);
 			JniArgumentMarshalInfo<T8> arg8 = new JniArgumentMarshalInfo<T8>(value8);
 
-			var args = stackalloc JValue [8];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
+			var args = stackalloc JniArgumentValue [8];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
 
 			try {
 				return peer.InvokeInt32Method (encodedMember, args);
@@ -12058,16 +12058,16 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T8> arg8 = new JniArgumentMarshalInfo<T8>(value8);
 			JniArgumentMarshalInfo<T9> arg9 = new JniArgumentMarshalInfo<T9>(value9);
 
-			var args = stackalloc JValue [9];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
+			var args = stackalloc JniArgumentValue [9];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
 
 			try {
 				return peer.InvokeInt32Method (encodedMember, args);
@@ -12101,17 +12101,17 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T9> arg9 = new JniArgumentMarshalInfo<T9>(value9);
 			JniArgumentMarshalInfo<T10> arg10 = new JniArgumentMarshalInfo<T10>(value10);
 
-			var args = stackalloc JValue [10];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
+			var args = stackalloc JniArgumentValue [10];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
 
 			try {
 				return peer.InvokeInt32Method (encodedMember, args);
@@ -12147,18 +12147,18 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T10> arg10 = new JniArgumentMarshalInfo<T10>(value10);
 			JniArgumentMarshalInfo<T11> arg11 = new JniArgumentMarshalInfo<T11>(value11);
 
-			var args = stackalloc JValue [11];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
+			var args = stackalloc JniArgumentValue [11];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
 
 			try {
 				return peer.InvokeInt32Method (encodedMember, args);
@@ -12196,19 +12196,19 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T11> arg11 = new JniArgumentMarshalInfo<T11>(value11);
 			JniArgumentMarshalInfo<T12> arg12 = new JniArgumentMarshalInfo<T12>(value12);
 
-			var args = stackalloc JValue [12];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
+			var args = stackalloc JniArgumentValue [12];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
 
 			try {
 				return peer.InvokeInt32Method (encodedMember, args);
@@ -12248,20 +12248,20 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T12> arg12 = new JniArgumentMarshalInfo<T12>(value12);
 			JniArgumentMarshalInfo<T13> arg13 = new JniArgumentMarshalInfo<T13>(value13);
 
-			var args = stackalloc JValue [13];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
+			var args = stackalloc JniArgumentValue [13];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
 
 			try {
 				return peer.InvokeInt32Method (encodedMember, args);
@@ -12303,21 +12303,21 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T13> arg13 = new JniArgumentMarshalInfo<T13>(value13);
 			JniArgumentMarshalInfo<T14> arg14 = new JniArgumentMarshalInfo<T14>(value14);
 
-			var args = stackalloc JValue [14];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
-			args [13] = arg14.JValue;
+			var args = stackalloc JniArgumentValue [14];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
+			args [13] = arg14.JniArgumentValue;
 
 			try {
 				return peer.InvokeInt32Method (encodedMember, args);
@@ -12361,22 +12361,22 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T14> arg14 = new JniArgumentMarshalInfo<T14>(value14);
 			JniArgumentMarshalInfo<T15> arg15 = new JniArgumentMarshalInfo<T15>(value15);
 
-			var args = stackalloc JValue [15];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
-			args [13] = arg14.JValue;
-			args [14] = arg15.JValue;
+			var args = stackalloc JniArgumentValue [15];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
+			args [13] = arg14.JniArgumentValue;
+			args [14] = arg15.JniArgumentValue;
 
 			try {
 				return peer.InvokeInt32Method (encodedMember, args);
@@ -12422,23 +12422,23 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T15> arg15 = new JniArgumentMarshalInfo<T15>(value15);
 			JniArgumentMarshalInfo<T16> arg16 = new JniArgumentMarshalInfo<T16>(value16);
 
-			var args = stackalloc JValue [16];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
-			args [13] = arg14.JValue;
-			args [14] = arg15.JValue;
-			args [15] = arg16.JValue;
+			var args = stackalloc JniArgumentValue [16];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
+			args [13] = arg14.JniArgumentValue;
+			args [14] = arg15.JniArgumentValue;
+			args [15] = arg16.JniArgumentValue;
 
 			try {
 				return peer.InvokeInt32Method (encodedMember, args);
@@ -12470,8 +12470,8 @@ namespace Java.Interop.GenericMarshaler {
 		{
 			JniArgumentMarshalInfo<T> arg = new JniArgumentMarshalInfo<T>(value);
 
-			var args = stackalloc JValue [1];
-			args [0] = arg.JValue;
+			var args = stackalloc JniArgumentValue [1];
+			args [0] = arg.JniArgumentValue;
 
 			try {
 				return peer.InvokeInt64Method (encodedMember, args);
@@ -12489,9 +12489,9 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 
-			var args = stackalloc JValue [2];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
+			var args = stackalloc JniArgumentValue [2];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
 
 			try {
 				return peer.InvokeInt64Method (encodedMember, args);
@@ -12511,10 +12511,10 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
 
-			var args = stackalloc JValue [3];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
+			var args = stackalloc JniArgumentValue [3];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
 
 			try {
 				return peer.InvokeInt64Method (encodedMember, args);
@@ -12536,11 +12536,11 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
 			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
 
-			var args = stackalloc JValue [4];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
+			var args = stackalloc JniArgumentValue [4];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
 
 			try {
 				return peer.InvokeInt64Method (encodedMember, args);
@@ -12564,12 +12564,12 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
 			JniArgumentMarshalInfo<T5> arg5 = new JniArgumentMarshalInfo<T5>(value5);
 
-			var args = stackalloc JValue [5];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
+			var args = stackalloc JniArgumentValue [5];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
 
 			try {
 				return peer.InvokeInt64Method (encodedMember, args);
@@ -12595,13 +12595,13 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T5> arg5 = new JniArgumentMarshalInfo<T5>(value5);
 			JniArgumentMarshalInfo<T6> arg6 = new JniArgumentMarshalInfo<T6>(value6);
 
-			var args = stackalloc JValue [6];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
+			var args = stackalloc JniArgumentValue [6];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
 
 			try {
 				return peer.InvokeInt64Method (encodedMember, args);
@@ -12629,14 +12629,14 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T6> arg6 = new JniArgumentMarshalInfo<T6>(value6);
 			JniArgumentMarshalInfo<T7> arg7 = new JniArgumentMarshalInfo<T7>(value7);
 
-			var args = stackalloc JValue [7];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
+			var args = stackalloc JniArgumentValue [7];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
 
 			try {
 				return peer.InvokeInt64Method (encodedMember, args);
@@ -12666,15 +12666,15 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T7> arg7 = new JniArgumentMarshalInfo<T7>(value7);
 			JniArgumentMarshalInfo<T8> arg8 = new JniArgumentMarshalInfo<T8>(value8);
 
-			var args = stackalloc JValue [8];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
+			var args = stackalloc JniArgumentValue [8];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
 
 			try {
 				return peer.InvokeInt64Method (encodedMember, args);
@@ -12706,16 +12706,16 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T8> arg8 = new JniArgumentMarshalInfo<T8>(value8);
 			JniArgumentMarshalInfo<T9> arg9 = new JniArgumentMarshalInfo<T9>(value9);
 
-			var args = stackalloc JValue [9];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
+			var args = stackalloc JniArgumentValue [9];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
 
 			try {
 				return peer.InvokeInt64Method (encodedMember, args);
@@ -12749,17 +12749,17 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T9> arg9 = new JniArgumentMarshalInfo<T9>(value9);
 			JniArgumentMarshalInfo<T10> arg10 = new JniArgumentMarshalInfo<T10>(value10);
 
-			var args = stackalloc JValue [10];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
+			var args = stackalloc JniArgumentValue [10];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
 
 			try {
 				return peer.InvokeInt64Method (encodedMember, args);
@@ -12795,18 +12795,18 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T10> arg10 = new JniArgumentMarshalInfo<T10>(value10);
 			JniArgumentMarshalInfo<T11> arg11 = new JniArgumentMarshalInfo<T11>(value11);
 
-			var args = stackalloc JValue [11];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
+			var args = stackalloc JniArgumentValue [11];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
 
 			try {
 				return peer.InvokeInt64Method (encodedMember, args);
@@ -12844,19 +12844,19 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T11> arg11 = new JniArgumentMarshalInfo<T11>(value11);
 			JniArgumentMarshalInfo<T12> arg12 = new JniArgumentMarshalInfo<T12>(value12);
 
-			var args = stackalloc JValue [12];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
+			var args = stackalloc JniArgumentValue [12];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
 
 			try {
 				return peer.InvokeInt64Method (encodedMember, args);
@@ -12896,20 +12896,20 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T12> arg12 = new JniArgumentMarshalInfo<T12>(value12);
 			JniArgumentMarshalInfo<T13> arg13 = new JniArgumentMarshalInfo<T13>(value13);
 
-			var args = stackalloc JValue [13];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
+			var args = stackalloc JniArgumentValue [13];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
 
 			try {
 				return peer.InvokeInt64Method (encodedMember, args);
@@ -12951,21 +12951,21 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T13> arg13 = new JniArgumentMarshalInfo<T13>(value13);
 			JniArgumentMarshalInfo<T14> arg14 = new JniArgumentMarshalInfo<T14>(value14);
 
-			var args = stackalloc JValue [14];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
-			args [13] = arg14.JValue;
+			var args = stackalloc JniArgumentValue [14];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
+			args [13] = arg14.JniArgumentValue;
 
 			try {
 				return peer.InvokeInt64Method (encodedMember, args);
@@ -13009,22 +13009,22 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T14> arg14 = new JniArgumentMarshalInfo<T14>(value14);
 			JniArgumentMarshalInfo<T15> arg15 = new JniArgumentMarshalInfo<T15>(value15);
 
-			var args = stackalloc JValue [15];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
-			args [13] = arg14.JValue;
-			args [14] = arg15.JValue;
+			var args = stackalloc JniArgumentValue [15];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
+			args [13] = arg14.JniArgumentValue;
+			args [14] = arg15.JniArgumentValue;
 
 			try {
 				return peer.InvokeInt64Method (encodedMember, args);
@@ -13070,23 +13070,23 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T15> arg15 = new JniArgumentMarshalInfo<T15>(value15);
 			JniArgumentMarshalInfo<T16> arg16 = new JniArgumentMarshalInfo<T16>(value16);
 
-			var args = stackalloc JValue [16];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
-			args [13] = arg14.JValue;
-			args [14] = arg15.JValue;
-			args [15] = arg16.JValue;
+			var args = stackalloc JniArgumentValue [16];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
+			args [13] = arg14.JniArgumentValue;
+			args [14] = arg15.JniArgumentValue;
+			args [15] = arg16.JniArgumentValue;
 
 			try {
 				return peer.InvokeInt64Method (encodedMember, args);
@@ -13118,8 +13118,8 @@ namespace Java.Interop.GenericMarshaler {
 		{
 			JniArgumentMarshalInfo<T> arg = new JniArgumentMarshalInfo<T>(value);
 
-			var args = stackalloc JValue [1];
-			args [0] = arg.JValue;
+			var args = stackalloc JniArgumentValue [1];
+			args [0] = arg.JniArgumentValue;
 
 			try {
 				return peer.InvokeSingleMethod (encodedMember, args);
@@ -13137,9 +13137,9 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 
-			var args = stackalloc JValue [2];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
+			var args = stackalloc JniArgumentValue [2];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
 
 			try {
 				return peer.InvokeSingleMethod (encodedMember, args);
@@ -13159,10 +13159,10 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
 
-			var args = stackalloc JValue [3];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
+			var args = stackalloc JniArgumentValue [3];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
 
 			try {
 				return peer.InvokeSingleMethod (encodedMember, args);
@@ -13184,11 +13184,11 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
 			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
 
-			var args = stackalloc JValue [4];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
+			var args = stackalloc JniArgumentValue [4];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
 
 			try {
 				return peer.InvokeSingleMethod (encodedMember, args);
@@ -13212,12 +13212,12 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
 			JniArgumentMarshalInfo<T5> arg5 = new JniArgumentMarshalInfo<T5>(value5);
 
-			var args = stackalloc JValue [5];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
+			var args = stackalloc JniArgumentValue [5];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
 
 			try {
 				return peer.InvokeSingleMethod (encodedMember, args);
@@ -13243,13 +13243,13 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T5> arg5 = new JniArgumentMarshalInfo<T5>(value5);
 			JniArgumentMarshalInfo<T6> arg6 = new JniArgumentMarshalInfo<T6>(value6);
 
-			var args = stackalloc JValue [6];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
+			var args = stackalloc JniArgumentValue [6];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
 
 			try {
 				return peer.InvokeSingleMethod (encodedMember, args);
@@ -13277,14 +13277,14 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T6> arg6 = new JniArgumentMarshalInfo<T6>(value6);
 			JniArgumentMarshalInfo<T7> arg7 = new JniArgumentMarshalInfo<T7>(value7);
 
-			var args = stackalloc JValue [7];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
+			var args = stackalloc JniArgumentValue [7];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
 
 			try {
 				return peer.InvokeSingleMethod (encodedMember, args);
@@ -13314,15 +13314,15 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T7> arg7 = new JniArgumentMarshalInfo<T7>(value7);
 			JniArgumentMarshalInfo<T8> arg8 = new JniArgumentMarshalInfo<T8>(value8);
 
-			var args = stackalloc JValue [8];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
+			var args = stackalloc JniArgumentValue [8];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
 
 			try {
 				return peer.InvokeSingleMethod (encodedMember, args);
@@ -13354,16 +13354,16 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T8> arg8 = new JniArgumentMarshalInfo<T8>(value8);
 			JniArgumentMarshalInfo<T9> arg9 = new JniArgumentMarshalInfo<T9>(value9);
 
-			var args = stackalloc JValue [9];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
+			var args = stackalloc JniArgumentValue [9];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
 
 			try {
 				return peer.InvokeSingleMethod (encodedMember, args);
@@ -13397,17 +13397,17 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T9> arg9 = new JniArgumentMarshalInfo<T9>(value9);
 			JniArgumentMarshalInfo<T10> arg10 = new JniArgumentMarshalInfo<T10>(value10);
 
-			var args = stackalloc JValue [10];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
+			var args = stackalloc JniArgumentValue [10];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
 
 			try {
 				return peer.InvokeSingleMethod (encodedMember, args);
@@ -13443,18 +13443,18 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T10> arg10 = new JniArgumentMarshalInfo<T10>(value10);
 			JniArgumentMarshalInfo<T11> arg11 = new JniArgumentMarshalInfo<T11>(value11);
 
-			var args = stackalloc JValue [11];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
+			var args = stackalloc JniArgumentValue [11];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
 
 			try {
 				return peer.InvokeSingleMethod (encodedMember, args);
@@ -13492,19 +13492,19 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T11> arg11 = new JniArgumentMarshalInfo<T11>(value11);
 			JniArgumentMarshalInfo<T12> arg12 = new JniArgumentMarshalInfo<T12>(value12);
 
-			var args = stackalloc JValue [12];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
+			var args = stackalloc JniArgumentValue [12];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
 
 			try {
 				return peer.InvokeSingleMethod (encodedMember, args);
@@ -13544,20 +13544,20 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T12> arg12 = new JniArgumentMarshalInfo<T12>(value12);
 			JniArgumentMarshalInfo<T13> arg13 = new JniArgumentMarshalInfo<T13>(value13);
 
-			var args = stackalloc JValue [13];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
+			var args = stackalloc JniArgumentValue [13];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
 
 			try {
 				return peer.InvokeSingleMethod (encodedMember, args);
@@ -13599,21 +13599,21 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T13> arg13 = new JniArgumentMarshalInfo<T13>(value13);
 			JniArgumentMarshalInfo<T14> arg14 = new JniArgumentMarshalInfo<T14>(value14);
 
-			var args = stackalloc JValue [14];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
-			args [13] = arg14.JValue;
+			var args = stackalloc JniArgumentValue [14];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
+			args [13] = arg14.JniArgumentValue;
 
 			try {
 				return peer.InvokeSingleMethod (encodedMember, args);
@@ -13657,22 +13657,22 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T14> arg14 = new JniArgumentMarshalInfo<T14>(value14);
 			JniArgumentMarshalInfo<T15> arg15 = new JniArgumentMarshalInfo<T15>(value15);
 
-			var args = stackalloc JValue [15];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
-			args [13] = arg14.JValue;
-			args [14] = arg15.JValue;
+			var args = stackalloc JniArgumentValue [15];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
+			args [13] = arg14.JniArgumentValue;
+			args [14] = arg15.JniArgumentValue;
 
 			try {
 				return peer.InvokeSingleMethod (encodedMember, args);
@@ -13718,23 +13718,23 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T15> arg15 = new JniArgumentMarshalInfo<T15>(value15);
 			JniArgumentMarshalInfo<T16> arg16 = new JniArgumentMarshalInfo<T16>(value16);
 
-			var args = stackalloc JValue [16];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
-			args [13] = arg14.JValue;
-			args [14] = arg15.JValue;
-			args [15] = arg16.JValue;
+			var args = stackalloc JniArgumentValue [16];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
+			args [13] = arg14.JniArgumentValue;
+			args [14] = arg15.JniArgumentValue;
+			args [15] = arg16.JniArgumentValue;
 
 			try {
 				return peer.InvokeSingleMethod (encodedMember, args);
@@ -13766,8 +13766,8 @@ namespace Java.Interop.GenericMarshaler {
 		{
 			JniArgumentMarshalInfo<T> arg = new JniArgumentMarshalInfo<T>(value);
 
-			var args = stackalloc JValue [1];
-			args [0] = arg.JValue;
+			var args = stackalloc JniArgumentValue [1];
+			args [0] = arg.JniArgumentValue;
 
 			try {
 				return peer.InvokeDoubleMethod (encodedMember, args);
@@ -13785,9 +13785,9 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 
-			var args = stackalloc JValue [2];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
+			var args = stackalloc JniArgumentValue [2];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
 
 			try {
 				return peer.InvokeDoubleMethod (encodedMember, args);
@@ -13807,10 +13807,10 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
 
-			var args = stackalloc JValue [3];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
+			var args = stackalloc JniArgumentValue [3];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
 
 			try {
 				return peer.InvokeDoubleMethod (encodedMember, args);
@@ -13832,11 +13832,11 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
 			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
 
-			var args = stackalloc JValue [4];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
+			var args = stackalloc JniArgumentValue [4];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
 
 			try {
 				return peer.InvokeDoubleMethod (encodedMember, args);
@@ -13860,12 +13860,12 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
 			JniArgumentMarshalInfo<T5> arg5 = new JniArgumentMarshalInfo<T5>(value5);
 
-			var args = stackalloc JValue [5];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
+			var args = stackalloc JniArgumentValue [5];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
 
 			try {
 				return peer.InvokeDoubleMethod (encodedMember, args);
@@ -13891,13 +13891,13 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T5> arg5 = new JniArgumentMarshalInfo<T5>(value5);
 			JniArgumentMarshalInfo<T6> arg6 = new JniArgumentMarshalInfo<T6>(value6);
 
-			var args = stackalloc JValue [6];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
+			var args = stackalloc JniArgumentValue [6];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
 
 			try {
 				return peer.InvokeDoubleMethod (encodedMember, args);
@@ -13925,14 +13925,14 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T6> arg6 = new JniArgumentMarshalInfo<T6>(value6);
 			JniArgumentMarshalInfo<T7> arg7 = new JniArgumentMarshalInfo<T7>(value7);
 
-			var args = stackalloc JValue [7];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
+			var args = stackalloc JniArgumentValue [7];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
 
 			try {
 				return peer.InvokeDoubleMethod (encodedMember, args);
@@ -13962,15 +13962,15 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T7> arg7 = new JniArgumentMarshalInfo<T7>(value7);
 			JniArgumentMarshalInfo<T8> arg8 = new JniArgumentMarshalInfo<T8>(value8);
 
-			var args = stackalloc JValue [8];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
+			var args = stackalloc JniArgumentValue [8];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
 
 			try {
 				return peer.InvokeDoubleMethod (encodedMember, args);
@@ -14002,16 +14002,16 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T8> arg8 = new JniArgumentMarshalInfo<T8>(value8);
 			JniArgumentMarshalInfo<T9> arg9 = new JniArgumentMarshalInfo<T9>(value9);
 
-			var args = stackalloc JValue [9];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
+			var args = stackalloc JniArgumentValue [9];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
 
 			try {
 				return peer.InvokeDoubleMethod (encodedMember, args);
@@ -14045,17 +14045,17 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T9> arg9 = new JniArgumentMarshalInfo<T9>(value9);
 			JniArgumentMarshalInfo<T10> arg10 = new JniArgumentMarshalInfo<T10>(value10);
 
-			var args = stackalloc JValue [10];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
+			var args = stackalloc JniArgumentValue [10];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
 
 			try {
 				return peer.InvokeDoubleMethod (encodedMember, args);
@@ -14091,18 +14091,18 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T10> arg10 = new JniArgumentMarshalInfo<T10>(value10);
 			JniArgumentMarshalInfo<T11> arg11 = new JniArgumentMarshalInfo<T11>(value11);
 
-			var args = stackalloc JValue [11];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
+			var args = stackalloc JniArgumentValue [11];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
 
 			try {
 				return peer.InvokeDoubleMethod (encodedMember, args);
@@ -14140,19 +14140,19 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T11> arg11 = new JniArgumentMarshalInfo<T11>(value11);
 			JniArgumentMarshalInfo<T12> arg12 = new JniArgumentMarshalInfo<T12>(value12);
 
-			var args = stackalloc JValue [12];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
+			var args = stackalloc JniArgumentValue [12];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
 
 			try {
 				return peer.InvokeDoubleMethod (encodedMember, args);
@@ -14192,20 +14192,20 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T12> arg12 = new JniArgumentMarshalInfo<T12>(value12);
 			JniArgumentMarshalInfo<T13> arg13 = new JniArgumentMarshalInfo<T13>(value13);
 
-			var args = stackalloc JValue [13];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
+			var args = stackalloc JniArgumentValue [13];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
 
 			try {
 				return peer.InvokeDoubleMethod (encodedMember, args);
@@ -14247,21 +14247,21 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T13> arg13 = new JniArgumentMarshalInfo<T13>(value13);
 			JniArgumentMarshalInfo<T14> arg14 = new JniArgumentMarshalInfo<T14>(value14);
 
-			var args = stackalloc JValue [14];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
-			args [13] = arg14.JValue;
+			var args = stackalloc JniArgumentValue [14];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
+			args [13] = arg14.JniArgumentValue;
 
 			try {
 				return peer.InvokeDoubleMethod (encodedMember, args);
@@ -14305,22 +14305,22 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T14> arg14 = new JniArgumentMarshalInfo<T14>(value14);
 			JniArgumentMarshalInfo<T15> arg15 = new JniArgumentMarshalInfo<T15>(value15);
 
-			var args = stackalloc JValue [15];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
-			args [13] = arg14.JValue;
-			args [14] = arg15.JValue;
+			var args = stackalloc JniArgumentValue [15];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
+			args [13] = arg14.JniArgumentValue;
+			args [14] = arg15.JniArgumentValue;
 
 			try {
 				return peer.InvokeDoubleMethod (encodedMember, args);
@@ -14366,23 +14366,23 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T15> arg15 = new JniArgumentMarshalInfo<T15>(value15);
 			JniArgumentMarshalInfo<T16> arg16 = new JniArgumentMarshalInfo<T16>(value16);
 
-			var args = stackalloc JValue [16];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
-			args [13] = arg14.JValue;
-			args [14] = arg15.JValue;
-			args [15] = arg16.JValue;
+			var args = stackalloc JniArgumentValue [16];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
+			args [13] = arg14.JniArgumentValue;
+			args [14] = arg15.JniArgumentValue;
+			args [15] = arg16.JniArgumentValue;
 
 			try {
 				return peer.InvokeDoubleMethod (encodedMember, args);
@@ -14414,8 +14414,8 @@ namespace Java.Interop.GenericMarshaler {
 		{
 			JniArgumentMarshalInfo<T> arg = new JniArgumentMarshalInfo<T>(value);
 
-			var args = stackalloc JValue [1];
-			args [0] = arg.JValue;
+			var args = stackalloc JniArgumentValue [1];
+			args [0] = arg.JniArgumentValue;
 
 			try {
 				return peer.InvokeObjectMethod (encodedMember, args);
@@ -14433,9 +14433,9 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T1> arg1 = new JniArgumentMarshalInfo<T1>(value1);
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 
-			var args = stackalloc JValue [2];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
+			var args = stackalloc JniArgumentValue [2];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
 
 			try {
 				return peer.InvokeObjectMethod (encodedMember, args);
@@ -14455,10 +14455,10 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T2> arg2 = new JniArgumentMarshalInfo<T2>(value2);
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
 
-			var args = stackalloc JValue [3];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
+			var args = stackalloc JniArgumentValue [3];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
 
 			try {
 				return peer.InvokeObjectMethod (encodedMember, args);
@@ -14480,11 +14480,11 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T3> arg3 = new JniArgumentMarshalInfo<T3>(value3);
 			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
 
-			var args = stackalloc JValue [4];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
+			var args = stackalloc JniArgumentValue [4];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
 
 			try {
 				return peer.InvokeObjectMethod (encodedMember, args);
@@ -14508,12 +14508,12 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T4> arg4 = new JniArgumentMarshalInfo<T4>(value4);
 			JniArgumentMarshalInfo<T5> arg5 = new JniArgumentMarshalInfo<T5>(value5);
 
-			var args = stackalloc JValue [5];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
+			var args = stackalloc JniArgumentValue [5];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
 
 			try {
 				return peer.InvokeObjectMethod (encodedMember, args);
@@ -14539,13 +14539,13 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T5> arg5 = new JniArgumentMarshalInfo<T5>(value5);
 			JniArgumentMarshalInfo<T6> arg6 = new JniArgumentMarshalInfo<T6>(value6);
 
-			var args = stackalloc JValue [6];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
+			var args = stackalloc JniArgumentValue [6];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
 
 			try {
 				return peer.InvokeObjectMethod (encodedMember, args);
@@ -14573,14 +14573,14 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T6> arg6 = new JniArgumentMarshalInfo<T6>(value6);
 			JniArgumentMarshalInfo<T7> arg7 = new JniArgumentMarshalInfo<T7>(value7);
 
-			var args = stackalloc JValue [7];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
+			var args = stackalloc JniArgumentValue [7];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
 
 			try {
 				return peer.InvokeObjectMethod (encodedMember, args);
@@ -14610,15 +14610,15 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T7> arg7 = new JniArgumentMarshalInfo<T7>(value7);
 			JniArgumentMarshalInfo<T8> arg8 = new JniArgumentMarshalInfo<T8>(value8);
 
-			var args = stackalloc JValue [8];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
+			var args = stackalloc JniArgumentValue [8];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
 
 			try {
 				return peer.InvokeObjectMethod (encodedMember, args);
@@ -14650,16 +14650,16 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T8> arg8 = new JniArgumentMarshalInfo<T8>(value8);
 			JniArgumentMarshalInfo<T9> arg9 = new JniArgumentMarshalInfo<T9>(value9);
 
-			var args = stackalloc JValue [9];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
+			var args = stackalloc JniArgumentValue [9];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
 
 			try {
 				return peer.InvokeObjectMethod (encodedMember, args);
@@ -14693,17 +14693,17 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T9> arg9 = new JniArgumentMarshalInfo<T9>(value9);
 			JniArgumentMarshalInfo<T10> arg10 = new JniArgumentMarshalInfo<T10>(value10);
 
-			var args = stackalloc JValue [10];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
+			var args = stackalloc JniArgumentValue [10];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
 
 			try {
 				return peer.InvokeObjectMethod (encodedMember, args);
@@ -14739,18 +14739,18 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T10> arg10 = new JniArgumentMarshalInfo<T10>(value10);
 			JniArgumentMarshalInfo<T11> arg11 = new JniArgumentMarshalInfo<T11>(value11);
 
-			var args = stackalloc JValue [11];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
+			var args = stackalloc JniArgumentValue [11];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
 
 			try {
 				return peer.InvokeObjectMethod (encodedMember, args);
@@ -14788,19 +14788,19 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T11> arg11 = new JniArgumentMarshalInfo<T11>(value11);
 			JniArgumentMarshalInfo<T12> arg12 = new JniArgumentMarshalInfo<T12>(value12);
 
-			var args = stackalloc JValue [12];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
+			var args = stackalloc JniArgumentValue [12];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
 
 			try {
 				return peer.InvokeObjectMethod (encodedMember, args);
@@ -14840,20 +14840,20 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T12> arg12 = new JniArgumentMarshalInfo<T12>(value12);
 			JniArgumentMarshalInfo<T13> arg13 = new JniArgumentMarshalInfo<T13>(value13);
 
-			var args = stackalloc JValue [13];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
+			var args = stackalloc JniArgumentValue [13];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
 
 			try {
 				return peer.InvokeObjectMethod (encodedMember, args);
@@ -14895,21 +14895,21 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T13> arg13 = new JniArgumentMarshalInfo<T13>(value13);
 			JniArgumentMarshalInfo<T14> arg14 = new JniArgumentMarshalInfo<T14>(value14);
 
-			var args = stackalloc JValue [14];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
-			args [13] = arg14.JValue;
+			var args = stackalloc JniArgumentValue [14];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
+			args [13] = arg14.JniArgumentValue;
 
 			try {
 				return peer.InvokeObjectMethod (encodedMember, args);
@@ -14953,22 +14953,22 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T14> arg14 = new JniArgumentMarshalInfo<T14>(value14);
 			JniArgumentMarshalInfo<T15> arg15 = new JniArgumentMarshalInfo<T15>(value15);
 
-			var args = stackalloc JValue [15];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
-			args [13] = arg14.JValue;
-			args [14] = arg15.JValue;
+			var args = stackalloc JniArgumentValue [15];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
+			args [13] = arg14.JniArgumentValue;
+			args [14] = arg15.JniArgumentValue;
 
 			try {
 				return peer.InvokeObjectMethod (encodedMember, args);
@@ -15014,23 +15014,23 @@ namespace Java.Interop.GenericMarshaler {
 			JniArgumentMarshalInfo<T15> arg15 = new JniArgumentMarshalInfo<T15>(value15);
 			JniArgumentMarshalInfo<T16> arg16 = new JniArgumentMarshalInfo<T16>(value16);
 
-			var args = stackalloc JValue [16];
-			args [0] = arg1.JValue;
-			args [1] = arg2.JValue;
-			args [2] = arg3.JValue;
-			args [3] = arg4.JValue;
-			args [4] = arg5.JValue;
-			args [5] = arg6.JValue;
-			args [6] = arg7.JValue;
-			args [7] = arg8.JValue;
-			args [8] = arg9.JValue;
-			args [9] = arg10.JValue;
-			args [10] = arg11.JValue;
-			args [11] = arg12.JValue;
-			args [12] = arg13.JValue;
-			args [13] = arg14.JValue;
-			args [14] = arg15.JValue;
-			args [15] = arg16.JValue;
+			var args = stackalloc JniArgumentValue [16];
+			args [0] = arg1.JniArgumentValue;
+			args [1] = arg2.JniArgumentValue;
+			args [2] = arg3.JniArgumentValue;
+			args [3] = arg4.JniArgumentValue;
+			args [4] = arg5.JniArgumentValue;
+			args [5] = arg6.JniArgumentValue;
+			args [6] = arg7.JniArgumentValue;
+			args [7] = arg8.JniArgumentValue;
+			args [8] = arg9.JniArgumentValue;
+			args [9] = arg10.JniArgumentValue;
+			args [10] = arg11.JniArgumentValue;
+			args [11] = arg12.JniArgumentValue;
+			args [12] = arg13.JniArgumentValue;
+			args [13] = arg14.JniArgumentValue;
+			args [14] = arg15.JniArgumentValue;
+			args [15] = arg16.JniArgumentValue;
 
 			try {
 				return peer.InvokeObjectMethod (encodedMember, args);

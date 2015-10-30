@@ -16,8 +16,8 @@ namespace Java.InteropTests
 			using (var Integer_class = new JniType ("java/lang/Integer")) {
 				Assert.AreEqual ("java/lang/Integer", Integer_class.Name);
 
-				var ctor_args = stackalloc JValue [1];
-				ctor_args [0] = new JValue (42);
+				var ctor_args = stackalloc JniArgumentValue [1];
+				ctor_args [0] = new JniArgumentValue (42);
 
 				var Integer_ctor        = Integer_class.GetConstructor ("(I)V");
 				var Integer_intValue    = Integer_class.GetInstanceMethod ("intValue", "()I");
@@ -135,8 +135,8 @@ namespace Java.InteropTests
 				var Class_getMethod         = Class_class.GetInstanceMethod ("getMethod", "(Ljava/lang/String;[Ljava/lang/Class;)Ljava/lang/reflect/Method;");
 				var Method_getReturnType    = Method_class.GetInstanceMethod ("getReturnType", "()Ljava/lang/Class;");
 				var hashCode_str            = JniEnvironment.Strings.NewString ("hashCode");
-				var hashCode_args           = stackalloc JValue [1];
-				hashCode_args [0]           = new JValue (hashCode_str);
+				var hashCode_args           = stackalloc JniArgumentValue [1];
+				hashCode_args [0]           = new JniArgumentValue (hashCode_str);
 				var Object_hashCode         = Class_getMethod.InvokeVirtualObjectMethod (Object_class.PeerReference, hashCode_args);
 				var Object_hashCode_rt      = Method_getReturnType.InvokeVirtualObjectMethod (Object_hashCode, null);
 				try {

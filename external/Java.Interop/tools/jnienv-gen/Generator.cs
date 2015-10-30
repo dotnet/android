@@ -538,7 +538,7 @@ namespace Xamarin.Java.Interop
 	abstract class TypeInfo
 	{
 		static readonly Dictionary<string, TypeInfo> types = new Dictionary<string, TypeInfo> () {
-			{ "jvalue*",                    new BuiltinTypeInfo ("jvalue*",                 "JValue*") },
+			{ "jvalue*",                    new BuiltinTypeInfo ("jvalue*",                 "JniArgumentValue*") },
 			{ "jbyte",                      new BuiltinTypeInfo ("jbyte",                   "sbyte") },
 			{ "jchar",                      new BuiltinTypeInfo ("jchar",                   "char") },
 			{ "jchar*",                     new BuiltinTypeInfo ("jchar*",                  "IntPtr") },

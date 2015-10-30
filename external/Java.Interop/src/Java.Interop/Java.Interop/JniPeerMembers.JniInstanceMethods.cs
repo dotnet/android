@@ -91,7 +91,7 @@ namespace Java.Interop
 			}
 		}
 
-		public unsafe JniObjectReference StartCreateInstance (string constructorSignature, Type declaringType, JValue* parameters)
+		public unsafe JniObjectReference StartCreateInstance (string constructorSignature, Type declaringType, JniArgumentValue* parameters)
 		{
 			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return NewObject (constructorSignature, declaringType, parameters);
@@ -112,14 +112,14 @@ namespace Java.Interop
 			return r;
 		}
 
-		internal unsafe JniObjectReference NewObject (string constructorSignature, Type declaringType, JValue* parameters)
+		internal unsafe JniObjectReference NewObject (string constructorSignature, Type declaringType, JniArgumentValue* parameters)
 		{
 			var methods = GetConstructorsForType (declaringType);
 			var ctor    = methods.GetConstructor (constructorSignature);
 			return methods.JniPeerType.NewObject (ctor, parameters);
 		}
 
-		public unsafe void FinishCreateInstance (string constructorSignature, IJavaPeerable self, JValue* parameters)
+		public unsafe void FinishCreateInstance (string constructorSignature, IJavaPeerable self, JniArgumentValue* parameters)
 		{
 			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return;
@@ -133,7 +133,7 @@ namespace Java.Interop
 
 #if !XA_INTEGRATION
 	struct JniArgumentMarshalInfo<T> {
-		JValue                          jvalue;
+		JniArgumentValue                  jvalue;
 		JniObjectReference              lref;
 		IJavaPeerable                     obj;
 		Action<IJavaPeerable, object>     cleanup;
@@ -143,20 +143,20 @@ namespace Java.Interop
 			this        = new JniArgumentMarshalInfo<T> ();
 			var jvm     = JniEnvironment.Runtime;
 			var info    = jvm.GetJniMarshalInfoForType (typeof (T));
-			if (info.CreateJValue != null)
-				jvalue = info.CreateJValue (value);
+			if (info.CreateJniArgumentValue != null)
+				jvalue = info.CreateJniArgumentValue (value);
 			else if (info.CreateMarshalCollection != null) {
 				obj     = info.CreateMarshalCollection (value);
-				jvalue  = new JValue (obj);
+				jvalue  = new JniArgumentValue (obj);
 			} else if (info.CreateLocalRef != null) {
 				lref    = info.CreateLocalRef (value);
-				jvalue  = new JValue (lref);
+				jvalue  = new JniArgumentValue (lref);
 			} else
-				throw new NotSupportedException ("Don't know how to get a JValue for: " + typeof (T).FullName);
+				throw new NotSupportedException ("Don't know how to get a JniArgumentValue for: " + typeof (T).FullName);
 			cleanup     = info.CleanupMarshalCollection;
 		}
 
-		public JValue JValue {
+		public JniArgumentValue JniArgumentValue {
 			get {return jvalue;}
 		}
 

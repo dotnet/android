@@ -48,7 +48,7 @@ namespace Java.Interop {
 	foreach (var type in types) {
 #>
 			new KeyValuePair<Type, JniMarshalInfo>(typeof (<#= type.Type #>), new JniMarshalInfo {
-				CreateJValue                = Jni<#= type.Name #>.CreateJValue,
+				CreateJniArgumentValue      = Jni<#= type.Name #>.CreateJniArgumentValue,
 				GetValueFromJni             = Jni<#= type.Name #>.GetValueFromJni,
 				CreateLocalRef              = Jni<#= type.Name #>.CreateLocalRef,
 			}),
@@ -69,9 +69,9 @@ namespace Java.Interop {
 			get {return JniType.GetCachedJniType (ref _TypeRef, JniTypeName);}
 		}
 
-		internal static JValue CreateJValue (object value)
+		internal static JniArgumentValue CreateJniArgumentValue (object value)
 		{
-			return new JValue ((<#= type.Type #>) value);
+			return new JniArgumentValue ((<#= type.Type #>) value);
 		}
 
 		static JniInstanceMethodInfo init;
@@ -79,8 +79,8 @@ namespace Java.Interop {
 		{
 			Debug.Assert (value is <#= type.Type #>, "Expected value of type `<#= type.Type #>`; was: " + (value == null ? "<null>" : value.GetType ().FullName));
 
-			var args    = stackalloc JValue [1];
-			args [0]    = new JValue ((<#= type.Type #>) value);
+			var args    = stackalloc JniArgumentValue [1];
+			args [0]    = new JniArgumentValue ((<#= type.Type #>) value);
 
 			TypeRef.GetCachedConstructor (ref init, "(<#= type.JniType #>)V");
 			return TypeRef.NewObject (init, args);

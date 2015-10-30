@@ -301,9 +301,9 @@ namespace Java.Interop.Dynamic {
 					return false;
 
 				margs       = args.Select (arg => new JniArgumentMarshalInfo (arg.Value, arg.LimitType)).ToList ();
-				var jargs   = stackalloc JValue [margs.Count];
+				var jargs   = stackalloc JniArgumentValue [margs.Count];
 				for (int i = 0; i < margs.Count; ++i)
-					jargs [i] = margs [i].JValue;
+					jargs [i] = margs [i].JniArgumentValue;
 				value       = invoke.Invoke (self, jargs);
 				return true;
 			}

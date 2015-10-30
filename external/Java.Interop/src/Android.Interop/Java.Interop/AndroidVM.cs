@@ -7,7 +7,7 @@ using Android.Runtime;
 namespace Java.Interop {
 
 	// FOR TEST PURPOSES ONLY
-	public  delegate    IntPtr              SafeHandleDelegate_CallObjectMethodA    (IntPtr   env,    IntPtr    instance,   IntPtr method, JValue[]    args);
+	public  delegate    IntPtr              SafeHandleDelegate_CallObjectMethodA    (IntPtr   env,    IntPtr    instance,   IntPtr method, JniArgumentValue[]    args);
 	public  delegate    void                SafeHandleDelegate_DeleteLocalRef       (IntPtr   env,    IntPtr    handle);
 
 	delegate int JNIEnv_GetJavaVM (IntPtr jnienv, out IntPtr vm);
