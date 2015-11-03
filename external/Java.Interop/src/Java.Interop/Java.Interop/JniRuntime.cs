@@ -255,7 +255,7 @@ namespace Java.Interop
 			var o   = PeekObject (value);
 			var e   = o as JavaException;
 			if (e != null) {
-				JniEnvironment.References.Dispose (ref value, transfer);
+				JniObjectReference.Dispose (ref value, transfer);
 				var p   = e as JavaProxyThrowable;
 				if (p != null)
 					return p.Exception;
@@ -327,7 +327,7 @@ namespace Java.Interop
 
 			if (r.Type != JniObjectReferenceType.Global) {
 				value.SetPeerReference (r.NewGlobalRef ());
-				JniEnvironment.References.Dispose (ref r, JniObjectReferenceOptions.DisposeSourceReference);
+				JniObjectReference.Dispose (ref r, JniObjectReferenceOptions.DisposeSourceReference);
 			}
 			int key = value.IdentityHashCode;
 			lock (RegisteredInstances) {
@@ -367,7 +367,7 @@ namespace Java.Interop
 
 			var newRef      = reference.NewGlobalRef ();
 			value.SetPeerReference (newRef);
-			JniEnvironment.References.Dispose (ref reference, options);
+			JniObjectReference.Dispose (ref reference, options);
 
 			value.IdentityHashCode = JniSystem.IdentityHashCode (newRef);
 
@@ -395,7 +395,7 @@ namespace Java.Interop
 				lref.SetHandleAsInvalid ();
 			}
 #endif  // FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
-			JniEnvironment.References.Dispose (ref h);
+			JniObjectReference.Dispose (ref h);
 			value.SetPeerReference (new JniObjectReference ());
 			GC.SuppressFinalize (value);
 		}
@@ -471,7 +471,7 @@ namespace Java.Interop
 
 			var existing = PeekObject (reference);
 			if (existing != null && (targetType == null || targetType.IsInstanceOfType (existing))) {
-				JniEnvironment.References.Dispose (ref reference, transfer);
+				JniObjectReference.Dispose (ref reference, transfer);
 				return existing;
 			}
 
@@ -518,7 +518,7 @@ namespace Java.Interop
 					});
 
 					if (ctor != null) {
-						JniEnvironment.References.Dispose (ref klass);
+						JniObjectReference.Dispose (ref klass);
 						return ctor;
 					}
 				}
@@ -528,10 +528,10 @@ namespace Java.Interop
 					? JniEnvironment.Types.GetJniTypeNameFromClass (super)
 					: null;
 
-				JniEnvironment.References.Dispose (ref klass, JniObjectReferenceOptions.DisposeSourceReference);
+				JniObjectReference.Dispose (ref klass, JniObjectReferenceOptions.DisposeSourceReference);
 				klass      = super;
 			}
-			JniEnvironment.References.Dispose (ref klass, JniObjectReferenceOptions.DisposeSourceReference);
+			JniObjectReference.Dispose (ref klass, JniObjectReferenceOptions.DisposeSourceReference);
 
 			return fallbackType.GetConstructor (new[] {
 				ByRefJniObjectReference,

@@ -161,6 +161,40 @@ namespace Java.Interop
 		{
 			return string.Format ("JniObjectReference(Handle=0x{0}, Type={1})", Handle.ToString ("x"), Type.ToString ());
 		}
+
+		public static void Dispose (ref JniObjectReference reference)
+		{
+			Dispose (ref reference, JniObjectReferenceOptions.DisposeSourceReference);
+		}
+
+		const JniObjectReferenceOptions TransferMask    = JniObjectReferenceOptions.CreateNewReference | JniObjectReferenceOptions.DisposeSourceReference;
+
+		public static void Dispose (ref JniObjectReference reference, JniObjectReferenceOptions transfer)
+		{
+			if (!reference.IsValid)
+				return;
+
+			switch (transfer & TransferMask) {
+			case JniObjectReferenceOptions.CreateNewReference:
+				break;
+			case JniObjectReferenceOptions.DisposeSourceReference:
+				switch (reference.Type) {
+				case JniObjectReferenceType.Global:
+					JniEnvironment.Runtime.ObjectReferenceManager.DeleteGlobalReference (ref reference);
+					break;
+				case JniObjectReferenceType.Local:
+					JniEnvironment.Runtime.ObjectReferenceManager.DeleteLocalReference (JniEnvironment.CurrentInfo, ref reference);
+					break;
+				case JniObjectReferenceType.WeakGlobal:
+					JniEnvironment.Runtime.ObjectReferenceManager.DeleteWeakGlobalReference (ref reference);
+					break;
+				default:
+					throw new NotImplementedException ("Do not know how to dispose: " + reference.Type + ".");
+				}
+				reference.Invalidate ();
+				break;
+			}
+		}
 	}
 }
 

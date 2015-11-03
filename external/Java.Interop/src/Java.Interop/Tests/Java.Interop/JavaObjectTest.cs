@@ -59,7 +59,7 @@ namespace Java.InteropTests
 			}
 			Assert.AreEqual (registeredCount, JniRuntime.Current.GetSurfacedObjects ().Count);
 			Assert.IsNull (JniRuntime.Current.PeekObject (l));
-			JniEnvironment.References.Dispose (ref l);
+			JniObjectReference.Dispose (ref l);
 			Assert.Throws<ObjectDisposedException> (() => o.UnregisterFromRuntime ());
 		}
 
@@ -90,7 +90,7 @@ namespace Java.InteropTests
 			Assert.IsFalse (r.IsAlive);
 			Assert.IsNull (r.Target);
 			Assert.IsNull (JniRuntime.Current.PeekObject (oldHandle));
-			JniEnvironment.References.Dispose (ref oldHandle);
+			JniObjectReference.Dispose (ref oldHandle);
 		}
 
 		[Test]

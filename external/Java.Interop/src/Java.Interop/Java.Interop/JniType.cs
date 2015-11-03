@@ -44,7 +44,7 @@ namespace Java.Interop {
 			try {
 				peer    = handle.NewLocalRef ();
 			} finally {
-				JniEnvironment.References.Dispose (ref handle, transfer);
+				JniObjectReference.Dispose (ref handle, transfer);
 			}
 		}
 
@@ -72,7 +72,7 @@ namespace Java.Interop {
 				if (peer.Type != JniObjectReferenceType.Global) {
 					var o           = peer;
 					peer            = o.NewGlobalRef ();
-					JniEnvironment.References.Dispose (ref o, JniObjectReferenceOptions.DisposeSourceReference);
+					JniObjectReference.Dispose (ref o, JniObjectReferenceOptions.DisposeSourceReference);
 				}
 				JniEnvironment.Runtime.Track (this);
 				registered = true;
@@ -104,7 +104,7 @@ namespace Java.Interop {
 				JniEnvironment.Runtime.UnTrack (PeerReference.Handle);
 			if (methods != null)
 				UnregisterNativeMethods ();
-			JniEnvironment.References.Dispose (ref peer);
+			JniObjectReference.Dispose (ref peer);
 		}
 
 		public JniType GetSuperclass ()

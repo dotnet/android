@@ -164,7 +164,7 @@ namespace Java.Interop
 		{
 			if (cleanup != null && obj != null)
 				cleanup (obj, value);
-			JniEnvironment.References.Dispose (ref lref, JniObjectReferenceOptions.DisposeSourceReference);
+			JniObjectReference.Dispose (ref lref, JniObjectReferenceOptions.DisposeSourceReference);
 		}
 	}
 #endif  // !XA_INTEGRATION

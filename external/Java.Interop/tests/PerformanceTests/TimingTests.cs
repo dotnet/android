@@ -325,35 +325,35 @@ namespace Java.Interop.PerformanceTests {
 				var tt = Stopwatch.StartNew ();
 				for (int i = 0; i < count; ++i) {
 					var s = o.Timing_ToString_Traditional ();
-					JniEnvironment.References.Dispose (ref s);
+					JniObjectReference.Dispose (ref s);
 				}
 				tt.Stop ();
 
 				var ta = Stopwatch.StartNew ();
 				for (int i = 0; i < count; ++i) {
 					var s = o.Timing_ToString_NoCache ();
-					JniEnvironment.References.Dispose (ref s);
+					JniObjectReference.Dispose (ref s);
 				}
 				ta.Stop ();
 
 				var td = Stopwatch.StartNew ();
 				for (int i = 0; i < count; ++i) {
 					var s = o.Timing_ToString_DictWithLock ();;
-					JniEnvironment.References.Dispose (ref s);
+					JniObjectReference.Dispose (ref s);
 				}
 				td.Stop ();
 
 				var tc = Stopwatch.StartNew ();
 				for (int i = 0; i < count; ++i) {
 					var s = o.Timing_ToString_DictWithNoLock ();
-					JniEnvironment.References.Dispose (ref s);
+					JniObjectReference.Dispose (ref s);
 				}
 				tc.Stop ();
 
 				var tp = Stopwatch.StartNew ();
 				for (int i = 0; i < count; ++i) {
 					var s = o.Timing_ToString_JniPeerMembers ();
-					JniEnvironment.References.Dispose (ref s);
+					JniObjectReference.Dispose (ref s);
 				}
 				tp.Stop ();
 
@@ -489,7 +489,7 @@ namespace Java.Interop.PerformanceTests {
 				for (int i = 0; i < len; ++i) {
 					var v = JniEnvironment.Arrays.GetObjectArrayElement (lrefMethods, i);
 					methodHandlesGO.Add (vm.GetObject<JavaObject> (ref v, JniObjectReferenceOptions.DoNotRegisterWithRuntime));
-					JniEnvironment.References.Dispose (ref v);
+					JniObjectReference.Dispose (ref v);
 				}
 				methodsTiming.Stop ();
 				Console.WriteLine ("# methodHandles(JavaVM.GetObject) creation timing: {0} Count={1}", methodsTiming.Elapsed, methodHandles.Count);
@@ -503,7 +503,7 @@ namespace Java.Interop.PerformanceTests {
 				for (int i = 0; i < len; ++i) {
 					var v = JniEnvironment.Arrays.GetObjectArrayElement (lrefMethods, i);
 					methodHandlesAr.Add (new JavaObject (ref v, JniObjectReferenceOptions.DoNotRegisterWithRuntime));
-					JniEnvironment.References.Dispose (ref v);
+					JniObjectReference.Dispose (ref v);
 				}
 				methodsTiming.Stop ();
 				Console.WriteLine ("# methodHandles(JavaObject[]) creation timing: {0} Count={1}", methodsTiming.Elapsed, methodHandles.Count);
@@ -518,18 +518,18 @@ namespace Java.Interop.PerformanceTests {
 				for (int i = 0; i < len; ++i) {
 					var v = JniEnvironment.Arrays.GetObjectArrayElement (lrefMethods, i);
 					methodHandlesGR.Add (v.NewGlobalRef ());
-					JniEnvironment.References.Dispose (ref v);
+					JniObjectReference.Dispose (ref v);
 				}
 				methodsTiming.Stop ();
 				Console.WriteLine ("# methodHandles(JniGlobalReference) creation timing: {0} Count={1}", methodsTiming.Elapsed, methodHandles.Count);
 
 				for (int i = 0; i < methodHandlesGR.Count; ++i) {
 					var h = methodHandlesGR [i];
-					JniEnvironment.References.Dispose (ref h);
+					JniObjectReference.Dispose (ref h);
 					methodHandlesGR [i] = h;
 				}
 
-				JniEnvironment.References.Dispose (ref lrefMethods);
+				JniObjectReference.Dispose (ref lrefMethods);
 			}
 
 			// HACK HACK HACK
@@ -645,14 +645,14 @@ namespace Java.Interop.PerformanceTests {
 				allocTime   = Stopwatch.StartNew ();
 				for (int i = 0; i < C; ++i) {
 					var h = Object_class.AllocObject ();
-					JniEnvironment.References.Dispose (ref h);
+					JniObjectReference.Dispose (ref h);
 				}
 				allocTime.Stop ();
 
 				newObjectTime   = Stopwatch.StartNew ();
 				for (int i = 0; i < C; ++i) {
 					var h = Object_class.NewObject (Object_init, null);
-					JniEnvironment.References.Dispose (ref h);
+					JniObjectReference.Dispose (ref h);
 				}
 				newObjectTime.Stop ();
 

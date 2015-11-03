@@ -26,7 +26,7 @@ namespace Java.InteropTests
 					int v = Integer_intValue.InvokeVirtualInt32Method (o);
 					Assert.AreEqual (42, v);
 				} finally {
-					JniEnvironment.References.Dispose (ref o);
+					JniObjectReference.Dispose (ref o);
 				}
 			}
 		}
@@ -145,9 +145,9 @@ namespace Java.InteropTests
 					using (var t = new JniType (ref Object_hashCode_rt, JniObjectReferenceOptions.CreateNewReference))
 						Assert.AreEqual ("I", t.Name);
 				} finally {
-					JniEnvironment.References.Dispose (ref hashCode_str);
-					JniEnvironment.References.Dispose (ref Object_hashCode);
-					JniEnvironment.References.Dispose (ref Object_hashCode_rt);
+					JniObjectReference.Dispose (ref hashCode_str);
+					JniObjectReference.Dispose (ref Object_hashCode);
+					JniObjectReference.Dispose (ref Object_hashCode_rt);
 				}
 			}
 		}

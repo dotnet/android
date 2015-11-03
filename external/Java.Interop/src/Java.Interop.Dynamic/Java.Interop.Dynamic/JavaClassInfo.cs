@@ -191,10 +191,10 @@ namespace Java.Interop.Dynamic {
 						var ctor    = JniEnvironment.Arrays.GetObjectArrayElement (ctors, i);
 						var m       = new JavaConstructorInfo (Members, ctor);
 						constructors.Add (m);
-						JniEnvironment.References.Dispose (ref ctor);
+						JniObjectReference.Dispose (ref ctor);
 					}
 				} finally {
-					JniEnvironment.References.Dispose (ref ctors);
+					JniObjectReference.Dispose (ref ctors);
 				}
 
 				return constructors;
@@ -231,10 +231,10 @@ namespace Java.Interop.Dynamic {
 							overloads.Add (new JavaFieldInfo (Members, name + "\u0000" + info.QualifiedReference, isStatic));
 						}
 
-						JniEnvironment.References.Dispose (ref field);
+						JniObjectReference.Dispose (ref field);
 					}
 				} finally {
-					JniEnvironment.References.Dispose (ref fields);
+					JniObjectReference.Dispose (ref fields);
 				}
 
 				return this.fields;
@@ -271,10 +271,10 @@ namespace Java.Interop.Dynamic {
 							ReturnType  = rt,
 						};
 						overloads.Add (m);
-						JniEnvironment.References.Dispose (ref method);
+						JniObjectReference.Dispose (ref method);
 					}
 				} finally {
-					JniEnvironment.References.Dispose (ref methods);
+					JniObjectReference.Dispose (ref methods);
 				}
 
 				return this.methods;

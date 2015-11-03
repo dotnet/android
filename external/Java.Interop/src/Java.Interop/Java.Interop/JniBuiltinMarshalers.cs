@@ -111,7 +111,7 @@ namespace Java.Interop {
 			try {
 				return booleanValue.InvokeVirtualBooleanMethod (self);
 			} finally {
-				JniEnvironment.References.Dispose (ref self, transfer);
+				JniObjectReference.Dispose (ref self, transfer);
 			}
 		}
 	}
@@ -149,7 +149,7 @@ namespace Java.Interop {
 			try {
 				return byteValue.InvokeVirtualSByteMethod (self);
 			} finally {
-				JniEnvironment.References.Dispose (ref self, transfer);
+				JniObjectReference.Dispose (ref self, transfer);
 			}
 		}
 	}
@@ -187,7 +187,7 @@ namespace Java.Interop {
 			try {
 				return charValue.InvokeVirtualCharMethod (self);
 			} finally {
-				JniEnvironment.References.Dispose (ref self, transfer);
+				JniObjectReference.Dispose (ref self, transfer);
 			}
 		}
 	}
@@ -225,7 +225,7 @@ namespace Java.Interop {
 			try {
 				return shortValue.InvokeVirtualInt16Method (self);
 			} finally {
-				JniEnvironment.References.Dispose (ref self, transfer);
+				JniObjectReference.Dispose (ref self, transfer);
 			}
 		}
 	}
@@ -263,7 +263,7 @@ namespace Java.Interop {
 			try {
 				return intValue.InvokeVirtualInt32Method (self);
 			} finally {
-				JniEnvironment.References.Dispose (ref self, transfer);
+				JniObjectReference.Dispose (ref self, transfer);
 			}
 		}
 	}
@@ -301,7 +301,7 @@ namespace Java.Interop {
 			try {
 				return longValue.InvokeVirtualInt64Method (self);
 			} finally {
-				JniEnvironment.References.Dispose (ref self, transfer);
+				JniObjectReference.Dispose (ref self, transfer);
 			}
 		}
 	}
@@ -339,7 +339,7 @@ namespace Java.Interop {
 			try {
 				return floatValue.InvokeVirtualSingleMethod (self);
 			} finally {
-				JniEnvironment.References.Dispose (ref self, transfer);
+				JniObjectReference.Dispose (ref self, transfer);
 			}
 		}
 	}
@@ -377,7 +377,7 @@ namespace Java.Interop {
 			try {
 				return doubleValue.InvokeVirtualDoubleMethod (self);
 			} finally {
-				JniEnvironment.References.Dispose (ref self, transfer);
+				JniObjectReference.Dispose (ref self, transfer);
 			}
 		}
 	}

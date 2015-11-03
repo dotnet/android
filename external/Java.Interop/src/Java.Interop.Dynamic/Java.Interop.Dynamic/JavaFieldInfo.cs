@@ -141,7 +141,7 @@ namespace Java.Interop.Dynamic {
 				try {
 					members.StaticFields.SetValue (JniSignature, lref);
 				} finally {
-					JniEnvironment.References.Dispose (ref lref);
+					JniObjectReference.Dispose (ref lref);
 				}
 				return;
 			default:
@@ -167,7 +167,7 @@ namespace Java.Interop.Dynamic {
 				try {
 					members.InstanceFields.SetValue (JniSignature, self, lref);
 				} finally {
-					JniEnvironment.References.Dispose (ref lref);
+					JniObjectReference.Dispose (ref lref);
 				}
 				return;
 			default:

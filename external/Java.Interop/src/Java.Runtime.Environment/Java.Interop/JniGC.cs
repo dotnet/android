@@ -10,7 +10,7 @@ namespace Java.Interop
 			try {
 				JavaLangRuntime.GC (runtime);
 			} finally {
-				JniEnvironment.References.Dispose (ref runtime);
+				JniObjectReference.Dispose (ref runtime);
 			}
 		}
 	}

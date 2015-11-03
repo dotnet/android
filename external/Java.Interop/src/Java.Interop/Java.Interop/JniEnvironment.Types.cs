@@ -44,7 +44,7 @@ namespace Java.Interop
 					return GetJniTypeNameFromClass (lref);
 				}
 				finally {
-					JniEnvironment.References.Dispose (ref lref, JniObjectReferenceOptions.DisposeSourceReference);
+					JniObjectReference.Dispose (ref lref, JniObjectReferenceOptions.DisposeSourceReference);
 				}
 			}
 

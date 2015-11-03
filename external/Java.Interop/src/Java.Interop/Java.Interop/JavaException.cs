@@ -48,7 +48,7 @@ namespace Java.Interop
 					JniPeerMembers.InstanceMethods.FinishCreateInstance (signature, this, args);
 				}
 			} finally {
-				JniEnvironment.References.Dispose (ref native_message, JniObjectReferenceOptions.DisposeSourceReference);
+				JniObjectReference.Dispose (ref native_message, JniObjectReferenceOptions.DisposeSourceReference);
 			}
 			javaStackTrace    = _GetJavaStack (PeerReference);
 		}
@@ -68,7 +68,7 @@ namespace Java.Interop
 					JniPeerMembers.InstanceMethods.FinishCreateInstance (signature, this, args);
 				}
 			} finally {
-				JniEnvironment.References.Dispose (ref native_message, JniObjectReferenceOptions.DisposeSourceReference);
+				JniObjectReference.Dispose (ref native_message, JniObjectReferenceOptions.DisposeSourceReference);
 			}
 			javaStackTrace    = _GetJavaStack (PeerReference);
 		}
@@ -215,10 +215,10 @@ namespace Java.Interop
 						var s = JniEnvironment.Object.ToString (swriter);
 						return JniEnvironment.Strings.ToString (ref s, JniObjectReferenceOptions.DisposeSourceReference);
 					} finally {
-						JniEnvironment.References.Dispose (ref pwriter, JniObjectReferenceOptions.DisposeSourceReference);
+						JniObjectReference.Dispose (ref pwriter, JniObjectReferenceOptions.DisposeSourceReference);
 					}
 				} finally {
-					JniEnvironment.References.Dispose (ref swriter, JniObjectReferenceOptions.DisposeSourceReference);
+					JniObjectReference.Dispose (ref swriter, JniObjectReferenceOptions.DisposeSourceReference);
 				}
 			}
 		}

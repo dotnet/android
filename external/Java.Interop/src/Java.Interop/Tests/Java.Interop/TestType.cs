@@ -132,7 +132,7 @@ namespace Java.InteropTests
 				try {
 					return JniEnvironment.References.NewReturnToJniRef (r);
 				} finally {
-					JniEnvironment.References.Dispose (ref r);
+					JniObjectReference.Dispose (ref r);
 				}
 			} finally {
 				self.DisposeUnlessRegistered ();

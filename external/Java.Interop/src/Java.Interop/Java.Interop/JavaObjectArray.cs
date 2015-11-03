@@ -66,7 +66,7 @@ namespace Java.Interop
 		{
 			var h = JniMarshal.CreateLocalRef (value);
 			JniEnvironment.Arrays.SetObjectArrayElement (PeerReference, index, h);
-			JniEnvironment.References.Dispose (ref h, JniObjectReferenceOptions.DisposeSourceReference);
+			JniObjectReference.Dispose (ref h, JniObjectReferenceOptions.DisposeSourceReference);
 		}
 
 		public override IEnumerator<T> GetEnumerator ()
@@ -84,7 +84,7 @@ namespace Java.Interop
 			for (int i = 0; i < len; i++) {
 				JniEnvironment.Arrays.SetObjectArrayElement (PeerReference, i, v);
 			}
-			JniEnvironment.References.Dispose (ref v, JniObjectReferenceOptions.DisposeSourceReference);
+			JniObjectReference.Dispose (ref v, JniObjectReferenceOptions.DisposeSourceReference);
 		}
 
 		public override int IndexOf (T item)

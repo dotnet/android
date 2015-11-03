@@ -95,7 +95,7 @@ namespace Java.InteropTests
 			// but the wrapper instance has been disposed, and thus should
 			// be unregistered, and thus unfindable.
 			Assert.IsNull (JniRuntime.Current.PeekObject (lref));
-			JniEnvironment.References.Dispose (ref lref);
+			JniObjectReference.Dispose (ref lref);
 		}
 
 		[Test]
@@ -207,7 +207,7 @@ namespace Java.InteropTests
 			info.CreateJniArgumentValue (default (T));
 			var lref = info.CreateLocalRef (default (T));
 			Assert.AreEqual (default (T), info.GetValueFromJni (ref lref, JniObjectReferenceOptions.CreateNewReference, null));
-			JniEnvironment.References.Dispose (ref lref);
+			JniObjectReference.Dispose (ref lref);
 		}
 
 		static void AssertGetJniMarshalInfoForPrimitiveArray<TArray, TElement> ()

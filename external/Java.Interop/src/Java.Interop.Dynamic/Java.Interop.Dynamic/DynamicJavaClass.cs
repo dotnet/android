@@ -177,7 +177,7 @@ namespace Java.Interop.Dynamic {
 		{
 			if (cleanup != null && obj != null)
 				cleanup (obj, value);
-			JniEnvironment.References.Dispose (ref lref);
+			JniObjectReference.Dispose (ref lref);
 		}
 	}
 }

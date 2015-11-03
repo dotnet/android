@@ -47,12 +47,12 @@ namespace Java.Interop {
 			var target  = jvm.PeekObject (reference);
 			var proxy   = target as JavaProxyObject;
 			if (proxy != null) {
-				JniEnvironment.References.Dispose (ref reference, transfer);
+				JniObjectReference.Dispose (ref reference, transfer);
 				return (T) proxy.Value;
 			}
 
 			if (target is T) {
-				JniEnvironment.References.Dispose (ref reference, transfer);
+				JniObjectReference.Dispose (ref reference, transfer);
 				return (T) target;
 			}
 
