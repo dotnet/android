@@ -448,7 +448,8 @@ namespace Java.Interop.PerformanceTests {
 				int len             = JniEnvironment.Arrays.GetArrayLength (lrefMethods);
 				for (int i = 0; i < len; ++i) {
 					var v = JniEnvironment.Arrays.GetObjectArrayElement (lrefMethods, i);
-					methodHandlesGO.Add (vm.GetObject<JavaObject> (ref v, JniObjectReferenceOptions.DisposeSourceReference));
+					methodHandlesGO.Add (vm.GetObject<JavaObject> (ref v, JniObjectReferenceOptions.DoNotRegisterWithRuntime));
+					JniEnvironment.References.Dispose (ref v);
 				}
 				methodsTiming.Stop ();
 				Console.WriteLine ("# methodHandles(JavaVM.GetObject) creation timing: {0} Count={1}", methodsTiming.Elapsed, methodHandles.Count);
@@ -461,7 +462,8 @@ namespace Java.Interop.PerformanceTests {
 				len                 = JniEnvironment.Arrays.GetArrayLength (lrefMethods);
 				for (int i = 0; i < len; ++i) {
 					var v = JniEnvironment.Arrays.GetObjectArrayElement (lrefMethods, i);
-					methodHandlesAr.Add (new JavaObject (ref v, JniObjectReferenceOptions.DisposeSourceReference));
+					methodHandlesAr.Add (new JavaObject (ref v, JniObjectReferenceOptions.DoNotRegisterWithRuntime));
+					JniEnvironment.References.Dispose (ref v);
 				}
 				methodsTiming.Stop ();
 				Console.WriteLine ("# methodHandles(JavaObject[]) creation timing: {0} Count={1}", methodsTiming.Elapsed, methodHandles.Count);
@@ -490,6 +492,13 @@ namespace Java.Interop.PerformanceTests {
 				JniEnvironment.References.Dispose (ref lrefMethods);
 			}
 
+			// HACK HACK HACK
+			// This is to workaround an error wherein constructing `pt` (below)
+			// throws an exception because `h` is NULL, when it really can't be.
+			// I believe that this is due to the finalizer, which likewise makes
+			// NO SENSE AT ALL, since `p` should be keeping the handle valid!
+			GC.Collect ();
+			GC.WaitForPendingFinalizers ();
 
 			foreach (var method in methodHandles) {
 				var lookupTiming    = Stopwatch.StartNew ();
