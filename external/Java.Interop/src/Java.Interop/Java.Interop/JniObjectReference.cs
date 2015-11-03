@@ -117,6 +117,16 @@ namespace Java.Interop
 #endif  // FEATURE_JNIOBJECTREFERENCE_INTPTRS
 		}
 
+		public static bool operator == (JniObjectReference lhs, JniObjectReference rhs)
+		{
+			return lhs.Handle == rhs.Handle;
+		}
+
+		public static bool operator != (JniObjectReference lhs, JniObjectReference rhs)
+		{
+			return lhs.Handle != rhs.Handle;
+		}
+
 		public JniObjectReference NewGlobalRef ()
 		{
 			return JniEnvironment.Runtime.ObjectReferenceManager.CreateGlobalReference (this);
