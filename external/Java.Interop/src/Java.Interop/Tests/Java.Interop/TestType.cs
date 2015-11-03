@@ -87,7 +87,6 @@ namespace Java.InteropTests
 			Func<IntPtr, IntPtr, IntPtr, bool> h = (jnienv, n_self, n_value) => {
 				var jvm     = JniEnvironment.Runtime;
 				var r_self  = new JniObjectReference (n_self);
-				var p = JniEnvironment.Runtime.PeekObject (r_self);
 				var self    = jvm.GetObject<TestType>(ref r_self, JniObjectReferenceOptions.DoNotRegisterWithRuntime);
 				var r_value = new JniObjectReference (n_self);
 				var value   = jvm.GetObject (ref r_value, JniObjectReferenceOptions.DoNotRegisterWithRuntime);

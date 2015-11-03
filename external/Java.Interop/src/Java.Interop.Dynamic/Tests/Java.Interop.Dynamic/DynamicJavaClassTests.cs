@@ -51,6 +51,7 @@ namespace Java.Interop.DynamicTests {
 			Assert.Catch<Exception> (() => Integer.bitCount (2));
 			Assert.Catch<Exception> (() => {
 				int max = Integer.MAX_INT;
+				max = max > 0 ? max : max;
 			});
 			Assert.Catch<Exception> (() => {
 				Integer.MAX_INT = 42;
