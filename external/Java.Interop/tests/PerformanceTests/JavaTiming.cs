@@ -10,8 +10,12 @@ namespace Java.Interop.PerformanceTests
 	[JniTypeSignature (JniTypeName)]
 	public class JavaTiming : JavaObject
 	{
-		const               string          JniTypeName = "com/xamarin/interop/performance/JavaTiming";
+		protected   const   string          JniTypeName = "com/xamarin/interop/performance/JavaTiming";
 		static  readonly    JniPeerMembers  _members    = new JniPeerMembers (JniTypeName, typeof (JavaTiming));
+
+		public override JniPeerMembers JniPeerMembers {
+			get {return _members;}
+		}
 
 		static JniType _TypeRef;
 		internal static JniType TypeRef {
@@ -267,6 +271,16 @@ namespace Java.Interop.PerformanceTests
 				(s, c) => c ?? TypeRef.GetInstanceMethod (toString_name, toString_sig));
 			return m.InvokeVirtualObjectMethod (PeerReference);
 		}
+
+		public unsafe JniObjectReference Timing_ToString_JniPeerMembers ()
+		{
+			const string id = toString_name + "\u0000" + toString_sig;
+			return _members.InstanceMethods.InvokeVirtualObjectMethod (id, this, null);
+		}
+	}
+
+	[JniTypeSignature (JniTypeName)]
+	class DerivedJavaTiming : JavaTiming {
 	}
 }
 

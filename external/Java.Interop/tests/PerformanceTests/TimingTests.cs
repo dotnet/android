@@ -350,11 +350,51 @@ namespace Java.Interop.PerformanceTests {
 				}
 				tc.Stop ();
 
+				var tp = Stopwatch.StartNew ();
+				for (int i = 0; i < count; ++i) {
+					var s = o.Timing_ToString_JniPeerMembers ();
+					JniEnvironment.References.Dispose (ref s);
+				}
+				tp.Stop ();
+
+
+				var vtt = Stopwatch.StartNew ();
+				for (int i = 0; i < count; ++i) {
+					o.VirtualIntMethod1Args (i);
+				}
+				vtt.Stop ();
+
+				var vti = Stopwatch.StartNew ();
+				for (int i = 0; i < count; ++i) {
+					o.Timing_VirtualIntMethod_Marshal1Args (i);
+				}
+				vti.Stop ();
+
+
 				Console.WriteLine ("Method Lookup + Invoke Timing:");
 				Console.WriteLine ("\t   Traditional: {0}", tt.Elapsed);
 				Console.WriteLine ("\t    No caching: {0}", ta.Elapsed);
 				Console.WriteLine ("\t  Dict w/ lock: {0}", td.Elapsed);
 				Console.WriteLine ("\tConcurrentDict: {0}", tc.Elapsed);
+				Console.WriteLine ("\tJniPeerMembers: {0}", tp.Elapsed);
+				Console.WriteLine ();
+				Console.WriteLine ("\t      (I)I virtual+traditional: {0}", vtt.Elapsed);
+				Console.WriteLine ("\t   (I)I virtual+JniPeerMembers: {0}", vti.Elapsed);
+			}
+			using (var o = new DerivedJavaTiming ()) {
+				var ntt = Stopwatch.StartNew ();
+				for (int i = 0; i < count; ++i) {
+					o.VirtualIntMethod1Args (i);
+				}
+				ntt.Stop ();
+
+				var nti = Stopwatch.StartNew ();
+				for (int i = 0; i < count; ++i) {
+					o.Timing_VirtualIntMethod_Marshal1Args (i);
+				}
+				nti.Stop ();
+				Console.WriteLine ("\t   (I)I nonvirtual+traditional: {0}", ntt.Elapsed);
+				Console.WriteLine ("\t(I)I nonvirtual+JniPeerMembers: {0}", nti.Elapsed);
 			}
 
 			total.Stop ();
