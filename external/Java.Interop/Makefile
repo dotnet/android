@@ -19,7 +19,7 @@ PTESTS = \
 ATESTS = \
 	bin/$(CONFIGURATION)/Android.Interop-Tests.dll
 
-XBUILD = xbuild
+XBUILD = xbuild $(if $(V),/v:diag,)
 
 all: $(DEPENDENCIES) $(TESTS) $(XA_INTEGRATION_OUTPUTS)
 
