@@ -70,7 +70,7 @@ namespace Android.Runtime
 			d = value;
 		}
 
-		JniArgumentValue (IntPtr value)
+		public JniArgumentValue (IntPtr value)
 		{
 			this = new JniArgumentValue ();
 			l = value;
