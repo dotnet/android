@@ -21,14 +21,14 @@
 				.SetValue (self.PeerReference, value);
 		}
 
-		public sbyte GetByteValue (
+		public sbyte GetSByteValue (
 			string encodedMember,
 			IJavaPeerable   self)
 		{
 			JniPeerMembers.AssertSelf (self);
 
 			return GetFieldInfo (encodedMember)
-				.GetByteValue (self.PeerReference);
+				.GetSByteValue (self.PeerReference);
 		}
 
 		public void SetValue (string encodedMember, IJavaPeerable self, sbyte value)
@@ -180,10 +180,10 @@
 				.SetValue (Members.JniPeerType.PeerReference, value);
 		}
 
-		public sbyte GetByteValue (string encodedMember)
+		public sbyte GetSByteValue (string encodedMember)
 		{
 			return GetFieldInfo (encodedMember)
-				.GetByteValue (Members.JniPeerType.PeerReference);
+				.GetSByteValue (Members.JniPeerType.PeerReference);
 		}
 
 		public void SetValue (string encodedMember, sbyte value)

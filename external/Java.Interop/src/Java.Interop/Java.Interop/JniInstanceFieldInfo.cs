@@ -20,7 +20,7 @@ namespace Java.Interop
 			return JniEnvironment.InstanceFields.GetBooleanField (@this, this);
 		}
 
-		public sbyte GetByteValue (JniObjectReference @this)
+		public sbyte GetSByteValue (JniObjectReference @this)
 		{
 			return JniEnvironment.InstanceFields.GetByteField (@this, this);
 		}

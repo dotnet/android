@@ -6,7 +6,7 @@
 <#
 	var jniReturnTypes = new[]{
 		new { JniCallType   = "Boolean",    ReturnType  = "bool",               ParameterType = "bool" },
-		new { JniCallType   = "Byte",       ReturnType  = "sbyte",              ParameterType = "sbyte" },
+		new { JniCallType   = "SByte",      ReturnType  = "sbyte",              ParameterType = "sbyte" },
 		new { JniCallType   = "Char",       ReturnType  = "char",               ParameterType = "char" },
 		new { JniCallType   = "Int16",      ReturnType  = "short",              ParameterType = "short" },
 		new { JniCallType   = "Int32",      ReturnType  = "int",                ParameterType = "int" },
