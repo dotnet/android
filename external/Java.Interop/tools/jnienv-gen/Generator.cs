@@ -259,13 +259,18 @@ namespace Xamarin.Java.Interop
 		static void GenerateTypes (TextWriter o, HandleStyle style)
 		{
 			var visibilities = new Dictionary<string, string> {
-				{ "Arrays",     "public" },
-				{ "Exceptions", "public" },
-				{ "References", "public" },
-				{ "IO",         "public" },
-				{ "Object",     "public" },
-				{ "Strings",    "public" },
-				{ "Types",      "public" },
+				{ ArrayOperationsCategory,      "public" },
+				{ ClassesCategory,              "public" },
+				{ ExceptionsCategory,           "public" },
+				{ InstanceFieldsCategory,       "public" },
+				{ InstanceMethodsCategory,      "public" },
+				{ MonitorOperationsCategory,    "public" },
+				{ NIOSupportCategory,           "public" },
+				{ ObjectOperationsCategory,     "public" },
+				{ ReferencesCatgeory,           "public" },
+				{ StaticFieldsCategory,         "public" },
+				{ StaticMethodsCategory,        "public" },
+				{ StringOperationsCategory,     "public" },
 			};
 			o.WriteLine ("\tpartial class JniEnvironment {");
 			if (style == HandleStyle.JIIntPtrPinvokeWithErrors) {

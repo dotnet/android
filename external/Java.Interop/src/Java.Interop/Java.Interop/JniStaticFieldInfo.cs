@@ -57,47 +57,47 @@ namespace Java.Interop {
 
 		public void SetValue (JniObjectReference @class, JniObjectReference value)
 		{
-			JniEnvironment.StaticFields.SetStaticField (@class, this, value);
+			JniEnvironment.StaticFields.SetStaticObjectField (@class, this, value);
 		}
 
 		public void SetValue (JniObjectReference @class, bool value)
 		{
-			JniEnvironment.StaticFields.SetStaticField (@class, this, value);
+			JniEnvironment.StaticFields.SetStaticBooleanField (@class, this, value);
 		}
 
 		public void SetValue (JniObjectReference @class, sbyte value)
 		{
-			JniEnvironment.StaticFields.SetStaticField (@class, this, value);
+			JniEnvironment.StaticFields.SetStaticByteField (@class, this, value);
 		}
 
 		public void SetValue (JniObjectReference @class, char value)
 		{
-			JniEnvironment.StaticFields.SetStaticField (@class, this, value);
+			JniEnvironment.StaticFields.SetStaticCharField (@class, this, value);
 		}
 
 		public void SetValue (JniObjectReference @class, short value)
 		{
-			JniEnvironment.StaticFields.SetStaticField (@class, this, value);
+			JniEnvironment.StaticFields.SetStaticShortField (@class, this, value);
 		}
 
 		public void SetValue (JniObjectReference @class, int value)
 		{
-			JniEnvironment.StaticFields.SetStaticField (@class, this, value);
+			JniEnvironment.StaticFields.SetStaticIntField (@class, this, value);
 		}
 
 		public void SetValue (JniObjectReference @class, long value)
 		{
-			JniEnvironment.StaticFields.SetStaticField (@class, this, value);
+			JniEnvironment.StaticFields.SetStaticLongField (@class, this, value);
 		}
 
 		public void SetValue (JniObjectReference @class, float value)
 		{
-			JniEnvironment.StaticFields.SetStaticField (@class, this, value);
+			JniEnvironment.StaticFields.SetStaticFloatField (@class, this, value);
 		}
 
 		public void SetValue (JniObjectReference @class, double value)
 		{
-			JniEnvironment.StaticFields.SetStaticField (@class, this, value);
+			JniEnvironment.StaticFields.SetStaticDoubleField (@class, this, value);
 		}
 	}
 }
