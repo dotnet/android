@@ -41,21 +41,21 @@ namespace Java.Interop.PerformanceTests
 		public static void StaticVoidMethod ()
 		{
 			TypeRef.GetCachedStaticMethod (ref svm, "StaticVoidMethod", "()V");
-			svm.CallVoidMethod (TypeRef.PeerReference);
+			svm.InvokeVoidMethod (TypeRef.PeerReference);
 		}
 
 		static JniStaticMethodInfo sim;
 		public static int StaticIntMethod ()
 		{
 			TypeRef.GetCachedStaticMethod (ref sim, "StaticIntMethod", "()I");
-			return sim.CallInt32Method (TypeRef.PeerReference);
+			return sim.InvokeInt32Method (TypeRef.PeerReference);
 		}
 
 		static JniStaticMethodInfo som;
 		public static IJavaPeerable StaticObjectMethod ()
 		{
 			TypeRef.GetCachedStaticMethod (ref som, "StaticObjectMethod", "()Ljava/lang/Object;");
-			var lref = som.CallObjectMethod (TypeRef.PeerReference);
+			var lref = som.InvokeObjectMethod (TypeRef.PeerReference);
 			return JniEnvironment.Runtime.GetObject (ref lref, JniObjectReferenceOptions.DisposeSourceReference);
 		}
 
@@ -180,7 +180,7 @@ namespace Java.Interop.PerformanceTests
 					"(Ljava/lang/Object;)V");
 			var args = stackalloc JniArgumentValue [1];
 			args [0] = new JniArgumentValue (obj1);
-			svm1.CallVoidMethod (TypeRef.PeerReference, args);
+			svm1.InvokeVoidMethod (TypeRef.PeerReference, args);
 		}
 
 		static JniStaticMethodInfo svm2;
@@ -191,7 +191,7 @@ namespace Java.Interop.PerformanceTests
 			var args = stackalloc JniArgumentValue [2];
 			args [0] = new JniArgumentValue (obj1);
 			args [1] = new JniArgumentValue (obj2);
-			svm2.CallVoidMethod (TypeRef.PeerReference, args);
+			svm2.InvokeVoidMethod (TypeRef.PeerReference, args);
 		}
 
 		static JniStaticMethodInfo svm3;
@@ -203,7 +203,7 @@ namespace Java.Interop.PerformanceTests
 			args [0] = new JniArgumentValue (obj1);
 			args [1] = new JniArgumentValue (obj2);
 			args [1] = new JniArgumentValue (obj3);
-			svm2.CallVoidMethod (TypeRef.PeerReference, args);
+			svm2.InvokeVoidMethod (TypeRef.PeerReference, args);
 		}
 
 		static JniStaticMethodInfo svmi1;
@@ -212,7 +212,7 @@ namespace Java.Interop.PerformanceTests
 			TypeRef.GetCachedStaticMethod (ref svmi1, "StaticVoidMethod1IArgs", "(I)V");
 			var args = stackalloc JniArgumentValue [1];
 			args [0] = new JniArgumentValue (obj1);
-			svmi1.CallVoidMethod (TypeRef.PeerReference, args);
+			svmi1.InvokeVoidMethod (TypeRef.PeerReference, args);
 		}
 
 		static JniStaticMethodInfo svmi2;
@@ -222,7 +222,7 @@ namespace Java.Interop.PerformanceTests
 			var args = stackalloc JniArgumentValue [2];
 			args [0] = new JniArgumentValue (obj1);
 			args [1] = new JniArgumentValue (obj2);
-			svmi1.CallVoidMethod (TypeRef.PeerReference, args);
+			svmi1.InvokeVoidMethod (TypeRef.PeerReference, args);
 		}
 
 		static JniStaticMethodInfo svmi3;
@@ -233,7 +233,7 @@ namespace Java.Interop.PerformanceTests
 			args [0] = new JniArgumentValue (obj1);
 			args [1] = new JniArgumentValue (obj2);
 			args [1] = new JniArgumentValue (obj3);
-			svmi1.CallVoidMethod (TypeRef.PeerReference, args);
+			svmi1.InvokeVoidMethod (TypeRef.PeerReference, args);
 		}
 
 		const string toString_name  = "toString";

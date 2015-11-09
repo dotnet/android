@@ -14,7 +14,7 @@ namespace Java.Interop
 			var args = stackalloc JniArgumentValue [1];
 			args [0] = new JniArgumentValue (value);
 			return TypeRef.GetCachedStaticMethod (ref _identityHashCode, "identityHashCode", "(Ljava/lang/Object;)I")
-				.CallInt32Method (TypeRef.PeerReference, args);
+				.InvokeInt32Method (TypeRef.PeerReference, args);
 		}
 	}
 }

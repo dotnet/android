@@ -12,7 +12,7 @@ namespace Java.Interop
 		internal static JniObjectReference GetRuntime ()
 		{
 			return TypeRef.GetCachedStaticMethod (ref _getRuntime, "getRuntime", "()Ljava/lang/Runtime;")
-				.CallObjectMethod (TypeRef.PeerReference);
+				.InvokeObjectMethod (TypeRef.PeerReference);
 		}
 
 		static JniInstanceMethodInfo _gc;

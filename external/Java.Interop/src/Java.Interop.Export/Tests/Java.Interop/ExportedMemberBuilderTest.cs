@@ -34,7 +34,7 @@ namespace Java.InteropTests
 
 				t.RegisterNativeMethods (methods.ToArray ());
 
-				t.GetStaticMethod ("testStaticMethods", "()V").CallVoidMethod (t.PeerReference);
+				t.GetStaticMethod ("testStaticMethods", "()V").InvokeVoidMethod (t.PeerReference);
 				Assert.IsTrue (ExportTest.StaticHelloCalled);
 				Assert.IsTrue (ExportTest.StaticActionInt32StringCalled);
 
