@@ -186,8 +186,9 @@ namespace Java.InteropTests
 	class JavaObjectWithNoJavaPeer : JavaObject {
 	}
 
-	[JniTypeSignature ("__this__/__type__/__had__/__better__/__not__/__Exist__")]
+	[JniTypeSignature (JniTypeName)]
 	class JavaObjectWithMissingJavaPeer : JavaObject {
+		internal    const   string  JniTypeName = "__this__/__type__/__had__/__better__/__not__/__Exist__";
 	}
 
 	[JniTypeSignature ("java/lang/Object")]

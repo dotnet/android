@@ -38,6 +38,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JniInstanceMethodIDTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JniMarshalMethodTests.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JniMarshalTests.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JniPeerMembersTests.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JniTransitionTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JniTypeSignatureTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JniTypeTest.cs" />

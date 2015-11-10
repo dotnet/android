@@ -9,7 +9,7 @@ namespace Java.Interop
 		internal JniInstanceMethods (JniPeerMembers members)
 		{
 			DeclaringType   = members.ManagedPeerType;
-			JniPeerType     = members.JniPeerType;
+			Members         = members;
 		}
 
 		JniInstanceMethods (Type declaringType)
@@ -22,11 +22,16 @@ namespace Java.Interop
 							declaringType.FullName));
 
 			DeclaringType   = declaringType;
-			JniPeerType     = new JniType (info.Name);
-			JniPeerType.RegisterWithRuntime ();
+			jniPeerType     = new JniType (info.Name);
+			jniPeerType.RegisterWithRuntime ();
 		}
 
-		internal    JniType                                 JniPeerType;
+		JniPeerMembers                                      Members;
+		JniType                                             jniPeerType;
+
+		internal    JniType                                 JniPeerType {
+			get {return jniPeerType ?? Members.JniPeerType;}
+		}
 
 		readonly Type                                       DeclaringType;
 
@@ -35,7 +40,7 @@ namespace Java.Interop
 
 		internal void Dispose ()
 		{
-			if (JniPeerType == null)
+			if (InstanceMethods == null)
 				return;
 
 			// Don't dispose JniPeerType; it's shared with others.
@@ -45,7 +50,9 @@ namespace Java.Interop
 				p.Dispose ();
 			SubclassConstructors    = null;
 
-			JniPeerType = null;
+			if (jniPeerType != null)
+				jniPeerType.Dispose ();
+			jniPeerType = null;
 		}
 
 		public JniInstanceMethodInfo GetConstructor (string signature)
