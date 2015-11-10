@@ -63,8 +63,8 @@ namespace Java.Interop {
 				if (!reference.IsValid)
 					return;
 				AssertReferenceType (ref reference, JniObjectReferenceType.Local);
-				AssertCount (localReferenceCount, "LREF", reference.ToString ());
 				localReferenceCount--;
+				AssertCount (localReferenceCount, "LREF", reference.ToString ());
 				JniEnvironment.References.DeleteLocalRef (reference.Handle);
 				reference.Invalidate ();
 			}
@@ -96,8 +96,8 @@ namespace Java.Interop {
 			{
 				if (!reference.IsValid)
 					return IntPtr.Zero;
-				AssertCount (localReferenceCount, "LREF", reference.ToString ());
 				localReferenceCount--;
+				AssertCount (localReferenceCount, "LREF", reference.ToString ());
 				var h           = reference.Handle;
 				reference.Invalidate ();
 				return h;
@@ -121,8 +121,8 @@ namespace Java.Interop {
 				if (!reference.IsValid)
 					return;
 				AssertReferenceType (ref reference, JniObjectReferenceType.Global);
-				AssertCount (grefc, "GREF", reference.ToString ());
 				Interlocked.Decrement (ref grefc);
+				AssertCount (grefc, "GREF", reference.ToString ());
 				JniEnvironment.References.DeleteGlobalRef (reference.Handle);
 				reference.Invalidate ();
 			}
@@ -141,8 +141,8 @@ namespace Java.Interop {
 				if (!reference.IsValid)
 					return;
 				AssertReferenceType (ref reference, JniObjectReferenceType.WeakGlobal);
-				AssertCount (wgrefc, "WGREF", reference.ToString ());
 				Interlocked.Decrement (ref wgrefc);
+				AssertCount (wgrefc, "WGREF", reference.ToString ());
 				JniEnvironment.References.DeleteWeakGlobalRef (reference.Handle);
 				reference.Invalidate ();
 			}

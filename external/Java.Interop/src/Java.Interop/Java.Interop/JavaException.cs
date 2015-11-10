@@ -157,6 +157,10 @@ namespace Java.Interop
 
 		protected virtual void Dispose (bool disposing)
 		{
+			var inner = InnerException as JavaException;
+			if (inner != null) {
+				inner.Dispose ();
+			}
 		}
 
 		public override bool Equals (object obj)
