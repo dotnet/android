@@ -29,6 +29,16 @@ namespace Java.Interop {
 	foreach (var returnType in jniReturnTypes) {
 #>
 
+			public unsafe <#= returnType.ReturnType #> InvokeAbstract<#= returnType.JniCallType #>Method (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			{
+				JniPeerMembers.AssertSelf (self);
+
+				var m   = GetMethodInfo (encodedMember);
+
+				<#= returnType.ReturnType != "void" ? "return " : "" #>m.InvokeVirtual<#= returnType.JniCallType #>Method (self.PeerReference, parameters);
+				<#= returnType.ReturnType == "void" ? "return;" : "" #>
+			}
+
 			public unsafe <#= returnType.ReturnType #> InvokeVirtual<#= returnType.JniCallType #>Method (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
