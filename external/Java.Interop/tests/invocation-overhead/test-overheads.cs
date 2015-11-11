@@ -477,7 +477,7 @@ class App {
 	{
 		SafeEnv.EnvironmentPointer = _env;
 		SafeEnv.Invoker = new Java.Interop.SafeHandles.JniEnvironmentInvoker ((JniNativeInterfaceStruct*) Marshal.ReadIntPtr (_env));
-		var Arrays_class = SafeEnv.Types.FindClass ("java/util/Arrays");
+		var Arrays_class = SafeEnv.Types._FindClass ("java/util/Arrays");
 		var Arrays_binarySearch = SafeEnv.StaticMethods.GetStaticMethodID (Arrays_class, "binarySearch", "([II)I");
 		var intArray = SafeEnv.Arrays.NewIntArray (3);
 		fixed (int* p = new int[]{1,2,3})
@@ -502,7 +502,7 @@ class App {
 	{
 		JIIntPtrEnv.EnvironmentPointer = _env;
 		JIIntPtrEnv.Invoker = new Java.Interop.JIIntPtrs.JniEnvironmentInvoker ((JniNativeInterfaceStruct*) Marshal.ReadIntPtr (_env));
-		var Arrays_class = JIIntPtrEnv.Types.FindClass ("java/util/Arrays");
+		var Arrays_class = JIIntPtrEnv.Types._FindClass ("java/util/Arrays");
 		var Arrays_binarySearch = JIIntPtrEnv.StaticMethods.GetStaticMethodID (Arrays_class, "binarySearch", "([II)I");
 		var intArray = JIIntPtrEnv.Arrays.NewIntArray (3);
 		fixed (int* p = new int[]{1,2,3})
@@ -523,7 +523,7 @@ class App {
 	static unsafe void JIPinvokeTiming (IntPtr _env)
 	{
 		PinvokeEnv.EnvironmentPointer = _env;
-		var Arrays_class = PinvokeEnv.Types.FindClass ("java/util/Arrays");
+		var Arrays_class = PinvokeEnv.Types._FindClass ("java/util/Arrays");
 		var Arrays_binarySearch = PinvokeEnv.StaticMethods.GetStaticMethodID (Arrays_class, "binarySearch", "([II)I");
 		var intArray = PinvokeEnv.Arrays.NewIntArray (3);
 		fixed (int* p = new int[]{1,2,3})
@@ -545,7 +545,7 @@ class App {
 	{
 		XAIntPtrEnv.EnvironmentPointer = _env;
 		XAIntPtrEnv.Invoker = new Java.Interop.XAIntPtrs.JniEnvironmentInvoker ((JniNativeInterfaceStruct*) Marshal.ReadIntPtr (_env));
-		var Arrays_class = XAIntPtrEnv.Types.FindClass ("java/util/Arrays");
+		var Arrays_class = XAIntPtrEnv.Types._FindClass ("java/util/Arrays");
 		var Arrays_binarySearch = XAIntPtrEnv.StaticMethods.GetStaticMethodID (Arrays_class, "binarySearch", "([II)I");
 		var intArray = XAIntPtrEnv.Arrays.NewIntArray (3);
 		fixed (int* p = new int[]{1,2,3})

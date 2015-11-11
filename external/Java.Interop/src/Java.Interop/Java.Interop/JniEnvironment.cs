@@ -168,7 +168,10 @@ namespace Java.Interop {
 
 	class JniEnvironmentInfo {
 
+		const   int             NameBufferLength        = 512;
+
 		IntPtr                  environmentPointer;
+		char[]                  nameBuffer;
 
 		public      JniRuntime              Runtime                 {get; private set;}
 		public      int                     LocalReferenceCount     {get; internal set;}
@@ -210,6 +213,33 @@ namespace Java.Interop {
 		{
 			EnvironmentPointer  = environmentPointer;
 			Runtime             = runtime;
+		}
+
+		internal unsafe JniObjectReference ToJavaName (string jniTypeName)
+		{
+			int index = jniTypeName.IndexOf ('/');
+
+			if (index == -1)
+				return JniEnvironment.Strings.NewString (jniTypeName);
+
+			int length = jniTypeName.Length;
+			if (length > NameBufferLength)
+				return JniEnvironment.Strings.NewString (jniTypeName.Replace ('/', '.'));
+
+			if (nameBuffer == null)
+				nameBuffer = new char [NameBufferLength];
+
+			fixed (char* src = jniTypeName, dst = nameBuffer) {
+				char* src_ptr = src;
+				char* dst_ptr = dst;
+				char* end_ptr = src + length;
+				while (src_ptr < end_ptr) {
+					*dst_ptr = (*src_ptr == '/') ? '.' : *src_ptr;
+					src_ptr++;
+					dst_ptr++;
+				}
+				return JniEnvironment.Strings.NewString ((IntPtr) dst, length);
+			}
 		}
 
 #if FEATURE_JNIENVIRONMENT_SAFEHANDLES

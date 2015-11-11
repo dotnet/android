@@ -40,7 +40,8 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = ClassesCategory,
 				Name          = "FindClass",
-				Visibility    = "public",
+				Visibility    = "internal",
+				ApiName       = "_FindClass",
 				Throws        = true,
 				Prototype     = "jclass      (*FindClass)(JNIEnv*, const char*);",
 				ReturnType    = "jclass",

@@ -53,6 +53,9 @@ namespace Java.Interop
 			public  IntPtr                      InvocationPointer           {get; set;}
 			public  IntPtr                      EnvironmentPointer          {get; set;}
 
+			public  JniObjectReference          ClassLoader                 {get; set;}
+			public  IntPtr                      ClassLoader_LoadClass_id    {get; set;}
+
 			public  JniObjectReferenceManager   ObjectReferenceManager      {get; set;}
 			public  JniTypeManager              TypeManager                 {get; set;}
 
@@ -119,6 +122,9 @@ namespace Java.Interop
 		JavaVMInterface                                 Invoker;
 		bool                                            DestroyRuntimeOnDispose;
 
+		internal    JniObjectReference                  ClassLoader;
+		internal    JniInstanceMethodInfo               ClassLoader_LoadClass;
+
 		public  IntPtr                                  InvocationPointer   {get; private set;}
 
 		internal    bool                                TrackIDs            {get; private set;}
@@ -155,6 +161,29 @@ namespace Java.Interop
 #if !XA_INTEGRATION
 			ManagedPeer.Init ();
 #endif  // !XA_INTEGRATION
+
+			ClassLoader = options.ClassLoader;
+			if (options.ClassLoader_LoadClass_id != IntPtr.Zero) {
+				ClassLoader_LoadClass   = new JniInstanceMethodInfo (options.ClassLoader_LoadClass_id);
+			}
+
+			if (ClassLoader.IsValid) {
+				ClassLoader = ClassLoader.NewGlobalRef ();
+			}
+
+			if (!ClassLoader.IsValid || ClassLoader_LoadClass == null) {
+				using (var t = new JniType ("java/lang/ClassLoader")) {
+					if (!ClassLoader.IsValid) {
+						var m       = t.GetStaticMethod ("getSystemClassLoader", "()Ljava/lang/ClassLoader;");
+						var loader  = m.InvokeObjectMethod (t.PeerReference);
+						ClassLoader = loader.NewGlobalRef ();
+						JniObjectReference.Dispose (ref loader);
+					}
+					if (ClassLoader_LoadClass == null) {
+						ClassLoader_LoadClass   = t.GetInstanceMethod ("loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");
+					}
+				}
+			}
 		}
 
 		T SetRuntime<T> (T value)
@@ -199,6 +228,8 @@ namespace Java.Interop
 
 			if (current == this)
 				current = null;
+
+			JniObjectReference.Dispose (ref ClassLoader);
 
 #if !XA_INTEGRATION
 			foreach (var o in RegisteredInstances.Values) {

@@ -28,6 +28,72 @@ namespace Java.Interop
 				}
 			}
 
+			public static unsafe JniObjectReference FindClass (string classname)
+			{
+				if (classname == null)
+					throw new ArgumentNullException ("classname");
+				if (classname.Length == 0)
+					throw new ArgumentException ("'classname' cannot be a zero-length string.", nameof (classname));
+
+				var info    = JniEnvironment.CurrentInfo;
+#if FEATURE_JNIENVIRONMENT_JI_PINVOKES
+				IntPtr thrown;
+				var c   = JavaInterop_FindClass (info.EnvironmentPointer, out thrown, classname);
+				if (thrown == IntPtr.Zero) {
+					var r   = new JniObjectReference (c, JniObjectReferenceType.Local);
+					JniEnvironment.LogCreateLocalRef (r);
+					return r;
+				}
+				JniEnvironment.Exceptions.JavaInterop_ExceptionClear (info.EnvironmentPointer);
+				var e   = new JniObjectReference (thrown, JniObjectReferenceType.Local);
+				LogCreateLocalRef (e);
+
+				var java    = info.ToJavaName (classname);
+				var __args  = stackalloc JniArgumentValue [1];
+				__args [0]  = new JniArgumentValue (java);
+
+				IntPtr ignoreThrown;
+				c   = JniEnvironment.InstanceMethods.JavaInterop_CallObjectMethodA (info.EnvironmentPointer, out ignoreThrown, info.Runtime.ClassLoader.Handle, info.Runtime.ClassLoader_LoadClass.ID, __args);
+				JniObjectReference.Dispose (ref java);
+				if (ignoreThrown == IntPtr.Zero) {
+					JniObjectReference.Dispose (ref e);
+					var r   = new JniObjectReference (c, JniObjectReferenceType.Local);
+					JniEnvironment.LogCreateLocalRef (r);
+					return r;
+				}
+				JniEnvironment.Exceptions.JavaInterop_ExceptionClear (info.EnvironmentPointer);
+				JniEnvironment.References.JavaInterop_DeleteLocalRef (info.EnvironmentPointer, ignoreThrown);
+				throw info.Runtime.GetExceptionForThrowable (ref e, JniObjectReferenceOptions.DisposeSourceReference);
+#endif  // !FEATURE_JNIENVIRONMENT_JI_PINVOKES
+#if FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
+				var c       = info.Invoker.FindClass (info.EnvironmentPointer, classname);
+				var thrown  = info.Invoker.ExceptionOccurred (info.EnvironmentPointer);
+				if (thrown.IsInvalid) {
+					JniEnvironment.LogCreateLocalRef (c);
+					return new JniObjectReference (c, JniObjectReferenceType.Local);
+				}
+				info.Invoker.ExceptionClear (info.EnvironmentPointer);
+				LogCreateLocalRef (thrown);
+
+				var java    = info.ToJavaName (classname);
+				var __args  = stackalloc JniArgumentValue [1];
+				__args [0]  = new JniArgumentValue (java);
+
+				c                   = info.Invoker.CallObjectMethodA (info.EnvironmentPointer, info.Runtime.ClassLoader.SafeHandle, info.Runtime.ClassLoader_LoadClass.ID, __args);
+				JniObjectReference.Dispose (ref java);
+				var ignoreThrown    = info.Invoker.ExceptionOccurred (info.EnvironmentPointer);
+				if (ignoreThrown.IsInvalid) {
+					thrown.Dispose ();
+					JniEnvironment.LogCreateLocalRef (c);
+					return new JniObjectReference (c, JniObjectReferenceType.Local);
+				}
+				info.Invoker.ExceptionClear (info.EnvironmentPointer);
+				LogCreateLocalRef (ignoreThrown);
+				ignoreThrown.Dispose ();
+				var e   = new JniObjectReference (thrown, JniObjectReferenceType.Local);
+				throw info.Runtime.GetExceptionForThrowable (ref e, JniObjectReferenceOptions.DisposeSourceReference);
+#endif  // !FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
+			}
 
 			public static JniType GetTypeFromInstance (JniObjectReference reference)
 			{

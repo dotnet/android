@@ -304,7 +304,7 @@ namespace Xamarin.Java.Interop
 				o.WriteLine ();
 				if (style == HandleStyle.JIIntPtrPinvokeWithErrors) {
 					o.WriteLine ("\t\t[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]");
-					o.WriteLine ("\t\tstatic extern unsafe {0} JavaInterop_{1} (IntPtr jnienv{2}{3}{4});",
+					o.WriteLine ("\t\tinternal static extern unsafe {0} JavaInterop_{1} (IntPtr jnienv{2}{3}{4});",
 							entry.ReturnType.GetMarshalType (style, isReturn: true),
 							entry.Name,
 							entry.Throws ? ", out IntPtr thrown" : "",

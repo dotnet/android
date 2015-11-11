@@ -372,14 +372,14 @@ namespace
 
 	public static partial class Arrays {
 
-		public static unsafe int GetArrayLength (JniObjectReference array_ptr)
+		public static unsafe int GetArrayLength (JniObjectReference array)
 		{
-			if (array_ptr.SafeHandle == null)
-				throw new ArgumentNullException ("array_ptr");
-			if (array_ptr.SafeHandle.IsInvalid)
-				throw new ArgumentException ("array_ptr");
+			if (array.SafeHandle == null)
+				throw new ArgumentNullException ("array");
+			if (array.SafeHandle.IsInvalid)
+				throw new ArgumentException ("array");
 
-			var tmp = JniEnvironment.Invoker.GetArrayLength (JniEnvironment.EnvironmentPointer, array_ptr.SafeHandle);
+			var tmp = JniEnvironment.Invoker.GetArrayLength (JniEnvironment.EnvironmentPointer, array.SafeHandle);
 			return tmp;
 		}
 
@@ -672,7 +672,7 @@ namespace
 			JniEnvironment.Invoker.ReleaseDoubleArrayElements (JniEnvironment.EnvironmentPointer, array.SafeHandle, elements, mode);
 		}
 
-		internal static unsafe void GetBooleanArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
+		public static unsafe void GetBooleanArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
 		{
 			if (array.SafeHandle == null)
 				throw new ArgumentNullException ("array");
@@ -808,7 +808,7 @@ namespace
 
 		}
 
-		internal static unsafe void SetBooleanArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
+		public static unsafe void SetBooleanArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
 		{
 			if (array.SafeHandle == null)
 				throw new ArgumentNullException ("array");
@@ -971,18 +971,18 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe JniObjectReference ExceptionOccurred ()
+		public static unsafe JniObjectReference ExceptionOccurred ()
 		{
 			var tmp = JniEnvironment.Invoker.ExceptionOccurred (JniEnvironment.EnvironmentPointer);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		internal static unsafe void ExceptionDescribe ()
+		public static unsafe void ExceptionDescribe ()
 		{
 			JniEnvironment.Invoker.ExceptionDescribe (JniEnvironment.EnvironmentPointer);
 		}
 
-		internal static unsafe void ExceptionClear ()
+		public static unsafe void ExceptionClear ()
 		{
 			JniEnvironment.Invoker.ExceptionClear (JniEnvironment.EnvironmentPointer);
 		}
@@ -995,14 +995,14 @@ namespace
 			JniEnvironment.Invoker.FatalError (JniEnvironment.EnvironmentPointer, message);
 		}
 
-		internal static unsafe bool ExceptionCheck ()
+		public static unsafe bool ExceptionCheck ()
 		{
 			var tmp = JniEnvironment.Invoker.ExceptionCheck (JniEnvironment.EnvironmentPointer);
 			return tmp;
 		}
 	}
 
-	internal static partial class InstanceFields {
+	public static partial class InstanceFields {
 
 		public static unsafe JniInstanceFieldInfo GetFieldID (JniObjectReference klass, string name, string signature)
 		{
@@ -1026,7 +1026,7 @@ namespace
 			return new JniInstanceFieldInfo (tmp);
 		}
 
-		internal static unsafe JniObjectReference GetObjectField (JniObjectReference @object, JniInstanceFieldInfo field)
+		public static unsafe JniObjectReference GetObjectField (JniObjectReference @object, JniInstanceFieldInfo field)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -1042,7 +1042,7 @@ namespace
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		internal static unsafe bool GetBooleanField (JniObjectReference @object, JniInstanceFieldInfo field)
+		public static unsafe bool GetBooleanField (JniObjectReference @object, JniInstanceFieldInfo field)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -1057,7 +1057,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe sbyte GetByteField (JniObjectReference @object, JniInstanceFieldInfo field)
+		public static unsafe sbyte GetByteField (JniObjectReference @object, JniInstanceFieldInfo field)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -1072,7 +1072,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe char GetCharField (JniObjectReference @object, JniInstanceFieldInfo field)
+		public static unsafe char GetCharField (JniObjectReference @object, JniInstanceFieldInfo field)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -1087,7 +1087,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe short GetShortField (JniObjectReference @object, JniInstanceFieldInfo field)
+		public static unsafe short GetShortField (JniObjectReference @object, JniInstanceFieldInfo field)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -1102,7 +1102,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe int GetIntField (JniObjectReference @object, JniInstanceFieldInfo field)
+		public static unsafe int GetIntField (JniObjectReference @object, JniInstanceFieldInfo field)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -1117,7 +1117,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe long GetLongField (JniObjectReference @object, JniInstanceFieldInfo field)
+		public static unsafe long GetLongField (JniObjectReference @object, JniInstanceFieldInfo field)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -1132,7 +1132,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe float GetFloatField (JniObjectReference @object, JniInstanceFieldInfo field)
+		public static unsafe float GetFloatField (JniObjectReference @object, JniInstanceFieldInfo field)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -1147,7 +1147,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe double GetDoubleField (JniObjectReference @object, JniInstanceFieldInfo field)
+		public static unsafe double GetDoubleField (JniObjectReference @object, JniInstanceFieldInfo field)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -1162,7 +1162,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe void SetField (JniObjectReference @object, JniInstanceFieldInfo field, JniObjectReference value)
+		public static unsafe void SetObjectField (JniObjectReference @object, JniInstanceFieldInfo field, JniObjectReference value)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -1176,7 +1176,7 @@ namespace
 			JniEnvironment.Invoker.SetObjectField (JniEnvironment.EnvironmentPointer, @object.SafeHandle, field.ID, value.SafeHandle);
 		}
 
-		internal static unsafe void SetField (JniObjectReference @object, JniInstanceFieldInfo field, bool value)
+		public static unsafe void SetBooleanField (JniObjectReference @object, JniInstanceFieldInfo field, bool value)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -1190,7 +1190,7 @@ namespace
 			JniEnvironment.Invoker.SetBooleanField (JniEnvironment.EnvironmentPointer, @object.SafeHandle, field.ID, value);
 		}
 
-		internal static unsafe void SetField (JniObjectReference @object, JniInstanceFieldInfo field, sbyte value)
+		public static unsafe void SetByteField (JniObjectReference @object, JniInstanceFieldInfo field, sbyte value)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -1204,7 +1204,7 @@ namespace
 			JniEnvironment.Invoker.SetByteField (JniEnvironment.EnvironmentPointer, @object.SafeHandle, field.ID, value);
 		}
 
-		internal static unsafe void SetField (JniObjectReference @object, JniInstanceFieldInfo field, char value)
+		public static unsafe void SetCharField (JniObjectReference @object, JniInstanceFieldInfo field, char value)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -1218,7 +1218,7 @@ namespace
 			JniEnvironment.Invoker.SetCharField (JniEnvironment.EnvironmentPointer, @object.SafeHandle, field.ID, value);
 		}
 
-		internal static unsafe void SetField (JniObjectReference @object, JniInstanceFieldInfo field, short value)
+		public static unsafe void SetShortField (JniObjectReference @object, JniInstanceFieldInfo field, short value)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -1232,7 +1232,7 @@ namespace
 			JniEnvironment.Invoker.SetShortField (JniEnvironment.EnvironmentPointer, @object.SafeHandle, field.ID, value);
 		}
 
-		internal static unsafe void SetField (JniObjectReference @object, JniInstanceFieldInfo field, int value)
+		public static unsafe void SetIntField (JniObjectReference @object, JniInstanceFieldInfo field, int value)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -1246,7 +1246,7 @@ namespace
 			JniEnvironment.Invoker.SetIntField (JniEnvironment.EnvironmentPointer, @object.SafeHandle, field.ID, value);
 		}
 
-		internal static unsafe void SetField (JniObjectReference @object, JniInstanceFieldInfo field, long value)
+		public static unsafe void SetLongField (JniObjectReference @object, JniInstanceFieldInfo field, long value)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -1260,7 +1260,7 @@ namespace
 			JniEnvironment.Invoker.SetLongField (JniEnvironment.EnvironmentPointer, @object.SafeHandle, field.ID, value);
 		}
 
-		internal static unsafe void SetField (JniObjectReference @object, JniInstanceFieldInfo field, float value)
+		public static unsafe void SetFloatField (JniObjectReference @object, JniInstanceFieldInfo field, float value)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -1274,7 +1274,7 @@ namespace
 			JniEnvironment.Invoker.SetFloatField (JniEnvironment.EnvironmentPointer, @object.SafeHandle, field.ID, value);
 		}
 
-		internal static unsafe void SetField (JniObjectReference @object, JniInstanceFieldInfo field, double value)
+		public static unsafe void SetDoubleField (JniObjectReference @object, JniInstanceFieldInfo field, double value)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -1289,9 +1289,9 @@ namespace
 		}
 	}
 
-	internal static partial class InstanceMethods {
+	public static partial class InstanceMethods {
 
-		internal static unsafe JniInstanceMethodInfo GetMethodID (JniObjectReference klass, string name, string signature)
+		public static unsafe JniInstanceMethodInfo GetMethodID (JniObjectReference klass, string name, string signature)
 		{
 			if (klass.SafeHandle == null)
 				throw new ArgumentNullException ("klass");
@@ -1313,7 +1313,7 @@ namespace
 			return new JniInstanceMethodInfo (tmp);
 		}
 
-		internal static unsafe JniObjectReference CallObjectMethod (JniObjectReference @object, JniInstanceMethodInfo method)
+		public static unsafe JniObjectReference CallObjectMethod (JniObjectReference @object, JniInstanceMethodInfo method)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -1334,7 +1334,7 @@ namespace
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		internal static unsafe JniObjectReference CallObjectMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe JniObjectReference CallObjectMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -1355,7 +1355,7 @@ namespace
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		internal static unsafe bool CallBooleanMethod (JniObjectReference @object, JniInstanceMethodInfo method)
+		public static unsafe bool CallBooleanMethod (JniObjectReference @object, JniInstanceMethodInfo method)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -1375,7 +1375,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe bool CallBooleanMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe bool CallBooleanMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -1395,7 +1395,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe sbyte CallByteMethod (JniObjectReference @object, JniInstanceMethodInfo method)
+		public static unsafe sbyte CallByteMethod (JniObjectReference @object, JniInstanceMethodInfo method)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -1415,7 +1415,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe sbyte CallByteMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe sbyte CallByteMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -1435,7 +1435,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe char CallCharMethod (JniObjectReference @object, JniInstanceMethodInfo method)
+		public static unsafe char CallCharMethod (JniObjectReference @object, JniInstanceMethodInfo method)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -1455,7 +1455,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe char CallCharMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe char CallCharMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -1475,7 +1475,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe short CallShortMethod (JniObjectReference @object, JniInstanceMethodInfo method)
+		public static unsafe short CallShortMethod (JniObjectReference @object, JniInstanceMethodInfo method)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -1495,7 +1495,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe short CallShortMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe short CallShortMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -1515,7 +1515,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe int CallIntMethod (JniObjectReference @object, JniInstanceMethodInfo method)
+		public static unsafe int CallIntMethod (JniObjectReference @object, JniInstanceMethodInfo method)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -1535,7 +1535,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe int CallIntMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe int CallIntMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -1555,7 +1555,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe long CallLongMethod (JniObjectReference @object, JniInstanceMethodInfo method)
+		public static unsafe long CallLongMethod (JniObjectReference @object, JniInstanceMethodInfo method)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -1575,7 +1575,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe long CallLongMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe long CallLongMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -1595,7 +1595,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe float CallFloatMethod (JniObjectReference @object, JniInstanceMethodInfo method)
+		public static unsafe float CallFloatMethod (JniObjectReference @object, JniInstanceMethodInfo method)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -1615,7 +1615,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe float CallFloatMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe float CallFloatMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -1635,7 +1635,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe double CallDoubleMethod (JniObjectReference @object, JniInstanceMethodInfo method)
+		public static unsafe double CallDoubleMethod (JniObjectReference @object, JniInstanceMethodInfo method)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -1655,7 +1655,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe double CallDoubleMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe double CallDoubleMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -1675,7 +1675,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe void CallVoidMethod (JniObjectReference @object, JniInstanceMethodInfo method)
+		public static unsafe void CallVoidMethod (JniObjectReference @object, JniInstanceMethodInfo method)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -1694,7 +1694,7 @@ namespace
 
 		}
 
-		internal static unsafe void CallVoidMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe void CallVoidMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -1713,7 +1713,7 @@ namespace
 
 		}
 
-		internal static unsafe JniObjectReference CallNonvirtualObjectMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method)
+		public static unsafe JniObjectReference CallNonvirtualObjectMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -1738,7 +1738,7 @@ namespace
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		internal static unsafe JniObjectReference CallNonvirtualObjectMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe JniObjectReference CallNonvirtualObjectMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -1763,7 +1763,7 @@ namespace
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		internal static unsafe bool CallNonvirtualBooleanMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method)
+		public static unsafe bool CallNonvirtualBooleanMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -1787,7 +1787,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe bool CallNonvirtualBooleanMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe bool CallNonvirtualBooleanMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -1811,7 +1811,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe sbyte CallNonvirtualByteMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method)
+		public static unsafe sbyte CallNonvirtualByteMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -1835,7 +1835,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe sbyte CallNonvirtualByteMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe sbyte CallNonvirtualByteMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -1859,7 +1859,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe char CallNonvirtualCharMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method)
+		public static unsafe char CallNonvirtualCharMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -1883,7 +1883,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe char CallNonvirtualCharMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe char CallNonvirtualCharMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -1907,7 +1907,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe short CallNonvirtualShortMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method)
+		public static unsafe short CallNonvirtualShortMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -1931,7 +1931,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe short CallNonvirtualShortMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe short CallNonvirtualShortMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -1955,7 +1955,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe int CallNonvirtualIntMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method)
+		public static unsafe int CallNonvirtualIntMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -1979,7 +1979,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe int CallNonvirtualIntMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe int CallNonvirtualIntMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -2003,7 +2003,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe long CallNonvirtualLongMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method)
+		public static unsafe long CallNonvirtualLongMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -2027,7 +2027,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe long CallNonvirtualLongMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe long CallNonvirtualLongMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -2051,7 +2051,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe float CallNonvirtualFloatMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method)
+		public static unsafe float CallNonvirtualFloatMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -2075,7 +2075,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe float CallNonvirtualFloatMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe float CallNonvirtualFloatMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -2099,7 +2099,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe double CallNonvirtualDoubleMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method)
+		public static unsafe double CallNonvirtualDoubleMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -2123,7 +2123,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe double CallNonvirtualDoubleMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe double CallNonvirtualDoubleMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -2147,7 +2147,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe void CallNonvirtualVoidMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method)
+		public static unsafe void CallNonvirtualVoidMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -2170,7 +2170,7 @@ namespace
 
 		}
 
-		internal static unsafe void CallNonvirtualVoidMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe void CallNonvirtualVoidMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("@object");
@@ -2234,7 +2234,7 @@ namespace
 		}
 	}
 
-	internal static partial class Monitors {
+	public static partial class Monitors {
 
 		public static unsafe int MonitorEnter (JniObjectReference @object)
 		{
@@ -2395,7 +2395,7 @@ namespace
 
 	internal static partial class Reflection {
 
-		internal static unsafe JniObjectReference ToReflectedMethod (JniObjectReference klass, JniInstanceMethodInfo method, bool isStatic)
+		public static unsafe JniObjectReference ToReflectedMethod (JniObjectReference klass, JniInstanceMethodInfo method, bool isStatic)
 		{
 			if (klass.SafeHandle == null)
 				throw new ArgumentNullException ("klass");
@@ -2411,7 +2411,7 @@ namespace
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		internal static unsafe JniObjectReference ToReflectedField (JniObjectReference klass, JniInstanceFieldInfo field, bool isStatic)
+		public static unsafe JniObjectReference ToReflectedField (JniObjectReference klass, JniInstanceFieldInfo field, bool isStatic)
 		{
 			if (klass.SafeHandle == null)
 				throw new ArgumentNullException ("klass");
@@ -2428,7 +2428,7 @@ namespace
 		}
 	}
 
-	internal static partial class StaticFields {
+	public static partial class StaticFields {
 
 		public static unsafe JniStaticFieldInfo GetStaticFieldID (JniObjectReference klass, string name, string signature)
 		{
@@ -2452,7 +2452,7 @@ namespace
 			return new JniStaticFieldInfo (tmp);
 		}
 
-		internal static unsafe JniObjectReference GetStaticObjectField (JniObjectReference klass, JniStaticFieldInfo field)
+		public static unsafe JniObjectReference GetStaticObjectField (JniObjectReference klass, JniStaticFieldInfo field)
 		{
 			if (klass.SafeHandle == null)
 				throw new ArgumentNullException ("klass");
@@ -2468,7 +2468,7 @@ namespace
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		internal static unsafe bool GetStaticBooleanField (JniObjectReference klass, JniStaticFieldInfo field)
+		public static unsafe bool GetStaticBooleanField (JniObjectReference klass, JniStaticFieldInfo field)
 		{
 			if (klass.SafeHandle == null)
 				throw new ArgumentNullException ("klass");
@@ -2483,7 +2483,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe sbyte GetStaticByteField (JniObjectReference klass, JniStaticFieldInfo field)
+		public static unsafe sbyte GetStaticByteField (JniObjectReference klass, JniStaticFieldInfo field)
 		{
 			if (klass.SafeHandle == null)
 				throw new ArgumentNullException ("klass");
@@ -2498,7 +2498,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe char GetStaticCharField (JniObjectReference klass, JniStaticFieldInfo field)
+		public static unsafe char GetStaticCharField (JniObjectReference klass, JniStaticFieldInfo field)
 		{
 			if (klass.SafeHandle == null)
 				throw new ArgumentNullException ("klass");
@@ -2513,7 +2513,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe short GetStaticShortField (JniObjectReference klass, JniStaticFieldInfo field)
+		public static unsafe short GetStaticShortField (JniObjectReference klass, JniStaticFieldInfo field)
 		{
 			if (klass.SafeHandle == null)
 				throw new ArgumentNullException ("klass");
@@ -2528,7 +2528,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe int GetStaticIntField (JniObjectReference klass, JniStaticFieldInfo field)
+		public static unsafe int GetStaticIntField (JniObjectReference klass, JniStaticFieldInfo field)
 		{
 			if (klass.SafeHandle == null)
 				throw new ArgumentNullException ("klass");
@@ -2543,7 +2543,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe long GetStaticLongField (JniObjectReference klass, JniStaticFieldInfo field)
+		public static unsafe long GetStaticLongField (JniObjectReference klass, JniStaticFieldInfo field)
 		{
 			if (klass.SafeHandle == null)
 				throw new ArgumentNullException ("klass");
@@ -2558,7 +2558,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe float GetStaticFloatField (JniObjectReference klass, JniStaticFieldInfo field)
+		public static unsafe float GetStaticFloatField (JniObjectReference klass, JniStaticFieldInfo field)
 		{
 			if (klass.SafeHandle == null)
 				throw new ArgumentNullException ("klass");
@@ -2573,7 +2573,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe double GetStaticDoubleField (JniObjectReference klass, JniStaticFieldInfo field)
+		public static unsafe double GetStaticDoubleField (JniObjectReference klass, JniStaticFieldInfo field)
 		{
 			if (klass.SafeHandle == null)
 				throw new ArgumentNullException ("klass");
@@ -2588,7 +2588,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe void SetStaticField (JniObjectReference klass, JniStaticFieldInfo field, JniObjectReference value)
+		public static unsafe void SetStaticObjectField (JniObjectReference klass, JniStaticFieldInfo field, JniObjectReference value)
 		{
 			if (klass.SafeHandle == null)
 				throw new ArgumentNullException ("klass");
@@ -2602,7 +2602,7 @@ namespace
 			JniEnvironment.Invoker.SetStaticObjectField (JniEnvironment.EnvironmentPointer, klass.SafeHandle, field.ID, value.SafeHandle);
 		}
 
-		internal static unsafe void SetStaticField (JniObjectReference klass, JniStaticFieldInfo field, bool value)
+		public static unsafe void SetStaticBooleanField (JniObjectReference klass, JniStaticFieldInfo field, bool value)
 		{
 			if (klass.SafeHandle == null)
 				throw new ArgumentNullException ("klass");
@@ -2616,7 +2616,7 @@ namespace
 			JniEnvironment.Invoker.SetStaticBooleanField (JniEnvironment.EnvironmentPointer, klass.SafeHandle, field.ID, value);
 		}
 
-		internal static unsafe void SetStaticField (JniObjectReference klass, JniStaticFieldInfo field, sbyte value)
+		public static unsafe void SetStaticByteField (JniObjectReference klass, JniStaticFieldInfo field, sbyte value)
 		{
 			if (klass.SafeHandle == null)
 				throw new ArgumentNullException ("klass");
@@ -2630,7 +2630,7 @@ namespace
 			JniEnvironment.Invoker.SetStaticByteField (JniEnvironment.EnvironmentPointer, klass.SafeHandle, field.ID, value);
 		}
 
-		internal static unsafe void SetStaticField (JniObjectReference klass, JniStaticFieldInfo field, char value)
+		public static unsafe void SetStaticCharField (JniObjectReference klass, JniStaticFieldInfo field, char value)
 		{
 			if (klass.SafeHandle == null)
 				throw new ArgumentNullException ("klass");
@@ -2644,7 +2644,7 @@ namespace
 			JniEnvironment.Invoker.SetStaticCharField (JniEnvironment.EnvironmentPointer, klass.SafeHandle, field.ID, value);
 		}
 
-		internal static unsafe void SetStaticField (JniObjectReference klass, JniStaticFieldInfo field, short value)
+		public static unsafe void SetStaticShortField (JniObjectReference klass, JniStaticFieldInfo field, short value)
 		{
 			if (klass.SafeHandle == null)
 				throw new ArgumentNullException ("klass");
@@ -2658,7 +2658,7 @@ namespace
 			JniEnvironment.Invoker.SetStaticShortField (JniEnvironment.EnvironmentPointer, klass.SafeHandle, field.ID, value);
 		}
 
-		internal static unsafe void SetStaticField (JniObjectReference klass, JniStaticFieldInfo field, int value)
+		public static unsafe void SetStaticIntField (JniObjectReference klass, JniStaticFieldInfo field, int value)
 		{
 			if (klass.SafeHandle == null)
 				throw new ArgumentNullException ("klass");
@@ -2672,7 +2672,7 @@ namespace
 			JniEnvironment.Invoker.SetStaticIntField (JniEnvironment.EnvironmentPointer, klass.SafeHandle, field.ID, value);
 		}
 
-		internal static unsafe void SetStaticField (JniObjectReference klass, JniStaticFieldInfo field, long value)
+		public static unsafe void SetStaticLongField (JniObjectReference klass, JniStaticFieldInfo field, long value)
 		{
 			if (klass.SafeHandle == null)
 				throw new ArgumentNullException ("klass");
@@ -2686,7 +2686,7 @@ namespace
 			JniEnvironment.Invoker.SetStaticLongField (JniEnvironment.EnvironmentPointer, klass.SafeHandle, field.ID, value);
 		}
 
-		internal static unsafe void SetStaticField (JniObjectReference klass, JniStaticFieldInfo field, float value)
+		public static unsafe void SetStaticFloatField (JniObjectReference klass, JniStaticFieldInfo field, float value)
 		{
 			if (klass.SafeHandle == null)
 				throw new ArgumentNullException ("klass");
@@ -2700,7 +2700,7 @@ namespace
 			JniEnvironment.Invoker.SetStaticFloatField (JniEnvironment.EnvironmentPointer, klass.SafeHandle, field.ID, value);
 		}
 
-		internal static unsafe void SetStaticField (JniObjectReference klass, JniStaticFieldInfo field, double value)
+		public static unsafe void SetStaticDoubleField (JniObjectReference klass, JniStaticFieldInfo field, double value)
 		{
 			if (klass.SafeHandle == null)
 				throw new ArgumentNullException ("klass");
@@ -2715,7 +2715,7 @@ namespace
 		}
 	}
 
-	internal static partial class StaticMethods {
+	public static partial class StaticMethods {
 
 		public static unsafe JniStaticMethodInfo GetStaticMethodID (JniObjectReference klass, string name, string signature)
 		{
@@ -2739,7 +2739,7 @@ namespace
 			return new JniStaticMethodInfo (tmp);
 		}
 
-		internal static unsafe JniObjectReference CallStaticObjectMethod (JniObjectReference klass, JniStaticMethodInfo method)
+		public static unsafe JniObjectReference CallStaticObjectMethod (JniObjectReference klass, JniStaticMethodInfo method)
 		{
 			if (klass.SafeHandle == null)
 				throw new ArgumentNullException ("klass");
@@ -2760,7 +2760,7 @@ namespace
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		internal static unsafe JniObjectReference CallStaticObjectMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
+		public static unsafe JniObjectReference CallStaticObjectMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
 		{
 			if (klass.SafeHandle == null)
 				throw new ArgumentNullException ("klass");
@@ -2781,7 +2781,7 @@ namespace
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		internal static unsafe bool CallStaticBooleanMethod (JniObjectReference klass, JniStaticMethodInfo method)
+		public static unsafe bool CallStaticBooleanMethod (JniObjectReference klass, JniStaticMethodInfo method)
 		{
 			if (klass.SafeHandle == null)
 				throw new ArgumentNullException ("klass");
@@ -2801,7 +2801,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe bool CallStaticBooleanMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
+		public static unsafe bool CallStaticBooleanMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
 		{
 			if (klass.SafeHandle == null)
 				throw new ArgumentNullException ("klass");
@@ -2821,7 +2821,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe sbyte CallStaticByteMethod (JniObjectReference klass, JniStaticMethodInfo method)
+		public static unsafe sbyte CallStaticByteMethod (JniObjectReference klass, JniStaticMethodInfo method)
 		{
 			if (klass.SafeHandle == null)
 				throw new ArgumentNullException ("klass");
@@ -2841,7 +2841,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe sbyte CallStaticByteMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
+		public static unsafe sbyte CallStaticByteMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
 		{
 			if (klass.SafeHandle == null)
 				throw new ArgumentNullException ("klass");
@@ -2861,7 +2861,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe char CallStaticCharMethod (JniObjectReference klass, JniStaticMethodInfo method)
+		public static unsafe char CallStaticCharMethod (JniObjectReference klass, JniStaticMethodInfo method)
 		{
 			if (klass.SafeHandle == null)
 				throw new ArgumentNullException ("klass");
@@ -2881,7 +2881,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe char CallStaticCharMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
+		public static unsafe char CallStaticCharMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
 		{
 			if (klass.SafeHandle == null)
 				throw new ArgumentNullException ("klass");
@@ -2901,7 +2901,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe short CallStaticShortMethod (JniObjectReference klass, JniStaticMethodInfo method)
+		public static unsafe short CallStaticShortMethod (JniObjectReference klass, JniStaticMethodInfo method)
 		{
 			if (klass.SafeHandle == null)
 				throw new ArgumentNullException ("klass");
@@ -2921,7 +2921,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe short CallStaticShortMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
+		public static unsafe short CallStaticShortMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
 		{
 			if (klass.SafeHandle == null)
 				throw new ArgumentNullException ("klass");
@@ -2941,7 +2941,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe int CallStaticIntMethod (JniObjectReference klass, JniStaticMethodInfo method)
+		public static unsafe int CallStaticIntMethod (JniObjectReference klass, JniStaticMethodInfo method)
 		{
 			if (klass.SafeHandle == null)
 				throw new ArgumentNullException ("klass");
@@ -2961,7 +2961,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe int CallStaticIntMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
+		public static unsafe int CallStaticIntMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
 		{
 			if (klass.SafeHandle == null)
 				throw new ArgumentNullException ("klass");
@@ -2981,7 +2981,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe long CallStaticLongMethod (JniObjectReference klass, JniStaticMethodInfo method)
+		public static unsafe long CallStaticLongMethod (JniObjectReference klass, JniStaticMethodInfo method)
 		{
 			if (klass.SafeHandle == null)
 				throw new ArgumentNullException ("klass");
@@ -3001,7 +3001,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe long CallStaticLongMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
+		public static unsafe long CallStaticLongMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
 		{
 			if (klass.SafeHandle == null)
 				throw new ArgumentNullException ("klass");
@@ -3021,7 +3021,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe float CallStaticFloatMethod (JniObjectReference klass, JniStaticMethodInfo method)
+		public static unsafe float CallStaticFloatMethod (JniObjectReference klass, JniStaticMethodInfo method)
 		{
 			if (klass.SafeHandle == null)
 				throw new ArgumentNullException ("klass");
@@ -3041,7 +3041,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe float CallStaticFloatMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
+		public static unsafe float CallStaticFloatMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
 		{
 			if (klass.SafeHandle == null)
 				throw new ArgumentNullException ("klass");
@@ -3061,7 +3061,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe double CallStaticDoubleMethod (JniObjectReference klass, JniStaticMethodInfo method)
+		public static unsafe double CallStaticDoubleMethod (JniObjectReference klass, JniStaticMethodInfo method)
 		{
 			if (klass.SafeHandle == null)
 				throw new ArgumentNullException ("klass");
@@ -3081,7 +3081,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe double CallStaticDoubleMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
+		public static unsafe double CallStaticDoubleMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
 		{
 			if (klass.SafeHandle == null)
 				throw new ArgumentNullException ("klass");
@@ -3101,7 +3101,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe void CallStaticVoidMethod (JniObjectReference klass, JniStaticMethodInfo method)
+		public static unsafe void CallStaticVoidMethod (JniObjectReference klass, JniStaticMethodInfo method)
 		{
 			if (klass.SafeHandle == null)
 				throw new ArgumentNullException ("klass");
@@ -3120,7 +3120,7 @@ namespace
 
 		}
 
-		internal static unsafe void CallStaticVoidMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
+		public static unsafe void CallStaticVoidMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
 		{
 			if (klass.SafeHandle == null)
 				throw new ArgumentNullException ("klass");
@@ -3142,7 +3142,7 @@ namespace
 
 	public static partial class Strings {
 
-		internal static unsafe JniObjectReference NewString (IntPtr unicodeChars, int length)
+		public static unsafe JniObjectReference NewString (IntPtr unicodeChars, int length)
 		{
 			if (unicodeChars == IntPtr.Zero)
 				throw new ArgumentException ("'unicodeChars' must not be IntPtr.Zero.", "unicodeChars");
@@ -3157,7 +3157,7 @@ namespace
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		internal static unsafe int GetStringLength (JniObjectReference @string)
+		public static unsafe int GetStringLength (JniObjectReference @string)
 		{
 			if (@string.SafeHandle == null)
 				throw new ArgumentNullException ("@string");
@@ -3168,7 +3168,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe IntPtr GetStringChars (JniObjectReference @string, IntPtr isCopy)
+		public static unsafe IntPtr GetStringChars (JniObjectReference @string, IntPtr isCopy)
 		{
 			if (@string.SafeHandle == null)
 				throw new ArgumentNullException ("@string");
@@ -3179,7 +3179,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe void ReleaseStringChars (JniObjectReference @string, IntPtr chars)
+		public static unsafe void ReleaseStringChars (JniObjectReference @string, IntPtr chars)
 		{
 			if (@string.SafeHandle == null)
 				throw new ArgumentNullException ("@string");
@@ -3194,7 +3194,7 @@ namespace
 
 	public static partial class Types {
 
-		internal static unsafe JniObjectReference DefineClass (string name, JniObjectReference loader, IntPtr buffer, int bufferLength)
+		public static unsafe JniObjectReference DefineClass (string name, JniObjectReference loader, IntPtr buffer, int bufferLength)
 		{
 			if (name == null)
 				throw new ArgumentNullException ("name");
@@ -3215,7 +3215,7 @@ namespace
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		public static unsafe JniObjectReference FindClass (string classname)
+		internal static unsafe JniObjectReference _FindClass (string classname)
 		{
 			if (classname == null)
 				throw new ArgumentNullException ("classname");
@@ -3290,7 +3290,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe int RegisterNatives (JniObjectReference klass, JniNativeMethodRegistration [] methods, int numMethods)
+		public static unsafe int RegisterNatives (JniObjectReference klass, JniNativeMethodRegistration [] methods, int numMethods)
 		{
 			if (klass.SafeHandle == null)
 				throw new ArgumentNullException ("klass");
@@ -3306,7 +3306,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe int UnregisterNatives (JniObjectReference klass)
+		public static unsafe int UnregisterNatives (JniObjectReference klass)
 		{
 			if (klass.SafeHandle == null)
 				throw new ArgumentNullException ("klass");
@@ -5216,12 +5216,12 @@ namespace
 
 	public static partial class Arrays {
 
-		public static unsafe int GetArrayLength (JniObjectReference array_ptr)
+		public static unsafe int GetArrayLength (JniObjectReference array)
 		{
-			if (array_ptr.Handle == IntPtr.Zero)
-				throw new ArgumentException ("`array_ptr` must not be IntPtr.Zero.", "array_ptr");
+			if (array.Handle == IntPtr.Zero)
+				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
 
-			var tmp = JniEnvironment.Invoker.GetArrayLength (JniEnvironment.EnvironmentPointer, array_ptr.Handle);
+			var tmp = JniEnvironment.Invoker.GetArrayLength (JniEnvironment.EnvironmentPointer, array.Handle);
 			return tmp;
 		}
 
@@ -5476,7 +5476,7 @@ namespace
 			JniEnvironment.Invoker.ReleaseDoubleArrayElements (JniEnvironment.EnvironmentPointer, array.Handle, elements, mode);
 		}
 
-		internal static unsafe void GetBooleanArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
+		public static unsafe void GetBooleanArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
@@ -5596,7 +5596,7 @@ namespace
 
 		}
 
-		internal static unsafe void SetBooleanArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
+		public static unsafe void SetBooleanArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
@@ -5739,18 +5739,18 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe JniObjectReference ExceptionOccurred ()
+		public static unsafe JniObjectReference ExceptionOccurred ()
 		{
 			var tmp = JniEnvironment.Invoker.ExceptionOccurred (JniEnvironment.EnvironmentPointer);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		internal static unsafe void ExceptionDescribe ()
+		public static unsafe void ExceptionDescribe ()
 		{
 			JniEnvironment.Invoker.ExceptionDescribe (JniEnvironment.EnvironmentPointer);
 		}
 
-		internal static unsafe void ExceptionClear ()
+		public static unsafe void ExceptionClear ()
 		{
 			JniEnvironment.Invoker.ExceptionClear (JniEnvironment.EnvironmentPointer);
 		}
@@ -5763,14 +5763,14 @@ namespace
 			JniEnvironment.Invoker.FatalError (JniEnvironment.EnvironmentPointer, message);
 		}
 
-		internal static unsafe bool ExceptionCheck ()
+		public static unsafe bool ExceptionCheck ()
 		{
 			var tmp = JniEnvironment.Invoker.ExceptionCheck (JniEnvironment.EnvironmentPointer);
 			return tmp;
 		}
 	}
 
-	internal static partial class InstanceFields {
+	public static partial class InstanceFields {
 
 		public static unsafe JniInstanceFieldInfo GetFieldID (JniObjectReference klass, string name, string signature)
 		{
@@ -5792,7 +5792,7 @@ namespace
 			return new JniInstanceFieldInfo (tmp);
 		}
 
-		internal static unsafe JniObjectReference GetObjectField (JniObjectReference @object, JniInstanceFieldInfo field)
+		public static unsafe JniObjectReference GetObjectField (JniObjectReference @object, JniInstanceFieldInfo field)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -5806,7 +5806,7 @@ namespace
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		internal static unsafe bool GetBooleanField (JniObjectReference @object, JniInstanceFieldInfo field)
+		public static unsafe bool GetBooleanField (JniObjectReference @object, JniInstanceFieldInfo field)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -5819,7 +5819,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe sbyte GetByteField (JniObjectReference @object, JniInstanceFieldInfo field)
+		public static unsafe sbyte GetByteField (JniObjectReference @object, JniInstanceFieldInfo field)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -5832,7 +5832,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe char GetCharField (JniObjectReference @object, JniInstanceFieldInfo field)
+		public static unsafe char GetCharField (JniObjectReference @object, JniInstanceFieldInfo field)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -5845,7 +5845,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe short GetShortField (JniObjectReference @object, JniInstanceFieldInfo field)
+		public static unsafe short GetShortField (JniObjectReference @object, JniInstanceFieldInfo field)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -5858,7 +5858,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe int GetIntField (JniObjectReference @object, JniInstanceFieldInfo field)
+		public static unsafe int GetIntField (JniObjectReference @object, JniInstanceFieldInfo field)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -5871,7 +5871,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe long GetLongField (JniObjectReference @object, JniInstanceFieldInfo field)
+		public static unsafe long GetLongField (JniObjectReference @object, JniInstanceFieldInfo field)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -5884,7 +5884,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe float GetFloatField (JniObjectReference @object, JniInstanceFieldInfo field)
+		public static unsafe float GetFloatField (JniObjectReference @object, JniInstanceFieldInfo field)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -5897,7 +5897,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe double GetDoubleField (JniObjectReference @object, JniInstanceFieldInfo field)
+		public static unsafe double GetDoubleField (JniObjectReference @object, JniInstanceFieldInfo field)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -5910,7 +5910,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe void SetField (JniObjectReference @object, JniInstanceFieldInfo field, JniObjectReference value)
+		public static unsafe void SetObjectField (JniObjectReference @object, JniInstanceFieldInfo field, JniObjectReference value)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -5922,7 +5922,7 @@ namespace
 			JniEnvironment.Invoker.SetObjectField (JniEnvironment.EnvironmentPointer, @object.Handle, field.ID, value.Handle);
 		}
 
-		internal static unsafe void SetField (JniObjectReference @object, JniInstanceFieldInfo field, bool value)
+		public static unsafe void SetBooleanField (JniObjectReference @object, JniInstanceFieldInfo field, bool value)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -5934,7 +5934,7 @@ namespace
 			JniEnvironment.Invoker.SetBooleanField (JniEnvironment.EnvironmentPointer, @object.Handle, field.ID, value);
 		}
 
-		internal static unsafe void SetField (JniObjectReference @object, JniInstanceFieldInfo field, sbyte value)
+		public static unsafe void SetByteField (JniObjectReference @object, JniInstanceFieldInfo field, sbyte value)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -5946,7 +5946,7 @@ namespace
 			JniEnvironment.Invoker.SetByteField (JniEnvironment.EnvironmentPointer, @object.Handle, field.ID, value);
 		}
 
-		internal static unsafe void SetField (JniObjectReference @object, JniInstanceFieldInfo field, char value)
+		public static unsafe void SetCharField (JniObjectReference @object, JniInstanceFieldInfo field, char value)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -5958,7 +5958,7 @@ namespace
 			JniEnvironment.Invoker.SetCharField (JniEnvironment.EnvironmentPointer, @object.Handle, field.ID, value);
 		}
 
-		internal static unsafe void SetField (JniObjectReference @object, JniInstanceFieldInfo field, short value)
+		public static unsafe void SetShortField (JniObjectReference @object, JniInstanceFieldInfo field, short value)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -5970,7 +5970,7 @@ namespace
 			JniEnvironment.Invoker.SetShortField (JniEnvironment.EnvironmentPointer, @object.Handle, field.ID, value);
 		}
 
-		internal static unsafe void SetField (JniObjectReference @object, JniInstanceFieldInfo field, int value)
+		public static unsafe void SetIntField (JniObjectReference @object, JniInstanceFieldInfo field, int value)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -5982,7 +5982,7 @@ namespace
 			JniEnvironment.Invoker.SetIntField (JniEnvironment.EnvironmentPointer, @object.Handle, field.ID, value);
 		}
 
-		internal static unsafe void SetField (JniObjectReference @object, JniInstanceFieldInfo field, long value)
+		public static unsafe void SetLongField (JniObjectReference @object, JniInstanceFieldInfo field, long value)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -5994,7 +5994,7 @@ namespace
 			JniEnvironment.Invoker.SetLongField (JniEnvironment.EnvironmentPointer, @object.Handle, field.ID, value);
 		}
 
-		internal static unsafe void SetField (JniObjectReference @object, JniInstanceFieldInfo field, float value)
+		public static unsafe void SetFloatField (JniObjectReference @object, JniInstanceFieldInfo field, float value)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -6006,7 +6006,7 @@ namespace
 			JniEnvironment.Invoker.SetFloatField (JniEnvironment.EnvironmentPointer, @object.Handle, field.ID, value);
 		}
 
-		internal static unsafe void SetField (JniObjectReference @object, JniInstanceFieldInfo field, double value)
+		public static unsafe void SetDoubleField (JniObjectReference @object, JniInstanceFieldInfo field, double value)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -6019,9 +6019,9 @@ namespace
 		}
 	}
 
-	internal static partial class InstanceMethods {
+	public static partial class InstanceMethods {
 
-		internal static unsafe JniInstanceMethodInfo GetMethodID (JniObjectReference klass, string name, string signature)
+		public static unsafe JniInstanceMethodInfo GetMethodID (JniObjectReference klass, string name, string signature)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -6041,7 +6041,7 @@ namespace
 			return new JniInstanceMethodInfo (tmp);
 		}
 
-		internal static unsafe JniObjectReference CallObjectMethod (JniObjectReference @object, JniInstanceMethodInfo method)
+		public static unsafe JniObjectReference CallObjectMethod (JniObjectReference @object, JniInstanceMethodInfo method)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -6060,7 +6060,7 @@ namespace
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		internal static unsafe JniObjectReference CallObjectMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe JniObjectReference CallObjectMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -6079,7 +6079,7 @@ namespace
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		internal static unsafe bool CallBooleanMethod (JniObjectReference @object, JniInstanceMethodInfo method)
+		public static unsafe bool CallBooleanMethod (JniObjectReference @object, JniInstanceMethodInfo method)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -6097,7 +6097,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe bool CallBooleanMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe bool CallBooleanMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -6115,7 +6115,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe sbyte CallByteMethod (JniObjectReference @object, JniInstanceMethodInfo method)
+		public static unsafe sbyte CallByteMethod (JniObjectReference @object, JniInstanceMethodInfo method)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -6133,7 +6133,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe sbyte CallByteMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe sbyte CallByteMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -6151,7 +6151,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe char CallCharMethod (JniObjectReference @object, JniInstanceMethodInfo method)
+		public static unsafe char CallCharMethod (JniObjectReference @object, JniInstanceMethodInfo method)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -6169,7 +6169,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe char CallCharMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe char CallCharMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -6187,7 +6187,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe short CallShortMethod (JniObjectReference @object, JniInstanceMethodInfo method)
+		public static unsafe short CallShortMethod (JniObjectReference @object, JniInstanceMethodInfo method)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -6205,7 +6205,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe short CallShortMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe short CallShortMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -6223,7 +6223,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe int CallIntMethod (JniObjectReference @object, JniInstanceMethodInfo method)
+		public static unsafe int CallIntMethod (JniObjectReference @object, JniInstanceMethodInfo method)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -6241,7 +6241,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe int CallIntMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe int CallIntMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -6259,7 +6259,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe long CallLongMethod (JniObjectReference @object, JniInstanceMethodInfo method)
+		public static unsafe long CallLongMethod (JniObjectReference @object, JniInstanceMethodInfo method)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -6277,7 +6277,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe long CallLongMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe long CallLongMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -6295,7 +6295,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe float CallFloatMethod (JniObjectReference @object, JniInstanceMethodInfo method)
+		public static unsafe float CallFloatMethod (JniObjectReference @object, JniInstanceMethodInfo method)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -6313,7 +6313,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe float CallFloatMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe float CallFloatMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -6331,7 +6331,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe double CallDoubleMethod (JniObjectReference @object, JniInstanceMethodInfo method)
+		public static unsafe double CallDoubleMethod (JniObjectReference @object, JniInstanceMethodInfo method)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -6349,7 +6349,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe double CallDoubleMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe double CallDoubleMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -6367,7 +6367,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe void CallVoidMethod (JniObjectReference @object, JniInstanceMethodInfo method)
+		public static unsafe void CallVoidMethod (JniObjectReference @object, JniInstanceMethodInfo method)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -6384,7 +6384,7 @@ namespace
 
 		}
 
-		internal static unsafe void CallVoidMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe void CallVoidMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -6401,7 +6401,7 @@ namespace
 
 		}
 
-		internal static unsafe JniObjectReference CallNonvirtualObjectMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method)
+		public static unsafe JniObjectReference CallNonvirtualObjectMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -6422,7 +6422,7 @@ namespace
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		internal static unsafe JniObjectReference CallNonvirtualObjectMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe JniObjectReference CallNonvirtualObjectMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -6443,7 +6443,7 @@ namespace
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		internal static unsafe bool CallNonvirtualBooleanMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method)
+		public static unsafe bool CallNonvirtualBooleanMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -6463,7 +6463,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe bool CallNonvirtualBooleanMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe bool CallNonvirtualBooleanMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -6483,7 +6483,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe sbyte CallNonvirtualByteMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method)
+		public static unsafe sbyte CallNonvirtualByteMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -6503,7 +6503,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe sbyte CallNonvirtualByteMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe sbyte CallNonvirtualByteMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -6523,7 +6523,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe char CallNonvirtualCharMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method)
+		public static unsafe char CallNonvirtualCharMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -6543,7 +6543,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe char CallNonvirtualCharMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe char CallNonvirtualCharMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -6563,7 +6563,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe short CallNonvirtualShortMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method)
+		public static unsafe short CallNonvirtualShortMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -6583,7 +6583,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe short CallNonvirtualShortMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe short CallNonvirtualShortMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -6603,7 +6603,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe int CallNonvirtualIntMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method)
+		public static unsafe int CallNonvirtualIntMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -6623,7 +6623,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe int CallNonvirtualIntMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe int CallNonvirtualIntMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -6643,7 +6643,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe long CallNonvirtualLongMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method)
+		public static unsafe long CallNonvirtualLongMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -6663,7 +6663,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe long CallNonvirtualLongMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe long CallNonvirtualLongMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -6683,7 +6683,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe float CallNonvirtualFloatMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method)
+		public static unsafe float CallNonvirtualFloatMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -6703,7 +6703,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe float CallNonvirtualFloatMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe float CallNonvirtualFloatMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -6723,7 +6723,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe double CallNonvirtualDoubleMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method)
+		public static unsafe double CallNonvirtualDoubleMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -6743,7 +6743,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe double CallNonvirtualDoubleMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe double CallNonvirtualDoubleMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -6763,7 +6763,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe void CallNonvirtualVoidMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method)
+		public static unsafe void CallNonvirtualVoidMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -6782,7 +6782,7 @@ namespace
 
 		}
 
-		internal static unsafe void CallNonvirtualVoidMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe void CallNonvirtualVoidMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -6838,7 +6838,7 @@ namespace
 		}
 	}
 
-	internal static partial class Monitors {
+	public static partial class Monitors {
 
 		public static unsafe int MonitorEnter (JniObjectReference @object)
 		{
@@ -6987,7 +6987,7 @@ namespace
 
 	internal static partial class Reflection {
 
-		internal static unsafe JniObjectReference ToReflectedMethod (JniObjectReference klass, JniInstanceMethodInfo method, bool isStatic)
+		public static unsafe JniObjectReference ToReflectedMethod (JniObjectReference klass, JniInstanceMethodInfo method, bool isStatic)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -7001,7 +7001,7 @@ namespace
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		internal static unsafe JniObjectReference ToReflectedField (JniObjectReference klass, JniInstanceFieldInfo field, bool isStatic)
+		public static unsafe JniObjectReference ToReflectedField (JniObjectReference klass, JniInstanceFieldInfo field, bool isStatic)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -7016,7 +7016,7 @@ namespace
 		}
 	}
 
-	internal static partial class StaticFields {
+	public static partial class StaticFields {
 
 		public static unsafe JniStaticFieldInfo GetStaticFieldID (JniObjectReference klass, string name, string signature)
 		{
@@ -7038,7 +7038,7 @@ namespace
 			return new JniStaticFieldInfo (tmp);
 		}
 
-		internal static unsafe JniObjectReference GetStaticObjectField (JniObjectReference klass, JniStaticFieldInfo field)
+		public static unsafe JniObjectReference GetStaticObjectField (JniObjectReference klass, JniStaticFieldInfo field)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -7052,7 +7052,7 @@ namespace
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		internal static unsafe bool GetStaticBooleanField (JniObjectReference klass, JniStaticFieldInfo field)
+		public static unsafe bool GetStaticBooleanField (JniObjectReference klass, JniStaticFieldInfo field)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -7065,7 +7065,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe sbyte GetStaticByteField (JniObjectReference klass, JniStaticFieldInfo field)
+		public static unsafe sbyte GetStaticByteField (JniObjectReference klass, JniStaticFieldInfo field)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -7078,7 +7078,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe char GetStaticCharField (JniObjectReference klass, JniStaticFieldInfo field)
+		public static unsafe char GetStaticCharField (JniObjectReference klass, JniStaticFieldInfo field)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -7091,7 +7091,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe short GetStaticShortField (JniObjectReference klass, JniStaticFieldInfo field)
+		public static unsafe short GetStaticShortField (JniObjectReference klass, JniStaticFieldInfo field)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -7104,7 +7104,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe int GetStaticIntField (JniObjectReference klass, JniStaticFieldInfo field)
+		public static unsafe int GetStaticIntField (JniObjectReference klass, JniStaticFieldInfo field)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -7117,7 +7117,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe long GetStaticLongField (JniObjectReference klass, JniStaticFieldInfo field)
+		public static unsafe long GetStaticLongField (JniObjectReference klass, JniStaticFieldInfo field)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -7130,7 +7130,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe float GetStaticFloatField (JniObjectReference klass, JniStaticFieldInfo field)
+		public static unsafe float GetStaticFloatField (JniObjectReference klass, JniStaticFieldInfo field)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -7143,7 +7143,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe double GetStaticDoubleField (JniObjectReference klass, JniStaticFieldInfo field)
+		public static unsafe double GetStaticDoubleField (JniObjectReference klass, JniStaticFieldInfo field)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -7156,7 +7156,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe void SetStaticField (JniObjectReference klass, JniStaticFieldInfo field, JniObjectReference value)
+		public static unsafe void SetStaticObjectField (JniObjectReference klass, JniStaticFieldInfo field, JniObjectReference value)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -7168,7 +7168,7 @@ namespace
 			JniEnvironment.Invoker.SetStaticObjectField (JniEnvironment.EnvironmentPointer, klass.Handle, field.ID, value.Handle);
 		}
 
-		internal static unsafe void SetStaticField (JniObjectReference klass, JniStaticFieldInfo field, bool value)
+		public static unsafe void SetStaticBooleanField (JniObjectReference klass, JniStaticFieldInfo field, bool value)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -7180,7 +7180,7 @@ namespace
 			JniEnvironment.Invoker.SetStaticBooleanField (JniEnvironment.EnvironmentPointer, klass.Handle, field.ID, value);
 		}
 
-		internal static unsafe void SetStaticField (JniObjectReference klass, JniStaticFieldInfo field, sbyte value)
+		public static unsafe void SetStaticByteField (JniObjectReference klass, JniStaticFieldInfo field, sbyte value)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -7192,7 +7192,7 @@ namespace
 			JniEnvironment.Invoker.SetStaticByteField (JniEnvironment.EnvironmentPointer, klass.Handle, field.ID, value);
 		}
 
-		internal static unsafe void SetStaticField (JniObjectReference klass, JniStaticFieldInfo field, char value)
+		public static unsafe void SetStaticCharField (JniObjectReference klass, JniStaticFieldInfo field, char value)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -7204,7 +7204,7 @@ namespace
 			JniEnvironment.Invoker.SetStaticCharField (JniEnvironment.EnvironmentPointer, klass.Handle, field.ID, value);
 		}
 
-		internal static unsafe void SetStaticField (JniObjectReference klass, JniStaticFieldInfo field, short value)
+		public static unsafe void SetStaticShortField (JniObjectReference klass, JniStaticFieldInfo field, short value)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -7216,7 +7216,7 @@ namespace
 			JniEnvironment.Invoker.SetStaticShortField (JniEnvironment.EnvironmentPointer, klass.Handle, field.ID, value);
 		}
 
-		internal static unsafe void SetStaticField (JniObjectReference klass, JniStaticFieldInfo field, int value)
+		public static unsafe void SetStaticIntField (JniObjectReference klass, JniStaticFieldInfo field, int value)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -7228,7 +7228,7 @@ namespace
 			JniEnvironment.Invoker.SetStaticIntField (JniEnvironment.EnvironmentPointer, klass.Handle, field.ID, value);
 		}
 
-		internal static unsafe void SetStaticField (JniObjectReference klass, JniStaticFieldInfo field, long value)
+		public static unsafe void SetStaticLongField (JniObjectReference klass, JniStaticFieldInfo field, long value)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -7240,7 +7240,7 @@ namespace
 			JniEnvironment.Invoker.SetStaticLongField (JniEnvironment.EnvironmentPointer, klass.Handle, field.ID, value);
 		}
 
-		internal static unsafe void SetStaticField (JniObjectReference klass, JniStaticFieldInfo field, float value)
+		public static unsafe void SetStaticFloatField (JniObjectReference klass, JniStaticFieldInfo field, float value)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -7252,7 +7252,7 @@ namespace
 			JniEnvironment.Invoker.SetStaticFloatField (JniEnvironment.EnvironmentPointer, klass.Handle, field.ID, value);
 		}
 
-		internal static unsafe void SetStaticField (JniObjectReference klass, JniStaticFieldInfo field, double value)
+		public static unsafe void SetStaticDoubleField (JniObjectReference klass, JniStaticFieldInfo field, double value)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -7265,7 +7265,7 @@ namespace
 		}
 	}
 
-	internal static partial class StaticMethods {
+	public static partial class StaticMethods {
 
 		public static unsafe JniStaticMethodInfo GetStaticMethodID (JniObjectReference klass, string name, string signature)
 		{
@@ -7287,7 +7287,7 @@ namespace
 			return new JniStaticMethodInfo (tmp);
 		}
 
-		internal static unsafe JniObjectReference CallStaticObjectMethod (JniObjectReference klass, JniStaticMethodInfo method)
+		public static unsafe JniObjectReference CallStaticObjectMethod (JniObjectReference klass, JniStaticMethodInfo method)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -7306,7 +7306,7 @@ namespace
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		internal static unsafe JniObjectReference CallStaticObjectMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
+		public static unsafe JniObjectReference CallStaticObjectMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -7325,7 +7325,7 @@ namespace
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		internal static unsafe bool CallStaticBooleanMethod (JniObjectReference klass, JniStaticMethodInfo method)
+		public static unsafe bool CallStaticBooleanMethod (JniObjectReference klass, JniStaticMethodInfo method)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -7343,7 +7343,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe bool CallStaticBooleanMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
+		public static unsafe bool CallStaticBooleanMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -7361,7 +7361,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe sbyte CallStaticByteMethod (JniObjectReference klass, JniStaticMethodInfo method)
+		public static unsafe sbyte CallStaticByteMethod (JniObjectReference klass, JniStaticMethodInfo method)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -7379,7 +7379,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe sbyte CallStaticByteMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
+		public static unsafe sbyte CallStaticByteMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -7397,7 +7397,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe char CallStaticCharMethod (JniObjectReference klass, JniStaticMethodInfo method)
+		public static unsafe char CallStaticCharMethod (JniObjectReference klass, JniStaticMethodInfo method)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -7415,7 +7415,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe char CallStaticCharMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
+		public static unsafe char CallStaticCharMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -7433,7 +7433,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe short CallStaticShortMethod (JniObjectReference klass, JniStaticMethodInfo method)
+		public static unsafe short CallStaticShortMethod (JniObjectReference klass, JniStaticMethodInfo method)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -7451,7 +7451,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe short CallStaticShortMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
+		public static unsafe short CallStaticShortMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -7469,7 +7469,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe int CallStaticIntMethod (JniObjectReference klass, JniStaticMethodInfo method)
+		public static unsafe int CallStaticIntMethod (JniObjectReference klass, JniStaticMethodInfo method)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -7487,7 +7487,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe int CallStaticIntMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
+		public static unsafe int CallStaticIntMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -7505,7 +7505,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe long CallStaticLongMethod (JniObjectReference klass, JniStaticMethodInfo method)
+		public static unsafe long CallStaticLongMethod (JniObjectReference klass, JniStaticMethodInfo method)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -7523,7 +7523,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe long CallStaticLongMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
+		public static unsafe long CallStaticLongMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -7541,7 +7541,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe float CallStaticFloatMethod (JniObjectReference klass, JniStaticMethodInfo method)
+		public static unsafe float CallStaticFloatMethod (JniObjectReference klass, JniStaticMethodInfo method)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -7559,7 +7559,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe float CallStaticFloatMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
+		public static unsafe float CallStaticFloatMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -7577,7 +7577,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe double CallStaticDoubleMethod (JniObjectReference klass, JniStaticMethodInfo method)
+		public static unsafe double CallStaticDoubleMethod (JniObjectReference klass, JniStaticMethodInfo method)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -7595,7 +7595,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe double CallStaticDoubleMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
+		public static unsafe double CallStaticDoubleMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -7613,7 +7613,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe void CallStaticVoidMethod (JniObjectReference klass, JniStaticMethodInfo method)
+		public static unsafe void CallStaticVoidMethod (JniObjectReference klass, JniStaticMethodInfo method)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -7630,7 +7630,7 @@ namespace
 
 		}
 
-		internal static unsafe void CallStaticVoidMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
+		public static unsafe void CallStaticVoidMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -7650,7 +7650,7 @@ namespace
 
 	public static partial class Strings {
 
-		internal static unsafe JniObjectReference NewString (IntPtr unicodeChars, int length)
+		public static unsafe JniObjectReference NewString (IntPtr unicodeChars, int length)
 		{
 			if (unicodeChars == IntPtr.Zero)
 				throw new ArgumentException ("'unicodeChars' must not be IntPtr.Zero.", "unicodeChars");
@@ -7665,7 +7665,7 @@ namespace
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		internal static unsafe int GetStringLength (JniObjectReference @string)
+		public static unsafe int GetStringLength (JniObjectReference @string)
 		{
 			if (@string.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@string` must not be IntPtr.Zero.", "@string");
@@ -7674,7 +7674,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe IntPtr GetStringChars (JniObjectReference @string, IntPtr isCopy)
+		public static unsafe IntPtr GetStringChars (JniObjectReference @string, IntPtr isCopy)
 		{
 			if (@string.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@string` must not be IntPtr.Zero.", "@string");
@@ -7683,7 +7683,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe void ReleaseStringChars (JniObjectReference @string, IntPtr chars)
+		public static unsafe void ReleaseStringChars (JniObjectReference @string, IntPtr chars)
 		{
 			if (@string.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@string` must not be IntPtr.Zero.", "@string");
@@ -7696,7 +7696,7 @@ namespace
 
 	public static partial class Types {
 
-		internal static unsafe JniObjectReference DefineClass (string name, JniObjectReference loader, IntPtr buffer, int bufferLength)
+		public static unsafe JniObjectReference DefineClass (string name, JniObjectReference loader, IntPtr buffer, int bufferLength)
 		{
 			if (name == null)
 				throw new ArgumentNullException ("name");
@@ -7715,7 +7715,7 @@ namespace
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		public static unsafe JniObjectReference FindClass (string classname)
+		internal static unsafe JniObjectReference _FindClass (string classname)
 		{
 			if (classname == null)
 				throw new ArgumentNullException ("classname");
@@ -7778,7 +7778,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe int RegisterNatives (JniObjectReference klass, JniNativeMethodRegistration [] methods, int numMethods)
+		public static unsafe int RegisterNatives (JniObjectReference klass, JniNativeMethodRegistration [] methods, int numMethods)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -7792,7 +7792,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe int UnregisterNatives (JniObjectReference klass)
+		public static unsafe int UnregisterNatives (JniObjectReference klass)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -9703,19 +9703,19 @@ namespace
 	public static partial class Arrays {
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe int JavaInterop_GetArrayLength (IntPtr jnienv, jobject array_ptr);
+		internal static extern unsafe int JavaInterop_GetArrayLength (IntPtr jnienv, jobject array);
 
-		public static unsafe int GetArrayLength (JniObjectReference array_ptr)
+		public static unsafe int GetArrayLength (JniObjectReference array)
 		{
-			if (array_ptr.Handle == IntPtr.Zero)
-				throw new ArgumentException ("`array_ptr` must not be IntPtr.Zero.", "array_ptr");
+			if (array.Handle == IntPtr.Zero)
+				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
 
-			var tmp = JavaInterop_GetArrayLength (JniEnvironment.EnvironmentPointer, array_ptr.Handle);
+			var tmp = JavaInterop_GetArrayLength (JniEnvironment.EnvironmentPointer, array.Handle);
 			return tmp;
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe jobject JavaInterop_NewObjectArray (IntPtr jnienv, out IntPtr thrown, int length, jobject elementClass, jobject initialElement);
+		internal static extern unsafe jobject JavaInterop_NewObjectArray (IntPtr jnienv, out IntPtr thrown, int length, jobject elementClass, jobject initialElement);
 
 		public static unsafe JniObjectReference NewObjectArray (int length, JniObjectReference elementClass, JniObjectReference initialElement)
 		{
@@ -9734,7 +9734,7 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe jobject JavaInterop_GetObjectArrayElement (IntPtr jnienv, out IntPtr thrown, jobject array, int index);
+		internal static extern unsafe jobject JavaInterop_GetObjectArrayElement (IntPtr jnienv, out IntPtr thrown, jobject array, int index);
 
 		public static unsafe JniObjectReference GetObjectArrayElement (JniObjectReference array, int index)
 		{
@@ -9753,7 +9753,7 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe void JavaInterop_SetObjectArrayElement (IntPtr jnienv, out IntPtr thrown, jobject array, int index, jobject value);
+		internal static extern unsafe void JavaInterop_SetObjectArrayElement (IntPtr jnienv, out IntPtr thrown, jobject array, int index, jobject value);
 
 		public static unsafe void SetObjectArrayElement (JniObjectReference array, int index, JniObjectReference value)
 		{
@@ -9770,7 +9770,7 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe jobject JavaInterop_NewBooleanArray (IntPtr jnienv, int length);
+		internal static extern unsafe jobject JavaInterop_NewBooleanArray (IntPtr jnienv, int length);
 
 		public static unsafe JniObjectReference NewBooleanArray (int length)
 		{
@@ -9780,7 +9780,7 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe jobject JavaInterop_NewByteArray (IntPtr jnienv, int length);
+		internal static extern unsafe jobject JavaInterop_NewByteArray (IntPtr jnienv, int length);
 
 		public static unsafe JniObjectReference NewByteArray (int length)
 		{
@@ -9790,7 +9790,7 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe jobject JavaInterop_NewCharArray (IntPtr jnienv, int length);
+		internal static extern unsafe jobject JavaInterop_NewCharArray (IntPtr jnienv, int length);
 
 		public static unsafe JniObjectReference NewCharArray (int length)
 		{
@@ -9800,7 +9800,7 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe jobject JavaInterop_NewShortArray (IntPtr jnienv, int length);
+		internal static extern unsafe jobject JavaInterop_NewShortArray (IntPtr jnienv, int length);
 
 		public static unsafe JniObjectReference NewShortArray (int length)
 		{
@@ -9810,7 +9810,7 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe jobject JavaInterop_NewIntArray (IntPtr jnienv, int length);
+		internal static extern unsafe jobject JavaInterop_NewIntArray (IntPtr jnienv, int length);
 
 		public static unsafe JniObjectReference NewIntArray (int length)
 		{
@@ -9820,7 +9820,7 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe jobject JavaInterop_NewLongArray (IntPtr jnienv, int length);
+		internal static extern unsafe jobject JavaInterop_NewLongArray (IntPtr jnienv, int length);
 
 		public static unsafe JniObjectReference NewLongArray (int length)
 		{
@@ -9830,7 +9830,7 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe jobject JavaInterop_NewFloatArray (IntPtr jnienv, int length);
+		internal static extern unsafe jobject JavaInterop_NewFloatArray (IntPtr jnienv, int length);
 
 		public static unsafe JniObjectReference NewFloatArray (int length)
 		{
@@ -9840,7 +9840,7 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe jobject JavaInterop_NewDoubleArray (IntPtr jnienv, int length);
+		internal static extern unsafe jobject JavaInterop_NewDoubleArray (IntPtr jnienv, int length);
 
 		public static unsafe JniObjectReference NewDoubleArray (int length)
 		{
@@ -9850,7 +9850,7 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe IntPtr JavaInterop_GetBooleanArrayElements (IntPtr jnienv, jobject array, IntPtr isCopy);
+		internal static extern unsafe IntPtr JavaInterop_GetBooleanArrayElements (IntPtr jnienv, jobject array, IntPtr isCopy);
 
 		public static unsafe IntPtr GetBooleanArrayElements (JniObjectReference array, IntPtr isCopy)
 		{
@@ -9862,7 +9862,7 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe IntPtr JavaInterop_GetByteArrayElements (IntPtr jnienv, jobject array, IntPtr isCopy);
+		internal static extern unsafe IntPtr JavaInterop_GetByteArrayElements (IntPtr jnienv, jobject array, IntPtr isCopy);
 
 		public static unsafe IntPtr GetByteArrayElements (JniObjectReference array, IntPtr isCopy)
 		{
@@ -9874,7 +9874,7 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe IntPtr JavaInterop_GetCharArrayElements (IntPtr jnienv, jobject array, IntPtr isCopy);
+		internal static extern unsafe IntPtr JavaInterop_GetCharArrayElements (IntPtr jnienv, jobject array, IntPtr isCopy);
 
 		public static unsafe IntPtr GetCharArrayElements (JniObjectReference array, IntPtr isCopy)
 		{
@@ -9886,7 +9886,7 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe IntPtr JavaInterop_GetShortArrayElements (IntPtr jnienv, jobject array, IntPtr isCopy);
+		internal static extern unsafe IntPtr JavaInterop_GetShortArrayElements (IntPtr jnienv, jobject array, IntPtr isCopy);
 
 		public static unsafe IntPtr GetShortArrayElements (JniObjectReference array, IntPtr isCopy)
 		{
@@ -9898,7 +9898,7 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe IntPtr JavaInterop_GetIntArrayElements (IntPtr jnienv, jobject array, IntPtr isCopy);
+		internal static extern unsafe IntPtr JavaInterop_GetIntArrayElements (IntPtr jnienv, jobject array, IntPtr isCopy);
 
 		public static unsafe IntPtr GetIntArrayElements (JniObjectReference array, IntPtr isCopy)
 		{
@@ -9910,7 +9910,7 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe IntPtr JavaInterop_GetLongArrayElements (IntPtr jnienv, jobject array, IntPtr isCopy);
+		internal static extern unsafe IntPtr JavaInterop_GetLongArrayElements (IntPtr jnienv, jobject array, IntPtr isCopy);
 
 		public static unsafe IntPtr GetLongArrayElements (JniObjectReference array, IntPtr isCopy)
 		{
@@ -9922,7 +9922,7 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe IntPtr JavaInterop_GetFloatArrayElements (IntPtr jnienv, jobject array, IntPtr isCopy);
+		internal static extern unsafe IntPtr JavaInterop_GetFloatArrayElements (IntPtr jnienv, jobject array, IntPtr isCopy);
 
 		public static unsafe IntPtr GetFloatArrayElements (JniObjectReference array, IntPtr isCopy)
 		{
@@ -9934,7 +9934,7 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe IntPtr JavaInterop_GetDoubleArrayElements (IntPtr jnienv, jobject array, IntPtr isCopy);
+		internal static extern unsafe IntPtr JavaInterop_GetDoubleArrayElements (IntPtr jnienv, jobject array, IntPtr isCopy);
 
 		public static unsafe IntPtr GetDoubleArrayElements (JniObjectReference array, IntPtr isCopy)
 		{
@@ -9946,7 +9946,7 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe void JavaInterop_ReleaseBooleanArrayElements (IntPtr jnienv, jobject array, IntPtr elements, int mode);
+		internal static extern unsafe void JavaInterop_ReleaseBooleanArrayElements (IntPtr jnienv, jobject array, IntPtr elements, int mode);
 
 		public static unsafe void ReleaseBooleanArrayElements (JniObjectReference array, IntPtr elements, int mode)
 		{
@@ -9959,7 +9959,7 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe void JavaInterop_ReleaseByteArrayElements (IntPtr jnienv, jobject array, IntPtr elements, int mode);
+		internal static extern unsafe void JavaInterop_ReleaseByteArrayElements (IntPtr jnienv, jobject array, IntPtr elements, int mode);
 
 		public static unsafe void ReleaseByteArrayElements (JniObjectReference array, IntPtr elements, int mode)
 		{
@@ -9972,7 +9972,7 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe void JavaInterop_ReleaseCharArrayElements (IntPtr jnienv, jobject array, IntPtr elements, int mode);
+		internal static extern unsafe void JavaInterop_ReleaseCharArrayElements (IntPtr jnienv, jobject array, IntPtr elements, int mode);
 
 		public static unsafe void ReleaseCharArrayElements (JniObjectReference array, IntPtr elements, int mode)
 		{
@@ -9985,7 +9985,7 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe void JavaInterop_ReleaseShortArrayElements (IntPtr jnienv, jobject array, IntPtr elements, int mode);
+		internal static extern unsafe void JavaInterop_ReleaseShortArrayElements (IntPtr jnienv, jobject array, IntPtr elements, int mode);
 
 		public static unsafe void ReleaseShortArrayElements (JniObjectReference array, IntPtr elements, int mode)
 		{
@@ -9998,7 +9998,7 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe void JavaInterop_ReleaseIntArrayElements (IntPtr jnienv, jobject array, IntPtr elements, int mode);
+		internal static extern unsafe void JavaInterop_ReleaseIntArrayElements (IntPtr jnienv, jobject array, IntPtr elements, int mode);
 
 		public static unsafe void ReleaseIntArrayElements (JniObjectReference array, IntPtr elements, int mode)
 		{
@@ -10011,7 +10011,7 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe void JavaInterop_ReleaseLongArrayElements (IntPtr jnienv, jobject array, IntPtr elements, int mode);
+		internal static extern unsafe void JavaInterop_ReleaseLongArrayElements (IntPtr jnienv, jobject array, IntPtr elements, int mode);
 
 		public static unsafe void ReleaseLongArrayElements (JniObjectReference array, IntPtr elements, int mode)
 		{
@@ -10024,7 +10024,7 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe void JavaInterop_ReleaseFloatArrayElements (IntPtr jnienv, jobject array, IntPtr elements, int mode);
+		internal static extern unsafe void JavaInterop_ReleaseFloatArrayElements (IntPtr jnienv, jobject array, IntPtr elements, int mode);
 
 		public static unsafe void ReleaseFloatArrayElements (JniObjectReference array, IntPtr elements, int mode)
 		{
@@ -10037,7 +10037,7 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe void JavaInterop_ReleaseDoubleArrayElements (IntPtr jnienv, jobject array, IntPtr elements, int mode);
+		internal static extern unsafe void JavaInterop_ReleaseDoubleArrayElements (IntPtr jnienv, jobject array, IntPtr elements, int mode);
 
 		public static unsafe void ReleaseDoubleArrayElements (JniObjectReference array, IntPtr elements, int mode)
 		{
@@ -10050,9 +10050,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe void JavaInterop_GetBooleanArrayRegion (IntPtr jnienv, out IntPtr thrown, jobject array, int start, int length, IntPtr buffer);
+		internal static extern unsafe void JavaInterop_GetBooleanArrayRegion (IntPtr jnienv, out IntPtr thrown, jobject array, int start, int length, IntPtr buffer);
 
-		internal static unsafe void GetBooleanArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
+		public static unsafe void GetBooleanArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
@@ -10069,7 +10069,7 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe void JavaInterop_GetByteArrayRegion (IntPtr jnienv, out IntPtr thrown, jobject array, int start, int length, IntPtr buffer);
+		internal static extern unsafe void JavaInterop_GetByteArrayRegion (IntPtr jnienv, out IntPtr thrown, jobject array, int start, int length, IntPtr buffer);
 
 		public static unsafe void GetByteArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
 		{
@@ -10088,7 +10088,7 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe void JavaInterop_GetCharArrayRegion (IntPtr jnienv, out IntPtr thrown, jobject array, int start, int length, IntPtr buffer);
+		internal static extern unsafe void JavaInterop_GetCharArrayRegion (IntPtr jnienv, out IntPtr thrown, jobject array, int start, int length, IntPtr buffer);
 
 		public static unsafe void GetCharArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
 		{
@@ -10107,7 +10107,7 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe void JavaInterop_GetShortArrayRegion (IntPtr jnienv, out IntPtr thrown, jobject array, int start, int length, IntPtr buffer);
+		internal static extern unsafe void JavaInterop_GetShortArrayRegion (IntPtr jnienv, out IntPtr thrown, jobject array, int start, int length, IntPtr buffer);
 
 		public static unsafe void GetShortArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
 		{
@@ -10126,7 +10126,7 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe void JavaInterop_GetIntArrayRegion (IntPtr jnienv, out IntPtr thrown, jobject array, int start, int length, IntPtr buffer);
+		internal static extern unsafe void JavaInterop_GetIntArrayRegion (IntPtr jnienv, out IntPtr thrown, jobject array, int start, int length, IntPtr buffer);
 
 		public static unsafe void GetIntArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
 		{
@@ -10145,7 +10145,7 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe void JavaInterop_GetLongArrayRegion (IntPtr jnienv, out IntPtr thrown, jobject array, int start, int length, IntPtr buffer);
+		internal static extern unsafe void JavaInterop_GetLongArrayRegion (IntPtr jnienv, out IntPtr thrown, jobject array, int start, int length, IntPtr buffer);
 
 		public static unsafe void GetLongArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
 		{
@@ -10164,7 +10164,7 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe void JavaInterop_GetFloatArrayRegion (IntPtr jnienv, out IntPtr thrown, jobject array, int start, int length, IntPtr buffer);
+		internal static extern unsafe void JavaInterop_GetFloatArrayRegion (IntPtr jnienv, out IntPtr thrown, jobject array, int start, int length, IntPtr buffer);
 
 		public static unsafe void GetFloatArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
 		{
@@ -10183,7 +10183,7 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe void JavaInterop_GetDoubleArrayRegion (IntPtr jnienv, out IntPtr thrown, jobject array, int start, int length, IntPtr buffer);
+		internal static extern unsafe void JavaInterop_GetDoubleArrayRegion (IntPtr jnienv, out IntPtr thrown, jobject array, int start, int length, IntPtr buffer);
 
 		public static unsafe void GetDoubleArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
 		{
@@ -10202,9 +10202,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe void JavaInterop_SetBooleanArrayRegion (IntPtr jnienv, out IntPtr thrown, jobject array, int start, int length, IntPtr buffer);
+		internal static extern unsafe void JavaInterop_SetBooleanArrayRegion (IntPtr jnienv, out IntPtr thrown, jobject array, int start, int length, IntPtr buffer);
 
-		internal static unsafe void SetBooleanArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
+		public static unsafe void SetBooleanArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
@@ -10221,7 +10221,7 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe void JavaInterop_SetByteArrayRegion (IntPtr jnienv, out IntPtr thrown, jobject array, int start, int length, IntPtr buffer);
+		internal static extern unsafe void JavaInterop_SetByteArrayRegion (IntPtr jnienv, out IntPtr thrown, jobject array, int start, int length, IntPtr buffer);
 
 		public static unsafe void SetByteArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
 		{
@@ -10240,7 +10240,7 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe void JavaInterop_SetCharArrayRegion (IntPtr jnienv, out IntPtr thrown, jobject array, int start, int length, IntPtr buffer);
+		internal static extern unsafe void JavaInterop_SetCharArrayRegion (IntPtr jnienv, out IntPtr thrown, jobject array, int start, int length, IntPtr buffer);
 
 		public static unsafe void SetCharArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
 		{
@@ -10259,7 +10259,7 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe void JavaInterop_SetShortArrayRegion (IntPtr jnienv, out IntPtr thrown, jobject array, int start, int length, IntPtr buffer);
+		internal static extern unsafe void JavaInterop_SetShortArrayRegion (IntPtr jnienv, out IntPtr thrown, jobject array, int start, int length, IntPtr buffer);
 
 		public static unsafe void SetShortArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
 		{
@@ -10278,7 +10278,7 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe void JavaInterop_SetIntArrayRegion (IntPtr jnienv, out IntPtr thrown, jobject array, int start, int length, IntPtr buffer);
+		internal static extern unsafe void JavaInterop_SetIntArrayRegion (IntPtr jnienv, out IntPtr thrown, jobject array, int start, int length, IntPtr buffer);
 
 		public static unsafe void SetIntArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
 		{
@@ -10297,7 +10297,7 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe void JavaInterop_SetLongArrayRegion (IntPtr jnienv, out IntPtr thrown, jobject array, int start, int length, IntPtr buffer);
+		internal static extern unsafe void JavaInterop_SetLongArrayRegion (IntPtr jnienv, out IntPtr thrown, jobject array, int start, int length, IntPtr buffer);
 
 		public static unsafe void SetLongArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
 		{
@@ -10316,7 +10316,7 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe void JavaInterop_SetFloatArrayRegion (IntPtr jnienv, out IntPtr thrown, jobject array, int start, int length, IntPtr buffer);
+		internal static extern unsafe void JavaInterop_SetFloatArrayRegion (IntPtr jnienv, out IntPtr thrown, jobject array, int start, int length, IntPtr buffer);
 
 		public static unsafe void SetFloatArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
 		{
@@ -10335,7 +10335,7 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe void JavaInterop_SetDoubleArrayRegion (IntPtr jnienv, out IntPtr thrown, jobject array, int start, int length, IntPtr buffer);
+		internal static extern unsafe void JavaInterop_SetDoubleArrayRegion (IntPtr jnienv, out IntPtr thrown, jobject array, int start, int length, IntPtr buffer);
 
 		public static unsafe void SetDoubleArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
 		{
@@ -10357,7 +10357,7 @@ namespace
 	public static partial class Exceptions {
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe int JavaInterop_Throw (IntPtr jnienv, jobject toThrow);
+		internal static extern unsafe int JavaInterop_Throw (IntPtr jnienv, jobject toThrow);
 
 		public static unsafe int Throw (JniObjectReference toThrow)
 		{
@@ -10369,7 +10369,7 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe int JavaInterop_ThrowNew (IntPtr jnienv, jobject klass, string message);
+		internal static extern unsafe int JavaInterop_ThrowNew (IntPtr jnienv, jobject klass, string message);
 
 		public static unsafe int ThrowNew (JniObjectReference klass, string message)
 		{
@@ -10383,32 +10383,32 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe jobject JavaInterop_ExceptionOccurred (IntPtr jnienv);
+		internal static extern unsafe jobject JavaInterop_ExceptionOccurred (IntPtr jnienv);
 
-		internal static unsafe JniObjectReference ExceptionOccurred ()
+		public static unsafe JniObjectReference ExceptionOccurred ()
 		{
 			var tmp = JavaInterop_ExceptionOccurred (JniEnvironment.EnvironmentPointer);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe void JavaInterop_ExceptionDescribe (IntPtr jnienv);
+		internal static extern unsafe void JavaInterop_ExceptionDescribe (IntPtr jnienv);
 
-		internal static unsafe void ExceptionDescribe ()
+		public static unsafe void ExceptionDescribe ()
 		{
 			JavaInterop_ExceptionDescribe (JniEnvironment.EnvironmentPointer);
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe void JavaInterop_ExceptionClear (IntPtr jnienv);
+		internal static extern unsafe void JavaInterop_ExceptionClear (IntPtr jnienv);
 
-		internal static unsafe void ExceptionClear ()
+		public static unsafe void ExceptionClear ()
 		{
 			JavaInterop_ExceptionClear (JniEnvironment.EnvironmentPointer);
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe void JavaInterop_FatalError (IntPtr jnienv, string message);
+		internal static extern unsafe void JavaInterop_FatalError (IntPtr jnienv, string message);
 
 		public static unsafe void FatalError (string message)
 		{
@@ -10419,19 +10419,19 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe bool JavaInterop_ExceptionCheck (IntPtr jnienv);
+		internal static extern unsafe bool JavaInterop_ExceptionCheck (IntPtr jnienv);
 
-		internal static unsafe bool ExceptionCheck ()
+		public static unsafe bool ExceptionCheck ()
 		{
 			var tmp = JavaInterop_ExceptionCheck (JniEnvironment.EnvironmentPointer);
 			return tmp;
 		}
 	}
 
-	internal static partial class InstanceFields {
+	public static partial class InstanceFields {
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe IntPtr JavaInterop_GetFieldID (IntPtr jnienv, out IntPtr thrown, jobject klass, string name, string signature);
+		internal static extern unsafe IntPtr JavaInterop_GetFieldID (IntPtr jnienv, out IntPtr thrown, jobject klass, string name, string signature);
 
 		public static unsafe JniInstanceFieldInfo GetFieldID (JniObjectReference klass, string name, string signature)
 		{
@@ -10455,9 +10455,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe jobject JavaInterop_GetObjectField (IntPtr jnienv, jobject @object, IntPtr field);
+		internal static extern unsafe jobject JavaInterop_GetObjectField (IntPtr jnienv, jobject @object, IntPtr field);
 
-		internal static unsafe JniObjectReference GetObjectField (JniObjectReference @object, JniInstanceFieldInfo field)
+		public static unsafe JniObjectReference GetObjectField (JniObjectReference @object, JniInstanceFieldInfo field)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -10472,9 +10472,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe bool JavaInterop_GetBooleanField (IntPtr jnienv, jobject @object, IntPtr field);
+		internal static extern unsafe bool JavaInterop_GetBooleanField (IntPtr jnienv, jobject @object, IntPtr field);
 
-		internal static unsafe bool GetBooleanField (JniObjectReference @object, JniInstanceFieldInfo field)
+		public static unsafe bool GetBooleanField (JniObjectReference @object, JniInstanceFieldInfo field)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -10488,9 +10488,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe sbyte JavaInterop_GetByteField (IntPtr jnienv, jobject @object, IntPtr field);
+		internal static extern unsafe sbyte JavaInterop_GetByteField (IntPtr jnienv, jobject @object, IntPtr field);
 
-		internal static unsafe sbyte GetByteField (JniObjectReference @object, JniInstanceFieldInfo field)
+		public static unsafe sbyte GetByteField (JniObjectReference @object, JniInstanceFieldInfo field)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -10504,9 +10504,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe char JavaInterop_GetCharField (IntPtr jnienv, jobject @object, IntPtr field);
+		internal static extern unsafe char JavaInterop_GetCharField (IntPtr jnienv, jobject @object, IntPtr field);
 
-		internal static unsafe char GetCharField (JniObjectReference @object, JniInstanceFieldInfo field)
+		public static unsafe char GetCharField (JniObjectReference @object, JniInstanceFieldInfo field)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -10520,9 +10520,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe short JavaInterop_GetShortField (IntPtr jnienv, jobject @object, IntPtr field);
+		internal static extern unsafe short JavaInterop_GetShortField (IntPtr jnienv, jobject @object, IntPtr field);
 
-		internal static unsafe short GetShortField (JniObjectReference @object, JniInstanceFieldInfo field)
+		public static unsafe short GetShortField (JniObjectReference @object, JniInstanceFieldInfo field)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -10536,9 +10536,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe int JavaInterop_GetIntField (IntPtr jnienv, jobject @object, IntPtr field);
+		internal static extern unsafe int JavaInterop_GetIntField (IntPtr jnienv, jobject @object, IntPtr field);
 
-		internal static unsafe int GetIntField (JniObjectReference @object, JniInstanceFieldInfo field)
+		public static unsafe int GetIntField (JniObjectReference @object, JniInstanceFieldInfo field)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -10552,9 +10552,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe long JavaInterop_GetLongField (IntPtr jnienv, jobject @object, IntPtr field);
+		internal static extern unsafe long JavaInterop_GetLongField (IntPtr jnienv, jobject @object, IntPtr field);
 
-		internal static unsafe long GetLongField (JniObjectReference @object, JniInstanceFieldInfo field)
+		public static unsafe long GetLongField (JniObjectReference @object, JniInstanceFieldInfo field)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -10568,9 +10568,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe float JavaInterop_GetFloatField (IntPtr jnienv, jobject @object, IntPtr field);
+		internal static extern unsafe float JavaInterop_GetFloatField (IntPtr jnienv, jobject @object, IntPtr field);
 
-		internal static unsafe float GetFloatField (JniObjectReference @object, JniInstanceFieldInfo field)
+		public static unsafe float GetFloatField (JniObjectReference @object, JniInstanceFieldInfo field)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -10584,9 +10584,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe double JavaInterop_GetDoubleField (IntPtr jnienv, jobject @object, IntPtr field);
+		internal static extern unsafe double JavaInterop_GetDoubleField (IntPtr jnienv, jobject @object, IntPtr field);
 
-		internal static unsafe double GetDoubleField (JniObjectReference @object, JniInstanceFieldInfo field)
+		public static unsafe double GetDoubleField (JniObjectReference @object, JniInstanceFieldInfo field)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -10600,9 +10600,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe void JavaInterop_SetObjectField (IntPtr jnienv, jobject @object, IntPtr field, jobject value);
+		internal static extern unsafe void JavaInterop_SetObjectField (IntPtr jnienv, jobject @object, IntPtr field, jobject value);
 
-		internal static unsafe void SetField (JniObjectReference @object, JniInstanceFieldInfo field, JniObjectReference value)
+		public static unsafe void SetObjectField (JniObjectReference @object, JniInstanceFieldInfo field, JniObjectReference value)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -10615,9 +10615,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe void JavaInterop_SetBooleanField (IntPtr jnienv, jobject @object, IntPtr field, bool value);
+		internal static extern unsafe void JavaInterop_SetBooleanField (IntPtr jnienv, jobject @object, IntPtr field, bool value);
 
-		internal static unsafe void SetField (JniObjectReference @object, JniInstanceFieldInfo field, bool value)
+		public static unsafe void SetBooleanField (JniObjectReference @object, JniInstanceFieldInfo field, bool value)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -10630,9 +10630,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe void JavaInterop_SetByteField (IntPtr jnienv, jobject @object, IntPtr field, sbyte value);
+		internal static extern unsafe void JavaInterop_SetByteField (IntPtr jnienv, jobject @object, IntPtr field, sbyte value);
 
-		internal static unsafe void SetField (JniObjectReference @object, JniInstanceFieldInfo field, sbyte value)
+		public static unsafe void SetByteField (JniObjectReference @object, JniInstanceFieldInfo field, sbyte value)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -10645,9 +10645,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe void JavaInterop_SetCharField (IntPtr jnienv, jobject @object, IntPtr field, char value);
+		internal static extern unsafe void JavaInterop_SetCharField (IntPtr jnienv, jobject @object, IntPtr field, char value);
 
-		internal static unsafe void SetField (JniObjectReference @object, JniInstanceFieldInfo field, char value)
+		public static unsafe void SetCharField (JniObjectReference @object, JniInstanceFieldInfo field, char value)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -10660,9 +10660,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe void JavaInterop_SetShortField (IntPtr jnienv, jobject @object, IntPtr field, short value);
+		internal static extern unsafe void JavaInterop_SetShortField (IntPtr jnienv, jobject @object, IntPtr field, short value);
 
-		internal static unsafe void SetField (JniObjectReference @object, JniInstanceFieldInfo field, short value)
+		public static unsafe void SetShortField (JniObjectReference @object, JniInstanceFieldInfo field, short value)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -10675,9 +10675,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe void JavaInterop_SetIntField (IntPtr jnienv, jobject @object, IntPtr field, int value);
+		internal static extern unsafe void JavaInterop_SetIntField (IntPtr jnienv, jobject @object, IntPtr field, int value);
 
-		internal static unsafe void SetField (JniObjectReference @object, JniInstanceFieldInfo field, int value)
+		public static unsafe void SetIntField (JniObjectReference @object, JniInstanceFieldInfo field, int value)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -10690,9 +10690,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe void JavaInterop_SetLongField (IntPtr jnienv, jobject @object, IntPtr field, long value);
+		internal static extern unsafe void JavaInterop_SetLongField (IntPtr jnienv, jobject @object, IntPtr field, long value);
 
-		internal static unsafe void SetField (JniObjectReference @object, JniInstanceFieldInfo field, long value)
+		public static unsafe void SetLongField (JniObjectReference @object, JniInstanceFieldInfo field, long value)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -10705,9 +10705,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe void JavaInterop_SetFloatField (IntPtr jnienv, jobject @object, IntPtr field, float value);
+		internal static extern unsafe void JavaInterop_SetFloatField (IntPtr jnienv, jobject @object, IntPtr field, float value);
 
-		internal static unsafe void SetField (JniObjectReference @object, JniInstanceFieldInfo field, float value)
+		public static unsafe void SetFloatField (JniObjectReference @object, JniInstanceFieldInfo field, float value)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -10720,9 +10720,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe void JavaInterop_SetDoubleField (IntPtr jnienv, jobject @object, IntPtr field, double value);
+		internal static extern unsafe void JavaInterop_SetDoubleField (IntPtr jnienv, jobject @object, IntPtr field, double value);
 
-		internal static unsafe void SetField (JniObjectReference @object, JniInstanceFieldInfo field, double value)
+		public static unsafe void SetDoubleField (JniObjectReference @object, JniInstanceFieldInfo field, double value)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -10735,12 +10735,12 @@ namespace
 		}
 	}
 
-	internal static partial class InstanceMethods {
+	public static partial class InstanceMethods {
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe IntPtr JavaInterop_GetMethodID (IntPtr jnienv, out IntPtr thrown, jobject klass, string name, string signature);
+		internal static extern unsafe IntPtr JavaInterop_GetMethodID (IntPtr jnienv, out IntPtr thrown, jobject klass, string name, string signature);
 
-		internal static unsafe JniInstanceMethodInfo GetMethodID (JniObjectReference klass, string name, string signature)
+		public static unsafe JniInstanceMethodInfo GetMethodID (JniObjectReference klass, string name, string signature)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -10762,9 +10762,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe jobject JavaInterop_CallObjectMethod (IntPtr jnienv, out IntPtr thrown, jobject @object, IntPtr method);
+		internal static extern unsafe jobject JavaInterop_CallObjectMethod (IntPtr jnienv, out IntPtr thrown, jobject @object, IntPtr method);
 
-		internal static unsafe JniObjectReference CallObjectMethod (JniObjectReference @object, JniInstanceMethodInfo method)
+		public static unsafe JniObjectReference CallObjectMethod (JniObjectReference @object, JniInstanceMethodInfo method)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -10785,9 +10785,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe jobject JavaInterop_CallObjectMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, IntPtr method, JniArgumentValue* args);
+		internal static extern unsafe jobject JavaInterop_CallObjectMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, IntPtr method, JniArgumentValue* args);
 
-		internal static unsafe JniObjectReference CallObjectMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe JniObjectReference CallObjectMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -10808,9 +10808,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe bool JavaInterop_CallBooleanMethod (IntPtr jnienv, out IntPtr thrown, jobject @object, IntPtr method);
+		internal static extern unsafe bool JavaInterop_CallBooleanMethod (IntPtr jnienv, out IntPtr thrown, jobject @object, IntPtr method);
 
-		internal static unsafe bool CallBooleanMethod (JniObjectReference @object, JniInstanceMethodInfo method)
+		public static unsafe bool CallBooleanMethod (JniObjectReference @object, JniInstanceMethodInfo method)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -10830,9 +10830,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe bool JavaInterop_CallBooleanMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, IntPtr method, JniArgumentValue* args);
+		internal static extern unsafe bool JavaInterop_CallBooleanMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, IntPtr method, JniArgumentValue* args);
 
-		internal static unsafe bool CallBooleanMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe bool CallBooleanMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -10852,9 +10852,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe sbyte JavaInterop_CallByteMethod (IntPtr jnienv, out IntPtr thrown, jobject @object, IntPtr method);
+		internal static extern unsafe sbyte JavaInterop_CallByteMethod (IntPtr jnienv, out IntPtr thrown, jobject @object, IntPtr method);
 
-		internal static unsafe sbyte CallByteMethod (JniObjectReference @object, JniInstanceMethodInfo method)
+		public static unsafe sbyte CallByteMethod (JniObjectReference @object, JniInstanceMethodInfo method)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -10874,9 +10874,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe sbyte JavaInterop_CallByteMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, IntPtr method, JniArgumentValue* args);
+		internal static extern unsafe sbyte JavaInterop_CallByteMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, IntPtr method, JniArgumentValue* args);
 
-		internal static unsafe sbyte CallByteMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe sbyte CallByteMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -10896,9 +10896,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe char JavaInterop_CallCharMethod (IntPtr jnienv, out IntPtr thrown, jobject @object, IntPtr method);
+		internal static extern unsafe char JavaInterop_CallCharMethod (IntPtr jnienv, out IntPtr thrown, jobject @object, IntPtr method);
 
-		internal static unsafe char CallCharMethod (JniObjectReference @object, JniInstanceMethodInfo method)
+		public static unsafe char CallCharMethod (JniObjectReference @object, JniInstanceMethodInfo method)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -10918,9 +10918,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe char JavaInterop_CallCharMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, IntPtr method, JniArgumentValue* args);
+		internal static extern unsafe char JavaInterop_CallCharMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, IntPtr method, JniArgumentValue* args);
 
-		internal static unsafe char CallCharMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe char CallCharMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -10940,9 +10940,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe short JavaInterop_CallShortMethod (IntPtr jnienv, out IntPtr thrown, jobject @object, IntPtr method);
+		internal static extern unsafe short JavaInterop_CallShortMethod (IntPtr jnienv, out IntPtr thrown, jobject @object, IntPtr method);
 
-		internal static unsafe short CallShortMethod (JniObjectReference @object, JniInstanceMethodInfo method)
+		public static unsafe short CallShortMethod (JniObjectReference @object, JniInstanceMethodInfo method)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -10962,9 +10962,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe short JavaInterop_CallShortMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, IntPtr method, JniArgumentValue* args);
+		internal static extern unsafe short JavaInterop_CallShortMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, IntPtr method, JniArgumentValue* args);
 
-		internal static unsafe short CallShortMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe short CallShortMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -10984,9 +10984,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe int JavaInterop_CallIntMethod (IntPtr jnienv, out IntPtr thrown, jobject @object, IntPtr method);
+		internal static extern unsafe int JavaInterop_CallIntMethod (IntPtr jnienv, out IntPtr thrown, jobject @object, IntPtr method);
 
-		internal static unsafe int CallIntMethod (JniObjectReference @object, JniInstanceMethodInfo method)
+		public static unsafe int CallIntMethod (JniObjectReference @object, JniInstanceMethodInfo method)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -11006,9 +11006,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe int JavaInterop_CallIntMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, IntPtr method, JniArgumentValue* args);
+		internal static extern unsafe int JavaInterop_CallIntMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, IntPtr method, JniArgumentValue* args);
 
-		internal static unsafe int CallIntMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe int CallIntMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -11028,9 +11028,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe long JavaInterop_CallLongMethod (IntPtr jnienv, out IntPtr thrown, jobject @object, IntPtr method);
+		internal static extern unsafe long JavaInterop_CallLongMethod (IntPtr jnienv, out IntPtr thrown, jobject @object, IntPtr method);
 
-		internal static unsafe long CallLongMethod (JniObjectReference @object, JniInstanceMethodInfo method)
+		public static unsafe long CallLongMethod (JniObjectReference @object, JniInstanceMethodInfo method)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -11050,9 +11050,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe long JavaInterop_CallLongMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, IntPtr method, JniArgumentValue* args);
+		internal static extern unsafe long JavaInterop_CallLongMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, IntPtr method, JniArgumentValue* args);
 
-		internal static unsafe long CallLongMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe long CallLongMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -11072,9 +11072,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe float JavaInterop_CallFloatMethod (IntPtr jnienv, out IntPtr thrown, jobject @object, IntPtr method);
+		internal static extern unsafe float JavaInterop_CallFloatMethod (IntPtr jnienv, out IntPtr thrown, jobject @object, IntPtr method);
 
-		internal static unsafe float CallFloatMethod (JniObjectReference @object, JniInstanceMethodInfo method)
+		public static unsafe float CallFloatMethod (JniObjectReference @object, JniInstanceMethodInfo method)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -11094,9 +11094,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe float JavaInterop_CallFloatMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, IntPtr method, JniArgumentValue* args);
+		internal static extern unsafe float JavaInterop_CallFloatMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, IntPtr method, JniArgumentValue* args);
 
-		internal static unsafe float CallFloatMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe float CallFloatMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -11116,9 +11116,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe double JavaInterop_CallDoubleMethod (IntPtr jnienv, out IntPtr thrown, jobject @object, IntPtr method);
+		internal static extern unsafe double JavaInterop_CallDoubleMethod (IntPtr jnienv, out IntPtr thrown, jobject @object, IntPtr method);
 
-		internal static unsafe double CallDoubleMethod (JniObjectReference @object, JniInstanceMethodInfo method)
+		public static unsafe double CallDoubleMethod (JniObjectReference @object, JniInstanceMethodInfo method)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -11138,9 +11138,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe double JavaInterop_CallDoubleMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, IntPtr method, JniArgumentValue* args);
+		internal static extern unsafe double JavaInterop_CallDoubleMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, IntPtr method, JniArgumentValue* args);
 
-		internal static unsafe double CallDoubleMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe double CallDoubleMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -11160,9 +11160,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe void JavaInterop_CallVoidMethod (IntPtr jnienv, out IntPtr thrown, jobject @object, IntPtr method);
+		internal static extern unsafe void JavaInterop_CallVoidMethod (IntPtr jnienv, out IntPtr thrown, jobject @object, IntPtr method);
 
-		internal static unsafe void CallVoidMethod (JniObjectReference @object, JniInstanceMethodInfo method)
+		public static unsafe void CallVoidMethod (JniObjectReference @object, JniInstanceMethodInfo method)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -11181,9 +11181,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe void JavaInterop_CallVoidMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, IntPtr method, JniArgumentValue* args);
+		internal static extern unsafe void JavaInterop_CallVoidMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, IntPtr method, JniArgumentValue* args);
 
-		internal static unsafe void CallVoidMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe void CallVoidMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -11202,9 +11202,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe jobject JavaInterop_CallNonvirtualObjectMethod (IntPtr jnienv, out IntPtr thrown, jobject @object, jobject klass, IntPtr method);
+		internal static extern unsafe jobject JavaInterop_CallNonvirtualObjectMethod (IntPtr jnienv, out IntPtr thrown, jobject @object, jobject klass, IntPtr method);
 
-		internal static unsafe JniObjectReference CallNonvirtualObjectMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method)
+		public static unsafe JniObjectReference CallNonvirtualObjectMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -11227,9 +11227,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe jobject JavaInterop_CallNonvirtualObjectMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, jobject klass, IntPtr method, JniArgumentValue* args);
+		internal static extern unsafe jobject JavaInterop_CallNonvirtualObjectMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, jobject klass, IntPtr method, JniArgumentValue* args);
 
-		internal static unsafe JniObjectReference CallNonvirtualObjectMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe JniObjectReference CallNonvirtualObjectMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -11252,9 +11252,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe bool JavaInterop_CallNonvirtualBooleanMethod (IntPtr jnienv, out IntPtr thrown, jobject @object, jobject klass, IntPtr method);
+		internal static extern unsafe bool JavaInterop_CallNonvirtualBooleanMethod (IntPtr jnienv, out IntPtr thrown, jobject @object, jobject klass, IntPtr method);
 
-		internal static unsafe bool CallNonvirtualBooleanMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method)
+		public static unsafe bool CallNonvirtualBooleanMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -11276,9 +11276,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe bool JavaInterop_CallNonvirtualBooleanMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, jobject klass, IntPtr method, JniArgumentValue* args);
+		internal static extern unsafe bool JavaInterop_CallNonvirtualBooleanMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, jobject klass, IntPtr method, JniArgumentValue* args);
 
-		internal static unsafe bool CallNonvirtualBooleanMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe bool CallNonvirtualBooleanMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -11300,9 +11300,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe sbyte JavaInterop_CallNonvirtualByteMethod (IntPtr jnienv, out IntPtr thrown, jobject @object, jobject klass, IntPtr method);
+		internal static extern unsafe sbyte JavaInterop_CallNonvirtualByteMethod (IntPtr jnienv, out IntPtr thrown, jobject @object, jobject klass, IntPtr method);
 
-		internal static unsafe sbyte CallNonvirtualByteMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method)
+		public static unsafe sbyte CallNonvirtualByteMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -11324,9 +11324,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe sbyte JavaInterop_CallNonvirtualByteMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, jobject klass, IntPtr method, JniArgumentValue* args);
+		internal static extern unsafe sbyte JavaInterop_CallNonvirtualByteMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, jobject klass, IntPtr method, JniArgumentValue* args);
 
-		internal static unsafe sbyte CallNonvirtualByteMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe sbyte CallNonvirtualByteMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -11348,9 +11348,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe char JavaInterop_CallNonvirtualCharMethod (IntPtr jnienv, out IntPtr thrown, jobject @object, jobject klass, IntPtr method);
+		internal static extern unsafe char JavaInterop_CallNonvirtualCharMethod (IntPtr jnienv, out IntPtr thrown, jobject @object, jobject klass, IntPtr method);
 
-		internal static unsafe char CallNonvirtualCharMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method)
+		public static unsafe char CallNonvirtualCharMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -11372,9 +11372,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe char JavaInterop_CallNonvirtualCharMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, jobject klass, IntPtr method, JniArgumentValue* args);
+		internal static extern unsafe char JavaInterop_CallNonvirtualCharMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, jobject klass, IntPtr method, JniArgumentValue* args);
 
-		internal static unsafe char CallNonvirtualCharMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe char CallNonvirtualCharMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -11396,9 +11396,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe short JavaInterop_CallNonvirtualShortMethod (IntPtr jnienv, out IntPtr thrown, jobject @object, jobject klass, IntPtr method);
+		internal static extern unsafe short JavaInterop_CallNonvirtualShortMethod (IntPtr jnienv, out IntPtr thrown, jobject @object, jobject klass, IntPtr method);
 
-		internal static unsafe short CallNonvirtualShortMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method)
+		public static unsafe short CallNonvirtualShortMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -11420,9 +11420,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe short JavaInterop_CallNonvirtualShortMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, jobject klass, IntPtr method, JniArgumentValue* args);
+		internal static extern unsafe short JavaInterop_CallNonvirtualShortMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, jobject klass, IntPtr method, JniArgumentValue* args);
 
-		internal static unsafe short CallNonvirtualShortMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe short CallNonvirtualShortMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -11444,9 +11444,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe int JavaInterop_CallNonvirtualIntMethod (IntPtr jnienv, out IntPtr thrown, jobject @object, jobject klass, IntPtr method);
+		internal static extern unsafe int JavaInterop_CallNonvirtualIntMethod (IntPtr jnienv, out IntPtr thrown, jobject @object, jobject klass, IntPtr method);
 
-		internal static unsafe int CallNonvirtualIntMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method)
+		public static unsafe int CallNonvirtualIntMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -11468,9 +11468,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe int JavaInterop_CallNonvirtualIntMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, jobject klass, IntPtr method, JniArgumentValue* args);
+		internal static extern unsafe int JavaInterop_CallNonvirtualIntMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, jobject klass, IntPtr method, JniArgumentValue* args);
 
-		internal static unsafe int CallNonvirtualIntMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe int CallNonvirtualIntMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -11492,9 +11492,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe long JavaInterop_CallNonvirtualLongMethod (IntPtr jnienv, out IntPtr thrown, jobject @object, jobject klass, IntPtr method);
+		internal static extern unsafe long JavaInterop_CallNonvirtualLongMethod (IntPtr jnienv, out IntPtr thrown, jobject @object, jobject klass, IntPtr method);
 
-		internal static unsafe long CallNonvirtualLongMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method)
+		public static unsafe long CallNonvirtualLongMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -11516,9 +11516,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe long JavaInterop_CallNonvirtualLongMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, jobject klass, IntPtr method, JniArgumentValue* args);
+		internal static extern unsafe long JavaInterop_CallNonvirtualLongMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, jobject klass, IntPtr method, JniArgumentValue* args);
 
-		internal static unsafe long CallNonvirtualLongMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe long CallNonvirtualLongMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -11540,9 +11540,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe float JavaInterop_CallNonvirtualFloatMethod (IntPtr jnienv, out IntPtr thrown, jobject @object, jobject klass, IntPtr method);
+		internal static extern unsafe float JavaInterop_CallNonvirtualFloatMethod (IntPtr jnienv, out IntPtr thrown, jobject @object, jobject klass, IntPtr method);
 
-		internal static unsafe float CallNonvirtualFloatMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method)
+		public static unsafe float CallNonvirtualFloatMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -11564,9 +11564,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe float JavaInterop_CallNonvirtualFloatMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, jobject klass, IntPtr method, JniArgumentValue* args);
+		internal static extern unsafe float JavaInterop_CallNonvirtualFloatMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, jobject klass, IntPtr method, JniArgumentValue* args);
 
-		internal static unsafe float CallNonvirtualFloatMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe float CallNonvirtualFloatMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -11588,9 +11588,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe double JavaInterop_CallNonvirtualDoubleMethod (IntPtr jnienv, out IntPtr thrown, jobject @object, jobject klass, IntPtr method);
+		internal static extern unsafe double JavaInterop_CallNonvirtualDoubleMethod (IntPtr jnienv, out IntPtr thrown, jobject @object, jobject klass, IntPtr method);
 
-		internal static unsafe double CallNonvirtualDoubleMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method)
+		public static unsafe double CallNonvirtualDoubleMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -11612,9 +11612,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe double JavaInterop_CallNonvirtualDoubleMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, jobject klass, IntPtr method, JniArgumentValue* args);
+		internal static extern unsafe double JavaInterop_CallNonvirtualDoubleMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, jobject klass, IntPtr method, JniArgumentValue* args);
 
-		internal static unsafe double CallNonvirtualDoubleMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe double CallNonvirtualDoubleMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -11636,9 +11636,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe void JavaInterop_CallNonvirtualVoidMethod (IntPtr jnienv, out IntPtr thrown, jobject @object, jobject klass, IntPtr method);
+		internal static extern unsafe void JavaInterop_CallNonvirtualVoidMethod (IntPtr jnienv, out IntPtr thrown, jobject @object, jobject klass, IntPtr method);
 
-		internal static unsafe void CallNonvirtualVoidMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method)
+		public static unsafe void CallNonvirtualVoidMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -11659,9 +11659,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe void JavaInterop_CallNonvirtualVoidMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, jobject klass, IntPtr method, JniArgumentValue* args);
+		internal static extern unsafe void JavaInterop_CallNonvirtualVoidMethodA (IntPtr jnienv, out IntPtr thrown, jobject @object, jobject klass, IntPtr method, JniArgumentValue* args);
 
-		internal static unsafe void CallNonvirtualVoidMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe void CallNonvirtualVoidMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -11685,7 +11685,7 @@ namespace
 	public static partial class IO {
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe jobject JavaInterop_NewDirectByteBuffer (IntPtr jnienv, out IntPtr thrown, IntPtr address, long capacity);
+		internal static extern unsafe jobject JavaInterop_NewDirectByteBuffer (IntPtr jnienv, out IntPtr thrown, IntPtr address, long capacity);
 
 		public static unsafe JniObjectReference NewDirectByteBuffer (IntPtr address, long capacity)
 		{
@@ -11704,7 +11704,7 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe IntPtr JavaInterop_GetDirectBufferAddress (IntPtr jnienv, jobject buffer);
+		internal static extern unsafe IntPtr JavaInterop_GetDirectBufferAddress (IntPtr jnienv, jobject buffer);
 
 		public static unsafe IntPtr GetDirectBufferAddress (JniObjectReference buffer)
 		{
@@ -11716,7 +11716,7 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe long JavaInterop_GetDirectBufferCapacity (IntPtr jnienv, jobject buffer);
+		internal static extern unsafe long JavaInterop_GetDirectBufferCapacity (IntPtr jnienv, jobject buffer);
 
 		public static unsafe long GetDirectBufferCapacity (JniObjectReference buffer)
 		{
@@ -11728,10 +11728,10 @@ namespace
 		}
 	}
 
-	internal static partial class Monitors {
+	public static partial class Monitors {
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe int JavaInterop_MonitorEnter (IntPtr jnienv, jobject @object);
+		internal static extern unsafe int JavaInterop_MonitorEnter (IntPtr jnienv, jobject @object);
 
 		public static unsafe int MonitorEnter (JniObjectReference @object)
 		{
@@ -11743,7 +11743,7 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe int JavaInterop_MonitorExit (IntPtr jnienv, jobject @object);
+		internal static extern unsafe int JavaInterop_MonitorExit (IntPtr jnienv, jobject @object);
 
 		public static unsafe int MonitorExit (JniObjectReference @object)
 		{
@@ -11758,7 +11758,7 @@ namespace
 	public static partial class Object {
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe jobject JavaInterop_AllocObject (IntPtr jnienv, out IntPtr thrown, jobject klass);
+		internal static extern unsafe jobject JavaInterop_AllocObject (IntPtr jnienv, out IntPtr thrown, jobject klass);
 
 		public static unsafe JniObjectReference AllocObject (JniObjectReference klass)
 		{
@@ -11777,7 +11777,7 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe jobject JavaInterop_NewObject (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method);
+		internal static extern unsafe jobject JavaInterop_NewObject (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method);
 
 		public static unsafe JniObjectReference NewObject (JniObjectReference klass, JniInstanceMethodInfo method)
 		{
@@ -11800,7 +11800,7 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe jobject JavaInterop_NewObjectA (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method, JniArgumentValue* args);
+		internal static extern unsafe jobject JavaInterop_NewObjectA (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method, JniArgumentValue* args);
 
 		public static unsafe JniObjectReference NewObject (JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
 		{
@@ -11826,7 +11826,7 @@ namespace
 	public static partial class References {
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe int JavaInterop_PushLocalFrame (IntPtr jnienv, int capacity);
+		internal static extern unsafe int JavaInterop_PushLocalFrame (IntPtr jnienv, int capacity);
 
 		public static unsafe int PushLocalFrame (int capacity)
 		{
@@ -11835,7 +11835,7 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe jobject JavaInterop_PopLocalFrame (IntPtr jnienv, jobject result);
+		internal static extern unsafe jobject JavaInterop_PopLocalFrame (IntPtr jnienv, jobject result);
 
 		public static unsafe JniObjectReference PopLocalFrame (JniObjectReference result)
 		{
@@ -11845,7 +11845,7 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe jobject JavaInterop_NewGlobalRef (IntPtr jnienv, jobject @object);
+		internal static extern unsafe jobject JavaInterop_NewGlobalRef (IntPtr jnienv, jobject @object);
 
 		internal static unsafe JniObjectReference NewGlobalRef (JniObjectReference @object)
 		{
@@ -11854,7 +11854,7 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe void JavaInterop_DeleteGlobalRef (IntPtr jnienv, IntPtr @object);
+		internal static extern unsafe void JavaInterop_DeleteGlobalRef (IntPtr jnienv, IntPtr @object);
 
 		internal static unsafe void DeleteGlobalRef (IntPtr @object)
 		{
@@ -11862,7 +11862,7 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe void JavaInterop_DeleteLocalRef (IntPtr jnienv, IntPtr @object);
+		internal static extern unsafe void JavaInterop_DeleteLocalRef (IntPtr jnienv, IntPtr @object);
 
 		internal static unsafe void DeleteLocalRef (IntPtr @object)
 		{
@@ -11870,7 +11870,7 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe jobject JavaInterop_NewLocalRef (IntPtr jnienv, jobject @object);
+		internal static extern unsafe jobject JavaInterop_NewLocalRef (IntPtr jnienv, jobject @object);
 
 		internal static unsafe JniObjectReference NewLocalRef (JniObjectReference @object)
 		{
@@ -11879,7 +11879,7 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe int JavaInterop_EnsureLocalCapacity (IntPtr jnienv, int capacity);
+		internal static extern unsafe int JavaInterop_EnsureLocalCapacity (IntPtr jnienv, int capacity);
 
 		public static unsafe int EnsureLocalCapacity (int capacity)
 		{
@@ -11888,7 +11888,7 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe int JavaInterop_GetJavaVM (IntPtr jnienv, out IntPtr vm);
+		internal static extern unsafe int JavaInterop_GetJavaVM (IntPtr jnienv, out IntPtr vm);
 
 		public static unsafe int GetJavaVM (out IntPtr vm)
 		{
@@ -11897,7 +11897,7 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe jobject JavaInterop_NewWeakGlobalRef (IntPtr jnienv, jobject @object);
+		internal static extern unsafe jobject JavaInterop_NewWeakGlobalRef (IntPtr jnienv, jobject @object);
 
 		internal static unsafe JniObjectReference NewWeakGlobalRef (JniObjectReference @object)
 		{
@@ -11906,7 +11906,7 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe void JavaInterop_DeleteWeakGlobalRef (IntPtr jnienv, IntPtr @object);
+		internal static extern unsafe void JavaInterop_DeleteWeakGlobalRef (IntPtr jnienv, IntPtr @object);
 
 		internal static unsafe void DeleteWeakGlobalRef (IntPtr @object)
 		{
@@ -11914,7 +11914,7 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe JniObjectReferenceType JavaInterop_GetObjectRefType (IntPtr jnienv, jobject @object);
+		internal static extern unsafe JniObjectReferenceType JavaInterop_GetObjectRefType (IntPtr jnienv, jobject @object);
 
 		internal static unsafe JniObjectReferenceType GetObjectRefType (JniObjectReference @object)
 		{
@@ -11929,9 +11929,9 @@ namespace
 	internal static partial class Reflection {
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe jobject JavaInterop_ToReflectedMethod (IntPtr jnienv, jobject klass, IntPtr method, bool isStatic);
+		internal static extern unsafe jobject JavaInterop_ToReflectedMethod (IntPtr jnienv, jobject klass, IntPtr method, bool isStatic);
 
-		internal static unsafe JniObjectReference ToReflectedMethod (JniObjectReference klass, JniInstanceMethodInfo method, bool isStatic)
+		public static unsafe JniObjectReference ToReflectedMethod (JniObjectReference klass, JniInstanceMethodInfo method, bool isStatic)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -11946,9 +11946,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe jobject JavaInterop_ToReflectedField (IntPtr jnienv, jobject klass, IntPtr field, bool isStatic);
+		internal static extern unsafe jobject JavaInterop_ToReflectedField (IntPtr jnienv, jobject klass, IntPtr field, bool isStatic);
 
-		internal static unsafe JniObjectReference ToReflectedField (JniObjectReference klass, JniInstanceFieldInfo field, bool isStatic)
+		public static unsafe JniObjectReference ToReflectedField (JniObjectReference klass, JniInstanceFieldInfo field, bool isStatic)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -11963,10 +11963,10 @@ namespace
 		}
 	}
 
-	internal static partial class StaticFields {
+	public static partial class StaticFields {
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe IntPtr JavaInterop_GetStaticFieldID (IntPtr jnienv, out IntPtr thrown, jobject klass, string name, string signature);
+		internal static extern unsafe IntPtr JavaInterop_GetStaticFieldID (IntPtr jnienv, out IntPtr thrown, jobject klass, string name, string signature);
 
 		public static unsafe JniStaticFieldInfo GetStaticFieldID (JniObjectReference klass, string name, string signature)
 		{
@@ -11990,9 +11990,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe jobject JavaInterop_GetStaticObjectField (IntPtr jnienv, jobject klass, IntPtr field);
+		internal static extern unsafe jobject JavaInterop_GetStaticObjectField (IntPtr jnienv, jobject klass, IntPtr field);
 
-		internal static unsafe JniObjectReference GetStaticObjectField (JniObjectReference klass, JniStaticFieldInfo field)
+		public static unsafe JniObjectReference GetStaticObjectField (JniObjectReference klass, JniStaticFieldInfo field)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -12007,9 +12007,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe bool JavaInterop_GetStaticBooleanField (IntPtr jnienv, jobject klass, IntPtr field);
+		internal static extern unsafe bool JavaInterop_GetStaticBooleanField (IntPtr jnienv, jobject klass, IntPtr field);
 
-		internal static unsafe bool GetStaticBooleanField (JniObjectReference klass, JniStaticFieldInfo field)
+		public static unsafe bool GetStaticBooleanField (JniObjectReference klass, JniStaticFieldInfo field)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -12023,9 +12023,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe sbyte JavaInterop_GetStaticByteField (IntPtr jnienv, jobject klass, IntPtr field);
+		internal static extern unsafe sbyte JavaInterop_GetStaticByteField (IntPtr jnienv, jobject klass, IntPtr field);
 
-		internal static unsafe sbyte GetStaticByteField (JniObjectReference klass, JniStaticFieldInfo field)
+		public static unsafe sbyte GetStaticByteField (JniObjectReference klass, JniStaticFieldInfo field)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -12039,9 +12039,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe char JavaInterop_GetStaticCharField (IntPtr jnienv, jobject klass, IntPtr field);
+		internal static extern unsafe char JavaInterop_GetStaticCharField (IntPtr jnienv, jobject klass, IntPtr field);
 
-		internal static unsafe char GetStaticCharField (JniObjectReference klass, JniStaticFieldInfo field)
+		public static unsafe char GetStaticCharField (JniObjectReference klass, JniStaticFieldInfo field)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -12055,9 +12055,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe short JavaInterop_GetStaticShortField (IntPtr jnienv, jobject klass, IntPtr field);
+		internal static extern unsafe short JavaInterop_GetStaticShortField (IntPtr jnienv, jobject klass, IntPtr field);
 
-		internal static unsafe short GetStaticShortField (JniObjectReference klass, JniStaticFieldInfo field)
+		public static unsafe short GetStaticShortField (JniObjectReference klass, JniStaticFieldInfo field)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -12071,9 +12071,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe int JavaInterop_GetStaticIntField (IntPtr jnienv, jobject klass, IntPtr field);
+		internal static extern unsafe int JavaInterop_GetStaticIntField (IntPtr jnienv, jobject klass, IntPtr field);
 
-		internal static unsafe int GetStaticIntField (JniObjectReference klass, JniStaticFieldInfo field)
+		public static unsafe int GetStaticIntField (JniObjectReference klass, JniStaticFieldInfo field)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -12087,9 +12087,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe long JavaInterop_GetStaticLongField (IntPtr jnienv, jobject klass, IntPtr field);
+		internal static extern unsafe long JavaInterop_GetStaticLongField (IntPtr jnienv, jobject klass, IntPtr field);
 
-		internal static unsafe long GetStaticLongField (JniObjectReference klass, JniStaticFieldInfo field)
+		public static unsafe long GetStaticLongField (JniObjectReference klass, JniStaticFieldInfo field)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -12103,9 +12103,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe float JavaInterop_GetStaticFloatField (IntPtr jnienv, jobject klass, IntPtr field);
+		internal static extern unsafe float JavaInterop_GetStaticFloatField (IntPtr jnienv, jobject klass, IntPtr field);
 
-		internal static unsafe float GetStaticFloatField (JniObjectReference klass, JniStaticFieldInfo field)
+		public static unsafe float GetStaticFloatField (JniObjectReference klass, JniStaticFieldInfo field)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -12119,9 +12119,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe double JavaInterop_GetStaticDoubleField (IntPtr jnienv, jobject klass, IntPtr field);
+		internal static extern unsafe double JavaInterop_GetStaticDoubleField (IntPtr jnienv, jobject klass, IntPtr field);
 
-		internal static unsafe double GetStaticDoubleField (JniObjectReference klass, JniStaticFieldInfo field)
+		public static unsafe double GetStaticDoubleField (JniObjectReference klass, JniStaticFieldInfo field)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -12135,9 +12135,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe void JavaInterop_SetStaticObjectField (IntPtr jnienv, jobject klass, IntPtr field, jobject value);
+		internal static extern unsafe void JavaInterop_SetStaticObjectField (IntPtr jnienv, jobject klass, IntPtr field, jobject value);
 
-		internal static unsafe void SetStaticField (JniObjectReference klass, JniStaticFieldInfo field, JniObjectReference value)
+		public static unsafe void SetStaticObjectField (JniObjectReference klass, JniStaticFieldInfo field, JniObjectReference value)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -12150,9 +12150,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe void JavaInterop_SetStaticBooleanField (IntPtr jnienv, jobject klass, IntPtr field, bool value);
+		internal static extern unsafe void JavaInterop_SetStaticBooleanField (IntPtr jnienv, jobject klass, IntPtr field, bool value);
 
-		internal static unsafe void SetStaticField (JniObjectReference klass, JniStaticFieldInfo field, bool value)
+		public static unsafe void SetStaticBooleanField (JniObjectReference klass, JniStaticFieldInfo field, bool value)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -12165,9 +12165,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe void JavaInterop_SetStaticByteField (IntPtr jnienv, jobject klass, IntPtr field, sbyte value);
+		internal static extern unsafe void JavaInterop_SetStaticByteField (IntPtr jnienv, jobject klass, IntPtr field, sbyte value);
 
-		internal static unsafe void SetStaticField (JniObjectReference klass, JniStaticFieldInfo field, sbyte value)
+		public static unsafe void SetStaticByteField (JniObjectReference klass, JniStaticFieldInfo field, sbyte value)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -12180,9 +12180,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe void JavaInterop_SetStaticCharField (IntPtr jnienv, jobject klass, IntPtr field, char value);
+		internal static extern unsafe void JavaInterop_SetStaticCharField (IntPtr jnienv, jobject klass, IntPtr field, char value);
 
-		internal static unsafe void SetStaticField (JniObjectReference klass, JniStaticFieldInfo field, char value)
+		public static unsafe void SetStaticCharField (JniObjectReference klass, JniStaticFieldInfo field, char value)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -12195,9 +12195,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe void JavaInterop_SetStaticShortField (IntPtr jnienv, jobject klass, IntPtr field, short value);
+		internal static extern unsafe void JavaInterop_SetStaticShortField (IntPtr jnienv, jobject klass, IntPtr field, short value);
 
-		internal static unsafe void SetStaticField (JniObjectReference klass, JniStaticFieldInfo field, short value)
+		public static unsafe void SetStaticShortField (JniObjectReference klass, JniStaticFieldInfo field, short value)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -12210,9 +12210,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe void JavaInterop_SetStaticIntField (IntPtr jnienv, jobject klass, IntPtr field, int value);
+		internal static extern unsafe void JavaInterop_SetStaticIntField (IntPtr jnienv, jobject klass, IntPtr field, int value);
 
-		internal static unsafe void SetStaticField (JniObjectReference klass, JniStaticFieldInfo field, int value)
+		public static unsafe void SetStaticIntField (JniObjectReference klass, JniStaticFieldInfo field, int value)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -12225,9 +12225,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe void JavaInterop_SetStaticLongField (IntPtr jnienv, jobject klass, IntPtr field, long value);
+		internal static extern unsafe void JavaInterop_SetStaticLongField (IntPtr jnienv, jobject klass, IntPtr field, long value);
 
-		internal static unsafe void SetStaticField (JniObjectReference klass, JniStaticFieldInfo field, long value)
+		public static unsafe void SetStaticLongField (JniObjectReference klass, JniStaticFieldInfo field, long value)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -12240,9 +12240,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe void JavaInterop_SetStaticFloatField (IntPtr jnienv, jobject klass, IntPtr field, float value);
+		internal static extern unsafe void JavaInterop_SetStaticFloatField (IntPtr jnienv, jobject klass, IntPtr field, float value);
 
-		internal static unsafe void SetStaticField (JniObjectReference klass, JniStaticFieldInfo field, float value)
+		public static unsafe void SetStaticFloatField (JniObjectReference klass, JniStaticFieldInfo field, float value)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -12255,9 +12255,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe void JavaInterop_SetStaticDoubleField (IntPtr jnienv, jobject klass, IntPtr field, double value);
+		internal static extern unsafe void JavaInterop_SetStaticDoubleField (IntPtr jnienv, jobject klass, IntPtr field, double value);
 
-		internal static unsafe void SetStaticField (JniObjectReference klass, JniStaticFieldInfo field, double value)
+		public static unsafe void SetStaticDoubleField (JniObjectReference klass, JniStaticFieldInfo field, double value)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -12270,10 +12270,10 @@ namespace
 		}
 	}
 
-	internal static partial class StaticMethods {
+	public static partial class StaticMethods {
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe IntPtr JavaInterop_GetStaticMethodID (IntPtr jnienv, out IntPtr thrown, jobject klass, string name, string signature);
+		internal static extern unsafe IntPtr JavaInterop_GetStaticMethodID (IntPtr jnienv, out IntPtr thrown, jobject klass, string name, string signature);
 
 		public static unsafe JniStaticMethodInfo GetStaticMethodID (JniObjectReference klass, string name, string signature)
 		{
@@ -12297,9 +12297,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe jobject JavaInterop_CallStaticObjectMethod (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method);
+		internal static extern unsafe jobject JavaInterop_CallStaticObjectMethod (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method);
 
-		internal static unsafe JniObjectReference CallStaticObjectMethod (JniObjectReference klass, JniStaticMethodInfo method)
+		public static unsafe JniObjectReference CallStaticObjectMethod (JniObjectReference klass, JniStaticMethodInfo method)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -12320,9 +12320,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe jobject JavaInterop_CallStaticObjectMethodA (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method, JniArgumentValue* args);
+		internal static extern unsafe jobject JavaInterop_CallStaticObjectMethodA (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method, JniArgumentValue* args);
 
-		internal static unsafe JniObjectReference CallStaticObjectMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
+		public static unsafe JniObjectReference CallStaticObjectMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -12343,9 +12343,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe bool JavaInterop_CallStaticBooleanMethod (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method);
+		internal static extern unsafe bool JavaInterop_CallStaticBooleanMethod (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method);
 
-		internal static unsafe bool CallStaticBooleanMethod (JniObjectReference klass, JniStaticMethodInfo method)
+		public static unsafe bool CallStaticBooleanMethod (JniObjectReference klass, JniStaticMethodInfo method)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -12365,9 +12365,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe bool JavaInterop_CallStaticBooleanMethodA (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method, JniArgumentValue* args);
+		internal static extern unsafe bool JavaInterop_CallStaticBooleanMethodA (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method, JniArgumentValue* args);
 
-		internal static unsafe bool CallStaticBooleanMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
+		public static unsafe bool CallStaticBooleanMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -12387,9 +12387,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe sbyte JavaInterop_CallStaticByteMethod (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method);
+		internal static extern unsafe sbyte JavaInterop_CallStaticByteMethod (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method);
 
-		internal static unsafe sbyte CallStaticByteMethod (JniObjectReference klass, JniStaticMethodInfo method)
+		public static unsafe sbyte CallStaticByteMethod (JniObjectReference klass, JniStaticMethodInfo method)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -12409,9 +12409,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe sbyte JavaInterop_CallStaticByteMethodA (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method, JniArgumentValue* args);
+		internal static extern unsafe sbyte JavaInterop_CallStaticByteMethodA (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method, JniArgumentValue* args);
 
-		internal static unsafe sbyte CallStaticByteMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
+		public static unsafe sbyte CallStaticByteMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -12431,9 +12431,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe char JavaInterop_CallStaticCharMethod (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method);
+		internal static extern unsafe char JavaInterop_CallStaticCharMethod (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method);
 
-		internal static unsafe char CallStaticCharMethod (JniObjectReference klass, JniStaticMethodInfo method)
+		public static unsafe char CallStaticCharMethod (JniObjectReference klass, JniStaticMethodInfo method)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -12453,9 +12453,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe char JavaInterop_CallStaticCharMethodA (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method, JniArgumentValue* args);
+		internal static extern unsafe char JavaInterop_CallStaticCharMethodA (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method, JniArgumentValue* args);
 
-		internal static unsafe char CallStaticCharMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
+		public static unsafe char CallStaticCharMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -12475,9 +12475,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe short JavaInterop_CallStaticShortMethod (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method);
+		internal static extern unsafe short JavaInterop_CallStaticShortMethod (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method);
 
-		internal static unsafe short CallStaticShortMethod (JniObjectReference klass, JniStaticMethodInfo method)
+		public static unsafe short CallStaticShortMethod (JniObjectReference klass, JniStaticMethodInfo method)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -12497,9 +12497,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe short JavaInterop_CallStaticShortMethodA (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method, JniArgumentValue* args);
+		internal static extern unsafe short JavaInterop_CallStaticShortMethodA (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method, JniArgumentValue* args);
 
-		internal static unsafe short CallStaticShortMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
+		public static unsafe short CallStaticShortMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -12519,9 +12519,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe int JavaInterop_CallStaticIntMethod (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method);
+		internal static extern unsafe int JavaInterop_CallStaticIntMethod (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method);
 
-		internal static unsafe int CallStaticIntMethod (JniObjectReference klass, JniStaticMethodInfo method)
+		public static unsafe int CallStaticIntMethod (JniObjectReference klass, JniStaticMethodInfo method)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -12541,9 +12541,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe int JavaInterop_CallStaticIntMethodA (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method, JniArgumentValue* args);
+		internal static extern unsafe int JavaInterop_CallStaticIntMethodA (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method, JniArgumentValue* args);
 
-		internal static unsafe int CallStaticIntMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
+		public static unsafe int CallStaticIntMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -12563,9 +12563,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe long JavaInterop_CallStaticLongMethod (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method);
+		internal static extern unsafe long JavaInterop_CallStaticLongMethod (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method);
 
-		internal static unsafe long CallStaticLongMethod (JniObjectReference klass, JniStaticMethodInfo method)
+		public static unsafe long CallStaticLongMethod (JniObjectReference klass, JniStaticMethodInfo method)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -12585,9 +12585,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe long JavaInterop_CallStaticLongMethodA (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method, JniArgumentValue* args);
+		internal static extern unsafe long JavaInterop_CallStaticLongMethodA (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method, JniArgumentValue* args);
 
-		internal static unsafe long CallStaticLongMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
+		public static unsafe long CallStaticLongMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -12607,9 +12607,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe float JavaInterop_CallStaticFloatMethod (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method);
+		internal static extern unsafe float JavaInterop_CallStaticFloatMethod (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method);
 
-		internal static unsafe float CallStaticFloatMethod (JniObjectReference klass, JniStaticMethodInfo method)
+		public static unsafe float CallStaticFloatMethod (JniObjectReference klass, JniStaticMethodInfo method)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -12629,9 +12629,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe float JavaInterop_CallStaticFloatMethodA (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method, JniArgumentValue* args);
+		internal static extern unsafe float JavaInterop_CallStaticFloatMethodA (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method, JniArgumentValue* args);
 
-		internal static unsafe float CallStaticFloatMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
+		public static unsafe float CallStaticFloatMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -12651,9 +12651,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe double JavaInterop_CallStaticDoubleMethod (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method);
+		internal static extern unsafe double JavaInterop_CallStaticDoubleMethod (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method);
 
-		internal static unsafe double CallStaticDoubleMethod (JniObjectReference klass, JniStaticMethodInfo method)
+		public static unsafe double CallStaticDoubleMethod (JniObjectReference klass, JniStaticMethodInfo method)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -12673,9 +12673,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe double JavaInterop_CallStaticDoubleMethodA (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method, JniArgumentValue* args);
+		internal static extern unsafe double JavaInterop_CallStaticDoubleMethodA (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method, JniArgumentValue* args);
 
-		internal static unsafe double CallStaticDoubleMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
+		public static unsafe double CallStaticDoubleMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -12695,9 +12695,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe void JavaInterop_CallStaticVoidMethod (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method);
+		internal static extern unsafe void JavaInterop_CallStaticVoidMethod (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method);
 
-		internal static unsafe void CallStaticVoidMethod (JniObjectReference klass, JniStaticMethodInfo method)
+		public static unsafe void CallStaticVoidMethod (JniObjectReference klass, JniStaticMethodInfo method)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -12716,9 +12716,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe void JavaInterop_CallStaticVoidMethodA (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method, JniArgumentValue* args);
+		internal static extern unsafe void JavaInterop_CallStaticVoidMethodA (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method, JniArgumentValue* args);
 
-		internal static unsafe void CallStaticVoidMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
+		public static unsafe void CallStaticVoidMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -12740,9 +12740,9 @@ namespace
 	public static partial class Strings {
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe jobject JavaInterop_NewString (IntPtr jnienv, out IntPtr thrown, IntPtr unicodeChars, int length);
+		internal static extern unsafe jobject JavaInterop_NewString (IntPtr jnienv, out IntPtr thrown, IntPtr unicodeChars, int length);
 
-		internal static unsafe JniObjectReference NewString (IntPtr unicodeChars, int length)
+		public static unsafe JniObjectReference NewString (IntPtr unicodeChars, int length)
 		{
 			if (unicodeChars == IntPtr.Zero)
 				throw new ArgumentException ("'unicodeChars' must not be IntPtr.Zero.", "unicodeChars");
@@ -12759,9 +12759,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe int JavaInterop_GetStringLength (IntPtr jnienv, jobject @string);
+		internal static extern unsafe int JavaInterop_GetStringLength (IntPtr jnienv, jobject @string);
 
-		internal static unsafe int GetStringLength (JniObjectReference @string)
+		public static unsafe int GetStringLength (JniObjectReference @string)
 		{
 			if (@string.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@string` must not be IntPtr.Zero.", "@string");
@@ -12771,9 +12771,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe IntPtr JavaInterop_GetStringChars (IntPtr jnienv, jobject @string, IntPtr isCopy);
+		internal static extern unsafe IntPtr JavaInterop_GetStringChars (IntPtr jnienv, jobject @string, IntPtr isCopy);
 
-		internal static unsafe IntPtr GetStringChars (JniObjectReference @string, IntPtr isCopy)
+		public static unsafe IntPtr GetStringChars (JniObjectReference @string, IntPtr isCopy)
 		{
 			if (@string.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@string` must not be IntPtr.Zero.", "@string");
@@ -12783,9 +12783,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe void JavaInterop_ReleaseStringChars (IntPtr jnienv, jobject @string, IntPtr chars);
+		internal static extern unsafe void JavaInterop_ReleaseStringChars (IntPtr jnienv, jobject @string, IntPtr chars);
 
-		internal static unsafe void ReleaseStringChars (JniObjectReference @string, IntPtr chars)
+		public static unsafe void ReleaseStringChars (JniObjectReference @string, IntPtr chars)
 		{
 			if (@string.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`@string` must not be IntPtr.Zero.", "@string");
@@ -12799,9 +12799,9 @@ namespace
 	public static partial class Types {
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe jobject JavaInterop_DefineClass (IntPtr jnienv, out IntPtr thrown, string name, jobject loader, IntPtr buffer, int bufferLength);
+		internal static extern unsafe jobject JavaInterop_DefineClass (IntPtr jnienv, out IntPtr thrown, string name, jobject loader, IntPtr buffer, int bufferLength);
 
-		internal static unsafe JniObjectReference DefineClass (string name, JniObjectReference loader, IntPtr buffer, int bufferLength)
+		public static unsafe JniObjectReference DefineClass (string name, JniObjectReference loader, IntPtr buffer, int bufferLength)
 		{
 			if (name == null)
 				throw new ArgumentNullException ("name");
@@ -12822,9 +12822,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe jobject JavaInterop_FindClass (IntPtr jnienv, out IntPtr thrown, string classname);
+		internal static extern unsafe jobject JavaInterop_FindClass (IntPtr jnienv, out IntPtr thrown, string classname);
 
-		public static unsafe JniObjectReference FindClass (string classname)
+		internal static unsafe JniObjectReference _FindClass (string classname)
 		{
 			if (classname == null)
 				throw new ArgumentNullException ("classname");
@@ -12841,7 +12841,7 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe jobject JavaInterop_GetSuperclass (IntPtr jnienv, jobject klass);
+		internal static extern unsafe jobject JavaInterop_GetSuperclass (IntPtr jnienv, jobject klass);
 
 		public static unsafe JniObjectReference GetSuperclass (JniObjectReference klass)
 		{
@@ -12854,7 +12854,7 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe bool JavaInterop_IsAssignableFrom (IntPtr jnienv, jobject class1, jobject class2);
+		internal static extern unsafe bool JavaInterop_IsAssignableFrom (IntPtr jnienv, jobject class1, jobject class2);
 
 		public static unsafe bool IsAssignableFrom (JniObjectReference class1, JniObjectReference class2)
 		{
@@ -12868,7 +12868,7 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe bool JavaInterop_IsSameObject (IntPtr jnienv, jobject object1, jobject object2);
+		internal static extern unsafe bool JavaInterop_IsSameObject (IntPtr jnienv, jobject object1, jobject object2);
 
 		public static unsafe bool IsSameObject (JniObjectReference object1, JniObjectReference object2)
 		{
@@ -12877,7 +12877,7 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe jobject JavaInterop_GetObjectClass (IntPtr jnienv, jobject @object);
+		internal static extern unsafe jobject JavaInterop_GetObjectClass (IntPtr jnienv, jobject @object);
 
 		public static unsafe JniObjectReference GetObjectClass (JniObjectReference @object)
 		{
@@ -12890,7 +12890,7 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe bool JavaInterop_IsInstanceOf (IntPtr jnienv, jobject @object, jobject klass);
+		internal static extern unsafe bool JavaInterop_IsInstanceOf (IntPtr jnienv, jobject @object, jobject klass);
 
 		public static unsafe bool IsInstanceOf (JniObjectReference @object, JniObjectReference klass)
 		{
@@ -12904,9 +12904,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe int JavaInterop_RegisterNatives (IntPtr jnienv, out IntPtr thrown, jobject klass, JniNativeMethodRegistration [] methods, int numMethods);
+		internal static extern unsafe int JavaInterop_RegisterNatives (IntPtr jnienv, out IntPtr thrown, jobject klass, JniNativeMethodRegistration [] methods, int numMethods);
 
-		internal static unsafe int RegisterNatives (JniObjectReference klass, JniNativeMethodRegistration [] methods, int numMethods)
+		public static unsafe int RegisterNatives (JniObjectReference klass, JniNativeMethodRegistration [] methods, int numMethods)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -12922,9 +12922,9 @@ namespace
 		}
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe int JavaInterop_UnregisterNatives (IntPtr jnienv, jobject klass);
+		internal static extern unsafe int JavaInterop_UnregisterNatives (IntPtr jnienv, jobject klass);
 
-		internal static unsafe int UnregisterNatives (JniObjectReference klass)
+		public static unsafe int UnregisterNatives (JniObjectReference klass)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -12937,7 +12937,7 @@ namespace
 	internal static partial class Versions {
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern unsafe int JavaInterop_GetVersion (IntPtr jnienv);
+		internal static extern unsafe int JavaInterop_GetVersion (IntPtr jnienv);
 
 		internal static unsafe int GetVersion ()
 		{
@@ -13043,12 +13043,12 @@ namespace
 
 	public static partial class Arrays {
 
-		public static unsafe int GetArrayLength (IntPtr array_ptr)
+		public static unsafe int GetArrayLength (IntPtr array)
 		{
-			if (array_ptr == IntPtr.Zero)
-				throw new ArgumentException ("`array_ptr` must not be IntPtr.Zero.", "array_ptr");
+			if (array == IntPtr.Zero)
+				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
 
-			var tmp = JniEnvironment.Invoker.GetArrayLength (JniEnvironment.EnvironmentPointer, array_ptr);
+			var tmp = JniEnvironment.Invoker.GetArrayLength (JniEnvironment.EnvironmentPointer, array);
 			return tmp;
 		}
 
@@ -13303,7 +13303,7 @@ namespace
 			JniEnvironment.Invoker.ReleaseDoubleArrayElements (JniEnvironment.EnvironmentPointer, array, elements, mode);
 		}
 
-		internal static unsafe void GetBooleanArrayRegion (IntPtr array, int start, int length, IntPtr buffer)
+		public static unsafe void GetBooleanArrayRegion (IntPtr array, int start, int length, IntPtr buffer)
 		{
 			if (array == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
@@ -13423,7 +13423,7 @@ namespace
 
 		}
 
-		internal static unsafe void SetBooleanArrayRegion (IntPtr array, int start, int length, IntPtr buffer)
+		public static unsafe void SetBooleanArrayRegion (IntPtr array, int start, int length, IntPtr buffer)
 		{
 			if (array == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
@@ -13566,18 +13566,18 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe IntPtr ExceptionOccurred ()
+		public static unsafe IntPtr ExceptionOccurred ()
 		{
 			var tmp = JniEnvironment.Invoker.ExceptionOccurred (JniEnvironment.EnvironmentPointer);
 			return tmp;
 		}
 
-		internal static unsafe void ExceptionDescribe ()
+		public static unsafe void ExceptionDescribe ()
 		{
 			JniEnvironment.Invoker.ExceptionDescribe (JniEnvironment.EnvironmentPointer);
 		}
 
-		internal static unsafe void ExceptionClear ()
+		public static unsafe void ExceptionClear ()
 		{
 			JniEnvironment.Invoker.ExceptionClear (JniEnvironment.EnvironmentPointer);
 		}
@@ -13590,14 +13590,14 @@ namespace
 			JniEnvironment.Invoker.FatalError (JniEnvironment.EnvironmentPointer, message);
 		}
 
-		internal static unsafe bool ExceptionCheck ()
+		public static unsafe bool ExceptionCheck ()
 		{
 			var tmp = JniEnvironment.Invoker.ExceptionCheck (JniEnvironment.EnvironmentPointer);
 			return tmp;
 		}
 	}
 
-	internal static partial class InstanceFields {
+	public static partial class InstanceFields {
 
 		public static unsafe IntPtr GetFieldID (IntPtr klass, string name, string signature)
 		{
@@ -13617,7 +13617,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe IntPtr GetObjectField (IntPtr @object, IntPtr field)
+		public static unsafe IntPtr GetObjectField (IntPtr @object, IntPtr field)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -13629,7 +13629,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe bool GetBooleanField (IntPtr @object, IntPtr field)
+		public static unsafe bool GetBooleanField (IntPtr @object, IntPtr field)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -13640,7 +13640,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe sbyte GetByteField (IntPtr @object, IntPtr field)
+		public static unsafe sbyte GetByteField (IntPtr @object, IntPtr field)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -13651,7 +13651,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe char GetCharField (IntPtr @object, IntPtr field)
+		public static unsafe char GetCharField (IntPtr @object, IntPtr field)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -13662,7 +13662,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe short GetShortField (IntPtr @object, IntPtr field)
+		public static unsafe short GetShortField (IntPtr @object, IntPtr field)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -13673,7 +13673,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe int GetIntField (IntPtr @object, IntPtr field)
+		public static unsafe int GetIntField (IntPtr @object, IntPtr field)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -13684,7 +13684,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe long GetLongField (IntPtr @object, IntPtr field)
+		public static unsafe long GetLongField (IntPtr @object, IntPtr field)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -13695,7 +13695,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe float GetFloatField (IntPtr @object, IntPtr field)
+		public static unsafe float GetFloatField (IntPtr @object, IntPtr field)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -13706,7 +13706,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe double GetDoubleField (IntPtr @object, IntPtr field)
+		public static unsafe double GetDoubleField (IntPtr @object, IntPtr field)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -13717,7 +13717,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe void SetField (IntPtr @object, IntPtr field, IntPtr value)
+		public static unsafe void SetObjectField (IntPtr @object, IntPtr field, IntPtr value)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -13727,7 +13727,7 @@ namespace
 			JniEnvironment.Invoker.SetObjectField (JniEnvironment.EnvironmentPointer, @object, field, value);
 		}
 
-		internal static unsafe void SetField (IntPtr @object, IntPtr field, bool value)
+		public static unsafe void SetBooleanField (IntPtr @object, IntPtr field, bool value)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -13737,7 +13737,7 @@ namespace
 			JniEnvironment.Invoker.SetBooleanField (JniEnvironment.EnvironmentPointer, @object, field, value);
 		}
 
-		internal static unsafe void SetField (IntPtr @object, IntPtr field, sbyte value)
+		public static unsafe void SetByteField (IntPtr @object, IntPtr field, sbyte value)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -13747,7 +13747,7 @@ namespace
 			JniEnvironment.Invoker.SetByteField (JniEnvironment.EnvironmentPointer, @object, field, value);
 		}
 
-		internal static unsafe void SetField (IntPtr @object, IntPtr field, char value)
+		public static unsafe void SetCharField (IntPtr @object, IntPtr field, char value)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -13757,7 +13757,7 @@ namespace
 			JniEnvironment.Invoker.SetCharField (JniEnvironment.EnvironmentPointer, @object, field, value);
 		}
 
-		internal static unsafe void SetField (IntPtr @object, IntPtr field, short value)
+		public static unsafe void SetShortField (IntPtr @object, IntPtr field, short value)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -13767,7 +13767,7 @@ namespace
 			JniEnvironment.Invoker.SetShortField (JniEnvironment.EnvironmentPointer, @object, field, value);
 		}
 
-		internal static unsafe void SetField (IntPtr @object, IntPtr field, int value)
+		public static unsafe void SetIntField (IntPtr @object, IntPtr field, int value)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -13777,7 +13777,7 @@ namespace
 			JniEnvironment.Invoker.SetIntField (JniEnvironment.EnvironmentPointer, @object, field, value);
 		}
 
-		internal static unsafe void SetField (IntPtr @object, IntPtr field, long value)
+		public static unsafe void SetLongField (IntPtr @object, IntPtr field, long value)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -13787,7 +13787,7 @@ namespace
 			JniEnvironment.Invoker.SetLongField (JniEnvironment.EnvironmentPointer, @object, field, value);
 		}
 
-		internal static unsafe void SetField (IntPtr @object, IntPtr field, float value)
+		public static unsafe void SetFloatField (IntPtr @object, IntPtr field, float value)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -13797,7 +13797,7 @@ namespace
 			JniEnvironment.Invoker.SetFloatField (JniEnvironment.EnvironmentPointer, @object, field, value);
 		}
 
-		internal static unsafe void SetField (IntPtr @object, IntPtr field, double value)
+		public static unsafe void SetDoubleField (IntPtr @object, IntPtr field, double value)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -13808,9 +13808,9 @@ namespace
 		}
 	}
 
-	internal static partial class InstanceMethods {
+	public static partial class InstanceMethods {
 
-		internal static unsafe IntPtr GetMethodID (IntPtr klass, string name, string signature)
+		public static unsafe IntPtr GetMethodID (IntPtr klass, string name, string signature)
 		{
 			if (klass == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -13828,7 +13828,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe IntPtr CallObjectMethod (IntPtr @object, IntPtr method)
+		public static unsafe IntPtr CallObjectMethod (IntPtr @object, IntPtr method)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -13845,7 +13845,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe IntPtr CallObjectMethod (IntPtr @object, IntPtr method, JniArgumentValue* args)
+		public static unsafe IntPtr CallObjectMethod (IntPtr @object, IntPtr method, JniArgumentValue* args)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -13862,7 +13862,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe bool CallBooleanMethod (IntPtr @object, IntPtr method)
+		public static unsafe bool CallBooleanMethod (IntPtr @object, IntPtr method)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -13878,7 +13878,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe bool CallBooleanMethod (IntPtr @object, IntPtr method, JniArgumentValue* args)
+		public static unsafe bool CallBooleanMethod (IntPtr @object, IntPtr method, JniArgumentValue* args)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -13894,7 +13894,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe sbyte CallByteMethod (IntPtr @object, IntPtr method)
+		public static unsafe sbyte CallByteMethod (IntPtr @object, IntPtr method)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -13910,7 +13910,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe sbyte CallByteMethod (IntPtr @object, IntPtr method, JniArgumentValue* args)
+		public static unsafe sbyte CallByteMethod (IntPtr @object, IntPtr method, JniArgumentValue* args)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -13926,7 +13926,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe char CallCharMethod (IntPtr @object, IntPtr method)
+		public static unsafe char CallCharMethod (IntPtr @object, IntPtr method)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -13942,7 +13942,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe char CallCharMethod (IntPtr @object, IntPtr method, JniArgumentValue* args)
+		public static unsafe char CallCharMethod (IntPtr @object, IntPtr method, JniArgumentValue* args)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -13958,7 +13958,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe short CallShortMethod (IntPtr @object, IntPtr method)
+		public static unsafe short CallShortMethod (IntPtr @object, IntPtr method)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -13974,7 +13974,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe short CallShortMethod (IntPtr @object, IntPtr method, JniArgumentValue* args)
+		public static unsafe short CallShortMethod (IntPtr @object, IntPtr method, JniArgumentValue* args)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -13990,7 +13990,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe int CallIntMethod (IntPtr @object, IntPtr method)
+		public static unsafe int CallIntMethod (IntPtr @object, IntPtr method)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -14006,7 +14006,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe int CallIntMethod (IntPtr @object, IntPtr method, JniArgumentValue* args)
+		public static unsafe int CallIntMethod (IntPtr @object, IntPtr method, JniArgumentValue* args)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -14022,7 +14022,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe long CallLongMethod (IntPtr @object, IntPtr method)
+		public static unsafe long CallLongMethod (IntPtr @object, IntPtr method)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -14038,7 +14038,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe long CallLongMethod (IntPtr @object, IntPtr method, JniArgumentValue* args)
+		public static unsafe long CallLongMethod (IntPtr @object, IntPtr method, JniArgumentValue* args)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -14054,7 +14054,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe float CallFloatMethod (IntPtr @object, IntPtr method)
+		public static unsafe float CallFloatMethod (IntPtr @object, IntPtr method)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -14070,7 +14070,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe float CallFloatMethod (IntPtr @object, IntPtr method, JniArgumentValue* args)
+		public static unsafe float CallFloatMethod (IntPtr @object, IntPtr method, JniArgumentValue* args)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -14086,7 +14086,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe double CallDoubleMethod (IntPtr @object, IntPtr method)
+		public static unsafe double CallDoubleMethod (IntPtr @object, IntPtr method)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -14102,7 +14102,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe double CallDoubleMethod (IntPtr @object, IntPtr method, JniArgumentValue* args)
+		public static unsafe double CallDoubleMethod (IntPtr @object, IntPtr method, JniArgumentValue* args)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -14118,7 +14118,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe void CallVoidMethod (IntPtr @object, IntPtr method)
+		public static unsafe void CallVoidMethod (IntPtr @object, IntPtr method)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -14133,7 +14133,7 @@ namespace
 
 		}
 
-		internal static unsafe void CallVoidMethod (IntPtr @object, IntPtr method, JniArgumentValue* args)
+		public static unsafe void CallVoidMethod (IntPtr @object, IntPtr method, JniArgumentValue* args)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -14148,7 +14148,7 @@ namespace
 
 		}
 
-		internal static unsafe IntPtr CallNonvirtualObjectMethod (IntPtr @object, IntPtr klass, IntPtr method)
+		public static unsafe IntPtr CallNonvirtualObjectMethod (IntPtr @object, IntPtr klass, IntPtr method)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -14167,7 +14167,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe IntPtr CallNonvirtualObjectMethod (IntPtr @object, IntPtr klass, IntPtr method, JniArgumentValue* args)
+		public static unsafe IntPtr CallNonvirtualObjectMethod (IntPtr @object, IntPtr klass, IntPtr method, JniArgumentValue* args)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -14186,7 +14186,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe bool CallNonvirtualBooleanMethod (IntPtr @object, IntPtr klass, IntPtr method)
+		public static unsafe bool CallNonvirtualBooleanMethod (IntPtr @object, IntPtr klass, IntPtr method)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -14204,7 +14204,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe bool CallNonvirtualBooleanMethod (IntPtr @object, IntPtr klass, IntPtr method, JniArgumentValue* args)
+		public static unsafe bool CallNonvirtualBooleanMethod (IntPtr @object, IntPtr klass, IntPtr method, JniArgumentValue* args)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -14222,7 +14222,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe sbyte CallNonvirtualByteMethod (IntPtr @object, IntPtr klass, IntPtr method)
+		public static unsafe sbyte CallNonvirtualByteMethod (IntPtr @object, IntPtr klass, IntPtr method)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -14240,7 +14240,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe sbyte CallNonvirtualByteMethod (IntPtr @object, IntPtr klass, IntPtr method, JniArgumentValue* args)
+		public static unsafe sbyte CallNonvirtualByteMethod (IntPtr @object, IntPtr klass, IntPtr method, JniArgumentValue* args)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -14258,7 +14258,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe char CallNonvirtualCharMethod (IntPtr @object, IntPtr klass, IntPtr method)
+		public static unsafe char CallNonvirtualCharMethod (IntPtr @object, IntPtr klass, IntPtr method)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -14276,7 +14276,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe char CallNonvirtualCharMethod (IntPtr @object, IntPtr klass, IntPtr method, JniArgumentValue* args)
+		public static unsafe char CallNonvirtualCharMethod (IntPtr @object, IntPtr klass, IntPtr method, JniArgumentValue* args)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -14294,7 +14294,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe short CallNonvirtualShortMethod (IntPtr @object, IntPtr klass, IntPtr method)
+		public static unsafe short CallNonvirtualShortMethod (IntPtr @object, IntPtr klass, IntPtr method)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -14312,7 +14312,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe short CallNonvirtualShortMethod (IntPtr @object, IntPtr klass, IntPtr method, JniArgumentValue* args)
+		public static unsafe short CallNonvirtualShortMethod (IntPtr @object, IntPtr klass, IntPtr method, JniArgumentValue* args)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -14330,7 +14330,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe int CallNonvirtualIntMethod (IntPtr @object, IntPtr klass, IntPtr method)
+		public static unsafe int CallNonvirtualIntMethod (IntPtr @object, IntPtr klass, IntPtr method)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -14348,7 +14348,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe int CallNonvirtualIntMethod (IntPtr @object, IntPtr klass, IntPtr method, JniArgumentValue* args)
+		public static unsafe int CallNonvirtualIntMethod (IntPtr @object, IntPtr klass, IntPtr method, JniArgumentValue* args)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -14366,7 +14366,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe long CallNonvirtualLongMethod (IntPtr @object, IntPtr klass, IntPtr method)
+		public static unsafe long CallNonvirtualLongMethod (IntPtr @object, IntPtr klass, IntPtr method)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -14384,7 +14384,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe long CallNonvirtualLongMethod (IntPtr @object, IntPtr klass, IntPtr method, JniArgumentValue* args)
+		public static unsafe long CallNonvirtualLongMethod (IntPtr @object, IntPtr klass, IntPtr method, JniArgumentValue* args)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -14402,7 +14402,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe float CallNonvirtualFloatMethod (IntPtr @object, IntPtr klass, IntPtr method)
+		public static unsafe float CallNonvirtualFloatMethod (IntPtr @object, IntPtr klass, IntPtr method)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -14420,7 +14420,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe float CallNonvirtualFloatMethod (IntPtr @object, IntPtr klass, IntPtr method, JniArgumentValue* args)
+		public static unsafe float CallNonvirtualFloatMethod (IntPtr @object, IntPtr klass, IntPtr method, JniArgumentValue* args)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -14438,7 +14438,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe double CallNonvirtualDoubleMethod (IntPtr @object, IntPtr klass, IntPtr method)
+		public static unsafe double CallNonvirtualDoubleMethod (IntPtr @object, IntPtr klass, IntPtr method)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -14456,7 +14456,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe double CallNonvirtualDoubleMethod (IntPtr @object, IntPtr klass, IntPtr method, JniArgumentValue* args)
+		public static unsafe double CallNonvirtualDoubleMethod (IntPtr @object, IntPtr klass, IntPtr method, JniArgumentValue* args)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -14474,7 +14474,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe void CallNonvirtualVoidMethod (IntPtr @object, IntPtr klass, IntPtr method)
+		public static unsafe void CallNonvirtualVoidMethod (IntPtr @object, IntPtr klass, IntPtr method)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -14491,7 +14491,7 @@ namespace
 
 		}
 
-		internal static unsafe void CallNonvirtualVoidMethod (IntPtr @object, IntPtr klass, IntPtr method, JniArgumentValue* args)
+		public static unsafe void CallNonvirtualVoidMethod (IntPtr @object, IntPtr klass, IntPtr method, JniArgumentValue* args)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`@object` must not be IntPtr.Zero.", "@object");
@@ -14545,7 +14545,7 @@ namespace
 		}
 	}
 
-	internal static partial class Monitors {
+	public static partial class Monitors {
 
 		public static unsafe int MonitorEnter (IntPtr @object)
 		{
@@ -14690,7 +14690,7 @@ namespace
 
 	internal static partial class Reflection {
 
-		internal static unsafe IntPtr ToReflectedMethod (IntPtr klass, IntPtr method, bool isStatic)
+		public static unsafe IntPtr ToReflectedMethod (IntPtr klass, IntPtr method, bool isStatic)
 		{
 			if (klass == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -14702,7 +14702,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe IntPtr ToReflectedField (IntPtr klass, IntPtr field, bool isStatic)
+		public static unsafe IntPtr ToReflectedField (IntPtr klass, IntPtr field, bool isStatic)
 		{
 			if (klass == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -14715,7 +14715,7 @@ namespace
 		}
 	}
 
-	internal static partial class StaticFields {
+	public static partial class StaticFields {
 
 		public static unsafe IntPtr GetStaticFieldID (IntPtr klass, string name, string signature)
 		{
@@ -14735,7 +14735,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe IntPtr GetStaticObjectField (IntPtr klass, IntPtr field)
+		public static unsafe IntPtr GetStaticObjectField (IntPtr klass, IntPtr field)
 		{
 			if (klass == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -14747,7 +14747,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe bool GetStaticBooleanField (IntPtr klass, IntPtr field)
+		public static unsafe bool GetStaticBooleanField (IntPtr klass, IntPtr field)
 		{
 			if (klass == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -14758,7 +14758,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe sbyte GetStaticByteField (IntPtr klass, IntPtr field)
+		public static unsafe sbyte GetStaticByteField (IntPtr klass, IntPtr field)
 		{
 			if (klass == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -14769,7 +14769,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe char GetStaticCharField (IntPtr klass, IntPtr field)
+		public static unsafe char GetStaticCharField (IntPtr klass, IntPtr field)
 		{
 			if (klass == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -14780,7 +14780,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe short GetStaticShortField (IntPtr klass, IntPtr field)
+		public static unsafe short GetStaticShortField (IntPtr klass, IntPtr field)
 		{
 			if (klass == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -14791,7 +14791,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe int GetStaticIntField (IntPtr klass, IntPtr field)
+		public static unsafe int GetStaticIntField (IntPtr klass, IntPtr field)
 		{
 			if (klass == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -14802,7 +14802,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe long GetStaticLongField (IntPtr klass, IntPtr field)
+		public static unsafe long GetStaticLongField (IntPtr klass, IntPtr field)
 		{
 			if (klass == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -14813,7 +14813,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe float GetStaticFloatField (IntPtr klass, IntPtr field)
+		public static unsafe float GetStaticFloatField (IntPtr klass, IntPtr field)
 		{
 			if (klass == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -14824,7 +14824,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe double GetStaticDoubleField (IntPtr klass, IntPtr field)
+		public static unsafe double GetStaticDoubleField (IntPtr klass, IntPtr field)
 		{
 			if (klass == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -14835,7 +14835,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe void SetStaticField (IntPtr klass, IntPtr field, IntPtr value)
+		public static unsafe void SetStaticObjectField (IntPtr klass, IntPtr field, IntPtr value)
 		{
 			if (klass == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -14845,7 +14845,7 @@ namespace
 			JniEnvironment.Invoker.SetStaticObjectField (JniEnvironment.EnvironmentPointer, klass, field, value);
 		}
 
-		internal static unsafe void SetStaticField (IntPtr klass, IntPtr field, bool value)
+		public static unsafe void SetStaticBooleanField (IntPtr klass, IntPtr field, bool value)
 		{
 			if (klass == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -14855,7 +14855,7 @@ namespace
 			JniEnvironment.Invoker.SetStaticBooleanField (JniEnvironment.EnvironmentPointer, klass, field, value);
 		}
 
-		internal static unsafe void SetStaticField (IntPtr klass, IntPtr field, sbyte value)
+		public static unsafe void SetStaticByteField (IntPtr klass, IntPtr field, sbyte value)
 		{
 			if (klass == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -14865,7 +14865,7 @@ namespace
 			JniEnvironment.Invoker.SetStaticByteField (JniEnvironment.EnvironmentPointer, klass, field, value);
 		}
 
-		internal static unsafe void SetStaticField (IntPtr klass, IntPtr field, char value)
+		public static unsafe void SetStaticCharField (IntPtr klass, IntPtr field, char value)
 		{
 			if (klass == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -14875,7 +14875,7 @@ namespace
 			JniEnvironment.Invoker.SetStaticCharField (JniEnvironment.EnvironmentPointer, klass, field, value);
 		}
 
-		internal static unsafe void SetStaticField (IntPtr klass, IntPtr field, short value)
+		public static unsafe void SetStaticShortField (IntPtr klass, IntPtr field, short value)
 		{
 			if (klass == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -14885,7 +14885,7 @@ namespace
 			JniEnvironment.Invoker.SetStaticShortField (JniEnvironment.EnvironmentPointer, klass, field, value);
 		}
 
-		internal static unsafe void SetStaticField (IntPtr klass, IntPtr field, int value)
+		public static unsafe void SetStaticIntField (IntPtr klass, IntPtr field, int value)
 		{
 			if (klass == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -14895,7 +14895,7 @@ namespace
 			JniEnvironment.Invoker.SetStaticIntField (JniEnvironment.EnvironmentPointer, klass, field, value);
 		}
 
-		internal static unsafe void SetStaticField (IntPtr klass, IntPtr field, long value)
+		public static unsafe void SetStaticLongField (IntPtr klass, IntPtr field, long value)
 		{
 			if (klass == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -14905,7 +14905,7 @@ namespace
 			JniEnvironment.Invoker.SetStaticLongField (JniEnvironment.EnvironmentPointer, klass, field, value);
 		}
 
-		internal static unsafe void SetStaticField (IntPtr klass, IntPtr field, float value)
+		public static unsafe void SetStaticFloatField (IntPtr klass, IntPtr field, float value)
 		{
 			if (klass == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -14915,7 +14915,7 @@ namespace
 			JniEnvironment.Invoker.SetStaticFloatField (JniEnvironment.EnvironmentPointer, klass, field, value);
 		}
 
-		internal static unsafe void SetStaticField (IntPtr klass, IntPtr field, double value)
+		public static unsafe void SetStaticDoubleField (IntPtr klass, IntPtr field, double value)
 		{
 			if (klass == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -14926,7 +14926,7 @@ namespace
 		}
 	}
 
-	internal static partial class StaticMethods {
+	public static partial class StaticMethods {
 
 		public static unsafe IntPtr GetStaticMethodID (IntPtr klass, string name, string signature)
 		{
@@ -14946,7 +14946,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe IntPtr CallStaticObjectMethod (IntPtr klass, IntPtr method)
+		public static unsafe IntPtr CallStaticObjectMethod (IntPtr klass, IntPtr method)
 		{
 			if (klass == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -14963,7 +14963,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe IntPtr CallStaticObjectMethod (IntPtr klass, IntPtr method, JniArgumentValue* args)
+		public static unsafe IntPtr CallStaticObjectMethod (IntPtr klass, IntPtr method, JniArgumentValue* args)
 		{
 			if (klass == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -14980,7 +14980,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe bool CallStaticBooleanMethod (IntPtr klass, IntPtr method)
+		public static unsafe bool CallStaticBooleanMethod (IntPtr klass, IntPtr method)
 		{
 			if (klass == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -14996,7 +14996,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe bool CallStaticBooleanMethod (IntPtr klass, IntPtr method, JniArgumentValue* args)
+		public static unsafe bool CallStaticBooleanMethod (IntPtr klass, IntPtr method, JniArgumentValue* args)
 		{
 			if (klass == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -15012,7 +15012,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe sbyte CallStaticByteMethod (IntPtr klass, IntPtr method)
+		public static unsafe sbyte CallStaticByteMethod (IntPtr klass, IntPtr method)
 		{
 			if (klass == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -15028,7 +15028,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe sbyte CallStaticByteMethod (IntPtr klass, IntPtr method, JniArgumentValue* args)
+		public static unsafe sbyte CallStaticByteMethod (IntPtr klass, IntPtr method, JniArgumentValue* args)
 		{
 			if (klass == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -15044,7 +15044,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe char CallStaticCharMethod (IntPtr klass, IntPtr method)
+		public static unsafe char CallStaticCharMethod (IntPtr klass, IntPtr method)
 		{
 			if (klass == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -15060,7 +15060,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe char CallStaticCharMethod (IntPtr klass, IntPtr method, JniArgumentValue* args)
+		public static unsafe char CallStaticCharMethod (IntPtr klass, IntPtr method, JniArgumentValue* args)
 		{
 			if (klass == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -15076,7 +15076,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe short CallStaticShortMethod (IntPtr klass, IntPtr method)
+		public static unsafe short CallStaticShortMethod (IntPtr klass, IntPtr method)
 		{
 			if (klass == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -15092,7 +15092,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe short CallStaticShortMethod (IntPtr klass, IntPtr method, JniArgumentValue* args)
+		public static unsafe short CallStaticShortMethod (IntPtr klass, IntPtr method, JniArgumentValue* args)
 		{
 			if (klass == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -15108,7 +15108,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe int CallStaticIntMethod (IntPtr klass, IntPtr method)
+		public static unsafe int CallStaticIntMethod (IntPtr klass, IntPtr method)
 		{
 			if (klass == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -15124,7 +15124,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe int CallStaticIntMethod (IntPtr klass, IntPtr method, JniArgumentValue* args)
+		public static unsafe int CallStaticIntMethod (IntPtr klass, IntPtr method, JniArgumentValue* args)
 		{
 			if (klass == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -15140,7 +15140,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe long CallStaticLongMethod (IntPtr klass, IntPtr method)
+		public static unsafe long CallStaticLongMethod (IntPtr klass, IntPtr method)
 		{
 			if (klass == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -15156,7 +15156,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe long CallStaticLongMethod (IntPtr klass, IntPtr method, JniArgumentValue* args)
+		public static unsafe long CallStaticLongMethod (IntPtr klass, IntPtr method, JniArgumentValue* args)
 		{
 			if (klass == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -15172,7 +15172,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe float CallStaticFloatMethod (IntPtr klass, IntPtr method)
+		public static unsafe float CallStaticFloatMethod (IntPtr klass, IntPtr method)
 		{
 			if (klass == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -15188,7 +15188,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe float CallStaticFloatMethod (IntPtr klass, IntPtr method, JniArgumentValue* args)
+		public static unsafe float CallStaticFloatMethod (IntPtr klass, IntPtr method, JniArgumentValue* args)
 		{
 			if (klass == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -15204,7 +15204,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe double CallStaticDoubleMethod (IntPtr klass, IntPtr method)
+		public static unsafe double CallStaticDoubleMethod (IntPtr klass, IntPtr method)
 		{
 			if (klass == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -15220,7 +15220,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe double CallStaticDoubleMethod (IntPtr klass, IntPtr method, JniArgumentValue* args)
+		public static unsafe double CallStaticDoubleMethod (IntPtr klass, IntPtr method, JniArgumentValue* args)
 		{
 			if (klass == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -15236,7 +15236,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe void CallStaticVoidMethod (IntPtr klass, IntPtr method)
+		public static unsafe void CallStaticVoidMethod (IntPtr klass, IntPtr method)
 		{
 			if (klass == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -15251,7 +15251,7 @@ namespace
 
 		}
 
-		internal static unsafe void CallStaticVoidMethod (IntPtr klass, IntPtr method, JniArgumentValue* args)
+		public static unsafe void CallStaticVoidMethod (IntPtr klass, IntPtr method, JniArgumentValue* args)
 		{
 			if (klass == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -15269,7 +15269,7 @@ namespace
 
 	public static partial class Strings {
 
-		internal static unsafe IntPtr NewString (IntPtr unicodeChars, int length)
+		public static unsafe IntPtr NewString (IntPtr unicodeChars, int length)
 		{
 			if (unicodeChars == IntPtr.Zero)
 				throw new ArgumentException ("'unicodeChars' must not be IntPtr.Zero.", "unicodeChars");
@@ -15284,7 +15284,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe int GetStringLength (IntPtr @string)
+		public static unsafe int GetStringLength (IntPtr @string)
 		{
 			if (@string == IntPtr.Zero)
 				throw new ArgumentException ("`@string` must not be IntPtr.Zero.", "@string");
@@ -15293,7 +15293,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe IntPtr GetStringChars (IntPtr @string, IntPtr isCopy)
+		public static unsafe IntPtr GetStringChars (IntPtr @string, IntPtr isCopy)
 		{
 			if (@string == IntPtr.Zero)
 				throw new ArgumentException ("`@string` must not be IntPtr.Zero.", "@string");
@@ -15302,7 +15302,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe void ReleaseStringChars (IntPtr @string, IntPtr chars)
+		public static unsafe void ReleaseStringChars (IntPtr @string, IntPtr chars)
 		{
 			if (@string == IntPtr.Zero)
 				throw new ArgumentException ("`@string` must not be IntPtr.Zero.", "@string");
@@ -15315,7 +15315,7 @@ namespace
 
 	public static partial class Types {
 
-		internal static unsafe IntPtr DefineClass (string name, IntPtr loader, IntPtr buffer, int bufferLength)
+		public static unsafe IntPtr DefineClass (string name, IntPtr loader, IntPtr buffer, int bufferLength)
 		{
 			if (name == null)
 				throw new ArgumentNullException ("name");
@@ -15334,7 +15334,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe IntPtr FindClass (string classname)
+		internal static unsafe IntPtr _FindClass (string classname)
 		{
 			if (classname == null)
 				throw new ArgumentNullException ("classname");
@@ -15397,7 +15397,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe int RegisterNatives (IntPtr klass, JniNativeMethodRegistration [] methods, int numMethods)
+		public static unsafe int RegisterNatives (IntPtr klass, JniNativeMethodRegistration [] methods, int numMethods)
 		{
 			if (klass == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -15411,7 +15411,7 @@ namespace
 			return tmp;
 		}
 
-		internal static unsafe int UnregisterNatives (IntPtr klass)
+		public static unsafe int UnregisterNatives (IntPtr klass)
 		{
 			if (klass == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
