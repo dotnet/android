@@ -78,12 +78,6 @@ namespace Java.Interop {
 			Runtime.ObjectReferenceManager.CreatedLocalReference (Info.Value, value);
 		}
 
-#if !FEATURE_JNIENVIRONMENT_JI_PINVOKES
-		static              JniEnvironmentInvoker   Invoker {
-			get {return Info.Value.Invoker;}
-		}
-#endif  // !FEATURE_JNIENVIRONMENT_JI_PINVOKES
-
 #if FEATURE_JNIENVIRONMENT_SAFEHANDLES
 		internal    static  void    PushLocalReferenceFrame ()
 		{

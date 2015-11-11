@@ -324,15 +324,19 @@ namespace Xamarin.Java.Interop
 					o.WriteLine (")");
 					o.WriteLine ("\t\t{");
 					NullCheckParameters (o, entry.Parameters, style);
-					if (style == HandleStyle.JIIntPtrPinvokeWithErrors && entry.Throws)
-						o.WriteLine ("\t\t\tIntPtr thrown;");
+					if (style == HandleStyle.JIIntPtrPinvokeWithErrors) {
+						if (entry.Throws)
+							o.WriteLine ("\t\t\tIntPtr thrown;");
+					} else {
+						o.WriteLine ("\t\t\tvar __info = JniEnvironment.CurrentInfo;");
+					}
 					o.Write ("\t\t\t");
 					if (!is_void)
 						o.Write ("var tmp = ");
 					if (style == HandleStyle.JIIntPtrPinvokeWithErrors) {
 						o.Write ("JavaInterop_{0} (JniEnvironment.EnvironmentPointer{1}", entry.Name, entry.Throws ? ", out thrown" : "");
 					} else {
-						o.Write ("JniEnvironment.Invoker.{0} (JniEnvironment.EnvironmentPointer", entry.Name);
+						o.Write ("__info.Invoker.{0} (__info.EnvironmentPointer", entry.Name);
 					}
 					for (int i = 0; i < entry.Parameters.Length; i++) {
 						var p = entry.Parameters [i];

@@ -346,9 +346,12 @@ namespace Java.Interop {
 }
 
 namespace Java.Interop.SafeHandles {
+	class JniEnvironmentInfo {
+		public IntPtr EnvironmentPointer;
+		public JniEnvironmentInvoker Invoker;
+	}
 	public static partial class JniEnvironment {
-		internal static JniEnvironmentInvoker Invoker;
-		public static IntPtr EnvironmentPointer;
+		internal static JniEnvironmentInfo CurrentInfo;
 
 		internal static void LogCreateLocalRef (JniLocalReference value)
 		{
@@ -369,9 +372,12 @@ namespace Java.Interop.SafeHandles {
 }
 
 namespace Java.Interop.JIIntPtrs {
+	class JniEnvironmentInfo {
+		public IntPtr EnvironmentPointer;
+		public JniEnvironmentInvoker Invoker;
+	}
 	public static partial class JniEnvironment {
-		internal static JniEnvironmentInvoker Invoker;
-		public static IntPtr EnvironmentPointer;
+		internal static JniEnvironmentInfo CurrentInfo;
 
 		internal static void LogCreateLocalRef (IntPtr value)
 		{
@@ -421,9 +427,12 @@ namespace Java.Interop.JIPinvokes {
 	}
 }
 namespace Java.Interop.XAIntPtrs {
+	class JniEnvironmentInfo {
+		public IntPtr EnvironmentPointer;
+		public JniEnvironmentInvoker Invoker;
+	}
 	public partial class JniEnvironment {
-		internal static JniEnvironmentInvoker Invoker;
-		public static IntPtr EnvironmentPointer;
+		internal static JniEnvironmentInfo CurrentInfo;
 
 		internal static void LogCreateLocalRef (IntPtr value)
 		{
@@ -475,8 +484,10 @@ class App {
 
 	static unsafe void SafeTiming (IntPtr _env)
 	{
-		SafeEnv.EnvironmentPointer = _env;
-		SafeEnv.Invoker = new Java.Interop.SafeHandles.JniEnvironmentInvoker ((JniNativeInterfaceStruct*) Marshal.ReadIntPtr (_env));
+		SafeEnv.CurrentInfo = new Java.Interop.SafeHandles.JniEnvironmentInfo {
+			EnvironmentPointer  = _env,
+			Invoker             = new Java.Interop.SafeHandles.JniEnvironmentInvoker ((JniNativeInterfaceStruct*) Marshal.ReadIntPtr (_env)),
+		};
 		var Arrays_class = SafeEnv.Types._FindClass ("java/util/Arrays");
 		var Arrays_binarySearch = SafeEnv.StaticMethods.GetStaticMethodID (Arrays_class, "binarySearch", "([II)I");
 		var intArray = SafeEnv.Arrays.NewIntArray (3);
@@ -500,8 +511,10 @@ class App {
 
 	static unsafe void JIIntPtrTiming (IntPtr _env)
 	{
-		JIIntPtrEnv.EnvironmentPointer = _env;
-		JIIntPtrEnv.Invoker = new Java.Interop.JIIntPtrs.JniEnvironmentInvoker ((JniNativeInterfaceStruct*) Marshal.ReadIntPtr (_env));
+		JIIntPtrEnv.CurrentInfo = new Java.Interop.JIIntPtrs.JniEnvironmentInfo {
+			EnvironmentPointer  = _env,
+			Invoker             = new Java.Interop.JIIntPtrs.JniEnvironmentInvoker ((JniNativeInterfaceStruct*) Marshal.ReadIntPtr (_env)),
+		};
 		var Arrays_class = JIIntPtrEnv.Types._FindClass ("java/util/Arrays");
 		var Arrays_binarySearch = JIIntPtrEnv.StaticMethods.GetStaticMethodID (Arrays_class, "binarySearch", "([II)I");
 		var intArray = JIIntPtrEnv.Arrays.NewIntArray (3);
@@ -543,8 +556,10 @@ class App {
 
 	static unsafe void XAIntPtrTiming (IntPtr _env)
 	{
-		XAIntPtrEnv.EnvironmentPointer = _env;
-		XAIntPtrEnv.Invoker = new Java.Interop.XAIntPtrs.JniEnvironmentInvoker ((JniNativeInterfaceStruct*) Marshal.ReadIntPtr (_env));
+		XAIntPtrEnv.CurrentInfo = new Java.Interop.XAIntPtrs.JniEnvironmentInfo {
+			EnvironmentPointer  = _env,
+			Invoker             = new Java.Interop.XAIntPtrs.JniEnvironmentInvoker ((JniNativeInterfaceStruct*) Marshal.ReadIntPtr (_env)),
+		};
 		var Arrays_class = XAIntPtrEnv.Types._FindClass ("java/util/Arrays");
 		var Arrays_binarySearch = XAIntPtrEnv.StaticMethods.GetStaticMethodID (Arrays_class, "binarySearch", "([II)I");
 		var intArray = XAIntPtrEnv.Arrays.NewIntArray (3);
