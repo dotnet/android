@@ -26,12 +26,11 @@ namespace Java.Interop {
 			{
 				JniPeerMembers.AssertSelf (self);
 
-				var j   = self.JniPeerMembers;
 				var m   = GetMethodInfo (encodedMember);
 
-				m.InvokeNonvirtualVoidMethod (self.PeerReference, j.JniPeerType.PeerReference, parameters);
+				m.InvokeNonvirtualVoidMethod (self.PeerReference, JniPeerType.PeerReference, parameters);
 				return;
-		}
+			}
 
 			public unsafe bool InvokeVirtualBooleanMethod (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
@@ -53,12 +52,11 @@ namespace Java.Interop {
 			{
 				JniPeerMembers.AssertSelf (self);
 
-				var j   = self.JniPeerMembers;
 				var m   = GetMethodInfo (encodedMember);
 
-				return m.InvokeNonvirtualBooleanMethod (self.PeerReference, j.JniPeerType.PeerReference, parameters);
+				return m.InvokeNonvirtualBooleanMethod (self.PeerReference, JniPeerType.PeerReference, parameters);
 				
-		}
+			}
 
 			public unsafe sbyte InvokeVirtualSByteMethod (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
@@ -80,12 +78,11 @@ namespace Java.Interop {
 			{
 				JniPeerMembers.AssertSelf (self);
 
-				var j   = self.JniPeerMembers;
 				var m   = GetMethodInfo (encodedMember);
 
-				return m.InvokeNonvirtualSByteMethod (self.PeerReference, j.JniPeerType.PeerReference, parameters);
+				return m.InvokeNonvirtualSByteMethod (self.PeerReference, JniPeerType.PeerReference, parameters);
 				
-		}
+			}
 
 			public unsafe char InvokeVirtualCharMethod (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
@@ -107,12 +104,11 @@ namespace Java.Interop {
 			{
 				JniPeerMembers.AssertSelf (self);
 
-				var j   = self.JniPeerMembers;
 				var m   = GetMethodInfo (encodedMember);
 
-				return m.InvokeNonvirtualCharMethod (self.PeerReference, j.JniPeerType.PeerReference, parameters);
+				return m.InvokeNonvirtualCharMethod (self.PeerReference, JniPeerType.PeerReference, parameters);
 				
-		}
+			}
 
 			public unsafe short InvokeVirtualInt16Method (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
@@ -134,12 +130,11 @@ namespace Java.Interop {
 			{
 				JniPeerMembers.AssertSelf (self);
 
-				var j   = self.JniPeerMembers;
 				var m   = GetMethodInfo (encodedMember);
 
-				return m.InvokeNonvirtualInt16Method (self.PeerReference, j.JniPeerType.PeerReference, parameters);
+				return m.InvokeNonvirtualInt16Method (self.PeerReference, JniPeerType.PeerReference, parameters);
 				
-		}
+			}
 
 			public unsafe int InvokeVirtualInt32Method (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
@@ -161,12 +156,11 @@ namespace Java.Interop {
 			{
 				JniPeerMembers.AssertSelf (self);
 
-				var j   = self.JniPeerMembers;
 				var m   = GetMethodInfo (encodedMember);
 
-				return m.InvokeNonvirtualInt32Method (self.PeerReference, j.JniPeerType.PeerReference, parameters);
+				return m.InvokeNonvirtualInt32Method (self.PeerReference, JniPeerType.PeerReference, parameters);
 				
-		}
+			}
 
 			public unsafe long InvokeVirtualInt64Method (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
@@ -188,12 +182,11 @@ namespace Java.Interop {
 			{
 				JniPeerMembers.AssertSelf (self);
 
-				var j   = self.JniPeerMembers;
 				var m   = GetMethodInfo (encodedMember);
 
-				return m.InvokeNonvirtualInt64Method (self.PeerReference, j.JniPeerType.PeerReference, parameters);
+				return m.InvokeNonvirtualInt64Method (self.PeerReference, JniPeerType.PeerReference, parameters);
 				
-		}
+			}
 
 			public unsafe float InvokeVirtualSingleMethod (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
@@ -215,12 +208,11 @@ namespace Java.Interop {
 			{
 				JniPeerMembers.AssertSelf (self);
 
-				var j   = self.JniPeerMembers;
 				var m   = GetMethodInfo (encodedMember);
 
-				return m.InvokeNonvirtualSingleMethod (self.PeerReference, j.JniPeerType.PeerReference, parameters);
+				return m.InvokeNonvirtualSingleMethod (self.PeerReference, JniPeerType.PeerReference, parameters);
 				
-		}
+			}
 
 			public unsafe double InvokeVirtualDoubleMethod (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
@@ -242,12 +234,11 @@ namespace Java.Interop {
 			{
 				JniPeerMembers.AssertSelf (self);
 
-				var j   = self.JniPeerMembers;
 				var m   = GetMethodInfo (encodedMember);
 
-				return m.InvokeNonvirtualDoubleMethod (self.PeerReference, j.JniPeerType.PeerReference, parameters);
+				return m.InvokeNonvirtualDoubleMethod (self.PeerReference, JniPeerType.PeerReference, parameters);
 				
-		}
+			}
 
 			public unsafe JniObjectReference InvokeVirtualObjectMethod (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
@@ -269,12 +260,11 @@ namespace Java.Interop {
 			{
 				JniPeerMembers.AssertSelf (self);
 
-				var j   = self.JniPeerMembers;
 				var m   = GetMethodInfo (encodedMember);
 
-				return m.InvokeNonvirtualObjectMethod (self.PeerReference, j.JniPeerType.PeerReference, parameters);
+				return m.InvokeNonvirtualObjectMethod (self.PeerReference, JniPeerType.PeerReference, parameters);
 				
-		}
+			}
 		}
 	}
 }

@@ -49,12 +49,11 @@ namespace Java.Interop {
 			{
 				JniPeerMembers.AssertSelf (self);
 
-				var j   = self.JniPeerMembers;
 				var m   = GetMethodInfo (encodedMember);
 
-				<#= returnType.ReturnType != "void" ? "return " : "" #>m.InvokeNonvirtual<#= returnType.JniCallType #>Method (self.PeerReference, j.JniPeerType.PeerReference, parameters);
+				<#= returnType.ReturnType != "void" ? "return " : "" #>m.InvokeNonvirtual<#= returnType.JniCallType #>Method (self.PeerReference, JniPeerType.PeerReference, parameters);
 				<#= returnType.ReturnType == "void" ? "return;" : "" #>
-		}
+			}
 <#
 	}
 #>
