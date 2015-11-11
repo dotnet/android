@@ -21,7 +21,7 @@ namespace Java.Interop {
 				JniPeerMembers.AssertSelf (self);
 
 				var declaringType   = DeclaringType;
-				if (self.GetType () == declaringType || declaringType == null) {
+				if (self.GetType () == declaringType || declaringType == null || self.GetType () == self.JniPeerMembers.ManagedPeerType) {
 					var m   = GetMethodInfo (encodedMember);
 					m.InvokeVirtualVoidMethod (self.PeerReference, parameters);
 					return;
@@ -57,7 +57,7 @@ namespace Java.Interop {
 				JniPeerMembers.AssertSelf (self);
 
 				var declaringType   = DeclaringType;
-				if (self.GetType () == declaringType || declaringType == null) {
+				if (self.GetType () == declaringType || declaringType == null || self.GetType () == self.JniPeerMembers.ManagedPeerType) {
 					var m   = GetMethodInfo (encodedMember);
 					return m.InvokeVirtualBooleanMethod (self.PeerReference, parameters);
 					
@@ -93,7 +93,7 @@ namespace Java.Interop {
 				JniPeerMembers.AssertSelf (self);
 
 				var declaringType   = DeclaringType;
-				if (self.GetType () == declaringType || declaringType == null) {
+				if (self.GetType () == declaringType || declaringType == null || self.GetType () == self.JniPeerMembers.ManagedPeerType) {
 					var m   = GetMethodInfo (encodedMember);
 					return m.InvokeVirtualSByteMethod (self.PeerReference, parameters);
 					
@@ -129,7 +129,7 @@ namespace Java.Interop {
 				JniPeerMembers.AssertSelf (self);
 
 				var declaringType   = DeclaringType;
-				if (self.GetType () == declaringType || declaringType == null) {
+				if (self.GetType () == declaringType || declaringType == null || self.GetType () == self.JniPeerMembers.ManagedPeerType) {
 					var m   = GetMethodInfo (encodedMember);
 					return m.InvokeVirtualCharMethod (self.PeerReference, parameters);
 					
@@ -165,7 +165,7 @@ namespace Java.Interop {
 				JniPeerMembers.AssertSelf (self);
 
 				var declaringType   = DeclaringType;
-				if (self.GetType () == declaringType || declaringType == null) {
+				if (self.GetType () == declaringType || declaringType == null || self.GetType () == self.JniPeerMembers.ManagedPeerType) {
 					var m   = GetMethodInfo (encodedMember);
 					return m.InvokeVirtualInt16Method (self.PeerReference, parameters);
 					
@@ -201,7 +201,7 @@ namespace Java.Interop {
 				JniPeerMembers.AssertSelf (self);
 
 				var declaringType   = DeclaringType;
-				if (self.GetType () == declaringType || declaringType == null) {
+				if (self.GetType () == declaringType || declaringType == null || self.GetType () == self.JniPeerMembers.ManagedPeerType) {
 					var m   = GetMethodInfo (encodedMember);
 					return m.InvokeVirtualInt32Method (self.PeerReference, parameters);
 					
@@ -237,7 +237,7 @@ namespace Java.Interop {
 				JniPeerMembers.AssertSelf (self);
 
 				var declaringType   = DeclaringType;
-				if (self.GetType () == declaringType || declaringType == null) {
+				if (self.GetType () == declaringType || declaringType == null || self.GetType () == self.JniPeerMembers.ManagedPeerType) {
 					var m   = GetMethodInfo (encodedMember);
 					return m.InvokeVirtualInt64Method (self.PeerReference, parameters);
 					
@@ -273,7 +273,7 @@ namespace Java.Interop {
 				JniPeerMembers.AssertSelf (self);
 
 				var declaringType   = DeclaringType;
-				if (self.GetType () == declaringType || declaringType == null) {
+				if (self.GetType () == declaringType || declaringType == null || self.GetType () == self.JniPeerMembers.ManagedPeerType) {
 					var m   = GetMethodInfo (encodedMember);
 					return m.InvokeVirtualSingleMethod (self.PeerReference, parameters);
 					
@@ -309,7 +309,7 @@ namespace Java.Interop {
 				JniPeerMembers.AssertSelf (self);
 
 				var declaringType   = DeclaringType;
-				if (self.GetType () == declaringType || declaringType == null) {
+				if (self.GetType () == declaringType || declaringType == null || self.GetType () == self.JniPeerMembers.ManagedPeerType) {
 					var m   = GetMethodInfo (encodedMember);
 					return m.InvokeVirtualDoubleMethod (self.PeerReference, parameters);
 					
@@ -345,7 +345,7 @@ namespace Java.Interop {
 				JniPeerMembers.AssertSelf (self);
 
 				var declaringType   = DeclaringType;
-				if (self.GetType () == declaringType || declaringType == null) {
+				if (self.GetType () == declaringType || declaringType == null || self.GetType () == self.JniPeerMembers.ManagedPeerType) {
 					var m   = GetMethodInfo (encodedMember);
 					return m.InvokeVirtualObjectMethod (self.PeerReference, parameters);
 					

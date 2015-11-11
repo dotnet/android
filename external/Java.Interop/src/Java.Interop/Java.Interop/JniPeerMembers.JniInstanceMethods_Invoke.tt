@@ -44,7 +44,7 @@ namespace Java.Interop {
 				JniPeerMembers.AssertSelf (self);
 
 				var declaringType   = DeclaringType;
-				if (self.GetType () == declaringType || declaringType == null) {
+				if (self.GetType () == declaringType || declaringType == null || self.GetType () == self.JniPeerMembers.ManagedPeerType) {
 					var m   = GetMethodInfo (encodedMember);
 					<#= returnType.ReturnType != "void" ? "return " : "" #>m.InvokeVirtual<#= returnType.JniCallType #>Method (self.PeerReference, parameters);
 					<#= returnType.ReturnType == "void" ? "return;" : "" #>
