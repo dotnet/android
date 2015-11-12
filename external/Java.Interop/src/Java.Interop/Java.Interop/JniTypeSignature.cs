@@ -85,7 +85,7 @@ namespace Java.Interop
 		{
 			var v = value as JniTypeSignature?;
 			if (v.HasValue)
-				return Equals (v);
+				return Equals (v.Value);
 			return false;
 		}
 
@@ -99,6 +99,16 @@ namespace Java.Interop
 		public override string ToString ()
 		{
 			return string.Format ("JniTypeSignature(TypeName={0} ArrayRank={1} Keyword={2})", SimpleReference, ArrayRank, IsKeyword);
+		}
+
+		public static bool operator== (JniTypeSignature lhs, JniTypeSignature rhs)
+		{
+			return lhs.Equals (rhs);
+		}
+
+		public static bool operator!= (JniTypeSignature lhs, JniTypeSignature rhs)
+		{
+			return !lhs.Equals (rhs);
 		}
 	}
 }

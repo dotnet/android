@@ -20,10 +20,10 @@ namespace Java.Interop {
 		}
 
 		bool    registered;
-		JniObjectReference  peer;
+		JniObjectReference  peerReference;
 
 		public  JniObjectReference  PeerReference   {
-			get {return peer;}
+			get {return peerReference;}
 		}
 
 		public JniType (string classname)
@@ -32,19 +32,19 @@ namespace Java.Interop {
 			Initialize (ref peer, JniObjectReferenceOptions.DisposeSourceReference);
 		}
 
-		public JniType (ref JniObjectReference handle, JniObjectReferenceOptions transfer)
+		public JniType (ref JniObjectReference peerReference, JniObjectReferenceOptions transfer)
 		{
-			Initialize (ref handle, transfer);
+			Initialize (ref peerReference, transfer);
 		}
 
-		void Initialize (ref JniObjectReference handle, JniObjectReferenceOptions transfer)
+		void Initialize (ref JniObjectReference peerReference, JniObjectReferenceOptions transfer)
 		{
-			if (handle.Handle == IntPtr.Zero)
-				throw new ArgumentException ("handle must be valid.", nameof (handle));
+			if (peerReference.Handle == IntPtr.Zero)
+				throw new ArgumentException ("handle must be valid.", nameof (peerReference));
 			try {
-				peer    = handle.NewLocalRef ();
+				this.peerReference  = peerReference.NewLocalRef ();
 			} finally {
-				JniObjectReference.Dispose (ref handle, transfer);
+				JniObjectReference.Dispose (ref peerReference, transfer);
 			}
 		}
 
@@ -69,9 +69,9 @@ namespace Java.Interop {
 				return;
 
 			lock (this) {
-				if (peer.Type != JniObjectReferenceType.Global) {
-					var o           = peer;
-					peer            = o.NewGlobalRef ();
+				if (peerReference.Type != JniObjectReferenceType.Global) {
+					var o           = peerReference;
+					peerReference   = o.NewGlobalRef ();
 					JniObjectReference.Dispose (ref o, JniObjectReferenceOptions.DisposeSourceReference);
 				}
 				JniEnvironment.Runtime.Track (this);
@@ -104,7 +104,7 @@ namespace Java.Interop {
 				JniEnvironment.Runtime.UnTrack (PeerReference.Handle);
 			if (methods != null)
 				UnregisterNativeMethods ();
-			JniObjectReference.Dispose (ref peer);
+			JniObjectReference.Dispose (ref peerReference);
 		}
 
 		public JniType GetSuperclass ()

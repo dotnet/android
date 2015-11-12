@@ -24,7 +24,7 @@ namespace Java.Interop
 		}
 
 		public unsafe JavaObjectArray (int length)
-			: this (ref *InvalidJniObjectReference, JniObjectReferenceOptions.Invalid)
+			: this (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
 		{
 			var peer    = _NewArray (CheckLength (length));
 			using (SetPeerReference (ref peer, JniObjectReferenceOptions.DisposeSourceReference)) {

@@ -76,7 +76,7 @@ namespace Java.Interop
 		public JavaException (ref JniObjectReference reference, JniObjectReferenceOptions transfer)
 			: base (_GetMessage (ref reference, transfer), _GetCause (ref reference, transfer))
 		{
-			if (transfer == JniObjectReferenceOptions.Invalid)
+			if (transfer == JniObjectReferenceOptions.None)
 				return;
 
 			if (!reference.IsValid)
@@ -182,7 +182,7 @@ namespace Java.Interop
 
 		static string _GetMessage (ref JniObjectReference reference, JniObjectReferenceOptions transfer)
 		{
-			if (transfer == JniObjectReferenceOptions.Invalid)
+			if (transfer == JniObjectReferenceOptions.None)
 				return null;
 
 			var m = _members.InstanceMethods.GetMethodInfo ("getMessage\u0000()Ljava/lang/String;");
@@ -192,7 +192,7 @@ namespace Java.Interop
 
 		static Exception _GetCause (ref JniObjectReference reference, JniObjectReferenceOptions transfer)
 		{
-			if (transfer == JniObjectReferenceOptions.Invalid)
+			if (transfer == JniObjectReferenceOptions.None)
 				return null;
 
 			var m = _members.InstanceMethods.GetMethodInfo ("getCause\u0000()Ljava/lang/Throwable;");

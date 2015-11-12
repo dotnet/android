@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 
 namespace Java.Interop
 {
+	[Flags]
 	enum JniObjectReferenceFlags : uint {
 		None,
 		Alloc   = 1 << 16,
@@ -38,7 +39,6 @@ namespace Java.Interop
 
 		public  JniObjectReferenceType      Type    {
 			get {return (JniObjectReferenceType) (referenceInfo & TypeMask);}
-			private set {referenceInfo = (uint) value;}
 		}
 
 		internal    JniObjectReferenceFlags Flags {
@@ -189,7 +189,7 @@ namespace Java.Interop
 					JniEnvironment.Runtime.ObjectReferenceManager.DeleteWeakGlobalReference (ref reference);
 					break;
 				default:
-					throw new NotImplementedException ("Do not know how to dispose: " + reference.Type + ".");
+					throw new NotImplementedException ("Do not know how to dispose: " + reference.Type.ToString () + ".");
 				}
 				reference.Invalidate ();
 				break;

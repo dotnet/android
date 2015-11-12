@@ -6,8 +6,8 @@ namespace Java.Interop {
 
 	public sealed partial class JniPeerMembers {
 
-		public JniPeerMembers (string jniPeerType, Type managedPeerType)
-			: this (jniPeerType, managedPeerType, checkManagedPeerType: true)
+		public JniPeerMembers (string jniPeerTypeName, Type managedPeerType)
+			: this (jniPeerTypeName, managedPeerType, checkManagedPeerType: true)
 		{
 			if (managedPeerType == null)
 				throw new ArgumentNullException ("managedPeerType");
@@ -16,38 +16,38 @@ namespace Java.Interop {
 
 #if !XA_INTEGRATION
 			Debug.Assert (
-					JniEnvironment.Runtime.TypeManager.GetTypeSignature (managedPeerType).SimpleReference == jniPeerType,
+					JniEnvironment.Runtime.TypeManager.GetTypeSignature (managedPeerType).SimpleReference == jniPeerTypeName,
 					string.Format ("ManagedPeerType <=> JniTypeName Mismatch! javaVM.GetJniTypeInfoForType(typeof({0})).JniTypeName=\"{1}\" != \"{2}\"",
 						managedPeerType.FullName,
 						JniEnvironment.Runtime.TypeManager.GetTypeSignature (managedPeerType).SimpleReference,
-						jniPeerType));
+						jniPeerTypeName));
 #endif  // !XA_INTEGRATION
 
 			ManagedPeerType = managedPeerType;
 		}
 
-		JniPeerMembers (string jniPeerType, Type managedPeerType, bool checkManagedPeerType)
+		JniPeerMembers (string jniPeerTypeName, Type managedPeerType, bool checkManagedPeerType)
 		{
-			if (jniPeerType == null)
-				throw new ArgumentNullException ("jniPeerType");
+			if (jniPeerTypeName == null)
+				throw new ArgumentNullException (nameof (jniPeerTypeName));
 
 			if (checkManagedPeerType) {
 				if (managedPeerType == null)
-					throw new ArgumentNullException ("managedPeerType");
+					throw new ArgumentNullException (nameof (managedPeerType));
 				if (!typeof (IJavaPeerable).IsAssignableFrom (managedPeerType))
 					throw new ArgumentException ("'managedPeerType' must implement the IJavaPeerable interface.", "managedPeerType");
 
 #if !XA_INTEGRATION
 				Debug.Assert (
-					JniEnvironment.Runtime.TypeManager.GetTypeSignature (managedPeerType).SimpleReference == jniPeerType,
+					JniEnvironment.Runtime.TypeManager.GetTypeSignature (managedPeerType).SimpleReference == jniPeerTypeName,
 					string.Format ("ManagedPeerType <=> JniTypeName Mismatch! javaVM.GetJniTypeInfoForType(typeof({0})).JniTypeName=\"{1}\" != \"{2}\"",
 						managedPeerType.FullName,
 						JniEnvironment.Runtime.TypeManager.GetTypeSignature (managedPeerType).SimpleReference,
-						jniPeerType));
+						jniPeerTypeName));
 #endif  // !XA_INTEGRATION
 			}
 
-			JniPeerTypeName = jniPeerType;
+			JniPeerTypeName = jniPeerTypeName;
 			ManagedPeerType = managedPeerType;
 
 			instanceMethods = new JniInstanceMethods (this);
@@ -56,9 +56,9 @@ namespace Java.Interop {
 			staticFields    = new JniStaticFields (this);
 		}
 
-		static JniPeerMembers CreatePeerMembers (string jniPeerType, Type managedPeerType)
+		static JniPeerMembers CreatePeerMembers (string jniPeerTypeName, Type managedPeerType)
 		{
-			return new JniPeerMembers (jniPeerType, managedPeerType, checkManagedPeerType: false);
+			return new JniPeerMembers (jniPeerTypeName, managedPeerType, checkManagedPeerType: false);
 		}
 
 		JniType     jniPeerType;
@@ -104,7 +104,7 @@ namespace Java.Interop {
 
 		public static void Dispose (JniPeerMembers members)
 		{
-			if (members.jniPeerType == null)
+			if (members == null || members.jniPeerType == null)
 				return;
 
 			members.instanceMethods.Dispose ();

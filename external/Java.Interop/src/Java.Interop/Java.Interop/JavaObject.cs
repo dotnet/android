@@ -45,7 +45,7 @@ namespace Java.Interop
 
 		public JavaObject (ref JniObjectReference reference, JniObjectReferenceOptions transfer)
 		{
-			if (transfer == JniObjectReferenceOptions.Invalid)
+			if (transfer == JniObjectReferenceOptions.None)
 				return;
 
 			using (SetPeerReference (ref reference, transfer)) {

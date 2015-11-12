@@ -49,7 +49,7 @@ $(LOCAL_JDK_HEADERS)/jni.h:
 	(cd LocalJDK; gunzip -c JavaEssentialsDev.pkg/Payload | cpio -i)
 
 xa-fxcop: lib/gendarme-2.10/gendarme.exe bin/$(XA_CONFIGURATION)/Java.Interop.dll
-	mono --debug $< --html xa-gendarme.html --ignore xa-gendarme-ignore.txt bin/$(XA_CONFIGURATION)/Java.Interop.dll
+	mono --debug $< --html xa-gendarme.html $(if @(GENDARME_XML),--xml xa-gendarme.xml) --ignore xa-gendarme-ignore.txt bin/$(XA_CONFIGURATION)/Java.Interop.dll
 
 lib/gendarme-2.10/gendarme.exe:
 	-mkdir -p `dirname "$@"`

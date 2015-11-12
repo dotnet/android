@@ -30,7 +30,7 @@ namespace Java.Interop.PerformanceTests
 		}
 
 		public unsafe JavaTiming ()
-			: base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.Invalid)
+			: base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
 		{
 			var peer    = _NewObject ();
 			using (SetPeerReference (ref peer, JniObjectReferenceOptions.DisposeSourceReference)) {

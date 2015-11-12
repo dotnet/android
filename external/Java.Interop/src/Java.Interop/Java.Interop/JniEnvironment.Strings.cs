@@ -15,9 +15,10 @@ namespace Java.Interop
 					return NewString ((IntPtr) s, value.Length);
 			}
 
+#if !XA_INTEGRATION
 			internal static JniObjectReference NewString (object value)
 			{
-				Debug.Assert (value == null || (value is string), "Expected value==null or string; was: " + (value ?? "").GetType ().FullName);
+				Debug.Assert (value == null || (value is string), "Expected value==null or string; was: " + (value ?? string.Empty).GetType ().FullName);
 				return NewString ((string) value);
 			}
 
@@ -25,6 +26,13 @@ namespace Java.Interop
 			{
 				return ToString (new JniObjectReference (handle));
 			}
+
+			internal static unsafe string ToString (ref JniObjectReference value, JniObjectReferenceOptions transfer, Type targetType)
+			{
+				Debug.Assert (targetType == typeof (string), "Expected targetType==typeof(string); was: " + targetType);
+				return ToString (ref value, transfer);
+			}
+#endif  // !XA_INTEGRATION
 
 			public static unsafe string ToString (JniObjectReference value)
 			{
@@ -43,12 +51,6 @@ namespace Java.Interop
 					JniEnvironment.Strings.ReleaseStringChars (value, p);
 					JniObjectReference.Dispose (ref value, transfer);
 				}
-			}
-
-			internal static unsafe string ToString (ref JniObjectReference value, JniObjectReferenceOptions transfer, Type targetType)
-			{
-				Debug.Assert (targetType == typeof (string), "Expected targetType==typeof(string); was: " + targetType);
-				return ToString (ref value, transfer);
 			}
 		}
 	}

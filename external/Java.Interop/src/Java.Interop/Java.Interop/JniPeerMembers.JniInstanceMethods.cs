@@ -100,6 +100,11 @@ namespace Java.Interop
 
 		public unsafe JniObjectReference StartCreateInstance (string constructorSignature, Type declaringType, JniArgumentValue* parameters)
 		{
+			if (constructorSignature == null)
+				throw new ArgumentNullException (nameof (constructorSignature));
+			if (declaringType == null)
+				throw new ArgumentNullException (nameof (declaringType));
+
 			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return NewObject (constructorSignature, declaringType, parameters);
 			}
@@ -110,6 +115,7 @@ namespace Java.Interop
 			return r;
 		}
 
+#if !XA_INTEGRATION
 		internal JniObjectReference AllocObject (Type declaringType)
 		{
 			var r   = GetConstructorsForType (declaringType)
@@ -118,6 +124,7 @@ namespace Java.Interop
 			r.Flags = JniObjectReferenceFlags.Alloc;
 			return r;
 		}
+#endif  // !XA_INTEGRATION
 
 		internal unsafe JniObjectReference NewObject (string constructorSignature, Type declaringType, JniArgumentValue* parameters)
 		{
@@ -128,6 +135,11 @@ namespace Java.Interop
 
 		public unsafe void FinishCreateInstance (string constructorSignature, IJavaPeerable self, JniArgumentValue* parameters)
 		{
+			if (constructorSignature == null)
+				throw new ArgumentNullException (nameof (constructorSignature));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
+
 			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return;
 			}

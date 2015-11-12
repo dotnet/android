@@ -49,7 +49,7 @@ namespace Java.InteropTests
 		}
 
 		public unsafe MyString (string value)
-			: base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.Invalid)
+			: base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
 		{
 			const   string  id  = "(Ljava/lang/String;)V";
 			var peer = _members.InstanceMethods.StartGenericCreateInstance (id, GetType (), value);

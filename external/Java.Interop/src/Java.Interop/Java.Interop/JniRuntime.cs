@@ -93,9 +93,9 @@ namespace Java.Interop
 		static JniRuntime current;
 		public static JniRuntime Current {
 			get {
-				if (current != null)
-					return current;
-				JniRuntime  c       = null;
+				var c   = current;
+				if (c != null)
+					return c;
 				int     count   = 0;
 				foreach (var vm in Runtimes.Values) {
 					if (count++ == 0)
@@ -105,7 +105,8 @@ namespace Java.Interop
 					throw new InvalidOperationException ("No JavaVM has been created. Please use Java.Interop.JreRuntimeBuilder.CreateJreRuntime().");
 				if (count > 1)
 					throw new NotSupportedException (string.Format ("Found {0} Java Runtimes. Don't know which to use. Use JniRuntime.SetCurrent().", count));
-				return current = c;
+				Interlocked.CompareExchange (ref current, c, null);
+				return c;
 			}
 		}
 
@@ -115,6 +116,7 @@ namespace Java.Interop
 				throw new ArgumentNullException ("newCurrent");
 			Runtimes.TryAdd (newCurrent.InvocationPointer, newCurrent);
 			current = newCurrent;
+			Thread.MemoryBarrier ();
 		}
 
 		ConcurrentDictionary<IntPtr, IDisposable>       TrackedInstances    = new ConcurrentDictionary<IntPtr, IDisposable> ();
@@ -148,8 +150,7 @@ namespace Java.Interop
 			InvocationPointer   = options.InvocationPointer;
 			Invoker             = CreateInvoker (InvocationPointer);
 
-			if (current == null)
-				current = this;
+			Interlocked.CompareExchange (ref current, this, null);
 
 			Runtimes.TryAdd (InvocationPointer, this);
 
@@ -219,6 +220,7 @@ namespace Java.Interop
 		public void Dispose ()
 		{
 			Dispose (true);
+			GC.SuppressFinalize (this);
 		}
 
 		protected virtual void Dispose (bool disposing)
@@ -226,8 +228,7 @@ namespace Java.Interop
 			if (InvocationPointer == IntPtr.Zero)
 				return;
 
-			if (current == this)
-				current = null;
+			Interlocked.CompareExchange (ref current, null, this);
 
 			JniObjectReference.Dispose (ref ClassLoader);
 
@@ -237,8 +238,8 @@ namespace Java.Interop
 				t.Dispose ();
 			}
 			RegisteredInstances.Clear ();
-			ClearTrackedReferences ();
 #endif  // !XA_INTEGRATION
+			ClearTrackedReferences ();
 			JniRuntime _;
 			Runtimes.TryRemove (InvocationPointer, out _);
 			ObjectReferenceManager.Dispose ();
@@ -255,6 +256,7 @@ namespace Java.Interop
 
 		internal    IntPtr  _AttachCurrentThread (string name = null, JniObjectReference group = default (JniObjectReference))
 		{
+			AssertValid ();
 			var threadArgs = new JavaVMThreadAttachArgs () {
 				version = JniVersion.v1_2,
 			};
@@ -266,15 +268,22 @@ namespace Java.Interop
 				IntPtr jnienv;
 				int r = Invoker.AttachCurrentThread (InvocationPointer, out jnienv, ref threadArgs);
 				if (r != 0)
-					throw new NotSupportedException ("AttachCurrentThread returned " + r);
+					throw new NotSupportedException ("AttachCurrentThread returned " + r.ToString ());
 				return jnienv;
 			} finally {
 				Marshal.FreeHGlobal (threadArgs.name);
 			}
 		}
 
+		void AssertValid ()
+		{
+			if (InvocationPointer == IntPtr.Zero)
+				throw new ObjectDisposedException (nameof (JniRuntime));
+		}
+
 		public void DestroyRuntime ()
 		{
+			AssertValid ();
 			Invoker.DestroyJavaVM (InvocationPointer);
 		}
 
@@ -307,11 +316,15 @@ namespace Java.Interop
 		public JniRuntime.JniObjectReferenceManager    ObjectReferenceManager      {get; private set;}
 		public JniTypeManager               TypeManager                 {get; private set;}
 
+#if !XA_INTEGRATION
 		internal void TrackID (IntPtr key, IDisposable value)
 		{
+			AssertValid ();
+
 			if (TrackIDs)
 				TrackedInstances.TryAdd (key, value);
 		}
+#endif  // !XA_INTEGRATION
 
 		internal void Track (JniType value)
 		{

@@ -154,13 +154,13 @@ namespace Java.Interop {
 		partial class References {
 			internal static int GetJavaVM (IntPtr jnienv, out IntPtr vm)
 			{
-				return JavaInterop_GetJavaVM (jnienv, out vm);
+				return NativeMethods.JavaInterop_GetJavaVM (jnienv, out vm);
 			}
 		}
 #endif  // !FEATURE_JNIENVIRONMENT_JI_PINVOKES
 	}
 
-	class JniEnvironmentInfo {
+	sealed class JniEnvironmentInfo {
 
 		const   int             NameBufferLength        = 512;
 
@@ -186,7 +186,7 @@ namespace Java.Interop {
 				r           = Invoker.GetJavaVM (EnvironmentPointer, out vmh);
 #endif  // #if !FEATURE_JNIENVIRONMENT_JI_PINVOKES
 				if (r < 0)
-					throw new InvalidOperationException ("JNIEnv::GetJavaVM() returned: " + r);
+					throw new InvalidOperationException ("JNIEnv::GetJavaVM() returned: " + r.ToString ());
 
 				var vm = JniRuntime.GetRegisteredRuntime (vmh);
 				if (vm == null)
