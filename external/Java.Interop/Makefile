@@ -2,6 +2,8 @@ CONFIGURATION = Debug
 
 XA_CONFIGURATION  = XAIntegrationDebug
 
+GENDARME_URL = https://cloud.github.com/downloads/spouliot/gendarme/gendarme-2.10-bin.zip
+
 DEPENDENCIES = \
 	bin/$(CONFIGURATION)/libNativeTiming.dylib
 
@@ -45,6 +47,14 @@ $(LOCAL_JDK_HEADERS)/jni.h:
 	_jdk="$$(cd `dirname "$(JDK)"`; pwd)/`basename "$(JDK)"`" ; \
 	(cd LocalJDK; xar -xf $$_jdk)
 	(cd LocalJDK; gunzip -c JavaEssentialsDev.pkg/Payload | cpio -i)
+
+xa-fxcop: lib/gendarme-2.10/gendarme.exe bin/$(XA_CONFIGURATION)/Java.Interop.dll
+	mono --debug $< --html xa-gendarme.html --ignore xa-gendarme-ignore.txt bin/$(XA_CONFIGURATION)/Java.Interop.dll
+
+lib/gendarme-2.10/gendarme.exe:
+	-mkdir -p `dirname "$@"`
+	curl -o lib/gendarme-2.10/gendarme-2.10-bin.zip $(GENDARME_URL)
+	(cd lib/gendarme-2.10 ; unzip gendarme-2.10-bin.zip)
 
 bin/$(CONFIGURATION)/libNativeTiming.dylib: tests/NativeTiming/timing.c $(LOCAL_JDK_HEADERS)/jni.h
 	mkdir -p `dirname "$@"`

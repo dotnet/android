@@ -2,3 +2,4 @@ bin
 obj
 LocalJDK
 TestResult.xml
+xa-gendarme.html
