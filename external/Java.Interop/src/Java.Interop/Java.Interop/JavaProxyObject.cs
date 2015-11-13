@@ -69,20 +69,20 @@ namespace Java.Interop {
 
 		static bool _Equals (IntPtr jnienv, IntPtr n_self, IntPtr n_value)
 		{
-			var self    = JniEnvironment.Runtime.GetObject<JavaProxyObject> (n_self);
-			var value   = JniEnvironment.Runtime.GetObject (n_value);
+			var self    = JniEnvironment.Runtime.ValueMarshaler.GetObject<JavaProxyObject> (n_self);
+			var value   = JniEnvironment.Runtime.ValueMarshaler.GetObject (n_value);
 			return self.Equals (value);
 		}
 
 		static int _GetHashCode (IntPtr jnienv, IntPtr n_self)
 		{
-			var self = JniEnvironment.Runtime.GetObject<JavaProxyObject> (n_self);
+			var self = JniEnvironment.Runtime.ValueMarshaler.GetObject<JavaProxyObject> (n_self);
 			return self.GetHashCode ();
 		}
 
 		static IntPtr _ToString (IntPtr jnienv, IntPtr n_self)
 		{
-			var self    = JniEnvironment.Runtime.GetObject<JavaProxyObject> (n_self);
+			var self    = JniEnvironment.Runtime.ValueMarshaler.GetObject<JavaProxyObject> (n_self);
 			var s       = self.ToString ();
 			var r       = JniEnvironment.Strings.NewString (s);
 			try {

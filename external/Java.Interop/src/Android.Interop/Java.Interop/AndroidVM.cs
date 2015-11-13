@@ -61,18 +61,6 @@ namespace Java.Interop {
 			get {return current;}
 		}
 
-		protected override bool TryGC (IJavaPeerable value, ref JniObjectReference handle)
-		{
-			if (!handle.IsValid)
-				return true;
-			var wgref = handle.NewWeakGlobalRef ();
-			JniObjectReference.Dispose (ref handle);
-			Java.Lang.Runtime.GetRuntime ().Gc ();
-			handle = wgref.NewGlobalRef ();
-			JniObjectReference.Dispose (ref wgref);
-			return handle.IsValid;
-		}
-
 		Dictionary<string, Type> typeMappings   = new Dictionary<string, Type> ();
 
 		public void AddTypeMapping (string jniTypeReference, Type type)

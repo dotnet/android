@@ -52,7 +52,7 @@ namespace Java.Interop.Dynamic {
 				return new DynamicMetaObject (typeE, BindingRestrictions.GetTypeRestriction (typeE, binder.Type), type);
 			}
 
-			var marshalInfo = vm.GetJniMarshalInfoForType (binder.Type);
+			var marshalInfo = vm.ValueMarshaler.GetJniMarshalInfoForType (binder.Type);
 			if (marshalInfo.GetValueFromJni == null)
 				return binder.FallbackConvert (this);
 

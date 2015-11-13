@@ -29,9 +29,9 @@ namespace Java.InteropTests
 				GC.WaitForPendingFinalizers ();
 				GC.WaitForPendingFinalizers ();
 				var first = array [0];
-				Assert.IsNotNull (JniRuntime.Current.PeekObject (first.PeerReference));
+				Assert.IsNotNull (JniRuntime.Current.ValueMarshaler.PeekObject (first.PeerReference));
 				var f = first.PeerReference;
-				var o = (JavaObject) JniRuntime.Current.GetObject (ref f, JniObjectReferenceOptions.CreateNewReference);
+				var o = (JavaObject) JniRuntime.Current.ValueMarshaler.GetObject (ref f, JniObjectReferenceOptions.CreateNewReference);
 				Assert.AreSame (first, o);
 				if (oldHandle != o.PeerReference.Handle) {
 					Console.WriteLine ("Yay, object handle changed; value survived a GC!");
@@ -46,19 +46,19 @@ namespace Java.InteropTests
 		[Test]
 		public void UnregisterFromRuntime ()
 		{
-			int registeredCount = JniRuntime.Current.GetSurfacedObjects ().Count;
+			int registeredCount = JniRuntime.Current.ValueMarshaler.GetSurfacedObjects ().Count;
 			JniObjectReference l;
 			JavaObject o;
 			using (o = new JavaObject ()) {
 				l   = o.PeerReference.NewLocalRef ();
 				Assert.AreEqual (JniObjectReferenceType.Global, o.PeerReference.Type);
-				Assert.AreEqual (registeredCount+1, JniRuntime.Current.GetSurfacedObjects ().Count);
-				Assert.IsNotNull (JniRuntime.Current.PeekObject (l));
+				Assert.AreEqual (registeredCount+1, JniRuntime.Current.ValueMarshaler.GetSurfacedObjects ().Count);
+				Assert.IsNotNull (JniRuntime.Current.ValueMarshaler.PeekObject (l));
 				Assert.AreNotSame (l, o.PeerReference);
-				Assert.AreSame (o, JniRuntime.Current.PeekObject (l));
+				Assert.AreSame (o, JniRuntime.Current.ValueMarshaler.PeekObject (l));
 			}
-			Assert.AreEqual (registeredCount, JniRuntime.Current.GetSurfacedObjects ().Count);
-			Assert.IsNull (JniRuntime.Current.PeekObject (l));
+			Assert.AreEqual (registeredCount, JniRuntime.Current.ValueMarshaler.GetSurfacedObjects ().Count);
+			Assert.IsNull (JniRuntime.Current.ValueMarshaler.PeekObject (l));
 			JniObjectReference.Dispose (ref l);
 			Assert.Throws<ObjectDisposedException> (() => o.UnregisterFromRuntime ());
 		}
@@ -89,7 +89,7 @@ namespace Java.InteropTests
 			GC.WaitForPendingFinalizers ();
 			Assert.IsFalse (r.IsAlive);
 			Assert.IsNull (r.Target);
-			Assert.IsNull (JniRuntime.Current.PeekObject (oldHandle));
+			Assert.IsNull (JniRuntime.Current.ValueMarshaler.PeekObject (oldHandle));
 			JniObjectReference.Dispose (ref oldHandle);
 		}
 

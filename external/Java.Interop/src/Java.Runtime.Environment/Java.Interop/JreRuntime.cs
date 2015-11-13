@@ -156,18 +156,6 @@ namespace Java.Interop {
 			: base (CreateJreVM (builder))
 		{
 		}
-
-		protected override bool TryGC (IJavaPeerable value, ref JniObjectReference handle)
-		{
-			if (!handle.IsValid)
-				return true;
-			var wgref = handle.NewWeakGlobalRef ();
-			JniObjectReference.Dispose (ref handle);
-			JniGC.Collect ();
-			handle = wgref.NewGlobalRef ();
-			JniObjectReference.Dispose (ref wgref);
-			return !handle.IsValid;
-		}
 	}
 }
 

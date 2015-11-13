@@ -488,7 +488,7 @@ namespace Java.Interop.PerformanceTests {
 				int len             = JniEnvironment.Arrays.GetArrayLength (lrefMethods);
 				for (int i = 0; i < len; ++i) {
 					var v = JniEnvironment.Arrays.GetObjectArrayElement (lrefMethods, i);
-					methodHandlesGO.Add (vm.GetObject<JavaObject> (ref v, JniObjectReferenceOptions.DoNotRegisterWithRuntime));
+					methodHandlesGO.Add (vm.ValueMarshaler.GetObject<JavaObject> (ref v, JniObjectReferenceOptions.DoNotRegisterWithRuntime));
 					JniObjectReference.Dispose (ref v);
 				}
 				methodsTiming.Stop ();
@@ -676,7 +676,7 @@ namespace Java.Interop.PerformanceTests {
 					getObjectTime   = Stopwatch.StartNew ();
 					for (int i  = 0; i < C; ++i) {
 						var h   = JniEnvironment.Arrays.GetObjectArrayElement (strings.PeerReference, i);
-						var o   = vm.GetObject<JavaObject> (ref h, JniObjectReferenceOptions.DisposeSourceReference);
+						var o   = vm.ValueMarshaler.GetObject<JavaObject> (ref h, JniObjectReferenceOptions.DisposeSourceReference);
 						rlist.Add (o);
 					}
 					getObjectTime.Stop ();

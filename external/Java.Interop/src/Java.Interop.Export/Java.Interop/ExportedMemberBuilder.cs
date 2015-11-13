@@ -319,7 +319,7 @@ namespace Java.Interop {
 		static Expression GetThis (Expression vm, Type targetType, Expression context)
 		{
 			return Expression.Call (
-					vm,
+					Expression.Property (vm, "ValueMarshaler"),
 					"GetObject",
 					new[]{targetType},
 					context);

@@ -56,7 +56,7 @@ namespace Java.Interop.PerformanceTests
 		{
 			TypeRef.GetCachedStaticMethod (ref som, "StaticObjectMethod", "()Ljava/lang/Object;");
 			var lref = som.InvokeObjectMethod (TypeRef.PeerReference);
-			return JniEnvironment.Runtime.GetObject (ref lref, JniObjectReferenceOptions.DisposeSourceReference);
+			return JniEnvironment.Runtime.ValueMarshaler.GetObject (ref lref, JniObjectReferenceOptions.DisposeSourceReference);
 		}
 
 		static JniInstanceMethodInfo vvm;
@@ -78,7 +78,7 @@ namespace Java.Interop.PerformanceTests
 		{
 			TypeRef.GetCachedInstanceMethod (ref vom, "VirtualObjectMethod", "()Ljava/lang/Object;");
 			var lref = vom.InvokeVirtualObjectMethod (PeerReference);
-			return JniEnvironment.Runtime.GetObject (ref lref, JniObjectReferenceOptions.DisposeSourceReference);
+			return JniEnvironment.Runtime.ValueMarshaler.GetObject (ref lref, JniObjectReferenceOptions.DisposeSourceReference);
 		}
 
 		static JniInstanceMethodInfo fvm;
@@ -100,7 +100,7 @@ namespace Java.Interop.PerformanceTests
 		{
 			TypeRef.GetCachedInstanceMethod (ref fom, "FinalObjectMethod", "()Ljava/lang/Object;");
 			var lref = vom.InvokeNonvirtualObjectMethod (PeerReference, TypeRef.PeerReference);
-			return JniEnvironment.Runtime.GetObject (ref lref, JniObjectReferenceOptions.DisposeSourceReference);
+			return JniEnvironment.Runtime.ValueMarshaler.GetObject (ref lref, JniObjectReferenceOptions.DisposeSourceReference);
 		}
 
 		static JniInstanceMethodInfo vim1;

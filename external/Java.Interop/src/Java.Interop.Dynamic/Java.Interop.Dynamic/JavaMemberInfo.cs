@@ -22,7 +22,7 @@ namespace Java.Interop.Dynamic {
 
 		protected static object ToReturnValue (ref JniObjectReference handle, string signature, int n)
 		{
-			var instance    = JniEnvironment.Runtime.GetObject (ref handle, JniObjectReferenceOptions.DisposeSourceReference);
+			var instance    = JniEnvironment.Runtime.ValueMarshaler.GetObject (ref handle, JniObjectReferenceOptions.DisposeSourceReference);
 			switch (signature [n]) {
 			case 'L':
 				return new DynamicJavaInstance (instance);

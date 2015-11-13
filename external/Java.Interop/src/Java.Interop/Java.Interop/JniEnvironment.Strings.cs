@@ -22,15 +22,15 @@ namespace Java.Interop
 				return NewString ((string) value);
 			}
 
-			public static string ToString (IntPtr handle)
+			public static string ToString (IntPtr reference)
 			{
-				return ToString (new JniObjectReference (handle));
+				return ToString (new JniObjectReference (reference));
 			}
 
-			internal static unsafe string ToString (ref JniObjectReference value, JniObjectReferenceOptions transfer, Type targetType)
+			internal static unsafe string ToString (ref JniObjectReference reference, JniObjectReferenceOptions transfer, Type targetType)
 			{
 				Debug.Assert (targetType == typeof (string), "Expected targetType==typeof(string); was: " + targetType);
-				return ToString (ref value, transfer);
+				return ToString (ref reference, transfer);
 			}
 #endif  // !XA_INTEGRATION
 
