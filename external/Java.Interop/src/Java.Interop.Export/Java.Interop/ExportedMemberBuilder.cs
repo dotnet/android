@@ -8,18 +8,21 @@ using System.Text;
 
 namespace Java.Interop {
 
-	public class ExportedMemberBuilder : IExportedMemberBuilder
+	public class ExportedMemberBuilder : JniRuntime.JniExportedMemberBuilder
 	{
+		public ExportedMemberBuilder ()
+		{
+		}
+
 		public ExportedMemberBuilder (JniRuntime runtime)
 		{
 			if (runtime == null)
-				throw new ArgumentNullException ("javaVM");
-			Runtime = runtime;
+				throw new ArgumentNullException (nameof (runtime));
+
+			SetRuntime (runtime);
 		}
 
-		public      JniRuntime      Runtime     {get; private set;}
-
-		public IEnumerable<JniNativeMethodRegistration> GetExportedMemberRegistrations (Type declaringType)
+		public override IEnumerable<JniNativeMethodRegistration> GetExportedMemberRegistrations (Type declaringType)
 		{
 			if (declaringType == null)
 				throw new ArgumentNullException ("declaringType");

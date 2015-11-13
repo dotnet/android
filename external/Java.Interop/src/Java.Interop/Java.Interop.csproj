@@ -88,7 +88,6 @@
     <Compile Include="Java.Interop\JniPeerMembers.JniStaticFields.cs" />
   </ItemGroup>
   <ItemGroup Condition=" !$(Configuration.StartsWith('XAIntegration')) ">
-    <Compile Include="Java.Interop\IExportedMemberBuilder.cs" />
     <Compile Include="Java.Interop\IJavaPeerableEx.cs" />
     <Compile Include="Java.Interop\JavaArray.cs" />
     <Compile Include="Java.Interop\JavaException.cs" />
@@ -114,6 +113,7 @@
       <DependentUpon>JniPeerMembers.JniMethods.tt</DependentUpon>
     </Compile>
     <Compile Include="Java.Interop\JniReferenceSafeHandle.cs" />
+    <Compile Include="Java.Interop\JniRuntime.JniExportedMemberBuilder.cs" />
     <Compile Include="Java.Interop\JniRuntime.JniValueMarshaler.cs" />
     <Compile Include="Java.Interop\JniSystem.cs" />
     <Compile Include="Java.Interop\JniWeakGlobalReference.cs" />

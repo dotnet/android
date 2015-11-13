@@ -146,6 +146,7 @@ namespace Java.Interop
 			TypeManager                 = SetRuntime (options.TypeManager ?? new JniTypeManager ());
 
 			SetValueMarshaler (options);
+			SetExportedMemberBuilder (options);
 
 			NewObjectRequired   = options.NewObjectRequired;
 
@@ -197,6 +198,7 @@ namespace Java.Interop
 		}
 
 		partial void SetValueMarshaler (CreationOptions options);
+		partial void SetExportedMemberBuilder (CreationOptions options);
 
 		static unsafe JavaVMInterface CreateInvoker (IntPtr handle)
 		{
@@ -365,26 +367,5 @@ namespace Java.Interop
 #endif  // !XA_INTEGRATION
 		}
 	}
-
-#if !XA_INTEGRATION
-
-	partial class JniRuntime {
-
-		static IExportedMemberBuilder memberBuilder;
-		public virtual IExportedMemberBuilder ExportedMemberBuilder {
-			get {
-				if (memberBuilder != null)
-					return memberBuilder;
-				var jie = Assembly.Load ("Java.Interop.Export");
-				var t   = jie.GetType ("Java.Interop.ExportedMemberBuilder");
-				var b   = (IExportedMemberBuilder) Activator.CreateInstance (t, this);
-				if (Interlocked.CompareExchange (ref memberBuilder, b, null) != null) {
-					// do nothing; GC will collect
-				}
-				return memberBuilder;
-			}
-		}
-	}
-#endif  // !XA_INTEGRATION
 }
 
