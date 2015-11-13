@@ -5,7 +5,7 @@ namespace Java.Interop
 {
 	public sealed class JniInstanceFieldInfo : JniFieldInfo
 	{
-		internal JniInstanceFieldInfo (IntPtr fieldID)
+		public JniInstanceFieldInfo (IntPtr fieldID)
 			: base (fieldID)
 		{
 		}

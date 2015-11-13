@@ -5,7 +5,7 @@ namespace Java.Interop
 {
 	public sealed class JniInstanceMethodInfo : JniMethodInfo
 	{
-		internal JniInstanceMethodInfo (IntPtr methodID)
+		public JniInstanceMethodInfo (IntPtr methodID)
 			: base (methodID)
 		{
 		}
