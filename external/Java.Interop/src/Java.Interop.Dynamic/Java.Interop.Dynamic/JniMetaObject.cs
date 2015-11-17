@@ -76,7 +76,7 @@ namespace Java.Interop.Dynamic {
 
 			Func<IJavaPeerable, object>   getValue  = field.GetValue;
 
-			var e = Expression.Call (Expression.Constant (field), getValue.Method, GetSelf ());
+			var e = Expression.Call (Expression.Constant (field), getValue.GetMethodInfo (), GetSelf ());
 			return new DynamicMetaObject (e, BindingRestrictions.GetInstanceRestriction (Expression, Value));
 		}
 
@@ -117,7 +117,7 @@ namespace Java.Interop.Dynamic {
 			var call        = Expression.Block (
 					new[]{value},
 					Expression.Condition (
-						test:       Expression.Call (Expression.Constant (info), invoke.Method, GetSelf (), Expression.Constant (applicable), Expression.Constant (args), value),
+						test:       Expression.Call (Expression.Constant (info), invoke.GetMethodInfo (), GetSelf (), Expression.Constant (applicable), Expression.Constant (args), value),
 						ifTrue:     value,
 						ifFalse:    fallback.Expression)
 			);
@@ -150,7 +150,7 @@ namespace Java.Interop.Dynamic {
 
 			Action<IJavaPeerable, object>  setValue  = field.SetValue;
 			var e = Expression.Block (
-					Expression.Call (Expression.Constant (field), setValue.Method,
+					Expression.Call (Expression.Constant (field), setValue.GetMethodInfo (),
 						GetSelf (), Expression.Convert (value.Expression, typeof (object))),
 					Expression);
 			return new DynamicMetaObject (e, BindingRestrictions.GetInstanceRestriction (Expression, Value));

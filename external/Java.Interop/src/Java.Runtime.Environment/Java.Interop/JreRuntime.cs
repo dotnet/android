@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading;
 
 namespace Java.Interop {
 
@@ -155,6 +156,11 @@ namespace Java.Interop {
 		internal protected JreRuntime (JreRuntimeOptions builder)
 			: base (CreateJreVM (builder))
 		{
+		}
+
+		public override string GetCurrentThreadDescription ()
+		{
+			return string.Format ("'{0}'({1})", Thread.CurrentThread.Name, Thread.CurrentThread.ManagedThreadId);
 		}
 	}
 }

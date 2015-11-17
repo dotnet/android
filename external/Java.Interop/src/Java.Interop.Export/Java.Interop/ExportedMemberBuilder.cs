@@ -19,7 +19,7 @@ namespace Java.Interop {
 			if (runtime == null)
 				throw new ArgumentNullException (nameof (runtime));
 
-			SetRuntime (runtime);
+			OnSetRuntime (runtime);
 		}
 
 		public override IEnumerable<JniNativeMethodRegistration> GetExportedMemberRegistrations (Type declaringType)
@@ -31,8 +31,7 @@ namespace Java.Interop {
 
 		IEnumerable<JniNativeMethodRegistration> CreateExportedMemberRegistrationIterator (Type declaringType)
 		{
-			const BindingFlags methodScope = BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
-			foreach (var method in declaringType.GetMethods (methodScope)) {
+			foreach (var method in declaringType.GetTypeInfo ().DeclaredMethods) {
 				var exports = (JavaCallableAttribute[]) method.GetCustomAttributes (typeof(JavaCallableAttribute), inherit:false);
 				if (exports == null || exports.Length == 0)
 					continue;
@@ -263,7 +262,7 @@ namespace Java.Interop {
 			MarshalInfo v;
 			if (Marshalers.TryGetValue (targetType, out v))
 				return v.FromJni (jvm, targetType, jniParameter);
-			if (typeof (IJavaPeerable).IsAssignableFrom (targetType))
+			if (typeof (IJavaPeerable).GetTypeInfo ().IsAssignableFrom (targetType.GetTypeInfo ()))
 				return Marshalers [typeof (IJavaPeerable)].FromJni (jvm, targetType, jniParameter);
 			return null;
 		}
@@ -273,19 +272,19 @@ namespace Java.Interop {
 			MarshalInfo v;
 			if (Marshalers.TryGetValue (sourceType, out v))
 				return v.ToJni (managedParameter);
-			if (typeof (IJavaPeerable).IsAssignableFrom (sourceType))
+			if (typeof (IJavaPeerable).GetTypeInfo ().IsAssignableFrom (sourceType.GetTypeInfo ()))
 				return Marshalers [typeof (IJavaPeerable)].ToJni (managedParameter);
 			return null;
 		}
 
 		static readonly Dictionary<Type, MarshalInfo> Marshalers = new Dictionary<Type, MarshalInfo> () {
 			{ typeof (string), new MarshalInfo {
-					FromJni = (vm, t, p) => Expression.Call (F<IntPtr, string> (JniEnvironment.Strings.ToString).Method, p),
-					ToJni   = p => Expression.Call (F<string, JniObjectReference> (JniEnvironment.Strings.NewString).Method, p)
+					FromJni = (vm, t, p) => Expression.Call (F<IntPtr, string> (JniEnvironment.Strings.ToString).GetMethodInfo (), p),
+					ToJni   = p => Expression.Call (F<string, JniObjectReference> (JniEnvironment.Strings.NewString).GetMethodInfo (), p)
 			} },
 			{ typeof (IJavaPeerable), new MarshalInfo {
 					FromJni = (vm, t, p) => GetThis (vm, t, p),
-					ToJni   = p => Expression.Call (F<IJavaPeerable, IntPtr> (JniEnvironment.References.NewReturnToJniRef).Method, p)
+					ToJni   = p => Expression.Call (F<IJavaPeerable, IntPtr> (JniEnvironment.References.NewReturnToJniRef).GetMethodInfo (), p)
 			} },
 		};
 
@@ -296,14 +295,20 @@ namespace Java.Interop {
 
 		static Expression CreateJniTransition (ParameterExpression jnienv)
 		{
+			var ctor =
+				(from c in typeof(JniTransition).GetTypeInfo ().DeclaredConstructors
+				 let p = c.GetParameters ()
+				 where p.Length == 1 && p [0].ParameterType == typeof (IntPtr)
+				 select c)
+				.First ();
 			return Expression.New (
-					typeof (JniTransition).GetConstructor (new []{typeof (IntPtr)}),
+					ctor,
 					jnienv);
 		}
 
 		static CatchBlock CreateMarshalException  (ParameterExpression envp, LabelTarget exit)
 		{
-			var spe     = typeof (JniTransition).GetMethod ("SetPendingException");
+			var spe     = typeof (JniTransition).GetTypeInfo ().GetDeclaredMethod ("SetPendingException");
 			var ex      = Expression.Variable (typeof (Exception), "__e");
 			var body = new List<Expression> () {
 				Expression.Call (envp, spe, ex),
@@ -316,7 +321,7 @@ namespace Java.Interop {
 
 		static Expression CreateDisposeJniEnvironment (ParameterExpression envp)
 		{
-			return Expression.Call (envp, typeof (JniTransition).GetMethod ("Dispose"));
+			return Expression.Call (envp, typeof (JniTransition).GetTypeInfo ().GetDeclaredMethod ("Dispose"));
 		}
 
 		static Expression GetThis (Expression vm, Type targetType, Expression context)

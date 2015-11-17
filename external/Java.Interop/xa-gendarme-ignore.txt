@@ -146,10 +146,15 @@ T: Java.Interop.DetachCurrentThreadDelegate
 
 R: Gendarme.Rules.Exceptions.UseObjectDisposedExceptionRule
 # I don't want ~any overhead around reference tracking
+M: System.Void Java.Interop.JniRuntime/JniObjectReferenceManager::CreatedLocalReference(Java.Interop.JniObjectReference,System.Int32&)
 M: Java.Interop.JniObjectReference Java.Interop.JniRuntime/JniObjectReferenceManager::CreateGlobalReference(Java.Interop.JniObjectReference)
-M: System.Void Java.Interop.JniRuntime/JniObjectReferenceManager::DeleteGlobalReference(Java.Interop.JniObjectReference&)
+M: Java.Interop.JniObjectReference Java.Interop.JniRuntime/JniObjectReferenceManager::CreateLocalReference(Java.Interop.JniObjectReference,System.Int32&)
 M: Java.Interop.JniObjectReference Java.Interop.JniRuntime/JniObjectReferenceManager::CreateWeakGlobalReference(Java.Interop.JniObjectReference)
+M: System.Void Java.Interop.JniRuntime/JniObjectReferenceManager::DeleteGlobalReference(Java.Interop.JniObjectReference&)
+M: System.Void Java.Interop.JniRuntime/JniObjectReferenceManager::DeleteLocalReference(Java.Interop.JniObjectReference&,System.Int32&)
 M: System.Void Java.Interop.JniRuntime/JniObjectReferenceManager::DeleteWeakGlobalReference(Java.Interop.JniObjectReference&)
+M: System.Void Java.Interop.JniRuntime/JniObjectReferenceManager::OnSetRuntime(Java.Interop.JniRuntime)
+M: System.IntPtr Java.Interop.JniRuntime/JniObjectReferenceManager::ReleaseLocalReference(Java.Interop.JniObjectReference&,System.Int32&)
 
 # These *do* validate, they just validate via AssertValid() helper method
 M: System.Void Java.Interop.JniRuntime::AttachCurrentThread(System.String,Java.Interop.JniObjectReference)
@@ -180,6 +185,8 @@ T: Java.Interop.JniArgumentValue
 T: Java.Interop.JniEnvironmentInfo
 T: Java.Interop.JniPeerMembers
 T: Java.Interop.JniPeerMembers/JniInstanceMethods
+T: Java.Interop.JniRuntime
+T: Java.Interop.JniRuntime/JniObjectReferenceManager
 
 
 R: Gendarme.Rules.Maintainability.AvoidUnnecessarySpecializationRule

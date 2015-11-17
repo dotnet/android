@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
 
@@ -13,9 +14,13 @@ namespace Java.Interop {
 
 		public class JniObjectReferenceManager : IDisposable, ISetRuntime {
 
-			protected   JniRuntime  Runtime { get; private set; }
+			public JniObjectReferenceManager ()
+			{
+			}
 
-			void JniRuntime.ISetRuntime.SetRuntime (JniRuntime runtime)
+			public  JniRuntime      Runtime { get; private set; }
+
+			public virtual void OnSetRuntime (JniRuntime runtime)
 			{
 				Runtime = runtime;
 			}
@@ -165,11 +170,11 @@ namespace Java.Interop {
 			}
 
 			[Conditional ("DEBUG")]
-			static void AssertCount (int count, string type, string value)
+			void AssertCount (int count, string type, string value)
 			{
 				Debug.Assert (count >= 0,
 						string.Format ("{0} count is {1}, expected to be >= 0 when dealing with handle {2} on thread {3}",
-							type, count, value, Thread.CurrentThread.ManagedThreadId));
+							type, count, value, Runtime.GetCurrentThreadDescription ()));
 			}
 		}
 	}

@@ -28,31 +28,28 @@ namespace Java.Interop {
 
 			Assembly jie;
 			try {
-				jie = Assembly.Load ("Java.Interop.Export");
+				jie = Assembly.Load (new AssemblyName ("Java.Interop.Export"));
 			} catch (Exception) {
 				return;
 			}
-			var t   = jie.GetType ("Java.Interop.ExportedMemberBuilder", throwOnError: true);
+			var t   = jie.GetType ("Java.Interop.ExportedMemberBuilder");
+			if (t == null)
+				throw new InvalidOperationException ("Could not find Java.Interop.ExportedMemberBuilder from Java.Interop.Export.dll!");
 			var b   = (JniExportedMemberBuilder) Activator.CreateInstance (t);
 			exportedMemberBuilder   = SetRuntime (b);
 		}
 
 		public abstract class JniExportedMemberBuilder : ISetRuntime
 		{
-			protected   JniRuntime  Runtime     {get; private set;}
-
-			void ISetRuntime.SetRuntime (JniRuntime runtime)
-			{
-				Runtime = runtime;
-			}
-
-			protected void SetRuntime (JniRuntime runtime)
-			{
-				Runtime = runtime;
-			}
+			public      JniRuntime  Runtime     {get; private set;}
 
 			protected JniExportedMemberBuilder ()
 			{
+			}
+
+			public virtual void OnSetRuntime (JniRuntime runtime)
+			{
+				Runtime = runtime;
 			}
 
 			public abstract IEnumerable<JniNativeMethodRegistration> GetExportedMemberRegistrations (Type declaringType);

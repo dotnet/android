@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 namespace Java.Interop {
 
@@ -8,9 +9,9 @@ namespace Java.Interop {
 
 		public class JniTypeManager : ISetRuntime {
 
-			protected   JniRuntime  Runtime { get; private set; }
+			public      JniRuntime  Runtime { get; private set; }
 
-			void ISetRuntime.SetRuntime (JniRuntime runtime)
+			public virtual void OnSetRuntime (JniRuntime runtime)
 			{
 				Runtime = runtime;
 			}
@@ -24,7 +25,7 @@ namespace Java.Interop {
 			{
 				if (type == null)
 					throw new ArgumentNullException ("type");
-				if (type.ContainsGenericParameters)
+				if (type.GetTypeInfo ().ContainsGenericParameters)
 					throw new ArgumentException ("Generic type definitions are not supported.", "type");
 
 				return CreateGetTypeSignaturesEnumerator (type);
@@ -41,7 +42,7 @@ namespace Java.Interop {
 					type    = type.GetElementType ();
 				}
 
-				if (type.IsEnum)
+				if (type.GetTypeInfo ().IsEnum)
 					type = Enum.GetUnderlyingType (type);
 
 #if !XA_INTEGRATION
@@ -60,16 +61,16 @@ namespace Java.Interop {
 				}
 #endif  // !XA_INTEGRATION
 
-				var names = (JniTypeSignatureAttribute[]) type.GetCustomAttributes (typeof (JniTypeSignatureAttribute), inherit:false);
-				for (int i = 0; i < names.Length; ++i) {
-					yield return new JniTypeSignature (names [i].SimpleReference, names [i].ArrayRank + rank, names [i].IsKeyword);
+				var name = type.GetTypeInfo ().GetCustomAttribute<JniTypeSignatureAttribute> (inherit: false);
+				if (name != null) {
+					yield return new JniTypeSignature (name.SimpleReference, name.ArrayRank + rank, name.IsKeyword);
 				}
 
 #if !XA_INTEGRATION
-				if (type.IsGenericType) {
+				if (type.GetTypeInfo ().IsGenericType) {
 					var def = type.GetGenericTypeDefinition ();
 					if (def == typeof(JavaArray<>) || def == typeof(JavaObjectArray<>)) {
-						var r = GetTypeSignature (type.GetGenericArguments () [0]);
+						var r = GetTypeSignature (type.GetTypeInfo ().GenericTypeArguments [0]);
 						yield return r.AddArrayRank (rank + 1);
 					}
 				}

@@ -68,7 +68,7 @@ namespace Java.Interop
 	partial class JniRuntime {
 
 		interface ISetRuntime {
-			void SetRuntime (JniRuntime runtime);
+			void OnSetRuntime (JniRuntime runtime);
 		}
 	}
 
@@ -116,7 +116,6 @@ namespace Java.Interop
 				throw new ArgumentNullException ("newCurrent");
 			Runtimes.TryAdd (newCurrent.InvocationPointer, newCurrent);
 			current = newCurrent;
-			Thread.MemoryBarrier ();
 		}
 
 		ConcurrentDictionary<IntPtr, IDisposable>       TrackedInstances    = new ConcurrentDictionary<IntPtr, IDisposable> ();
@@ -193,8 +192,12 @@ namespace Java.Interop
 		T SetRuntime<T> (T value)
 			where T : ISetRuntime
 		{
-			value.SetRuntime (this);
+			value.OnSetRuntime (this);
 			return value;
+		}
+
+		protected static void SetRuntime ()
+		{
 		}
 
 		partial void SetValueMarshaler (CreationOptions options);
@@ -211,10 +214,16 @@ namespace Java.Interop
 			Dispose (false);
 		}
 
+		// In format $"'{Thread.CurrentThread.Name}'({Thread.CurrentThread.ManagedThreadId})"
+		public virtual string GetCurrentThreadDescription ()
+		{
+			return string.Empty;
+		}
+
 		public virtual void FailFast (string message)
 		{
-			var t = typeof (Environment);
-			var m = t.GetMethod ("FailFast");
+			var t = typeof (Environment).GetTypeInfo ();
+			var m = t.DeclaredMethods.FirstOrDefault (x => x.Name == "FailFast");
 			m.Invoke (null, new object[]{ message });
 		}
 

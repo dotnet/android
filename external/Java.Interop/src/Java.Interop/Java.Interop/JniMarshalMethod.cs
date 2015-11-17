@@ -22,7 +22,7 @@ namespace Java.Interop {
 			if (value == null)
 				throw new ArgumentNullException ("value");
 
-			var invoke = value.GetType ().GetMethod ("Invoke", BindingFlags.Public | BindingFlags.Instance);
+			var invoke = value.GetType ().GetTypeInfo ().GetDeclaredMethod ("Invoke");
 			if (invoke == null)
 				throw new NotSupportedException ("Cannot find Invoke() method on type: " + value.GetType ());
 
@@ -53,13 +53,13 @@ namespace Java.Interop {
 			var jnienv  = parameters [0];
 			MethodCallExpression invoke;
 			if (value.Target == null) {
-				invoke = Expression.Call (value.Method, parameters);
+				invoke = Expression.Call (value.GetMethodInfo (), parameters);
 			} else {
 				var delArgs = new List<Expression> () {
 					Expression.Constant (value.Target),
 				};
 				delArgs.AddRange (parameters);
-				invoke = Expression.Call (value.Method, delArgs);
+				invoke = Expression.Call (value.GetMethodInfo (), delArgs);
 			}
 			var body    = new List<Expression> () {
 				Expression.Assign (envp, CreateJniTransition (jnienv)),
@@ -89,14 +89,18 @@ namespace Java.Interop {
 
 		static Expression CreateJniTransition (ParameterExpression jnienv)
 		{
-			return Expression.New (
-					typeof (JniTransition).GetConstructor (new []{typeof (IntPtr)}),
-					jnienv);
+			var ctor =
+				(from c in typeof(JniTransition).GetTypeInfo ().DeclaredConstructors
+				 let p = c.GetParameters ()
+				 where p.Length == 1 && p [0].ParameterType == typeof (IntPtr)
+				 select c)
+				.First ();
+			return Expression.New (ctor, jnienv);
 		}
 
 		static CatchBlock CreateMarshalException  (ParameterExpression envp, MethodInfo method, LabelTarget exit)
 		{
-			var spe     = typeof (JniTransition).GetMethod ("SetPendingException");
+			var spe     = typeof (JniTransition).GetTypeInfo ().GetDeclaredMethod ("SetPendingException");
 			var ex      = Expression.Variable (typeof (Exception), "__e");
 			var body = new List<Expression> () {
 				Expression.Call (envp, spe, ex),
@@ -109,7 +113,7 @@ namespace Java.Interop {
 
 		static Expression CreateDisposeJniTransition (ParameterExpression envp)
 		{
-			return Expression.Call (envp, typeof (JniTransition).GetMethod ("Dispose"));
+			return Expression.Call (envp, typeof (JniTransition).GetTypeInfo ().GetDeclaredMethod ("Dispose"));
 		}
 	}
 }

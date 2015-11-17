@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Collections.Generic;
+using System.Reflection;
 
 namespace Java.Interop {
 
@@ -11,7 +12,7 @@ namespace Java.Interop {
 		{
 			if (managedPeerType == null)
 				throw new ArgumentNullException ("managedPeerType");
-			if (!typeof (IJavaPeerable).IsAssignableFrom (managedPeerType))
+			if (!typeof (IJavaPeerable).GetTypeInfo ().IsAssignableFrom (managedPeerType.GetTypeInfo ()))
 				throw new ArgumentException ("'managedPeerType' must implement the IJavaPeerable interface.", "managedPeerType");
 
 #if !XA_INTEGRATION
@@ -34,7 +35,7 @@ namespace Java.Interop {
 			if (checkManagedPeerType) {
 				if (managedPeerType == null)
 					throw new ArgumentNullException (nameof (managedPeerType));
-				if (!typeof (IJavaPeerable).IsAssignableFrom (managedPeerType))
+				if (!typeof (IJavaPeerable).GetTypeInfo ().IsAssignableFrom (managedPeerType.GetTypeInfo ()))
 					throw new ArgumentException ("'managedPeerType' must implement the IJavaPeerable interface.", "managedPeerType");
 
 #if !XA_INTEGRATION

@@ -85,6 +85,7 @@ namespace Xamarin.Java.Interop
 			o.WriteLine ();
 			o.WriteLine ("using System;");
 			o.WriteLine ("using System.Linq;");
+			o.WriteLine ("using System.Runtime.ExceptionServices;");
 			o.WriteLine ("using System.Runtime.InteropServices;");
 			o.WriteLine ("using System.Threading;");
 			o.WriteLine ();
@@ -407,7 +408,7 @@ namespace Xamarin.Java.Interop
 			o.WriteLine ("\t\t\tException __e = JniEnvironment.GetExceptionForLastThrowable ({0});",
 					style == HandleStyle.JIIntPtrPinvokeWithErrors ? "thrown" : "");
 			o.WriteLine ("\t\t\tif (__e != null)");
-			o.WriteLine ("\t\t\t\tthrow __e;");
+			o.WriteLine ("\t\t\t\tExceptionDispatchInfo.Capture (__e).Throw ();");
 			o.WriteLine ();
 		}
 

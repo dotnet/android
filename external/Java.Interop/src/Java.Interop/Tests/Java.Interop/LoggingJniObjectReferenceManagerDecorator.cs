@@ -25,6 +25,12 @@ namespace Java.InteropTests {
 			grefLog         = grefOutput;
 		}
 
+		public override void OnSetRuntime (JniRuntime runtime)
+		{
+			base.OnSetRuntime (runtime);
+			manager.OnSetRuntime (runtime);
+		}
+
 		public override int GlobalReferenceCount {
 			get {return manager.GlobalReferenceCount;}
 		}

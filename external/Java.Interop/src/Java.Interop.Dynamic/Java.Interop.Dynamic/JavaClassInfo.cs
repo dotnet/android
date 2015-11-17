@@ -38,10 +38,10 @@ namespace Java.Interop.Dynamic {
 
 		static JavaClassInfo ()
 		{
-			CreatePeerMembers = (Func<string, Type, JniPeerMembers>)
-				Delegate.CreateDelegate (
-					typeof(Func<string, Type, JniPeerMembers>),
-					typeof(JniPeerMembers).GetMethod ("CreatePeerMembers", BindingFlags.NonPublic | BindingFlags.Static));
+			CreatePeerMembers = (Func<string, Type, JniPeerMembers>) typeof (JniPeerMembers)
+				.GetTypeInfo ()
+				.GetDeclaredMethod ("CreatePeerMembers")
+				.CreateDelegate (typeof (Func<string, Type, JniPeerMembers>));
 			if (CreatePeerMembers == null)
 				throw new NotSupportedException ("Could not find JniPeerMembers.CreatePeerMembers!");
 

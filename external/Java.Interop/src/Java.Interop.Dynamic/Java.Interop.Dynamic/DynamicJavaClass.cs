@@ -123,7 +123,7 @@ namespace Java.Interop.Dynamic {
 				var call        = Expression.Block (
 						new[]{value},
 						Expression.Condition (
-							test:       Expression.Call (Expression.Constant (klass.info), invoke.Method,
+							test:       Expression.Call (Expression.Constant (klass.info), invoke.GetMethodInfo (),
 								Expression.Constant (null, typeof (IJavaPeerable)), Expression.Constant (applicable), Expression.Constant (args), value),
 							ifTrue:     value,
 							ifFalse:    fallback.Expression)

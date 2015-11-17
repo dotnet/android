@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Diagnostics;
+using System.Reflection;
 
 namespace Java.Interop {
 
@@ -64,8 +65,8 @@ namespace Java.Interop {
 			var signature   = jvm.TypeManager.GetTypeSignature (JniEnvironment.Types.GetJniTypeNameFromInstance (reference));
 			var targetType  = jvm.TypeManager.GetType (signature);
 			if (targetType != null &&
-					typeof (T).IsAssignableFrom (targetType) &&
-				(info = jvm.ValueMarshaler.GetJniMarshalInfoForType (targetType)).GetValueFromJni != null) {
+					typeof (T).GetTypeInfo ().IsAssignableFrom (targetType.GetTypeInfo ()) &&
+					(info = jvm.ValueMarshaler.GetJniMarshalInfoForType (targetType)).GetValueFromJni != null) {
 				return (T) info.GetValueFromJni (ref reference, transfer, targetType);
 			}
 

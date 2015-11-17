@@ -119,8 +119,8 @@ namespace Java.Interop {
 			var c           = localRefs.FirstOrDefault (r => r.Contains (value));
 			if (c == null) {
 				Runtime.ObjectReferenceManager.WriteLocalReferenceLine (
-						"Deleting JNI local reference handle 0x{0} from wrong thread id={1}! Ignoring...",
-						handle.ToString ("x"), Thread.CurrentThread.ManagedThreadId);
+						"Deleting JNI local reference handle 0x{0} from wrong thread {1}! Ignoring...",
+						handle.ToString ("x"), Runtime.GetCurrentThreadDescription ());
 				Runtime.ObjectReferenceManager.WriteLocalReferenceLine ("{0}",
 						System.Activator.CreateInstance (Type.GetType ("System.Diagnostics.StackTrace")));
 				return;

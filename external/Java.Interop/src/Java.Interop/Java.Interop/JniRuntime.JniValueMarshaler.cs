@@ -20,9 +20,9 @@ namespace Java.Interop
 
 		public class JniValueMarshaler : ISetRuntime, IDisposable {
 
-			protected   JniRuntime  Runtime { get; private set; }
+			public      JniRuntime  Runtime { get; private set; }
 
-			void ISetRuntime.SetRuntime (JniRuntime runtime)
+			public virtual void OnSetRuntime (JniRuntime runtime)
 			{
 				Runtime = runtime;
 			}
@@ -221,7 +221,7 @@ namespace Java.Interop
 					return null;
 
 				var existing = PeekObject (reference);
-				if (existing != null && (targetType == null || targetType.IsInstanceOfType (existing))) {
+				if (existing != null && (targetType == null || targetType.GetTypeInfo ().IsAssignableFrom (existing.GetType ().GetTypeInfo ()))) {
 					JniObjectReference.Dispose (ref reference, transfer);
 					return existing;
 				}
@@ -232,7 +232,7 @@ namespace Java.Interop
 			protected virtual IJavaPeerable CreateObjectWrapper (ref JniObjectReference reference, JniObjectReferenceOptions transfer, Type targetType)
 			{
 				targetType  = targetType ?? typeof (JavaObject);
-				if (!typeof (IJavaPeerable).IsAssignableFrom (targetType))
+				if (!typeof (IJavaPeerable).GetTypeInfo ().IsAssignableFrom (targetType.GetTypeInfo ()))
 					throw new ArgumentException ("targetType must implement IJavaPeerable!", "targetType");
 
 				var ctor = GetWrapperConstructor (reference, targetType);
@@ -263,10 +263,7 @@ namespace Java.Interop
 					type = Runtime.TypeManager.GetType (Runtime.TypeManager.GetTypeSignature (jniTypeName));
 
 					if (type != null) {
-						var ctor    = type.GetConstructor (new[] {
-							ByRefJniObjectReference,
-							typeof(JniObjectReferenceOptions)
-						});
+						var ctor = GetActivationConstructor (type);
 
 						if (ctor != null) {
 							JniObjectReference.Dispose (ref klass);
@@ -284,10 +281,17 @@ namespace Java.Interop
 				}
 				JniObjectReference.Dispose (ref klass, JniObjectReferenceOptions.DisposeSourceReference);
 
-				return fallbackType.GetConstructor (new[] {
-					ByRefJniObjectReference,
-					typeof(JniObjectReferenceOptions)
-				});
+				return GetActivationConstructor (fallbackType);
+			}
+
+			static ConstructorInfo GetActivationConstructor (Type type)
+			{
+				return
+					(from c in type.GetTypeInfo ().DeclaredConstructors
+					 let p = c.GetParameters ()
+					 where p.Length == 2 && p [0].ParameterType == ByRefJniObjectReference && p [1].ParameterType == typeof (JniObjectReferenceOptions)
+					 select c)
+				.FirstOrDefault ();
 			}
 
 			public T GetObject<T> (ref JniObjectReference reference, JniObjectReferenceOptions transfer)
@@ -314,7 +318,8 @@ namespace Java.Interop
 			{
 				if (type == null)
 					throw new ArgumentNullException ("type");
-				if (type.ContainsGenericParameters)
+				var info = type.GetTypeInfo ();
+				if (info.ContainsGenericParameters)
 					throw new ArgumentException ("Generic type definitions are not supported.", "type");
 
 				if (typeof (IJavaPeerable) == type)
@@ -325,11 +330,11 @@ namespace Java.Interop
 						return marshaler.Value;
 				}
 
-				var listType = type.GetInterfaces ()
-					.FirstOrDefault (i => i.IsGenericType && i.GetGenericTypeDefinition () == typeof (IList<>));
+				var listType = info.ImplementedInterfaces
+					.FirstOrDefault (i => i.GetTypeInfo ().IsGenericType && i.GetGenericTypeDefinition () == typeof (IList<>));
 				if (listType != null) {
-					var elementType = listType.GetGenericArguments () [0];
-					if (elementType.IsValueType) {
+					var elementType = listType.GetTypeInfo ().GenericTypeArguments [0];
+					if (elementType.GetTypeInfo ().IsValueType) {
 						foreach (var marshaler in JniPrimitiveArrayMarshalers) {
 							if (marshaler.Key == type)
 								return marshaler.Value;
@@ -349,7 +354,7 @@ namespace Java.Interop
 					};
 				}
 
-				if (typeof (IJavaPeerable).IsAssignableFrom (type)) {
+				if (typeof (IJavaPeerable).GetTypeInfo ().IsAssignableFrom (type.GetTypeInfo ())) {
 					return DefaultObjectMarshaler;
 				}
 				return new JniMarshalInfo ();
@@ -358,9 +363,7 @@ namespace Java.Interop
 			static TDelegate CreateMethodDelegate<TDelegate>(Type type, string methodName)
 				where TDelegate : class
 			{
-				return (TDelegate) (object) Delegate.CreateDelegate (
-						typeof (TDelegate),
-						type.GetMethod (methodName, BindingFlags.Static | BindingFlags.NonPublic));
+				return (TDelegate) (object) type.GetTypeInfo ().GetDeclaredMethod (methodName).CreateDelegate (typeof (TDelegate));
 			}
 
 			static readonly JniMarshalInfo DefaultObjectMarshaler = new JniMarshalInfo {
