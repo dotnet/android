@@ -12,8 +12,8 @@ namespace Java.InteropTests
 		[Test]
 		public void CreateJavaVM ()
 		{
-			Assert.AreSame (JniRuntime.Current, JniRuntime.Current);
-			Assert.IsTrue (JniRuntime.Current.InvocationPointer != IntPtr.Zero);
+			Assert.AreSame (JniRuntime.CurrentRuntime, JniRuntime.CurrentRuntime);
+			Assert.IsTrue (JniRuntime.CurrentRuntime.InvocationPointer != IntPtr.Zero);
 			Assert.IsTrue (JniEnvironment.EnvironmentPointer != IntPtr.Zero);
 		}
 
@@ -49,7 +49,7 @@ namespace Java.InteropTests
 		[Test]
 		public void GetRegisteredJavaVM_ExistingInstance ()
 		{
-			Assert.AreEqual (JniRuntime.Current, JniRuntime.GetRegisteredRuntime (JniRuntime.Current.InvocationPointer));
+			Assert.AreEqual (JniRuntime.CurrentRuntime, JniRuntime.GetRegisteredRuntime (JniRuntime.CurrentRuntime.InvocationPointer));
 		}
 
 		[Test]
@@ -57,7 +57,7 @@ namespace Java.InteropTests
 		{
 			var local   = new JavaObject ();
 			local.UnregisterFromRuntime ();
-			Assert.IsNull (JniRuntime.Current.ValueMarshaler.PeekObject (local.PeerReference));
+			Assert.IsNull (JniRuntime.CurrentRuntime.ValueMarshaler.PeekObject (local.PeerReference));
 			// GetObject must always return a value (unless handle is null, etc.).
 			// However, since we called local.UnregisterFromRuntime(),
 			// JniRuntime.PeekObject() is null (asserted above), but GetObject() must
@@ -65,7 +65,7 @@ namespace Java.InteropTests
 			// In this case, it returns an _alias_.
 			// TODO: "most derived type" alias generation. (Not relevant here, but...)
 			var p       = local.PeerReference;
-			var alias   = JniRuntime.Current.ValueMarshaler.GetObject (ref p, JniObjectReferenceOptions.CreateNewReference);
+			var alias   = JniRuntime.CurrentRuntime.ValueMarshaler.GetObject (ref p, JniObjectReferenceOptions.CreateNewReference);
 			Assert.AreNotSame (local, alias);
 			alias.Dispose ();
 			local.Dispose ();
@@ -74,7 +74,7 @@ namespace Java.InteropTests
 		[Test]
 		public void GetObject_ReturnsNullWithNullHandle ()
 		{
-			var o = JniRuntime.Current.ValueMarshaler.GetObject (IntPtr.Zero);
+			var o = JniRuntime.CurrentRuntime.ValueMarshaler.GetObject (IntPtr.Zero);
 			Assert.IsNull (o);
 		}
 
@@ -84,12 +84,12 @@ namespace Java.InteropTests
 			JniObjectReference lref;
 			using (var o = new JavaObject ()) {
 				lref = o.PeerReference.NewLocalRef ();
-				Assert.AreSame (o, JniRuntime.Current.ValueMarshaler.PeekObject (lref));
+				Assert.AreSame (o, JniRuntime.CurrentRuntime.ValueMarshaler.PeekObject (lref));
 			}
 			// At this point, the Java-side object is kept alive by `lref`,
 			// but the wrapper instance has been disposed, and thus should
 			// be unregistered, and thus unfindable.
-			Assert.IsNull (JniRuntime.Current.ValueMarshaler.PeekObject (lref));
+			Assert.IsNull (JniRuntime.CurrentRuntime.ValueMarshaler.PeekObject (lref));
 			JniObjectReference.Dispose (ref lref);
 		}
 
@@ -97,7 +97,7 @@ namespace Java.InteropTests
 		public void GetObject_ReturnsNullWithInvalidSafeHandle ()
 		{
 			var invalid = new JniObjectReference ();
-			Assert.IsNull (JniRuntime.Current.ValueMarshaler.GetObject (ref invalid, JniObjectReferenceOptions.DisposeSourceReference));
+			Assert.IsNull (JniRuntime.CurrentRuntime.ValueMarshaler.GetObject (ref invalid, JniObjectReferenceOptions.DisposeSourceReference));
 		}
 
 		[Test]
@@ -106,7 +106,7 @@ namespace Java.InteropTests
 			using (var t = new JniType (TestType.JniTypeName)) {
 				var c = t.GetConstructor ("()V");
 				var o = t.NewObject (c, null);
-				using (var w = JniRuntime.Current.ValueMarshaler.GetObject (ref o, JniObjectReferenceOptions.DisposeSourceReference)) {
+				using (var w = JniRuntime.CurrentRuntime.ValueMarshaler.GetObject (ref o, JniObjectReferenceOptions.DisposeSourceReference)) {
 					Assert.AreEqual (typeof (TestType), w.GetType ());
 				}
 			}
@@ -184,7 +184,7 @@ namespace Java.InteropTests
 							message);
 				}
 			};
-			var info = JniRuntime.Current.ValueMarshaler.GetJniMarshalInfoForType (type);
+			var info = JniRuntime.CurrentRuntime.ValueMarshaler.GetJniMarshalInfoForType (type);
 			assertMethod (getValue,                 info.GetValueFromJni,           "GetValueFromJni");
 			assertMethod (createJValue,             info.CreateJniArgumentValue,    "CreateJniArgumentValue");
 			assertMethod (createLocalRef,           info.CreateLocalRef,            "CreateLocalRef");
@@ -198,7 +198,7 @@ namespace Java.InteropTests
 					getValue:       type + ".GetValueFromJni",
 					createJValue:   type + ".CreateJniArgumentValue",
 					createLocalRef: type + ".CreateLocalRef");
-			var info = JniRuntime.Current.ValueMarshaler.GetJniMarshalInfoForType (typeof(T));
+			var info = JniRuntime.CurrentRuntime.ValueMarshaler.GetJniMarshalInfoForType (typeof(T));
 			info.CreateJniArgumentValue (default (T));
 			var lref = info.CreateLocalRef (default (T));
 			Assert.AreEqual (default (T), info.GetValueFromJni (ref lref, JniObjectReferenceOptions.CreateNewReference, null));

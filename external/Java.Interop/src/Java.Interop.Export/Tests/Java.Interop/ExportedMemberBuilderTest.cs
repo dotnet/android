@@ -48,7 +48,7 @@ namespace Java.InteropTests
 
 		static ExportedMemberBuilder CreateBuilder ()
 		{
-			return new ExportedMemberBuilder (JniRuntime.Current);
+			return new ExportedMemberBuilder (JniRuntime.CurrentRuntime);
 		}
 
 		static JniType CreateExportTestType ()

@@ -91,7 +91,7 @@ namespace Java.Interop
 		}
 
 		static JniRuntime current;
-		public static JniRuntime Current {
+		public static JniRuntime CurrentRuntime {
 			get {
 				var c   = current;
 				if (c != null)

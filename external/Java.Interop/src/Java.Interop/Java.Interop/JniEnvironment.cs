@@ -199,7 +199,7 @@ namespace Java.Interop {
 
 		public JniEnvironmentInfo ()
 		{
-			Runtime             = JniRuntime.Current;
+			Runtime             = JniRuntime.CurrentRuntime;
 			EnvironmentPointer  = Runtime._AttachCurrentThread ();
 		}
 

@@ -76,8 +76,8 @@ namespace Java.Interop {
 
 		public static new JniRuntime Current {
 			get {
-				if (JniRuntime.Current != null)
-					return JniRuntime.Current;
+				if (JniRuntime.CurrentRuntime != null)
+					return JniRuntime.CurrentRuntime;
 				IntPtr              h       = IntPtr.Zero;
 				int                 count   = 0;
 				foreach (var vmh in GetCreatedJavaVMHandles ()) {

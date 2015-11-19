@@ -12,12 +12,12 @@ namespace Java.InteropTests
 		[Test]
 		public void GetTypeSignature_Type ()
 		{
-			Assert.Throws<ArgumentNullException> (() => JniRuntime.Current.TypeManager.GetTypeSignature ((Type) null));
-			Assert.Throws<ArgumentException>(() => JniRuntime.Current.TypeManager.GetTypeSignature (typeof (int[,])));
-			Assert.Throws<ArgumentException>(() => JniRuntime.Current.TypeManager.GetTypeSignature (typeof (int[,][])));
-			Assert.Throws<ArgumentException>(() => JniRuntime.Current.TypeManager.GetTypeSignature (typeof (int[][,])));
-			Assert.Throws<ArgumentException>(() => JniRuntime.Current.TypeManager.GetTypeSignature (typeof (Action<>)));
-			Assert.AreEqual (null, JniRuntime.Current.TypeManager.GetTypeSignature (typeof (JniRuntimeTest)).SimpleReference);
+			Assert.Throws<ArgumentNullException> (() => JniRuntime.CurrentRuntime.TypeManager.GetTypeSignature ((Type) null));
+			Assert.Throws<ArgumentException>(() => JniRuntime.CurrentRuntime.TypeManager.GetTypeSignature (typeof (int[,])));
+			Assert.Throws<ArgumentException>(() => JniRuntime.CurrentRuntime.TypeManager.GetTypeSignature (typeof (int[,][])));
+			Assert.Throws<ArgumentException>(() => JniRuntime.CurrentRuntime.TypeManager.GetTypeSignature (typeof (int[][,])));
+			Assert.Throws<ArgumentException>(() => JniRuntime.CurrentRuntime.TypeManager.GetTypeSignature (typeof (Action<>)));
+			Assert.AreEqual (null, JniRuntime.CurrentRuntime.TypeManager.GetTypeSignature (typeof (JniRuntimeTest)).SimpleReference);
 
 			AssertGetJniTypeInfoForType (typeof (string),   "java/lang/String",   false,  0);
 
@@ -78,7 +78,7 @@ namespace Java.InteropTests
 
 		static void AssertGetJniTypeInfoForType (Type type, string jniType, bool isKeyword, int arrayRank)
 		{
-			var info = JniRuntime.Current.TypeManager.GetTypeSignature (type);
+			var info = JniRuntime.CurrentRuntime.TypeManager.GetTypeSignature (type);
 			Assert.AreEqual (jniType,   info.Name);
 			Assert.AreEqual (arrayRank, info.ArrayRank);
 		}
@@ -86,7 +86,7 @@ namespace Java.InteropTests
 		[Test]
 		public new void GetType ()
 		{
-			var manager = JniRuntime.Current.TypeManager;
+			var manager = JniRuntime.CurrentRuntime.TypeManager;
 			Func<string, Type> GetType = s => {
 				var sig = manager.GetTypeSignature (s);
 				return manager.GetType (sig);
@@ -140,10 +140,10 @@ namespace Java.InteropTests
 		[Test]
 		public void GetTypeSignature_String ()
 		{
-			Assert.Throws<ArgumentNullException> (() => JniRuntime.Current.TypeManager.GetTypeSignature ((string) null));
-			Assert.Throws<ArgumentException> (() => JniRuntime.Current.TypeManager.GetTypeSignature ("java.lang.String"));
-			Assert.Throws<ArgumentException> (() => JniRuntime.Current.TypeManager.GetTypeSignature ("Ljava/lang/String;I"));
-			Assert.Throws<ArgumentException> (() => JniRuntime.Current.TypeManager.GetTypeSignature ("ILjava/lang/String;"));
+			Assert.Throws<ArgumentNullException> (() => JniRuntime.CurrentRuntime.TypeManager.GetTypeSignature ((string) null));
+			Assert.Throws<ArgumentException> (() => JniRuntime.CurrentRuntime.TypeManager.GetTypeSignature ("java.lang.String"));
+			Assert.Throws<ArgumentException> (() => JniRuntime.CurrentRuntime.TypeManager.GetTypeSignature ("Ljava/lang/String;I"));
+			Assert.Throws<ArgumentException> (() => JniRuntime.CurrentRuntime.TypeManager.GetTypeSignature ("ILjava/lang/String;"));
 
 			AssertGetJniTypeInfoForJniTypeReference ("java/lang/String",    "java/lang/String");
 			AssertGetJniTypeInfoForJniTypeReference ("Ljava/lang/String;",  "java/lang/String");
@@ -160,7 +160,7 @@ namespace Java.InteropTests
 
 		static void AssertGetJniTypeInfoForJniTypeReference (string jniTypeReference, string jniTypeName, bool typeIsKeyword = false, int arrayRank = 0)
 		{
-			var info    = JniRuntime.Current.TypeManager.GetTypeSignature (jniTypeReference);
+			var info    = JniRuntime.CurrentRuntime.TypeManager.GetTypeSignature (jniTypeReference);
 			Assert.AreEqual (jniTypeName,   info.SimpleReference,   "JniTypeName for: " + jniTypeReference);
 			Assert.AreEqual (arrayRank,     info.ArrayRank,     "ArrayRank for: " + jniTypeReference);
 		}
@@ -168,7 +168,7 @@ namespace Java.InteropTests
 		[Test]
 		public void GetTypeSignature ()
 		{
-			var jvm = JniRuntime.Current;
+			var jvm = JniRuntime.CurrentRuntime;
 			Func<string, Type> GetTypeForSimpleReference = s => {
 				var sig     = jvm.TypeManager.GetTypeSignature (s);
 				return jvm.TypeManager.GetType (sig);

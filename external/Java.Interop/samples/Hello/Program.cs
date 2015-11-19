@@ -11,7 +11,7 @@ namespace Hello
 		{
 			Console.WriteLine ("Hello World!");
 			try {
-				var ignore = JniRuntime.Current;
+				var ignore = JniRuntime.CurrentRuntime;
 			} catch (InvalidOperationException e) {
 				Console.WriteLine (e);
 			}
