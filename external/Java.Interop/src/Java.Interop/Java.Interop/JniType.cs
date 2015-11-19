@@ -154,9 +154,7 @@ namespace Java.Interop {
 			}
 #endif  // !XA_INTEGRATION
 
-			int r = JniEnvironment.Types.RegisterNatives (PeerReference, methods, checked ((int)methods.Length));
-			if (r != 0)
-				throw new InvalidOperationException ("Unable to register native methods.");
+			JniEnvironment.Types.RegisterNatives (PeerReference, methods, checked ((int)methods.Length));
 			// Prevents method delegates from being GC'd so long as this type remains
 			this.methods = methods;
 			RegisterWithRuntime ();

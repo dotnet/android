@@ -128,6 +128,24 @@ namespace Java.Interop
 				}
 				return value.Replace ('.', '/');
 			}
+
+			public static void RegisterNatives (JniObjectReference klass, JniNativeMethodRegistration [] methods, int numMethods)
+			{
+				int r   = _RegisterNatives (klass, methods, numMethods);
+
+				if (r != 0) {
+					throw new InvalidOperationException (string.Format ("Could not get JavaVM; JNIEnv::RegisterNatives() returned {0}.", r));
+				}
+			}
+
+			public static void UnregisterNatives (JniObjectReference klass)
+			{
+				int r   = _UnregisterNatives (klass);
+
+				if (r != 0) {
+					throw new InvalidOperationException (string.Format ("Could not get JavaVM; JNIEnv::UnregisterNatives() returned {0}.", r));
+				}
+			}
 		}
 	}
 }

@@ -54,7 +54,9 @@
     <Compile Include="Java.Interop\JniArgumentValue.cs" />
     <Compile Include="Java.Interop\JniEnvironment.cs" />
     <Compile Include="Java.Interop\JniEnvironment.g.cs" />
+    <Compile Include="Java.Interop\JniEnvironment.Errors.cs" />
     <Compile Include="Java.Interop\JniEnvironment.Object.cs" />
+    <Compile Include="Java.Interop\JniEnvironment.Monitors.cs" />
     <Compile Include="Java.Interop\JniEnvironment.References.cs" />
     <Compile Include="Java.Interop\JniEnvironment.Strings.cs" />
     <Compile Include="Java.Interop\JniEnvironment.Types.cs" />
@@ -103,7 +105,6 @@
     <Compile Include="Java.Interop\JniBuiltinMarshalers.cs">
       <DependentUpon>JniBuiltinMarshalers.tt</DependentUpon>
     </Compile>
-    <Compile Include="Java.Interop\JniEnvironment.Errors.cs" />
     <Compile Include="Java.Interop\JniGlobalReference.cs" />
     <Compile Include="Java.Interop\JniLocalReference.cs" />
     <Compile Include="Java.Interop\JniMarshal.cs" />

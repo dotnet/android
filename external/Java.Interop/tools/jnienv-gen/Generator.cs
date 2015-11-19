@@ -703,7 +703,7 @@ namespace Xamarin.Java.Interop
 		public override string[] GetMarshalToManagedStatements (HandleStyle style, string variable)
 		{
 			return new string[] {
-				string.Format ("return ({0} > 0) ? true : false;", variable),
+				string.Format ("return ({0} != 0) ? true : false;", variable),
 			};
 		}
 

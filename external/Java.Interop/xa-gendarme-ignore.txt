@@ -34,7 +34,7 @@ T: Java.Interop.JniTypeSignature
 
 R: Gendarme.Rules.Design.AvoidRefAndOutParametersRule
 # JniEnvironment.References mirros native API
-M: System.Int32 Java.Interop.JniEnvironment/References::GetJavaVM(System.IntPtr&)
+M: System.Void Java.Interop.JniEnvironment/References::GetJavaVM(System.IntPtr&)
 
 # Use of `int&` is to avoid making JniEnvironmentInfo public; see a314ad82
 M: Java.Interop.JniObjectReference Java.Interop.JniRuntime/JniObjectReferenceManager::CreateLocalReference(Java.Interop.JniObjectReference,System.Int32&)
@@ -320,6 +320,15 @@ R: Gendarme.Rules.Naming.UseCorrectCasingRule
 # These are `internal`. Don't care.
 M: Java.Interop.JniObjectReference Java.Interop.JniEnvironment/Types::_FindClass(System.String)
 M: System.IntPtr Java.Interop.JniRuntime::_AttachCurrentThread(System.String,Java.Interop.JniObjectReference)
+M: System.Int32 Java.Interop.JniEnvironment/References::_PushLocalFrame(System.Int32)
+M: System.Int32 Java.Interop.JniEnvironment/References::_EnsureLocalCapacity(System.Int32)
+M: System.Int32 Java.Interop.JniEnvironment/References::_GetJavaVM(System.IntPtr&)
+M: System.Int32 Java.Interop.JniEnvironment/Exceptions::_Throw(Java.Interop.JniObjectReference)
+M: System.Int32 Java.Interop.JniEnvironment/Exceptions::_ThrowNew(Java.Interop.JniObjectReference,System.String)
+M: System.Int32 Java.Interop.JniEnvironment/Monitors::_MonitorEnter(Java.Interop.JniObjectReference)
+M: System.Int32 Java.Interop.JniEnvironment/Monitors::_MonitorExit(Java.Interop.JniObjectReference)
+M: System.Int32 Java.Interop.JniEnvironment/Types::_RegisterNatives(Java.Interop.JniObjectReference,Java.Interop.JniNativeMethodRegistration[],System.Int32)
+M: System.Int32 Java.Interop.JniEnvironment/Types::_UnregisterNatives(Java.Interop.JniObjectReference)
 
 
 R: Gendarme.Rules.Naming.UseCorrectSuffixRule

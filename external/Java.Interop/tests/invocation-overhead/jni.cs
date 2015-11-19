@@ -18,6 +18,7 @@
 
 using System;
 using System.Linq;
+using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using System.Threading;
 
@@ -398,7 +399,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
@@ -416,7 +417,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
@@ -434,7 +435,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -716,7 +717,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -734,7 +735,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -752,7 +753,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -770,7 +771,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -788,7 +789,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -806,7 +807,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -824,7 +825,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -842,7 +843,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -860,7 +861,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -878,7 +879,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -896,7 +897,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -914,7 +915,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -932,7 +933,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -950,7 +951,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -968,7 +969,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -986,14 +987,14 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 	}
 
 	public static partial class Exceptions {
 
-		public static unsafe int Throw (JniObjectReference toThrow)
+		internal static unsafe int _Throw (JniObjectReference toThrow)
 		{
 			if (toThrow.SafeHandle == null)
 				throw new ArgumentNullException ("toThrow");
@@ -1005,7 +1006,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe int ThrowNew (JniObjectReference klass, string message)
+		internal static unsafe int _ThrowNew (JniObjectReference klass, string message)
 		{
 			if (klass.SafeHandle == null)
 				throw new ArgumentNullException ("klass");
@@ -1051,7 +1052,7 @@ namespace
 		{
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.ExceptionCheck (__info.EnvironmentPointer);
-			return (tmp > 0) ? true : false;
+			return (tmp != 0) ? true : false;
 		}
 	}
 
@@ -1073,7 +1074,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			if (tmp == IntPtr.Zero)
 				return null;
@@ -1110,7 +1111,7 @@ namespace
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.GetBooleanField (__info.EnvironmentPointer, @object.SafeHandle, field.ID);
-			return (tmp > 0) ? true : false;
+			return (tmp != 0) ? true : false;
 		}
 
 		public static unsafe sbyte GetByteField (JniObjectReference @object, JniInstanceFieldInfo field)
@@ -1379,7 +1380,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			if (tmp == IntPtr.Zero)
 				return null;
@@ -1402,7 +1403,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
@@ -1424,7 +1425,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
@@ -1446,9 +1447,9 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
-			return (tmp > 0) ? true : false;
+			return (tmp != 0) ? true : false;
 		}
 
 		public static unsafe bool CallBooleanMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
@@ -1467,9 +1468,9 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
-			return (tmp > 0) ? true : false;
+			return (tmp != 0) ? true : false;
 		}
 
 		public static unsafe sbyte CallByteMethod (JniObjectReference @object, JniInstanceMethodInfo method)
@@ -1488,7 +1489,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -1509,7 +1510,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -1530,7 +1531,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -1551,7 +1552,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -1572,7 +1573,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -1593,7 +1594,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -1614,7 +1615,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -1635,7 +1636,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -1656,7 +1657,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -1677,7 +1678,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -1698,7 +1699,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -1719,7 +1720,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -1740,7 +1741,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -1761,7 +1762,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -1782,7 +1783,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -1802,7 +1803,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -1826,7 +1827,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
@@ -1852,7 +1853,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
@@ -1878,9 +1879,9 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
-			return (tmp > 0) ? true : false;
+			return (tmp != 0) ? true : false;
 		}
 
 		public static unsafe bool CallNonvirtualBooleanMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
@@ -1903,9 +1904,9 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
-			return (tmp > 0) ? true : false;
+			return (tmp != 0) ? true : false;
 		}
 
 		public static unsafe sbyte CallNonvirtualByteMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method)
@@ -1928,7 +1929,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -1953,7 +1954,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -1978,7 +1979,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -2003,7 +2004,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -2028,7 +2029,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -2053,7 +2054,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -2078,7 +2079,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -2103,7 +2104,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -2128,7 +2129,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -2153,7 +2154,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -2178,7 +2179,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -2203,7 +2204,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -2228,7 +2229,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -2253,7 +2254,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -2278,7 +2279,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -2302,7 +2303,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 	}
@@ -2319,7 +2320,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
@@ -2352,7 +2353,7 @@ namespace
 
 	public static partial class Monitors {
 
-		public static unsafe int MonitorEnter (JniObjectReference @object)
+		internal static unsafe int _MonitorEnter (JniObjectReference @object)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("object");
@@ -2364,7 +2365,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe int MonitorExit (JniObjectReference @object)
+		internal static unsafe int _MonitorExit (JniObjectReference @object)
 		{
 			if (@object.SafeHandle == null)
 				throw new ArgumentNullException ("object");
@@ -2391,7 +2392,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
@@ -2413,7 +2414,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
@@ -2435,7 +2436,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
@@ -2444,7 +2445,7 @@ namespace
 
 	public static partial class References {
 
-		public static unsafe int PushLocalFrame (int capacity)
+		internal static unsafe int _PushLocalFrame (int capacity)
 		{
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.PushLocalFrame (__info.EnvironmentPointer, capacity);
@@ -2485,14 +2486,14 @@ namespace
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		public static unsafe int EnsureLocalCapacity (int capacity)
+		internal static unsafe int _EnsureLocalCapacity (int capacity)
 		{
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.EnsureLocalCapacity (__info.EnvironmentPointer, capacity);
 			return tmp;
 		}
 
-		public static unsafe int GetJavaVM (out IntPtr vm)
+		internal static unsafe int _GetJavaVM (out IntPtr vm)
 		{
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.GetJavaVM (__info.EnvironmentPointer, out vm);
@@ -2540,6 +2541,11 @@ namespace
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.ToReflectedMethod (__info.EnvironmentPointer, klass.SafeHandle, method.ID, (isStatic ? (byte) 1 : (byte) 0));
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
@@ -2557,6 +2563,11 @@ namespace
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.ToReflectedField (__info.EnvironmentPointer, klass.SafeHandle, field.ID, (isStatic ? (byte) 1 : (byte) 0));
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
@@ -2580,7 +2591,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			if (tmp == IntPtr.Zero)
 				return null;
@@ -2617,7 +2628,7 @@ namespace
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.GetStaticBooleanField (__info.EnvironmentPointer, klass.SafeHandle, field.ID);
-			return (tmp > 0) ? true : false;
+			return (tmp != 0) ? true : false;
 		}
 
 		public static unsafe sbyte GetStaticByteField (JniObjectReference klass, JniStaticFieldInfo field)
@@ -2886,7 +2897,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			if (tmp == IntPtr.Zero)
 				return null;
@@ -2909,7 +2920,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
@@ -2931,7 +2942,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
@@ -2953,9 +2964,9 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
-			return (tmp > 0) ? true : false;
+			return (tmp != 0) ? true : false;
 		}
 
 		public static unsafe bool CallStaticBooleanMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
@@ -2974,9 +2985,9 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
-			return (tmp > 0) ? true : false;
+			return (tmp != 0) ? true : false;
 		}
 
 		public static unsafe sbyte CallStaticByteMethod (JniObjectReference klass, JniStaticMethodInfo method)
@@ -2995,7 +3006,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -3016,7 +3027,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -3037,7 +3048,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -3058,7 +3069,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -3079,7 +3090,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -3100,7 +3111,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -3121,7 +3132,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -3142,7 +3153,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -3163,7 +3174,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -3184,7 +3195,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -3205,7 +3216,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -3226,7 +3237,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -3247,7 +3258,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -3268,7 +3279,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -3289,7 +3300,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -3309,7 +3320,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 	}
@@ -3326,7 +3337,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
@@ -3388,7 +3399,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
@@ -3404,7 +3415,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
@@ -3436,14 +3447,14 @@ namespace
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.IsAssignableFrom (__info.EnvironmentPointer, class1.SafeHandle, class2.SafeHandle);
-			return (tmp > 0) ? true : false;
+			return (tmp != 0) ? true : false;
 		}
 
 		public static unsafe bool IsSameObject (JniObjectReference object1, JniObjectReference object2)
 		{
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.IsSameObject (__info.EnvironmentPointer, object1.SafeHandle, object2.SafeHandle);
-			return (tmp > 0) ? true : false;
+			return (tmp != 0) ? true : false;
 		}
 
 		public static unsafe JniObjectReference GetObjectClass (JniObjectReference @object)
@@ -3472,10 +3483,10 @@ namespace
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.IsInstanceOf (__info.EnvironmentPointer, @object.SafeHandle, klass.SafeHandle);
-			return (tmp > 0) ? true : false;
+			return (tmp != 0) ? true : false;
 		}
 
-		public static unsafe int RegisterNatives (JniObjectReference klass, JniNativeMethodRegistration [] methods, int numMethods)
+		internal static unsafe int _RegisterNatives (JniObjectReference klass, JniNativeMethodRegistration [] methods, int numMethods)
 		{
 			if (klass.SafeHandle == null)
 				throw new ArgumentNullException ("klass");
@@ -3487,12 +3498,12 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
 
-		public static unsafe int UnregisterNatives (JniObjectReference klass)
+		internal static unsafe int _UnregisterNatives (JniObjectReference klass)
 		{
 			if (klass.SafeHandle == null)
 				throw new ArgumentNullException ("klass");
@@ -5424,7 +5435,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
@@ -5440,7 +5451,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
@@ -5456,7 +5467,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -5704,7 +5715,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -5720,7 +5731,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -5736,7 +5747,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -5752,7 +5763,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -5768,7 +5779,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -5784,7 +5795,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -5800,7 +5811,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -5816,7 +5827,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -5832,7 +5843,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -5848,7 +5859,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -5864,7 +5875,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -5880,7 +5891,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -5896,7 +5907,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -5912,7 +5923,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -5928,7 +5939,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -5944,14 +5955,14 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 	}
 
 	public static partial class Exceptions {
 
-		public static unsafe int Throw (JniObjectReference toThrow)
+		internal static unsafe int _Throw (JniObjectReference toThrow)
 		{
 			if (toThrow.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`toThrow` must not be IntPtr.Zero.", "toThrow");
@@ -5961,7 +5972,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe int ThrowNew (JniObjectReference klass, string message)
+		internal static unsafe int _ThrowNew (JniObjectReference klass, string message)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -6005,7 +6016,7 @@ namespace
 		{
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.ExceptionCheck (__info.EnvironmentPointer);
-			return (tmp > 0) ? true : false;
+			return (tmp != 0) ? true : false;
 		}
 	}
 
@@ -6025,7 +6036,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			if (tmp == IntPtr.Zero)
 				return null;
@@ -6058,7 +6069,7 @@ namespace
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.GetBooleanField (__info.EnvironmentPointer, @object.Handle, field.ID);
-			return (tmp > 0) ? true : false;
+			return (tmp != 0) ? true : false;
 		}
 
 		public static unsafe sbyte GetByteField (JniObjectReference @object, JniInstanceFieldInfo field)
@@ -6293,7 +6304,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			if (tmp == IntPtr.Zero)
 				return null;
@@ -6314,7 +6325,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
@@ -6334,7 +6345,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
@@ -6354,9 +6365,9 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
-			return (tmp > 0) ? true : false;
+			return (tmp != 0) ? true : false;
 		}
 
 		public static unsafe bool CallBooleanMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
@@ -6373,9 +6384,9 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
-			return (tmp > 0) ? true : false;
+			return (tmp != 0) ? true : false;
 		}
 
 		public static unsafe sbyte CallByteMethod (JniObjectReference @object, JniInstanceMethodInfo method)
@@ -6392,7 +6403,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -6411,7 +6422,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -6430,7 +6441,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -6449,7 +6460,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -6468,7 +6479,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -6487,7 +6498,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -6506,7 +6517,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -6525,7 +6536,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -6544,7 +6555,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -6563,7 +6574,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -6582,7 +6593,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -6601,7 +6612,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -6620,7 +6631,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -6639,7 +6650,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -6658,7 +6669,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -6676,7 +6687,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -6696,7 +6707,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
@@ -6718,7 +6729,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
@@ -6740,9 +6751,9 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
-			return (tmp > 0) ? true : false;
+			return (tmp != 0) ? true : false;
 		}
 
 		public static unsafe bool CallNonvirtualBooleanMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
@@ -6761,9 +6772,9 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
-			return (tmp > 0) ? true : false;
+			return (tmp != 0) ? true : false;
 		}
 
 		public static unsafe sbyte CallNonvirtualByteMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method)
@@ -6782,7 +6793,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -6803,7 +6814,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -6824,7 +6835,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -6845,7 +6856,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -6866,7 +6877,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -6887,7 +6898,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -6908,7 +6919,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -6929,7 +6940,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -6950,7 +6961,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -6971,7 +6982,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -6992,7 +7003,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -7013,7 +7024,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -7034,7 +7045,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -7055,7 +7066,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -7076,7 +7087,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -7096,7 +7107,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 	}
@@ -7113,7 +7124,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
@@ -7142,7 +7153,7 @@ namespace
 
 	public static partial class Monitors {
 
-		public static unsafe int MonitorEnter (JniObjectReference @object)
+		internal static unsafe int _MonitorEnter (JniObjectReference @object)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`object` must not be IntPtr.Zero.", "object");
@@ -7152,7 +7163,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe int MonitorExit (JniObjectReference @object)
+		internal static unsafe int _MonitorExit (JniObjectReference @object)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`object` must not be IntPtr.Zero.", "object");
@@ -7175,7 +7186,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
@@ -7195,7 +7206,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
@@ -7215,7 +7226,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
@@ -7224,7 +7235,7 @@ namespace
 
 	public static partial class References {
 
-		public static unsafe int PushLocalFrame (int capacity)
+		internal static unsafe int _PushLocalFrame (int capacity)
 		{
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.PushLocalFrame (__info.EnvironmentPointer, capacity);
@@ -7265,14 +7276,14 @@ namespace
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		public static unsafe int EnsureLocalCapacity (int capacity)
+		internal static unsafe int _EnsureLocalCapacity (int capacity)
 		{
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.EnsureLocalCapacity (__info.EnvironmentPointer, capacity);
 			return tmp;
 		}
 
-		public static unsafe int GetJavaVM (out IntPtr vm)
+		internal static unsafe int _GetJavaVM (out IntPtr vm)
 		{
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.GetJavaVM (__info.EnvironmentPointer, out vm);
@@ -7316,6 +7327,11 @@ namespace
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.ToReflectedMethod (__info.EnvironmentPointer, klass.Handle, method.ID, (isStatic ? (byte) 1 : (byte) 0));
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
@@ -7331,6 +7347,11 @@ namespace
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.ToReflectedField (__info.EnvironmentPointer, klass.Handle, field.ID, (isStatic ? (byte) 1 : (byte) 0));
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
@@ -7352,7 +7373,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			if (tmp == IntPtr.Zero)
 				return null;
@@ -7385,7 +7406,7 @@ namespace
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.GetStaticBooleanField (__info.EnvironmentPointer, klass.Handle, field.ID);
-			return (tmp > 0) ? true : false;
+			return (tmp != 0) ? true : false;
 		}
 
 		public static unsafe sbyte GetStaticByteField (JniObjectReference klass, JniStaticFieldInfo field)
@@ -7620,7 +7641,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			if (tmp == IntPtr.Zero)
 				return null;
@@ -7641,7 +7662,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
@@ -7661,7 +7682,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
@@ -7681,9 +7702,9 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
-			return (tmp > 0) ? true : false;
+			return (tmp != 0) ? true : false;
 		}
 
 		public static unsafe bool CallStaticBooleanMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
@@ -7700,9 +7721,9 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
-			return (tmp > 0) ? true : false;
+			return (tmp != 0) ? true : false;
 		}
 
 		public static unsafe sbyte CallStaticByteMethod (JniObjectReference klass, JniStaticMethodInfo method)
@@ -7719,7 +7740,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -7738,7 +7759,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -7757,7 +7778,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -7776,7 +7797,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -7795,7 +7816,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -7814,7 +7835,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -7833,7 +7854,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -7852,7 +7873,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -7871,7 +7892,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -7890,7 +7911,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -7909,7 +7930,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -7928,7 +7949,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -7947,7 +7968,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -7966,7 +7987,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -7985,7 +8006,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -8003,7 +8024,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 	}
@@ -8020,7 +8041,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
@@ -8074,7 +8095,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
@@ -8090,7 +8111,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
@@ -8116,14 +8137,14 @@ namespace
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.IsAssignableFrom (__info.EnvironmentPointer, class1.Handle, class2.Handle);
-			return (tmp > 0) ? true : false;
+			return (tmp != 0) ? true : false;
 		}
 
 		public static unsafe bool IsSameObject (JniObjectReference object1, JniObjectReference object2)
 		{
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.IsSameObject (__info.EnvironmentPointer, object1.Handle, object2.Handle);
-			return (tmp > 0) ? true : false;
+			return (tmp != 0) ? true : false;
 		}
 
 		public static unsafe JniObjectReference GetObjectClass (JniObjectReference @object)
@@ -8146,10 +8167,10 @@ namespace
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.IsInstanceOf (__info.EnvironmentPointer, @object.Handle, klass.Handle);
-			return (tmp > 0) ? true : false;
+			return (tmp != 0) ? true : false;
 		}
 
-		public static unsafe int RegisterNatives (JniObjectReference klass, JniNativeMethodRegistration [] methods, int numMethods)
+		internal static unsafe int _RegisterNatives (JniObjectReference klass, JniNativeMethodRegistration [] methods, int numMethods)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -8159,12 +8180,12 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
 
-		public static unsafe int UnregisterNatives (JniObjectReference klass)
+		internal static unsafe int _UnregisterNatives (JniObjectReference klass)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -10003,7 +10024,7 @@ namespace
 		internal static extern unsafe jobject JavaInterop_FindClass (IntPtr jnienv, out IntPtr thrown, string classname);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-		internal static extern unsafe jobject JavaInterop_ToReflectedMethod (IntPtr jnienv, jobject klass, IntPtr method, byte isStatic);
+		internal static extern unsafe jobject JavaInterop_ToReflectedMethod (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr method, byte isStatic);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
 		internal static extern unsafe jobject JavaInterop_GetSuperclass (IntPtr jnienv, jobject klass);
@@ -10012,7 +10033,7 @@ namespace
 		internal static extern unsafe byte JavaInterop_IsAssignableFrom (IntPtr jnienv, jobject class1, jobject class2);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-		internal static extern unsafe jobject JavaInterop_ToReflectedField (IntPtr jnienv, jobject klass, IntPtr field, byte isStatic);
+		internal static extern unsafe jobject JavaInterop_ToReflectedField (IntPtr jnienv, out IntPtr thrown, jobject klass, IntPtr field, byte isStatic);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
 		internal static extern unsafe int JavaInterop_Throw (IntPtr jnienv, jobject toThrow);
@@ -10575,7 +10596,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
@@ -10591,7 +10612,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
@@ -10607,7 +10628,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -10831,7 +10852,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -10847,7 +10868,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -10863,7 +10884,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -10879,7 +10900,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -10895,7 +10916,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -10911,7 +10932,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -10927,7 +10948,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -10943,7 +10964,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -10959,7 +10980,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -10975,7 +10996,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -10991,7 +11012,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -11007,7 +11028,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -11023,7 +11044,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -11039,7 +11060,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -11055,7 +11076,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -11071,14 +11092,14 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 	}
 
 	public static partial class Exceptions {
 
-		public static unsafe int Throw (JniObjectReference toThrow)
+		internal static unsafe int _Throw (JniObjectReference toThrow)
 		{
 			if (toThrow.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`toThrow` must not be IntPtr.Zero.", "toThrow");
@@ -11087,7 +11108,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe int ThrowNew (JniObjectReference klass, string message)
+		internal static unsafe int _ThrowNew (JniObjectReference klass, string message)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -11125,7 +11146,7 @@ namespace
 		public static unsafe bool ExceptionCheck ()
 		{
 			var tmp = NativeMethods.JavaInterop_ExceptionCheck (JniEnvironment.EnvironmentPointer);
-			return (tmp > 0) ? true : false;
+			return (tmp != 0) ? true : false;
 		}
 	}
 
@@ -11145,7 +11166,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			if (tmp == IntPtr.Zero)
 				return null;
@@ -11176,7 +11197,7 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
 			var tmp = NativeMethods.JavaInterop_GetBooleanField (JniEnvironment.EnvironmentPointer, @object.Handle, field.ID);
-			return (tmp > 0) ? true : false;
+			return (tmp != 0) ? true : false;
 		}
 
 		public static unsafe sbyte GetByteField (JniObjectReference @object, JniInstanceFieldInfo field)
@@ -11395,7 +11416,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			if (tmp == IntPtr.Zero)
 				return null;
@@ -11416,7 +11437,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
@@ -11436,7 +11457,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
@@ -11456,9 +11477,9 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
-			return (tmp > 0) ? true : false;
+			return (tmp != 0) ? true : false;
 		}
 
 		public static unsafe bool CallBooleanMethod (JniObjectReference @object, JniInstanceMethodInfo method, JniArgumentValue* args)
@@ -11475,9 +11496,9 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
-			return (tmp > 0) ? true : false;
+			return (tmp != 0) ? true : false;
 		}
 
 		public static unsafe sbyte CallByteMethod (JniObjectReference @object, JniInstanceMethodInfo method)
@@ -11494,7 +11515,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -11513,7 +11534,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -11532,7 +11553,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -11551,7 +11572,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -11570,7 +11591,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -11589,7 +11610,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -11608,7 +11629,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -11627,7 +11648,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -11646,7 +11667,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -11665,7 +11686,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -11684,7 +11705,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -11703,7 +11724,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -11722,7 +11743,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -11741,7 +11762,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -11760,7 +11781,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -11778,7 +11799,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -11798,7 +11819,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
@@ -11820,7 +11841,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
@@ -11842,9 +11863,9 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
-			return (tmp > 0) ? true : false;
+			return (tmp != 0) ? true : false;
 		}
 
 		public static unsafe bool CallNonvirtualBooleanMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method, JniArgumentValue* args)
@@ -11863,9 +11884,9 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
-			return (tmp > 0) ? true : false;
+			return (tmp != 0) ? true : false;
 		}
 
 		public static unsafe sbyte CallNonvirtualByteMethod (JniObjectReference @object, JniObjectReference klass, JniInstanceMethodInfo method)
@@ -11884,7 +11905,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -11905,7 +11926,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -11926,7 +11947,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -11947,7 +11968,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -11968,7 +11989,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -11989,7 +12010,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -12010,7 +12031,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -12031,7 +12052,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -12052,7 +12073,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -12073,7 +12094,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -12094,7 +12115,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -12115,7 +12136,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -12136,7 +12157,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -12157,7 +12178,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -12178,7 +12199,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -12198,7 +12219,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 	}
@@ -12215,7 +12236,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
@@ -12242,7 +12263,7 @@ namespace
 
 	public static partial class Monitors {
 
-		public static unsafe int MonitorEnter (JniObjectReference @object)
+		internal static unsafe int _MonitorEnter (JniObjectReference @object)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`object` must not be IntPtr.Zero.", "object");
@@ -12251,7 +12272,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe int MonitorExit (JniObjectReference @object)
+		internal static unsafe int _MonitorExit (JniObjectReference @object)
 		{
 			if (@object.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`object` must not be IntPtr.Zero.", "object");
@@ -12273,7 +12294,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
@@ -12293,7 +12314,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
@@ -12313,7 +12334,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
@@ -12322,7 +12343,7 @@ namespace
 
 	public static partial class References {
 
-		public static unsafe int PushLocalFrame (int capacity)
+		internal static unsafe int _PushLocalFrame (int capacity)
 		{
 			var tmp = NativeMethods.JavaInterop_PushLocalFrame (JniEnvironment.EnvironmentPointer, capacity);
 			return tmp;
@@ -12357,13 +12378,13 @@ namespace
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		public static unsafe int EnsureLocalCapacity (int capacity)
+		internal static unsafe int _EnsureLocalCapacity (int capacity)
 		{
 			var tmp = NativeMethods.JavaInterop_EnsureLocalCapacity (JniEnvironment.EnvironmentPointer, capacity);
 			return tmp;
 		}
 
-		public static unsafe int GetJavaVM (out IntPtr vm)
+		internal static unsafe int _GetJavaVM (out IntPtr vm)
 		{
 			var tmp = NativeMethods.JavaInterop_GetJavaVM (JniEnvironment.EnvironmentPointer, out vm);
 			return tmp;
@@ -12401,7 +12422,13 @@ namespace
 			if (method.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
-			var tmp = NativeMethods.JavaInterop_ToReflectedMethod (JniEnvironment.EnvironmentPointer, klass.Handle, method.ID, (isStatic ? (byte) 1 : (byte) 0));
+			IntPtr thrown;
+			var tmp = NativeMethods.JavaInterop_ToReflectedMethod (JniEnvironment.EnvironmentPointer, out thrown, klass.Handle, method.ID, (isStatic ? (byte) 1 : (byte) 0));
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
@@ -12415,7 +12442,13 @@ namespace
 			if (field.ID == IntPtr.Zero)
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
-			var tmp = NativeMethods.JavaInterop_ToReflectedField (JniEnvironment.EnvironmentPointer, klass.Handle, field.ID, (isStatic ? (byte) 1 : (byte) 0));
+			IntPtr thrown;
+			var tmp = NativeMethods.JavaInterop_ToReflectedField (JniEnvironment.EnvironmentPointer, out thrown, klass.Handle, field.ID, (isStatic ? (byte) 1 : (byte) 0));
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
@@ -12437,7 +12470,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			if (tmp == IntPtr.Zero)
 				return null;
@@ -12468,7 +12501,7 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "field");
 
 			var tmp = NativeMethods.JavaInterop_GetStaticBooleanField (JniEnvironment.EnvironmentPointer, klass.Handle, field.ID);
-			return (tmp > 0) ? true : false;
+			return (tmp != 0) ? true : false;
 		}
 
 		public static unsafe sbyte GetStaticByteField (JniObjectReference klass, JniStaticFieldInfo field)
@@ -12687,7 +12720,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			if (tmp == IntPtr.Zero)
 				return null;
@@ -12708,7 +12741,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
@@ -12728,7 +12761,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
@@ -12748,9 +12781,9 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
-			return (tmp > 0) ? true : false;
+			return (tmp != 0) ? true : false;
 		}
 
 		public static unsafe bool CallStaticBooleanMethod (JniObjectReference klass, JniStaticMethodInfo method, JniArgumentValue* args)
@@ -12767,9 +12800,9 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
-			return (tmp > 0) ? true : false;
+			return (tmp != 0) ? true : false;
 		}
 
 		public static unsafe sbyte CallStaticByteMethod (JniObjectReference klass, JniStaticMethodInfo method)
@@ -12786,7 +12819,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -12805,7 +12838,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -12824,7 +12857,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -12843,7 +12876,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -12862,7 +12895,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -12881,7 +12914,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -12900,7 +12933,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -12919,7 +12952,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -12938,7 +12971,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -12957,7 +12990,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -12976,7 +13009,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -12995,7 +13028,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -13014,7 +13047,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -13033,7 +13066,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -13052,7 +13085,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -13070,7 +13103,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 	}
@@ -13087,7 +13120,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
@@ -13138,7 +13171,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
@@ -13154,7 +13187,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
@@ -13178,13 +13211,13 @@ namespace
 				throw new ArgumentException ("`class2` must not be IntPtr.Zero.", "class2");
 
 			var tmp = NativeMethods.JavaInterop_IsAssignableFrom (JniEnvironment.EnvironmentPointer, class1.Handle, class2.Handle);
-			return (tmp > 0) ? true : false;
+			return (tmp != 0) ? true : false;
 		}
 
 		public static unsafe bool IsSameObject (JniObjectReference object1, JniObjectReference object2)
 		{
 			var tmp = NativeMethods.JavaInterop_IsSameObject (JniEnvironment.EnvironmentPointer, object1.Handle, object2.Handle);
-			return (tmp > 0) ? true : false;
+			return (tmp != 0) ? true : false;
 		}
 
 		public static unsafe JniObjectReference GetObjectClass (JniObjectReference @object)
@@ -13205,10 +13238,10 @@ namespace
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
 
 			var tmp = NativeMethods.JavaInterop_IsInstanceOf (JniEnvironment.EnvironmentPointer, @object.Handle, klass.Handle);
-			return (tmp > 0) ? true : false;
+			return (tmp != 0) ? true : false;
 		}
 
-		public static unsafe int RegisterNatives (JniObjectReference klass, JniNativeMethodRegistration [] methods, int numMethods)
+		internal static unsafe int _RegisterNatives (JniObjectReference klass, JniNativeMethodRegistration [] methods, int numMethods)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -13218,12 +13251,12 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
 
-		public static unsafe int UnregisterNatives (JniObjectReference klass)
+		internal static unsafe int _UnregisterNatives (JniObjectReference klass)
 		{
 			if (klass.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -13359,7 +13392,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return tmp;
@@ -13375,7 +13408,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return tmp;
@@ -13391,7 +13424,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -13639,7 +13672,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -13655,7 +13688,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -13671,7 +13704,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -13687,7 +13720,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -13703,7 +13736,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -13719,7 +13752,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -13735,7 +13768,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -13751,7 +13784,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -13767,7 +13800,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -13783,7 +13816,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -13799,7 +13832,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -13815,7 +13848,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -13831,7 +13864,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -13847,7 +13880,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -13863,7 +13896,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -13879,14 +13912,14 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 	}
 
 	public static partial class Exceptions {
 
-		public static unsafe int Throw (IntPtr toThrow)
+		internal static unsafe int _Throw (IntPtr toThrow)
 		{
 			if (toThrow == IntPtr.Zero)
 				throw new ArgumentException ("`toThrow` must not be IntPtr.Zero.", "toThrow");
@@ -13896,7 +13929,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe int ThrowNew (IntPtr klass, string message)
+		internal static unsafe int _ThrowNew (IntPtr klass, string message)
 		{
 			if (klass == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -13940,7 +13973,7 @@ namespace
 		{
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.ExceptionCheck (__info.EnvironmentPointer);
-			return (tmp > 0) ? true : false;
+			return (tmp != 0) ? true : false;
 		}
 	}
 
@@ -13960,7 +13993,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -13987,7 +14020,7 @@ namespace
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.GetBooleanField (__info.EnvironmentPointer, @object, field);
-			return (tmp > 0) ? true : false;
+			return (tmp != 0) ? true : false;
 		}
 
 		public static unsafe sbyte GetByteField (IntPtr @object, IntPtr field)
@@ -14190,7 +14223,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -14207,7 +14240,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return tmp;
@@ -14225,7 +14258,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return tmp;
@@ -14243,9 +14276,9 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
-			return (tmp > 0) ? true : false;
+			return (tmp != 0) ? true : false;
 		}
 
 		public static unsafe bool CallBooleanMethod (IntPtr @object, IntPtr method, JniArgumentValue* args)
@@ -14260,9 +14293,9 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
-			return (tmp > 0) ? true : false;
+			return (tmp != 0) ? true : false;
 		}
 
 		public static unsafe sbyte CallByteMethod (IntPtr @object, IntPtr method)
@@ -14277,7 +14310,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -14294,7 +14327,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -14311,7 +14344,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -14328,7 +14361,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -14345,7 +14378,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -14362,7 +14395,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -14379,7 +14412,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -14396,7 +14429,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -14413,7 +14446,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -14430,7 +14463,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -14447,7 +14480,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -14464,7 +14497,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -14481,7 +14514,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -14498,7 +14531,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -14515,7 +14548,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -14531,7 +14564,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -14549,7 +14582,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return tmp;
@@ -14569,7 +14602,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return tmp;
@@ -14589,9 +14622,9 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
-			return (tmp > 0) ? true : false;
+			return (tmp != 0) ? true : false;
 		}
 
 		public static unsafe bool CallNonvirtualBooleanMethod (IntPtr @object, IntPtr klass, IntPtr method, JniArgumentValue* args)
@@ -14608,9 +14641,9 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
-			return (tmp > 0) ? true : false;
+			return (tmp != 0) ? true : false;
 		}
 
 		public static unsafe sbyte CallNonvirtualByteMethod (IntPtr @object, IntPtr klass, IntPtr method)
@@ -14627,7 +14660,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -14646,7 +14679,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -14665,7 +14698,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -14684,7 +14717,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -14703,7 +14736,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -14722,7 +14755,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -14741,7 +14774,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -14760,7 +14793,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -14779,7 +14812,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -14798,7 +14831,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -14817,7 +14850,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -14836,7 +14869,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -14855,7 +14888,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -14874,7 +14907,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -14893,7 +14926,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -14911,7 +14944,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 	}
@@ -14928,7 +14961,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return tmp;
@@ -14957,7 +14990,7 @@ namespace
 
 	public static partial class Monitors {
 
-		public static unsafe int MonitorEnter (IntPtr @object)
+		internal static unsafe int _MonitorEnter (IntPtr @object)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`object` must not be IntPtr.Zero.", "object");
@@ -14967,7 +15000,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe int MonitorExit (IntPtr @object)
+		internal static unsafe int _MonitorExit (IntPtr @object)
 		{
 			if (@object == IntPtr.Zero)
 				throw new ArgumentException ("`object` must not be IntPtr.Zero.", "object");
@@ -14990,7 +15023,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return tmp;
@@ -15008,7 +15041,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return tmp;
@@ -15026,7 +15059,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return tmp;
@@ -15035,7 +15068,7 @@ namespace
 
 	public static partial class References {
 
-		public static unsafe int PushLocalFrame (int capacity)
+		internal static unsafe int _PushLocalFrame (int capacity)
 		{
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.PushLocalFrame (__info.EnvironmentPointer, capacity);
@@ -15076,14 +15109,14 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe int EnsureLocalCapacity (int capacity)
+		internal static unsafe int _EnsureLocalCapacity (int capacity)
 		{
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.EnsureLocalCapacity (__info.EnvironmentPointer, capacity);
 			return tmp;
 		}
 
-		public static unsafe int GetJavaVM (out IntPtr vm)
+		internal static unsafe int _GetJavaVM (out IntPtr vm)
 		{
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.GetJavaVM (__info.EnvironmentPointer, out vm);
@@ -15125,6 +15158,11 @@ namespace
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.ToReflectedMethod (__info.EnvironmentPointer, klass, method, (isStatic ? (byte) 1 : (byte) 0));
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return tmp;
 		}
@@ -15138,6 +15176,11 @@ namespace
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.ToReflectedField (__info.EnvironmentPointer, klass, field, (isStatic ? (byte) 1 : (byte) 0));
+
+			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			if (__e != null)
+				ExceptionDispatchInfo.Capture (__e).Throw ();
+
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return tmp;
 		}
@@ -15159,7 +15202,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -15186,7 +15229,7 @@ namespace
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.GetStaticBooleanField (__info.EnvironmentPointer, klass, field);
-			return (tmp > 0) ? true : false;
+			return (tmp != 0) ? true : false;
 		}
 
 		public static unsafe sbyte GetStaticByteField (IntPtr klass, IntPtr field)
@@ -15389,7 +15432,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -15406,7 +15449,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return tmp;
@@ -15424,7 +15467,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return tmp;
@@ -15442,9 +15485,9 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
-			return (tmp > 0) ? true : false;
+			return (tmp != 0) ? true : false;
 		}
 
 		public static unsafe bool CallStaticBooleanMethod (IntPtr klass, IntPtr method, JniArgumentValue* args)
@@ -15459,9 +15502,9 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
-			return (tmp > 0) ? true : false;
+			return (tmp != 0) ? true : false;
 		}
 
 		public static unsafe sbyte CallStaticByteMethod (IntPtr klass, IntPtr method)
@@ -15476,7 +15519,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -15493,7 +15536,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -15510,7 +15553,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -15527,7 +15570,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -15544,7 +15587,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -15561,7 +15604,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -15578,7 +15621,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -15595,7 +15638,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -15612,7 +15655,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -15629,7 +15672,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -15646,7 +15689,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -15663,7 +15706,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -15680,7 +15723,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -15697,7 +15740,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
@@ -15714,7 +15757,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 
@@ -15730,7 +15773,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
 	}
@@ -15747,7 +15790,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return tmp;
@@ -15801,7 +15844,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return tmp;
@@ -15817,7 +15860,7 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return tmp;
@@ -15843,14 +15886,14 @@ namespace
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.IsAssignableFrom (__info.EnvironmentPointer, class1, class2);
-			return (tmp > 0) ? true : false;
+			return (tmp != 0) ? true : false;
 		}
 
 		public static unsafe bool IsSameObject (IntPtr object1, IntPtr object2)
 		{
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.IsSameObject (__info.EnvironmentPointer, object1, object2);
-			return (tmp > 0) ? true : false;
+			return (tmp != 0) ? true : false;
 		}
 
 		public static unsafe IntPtr GetObjectClass (IntPtr @object)
@@ -15873,10 +15916,10 @@ namespace
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.IsInstanceOf (__info.EnvironmentPointer, @object, klass);
-			return (tmp > 0) ? true : false;
+			return (tmp != 0) ? true : false;
 		}
 
-		public static unsafe int RegisterNatives (IntPtr klass, JniNativeMethodRegistration [] methods, int numMethods)
+		internal static unsafe int _RegisterNatives (IntPtr klass, JniNativeMethodRegistration [] methods, int numMethods)
 		{
 			if (klass == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
@@ -15886,12 +15929,12 @@ namespace
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
-				throw __e;
+				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			return tmp;
 		}
 
-		public static unsafe int UnregisterNatives (IntPtr klass)
+		internal static unsafe int _UnregisterNatives (IntPtr klass)
 		{
 			if (klass == IntPtr.Zero)
 				throw new ArgumentException ("`klass` must not be IntPtr.Zero.", "klass");
