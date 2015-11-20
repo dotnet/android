@@ -186,7 +186,7 @@ namespace Java.Interop
 				return null;
 
 			var m = _members.InstanceMethods.GetMethodInfo ("getMessage\u0000()Ljava/lang/String;");
-			var s = m.InvokeVirtualObjectMethod (reference);
+			var s = JniEnvironment.InstanceMethods.CallObjectMethod (reference, m);
 			return JniEnvironment.Strings.ToString (ref s, JniObjectReferenceOptions.DisposeSourceReference);
 		}
 
@@ -196,7 +196,7 @@ namespace Java.Interop
 				return null;
 
 			var m = _members.InstanceMethods.GetMethodInfo ("getCause\u0000()Ljava/lang/Throwable;");
-			var e = m.InvokeVirtualObjectMethod (reference);
+			var e = JniEnvironment.InstanceMethods.CallObjectMethod (reference, m);
 			return JniEnvironment.Runtime.GetExceptionForThrowable (ref e, JniObjectReferenceOptions.DisposeSourceReference);
 		}
 
@@ -215,7 +215,7 @@ namespace Java.Interop
 						var pst = _members.InstanceMethods.GetMethodInfo ("printStackTrace\u0000(Ljava/io/PrintWriter;)V");
 						var pst_args = stackalloc JniArgumentValue [1];
 						pst_args [0] = new JniArgumentValue (pwriter);
-						pst.InvokeVirtualVoidMethod (handle, pst_args);
+						JniEnvironment.InstanceMethods.CallVoidMethod (handle, pst, pst_args);
 						var s = JniEnvironment.Object.ToString (swriter);
 						return JniEnvironment.Strings.ToString (ref s, JniObjectReferenceOptions.DisposeSourceReference);
 					} finally {

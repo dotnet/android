@@ -140,7 +140,7 @@ namespace Java.Interop.Dynamic {
 		{
 			using (var t = new JniType ("java/lang/reflect/Modifier")) {
 				var s   = t.GetStaticField ("STATIC", "I");
-				Static  = s.GetInt32Value (t.PeerReference);
+				Static  = JniEnvironment.StaticFields.GetStaticIntField (t.PeerReference, s);
 			}
 		}
 	}

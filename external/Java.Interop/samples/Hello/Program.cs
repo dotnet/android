@@ -26,7 +26,7 @@ namespace Hello
 				var c = t.GetConstructor ("()V");
 				var o = t.NewObject (c, null);
 				var m = t.GetInstanceMethod ("hashCode", "()I");
-				int i = m.InvokeVirtualInt32Method (o);
+				int i = JniEnvironment.InstanceMethods.CallIntMethod (o, m);
 				Console.WriteLine ("java.lang.Object={0}", o);
 				Console.WriteLine ("hashcode={0}", i);
 				JniObjectReference.Dispose (ref o);

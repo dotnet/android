@@ -35,7 +35,7 @@ namespace Java.Interop
 
 		readonly Type                                       DeclaringType;
 
-		Dictionary<string, JniInstanceMethodInfo>           InstanceMethods = new Dictionary<string, JniInstanceMethodInfo>();
+		Dictionary<string, JniMethodInfo>                   InstanceMethods = new Dictionary<string, JniMethodInfo>();
 		Dictionary<Type, JniInstanceMethods>                SubclassConstructors = new Dictionary<Type, JniInstanceMethods> ();
 
 		internal void Dispose ()
@@ -55,12 +55,12 @@ namespace Java.Interop
 			jniPeerType = null;
 		}
 
-		public JniInstanceMethodInfo GetConstructor (string signature)
+		public JniMethodInfo GetConstructor (string signature)
 		{
 			if (signature == null)
 				throw new ArgumentNullException ("signature");
 			lock (InstanceMethods) {
-				JniInstanceMethodInfo m;
+				JniMethodInfo m;
 				if (!InstanceMethods.TryGetValue (signature, out m)) {
 					m = JniPeerType.GetConstructor (signature);
 					InstanceMethods.Add (signature, m);
@@ -84,10 +84,10 @@ namespace Java.Interop
 			return methods;
 		}
 
-		public JniInstanceMethodInfo GetMethodInfo (string encodedMember)
+		public JniMethodInfo GetMethodInfo (string encodedMember)
 		{
 			lock (InstanceMethods) {
-				JniInstanceMethodInfo m;
+				JniMethodInfo m;
 				if (!InstanceMethods.TryGetValue (encodedMember, out m)) {
 					string method, signature;
 					JniPeerMembers.GetNameAndSignature (encodedMember, out method, out signature);
@@ -145,7 +145,7 @@ namespace Java.Interop
 			}
 			var methods = GetConstructorsForType (self.GetType ());
 			var ctor    = methods.GetConstructor (constructorSignature);
-			ctor.InvokeNonvirtualVoidMethod (self.PeerReference, methods.JniPeerType.PeerReference, parameters);
+			JniEnvironment.InstanceMethods.CallNonvirtualVoidMethod (self.PeerReference, methods.JniPeerType.PeerReference, ctor, parameters);
 		}
 	}
 	}

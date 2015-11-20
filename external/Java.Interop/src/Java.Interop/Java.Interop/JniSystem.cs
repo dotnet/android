@@ -8,13 +8,13 @@ namespace Java.Interop
 			get {return JniType.GetCachedJniType (ref _typeRef, "java/lang/System");}
 		}
 
-		static JniStaticMethodInfo _identityHashCode;
+		static JniMethodInfo _identityHashCode;
 		internal static unsafe int IdentityHashCode (JniObjectReference value)
 		{
 			var args = stackalloc JniArgumentValue [1];
 			args [0] = new JniArgumentValue (value);
-			return TypeRef.GetCachedStaticMethod (ref _identityHashCode, "identityHashCode", "(Ljava/lang/Object;)I")
-				.InvokeInt32Method (TypeRef.PeerReference, args);
+			TypeRef.GetCachedStaticMethod (ref _identityHashCode, "identityHashCode", "(Ljava/lang/Object;)I");
+			return JniEnvironment.StaticMethods.CallStaticIntMethod (TypeRef.PeerReference, _identityHashCode, args);
 		}
 	}
 }

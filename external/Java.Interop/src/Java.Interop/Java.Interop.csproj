@@ -61,16 +61,12 @@
     <Compile Include="Java.Interop\JniEnvironment.Strings.cs" />
     <Compile Include="Java.Interop\JniEnvironment.Types.cs" />
     <Compile Include="Java.Interop\JniFieldInfo.cs" />
-    <Compile Include="Java.Interop\JniInstanceFieldInfo.cs" />
-    <Compile Include="Java.Interop\JniInstanceMethodInfo.cs" />
     <Compile Include="Java.Interop\JniMethodInfo.cs" />
     <Compile Include="Java.Interop\JniPeerMembers.cs" />
     <Compile Include="Java.Interop\JniReleaseArrayElementsMode.cs" />
     <Compile Include="Java.Interop\JniRuntime.cs" />
     <Compile Include="Java.Interop\JniRuntime.JniObjectReferenceManager.cs" />
     <Compile Include="Java.Interop\JniRuntime.JniTypeManager.cs" />
-    <Compile Include="Java.Interop\JniStaticMethodInfo.cs" />
-    <Compile Include="Java.Interop\JniStaticFieldInfo.cs" />
     <Compile Include="Java.Interop\JniTransition.cs" />
     <Compile Include="Java.Interop\JniType.cs" />
     <Compile Include="Java.Interop\JniTypeSignature.cs" />

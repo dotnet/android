@@ -23,13 +23,13 @@ namespace Java.InteropTests
 				var o = d.NewObject (c, null);
 				try {
 					if (JavaVMFixture.CallNonvirtualVoidMethodSupportsDeclaringClassMismatch) {
-						m.InvokeNonvirtualVoidMethod (o, d.PeerReference);
-						Assert.IsFalse (f.GetBooleanValue (o));
-						Assert.IsTrue (g.GetBooleanValue (o));
+						JniEnvironment.InstanceMethods.CallNonvirtualVoidMethod (o, d.PeerReference, m);
+						Assert.IsFalse (JniEnvironment.InstanceFields.GetBooleanField (o, f));
+						Assert.IsTrue (JniEnvironment.InstanceFields.GetBooleanField (o, g));
 					} else {
-						m.InvokeNonvirtualVoidMethod (o, d.PeerReference);
-						Assert.IsTrue (f.GetBooleanValue (o));
-						Assert.IsFalse (g.GetBooleanValue (o));
+						JniEnvironment.InstanceMethods.CallNonvirtualVoidMethod (o, d.PeerReference, m);
+						Assert.IsTrue (JniEnvironment.InstanceFields.GetBooleanField (o, f));
+						Assert.IsFalse (JniEnvironment.InstanceFields.GetBooleanField (o, g));
 					}
 				} finally {
 					JniObjectReference.Dispose (ref o);

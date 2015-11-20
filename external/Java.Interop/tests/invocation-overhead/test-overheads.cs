@@ -132,13 +132,21 @@ namespace Java.Interop {
 					z, b, c, s, i, f, d, l.ToString ("x"));
 		}
 	}
-	public abstract class JniFieldInfo
+	public sealed class JniFieldInfo
 	{
 		public IntPtr ID;
+		public bool   IsStatic;
+		public bool IsValid {get {return ID != IntPtr.Zero;}}
 
-		protected JniFieldInfo (IntPtr id)
+		public JniFieldInfo (IntPtr id, bool isStatic)
 		{
 			ID = id;
+			IsStatic = isStatic;
+		}
+		public JniFieldInfo (string name, string signature, IntPtr id, bool isStatic)
+		{
+			ID = id;
+			IsStatic = isStatic;
 		}
 
 		public override string ToString ()
@@ -147,44 +155,24 @@ namespace Java.Interop {
 		}
 	}
 
-	public sealed class JniStaticFieldInfo : JniFieldInfo
-	{
-		public JniStaticFieldInfo (IntPtr id)
-			: base (id)
-		{
-		}
-	}
-	public sealed class JniInstanceFieldInfo : JniFieldInfo
-	{
-		public JniInstanceFieldInfo (IntPtr id)
-			: base (id)
-		{
-		}
-	}
-	public abstract class JniMethodInfo
+	public class JniMethodInfo
 	{
 		public IntPtr ID;
-		protected JniMethodInfo (IntPtr id)
+		public bool   IsStatic;
+		public bool IsValid {get {return ID != IntPtr.Zero;}}
+		public JniMethodInfo (IntPtr id, bool isStatic)
 		{
 			ID = id;
+			IsStatic = isStatic;
+		}
+		public JniMethodInfo (string name, string signature, IntPtr id, bool isStatic)
+		{
+			ID = id;
+			IsStatic = isStatic;
 		}
 		public override string ToString ()
 		{
 			return string.Format ("{0}(0x{1})", GetType ().FullName, ID.ToString ("x"));
-		}
-	}
-	public sealed class JniStaticMethodInfo : JniMethodInfo
-	{
-		public JniStaticMethodInfo (IntPtr id)
-			: base (id)
-		{
-		}
-	}
-	public sealed class JniInstanceMethodInfo : JniMethodInfo
-	{
-		public JniInstanceMethodInfo (IntPtr id)
-			: base (id)
-		{
 		}
 	}
 	public struct JniNativeMethodRegistration {

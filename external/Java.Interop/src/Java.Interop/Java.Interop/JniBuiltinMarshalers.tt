@@ -10,14 +10,14 @@ using System.Diagnostics;
 namespace Java.Interop {
 <#
 	var types = new[]{
-		new { Name = "Boolean",     Type = "Boolean",   JniType = "Z",  GetValue = "booleanValue" },
-		new { Name = "Byte",        Type = "SByte",     JniType = "B",  GetValue = "byteValue" },
-		new { Name = "Character",   Type = "Char",      JniType = "C",  GetValue = "charValue" },
-		new { Name = "Short",       Type = "Int16",     JniType = "S",  GetValue = "shortValue" },
-		new { Name = "Integer",     Type = "Int32",     JniType = "I",  GetValue = "intValue" },
-		new { Name = "Long",        Type = "Int64",     JniType = "J",  GetValue = "longValue" },
-		new { Name = "Float",       Type = "Single",    JniType = "F",  GetValue = "floatValue" },
-		new { Name = "Double",      Type = "Double",    JniType = "D",  GetValue = "doubleValue" },
+		new { Name = "Boolean",     Type = "Boolean",   JniCallType = "Boolean",    JniType = "Z",  GetValue = "booleanValue" },
+		new { Name = "Byte",        Type = "SByte",     JniCallType = "Byte",       JniType = "B",  GetValue = "byteValue" },
+		new { Name = "Character",   Type = "Char",      JniCallType = "Char",       JniType = "C",  GetValue = "charValue" },
+		new { Name = "Short",       Type = "Int16",     JniCallType = "Short",      JniType = "S",  GetValue = "shortValue" },
+		new { Name = "Integer",     Type = "Int32",     JniCallType = "Int",        JniType = "I",  GetValue = "intValue" },
+		new { Name = "Long",        Type = "Int64",     JniCallType = "Long",       JniType = "J",  GetValue = "longValue" },
+		new { Name = "Float",       Type = "Single",    JniCallType = "Float",      JniType = "F",  GetValue = "floatValue" },
+		new { Name = "Double",      Type = "Double",    JniCallType = "Double",     JniType = "D",  GetValue = "doubleValue" },
 	};
 #>
 
@@ -74,7 +74,7 @@ namespace Java.Interop {
 			return new JniArgumentValue ((<#= type.Type #>) value);
 		}
 
-		static JniInstanceMethodInfo init;
+		static JniMethodInfo init;
 		internal static unsafe JniObjectReference CreateLocalRef (object value)
 		{
 			Debug.Assert (value is <#= type.Type #>, "Expected value of type `<#= type.Type #>`; was: " + (value == null ? "<null>" : value.GetType ().FullName));
@@ -86,15 +86,15 @@ namespace Java.Interop {
 			return TypeRef.NewObject (init, args);
 		}
 
-		static JniInstanceMethodInfo <#= type.GetValue #>;
+		static JniMethodInfo <#= type.GetValue #>;
 		internal static object GetValueFromJni (ref JniObjectReference self, JniObjectReferenceOptions transfer, Type targetType)
 		{
 			Debug.Assert (targetType == null || targetType == typeof (<#= type.Type #>), "Expected targetType==typeof(<#= type.Type #>); was: " + targetType);
 			TypeRef.GetCachedInstanceMethod (ref <#= type.GetValue #>, "<#= type.GetValue #>", "()<#= type.JniType #>");
 			try {
-				return <#= type.GetValue #>.InvokeVirtual<#= type.Type #>Method (self);
+				return JniEnvironment.InstanceMethods.Call<#= type.JniCallType #>Method (self, <#= type.GetValue #>);
 			} finally {
-				JniEnvironment.References.Dispose (ref self, transfer);
+				JniObjectReference.Dispose (ref self, transfer);
 			}
 		}
 	}

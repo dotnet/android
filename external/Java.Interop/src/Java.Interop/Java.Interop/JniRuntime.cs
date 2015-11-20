@@ -124,7 +124,7 @@ namespace Java.Interop
 		bool                                            DestroyRuntimeOnDispose;
 
 		internal    JniObjectReference                  ClassLoader;
-		internal    JniInstanceMethodInfo               ClassLoader_LoadClass;
+		internal    JniMethodInfo                       ClassLoader_LoadClass;
 
 		public  IntPtr                                  InvocationPointer   {get; private set;}
 
@@ -167,7 +167,7 @@ namespace Java.Interop
 
 			ClassLoader = options.ClassLoader;
 			if (options.ClassLoader_LoadClass_id != IntPtr.Zero) {
-				ClassLoader_LoadClass   = new JniInstanceMethodInfo (options.ClassLoader_LoadClass_id);
+				ClassLoader_LoadClass   = new JniMethodInfo (options.ClassLoader_LoadClass_id, isStatic: false);
 			}
 
 			if (ClassLoader.IsValid) {
@@ -178,7 +178,7 @@ namespace Java.Interop
 				using (var t = new JniType ("java/lang/ClassLoader")) {
 					if (!ClassLoader.IsValid) {
 						var m       = t.GetStaticMethod ("getSystemClassLoader", "()Ljava/lang/ClassLoader;");
-						var loader  = m.InvokeObjectMethod (t.PeerReference);
+						var loader  = JniEnvironment.StaticMethods.CallStaticObjectMethod (t.PeerReference, m);
 						ClassLoader = loader.NewGlobalRef ();
 						JniObjectReference.Dispose (ref loader);
 					}

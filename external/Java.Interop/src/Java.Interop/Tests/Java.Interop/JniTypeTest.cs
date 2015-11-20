@@ -23,7 +23,7 @@ namespace Java.InteropTests
 				var Integer_intValue    = Integer_class.GetInstanceMethod ("intValue", "()I");
 				var o                   = Integer_class.NewObject (Integer_ctor, ctor_args);
 				try {
-					int v = Integer_intValue.InvokeVirtualInt32Method (o);
+					int v = JniEnvironment.InstanceMethods.CallIntMethod (o, Integer_intValue);
 					Assert.AreEqual (42, v);
 				} finally {
 					JniObjectReference.Dispose (ref o);
@@ -56,14 +56,14 @@ namespace Java.InteropTests
 			Assert.Throws<ObjectDisposedException> (() => t.RegisterNativeMethods (null));
 			Assert.Throws<ObjectDisposedException> (() => t.UnregisterNativeMethods ());
 
-			JniInstanceFieldInfo jif = null;
+			JniFieldInfo    jif = null;
 			Assert.Throws<ObjectDisposedException> (() => t.GetCachedInstanceField (ref jif, null, null));
-			JniInstanceMethodInfo jim = null;
+			JniMethodInfo   jim = null;
 			Assert.Throws<ObjectDisposedException> (() => t.GetCachedConstructor (ref jim, null));
 			Assert.Throws<ObjectDisposedException> (() => t.GetCachedInstanceMethod (ref jim, null, null));
-			JniStaticFieldInfo jsf = null;
+			JniFieldInfo    jsf = null;
 			Assert.Throws<ObjectDisposedException> (() => t.GetCachedStaticField (ref jsf, null, null));
-			JniStaticMethodInfo jsm = null;
+			JniMethodInfo   jsm = null;
 			Assert.Throws<ObjectDisposedException> (() => t.GetCachedStaticMethod (ref jsm, null, null));
 		}
 
@@ -137,8 +137,8 @@ namespace Java.InteropTests
 				var hashCode_str            = JniEnvironment.Strings.NewString ("hashCode");
 				var hashCode_args           = stackalloc JniArgumentValue [1];
 				hashCode_args [0]           = new JniArgumentValue (hashCode_str);
-				var Object_hashCode         = Class_getMethod.InvokeVirtualObjectMethod (Object_class.PeerReference, hashCode_args);
-				var Object_hashCode_rt      = Method_getReturnType.InvokeVirtualObjectMethod (Object_hashCode, null);
+				var Object_hashCode         = JniEnvironment.InstanceMethods.CallObjectMethod (Object_class.PeerReference, Class_getMethod, hashCode_args);
+				var Object_hashCode_rt      = JniEnvironment.InstanceMethods.CallObjectMethod (Object_hashCode, Method_getReturnType);
 				try {
 					Assert.AreEqual ("java/lang/Object", Object_class.Name);
 

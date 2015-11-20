@@ -12,7 +12,7 @@ namespace Java.Interop {
 
 				var m   = GetMethodInfo (encodedMember);
 
-				m.InvokeVirtualVoidMethod (self.PeerReference, parameters);
+				JniEnvironment.InstanceMethods.CallVoidMethod (self.PeerReference, m, parameters);
 				return;
 			}
 
@@ -23,12 +23,12 @@ namespace Java.Interop {
 				var declaringType   = DeclaringType;
 				if (self.GetType () == declaringType || declaringType == null || self.GetType () == self.JniPeerMembers.ManagedPeerType) {
 					var m   = GetMethodInfo (encodedMember);
-					m.InvokeVirtualVoidMethod (self.PeerReference, parameters);
+					JniEnvironment.InstanceMethods.CallVoidMethod (self.PeerReference, m, parameters);
 					return;
 				}
 				var j = self.JniPeerMembers;
 				var n = j.InstanceMethods.GetMethodInfo (encodedMember);
-				n.InvokeNonvirtualVoidMethod (self.PeerReference, j.JniPeerType.PeerReference, parameters);
+				JniEnvironment.InstanceMethods.CallNonvirtualVoidMethod (self.PeerReference, j.JniPeerType.PeerReference, n, parameters);
 				return;
 			}
 
@@ -38,7 +38,7 @@ namespace Java.Interop {
 
 				var m   = GetMethodInfo (encodedMember);
 
-				m.InvokeNonvirtualVoidMethod (self.PeerReference, JniPeerType.PeerReference, parameters);
+				JniEnvironment.InstanceMethods.CallNonvirtualVoidMethod (self.PeerReference, JniPeerType.PeerReference, m, parameters);
 				return;
 			}
 
@@ -48,7 +48,7 @@ namespace Java.Interop {
 
 				var m   = GetMethodInfo (encodedMember);
 
-				return m.InvokeVirtualBooleanMethod (self.PeerReference, parameters);
+				return JniEnvironment.InstanceMethods.CallBooleanMethod (self.PeerReference, m, parameters);
 				
 			}
 
@@ -59,12 +59,12 @@ namespace Java.Interop {
 				var declaringType   = DeclaringType;
 				if (self.GetType () == declaringType || declaringType == null || self.GetType () == self.JniPeerMembers.ManagedPeerType) {
 					var m   = GetMethodInfo (encodedMember);
-					return m.InvokeVirtualBooleanMethod (self.PeerReference, parameters);
+					return JniEnvironment.InstanceMethods.CallBooleanMethod (self.PeerReference, m, parameters);
 					
 				}
 				var j = self.JniPeerMembers;
 				var n = j.InstanceMethods.GetMethodInfo (encodedMember);
-				return n.InvokeNonvirtualBooleanMethod (self.PeerReference, j.JniPeerType.PeerReference, parameters);
+				return JniEnvironment.InstanceMethods.CallNonvirtualBooleanMethod (self.PeerReference, j.JniPeerType.PeerReference, n, parameters);
 				
 			}
 
@@ -74,7 +74,7 @@ namespace Java.Interop {
 
 				var m   = GetMethodInfo (encodedMember);
 
-				return m.InvokeNonvirtualBooleanMethod (self.PeerReference, JniPeerType.PeerReference, parameters);
+				return JniEnvironment.InstanceMethods.CallNonvirtualBooleanMethod (self.PeerReference, JniPeerType.PeerReference, m, parameters);
 				
 			}
 
@@ -84,7 +84,7 @@ namespace Java.Interop {
 
 				var m   = GetMethodInfo (encodedMember);
 
-				return m.InvokeVirtualSByteMethod (self.PeerReference, parameters);
+				return JniEnvironment.InstanceMethods.CallByteMethod (self.PeerReference, m, parameters);
 				
 			}
 
@@ -95,22 +95,22 @@ namespace Java.Interop {
 				var declaringType   = DeclaringType;
 				if (self.GetType () == declaringType || declaringType == null || self.GetType () == self.JniPeerMembers.ManagedPeerType) {
 					var m   = GetMethodInfo (encodedMember);
-					return m.InvokeVirtualSByteMethod (self.PeerReference, parameters);
+					return JniEnvironment.InstanceMethods.CallByteMethod (self.PeerReference, m, parameters);
 					
 				}
 				var j = self.JniPeerMembers;
 				var n = j.InstanceMethods.GetMethodInfo (encodedMember);
-				return n.InvokeNonvirtualSByteMethod (self.PeerReference, j.JniPeerType.PeerReference, parameters);
+				return JniEnvironment.InstanceMethods.CallNonvirtualByteMethod (self.PeerReference, j.JniPeerType.PeerReference, n, parameters);
 				
 			}
 
-			public unsafe sbyte InvokeNonvirtualSByteMethod (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			public unsafe sbyte InvokeNonvirtualByteMethod (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
 				var m   = GetMethodInfo (encodedMember);
 
-				return m.InvokeNonvirtualSByteMethod (self.PeerReference, JniPeerType.PeerReference, parameters);
+				return JniEnvironment.InstanceMethods.CallNonvirtualByteMethod (self.PeerReference, JniPeerType.PeerReference, m, parameters);
 				
 			}
 
@@ -120,7 +120,7 @@ namespace Java.Interop {
 
 				var m   = GetMethodInfo (encodedMember);
 
-				return m.InvokeVirtualCharMethod (self.PeerReference, parameters);
+				return JniEnvironment.InstanceMethods.CallCharMethod (self.PeerReference, m, parameters);
 				
 			}
 
@@ -131,12 +131,12 @@ namespace Java.Interop {
 				var declaringType   = DeclaringType;
 				if (self.GetType () == declaringType || declaringType == null || self.GetType () == self.JniPeerMembers.ManagedPeerType) {
 					var m   = GetMethodInfo (encodedMember);
-					return m.InvokeVirtualCharMethod (self.PeerReference, parameters);
+					return JniEnvironment.InstanceMethods.CallCharMethod (self.PeerReference, m, parameters);
 					
 				}
 				var j = self.JniPeerMembers;
 				var n = j.InstanceMethods.GetMethodInfo (encodedMember);
-				return n.InvokeNonvirtualCharMethod (self.PeerReference, j.JniPeerType.PeerReference, parameters);
+				return JniEnvironment.InstanceMethods.CallNonvirtualCharMethod (self.PeerReference, j.JniPeerType.PeerReference, n, parameters);
 				
 			}
 
@@ -146,7 +146,7 @@ namespace Java.Interop {
 
 				var m   = GetMethodInfo (encodedMember);
 
-				return m.InvokeNonvirtualCharMethod (self.PeerReference, JniPeerType.PeerReference, parameters);
+				return JniEnvironment.InstanceMethods.CallNonvirtualCharMethod (self.PeerReference, JniPeerType.PeerReference, m, parameters);
 				
 			}
 
@@ -156,7 +156,7 @@ namespace Java.Interop {
 
 				var m   = GetMethodInfo (encodedMember);
 
-				return m.InvokeVirtualInt16Method (self.PeerReference, parameters);
+				return JniEnvironment.InstanceMethods.CallShortMethod (self.PeerReference, m, parameters);
 				
 			}
 
@@ -167,22 +167,22 @@ namespace Java.Interop {
 				var declaringType   = DeclaringType;
 				if (self.GetType () == declaringType || declaringType == null || self.GetType () == self.JniPeerMembers.ManagedPeerType) {
 					var m   = GetMethodInfo (encodedMember);
-					return m.InvokeVirtualInt16Method (self.PeerReference, parameters);
+					return JniEnvironment.InstanceMethods.CallShortMethod (self.PeerReference, m, parameters);
 					
 				}
 				var j = self.JniPeerMembers;
 				var n = j.InstanceMethods.GetMethodInfo (encodedMember);
-				return n.InvokeNonvirtualInt16Method (self.PeerReference, j.JniPeerType.PeerReference, parameters);
+				return JniEnvironment.InstanceMethods.CallNonvirtualShortMethod (self.PeerReference, j.JniPeerType.PeerReference, n, parameters);
 				
 			}
 
-			public unsafe short InvokeNonvirtualInt16Method (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			public unsafe short InvokeNonvirtualShortMethod (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
 				var m   = GetMethodInfo (encodedMember);
 
-				return m.InvokeNonvirtualInt16Method (self.PeerReference, JniPeerType.PeerReference, parameters);
+				return JniEnvironment.InstanceMethods.CallNonvirtualShortMethod (self.PeerReference, JniPeerType.PeerReference, m, parameters);
 				
 			}
 
@@ -192,7 +192,7 @@ namespace Java.Interop {
 
 				var m   = GetMethodInfo (encodedMember);
 
-				return m.InvokeVirtualInt32Method (self.PeerReference, parameters);
+				return JniEnvironment.InstanceMethods.CallIntMethod (self.PeerReference, m, parameters);
 				
 			}
 
@@ -203,22 +203,22 @@ namespace Java.Interop {
 				var declaringType   = DeclaringType;
 				if (self.GetType () == declaringType || declaringType == null || self.GetType () == self.JniPeerMembers.ManagedPeerType) {
 					var m   = GetMethodInfo (encodedMember);
-					return m.InvokeVirtualInt32Method (self.PeerReference, parameters);
+					return JniEnvironment.InstanceMethods.CallIntMethod (self.PeerReference, m, parameters);
 					
 				}
 				var j = self.JniPeerMembers;
 				var n = j.InstanceMethods.GetMethodInfo (encodedMember);
-				return n.InvokeNonvirtualInt32Method (self.PeerReference, j.JniPeerType.PeerReference, parameters);
+				return JniEnvironment.InstanceMethods.CallNonvirtualIntMethod (self.PeerReference, j.JniPeerType.PeerReference, n, parameters);
 				
 			}
 
-			public unsafe int InvokeNonvirtualInt32Method (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			public unsafe int InvokeNonvirtualIntMethod (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
 				var m   = GetMethodInfo (encodedMember);
 
-				return m.InvokeNonvirtualInt32Method (self.PeerReference, JniPeerType.PeerReference, parameters);
+				return JniEnvironment.InstanceMethods.CallNonvirtualIntMethod (self.PeerReference, JniPeerType.PeerReference, m, parameters);
 				
 			}
 
@@ -228,7 +228,7 @@ namespace Java.Interop {
 
 				var m   = GetMethodInfo (encodedMember);
 
-				return m.InvokeVirtualInt64Method (self.PeerReference, parameters);
+				return JniEnvironment.InstanceMethods.CallLongMethod (self.PeerReference, m, parameters);
 				
 			}
 
@@ -239,22 +239,22 @@ namespace Java.Interop {
 				var declaringType   = DeclaringType;
 				if (self.GetType () == declaringType || declaringType == null || self.GetType () == self.JniPeerMembers.ManagedPeerType) {
 					var m   = GetMethodInfo (encodedMember);
-					return m.InvokeVirtualInt64Method (self.PeerReference, parameters);
+					return JniEnvironment.InstanceMethods.CallLongMethod (self.PeerReference, m, parameters);
 					
 				}
 				var j = self.JniPeerMembers;
 				var n = j.InstanceMethods.GetMethodInfo (encodedMember);
-				return n.InvokeNonvirtualInt64Method (self.PeerReference, j.JniPeerType.PeerReference, parameters);
+				return JniEnvironment.InstanceMethods.CallNonvirtualLongMethod (self.PeerReference, j.JniPeerType.PeerReference, n, parameters);
 				
 			}
 
-			public unsafe long InvokeNonvirtualInt64Method (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			public unsafe long InvokeNonvirtualLongMethod (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
 				var m   = GetMethodInfo (encodedMember);
 
-				return m.InvokeNonvirtualInt64Method (self.PeerReference, JniPeerType.PeerReference, parameters);
+				return JniEnvironment.InstanceMethods.CallNonvirtualLongMethod (self.PeerReference, JniPeerType.PeerReference, m, parameters);
 				
 			}
 
@@ -264,7 +264,7 @@ namespace Java.Interop {
 
 				var m   = GetMethodInfo (encodedMember);
 
-				return m.InvokeVirtualSingleMethod (self.PeerReference, parameters);
+				return JniEnvironment.InstanceMethods.CallFloatMethod (self.PeerReference, m, parameters);
 				
 			}
 
@@ -275,22 +275,22 @@ namespace Java.Interop {
 				var declaringType   = DeclaringType;
 				if (self.GetType () == declaringType || declaringType == null || self.GetType () == self.JniPeerMembers.ManagedPeerType) {
 					var m   = GetMethodInfo (encodedMember);
-					return m.InvokeVirtualSingleMethod (self.PeerReference, parameters);
+					return JniEnvironment.InstanceMethods.CallFloatMethod (self.PeerReference, m, parameters);
 					
 				}
 				var j = self.JniPeerMembers;
 				var n = j.InstanceMethods.GetMethodInfo (encodedMember);
-				return n.InvokeNonvirtualSingleMethod (self.PeerReference, j.JniPeerType.PeerReference, parameters);
+				return JniEnvironment.InstanceMethods.CallNonvirtualFloatMethod (self.PeerReference, j.JniPeerType.PeerReference, n, parameters);
 				
 			}
 
-			public unsafe float InvokeNonvirtualSingleMethod (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			public unsafe float InvokeNonvirtualFloatMethod (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
 				var m   = GetMethodInfo (encodedMember);
 
-				return m.InvokeNonvirtualSingleMethod (self.PeerReference, JniPeerType.PeerReference, parameters);
+				return JniEnvironment.InstanceMethods.CallNonvirtualFloatMethod (self.PeerReference, JniPeerType.PeerReference, m, parameters);
 				
 			}
 
@@ -300,7 +300,7 @@ namespace Java.Interop {
 
 				var m   = GetMethodInfo (encodedMember);
 
-				return m.InvokeVirtualDoubleMethod (self.PeerReference, parameters);
+				return JniEnvironment.InstanceMethods.CallDoubleMethod (self.PeerReference, m, parameters);
 				
 			}
 
@@ -311,12 +311,12 @@ namespace Java.Interop {
 				var declaringType   = DeclaringType;
 				if (self.GetType () == declaringType || declaringType == null || self.GetType () == self.JniPeerMembers.ManagedPeerType) {
 					var m   = GetMethodInfo (encodedMember);
-					return m.InvokeVirtualDoubleMethod (self.PeerReference, parameters);
+					return JniEnvironment.InstanceMethods.CallDoubleMethod (self.PeerReference, m, parameters);
 					
 				}
 				var j = self.JniPeerMembers;
 				var n = j.InstanceMethods.GetMethodInfo (encodedMember);
-				return n.InvokeNonvirtualDoubleMethod (self.PeerReference, j.JniPeerType.PeerReference, parameters);
+				return JniEnvironment.InstanceMethods.CallNonvirtualDoubleMethod (self.PeerReference, j.JniPeerType.PeerReference, n, parameters);
 				
 			}
 
@@ -326,7 +326,7 @@ namespace Java.Interop {
 
 				var m   = GetMethodInfo (encodedMember);
 
-				return m.InvokeNonvirtualDoubleMethod (self.PeerReference, JniPeerType.PeerReference, parameters);
+				return JniEnvironment.InstanceMethods.CallNonvirtualDoubleMethod (self.PeerReference, JniPeerType.PeerReference, m, parameters);
 				
 			}
 
@@ -336,7 +336,7 @@ namespace Java.Interop {
 
 				var m   = GetMethodInfo (encodedMember);
 
-				return m.InvokeVirtualObjectMethod (self.PeerReference, parameters);
+				return JniEnvironment.InstanceMethods.CallObjectMethod (self.PeerReference, m, parameters);
 				
 			}
 
@@ -347,12 +347,12 @@ namespace Java.Interop {
 				var declaringType   = DeclaringType;
 				if (self.GetType () == declaringType || declaringType == null || self.GetType () == self.JniPeerMembers.ManagedPeerType) {
 					var m   = GetMethodInfo (encodedMember);
-					return m.InvokeVirtualObjectMethod (self.PeerReference, parameters);
+					return JniEnvironment.InstanceMethods.CallObjectMethod (self.PeerReference, m, parameters);
 					
 				}
 				var j = self.JniPeerMembers;
 				var n = j.InstanceMethods.GetMethodInfo (encodedMember);
-				return n.InvokeNonvirtualObjectMethod (self.PeerReference, j.JniPeerType.PeerReference, parameters);
+				return JniEnvironment.InstanceMethods.CallNonvirtualObjectMethod (self.PeerReference, j.JniPeerType.PeerReference, n, parameters);
 				
 			}
 
@@ -362,7 +362,7 @@ namespace Java.Interop {
 
 				var m   = GetMethodInfo (encodedMember);
 
-				return m.InvokeNonvirtualObjectMethod (self.PeerReference, JniPeerType.PeerReference, parameters);
+				return JniEnvironment.InstanceMethods.CallNonvirtualObjectMethod (self.PeerReference, JniPeerType.PeerReference, m, parameters);
 				
 			}
 		}

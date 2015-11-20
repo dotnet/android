@@ -130,7 +130,7 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				var methods = peer.GetConstructorsForType (self.GetType ());
 				var ctor    = methods.GetConstructor (constructorSignature);
-				ctor.InvokeNonvirtualVoidMethod (self.PeerReference, methods.JniPeerType.PeerReference, args);
+				JniEnvironment.InstanceMethods.CallNonvirtualVoidMethod (self.PeerReference, methods.JniPeerType.PeerReference, ctor, args);
 			} finally {
 <#
 		for (int a = 1; a <= i; ++a) {

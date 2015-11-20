@@ -167,14 +167,14 @@ namespace Java.Interop {
 			JniEnvironment.Types.UnregisterNatives (PeerReference);
 		}
 
-		public JniInstanceMethodInfo GetConstructor (string signature)
+		public JniMethodInfo GetConstructor (string signature)
 		{
 			AssertValid ();
 
 			return JniEnvironment.InstanceMethods.GetMethodID (PeerReference, "<init>", signature);
 		}
 
-		public JniInstanceMethodInfo GetCachedConstructor (ref JniInstanceMethodInfo cachedMethod, string signature)
+		public JniMethodInfo GetCachedConstructor (ref JniMethodInfo cachedMethod, string signature)
 		{
 			AssertValid ();
 
@@ -188,21 +188,21 @@ namespace Java.Interop {
 			return JniEnvironment.Object.AllocObject (PeerReference);
 		}
 
-		public unsafe JniObjectReference NewObject (JniInstanceMethodInfo constructor, JniArgumentValue* @parameters)
+		public unsafe JniObjectReference NewObject (JniMethodInfo constructor, JniArgumentValue* @parameters)
 		{
 			AssertValid ();
 
 			return JniEnvironment.Object.NewObject (PeerReference, constructor, parameters);
 		}
 
-		public JniInstanceFieldInfo GetInstanceField (string name, string signature)
+		public JniFieldInfo GetInstanceField (string name, string signature)
 		{
 			AssertValid ();
 
 			return JniEnvironment.InstanceFields.GetFieldID (PeerReference, name, signature);
 		}
 
-		public JniInstanceFieldInfo GetCachedInstanceField (ref JniInstanceFieldInfo cachedField, string name, string signature)
+		public JniFieldInfo GetCachedInstanceField (ref JniFieldInfo cachedField, string name, string signature)
 		{
 			AssertValid ();
 
@@ -215,14 +215,14 @@ namespace Java.Interop {
 			return cachedField;
 		}
 
-		public JniStaticFieldInfo GetStaticField (string name, string signature)
+		public JniFieldInfo GetStaticField (string name, string signature)
 		{
 			AssertValid ();
 
 			return JniEnvironment.StaticFields.GetStaticFieldID (PeerReference, name, signature);
 		}
 
-		public JniStaticFieldInfo GetCachedStaticField (ref JniStaticFieldInfo cachedField, string name, string signature)
+		public JniFieldInfo GetCachedStaticField (ref JniFieldInfo cachedField, string name, string signature)
 		{
 			AssertValid ();
 
@@ -235,14 +235,14 @@ namespace Java.Interop {
 			return cachedField;
 		}
 
-		public JniInstanceMethodInfo GetInstanceMethod (string name, string signature)
+		public JniMethodInfo GetInstanceMethod (string name, string signature)
 		{
 			AssertValid ();
 
 			return JniEnvironment.InstanceMethods.GetMethodID (PeerReference, name, signature);
 		}
 
-		public JniInstanceMethodInfo GetCachedInstanceMethod (ref JniInstanceMethodInfo cachedMethod, string name, string signature)
+		public JniMethodInfo GetCachedInstanceMethod (ref JniMethodInfo cachedMethod, string name, string signature)
 		{
 			AssertValid ();
 
@@ -255,14 +255,14 @@ namespace Java.Interop {
 			return cachedMethod;
 		}
 
-		public JniStaticMethodInfo GetStaticMethod (string name, string signature)
+		public JniMethodInfo GetStaticMethod (string name, string signature)
 		{
 			AssertValid ();
 
 			return JniEnvironment.StaticMethods.GetStaticMethodID (PeerReference, name, signature);
 		}
 
-		public JniStaticMethodInfo GetCachedStaticMethod (ref JniStaticMethodInfo cachedMethod, string name, string signature)
+		public JniMethodInfo GetCachedStaticMethod (ref JniMethodInfo cachedMethod, string name, string signature)
 		{
 			AssertValid ();
 

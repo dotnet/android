@@ -19,7 +19,7 @@ namespace Java.Interop
 				new KeyValuePair<string, string>("void",       "V"),
 			};
 
-			static  readonly    JniInstanceMethodInfo   Class_getName;
+			static  readonly    JniMethodInfo           Class_getName;
 
 			static Types ()
 			{
@@ -116,7 +116,7 @@ namespace Java.Interop
 
 			public static string GetJniTypeNameFromClass (JniObjectReference reference)
 			{
-				var s = Class_getName.InvokeVirtualObjectMethod (reference);
+				var s = JniEnvironment.InstanceMethods.CallObjectMethod (reference, Class_getName);
 				return JavaClassToJniType (Strings.ToString (ref s, JniObjectReferenceOptions.DisposeSourceReference));
 			}
 

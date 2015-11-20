@@ -379,18 +379,18 @@ namespace Java.Interop
 			get {return JniType.GetCachedJniType (ref _typeRef, "java/lang/Runtime");}
 		}
 
-		static JniStaticMethodInfo _getRuntime;
+		static JniMethodInfo _getRuntime;
 		internal static JniObjectReference GetRuntime ()
 		{
-			return TypeRef.GetCachedStaticMethod (ref _getRuntime, "getRuntime", "()Ljava/lang/Runtime;")
-				.InvokeObjectMethod (TypeRef.PeerReference);
+			TypeRef.GetCachedStaticMethod (ref _getRuntime, "getRuntime", "()Ljava/lang/Runtime;");
+			return JniEnvironment.StaticMethods.CallStaticObjectMethod (TypeRef.PeerReference, _getRuntime);
 		}
 
-		static JniInstanceMethodInfo _gc;
+		static JniMethodInfo _gc;
 		internal static void GC (JniObjectReference runtime)
 		{
-			TypeRef.GetCachedInstanceMethod (ref _gc, "gc", "()V")
-				.InvokeVirtualVoidMethod (runtime);
+			TypeRef.GetCachedInstanceMethod (ref _gc, "gc", "()V");
+			JniEnvironment.InstanceMethods.CallVoidMethod (runtime, _gc);
 		}
 	}
 

@@ -5,15 +5,15 @@
 <#@ import    namespace="System.Text" #>
 <#
 	var jniReturnTypes = new[]{
-		new { JniCallType   = "Boolean",    ReturnType  = "bool",               ParameterType = "bool" },
-		new { JniCallType   = "SByte",      ReturnType  = "sbyte",              ParameterType = "sbyte" },
-		new { JniCallType   = "Char",       ReturnType  = "char",               ParameterType = "char" },
-		new { JniCallType   = "Int16",      ReturnType  = "short",              ParameterType = "short" },
-		new { JniCallType   = "Int32",      ReturnType  = "int",                ParameterType = "int" },
-		new { JniCallType   = "Int64",      ReturnType  = "long",               ParameterType = "long" },
-		new { JniCallType   = "Single",     ReturnType  = "float",              ParameterType = "float" },
-		new { JniCallType   = "Double",     ReturnType  = "double",             ParameterType = "double" },
-		new { JniCallType   = "Object",     ReturnType  = "JniObjectReference", ParameterType = "JniObjectReference" },
+		new { JniCallType   = "Boolean",    ManagedType = "Boolean",    ReturnType  = "bool",               ParameterType = "bool" },
+		new { JniCallType   = "Byte",       ManagedType = "SByte",      ReturnType  = "sbyte",              ParameterType = "sbyte" },
+		new { JniCallType   = "Char",       ManagedType = "Char",       ReturnType  = "char",               ParameterType = "char" },
+		new { JniCallType   = "Short",      ManagedType = "Int16",      ReturnType  = "short",              ParameterType = "short" },
+		new { JniCallType   = "Int",        ManagedType = "Int32",      ReturnType  = "int",                ParameterType = "int" },
+		new { JniCallType   = "Long",       ManagedType = "Int64",      ReturnType  = "long",               ParameterType = "long" },
+		new { JniCallType   = "Float",      ManagedType = "Single",     ReturnType  = "float",              ParameterType = "float" },
+		new { JniCallType   = "Double",     ManagedType = "Double",     ReturnType  = "double",             ParameterType = "double" },
+		new { JniCallType   = "Object",     ManagedType = "Object",     ReturnType  = "JniObjectReference", ParameterType = "JniObjectReference" },
 	};
 
 #>
@@ -25,22 +25,22 @@ namespace Java.Interop {
 	foreach (var info in jniReturnTypes) {
 #>
 
-		public <#= info.ReturnType #> Get<#= info.JniCallType #>Value (
+		public <#= info.ReturnType #> Get<#= info.ManagedType #>Value (
 			string encodedMember,
 			IJavaPeerable   self)
 		{
 			JniPeerMembers.AssertSelf (self);
 
-			return GetFieldInfo (encodedMember)
-				.Get<#= info.JniCallType #>Value (self.PeerReference);
+			var f   = GetFieldInfo (encodedMember);
+			return JniEnvironment.InstanceFields.Get<#= info.JniCallType #>Field (self.PeerReference, f);
 		}
 
 		public void SetValue (string encodedMember, IJavaPeerable self, <#= info.ParameterType #> value)
 		{
 			JniPeerMembers.AssertSelf (self);
 
-			GetFieldInfo (encodedMember)
-				.SetValue (self.PeerReference, value);
+			var f  = GetFieldInfo (encodedMember);
+			JniEnvironment.InstanceFields.Set<#= info.JniCallType #>Field (self.PeerReference, f, value);
 		}
 <#
 	}
@@ -52,16 +52,16 @@ namespace Java.Interop {
 	foreach (var info in jniReturnTypes) {
 #>
 
-		public <#= info.ReturnType #> Get<#= info.JniCallType #>Value (string encodedMember)
+		public <#= info.ReturnType #> Get<#= info.ManagedType #>Value (string encodedMember)
 		{
-			return GetFieldInfo (encodedMember)
-				.Get<#= info.JniCallType #>Value (Members.JniPeerType.PeerReference);
+			var f   = GetFieldInfo (encodedMember);
+			return JniEnvironment.StaticFields.GetStatic<#= info.JniCallType #>Field (Members.JniPeerType.PeerReference, f);
 		}
 
 		public void SetValue (string encodedMember, <#= info.ParameterType #> value)
 		{
-			GetFieldInfo (encodedMember)
-				.SetValue (Members.JniPeerType.PeerReference, value);
+			var f   = GetFieldInfo (encodedMember);
+			JniEnvironment.StaticFields.SetStatic<#= info.JniCallType #>Field (Members.JniPeerType.PeerReference, f, value);
 		}
 <#
 	}

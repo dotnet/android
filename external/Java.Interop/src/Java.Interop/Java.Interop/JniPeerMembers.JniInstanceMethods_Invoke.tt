@@ -5,16 +5,16 @@
 <#@ import    namespace="System.Text" #>
 <#
 	var jniReturnTypes = new[]{
-		new { JniCallType   = "Void",       ReturnType  = "void" },
-		new { JniCallType   = "Boolean",    ReturnType  = "bool" },
-		new { JniCallType   = "SByte",      ReturnType  = "sbyte" },
-		new { JniCallType   = "Char",       ReturnType  = "char" },
-		new { JniCallType   = "Int16",      ReturnType  = "short" },
-		new { JniCallType   = "Int32",      ReturnType  = "int" },
-		new { JniCallType   = "Int64",      ReturnType  = "long" },
-		new { JniCallType   = "Single",     ReturnType  = "float" },
-		new { JniCallType   = "Double",     ReturnType  = "double" },
-		new { JniCallType   = "Object",     ReturnType  = "JniObjectReference" },
+		new { JniCallType   = "Void",       ManagedType = "Void",       ReturnType  = "void" },
+		new { JniCallType   = "Boolean",    ManagedType = "Boolean",    ReturnType  = "bool" },
+		new { JniCallType   = "Byte",       ManagedType = "SByte",      ReturnType  = "sbyte" },
+		new { JniCallType   = "Char",       ManagedType = "Char",       ReturnType  = "char" },
+		new { JniCallType   = "Short",      ManagedType = "Int16",      ReturnType  = "short" },
+		new { JniCallType   = "Int",        ManagedType = "Int32",      ReturnType  = "int" },
+		new { JniCallType   = "Long",       ManagedType = "Int64",      ReturnType  = "long" },
+		new { JniCallType   = "Float",      ManagedType = "Single",     ReturnType  = "float" },
+		new { JniCallType   = "Double",     ManagedType = "Double",     ReturnType  = "double" },
+		new { JniCallType   = "Object",     ManagedType = "Object",     ReturnType  = "JniObjectReference" },
 	};
 
 #>
@@ -29,29 +29,29 @@ namespace Java.Interop {
 	foreach (var returnType in jniReturnTypes) {
 #>
 
-			public unsafe <#= returnType.ReturnType #> InvokeAbstract<#= returnType.JniCallType #>Method (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			public unsafe <#= returnType.ReturnType #> InvokeAbstract<#= returnType.ManagedType #>Method (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
 				var m   = GetMethodInfo (encodedMember);
 
-				<#= returnType.ReturnType != "void" ? "return " : "" #>m.InvokeVirtual<#= returnType.JniCallType #>Method (self.PeerReference, parameters);
+				<#= returnType.ReturnType != "void" ? "return " : "" #>JniEnvironment.InstanceMethods.Call<#= returnType.JniCallType #>Method (self.PeerReference, m, parameters);
 				<#= returnType.ReturnType == "void" ? "return;" : "" #>
 			}
 
-			public unsafe <#= returnType.ReturnType #> InvokeVirtual<#= returnType.JniCallType #>Method (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			public unsafe <#= returnType.ReturnType #> InvokeVirtual<#= returnType.ManagedType #>Method (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
 				var declaringType   = DeclaringType;
 				if (self.GetType () == declaringType || declaringType == null || self.GetType () == self.JniPeerMembers.ManagedPeerType) {
 					var m   = GetMethodInfo (encodedMember);
-					<#= returnType.ReturnType != "void" ? "return " : "" #>m.InvokeVirtual<#= returnType.JniCallType #>Method (self.PeerReference, parameters);
+					<#= returnType.ReturnType != "void" ? "return " : "" #>JniEnvironment.InstanceMethods.Call<#= returnType.JniCallType #>Method (self.PeerReference, m, parameters);
 					<#= returnType.ReturnType == "void" ? "return;" : "" #>
 				}
 				var j = self.JniPeerMembers;
 				var n = j.InstanceMethods.GetMethodInfo (encodedMember);
-				<#= returnType.ReturnType != "void" ? "return " : "" #>n.InvokeNonvirtual<#= returnType.JniCallType #>Method (self.PeerReference, j.JniPeerType.PeerReference, parameters);
+				<#= returnType.ReturnType != "void" ? "return " : "" #>JniEnvironment.InstanceMethods.CallNonvirtual<#= returnType.JniCallType #>Method (self.PeerReference, j.JniPeerType.PeerReference, n, parameters);
 				<#= returnType.ReturnType == "void" ? "return;" : "" #>
 			}
 
@@ -61,7 +61,7 @@ namespace Java.Interop {
 
 				var m   = GetMethodInfo (encodedMember);
 
-				<#= returnType.ReturnType != "void" ? "return " : "" #>m.InvokeNonvirtual<#= returnType.JniCallType #>Method (self.PeerReference, JniPeerType.PeerReference, parameters);
+				<#= returnType.ReturnType != "void" ? "return " : "" #>JniEnvironment.InstanceMethods.CallNonvirtual<#= returnType.JniCallType #>Method (self.PeerReference, JniPeerType.PeerReference, m, parameters);
 				<#= returnType.ReturnType == "void" ? "return;" : "" #>
 			}
 <#

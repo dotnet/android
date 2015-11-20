@@ -34,12 +34,14 @@ namespace Java.InteropTests
 
 				t.RegisterNativeMethods (methods.ToArray ());
 
-				t.GetStaticMethod ("testStaticMethods", "()V").InvokeVoidMethod (t.PeerReference);
+				var m = t.GetStaticMethod ("testStaticMethods", "()V");
+				JniEnvironment.StaticMethods.CallStaticVoidMethod (t.PeerReference, m);
 				Assert.IsTrue (ExportTest.StaticHelloCalled);
 				Assert.IsTrue (ExportTest.StaticActionInt32StringCalled);
 
 				using (var o = CreateExportTest (t)) {
-					t.GetInstanceMethod ("testMethods", "()V").InvokeVirtualVoidMethod (o.PeerReference);
+					var n = t.GetInstanceMethod ("testMethods", "()V");
+					JniEnvironment.InstanceMethods.CallVoidMethod (o.PeerReference, n);
 					Assert.IsTrue (o.HelloCalled);
 					o.Dispose ();
 				}

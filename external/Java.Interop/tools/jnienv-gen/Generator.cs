@@ -371,7 +371,7 @@ namespace Xamarin.Java.Interop
 					} else {
 						foreach (var line in entry.ReturnType.GetHandleCreationLogStatements (style, entry.Name, "tmp"))
 							o.WriteLine ("\t\t\t{0}", line);
-						foreach (var line in entry.ReturnType.GetMarshalToManagedStatements (style, "tmp"))
+						foreach (var line in entry.ReturnType.GetMarshalToManagedStatements (style, "tmp", entry))
 							o.WriteLine ("\t\t\t{0}", line);
 					}
 					break;
@@ -651,7 +651,7 @@ namespace Xamarin.Java.Interop
 			return variable;
 		}
 
-		public  virtual     string[]    GetMarshalToManagedStatements (HandleStyle style, string variable)
+		public  virtual     string[]    GetMarshalToManagedStatements (HandleStyle style, string variable, JniFunction entry)
 		{
 			return new[] {
 				string.Format ("return {0};", variable),
@@ -715,7 +715,7 @@ namespace Xamarin.Java.Interop
 			return "bool";
 		}
 
-		public override string[] GetMarshalToManagedStatements (HandleStyle style, string variable)
+		public override string[] GetMarshalToManagedStatements (HandleStyle style, string variable, JniFunction entry)
 		{
 			return new string[] {
 				string.Format ("return ({0} != 0) ? true : false;", variable),
@@ -745,7 +745,7 @@ namespace Xamarin.Java.Interop
 			return "string";
 		}
 
-		public override string[] GetMarshalToManagedStatements (HandleStyle style, string variable)
+		public override string[] GetMarshalToManagedStatements (HandleStyle style, string variable, JniFunction entry)
 		{
 			switch (style) {
 			case HandleStyle.SafeHandle:
@@ -793,7 +793,7 @@ namespace Xamarin.Java.Interop
 			return "JniReleaseArrayElementsMode";
 		}
 
-		public override string[] GetMarshalToManagedStatements (HandleStyle style, string variable)
+		public override string[] GetMarshalToManagedStatements (HandleStyle style, string variable, JniFunction entry)
 		{
 			return new string[] {
 				string.Format ("return (JniReleaseArrayElementsMode) {0};", variable),
@@ -865,8 +865,9 @@ namespace Xamarin.Java.Interop
 				return new [] {
 					string.Format ("if ({0} == null)", variable),
 					string.Format ("\tthrow new ArgumentNullException (\"{0}\");", variableName),
-					string.Format ("if ({0}.ID == IntPtr.Zero)", variable),
-					string.Format ("\tthrow new ArgumentException (\"Handle value cannot be null.\", \"{0}\");", variableName),
+					string.Format ("if (!{0}.IsValid)", variable),
+					string.Format ("\tthrow new ArgumentException (\"Handle value is not valid.\", \"{0}\");", variableName),
+					string.Format ("System.Diagnostics.Debug.Assert ({0}{1}.IsStatic);", IsStatic ? "" : "!", variableName),
 				};
 			case HandleStyle.XAIntPtr:
 				return new[] {
@@ -877,7 +878,7 @@ namespace Xamarin.Java.Interop
 			return new string [0];
 		}
 
-		public override string[] GetMarshalToManagedStatements (HandleStyle style, string variable)
+		public override string[] GetMarshalToManagedStatements (HandleStyle style, string variable, JniFunction entry)
 		{
 			switch (style) {
 			case HandleStyle.SafeHandle:
@@ -886,7 +887,7 @@ namespace Xamarin.Java.Interop
 				return new[] {
 					string.Format ("if ({0} == IntPtr.Zero)", variable),
 					string.Format ("\treturn null;"),
-					string.Format ("return new {0} ({1});", type, variable),
+					string.Format ("return new {0} ({1}, {2}, {3}, isStatic: {4});", type, entry.Parameters [1].Name, entry.Parameters [2].Name, variable, IsStatic ? "true" : "false"),
 				};
 			case HandleStyle.XAIntPtr:
 				return new[]{
@@ -895,12 +896,16 @@ namespace Xamarin.Java.Interop
 			}
 			return new string [0];
 		}
+
+		protected virtual bool IsStatic {
+			get {return false;}
+		}
 	}
 
 	class InstanceFieldTypeInfo : IdTypeInfo {
 
 		public InstanceFieldTypeInfo (string jni)
-			: base (jni, "JniInstanceFieldInfo")
+			: base (jni, "JniFieldInfo")
 		{
 		}
 	}
@@ -908,7 +913,7 @@ namespace Xamarin.Java.Interop
 	class InstanceMethodTypeInfo : IdTypeInfo {
 
 		public InstanceMethodTypeInfo (string jni)
-			: base (jni, "JniInstanceMethodInfo")
+			: base (jni, "JniMethodInfo")
 		{
 		}
 	}
@@ -916,16 +921,24 @@ namespace Xamarin.Java.Interop
 	class StaticFieldTypeInfo : IdTypeInfo {
 
 		public StaticFieldTypeInfo (string jni)
-			: base (jni, "JniStaticFieldInfo")
+			: base (jni, "JniFieldInfo")
 		{
+		}
+
+		protected override bool IsStatic {
+			get {return true;}
 		}
 	}
 
 	class StaticMethodTypeInfo : IdTypeInfo {
 
 		public StaticMethodTypeInfo (string jni)
-			: base (jni, "JniStaticMethodInfo")
+			: base (jni, "JniMethodInfo")
 		{
+		}
+
+		protected override bool IsStatic {
+			get {return true;}
 		}
 	}
 
@@ -980,7 +993,7 @@ namespace Xamarin.Java.Interop
 			return null;
 		}
 
-		public override string[] GetMarshalToManagedStatements (HandleStyle style, string variable)
+		public override string[] GetMarshalToManagedStatements (HandleStyle style, string variable, JniFunction entry)
 		{
 			switch (style) {
 			case HandleStyle.SafeHandle:

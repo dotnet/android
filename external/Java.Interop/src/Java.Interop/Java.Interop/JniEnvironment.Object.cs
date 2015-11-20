@@ -6,7 +6,7 @@ namespace Java.Interop {
 
 		public static partial class Object {
 
-			static  JniInstanceMethodInfo   Object_toString;
+			static  JniMethodInfo           Object_toString;
 
 			static Object ()
 			{
@@ -17,7 +17,7 @@ namespace Java.Interop {
 
 			public static JniObjectReference    ToString (JniObjectReference value)
 			{
-				return Object_toString.InvokeVirtualObjectMethod (value);
+				return JniEnvironment.InstanceMethods.CallObjectMethod (value, Object_toString);
 			}
 		}
 	}

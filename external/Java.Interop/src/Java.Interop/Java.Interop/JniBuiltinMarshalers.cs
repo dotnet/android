@@ -91,7 +91,7 @@ namespace Java.Interop {
 			return new JniArgumentValue ((Boolean) value);
 		}
 
-		static JniInstanceMethodInfo init;
+		static JniMethodInfo init;
 		internal static unsafe JniObjectReference CreateLocalRef (object value)
 		{
 			Debug.Assert (value is Boolean, "Expected value of type `Boolean`; was: " + (value == null ? "<null>" : value.GetType ().FullName));
@@ -103,13 +103,13 @@ namespace Java.Interop {
 			return TypeRef.NewObject (init, args);
 		}
 
-		static JniInstanceMethodInfo booleanValue;
+		static JniMethodInfo booleanValue;
 		internal static object GetValueFromJni (ref JniObjectReference self, JniObjectReferenceOptions transfer, Type targetType)
 		{
 			Debug.Assert (targetType == null || targetType == typeof (Boolean), "Expected targetType==typeof(Boolean); was: " + targetType);
 			TypeRef.GetCachedInstanceMethod (ref booleanValue, "booleanValue", "()Z");
 			try {
-				return booleanValue.InvokeVirtualBooleanMethod (self);
+				return JniEnvironment.InstanceMethods.CallBooleanMethod (self, booleanValue);
 			} finally {
 				JniObjectReference.Dispose (ref self, transfer);
 			}
@@ -129,7 +129,7 @@ namespace Java.Interop {
 			return new JniArgumentValue ((SByte) value);
 		}
 
-		static JniInstanceMethodInfo init;
+		static JniMethodInfo init;
 		internal static unsafe JniObjectReference CreateLocalRef (object value)
 		{
 			Debug.Assert (value is SByte, "Expected value of type `SByte`; was: " + (value == null ? "<null>" : value.GetType ().FullName));
@@ -141,13 +141,13 @@ namespace Java.Interop {
 			return TypeRef.NewObject (init, args);
 		}
 
-		static JniInstanceMethodInfo byteValue;
+		static JniMethodInfo byteValue;
 		internal static object GetValueFromJni (ref JniObjectReference self, JniObjectReferenceOptions transfer, Type targetType)
 		{
 			Debug.Assert (targetType == null || targetType == typeof (SByte), "Expected targetType==typeof(SByte); was: " + targetType);
 			TypeRef.GetCachedInstanceMethod (ref byteValue, "byteValue", "()B");
 			try {
-				return byteValue.InvokeVirtualSByteMethod (self);
+				return JniEnvironment.InstanceMethods.CallByteMethod (self, byteValue);
 			} finally {
 				JniObjectReference.Dispose (ref self, transfer);
 			}
@@ -167,7 +167,7 @@ namespace Java.Interop {
 			return new JniArgumentValue ((Char) value);
 		}
 
-		static JniInstanceMethodInfo init;
+		static JniMethodInfo init;
 		internal static unsafe JniObjectReference CreateLocalRef (object value)
 		{
 			Debug.Assert (value is Char, "Expected value of type `Char`; was: " + (value == null ? "<null>" : value.GetType ().FullName));
@@ -179,13 +179,13 @@ namespace Java.Interop {
 			return TypeRef.NewObject (init, args);
 		}
 
-		static JniInstanceMethodInfo charValue;
+		static JniMethodInfo charValue;
 		internal static object GetValueFromJni (ref JniObjectReference self, JniObjectReferenceOptions transfer, Type targetType)
 		{
 			Debug.Assert (targetType == null || targetType == typeof (Char), "Expected targetType==typeof(Char); was: " + targetType);
 			TypeRef.GetCachedInstanceMethod (ref charValue, "charValue", "()C");
 			try {
-				return charValue.InvokeVirtualCharMethod (self);
+				return JniEnvironment.InstanceMethods.CallCharMethod (self, charValue);
 			} finally {
 				JniObjectReference.Dispose (ref self, transfer);
 			}
@@ -205,7 +205,7 @@ namespace Java.Interop {
 			return new JniArgumentValue ((Int16) value);
 		}
 
-		static JniInstanceMethodInfo init;
+		static JniMethodInfo init;
 		internal static unsafe JniObjectReference CreateLocalRef (object value)
 		{
 			Debug.Assert (value is Int16, "Expected value of type `Int16`; was: " + (value == null ? "<null>" : value.GetType ().FullName));
@@ -217,13 +217,13 @@ namespace Java.Interop {
 			return TypeRef.NewObject (init, args);
 		}
 
-		static JniInstanceMethodInfo shortValue;
+		static JniMethodInfo shortValue;
 		internal static object GetValueFromJni (ref JniObjectReference self, JniObjectReferenceOptions transfer, Type targetType)
 		{
 			Debug.Assert (targetType == null || targetType == typeof (Int16), "Expected targetType==typeof(Int16); was: " + targetType);
 			TypeRef.GetCachedInstanceMethod (ref shortValue, "shortValue", "()S");
 			try {
-				return shortValue.InvokeVirtualInt16Method (self);
+				return JniEnvironment.InstanceMethods.CallShortMethod (self, shortValue);
 			} finally {
 				JniObjectReference.Dispose (ref self, transfer);
 			}
@@ -243,7 +243,7 @@ namespace Java.Interop {
 			return new JniArgumentValue ((Int32) value);
 		}
 
-		static JniInstanceMethodInfo init;
+		static JniMethodInfo init;
 		internal static unsafe JniObjectReference CreateLocalRef (object value)
 		{
 			Debug.Assert (value is Int32, "Expected value of type `Int32`; was: " + (value == null ? "<null>" : value.GetType ().FullName));
@@ -255,13 +255,13 @@ namespace Java.Interop {
 			return TypeRef.NewObject (init, args);
 		}
 
-		static JniInstanceMethodInfo intValue;
+		static JniMethodInfo intValue;
 		internal static object GetValueFromJni (ref JniObjectReference self, JniObjectReferenceOptions transfer, Type targetType)
 		{
 			Debug.Assert (targetType == null || targetType == typeof (Int32), "Expected targetType==typeof(Int32); was: " + targetType);
 			TypeRef.GetCachedInstanceMethod (ref intValue, "intValue", "()I");
 			try {
-				return intValue.InvokeVirtualInt32Method (self);
+				return JniEnvironment.InstanceMethods.CallIntMethod (self, intValue);
 			} finally {
 				JniObjectReference.Dispose (ref self, transfer);
 			}
@@ -281,7 +281,7 @@ namespace Java.Interop {
 			return new JniArgumentValue ((Int64) value);
 		}
 
-		static JniInstanceMethodInfo init;
+		static JniMethodInfo init;
 		internal static unsafe JniObjectReference CreateLocalRef (object value)
 		{
 			Debug.Assert (value is Int64, "Expected value of type `Int64`; was: " + (value == null ? "<null>" : value.GetType ().FullName));
@@ -293,13 +293,13 @@ namespace Java.Interop {
 			return TypeRef.NewObject (init, args);
 		}
 
-		static JniInstanceMethodInfo longValue;
+		static JniMethodInfo longValue;
 		internal static object GetValueFromJni (ref JniObjectReference self, JniObjectReferenceOptions transfer, Type targetType)
 		{
 			Debug.Assert (targetType == null || targetType == typeof (Int64), "Expected targetType==typeof(Int64); was: " + targetType);
 			TypeRef.GetCachedInstanceMethod (ref longValue, "longValue", "()J");
 			try {
-				return longValue.InvokeVirtualInt64Method (self);
+				return JniEnvironment.InstanceMethods.CallLongMethod (self, longValue);
 			} finally {
 				JniObjectReference.Dispose (ref self, transfer);
 			}
@@ -319,7 +319,7 @@ namespace Java.Interop {
 			return new JniArgumentValue ((Single) value);
 		}
 
-		static JniInstanceMethodInfo init;
+		static JniMethodInfo init;
 		internal static unsafe JniObjectReference CreateLocalRef (object value)
 		{
 			Debug.Assert (value is Single, "Expected value of type `Single`; was: " + (value == null ? "<null>" : value.GetType ().FullName));
@@ -331,13 +331,13 @@ namespace Java.Interop {
 			return TypeRef.NewObject (init, args);
 		}
 
-		static JniInstanceMethodInfo floatValue;
+		static JniMethodInfo floatValue;
 		internal static object GetValueFromJni (ref JniObjectReference self, JniObjectReferenceOptions transfer, Type targetType)
 		{
 			Debug.Assert (targetType == null || targetType == typeof (Single), "Expected targetType==typeof(Single); was: " + targetType);
 			TypeRef.GetCachedInstanceMethod (ref floatValue, "floatValue", "()F");
 			try {
-				return floatValue.InvokeVirtualSingleMethod (self);
+				return JniEnvironment.InstanceMethods.CallFloatMethod (self, floatValue);
 			} finally {
 				JniObjectReference.Dispose (ref self, transfer);
 			}
@@ -357,7 +357,7 @@ namespace Java.Interop {
 			return new JniArgumentValue ((Double) value);
 		}
 
-		static JniInstanceMethodInfo init;
+		static JniMethodInfo init;
 		internal static unsafe JniObjectReference CreateLocalRef (object value)
 		{
 			Debug.Assert (value is Double, "Expected value of type `Double`; was: " + (value == null ? "<null>" : value.GetType ().FullName));
@@ -369,13 +369,13 @@ namespace Java.Interop {
 			return TypeRef.NewObject (init, args);
 		}
 
-		static JniInstanceMethodInfo doubleValue;
+		static JniMethodInfo doubleValue;
 		internal static object GetValueFromJni (ref JniObjectReference self, JniObjectReferenceOptions transfer, Type targetType)
 		{
 			Debug.Assert (targetType == null || targetType == typeof (Double), "Expected targetType==typeof(Double); was: " + targetType);
 			TypeRef.GetCachedInstanceMethod (ref doubleValue, "doubleValue", "()D");
 			try {
-				return doubleValue.InvokeVirtualDoubleMethod (self);
+				return JniEnvironment.InstanceMethods.CallDoubleMethod (self, doubleValue);
 			} finally {
 				JniObjectReference.Dispose (ref self, transfer);
 			}

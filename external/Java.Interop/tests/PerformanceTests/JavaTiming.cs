@@ -22,7 +22,7 @@ namespace Java.Interop.PerformanceTests
 			get {return JniType.GetCachedJniType (ref _TypeRef, JniTypeName);}
 		}
 
-		static JniInstanceMethodInfo Object_ctor;
+		static JniMethodInfo Object_ctor;
 		static unsafe JniObjectReference _NewObject ()
 		{
 			TypeRef.GetCachedConstructor (ref Object_ctor, "()V");
@@ -37,73 +37,73 @@ namespace Java.Interop.PerformanceTests
 			}
 		}
 
-		static JniStaticMethodInfo svm;
+		static JniMethodInfo svm;
 		public static void StaticVoidMethod ()
 		{
 			TypeRef.GetCachedStaticMethod (ref svm, "StaticVoidMethod", "()V");
-			svm.InvokeVoidMethod (TypeRef.PeerReference);
+			JniEnvironment.StaticMethods.CallStaticVoidMethod (TypeRef.PeerReference, svm);
 		}
 
-		static JniStaticMethodInfo sim;
+		static JniMethodInfo sim;
 		public static int StaticIntMethod ()
 		{
 			TypeRef.GetCachedStaticMethod (ref sim, "StaticIntMethod", "()I");
-			return sim.InvokeInt32Method (TypeRef.PeerReference);
+			return JniEnvironment.StaticMethods.CallStaticIntMethod (TypeRef.PeerReference, sim);
 		}
 
-		static JniStaticMethodInfo som;
+		static JniMethodInfo som;
 		public static IJavaPeerable StaticObjectMethod ()
 		{
 			TypeRef.GetCachedStaticMethod (ref som, "StaticObjectMethod", "()Ljava/lang/Object;");
-			var lref = som.InvokeObjectMethod (TypeRef.PeerReference);
+			var lref = JniEnvironment.StaticMethods.CallStaticObjectMethod (TypeRef.PeerReference, som);
 			return JniEnvironment.Runtime.ValueMarshaler.GetObject (ref lref, JniObjectReferenceOptions.DisposeSourceReference);
 		}
 
-		static JniInstanceMethodInfo vvm;
+		static JniMethodInfo vvm;
 		public virtual void VirtualVoidMethod ()
 		{
 			TypeRef.GetCachedInstanceMethod (ref vvm, "VirtualVoidMethod", "()V");
-			vvm.InvokeVirtualVoidMethod (PeerReference);
+			JniEnvironment.InstanceMethods.CallObjectMethod (PeerReference, vvm);
 		}
 
-		static JniInstanceMethodInfo vim;
+		static JniMethodInfo vim;
 		public virtual int VirtualIntMethod ()
 		{
 			TypeRef.GetCachedInstanceMethod (ref vim, "VirtualIntMethod", "()I");
-			return vim.InvokeVirtualInt32Method (PeerReference);
+			return JniEnvironment.InstanceMethods.CallIntMethod (PeerReference, vim);
 		}
 
-		static JniInstanceMethodInfo vom;
+		static JniMethodInfo vom;
 		public virtual IJavaPeerable VirtualObjectMethod ()
 		{
 			TypeRef.GetCachedInstanceMethod (ref vom, "VirtualObjectMethod", "()Ljava/lang/Object;");
-			var lref = vom.InvokeVirtualObjectMethod (PeerReference);
+			var lref = JniEnvironment.InstanceMethods.CallObjectMethod (PeerReference, vom);
 			return JniEnvironment.Runtime.ValueMarshaler.GetObject (ref lref, JniObjectReferenceOptions.DisposeSourceReference);
 		}
 
-		static JniInstanceMethodInfo fvm;
+		static JniMethodInfo fvm;
 		public void FinalVoidMethod ()
 		{
 			TypeRef.GetCachedInstanceMethod (ref fvm, "FinalVoidMethod", "()V");
-			fvm.InvokeNonvirtualVoidMethod (PeerReference, TypeRef.PeerReference);
+			JniEnvironment.InstanceMethods.CallNonvirtualVoidMethod (PeerReference, TypeRef.PeerReference, fvm);
 		}
 
-		static JniInstanceMethodInfo fim;
+		static JniMethodInfo fim;
 		public int FinalIntMethod ()
 		{
 			TypeRef.GetCachedInstanceMethod (ref fim, "FinalIntMethod", "()I");
-			return fim.InvokeNonvirtualInt32Method (PeerReference, TypeRef.PeerReference);
+			return JniEnvironment.InstanceMethods.CallNonvirtualIntMethod (PeerReference, TypeRef.PeerReference, fim);
 		}
 
-		static JniInstanceMethodInfo fom;
+		static JniMethodInfo fom;
 		public IJavaPeerable FinalObjectMethod ()
 		{
 			TypeRef.GetCachedInstanceMethod (ref fom, "FinalObjectMethod", "()Ljava/lang/Object;");
-			var lref = vom.InvokeNonvirtualObjectMethod (PeerReference, TypeRef.PeerReference);
+			var lref = JniEnvironment.InstanceMethods.CallNonvirtualObjectMethod (PeerReference, TypeRef.PeerReference, fom);
 			return JniEnvironment.Runtime.ValueMarshaler.GetObject (ref lref, JniObjectReferenceOptions.DisposeSourceReference);
 		}
 
-		static JniInstanceMethodInfo vim1;
+		static JniMethodInfo vim1;
 		public unsafe int VirtualIntMethod1Args (int value)
 		{
 			TypeRef.GetCachedInstanceMethod (ref vim1, "VirtualIntMethod1Args", "(I)I");
@@ -113,10 +113,10 @@ namespace Java.Interop.PerformanceTests
 			int r;
 
 			if (GetType () == _members.ManagedPeerType)
-				r = vim1.InvokeVirtualInt32Method (PeerReference, args);
+				r = JniEnvironment.InstanceMethods.CallIntMethod (PeerReference, vim1, args);
 			else {
-				JniInstanceMethodInfo m = JniPeerMembers.InstanceMethods.GetMethodInfo ("VirtualIntMethod1Args\u0000(I)I");
-				r = m.InvokeNonvirtualInt32Method (PeerReference, JniPeerMembers.JniPeerType.PeerReference, args);
+				JniMethodInfo m = JniPeerMembers.InstanceMethods.GetMethodInfo ("VirtualIntMethod1Args\u0000(I)I");
+				r = JniEnvironment.InstanceMethods.CallNonvirtualIntMethod (PeerReference, JniPeerMembers.JniPeerType.PeerReference, m, args);
 			}
 			return r;
 		}
@@ -134,7 +134,7 @@ namespace Java.Interop.PerformanceTests
 			return _members.InstanceMethods.InvokeGenericVirtualInt32Method ("VirtualIntMethod1Args\u0000(I)I", this, value);
 		}
 
-		static JniInstanceMethodInfo vim1_a;
+		static JniMethodInfo vim1_a;
 		public unsafe int VirtualIntMethod1Args (int[][][] value)
 		{
 			TypeRef.GetCachedInstanceMethod (ref vim1_a, "VirtualIntMethod1Args", "([[[I)I");
@@ -145,10 +145,10 @@ namespace Java.Interop.PerformanceTests
 				var args = stackalloc JniArgumentValue [1];
 				args [0] = new JniArgumentValue (native_array);
 				if (GetType () == _members.ManagedPeerType)
-					r = vim1_a.InvokeVirtualInt32Method (PeerReference, args);
+					r = JniEnvironment.InstanceMethods.CallIntMethod (PeerReference, vim1_a, args);
 				else {
-					JniInstanceMethodInfo m = JniPeerMembers.InstanceMethods.GetMethodInfo ("VirtualIntMethod1Args\u0000([[[I)I");
-					r = m.InvokeNonvirtualInt32Method (PeerReference, JniPeerMembers.JniPeerType.PeerReference, args);
+					JniMethodInfo m = JniPeerMembers.InstanceMethods.GetMethodInfo ("VirtualIntMethod1Args\u0000([[[I)I");
+					r = JniEnvironment.InstanceMethods.CallNonvirtualIntMethod (PeerReference, JniPeerMembers.JniPeerType.PeerReference, m, args);
 				}
 				native_array.CopyTo (value, 0);
 			}
@@ -173,17 +173,17 @@ namespace Java.Interop.PerformanceTests
 			return _members.InstanceMethods.InvokeGenericVirtualInt32Method ("VirtualIntMethod1Args\u0000([[[I)I", this, value);
 		}
 
-		static JniStaticMethodInfo svm1;
+		static JniMethodInfo svm1;
 		public static unsafe void StaticVoidMethod1Args (IJavaPeerable obj1)
 		{
 			TypeRef.GetCachedStaticMethod (ref svm1, "StaticVoidMethod1Args",
 					"(Ljava/lang/Object;)V");
 			var args = stackalloc JniArgumentValue [1];
 			args [0] = new JniArgumentValue (obj1);
-			svm1.InvokeVoidMethod (TypeRef.PeerReference, args);
+			JniEnvironment.StaticMethods.CallStaticVoidMethod (TypeRef.PeerReference, svm1, args);
 		}
 
-		static JniStaticMethodInfo svm2;
+		static JniMethodInfo svm2;
 		public static unsafe void StaticVoidMethod2Args (IJavaPeerable obj1, IJavaPeerable obj2)
 		{
 			TypeRef.GetCachedStaticMethod (ref svm2, "StaticVoidMethod2Args",
@@ -191,10 +191,10 @@ namespace Java.Interop.PerformanceTests
 			var args = stackalloc JniArgumentValue [2];
 			args [0] = new JniArgumentValue (obj1);
 			args [1] = new JniArgumentValue (obj2);
-			svm2.InvokeVoidMethod (TypeRef.PeerReference, args);
+			JniEnvironment.StaticMethods.CallStaticVoidMethod (TypeRef.PeerReference, svm2, args);
 		}
 
-		static JniStaticMethodInfo svm3;
+		static JniMethodInfo svm3;
 		public static unsafe void StaticVoidMethod3Args (IJavaPeerable obj1, IJavaPeerable obj2, IJavaPeerable obj3)
 		{
 			TypeRef.GetCachedStaticMethod (ref svm3, "StaticVoidMethod3Args",
@@ -203,29 +203,29 @@ namespace Java.Interop.PerformanceTests
 			args [0] = new JniArgumentValue (obj1);
 			args [1] = new JniArgumentValue (obj2);
 			args [1] = new JniArgumentValue (obj3);
-			svm2.InvokeVoidMethod (TypeRef.PeerReference, args);
+			JniEnvironment.StaticMethods.CallStaticVoidMethod (TypeRef.PeerReference, svm3, args);
 		}
 
-		static JniStaticMethodInfo svmi1;
+		static JniMethodInfo svmi1;
 		public static unsafe void StaticVoidMethod1IArgs (int obj1)
 		{
 			TypeRef.GetCachedStaticMethod (ref svmi1, "StaticVoidMethod1IArgs", "(I)V");
 			var args = stackalloc JniArgumentValue [1];
 			args [0] = new JniArgumentValue (obj1);
-			svmi1.InvokeVoidMethod (TypeRef.PeerReference, args);
+			JniEnvironment.StaticMethods.CallStaticVoidMethod (TypeRef.PeerReference, svmi1, args);
 		}
 
-		static JniStaticMethodInfo svmi2;
+		static JniMethodInfo svmi2;
 		public static unsafe void StaticVoidMethod2IArgs (int obj1, int obj2)
 		{
 			TypeRef.GetCachedStaticMethod (ref svmi2, "StaticVoidMethod2IArgs", "(II)V");
 			var args = stackalloc JniArgumentValue [2];
 			args [0] = new JniArgumentValue (obj1);
 			args [1] = new JniArgumentValue (obj2);
-			svmi1.InvokeVoidMethod (TypeRef.PeerReference, args);
+			JniEnvironment.StaticMethods.CallStaticVoidMethod (TypeRef.PeerReference, svmi2, args);
 		}
 
-		static JniStaticMethodInfo svmi3;
+		static JniMethodInfo svmi3;
 		public static unsafe void StaticVoidMethod3IArgs (int obj1, int obj2, int obj3)
 		{
 			TypeRef.GetCachedStaticMethod (ref svmi3, "StaticVoidMethod3IArgs", "(III)V");
@@ -233,43 +233,43 @@ namespace Java.Interop.PerformanceTests
 			args [0] = new JniArgumentValue (obj1);
 			args [1] = new JniArgumentValue (obj2);
 			args [1] = new JniArgumentValue (obj3);
-			svmi1.InvokeVoidMethod (TypeRef.PeerReference, args);
+			JniEnvironment.StaticMethods.CallStaticVoidMethod (TypeRef.PeerReference, svmi3, args);
 		}
 
 		const string toString_name  = "toString";
 		const string toString_sig   = "()Ljava/lang/String;";
 
-		static JniInstanceMethodInfo toString;
+		static JniMethodInfo toString;
 		public JniObjectReference Timing_ToString_Traditional ()
 		{
 			TypeRef.GetCachedInstanceMethod (ref toString, toString_name, toString_sig);
-			return toString.InvokeVirtualObjectMethod (PeerReference);
+			return JniEnvironment.InstanceMethods.CallObjectMethod (PeerReference, toString);
 		}
 
 		public JniObjectReference Timing_ToString_NoCache ()
 		{
 			var m = TypeRef.GetInstanceMethod (toString_name, toString_sig);
-			return m.InvokeVirtualObjectMethod (PeerReference);
+			return JniEnvironment.InstanceMethods.CallObjectMethod (PeerReference, m);
 		}
 
-		static Dictionary<string, JniInstanceMethodInfo> dictInstanceMethods = new Dictionary<string, JniInstanceMethodInfo>();
+		static Dictionary<string, JniMethodInfo> dictInstanceMethods = new Dictionary<string, JniMethodInfo>();
 		public JniObjectReference Timing_ToString_DictWithLock ()
 		{
-			JniInstanceMethodInfo m;
+			JniMethodInfo m;
 			lock (dictInstanceMethods) {
 				if (!dictInstanceMethods.TryGetValue (toString_name + toString_sig, out m))
 					dictInstanceMethods.Add (toString_name + toString_sig, m = TypeRef.GetInstanceMethod (toString_name, toString_sig));
 			}
-			return m.InvokeVirtualObjectMethod (PeerReference);
+			return JniEnvironment.InstanceMethods.CallObjectMethod (PeerReference, m);
 		}
 
-		static ConcurrentDictionary<string, JniInstanceMethodInfo> nolockInstanceMethods = new ConcurrentDictionary<string, JniInstanceMethodInfo>();
+		static ConcurrentDictionary<string, JniMethodInfo> nolockInstanceMethods = new ConcurrentDictionary<string, JniMethodInfo>();
 		public JniObjectReference Timing_ToString_DictWithNoLock ()
 		{
 			var m = nolockInstanceMethods.AddOrUpdate (toString_name + toString_sig,
 				s => TypeRef.GetInstanceMethod (toString_name, toString_sig),
 				(s, c) => c ?? TypeRef.GetInstanceMethod (toString_name, toString_sig));
-			return m.InvokeVirtualObjectMethod (PeerReference);
+			return JniEnvironment.InstanceMethods.CallObjectMethod (PeerReference, m);
 		}
 
 		public unsafe JniObjectReference Timing_ToString_JniPeerMembers ()

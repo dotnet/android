@@ -967,6 +967,31 @@ namespace
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
+
+		public static unsafe IntPtr GetPrimitiveArrayCritical (JniObjectReference array, bool* isCopy)
+		{
+			if (array.SafeHandle == null)
+				throw new ArgumentNullException ("array");
+			if (array.SafeHandle.IsInvalid)
+				throw new ArgumentException ("array");
+
+			var __info = JniEnvironment.CurrentInfo;
+			var tmp = __info.Invoker.GetPrimitiveArrayCritical (__info.EnvironmentPointer, array.SafeHandle, isCopy);
+			return tmp;
+		}
+
+		public static unsafe void ReleasePrimitiveArrayCritical (JniObjectReference array, IntPtr carray, JniReleaseArrayElementsMode mode)
+		{
+			if (array.SafeHandle == null)
+				throw new ArgumentNullException ("array");
+			if (array.SafeHandle.IsInvalid)
+				throw new ArgumentException ("array");
+			if (carray == IntPtr.Zero)
+				throw new ArgumentException ("'carray' must not be IntPtr.Zero.", "carray");
+
+			var __info = JniEnvironment.CurrentInfo;
+			__info.Invoker.ReleasePrimitiveArrayCritical (__info.EnvironmentPointer, array.SafeHandle, carray, ((int) mode));
+		}
 	}
 
 	public static partial class Exceptions {
@@ -1035,7 +1060,7 @@ namespace
 
 	public static partial class InstanceFields {
 
-		public static unsafe JniInstanceFieldInfo GetFieldID (JniObjectReference type, string name, string signature)
+		public static unsafe JniFieldInfo GetFieldID (JniObjectReference type, string name, string signature)
 		{
 			if (type.SafeHandle == null)
 				throw new ArgumentNullException ("type");
@@ -1055,10 +1080,10 @@ namespace
 
 			if (tmp == IntPtr.Zero)
 				return null;
-			return new JniInstanceFieldInfo (tmp);
+			return new JniFieldInfo (name, signature, tmp, isStatic: false);
 		}
 
-		public static unsafe JniObjectReference GetObjectField (JniObjectReference instance, JniInstanceFieldInfo field)
+		public static unsafe JniObjectReference GetObjectField (JniObjectReference instance, JniFieldInfo field)
 		{
 			if (instance.SafeHandle == null)
 				throw new ArgumentNullException ("instance");
@@ -1066,8 +1091,9 @@ namespace
 				throw new ArgumentException ("instance");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.GetObjectField (__info.EnvironmentPointer, instance.SafeHandle, field.ID);
@@ -1075,7 +1101,7 @@ namespace
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		public static unsafe bool GetBooleanField (JniObjectReference instance, JniInstanceFieldInfo field)
+		public static unsafe bool GetBooleanField (JniObjectReference instance, JniFieldInfo field)
 		{
 			if (instance.SafeHandle == null)
 				throw new ArgumentNullException ("instance");
@@ -1083,15 +1109,16 @@ namespace
 				throw new ArgumentException ("instance");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.GetBooleanField (__info.EnvironmentPointer, instance.SafeHandle, field.ID);
 			return (tmp != 0) ? true : false;
 		}
 
-		public static unsafe sbyte GetByteField (JniObjectReference instance, JniInstanceFieldInfo field)
+		public static unsafe sbyte GetByteField (JniObjectReference instance, JniFieldInfo field)
 		{
 			if (instance.SafeHandle == null)
 				throw new ArgumentNullException ("instance");
@@ -1099,15 +1126,16 @@ namespace
 				throw new ArgumentException ("instance");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.GetByteField (__info.EnvironmentPointer, instance.SafeHandle, field.ID);
 			return tmp;
 		}
 
-		public static unsafe char GetCharField (JniObjectReference instance, JniInstanceFieldInfo field)
+		public static unsafe char GetCharField (JniObjectReference instance, JniFieldInfo field)
 		{
 			if (instance.SafeHandle == null)
 				throw new ArgumentNullException ("instance");
@@ -1115,15 +1143,16 @@ namespace
 				throw new ArgumentException ("instance");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.GetCharField (__info.EnvironmentPointer, instance.SafeHandle, field.ID);
 			return tmp;
 		}
 
-		public static unsafe short GetShortField (JniObjectReference instance, JniInstanceFieldInfo field)
+		public static unsafe short GetShortField (JniObjectReference instance, JniFieldInfo field)
 		{
 			if (instance.SafeHandle == null)
 				throw new ArgumentNullException ("instance");
@@ -1131,15 +1160,16 @@ namespace
 				throw new ArgumentException ("instance");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.GetShortField (__info.EnvironmentPointer, instance.SafeHandle, field.ID);
 			return tmp;
 		}
 
-		public static unsafe int GetIntField (JniObjectReference instance, JniInstanceFieldInfo field)
+		public static unsafe int GetIntField (JniObjectReference instance, JniFieldInfo field)
 		{
 			if (instance.SafeHandle == null)
 				throw new ArgumentNullException ("instance");
@@ -1147,15 +1177,16 @@ namespace
 				throw new ArgumentException ("instance");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.GetIntField (__info.EnvironmentPointer, instance.SafeHandle, field.ID);
 			return tmp;
 		}
 
-		public static unsafe long GetLongField (JniObjectReference instance, JniInstanceFieldInfo field)
+		public static unsafe long GetLongField (JniObjectReference instance, JniFieldInfo field)
 		{
 			if (instance.SafeHandle == null)
 				throw new ArgumentNullException ("instance");
@@ -1163,15 +1194,16 @@ namespace
 				throw new ArgumentException ("instance");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.GetLongField (__info.EnvironmentPointer, instance.SafeHandle, field.ID);
 			return tmp;
 		}
 
-		public static unsafe float GetFloatField (JniObjectReference instance, JniInstanceFieldInfo field)
+		public static unsafe float GetFloatField (JniObjectReference instance, JniFieldInfo field)
 		{
 			if (instance.SafeHandle == null)
 				throw new ArgumentNullException ("instance");
@@ -1179,15 +1211,16 @@ namespace
 				throw new ArgumentException ("instance");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.GetFloatField (__info.EnvironmentPointer, instance.SafeHandle, field.ID);
 			return tmp;
 		}
 
-		public static unsafe double GetDoubleField (JniObjectReference instance, JniInstanceFieldInfo field)
+		public static unsafe double GetDoubleField (JniObjectReference instance, JniFieldInfo field)
 		{
 			if (instance.SafeHandle == null)
 				throw new ArgumentNullException ("instance");
@@ -1195,15 +1228,16 @@ namespace
 				throw new ArgumentException ("instance");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.GetDoubleField (__info.EnvironmentPointer, instance.SafeHandle, field.ID);
 			return tmp;
 		}
 
-		public static unsafe void SetObjectField (JniObjectReference instance, JniInstanceFieldInfo field, JniObjectReference value)
+		public static unsafe void SetObjectField (JniObjectReference instance, JniFieldInfo field, JniObjectReference value)
 		{
 			if (instance.SafeHandle == null)
 				throw new ArgumentNullException ("instance");
@@ -1211,14 +1245,15 @@ namespace
 				throw new ArgumentException ("instance");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetObjectField (__info.EnvironmentPointer, instance.SafeHandle, field.ID, value.SafeHandle);
 		}
 
-		public static unsafe void SetBooleanField (JniObjectReference instance, JniInstanceFieldInfo field, bool value)
+		public static unsafe void SetBooleanField (JniObjectReference instance, JniFieldInfo field, bool value)
 		{
 			if (instance.SafeHandle == null)
 				throw new ArgumentNullException ("instance");
@@ -1226,14 +1261,15 @@ namespace
 				throw new ArgumentException ("instance");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetBooleanField (__info.EnvironmentPointer, instance.SafeHandle, field.ID, (value ? (byte) 1 : (byte) 0));
 		}
 
-		public static unsafe void SetByteField (JniObjectReference instance, JniInstanceFieldInfo field, sbyte value)
+		public static unsafe void SetByteField (JniObjectReference instance, JniFieldInfo field, sbyte value)
 		{
 			if (instance.SafeHandle == null)
 				throw new ArgumentNullException ("instance");
@@ -1241,14 +1277,15 @@ namespace
 				throw new ArgumentException ("instance");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetByteField (__info.EnvironmentPointer, instance.SafeHandle, field.ID, value);
 		}
 
-		public static unsafe void SetCharField (JniObjectReference instance, JniInstanceFieldInfo field, char value)
+		public static unsafe void SetCharField (JniObjectReference instance, JniFieldInfo field, char value)
 		{
 			if (instance.SafeHandle == null)
 				throw new ArgumentNullException ("instance");
@@ -1256,14 +1293,15 @@ namespace
 				throw new ArgumentException ("instance");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetCharField (__info.EnvironmentPointer, instance.SafeHandle, field.ID, value);
 		}
 
-		public static unsafe void SetShortField (JniObjectReference instance, JniInstanceFieldInfo field, short value)
+		public static unsafe void SetShortField (JniObjectReference instance, JniFieldInfo field, short value)
 		{
 			if (instance.SafeHandle == null)
 				throw new ArgumentNullException ("instance");
@@ -1271,14 +1309,15 @@ namespace
 				throw new ArgumentException ("instance");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetShortField (__info.EnvironmentPointer, instance.SafeHandle, field.ID, value);
 		}
 
-		public static unsafe void SetIntField (JniObjectReference instance, JniInstanceFieldInfo field, int value)
+		public static unsafe void SetIntField (JniObjectReference instance, JniFieldInfo field, int value)
 		{
 			if (instance.SafeHandle == null)
 				throw new ArgumentNullException ("instance");
@@ -1286,14 +1325,15 @@ namespace
 				throw new ArgumentException ("instance");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetIntField (__info.EnvironmentPointer, instance.SafeHandle, field.ID, value);
 		}
 
-		public static unsafe void SetLongField (JniObjectReference instance, JniInstanceFieldInfo field, long value)
+		public static unsafe void SetLongField (JniObjectReference instance, JniFieldInfo field, long value)
 		{
 			if (instance.SafeHandle == null)
 				throw new ArgumentNullException ("instance");
@@ -1301,14 +1341,15 @@ namespace
 				throw new ArgumentException ("instance");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetLongField (__info.EnvironmentPointer, instance.SafeHandle, field.ID, value);
 		}
 
-		public static unsafe void SetFloatField (JniObjectReference instance, JniInstanceFieldInfo field, float value)
+		public static unsafe void SetFloatField (JniObjectReference instance, JniFieldInfo field, float value)
 		{
 			if (instance.SafeHandle == null)
 				throw new ArgumentNullException ("instance");
@@ -1316,14 +1357,15 @@ namespace
 				throw new ArgumentException ("instance");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetFloatField (__info.EnvironmentPointer, instance.SafeHandle, field.ID, value);
 		}
 
-		public static unsafe void SetDoubleField (JniObjectReference instance, JniInstanceFieldInfo field, double value)
+		public static unsafe void SetDoubleField (JniObjectReference instance, JniFieldInfo field, double value)
 		{
 			if (instance.SafeHandle == null)
 				throw new ArgumentNullException ("instance");
@@ -1331,8 +1373,9 @@ namespace
 				throw new ArgumentException ("instance");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetDoubleField (__info.EnvironmentPointer, instance.SafeHandle, field.ID, value);
@@ -1341,7 +1384,7 @@ namespace
 
 	public static partial class InstanceMethods {
 
-		public static unsafe JniInstanceMethodInfo GetMethodID (JniObjectReference type, string name, string signature)
+		public static unsafe JniMethodInfo GetMethodID (JniObjectReference type, string name, string signature)
 		{
 			if (type.SafeHandle == null)
 				throw new ArgumentNullException ("type");
@@ -1361,10 +1404,10 @@ namespace
 
 			if (tmp == IntPtr.Zero)
 				return null;
-			return new JniInstanceMethodInfo (tmp);
+			return new JniMethodInfo (name, signature, tmp, isStatic: false);
 		}
 
-		public static unsafe JniObjectReference CallObjectMethod (JniObjectReference instance, JniInstanceMethodInfo method)
+		public static unsafe JniObjectReference CallObjectMethod (JniObjectReference instance, JniMethodInfo method)
 		{
 			if (instance.SafeHandle == null)
 				throw new ArgumentNullException ("instance");
@@ -1372,8 +1415,9 @@ namespace
 				throw new ArgumentException ("instance");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallObjectMethod (__info.EnvironmentPointer, instance.SafeHandle, method.ID);
@@ -1386,7 +1430,7 @@ namespace
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		public static unsafe JniObjectReference CallObjectMethod (JniObjectReference instance, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe JniObjectReference CallObjectMethod (JniObjectReference instance, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (instance.SafeHandle == null)
 				throw new ArgumentNullException ("instance");
@@ -1394,8 +1438,9 @@ namespace
 				throw new ArgumentException ("instance");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallObjectMethodA (__info.EnvironmentPointer, instance.SafeHandle, method.ID, args);
@@ -1408,7 +1453,7 @@ namespace
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		public static unsafe bool CallBooleanMethod (JniObjectReference instance, JniInstanceMethodInfo method)
+		public static unsafe bool CallBooleanMethod (JniObjectReference instance, JniMethodInfo method)
 		{
 			if (instance.SafeHandle == null)
 				throw new ArgumentNullException ("instance");
@@ -1416,8 +1461,9 @@ namespace
 				throw new ArgumentException ("instance");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallBooleanMethod (__info.EnvironmentPointer, instance.SafeHandle, method.ID);
@@ -1429,7 +1475,7 @@ namespace
 			return (tmp != 0) ? true : false;
 		}
 
-		public static unsafe bool CallBooleanMethod (JniObjectReference instance, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe bool CallBooleanMethod (JniObjectReference instance, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (instance.SafeHandle == null)
 				throw new ArgumentNullException ("instance");
@@ -1437,8 +1483,9 @@ namespace
 				throw new ArgumentException ("instance");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallBooleanMethodA (__info.EnvironmentPointer, instance.SafeHandle, method.ID, args);
@@ -1450,7 +1497,7 @@ namespace
 			return (tmp != 0) ? true : false;
 		}
 
-		public static unsafe sbyte CallByteMethod (JniObjectReference instance, JniInstanceMethodInfo method)
+		public static unsafe sbyte CallByteMethod (JniObjectReference instance, JniMethodInfo method)
 		{
 			if (instance.SafeHandle == null)
 				throw new ArgumentNullException ("instance");
@@ -1458,8 +1505,9 @@ namespace
 				throw new ArgumentException ("instance");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallByteMethod (__info.EnvironmentPointer, instance.SafeHandle, method.ID);
@@ -1471,7 +1519,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe sbyte CallByteMethod (JniObjectReference instance, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe sbyte CallByteMethod (JniObjectReference instance, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (instance.SafeHandle == null)
 				throw new ArgumentNullException ("instance");
@@ -1479,8 +1527,9 @@ namespace
 				throw new ArgumentException ("instance");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallByteMethodA (__info.EnvironmentPointer, instance.SafeHandle, method.ID, args);
@@ -1492,7 +1541,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe char CallCharMethod (JniObjectReference instance, JniInstanceMethodInfo method)
+		public static unsafe char CallCharMethod (JniObjectReference instance, JniMethodInfo method)
 		{
 			if (instance.SafeHandle == null)
 				throw new ArgumentNullException ("instance");
@@ -1500,8 +1549,9 @@ namespace
 				throw new ArgumentException ("instance");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallCharMethod (__info.EnvironmentPointer, instance.SafeHandle, method.ID);
@@ -1513,7 +1563,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe char CallCharMethod (JniObjectReference instance, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe char CallCharMethod (JniObjectReference instance, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (instance.SafeHandle == null)
 				throw new ArgumentNullException ("instance");
@@ -1521,8 +1571,9 @@ namespace
 				throw new ArgumentException ("instance");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallCharMethodA (__info.EnvironmentPointer, instance.SafeHandle, method.ID, args);
@@ -1534,7 +1585,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe short CallShortMethod (JniObjectReference instance, JniInstanceMethodInfo method)
+		public static unsafe short CallShortMethod (JniObjectReference instance, JniMethodInfo method)
 		{
 			if (instance.SafeHandle == null)
 				throw new ArgumentNullException ("instance");
@@ -1542,8 +1593,9 @@ namespace
 				throw new ArgumentException ("instance");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallShortMethod (__info.EnvironmentPointer, instance.SafeHandle, method.ID);
@@ -1555,7 +1607,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe short CallShortMethod (JniObjectReference instance, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe short CallShortMethod (JniObjectReference instance, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (instance.SafeHandle == null)
 				throw new ArgumentNullException ("instance");
@@ -1563,8 +1615,9 @@ namespace
 				throw new ArgumentException ("instance");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallShortMethodA (__info.EnvironmentPointer, instance.SafeHandle, method.ID, args);
@@ -1576,7 +1629,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe int CallIntMethod (JniObjectReference instance, JniInstanceMethodInfo method)
+		public static unsafe int CallIntMethod (JniObjectReference instance, JniMethodInfo method)
 		{
 			if (instance.SafeHandle == null)
 				throw new ArgumentNullException ("instance");
@@ -1584,8 +1637,9 @@ namespace
 				throw new ArgumentException ("instance");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallIntMethod (__info.EnvironmentPointer, instance.SafeHandle, method.ID);
@@ -1597,7 +1651,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe int CallIntMethod (JniObjectReference instance, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe int CallIntMethod (JniObjectReference instance, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (instance.SafeHandle == null)
 				throw new ArgumentNullException ("instance");
@@ -1605,8 +1659,9 @@ namespace
 				throw new ArgumentException ("instance");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallIntMethodA (__info.EnvironmentPointer, instance.SafeHandle, method.ID, args);
@@ -1618,7 +1673,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe long CallLongMethod (JniObjectReference instance, JniInstanceMethodInfo method)
+		public static unsafe long CallLongMethod (JniObjectReference instance, JniMethodInfo method)
 		{
 			if (instance.SafeHandle == null)
 				throw new ArgumentNullException ("instance");
@@ -1626,8 +1681,9 @@ namespace
 				throw new ArgumentException ("instance");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallLongMethod (__info.EnvironmentPointer, instance.SafeHandle, method.ID);
@@ -1639,7 +1695,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe long CallLongMethod (JniObjectReference instance, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe long CallLongMethod (JniObjectReference instance, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (instance.SafeHandle == null)
 				throw new ArgumentNullException ("instance");
@@ -1647,8 +1703,9 @@ namespace
 				throw new ArgumentException ("instance");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallLongMethodA (__info.EnvironmentPointer, instance.SafeHandle, method.ID, args);
@@ -1660,7 +1717,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe float CallFloatMethod (JniObjectReference instance, JniInstanceMethodInfo method)
+		public static unsafe float CallFloatMethod (JniObjectReference instance, JniMethodInfo method)
 		{
 			if (instance.SafeHandle == null)
 				throw new ArgumentNullException ("instance");
@@ -1668,8 +1725,9 @@ namespace
 				throw new ArgumentException ("instance");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallFloatMethod (__info.EnvironmentPointer, instance.SafeHandle, method.ID);
@@ -1681,7 +1739,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe float CallFloatMethod (JniObjectReference instance, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe float CallFloatMethod (JniObjectReference instance, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (instance.SafeHandle == null)
 				throw new ArgumentNullException ("instance");
@@ -1689,8 +1747,9 @@ namespace
 				throw new ArgumentException ("instance");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallFloatMethodA (__info.EnvironmentPointer, instance.SafeHandle, method.ID, args);
@@ -1702,7 +1761,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe double CallDoubleMethod (JniObjectReference instance, JniInstanceMethodInfo method)
+		public static unsafe double CallDoubleMethod (JniObjectReference instance, JniMethodInfo method)
 		{
 			if (instance.SafeHandle == null)
 				throw new ArgumentNullException ("instance");
@@ -1710,8 +1769,9 @@ namespace
 				throw new ArgumentException ("instance");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallDoubleMethod (__info.EnvironmentPointer, instance.SafeHandle, method.ID);
@@ -1723,7 +1783,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe double CallDoubleMethod (JniObjectReference instance, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe double CallDoubleMethod (JniObjectReference instance, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (instance.SafeHandle == null)
 				throw new ArgumentNullException ("instance");
@@ -1731,8 +1791,9 @@ namespace
 				throw new ArgumentException ("instance");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallDoubleMethodA (__info.EnvironmentPointer, instance.SafeHandle, method.ID, args);
@@ -1744,7 +1805,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe void CallVoidMethod (JniObjectReference instance, JniInstanceMethodInfo method)
+		public static unsafe void CallVoidMethod (JniObjectReference instance, JniMethodInfo method)
 		{
 			if (instance.SafeHandle == null)
 				throw new ArgumentNullException ("instance");
@@ -1752,8 +1813,9 @@ namespace
 				throw new ArgumentException ("instance");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.CallVoidMethod (__info.EnvironmentPointer, instance.SafeHandle, method.ID);
@@ -1764,7 +1826,7 @@ namespace
 
 		}
 
-		public static unsafe void CallVoidMethod (JniObjectReference instance, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe void CallVoidMethod (JniObjectReference instance, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (instance.SafeHandle == null)
 				throw new ArgumentNullException ("instance");
@@ -1772,8 +1834,9 @@ namespace
 				throw new ArgumentException ("instance");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.CallVoidMethodA (__info.EnvironmentPointer, instance.SafeHandle, method.ID, args);
@@ -1784,7 +1847,7 @@ namespace
 
 		}
 
-		public static unsafe JniObjectReference CallNonvirtualObjectMethod (JniObjectReference instance, JniObjectReference type, JniInstanceMethodInfo method)
+		public static unsafe JniObjectReference CallNonvirtualObjectMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method)
 		{
 			if (instance.SafeHandle == null)
 				throw new ArgumentNullException ("instance");
@@ -1796,8 +1859,9 @@ namespace
 				throw new ArgumentException ("type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualObjectMethod (__info.EnvironmentPointer, instance.SafeHandle, type.SafeHandle, method.ID);
@@ -1810,7 +1874,7 @@ namespace
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		public static unsafe JniObjectReference CallNonvirtualObjectMethod (JniObjectReference instance, JniObjectReference type, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe JniObjectReference CallNonvirtualObjectMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (instance.SafeHandle == null)
 				throw new ArgumentNullException ("instance");
@@ -1822,8 +1886,9 @@ namespace
 				throw new ArgumentException ("type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualObjectMethodA (__info.EnvironmentPointer, instance.SafeHandle, type.SafeHandle, method.ID, args);
@@ -1836,7 +1901,7 @@ namespace
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		public static unsafe bool CallNonvirtualBooleanMethod (JniObjectReference instance, JniObjectReference type, JniInstanceMethodInfo method)
+		public static unsafe bool CallNonvirtualBooleanMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method)
 		{
 			if (instance.SafeHandle == null)
 				throw new ArgumentNullException ("instance");
@@ -1848,8 +1913,9 @@ namespace
 				throw new ArgumentException ("type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualBooleanMethod (__info.EnvironmentPointer, instance.SafeHandle, type.SafeHandle, method.ID);
@@ -1861,7 +1927,7 @@ namespace
 			return (tmp != 0) ? true : false;
 		}
 
-		public static unsafe bool CallNonvirtualBooleanMethod (JniObjectReference instance, JniObjectReference type, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe bool CallNonvirtualBooleanMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (instance.SafeHandle == null)
 				throw new ArgumentNullException ("instance");
@@ -1873,8 +1939,9 @@ namespace
 				throw new ArgumentException ("type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualBooleanMethodA (__info.EnvironmentPointer, instance.SafeHandle, type.SafeHandle, method.ID, args);
@@ -1886,7 +1953,7 @@ namespace
 			return (tmp != 0) ? true : false;
 		}
 
-		public static unsafe sbyte CallNonvirtualByteMethod (JniObjectReference instance, JniObjectReference type, JniInstanceMethodInfo method)
+		public static unsafe sbyte CallNonvirtualByteMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method)
 		{
 			if (instance.SafeHandle == null)
 				throw new ArgumentNullException ("instance");
@@ -1898,8 +1965,9 @@ namespace
 				throw new ArgumentException ("type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualByteMethod (__info.EnvironmentPointer, instance.SafeHandle, type.SafeHandle, method.ID);
@@ -1911,7 +1979,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe sbyte CallNonvirtualByteMethod (JniObjectReference instance, JniObjectReference type, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe sbyte CallNonvirtualByteMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (instance.SafeHandle == null)
 				throw new ArgumentNullException ("instance");
@@ -1923,8 +1991,9 @@ namespace
 				throw new ArgumentException ("type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualByteMethodA (__info.EnvironmentPointer, instance.SafeHandle, type.SafeHandle, method.ID, args);
@@ -1936,7 +2005,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe char CallNonvirtualCharMethod (JniObjectReference instance, JniObjectReference type, JniInstanceMethodInfo method)
+		public static unsafe char CallNonvirtualCharMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method)
 		{
 			if (instance.SafeHandle == null)
 				throw new ArgumentNullException ("instance");
@@ -1948,8 +2017,9 @@ namespace
 				throw new ArgumentException ("type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualCharMethod (__info.EnvironmentPointer, instance.SafeHandle, type.SafeHandle, method.ID);
@@ -1961,7 +2031,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe char CallNonvirtualCharMethod (JniObjectReference instance, JniObjectReference type, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe char CallNonvirtualCharMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (instance.SafeHandle == null)
 				throw new ArgumentNullException ("instance");
@@ -1973,8 +2043,9 @@ namespace
 				throw new ArgumentException ("type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualCharMethodA (__info.EnvironmentPointer, instance.SafeHandle, type.SafeHandle, method.ID, args);
@@ -1986,7 +2057,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe short CallNonvirtualShortMethod (JniObjectReference instance, JniObjectReference type, JniInstanceMethodInfo method)
+		public static unsafe short CallNonvirtualShortMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method)
 		{
 			if (instance.SafeHandle == null)
 				throw new ArgumentNullException ("instance");
@@ -1998,8 +2069,9 @@ namespace
 				throw new ArgumentException ("type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualShortMethod (__info.EnvironmentPointer, instance.SafeHandle, type.SafeHandle, method.ID);
@@ -2011,7 +2083,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe short CallNonvirtualShortMethod (JniObjectReference instance, JniObjectReference type, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe short CallNonvirtualShortMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (instance.SafeHandle == null)
 				throw new ArgumentNullException ("instance");
@@ -2023,8 +2095,9 @@ namespace
 				throw new ArgumentException ("type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualShortMethodA (__info.EnvironmentPointer, instance.SafeHandle, type.SafeHandle, method.ID, args);
@@ -2036,7 +2109,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe int CallNonvirtualIntMethod (JniObjectReference instance, JniObjectReference type, JniInstanceMethodInfo method)
+		public static unsafe int CallNonvirtualIntMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method)
 		{
 			if (instance.SafeHandle == null)
 				throw new ArgumentNullException ("instance");
@@ -2048,8 +2121,9 @@ namespace
 				throw new ArgumentException ("type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualIntMethod (__info.EnvironmentPointer, instance.SafeHandle, type.SafeHandle, method.ID);
@@ -2061,7 +2135,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe int CallNonvirtualIntMethod (JniObjectReference instance, JniObjectReference type, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe int CallNonvirtualIntMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (instance.SafeHandle == null)
 				throw new ArgumentNullException ("instance");
@@ -2073,8 +2147,9 @@ namespace
 				throw new ArgumentException ("type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualIntMethodA (__info.EnvironmentPointer, instance.SafeHandle, type.SafeHandle, method.ID, args);
@@ -2086,7 +2161,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe long CallNonvirtualLongMethod (JniObjectReference instance, JniObjectReference type, JniInstanceMethodInfo method)
+		public static unsafe long CallNonvirtualLongMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method)
 		{
 			if (instance.SafeHandle == null)
 				throw new ArgumentNullException ("instance");
@@ -2098,8 +2173,9 @@ namespace
 				throw new ArgumentException ("type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualLongMethod (__info.EnvironmentPointer, instance.SafeHandle, type.SafeHandle, method.ID);
@@ -2111,7 +2187,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe long CallNonvirtualLongMethod (JniObjectReference instance, JniObjectReference type, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe long CallNonvirtualLongMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (instance.SafeHandle == null)
 				throw new ArgumentNullException ("instance");
@@ -2123,8 +2199,9 @@ namespace
 				throw new ArgumentException ("type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualLongMethodA (__info.EnvironmentPointer, instance.SafeHandle, type.SafeHandle, method.ID, args);
@@ -2136,7 +2213,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe float CallNonvirtualFloatMethod (JniObjectReference instance, JniObjectReference type, JniInstanceMethodInfo method)
+		public static unsafe float CallNonvirtualFloatMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method)
 		{
 			if (instance.SafeHandle == null)
 				throw new ArgumentNullException ("instance");
@@ -2148,8 +2225,9 @@ namespace
 				throw new ArgumentException ("type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualFloatMethod (__info.EnvironmentPointer, instance.SafeHandle, type.SafeHandle, method.ID);
@@ -2161,7 +2239,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe float CallNonvirtualFloatMethod (JniObjectReference instance, JniObjectReference type, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe float CallNonvirtualFloatMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (instance.SafeHandle == null)
 				throw new ArgumentNullException ("instance");
@@ -2173,8 +2251,9 @@ namespace
 				throw new ArgumentException ("type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualFloatMethodA (__info.EnvironmentPointer, instance.SafeHandle, type.SafeHandle, method.ID, args);
@@ -2186,7 +2265,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe double CallNonvirtualDoubleMethod (JniObjectReference instance, JniObjectReference type, JniInstanceMethodInfo method)
+		public static unsafe double CallNonvirtualDoubleMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method)
 		{
 			if (instance.SafeHandle == null)
 				throw new ArgumentNullException ("instance");
@@ -2198,8 +2277,9 @@ namespace
 				throw new ArgumentException ("type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualDoubleMethod (__info.EnvironmentPointer, instance.SafeHandle, type.SafeHandle, method.ID);
@@ -2211,7 +2291,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe double CallNonvirtualDoubleMethod (JniObjectReference instance, JniObjectReference type, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe double CallNonvirtualDoubleMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (instance.SafeHandle == null)
 				throw new ArgumentNullException ("instance");
@@ -2223,8 +2303,9 @@ namespace
 				throw new ArgumentException ("type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualDoubleMethodA (__info.EnvironmentPointer, instance.SafeHandle, type.SafeHandle, method.ID, args);
@@ -2236,7 +2317,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe void CallNonvirtualVoidMethod (JniObjectReference instance, JniObjectReference type, JniInstanceMethodInfo method)
+		public static unsafe void CallNonvirtualVoidMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method)
 		{
 			if (instance.SafeHandle == null)
 				throw new ArgumentNullException ("instance");
@@ -2248,8 +2329,9 @@ namespace
 				throw new ArgumentException ("type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.CallNonvirtualVoidMethod (__info.EnvironmentPointer, instance.SafeHandle, type.SafeHandle, method.ID);
@@ -2260,7 +2342,7 @@ namespace
 
 		}
 
-		public static unsafe void CallNonvirtualVoidMethod (JniObjectReference instance, JniObjectReference type, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe void CallNonvirtualVoidMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (instance.SafeHandle == null)
 				throw new ArgumentNullException ("instance");
@@ -2272,8 +2354,9 @@ namespace
 				throw new ArgumentException ("type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.CallNonvirtualVoidMethodA (__info.EnvironmentPointer, instance.SafeHandle, type.SafeHandle, method.ID, args);
@@ -2375,7 +2458,7 @@ namespace
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		public static unsafe JniObjectReference NewObject (JniObjectReference type, JniInstanceMethodInfo method)
+		public static unsafe JniObjectReference NewObject (JniObjectReference type, JniMethodInfo method)
 		{
 			if (type.SafeHandle == null)
 				throw new ArgumentNullException ("type");
@@ -2383,8 +2466,9 @@ namespace
 				throw new ArgumentException ("type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.NewObject (__info.EnvironmentPointer, type.SafeHandle, method.ID);
@@ -2397,7 +2481,7 @@ namespace
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		public static unsafe JniObjectReference NewObject (JniObjectReference type, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe JniObjectReference NewObject (JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (type.SafeHandle == null)
 				throw new ArgumentNullException ("type");
@@ -2405,8 +2489,9 @@ namespace
 				throw new ArgumentException ("type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.NewObjectA (__info.EnvironmentPointer, type.SafeHandle, method.ID, args);
@@ -2505,7 +2590,7 @@ namespace
 
 	internal static partial class Reflection {
 
-		public static unsafe JniObjectReference ToReflectedMethod (JniObjectReference type, JniInstanceMethodInfo method, bool isStatic)
+		public static unsafe JniObjectReference ToReflectedMethod (JniObjectReference type, JniMethodInfo method, bool isStatic)
 		{
 			if (type.SafeHandle == null)
 				throw new ArgumentNullException ("type");
@@ -2513,8 +2598,9 @@ namespace
 				throw new ArgumentException ("type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.ToReflectedMethod (__info.EnvironmentPointer, type.SafeHandle, method.ID, (isStatic ? (byte) 1 : (byte) 0));
@@ -2527,7 +2613,7 @@ namespace
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		public static unsafe JniObjectReference ToReflectedField (JniObjectReference type, JniInstanceFieldInfo field, bool isStatic)
+		public static unsafe JniObjectReference ToReflectedField (JniObjectReference type, JniFieldInfo field, bool isStatic)
 		{
 			if (type.SafeHandle == null)
 				throw new ArgumentNullException ("type");
@@ -2535,8 +2621,9 @@ namespace
 				throw new ArgumentException ("type");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.ToReflectedField (__info.EnvironmentPointer, type.SafeHandle, field.ID, (isStatic ? (byte) 1 : (byte) 0));
@@ -2552,7 +2639,7 @@ namespace
 
 	public static partial class StaticFields {
 
-		public static unsafe JniStaticFieldInfo GetStaticFieldID (JniObjectReference type, string name, string signature)
+		public static unsafe JniFieldInfo GetStaticFieldID (JniObjectReference type, string name, string signature)
 		{
 			if (type.SafeHandle == null)
 				throw new ArgumentNullException ("type");
@@ -2572,10 +2659,10 @@ namespace
 
 			if (tmp == IntPtr.Zero)
 				return null;
-			return new JniStaticFieldInfo (tmp);
+			return new JniFieldInfo (name, signature, tmp, isStatic: true);
 		}
 
-		public static unsafe JniObjectReference GetStaticObjectField (JniObjectReference type, JniStaticFieldInfo field)
+		public static unsafe JniObjectReference GetStaticObjectField (JniObjectReference type, JniFieldInfo field)
 		{
 			if (type.SafeHandle == null)
 				throw new ArgumentNullException ("type");
@@ -2583,8 +2670,9 @@ namespace
 				throw new ArgumentException ("type");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.GetStaticObjectField (__info.EnvironmentPointer, type.SafeHandle, field.ID);
@@ -2592,7 +2680,7 @@ namespace
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		public static unsafe bool GetStaticBooleanField (JniObjectReference type, JniStaticFieldInfo field)
+		public static unsafe bool GetStaticBooleanField (JniObjectReference type, JniFieldInfo field)
 		{
 			if (type.SafeHandle == null)
 				throw new ArgumentNullException ("type");
@@ -2600,15 +2688,16 @@ namespace
 				throw new ArgumentException ("type");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.GetStaticBooleanField (__info.EnvironmentPointer, type.SafeHandle, field.ID);
 			return (tmp != 0) ? true : false;
 		}
 
-		public static unsafe sbyte GetStaticByteField (JniObjectReference type, JniStaticFieldInfo field)
+		public static unsafe sbyte GetStaticByteField (JniObjectReference type, JniFieldInfo field)
 		{
 			if (type.SafeHandle == null)
 				throw new ArgumentNullException ("type");
@@ -2616,15 +2705,16 @@ namespace
 				throw new ArgumentException ("type");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.GetStaticByteField (__info.EnvironmentPointer, type.SafeHandle, field.ID);
 			return tmp;
 		}
 
-		public static unsafe char GetStaticCharField (JniObjectReference type, JniStaticFieldInfo field)
+		public static unsafe char GetStaticCharField (JniObjectReference type, JniFieldInfo field)
 		{
 			if (type.SafeHandle == null)
 				throw new ArgumentNullException ("type");
@@ -2632,15 +2722,16 @@ namespace
 				throw new ArgumentException ("type");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.GetStaticCharField (__info.EnvironmentPointer, type.SafeHandle, field.ID);
 			return tmp;
 		}
 
-		public static unsafe short GetStaticShortField (JniObjectReference type, JniStaticFieldInfo field)
+		public static unsafe short GetStaticShortField (JniObjectReference type, JniFieldInfo field)
 		{
 			if (type.SafeHandle == null)
 				throw new ArgumentNullException ("type");
@@ -2648,15 +2739,16 @@ namespace
 				throw new ArgumentException ("type");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.GetStaticShortField (__info.EnvironmentPointer, type.SafeHandle, field.ID);
 			return tmp;
 		}
 
-		public static unsafe int GetStaticIntField (JniObjectReference type, JniStaticFieldInfo field)
+		public static unsafe int GetStaticIntField (JniObjectReference type, JniFieldInfo field)
 		{
 			if (type.SafeHandle == null)
 				throw new ArgumentNullException ("type");
@@ -2664,15 +2756,16 @@ namespace
 				throw new ArgumentException ("type");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.GetStaticIntField (__info.EnvironmentPointer, type.SafeHandle, field.ID);
 			return tmp;
 		}
 
-		public static unsafe long GetStaticLongField (JniObjectReference type, JniStaticFieldInfo field)
+		public static unsafe long GetStaticLongField (JniObjectReference type, JniFieldInfo field)
 		{
 			if (type.SafeHandle == null)
 				throw new ArgumentNullException ("type");
@@ -2680,15 +2773,16 @@ namespace
 				throw new ArgumentException ("type");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.GetStaticLongField (__info.EnvironmentPointer, type.SafeHandle, field.ID);
 			return tmp;
 		}
 
-		public static unsafe float GetStaticFloatField (JniObjectReference type, JniStaticFieldInfo field)
+		public static unsafe float GetStaticFloatField (JniObjectReference type, JniFieldInfo field)
 		{
 			if (type.SafeHandle == null)
 				throw new ArgumentNullException ("type");
@@ -2696,15 +2790,16 @@ namespace
 				throw new ArgumentException ("type");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.GetStaticFloatField (__info.EnvironmentPointer, type.SafeHandle, field.ID);
 			return tmp;
 		}
 
-		public static unsafe double GetStaticDoubleField (JniObjectReference type, JniStaticFieldInfo field)
+		public static unsafe double GetStaticDoubleField (JniObjectReference type, JniFieldInfo field)
 		{
 			if (type.SafeHandle == null)
 				throw new ArgumentNullException ("type");
@@ -2712,15 +2807,16 @@ namespace
 				throw new ArgumentException ("type");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.GetStaticDoubleField (__info.EnvironmentPointer, type.SafeHandle, field.ID);
 			return tmp;
 		}
 
-		public static unsafe void SetStaticObjectField (JniObjectReference type, JniStaticFieldInfo field, JniObjectReference value)
+		public static unsafe void SetStaticObjectField (JniObjectReference type, JniFieldInfo field, JniObjectReference value)
 		{
 			if (type.SafeHandle == null)
 				throw new ArgumentNullException ("type");
@@ -2728,14 +2824,15 @@ namespace
 				throw new ArgumentException ("type");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetStaticObjectField (__info.EnvironmentPointer, type.SafeHandle, field.ID, value.SafeHandle);
 		}
 
-		public static unsafe void SetStaticBooleanField (JniObjectReference type, JniStaticFieldInfo field, bool value)
+		public static unsafe void SetStaticBooleanField (JniObjectReference type, JniFieldInfo field, bool value)
 		{
 			if (type.SafeHandle == null)
 				throw new ArgumentNullException ("type");
@@ -2743,14 +2840,15 @@ namespace
 				throw new ArgumentException ("type");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetStaticBooleanField (__info.EnvironmentPointer, type.SafeHandle, field.ID, (value ? (byte) 1 : (byte) 0));
 		}
 
-		public static unsafe void SetStaticByteField (JniObjectReference type, JniStaticFieldInfo field, sbyte value)
+		public static unsafe void SetStaticByteField (JniObjectReference type, JniFieldInfo field, sbyte value)
 		{
 			if (type.SafeHandle == null)
 				throw new ArgumentNullException ("type");
@@ -2758,14 +2856,15 @@ namespace
 				throw new ArgumentException ("type");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetStaticByteField (__info.EnvironmentPointer, type.SafeHandle, field.ID, value);
 		}
 
-		public static unsafe void SetStaticCharField (JniObjectReference type, JniStaticFieldInfo field, char value)
+		public static unsafe void SetStaticCharField (JniObjectReference type, JniFieldInfo field, char value)
 		{
 			if (type.SafeHandle == null)
 				throw new ArgumentNullException ("type");
@@ -2773,14 +2872,15 @@ namespace
 				throw new ArgumentException ("type");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetStaticCharField (__info.EnvironmentPointer, type.SafeHandle, field.ID, value);
 		}
 
-		public static unsafe void SetStaticShortField (JniObjectReference type, JniStaticFieldInfo field, short value)
+		public static unsafe void SetStaticShortField (JniObjectReference type, JniFieldInfo field, short value)
 		{
 			if (type.SafeHandle == null)
 				throw new ArgumentNullException ("type");
@@ -2788,14 +2888,15 @@ namespace
 				throw new ArgumentException ("type");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetStaticShortField (__info.EnvironmentPointer, type.SafeHandle, field.ID, value);
 		}
 
-		public static unsafe void SetStaticIntField (JniObjectReference type, JniStaticFieldInfo field, int value)
+		public static unsafe void SetStaticIntField (JniObjectReference type, JniFieldInfo field, int value)
 		{
 			if (type.SafeHandle == null)
 				throw new ArgumentNullException ("type");
@@ -2803,14 +2904,15 @@ namespace
 				throw new ArgumentException ("type");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetStaticIntField (__info.EnvironmentPointer, type.SafeHandle, field.ID, value);
 		}
 
-		public static unsafe void SetStaticLongField (JniObjectReference type, JniStaticFieldInfo field, long value)
+		public static unsafe void SetStaticLongField (JniObjectReference type, JniFieldInfo field, long value)
 		{
 			if (type.SafeHandle == null)
 				throw new ArgumentNullException ("type");
@@ -2818,14 +2920,15 @@ namespace
 				throw new ArgumentException ("type");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetStaticLongField (__info.EnvironmentPointer, type.SafeHandle, field.ID, value);
 		}
 
-		public static unsafe void SetStaticFloatField (JniObjectReference type, JniStaticFieldInfo field, float value)
+		public static unsafe void SetStaticFloatField (JniObjectReference type, JniFieldInfo field, float value)
 		{
 			if (type.SafeHandle == null)
 				throw new ArgumentNullException ("type");
@@ -2833,14 +2936,15 @@ namespace
 				throw new ArgumentException ("type");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetStaticFloatField (__info.EnvironmentPointer, type.SafeHandle, field.ID, value);
 		}
 
-		public static unsafe void SetStaticDoubleField (JniObjectReference type, JniStaticFieldInfo field, double value)
+		public static unsafe void SetStaticDoubleField (JniObjectReference type, JniFieldInfo field, double value)
 		{
 			if (type.SafeHandle == null)
 				throw new ArgumentNullException ("type");
@@ -2848,8 +2952,9 @@ namespace
 				throw new ArgumentException ("type");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetStaticDoubleField (__info.EnvironmentPointer, type.SafeHandle, field.ID, value);
@@ -2858,7 +2963,7 @@ namespace
 
 	public static partial class StaticMethods {
 
-		public static unsafe JniStaticMethodInfo GetStaticMethodID (JniObjectReference type, string name, string signature)
+		public static unsafe JniMethodInfo GetStaticMethodID (JniObjectReference type, string name, string signature)
 		{
 			if (type.SafeHandle == null)
 				throw new ArgumentNullException ("type");
@@ -2878,10 +2983,10 @@ namespace
 
 			if (tmp == IntPtr.Zero)
 				return null;
-			return new JniStaticMethodInfo (tmp);
+			return new JniMethodInfo (name, signature, tmp, isStatic: true);
 		}
 
-		public static unsafe JniObjectReference CallStaticObjectMethod (JniObjectReference type, JniStaticMethodInfo method)
+		public static unsafe JniObjectReference CallStaticObjectMethod (JniObjectReference type, JniMethodInfo method)
 		{
 			if (type.SafeHandle == null)
 				throw new ArgumentNullException ("type");
@@ -2889,8 +2994,9 @@ namespace
 				throw new ArgumentException ("type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticObjectMethod (__info.EnvironmentPointer, type.SafeHandle, method.ID);
@@ -2903,7 +3009,7 @@ namespace
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		public static unsafe JniObjectReference CallStaticObjectMethod (JniObjectReference type, JniStaticMethodInfo method, JniArgumentValue* args)
+		public static unsafe JniObjectReference CallStaticObjectMethod (JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (type.SafeHandle == null)
 				throw new ArgumentNullException ("type");
@@ -2911,8 +3017,9 @@ namespace
 				throw new ArgumentException ("type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticObjectMethodA (__info.EnvironmentPointer, type.SafeHandle, method.ID, args);
@@ -2925,7 +3032,7 @@ namespace
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		public static unsafe bool CallStaticBooleanMethod (JniObjectReference type, JniStaticMethodInfo method)
+		public static unsafe bool CallStaticBooleanMethod (JniObjectReference type, JniMethodInfo method)
 		{
 			if (type.SafeHandle == null)
 				throw new ArgumentNullException ("type");
@@ -2933,8 +3040,9 @@ namespace
 				throw new ArgumentException ("type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticBooleanMethod (__info.EnvironmentPointer, type.SafeHandle, method.ID);
@@ -2946,7 +3054,7 @@ namespace
 			return (tmp != 0) ? true : false;
 		}
 
-		public static unsafe bool CallStaticBooleanMethod (JniObjectReference type, JniStaticMethodInfo method, JniArgumentValue* args)
+		public static unsafe bool CallStaticBooleanMethod (JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (type.SafeHandle == null)
 				throw new ArgumentNullException ("type");
@@ -2954,8 +3062,9 @@ namespace
 				throw new ArgumentException ("type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticBooleanMethodA (__info.EnvironmentPointer, type.SafeHandle, method.ID, args);
@@ -2967,7 +3076,7 @@ namespace
 			return (tmp != 0) ? true : false;
 		}
 
-		public static unsafe sbyte CallStaticByteMethod (JniObjectReference type, JniStaticMethodInfo method)
+		public static unsafe sbyte CallStaticByteMethod (JniObjectReference type, JniMethodInfo method)
 		{
 			if (type.SafeHandle == null)
 				throw new ArgumentNullException ("type");
@@ -2975,8 +3084,9 @@ namespace
 				throw new ArgumentException ("type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticByteMethod (__info.EnvironmentPointer, type.SafeHandle, method.ID);
@@ -2988,7 +3098,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe sbyte CallStaticByteMethod (JniObjectReference type, JniStaticMethodInfo method, JniArgumentValue* args)
+		public static unsafe sbyte CallStaticByteMethod (JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (type.SafeHandle == null)
 				throw new ArgumentNullException ("type");
@@ -2996,8 +3106,9 @@ namespace
 				throw new ArgumentException ("type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticByteMethodA (__info.EnvironmentPointer, type.SafeHandle, method.ID, args);
@@ -3009,7 +3120,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe char CallStaticCharMethod (JniObjectReference type, JniStaticMethodInfo method)
+		public static unsafe char CallStaticCharMethod (JniObjectReference type, JniMethodInfo method)
 		{
 			if (type.SafeHandle == null)
 				throw new ArgumentNullException ("type");
@@ -3017,8 +3128,9 @@ namespace
 				throw new ArgumentException ("type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticCharMethod (__info.EnvironmentPointer, type.SafeHandle, method.ID);
@@ -3030,7 +3142,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe char CallStaticCharMethod (JniObjectReference type, JniStaticMethodInfo method, JniArgumentValue* args)
+		public static unsafe char CallStaticCharMethod (JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (type.SafeHandle == null)
 				throw new ArgumentNullException ("type");
@@ -3038,8 +3150,9 @@ namespace
 				throw new ArgumentException ("type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticCharMethodA (__info.EnvironmentPointer, type.SafeHandle, method.ID, args);
@@ -3051,7 +3164,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe short CallStaticShortMethod (JniObjectReference type, JniStaticMethodInfo method)
+		public static unsafe short CallStaticShortMethod (JniObjectReference type, JniMethodInfo method)
 		{
 			if (type.SafeHandle == null)
 				throw new ArgumentNullException ("type");
@@ -3059,8 +3172,9 @@ namespace
 				throw new ArgumentException ("type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticShortMethod (__info.EnvironmentPointer, type.SafeHandle, method.ID);
@@ -3072,7 +3186,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe short CallStaticShortMethod (JniObjectReference type, JniStaticMethodInfo method, JniArgumentValue* args)
+		public static unsafe short CallStaticShortMethod (JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (type.SafeHandle == null)
 				throw new ArgumentNullException ("type");
@@ -3080,8 +3194,9 @@ namespace
 				throw new ArgumentException ("type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticShortMethodA (__info.EnvironmentPointer, type.SafeHandle, method.ID, args);
@@ -3093,7 +3208,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe int CallStaticIntMethod (JniObjectReference type, JniStaticMethodInfo method)
+		public static unsafe int CallStaticIntMethod (JniObjectReference type, JniMethodInfo method)
 		{
 			if (type.SafeHandle == null)
 				throw new ArgumentNullException ("type");
@@ -3101,8 +3216,9 @@ namespace
 				throw new ArgumentException ("type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticIntMethod (__info.EnvironmentPointer, type.SafeHandle, method.ID);
@@ -3114,7 +3230,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe int CallStaticIntMethod (JniObjectReference type, JniStaticMethodInfo method, JniArgumentValue* args)
+		public static unsafe int CallStaticIntMethod (JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (type.SafeHandle == null)
 				throw new ArgumentNullException ("type");
@@ -3122,8 +3238,9 @@ namespace
 				throw new ArgumentException ("type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticIntMethodA (__info.EnvironmentPointer, type.SafeHandle, method.ID, args);
@@ -3135,7 +3252,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe long CallStaticLongMethod (JniObjectReference type, JniStaticMethodInfo method)
+		public static unsafe long CallStaticLongMethod (JniObjectReference type, JniMethodInfo method)
 		{
 			if (type.SafeHandle == null)
 				throw new ArgumentNullException ("type");
@@ -3143,8 +3260,9 @@ namespace
 				throw new ArgumentException ("type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticLongMethod (__info.EnvironmentPointer, type.SafeHandle, method.ID);
@@ -3156,7 +3274,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe long CallStaticLongMethod (JniObjectReference type, JniStaticMethodInfo method, JniArgumentValue* args)
+		public static unsafe long CallStaticLongMethod (JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (type.SafeHandle == null)
 				throw new ArgumentNullException ("type");
@@ -3164,8 +3282,9 @@ namespace
 				throw new ArgumentException ("type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticLongMethodA (__info.EnvironmentPointer, type.SafeHandle, method.ID, args);
@@ -3177,7 +3296,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe float CallStaticFloatMethod (JniObjectReference type, JniStaticMethodInfo method)
+		public static unsafe float CallStaticFloatMethod (JniObjectReference type, JniMethodInfo method)
 		{
 			if (type.SafeHandle == null)
 				throw new ArgumentNullException ("type");
@@ -3185,8 +3304,9 @@ namespace
 				throw new ArgumentException ("type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticFloatMethod (__info.EnvironmentPointer, type.SafeHandle, method.ID);
@@ -3198,7 +3318,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe float CallStaticFloatMethod (JniObjectReference type, JniStaticMethodInfo method, JniArgumentValue* args)
+		public static unsafe float CallStaticFloatMethod (JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (type.SafeHandle == null)
 				throw new ArgumentNullException ("type");
@@ -3206,8 +3326,9 @@ namespace
 				throw new ArgumentException ("type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticFloatMethodA (__info.EnvironmentPointer, type.SafeHandle, method.ID, args);
@@ -3219,7 +3340,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe double CallStaticDoubleMethod (JniObjectReference type, JniStaticMethodInfo method)
+		public static unsafe double CallStaticDoubleMethod (JniObjectReference type, JniMethodInfo method)
 		{
 			if (type.SafeHandle == null)
 				throw new ArgumentNullException ("type");
@@ -3227,8 +3348,9 @@ namespace
 				throw new ArgumentException ("type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticDoubleMethod (__info.EnvironmentPointer, type.SafeHandle, method.ID);
@@ -3240,7 +3362,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe double CallStaticDoubleMethod (JniObjectReference type, JniStaticMethodInfo method, JniArgumentValue* args)
+		public static unsafe double CallStaticDoubleMethod (JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (type.SafeHandle == null)
 				throw new ArgumentNullException ("type");
@@ -3248,8 +3370,9 @@ namespace
 				throw new ArgumentException ("type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticDoubleMethodA (__info.EnvironmentPointer, type.SafeHandle, method.ID, args);
@@ -3261,7 +3384,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe void CallStaticVoidMethod (JniObjectReference type, JniStaticMethodInfo method)
+		public static unsafe void CallStaticVoidMethod (JniObjectReference type, JniMethodInfo method)
 		{
 			if (type.SafeHandle == null)
 				throw new ArgumentNullException ("type");
@@ -3269,8 +3392,9 @@ namespace
 				throw new ArgumentException ("type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.CallStaticVoidMethod (__info.EnvironmentPointer, type.SafeHandle, method.ID);
@@ -3281,7 +3405,7 @@ namespace
 
 		}
 
-		public static unsafe void CallStaticVoidMethod (JniObjectReference type, JniStaticMethodInfo method, JniArgumentValue* args)
+		public static unsafe void CallStaticVoidMethod (JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (type.SafeHandle == null)
 				throw new ArgumentNullException ("type");
@@ -3289,8 +3413,9 @@ namespace
 				throw new ArgumentException ("type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.CallStaticVoidMethodA (__info.EnvironmentPointer, type.SafeHandle, method.ID, args);
@@ -5907,6 +6032,27 @@ namespace
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
+
+		public static unsafe IntPtr GetPrimitiveArrayCritical (JniObjectReference array, bool* isCopy)
+		{
+			if (array.Handle == IntPtr.Zero)
+				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
+
+			var __info = JniEnvironment.CurrentInfo;
+			var tmp = __info.Invoker.GetPrimitiveArrayCritical (__info.EnvironmentPointer, array.Handle, isCopy);
+			return tmp;
+		}
+
+		public static unsafe void ReleasePrimitiveArrayCritical (JniObjectReference array, IntPtr carray, JniReleaseArrayElementsMode mode)
+		{
+			if (array.Handle == IntPtr.Zero)
+				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
+			if (carray == IntPtr.Zero)
+				throw new ArgumentException ("'carray' must not be IntPtr.Zero.", "carray");
+
+			var __info = JniEnvironment.CurrentInfo;
+			__info.Invoker.ReleasePrimitiveArrayCritical (__info.EnvironmentPointer, array.Handle, carray, ((int) mode));
+		}
 	}
 
 	public static partial class Exceptions {
@@ -5971,7 +6117,7 @@ namespace
 
 	public static partial class InstanceFields {
 
-		public static unsafe JniInstanceFieldInfo GetFieldID (JniObjectReference type, string name, string signature)
+		public static unsafe JniFieldInfo GetFieldID (JniObjectReference type, string name, string signature)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
@@ -5989,17 +6135,18 @@ namespace
 
 			if (tmp == IntPtr.Zero)
 				return null;
-			return new JniInstanceFieldInfo (tmp);
+			return new JniFieldInfo (name, signature, tmp, isStatic: false);
 		}
 
-		public static unsafe JniObjectReference GetObjectField (JniObjectReference instance, JniInstanceFieldInfo field)
+		public static unsafe JniObjectReference GetObjectField (JniObjectReference instance, JniFieldInfo field)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.GetObjectField (__info.EnvironmentPointer, instance.Handle, field.ID);
@@ -6007,230 +6154,247 @@ namespace
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		public static unsafe bool GetBooleanField (JniObjectReference instance, JniInstanceFieldInfo field)
+		public static unsafe bool GetBooleanField (JniObjectReference instance, JniFieldInfo field)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.GetBooleanField (__info.EnvironmentPointer, instance.Handle, field.ID);
 			return (tmp != 0) ? true : false;
 		}
 
-		public static unsafe sbyte GetByteField (JniObjectReference instance, JniInstanceFieldInfo field)
+		public static unsafe sbyte GetByteField (JniObjectReference instance, JniFieldInfo field)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.GetByteField (__info.EnvironmentPointer, instance.Handle, field.ID);
 			return tmp;
 		}
 
-		public static unsafe char GetCharField (JniObjectReference instance, JniInstanceFieldInfo field)
+		public static unsafe char GetCharField (JniObjectReference instance, JniFieldInfo field)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.GetCharField (__info.EnvironmentPointer, instance.Handle, field.ID);
 			return tmp;
 		}
 
-		public static unsafe short GetShortField (JniObjectReference instance, JniInstanceFieldInfo field)
+		public static unsafe short GetShortField (JniObjectReference instance, JniFieldInfo field)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.GetShortField (__info.EnvironmentPointer, instance.Handle, field.ID);
 			return tmp;
 		}
 
-		public static unsafe int GetIntField (JniObjectReference instance, JniInstanceFieldInfo field)
+		public static unsafe int GetIntField (JniObjectReference instance, JniFieldInfo field)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.GetIntField (__info.EnvironmentPointer, instance.Handle, field.ID);
 			return tmp;
 		}
 
-		public static unsafe long GetLongField (JniObjectReference instance, JniInstanceFieldInfo field)
+		public static unsafe long GetLongField (JniObjectReference instance, JniFieldInfo field)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.GetLongField (__info.EnvironmentPointer, instance.Handle, field.ID);
 			return tmp;
 		}
 
-		public static unsafe float GetFloatField (JniObjectReference instance, JniInstanceFieldInfo field)
+		public static unsafe float GetFloatField (JniObjectReference instance, JniFieldInfo field)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.GetFloatField (__info.EnvironmentPointer, instance.Handle, field.ID);
 			return tmp;
 		}
 
-		public static unsafe double GetDoubleField (JniObjectReference instance, JniInstanceFieldInfo field)
+		public static unsafe double GetDoubleField (JniObjectReference instance, JniFieldInfo field)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.GetDoubleField (__info.EnvironmentPointer, instance.Handle, field.ID);
 			return tmp;
 		}
 
-		public static unsafe void SetObjectField (JniObjectReference instance, JniInstanceFieldInfo field, JniObjectReference value)
+		public static unsafe void SetObjectField (JniObjectReference instance, JniFieldInfo field, JniObjectReference value)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetObjectField (__info.EnvironmentPointer, instance.Handle, field.ID, value.Handle);
 		}
 
-		public static unsafe void SetBooleanField (JniObjectReference instance, JniInstanceFieldInfo field, bool value)
+		public static unsafe void SetBooleanField (JniObjectReference instance, JniFieldInfo field, bool value)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetBooleanField (__info.EnvironmentPointer, instance.Handle, field.ID, (value ? (byte) 1 : (byte) 0));
 		}
 
-		public static unsafe void SetByteField (JniObjectReference instance, JniInstanceFieldInfo field, sbyte value)
+		public static unsafe void SetByteField (JniObjectReference instance, JniFieldInfo field, sbyte value)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetByteField (__info.EnvironmentPointer, instance.Handle, field.ID, value);
 		}
 
-		public static unsafe void SetCharField (JniObjectReference instance, JniInstanceFieldInfo field, char value)
+		public static unsafe void SetCharField (JniObjectReference instance, JniFieldInfo field, char value)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetCharField (__info.EnvironmentPointer, instance.Handle, field.ID, value);
 		}
 
-		public static unsafe void SetShortField (JniObjectReference instance, JniInstanceFieldInfo field, short value)
+		public static unsafe void SetShortField (JniObjectReference instance, JniFieldInfo field, short value)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetShortField (__info.EnvironmentPointer, instance.Handle, field.ID, value);
 		}
 
-		public static unsafe void SetIntField (JniObjectReference instance, JniInstanceFieldInfo field, int value)
+		public static unsafe void SetIntField (JniObjectReference instance, JniFieldInfo field, int value)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetIntField (__info.EnvironmentPointer, instance.Handle, field.ID, value);
 		}
 
-		public static unsafe void SetLongField (JniObjectReference instance, JniInstanceFieldInfo field, long value)
+		public static unsafe void SetLongField (JniObjectReference instance, JniFieldInfo field, long value)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetLongField (__info.EnvironmentPointer, instance.Handle, field.ID, value);
 		}
 
-		public static unsafe void SetFloatField (JniObjectReference instance, JniInstanceFieldInfo field, float value)
+		public static unsafe void SetFloatField (JniObjectReference instance, JniFieldInfo field, float value)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetFloatField (__info.EnvironmentPointer, instance.Handle, field.ID, value);
 		}
 
-		public static unsafe void SetDoubleField (JniObjectReference instance, JniInstanceFieldInfo field, double value)
+		public static unsafe void SetDoubleField (JniObjectReference instance, JniFieldInfo field, double value)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetDoubleField (__info.EnvironmentPointer, instance.Handle, field.ID, value);
@@ -6239,7 +6403,7 @@ namespace
 
 	public static partial class InstanceMethods {
 
-		public static unsafe JniInstanceMethodInfo GetMethodID (JniObjectReference type, string name, string signature)
+		public static unsafe JniMethodInfo GetMethodID (JniObjectReference type, string name, string signature)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
@@ -6257,17 +6421,18 @@ namespace
 
 			if (tmp == IntPtr.Zero)
 				return null;
-			return new JniInstanceMethodInfo (tmp);
+			return new JniMethodInfo (name, signature, tmp, isStatic: false);
 		}
 
-		public static unsafe JniObjectReference CallObjectMethod (JniObjectReference instance, JniInstanceMethodInfo method)
+		public static unsafe JniObjectReference CallObjectMethod (JniObjectReference instance, JniMethodInfo method)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallObjectMethod (__info.EnvironmentPointer, instance.Handle, method.ID);
@@ -6280,14 +6445,15 @@ namespace
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		public static unsafe JniObjectReference CallObjectMethod (JniObjectReference instance, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe JniObjectReference CallObjectMethod (JniObjectReference instance, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallObjectMethodA (__info.EnvironmentPointer, instance.Handle, method.ID, args);
@@ -6300,14 +6466,15 @@ namespace
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		public static unsafe bool CallBooleanMethod (JniObjectReference instance, JniInstanceMethodInfo method)
+		public static unsafe bool CallBooleanMethod (JniObjectReference instance, JniMethodInfo method)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallBooleanMethod (__info.EnvironmentPointer, instance.Handle, method.ID);
@@ -6319,14 +6486,15 @@ namespace
 			return (tmp != 0) ? true : false;
 		}
 
-		public static unsafe bool CallBooleanMethod (JniObjectReference instance, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe bool CallBooleanMethod (JniObjectReference instance, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallBooleanMethodA (__info.EnvironmentPointer, instance.Handle, method.ID, args);
@@ -6338,14 +6506,15 @@ namespace
 			return (tmp != 0) ? true : false;
 		}
 
-		public static unsafe sbyte CallByteMethod (JniObjectReference instance, JniInstanceMethodInfo method)
+		public static unsafe sbyte CallByteMethod (JniObjectReference instance, JniMethodInfo method)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallByteMethod (__info.EnvironmentPointer, instance.Handle, method.ID);
@@ -6357,14 +6526,15 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe sbyte CallByteMethod (JniObjectReference instance, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe sbyte CallByteMethod (JniObjectReference instance, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallByteMethodA (__info.EnvironmentPointer, instance.Handle, method.ID, args);
@@ -6376,14 +6546,15 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe char CallCharMethod (JniObjectReference instance, JniInstanceMethodInfo method)
+		public static unsafe char CallCharMethod (JniObjectReference instance, JniMethodInfo method)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallCharMethod (__info.EnvironmentPointer, instance.Handle, method.ID);
@@ -6395,14 +6566,15 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe char CallCharMethod (JniObjectReference instance, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe char CallCharMethod (JniObjectReference instance, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallCharMethodA (__info.EnvironmentPointer, instance.Handle, method.ID, args);
@@ -6414,14 +6586,15 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe short CallShortMethod (JniObjectReference instance, JniInstanceMethodInfo method)
+		public static unsafe short CallShortMethod (JniObjectReference instance, JniMethodInfo method)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallShortMethod (__info.EnvironmentPointer, instance.Handle, method.ID);
@@ -6433,14 +6606,15 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe short CallShortMethod (JniObjectReference instance, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe short CallShortMethod (JniObjectReference instance, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallShortMethodA (__info.EnvironmentPointer, instance.Handle, method.ID, args);
@@ -6452,14 +6626,15 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe int CallIntMethod (JniObjectReference instance, JniInstanceMethodInfo method)
+		public static unsafe int CallIntMethod (JniObjectReference instance, JniMethodInfo method)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallIntMethod (__info.EnvironmentPointer, instance.Handle, method.ID);
@@ -6471,14 +6646,15 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe int CallIntMethod (JniObjectReference instance, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe int CallIntMethod (JniObjectReference instance, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallIntMethodA (__info.EnvironmentPointer, instance.Handle, method.ID, args);
@@ -6490,14 +6666,15 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe long CallLongMethod (JniObjectReference instance, JniInstanceMethodInfo method)
+		public static unsafe long CallLongMethod (JniObjectReference instance, JniMethodInfo method)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallLongMethod (__info.EnvironmentPointer, instance.Handle, method.ID);
@@ -6509,14 +6686,15 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe long CallLongMethod (JniObjectReference instance, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe long CallLongMethod (JniObjectReference instance, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallLongMethodA (__info.EnvironmentPointer, instance.Handle, method.ID, args);
@@ -6528,14 +6706,15 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe float CallFloatMethod (JniObjectReference instance, JniInstanceMethodInfo method)
+		public static unsafe float CallFloatMethod (JniObjectReference instance, JniMethodInfo method)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallFloatMethod (__info.EnvironmentPointer, instance.Handle, method.ID);
@@ -6547,14 +6726,15 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe float CallFloatMethod (JniObjectReference instance, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe float CallFloatMethod (JniObjectReference instance, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallFloatMethodA (__info.EnvironmentPointer, instance.Handle, method.ID, args);
@@ -6566,14 +6746,15 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe double CallDoubleMethod (JniObjectReference instance, JniInstanceMethodInfo method)
+		public static unsafe double CallDoubleMethod (JniObjectReference instance, JniMethodInfo method)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallDoubleMethod (__info.EnvironmentPointer, instance.Handle, method.ID);
@@ -6585,14 +6766,15 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe double CallDoubleMethod (JniObjectReference instance, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe double CallDoubleMethod (JniObjectReference instance, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallDoubleMethodA (__info.EnvironmentPointer, instance.Handle, method.ID, args);
@@ -6604,14 +6786,15 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe void CallVoidMethod (JniObjectReference instance, JniInstanceMethodInfo method)
+		public static unsafe void CallVoidMethod (JniObjectReference instance, JniMethodInfo method)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.CallVoidMethod (__info.EnvironmentPointer, instance.Handle, method.ID);
@@ -6622,14 +6805,15 @@ namespace
 
 		}
 
-		public static unsafe void CallVoidMethod (JniObjectReference instance, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe void CallVoidMethod (JniObjectReference instance, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.CallVoidMethodA (__info.EnvironmentPointer, instance.Handle, method.ID, args);
@@ -6640,7 +6824,7 @@ namespace
 
 		}
 
-		public static unsafe JniObjectReference CallNonvirtualObjectMethod (JniObjectReference instance, JniObjectReference type, JniInstanceMethodInfo method)
+		public static unsafe JniObjectReference CallNonvirtualObjectMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
@@ -6648,8 +6832,9 @@ namespace
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualObjectMethod (__info.EnvironmentPointer, instance.Handle, type.Handle, method.ID);
@@ -6662,7 +6847,7 @@ namespace
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		public static unsafe JniObjectReference CallNonvirtualObjectMethod (JniObjectReference instance, JniObjectReference type, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe JniObjectReference CallNonvirtualObjectMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
@@ -6670,8 +6855,9 @@ namespace
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualObjectMethodA (__info.EnvironmentPointer, instance.Handle, type.Handle, method.ID, args);
@@ -6684,7 +6870,7 @@ namespace
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		public static unsafe bool CallNonvirtualBooleanMethod (JniObjectReference instance, JniObjectReference type, JniInstanceMethodInfo method)
+		public static unsafe bool CallNonvirtualBooleanMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
@@ -6692,8 +6878,9 @@ namespace
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualBooleanMethod (__info.EnvironmentPointer, instance.Handle, type.Handle, method.ID);
@@ -6705,7 +6892,7 @@ namespace
 			return (tmp != 0) ? true : false;
 		}
 
-		public static unsafe bool CallNonvirtualBooleanMethod (JniObjectReference instance, JniObjectReference type, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe bool CallNonvirtualBooleanMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
@@ -6713,8 +6900,9 @@ namespace
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualBooleanMethodA (__info.EnvironmentPointer, instance.Handle, type.Handle, method.ID, args);
@@ -6726,7 +6914,7 @@ namespace
 			return (tmp != 0) ? true : false;
 		}
 
-		public static unsafe sbyte CallNonvirtualByteMethod (JniObjectReference instance, JniObjectReference type, JniInstanceMethodInfo method)
+		public static unsafe sbyte CallNonvirtualByteMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
@@ -6734,8 +6922,9 @@ namespace
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualByteMethod (__info.EnvironmentPointer, instance.Handle, type.Handle, method.ID);
@@ -6747,7 +6936,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe sbyte CallNonvirtualByteMethod (JniObjectReference instance, JniObjectReference type, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe sbyte CallNonvirtualByteMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
@@ -6755,8 +6944,9 @@ namespace
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualByteMethodA (__info.EnvironmentPointer, instance.Handle, type.Handle, method.ID, args);
@@ -6768,7 +6958,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe char CallNonvirtualCharMethod (JniObjectReference instance, JniObjectReference type, JniInstanceMethodInfo method)
+		public static unsafe char CallNonvirtualCharMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
@@ -6776,8 +6966,9 @@ namespace
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualCharMethod (__info.EnvironmentPointer, instance.Handle, type.Handle, method.ID);
@@ -6789,7 +6980,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe char CallNonvirtualCharMethod (JniObjectReference instance, JniObjectReference type, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe char CallNonvirtualCharMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
@@ -6797,8 +6988,9 @@ namespace
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualCharMethodA (__info.EnvironmentPointer, instance.Handle, type.Handle, method.ID, args);
@@ -6810,7 +7002,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe short CallNonvirtualShortMethod (JniObjectReference instance, JniObjectReference type, JniInstanceMethodInfo method)
+		public static unsafe short CallNonvirtualShortMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
@@ -6818,8 +7010,9 @@ namespace
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualShortMethod (__info.EnvironmentPointer, instance.Handle, type.Handle, method.ID);
@@ -6831,7 +7024,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe short CallNonvirtualShortMethod (JniObjectReference instance, JniObjectReference type, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe short CallNonvirtualShortMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
@@ -6839,8 +7032,9 @@ namespace
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualShortMethodA (__info.EnvironmentPointer, instance.Handle, type.Handle, method.ID, args);
@@ -6852,7 +7046,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe int CallNonvirtualIntMethod (JniObjectReference instance, JniObjectReference type, JniInstanceMethodInfo method)
+		public static unsafe int CallNonvirtualIntMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
@@ -6860,8 +7054,9 @@ namespace
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualIntMethod (__info.EnvironmentPointer, instance.Handle, type.Handle, method.ID);
@@ -6873,7 +7068,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe int CallNonvirtualIntMethod (JniObjectReference instance, JniObjectReference type, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe int CallNonvirtualIntMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
@@ -6881,8 +7076,9 @@ namespace
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualIntMethodA (__info.EnvironmentPointer, instance.Handle, type.Handle, method.ID, args);
@@ -6894,7 +7090,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe long CallNonvirtualLongMethod (JniObjectReference instance, JniObjectReference type, JniInstanceMethodInfo method)
+		public static unsafe long CallNonvirtualLongMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
@@ -6902,8 +7098,9 @@ namespace
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualLongMethod (__info.EnvironmentPointer, instance.Handle, type.Handle, method.ID);
@@ -6915,7 +7112,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe long CallNonvirtualLongMethod (JniObjectReference instance, JniObjectReference type, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe long CallNonvirtualLongMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
@@ -6923,8 +7120,9 @@ namespace
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualLongMethodA (__info.EnvironmentPointer, instance.Handle, type.Handle, method.ID, args);
@@ -6936,7 +7134,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe float CallNonvirtualFloatMethod (JniObjectReference instance, JniObjectReference type, JniInstanceMethodInfo method)
+		public static unsafe float CallNonvirtualFloatMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
@@ -6944,8 +7142,9 @@ namespace
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualFloatMethod (__info.EnvironmentPointer, instance.Handle, type.Handle, method.ID);
@@ -6957,7 +7156,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe float CallNonvirtualFloatMethod (JniObjectReference instance, JniObjectReference type, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe float CallNonvirtualFloatMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
@@ -6965,8 +7164,9 @@ namespace
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualFloatMethodA (__info.EnvironmentPointer, instance.Handle, type.Handle, method.ID, args);
@@ -6978,7 +7178,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe double CallNonvirtualDoubleMethod (JniObjectReference instance, JniObjectReference type, JniInstanceMethodInfo method)
+		public static unsafe double CallNonvirtualDoubleMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
@@ -6986,8 +7186,9 @@ namespace
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualDoubleMethod (__info.EnvironmentPointer, instance.Handle, type.Handle, method.ID);
@@ -6999,7 +7200,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe double CallNonvirtualDoubleMethod (JniObjectReference instance, JniObjectReference type, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe double CallNonvirtualDoubleMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
@@ -7007,8 +7208,9 @@ namespace
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualDoubleMethodA (__info.EnvironmentPointer, instance.Handle, type.Handle, method.ID, args);
@@ -7020,7 +7222,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe void CallNonvirtualVoidMethod (JniObjectReference instance, JniObjectReference type, JniInstanceMethodInfo method)
+		public static unsafe void CallNonvirtualVoidMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
@@ -7028,8 +7230,9 @@ namespace
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.CallNonvirtualVoidMethod (__info.EnvironmentPointer, instance.Handle, type.Handle, method.ID);
@@ -7040,7 +7243,7 @@ namespace
 
 		}
 
-		public static unsafe void CallNonvirtualVoidMethod (JniObjectReference instance, JniObjectReference type, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe void CallNonvirtualVoidMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
@@ -7048,8 +7251,9 @@ namespace
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.CallNonvirtualVoidMethodA (__info.EnvironmentPointer, instance.Handle, type.Handle, method.ID, args);
@@ -7141,14 +7345,15 @@ namespace
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		public static unsafe JniObjectReference NewObject (JniObjectReference type, JniInstanceMethodInfo method)
+		public static unsafe JniObjectReference NewObject (JniObjectReference type, JniMethodInfo method)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.NewObject (__info.EnvironmentPointer, type.Handle, method.ID);
@@ -7161,14 +7366,15 @@ namespace
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		public static unsafe JniObjectReference NewObject (JniObjectReference type, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe JniObjectReference NewObject (JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.NewObjectA (__info.EnvironmentPointer, type.Handle, method.ID, args);
@@ -7265,14 +7471,15 @@ namespace
 
 	internal static partial class Reflection {
 
-		public static unsafe JniObjectReference ToReflectedMethod (JniObjectReference type, JniInstanceMethodInfo method, bool isStatic)
+		public static unsafe JniObjectReference ToReflectedMethod (JniObjectReference type, JniMethodInfo method, bool isStatic)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.ToReflectedMethod (__info.EnvironmentPointer, type.Handle, method.ID, (isStatic ? (byte) 1 : (byte) 0));
@@ -7285,14 +7492,15 @@ namespace
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		public static unsafe JniObjectReference ToReflectedField (JniObjectReference type, JniInstanceFieldInfo field, bool isStatic)
+		public static unsafe JniObjectReference ToReflectedField (JniObjectReference type, JniFieldInfo field, bool isStatic)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.ToReflectedField (__info.EnvironmentPointer, type.Handle, field.ID, (isStatic ? (byte) 1 : (byte) 0));
@@ -7308,7 +7516,7 @@ namespace
 
 	public static partial class StaticFields {
 
-		public static unsafe JniStaticFieldInfo GetStaticFieldID (JniObjectReference type, string name, string signature)
+		public static unsafe JniFieldInfo GetStaticFieldID (JniObjectReference type, string name, string signature)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
@@ -7326,17 +7534,18 @@ namespace
 
 			if (tmp == IntPtr.Zero)
 				return null;
-			return new JniStaticFieldInfo (tmp);
+			return new JniFieldInfo (name, signature, tmp, isStatic: true);
 		}
 
-		public static unsafe JniObjectReference GetStaticObjectField (JniObjectReference type, JniStaticFieldInfo field)
+		public static unsafe JniObjectReference GetStaticObjectField (JniObjectReference type, JniFieldInfo field)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.GetStaticObjectField (__info.EnvironmentPointer, type.Handle, field.ID);
@@ -7344,230 +7553,247 @@ namespace
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		public static unsafe bool GetStaticBooleanField (JniObjectReference type, JniStaticFieldInfo field)
+		public static unsafe bool GetStaticBooleanField (JniObjectReference type, JniFieldInfo field)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.GetStaticBooleanField (__info.EnvironmentPointer, type.Handle, field.ID);
 			return (tmp != 0) ? true : false;
 		}
 
-		public static unsafe sbyte GetStaticByteField (JniObjectReference type, JniStaticFieldInfo field)
+		public static unsafe sbyte GetStaticByteField (JniObjectReference type, JniFieldInfo field)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.GetStaticByteField (__info.EnvironmentPointer, type.Handle, field.ID);
 			return tmp;
 		}
 
-		public static unsafe char GetStaticCharField (JniObjectReference type, JniStaticFieldInfo field)
+		public static unsafe char GetStaticCharField (JniObjectReference type, JniFieldInfo field)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.GetStaticCharField (__info.EnvironmentPointer, type.Handle, field.ID);
 			return tmp;
 		}
 
-		public static unsafe short GetStaticShortField (JniObjectReference type, JniStaticFieldInfo field)
+		public static unsafe short GetStaticShortField (JniObjectReference type, JniFieldInfo field)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.GetStaticShortField (__info.EnvironmentPointer, type.Handle, field.ID);
 			return tmp;
 		}
 
-		public static unsafe int GetStaticIntField (JniObjectReference type, JniStaticFieldInfo field)
+		public static unsafe int GetStaticIntField (JniObjectReference type, JniFieldInfo field)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.GetStaticIntField (__info.EnvironmentPointer, type.Handle, field.ID);
 			return tmp;
 		}
 
-		public static unsafe long GetStaticLongField (JniObjectReference type, JniStaticFieldInfo field)
+		public static unsafe long GetStaticLongField (JniObjectReference type, JniFieldInfo field)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.GetStaticLongField (__info.EnvironmentPointer, type.Handle, field.ID);
 			return tmp;
 		}
 
-		public static unsafe float GetStaticFloatField (JniObjectReference type, JniStaticFieldInfo field)
+		public static unsafe float GetStaticFloatField (JniObjectReference type, JniFieldInfo field)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.GetStaticFloatField (__info.EnvironmentPointer, type.Handle, field.ID);
 			return tmp;
 		}
 
-		public static unsafe double GetStaticDoubleField (JniObjectReference type, JniStaticFieldInfo field)
+		public static unsafe double GetStaticDoubleField (JniObjectReference type, JniFieldInfo field)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.GetStaticDoubleField (__info.EnvironmentPointer, type.Handle, field.ID);
 			return tmp;
 		}
 
-		public static unsafe void SetStaticObjectField (JniObjectReference type, JniStaticFieldInfo field, JniObjectReference value)
+		public static unsafe void SetStaticObjectField (JniObjectReference type, JniFieldInfo field, JniObjectReference value)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetStaticObjectField (__info.EnvironmentPointer, type.Handle, field.ID, value.Handle);
 		}
 
-		public static unsafe void SetStaticBooleanField (JniObjectReference type, JniStaticFieldInfo field, bool value)
+		public static unsafe void SetStaticBooleanField (JniObjectReference type, JniFieldInfo field, bool value)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetStaticBooleanField (__info.EnvironmentPointer, type.Handle, field.ID, (value ? (byte) 1 : (byte) 0));
 		}
 
-		public static unsafe void SetStaticByteField (JniObjectReference type, JniStaticFieldInfo field, sbyte value)
+		public static unsafe void SetStaticByteField (JniObjectReference type, JniFieldInfo field, sbyte value)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetStaticByteField (__info.EnvironmentPointer, type.Handle, field.ID, value);
 		}
 
-		public static unsafe void SetStaticCharField (JniObjectReference type, JniStaticFieldInfo field, char value)
+		public static unsafe void SetStaticCharField (JniObjectReference type, JniFieldInfo field, char value)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetStaticCharField (__info.EnvironmentPointer, type.Handle, field.ID, value);
 		}
 
-		public static unsafe void SetStaticShortField (JniObjectReference type, JniStaticFieldInfo field, short value)
+		public static unsafe void SetStaticShortField (JniObjectReference type, JniFieldInfo field, short value)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetStaticShortField (__info.EnvironmentPointer, type.Handle, field.ID, value);
 		}
 
-		public static unsafe void SetStaticIntField (JniObjectReference type, JniStaticFieldInfo field, int value)
+		public static unsafe void SetStaticIntField (JniObjectReference type, JniFieldInfo field, int value)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetStaticIntField (__info.EnvironmentPointer, type.Handle, field.ID, value);
 		}
 
-		public static unsafe void SetStaticLongField (JniObjectReference type, JniStaticFieldInfo field, long value)
+		public static unsafe void SetStaticLongField (JniObjectReference type, JniFieldInfo field, long value)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetStaticLongField (__info.EnvironmentPointer, type.Handle, field.ID, value);
 		}
 
-		public static unsafe void SetStaticFloatField (JniObjectReference type, JniStaticFieldInfo field, float value)
+		public static unsafe void SetStaticFloatField (JniObjectReference type, JniFieldInfo field, float value)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetStaticFloatField (__info.EnvironmentPointer, type.Handle, field.ID, value);
 		}
 
-		public static unsafe void SetStaticDoubleField (JniObjectReference type, JniStaticFieldInfo field, double value)
+		public static unsafe void SetStaticDoubleField (JniObjectReference type, JniFieldInfo field, double value)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetStaticDoubleField (__info.EnvironmentPointer, type.Handle, field.ID, value);
@@ -7576,7 +7802,7 @@ namespace
 
 	public static partial class StaticMethods {
 
-		public static unsafe JniStaticMethodInfo GetStaticMethodID (JniObjectReference type, string name, string signature)
+		public static unsafe JniMethodInfo GetStaticMethodID (JniObjectReference type, string name, string signature)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
@@ -7594,17 +7820,18 @@ namespace
 
 			if (tmp == IntPtr.Zero)
 				return null;
-			return new JniStaticMethodInfo (tmp);
+			return new JniMethodInfo (name, signature, tmp, isStatic: true);
 		}
 
-		public static unsafe JniObjectReference CallStaticObjectMethod (JniObjectReference type, JniStaticMethodInfo method)
+		public static unsafe JniObjectReference CallStaticObjectMethod (JniObjectReference type, JniMethodInfo method)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticObjectMethod (__info.EnvironmentPointer, type.Handle, method.ID);
@@ -7617,14 +7844,15 @@ namespace
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		public static unsafe JniObjectReference CallStaticObjectMethod (JniObjectReference type, JniStaticMethodInfo method, JniArgumentValue* args)
+		public static unsafe JniObjectReference CallStaticObjectMethod (JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticObjectMethodA (__info.EnvironmentPointer, type.Handle, method.ID, args);
@@ -7637,14 +7865,15 @@ namespace
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		public static unsafe bool CallStaticBooleanMethod (JniObjectReference type, JniStaticMethodInfo method)
+		public static unsafe bool CallStaticBooleanMethod (JniObjectReference type, JniMethodInfo method)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticBooleanMethod (__info.EnvironmentPointer, type.Handle, method.ID);
@@ -7656,14 +7885,15 @@ namespace
 			return (tmp != 0) ? true : false;
 		}
 
-		public static unsafe bool CallStaticBooleanMethod (JniObjectReference type, JniStaticMethodInfo method, JniArgumentValue* args)
+		public static unsafe bool CallStaticBooleanMethod (JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticBooleanMethodA (__info.EnvironmentPointer, type.Handle, method.ID, args);
@@ -7675,14 +7905,15 @@ namespace
 			return (tmp != 0) ? true : false;
 		}
 
-		public static unsafe sbyte CallStaticByteMethod (JniObjectReference type, JniStaticMethodInfo method)
+		public static unsafe sbyte CallStaticByteMethod (JniObjectReference type, JniMethodInfo method)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticByteMethod (__info.EnvironmentPointer, type.Handle, method.ID);
@@ -7694,14 +7925,15 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe sbyte CallStaticByteMethod (JniObjectReference type, JniStaticMethodInfo method, JniArgumentValue* args)
+		public static unsafe sbyte CallStaticByteMethod (JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticByteMethodA (__info.EnvironmentPointer, type.Handle, method.ID, args);
@@ -7713,14 +7945,15 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe char CallStaticCharMethod (JniObjectReference type, JniStaticMethodInfo method)
+		public static unsafe char CallStaticCharMethod (JniObjectReference type, JniMethodInfo method)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticCharMethod (__info.EnvironmentPointer, type.Handle, method.ID);
@@ -7732,14 +7965,15 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe char CallStaticCharMethod (JniObjectReference type, JniStaticMethodInfo method, JniArgumentValue* args)
+		public static unsafe char CallStaticCharMethod (JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticCharMethodA (__info.EnvironmentPointer, type.Handle, method.ID, args);
@@ -7751,14 +7985,15 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe short CallStaticShortMethod (JniObjectReference type, JniStaticMethodInfo method)
+		public static unsafe short CallStaticShortMethod (JniObjectReference type, JniMethodInfo method)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticShortMethod (__info.EnvironmentPointer, type.Handle, method.ID);
@@ -7770,14 +8005,15 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe short CallStaticShortMethod (JniObjectReference type, JniStaticMethodInfo method, JniArgumentValue* args)
+		public static unsafe short CallStaticShortMethod (JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticShortMethodA (__info.EnvironmentPointer, type.Handle, method.ID, args);
@@ -7789,14 +8025,15 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe int CallStaticIntMethod (JniObjectReference type, JniStaticMethodInfo method)
+		public static unsafe int CallStaticIntMethod (JniObjectReference type, JniMethodInfo method)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticIntMethod (__info.EnvironmentPointer, type.Handle, method.ID);
@@ -7808,14 +8045,15 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe int CallStaticIntMethod (JniObjectReference type, JniStaticMethodInfo method, JniArgumentValue* args)
+		public static unsafe int CallStaticIntMethod (JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticIntMethodA (__info.EnvironmentPointer, type.Handle, method.ID, args);
@@ -7827,14 +8065,15 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe long CallStaticLongMethod (JniObjectReference type, JniStaticMethodInfo method)
+		public static unsafe long CallStaticLongMethod (JniObjectReference type, JniMethodInfo method)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticLongMethod (__info.EnvironmentPointer, type.Handle, method.ID);
@@ -7846,14 +8085,15 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe long CallStaticLongMethod (JniObjectReference type, JniStaticMethodInfo method, JniArgumentValue* args)
+		public static unsafe long CallStaticLongMethod (JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticLongMethodA (__info.EnvironmentPointer, type.Handle, method.ID, args);
@@ -7865,14 +8105,15 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe float CallStaticFloatMethod (JniObjectReference type, JniStaticMethodInfo method)
+		public static unsafe float CallStaticFloatMethod (JniObjectReference type, JniMethodInfo method)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticFloatMethod (__info.EnvironmentPointer, type.Handle, method.ID);
@@ -7884,14 +8125,15 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe float CallStaticFloatMethod (JniObjectReference type, JniStaticMethodInfo method, JniArgumentValue* args)
+		public static unsafe float CallStaticFloatMethod (JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticFloatMethodA (__info.EnvironmentPointer, type.Handle, method.ID, args);
@@ -7903,14 +8145,15 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe double CallStaticDoubleMethod (JniObjectReference type, JniStaticMethodInfo method)
+		public static unsafe double CallStaticDoubleMethod (JniObjectReference type, JniMethodInfo method)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticDoubleMethod (__info.EnvironmentPointer, type.Handle, method.ID);
@@ -7922,14 +8165,15 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe double CallStaticDoubleMethod (JniObjectReference type, JniStaticMethodInfo method, JniArgumentValue* args)
+		public static unsafe double CallStaticDoubleMethod (JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticDoubleMethodA (__info.EnvironmentPointer, type.Handle, method.ID, args);
@@ -7941,14 +8185,15 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe void CallStaticVoidMethod (JniObjectReference type, JniStaticMethodInfo method)
+		public static unsafe void CallStaticVoidMethod (JniObjectReference type, JniMethodInfo method)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.CallStaticVoidMethod (__info.EnvironmentPointer, type.Handle, method.ID);
@@ -7959,14 +8204,15 @@ namespace
 
 		}
 
-		public static unsafe void CallStaticVoidMethod (JniObjectReference type, JniStaticMethodInfo method, JniArgumentValue* args)
+		public static unsafe void CallStaticVoidMethod (JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.CallStaticVoidMethodA (__info.EnvironmentPointer, type.Handle, method.ID, args);
@@ -10496,6 +10742,12 @@ namespace
 		internal static extern unsafe int JavaInterop_GetJavaVM (IntPtr jnienv, out IntPtr vm);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
+		internal static extern unsafe IntPtr JavaInterop_GetPrimitiveArrayCritical (IntPtr jnienv, jobject array, bool* isCopy);
+
+		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
+		internal static extern unsafe void JavaInterop_ReleasePrimitiveArrayCritical (IntPtr jnienv, jobject array, IntPtr carray, int mode);
+
+		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
 		internal static extern unsafe jobject JavaInterop_NewWeakGlobalRef (IntPtr jnienv, jobject instance);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
@@ -10991,6 +11243,25 @@ namespace
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 		}
+
+		public static unsafe IntPtr GetPrimitiveArrayCritical (JniObjectReference array, bool* isCopy)
+		{
+			if (array.Handle == IntPtr.Zero)
+				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
+
+			var tmp = NativeMethods.JavaInterop_GetPrimitiveArrayCritical (JniEnvironment.EnvironmentPointer, array.Handle, isCopy);
+			return tmp;
+		}
+
+		public static unsafe void ReleasePrimitiveArrayCritical (JniObjectReference array, IntPtr carray, JniReleaseArrayElementsMode mode)
+		{
+			if (array.Handle == IntPtr.Zero)
+				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
+			if (carray == IntPtr.Zero)
+				throw new ArgumentException ("'carray' must not be IntPtr.Zero.", "carray");
+
+			NativeMethods.JavaInterop_ReleasePrimitiveArrayCritical (JniEnvironment.EnvironmentPointer, array.Handle, carray, ((int) mode));
+		}
 	}
 
 	public static partial class Exceptions {
@@ -11048,7 +11319,7 @@ namespace
 
 	public static partial class InstanceFields {
 
-		public static unsafe JniInstanceFieldInfo GetFieldID (JniObjectReference type, string name, string signature)
+		public static unsafe JniFieldInfo GetFieldID (JniObjectReference type, string name, string signature)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
@@ -11066,231 +11337,249 @@ namespace
 
 			if (tmp == IntPtr.Zero)
 				return null;
-			return new JniInstanceFieldInfo (tmp);
+			return new JniFieldInfo (name, signature, tmp, isStatic: false);
 		}
 
-		public static unsafe JniObjectReference GetObjectField (JniObjectReference instance, JniInstanceFieldInfo field)
+		public static unsafe JniObjectReference GetObjectField (JniObjectReference instance, JniFieldInfo field)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			var tmp = NativeMethods.JavaInterop_GetObjectField (JniEnvironment.EnvironmentPointer, instance.Handle, field.ID);
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		public static unsafe bool GetBooleanField (JniObjectReference instance, JniInstanceFieldInfo field)
+		public static unsafe bool GetBooleanField (JniObjectReference instance, JniFieldInfo field)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			var tmp = NativeMethods.JavaInterop_GetBooleanField (JniEnvironment.EnvironmentPointer, instance.Handle, field.ID);
 			return (tmp != 0) ? true : false;
 		}
 
-		public static unsafe sbyte GetByteField (JniObjectReference instance, JniInstanceFieldInfo field)
+		public static unsafe sbyte GetByteField (JniObjectReference instance, JniFieldInfo field)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			var tmp = NativeMethods.JavaInterop_GetByteField (JniEnvironment.EnvironmentPointer, instance.Handle, field.ID);
 			return tmp;
 		}
 
-		public static unsafe char GetCharField (JniObjectReference instance, JniInstanceFieldInfo field)
+		public static unsafe char GetCharField (JniObjectReference instance, JniFieldInfo field)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			var tmp = NativeMethods.JavaInterop_GetCharField (JniEnvironment.EnvironmentPointer, instance.Handle, field.ID);
 			return tmp;
 		}
 
-		public static unsafe short GetShortField (JniObjectReference instance, JniInstanceFieldInfo field)
+		public static unsafe short GetShortField (JniObjectReference instance, JniFieldInfo field)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			var tmp = NativeMethods.JavaInterop_GetShortField (JniEnvironment.EnvironmentPointer, instance.Handle, field.ID);
 			return tmp;
 		}
 
-		public static unsafe int GetIntField (JniObjectReference instance, JniInstanceFieldInfo field)
+		public static unsafe int GetIntField (JniObjectReference instance, JniFieldInfo field)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			var tmp = NativeMethods.JavaInterop_GetIntField (JniEnvironment.EnvironmentPointer, instance.Handle, field.ID);
 			return tmp;
 		}
 
-		public static unsafe long GetLongField (JniObjectReference instance, JniInstanceFieldInfo field)
+		public static unsafe long GetLongField (JniObjectReference instance, JniFieldInfo field)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			var tmp = NativeMethods.JavaInterop_GetLongField (JniEnvironment.EnvironmentPointer, instance.Handle, field.ID);
 			return tmp;
 		}
 
-		public static unsafe float GetFloatField (JniObjectReference instance, JniInstanceFieldInfo field)
+		public static unsafe float GetFloatField (JniObjectReference instance, JniFieldInfo field)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			var tmp = NativeMethods.JavaInterop_GetFloatField (JniEnvironment.EnvironmentPointer, instance.Handle, field.ID);
 			return tmp;
 		}
 
-		public static unsafe double GetDoubleField (JniObjectReference instance, JniInstanceFieldInfo field)
+		public static unsafe double GetDoubleField (JniObjectReference instance, JniFieldInfo field)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			var tmp = NativeMethods.JavaInterop_GetDoubleField (JniEnvironment.EnvironmentPointer, instance.Handle, field.ID);
 			return tmp;
 		}
 
-		public static unsafe void SetObjectField (JniObjectReference instance, JniInstanceFieldInfo field, JniObjectReference value)
+		public static unsafe void SetObjectField (JniObjectReference instance, JniFieldInfo field, JniObjectReference value)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			NativeMethods.JavaInterop_SetObjectField (JniEnvironment.EnvironmentPointer, instance.Handle, field.ID, value.Handle);
 		}
 
-		public static unsafe void SetBooleanField (JniObjectReference instance, JniInstanceFieldInfo field, bool value)
+		public static unsafe void SetBooleanField (JniObjectReference instance, JniFieldInfo field, bool value)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			NativeMethods.JavaInterop_SetBooleanField (JniEnvironment.EnvironmentPointer, instance.Handle, field.ID, (value ? (byte) 1 : (byte) 0));
 		}
 
-		public static unsafe void SetByteField (JniObjectReference instance, JniInstanceFieldInfo field, sbyte value)
+		public static unsafe void SetByteField (JniObjectReference instance, JniFieldInfo field, sbyte value)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			NativeMethods.JavaInterop_SetByteField (JniEnvironment.EnvironmentPointer, instance.Handle, field.ID, value);
 		}
 
-		public static unsafe void SetCharField (JniObjectReference instance, JniInstanceFieldInfo field, char value)
+		public static unsafe void SetCharField (JniObjectReference instance, JniFieldInfo field, char value)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			NativeMethods.JavaInterop_SetCharField (JniEnvironment.EnvironmentPointer, instance.Handle, field.ID, value);
 		}
 
-		public static unsafe void SetShortField (JniObjectReference instance, JniInstanceFieldInfo field, short value)
+		public static unsafe void SetShortField (JniObjectReference instance, JniFieldInfo field, short value)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			NativeMethods.JavaInterop_SetShortField (JniEnvironment.EnvironmentPointer, instance.Handle, field.ID, value);
 		}
 
-		public static unsafe void SetIntField (JniObjectReference instance, JniInstanceFieldInfo field, int value)
+		public static unsafe void SetIntField (JniObjectReference instance, JniFieldInfo field, int value)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			NativeMethods.JavaInterop_SetIntField (JniEnvironment.EnvironmentPointer, instance.Handle, field.ID, value);
 		}
 
-		public static unsafe void SetLongField (JniObjectReference instance, JniInstanceFieldInfo field, long value)
+		public static unsafe void SetLongField (JniObjectReference instance, JniFieldInfo field, long value)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			NativeMethods.JavaInterop_SetLongField (JniEnvironment.EnvironmentPointer, instance.Handle, field.ID, value);
 		}
 
-		public static unsafe void SetFloatField (JniObjectReference instance, JniInstanceFieldInfo field, float value)
+		public static unsafe void SetFloatField (JniObjectReference instance, JniFieldInfo field, float value)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			NativeMethods.JavaInterop_SetFloatField (JniEnvironment.EnvironmentPointer, instance.Handle, field.ID, value);
 		}
 
-		public static unsafe void SetDoubleField (JniObjectReference instance, JniInstanceFieldInfo field, double value)
+		public static unsafe void SetDoubleField (JniObjectReference instance, JniFieldInfo field, double value)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			NativeMethods.JavaInterop_SetDoubleField (JniEnvironment.EnvironmentPointer, instance.Handle, field.ID, value);
 		}
@@ -11298,7 +11587,7 @@ namespace
 
 	public static partial class InstanceMethods {
 
-		public static unsafe JniInstanceMethodInfo GetMethodID (JniObjectReference type, string name, string signature)
+		public static unsafe JniMethodInfo GetMethodID (JniObjectReference type, string name, string signature)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
@@ -11316,17 +11605,18 @@ namespace
 
 			if (tmp == IntPtr.Zero)
 				return null;
-			return new JniInstanceMethodInfo (tmp);
+			return new JniMethodInfo (name, signature, tmp, isStatic: false);
 		}
 
-		public static unsafe JniObjectReference CallObjectMethod (JniObjectReference instance, JniInstanceMethodInfo method)
+		public static unsafe JniObjectReference CallObjectMethod (JniObjectReference instance, JniMethodInfo method)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr thrown;
 			var tmp = NativeMethods.JavaInterop_CallObjectMethod (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, method.ID);
@@ -11339,14 +11629,15 @@ namespace
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		public static unsafe JniObjectReference CallObjectMethod (JniObjectReference instance, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe JniObjectReference CallObjectMethod (JniObjectReference instance, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr thrown;
 			var tmp = NativeMethods.JavaInterop_CallObjectMethodA (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, method.ID, args);
@@ -11359,14 +11650,15 @@ namespace
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		public static unsafe bool CallBooleanMethod (JniObjectReference instance, JniInstanceMethodInfo method)
+		public static unsafe bool CallBooleanMethod (JniObjectReference instance, JniMethodInfo method)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr thrown;
 			var tmp = NativeMethods.JavaInterop_CallBooleanMethod (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, method.ID);
@@ -11378,14 +11670,15 @@ namespace
 			return (tmp != 0) ? true : false;
 		}
 
-		public static unsafe bool CallBooleanMethod (JniObjectReference instance, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe bool CallBooleanMethod (JniObjectReference instance, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr thrown;
 			var tmp = NativeMethods.JavaInterop_CallBooleanMethodA (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, method.ID, args);
@@ -11397,14 +11690,15 @@ namespace
 			return (tmp != 0) ? true : false;
 		}
 
-		public static unsafe sbyte CallByteMethod (JniObjectReference instance, JniInstanceMethodInfo method)
+		public static unsafe sbyte CallByteMethod (JniObjectReference instance, JniMethodInfo method)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr thrown;
 			var tmp = NativeMethods.JavaInterop_CallByteMethod (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, method.ID);
@@ -11416,14 +11710,15 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe sbyte CallByteMethod (JniObjectReference instance, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe sbyte CallByteMethod (JniObjectReference instance, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr thrown;
 			var tmp = NativeMethods.JavaInterop_CallByteMethodA (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, method.ID, args);
@@ -11435,14 +11730,15 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe char CallCharMethod (JniObjectReference instance, JniInstanceMethodInfo method)
+		public static unsafe char CallCharMethod (JniObjectReference instance, JniMethodInfo method)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr thrown;
 			var tmp = NativeMethods.JavaInterop_CallCharMethod (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, method.ID);
@@ -11454,14 +11750,15 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe char CallCharMethod (JniObjectReference instance, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe char CallCharMethod (JniObjectReference instance, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr thrown;
 			var tmp = NativeMethods.JavaInterop_CallCharMethodA (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, method.ID, args);
@@ -11473,14 +11770,15 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe short CallShortMethod (JniObjectReference instance, JniInstanceMethodInfo method)
+		public static unsafe short CallShortMethod (JniObjectReference instance, JniMethodInfo method)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr thrown;
 			var tmp = NativeMethods.JavaInterop_CallShortMethod (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, method.ID);
@@ -11492,14 +11790,15 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe short CallShortMethod (JniObjectReference instance, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe short CallShortMethod (JniObjectReference instance, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr thrown;
 			var tmp = NativeMethods.JavaInterop_CallShortMethodA (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, method.ID, args);
@@ -11511,14 +11810,15 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe int CallIntMethod (JniObjectReference instance, JniInstanceMethodInfo method)
+		public static unsafe int CallIntMethod (JniObjectReference instance, JniMethodInfo method)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr thrown;
 			var tmp = NativeMethods.JavaInterop_CallIntMethod (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, method.ID);
@@ -11530,14 +11830,15 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe int CallIntMethod (JniObjectReference instance, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe int CallIntMethod (JniObjectReference instance, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr thrown;
 			var tmp = NativeMethods.JavaInterop_CallIntMethodA (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, method.ID, args);
@@ -11549,14 +11850,15 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe long CallLongMethod (JniObjectReference instance, JniInstanceMethodInfo method)
+		public static unsafe long CallLongMethod (JniObjectReference instance, JniMethodInfo method)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr thrown;
 			var tmp = NativeMethods.JavaInterop_CallLongMethod (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, method.ID);
@@ -11568,14 +11870,15 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe long CallLongMethod (JniObjectReference instance, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe long CallLongMethod (JniObjectReference instance, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr thrown;
 			var tmp = NativeMethods.JavaInterop_CallLongMethodA (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, method.ID, args);
@@ -11587,14 +11890,15 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe float CallFloatMethod (JniObjectReference instance, JniInstanceMethodInfo method)
+		public static unsafe float CallFloatMethod (JniObjectReference instance, JniMethodInfo method)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr thrown;
 			var tmp = NativeMethods.JavaInterop_CallFloatMethod (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, method.ID);
@@ -11606,14 +11910,15 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe float CallFloatMethod (JniObjectReference instance, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe float CallFloatMethod (JniObjectReference instance, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr thrown;
 			var tmp = NativeMethods.JavaInterop_CallFloatMethodA (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, method.ID, args);
@@ -11625,14 +11930,15 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe double CallDoubleMethod (JniObjectReference instance, JniInstanceMethodInfo method)
+		public static unsafe double CallDoubleMethod (JniObjectReference instance, JniMethodInfo method)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr thrown;
 			var tmp = NativeMethods.JavaInterop_CallDoubleMethod (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, method.ID);
@@ -11644,14 +11950,15 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe double CallDoubleMethod (JniObjectReference instance, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe double CallDoubleMethod (JniObjectReference instance, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr thrown;
 			var tmp = NativeMethods.JavaInterop_CallDoubleMethodA (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, method.ID, args);
@@ -11663,14 +11970,15 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe void CallVoidMethod (JniObjectReference instance, JniInstanceMethodInfo method)
+		public static unsafe void CallVoidMethod (JniObjectReference instance, JniMethodInfo method)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr thrown;
 			NativeMethods.JavaInterop_CallVoidMethod (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, method.ID);
@@ -11681,14 +11989,15 @@ namespace
 
 		}
 
-		public static unsafe void CallVoidMethod (JniObjectReference instance, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe void CallVoidMethod (JniObjectReference instance, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr thrown;
 			NativeMethods.JavaInterop_CallVoidMethodA (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, method.ID, args);
@@ -11699,7 +12008,7 @@ namespace
 
 		}
 
-		public static unsafe JniObjectReference CallNonvirtualObjectMethod (JniObjectReference instance, JniObjectReference type, JniInstanceMethodInfo method)
+		public static unsafe JniObjectReference CallNonvirtualObjectMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
@@ -11707,8 +12016,9 @@ namespace
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr thrown;
 			var tmp = NativeMethods.JavaInterop_CallNonvirtualObjectMethod (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, type.Handle, method.ID);
@@ -11721,7 +12031,7 @@ namespace
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		public static unsafe JniObjectReference CallNonvirtualObjectMethod (JniObjectReference instance, JniObjectReference type, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe JniObjectReference CallNonvirtualObjectMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
@@ -11729,8 +12039,9 @@ namespace
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr thrown;
 			var tmp = NativeMethods.JavaInterop_CallNonvirtualObjectMethodA (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, type.Handle, method.ID, args);
@@ -11743,7 +12054,7 @@ namespace
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		public static unsafe bool CallNonvirtualBooleanMethod (JniObjectReference instance, JniObjectReference type, JniInstanceMethodInfo method)
+		public static unsafe bool CallNonvirtualBooleanMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
@@ -11751,8 +12062,9 @@ namespace
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr thrown;
 			var tmp = NativeMethods.JavaInterop_CallNonvirtualBooleanMethod (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, type.Handle, method.ID);
@@ -11764,7 +12076,7 @@ namespace
 			return (tmp != 0) ? true : false;
 		}
 
-		public static unsafe bool CallNonvirtualBooleanMethod (JniObjectReference instance, JniObjectReference type, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe bool CallNonvirtualBooleanMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
@@ -11772,8 +12084,9 @@ namespace
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr thrown;
 			var tmp = NativeMethods.JavaInterop_CallNonvirtualBooleanMethodA (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, type.Handle, method.ID, args);
@@ -11785,7 +12098,7 @@ namespace
 			return (tmp != 0) ? true : false;
 		}
 
-		public static unsafe sbyte CallNonvirtualByteMethod (JniObjectReference instance, JniObjectReference type, JniInstanceMethodInfo method)
+		public static unsafe sbyte CallNonvirtualByteMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
@@ -11793,8 +12106,9 @@ namespace
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr thrown;
 			var tmp = NativeMethods.JavaInterop_CallNonvirtualByteMethod (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, type.Handle, method.ID);
@@ -11806,7 +12120,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe sbyte CallNonvirtualByteMethod (JniObjectReference instance, JniObjectReference type, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe sbyte CallNonvirtualByteMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
@@ -11814,8 +12128,9 @@ namespace
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr thrown;
 			var tmp = NativeMethods.JavaInterop_CallNonvirtualByteMethodA (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, type.Handle, method.ID, args);
@@ -11827,7 +12142,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe char CallNonvirtualCharMethod (JniObjectReference instance, JniObjectReference type, JniInstanceMethodInfo method)
+		public static unsafe char CallNonvirtualCharMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
@@ -11835,8 +12150,9 @@ namespace
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr thrown;
 			var tmp = NativeMethods.JavaInterop_CallNonvirtualCharMethod (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, type.Handle, method.ID);
@@ -11848,7 +12164,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe char CallNonvirtualCharMethod (JniObjectReference instance, JniObjectReference type, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe char CallNonvirtualCharMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
@@ -11856,8 +12172,9 @@ namespace
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr thrown;
 			var tmp = NativeMethods.JavaInterop_CallNonvirtualCharMethodA (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, type.Handle, method.ID, args);
@@ -11869,7 +12186,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe short CallNonvirtualShortMethod (JniObjectReference instance, JniObjectReference type, JniInstanceMethodInfo method)
+		public static unsafe short CallNonvirtualShortMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
@@ -11877,8 +12194,9 @@ namespace
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr thrown;
 			var tmp = NativeMethods.JavaInterop_CallNonvirtualShortMethod (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, type.Handle, method.ID);
@@ -11890,7 +12208,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe short CallNonvirtualShortMethod (JniObjectReference instance, JniObjectReference type, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe short CallNonvirtualShortMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
@@ -11898,8 +12216,9 @@ namespace
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr thrown;
 			var tmp = NativeMethods.JavaInterop_CallNonvirtualShortMethodA (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, type.Handle, method.ID, args);
@@ -11911,7 +12230,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe int CallNonvirtualIntMethod (JniObjectReference instance, JniObjectReference type, JniInstanceMethodInfo method)
+		public static unsafe int CallNonvirtualIntMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
@@ -11919,8 +12238,9 @@ namespace
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr thrown;
 			var tmp = NativeMethods.JavaInterop_CallNonvirtualIntMethod (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, type.Handle, method.ID);
@@ -11932,7 +12252,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe int CallNonvirtualIntMethod (JniObjectReference instance, JniObjectReference type, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe int CallNonvirtualIntMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
@@ -11940,8 +12260,9 @@ namespace
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr thrown;
 			var tmp = NativeMethods.JavaInterop_CallNonvirtualIntMethodA (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, type.Handle, method.ID, args);
@@ -11953,7 +12274,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe long CallNonvirtualLongMethod (JniObjectReference instance, JniObjectReference type, JniInstanceMethodInfo method)
+		public static unsafe long CallNonvirtualLongMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
@@ -11961,8 +12282,9 @@ namespace
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr thrown;
 			var tmp = NativeMethods.JavaInterop_CallNonvirtualLongMethod (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, type.Handle, method.ID);
@@ -11974,7 +12296,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe long CallNonvirtualLongMethod (JniObjectReference instance, JniObjectReference type, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe long CallNonvirtualLongMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
@@ -11982,8 +12304,9 @@ namespace
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr thrown;
 			var tmp = NativeMethods.JavaInterop_CallNonvirtualLongMethodA (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, type.Handle, method.ID, args);
@@ -11995,7 +12318,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe float CallNonvirtualFloatMethod (JniObjectReference instance, JniObjectReference type, JniInstanceMethodInfo method)
+		public static unsafe float CallNonvirtualFloatMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
@@ -12003,8 +12326,9 @@ namespace
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr thrown;
 			var tmp = NativeMethods.JavaInterop_CallNonvirtualFloatMethod (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, type.Handle, method.ID);
@@ -12016,7 +12340,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe float CallNonvirtualFloatMethod (JniObjectReference instance, JniObjectReference type, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe float CallNonvirtualFloatMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
@@ -12024,8 +12348,9 @@ namespace
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr thrown;
 			var tmp = NativeMethods.JavaInterop_CallNonvirtualFloatMethodA (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, type.Handle, method.ID, args);
@@ -12037,7 +12362,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe double CallNonvirtualDoubleMethod (JniObjectReference instance, JniObjectReference type, JniInstanceMethodInfo method)
+		public static unsafe double CallNonvirtualDoubleMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
@@ -12045,8 +12370,9 @@ namespace
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr thrown;
 			var tmp = NativeMethods.JavaInterop_CallNonvirtualDoubleMethod (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, type.Handle, method.ID);
@@ -12058,7 +12384,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe double CallNonvirtualDoubleMethod (JniObjectReference instance, JniObjectReference type, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe double CallNonvirtualDoubleMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
@@ -12066,8 +12392,9 @@ namespace
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr thrown;
 			var tmp = NativeMethods.JavaInterop_CallNonvirtualDoubleMethodA (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, type.Handle, method.ID, args);
@@ -12079,7 +12406,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe void CallNonvirtualVoidMethod (JniObjectReference instance, JniObjectReference type, JniInstanceMethodInfo method)
+		public static unsafe void CallNonvirtualVoidMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
@@ -12087,8 +12414,9 @@ namespace
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr thrown;
 			NativeMethods.JavaInterop_CallNonvirtualVoidMethod (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, type.Handle, method.ID);
@@ -12099,7 +12427,7 @@ namespace
 
 		}
 
-		public static unsafe void CallNonvirtualVoidMethod (JniObjectReference instance, JniObjectReference type, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe void CallNonvirtualVoidMethod (JniObjectReference instance, JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (instance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`instance` must not be IntPtr.Zero.", "instance");
@@ -12107,8 +12435,9 @@ namespace
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr thrown;
 			NativeMethods.JavaInterop_CallNonvirtualVoidMethodA (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, type.Handle, method.ID, args);
@@ -12196,14 +12525,15 @@ namespace
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		public static unsafe JniObjectReference NewObject (JniObjectReference type, JniInstanceMethodInfo method)
+		public static unsafe JniObjectReference NewObject (JniObjectReference type, JniMethodInfo method)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr thrown;
 			var tmp = NativeMethods.JavaInterop_NewObject (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, method.ID);
@@ -12216,14 +12546,15 @@ namespace
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		public static unsafe JniObjectReference NewObject (JniObjectReference type, JniInstanceMethodInfo method, JniArgumentValue* args)
+		public static unsafe JniObjectReference NewObject (JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr thrown;
 			var tmp = NativeMethods.JavaInterop_NewObjectA (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, method.ID, args);
@@ -12309,14 +12640,15 @@ namespace
 
 	internal static partial class Reflection {
 
-		public static unsafe JniObjectReference ToReflectedMethod (JniObjectReference type, JniInstanceMethodInfo method, bool isStatic)
+		public static unsafe JniObjectReference ToReflectedMethod (JniObjectReference type, JniMethodInfo method, bool isStatic)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr thrown;
 			var tmp = NativeMethods.JavaInterop_ToReflectedMethod (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, method.ID, (isStatic ? (byte) 1 : (byte) 0));
@@ -12329,14 +12661,15 @@ namespace
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		public static unsafe JniObjectReference ToReflectedField (JniObjectReference type, JniInstanceFieldInfo field, bool isStatic)
+		public static unsafe JniObjectReference ToReflectedField (JniObjectReference type, JniFieldInfo field, bool isStatic)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (!field.IsStatic);
 
 			IntPtr thrown;
 			var tmp = NativeMethods.JavaInterop_ToReflectedField (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, field.ID, (isStatic ? (byte) 1 : (byte) 0));
@@ -12352,7 +12685,7 @@ namespace
 
 	public static partial class StaticFields {
 
-		public static unsafe JniStaticFieldInfo GetStaticFieldID (JniObjectReference type, string name, string signature)
+		public static unsafe JniFieldInfo GetStaticFieldID (JniObjectReference type, string name, string signature)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
@@ -12370,231 +12703,249 @@ namespace
 
 			if (tmp == IntPtr.Zero)
 				return null;
-			return new JniStaticFieldInfo (tmp);
+			return new JniFieldInfo (name, signature, tmp, isStatic: true);
 		}
 
-		public static unsafe JniObjectReference GetStaticObjectField (JniObjectReference type, JniStaticFieldInfo field)
+		public static unsafe JniObjectReference GetStaticObjectField (JniObjectReference type, JniFieldInfo field)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			var tmp = NativeMethods.JavaInterop_GetStaticObjectField (JniEnvironment.EnvironmentPointer, type.Handle, field.ID);
 			JniEnvironment.LogCreateLocalRef (tmp);
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		public static unsafe bool GetStaticBooleanField (JniObjectReference type, JniStaticFieldInfo field)
+		public static unsafe bool GetStaticBooleanField (JniObjectReference type, JniFieldInfo field)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			var tmp = NativeMethods.JavaInterop_GetStaticBooleanField (JniEnvironment.EnvironmentPointer, type.Handle, field.ID);
 			return (tmp != 0) ? true : false;
 		}
 
-		public static unsafe sbyte GetStaticByteField (JniObjectReference type, JniStaticFieldInfo field)
+		public static unsafe sbyte GetStaticByteField (JniObjectReference type, JniFieldInfo field)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			var tmp = NativeMethods.JavaInterop_GetStaticByteField (JniEnvironment.EnvironmentPointer, type.Handle, field.ID);
 			return tmp;
 		}
 
-		public static unsafe char GetStaticCharField (JniObjectReference type, JniStaticFieldInfo field)
+		public static unsafe char GetStaticCharField (JniObjectReference type, JniFieldInfo field)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			var tmp = NativeMethods.JavaInterop_GetStaticCharField (JniEnvironment.EnvironmentPointer, type.Handle, field.ID);
 			return tmp;
 		}
 
-		public static unsafe short GetStaticShortField (JniObjectReference type, JniStaticFieldInfo field)
+		public static unsafe short GetStaticShortField (JniObjectReference type, JniFieldInfo field)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			var tmp = NativeMethods.JavaInterop_GetStaticShortField (JniEnvironment.EnvironmentPointer, type.Handle, field.ID);
 			return tmp;
 		}
 
-		public static unsafe int GetStaticIntField (JniObjectReference type, JniStaticFieldInfo field)
+		public static unsafe int GetStaticIntField (JniObjectReference type, JniFieldInfo field)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			var tmp = NativeMethods.JavaInterop_GetStaticIntField (JniEnvironment.EnvironmentPointer, type.Handle, field.ID);
 			return tmp;
 		}
 
-		public static unsafe long GetStaticLongField (JniObjectReference type, JniStaticFieldInfo field)
+		public static unsafe long GetStaticLongField (JniObjectReference type, JniFieldInfo field)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			var tmp = NativeMethods.JavaInterop_GetStaticLongField (JniEnvironment.EnvironmentPointer, type.Handle, field.ID);
 			return tmp;
 		}
 
-		public static unsafe float GetStaticFloatField (JniObjectReference type, JniStaticFieldInfo field)
+		public static unsafe float GetStaticFloatField (JniObjectReference type, JniFieldInfo field)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			var tmp = NativeMethods.JavaInterop_GetStaticFloatField (JniEnvironment.EnvironmentPointer, type.Handle, field.ID);
 			return tmp;
 		}
 
-		public static unsafe double GetStaticDoubleField (JniObjectReference type, JniStaticFieldInfo field)
+		public static unsafe double GetStaticDoubleField (JniObjectReference type, JniFieldInfo field)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			var tmp = NativeMethods.JavaInterop_GetStaticDoubleField (JniEnvironment.EnvironmentPointer, type.Handle, field.ID);
 			return tmp;
 		}
 
-		public static unsafe void SetStaticObjectField (JniObjectReference type, JniStaticFieldInfo field, JniObjectReference value)
+		public static unsafe void SetStaticObjectField (JniObjectReference type, JniFieldInfo field, JniObjectReference value)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			NativeMethods.JavaInterop_SetStaticObjectField (JniEnvironment.EnvironmentPointer, type.Handle, field.ID, value.Handle);
 		}
 
-		public static unsafe void SetStaticBooleanField (JniObjectReference type, JniStaticFieldInfo field, bool value)
+		public static unsafe void SetStaticBooleanField (JniObjectReference type, JniFieldInfo field, bool value)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			NativeMethods.JavaInterop_SetStaticBooleanField (JniEnvironment.EnvironmentPointer, type.Handle, field.ID, (value ? (byte) 1 : (byte) 0));
 		}
 
-		public static unsafe void SetStaticByteField (JniObjectReference type, JniStaticFieldInfo field, sbyte value)
+		public static unsafe void SetStaticByteField (JniObjectReference type, JniFieldInfo field, sbyte value)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			NativeMethods.JavaInterop_SetStaticByteField (JniEnvironment.EnvironmentPointer, type.Handle, field.ID, value);
 		}
 
-		public static unsafe void SetStaticCharField (JniObjectReference type, JniStaticFieldInfo field, char value)
+		public static unsafe void SetStaticCharField (JniObjectReference type, JniFieldInfo field, char value)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			NativeMethods.JavaInterop_SetStaticCharField (JniEnvironment.EnvironmentPointer, type.Handle, field.ID, value);
 		}
 
-		public static unsafe void SetStaticShortField (JniObjectReference type, JniStaticFieldInfo field, short value)
+		public static unsafe void SetStaticShortField (JniObjectReference type, JniFieldInfo field, short value)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			NativeMethods.JavaInterop_SetStaticShortField (JniEnvironment.EnvironmentPointer, type.Handle, field.ID, value);
 		}
 
-		public static unsafe void SetStaticIntField (JniObjectReference type, JniStaticFieldInfo field, int value)
+		public static unsafe void SetStaticIntField (JniObjectReference type, JniFieldInfo field, int value)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			NativeMethods.JavaInterop_SetStaticIntField (JniEnvironment.EnvironmentPointer, type.Handle, field.ID, value);
 		}
 
-		public static unsafe void SetStaticLongField (JniObjectReference type, JniStaticFieldInfo field, long value)
+		public static unsafe void SetStaticLongField (JniObjectReference type, JniFieldInfo field, long value)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			NativeMethods.JavaInterop_SetStaticLongField (JniEnvironment.EnvironmentPointer, type.Handle, field.ID, value);
 		}
 
-		public static unsafe void SetStaticFloatField (JniObjectReference type, JniStaticFieldInfo field, float value)
+		public static unsafe void SetStaticFloatField (JniObjectReference type, JniFieldInfo field, float value)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			NativeMethods.JavaInterop_SetStaticFloatField (JniEnvironment.EnvironmentPointer, type.Handle, field.ID, value);
 		}
 
-		public static unsafe void SetStaticDoubleField (JniObjectReference type, JniStaticFieldInfo field, double value)
+		public static unsafe void SetStaticDoubleField (JniObjectReference type, JniFieldInfo field, double value)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (field == null)
 				throw new ArgumentNullException ("field");
-			if (field.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "field");
+			if (!field.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "field");
+			System.Diagnostics.Debug.Assert (field.IsStatic);
 
 			NativeMethods.JavaInterop_SetStaticDoubleField (JniEnvironment.EnvironmentPointer, type.Handle, field.ID, value);
 		}
@@ -12602,7 +12953,7 @@ namespace
 
 	public static partial class StaticMethods {
 
-		public static unsafe JniStaticMethodInfo GetStaticMethodID (JniObjectReference type, string name, string signature)
+		public static unsafe JniMethodInfo GetStaticMethodID (JniObjectReference type, string name, string signature)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
@@ -12620,17 +12971,18 @@ namespace
 
 			if (tmp == IntPtr.Zero)
 				return null;
-			return new JniStaticMethodInfo (tmp);
+			return new JniMethodInfo (name, signature, tmp, isStatic: true);
 		}
 
-		public static unsafe JniObjectReference CallStaticObjectMethod (JniObjectReference type, JniStaticMethodInfo method)
+		public static unsafe JniObjectReference CallStaticObjectMethod (JniObjectReference type, JniMethodInfo method)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			IntPtr thrown;
 			var tmp = NativeMethods.JavaInterop_CallStaticObjectMethod (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, method.ID);
@@ -12643,14 +12995,15 @@ namespace
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		public static unsafe JniObjectReference CallStaticObjectMethod (JniObjectReference type, JniStaticMethodInfo method, JniArgumentValue* args)
+		public static unsafe JniObjectReference CallStaticObjectMethod (JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			IntPtr thrown;
 			var tmp = NativeMethods.JavaInterop_CallStaticObjectMethodA (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, method.ID, args);
@@ -12663,14 +13016,15 @@ namespace
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		public static unsafe bool CallStaticBooleanMethod (JniObjectReference type, JniStaticMethodInfo method)
+		public static unsafe bool CallStaticBooleanMethod (JniObjectReference type, JniMethodInfo method)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			IntPtr thrown;
 			var tmp = NativeMethods.JavaInterop_CallStaticBooleanMethod (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, method.ID);
@@ -12682,14 +13036,15 @@ namespace
 			return (tmp != 0) ? true : false;
 		}
 
-		public static unsafe bool CallStaticBooleanMethod (JniObjectReference type, JniStaticMethodInfo method, JniArgumentValue* args)
+		public static unsafe bool CallStaticBooleanMethod (JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			IntPtr thrown;
 			var tmp = NativeMethods.JavaInterop_CallStaticBooleanMethodA (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, method.ID, args);
@@ -12701,14 +13056,15 @@ namespace
 			return (tmp != 0) ? true : false;
 		}
 
-		public static unsafe sbyte CallStaticByteMethod (JniObjectReference type, JniStaticMethodInfo method)
+		public static unsafe sbyte CallStaticByteMethod (JniObjectReference type, JniMethodInfo method)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			IntPtr thrown;
 			var tmp = NativeMethods.JavaInterop_CallStaticByteMethod (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, method.ID);
@@ -12720,14 +13076,15 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe sbyte CallStaticByteMethod (JniObjectReference type, JniStaticMethodInfo method, JniArgumentValue* args)
+		public static unsafe sbyte CallStaticByteMethod (JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			IntPtr thrown;
 			var tmp = NativeMethods.JavaInterop_CallStaticByteMethodA (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, method.ID, args);
@@ -12739,14 +13096,15 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe char CallStaticCharMethod (JniObjectReference type, JniStaticMethodInfo method)
+		public static unsafe char CallStaticCharMethod (JniObjectReference type, JniMethodInfo method)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			IntPtr thrown;
 			var tmp = NativeMethods.JavaInterop_CallStaticCharMethod (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, method.ID);
@@ -12758,14 +13116,15 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe char CallStaticCharMethod (JniObjectReference type, JniStaticMethodInfo method, JniArgumentValue* args)
+		public static unsafe char CallStaticCharMethod (JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			IntPtr thrown;
 			var tmp = NativeMethods.JavaInterop_CallStaticCharMethodA (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, method.ID, args);
@@ -12777,14 +13136,15 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe short CallStaticShortMethod (JniObjectReference type, JniStaticMethodInfo method)
+		public static unsafe short CallStaticShortMethod (JniObjectReference type, JniMethodInfo method)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			IntPtr thrown;
 			var tmp = NativeMethods.JavaInterop_CallStaticShortMethod (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, method.ID);
@@ -12796,14 +13156,15 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe short CallStaticShortMethod (JniObjectReference type, JniStaticMethodInfo method, JniArgumentValue* args)
+		public static unsafe short CallStaticShortMethod (JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			IntPtr thrown;
 			var tmp = NativeMethods.JavaInterop_CallStaticShortMethodA (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, method.ID, args);
@@ -12815,14 +13176,15 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe int CallStaticIntMethod (JniObjectReference type, JniStaticMethodInfo method)
+		public static unsafe int CallStaticIntMethod (JniObjectReference type, JniMethodInfo method)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			IntPtr thrown;
 			var tmp = NativeMethods.JavaInterop_CallStaticIntMethod (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, method.ID);
@@ -12834,14 +13196,15 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe int CallStaticIntMethod (JniObjectReference type, JniStaticMethodInfo method, JniArgumentValue* args)
+		public static unsafe int CallStaticIntMethod (JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			IntPtr thrown;
 			var tmp = NativeMethods.JavaInterop_CallStaticIntMethodA (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, method.ID, args);
@@ -12853,14 +13216,15 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe long CallStaticLongMethod (JniObjectReference type, JniStaticMethodInfo method)
+		public static unsafe long CallStaticLongMethod (JniObjectReference type, JniMethodInfo method)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			IntPtr thrown;
 			var tmp = NativeMethods.JavaInterop_CallStaticLongMethod (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, method.ID);
@@ -12872,14 +13236,15 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe long CallStaticLongMethod (JniObjectReference type, JniStaticMethodInfo method, JniArgumentValue* args)
+		public static unsafe long CallStaticLongMethod (JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			IntPtr thrown;
 			var tmp = NativeMethods.JavaInterop_CallStaticLongMethodA (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, method.ID, args);
@@ -12891,14 +13256,15 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe float CallStaticFloatMethod (JniObjectReference type, JniStaticMethodInfo method)
+		public static unsafe float CallStaticFloatMethod (JniObjectReference type, JniMethodInfo method)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			IntPtr thrown;
 			var tmp = NativeMethods.JavaInterop_CallStaticFloatMethod (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, method.ID);
@@ -12910,14 +13276,15 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe float CallStaticFloatMethod (JniObjectReference type, JniStaticMethodInfo method, JniArgumentValue* args)
+		public static unsafe float CallStaticFloatMethod (JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			IntPtr thrown;
 			var tmp = NativeMethods.JavaInterop_CallStaticFloatMethodA (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, method.ID, args);
@@ -12929,14 +13296,15 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe double CallStaticDoubleMethod (JniObjectReference type, JniStaticMethodInfo method)
+		public static unsafe double CallStaticDoubleMethod (JniObjectReference type, JniMethodInfo method)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			IntPtr thrown;
 			var tmp = NativeMethods.JavaInterop_CallStaticDoubleMethod (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, method.ID);
@@ -12948,14 +13316,15 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe double CallStaticDoubleMethod (JniObjectReference type, JniStaticMethodInfo method, JniArgumentValue* args)
+		public static unsafe double CallStaticDoubleMethod (JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			IntPtr thrown;
 			var tmp = NativeMethods.JavaInterop_CallStaticDoubleMethodA (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, method.ID, args);
@@ -12967,14 +13336,15 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe void CallStaticVoidMethod (JniObjectReference type, JniStaticMethodInfo method)
+		public static unsafe void CallStaticVoidMethod (JniObjectReference type, JniMethodInfo method)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			IntPtr thrown;
 			NativeMethods.JavaInterop_CallStaticVoidMethod (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, method.ID);
@@ -12985,14 +13355,15 @@ namespace
 
 		}
 
-		public static unsafe void CallStaticVoidMethod (JniObjectReference type, JniStaticMethodInfo method, JniArgumentValue* args)
+		public static unsafe void CallStaticVoidMethod (JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
 		{
 			if (type.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`type` must not be IntPtr.Zero.", "type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
-			if (method.ID == IntPtr.Zero)
-				throw new ArgumentException ("Handle value cannot be null.", "method");
+			if (!method.IsValid)
+				throw new ArgumentException ("Handle value is not valid.", "method");
+			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			IntPtr thrown;
 			NativeMethods.JavaInterop_CallStaticVoidMethodA (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, method.ID, args);
@@ -13782,6 +14153,27 @@ namespace
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
+		}
+
+		public static unsafe IntPtr GetPrimitiveArrayCritical (IntPtr array, bool* isCopy)
+		{
+			if (array == IntPtr.Zero)
+				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
+
+			var __info = JniEnvironment.CurrentInfo;
+			var tmp = __info.Invoker.GetPrimitiveArrayCritical (__info.EnvironmentPointer, array, isCopy);
+			return tmp;
+		}
+
+		public static unsafe void ReleasePrimitiveArrayCritical (IntPtr array, IntPtr carray, JniReleaseArrayElementsMode mode)
+		{
+			if (array == IntPtr.Zero)
+				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
+			if (carray == IntPtr.Zero)
+				throw new ArgumentException ("'carray' must not be IntPtr.Zero.", "carray");
+
+			var __info = JniEnvironment.CurrentInfo;
+			__info.Invoker.ReleasePrimitiveArrayCritical (__info.EnvironmentPointer, array, carray, ((int) mode));
 		}
 	}
 

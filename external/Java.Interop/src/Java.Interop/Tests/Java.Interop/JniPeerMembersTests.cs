@@ -31,10 +31,10 @@ namespace Java.InteropTests
 			}
 		}
 
-		static Dictionary<string, JniInstanceMethodInfo> GetInstanceMethods (JniPeerMembers.JniInstanceMethods methods)
+		static Dictionary<string, JniMethodInfo> GetInstanceMethods (JniPeerMembers.JniInstanceMethods methods)
 		{
 			var f   = typeof (JniPeerMembers.JniInstanceMethods).GetField ("InstanceMethods", BindingFlags.NonPublic | BindingFlags.Instance);
-			return (Dictionary<string, JniInstanceMethodInfo>) f.GetValue (methods);
+			return (Dictionary<string, JniMethodInfo>) f.GetValue (methods);
 		}
 	}
 

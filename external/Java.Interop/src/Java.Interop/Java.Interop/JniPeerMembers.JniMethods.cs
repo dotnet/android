@@ -64,7 +64,7 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				var methods = peer.GetConstructorsForType (self.GetType ());
 				var ctor    = methods.GetConstructor (constructorSignature);
-				ctor.InvokeNonvirtualVoidMethod (self.PeerReference, methods.JniPeerType.PeerReference, args);
+				JniEnvironment.InstanceMethods.CallNonvirtualVoidMethod (self.PeerReference, methods.JniPeerType.PeerReference, ctor, args);
 			} finally {
 				arg.Cleanup (value);
 			}
@@ -135,7 +135,7 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				var methods = peer.GetConstructorsForType (self.GetType ());
 				var ctor    = methods.GetConstructor (constructorSignature);
-				ctor.InvokeNonvirtualVoidMethod (self.PeerReference, methods.JniPeerType.PeerReference, args);
+				JniEnvironment.InstanceMethods.CallNonvirtualVoidMethod (self.PeerReference, methods.JniPeerType.PeerReference, ctor, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -212,7 +212,7 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				var methods = peer.GetConstructorsForType (self.GetType ());
 				var ctor    = methods.GetConstructor (constructorSignature);
-				ctor.InvokeNonvirtualVoidMethod (self.PeerReference, methods.JniPeerType.PeerReference, args);
+				JniEnvironment.InstanceMethods.CallNonvirtualVoidMethod (self.PeerReference, methods.JniPeerType.PeerReference, ctor, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -295,7 +295,7 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				var methods = peer.GetConstructorsForType (self.GetType ());
 				var ctor    = methods.GetConstructor (constructorSignature);
-				ctor.InvokeNonvirtualVoidMethod (self.PeerReference, methods.JniPeerType.PeerReference, args);
+				JniEnvironment.InstanceMethods.CallNonvirtualVoidMethod (self.PeerReference, methods.JniPeerType.PeerReference, ctor, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -384,7 +384,7 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				var methods = peer.GetConstructorsForType (self.GetType ());
 				var ctor    = methods.GetConstructor (constructorSignature);
-				ctor.InvokeNonvirtualVoidMethod (self.PeerReference, methods.JniPeerType.PeerReference, args);
+				JniEnvironment.InstanceMethods.CallNonvirtualVoidMethod (self.PeerReference, methods.JniPeerType.PeerReference, ctor, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -479,7 +479,7 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				var methods = peer.GetConstructorsForType (self.GetType ());
 				var ctor    = methods.GetConstructor (constructorSignature);
-				ctor.InvokeNonvirtualVoidMethod (self.PeerReference, methods.JniPeerType.PeerReference, args);
+				JniEnvironment.InstanceMethods.CallNonvirtualVoidMethod (self.PeerReference, methods.JniPeerType.PeerReference, ctor, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -580,7 +580,7 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				var methods = peer.GetConstructorsForType (self.GetType ());
 				var ctor    = methods.GetConstructor (constructorSignature);
-				ctor.InvokeNonvirtualVoidMethod (self.PeerReference, methods.JniPeerType.PeerReference, args);
+				JniEnvironment.InstanceMethods.CallNonvirtualVoidMethod (self.PeerReference, methods.JniPeerType.PeerReference, ctor, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -687,7 +687,7 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				var methods = peer.GetConstructorsForType (self.GetType ());
 				var ctor    = methods.GetConstructor (constructorSignature);
-				ctor.InvokeNonvirtualVoidMethod (self.PeerReference, methods.JniPeerType.PeerReference, args);
+				JniEnvironment.InstanceMethods.CallNonvirtualVoidMethod (self.PeerReference, methods.JniPeerType.PeerReference, ctor, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -800,7 +800,7 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				var methods = peer.GetConstructorsForType (self.GetType ());
 				var ctor    = methods.GetConstructor (constructorSignature);
-				ctor.InvokeNonvirtualVoidMethod (self.PeerReference, methods.JniPeerType.PeerReference, args);
+				JniEnvironment.InstanceMethods.CallNonvirtualVoidMethod (self.PeerReference, methods.JniPeerType.PeerReference, ctor, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -919,7 +919,7 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				var methods = peer.GetConstructorsForType (self.GetType ());
 				var ctor    = methods.GetConstructor (constructorSignature);
-				ctor.InvokeNonvirtualVoidMethod (self.PeerReference, methods.JniPeerType.PeerReference, args);
+				JniEnvironment.InstanceMethods.CallNonvirtualVoidMethod (self.PeerReference, methods.JniPeerType.PeerReference, ctor, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -1044,7 +1044,7 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				var methods = peer.GetConstructorsForType (self.GetType ());
 				var ctor    = methods.GetConstructor (constructorSignature);
-				ctor.InvokeNonvirtualVoidMethod (self.PeerReference, methods.JniPeerType.PeerReference, args);
+				JniEnvironment.InstanceMethods.CallNonvirtualVoidMethod (self.PeerReference, methods.JniPeerType.PeerReference, ctor, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -1175,7 +1175,7 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				var methods = peer.GetConstructorsForType (self.GetType ());
 				var ctor    = methods.GetConstructor (constructorSignature);
-				ctor.InvokeNonvirtualVoidMethod (self.PeerReference, methods.JniPeerType.PeerReference, args);
+				JniEnvironment.InstanceMethods.CallNonvirtualVoidMethod (self.PeerReference, methods.JniPeerType.PeerReference, ctor, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -1312,7 +1312,7 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				var methods = peer.GetConstructorsForType (self.GetType ());
 				var ctor    = methods.GetConstructor (constructorSignature);
-				ctor.InvokeNonvirtualVoidMethod (self.PeerReference, methods.JniPeerType.PeerReference, args);
+				JniEnvironment.InstanceMethods.CallNonvirtualVoidMethod (self.PeerReference, methods.JniPeerType.PeerReference, ctor, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -1455,7 +1455,7 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				var methods = peer.GetConstructorsForType (self.GetType ());
 				var ctor    = methods.GetConstructor (constructorSignature);
-				ctor.InvokeNonvirtualVoidMethod (self.PeerReference, methods.JniPeerType.PeerReference, args);
+				JniEnvironment.InstanceMethods.CallNonvirtualVoidMethod (self.PeerReference, methods.JniPeerType.PeerReference, ctor, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -1604,7 +1604,7 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				var methods = peer.GetConstructorsForType (self.GetType ());
 				var ctor    = methods.GetConstructor (constructorSignature);
-				ctor.InvokeNonvirtualVoidMethod (self.PeerReference, methods.JniPeerType.PeerReference, args);
+				JniEnvironment.InstanceMethods.CallNonvirtualVoidMethod (self.PeerReference, methods.JniPeerType.PeerReference, ctor, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
@@ -1759,7 +1759,7 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				var methods = peer.GetConstructorsForType (self.GetType ());
 				var ctor    = methods.GetConstructor (constructorSignature);
-				ctor.InvokeNonvirtualVoidMethod (self.PeerReference, methods.JniPeerType.PeerReference, args);
+				JniEnvironment.InstanceMethods.CallNonvirtualVoidMethod (self.PeerReference, methods.JniPeerType.PeerReference, ctor, args);
 			} finally {
 				arg1.Cleanup (value1);
 				arg2.Cleanup (value2);
