@@ -304,46 +304,46 @@ namespace
 	unsafe delegate JniGlobalReference JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniGlobalReference (JNIEnvPtr env, JniReferenceSafeHandle instance);
 	unsafe delegate void JniAction_JNIEnvPtr_IntPtr (JNIEnvPtr env, IntPtr instance);
 	unsafe delegate JniLocalReference JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniLocalReference (JNIEnvPtr env, JniReferenceSafeHandle type, IntPtr method);
-	unsafe delegate JniLocalReference JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_JniLocalReference (JNIEnvPtr env, JniReferenceSafeHandle type, IntPtr method, JniArgumentValue* args);
+	unsafe delegate JniLocalReference JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_JniLocalReference (JNIEnvPtr env, JniReferenceSafeHandle type, IntPtr method, JniArgumentValue* args);
 	unsafe delegate IntPtr JniFunc_JNIEnvPtr_JniReferenceSafeHandle_string_string_IntPtr (JNIEnvPtr env, JniReferenceSafeHandle type, string name, string signature);
 	unsafe delegate byte JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_byte (JNIEnvPtr env, JniReferenceSafeHandle instance, IntPtr method);
-	unsafe delegate byte JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_byte (JNIEnvPtr env, JniReferenceSafeHandle instance, IntPtr method, JniArgumentValue* args);
+	unsafe delegate byte JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_byte (JNIEnvPtr env, JniReferenceSafeHandle instance, IntPtr method, JniArgumentValue* args);
 	unsafe delegate sbyte JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_sbyte (JNIEnvPtr env, JniReferenceSafeHandle instance, IntPtr method);
-	unsafe delegate sbyte JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_sbyte (JNIEnvPtr env, JniReferenceSafeHandle instance, IntPtr method, JniArgumentValue* args);
+	unsafe delegate sbyte JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_sbyte (JNIEnvPtr env, JniReferenceSafeHandle instance, IntPtr method, JniArgumentValue* args);
 	unsafe delegate char JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_char (JNIEnvPtr env, JniReferenceSafeHandle instance, IntPtr method);
-	unsafe delegate char JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_char (JNIEnvPtr env, JniReferenceSafeHandle instance, IntPtr method, JniArgumentValue* args);
+	unsafe delegate char JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_char (JNIEnvPtr env, JniReferenceSafeHandle instance, IntPtr method, JniArgumentValue* args);
 	unsafe delegate short JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_short (JNIEnvPtr env, JniReferenceSafeHandle instance, IntPtr method);
-	unsafe delegate short JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_short (JNIEnvPtr env, JniReferenceSafeHandle instance, IntPtr method, JniArgumentValue* args);
+	unsafe delegate short JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_short (JNIEnvPtr env, JniReferenceSafeHandle instance, IntPtr method, JniArgumentValue* args);
 	unsafe delegate int JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_int (JNIEnvPtr env, JniReferenceSafeHandle instance, IntPtr method);
-	unsafe delegate int JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_int (JNIEnvPtr env, JniReferenceSafeHandle instance, IntPtr method, JniArgumentValue* args);
+	unsafe delegate int JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_int (JNIEnvPtr env, JniReferenceSafeHandle instance, IntPtr method, JniArgumentValue* args);
 	unsafe delegate long JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_long (JNIEnvPtr env, JniReferenceSafeHandle instance, IntPtr method);
-	unsafe delegate long JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_long (JNIEnvPtr env, JniReferenceSafeHandle instance, IntPtr method, JniArgumentValue* args);
+	unsafe delegate long JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_long (JNIEnvPtr env, JniReferenceSafeHandle instance, IntPtr method, JniArgumentValue* args);
 	unsafe delegate float JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_float (JNIEnvPtr env, JniReferenceSafeHandle instance, IntPtr method);
-	unsafe delegate float JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_float (JNIEnvPtr env, JniReferenceSafeHandle instance, IntPtr method, JniArgumentValue* args);
+	unsafe delegate float JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_float (JNIEnvPtr env, JniReferenceSafeHandle instance, IntPtr method, JniArgumentValue* args);
 	unsafe delegate double JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_double (JNIEnvPtr env, JniReferenceSafeHandle instance, IntPtr method);
-	unsafe delegate double JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_double (JNIEnvPtr env, JniReferenceSafeHandle instance, IntPtr method, JniArgumentValue* args);
+	unsafe delegate double JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_double (JNIEnvPtr env, JniReferenceSafeHandle instance, IntPtr method, JniArgumentValue* args);
 	unsafe delegate void JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr (JNIEnvPtr env, JniReferenceSafeHandle instance, IntPtr method);
-	unsafe delegate void JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef (JNIEnvPtr env, JniReferenceSafeHandle instance, IntPtr method, JniArgumentValue* args);
+	unsafe delegate void JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr (JNIEnvPtr env, JniReferenceSafeHandle instance, IntPtr method, JniArgumentValue* args);
 	unsafe delegate JniLocalReference JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniLocalReference (JNIEnvPtr env, JniReferenceSafeHandle instance, JniReferenceSafeHandle type, IntPtr method);
-	unsafe delegate JniLocalReference JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_JniLocalReference (JNIEnvPtr env, JniReferenceSafeHandle instance, JniReferenceSafeHandle type, IntPtr method, JniArgumentValue* args);
+	unsafe delegate JniLocalReference JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_JniLocalReference (JNIEnvPtr env, JniReferenceSafeHandle instance, JniReferenceSafeHandle type, IntPtr method, JniArgumentValue* args);
 	unsafe delegate byte JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_byte (JNIEnvPtr env, JniReferenceSafeHandle instance, JniReferenceSafeHandle type, IntPtr method);
-	unsafe delegate byte JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_byte (JNIEnvPtr env, JniReferenceSafeHandle instance, JniReferenceSafeHandle type, IntPtr method, JniArgumentValue* args);
+	unsafe delegate byte JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_byte (JNIEnvPtr env, JniReferenceSafeHandle instance, JniReferenceSafeHandle type, IntPtr method, JniArgumentValue* args);
 	unsafe delegate sbyte JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_sbyte (JNIEnvPtr env, JniReferenceSafeHandle instance, JniReferenceSafeHandle type, IntPtr method);
-	unsafe delegate sbyte JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_sbyte (JNIEnvPtr env, JniReferenceSafeHandle instance, JniReferenceSafeHandle type, IntPtr method, JniArgumentValue* args);
+	unsafe delegate sbyte JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_sbyte (JNIEnvPtr env, JniReferenceSafeHandle instance, JniReferenceSafeHandle type, IntPtr method, JniArgumentValue* args);
 	unsafe delegate char JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_char (JNIEnvPtr env, JniReferenceSafeHandle instance, JniReferenceSafeHandle type, IntPtr method);
-	unsafe delegate char JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_char (JNIEnvPtr env, JniReferenceSafeHandle instance, JniReferenceSafeHandle type, IntPtr method, JniArgumentValue* args);
+	unsafe delegate char JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_char (JNIEnvPtr env, JniReferenceSafeHandle instance, JniReferenceSafeHandle type, IntPtr method, JniArgumentValue* args);
 	unsafe delegate short JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_short (JNIEnvPtr env, JniReferenceSafeHandle instance, JniReferenceSafeHandle type, IntPtr method);
-	unsafe delegate short JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_short (JNIEnvPtr env, JniReferenceSafeHandle instance, JniReferenceSafeHandle type, IntPtr method, JniArgumentValue* args);
+	unsafe delegate short JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_short (JNIEnvPtr env, JniReferenceSafeHandle instance, JniReferenceSafeHandle type, IntPtr method, JniArgumentValue* args);
 	unsafe delegate int JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_int (JNIEnvPtr env, JniReferenceSafeHandle instance, JniReferenceSafeHandle type, IntPtr method);
-	unsafe delegate int JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_int (JNIEnvPtr env, JniReferenceSafeHandle instance, JniReferenceSafeHandle type, IntPtr method, JniArgumentValue* args);
+	unsafe delegate int JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_int (JNIEnvPtr env, JniReferenceSafeHandle instance, JniReferenceSafeHandle type, IntPtr method, JniArgumentValue* args);
 	unsafe delegate long JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_long (JNIEnvPtr env, JniReferenceSafeHandle instance, JniReferenceSafeHandle type, IntPtr method);
-	unsafe delegate long JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_long (JNIEnvPtr env, JniReferenceSafeHandle instance, JniReferenceSafeHandle type, IntPtr method, JniArgumentValue* args);
+	unsafe delegate long JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_long (JNIEnvPtr env, JniReferenceSafeHandle instance, JniReferenceSafeHandle type, IntPtr method, JniArgumentValue* args);
 	unsafe delegate float JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_float (JNIEnvPtr env, JniReferenceSafeHandle instance, JniReferenceSafeHandle type, IntPtr method);
-	unsafe delegate float JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_float (JNIEnvPtr env, JniReferenceSafeHandle instance, JniReferenceSafeHandle type, IntPtr method, JniArgumentValue* args);
+	unsafe delegate float JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_float (JNIEnvPtr env, JniReferenceSafeHandle instance, JniReferenceSafeHandle type, IntPtr method, JniArgumentValue* args);
 	unsafe delegate double JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_double (JNIEnvPtr env, JniReferenceSafeHandle instance, JniReferenceSafeHandle type, IntPtr method);
-	unsafe delegate double JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_double (JNIEnvPtr env, JniReferenceSafeHandle instance, JniReferenceSafeHandle type, IntPtr method, JniArgumentValue* args);
+	unsafe delegate double JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_double (JNIEnvPtr env, JniReferenceSafeHandle instance, JniReferenceSafeHandle type, IntPtr method, JniArgumentValue* args);
 	unsafe delegate void JniAction_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr (JNIEnvPtr env, JniReferenceSafeHandle instance, JniReferenceSafeHandle type, IntPtr method);
-	unsafe delegate void JniAction_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef (JNIEnvPtr env, JniReferenceSafeHandle instance, JniReferenceSafeHandle type, IntPtr method, JniArgumentValue* args);
+	unsafe delegate void JniAction_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr (JNIEnvPtr env, JniReferenceSafeHandle instance, JniReferenceSafeHandle type, IntPtr method, JniArgumentValue* args);
 	unsafe delegate void JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniReferenceSafeHandle (JNIEnvPtr env, JniReferenceSafeHandle instance, IntPtr field, JniReferenceSafeHandle value);
 	unsafe delegate void JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_byte (JNIEnvPtr env, JniReferenceSafeHandle instance, IntPtr field, byte value);
 	unsafe delegate void JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_sbyte (JNIEnvPtr env, JniReferenceSafeHandle instance, IntPtr field, sbyte value);
@@ -354,17 +354,42 @@ namespace
 	unsafe delegate void JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_float (JNIEnvPtr env, JniReferenceSafeHandle instance, IntPtr field, float value);
 	unsafe delegate void JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_double (JNIEnvPtr env, JniReferenceSafeHandle instance, IntPtr field, double value);
 	[UnmanagedFunctionPointerAttribute (CallingConvention.Cdecl, CharSet=CharSet.Unicode)]
-	unsafe delegate JniLocalReference JniFunc_JNIEnvPtr_IntPtr_int_JniLocalReference (JNIEnvPtr env, IntPtr unicodeChars, int length);
-	unsafe delegate IntPtr JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_IntPtr (JNIEnvPtr env, JniReferenceSafeHandle stringInstance, IntPtr isCopy);
-	unsafe delegate string JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_string (JNIEnvPtr env, JniReferenceSafeHandle stringInstance, IntPtr isCopy);
+	unsafe delegate JniLocalReference JniFunc_JNIEnvPtr_charPtr_int_JniLocalReference (JNIEnvPtr env, char* unicodeChars, int length);
+	unsafe delegate char* JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_charPtr (JNIEnvPtr env, JniReferenceSafeHandle stringInstance, bool* isCopy);
+	unsafe delegate void JniAction_JNIEnvPtr_JniReferenceSafeHandle_charPtr (JNIEnvPtr env, JniReferenceSafeHandle stringInstance, char* chars);
+	unsafe delegate string JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_string (JNIEnvPtr env, JniReferenceSafeHandle stringInstance, bool* isCopy);
 	unsafe delegate void JniAction_JNIEnvPtr_JniReferenceSafeHandle_string (JNIEnvPtr env, JniReferenceSafeHandle stringInstance, string utf);
 	unsafe delegate JniLocalReference JniFunc_JNIEnvPtr_int_JniReferenceSafeHandle_JniReferenceSafeHandle_JniLocalReference (JNIEnvPtr env, int length, JniReferenceSafeHandle elementClass, JniReferenceSafeHandle initialElement);
 	unsafe delegate JniLocalReference JniFunc_JNIEnvPtr_JniReferenceSafeHandle_int_JniLocalReference (JNIEnvPtr env, JniReferenceSafeHandle array, int index);
 	unsafe delegate void JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_JniReferenceSafeHandle (JNIEnvPtr env, JniReferenceSafeHandle array, int index, JniReferenceSafeHandle value);
 	unsafe delegate JniLocalReference JniFunc_JNIEnvPtr_int_JniLocalReference (JNIEnvPtr env, int length);
-	unsafe delegate void JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr (JNIEnvPtr env, JniReferenceSafeHandle array, int start, int length, IntPtr buffer);
+	unsafe delegate bool* JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_boolPtr (JNIEnvPtr env, JniReferenceSafeHandle array, bool* isCopy);
+	unsafe delegate sbyte* JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_sbytePtr (JNIEnvPtr env, JniReferenceSafeHandle array, bool* isCopy);
+	unsafe delegate short* JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_shortPtr (JNIEnvPtr env, JniReferenceSafeHandle array, bool* isCopy);
+	unsafe delegate int* JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_intPtr (JNIEnvPtr env, JniReferenceSafeHandle array, bool* isCopy);
+	unsafe delegate long* JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_longPtr (JNIEnvPtr env, JniReferenceSafeHandle array, bool* isCopy);
+	unsafe delegate float* JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_floatPtr (JNIEnvPtr env, JniReferenceSafeHandle array, bool* isCopy);
+	unsafe delegate double* JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_doublePtr (JNIEnvPtr env, JniReferenceSafeHandle array, bool* isCopy);
+	unsafe delegate void JniAction_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_int (JNIEnvPtr env, JniReferenceSafeHandle array, bool* elements, int mode);
+	unsafe delegate void JniAction_JNIEnvPtr_JniReferenceSafeHandle_sbytePtr_int (JNIEnvPtr env, JniReferenceSafeHandle array, sbyte* elements, int mode);
+	unsafe delegate void JniAction_JNIEnvPtr_JniReferenceSafeHandle_charPtr_int (JNIEnvPtr env, JniReferenceSafeHandle array, char* elements, int mode);
+	unsafe delegate void JniAction_JNIEnvPtr_JniReferenceSafeHandle_shortPtr_int (JNIEnvPtr env, JniReferenceSafeHandle array, short* elements, int mode);
+	unsafe delegate void JniAction_JNIEnvPtr_JniReferenceSafeHandle_intPtr_int (JNIEnvPtr env, JniReferenceSafeHandle array, int* elements, int mode);
+	unsafe delegate void JniAction_JNIEnvPtr_JniReferenceSafeHandle_longPtr_int (JNIEnvPtr env, JniReferenceSafeHandle array, long* elements, int mode);
+	unsafe delegate void JniAction_JNIEnvPtr_JniReferenceSafeHandle_floatPtr_int (JNIEnvPtr env, JniReferenceSafeHandle array, float* elements, int mode);
+	unsafe delegate void JniAction_JNIEnvPtr_JniReferenceSafeHandle_doublePtr_int (JNIEnvPtr env, JniReferenceSafeHandle array, double* elements, int mode);
+	unsafe delegate void JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_boolPtr (JNIEnvPtr env, JniReferenceSafeHandle array, int start, int length, bool* buffer);
+	unsafe delegate void JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_sbytePtr (JNIEnvPtr env, JniReferenceSafeHandle array, int start, int length, sbyte* buffer);
+	unsafe delegate void JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_charPtr (JNIEnvPtr env, JniReferenceSafeHandle array, int start, int length, char* buffer);
+	unsafe delegate void JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_shortPtr (JNIEnvPtr env, JniReferenceSafeHandle array, int start, int length, short* buffer);
+	unsafe delegate void JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_intPtr (JNIEnvPtr env, JniReferenceSafeHandle array, int start, int length, int* buffer);
+	unsafe delegate void JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_longPtr (JNIEnvPtr env, JniReferenceSafeHandle array, int start, int length, long* buffer);
+	unsafe delegate void JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_floatPtr (JNIEnvPtr env, JniReferenceSafeHandle array, int start, int length, float* buffer);
+	unsafe delegate void JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_doublePtr (JNIEnvPtr env, JniReferenceSafeHandle array, int start, int length, double* buffer);
 	unsafe delegate int JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniNativeMethodRegistrationArray_int_int (JNIEnvPtr env, JniReferenceSafeHandle type, JniNativeMethodRegistration [] methods, int numMethods);
 	unsafe delegate int JniFunc_JNIEnvPtr_outIntPtr_int (JNIEnvPtr env, out IntPtr vm);
+	unsafe delegate void JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr (JNIEnvPtr env, JniReferenceSafeHandle stringInstance, int start, int length, IntPtr buffer);
+	unsafe delegate IntPtr JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_IntPtr (JNIEnvPtr env, JniReferenceSafeHandle array, bool* isCopy);
 	unsafe delegate JniWeakGlobalReference JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniWeakGlobalReference (JNIEnvPtr env, JniReferenceSafeHandle instance);
 	unsafe delegate byte JniFunc_JNIEnvPtr_byte (JNIEnvPtr env);
 	unsafe delegate JniLocalReference JniFunc_JNIEnvPtr_IntPtr_long_JniLocalReference (JNIEnvPtr env, IntPtr address, long capacity);
@@ -503,7 +528,7 @@ namespace
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		public static unsafe IntPtr GetBooleanArrayElements (JniObjectReference array, IntPtr isCopy)
+		public static unsafe bool* GetBooleanArrayElements (JniObjectReference array, bool* isCopy)
 		{
 			if (array.SafeHandle == null)
 				throw new ArgumentNullException ("array");
@@ -515,7 +540,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe IntPtr GetByteArrayElements (JniObjectReference array, IntPtr isCopy)
+		public static unsafe sbyte* GetByteArrayElements (JniObjectReference array, bool* isCopy)
 		{
 			if (array.SafeHandle == null)
 				throw new ArgumentNullException ("array");
@@ -527,7 +552,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe IntPtr GetCharArrayElements (JniObjectReference array, IntPtr isCopy)
+		public static unsafe char* GetCharArrayElements (JniObjectReference array, bool* isCopy)
 		{
 			if (array.SafeHandle == null)
 				throw new ArgumentNullException ("array");
@@ -539,7 +564,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe IntPtr GetShortArrayElements (JniObjectReference array, IntPtr isCopy)
+		public static unsafe short* GetShortArrayElements (JniObjectReference array, bool* isCopy)
 		{
 			if (array.SafeHandle == null)
 				throw new ArgumentNullException ("array");
@@ -551,7 +576,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe IntPtr GetIntArrayElements (JniObjectReference array, IntPtr isCopy)
+		public static unsafe int* GetIntArrayElements (JniObjectReference array, bool* isCopy)
 		{
 			if (array.SafeHandle == null)
 				throw new ArgumentNullException ("array");
@@ -563,7 +588,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe IntPtr GetLongArrayElements (JniObjectReference array, IntPtr isCopy)
+		public static unsafe long* GetLongArrayElements (JniObjectReference array, bool* isCopy)
 		{
 			if (array.SafeHandle == null)
 				throw new ArgumentNullException ("array");
@@ -575,7 +600,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe IntPtr GetFloatArrayElements (JniObjectReference array, IntPtr isCopy)
+		public static unsafe float* GetFloatArrayElements (JniObjectReference array, bool* isCopy)
 		{
 			if (array.SafeHandle == null)
 				throw new ArgumentNullException ("array");
@@ -587,7 +612,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe IntPtr GetDoubleArrayElements (JniObjectReference array, IntPtr isCopy)
+		public static unsafe double* GetDoubleArrayElements (JniObjectReference array, bool* isCopy)
 		{
 			if (array.SafeHandle == null)
 				throw new ArgumentNullException ("array");
@@ -599,118 +624,100 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe void ReleaseBooleanArrayElements (JniObjectReference array, IntPtr elements, int mode)
+		public static unsafe void ReleaseBooleanArrayElements (JniObjectReference array, bool* elements, int mode)
 		{
 			if (array.SafeHandle == null)
 				throw new ArgumentNullException ("array");
 			if (array.SafeHandle.IsInvalid)
 				throw new ArgumentException ("array");
-			if (elements == IntPtr.Zero)
-				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", "elements");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.ReleaseBooleanArrayElements (__info.EnvironmentPointer, array.SafeHandle, elements, mode);
 		}
 
-		public static unsafe void ReleaseByteArrayElements (JniObjectReference array, IntPtr elements, int mode)
+		public static unsafe void ReleaseByteArrayElements (JniObjectReference array, sbyte* elements, int mode)
 		{
 			if (array.SafeHandle == null)
 				throw new ArgumentNullException ("array");
 			if (array.SafeHandle.IsInvalid)
 				throw new ArgumentException ("array");
-			if (elements == IntPtr.Zero)
-				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", "elements");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.ReleaseByteArrayElements (__info.EnvironmentPointer, array.SafeHandle, elements, mode);
 		}
 
-		public static unsafe void ReleaseCharArrayElements (JniObjectReference array, IntPtr elements, int mode)
+		public static unsafe void ReleaseCharArrayElements (JniObjectReference array, char* elements, int mode)
 		{
 			if (array.SafeHandle == null)
 				throw new ArgumentNullException ("array");
 			if (array.SafeHandle.IsInvalid)
 				throw new ArgumentException ("array");
-			if (elements == IntPtr.Zero)
-				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", "elements");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.ReleaseCharArrayElements (__info.EnvironmentPointer, array.SafeHandle, elements, mode);
 		}
 
-		public static unsafe void ReleaseShortArrayElements (JniObjectReference array, IntPtr elements, int mode)
+		public static unsafe void ReleaseShortArrayElements (JniObjectReference array, short* elements, int mode)
 		{
 			if (array.SafeHandle == null)
 				throw new ArgumentNullException ("array");
 			if (array.SafeHandle.IsInvalid)
 				throw new ArgumentException ("array");
-			if (elements == IntPtr.Zero)
-				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", "elements");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.ReleaseShortArrayElements (__info.EnvironmentPointer, array.SafeHandle, elements, mode);
 		}
 
-		public static unsafe void ReleaseIntArrayElements (JniObjectReference array, IntPtr elements, int mode)
+		public static unsafe void ReleaseIntArrayElements (JniObjectReference array, int* elements, int mode)
 		{
 			if (array.SafeHandle == null)
 				throw new ArgumentNullException ("array");
 			if (array.SafeHandle.IsInvalid)
 				throw new ArgumentException ("array");
-			if (elements == IntPtr.Zero)
-				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", "elements");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.ReleaseIntArrayElements (__info.EnvironmentPointer, array.SafeHandle, elements, mode);
 		}
 
-		public static unsafe void ReleaseLongArrayElements (JniObjectReference array, IntPtr elements, int mode)
+		public static unsafe void ReleaseLongArrayElements (JniObjectReference array, long* elements, int mode)
 		{
 			if (array.SafeHandle == null)
 				throw new ArgumentNullException ("array");
 			if (array.SafeHandle.IsInvalid)
 				throw new ArgumentException ("array");
-			if (elements == IntPtr.Zero)
-				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", "elements");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.ReleaseLongArrayElements (__info.EnvironmentPointer, array.SafeHandle, elements, mode);
 		}
 
-		public static unsafe void ReleaseFloatArrayElements (JniObjectReference array, IntPtr elements, int mode)
+		public static unsafe void ReleaseFloatArrayElements (JniObjectReference array, float* elements, int mode)
 		{
 			if (array.SafeHandle == null)
 				throw new ArgumentNullException ("array");
 			if (array.SafeHandle.IsInvalid)
 				throw new ArgumentException ("array");
-			if (elements == IntPtr.Zero)
-				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", "elements");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.ReleaseFloatArrayElements (__info.EnvironmentPointer, array.SafeHandle, elements, mode);
 		}
 
-		public static unsafe void ReleaseDoubleArrayElements (JniObjectReference array, IntPtr elements, int mode)
+		public static unsafe void ReleaseDoubleArrayElements (JniObjectReference array, double* elements, int mode)
 		{
 			if (array.SafeHandle == null)
 				throw new ArgumentNullException ("array");
 			if (array.SafeHandle.IsInvalid)
 				throw new ArgumentException ("array");
-			if (elements == IntPtr.Zero)
-				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", "elements");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.ReleaseDoubleArrayElements (__info.EnvironmentPointer, array.SafeHandle, elements, mode);
 		}
 
-		public static unsafe void GetBooleanArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
+		public static unsafe void GetBooleanArrayRegion (JniObjectReference array, int start, int length, bool* buffer)
 		{
 			if (array.SafeHandle == null)
 				throw new ArgumentNullException ("array");
 			if (array.SafeHandle.IsInvalid)
 				throw new ArgumentException ("array");
-			if (buffer == IntPtr.Zero)
-				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.GetBooleanArrayRegion (__info.EnvironmentPointer, array.SafeHandle, start, length, buffer);
@@ -721,14 +728,12 @@ namespace
 
 		}
 
-		public static unsafe void GetByteArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
+		public static unsafe void GetByteArrayRegion (JniObjectReference array, int start, int length, sbyte* buffer)
 		{
 			if (array.SafeHandle == null)
 				throw new ArgumentNullException ("array");
 			if (array.SafeHandle.IsInvalid)
 				throw new ArgumentException ("array");
-			if (buffer == IntPtr.Zero)
-				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.GetByteArrayRegion (__info.EnvironmentPointer, array.SafeHandle, start, length, buffer);
@@ -739,14 +744,12 @@ namespace
 
 		}
 
-		public static unsafe void GetCharArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
+		public static unsafe void GetCharArrayRegion (JniObjectReference array, int start, int length, char* buffer)
 		{
 			if (array.SafeHandle == null)
 				throw new ArgumentNullException ("array");
 			if (array.SafeHandle.IsInvalid)
 				throw new ArgumentException ("array");
-			if (buffer == IntPtr.Zero)
-				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.GetCharArrayRegion (__info.EnvironmentPointer, array.SafeHandle, start, length, buffer);
@@ -757,14 +760,12 @@ namespace
 
 		}
 
-		public static unsafe void GetShortArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
+		public static unsafe void GetShortArrayRegion (JniObjectReference array, int start, int length, short* buffer)
 		{
 			if (array.SafeHandle == null)
 				throw new ArgumentNullException ("array");
 			if (array.SafeHandle.IsInvalid)
 				throw new ArgumentException ("array");
-			if (buffer == IntPtr.Zero)
-				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.GetShortArrayRegion (__info.EnvironmentPointer, array.SafeHandle, start, length, buffer);
@@ -775,14 +776,12 @@ namespace
 
 		}
 
-		public static unsafe void GetIntArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
+		public static unsafe void GetIntArrayRegion (JniObjectReference array, int start, int length, int* buffer)
 		{
 			if (array.SafeHandle == null)
 				throw new ArgumentNullException ("array");
 			if (array.SafeHandle.IsInvalid)
 				throw new ArgumentException ("array");
-			if (buffer == IntPtr.Zero)
-				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.GetIntArrayRegion (__info.EnvironmentPointer, array.SafeHandle, start, length, buffer);
@@ -793,14 +792,12 @@ namespace
 
 		}
 
-		public static unsafe void GetLongArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
+		public static unsafe void GetLongArrayRegion (JniObjectReference array, int start, int length, long* buffer)
 		{
 			if (array.SafeHandle == null)
 				throw new ArgumentNullException ("array");
 			if (array.SafeHandle.IsInvalid)
 				throw new ArgumentException ("array");
-			if (buffer == IntPtr.Zero)
-				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.GetLongArrayRegion (__info.EnvironmentPointer, array.SafeHandle, start, length, buffer);
@@ -811,14 +808,12 @@ namespace
 
 		}
 
-		public static unsafe void GetFloatArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
+		public static unsafe void GetFloatArrayRegion (JniObjectReference array, int start, int length, float* buffer)
 		{
 			if (array.SafeHandle == null)
 				throw new ArgumentNullException ("array");
 			if (array.SafeHandle.IsInvalid)
 				throw new ArgumentException ("array");
-			if (buffer == IntPtr.Zero)
-				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.GetFloatArrayRegion (__info.EnvironmentPointer, array.SafeHandle, start, length, buffer);
@@ -829,14 +824,12 @@ namespace
 
 		}
 
-		public static unsafe void GetDoubleArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
+		public static unsafe void GetDoubleArrayRegion (JniObjectReference array, int start, int length, double* buffer)
 		{
 			if (array.SafeHandle == null)
 				throw new ArgumentNullException ("array");
 			if (array.SafeHandle.IsInvalid)
 				throw new ArgumentException ("array");
-			if (buffer == IntPtr.Zero)
-				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.GetDoubleArrayRegion (__info.EnvironmentPointer, array.SafeHandle, start, length, buffer);
@@ -847,14 +840,12 @@ namespace
 
 		}
 
-		public static unsafe void SetBooleanArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
+		public static unsafe void SetBooleanArrayRegion (JniObjectReference array, int start, int length, bool* buffer)
 		{
 			if (array.SafeHandle == null)
 				throw new ArgumentNullException ("array");
 			if (array.SafeHandle.IsInvalid)
 				throw new ArgumentException ("array");
-			if (buffer == IntPtr.Zero)
-				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetBooleanArrayRegion (__info.EnvironmentPointer, array.SafeHandle, start, length, buffer);
@@ -865,14 +856,12 @@ namespace
 
 		}
 
-		public static unsafe void SetByteArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
+		public static unsafe void SetByteArrayRegion (JniObjectReference array, int start, int length, sbyte* buffer)
 		{
 			if (array.SafeHandle == null)
 				throw new ArgumentNullException ("array");
 			if (array.SafeHandle.IsInvalid)
 				throw new ArgumentException ("array");
-			if (buffer == IntPtr.Zero)
-				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetByteArrayRegion (__info.EnvironmentPointer, array.SafeHandle, start, length, buffer);
@@ -883,14 +872,12 @@ namespace
 
 		}
 
-		public static unsafe void SetCharArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
+		public static unsafe void SetCharArrayRegion (JniObjectReference array, int start, int length, char* buffer)
 		{
 			if (array.SafeHandle == null)
 				throw new ArgumentNullException ("array");
 			if (array.SafeHandle.IsInvalid)
 				throw new ArgumentException ("array");
-			if (buffer == IntPtr.Zero)
-				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetCharArrayRegion (__info.EnvironmentPointer, array.SafeHandle, start, length, buffer);
@@ -901,14 +888,12 @@ namespace
 
 		}
 
-		public static unsafe void SetShortArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
+		public static unsafe void SetShortArrayRegion (JniObjectReference array, int start, int length, short* buffer)
 		{
 			if (array.SafeHandle == null)
 				throw new ArgumentNullException ("array");
 			if (array.SafeHandle.IsInvalid)
 				throw new ArgumentException ("array");
-			if (buffer == IntPtr.Zero)
-				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetShortArrayRegion (__info.EnvironmentPointer, array.SafeHandle, start, length, buffer);
@@ -919,14 +904,12 @@ namespace
 
 		}
 
-		public static unsafe void SetIntArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
+		public static unsafe void SetIntArrayRegion (JniObjectReference array, int start, int length, int* buffer)
 		{
 			if (array.SafeHandle == null)
 				throw new ArgumentNullException ("array");
 			if (array.SafeHandle.IsInvalid)
 				throw new ArgumentException ("array");
-			if (buffer == IntPtr.Zero)
-				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetIntArrayRegion (__info.EnvironmentPointer, array.SafeHandle, start, length, buffer);
@@ -937,14 +920,12 @@ namespace
 
 		}
 
-		public static unsafe void SetLongArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
+		public static unsafe void SetLongArrayRegion (JniObjectReference array, int start, int length, long* buffer)
 		{
 			if (array.SafeHandle == null)
 				throw new ArgumentNullException ("array");
 			if (array.SafeHandle.IsInvalid)
 				throw new ArgumentException ("array");
-			if (buffer == IntPtr.Zero)
-				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetLongArrayRegion (__info.EnvironmentPointer, array.SafeHandle, start, length, buffer);
@@ -955,14 +936,12 @@ namespace
 
 		}
 
-		public static unsafe void SetFloatArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
+		public static unsafe void SetFloatArrayRegion (JniObjectReference array, int start, int length, float* buffer)
 		{
 			if (array.SafeHandle == null)
 				throw new ArgumentNullException ("array");
 			if (array.SafeHandle.IsInvalid)
 				throw new ArgumentException ("array");
-			if (buffer == IntPtr.Zero)
-				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetFloatArrayRegion (__info.EnvironmentPointer, array.SafeHandle, start, length, buffer);
@@ -973,14 +952,12 @@ namespace
 
 		}
 
-		public static unsafe void SetDoubleArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
+		public static unsafe void SetDoubleArrayRegion (JniObjectReference array, int start, int length, double* buffer)
 		{
 			if (array.SafeHandle == null)
 				throw new ArgumentNullException ("array");
 			if (array.SafeHandle.IsInvalid)
 				throw new ArgumentException ("array");
-			if (buffer == IntPtr.Zero)
-				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetDoubleArrayRegion (__info.EnvironmentPointer, array.SafeHandle, start, length, buffer);
@@ -3327,11 +3304,8 @@ namespace
 
 	public static partial class Strings {
 
-		public static unsafe JniObjectReference NewString (IntPtr unicodeChars, int length)
+		public static unsafe JniObjectReference NewString (char* unicodeChars, int length)
 		{
-			if (unicodeChars == IntPtr.Zero)
-				throw new ArgumentException ("'unicodeChars' must not be IntPtr.Zero.", "unicodeChars");
-
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.NewString (__info.EnvironmentPointer, unicodeChars, length);
 
@@ -3355,7 +3329,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe IntPtr GetStringChars (JniObjectReference stringInstance, IntPtr isCopy)
+		public static unsafe char* GetStringChars (JniObjectReference stringInstance, bool* isCopy)
 		{
 			if (stringInstance.SafeHandle == null)
 				throw new ArgumentNullException ("stringInstance");
@@ -3367,14 +3341,12 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe void ReleaseStringChars (JniObjectReference stringInstance, IntPtr chars)
+		public static unsafe void ReleaseStringChars (JniObjectReference stringInstance, char* chars)
 		{
 			if (stringInstance.SafeHandle == null)
 				throw new ArgumentNullException ("stringInstance");
 			if (stringInstance.SafeHandle.IsInvalid)
 				throw new ArgumentException ("stringInstance");
-			if (chars == IntPtr.Zero)
-				throw new ArgumentException ("'chars' must not be IntPtr.Zero.", "chars");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.ReleaseStringChars (__info.EnvironmentPointer, stringInstance.SafeHandle, chars);
@@ -3762,11 +3734,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_JniLocalReference _NewObjectA;
-		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_JniLocalReference NewObjectA {
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_JniLocalReference _NewObjectA;
+		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_JniLocalReference NewObjectA {
 			get {
 				if (_NewObjectA == null)
-					_NewObjectA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_JniLocalReference) Marshal.GetDelegateForFunctionPointer (env.NewObjectA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_JniLocalReference));
+					_NewObjectA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_JniLocalReference) Marshal.GetDelegateForFunctionPointer (env.NewObjectA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_JniLocalReference));
 				return _NewObjectA;
 			}
 		}
@@ -3807,11 +3779,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_JniLocalReference _CallObjectMethodA;
-		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_JniLocalReference CallObjectMethodA {
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_JniLocalReference _CallObjectMethodA;
+		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_JniLocalReference CallObjectMethodA {
 			get {
 				if (_CallObjectMethodA == null)
-					_CallObjectMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_JniLocalReference) Marshal.GetDelegateForFunctionPointer (env.CallObjectMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_JniLocalReference));
+					_CallObjectMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_JniLocalReference) Marshal.GetDelegateForFunctionPointer (env.CallObjectMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_JniLocalReference));
 				return _CallObjectMethodA;
 			}
 		}
@@ -3825,11 +3797,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_byte _CallBooleanMethodA;
-		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_byte CallBooleanMethodA {
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_byte _CallBooleanMethodA;
+		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_byte CallBooleanMethodA {
 			get {
 				if (_CallBooleanMethodA == null)
-					_CallBooleanMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_byte) Marshal.GetDelegateForFunctionPointer (env.CallBooleanMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_byte));
+					_CallBooleanMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_byte) Marshal.GetDelegateForFunctionPointer (env.CallBooleanMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_byte));
 				return _CallBooleanMethodA;
 			}
 		}
@@ -3843,11 +3815,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_sbyte _CallByteMethodA;
-		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_sbyte CallByteMethodA {
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_sbyte _CallByteMethodA;
+		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_sbyte CallByteMethodA {
 			get {
 				if (_CallByteMethodA == null)
-					_CallByteMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_sbyte) Marshal.GetDelegateForFunctionPointer (env.CallByteMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_sbyte));
+					_CallByteMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_sbyte) Marshal.GetDelegateForFunctionPointer (env.CallByteMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_sbyte));
 				return _CallByteMethodA;
 			}
 		}
@@ -3861,11 +3833,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_char _CallCharMethodA;
-		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_char CallCharMethodA {
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_char _CallCharMethodA;
+		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_char CallCharMethodA {
 			get {
 				if (_CallCharMethodA == null)
-					_CallCharMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_char) Marshal.GetDelegateForFunctionPointer (env.CallCharMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_char));
+					_CallCharMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_char) Marshal.GetDelegateForFunctionPointer (env.CallCharMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_char));
 				return _CallCharMethodA;
 			}
 		}
@@ -3879,11 +3851,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_short _CallShortMethodA;
-		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_short CallShortMethodA {
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_short _CallShortMethodA;
+		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_short CallShortMethodA {
 			get {
 				if (_CallShortMethodA == null)
-					_CallShortMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_short) Marshal.GetDelegateForFunctionPointer (env.CallShortMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_short));
+					_CallShortMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_short) Marshal.GetDelegateForFunctionPointer (env.CallShortMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_short));
 				return _CallShortMethodA;
 			}
 		}
@@ -3897,11 +3869,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_int _CallIntMethodA;
-		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_int CallIntMethodA {
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_int _CallIntMethodA;
+		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_int CallIntMethodA {
 			get {
 				if (_CallIntMethodA == null)
-					_CallIntMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_int) Marshal.GetDelegateForFunctionPointer (env.CallIntMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_int));
+					_CallIntMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_int) Marshal.GetDelegateForFunctionPointer (env.CallIntMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_int));
 				return _CallIntMethodA;
 			}
 		}
@@ -3915,11 +3887,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_long _CallLongMethodA;
-		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_long CallLongMethodA {
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_long _CallLongMethodA;
+		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_long CallLongMethodA {
 			get {
 				if (_CallLongMethodA == null)
-					_CallLongMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_long) Marshal.GetDelegateForFunctionPointer (env.CallLongMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_long));
+					_CallLongMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_long) Marshal.GetDelegateForFunctionPointer (env.CallLongMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_long));
 				return _CallLongMethodA;
 			}
 		}
@@ -3933,11 +3905,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_float _CallFloatMethodA;
-		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_float CallFloatMethodA {
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_float _CallFloatMethodA;
+		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_float CallFloatMethodA {
 			get {
 				if (_CallFloatMethodA == null)
-					_CallFloatMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_float) Marshal.GetDelegateForFunctionPointer (env.CallFloatMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_float));
+					_CallFloatMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_float) Marshal.GetDelegateForFunctionPointer (env.CallFloatMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_float));
 				return _CallFloatMethodA;
 			}
 		}
@@ -3951,11 +3923,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_double _CallDoubleMethodA;
-		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_double CallDoubleMethodA {
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_double _CallDoubleMethodA;
+		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_double CallDoubleMethodA {
 			get {
 				if (_CallDoubleMethodA == null)
-					_CallDoubleMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_double) Marshal.GetDelegateForFunctionPointer (env.CallDoubleMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_double));
+					_CallDoubleMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_double) Marshal.GetDelegateForFunctionPointer (env.CallDoubleMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_double));
 				return _CallDoubleMethodA;
 			}
 		}
@@ -3969,11 +3941,11 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef _CallVoidMethodA;
-		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef CallVoidMethodA {
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr _CallVoidMethodA;
+		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr CallVoidMethodA {
 			get {
 				if (_CallVoidMethodA == null)
-					_CallVoidMethodA = (JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef) Marshal.GetDelegateForFunctionPointer (env.CallVoidMethodA, typeof (JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef));
+					_CallVoidMethodA = (JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr) Marshal.GetDelegateForFunctionPointer (env.CallVoidMethodA, typeof (JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr));
 				return _CallVoidMethodA;
 			}
 		}
@@ -3987,11 +3959,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_JniLocalReference _CallNonvirtualObjectMethodA;
-		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_JniLocalReference CallNonvirtualObjectMethodA {
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_JniLocalReference _CallNonvirtualObjectMethodA;
+		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_JniLocalReference CallNonvirtualObjectMethodA {
 			get {
 				if (_CallNonvirtualObjectMethodA == null)
-					_CallNonvirtualObjectMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_JniLocalReference) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualObjectMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_JniLocalReference));
+					_CallNonvirtualObjectMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_JniLocalReference) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualObjectMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_JniLocalReference));
 				return _CallNonvirtualObjectMethodA;
 			}
 		}
@@ -4005,11 +3977,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_byte _CallNonvirtualBooleanMethodA;
-		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_byte CallNonvirtualBooleanMethodA {
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_byte _CallNonvirtualBooleanMethodA;
+		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_byte CallNonvirtualBooleanMethodA {
 			get {
 				if (_CallNonvirtualBooleanMethodA == null)
-					_CallNonvirtualBooleanMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_byte) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualBooleanMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_byte));
+					_CallNonvirtualBooleanMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_byte) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualBooleanMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_byte));
 				return _CallNonvirtualBooleanMethodA;
 			}
 		}
@@ -4023,11 +3995,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_sbyte _CallNonvirtualByteMethodA;
-		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_sbyte CallNonvirtualByteMethodA {
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_sbyte _CallNonvirtualByteMethodA;
+		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_sbyte CallNonvirtualByteMethodA {
 			get {
 				if (_CallNonvirtualByteMethodA == null)
-					_CallNonvirtualByteMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_sbyte) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualByteMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_sbyte));
+					_CallNonvirtualByteMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_sbyte) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualByteMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_sbyte));
 				return _CallNonvirtualByteMethodA;
 			}
 		}
@@ -4041,11 +4013,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_char _CallNonvirtualCharMethodA;
-		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_char CallNonvirtualCharMethodA {
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_char _CallNonvirtualCharMethodA;
+		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_char CallNonvirtualCharMethodA {
 			get {
 				if (_CallNonvirtualCharMethodA == null)
-					_CallNonvirtualCharMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_char) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualCharMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_char));
+					_CallNonvirtualCharMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_char) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualCharMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_char));
 				return _CallNonvirtualCharMethodA;
 			}
 		}
@@ -4059,11 +4031,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_short _CallNonvirtualShortMethodA;
-		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_short CallNonvirtualShortMethodA {
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_short _CallNonvirtualShortMethodA;
+		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_short CallNonvirtualShortMethodA {
 			get {
 				if (_CallNonvirtualShortMethodA == null)
-					_CallNonvirtualShortMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_short) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualShortMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_short));
+					_CallNonvirtualShortMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_short) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualShortMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_short));
 				return _CallNonvirtualShortMethodA;
 			}
 		}
@@ -4077,11 +4049,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_int _CallNonvirtualIntMethodA;
-		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_int CallNonvirtualIntMethodA {
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_int _CallNonvirtualIntMethodA;
+		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_int CallNonvirtualIntMethodA {
 			get {
 				if (_CallNonvirtualIntMethodA == null)
-					_CallNonvirtualIntMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_int) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualIntMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_int));
+					_CallNonvirtualIntMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_int) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualIntMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_int));
 				return _CallNonvirtualIntMethodA;
 			}
 		}
@@ -4095,11 +4067,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_long _CallNonvirtualLongMethodA;
-		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_long CallNonvirtualLongMethodA {
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_long _CallNonvirtualLongMethodA;
+		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_long CallNonvirtualLongMethodA {
 			get {
 				if (_CallNonvirtualLongMethodA == null)
-					_CallNonvirtualLongMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_long) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualLongMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_long));
+					_CallNonvirtualLongMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_long) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualLongMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_long));
 				return _CallNonvirtualLongMethodA;
 			}
 		}
@@ -4113,11 +4085,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_float _CallNonvirtualFloatMethodA;
-		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_float CallNonvirtualFloatMethodA {
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_float _CallNonvirtualFloatMethodA;
+		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_float CallNonvirtualFloatMethodA {
 			get {
 				if (_CallNonvirtualFloatMethodA == null)
-					_CallNonvirtualFloatMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_float) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualFloatMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_float));
+					_CallNonvirtualFloatMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_float) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualFloatMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_float));
 				return _CallNonvirtualFloatMethodA;
 			}
 		}
@@ -4131,11 +4103,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_double _CallNonvirtualDoubleMethodA;
-		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_double CallNonvirtualDoubleMethodA {
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_double _CallNonvirtualDoubleMethodA;
+		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_double CallNonvirtualDoubleMethodA {
 			get {
 				if (_CallNonvirtualDoubleMethodA == null)
-					_CallNonvirtualDoubleMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_double) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualDoubleMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_double));
+					_CallNonvirtualDoubleMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_double) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualDoubleMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_double));
 				return _CallNonvirtualDoubleMethodA;
 			}
 		}
@@ -4149,11 +4121,11 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef _CallNonvirtualVoidMethodA;
-		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef CallNonvirtualVoidMethodA {
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr _CallNonvirtualVoidMethodA;
+		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr CallNonvirtualVoidMethodA {
 			get {
 				if (_CallNonvirtualVoidMethodA == null)
-					_CallNonvirtualVoidMethodA = (JniAction_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualVoidMethodA, typeof (JniAction_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef));
+					_CallNonvirtualVoidMethodA = (JniAction_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualVoidMethodA, typeof (JniAction_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr));
 				return _CallNonvirtualVoidMethodA;
 			}
 		}
@@ -4347,11 +4319,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_JniLocalReference _CallStaticObjectMethodA;
-		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_JniLocalReference CallStaticObjectMethodA {
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_JniLocalReference _CallStaticObjectMethodA;
+		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_JniLocalReference CallStaticObjectMethodA {
 			get {
 				if (_CallStaticObjectMethodA == null)
-					_CallStaticObjectMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_JniLocalReference) Marshal.GetDelegateForFunctionPointer (env.CallStaticObjectMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_JniLocalReference));
+					_CallStaticObjectMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_JniLocalReference) Marshal.GetDelegateForFunctionPointer (env.CallStaticObjectMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_JniLocalReference));
 				return _CallStaticObjectMethodA;
 			}
 		}
@@ -4365,11 +4337,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_byte _CallStaticBooleanMethodA;
-		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_byte CallStaticBooleanMethodA {
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_byte _CallStaticBooleanMethodA;
+		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_byte CallStaticBooleanMethodA {
 			get {
 				if (_CallStaticBooleanMethodA == null)
-					_CallStaticBooleanMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_byte) Marshal.GetDelegateForFunctionPointer (env.CallStaticBooleanMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_byte));
+					_CallStaticBooleanMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_byte) Marshal.GetDelegateForFunctionPointer (env.CallStaticBooleanMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_byte));
 				return _CallStaticBooleanMethodA;
 			}
 		}
@@ -4383,11 +4355,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_sbyte _CallStaticByteMethodA;
-		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_sbyte CallStaticByteMethodA {
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_sbyte _CallStaticByteMethodA;
+		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_sbyte CallStaticByteMethodA {
 			get {
 				if (_CallStaticByteMethodA == null)
-					_CallStaticByteMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_sbyte) Marshal.GetDelegateForFunctionPointer (env.CallStaticByteMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_sbyte));
+					_CallStaticByteMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_sbyte) Marshal.GetDelegateForFunctionPointer (env.CallStaticByteMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_sbyte));
 				return _CallStaticByteMethodA;
 			}
 		}
@@ -4401,11 +4373,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_char _CallStaticCharMethodA;
-		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_char CallStaticCharMethodA {
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_char _CallStaticCharMethodA;
+		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_char CallStaticCharMethodA {
 			get {
 				if (_CallStaticCharMethodA == null)
-					_CallStaticCharMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_char) Marshal.GetDelegateForFunctionPointer (env.CallStaticCharMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_char));
+					_CallStaticCharMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_char) Marshal.GetDelegateForFunctionPointer (env.CallStaticCharMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_char));
 				return _CallStaticCharMethodA;
 			}
 		}
@@ -4419,11 +4391,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_short _CallStaticShortMethodA;
-		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_short CallStaticShortMethodA {
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_short _CallStaticShortMethodA;
+		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_short CallStaticShortMethodA {
 			get {
 				if (_CallStaticShortMethodA == null)
-					_CallStaticShortMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_short) Marshal.GetDelegateForFunctionPointer (env.CallStaticShortMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_short));
+					_CallStaticShortMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_short) Marshal.GetDelegateForFunctionPointer (env.CallStaticShortMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_short));
 				return _CallStaticShortMethodA;
 			}
 		}
@@ -4437,11 +4409,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_int _CallStaticIntMethodA;
-		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_int CallStaticIntMethodA {
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_int _CallStaticIntMethodA;
+		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_int CallStaticIntMethodA {
 			get {
 				if (_CallStaticIntMethodA == null)
-					_CallStaticIntMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_int) Marshal.GetDelegateForFunctionPointer (env.CallStaticIntMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_int));
+					_CallStaticIntMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_int) Marshal.GetDelegateForFunctionPointer (env.CallStaticIntMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_int));
 				return _CallStaticIntMethodA;
 			}
 		}
@@ -4455,11 +4427,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_long _CallStaticLongMethodA;
-		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_long CallStaticLongMethodA {
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_long _CallStaticLongMethodA;
+		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_long CallStaticLongMethodA {
 			get {
 				if (_CallStaticLongMethodA == null)
-					_CallStaticLongMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_long) Marshal.GetDelegateForFunctionPointer (env.CallStaticLongMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_long));
+					_CallStaticLongMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_long) Marshal.GetDelegateForFunctionPointer (env.CallStaticLongMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_long));
 				return _CallStaticLongMethodA;
 			}
 		}
@@ -4473,11 +4445,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_float _CallStaticFloatMethodA;
-		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_float CallStaticFloatMethodA {
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_float _CallStaticFloatMethodA;
+		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_float CallStaticFloatMethodA {
 			get {
 				if (_CallStaticFloatMethodA == null)
-					_CallStaticFloatMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_float) Marshal.GetDelegateForFunctionPointer (env.CallStaticFloatMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_float));
+					_CallStaticFloatMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_float) Marshal.GetDelegateForFunctionPointer (env.CallStaticFloatMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_float));
 				return _CallStaticFloatMethodA;
 			}
 		}
@@ -4491,11 +4463,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_double _CallStaticDoubleMethodA;
-		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_double CallStaticDoubleMethodA {
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_double _CallStaticDoubleMethodA;
+		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_double CallStaticDoubleMethodA {
 			get {
 				if (_CallStaticDoubleMethodA == null)
-					_CallStaticDoubleMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_double) Marshal.GetDelegateForFunctionPointer (env.CallStaticDoubleMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef_double));
+					_CallStaticDoubleMethodA = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_double) Marshal.GetDelegateForFunctionPointer (env.CallStaticDoubleMethodA, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_double));
 				return _CallStaticDoubleMethodA;
 			}
 		}
@@ -4509,11 +4481,11 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef _CallStaticVoidMethodA;
-		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef CallStaticVoidMethodA {
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr _CallStaticVoidMethodA;
+		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr CallStaticVoidMethodA {
 			get {
 				if (_CallStaticVoidMethodA == null)
-					_CallStaticVoidMethodA = (JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef) Marshal.GetDelegateForFunctionPointer (env.CallStaticVoidMethodA, typeof (JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValueRef));
+					_CallStaticVoidMethodA = (JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr) Marshal.GetDelegateForFunctionPointer (env.CallStaticVoidMethodA, typeof (JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr));
 				return _CallStaticVoidMethodA;
 			}
 		}
@@ -4689,11 +4661,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_IntPtr_int_JniLocalReference _NewString;
-		public JniFunc_JNIEnvPtr_IntPtr_int_JniLocalReference NewString {
+		JniFunc_JNIEnvPtr_charPtr_int_JniLocalReference _NewString;
+		public JniFunc_JNIEnvPtr_charPtr_int_JniLocalReference NewString {
 			get {
 				if (_NewString == null)
-					_NewString = (JniFunc_JNIEnvPtr_IntPtr_int_JniLocalReference) Marshal.GetDelegateForFunctionPointer (env.NewString, typeof (JniFunc_JNIEnvPtr_IntPtr_int_JniLocalReference));
+					_NewString = (JniFunc_JNIEnvPtr_charPtr_int_JniLocalReference) Marshal.GetDelegateForFunctionPointer (env.NewString, typeof (JniFunc_JNIEnvPtr_charPtr_int_JniLocalReference));
 				return _NewString;
 			}
 		}
@@ -4707,20 +4679,20 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_IntPtr _GetStringChars;
-		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_IntPtr GetStringChars {
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_charPtr _GetStringChars;
+		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_charPtr GetStringChars {
 			get {
 				if (_GetStringChars == null)
-					_GetStringChars = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_IntPtr) Marshal.GetDelegateForFunctionPointer (env.GetStringChars, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_IntPtr));
+					_GetStringChars = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_charPtr) Marshal.GetDelegateForFunctionPointer (env.GetStringChars, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_charPtr));
 				return _GetStringChars;
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr _ReleaseStringChars;
-		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr ReleaseStringChars {
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_charPtr _ReleaseStringChars;
+		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_charPtr ReleaseStringChars {
 			get {
 				if (_ReleaseStringChars == null)
-					_ReleaseStringChars = (JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr) Marshal.GetDelegateForFunctionPointer (env.ReleaseStringChars, typeof (JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr));
+					_ReleaseStringChars = (JniAction_JNIEnvPtr_JniReferenceSafeHandle_charPtr) Marshal.GetDelegateForFunctionPointer (env.ReleaseStringChars, typeof (JniAction_JNIEnvPtr_JniReferenceSafeHandle_charPtr));
 				return _ReleaseStringChars;
 			}
 		}
@@ -4743,11 +4715,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_string _GetStringUTFChars;
-		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_string GetStringUTFChars {
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_string _GetStringUTFChars;
+		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_string GetStringUTFChars {
 			get {
 				if (_GetStringUTFChars == null)
-					_GetStringUTFChars = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_string) Marshal.GetDelegateForFunctionPointer (env.GetStringUTFChars, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_string));
+					_GetStringUTFChars = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_string) Marshal.GetDelegateForFunctionPointer (env.GetStringUTFChars, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_string));
 				return _GetStringUTFChars;
 			}
 		}
@@ -4869,290 +4841,290 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_IntPtr _GetBooleanArrayElements;
-		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_IntPtr GetBooleanArrayElements {
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_boolPtr _GetBooleanArrayElements;
+		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_boolPtr GetBooleanArrayElements {
 			get {
 				if (_GetBooleanArrayElements == null)
-					_GetBooleanArrayElements = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_IntPtr) Marshal.GetDelegateForFunctionPointer (env.GetBooleanArrayElements, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_IntPtr));
+					_GetBooleanArrayElements = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_boolPtr) Marshal.GetDelegateForFunctionPointer (env.GetBooleanArrayElements, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_boolPtr));
 				return _GetBooleanArrayElements;
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_IntPtr _GetByteArrayElements;
-		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_IntPtr GetByteArrayElements {
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_sbytePtr _GetByteArrayElements;
+		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_sbytePtr GetByteArrayElements {
 			get {
 				if (_GetByteArrayElements == null)
-					_GetByteArrayElements = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_IntPtr) Marshal.GetDelegateForFunctionPointer (env.GetByteArrayElements, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_IntPtr));
+					_GetByteArrayElements = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_sbytePtr) Marshal.GetDelegateForFunctionPointer (env.GetByteArrayElements, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_sbytePtr));
 				return _GetByteArrayElements;
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_IntPtr _GetCharArrayElements;
-		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_IntPtr GetCharArrayElements {
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_charPtr _GetCharArrayElements;
+		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_charPtr GetCharArrayElements {
 			get {
 				if (_GetCharArrayElements == null)
-					_GetCharArrayElements = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_IntPtr) Marshal.GetDelegateForFunctionPointer (env.GetCharArrayElements, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_IntPtr));
+					_GetCharArrayElements = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_charPtr) Marshal.GetDelegateForFunctionPointer (env.GetCharArrayElements, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_charPtr));
 				return _GetCharArrayElements;
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_IntPtr _GetShortArrayElements;
-		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_IntPtr GetShortArrayElements {
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_shortPtr _GetShortArrayElements;
+		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_shortPtr GetShortArrayElements {
 			get {
 				if (_GetShortArrayElements == null)
-					_GetShortArrayElements = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_IntPtr) Marshal.GetDelegateForFunctionPointer (env.GetShortArrayElements, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_IntPtr));
+					_GetShortArrayElements = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_shortPtr) Marshal.GetDelegateForFunctionPointer (env.GetShortArrayElements, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_shortPtr));
 				return _GetShortArrayElements;
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_IntPtr _GetIntArrayElements;
-		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_IntPtr GetIntArrayElements {
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_intPtr _GetIntArrayElements;
+		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_intPtr GetIntArrayElements {
 			get {
 				if (_GetIntArrayElements == null)
-					_GetIntArrayElements = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_IntPtr) Marshal.GetDelegateForFunctionPointer (env.GetIntArrayElements, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_IntPtr));
+					_GetIntArrayElements = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_intPtr) Marshal.GetDelegateForFunctionPointer (env.GetIntArrayElements, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_intPtr));
 				return _GetIntArrayElements;
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_IntPtr _GetLongArrayElements;
-		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_IntPtr GetLongArrayElements {
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_longPtr _GetLongArrayElements;
+		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_longPtr GetLongArrayElements {
 			get {
 				if (_GetLongArrayElements == null)
-					_GetLongArrayElements = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_IntPtr) Marshal.GetDelegateForFunctionPointer (env.GetLongArrayElements, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_IntPtr));
+					_GetLongArrayElements = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_longPtr) Marshal.GetDelegateForFunctionPointer (env.GetLongArrayElements, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_longPtr));
 				return _GetLongArrayElements;
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_IntPtr _GetFloatArrayElements;
-		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_IntPtr GetFloatArrayElements {
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_floatPtr _GetFloatArrayElements;
+		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_floatPtr GetFloatArrayElements {
 			get {
 				if (_GetFloatArrayElements == null)
-					_GetFloatArrayElements = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_IntPtr) Marshal.GetDelegateForFunctionPointer (env.GetFloatArrayElements, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_IntPtr));
+					_GetFloatArrayElements = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_floatPtr) Marshal.GetDelegateForFunctionPointer (env.GetFloatArrayElements, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_floatPtr));
 				return _GetFloatArrayElements;
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_IntPtr _GetDoubleArrayElements;
-		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_IntPtr GetDoubleArrayElements {
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_doublePtr _GetDoubleArrayElements;
+		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_doublePtr GetDoubleArrayElements {
 			get {
 				if (_GetDoubleArrayElements == null)
-					_GetDoubleArrayElements = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_IntPtr) Marshal.GetDelegateForFunctionPointer (env.GetDoubleArrayElements, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_IntPtr));
+					_GetDoubleArrayElements = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_doublePtr) Marshal.GetDelegateForFunctionPointer (env.GetDoubleArrayElements, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_doublePtr));
 				return _GetDoubleArrayElements;
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_int _ReleaseBooleanArrayElements;
-		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_int ReleaseBooleanArrayElements {
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_int _ReleaseBooleanArrayElements;
+		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_int ReleaseBooleanArrayElements {
 			get {
 				if (_ReleaseBooleanArrayElements == null)
-					_ReleaseBooleanArrayElements = (JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_int) Marshal.GetDelegateForFunctionPointer (env.ReleaseBooleanArrayElements, typeof (JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_int));
+					_ReleaseBooleanArrayElements = (JniAction_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_int) Marshal.GetDelegateForFunctionPointer (env.ReleaseBooleanArrayElements, typeof (JniAction_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_int));
 				return _ReleaseBooleanArrayElements;
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_int _ReleaseByteArrayElements;
-		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_int ReleaseByteArrayElements {
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_sbytePtr_int _ReleaseByteArrayElements;
+		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_sbytePtr_int ReleaseByteArrayElements {
 			get {
 				if (_ReleaseByteArrayElements == null)
-					_ReleaseByteArrayElements = (JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_int) Marshal.GetDelegateForFunctionPointer (env.ReleaseByteArrayElements, typeof (JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_int));
+					_ReleaseByteArrayElements = (JniAction_JNIEnvPtr_JniReferenceSafeHandle_sbytePtr_int) Marshal.GetDelegateForFunctionPointer (env.ReleaseByteArrayElements, typeof (JniAction_JNIEnvPtr_JniReferenceSafeHandle_sbytePtr_int));
 				return _ReleaseByteArrayElements;
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_int _ReleaseCharArrayElements;
-		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_int ReleaseCharArrayElements {
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_charPtr_int _ReleaseCharArrayElements;
+		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_charPtr_int ReleaseCharArrayElements {
 			get {
 				if (_ReleaseCharArrayElements == null)
-					_ReleaseCharArrayElements = (JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_int) Marshal.GetDelegateForFunctionPointer (env.ReleaseCharArrayElements, typeof (JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_int));
+					_ReleaseCharArrayElements = (JniAction_JNIEnvPtr_JniReferenceSafeHandle_charPtr_int) Marshal.GetDelegateForFunctionPointer (env.ReleaseCharArrayElements, typeof (JniAction_JNIEnvPtr_JniReferenceSafeHandle_charPtr_int));
 				return _ReleaseCharArrayElements;
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_int _ReleaseShortArrayElements;
-		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_int ReleaseShortArrayElements {
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_shortPtr_int _ReleaseShortArrayElements;
+		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_shortPtr_int ReleaseShortArrayElements {
 			get {
 				if (_ReleaseShortArrayElements == null)
-					_ReleaseShortArrayElements = (JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_int) Marshal.GetDelegateForFunctionPointer (env.ReleaseShortArrayElements, typeof (JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_int));
+					_ReleaseShortArrayElements = (JniAction_JNIEnvPtr_JniReferenceSafeHandle_shortPtr_int) Marshal.GetDelegateForFunctionPointer (env.ReleaseShortArrayElements, typeof (JniAction_JNIEnvPtr_JniReferenceSafeHandle_shortPtr_int));
 				return _ReleaseShortArrayElements;
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_int _ReleaseIntArrayElements;
-		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_int ReleaseIntArrayElements {
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_intPtr_int _ReleaseIntArrayElements;
+		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_intPtr_int ReleaseIntArrayElements {
 			get {
 				if (_ReleaseIntArrayElements == null)
-					_ReleaseIntArrayElements = (JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_int) Marshal.GetDelegateForFunctionPointer (env.ReleaseIntArrayElements, typeof (JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_int));
+					_ReleaseIntArrayElements = (JniAction_JNIEnvPtr_JniReferenceSafeHandle_intPtr_int) Marshal.GetDelegateForFunctionPointer (env.ReleaseIntArrayElements, typeof (JniAction_JNIEnvPtr_JniReferenceSafeHandle_intPtr_int));
 				return _ReleaseIntArrayElements;
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_int _ReleaseLongArrayElements;
-		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_int ReleaseLongArrayElements {
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_longPtr_int _ReleaseLongArrayElements;
+		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_longPtr_int ReleaseLongArrayElements {
 			get {
 				if (_ReleaseLongArrayElements == null)
-					_ReleaseLongArrayElements = (JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_int) Marshal.GetDelegateForFunctionPointer (env.ReleaseLongArrayElements, typeof (JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_int));
+					_ReleaseLongArrayElements = (JniAction_JNIEnvPtr_JniReferenceSafeHandle_longPtr_int) Marshal.GetDelegateForFunctionPointer (env.ReleaseLongArrayElements, typeof (JniAction_JNIEnvPtr_JniReferenceSafeHandle_longPtr_int));
 				return _ReleaseLongArrayElements;
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_int _ReleaseFloatArrayElements;
-		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_int ReleaseFloatArrayElements {
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_floatPtr_int _ReleaseFloatArrayElements;
+		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_floatPtr_int ReleaseFloatArrayElements {
 			get {
 				if (_ReleaseFloatArrayElements == null)
-					_ReleaseFloatArrayElements = (JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_int) Marshal.GetDelegateForFunctionPointer (env.ReleaseFloatArrayElements, typeof (JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_int));
+					_ReleaseFloatArrayElements = (JniAction_JNIEnvPtr_JniReferenceSafeHandle_floatPtr_int) Marshal.GetDelegateForFunctionPointer (env.ReleaseFloatArrayElements, typeof (JniAction_JNIEnvPtr_JniReferenceSafeHandle_floatPtr_int));
 				return _ReleaseFloatArrayElements;
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_int _ReleaseDoubleArrayElements;
-		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_int ReleaseDoubleArrayElements {
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_doublePtr_int _ReleaseDoubleArrayElements;
+		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_doublePtr_int ReleaseDoubleArrayElements {
 			get {
 				if (_ReleaseDoubleArrayElements == null)
-					_ReleaseDoubleArrayElements = (JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_int) Marshal.GetDelegateForFunctionPointer (env.ReleaseDoubleArrayElements, typeof (JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_int));
+					_ReleaseDoubleArrayElements = (JniAction_JNIEnvPtr_JniReferenceSafeHandle_doublePtr_int) Marshal.GetDelegateForFunctionPointer (env.ReleaseDoubleArrayElements, typeof (JniAction_JNIEnvPtr_JniReferenceSafeHandle_doublePtr_int));
 				return _ReleaseDoubleArrayElements;
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr _GetBooleanArrayRegion;
-		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr GetBooleanArrayRegion {
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_boolPtr _GetBooleanArrayRegion;
+		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_boolPtr GetBooleanArrayRegion {
 			get {
 				if (_GetBooleanArrayRegion == null)
-					_GetBooleanArrayRegion = (JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr) Marshal.GetDelegateForFunctionPointer (env.GetBooleanArrayRegion, typeof (JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr));
+					_GetBooleanArrayRegion = (JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_boolPtr) Marshal.GetDelegateForFunctionPointer (env.GetBooleanArrayRegion, typeof (JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_boolPtr));
 				return _GetBooleanArrayRegion;
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr _GetByteArrayRegion;
-		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr GetByteArrayRegion {
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_sbytePtr _GetByteArrayRegion;
+		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_sbytePtr GetByteArrayRegion {
 			get {
 				if (_GetByteArrayRegion == null)
-					_GetByteArrayRegion = (JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr) Marshal.GetDelegateForFunctionPointer (env.GetByteArrayRegion, typeof (JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr));
+					_GetByteArrayRegion = (JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_sbytePtr) Marshal.GetDelegateForFunctionPointer (env.GetByteArrayRegion, typeof (JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_sbytePtr));
 				return _GetByteArrayRegion;
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr _GetCharArrayRegion;
-		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr GetCharArrayRegion {
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_charPtr _GetCharArrayRegion;
+		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_charPtr GetCharArrayRegion {
 			get {
 				if (_GetCharArrayRegion == null)
-					_GetCharArrayRegion = (JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr) Marshal.GetDelegateForFunctionPointer (env.GetCharArrayRegion, typeof (JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr));
+					_GetCharArrayRegion = (JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_charPtr) Marshal.GetDelegateForFunctionPointer (env.GetCharArrayRegion, typeof (JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_charPtr));
 				return _GetCharArrayRegion;
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr _GetShortArrayRegion;
-		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr GetShortArrayRegion {
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_shortPtr _GetShortArrayRegion;
+		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_shortPtr GetShortArrayRegion {
 			get {
 				if (_GetShortArrayRegion == null)
-					_GetShortArrayRegion = (JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr) Marshal.GetDelegateForFunctionPointer (env.GetShortArrayRegion, typeof (JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr));
+					_GetShortArrayRegion = (JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_shortPtr) Marshal.GetDelegateForFunctionPointer (env.GetShortArrayRegion, typeof (JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_shortPtr));
 				return _GetShortArrayRegion;
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr _GetIntArrayRegion;
-		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr GetIntArrayRegion {
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_intPtr _GetIntArrayRegion;
+		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_intPtr GetIntArrayRegion {
 			get {
 				if (_GetIntArrayRegion == null)
-					_GetIntArrayRegion = (JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr) Marshal.GetDelegateForFunctionPointer (env.GetIntArrayRegion, typeof (JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr));
+					_GetIntArrayRegion = (JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_intPtr) Marshal.GetDelegateForFunctionPointer (env.GetIntArrayRegion, typeof (JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_intPtr));
 				return _GetIntArrayRegion;
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr _GetLongArrayRegion;
-		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr GetLongArrayRegion {
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_longPtr _GetLongArrayRegion;
+		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_longPtr GetLongArrayRegion {
 			get {
 				if (_GetLongArrayRegion == null)
-					_GetLongArrayRegion = (JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr) Marshal.GetDelegateForFunctionPointer (env.GetLongArrayRegion, typeof (JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr));
+					_GetLongArrayRegion = (JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_longPtr) Marshal.GetDelegateForFunctionPointer (env.GetLongArrayRegion, typeof (JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_longPtr));
 				return _GetLongArrayRegion;
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr _GetFloatArrayRegion;
-		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr GetFloatArrayRegion {
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_floatPtr _GetFloatArrayRegion;
+		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_floatPtr GetFloatArrayRegion {
 			get {
 				if (_GetFloatArrayRegion == null)
-					_GetFloatArrayRegion = (JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr) Marshal.GetDelegateForFunctionPointer (env.GetFloatArrayRegion, typeof (JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr));
+					_GetFloatArrayRegion = (JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_floatPtr) Marshal.GetDelegateForFunctionPointer (env.GetFloatArrayRegion, typeof (JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_floatPtr));
 				return _GetFloatArrayRegion;
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr _GetDoubleArrayRegion;
-		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr GetDoubleArrayRegion {
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_doublePtr _GetDoubleArrayRegion;
+		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_doublePtr GetDoubleArrayRegion {
 			get {
 				if (_GetDoubleArrayRegion == null)
-					_GetDoubleArrayRegion = (JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr) Marshal.GetDelegateForFunctionPointer (env.GetDoubleArrayRegion, typeof (JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr));
+					_GetDoubleArrayRegion = (JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_doublePtr) Marshal.GetDelegateForFunctionPointer (env.GetDoubleArrayRegion, typeof (JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_doublePtr));
 				return _GetDoubleArrayRegion;
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr _SetBooleanArrayRegion;
-		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr SetBooleanArrayRegion {
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_boolPtr _SetBooleanArrayRegion;
+		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_boolPtr SetBooleanArrayRegion {
 			get {
 				if (_SetBooleanArrayRegion == null)
-					_SetBooleanArrayRegion = (JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr) Marshal.GetDelegateForFunctionPointer (env.SetBooleanArrayRegion, typeof (JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr));
+					_SetBooleanArrayRegion = (JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_boolPtr) Marshal.GetDelegateForFunctionPointer (env.SetBooleanArrayRegion, typeof (JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_boolPtr));
 				return _SetBooleanArrayRegion;
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr _SetByteArrayRegion;
-		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr SetByteArrayRegion {
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_sbytePtr _SetByteArrayRegion;
+		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_sbytePtr SetByteArrayRegion {
 			get {
 				if (_SetByteArrayRegion == null)
-					_SetByteArrayRegion = (JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr) Marshal.GetDelegateForFunctionPointer (env.SetByteArrayRegion, typeof (JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr));
+					_SetByteArrayRegion = (JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_sbytePtr) Marshal.GetDelegateForFunctionPointer (env.SetByteArrayRegion, typeof (JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_sbytePtr));
 				return _SetByteArrayRegion;
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr _SetCharArrayRegion;
-		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr SetCharArrayRegion {
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_charPtr _SetCharArrayRegion;
+		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_charPtr SetCharArrayRegion {
 			get {
 				if (_SetCharArrayRegion == null)
-					_SetCharArrayRegion = (JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr) Marshal.GetDelegateForFunctionPointer (env.SetCharArrayRegion, typeof (JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr));
+					_SetCharArrayRegion = (JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_charPtr) Marshal.GetDelegateForFunctionPointer (env.SetCharArrayRegion, typeof (JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_charPtr));
 				return _SetCharArrayRegion;
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr _SetShortArrayRegion;
-		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr SetShortArrayRegion {
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_shortPtr _SetShortArrayRegion;
+		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_shortPtr SetShortArrayRegion {
 			get {
 				if (_SetShortArrayRegion == null)
-					_SetShortArrayRegion = (JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr) Marshal.GetDelegateForFunctionPointer (env.SetShortArrayRegion, typeof (JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr));
+					_SetShortArrayRegion = (JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_shortPtr) Marshal.GetDelegateForFunctionPointer (env.SetShortArrayRegion, typeof (JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_shortPtr));
 				return _SetShortArrayRegion;
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr _SetIntArrayRegion;
-		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr SetIntArrayRegion {
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_intPtr _SetIntArrayRegion;
+		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_intPtr SetIntArrayRegion {
 			get {
 				if (_SetIntArrayRegion == null)
-					_SetIntArrayRegion = (JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr) Marshal.GetDelegateForFunctionPointer (env.SetIntArrayRegion, typeof (JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr));
+					_SetIntArrayRegion = (JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_intPtr) Marshal.GetDelegateForFunctionPointer (env.SetIntArrayRegion, typeof (JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_intPtr));
 				return _SetIntArrayRegion;
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr _SetLongArrayRegion;
-		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr SetLongArrayRegion {
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_longPtr _SetLongArrayRegion;
+		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_longPtr SetLongArrayRegion {
 			get {
 				if (_SetLongArrayRegion == null)
-					_SetLongArrayRegion = (JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr) Marshal.GetDelegateForFunctionPointer (env.SetLongArrayRegion, typeof (JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr));
+					_SetLongArrayRegion = (JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_longPtr) Marshal.GetDelegateForFunctionPointer (env.SetLongArrayRegion, typeof (JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_longPtr));
 				return _SetLongArrayRegion;
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr _SetFloatArrayRegion;
-		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr SetFloatArrayRegion {
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_floatPtr _SetFloatArrayRegion;
+		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_floatPtr SetFloatArrayRegion {
 			get {
 				if (_SetFloatArrayRegion == null)
-					_SetFloatArrayRegion = (JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr) Marshal.GetDelegateForFunctionPointer (env.SetFloatArrayRegion, typeof (JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr));
+					_SetFloatArrayRegion = (JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_floatPtr) Marshal.GetDelegateForFunctionPointer (env.SetFloatArrayRegion, typeof (JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_floatPtr));
 				return _SetFloatArrayRegion;
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr _SetDoubleArrayRegion;
-		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr SetDoubleArrayRegion {
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_doublePtr _SetDoubleArrayRegion;
+		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_doublePtr SetDoubleArrayRegion {
 			get {
 				if (_SetDoubleArrayRegion == null)
-					_SetDoubleArrayRegion = (JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr) Marshal.GetDelegateForFunctionPointer (env.SetDoubleArrayRegion, typeof (JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr));
+					_SetDoubleArrayRegion = (JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_doublePtr) Marshal.GetDelegateForFunctionPointer (env.SetDoubleArrayRegion, typeof (JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_doublePtr));
 				return _SetDoubleArrayRegion;
 			}
 		}
@@ -5202,11 +5174,11 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr _GetStringRegion;
-		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr GetStringRegion {
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_charPtr _GetStringRegion;
+		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_charPtr GetStringRegion {
 			get {
 				if (_GetStringRegion == null)
-					_GetStringRegion = (JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr) Marshal.GetDelegateForFunctionPointer (env.GetStringRegion, typeof (JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr));
+					_GetStringRegion = (JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_charPtr) Marshal.GetDelegateForFunctionPointer (env.GetStringRegion, typeof (JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_charPtr));
 				return _GetStringRegion;
 			}
 		}
@@ -5220,11 +5192,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_IntPtr _GetPrimitiveArrayCritical;
-		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_IntPtr GetPrimitiveArrayCritical {
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_IntPtr _GetPrimitiveArrayCritical;
+		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_IntPtr GetPrimitiveArrayCritical {
 			get {
 				if (_GetPrimitiveArrayCritical == null)
-					_GetPrimitiveArrayCritical = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_IntPtr) Marshal.GetDelegateForFunctionPointer (env.GetPrimitiveArrayCritical, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_IntPtr));
+					_GetPrimitiveArrayCritical = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_IntPtr) Marshal.GetDelegateForFunctionPointer (env.GetPrimitiveArrayCritical, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_IntPtr));
 				return _GetPrimitiveArrayCritical;
 			}
 		}
@@ -5238,11 +5210,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_string _GetStringCritical;
-		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_string GetStringCritical {
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_string _GetStringCritical;
+		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_string GetStringCritical {
 			get {
 				if (_GetStringCritical == null)
-					_GetStringCritical = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_string) Marshal.GetDelegateForFunctionPointer (env.GetStringCritical, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_string));
+					_GetStringCritical = (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_string) Marshal.GetDelegateForFunctionPointer (env.GetStringCritical, typeof (JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_string));
 				return _GetStringCritical;
 			}
 		}
@@ -5345,46 +5317,46 @@ namespace
 	unsafe delegate int JniFunc_JNIEnvPtr_int_int (JNIEnvPtr env, int capacity);
 	unsafe delegate void JniAction_JNIEnvPtr_IntPtr (JNIEnvPtr env, IntPtr instance);
 	unsafe delegate jobject JniFunc_JNIEnvPtr_jobject_IntPtr_jobject (JNIEnvPtr env, jobject type, IntPtr method);
-	unsafe delegate jobject JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_jobject (JNIEnvPtr env, jobject type, IntPtr method, JniArgumentValue* args);
+	unsafe delegate jobject JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_jobject (JNIEnvPtr env, jobject type, IntPtr method, JniArgumentValue* args);
 	unsafe delegate IntPtr JniFunc_JNIEnvPtr_jobject_string_string_IntPtr (JNIEnvPtr env, jobject type, string name, string signature);
 	unsafe delegate byte JniFunc_JNIEnvPtr_jobject_IntPtr_byte (JNIEnvPtr env, jobject instance, IntPtr method);
-	unsafe delegate byte JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_byte (JNIEnvPtr env, jobject instance, IntPtr method, JniArgumentValue* args);
+	unsafe delegate byte JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_byte (JNIEnvPtr env, jobject instance, IntPtr method, JniArgumentValue* args);
 	unsafe delegate sbyte JniFunc_JNIEnvPtr_jobject_IntPtr_sbyte (JNIEnvPtr env, jobject instance, IntPtr method);
-	unsafe delegate sbyte JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_sbyte (JNIEnvPtr env, jobject instance, IntPtr method, JniArgumentValue* args);
+	unsafe delegate sbyte JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_sbyte (JNIEnvPtr env, jobject instance, IntPtr method, JniArgumentValue* args);
 	unsafe delegate char JniFunc_JNIEnvPtr_jobject_IntPtr_char (JNIEnvPtr env, jobject instance, IntPtr method);
-	unsafe delegate char JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_char (JNIEnvPtr env, jobject instance, IntPtr method, JniArgumentValue* args);
+	unsafe delegate char JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_char (JNIEnvPtr env, jobject instance, IntPtr method, JniArgumentValue* args);
 	unsafe delegate short JniFunc_JNIEnvPtr_jobject_IntPtr_short (JNIEnvPtr env, jobject instance, IntPtr method);
-	unsafe delegate short JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_short (JNIEnvPtr env, jobject instance, IntPtr method, JniArgumentValue* args);
+	unsafe delegate short JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_short (JNIEnvPtr env, jobject instance, IntPtr method, JniArgumentValue* args);
 	unsafe delegate int JniFunc_JNIEnvPtr_jobject_IntPtr_int (JNIEnvPtr env, jobject instance, IntPtr method);
-	unsafe delegate int JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_int (JNIEnvPtr env, jobject instance, IntPtr method, JniArgumentValue* args);
+	unsafe delegate int JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_int (JNIEnvPtr env, jobject instance, IntPtr method, JniArgumentValue* args);
 	unsafe delegate long JniFunc_JNIEnvPtr_jobject_IntPtr_long (JNIEnvPtr env, jobject instance, IntPtr method);
-	unsafe delegate long JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_long (JNIEnvPtr env, jobject instance, IntPtr method, JniArgumentValue* args);
+	unsafe delegate long JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_long (JNIEnvPtr env, jobject instance, IntPtr method, JniArgumentValue* args);
 	unsafe delegate float JniFunc_JNIEnvPtr_jobject_IntPtr_float (JNIEnvPtr env, jobject instance, IntPtr method);
-	unsafe delegate float JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_float (JNIEnvPtr env, jobject instance, IntPtr method, JniArgumentValue* args);
+	unsafe delegate float JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_float (JNIEnvPtr env, jobject instance, IntPtr method, JniArgumentValue* args);
 	unsafe delegate double JniFunc_JNIEnvPtr_jobject_IntPtr_double (JNIEnvPtr env, jobject instance, IntPtr method);
-	unsafe delegate double JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_double (JNIEnvPtr env, jobject instance, IntPtr method, JniArgumentValue* args);
+	unsafe delegate double JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_double (JNIEnvPtr env, jobject instance, IntPtr method, JniArgumentValue* args);
 	unsafe delegate void JniAction_JNIEnvPtr_jobject_IntPtr (JNIEnvPtr env, jobject instance, IntPtr method);
-	unsafe delegate void JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef (JNIEnvPtr env, jobject instance, IntPtr method, JniArgumentValue* args);
+	unsafe delegate void JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr (JNIEnvPtr env, jobject instance, IntPtr method, JniArgumentValue* args);
 	unsafe delegate jobject JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_jobject (JNIEnvPtr env, jobject instance, jobject type, IntPtr method);
-	unsafe delegate jobject JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_jobject (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
+	unsafe delegate jobject JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_jobject (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
 	unsafe delegate byte JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_byte (JNIEnvPtr env, jobject instance, jobject type, IntPtr method);
-	unsafe delegate byte JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_byte (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
+	unsafe delegate byte JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_byte (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
 	unsafe delegate sbyte JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_sbyte (JNIEnvPtr env, jobject instance, jobject type, IntPtr method);
-	unsafe delegate sbyte JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_sbyte (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
+	unsafe delegate sbyte JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_sbyte (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
 	unsafe delegate char JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_char (JNIEnvPtr env, jobject instance, jobject type, IntPtr method);
-	unsafe delegate char JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_char (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
+	unsafe delegate char JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_char (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
 	unsafe delegate short JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_short (JNIEnvPtr env, jobject instance, jobject type, IntPtr method);
-	unsafe delegate short JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_short (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
+	unsafe delegate short JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_short (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
 	unsafe delegate int JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_int (JNIEnvPtr env, jobject instance, jobject type, IntPtr method);
-	unsafe delegate int JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_int (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
+	unsafe delegate int JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_int (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
 	unsafe delegate long JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_long (JNIEnvPtr env, jobject instance, jobject type, IntPtr method);
-	unsafe delegate long JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_long (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
+	unsafe delegate long JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_long (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
 	unsafe delegate float JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_float (JNIEnvPtr env, jobject instance, jobject type, IntPtr method);
-	unsafe delegate float JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_float (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
+	unsafe delegate float JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_float (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
 	unsafe delegate double JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_double (JNIEnvPtr env, jobject instance, jobject type, IntPtr method);
-	unsafe delegate double JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_double (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
+	unsafe delegate double JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_double (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
 	unsafe delegate void JniAction_JNIEnvPtr_jobject_jobject_IntPtr (JNIEnvPtr env, jobject instance, jobject type, IntPtr method);
-	unsafe delegate void JniAction_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
+	unsafe delegate void JniAction_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
 	unsafe delegate void JniAction_JNIEnvPtr_jobject_IntPtr_jobject (JNIEnvPtr env, jobject instance, IntPtr field, jobject value);
 	unsafe delegate void JniAction_JNIEnvPtr_jobject_IntPtr_byte (JNIEnvPtr env, jobject instance, IntPtr field, byte value);
 	unsafe delegate void JniAction_JNIEnvPtr_jobject_IntPtr_sbyte (JNIEnvPtr env, jobject instance, IntPtr field, sbyte value);
@@ -5395,17 +5367,42 @@ namespace
 	unsafe delegate void JniAction_JNIEnvPtr_jobject_IntPtr_float (JNIEnvPtr env, jobject instance, IntPtr field, float value);
 	unsafe delegate void JniAction_JNIEnvPtr_jobject_IntPtr_double (JNIEnvPtr env, jobject instance, IntPtr field, double value);
 	[UnmanagedFunctionPointerAttribute (CallingConvention.Cdecl, CharSet=CharSet.Unicode)]
-	unsafe delegate jobject JniFunc_JNIEnvPtr_IntPtr_int_jobject (JNIEnvPtr env, IntPtr unicodeChars, int length);
-	unsafe delegate IntPtr JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr (JNIEnvPtr env, jobject stringInstance, IntPtr isCopy);
-	unsafe delegate string JniFunc_JNIEnvPtr_jobject_IntPtr_string (JNIEnvPtr env, jobject stringInstance, IntPtr isCopy);
+	unsafe delegate jobject JniFunc_JNIEnvPtr_charPtr_int_jobject (JNIEnvPtr env, char* unicodeChars, int length);
+	unsafe delegate char* JniFunc_JNIEnvPtr_jobject_boolPtr_charPtr (JNIEnvPtr env, jobject stringInstance, bool* isCopy);
+	unsafe delegate void JniAction_JNIEnvPtr_jobject_charPtr (JNIEnvPtr env, jobject stringInstance, char* chars);
+	unsafe delegate string JniFunc_JNIEnvPtr_jobject_boolPtr_string (JNIEnvPtr env, jobject stringInstance, bool* isCopy);
 	unsafe delegate void JniAction_JNIEnvPtr_jobject_string (JNIEnvPtr env, jobject stringInstance, string utf);
 	unsafe delegate jobject JniFunc_JNIEnvPtr_int_jobject_jobject_jobject (JNIEnvPtr env, int length, jobject elementClass, jobject initialElement);
 	unsafe delegate jobject JniFunc_JNIEnvPtr_jobject_int_jobject (JNIEnvPtr env, jobject array, int index);
 	unsafe delegate void JniAction_JNIEnvPtr_jobject_int_jobject (JNIEnvPtr env, jobject array, int index, jobject value);
 	unsafe delegate jobject JniFunc_JNIEnvPtr_int_jobject (JNIEnvPtr env, int length);
-	unsafe delegate void JniAction_JNIEnvPtr_jobject_int_int_IntPtr (JNIEnvPtr env, jobject array, int start, int length, IntPtr buffer);
+	unsafe delegate bool* JniFunc_JNIEnvPtr_jobject_boolPtr_boolPtr (JNIEnvPtr env, jobject array, bool* isCopy);
+	unsafe delegate sbyte* JniFunc_JNIEnvPtr_jobject_boolPtr_sbytePtr (JNIEnvPtr env, jobject array, bool* isCopy);
+	unsafe delegate short* JniFunc_JNIEnvPtr_jobject_boolPtr_shortPtr (JNIEnvPtr env, jobject array, bool* isCopy);
+	unsafe delegate int* JniFunc_JNIEnvPtr_jobject_boolPtr_intPtr (JNIEnvPtr env, jobject array, bool* isCopy);
+	unsafe delegate long* JniFunc_JNIEnvPtr_jobject_boolPtr_longPtr (JNIEnvPtr env, jobject array, bool* isCopy);
+	unsafe delegate float* JniFunc_JNIEnvPtr_jobject_boolPtr_floatPtr (JNIEnvPtr env, jobject array, bool* isCopy);
+	unsafe delegate double* JniFunc_JNIEnvPtr_jobject_boolPtr_doublePtr (JNIEnvPtr env, jobject array, bool* isCopy);
+	unsafe delegate void JniAction_JNIEnvPtr_jobject_boolPtr_int (JNIEnvPtr env, jobject array, bool* elements, int mode);
+	unsafe delegate void JniAction_JNIEnvPtr_jobject_sbytePtr_int (JNIEnvPtr env, jobject array, sbyte* elements, int mode);
+	unsafe delegate void JniAction_JNIEnvPtr_jobject_charPtr_int (JNIEnvPtr env, jobject array, char* elements, int mode);
+	unsafe delegate void JniAction_JNIEnvPtr_jobject_shortPtr_int (JNIEnvPtr env, jobject array, short* elements, int mode);
+	unsafe delegate void JniAction_JNIEnvPtr_jobject_intPtr_int (JNIEnvPtr env, jobject array, int* elements, int mode);
+	unsafe delegate void JniAction_JNIEnvPtr_jobject_longPtr_int (JNIEnvPtr env, jobject array, long* elements, int mode);
+	unsafe delegate void JniAction_JNIEnvPtr_jobject_floatPtr_int (JNIEnvPtr env, jobject array, float* elements, int mode);
+	unsafe delegate void JniAction_JNIEnvPtr_jobject_doublePtr_int (JNIEnvPtr env, jobject array, double* elements, int mode);
+	unsafe delegate void JniAction_JNIEnvPtr_jobject_int_int_boolPtr (JNIEnvPtr env, jobject array, int start, int length, bool* buffer);
+	unsafe delegate void JniAction_JNIEnvPtr_jobject_int_int_sbytePtr (JNIEnvPtr env, jobject array, int start, int length, sbyte* buffer);
+	unsafe delegate void JniAction_JNIEnvPtr_jobject_int_int_charPtr (JNIEnvPtr env, jobject array, int start, int length, char* buffer);
+	unsafe delegate void JniAction_JNIEnvPtr_jobject_int_int_shortPtr (JNIEnvPtr env, jobject array, int start, int length, short* buffer);
+	unsafe delegate void JniAction_JNIEnvPtr_jobject_int_int_intPtr (JNIEnvPtr env, jobject array, int start, int length, int* buffer);
+	unsafe delegate void JniAction_JNIEnvPtr_jobject_int_int_longPtr (JNIEnvPtr env, jobject array, int start, int length, long* buffer);
+	unsafe delegate void JniAction_JNIEnvPtr_jobject_int_int_floatPtr (JNIEnvPtr env, jobject array, int start, int length, float* buffer);
+	unsafe delegate void JniAction_JNIEnvPtr_jobject_int_int_doublePtr (JNIEnvPtr env, jobject array, int start, int length, double* buffer);
 	unsafe delegate int JniFunc_JNIEnvPtr_jobject_JniNativeMethodRegistrationArray_int_int (JNIEnvPtr env, jobject type, JniNativeMethodRegistration [] methods, int numMethods);
 	unsafe delegate int JniFunc_JNIEnvPtr_outIntPtr_int (JNIEnvPtr env, out IntPtr vm);
+	unsafe delegate void JniAction_JNIEnvPtr_jobject_int_int_IntPtr (JNIEnvPtr env, jobject stringInstance, int start, int length, IntPtr buffer);
+	unsafe delegate IntPtr JniFunc_JNIEnvPtr_jobject_boolPtr_IntPtr (JNIEnvPtr env, jobject array, bool* isCopy);
 	unsafe delegate byte JniFunc_JNIEnvPtr_byte (JNIEnvPtr env);
 	unsafe delegate jobject JniFunc_JNIEnvPtr_IntPtr_long_jobject (JNIEnvPtr env, IntPtr address, long capacity);
 	unsafe delegate long JniFunc_JNIEnvPtr_jobject_long (JNIEnvPtr env, jobject buffer);
@@ -5535,7 +5532,7 @@ namespace
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		public static unsafe IntPtr GetBooleanArrayElements (JniObjectReference array, IntPtr isCopy)
+		public static unsafe bool* GetBooleanArrayElements (JniObjectReference array, bool* isCopy)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
@@ -5545,7 +5542,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe IntPtr GetByteArrayElements (JniObjectReference array, IntPtr isCopy)
+		public static unsafe sbyte* GetByteArrayElements (JniObjectReference array, bool* isCopy)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
@@ -5555,7 +5552,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe IntPtr GetCharArrayElements (JniObjectReference array, IntPtr isCopy)
+		public static unsafe char* GetCharArrayElements (JniObjectReference array, bool* isCopy)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
@@ -5565,7 +5562,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe IntPtr GetShortArrayElements (JniObjectReference array, IntPtr isCopy)
+		public static unsafe short* GetShortArrayElements (JniObjectReference array, bool* isCopy)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
@@ -5575,7 +5572,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe IntPtr GetIntArrayElements (JniObjectReference array, IntPtr isCopy)
+		public static unsafe int* GetIntArrayElements (JniObjectReference array, bool* isCopy)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
@@ -5585,7 +5582,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe IntPtr GetLongArrayElements (JniObjectReference array, IntPtr isCopy)
+		public static unsafe long* GetLongArrayElements (JniObjectReference array, bool* isCopy)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
@@ -5595,7 +5592,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe IntPtr GetFloatArrayElements (JniObjectReference array, IntPtr isCopy)
+		public static unsafe float* GetFloatArrayElements (JniObjectReference array, bool* isCopy)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
@@ -5605,7 +5602,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe IntPtr GetDoubleArrayElements (JniObjectReference array, IntPtr isCopy)
+		public static unsafe double* GetDoubleArrayElements (JniObjectReference array, bool* isCopy)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
@@ -5615,100 +5612,82 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe void ReleaseBooleanArrayElements (JniObjectReference array, IntPtr elements, int mode)
+		public static unsafe void ReleaseBooleanArrayElements (JniObjectReference array, bool* elements, int mode)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (elements == IntPtr.Zero)
-				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", "elements");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.ReleaseBooleanArrayElements (__info.EnvironmentPointer, array.Handle, elements, mode);
 		}
 
-		public static unsafe void ReleaseByteArrayElements (JniObjectReference array, IntPtr elements, int mode)
+		public static unsafe void ReleaseByteArrayElements (JniObjectReference array, sbyte* elements, int mode)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (elements == IntPtr.Zero)
-				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", "elements");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.ReleaseByteArrayElements (__info.EnvironmentPointer, array.Handle, elements, mode);
 		}
 
-		public static unsafe void ReleaseCharArrayElements (JniObjectReference array, IntPtr elements, int mode)
+		public static unsafe void ReleaseCharArrayElements (JniObjectReference array, char* elements, int mode)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (elements == IntPtr.Zero)
-				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", "elements");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.ReleaseCharArrayElements (__info.EnvironmentPointer, array.Handle, elements, mode);
 		}
 
-		public static unsafe void ReleaseShortArrayElements (JniObjectReference array, IntPtr elements, int mode)
+		public static unsafe void ReleaseShortArrayElements (JniObjectReference array, short* elements, int mode)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (elements == IntPtr.Zero)
-				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", "elements");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.ReleaseShortArrayElements (__info.EnvironmentPointer, array.Handle, elements, mode);
 		}
 
-		public static unsafe void ReleaseIntArrayElements (JniObjectReference array, IntPtr elements, int mode)
+		public static unsafe void ReleaseIntArrayElements (JniObjectReference array, int* elements, int mode)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (elements == IntPtr.Zero)
-				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", "elements");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.ReleaseIntArrayElements (__info.EnvironmentPointer, array.Handle, elements, mode);
 		}
 
-		public static unsafe void ReleaseLongArrayElements (JniObjectReference array, IntPtr elements, int mode)
+		public static unsafe void ReleaseLongArrayElements (JniObjectReference array, long* elements, int mode)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (elements == IntPtr.Zero)
-				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", "elements");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.ReleaseLongArrayElements (__info.EnvironmentPointer, array.Handle, elements, mode);
 		}
 
-		public static unsafe void ReleaseFloatArrayElements (JniObjectReference array, IntPtr elements, int mode)
+		public static unsafe void ReleaseFloatArrayElements (JniObjectReference array, float* elements, int mode)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (elements == IntPtr.Zero)
-				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", "elements");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.ReleaseFloatArrayElements (__info.EnvironmentPointer, array.Handle, elements, mode);
 		}
 
-		public static unsafe void ReleaseDoubleArrayElements (JniObjectReference array, IntPtr elements, int mode)
+		public static unsafe void ReleaseDoubleArrayElements (JniObjectReference array, double* elements, int mode)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (elements == IntPtr.Zero)
-				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", "elements");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.ReleaseDoubleArrayElements (__info.EnvironmentPointer, array.Handle, elements, mode);
 		}
 
-		public static unsafe void GetBooleanArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
+		public static unsafe void GetBooleanArrayRegion (JniObjectReference array, int start, int length, bool* buffer)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (buffer == IntPtr.Zero)
-				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.GetBooleanArrayRegion (__info.EnvironmentPointer, array.Handle, start, length, buffer);
@@ -5719,12 +5698,10 @@ namespace
 
 		}
 
-		public static unsafe void GetByteArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
+		public static unsafe void GetByteArrayRegion (JniObjectReference array, int start, int length, sbyte* buffer)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (buffer == IntPtr.Zero)
-				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.GetByteArrayRegion (__info.EnvironmentPointer, array.Handle, start, length, buffer);
@@ -5735,12 +5712,10 @@ namespace
 
 		}
 
-		public static unsafe void GetCharArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
+		public static unsafe void GetCharArrayRegion (JniObjectReference array, int start, int length, char* buffer)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (buffer == IntPtr.Zero)
-				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.GetCharArrayRegion (__info.EnvironmentPointer, array.Handle, start, length, buffer);
@@ -5751,12 +5726,10 @@ namespace
 
 		}
 
-		public static unsafe void GetShortArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
+		public static unsafe void GetShortArrayRegion (JniObjectReference array, int start, int length, short* buffer)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (buffer == IntPtr.Zero)
-				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.GetShortArrayRegion (__info.EnvironmentPointer, array.Handle, start, length, buffer);
@@ -5767,12 +5740,10 @@ namespace
 
 		}
 
-		public static unsafe void GetIntArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
+		public static unsafe void GetIntArrayRegion (JniObjectReference array, int start, int length, int* buffer)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (buffer == IntPtr.Zero)
-				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.GetIntArrayRegion (__info.EnvironmentPointer, array.Handle, start, length, buffer);
@@ -5783,12 +5754,10 @@ namespace
 
 		}
 
-		public static unsafe void GetLongArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
+		public static unsafe void GetLongArrayRegion (JniObjectReference array, int start, int length, long* buffer)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (buffer == IntPtr.Zero)
-				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.GetLongArrayRegion (__info.EnvironmentPointer, array.Handle, start, length, buffer);
@@ -5799,12 +5768,10 @@ namespace
 
 		}
 
-		public static unsafe void GetFloatArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
+		public static unsafe void GetFloatArrayRegion (JniObjectReference array, int start, int length, float* buffer)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (buffer == IntPtr.Zero)
-				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.GetFloatArrayRegion (__info.EnvironmentPointer, array.Handle, start, length, buffer);
@@ -5815,12 +5782,10 @@ namespace
 
 		}
 
-		public static unsafe void GetDoubleArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
+		public static unsafe void GetDoubleArrayRegion (JniObjectReference array, int start, int length, double* buffer)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (buffer == IntPtr.Zero)
-				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.GetDoubleArrayRegion (__info.EnvironmentPointer, array.Handle, start, length, buffer);
@@ -5831,12 +5796,10 @@ namespace
 
 		}
 
-		public static unsafe void SetBooleanArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
+		public static unsafe void SetBooleanArrayRegion (JniObjectReference array, int start, int length, bool* buffer)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (buffer == IntPtr.Zero)
-				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetBooleanArrayRegion (__info.EnvironmentPointer, array.Handle, start, length, buffer);
@@ -5847,12 +5810,10 @@ namespace
 
 		}
 
-		public static unsafe void SetByteArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
+		public static unsafe void SetByteArrayRegion (JniObjectReference array, int start, int length, sbyte* buffer)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (buffer == IntPtr.Zero)
-				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetByteArrayRegion (__info.EnvironmentPointer, array.Handle, start, length, buffer);
@@ -5863,12 +5824,10 @@ namespace
 
 		}
 
-		public static unsafe void SetCharArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
+		public static unsafe void SetCharArrayRegion (JniObjectReference array, int start, int length, char* buffer)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (buffer == IntPtr.Zero)
-				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetCharArrayRegion (__info.EnvironmentPointer, array.Handle, start, length, buffer);
@@ -5879,12 +5838,10 @@ namespace
 
 		}
 
-		public static unsafe void SetShortArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
+		public static unsafe void SetShortArrayRegion (JniObjectReference array, int start, int length, short* buffer)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (buffer == IntPtr.Zero)
-				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetShortArrayRegion (__info.EnvironmentPointer, array.Handle, start, length, buffer);
@@ -5895,12 +5852,10 @@ namespace
 
 		}
 
-		public static unsafe void SetIntArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
+		public static unsafe void SetIntArrayRegion (JniObjectReference array, int start, int length, int* buffer)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (buffer == IntPtr.Zero)
-				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetIntArrayRegion (__info.EnvironmentPointer, array.Handle, start, length, buffer);
@@ -5911,12 +5866,10 @@ namespace
 
 		}
 
-		public static unsafe void SetLongArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
+		public static unsafe void SetLongArrayRegion (JniObjectReference array, int start, int length, long* buffer)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (buffer == IntPtr.Zero)
-				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetLongArrayRegion (__info.EnvironmentPointer, array.Handle, start, length, buffer);
@@ -5927,12 +5880,10 @@ namespace
 
 		}
 
-		public static unsafe void SetFloatArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
+		public static unsafe void SetFloatArrayRegion (JniObjectReference array, int start, int length, float* buffer)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (buffer == IntPtr.Zero)
-				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetFloatArrayRegion (__info.EnvironmentPointer, array.Handle, start, length, buffer);
@@ -5943,12 +5894,10 @@ namespace
 
 		}
 
-		public static unsafe void SetDoubleArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
+		public static unsafe void SetDoubleArrayRegion (JniObjectReference array, int start, int length, double* buffer)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (buffer == IntPtr.Zero)
-				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetDoubleArrayRegion (__info.EnvironmentPointer, array.Handle, start, length, buffer);
@@ -8031,11 +7980,8 @@ namespace
 
 	public static partial class Strings {
 
-		public static unsafe JniObjectReference NewString (IntPtr unicodeChars, int length)
+		public static unsafe JniObjectReference NewString (char* unicodeChars, int length)
 		{
-			if (unicodeChars == IntPtr.Zero)
-				throw new ArgumentException ("'unicodeChars' must not be IntPtr.Zero.", "unicodeChars");
-
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.NewString (__info.EnvironmentPointer, unicodeChars, length);
 
@@ -8057,7 +8003,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe IntPtr GetStringChars (JniObjectReference stringInstance, IntPtr isCopy)
+		public static unsafe char* GetStringChars (JniObjectReference stringInstance, bool* isCopy)
 		{
 			if (stringInstance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`stringInstance` must not be IntPtr.Zero.", "stringInstance");
@@ -8067,12 +8013,10 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe void ReleaseStringChars (JniObjectReference stringInstance, IntPtr chars)
+		public static unsafe void ReleaseStringChars (JniObjectReference stringInstance, char* chars)
 		{
 			if (stringInstance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`stringInstance` must not be IntPtr.Zero.", "stringInstance");
-			if (chars == IntPtr.Zero)
-				throw new ArgumentException ("'chars' must not be IntPtr.Zero.", "chars");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.ReleaseStringChars (__info.EnvironmentPointer, stringInstance.Handle, chars);
@@ -8442,11 +8386,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_jobject _NewObjectA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_jobject NewObjectA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_jobject _NewObjectA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_jobject NewObjectA {
 			get {
 				if (_NewObjectA == null)
-					_NewObjectA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_jobject) Marshal.GetDelegateForFunctionPointer (env.NewObjectA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_jobject));
+					_NewObjectA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_jobject) Marshal.GetDelegateForFunctionPointer (env.NewObjectA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_jobject));
 				return _NewObjectA;
 			}
 		}
@@ -8487,11 +8431,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_jobject _CallObjectMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_jobject CallObjectMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_jobject _CallObjectMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_jobject CallObjectMethodA {
 			get {
 				if (_CallObjectMethodA == null)
-					_CallObjectMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_jobject) Marshal.GetDelegateForFunctionPointer (env.CallObjectMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_jobject));
+					_CallObjectMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_jobject) Marshal.GetDelegateForFunctionPointer (env.CallObjectMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_jobject));
 				return _CallObjectMethodA;
 			}
 		}
@@ -8505,11 +8449,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_byte _CallBooleanMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_byte CallBooleanMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_byte _CallBooleanMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_byte CallBooleanMethodA {
 			get {
 				if (_CallBooleanMethodA == null)
-					_CallBooleanMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_byte) Marshal.GetDelegateForFunctionPointer (env.CallBooleanMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_byte));
+					_CallBooleanMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_byte) Marshal.GetDelegateForFunctionPointer (env.CallBooleanMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_byte));
 				return _CallBooleanMethodA;
 			}
 		}
@@ -8523,11 +8467,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_sbyte _CallByteMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_sbyte CallByteMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_sbyte _CallByteMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_sbyte CallByteMethodA {
 			get {
 				if (_CallByteMethodA == null)
-					_CallByteMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_sbyte) Marshal.GetDelegateForFunctionPointer (env.CallByteMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_sbyte));
+					_CallByteMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_sbyte) Marshal.GetDelegateForFunctionPointer (env.CallByteMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_sbyte));
 				return _CallByteMethodA;
 			}
 		}
@@ -8541,11 +8485,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_char _CallCharMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_char CallCharMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_char _CallCharMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_char CallCharMethodA {
 			get {
 				if (_CallCharMethodA == null)
-					_CallCharMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_char) Marshal.GetDelegateForFunctionPointer (env.CallCharMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_char));
+					_CallCharMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_char) Marshal.GetDelegateForFunctionPointer (env.CallCharMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_char));
 				return _CallCharMethodA;
 			}
 		}
@@ -8559,11 +8503,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_short _CallShortMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_short CallShortMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_short _CallShortMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_short CallShortMethodA {
 			get {
 				if (_CallShortMethodA == null)
-					_CallShortMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_short) Marshal.GetDelegateForFunctionPointer (env.CallShortMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_short));
+					_CallShortMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_short) Marshal.GetDelegateForFunctionPointer (env.CallShortMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_short));
 				return _CallShortMethodA;
 			}
 		}
@@ -8577,11 +8521,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_int _CallIntMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_int CallIntMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_int _CallIntMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_int CallIntMethodA {
 			get {
 				if (_CallIntMethodA == null)
-					_CallIntMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_int) Marshal.GetDelegateForFunctionPointer (env.CallIntMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_int));
+					_CallIntMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_int) Marshal.GetDelegateForFunctionPointer (env.CallIntMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_int));
 				return _CallIntMethodA;
 			}
 		}
@@ -8595,11 +8539,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_long _CallLongMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_long CallLongMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_long _CallLongMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_long CallLongMethodA {
 			get {
 				if (_CallLongMethodA == null)
-					_CallLongMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_long) Marshal.GetDelegateForFunctionPointer (env.CallLongMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_long));
+					_CallLongMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_long) Marshal.GetDelegateForFunctionPointer (env.CallLongMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_long));
 				return _CallLongMethodA;
 			}
 		}
@@ -8613,11 +8557,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_float _CallFloatMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_float CallFloatMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_float _CallFloatMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_float CallFloatMethodA {
 			get {
 				if (_CallFloatMethodA == null)
-					_CallFloatMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_float) Marshal.GetDelegateForFunctionPointer (env.CallFloatMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_float));
+					_CallFloatMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_float) Marshal.GetDelegateForFunctionPointer (env.CallFloatMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_float));
 				return _CallFloatMethodA;
 			}
 		}
@@ -8631,11 +8575,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_double _CallDoubleMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_double CallDoubleMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_double _CallDoubleMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_double CallDoubleMethodA {
 			get {
 				if (_CallDoubleMethodA == null)
-					_CallDoubleMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_double) Marshal.GetDelegateForFunctionPointer (env.CallDoubleMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_double));
+					_CallDoubleMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_double) Marshal.GetDelegateForFunctionPointer (env.CallDoubleMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_double));
 				return _CallDoubleMethodA;
 			}
 		}
@@ -8649,11 +8593,11 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef _CallVoidMethodA;
-		public JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef CallVoidMethodA {
+		JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr _CallVoidMethodA;
+		public JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr CallVoidMethodA {
 			get {
 				if (_CallVoidMethodA == null)
-					_CallVoidMethodA = (JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef) Marshal.GetDelegateForFunctionPointer (env.CallVoidMethodA, typeof (JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef));
+					_CallVoidMethodA = (JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr) Marshal.GetDelegateForFunctionPointer (env.CallVoidMethodA, typeof (JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr));
 				return _CallVoidMethodA;
 			}
 		}
@@ -8667,11 +8611,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_jobject _CallNonvirtualObjectMethodA;
-		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_jobject CallNonvirtualObjectMethodA {
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_jobject _CallNonvirtualObjectMethodA;
+		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_jobject CallNonvirtualObjectMethodA {
 			get {
 				if (_CallNonvirtualObjectMethodA == null)
-					_CallNonvirtualObjectMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_jobject) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualObjectMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_jobject));
+					_CallNonvirtualObjectMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_jobject) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualObjectMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_jobject));
 				return _CallNonvirtualObjectMethodA;
 			}
 		}
@@ -8685,11 +8629,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_byte _CallNonvirtualBooleanMethodA;
-		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_byte CallNonvirtualBooleanMethodA {
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_byte _CallNonvirtualBooleanMethodA;
+		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_byte CallNonvirtualBooleanMethodA {
 			get {
 				if (_CallNonvirtualBooleanMethodA == null)
-					_CallNonvirtualBooleanMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_byte) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualBooleanMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_byte));
+					_CallNonvirtualBooleanMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_byte) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualBooleanMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_byte));
 				return _CallNonvirtualBooleanMethodA;
 			}
 		}
@@ -8703,11 +8647,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_sbyte _CallNonvirtualByteMethodA;
-		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_sbyte CallNonvirtualByteMethodA {
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_sbyte _CallNonvirtualByteMethodA;
+		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_sbyte CallNonvirtualByteMethodA {
 			get {
 				if (_CallNonvirtualByteMethodA == null)
-					_CallNonvirtualByteMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_sbyte) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualByteMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_sbyte));
+					_CallNonvirtualByteMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_sbyte) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualByteMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_sbyte));
 				return _CallNonvirtualByteMethodA;
 			}
 		}
@@ -8721,11 +8665,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_char _CallNonvirtualCharMethodA;
-		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_char CallNonvirtualCharMethodA {
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_char _CallNonvirtualCharMethodA;
+		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_char CallNonvirtualCharMethodA {
 			get {
 				if (_CallNonvirtualCharMethodA == null)
-					_CallNonvirtualCharMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_char) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualCharMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_char));
+					_CallNonvirtualCharMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_char) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualCharMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_char));
 				return _CallNonvirtualCharMethodA;
 			}
 		}
@@ -8739,11 +8683,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_short _CallNonvirtualShortMethodA;
-		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_short CallNonvirtualShortMethodA {
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_short _CallNonvirtualShortMethodA;
+		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_short CallNonvirtualShortMethodA {
 			get {
 				if (_CallNonvirtualShortMethodA == null)
-					_CallNonvirtualShortMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_short) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualShortMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_short));
+					_CallNonvirtualShortMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_short) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualShortMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_short));
 				return _CallNonvirtualShortMethodA;
 			}
 		}
@@ -8757,11 +8701,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_int _CallNonvirtualIntMethodA;
-		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_int CallNonvirtualIntMethodA {
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_int _CallNonvirtualIntMethodA;
+		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_int CallNonvirtualIntMethodA {
 			get {
 				if (_CallNonvirtualIntMethodA == null)
-					_CallNonvirtualIntMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_int) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualIntMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_int));
+					_CallNonvirtualIntMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_int) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualIntMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_int));
 				return _CallNonvirtualIntMethodA;
 			}
 		}
@@ -8775,11 +8719,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_long _CallNonvirtualLongMethodA;
-		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_long CallNonvirtualLongMethodA {
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_long _CallNonvirtualLongMethodA;
+		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_long CallNonvirtualLongMethodA {
 			get {
 				if (_CallNonvirtualLongMethodA == null)
-					_CallNonvirtualLongMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_long) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualLongMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_long));
+					_CallNonvirtualLongMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_long) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualLongMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_long));
 				return _CallNonvirtualLongMethodA;
 			}
 		}
@@ -8793,11 +8737,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_float _CallNonvirtualFloatMethodA;
-		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_float CallNonvirtualFloatMethodA {
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_float _CallNonvirtualFloatMethodA;
+		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_float CallNonvirtualFloatMethodA {
 			get {
 				if (_CallNonvirtualFloatMethodA == null)
-					_CallNonvirtualFloatMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_float) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualFloatMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_float));
+					_CallNonvirtualFloatMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_float) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualFloatMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_float));
 				return _CallNonvirtualFloatMethodA;
 			}
 		}
@@ -8811,11 +8755,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_double _CallNonvirtualDoubleMethodA;
-		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_double CallNonvirtualDoubleMethodA {
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_double _CallNonvirtualDoubleMethodA;
+		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_double CallNonvirtualDoubleMethodA {
 			get {
 				if (_CallNonvirtualDoubleMethodA == null)
-					_CallNonvirtualDoubleMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_double) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualDoubleMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_double));
+					_CallNonvirtualDoubleMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_double) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualDoubleMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_double));
 				return _CallNonvirtualDoubleMethodA;
 			}
 		}
@@ -8829,11 +8773,11 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef _CallNonvirtualVoidMethodA;
-		public JniAction_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef CallNonvirtualVoidMethodA {
+		JniAction_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr _CallNonvirtualVoidMethodA;
+		public JniAction_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr CallNonvirtualVoidMethodA {
 			get {
 				if (_CallNonvirtualVoidMethodA == null)
-					_CallNonvirtualVoidMethodA = (JniAction_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualVoidMethodA, typeof (JniAction_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef));
+					_CallNonvirtualVoidMethodA = (JniAction_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualVoidMethodA, typeof (JniAction_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr));
 				return _CallNonvirtualVoidMethodA;
 			}
 		}
@@ -9027,11 +8971,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_jobject _CallStaticObjectMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_jobject CallStaticObjectMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_jobject _CallStaticObjectMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_jobject CallStaticObjectMethodA {
 			get {
 				if (_CallStaticObjectMethodA == null)
-					_CallStaticObjectMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_jobject) Marshal.GetDelegateForFunctionPointer (env.CallStaticObjectMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_jobject));
+					_CallStaticObjectMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_jobject) Marshal.GetDelegateForFunctionPointer (env.CallStaticObjectMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_jobject));
 				return _CallStaticObjectMethodA;
 			}
 		}
@@ -9045,11 +8989,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_byte _CallStaticBooleanMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_byte CallStaticBooleanMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_byte _CallStaticBooleanMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_byte CallStaticBooleanMethodA {
 			get {
 				if (_CallStaticBooleanMethodA == null)
-					_CallStaticBooleanMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_byte) Marshal.GetDelegateForFunctionPointer (env.CallStaticBooleanMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_byte));
+					_CallStaticBooleanMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_byte) Marshal.GetDelegateForFunctionPointer (env.CallStaticBooleanMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_byte));
 				return _CallStaticBooleanMethodA;
 			}
 		}
@@ -9063,11 +9007,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_sbyte _CallStaticByteMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_sbyte CallStaticByteMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_sbyte _CallStaticByteMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_sbyte CallStaticByteMethodA {
 			get {
 				if (_CallStaticByteMethodA == null)
-					_CallStaticByteMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_sbyte) Marshal.GetDelegateForFunctionPointer (env.CallStaticByteMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_sbyte));
+					_CallStaticByteMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_sbyte) Marshal.GetDelegateForFunctionPointer (env.CallStaticByteMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_sbyte));
 				return _CallStaticByteMethodA;
 			}
 		}
@@ -9081,11 +9025,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_char _CallStaticCharMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_char CallStaticCharMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_char _CallStaticCharMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_char CallStaticCharMethodA {
 			get {
 				if (_CallStaticCharMethodA == null)
-					_CallStaticCharMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_char) Marshal.GetDelegateForFunctionPointer (env.CallStaticCharMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_char));
+					_CallStaticCharMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_char) Marshal.GetDelegateForFunctionPointer (env.CallStaticCharMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_char));
 				return _CallStaticCharMethodA;
 			}
 		}
@@ -9099,11 +9043,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_short _CallStaticShortMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_short CallStaticShortMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_short _CallStaticShortMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_short CallStaticShortMethodA {
 			get {
 				if (_CallStaticShortMethodA == null)
-					_CallStaticShortMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_short) Marshal.GetDelegateForFunctionPointer (env.CallStaticShortMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_short));
+					_CallStaticShortMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_short) Marshal.GetDelegateForFunctionPointer (env.CallStaticShortMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_short));
 				return _CallStaticShortMethodA;
 			}
 		}
@@ -9117,11 +9061,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_int _CallStaticIntMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_int CallStaticIntMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_int _CallStaticIntMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_int CallStaticIntMethodA {
 			get {
 				if (_CallStaticIntMethodA == null)
-					_CallStaticIntMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_int) Marshal.GetDelegateForFunctionPointer (env.CallStaticIntMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_int));
+					_CallStaticIntMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_int) Marshal.GetDelegateForFunctionPointer (env.CallStaticIntMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_int));
 				return _CallStaticIntMethodA;
 			}
 		}
@@ -9135,11 +9079,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_long _CallStaticLongMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_long CallStaticLongMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_long _CallStaticLongMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_long CallStaticLongMethodA {
 			get {
 				if (_CallStaticLongMethodA == null)
-					_CallStaticLongMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_long) Marshal.GetDelegateForFunctionPointer (env.CallStaticLongMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_long));
+					_CallStaticLongMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_long) Marshal.GetDelegateForFunctionPointer (env.CallStaticLongMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_long));
 				return _CallStaticLongMethodA;
 			}
 		}
@@ -9153,11 +9097,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_float _CallStaticFloatMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_float CallStaticFloatMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_float _CallStaticFloatMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_float CallStaticFloatMethodA {
 			get {
 				if (_CallStaticFloatMethodA == null)
-					_CallStaticFloatMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_float) Marshal.GetDelegateForFunctionPointer (env.CallStaticFloatMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_float));
+					_CallStaticFloatMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_float) Marshal.GetDelegateForFunctionPointer (env.CallStaticFloatMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_float));
 				return _CallStaticFloatMethodA;
 			}
 		}
@@ -9171,11 +9115,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_double _CallStaticDoubleMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_double CallStaticDoubleMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_double _CallStaticDoubleMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_double CallStaticDoubleMethodA {
 			get {
 				if (_CallStaticDoubleMethodA == null)
-					_CallStaticDoubleMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_double) Marshal.GetDelegateForFunctionPointer (env.CallStaticDoubleMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_double));
+					_CallStaticDoubleMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_double) Marshal.GetDelegateForFunctionPointer (env.CallStaticDoubleMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_double));
 				return _CallStaticDoubleMethodA;
 			}
 		}
@@ -9189,11 +9133,11 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef _CallStaticVoidMethodA;
-		public JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef CallStaticVoidMethodA {
+		JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr _CallStaticVoidMethodA;
+		public JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr CallStaticVoidMethodA {
 			get {
 				if (_CallStaticVoidMethodA == null)
-					_CallStaticVoidMethodA = (JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef) Marshal.GetDelegateForFunctionPointer (env.CallStaticVoidMethodA, typeof (JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef));
+					_CallStaticVoidMethodA = (JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr) Marshal.GetDelegateForFunctionPointer (env.CallStaticVoidMethodA, typeof (JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr));
 				return _CallStaticVoidMethodA;
 			}
 		}
@@ -9369,11 +9313,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_IntPtr_int_jobject _NewString;
-		public JniFunc_JNIEnvPtr_IntPtr_int_jobject NewString {
+		JniFunc_JNIEnvPtr_charPtr_int_jobject _NewString;
+		public JniFunc_JNIEnvPtr_charPtr_int_jobject NewString {
 			get {
 				if (_NewString == null)
-					_NewString = (JniFunc_JNIEnvPtr_IntPtr_int_jobject) Marshal.GetDelegateForFunctionPointer (env.NewString, typeof (JniFunc_JNIEnvPtr_IntPtr_int_jobject));
+					_NewString = (JniFunc_JNIEnvPtr_charPtr_int_jobject) Marshal.GetDelegateForFunctionPointer (env.NewString, typeof (JniFunc_JNIEnvPtr_charPtr_int_jobject));
 				return _NewString;
 			}
 		}
@@ -9387,20 +9331,20 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr _GetStringChars;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr GetStringChars {
+		JniFunc_JNIEnvPtr_jobject_boolPtr_charPtr _GetStringChars;
+		public JniFunc_JNIEnvPtr_jobject_boolPtr_charPtr GetStringChars {
 			get {
 				if (_GetStringChars == null)
-					_GetStringChars = (JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr) Marshal.GetDelegateForFunctionPointer (env.GetStringChars, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr));
+					_GetStringChars = (JniFunc_JNIEnvPtr_jobject_boolPtr_charPtr) Marshal.GetDelegateForFunctionPointer (env.GetStringChars, typeof (JniFunc_JNIEnvPtr_jobject_boolPtr_charPtr));
 				return _GetStringChars;
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr _ReleaseStringChars;
-		public JniAction_JNIEnvPtr_jobject_IntPtr ReleaseStringChars {
+		JniAction_JNIEnvPtr_jobject_charPtr _ReleaseStringChars;
+		public JniAction_JNIEnvPtr_jobject_charPtr ReleaseStringChars {
 			get {
 				if (_ReleaseStringChars == null)
-					_ReleaseStringChars = (JniAction_JNIEnvPtr_jobject_IntPtr) Marshal.GetDelegateForFunctionPointer (env.ReleaseStringChars, typeof (JniAction_JNIEnvPtr_jobject_IntPtr));
+					_ReleaseStringChars = (JniAction_JNIEnvPtr_jobject_charPtr) Marshal.GetDelegateForFunctionPointer (env.ReleaseStringChars, typeof (JniAction_JNIEnvPtr_jobject_charPtr));
 				return _ReleaseStringChars;
 			}
 		}
@@ -9423,11 +9367,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_string _GetStringUTFChars;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_string GetStringUTFChars {
+		JniFunc_JNIEnvPtr_jobject_boolPtr_string _GetStringUTFChars;
+		public JniFunc_JNIEnvPtr_jobject_boolPtr_string GetStringUTFChars {
 			get {
 				if (_GetStringUTFChars == null)
-					_GetStringUTFChars = (JniFunc_JNIEnvPtr_jobject_IntPtr_string) Marshal.GetDelegateForFunctionPointer (env.GetStringUTFChars, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_string));
+					_GetStringUTFChars = (JniFunc_JNIEnvPtr_jobject_boolPtr_string) Marshal.GetDelegateForFunctionPointer (env.GetStringUTFChars, typeof (JniFunc_JNIEnvPtr_jobject_boolPtr_string));
 				return _GetStringUTFChars;
 			}
 		}
@@ -9549,290 +9493,290 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr _GetBooleanArrayElements;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr GetBooleanArrayElements {
+		JniFunc_JNIEnvPtr_jobject_boolPtr_boolPtr _GetBooleanArrayElements;
+		public JniFunc_JNIEnvPtr_jobject_boolPtr_boolPtr GetBooleanArrayElements {
 			get {
 				if (_GetBooleanArrayElements == null)
-					_GetBooleanArrayElements = (JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr) Marshal.GetDelegateForFunctionPointer (env.GetBooleanArrayElements, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr));
+					_GetBooleanArrayElements = (JniFunc_JNIEnvPtr_jobject_boolPtr_boolPtr) Marshal.GetDelegateForFunctionPointer (env.GetBooleanArrayElements, typeof (JniFunc_JNIEnvPtr_jobject_boolPtr_boolPtr));
 				return _GetBooleanArrayElements;
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr _GetByteArrayElements;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr GetByteArrayElements {
+		JniFunc_JNIEnvPtr_jobject_boolPtr_sbytePtr _GetByteArrayElements;
+		public JniFunc_JNIEnvPtr_jobject_boolPtr_sbytePtr GetByteArrayElements {
 			get {
 				if (_GetByteArrayElements == null)
-					_GetByteArrayElements = (JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr) Marshal.GetDelegateForFunctionPointer (env.GetByteArrayElements, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr));
+					_GetByteArrayElements = (JniFunc_JNIEnvPtr_jobject_boolPtr_sbytePtr) Marshal.GetDelegateForFunctionPointer (env.GetByteArrayElements, typeof (JniFunc_JNIEnvPtr_jobject_boolPtr_sbytePtr));
 				return _GetByteArrayElements;
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr _GetCharArrayElements;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr GetCharArrayElements {
+		JniFunc_JNIEnvPtr_jobject_boolPtr_charPtr _GetCharArrayElements;
+		public JniFunc_JNIEnvPtr_jobject_boolPtr_charPtr GetCharArrayElements {
 			get {
 				if (_GetCharArrayElements == null)
-					_GetCharArrayElements = (JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr) Marshal.GetDelegateForFunctionPointer (env.GetCharArrayElements, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr));
+					_GetCharArrayElements = (JniFunc_JNIEnvPtr_jobject_boolPtr_charPtr) Marshal.GetDelegateForFunctionPointer (env.GetCharArrayElements, typeof (JniFunc_JNIEnvPtr_jobject_boolPtr_charPtr));
 				return _GetCharArrayElements;
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr _GetShortArrayElements;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr GetShortArrayElements {
+		JniFunc_JNIEnvPtr_jobject_boolPtr_shortPtr _GetShortArrayElements;
+		public JniFunc_JNIEnvPtr_jobject_boolPtr_shortPtr GetShortArrayElements {
 			get {
 				if (_GetShortArrayElements == null)
-					_GetShortArrayElements = (JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr) Marshal.GetDelegateForFunctionPointer (env.GetShortArrayElements, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr));
+					_GetShortArrayElements = (JniFunc_JNIEnvPtr_jobject_boolPtr_shortPtr) Marshal.GetDelegateForFunctionPointer (env.GetShortArrayElements, typeof (JniFunc_JNIEnvPtr_jobject_boolPtr_shortPtr));
 				return _GetShortArrayElements;
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr _GetIntArrayElements;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr GetIntArrayElements {
+		JniFunc_JNIEnvPtr_jobject_boolPtr_intPtr _GetIntArrayElements;
+		public JniFunc_JNIEnvPtr_jobject_boolPtr_intPtr GetIntArrayElements {
 			get {
 				if (_GetIntArrayElements == null)
-					_GetIntArrayElements = (JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr) Marshal.GetDelegateForFunctionPointer (env.GetIntArrayElements, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr));
+					_GetIntArrayElements = (JniFunc_JNIEnvPtr_jobject_boolPtr_intPtr) Marshal.GetDelegateForFunctionPointer (env.GetIntArrayElements, typeof (JniFunc_JNIEnvPtr_jobject_boolPtr_intPtr));
 				return _GetIntArrayElements;
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr _GetLongArrayElements;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr GetLongArrayElements {
+		JniFunc_JNIEnvPtr_jobject_boolPtr_longPtr _GetLongArrayElements;
+		public JniFunc_JNIEnvPtr_jobject_boolPtr_longPtr GetLongArrayElements {
 			get {
 				if (_GetLongArrayElements == null)
-					_GetLongArrayElements = (JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr) Marshal.GetDelegateForFunctionPointer (env.GetLongArrayElements, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr));
+					_GetLongArrayElements = (JniFunc_JNIEnvPtr_jobject_boolPtr_longPtr) Marshal.GetDelegateForFunctionPointer (env.GetLongArrayElements, typeof (JniFunc_JNIEnvPtr_jobject_boolPtr_longPtr));
 				return _GetLongArrayElements;
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr _GetFloatArrayElements;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr GetFloatArrayElements {
+		JniFunc_JNIEnvPtr_jobject_boolPtr_floatPtr _GetFloatArrayElements;
+		public JniFunc_JNIEnvPtr_jobject_boolPtr_floatPtr GetFloatArrayElements {
 			get {
 				if (_GetFloatArrayElements == null)
-					_GetFloatArrayElements = (JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr) Marshal.GetDelegateForFunctionPointer (env.GetFloatArrayElements, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr));
+					_GetFloatArrayElements = (JniFunc_JNIEnvPtr_jobject_boolPtr_floatPtr) Marshal.GetDelegateForFunctionPointer (env.GetFloatArrayElements, typeof (JniFunc_JNIEnvPtr_jobject_boolPtr_floatPtr));
 				return _GetFloatArrayElements;
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr _GetDoubleArrayElements;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr GetDoubleArrayElements {
+		JniFunc_JNIEnvPtr_jobject_boolPtr_doublePtr _GetDoubleArrayElements;
+		public JniFunc_JNIEnvPtr_jobject_boolPtr_doublePtr GetDoubleArrayElements {
 			get {
 				if (_GetDoubleArrayElements == null)
-					_GetDoubleArrayElements = (JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr) Marshal.GetDelegateForFunctionPointer (env.GetDoubleArrayElements, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr));
+					_GetDoubleArrayElements = (JniFunc_JNIEnvPtr_jobject_boolPtr_doublePtr) Marshal.GetDelegateForFunctionPointer (env.GetDoubleArrayElements, typeof (JniFunc_JNIEnvPtr_jobject_boolPtr_doublePtr));
 				return _GetDoubleArrayElements;
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr_int _ReleaseBooleanArrayElements;
-		public JniAction_JNIEnvPtr_jobject_IntPtr_int ReleaseBooleanArrayElements {
+		JniAction_JNIEnvPtr_jobject_boolPtr_int _ReleaseBooleanArrayElements;
+		public JniAction_JNIEnvPtr_jobject_boolPtr_int ReleaseBooleanArrayElements {
 			get {
 				if (_ReleaseBooleanArrayElements == null)
-					_ReleaseBooleanArrayElements = (JniAction_JNIEnvPtr_jobject_IntPtr_int) Marshal.GetDelegateForFunctionPointer (env.ReleaseBooleanArrayElements, typeof (JniAction_JNIEnvPtr_jobject_IntPtr_int));
+					_ReleaseBooleanArrayElements = (JniAction_JNIEnvPtr_jobject_boolPtr_int) Marshal.GetDelegateForFunctionPointer (env.ReleaseBooleanArrayElements, typeof (JniAction_JNIEnvPtr_jobject_boolPtr_int));
 				return _ReleaseBooleanArrayElements;
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr_int _ReleaseByteArrayElements;
-		public JniAction_JNIEnvPtr_jobject_IntPtr_int ReleaseByteArrayElements {
+		JniAction_JNIEnvPtr_jobject_sbytePtr_int _ReleaseByteArrayElements;
+		public JniAction_JNIEnvPtr_jobject_sbytePtr_int ReleaseByteArrayElements {
 			get {
 				if (_ReleaseByteArrayElements == null)
-					_ReleaseByteArrayElements = (JniAction_JNIEnvPtr_jobject_IntPtr_int) Marshal.GetDelegateForFunctionPointer (env.ReleaseByteArrayElements, typeof (JniAction_JNIEnvPtr_jobject_IntPtr_int));
+					_ReleaseByteArrayElements = (JniAction_JNIEnvPtr_jobject_sbytePtr_int) Marshal.GetDelegateForFunctionPointer (env.ReleaseByteArrayElements, typeof (JniAction_JNIEnvPtr_jobject_sbytePtr_int));
 				return _ReleaseByteArrayElements;
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr_int _ReleaseCharArrayElements;
-		public JniAction_JNIEnvPtr_jobject_IntPtr_int ReleaseCharArrayElements {
+		JniAction_JNIEnvPtr_jobject_charPtr_int _ReleaseCharArrayElements;
+		public JniAction_JNIEnvPtr_jobject_charPtr_int ReleaseCharArrayElements {
 			get {
 				if (_ReleaseCharArrayElements == null)
-					_ReleaseCharArrayElements = (JniAction_JNIEnvPtr_jobject_IntPtr_int) Marshal.GetDelegateForFunctionPointer (env.ReleaseCharArrayElements, typeof (JniAction_JNIEnvPtr_jobject_IntPtr_int));
+					_ReleaseCharArrayElements = (JniAction_JNIEnvPtr_jobject_charPtr_int) Marshal.GetDelegateForFunctionPointer (env.ReleaseCharArrayElements, typeof (JniAction_JNIEnvPtr_jobject_charPtr_int));
 				return _ReleaseCharArrayElements;
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr_int _ReleaseShortArrayElements;
-		public JniAction_JNIEnvPtr_jobject_IntPtr_int ReleaseShortArrayElements {
+		JniAction_JNIEnvPtr_jobject_shortPtr_int _ReleaseShortArrayElements;
+		public JniAction_JNIEnvPtr_jobject_shortPtr_int ReleaseShortArrayElements {
 			get {
 				if (_ReleaseShortArrayElements == null)
-					_ReleaseShortArrayElements = (JniAction_JNIEnvPtr_jobject_IntPtr_int) Marshal.GetDelegateForFunctionPointer (env.ReleaseShortArrayElements, typeof (JniAction_JNIEnvPtr_jobject_IntPtr_int));
+					_ReleaseShortArrayElements = (JniAction_JNIEnvPtr_jobject_shortPtr_int) Marshal.GetDelegateForFunctionPointer (env.ReleaseShortArrayElements, typeof (JniAction_JNIEnvPtr_jobject_shortPtr_int));
 				return _ReleaseShortArrayElements;
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr_int _ReleaseIntArrayElements;
-		public JniAction_JNIEnvPtr_jobject_IntPtr_int ReleaseIntArrayElements {
+		JniAction_JNIEnvPtr_jobject_intPtr_int _ReleaseIntArrayElements;
+		public JniAction_JNIEnvPtr_jobject_intPtr_int ReleaseIntArrayElements {
 			get {
 				if (_ReleaseIntArrayElements == null)
-					_ReleaseIntArrayElements = (JniAction_JNIEnvPtr_jobject_IntPtr_int) Marshal.GetDelegateForFunctionPointer (env.ReleaseIntArrayElements, typeof (JniAction_JNIEnvPtr_jobject_IntPtr_int));
+					_ReleaseIntArrayElements = (JniAction_JNIEnvPtr_jobject_intPtr_int) Marshal.GetDelegateForFunctionPointer (env.ReleaseIntArrayElements, typeof (JniAction_JNIEnvPtr_jobject_intPtr_int));
 				return _ReleaseIntArrayElements;
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr_int _ReleaseLongArrayElements;
-		public JniAction_JNIEnvPtr_jobject_IntPtr_int ReleaseLongArrayElements {
+		JniAction_JNIEnvPtr_jobject_longPtr_int _ReleaseLongArrayElements;
+		public JniAction_JNIEnvPtr_jobject_longPtr_int ReleaseLongArrayElements {
 			get {
 				if (_ReleaseLongArrayElements == null)
-					_ReleaseLongArrayElements = (JniAction_JNIEnvPtr_jobject_IntPtr_int) Marshal.GetDelegateForFunctionPointer (env.ReleaseLongArrayElements, typeof (JniAction_JNIEnvPtr_jobject_IntPtr_int));
+					_ReleaseLongArrayElements = (JniAction_JNIEnvPtr_jobject_longPtr_int) Marshal.GetDelegateForFunctionPointer (env.ReleaseLongArrayElements, typeof (JniAction_JNIEnvPtr_jobject_longPtr_int));
 				return _ReleaseLongArrayElements;
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr_int _ReleaseFloatArrayElements;
-		public JniAction_JNIEnvPtr_jobject_IntPtr_int ReleaseFloatArrayElements {
+		JniAction_JNIEnvPtr_jobject_floatPtr_int _ReleaseFloatArrayElements;
+		public JniAction_JNIEnvPtr_jobject_floatPtr_int ReleaseFloatArrayElements {
 			get {
 				if (_ReleaseFloatArrayElements == null)
-					_ReleaseFloatArrayElements = (JniAction_JNIEnvPtr_jobject_IntPtr_int) Marshal.GetDelegateForFunctionPointer (env.ReleaseFloatArrayElements, typeof (JniAction_JNIEnvPtr_jobject_IntPtr_int));
+					_ReleaseFloatArrayElements = (JniAction_JNIEnvPtr_jobject_floatPtr_int) Marshal.GetDelegateForFunctionPointer (env.ReleaseFloatArrayElements, typeof (JniAction_JNIEnvPtr_jobject_floatPtr_int));
 				return _ReleaseFloatArrayElements;
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr_int _ReleaseDoubleArrayElements;
-		public JniAction_JNIEnvPtr_jobject_IntPtr_int ReleaseDoubleArrayElements {
+		JniAction_JNIEnvPtr_jobject_doublePtr_int _ReleaseDoubleArrayElements;
+		public JniAction_JNIEnvPtr_jobject_doublePtr_int ReleaseDoubleArrayElements {
 			get {
 				if (_ReleaseDoubleArrayElements == null)
-					_ReleaseDoubleArrayElements = (JniAction_JNIEnvPtr_jobject_IntPtr_int) Marshal.GetDelegateForFunctionPointer (env.ReleaseDoubleArrayElements, typeof (JniAction_JNIEnvPtr_jobject_IntPtr_int));
+					_ReleaseDoubleArrayElements = (JniAction_JNIEnvPtr_jobject_doublePtr_int) Marshal.GetDelegateForFunctionPointer (env.ReleaseDoubleArrayElements, typeof (JniAction_JNIEnvPtr_jobject_doublePtr_int));
 				return _ReleaseDoubleArrayElements;
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_IntPtr _GetBooleanArrayRegion;
-		public JniAction_JNIEnvPtr_jobject_int_int_IntPtr GetBooleanArrayRegion {
+		JniAction_JNIEnvPtr_jobject_int_int_boolPtr _GetBooleanArrayRegion;
+		public JniAction_JNIEnvPtr_jobject_int_int_boolPtr GetBooleanArrayRegion {
 			get {
 				if (_GetBooleanArrayRegion == null)
-					_GetBooleanArrayRegion = (JniAction_JNIEnvPtr_jobject_int_int_IntPtr) Marshal.GetDelegateForFunctionPointer (env.GetBooleanArrayRegion, typeof (JniAction_JNIEnvPtr_jobject_int_int_IntPtr));
+					_GetBooleanArrayRegion = (JniAction_JNIEnvPtr_jobject_int_int_boolPtr) Marshal.GetDelegateForFunctionPointer (env.GetBooleanArrayRegion, typeof (JniAction_JNIEnvPtr_jobject_int_int_boolPtr));
 				return _GetBooleanArrayRegion;
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_IntPtr _GetByteArrayRegion;
-		public JniAction_JNIEnvPtr_jobject_int_int_IntPtr GetByteArrayRegion {
+		JniAction_JNIEnvPtr_jobject_int_int_sbytePtr _GetByteArrayRegion;
+		public JniAction_JNIEnvPtr_jobject_int_int_sbytePtr GetByteArrayRegion {
 			get {
 				if (_GetByteArrayRegion == null)
-					_GetByteArrayRegion = (JniAction_JNIEnvPtr_jobject_int_int_IntPtr) Marshal.GetDelegateForFunctionPointer (env.GetByteArrayRegion, typeof (JniAction_JNIEnvPtr_jobject_int_int_IntPtr));
+					_GetByteArrayRegion = (JniAction_JNIEnvPtr_jobject_int_int_sbytePtr) Marshal.GetDelegateForFunctionPointer (env.GetByteArrayRegion, typeof (JniAction_JNIEnvPtr_jobject_int_int_sbytePtr));
 				return _GetByteArrayRegion;
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_IntPtr _GetCharArrayRegion;
-		public JniAction_JNIEnvPtr_jobject_int_int_IntPtr GetCharArrayRegion {
+		JniAction_JNIEnvPtr_jobject_int_int_charPtr _GetCharArrayRegion;
+		public JniAction_JNIEnvPtr_jobject_int_int_charPtr GetCharArrayRegion {
 			get {
 				if (_GetCharArrayRegion == null)
-					_GetCharArrayRegion = (JniAction_JNIEnvPtr_jobject_int_int_IntPtr) Marshal.GetDelegateForFunctionPointer (env.GetCharArrayRegion, typeof (JniAction_JNIEnvPtr_jobject_int_int_IntPtr));
+					_GetCharArrayRegion = (JniAction_JNIEnvPtr_jobject_int_int_charPtr) Marshal.GetDelegateForFunctionPointer (env.GetCharArrayRegion, typeof (JniAction_JNIEnvPtr_jobject_int_int_charPtr));
 				return _GetCharArrayRegion;
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_IntPtr _GetShortArrayRegion;
-		public JniAction_JNIEnvPtr_jobject_int_int_IntPtr GetShortArrayRegion {
+		JniAction_JNIEnvPtr_jobject_int_int_shortPtr _GetShortArrayRegion;
+		public JniAction_JNIEnvPtr_jobject_int_int_shortPtr GetShortArrayRegion {
 			get {
 				if (_GetShortArrayRegion == null)
-					_GetShortArrayRegion = (JniAction_JNIEnvPtr_jobject_int_int_IntPtr) Marshal.GetDelegateForFunctionPointer (env.GetShortArrayRegion, typeof (JniAction_JNIEnvPtr_jobject_int_int_IntPtr));
+					_GetShortArrayRegion = (JniAction_JNIEnvPtr_jobject_int_int_shortPtr) Marshal.GetDelegateForFunctionPointer (env.GetShortArrayRegion, typeof (JniAction_JNIEnvPtr_jobject_int_int_shortPtr));
 				return _GetShortArrayRegion;
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_IntPtr _GetIntArrayRegion;
-		public JniAction_JNIEnvPtr_jobject_int_int_IntPtr GetIntArrayRegion {
+		JniAction_JNIEnvPtr_jobject_int_int_intPtr _GetIntArrayRegion;
+		public JniAction_JNIEnvPtr_jobject_int_int_intPtr GetIntArrayRegion {
 			get {
 				if (_GetIntArrayRegion == null)
-					_GetIntArrayRegion = (JniAction_JNIEnvPtr_jobject_int_int_IntPtr) Marshal.GetDelegateForFunctionPointer (env.GetIntArrayRegion, typeof (JniAction_JNIEnvPtr_jobject_int_int_IntPtr));
+					_GetIntArrayRegion = (JniAction_JNIEnvPtr_jobject_int_int_intPtr) Marshal.GetDelegateForFunctionPointer (env.GetIntArrayRegion, typeof (JniAction_JNIEnvPtr_jobject_int_int_intPtr));
 				return _GetIntArrayRegion;
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_IntPtr _GetLongArrayRegion;
-		public JniAction_JNIEnvPtr_jobject_int_int_IntPtr GetLongArrayRegion {
+		JniAction_JNIEnvPtr_jobject_int_int_longPtr _GetLongArrayRegion;
+		public JniAction_JNIEnvPtr_jobject_int_int_longPtr GetLongArrayRegion {
 			get {
 				if (_GetLongArrayRegion == null)
-					_GetLongArrayRegion = (JniAction_JNIEnvPtr_jobject_int_int_IntPtr) Marshal.GetDelegateForFunctionPointer (env.GetLongArrayRegion, typeof (JniAction_JNIEnvPtr_jobject_int_int_IntPtr));
+					_GetLongArrayRegion = (JniAction_JNIEnvPtr_jobject_int_int_longPtr) Marshal.GetDelegateForFunctionPointer (env.GetLongArrayRegion, typeof (JniAction_JNIEnvPtr_jobject_int_int_longPtr));
 				return _GetLongArrayRegion;
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_IntPtr _GetFloatArrayRegion;
-		public JniAction_JNIEnvPtr_jobject_int_int_IntPtr GetFloatArrayRegion {
+		JniAction_JNIEnvPtr_jobject_int_int_floatPtr _GetFloatArrayRegion;
+		public JniAction_JNIEnvPtr_jobject_int_int_floatPtr GetFloatArrayRegion {
 			get {
 				if (_GetFloatArrayRegion == null)
-					_GetFloatArrayRegion = (JniAction_JNIEnvPtr_jobject_int_int_IntPtr) Marshal.GetDelegateForFunctionPointer (env.GetFloatArrayRegion, typeof (JniAction_JNIEnvPtr_jobject_int_int_IntPtr));
+					_GetFloatArrayRegion = (JniAction_JNIEnvPtr_jobject_int_int_floatPtr) Marshal.GetDelegateForFunctionPointer (env.GetFloatArrayRegion, typeof (JniAction_JNIEnvPtr_jobject_int_int_floatPtr));
 				return _GetFloatArrayRegion;
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_IntPtr _GetDoubleArrayRegion;
-		public JniAction_JNIEnvPtr_jobject_int_int_IntPtr GetDoubleArrayRegion {
+		JniAction_JNIEnvPtr_jobject_int_int_doublePtr _GetDoubleArrayRegion;
+		public JniAction_JNIEnvPtr_jobject_int_int_doublePtr GetDoubleArrayRegion {
 			get {
 				if (_GetDoubleArrayRegion == null)
-					_GetDoubleArrayRegion = (JniAction_JNIEnvPtr_jobject_int_int_IntPtr) Marshal.GetDelegateForFunctionPointer (env.GetDoubleArrayRegion, typeof (JniAction_JNIEnvPtr_jobject_int_int_IntPtr));
+					_GetDoubleArrayRegion = (JniAction_JNIEnvPtr_jobject_int_int_doublePtr) Marshal.GetDelegateForFunctionPointer (env.GetDoubleArrayRegion, typeof (JniAction_JNIEnvPtr_jobject_int_int_doublePtr));
 				return _GetDoubleArrayRegion;
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_IntPtr _SetBooleanArrayRegion;
-		public JniAction_JNIEnvPtr_jobject_int_int_IntPtr SetBooleanArrayRegion {
+		JniAction_JNIEnvPtr_jobject_int_int_boolPtr _SetBooleanArrayRegion;
+		public JniAction_JNIEnvPtr_jobject_int_int_boolPtr SetBooleanArrayRegion {
 			get {
 				if (_SetBooleanArrayRegion == null)
-					_SetBooleanArrayRegion = (JniAction_JNIEnvPtr_jobject_int_int_IntPtr) Marshal.GetDelegateForFunctionPointer (env.SetBooleanArrayRegion, typeof (JniAction_JNIEnvPtr_jobject_int_int_IntPtr));
+					_SetBooleanArrayRegion = (JniAction_JNIEnvPtr_jobject_int_int_boolPtr) Marshal.GetDelegateForFunctionPointer (env.SetBooleanArrayRegion, typeof (JniAction_JNIEnvPtr_jobject_int_int_boolPtr));
 				return _SetBooleanArrayRegion;
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_IntPtr _SetByteArrayRegion;
-		public JniAction_JNIEnvPtr_jobject_int_int_IntPtr SetByteArrayRegion {
+		JniAction_JNIEnvPtr_jobject_int_int_sbytePtr _SetByteArrayRegion;
+		public JniAction_JNIEnvPtr_jobject_int_int_sbytePtr SetByteArrayRegion {
 			get {
 				if (_SetByteArrayRegion == null)
-					_SetByteArrayRegion = (JniAction_JNIEnvPtr_jobject_int_int_IntPtr) Marshal.GetDelegateForFunctionPointer (env.SetByteArrayRegion, typeof (JniAction_JNIEnvPtr_jobject_int_int_IntPtr));
+					_SetByteArrayRegion = (JniAction_JNIEnvPtr_jobject_int_int_sbytePtr) Marshal.GetDelegateForFunctionPointer (env.SetByteArrayRegion, typeof (JniAction_JNIEnvPtr_jobject_int_int_sbytePtr));
 				return _SetByteArrayRegion;
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_IntPtr _SetCharArrayRegion;
-		public JniAction_JNIEnvPtr_jobject_int_int_IntPtr SetCharArrayRegion {
+		JniAction_JNIEnvPtr_jobject_int_int_charPtr _SetCharArrayRegion;
+		public JniAction_JNIEnvPtr_jobject_int_int_charPtr SetCharArrayRegion {
 			get {
 				if (_SetCharArrayRegion == null)
-					_SetCharArrayRegion = (JniAction_JNIEnvPtr_jobject_int_int_IntPtr) Marshal.GetDelegateForFunctionPointer (env.SetCharArrayRegion, typeof (JniAction_JNIEnvPtr_jobject_int_int_IntPtr));
+					_SetCharArrayRegion = (JniAction_JNIEnvPtr_jobject_int_int_charPtr) Marshal.GetDelegateForFunctionPointer (env.SetCharArrayRegion, typeof (JniAction_JNIEnvPtr_jobject_int_int_charPtr));
 				return _SetCharArrayRegion;
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_IntPtr _SetShortArrayRegion;
-		public JniAction_JNIEnvPtr_jobject_int_int_IntPtr SetShortArrayRegion {
+		JniAction_JNIEnvPtr_jobject_int_int_shortPtr _SetShortArrayRegion;
+		public JniAction_JNIEnvPtr_jobject_int_int_shortPtr SetShortArrayRegion {
 			get {
 				if (_SetShortArrayRegion == null)
-					_SetShortArrayRegion = (JniAction_JNIEnvPtr_jobject_int_int_IntPtr) Marshal.GetDelegateForFunctionPointer (env.SetShortArrayRegion, typeof (JniAction_JNIEnvPtr_jobject_int_int_IntPtr));
+					_SetShortArrayRegion = (JniAction_JNIEnvPtr_jobject_int_int_shortPtr) Marshal.GetDelegateForFunctionPointer (env.SetShortArrayRegion, typeof (JniAction_JNIEnvPtr_jobject_int_int_shortPtr));
 				return _SetShortArrayRegion;
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_IntPtr _SetIntArrayRegion;
-		public JniAction_JNIEnvPtr_jobject_int_int_IntPtr SetIntArrayRegion {
+		JniAction_JNIEnvPtr_jobject_int_int_intPtr _SetIntArrayRegion;
+		public JniAction_JNIEnvPtr_jobject_int_int_intPtr SetIntArrayRegion {
 			get {
 				if (_SetIntArrayRegion == null)
-					_SetIntArrayRegion = (JniAction_JNIEnvPtr_jobject_int_int_IntPtr) Marshal.GetDelegateForFunctionPointer (env.SetIntArrayRegion, typeof (JniAction_JNIEnvPtr_jobject_int_int_IntPtr));
+					_SetIntArrayRegion = (JniAction_JNIEnvPtr_jobject_int_int_intPtr) Marshal.GetDelegateForFunctionPointer (env.SetIntArrayRegion, typeof (JniAction_JNIEnvPtr_jobject_int_int_intPtr));
 				return _SetIntArrayRegion;
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_IntPtr _SetLongArrayRegion;
-		public JniAction_JNIEnvPtr_jobject_int_int_IntPtr SetLongArrayRegion {
+		JniAction_JNIEnvPtr_jobject_int_int_longPtr _SetLongArrayRegion;
+		public JniAction_JNIEnvPtr_jobject_int_int_longPtr SetLongArrayRegion {
 			get {
 				if (_SetLongArrayRegion == null)
-					_SetLongArrayRegion = (JniAction_JNIEnvPtr_jobject_int_int_IntPtr) Marshal.GetDelegateForFunctionPointer (env.SetLongArrayRegion, typeof (JniAction_JNIEnvPtr_jobject_int_int_IntPtr));
+					_SetLongArrayRegion = (JniAction_JNIEnvPtr_jobject_int_int_longPtr) Marshal.GetDelegateForFunctionPointer (env.SetLongArrayRegion, typeof (JniAction_JNIEnvPtr_jobject_int_int_longPtr));
 				return _SetLongArrayRegion;
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_IntPtr _SetFloatArrayRegion;
-		public JniAction_JNIEnvPtr_jobject_int_int_IntPtr SetFloatArrayRegion {
+		JniAction_JNIEnvPtr_jobject_int_int_floatPtr _SetFloatArrayRegion;
+		public JniAction_JNIEnvPtr_jobject_int_int_floatPtr SetFloatArrayRegion {
 			get {
 				if (_SetFloatArrayRegion == null)
-					_SetFloatArrayRegion = (JniAction_JNIEnvPtr_jobject_int_int_IntPtr) Marshal.GetDelegateForFunctionPointer (env.SetFloatArrayRegion, typeof (JniAction_JNIEnvPtr_jobject_int_int_IntPtr));
+					_SetFloatArrayRegion = (JniAction_JNIEnvPtr_jobject_int_int_floatPtr) Marshal.GetDelegateForFunctionPointer (env.SetFloatArrayRegion, typeof (JniAction_JNIEnvPtr_jobject_int_int_floatPtr));
 				return _SetFloatArrayRegion;
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_IntPtr _SetDoubleArrayRegion;
-		public JniAction_JNIEnvPtr_jobject_int_int_IntPtr SetDoubleArrayRegion {
+		JniAction_JNIEnvPtr_jobject_int_int_doublePtr _SetDoubleArrayRegion;
+		public JniAction_JNIEnvPtr_jobject_int_int_doublePtr SetDoubleArrayRegion {
 			get {
 				if (_SetDoubleArrayRegion == null)
-					_SetDoubleArrayRegion = (JniAction_JNIEnvPtr_jobject_int_int_IntPtr) Marshal.GetDelegateForFunctionPointer (env.SetDoubleArrayRegion, typeof (JniAction_JNIEnvPtr_jobject_int_int_IntPtr));
+					_SetDoubleArrayRegion = (JniAction_JNIEnvPtr_jobject_int_int_doublePtr) Marshal.GetDelegateForFunctionPointer (env.SetDoubleArrayRegion, typeof (JniAction_JNIEnvPtr_jobject_int_int_doublePtr));
 				return _SetDoubleArrayRegion;
 			}
 		}
@@ -9882,11 +9826,11 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_IntPtr _GetStringRegion;
-		public JniAction_JNIEnvPtr_jobject_int_int_IntPtr GetStringRegion {
+		JniAction_JNIEnvPtr_jobject_int_int_charPtr _GetStringRegion;
+		public JniAction_JNIEnvPtr_jobject_int_int_charPtr GetStringRegion {
 			get {
 				if (_GetStringRegion == null)
-					_GetStringRegion = (JniAction_JNIEnvPtr_jobject_int_int_IntPtr) Marshal.GetDelegateForFunctionPointer (env.GetStringRegion, typeof (JniAction_JNIEnvPtr_jobject_int_int_IntPtr));
+					_GetStringRegion = (JniAction_JNIEnvPtr_jobject_int_int_charPtr) Marshal.GetDelegateForFunctionPointer (env.GetStringRegion, typeof (JniAction_JNIEnvPtr_jobject_int_int_charPtr));
 				return _GetStringRegion;
 			}
 		}
@@ -9900,11 +9844,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr _GetPrimitiveArrayCritical;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr GetPrimitiveArrayCritical {
+		JniFunc_JNIEnvPtr_jobject_boolPtr_IntPtr _GetPrimitiveArrayCritical;
+		public JniFunc_JNIEnvPtr_jobject_boolPtr_IntPtr GetPrimitiveArrayCritical {
 			get {
 				if (_GetPrimitiveArrayCritical == null)
-					_GetPrimitiveArrayCritical = (JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr) Marshal.GetDelegateForFunctionPointer (env.GetPrimitiveArrayCritical, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr));
+					_GetPrimitiveArrayCritical = (JniFunc_JNIEnvPtr_jobject_boolPtr_IntPtr) Marshal.GetDelegateForFunctionPointer (env.GetPrimitiveArrayCritical, typeof (JniFunc_JNIEnvPtr_jobject_boolPtr_IntPtr));
 				return _GetPrimitiveArrayCritical;
 			}
 		}
@@ -9918,11 +9862,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_string _GetStringCritical;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_string GetStringCritical {
+		JniFunc_JNIEnvPtr_jobject_boolPtr_string _GetStringCritical;
+		public JniFunc_JNIEnvPtr_jobject_boolPtr_string GetStringCritical {
 			get {
 				if (_GetStringCritical == null)
-					_GetStringCritical = (JniFunc_JNIEnvPtr_jobject_IntPtr_string) Marshal.GetDelegateForFunctionPointer (env.GetStringCritical, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_string));
+					_GetStringCritical = (JniFunc_JNIEnvPtr_jobject_boolPtr_string) Marshal.GetDelegateForFunctionPointer (env.GetStringCritical, typeof (JniFunc_JNIEnvPtr_jobject_boolPtr_string));
 				return _GetStringCritical;
 			}
 		}
@@ -10393,16 +10337,16 @@ namespace
 		internal static extern unsafe void JavaInterop_SetStaticDoubleField (IntPtr jnienv, jobject type, IntPtr field, double value);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-		internal static extern unsafe jobject JavaInterop_NewString (IntPtr jnienv, out IntPtr thrown, IntPtr unicodeChars, int length);
+		internal static extern unsafe jobject JavaInterop_NewString (IntPtr jnienv, out IntPtr thrown, char* unicodeChars, int length);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
 		internal static extern unsafe int JavaInterop_GetStringLength (IntPtr jnienv, jobject stringInstance);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-		internal static extern unsafe IntPtr JavaInterop_GetStringChars (IntPtr jnienv, jobject stringInstance, IntPtr isCopy);
+		internal static extern unsafe char* JavaInterop_GetStringChars (IntPtr jnienv, jobject stringInstance, bool* isCopy);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-		internal static extern unsafe void JavaInterop_ReleaseStringChars (IntPtr jnienv, jobject stringInstance, IntPtr chars);
+		internal static extern unsafe void JavaInterop_ReleaseStringChars (IntPtr jnienv, jobject stringInstance, char* chars);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
 		internal static extern unsafe int JavaInterop_GetArrayLength (IntPtr jnienv, jobject array);
@@ -10441,100 +10385,100 @@ namespace
 		internal static extern unsafe jobject JavaInterop_NewDoubleArray (IntPtr jnienv, int length);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-		internal static extern unsafe IntPtr JavaInterop_GetBooleanArrayElements (IntPtr jnienv, jobject array, IntPtr isCopy);
+		internal static extern unsafe bool* JavaInterop_GetBooleanArrayElements (IntPtr jnienv, jobject array, bool* isCopy);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-		internal static extern unsafe IntPtr JavaInterop_GetByteArrayElements (IntPtr jnienv, jobject array, IntPtr isCopy);
+		internal static extern unsafe sbyte* JavaInterop_GetByteArrayElements (IntPtr jnienv, jobject array, bool* isCopy);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-		internal static extern unsafe IntPtr JavaInterop_GetCharArrayElements (IntPtr jnienv, jobject array, IntPtr isCopy);
+		internal static extern unsafe char* JavaInterop_GetCharArrayElements (IntPtr jnienv, jobject array, bool* isCopy);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-		internal static extern unsafe IntPtr JavaInterop_GetShortArrayElements (IntPtr jnienv, jobject array, IntPtr isCopy);
+		internal static extern unsafe short* JavaInterop_GetShortArrayElements (IntPtr jnienv, jobject array, bool* isCopy);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-		internal static extern unsafe IntPtr JavaInterop_GetIntArrayElements (IntPtr jnienv, jobject array, IntPtr isCopy);
+		internal static extern unsafe int* JavaInterop_GetIntArrayElements (IntPtr jnienv, jobject array, bool* isCopy);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-		internal static extern unsafe IntPtr JavaInterop_GetLongArrayElements (IntPtr jnienv, jobject array, IntPtr isCopy);
+		internal static extern unsafe long* JavaInterop_GetLongArrayElements (IntPtr jnienv, jobject array, bool* isCopy);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-		internal static extern unsafe IntPtr JavaInterop_GetFloatArrayElements (IntPtr jnienv, jobject array, IntPtr isCopy);
+		internal static extern unsafe float* JavaInterop_GetFloatArrayElements (IntPtr jnienv, jobject array, bool* isCopy);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-		internal static extern unsafe IntPtr JavaInterop_GetDoubleArrayElements (IntPtr jnienv, jobject array, IntPtr isCopy);
+		internal static extern unsafe double* JavaInterop_GetDoubleArrayElements (IntPtr jnienv, jobject array, bool* isCopy);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-		internal static extern unsafe void JavaInterop_ReleaseBooleanArrayElements (IntPtr jnienv, jobject array, IntPtr elements, int mode);
+		internal static extern unsafe void JavaInterop_ReleaseBooleanArrayElements (IntPtr jnienv, jobject array, bool* elements, int mode);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-		internal static extern unsafe void JavaInterop_ReleaseByteArrayElements (IntPtr jnienv, jobject array, IntPtr elements, int mode);
+		internal static extern unsafe void JavaInterop_ReleaseByteArrayElements (IntPtr jnienv, jobject array, sbyte* elements, int mode);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-		internal static extern unsafe void JavaInterop_ReleaseCharArrayElements (IntPtr jnienv, jobject array, IntPtr elements, int mode);
+		internal static extern unsafe void JavaInterop_ReleaseCharArrayElements (IntPtr jnienv, jobject array, char* elements, int mode);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-		internal static extern unsafe void JavaInterop_ReleaseShortArrayElements (IntPtr jnienv, jobject array, IntPtr elements, int mode);
+		internal static extern unsafe void JavaInterop_ReleaseShortArrayElements (IntPtr jnienv, jobject array, short* elements, int mode);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-		internal static extern unsafe void JavaInterop_ReleaseIntArrayElements (IntPtr jnienv, jobject array, IntPtr elements, int mode);
+		internal static extern unsafe void JavaInterop_ReleaseIntArrayElements (IntPtr jnienv, jobject array, int* elements, int mode);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-		internal static extern unsafe void JavaInterop_ReleaseLongArrayElements (IntPtr jnienv, jobject array, IntPtr elements, int mode);
+		internal static extern unsafe void JavaInterop_ReleaseLongArrayElements (IntPtr jnienv, jobject array, long* elements, int mode);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-		internal static extern unsafe void JavaInterop_ReleaseFloatArrayElements (IntPtr jnienv, jobject array, IntPtr elements, int mode);
+		internal static extern unsafe void JavaInterop_ReleaseFloatArrayElements (IntPtr jnienv, jobject array, float* elements, int mode);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-		internal static extern unsafe void JavaInterop_ReleaseDoubleArrayElements (IntPtr jnienv, jobject array, IntPtr elements, int mode);
+		internal static extern unsafe void JavaInterop_ReleaseDoubleArrayElements (IntPtr jnienv, jobject array, double* elements, int mode);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-		internal static extern unsafe void JavaInterop_GetBooleanArrayRegion (IntPtr jnienv, out IntPtr thrown, jobject array, int start, int length, IntPtr buffer);
+		internal static extern unsafe void JavaInterop_GetBooleanArrayRegion (IntPtr jnienv, out IntPtr thrown, jobject array, int start, int length, bool* buffer);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-		internal static extern unsafe void JavaInterop_GetByteArrayRegion (IntPtr jnienv, out IntPtr thrown, jobject array, int start, int length, IntPtr buffer);
+		internal static extern unsafe void JavaInterop_GetByteArrayRegion (IntPtr jnienv, out IntPtr thrown, jobject array, int start, int length, sbyte* buffer);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-		internal static extern unsafe void JavaInterop_GetCharArrayRegion (IntPtr jnienv, out IntPtr thrown, jobject array, int start, int length, IntPtr buffer);
+		internal static extern unsafe void JavaInterop_GetCharArrayRegion (IntPtr jnienv, out IntPtr thrown, jobject array, int start, int length, char* buffer);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-		internal static extern unsafe void JavaInterop_GetShortArrayRegion (IntPtr jnienv, out IntPtr thrown, jobject array, int start, int length, IntPtr buffer);
+		internal static extern unsafe void JavaInterop_GetShortArrayRegion (IntPtr jnienv, out IntPtr thrown, jobject array, int start, int length, short* buffer);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-		internal static extern unsafe void JavaInterop_GetIntArrayRegion (IntPtr jnienv, out IntPtr thrown, jobject array, int start, int length, IntPtr buffer);
+		internal static extern unsafe void JavaInterop_GetIntArrayRegion (IntPtr jnienv, out IntPtr thrown, jobject array, int start, int length, int* buffer);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-		internal static extern unsafe void JavaInterop_GetLongArrayRegion (IntPtr jnienv, out IntPtr thrown, jobject array, int start, int length, IntPtr buffer);
+		internal static extern unsafe void JavaInterop_GetLongArrayRegion (IntPtr jnienv, out IntPtr thrown, jobject array, int start, int length, long* buffer);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-		internal static extern unsafe void JavaInterop_GetFloatArrayRegion (IntPtr jnienv, out IntPtr thrown, jobject array, int start, int length, IntPtr buffer);
+		internal static extern unsafe void JavaInterop_GetFloatArrayRegion (IntPtr jnienv, out IntPtr thrown, jobject array, int start, int length, float* buffer);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-		internal static extern unsafe void JavaInterop_GetDoubleArrayRegion (IntPtr jnienv, out IntPtr thrown, jobject array, int start, int length, IntPtr buffer);
+		internal static extern unsafe void JavaInterop_GetDoubleArrayRegion (IntPtr jnienv, out IntPtr thrown, jobject array, int start, int length, double* buffer);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-		internal static extern unsafe void JavaInterop_SetBooleanArrayRegion (IntPtr jnienv, out IntPtr thrown, jobject array, int start, int length, IntPtr buffer);
+		internal static extern unsafe void JavaInterop_SetBooleanArrayRegion (IntPtr jnienv, out IntPtr thrown, jobject array, int start, int length, bool* buffer);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-		internal static extern unsafe void JavaInterop_SetByteArrayRegion (IntPtr jnienv, out IntPtr thrown, jobject array, int start, int length, IntPtr buffer);
+		internal static extern unsafe void JavaInterop_SetByteArrayRegion (IntPtr jnienv, out IntPtr thrown, jobject array, int start, int length, sbyte* buffer);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-		internal static extern unsafe void JavaInterop_SetCharArrayRegion (IntPtr jnienv, out IntPtr thrown, jobject array, int start, int length, IntPtr buffer);
+		internal static extern unsafe void JavaInterop_SetCharArrayRegion (IntPtr jnienv, out IntPtr thrown, jobject array, int start, int length, char* buffer);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-		internal static extern unsafe void JavaInterop_SetShortArrayRegion (IntPtr jnienv, out IntPtr thrown, jobject array, int start, int length, IntPtr buffer);
+		internal static extern unsafe void JavaInterop_SetShortArrayRegion (IntPtr jnienv, out IntPtr thrown, jobject array, int start, int length, short* buffer);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-		internal static extern unsafe void JavaInterop_SetIntArrayRegion (IntPtr jnienv, out IntPtr thrown, jobject array, int start, int length, IntPtr buffer);
+		internal static extern unsafe void JavaInterop_SetIntArrayRegion (IntPtr jnienv, out IntPtr thrown, jobject array, int start, int length, int* buffer);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-		internal static extern unsafe void JavaInterop_SetLongArrayRegion (IntPtr jnienv, out IntPtr thrown, jobject array, int start, int length, IntPtr buffer);
+		internal static extern unsafe void JavaInterop_SetLongArrayRegion (IntPtr jnienv, out IntPtr thrown, jobject array, int start, int length, long* buffer);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-		internal static extern unsafe void JavaInterop_SetFloatArrayRegion (IntPtr jnienv, out IntPtr thrown, jobject array, int start, int length, IntPtr buffer);
+		internal static extern unsafe void JavaInterop_SetFloatArrayRegion (IntPtr jnienv, out IntPtr thrown, jobject array, int start, int length, float* buffer);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-		internal static extern unsafe void JavaInterop_SetDoubleArrayRegion (IntPtr jnienv, out IntPtr thrown, jobject array, int start, int length, IntPtr buffer);
+		internal static extern unsafe void JavaInterop_SetDoubleArrayRegion (IntPtr jnienv, out IntPtr thrown, jobject array, int start, int length, double* buffer);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
 		internal static extern unsafe int JavaInterop_RegisterNatives (IntPtr jnienv, out IntPtr thrown, jobject type, JniNativeMethodRegistration [] methods, int numMethods);
@@ -10688,7 +10632,7 @@ namespace
 			return new JniObjectReference (tmp, JniObjectReferenceType.Local);
 		}
 
-		public static unsafe IntPtr GetBooleanArrayElements (JniObjectReference array, IntPtr isCopy)
+		public static unsafe bool* GetBooleanArrayElements (JniObjectReference array, bool* isCopy)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
@@ -10697,7 +10641,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe IntPtr GetByteArrayElements (JniObjectReference array, IntPtr isCopy)
+		public static unsafe sbyte* GetByteArrayElements (JniObjectReference array, bool* isCopy)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
@@ -10706,7 +10650,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe IntPtr GetCharArrayElements (JniObjectReference array, IntPtr isCopy)
+		public static unsafe char* GetCharArrayElements (JniObjectReference array, bool* isCopy)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
@@ -10715,7 +10659,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe IntPtr GetShortArrayElements (JniObjectReference array, IntPtr isCopy)
+		public static unsafe short* GetShortArrayElements (JniObjectReference array, bool* isCopy)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
@@ -10724,7 +10668,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe IntPtr GetIntArrayElements (JniObjectReference array, IntPtr isCopy)
+		public static unsafe int* GetIntArrayElements (JniObjectReference array, bool* isCopy)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
@@ -10733,7 +10677,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe IntPtr GetLongArrayElements (JniObjectReference array, IntPtr isCopy)
+		public static unsafe long* GetLongArrayElements (JniObjectReference array, bool* isCopy)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
@@ -10742,7 +10686,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe IntPtr GetFloatArrayElements (JniObjectReference array, IntPtr isCopy)
+		public static unsafe float* GetFloatArrayElements (JniObjectReference array, bool* isCopy)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
@@ -10751,7 +10695,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe IntPtr GetDoubleArrayElements (JniObjectReference array, IntPtr isCopy)
+		public static unsafe double* GetDoubleArrayElements (JniObjectReference array, bool* isCopy)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
@@ -10760,92 +10704,74 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe void ReleaseBooleanArrayElements (JniObjectReference array, IntPtr elements, int mode)
+		public static unsafe void ReleaseBooleanArrayElements (JniObjectReference array, bool* elements, int mode)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (elements == IntPtr.Zero)
-				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", "elements");
 
 			NativeMethods.JavaInterop_ReleaseBooleanArrayElements (JniEnvironment.EnvironmentPointer, array.Handle, elements, mode);
 		}
 
-		public static unsafe void ReleaseByteArrayElements (JniObjectReference array, IntPtr elements, int mode)
+		public static unsafe void ReleaseByteArrayElements (JniObjectReference array, sbyte* elements, int mode)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (elements == IntPtr.Zero)
-				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", "elements");
 
 			NativeMethods.JavaInterop_ReleaseByteArrayElements (JniEnvironment.EnvironmentPointer, array.Handle, elements, mode);
 		}
 
-		public static unsafe void ReleaseCharArrayElements (JniObjectReference array, IntPtr elements, int mode)
+		public static unsafe void ReleaseCharArrayElements (JniObjectReference array, char* elements, int mode)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (elements == IntPtr.Zero)
-				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", "elements");
 
 			NativeMethods.JavaInterop_ReleaseCharArrayElements (JniEnvironment.EnvironmentPointer, array.Handle, elements, mode);
 		}
 
-		public static unsafe void ReleaseShortArrayElements (JniObjectReference array, IntPtr elements, int mode)
+		public static unsafe void ReleaseShortArrayElements (JniObjectReference array, short* elements, int mode)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (elements == IntPtr.Zero)
-				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", "elements");
 
 			NativeMethods.JavaInterop_ReleaseShortArrayElements (JniEnvironment.EnvironmentPointer, array.Handle, elements, mode);
 		}
 
-		public static unsafe void ReleaseIntArrayElements (JniObjectReference array, IntPtr elements, int mode)
+		public static unsafe void ReleaseIntArrayElements (JniObjectReference array, int* elements, int mode)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (elements == IntPtr.Zero)
-				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", "elements");
 
 			NativeMethods.JavaInterop_ReleaseIntArrayElements (JniEnvironment.EnvironmentPointer, array.Handle, elements, mode);
 		}
 
-		public static unsafe void ReleaseLongArrayElements (JniObjectReference array, IntPtr elements, int mode)
+		public static unsafe void ReleaseLongArrayElements (JniObjectReference array, long* elements, int mode)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (elements == IntPtr.Zero)
-				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", "elements");
 
 			NativeMethods.JavaInterop_ReleaseLongArrayElements (JniEnvironment.EnvironmentPointer, array.Handle, elements, mode);
 		}
 
-		public static unsafe void ReleaseFloatArrayElements (JniObjectReference array, IntPtr elements, int mode)
+		public static unsafe void ReleaseFloatArrayElements (JniObjectReference array, float* elements, int mode)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (elements == IntPtr.Zero)
-				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", "elements");
 
 			NativeMethods.JavaInterop_ReleaseFloatArrayElements (JniEnvironment.EnvironmentPointer, array.Handle, elements, mode);
 		}
 
-		public static unsafe void ReleaseDoubleArrayElements (JniObjectReference array, IntPtr elements, int mode)
+		public static unsafe void ReleaseDoubleArrayElements (JniObjectReference array, double* elements, int mode)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (elements == IntPtr.Zero)
-				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", "elements");
 
 			NativeMethods.JavaInterop_ReleaseDoubleArrayElements (JniEnvironment.EnvironmentPointer, array.Handle, elements, mode);
 		}
 
-		public static unsafe void GetBooleanArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
+		public static unsafe void GetBooleanArrayRegion (JniObjectReference array, int start, int length, bool* buffer)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (buffer == IntPtr.Zero)
-				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			IntPtr thrown;
 			NativeMethods.JavaInterop_GetBooleanArrayRegion (JniEnvironment.EnvironmentPointer, out thrown, array.Handle, start, length, buffer);
@@ -10856,12 +10782,10 @@ namespace
 
 		}
 
-		public static unsafe void GetByteArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
+		public static unsafe void GetByteArrayRegion (JniObjectReference array, int start, int length, sbyte* buffer)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (buffer == IntPtr.Zero)
-				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			IntPtr thrown;
 			NativeMethods.JavaInterop_GetByteArrayRegion (JniEnvironment.EnvironmentPointer, out thrown, array.Handle, start, length, buffer);
@@ -10872,12 +10796,10 @@ namespace
 
 		}
 
-		public static unsafe void GetCharArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
+		public static unsafe void GetCharArrayRegion (JniObjectReference array, int start, int length, char* buffer)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (buffer == IntPtr.Zero)
-				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			IntPtr thrown;
 			NativeMethods.JavaInterop_GetCharArrayRegion (JniEnvironment.EnvironmentPointer, out thrown, array.Handle, start, length, buffer);
@@ -10888,12 +10810,10 @@ namespace
 
 		}
 
-		public static unsafe void GetShortArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
+		public static unsafe void GetShortArrayRegion (JniObjectReference array, int start, int length, short* buffer)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (buffer == IntPtr.Zero)
-				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			IntPtr thrown;
 			NativeMethods.JavaInterop_GetShortArrayRegion (JniEnvironment.EnvironmentPointer, out thrown, array.Handle, start, length, buffer);
@@ -10904,12 +10824,10 @@ namespace
 
 		}
 
-		public static unsafe void GetIntArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
+		public static unsafe void GetIntArrayRegion (JniObjectReference array, int start, int length, int* buffer)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (buffer == IntPtr.Zero)
-				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			IntPtr thrown;
 			NativeMethods.JavaInterop_GetIntArrayRegion (JniEnvironment.EnvironmentPointer, out thrown, array.Handle, start, length, buffer);
@@ -10920,12 +10838,10 @@ namespace
 
 		}
 
-		public static unsafe void GetLongArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
+		public static unsafe void GetLongArrayRegion (JniObjectReference array, int start, int length, long* buffer)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (buffer == IntPtr.Zero)
-				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			IntPtr thrown;
 			NativeMethods.JavaInterop_GetLongArrayRegion (JniEnvironment.EnvironmentPointer, out thrown, array.Handle, start, length, buffer);
@@ -10936,12 +10852,10 @@ namespace
 
 		}
 
-		public static unsafe void GetFloatArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
+		public static unsafe void GetFloatArrayRegion (JniObjectReference array, int start, int length, float* buffer)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (buffer == IntPtr.Zero)
-				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			IntPtr thrown;
 			NativeMethods.JavaInterop_GetFloatArrayRegion (JniEnvironment.EnvironmentPointer, out thrown, array.Handle, start, length, buffer);
@@ -10952,12 +10866,10 @@ namespace
 
 		}
 
-		public static unsafe void GetDoubleArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
+		public static unsafe void GetDoubleArrayRegion (JniObjectReference array, int start, int length, double* buffer)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (buffer == IntPtr.Zero)
-				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			IntPtr thrown;
 			NativeMethods.JavaInterop_GetDoubleArrayRegion (JniEnvironment.EnvironmentPointer, out thrown, array.Handle, start, length, buffer);
@@ -10968,12 +10880,10 @@ namespace
 
 		}
 
-		public static unsafe void SetBooleanArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
+		public static unsafe void SetBooleanArrayRegion (JniObjectReference array, int start, int length, bool* buffer)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (buffer == IntPtr.Zero)
-				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			IntPtr thrown;
 			NativeMethods.JavaInterop_SetBooleanArrayRegion (JniEnvironment.EnvironmentPointer, out thrown, array.Handle, start, length, buffer);
@@ -10984,12 +10894,10 @@ namespace
 
 		}
 
-		public static unsafe void SetByteArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
+		public static unsafe void SetByteArrayRegion (JniObjectReference array, int start, int length, sbyte* buffer)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (buffer == IntPtr.Zero)
-				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			IntPtr thrown;
 			NativeMethods.JavaInterop_SetByteArrayRegion (JniEnvironment.EnvironmentPointer, out thrown, array.Handle, start, length, buffer);
@@ -11000,12 +10908,10 @@ namespace
 
 		}
 
-		public static unsafe void SetCharArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
+		public static unsafe void SetCharArrayRegion (JniObjectReference array, int start, int length, char* buffer)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (buffer == IntPtr.Zero)
-				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			IntPtr thrown;
 			NativeMethods.JavaInterop_SetCharArrayRegion (JniEnvironment.EnvironmentPointer, out thrown, array.Handle, start, length, buffer);
@@ -11016,12 +10922,10 @@ namespace
 
 		}
 
-		public static unsafe void SetShortArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
+		public static unsafe void SetShortArrayRegion (JniObjectReference array, int start, int length, short* buffer)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (buffer == IntPtr.Zero)
-				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			IntPtr thrown;
 			NativeMethods.JavaInterop_SetShortArrayRegion (JniEnvironment.EnvironmentPointer, out thrown, array.Handle, start, length, buffer);
@@ -11032,12 +10936,10 @@ namespace
 
 		}
 
-		public static unsafe void SetIntArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
+		public static unsafe void SetIntArrayRegion (JniObjectReference array, int start, int length, int* buffer)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (buffer == IntPtr.Zero)
-				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			IntPtr thrown;
 			NativeMethods.JavaInterop_SetIntArrayRegion (JniEnvironment.EnvironmentPointer, out thrown, array.Handle, start, length, buffer);
@@ -11048,12 +10950,10 @@ namespace
 
 		}
 
-		public static unsafe void SetLongArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
+		public static unsafe void SetLongArrayRegion (JniObjectReference array, int start, int length, long* buffer)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (buffer == IntPtr.Zero)
-				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			IntPtr thrown;
 			NativeMethods.JavaInterop_SetLongArrayRegion (JniEnvironment.EnvironmentPointer, out thrown, array.Handle, start, length, buffer);
@@ -11064,12 +10964,10 @@ namespace
 
 		}
 
-		public static unsafe void SetFloatArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
+		public static unsafe void SetFloatArrayRegion (JniObjectReference array, int start, int length, float* buffer)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (buffer == IntPtr.Zero)
-				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			IntPtr thrown;
 			NativeMethods.JavaInterop_SetFloatArrayRegion (JniEnvironment.EnvironmentPointer, out thrown, array.Handle, start, length, buffer);
@@ -11080,12 +10978,10 @@ namespace
 
 		}
 
-		public static unsafe void SetDoubleArrayRegion (JniObjectReference array, int start, int length, IntPtr buffer)
+		public static unsafe void SetDoubleArrayRegion (JniObjectReference array, int start, int length, double* buffer)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (buffer == IntPtr.Zero)
-				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			IntPtr thrown;
 			NativeMethods.JavaInterop_SetDoubleArrayRegion (JniEnvironment.EnvironmentPointer, out thrown, array.Handle, start, length, buffer);
@@ -13110,11 +13006,8 @@ namespace
 
 	public static partial class Strings {
 
-		public static unsafe JniObjectReference NewString (IntPtr unicodeChars, int length)
+		public static unsafe JniObjectReference NewString (char* unicodeChars, int length)
 		{
-			if (unicodeChars == IntPtr.Zero)
-				throw new ArgumentException ("'unicodeChars' must not be IntPtr.Zero.", "unicodeChars");
-
 			IntPtr thrown;
 			var tmp = NativeMethods.JavaInterop_NewString (JniEnvironment.EnvironmentPointer, out thrown, unicodeChars, length);
 
@@ -13135,7 +13028,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe IntPtr GetStringChars (JniObjectReference stringInstance, IntPtr isCopy)
+		public static unsafe char* GetStringChars (JniObjectReference stringInstance, bool* isCopy)
 		{
 			if (stringInstance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`stringInstance` must not be IntPtr.Zero.", "stringInstance");
@@ -13144,12 +13037,10 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe void ReleaseStringChars (JniObjectReference stringInstance, IntPtr chars)
+		public static unsafe void ReleaseStringChars (JniObjectReference stringInstance, char* chars)
 		{
 			if (stringInstance.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`stringInstance` must not be IntPtr.Zero.", "stringInstance");
-			if (chars == IntPtr.Zero)
-				throw new ArgumentException ("'chars' must not be IntPtr.Zero.", "chars");
 
 			NativeMethods.JavaInterop_ReleaseStringChars (JniEnvironment.EnvironmentPointer, stringInstance.Handle, chars);
 		}
@@ -13302,46 +13193,46 @@ namespace
 	unsafe delegate int JniFunc_JNIEnvPtr_int_int (JNIEnvPtr env, int capacity);
 	unsafe delegate void JniAction_JNIEnvPtr_IntPtr (JNIEnvPtr env, IntPtr instance);
 	unsafe delegate jobject JniFunc_JNIEnvPtr_jobject_IntPtr_jobject (JNIEnvPtr env, jobject type, IntPtr method);
-	unsafe delegate jobject JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_jobject (JNIEnvPtr env, jobject type, IntPtr method, JniArgumentValue* args);
+	unsafe delegate jobject JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_jobject (JNIEnvPtr env, jobject type, IntPtr method, JniArgumentValue* args);
 	unsafe delegate IntPtr JniFunc_JNIEnvPtr_jobject_string_string_IntPtr (JNIEnvPtr env, jobject type, string name, string signature);
 	unsafe delegate byte JniFunc_JNIEnvPtr_jobject_IntPtr_byte (JNIEnvPtr env, jobject instance, IntPtr method);
-	unsafe delegate byte JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_byte (JNIEnvPtr env, jobject instance, IntPtr method, JniArgumentValue* args);
+	unsafe delegate byte JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_byte (JNIEnvPtr env, jobject instance, IntPtr method, JniArgumentValue* args);
 	unsafe delegate sbyte JniFunc_JNIEnvPtr_jobject_IntPtr_sbyte (JNIEnvPtr env, jobject instance, IntPtr method);
-	unsafe delegate sbyte JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_sbyte (JNIEnvPtr env, jobject instance, IntPtr method, JniArgumentValue* args);
+	unsafe delegate sbyte JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_sbyte (JNIEnvPtr env, jobject instance, IntPtr method, JniArgumentValue* args);
 	unsafe delegate char JniFunc_JNIEnvPtr_jobject_IntPtr_char (JNIEnvPtr env, jobject instance, IntPtr method);
-	unsafe delegate char JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_char (JNIEnvPtr env, jobject instance, IntPtr method, JniArgumentValue* args);
+	unsafe delegate char JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_char (JNIEnvPtr env, jobject instance, IntPtr method, JniArgumentValue* args);
 	unsafe delegate short JniFunc_JNIEnvPtr_jobject_IntPtr_short (JNIEnvPtr env, jobject instance, IntPtr method);
-	unsafe delegate short JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_short (JNIEnvPtr env, jobject instance, IntPtr method, JniArgumentValue* args);
+	unsafe delegate short JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_short (JNIEnvPtr env, jobject instance, IntPtr method, JniArgumentValue* args);
 	unsafe delegate int JniFunc_JNIEnvPtr_jobject_IntPtr_int (JNIEnvPtr env, jobject instance, IntPtr method);
-	unsafe delegate int JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_int (JNIEnvPtr env, jobject instance, IntPtr method, JniArgumentValue* args);
+	unsafe delegate int JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_int (JNIEnvPtr env, jobject instance, IntPtr method, JniArgumentValue* args);
 	unsafe delegate long JniFunc_JNIEnvPtr_jobject_IntPtr_long (JNIEnvPtr env, jobject instance, IntPtr method);
-	unsafe delegate long JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_long (JNIEnvPtr env, jobject instance, IntPtr method, JniArgumentValue* args);
+	unsafe delegate long JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_long (JNIEnvPtr env, jobject instance, IntPtr method, JniArgumentValue* args);
 	unsafe delegate float JniFunc_JNIEnvPtr_jobject_IntPtr_float (JNIEnvPtr env, jobject instance, IntPtr method);
-	unsafe delegate float JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_float (JNIEnvPtr env, jobject instance, IntPtr method, JniArgumentValue* args);
+	unsafe delegate float JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_float (JNIEnvPtr env, jobject instance, IntPtr method, JniArgumentValue* args);
 	unsafe delegate double JniFunc_JNIEnvPtr_jobject_IntPtr_double (JNIEnvPtr env, jobject instance, IntPtr method);
-	unsafe delegate double JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_double (JNIEnvPtr env, jobject instance, IntPtr method, JniArgumentValue* args);
+	unsafe delegate double JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_double (JNIEnvPtr env, jobject instance, IntPtr method, JniArgumentValue* args);
 	unsafe delegate void JniAction_JNIEnvPtr_jobject_IntPtr (JNIEnvPtr env, jobject instance, IntPtr method);
-	unsafe delegate void JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef (JNIEnvPtr env, jobject instance, IntPtr method, JniArgumentValue* args);
+	unsafe delegate void JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr (JNIEnvPtr env, jobject instance, IntPtr method, JniArgumentValue* args);
 	unsafe delegate jobject JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_jobject (JNIEnvPtr env, jobject instance, jobject type, IntPtr method);
-	unsafe delegate jobject JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_jobject (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
+	unsafe delegate jobject JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_jobject (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
 	unsafe delegate byte JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_byte (JNIEnvPtr env, jobject instance, jobject type, IntPtr method);
-	unsafe delegate byte JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_byte (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
+	unsafe delegate byte JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_byte (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
 	unsafe delegate sbyte JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_sbyte (JNIEnvPtr env, jobject instance, jobject type, IntPtr method);
-	unsafe delegate sbyte JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_sbyte (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
+	unsafe delegate sbyte JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_sbyte (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
 	unsafe delegate char JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_char (JNIEnvPtr env, jobject instance, jobject type, IntPtr method);
-	unsafe delegate char JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_char (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
+	unsafe delegate char JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_char (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
 	unsafe delegate short JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_short (JNIEnvPtr env, jobject instance, jobject type, IntPtr method);
-	unsafe delegate short JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_short (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
+	unsafe delegate short JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_short (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
 	unsafe delegate int JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_int (JNIEnvPtr env, jobject instance, jobject type, IntPtr method);
-	unsafe delegate int JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_int (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
+	unsafe delegate int JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_int (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
 	unsafe delegate long JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_long (JNIEnvPtr env, jobject instance, jobject type, IntPtr method);
-	unsafe delegate long JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_long (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
+	unsafe delegate long JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_long (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
 	unsafe delegate float JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_float (JNIEnvPtr env, jobject instance, jobject type, IntPtr method);
-	unsafe delegate float JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_float (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
+	unsafe delegate float JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_float (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
 	unsafe delegate double JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_double (JNIEnvPtr env, jobject instance, jobject type, IntPtr method);
-	unsafe delegate double JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_double (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
+	unsafe delegate double JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_double (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
 	unsafe delegate void JniAction_JNIEnvPtr_jobject_jobject_IntPtr (JNIEnvPtr env, jobject instance, jobject type, IntPtr method);
-	unsafe delegate void JniAction_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
+	unsafe delegate void JniAction_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
 	unsafe delegate void JniAction_JNIEnvPtr_jobject_IntPtr_jobject (JNIEnvPtr env, jobject instance, IntPtr field, jobject value);
 	unsafe delegate void JniAction_JNIEnvPtr_jobject_IntPtr_byte (JNIEnvPtr env, jobject instance, IntPtr field, byte value);
 	unsafe delegate void JniAction_JNIEnvPtr_jobject_IntPtr_sbyte (JNIEnvPtr env, jobject instance, IntPtr field, sbyte value);
@@ -13352,17 +13243,42 @@ namespace
 	unsafe delegate void JniAction_JNIEnvPtr_jobject_IntPtr_float (JNIEnvPtr env, jobject instance, IntPtr field, float value);
 	unsafe delegate void JniAction_JNIEnvPtr_jobject_IntPtr_double (JNIEnvPtr env, jobject instance, IntPtr field, double value);
 	[UnmanagedFunctionPointerAttribute (CallingConvention.Cdecl, CharSet=CharSet.Unicode)]
-	unsafe delegate jobject JniFunc_JNIEnvPtr_IntPtr_int_jobject (JNIEnvPtr env, IntPtr unicodeChars, int length);
-	unsafe delegate IntPtr JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr (JNIEnvPtr env, jobject stringInstance, IntPtr isCopy);
-	unsafe delegate string JniFunc_JNIEnvPtr_jobject_IntPtr_string (JNIEnvPtr env, jobject stringInstance, IntPtr isCopy);
+	unsafe delegate jobject JniFunc_JNIEnvPtr_charPtr_int_jobject (JNIEnvPtr env, char* unicodeChars, int length);
+	unsafe delegate char* JniFunc_JNIEnvPtr_jobject_boolPtr_charPtr (JNIEnvPtr env, jobject stringInstance, bool* isCopy);
+	unsafe delegate void JniAction_JNIEnvPtr_jobject_charPtr (JNIEnvPtr env, jobject stringInstance, char* chars);
+	unsafe delegate string JniFunc_JNIEnvPtr_jobject_boolPtr_string (JNIEnvPtr env, jobject stringInstance, bool* isCopy);
 	unsafe delegate void JniAction_JNIEnvPtr_jobject_string (JNIEnvPtr env, jobject stringInstance, string utf);
 	unsafe delegate jobject JniFunc_JNIEnvPtr_int_jobject_jobject_jobject (JNIEnvPtr env, int length, jobject elementClass, jobject initialElement);
 	unsafe delegate jobject JniFunc_JNIEnvPtr_jobject_int_jobject (JNIEnvPtr env, jobject array, int index);
 	unsafe delegate void JniAction_JNIEnvPtr_jobject_int_jobject (JNIEnvPtr env, jobject array, int index, jobject value);
 	unsafe delegate jobject JniFunc_JNIEnvPtr_int_jobject (JNIEnvPtr env, int length);
-	unsafe delegate void JniAction_JNIEnvPtr_jobject_int_int_IntPtr (JNIEnvPtr env, jobject array, int start, int length, IntPtr buffer);
+	unsafe delegate bool* JniFunc_JNIEnvPtr_jobject_boolPtr_boolPtr (JNIEnvPtr env, jobject array, bool* isCopy);
+	unsafe delegate sbyte* JniFunc_JNIEnvPtr_jobject_boolPtr_sbytePtr (JNIEnvPtr env, jobject array, bool* isCopy);
+	unsafe delegate short* JniFunc_JNIEnvPtr_jobject_boolPtr_shortPtr (JNIEnvPtr env, jobject array, bool* isCopy);
+	unsafe delegate int* JniFunc_JNIEnvPtr_jobject_boolPtr_intPtr (JNIEnvPtr env, jobject array, bool* isCopy);
+	unsafe delegate long* JniFunc_JNIEnvPtr_jobject_boolPtr_longPtr (JNIEnvPtr env, jobject array, bool* isCopy);
+	unsafe delegate float* JniFunc_JNIEnvPtr_jobject_boolPtr_floatPtr (JNIEnvPtr env, jobject array, bool* isCopy);
+	unsafe delegate double* JniFunc_JNIEnvPtr_jobject_boolPtr_doublePtr (JNIEnvPtr env, jobject array, bool* isCopy);
+	unsafe delegate void JniAction_JNIEnvPtr_jobject_boolPtr_int (JNIEnvPtr env, jobject array, bool* elements, int mode);
+	unsafe delegate void JniAction_JNIEnvPtr_jobject_sbytePtr_int (JNIEnvPtr env, jobject array, sbyte* elements, int mode);
+	unsafe delegate void JniAction_JNIEnvPtr_jobject_charPtr_int (JNIEnvPtr env, jobject array, char* elements, int mode);
+	unsafe delegate void JniAction_JNIEnvPtr_jobject_shortPtr_int (JNIEnvPtr env, jobject array, short* elements, int mode);
+	unsafe delegate void JniAction_JNIEnvPtr_jobject_intPtr_int (JNIEnvPtr env, jobject array, int* elements, int mode);
+	unsafe delegate void JniAction_JNIEnvPtr_jobject_longPtr_int (JNIEnvPtr env, jobject array, long* elements, int mode);
+	unsafe delegate void JniAction_JNIEnvPtr_jobject_floatPtr_int (JNIEnvPtr env, jobject array, float* elements, int mode);
+	unsafe delegate void JniAction_JNIEnvPtr_jobject_doublePtr_int (JNIEnvPtr env, jobject array, double* elements, int mode);
+	unsafe delegate void JniAction_JNIEnvPtr_jobject_int_int_boolPtr (JNIEnvPtr env, jobject array, int start, int length, bool* buffer);
+	unsafe delegate void JniAction_JNIEnvPtr_jobject_int_int_sbytePtr (JNIEnvPtr env, jobject array, int start, int length, sbyte* buffer);
+	unsafe delegate void JniAction_JNIEnvPtr_jobject_int_int_charPtr (JNIEnvPtr env, jobject array, int start, int length, char* buffer);
+	unsafe delegate void JniAction_JNIEnvPtr_jobject_int_int_shortPtr (JNIEnvPtr env, jobject array, int start, int length, short* buffer);
+	unsafe delegate void JniAction_JNIEnvPtr_jobject_int_int_intPtr (JNIEnvPtr env, jobject array, int start, int length, int* buffer);
+	unsafe delegate void JniAction_JNIEnvPtr_jobject_int_int_longPtr (JNIEnvPtr env, jobject array, int start, int length, long* buffer);
+	unsafe delegate void JniAction_JNIEnvPtr_jobject_int_int_floatPtr (JNIEnvPtr env, jobject array, int start, int length, float* buffer);
+	unsafe delegate void JniAction_JNIEnvPtr_jobject_int_int_doublePtr (JNIEnvPtr env, jobject array, int start, int length, double* buffer);
 	unsafe delegate int JniFunc_JNIEnvPtr_jobject_JniNativeMethodRegistrationArray_int_int (JNIEnvPtr env, jobject type, JniNativeMethodRegistration [] methods, int numMethods);
 	unsafe delegate int JniFunc_JNIEnvPtr_outIntPtr_int (JNIEnvPtr env, out IntPtr vm);
+	unsafe delegate void JniAction_JNIEnvPtr_jobject_int_int_IntPtr (JNIEnvPtr env, jobject stringInstance, int start, int length, IntPtr buffer);
+	unsafe delegate IntPtr JniFunc_JNIEnvPtr_jobject_boolPtr_IntPtr (JNIEnvPtr env, jobject array, bool* isCopy);
 	unsafe delegate byte JniFunc_JNIEnvPtr_byte (JNIEnvPtr env);
 	unsafe delegate jobject JniFunc_JNIEnvPtr_IntPtr_long_jobject (JNIEnvPtr env, IntPtr address, long capacity);
 	unsafe delegate long JniFunc_JNIEnvPtr_jobject_long (JNIEnvPtr env, jobject buffer);
@@ -13492,7 +13408,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe IntPtr GetBooleanArrayElements (IntPtr array, IntPtr isCopy)
+		public static unsafe bool* GetBooleanArrayElements (IntPtr array, bool* isCopy)
 		{
 			if (array == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
@@ -13502,7 +13418,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe IntPtr GetByteArrayElements (IntPtr array, IntPtr isCopy)
+		public static unsafe sbyte* GetByteArrayElements (IntPtr array, bool* isCopy)
 		{
 			if (array == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
@@ -13512,7 +13428,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe IntPtr GetCharArrayElements (IntPtr array, IntPtr isCopy)
+		public static unsafe char* GetCharArrayElements (IntPtr array, bool* isCopy)
 		{
 			if (array == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
@@ -13522,7 +13438,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe IntPtr GetShortArrayElements (IntPtr array, IntPtr isCopy)
+		public static unsafe short* GetShortArrayElements (IntPtr array, bool* isCopy)
 		{
 			if (array == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
@@ -13532,7 +13448,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe IntPtr GetIntArrayElements (IntPtr array, IntPtr isCopy)
+		public static unsafe int* GetIntArrayElements (IntPtr array, bool* isCopy)
 		{
 			if (array == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
@@ -13542,7 +13458,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe IntPtr GetLongArrayElements (IntPtr array, IntPtr isCopy)
+		public static unsafe long* GetLongArrayElements (IntPtr array, bool* isCopy)
 		{
 			if (array == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
@@ -13552,7 +13468,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe IntPtr GetFloatArrayElements (IntPtr array, IntPtr isCopy)
+		public static unsafe float* GetFloatArrayElements (IntPtr array, bool* isCopy)
 		{
 			if (array == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
@@ -13562,7 +13478,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe IntPtr GetDoubleArrayElements (IntPtr array, IntPtr isCopy)
+		public static unsafe double* GetDoubleArrayElements (IntPtr array, bool* isCopy)
 		{
 			if (array == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
@@ -13572,100 +13488,82 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe void ReleaseBooleanArrayElements (IntPtr array, IntPtr elements, int mode)
+		public static unsafe void ReleaseBooleanArrayElements (IntPtr array, bool* elements, int mode)
 		{
 			if (array == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (elements == IntPtr.Zero)
-				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", "elements");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.ReleaseBooleanArrayElements (__info.EnvironmentPointer, array, elements, mode);
 		}
 
-		public static unsafe void ReleaseByteArrayElements (IntPtr array, IntPtr elements, int mode)
+		public static unsafe void ReleaseByteArrayElements (IntPtr array, sbyte* elements, int mode)
 		{
 			if (array == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (elements == IntPtr.Zero)
-				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", "elements");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.ReleaseByteArrayElements (__info.EnvironmentPointer, array, elements, mode);
 		}
 
-		public static unsafe void ReleaseCharArrayElements (IntPtr array, IntPtr elements, int mode)
+		public static unsafe void ReleaseCharArrayElements (IntPtr array, char* elements, int mode)
 		{
 			if (array == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (elements == IntPtr.Zero)
-				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", "elements");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.ReleaseCharArrayElements (__info.EnvironmentPointer, array, elements, mode);
 		}
 
-		public static unsafe void ReleaseShortArrayElements (IntPtr array, IntPtr elements, int mode)
+		public static unsafe void ReleaseShortArrayElements (IntPtr array, short* elements, int mode)
 		{
 			if (array == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (elements == IntPtr.Zero)
-				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", "elements");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.ReleaseShortArrayElements (__info.EnvironmentPointer, array, elements, mode);
 		}
 
-		public static unsafe void ReleaseIntArrayElements (IntPtr array, IntPtr elements, int mode)
+		public static unsafe void ReleaseIntArrayElements (IntPtr array, int* elements, int mode)
 		{
 			if (array == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (elements == IntPtr.Zero)
-				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", "elements");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.ReleaseIntArrayElements (__info.EnvironmentPointer, array, elements, mode);
 		}
 
-		public static unsafe void ReleaseLongArrayElements (IntPtr array, IntPtr elements, int mode)
+		public static unsafe void ReleaseLongArrayElements (IntPtr array, long* elements, int mode)
 		{
 			if (array == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (elements == IntPtr.Zero)
-				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", "elements");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.ReleaseLongArrayElements (__info.EnvironmentPointer, array, elements, mode);
 		}
 
-		public static unsafe void ReleaseFloatArrayElements (IntPtr array, IntPtr elements, int mode)
+		public static unsafe void ReleaseFloatArrayElements (IntPtr array, float* elements, int mode)
 		{
 			if (array == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (elements == IntPtr.Zero)
-				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", "elements");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.ReleaseFloatArrayElements (__info.EnvironmentPointer, array, elements, mode);
 		}
 
-		public static unsafe void ReleaseDoubleArrayElements (IntPtr array, IntPtr elements, int mode)
+		public static unsafe void ReleaseDoubleArrayElements (IntPtr array, double* elements, int mode)
 		{
 			if (array == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (elements == IntPtr.Zero)
-				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", "elements");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.ReleaseDoubleArrayElements (__info.EnvironmentPointer, array, elements, mode);
 		}
 
-		public static unsafe void GetBooleanArrayRegion (IntPtr array, int start, int length, IntPtr buffer)
+		public static unsafe void GetBooleanArrayRegion (IntPtr array, int start, int length, bool* buffer)
 		{
 			if (array == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (buffer == IntPtr.Zero)
-				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.GetBooleanArrayRegion (__info.EnvironmentPointer, array, start, length, buffer);
@@ -13676,12 +13574,10 @@ namespace
 
 		}
 
-		public static unsafe void GetByteArrayRegion (IntPtr array, int start, int length, IntPtr buffer)
+		public static unsafe void GetByteArrayRegion (IntPtr array, int start, int length, sbyte* buffer)
 		{
 			if (array == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (buffer == IntPtr.Zero)
-				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.GetByteArrayRegion (__info.EnvironmentPointer, array, start, length, buffer);
@@ -13692,12 +13588,10 @@ namespace
 
 		}
 
-		public static unsafe void GetCharArrayRegion (IntPtr array, int start, int length, IntPtr buffer)
+		public static unsafe void GetCharArrayRegion (IntPtr array, int start, int length, char* buffer)
 		{
 			if (array == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (buffer == IntPtr.Zero)
-				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.GetCharArrayRegion (__info.EnvironmentPointer, array, start, length, buffer);
@@ -13708,12 +13602,10 @@ namespace
 
 		}
 
-		public static unsafe void GetShortArrayRegion (IntPtr array, int start, int length, IntPtr buffer)
+		public static unsafe void GetShortArrayRegion (IntPtr array, int start, int length, short* buffer)
 		{
 			if (array == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (buffer == IntPtr.Zero)
-				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.GetShortArrayRegion (__info.EnvironmentPointer, array, start, length, buffer);
@@ -13724,12 +13616,10 @@ namespace
 
 		}
 
-		public static unsafe void GetIntArrayRegion (IntPtr array, int start, int length, IntPtr buffer)
+		public static unsafe void GetIntArrayRegion (IntPtr array, int start, int length, int* buffer)
 		{
 			if (array == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (buffer == IntPtr.Zero)
-				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.GetIntArrayRegion (__info.EnvironmentPointer, array, start, length, buffer);
@@ -13740,12 +13630,10 @@ namespace
 
 		}
 
-		public static unsafe void GetLongArrayRegion (IntPtr array, int start, int length, IntPtr buffer)
+		public static unsafe void GetLongArrayRegion (IntPtr array, int start, int length, long* buffer)
 		{
 			if (array == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (buffer == IntPtr.Zero)
-				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.GetLongArrayRegion (__info.EnvironmentPointer, array, start, length, buffer);
@@ -13756,12 +13644,10 @@ namespace
 
 		}
 
-		public static unsafe void GetFloatArrayRegion (IntPtr array, int start, int length, IntPtr buffer)
+		public static unsafe void GetFloatArrayRegion (IntPtr array, int start, int length, float* buffer)
 		{
 			if (array == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (buffer == IntPtr.Zero)
-				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.GetFloatArrayRegion (__info.EnvironmentPointer, array, start, length, buffer);
@@ -13772,12 +13658,10 @@ namespace
 
 		}
 
-		public static unsafe void GetDoubleArrayRegion (IntPtr array, int start, int length, IntPtr buffer)
+		public static unsafe void GetDoubleArrayRegion (IntPtr array, int start, int length, double* buffer)
 		{
 			if (array == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (buffer == IntPtr.Zero)
-				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.GetDoubleArrayRegion (__info.EnvironmentPointer, array, start, length, buffer);
@@ -13788,12 +13672,10 @@ namespace
 
 		}
 
-		public static unsafe void SetBooleanArrayRegion (IntPtr array, int start, int length, IntPtr buffer)
+		public static unsafe void SetBooleanArrayRegion (IntPtr array, int start, int length, bool* buffer)
 		{
 			if (array == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (buffer == IntPtr.Zero)
-				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetBooleanArrayRegion (__info.EnvironmentPointer, array, start, length, buffer);
@@ -13804,12 +13686,10 @@ namespace
 
 		}
 
-		public static unsafe void SetByteArrayRegion (IntPtr array, int start, int length, IntPtr buffer)
+		public static unsafe void SetByteArrayRegion (IntPtr array, int start, int length, sbyte* buffer)
 		{
 			if (array == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (buffer == IntPtr.Zero)
-				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetByteArrayRegion (__info.EnvironmentPointer, array, start, length, buffer);
@@ -13820,12 +13700,10 @@ namespace
 
 		}
 
-		public static unsafe void SetCharArrayRegion (IntPtr array, int start, int length, IntPtr buffer)
+		public static unsafe void SetCharArrayRegion (IntPtr array, int start, int length, char* buffer)
 		{
 			if (array == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (buffer == IntPtr.Zero)
-				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetCharArrayRegion (__info.EnvironmentPointer, array, start, length, buffer);
@@ -13836,12 +13714,10 @@ namespace
 
 		}
 
-		public static unsafe void SetShortArrayRegion (IntPtr array, int start, int length, IntPtr buffer)
+		public static unsafe void SetShortArrayRegion (IntPtr array, int start, int length, short* buffer)
 		{
 			if (array == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (buffer == IntPtr.Zero)
-				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetShortArrayRegion (__info.EnvironmentPointer, array, start, length, buffer);
@@ -13852,12 +13728,10 @@ namespace
 
 		}
 
-		public static unsafe void SetIntArrayRegion (IntPtr array, int start, int length, IntPtr buffer)
+		public static unsafe void SetIntArrayRegion (IntPtr array, int start, int length, int* buffer)
 		{
 			if (array == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (buffer == IntPtr.Zero)
-				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetIntArrayRegion (__info.EnvironmentPointer, array, start, length, buffer);
@@ -13868,12 +13742,10 @@ namespace
 
 		}
 
-		public static unsafe void SetLongArrayRegion (IntPtr array, int start, int length, IntPtr buffer)
+		public static unsafe void SetLongArrayRegion (IntPtr array, int start, int length, long* buffer)
 		{
 			if (array == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (buffer == IntPtr.Zero)
-				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetLongArrayRegion (__info.EnvironmentPointer, array, start, length, buffer);
@@ -13884,12 +13756,10 @@ namespace
 
 		}
 
-		public static unsafe void SetFloatArrayRegion (IntPtr array, int start, int length, IntPtr buffer)
+		public static unsafe void SetFloatArrayRegion (IntPtr array, int start, int length, float* buffer)
 		{
 			if (array == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (buffer == IntPtr.Zero)
-				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetFloatArrayRegion (__info.EnvironmentPointer, array, start, length, buffer);
@@ -13900,12 +13770,10 @@ namespace
 
 		}
 
-		public static unsafe void SetDoubleArrayRegion (IntPtr array, int start, int length, IntPtr buffer)
+		public static unsafe void SetDoubleArrayRegion (IntPtr array, int start, int length, double* buffer)
 		{
 			if (array == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
-			if (buffer == IntPtr.Zero)
-				throw new ArgumentException ("'buffer' must not be IntPtr.Zero.", "buffer");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetDoubleArrayRegion (__info.EnvironmentPointer, array, start, length, buffer);
@@ -15780,11 +15648,8 @@ namespace
 
 	public static partial class Strings {
 
-		public static unsafe IntPtr NewString (IntPtr unicodeChars, int length)
+		public static unsafe IntPtr NewString (char* unicodeChars, int length)
 		{
-			if (unicodeChars == IntPtr.Zero)
-				throw new ArgumentException ("'unicodeChars' must not be IntPtr.Zero.", "unicodeChars");
-
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.NewString (__info.EnvironmentPointer, unicodeChars, length);
 
@@ -15806,7 +15671,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe IntPtr GetStringChars (IntPtr stringInstance, IntPtr isCopy)
+		public static unsafe char* GetStringChars (IntPtr stringInstance, bool* isCopy)
 		{
 			if (stringInstance == IntPtr.Zero)
 				throw new ArgumentException ("`stringInstance` must not be IntPtr.Zero.", "stringInstance");
@@ -15816,12 +15681,10 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe void ReleaseStringChars (IntPtr stringInstance, IntPtr chars)
+		public static unsafe void ReleaseStringChars (IntPtr stringInstance, char* chars)
 		{
 			if (stringInstance == IntPtr.Zero)
 				throw new ArgumentException ("`stringInstance` must not be IntPtr.Zero.", "stringInstance");
-			if (chars == IntPtr.Zero)
-				throw new ArgumentException ("'chars' must not be IntPtr.Zero.", "chars");
 
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.ReleaseStringChars (__info.EnvironmentPointer, stringInstance, chars);
@@ -16191,11 +16054,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_jobject _NewObjectA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_jobject NewObjectA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_jobject _NewObjectA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_jobject NewObjectA {
 			get {
 				if (_NewObjectA == null)
-					_NewObjectA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_jobject) Marshal.GetDelegateForFunctionPointer (env.NewObjectA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_jobject));
+					_NewObjectA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_jobject) Marshal.GetDelegateForFunctionPointer (env.NewObjectA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_jobject));
 				return _NewObjectA;
 			}
 		}
@@ -16236,11 +16099,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_jobject _CallObjectMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_jobject CallObjectMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_jobject _CallObjectMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_jobject CallObjectMethodA {
 			get {
 				if (_CallObjectMethodA == null)
-					_CallObjectMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_jobject) Marshal.GetDelegateForFunctionPointer (env.CallObjectMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_jobject));
+					_CallObjectMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_jobject) Marshal.GetDelegateForFunctionPointer (env.CallObjectMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_jobject));
 				return _CallObjectMethodA;
 			}
 		}
@@ -16254,11 +16117,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_byte _CallBooleanMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_byte CallBooleanMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_byte _CallBooleanMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_byte CallBooleanMethodA {
 			get {
 				if (_CallBooleanMethodA == null)
-					_CallBooleanMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_byte) Marshal.GetDelegateForFunctionPointer (env.CallBooleanMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_byte));
+					_CallBooleanMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_byte) Marshal.GetDelegateForFunctionPointer (env.CallBooleanMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_byte));
 				return _CallBooleanMethodA;
 			}
 		}
@@ -16272,11 +16135,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_sbyte _CallByteMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_sbyte CallByteMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_sbyte _CallByteMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_sbyte CallByteMethodA {
 			get {
 				if (_CallByteMethodA == null)
-					_CallByteMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_sbyte) Marshal.GetDelegateForFunctionPointer (env.CallByteMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_sbyte));
+					_CallByteMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_sbyte) Marshal.GetDelegateForFunctionPointer (env.CallByteMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_sbyte));
 				return _CallByteMethodA;
 			}
 		}
@@ -16290,11 +16153,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_char _CallCharMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_char CallCharMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_char _CallCharMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_char CallCharMethodA {
 			get {
 				if (_CallCharMethodA == null)
-					_CallCharMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_char) Marshal.GetDelegateForFunctionPointer (env.CallCharMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_char));
+					_CallCharMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_char) Marshal.GetDelegateForFunctionPointer (env.CallCharMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_char));
 				return _CallCharMethodA;
 			}
 		}
@@ -16308,11 +16171,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_short _CallShortMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_short CallShortMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_short _CallShortMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_short CallShortMethodA {
 			get {
 				if (_CallShortMethodA == null)
-					_CallShortMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_short) Marshal.GetDelegateForFunctionPointer (env.CallShortMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_short));
+					_CallShortMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_short) Marshal.GetDelegateForFunctionPointer (env.CallShortMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_short));
 				return _CallShortMethodA;
 			}
 		}
@@ -16326,11 +16189,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_int _CallIntMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_int CallIntMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_int _CallIntMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_int CallIntMethodA {
 			get {
 				if (_CallIntMethodA == null)
-					_CallIntMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_int) Marshal.GetDelegateForFunctionPointer (env.CallIntMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_int));
+					_CallIntMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_int) Marshal.GetDelegateForFunctionPointer (env.CallIntMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_int));
 				return _CallIntMethodA;
 			}
 		}
@@ -16344,11 +16207,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_long _CallLongMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_long CallLongMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_long _CallLongMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_long CallLongMethodA {
 			get {
 				if (_CallLongMethodA == null)
-					_CallLongMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_long) Marshal.GetDelegateForFunctionPointer (env.CallLongMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_long));
+					_CallLongMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_long) Marshal.GetDelegateForFunctionPointer (env.CallLongMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_long));
 				return _CallLongMethodA;
 			}
 		}
@@ -16362,11 +16225,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_float _CallFloatMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_float CallFloatMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_float _CallFloatMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_float CallFloatMethodA {
 			get {
 				if (_CallFloatMethodA == null)
-					_CallFloatMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_float) Marshal.GetDelegateForFunctionPointer (env.CallFloatMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_float));
+					_CallFloatMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_float) Marshal.GetDelegateForFunctionPointer (env.CallFloatMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_float));
 				return _CallFloatMethodA;
 			}
 		}
@@ -16380,11 +16243,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_double _CallDoubleMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_double CallDoubleMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_double _CallDoubleMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_double CallDoubleMethodA {
 			get {
 				if (_CallDoubleMethodA == null)
-					_CallDoubleMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_double) Marshal.GetDelegateForFunctionPointer (env.CallDoubleMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_double));
+					_CallDoubleMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_double) Marshal.GetDelegateForFunctionPointer (env.CallDoubleMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_double));
 				return _CallDoubleMethodA;
 			}
 		}
@@ -16398,11 +16261,11 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef _CallVoidMethodA;
-		public JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef CallVoidMethodA {
+		JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr _CallVoidMethodA;
+		public JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr CallVoidMethodA {
 			get {
 				if (_CallVoidMethodA == null)
-					_CallVoidMethodA = (JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef) Marshal.GetDelegateForFunctionPointer (env.CallVoidMethodA, typeof (JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef));
+					_CallVoidMethodA = (JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr) Marshal.GetDelegateForFunctionPointer (env.CallVoidMethodA, typeof (JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr));
 				return _CallVoidMethodA;
 			}
 		}
@@ -16416,11 +16279,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_jobject _CallNonvirtualObjectMethodA;
-		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_jobject CallNonvirtualObjectMethodA {
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_jobject _CallNonvirtualObjectMethodA;
+		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_jobject CallNonvirtualObjectMethodA {
 			get {
 				if (_CallNonvirtualObjectMethodA == null)
-					_CallNonvirtualObjectMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_jobject) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualObjectMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_jobject));
+					_CallNonvirtualObjectMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_jobject) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualObjectMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_jobject));
 				return _CallNonvirtualObjectMethodA;
 			}
 		}
@@ -16434,11 +16297,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_byte _CallNonvirtualBooleanMethodA;
-		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_byte CallNonvirtualBooleanMethodA {
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_byte _CallNonvirtualBooleanMethodA;
+		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_byte CallNonvirtualBooleanMethodA {
 			get {
 				if (_CallNonvirtualBooleanMethodA == null)
-					_CallNonvirtualBooleanMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_byte) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualBooleanMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_byte));
+					_CallNonvirtualBooleanMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_byte) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualBooleanMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_byte));
 				return _CallNonvirtualBooleanMethodA;
 			}
 		}
@@ -16452,11 +16315,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_sbyte _CallNonvirtualByteMethodA;
-		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_sbyte CallNonvirtualByteMethodA {
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_sbyte _CallNonvirtualByteMethodA;
+		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_sbyte CallNonvirtualByteMethodA {
 			get {
 				if (_CallNonvirtualByteMethodA == null)
-					_CallNonvirtualByteMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_sbyte) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualByteMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_sbyte));
+					_CallNonvirtualByteMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_sbyte) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualByteMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_sbyte));
 				return _CallNonvirtualByteMethodA;
 			}
 		}
@@ -16470,11 +16333,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_char _CallNonvirtualCharMethodA;
-		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_char CallNonvirtualCharMethodA {
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_char _CallNonvirtualCharMethodA;
+		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_char CallNonvirtualCharMethodA {
 			get {
 				if (_CallNonvirtualCharMethodA == null)
-					_CallNonvirtualCharMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_char) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualCharMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_char));
+					_CallNonvirtualCharMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_char) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualCharMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_char));
 				return _CallNonvirtualCharMethodA;
 			}
 		}
@@ -16488,11 +16351,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_short _CallNonvirtualShortMethodA;
-		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_short CallNonvirtualShortMethodA {
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_short _CallNonvirtualShortMethodA;
+		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_short CallNonvirtualShortMethodA {
 			get {
 				if (_CallNonvirtualShortMethodA == null)
-					_CallNonvirtualShortMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_short) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualShortMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_short));
+					_CallNonvirtualShortMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_short) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualShortMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_short));
 				return _CallNonvirtualShortMethodA;
 			}
 		}
@@ -16506,11 +16369,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_int _CallNonvirtualIntMethodA;
-		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_int CallNonvirtualIntMethodA {
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_int _CallNonvirtualIntMethodA;
+		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_int CallNonvirtualIntMethodA {
 			get {
 				if (_CallNonvirtualIntMethodA == null)
-					_CallNonvirtualIntMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_int) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualIntMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_int));
+					_CallNonvirtualIntMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_int) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualIntMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_int));
 				return _CallNonvirtualIntMethodA;
 			}
 		}
@@ -16524,11 +16387,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_long _CallNonvirtualLongMethodA;
-		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_long CallNonvirtualLongMethodA {
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_long _CallNonvirtualLongMethodA;
+		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_long CallNonvirtualLongMethodA {
 			get {
 				if (_CallNonvirtualLongMethodA == null)
-					_CallNonvirtualLongMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_long) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualLongMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_long));
+					_CallNonvirtualLongMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_long) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualLongMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_long));
 				return _CallNonvirtualLongMethodA;
 			}
 		}
@@ -16542,11 +16405,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_float _CallNonvirtualFloatMethodA;
-		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_float CallNonvirtualFloatMethodA {
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_float _CallNonvirtualFloatMethodA;
+		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_float CallNonvirtualFloatMethodA {
 			get {
 				if (_CallNonvirtualFloatMethodA == null)
-					_CallNonvirtualFloatMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_float) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualFloatMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_float));
+					_CallNonvirtualFloatMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_float) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualFloatMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_float));
 				return _CallNonvirtualFloatMethodA;
 			}
 		}
@@ -16560,11 +16423,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_double _CallNonvirtualDoubleMethodA;
-		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_double CallNonvirtualDoubleMethodA {
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_double _CallNonvirtualDoubleMethodA;
+		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_double CallNonvirtualDoubleMethodA {
 			get {
 				if (_CallNonvirtualDoubleMethodA == null)
-					_CallNonvirtualDoubleMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_double) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualDoubleMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef_double));
+					_CallNonvirtualDoubleMethodA = (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_double) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualDoubleMethodA, typeof (JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_double));
 				return _CallNonvirtualDoubleMethodA;
 			}
 		}
@@ -16578,11 +16441,11 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef _CallNonvirtualVoidMethodA;
-		public JniAction_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef CallNonvirtualVoidMethodA {
+		JniAction_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr _CallNonvirtualVoidMethodA;
+		public JniAction_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr CallNonvirtualVoidMethodA {
 			get {
 				if (_CallNonvirtualVoidMethodA == null)
-					_CallNonvirtualVoidMethodA = (JniAction_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualVoidMethodA, typeof (JniAction_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValueRef));
+					_CallNonvirtualVoidMethodA = (JniAction_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr) Marshal.GetDelegateForFunctionPointer (env.CallNonvirtualVoidMethodA, typeof (JniAction_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr));
 				return _CallNonvirtualVoidMethodA;
 			}
 		}
@@ -16776,11 +16639,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_jobject _CallStaticObjectMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_jobject CallStaticObjectMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_jobject _CallStaticObjectMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_jobject CallStaticObjectMethodA {
 			get {
 				if (_CallStaticObjectMethodA == null)
-					_CallStaticObjectMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_jobject) Marshal.GetDelegateForFunctionPointer (env.CallStaticObjectMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_jobject));
+					_CallStaticObjectMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_jobject) Marshal.GetDelegateForFunctionPointer (env.CallStaticObjectMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_jobject));
 				return _CallStaticObjectMethodA;
 			}
 		}
@@ -16794,11 +16657,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_byte _CallStaticBooleanMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_byte CallStaticBooleanMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_byte _CallStaticBooleanMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_byte CallStaticBooleanMethodA {
 			get {
 				if (_CallStaticBooleanMethodA == null)
-					_CallStaticBooleanMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_byte) Marshal.GetDelegateForFunctionPointer (env.CallStaticBooleanMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_byte));
+					_CallStaticBooleanMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_byte) Marshal.GetDelegateForFunctionPointer (env.CallStaticBooleanMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_byte));
 				return _CallStaticBooleanMethodA;
 			}
 		}
@@ -16812,11 +16675,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_sbyte _CallStaticByteMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_sbyte CallStaticByteMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_sbyte _CallStaticByteMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_sbyte CallStaticByteMethodA {
 			get {
 				if (_CallStaticByteMethodA == null)
-					_CallStaticByteMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_sbyte) Marshal.GetDelegateForFunctionPointer (env.CallStaticByteMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_sbyte));
+					_CallStaticByteMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_sbyte) Marshal.GetDelegateForFunctionPointer (env.CallStaticByteMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_sbyte));
 				return _CallStaticByteMethodA;
 			}
 		}
@@ -16830,11 +16693,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_char _CallStaticCharMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_char CallStaticCharMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_char _CallStaticCharMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_char CallStaticCharMethodA {
 			get {
 				if (_CallStaticCharMethodA == null)
-					_CallStaticCharMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_char) Marshal.GetDelegateForFunctionPointer (env.CallStaticCharMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_char));
+					_CallStaticCharMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_char) Marshal.GetDelegateForFunctionPointer (env.CallStaticCharMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_char));
 				return _CallStaticCharMethodA;
 			}
 		}
@@ -16848,11 +16711,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_short _CallStaticShortMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_short CallStaticShortMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_short _CallStaticShortMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_short CallStaticShortMethodA {
 			get {
 				if (_CallStaticShortMethodA == null)
-					_CallStaticShortMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_short) Marshal.GetDelegateForFunctionPointer (env.CallStaticShortMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_short));
+					_CallStaticShortMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_short) Marshal.GetDelegateForFunctionPointer (env.CallStaticShortMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_short));
 				return _CallStaticShortMethodA;
 			}
 		}
@@ -16866,11 +16729,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_int _CallStaticIntMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_int CallStaticIntMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_int _CallStaticIntMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_int CallStaticIntMethodA {
 			get {
 				if (_CallStaticIntMethodA == null)
-					_CallStaticIntMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_int) Marshal.GetDelegateForFunctionPointer (env.CallStaticIntMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_int));
+					_CallStaticIntMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_int) Marshal.GetDelegateForFunctionPointer (env.CallStaticIntMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_int));
 				return _CallStaticIntMethodA;
 			}
 		}
@@ -16884,11 +16747,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_long _CallStaticLongMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_long CallStaticLongMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_long _CallStaticLongMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_long CallStaticLongMethodA {
 			get {
 				if (_CallStaticLongMethodA == null)
-					_CallStaticLongMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_long) Marshal.GetDelegateForFunctionPointer (env.CallStaticLongMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_long));
+					_CallStaticLongMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_long) Marshal.GetDelegateForFunctionPointer (env.CallStaticLongMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_long));
 				return _CallStaticLongMethodA;
 			}
 		}
@@ -16902,11 +16765,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_float _CallStaticFloatMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_float CallStaticFloatMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_float _CallStaticFloatMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_float CallStaticFloatMethodA {
 			get {
 				if (_CallStaticFloatMethodA == null)
-					_CallStaticFloatMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_float) Marshal.GetDelegateForFunctionPointer (env.CallStaticFloatMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_float));
+					_CallStaticFloatMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_float) Marshal.GetDelegateForFunctionPointer (env.CallStaticFloatMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_float));
 				return _CallStaticFloatMethodA;
 			}
 		}
@@ -16920,11 +16783,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_double _CallStaticDoubleMethodA;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_double CallStaticDoubleMethodA {
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_double _CallStaticDoubleMethodA;
+		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_double CallStaticDoubleMethodA {
 			get {
 				if (_CallStaticDoubleMethodA == null)
-					_CallStaticDoubleMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_double) Marshal.GetDelegateForFunctionPointer (env.CallStaticDoubleMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef_double));
+					_CallStaticDoubleMethodA = (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_double) Marshal.GetDelegateForFunctionPointer (env.CallStaticDoubleMethodA, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_double));
 				return _CallStaticDoubleMethodA;
 			}
 		}
@@ -16938,11 +16801,11 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef _CallStaticVoidMethodA;
-		public JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef CallStaticVoidMethodA {
+		JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr _CallStaticVoidMethodA;
+		public JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr CallStaticVoidMethodA {
 			get {
 				if (_CallStaticVoidMethodA == null)
-					_CallStaticVoidMethodA = (JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef) Marshal.GetDelegateForFunctionPointer (env.CallStaticVoidMethodA, typeof (JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValueRef));
+					_CallStaticVoidMethodA = (JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr) Marshal.GetDelegateForFunctionPointer (env.CallStaticVoidMethodA, typeof (JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr));
 				return _CallStaticVoidMethodA;
 			}
 		}
@@ -17118,11 +16981,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_IntPtr_int_jobject _NewString;
-		public JniFunc_JNIEnvPtr_IntPtr_int_jobject NewString {
+		JniFunc_JNIEnvPtr_charPtr_int_jobject _NewString;
+		public JniFunc_JNIEnvPtr_charPtr_int_jobject NewString {
 			get {
 				if (_NewString == null)
-					_NewString = (JniFunc_JNIEnvPtr_IntPtr_int_jobject) Marshal.GetDelegateForFunctionPointer (env.NewString, typeof (JniFunc_JNIEnvPtr_IntPtr_int_jobject));
+					_NewString = (JniFunc_JNIEnvPtr_charPtr_int_jobject) Marshal.GetDelegateForFunctionPointer (env.NewString, typeof (JniFunc_JNIEnvPtr_charPtr_int_jobject));
 				return _NewString;
 			}
 		}
@@ -17136,20 +16999,20 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr _GetStringChars;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr GetStringChars {
+		JniFunc_JNIEnvPtr_jobject_boolPtr_charPtr _GetStringChars;
+		public JniFunc_JNIEnvPtr_jobject_boolPtr_charPtr GetStringChars {
 			get {
 				if (_GetStringChars == null)
-					_GetStringChars = (JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr) Marshal.GetDelegateForFunctionPointer (env.GetStringChars, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr));
+					_GetStringChars = (JniFunc_JNIEnvPtr_jobject_boolPtr_charPtr) Marshal.GetDelegateForFunctionPointer (env.GetStringChars, typeof (JniFunc_JNIEnvPtr_jobject_boolPtr_charPtr));
 				return _GetStringChars;
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr _ReleaseStringChars;
-		public JniAction_JNIEnvPtr_jobject_IntPtr ReleaseStringChars {
+		JniAction_JNIEnvPtr_jobject_charPtr _ReleaseStringChars;
+		public JniAction_JNIEnvPtr_jobject_charPtr ReleaseStringChars {
 			get {
 				if (_ReleaseStringChars == null)
-					_ReleaseStringChars = (JniAction_JNIEnvPtr_jobject_IntPtr) Marshal.GetDelegateForFunctionPointer (env.ReleaseStringChars, typeof (JniAction_JNIEnvPtr_jobject_IntPtr));
+					_ReleaseStringChars = (JniAction_JNIEnvPtr_jobject_charPtr) Marshal.GetDelegateForFunctionPointer (env.ReleaseStringChars, typeof (JniAction_JNIEnvPtr_jobject_charPtr));
 				return _ReleaseStringChars;
 			}
 		}
@@ -17172,11 +17035,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_string _GetStringUTFChars;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_string GetStringUTFChars {
+		JniFunc_JNIEnvPtr_jobject_boolPtr_string _GetStringUTFChars;
+		public JniFunc_JNIEnvPtr_jobject_boolPtr_string GetStringUTFChars {
 			get {
 				if (_GetStringUTFChars == null)
-					_GetStringUTFChars = (JniFunc_JNIEnvPtr_jobject_IntPtr_string) Marshal.GetDelegateForFunctionPointer (env.GetStringUTFChars, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_string));
+					_GetStringUTFChars = (JniFunc_JNIEnvPtr_jobject_boolPtr_string) Marshal.GetDelegateForFunctionPointer (env.GetStringUTFChars, typeof (JniFunc_JNIEnvPtr_jobject_boolPtr_string));
 				return _GetStringUTFChars;
 			}
 		}
@@ -17298,290 +17161,290 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr _GetBooleanArrayElements;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr GetBooleanArrayElements {
+		JniFunc_JNIEnvPtr_jobject_boolPtr_boolPtr _GetBooleanArrayElements;
+		public JniFunc_JNIEnvPtr_jobject_boolPtr_boolPtr GetBooleanArrayElements {
 			get {
 				if (_GetBooleanArrayElements == null)
-					_GetBooleanArrayElements = (JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr) Marshal.GetDelegateForFunctionPointer (env.GetBooleanArrayElements, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr));
+					_GetBooleanArrayElements = (JniFunc_JNIEnvPtr_jobject_boolPtr_boolPtr) Marshal.GetDelegateForFunctionPointer (env.GetBooleanArrayElements, typeof (JniFunc_JNIEnvPtr_jobject_boolPtr_boolPtr));
 				return _GetBooleanArrayElements;
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr _GetByteArrayElements;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr GetByteArrayElements {
+		JniFunc_JNIEnvPtr_jobject_boolPtr_sbytePtr _GetByteArrayElements;
+		public JniFunc_JNIEnvPtr_jobject_boolPtr_sbytePtr GetByteArrayElements {
 			get {
 				if (_GetByteArrayElements == null)
-					_GetByteArrayElements = (JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr) Marshal.GetDelegateForFunctionPointer (env.GetByteArrayElements, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr));
+					_GetByteArrayElements = (JniFunc_JNIEnvPtr_jobject_boolPtr_sbytePtr) Marshal.GetDelegateForFunctionPointer (env.GetByteArrayElements, typeof (JniFunc_JNIEnvPtr_jobject_boolPtr_sbytePtr));
 				return _GetByteArrayElements;
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr _GetCharArrayElements;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr GetCharArrayElements {
+		JniFunc_JNIEnvPtr_jobject_boolPtr_charPtr _GetCharArrayElements;
+		public JniFunc_JNIEnvPtr_jobject_boolPtr_charPtr GetCharArrayElements {
 			get {
 				if (_GetCharArrayElements == null)
-					_GetCharArrayElements = (JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr) Marshal.GetDelegateForFunctionPointer (env.GetCharArrayElements, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr));
+					_GetCharArrayElements = (JniFunc_JNIEnvPtr_jobject_boolPtr_charPtr) Marshal.GetDelegateForFunctionPointer (env.GetCharArrayElements, typeof (JniFunc_JNIEnvPtr_jobject_boolPtr_charPtr));
 				return _GetCharArrayElements;
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr _GetShortArrayElements;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr GetShortArrayElements {
+		JniFunc_JNIEnvPtr_jobject_boolPtr_shortPtr _GetShortArrayElements;
+		public JniFunc_JNIEnvPtr_jobject_boolPtr_shortPtr GetShortArrayElements {
 			get {
 				if (_GetShortArrayElements == null)
-					_GetShortArrayElements = (JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr) Marshal.GetDelegateForFunctionPointer (env.GetShortArrayElements, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr));
+					_GetShortArrayElements = (JniFunc_JNIEnvPtr_jobject_boolPtr_shortPtr) Marshal.GetDelegateForFunctionPointer (env.GetShortArrayElements, typeof (JniFunc_JNIEnvPtr_jobject_boolPtr_shortPtr));
 				return _GetShortArrayElements;
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr _GetIntArrayElements;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr GetIntArrayElements {
+		JniFunc_JNIEnvPtr_jobject_boolPtr_intPtr _GetIntArrayElements;
+		public JniFunc_JNIEnvPtr_jobject_boolPtr_intPtr GetIntArrayElements {
 			get {
 				if (_GetIntArrayElements == null)
-					_GetIntArrayElements = (JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr) Marshal.GetDelegateForFunctionPointer (env.GetIntArrayElements, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr));
+					_GetIntArrayElements = (JniFunc_JNIEnvPtr_jobject_boolPtr_intPtr) Marshal.GetDelegateForFunctionPointer (env.GetIntArrayElements, typeof (JniFunc_JNIEnvPtr_jobject_boolPtr_intPtr));
 				return _GetIntArrayElements;
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr _GetLongArrayElements;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr GetLongArrayElements {
+		JniFunc_JNIEnvPtr_jobject_boolPtr_longPtr _GetLongArrayElements;
+		public JniFunc_JNIEnvPtr_jobject_boolPtr_longPtr GetLongArrayElements {
 			get {
 				if (_GetLongArrayElements == null)
-					_GetLongArrayElements = (JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr) Marshal.GetDelegateForFunctionPointer (env.GetLongArrayElements, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr));
+					_GetLongArrayElements = (JniFunc_JNIEnvPtr_jobject_boolPtr_longPtr) Marshal.GetDelegateForFunctionPointer (env.GetLongArrayElements, typeof (JniFunc_JNIEnvPtr_jobject_boolPtr_longPtr));
 				return _GetLongArrayElements;
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr _GetFloatArrayElements;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr GetFloatArrayElements {
+		JniFunc_JNIEnvPtr_jobject_boolPtr_floatPtr _GetFloatArrayElements;
+		public JniFunc_JNIEnvPtr_jobject_boolPtr_floatPtr GetFloatArrayElements {
 			get {
 				if (_GetFloatArrayElements == null)
-					_GetFloatArrayElements = (JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr) Marshal.GetDelegateForFunctionPointer (env.GetFloatArrayElements, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr));
+					_GetFloatArrayElements = (JniFunc_JNIEnvPtr_jobject_boolPtr_floatPtr) Marshal.GetDelegateForFunctionPointer (env.GetFloatArrayElements, typeof (JniFunc_JNIEnvPtr_jobject_boolPtr_floatPtr));
 				return _GetFloatArrayElements;
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr _GetDoubleArrayElements;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr GetDoubleArrayElements {
+		JniFunc_JNIEnvPtr_jobject_boolPtr_doublePtr _GetDoubleArrayElements;
+		public JniFunc_JNIEnvPtr_jobject_boolPtr_doublePtr GetDoubleArrayElements {
 			get {
 				if (_GetDoubleArrayElements == null)
-					_GetDoubleArrayElements = (JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr) Marshal.GetDelegateForFunctionPointer (env.GetDoubleArrayElements, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr));
+					_GetDoubleArrayElements = (JniFunc_JNIEnvPtr_jobject_boolPtr_doublePtr) Marshal.GetDelegateForFunctionPointer (env.GetDoubleArrayElements, typeof (JniFunc_JNIEnvPtr_jobject_boolPtr_doublePtr));
 				return _GetDoubleArrayElements;
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr_int _ReleaseBooleanArrayElements;
-		public JniAction_JNIEnvPtr_jobject_IntPtr_int ReleaseBooleanArrayElements {
+		JniAction_JNIEnvPtr_jobject_boolPtr_int _ReleaseBooleanArrayElements;
+		public JniAction_JNIEnvPtr_jobject_boolPtr_int ReleaseBooleanArrayElements {
 			get {
 				if (_ReleaseBooleanArrayElements == null)
-					_ReleaseBooleanArrayElements = (JniAction_JNIEnvPtr_jobject_IntPtr_int) Marshal.GetDelegateForFunctionPointer (env.ReleaseBooleanArrayElements, typeof (JniAction_JNIEnvPtr_jobject_IntPtr_int));
+					_ReleaseBooleanArrayElements = (JniAction_JNIEnvPtr_jobject_boolPtr_int) Marshal.GetDelegateForFunctionPointer (env.ReleaseBooleanArrayElements, typeof (JniAction_JNIEnvPtr_jobject_boolPtr_int));
 				return _ReleaseBooleanArrayElements;
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr_int _ReleaseByteArrayElements;
-		public JniAction_JNIEnvPtr_jobject_IntPtr_int ReleaseByteArrayElements {
+		JniAction_JNIEnvPtr_jobject_sbytePtr_int _ReleaseByteArrayElements;
+		public JniAction_JNIEnvPtr_jobject_sbytePtr_int ReleaseByteArrayElements {
 			get {
 				if (_ReleaseByteArrayElements == null)
-					_ReleaseByteArrayElements = (JniAction_JNIEnvPtr_jobject_IntPtr_int) Marshal.GetDelegateForFunctionPointer (env.ReleaseByteArrayElements, typeof (JniAction_JNIEnvPtr_jobject_IntPtr_int));
+					_ReleaseByteArrayElements = (JniAction_JNIEnvPtr_jobject_sbytePtr_int) Marshal.GetDelegateForFunctionPointer (env.ReleaseByteArrayElements, typeof (JniAction_JNIEnvPtr_jobject_sbytePtr_int));
 				return _ReleaseByteArrayElements;
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr_int _ReleaseCharArrayElements;
-		public JniAction_JNIEnvPtr_jobject_IntPtr_int ReleaseCharArrayElements {
+		JniAction_JNIEnvPtr_jobject_charPtr_int _ReleaseCharArrayElements;
+		public JniAction_JNIEnvPtr_jobject_charPtr_int ReleaseCharArrayElements {
 			get {
 				if (_ReleaseCharArrayElements == null)
-					_ReleaseCharArrayElements = (JniAction_JNIEnvPtr_jobject_IntPtr_int) Marshal.GetDelegateForFunctionPointer (env.ReleaseCharArrayElements, typeof (JniAction_JNIEnvPtr_jobject_IntPtr_int));
+					_ReleaseCharArrayElements = (JniAction_JNIEnvPtr_jobject_charPtr_int) Marshal.GetDelegateForFunctionPointer (env.ReleaseCharArrayElements, typeof (JniAction_JNIEnvPtr_jobject_charPtr_int));
 				return _ReleaseCharArrayElements;
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr_int _ReleaseShortArrayElements;
-		public JniAction_JNIEnvPtr_jobject_IntPtr_int ReleaseShortArrayElements {
+		JniAction_JNIEnvPtr_jobject_shortPtr_int _ReleaseShortArrayElements;
+		public JniAction_JNIEnvPtr_jobject_shortPtr_int ReleaseShortArrayElements {
 			get {
 				if (_ReleaseShortArrayElements == null)
-					_ReleaseShortArrayElements = (JniAction_JNIEnvPtr_jobject_IntPtr_int) Marshal.GetDelegateForFunctionPointer (env.ReleaseShortArrayElements, typeof (JniAction_JNIEnvPtr_jobject_IntPtr_int));
+					_ReleaseShortArrayElements = (JniAction_JNIEnvPtr_jobject_shortPtr_int) Marshal.GetDelegateForFunctionPointer (env.ReleaseShortArrayElements, typeof (JniAction_JNIEnvPtr_jobject_shortPtr_int));
 				return _ReleaseShortArrayElements;
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr_int _ReleaseIntArrayElements;
-		public JniAction_JNIEnvPtr_jobject_IntPtr_int ReleaseIntArrayElements {
+		JniAction_JNIEnvPtr_jobject_intPtr_int _ReleaseIntArrayElements;
+		public JniAction_JNIEnvPtr_jobject_intPtr_int ReleaseIntArrayElements {
 			get {
 				if (_ReleaseIntArrayElements == null)
-					_ReleaseIntArrayElements = (JniAction_JNIEnvPtr_jobject_IntPtr_int) Marshal.GetDelegateForFunctionPointer (env.ReleaseIntArrayElements, typeof (JniAction_JNIEnvPtr_jobject_IntPtr_int));
+					_ReleaseIntArrayElements = (JniAction_JNIEnvPtr_jobject_intPtr_int) Marshal.GetDelegateForFunctionPointer (env.ReleaseIntArrayElements, typeof (JniAction_JNIEnvPtr_jobject_intPtr_int));
 				return _ReleaseIntArrayElements;
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr_int _ReleaseLongArrayElements;
-		public JniAction_JNIEnvPtr_jobject_IntPtr_int ReleaseLongArrayElements {
+		JniAction_JNIEnvPtr_jobject_longPtr_int _ReleaseLongArrayElements;
+		public JniAction_JNIEnvPtr_jobject_longPtr_int ReleaseLongArrayElements {
 			get {
 				if (_ReleaseLongArrayElements == null)
-					_ReleaseLongArrayElements = (JniAction_JNIEnvPtr_jobject_IntPtr_int) Marshal.GetDelegateForFunctionPointer (env.ReleaseLongArrayElements, typeof (JniAction_JNIEnvPtr_jobject_IntPtr_int));
+					_ReleaseLongArrayElements = (JniAction_JNIEnvPtr_jobject_longPtr_int) Marshal.GetDelegateForFunctionPointer (env.ReleaseLongArrayElements, typeof (JniAction_JNIEnvPtr_jobject_longPtr_int));
 				return _ReleaseLongArrayElements;
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr_int _ReleaseFloatArrayElements;
-		public JniAction_JNIEnvPtr_jobject_IntPtr_int ReleaseFloatArrayElements {
+		JniAction_JNIEnvPtr_jobject_floatPtr_int _ReleaseFloatArrayElements;
+		public JniAction_JNIEnvPtr_jobject_floatPtr_int ReleaseFloatArrayElements {
 			get {
 				if (_ReleaseFloatArrayElements == null)
-					_ReleaseFloatArrayElements = (JniAction_JNIEnvPtr_jobject_IntPtr_int) Marshal.GetDelegateForFunctionPointer (env.ReleaseFloatArrayElements, typeof (JniAction_JNIEnvPtr_jobject_IntPtr_int));
+					_ReleaseFloatArrayElements = (JniAction_JNIEnvPtr_jobject_floatPtr_int) Marshal.GetDelegateForFunctionPointer (env.ReleaseFloatArrayElements, typeof (JniAction_JNIEnvPtr_jobject_floatPtr_int));
 				return _ReleaseFloatArrayElements;
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr_int _ReleaseDoubleArrayElements;
-		public JniAction_JNIEnvPtr_jobject_IntPtr_int ReleaseDoubleArrayElements {
+		JniAction_JNIEnvPtr_jobject_doublePtr_int _ReleaseDoubleArrayElements;
+		public JniAction_JNIEnvPtr_jobject_doublePtr_int ReleaseDoubleArrayElements {
 			get {
 				if (_ReleaseDoubleArrayElements == null)
-					_ReleaseDoubleArrayElements = (JniAction_JNIEnvPtr_jobject_IntPtr_int) Marshal.GetDelegateForFunctionPointer (env.ReleaseDoubleArrayElements, typeof (JniAction_JNIEnvPtr_jobject_IntPtr_int));
+					_ReleaseDoubleArrayElements = (JniAction_JNIEnvPtr_jobject_doublePtr_int) Marshal.GetDelegateForFunctionPointer (env.ReleaseDoubleArrayElements, typeof (JniAction_JNIEnvPtr_jobject_doublePtr_int));
 				return _ReleaseDoubleArrayElements;
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_IntPtr _GetBooleanArrayRegion;
-		public JniAction_JNIEnvPtr_jobject_int_int_IntPtr GetBooleanArrayRegion {
+		JniAction_JNIEnvPtr_jobject_int_int_boolPtr _GetBooleanArrayRegion;
+		public JniAction_JNIEnvPtr_jobject_int_int_boolPtr GetBooleanArrayRegion {
 			get {
 				if (_GetBooleanArrayRegion == null)
-					_GetBooleanArrayRegion = (JniAction_JNIEnvPtr_jobject_int_int_IntPtr) Marshal.GetDelegateForFunctionPointer (env.GetBooleanArrayRegion, typeof (JniAction_JNIEnvPtr_jobject_int_int_IntPtr));
+					_GetBooleanArrayRegion = (JniAction_JNIEnvPtr_jobject_int_int_boolPtr) Marshal.GetDelegateForFunctionPointer (env.GetBooleanArrayRegion, typeof (JniAction_JNIEnvPtr_jobject_int_int_boolPtr));
 				return _GetBooleanArrayRegion;
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_IntPtr _GetByteArrayRegion;
-		public JniAction_JNIEnvPtr_jobject_int_int_IntPtr GetByteArrayRegion {
+		JniAction_JNIEnvPtr_jobject_int_int_sbytePtr _GetByteArrayRegion;
+		public JniAction_JNIEnvPtr_jobject_int_int_sbytePtr GetByteArrayRegion {
 			get {
 				if (_GetByteArrayRegion == null)
-					_GetByteArrayRegion = (JniAction_JNIEnvPtr_jobject_int_int_IntPtr) Marshal.GetDelegateForFunctionPointer (env.GetByteArrayRegion, typeof (JniAction_JNIEnvPtr_jobject_int_int_IntPtr));
+					_GetByteArrayRegion = (JniAction_JNIEnvPtr_jobject_int_int_sbytePtr) Marshal.GetDelegateForFunctionPointer (env.GetByteArrayRegion, typeof (JniAction_JNIEnvPtr_jobject_int_int_sbytePtr));
 				return _GetByteArrayRegion;
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_IntPtr _GetCharArrayRegion;
-		public JniAction_JNIEnvPtr_jobject_int_int_IntPtr GetCharArrayRegion {
+		JniAction_JNIEnvPtr_jobject_int_int_charPtr _GetCharArrayRegion;
+		public JniAction_JNIEnvPtr_jobject_int_int_charPtr GetCharArrayRegion {
 			get {
 				if (_GetCharArrayRegion == null)
-					_GetCharArrayRegion = (JniAction_JNIEnvPtr_jobject_int_int_IntPtr) Marshal.GetDelegateForFunctionPointer (env.GetCharArrayRegion, typeof (JniAction_JNIEnvPtr_jobject_int_int_IntPtr));
+					_GetCharArrayRegion = (JniAction_JNIEnvPtr_jobject_int_int_charPtr) Marshal.GetDelegateForFunctionPointer (env.GetCharArrayRegion, typeof (JniAction_JNIEnvPtr_jobject_int_int_charPtr));
 				return _GetCharArrayRegion;
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_IntPtr _GetShortArrayRegion;
-		public JniAction_JNIEnvPtr_jobject_int_int_IntPtr GetShortArrayRegion {
+		JniAction_JNIEnvPtr_jobject_int_int_shortPtr _GetShortArrayRegion;
+		public JniAction_JNIEnvPtr_jobject_int_int_shortPtr GetShortArrayRegion {
 			get {
 				if (_GetShortArrayRegion == null)
-					_GetShortArrayRegion = (JniAction_JNIEnvPtr_jobject_int_int_IntPtr) Marshal.GetDelegateForFunctionPointer (env.GetShortArrayRegion, typeof (JniAction_JNIEnvPtr_jobject_int_int_IntPtr));
+					_GetShortArrayRegion = (JniAction_JNIEnvPtr_jobject_int_int_shortPtr) Marshal.GetDelegateForFunctionPointer (env.GetShortArrayRegion, typeof (JniAction_JNIEnvPtr_jobject_int_int_shortPtr));
 				return _GetShortArrayRegion;
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_IntPtr _GetIntArrayRegion;
-		public JniAction_JNIEnvPtr_jobject_int_int_IntPtr GetIntArrayRegion {
+		JniAction_JNIEnvPtr_jobject_int_int_intPtr _GetIntArrayRegion;
+		public JniAction_JNIEnvPtr_jobject_int_int_intPtr GetIntArrayRegion {
 			get {
 				if (_GetIntArrayRegion == null)
-					_GetIntArrayRegion = (JniAction_JNIEnvPtr_jobject_int_int_IntPtr) Marshal.GetDelegateForFunctionPointer (env.GetIntArrayRegion, typeof (JniAction_JNIEnvPtr_jobject_int_int_IntPtr));
+					_GetIntArrayRegion = (JniAction_JNIEnvPtr_jobject_int_int_intPtr) Marshal.GetDelegateForFunctionPointer (env.GetIntArrayRegion, typeof (JniAction_JNIEnvPtr_jobject_int_int_intPtr));
 				return _GetIntArrayRegion;
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_IntPtr _GetLongArrayRegion;
-		public JniAction_JNIEnvPtr_jobject_int_int_IntPtr GetLongArrayRegion {
+		JniAction_JNIEnvPtr_jobject_int_int_longPtr _GetLongArrayRegion;
+		public JniAction_JNIEnvPtr_jobject_int_int_longPtr GetLongArrayRegion {
 			get {
 				if (_GetLongArrayRegion == null)
-					_GetLongArrayRegion = (JniAction_JNIEnvPtr_jobject_int_int_IntPtr) Marshal.GetDelegateForFunctionPointer (env.GetLongArrayRegion, typeof (JniAction_JNIEnvPtr_jobject_int_int_IntPtr));
+					_GetLongArrayRegion = (JniAction_JNIEnvPtr_jobject_int_int_longPtr) Marshal.GetDelegateForFunctionPointer (env.GetLongArrayRegion, typeof (JniAction_JNIEnvPtr_jobject_int_int_longPtr));
 				return _GetLongArrayRegion;
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_IntPtr _GetFloatArrayRegion;
-		public JniAction_JNIEnvPtr_jobject_int_int_IntPtr GetFloatArrayRegion {
+		JniAction_JNIEnvPtr_jobject_int_int_floatPtr _GetFloatArrayRegion;
+		public JniAction_JNIEnvPtr_jobject_int_int_floatPtr GetFloatArrayRegion {
 			get {
 				if (_GetFloatArrayRegion == null)
-					_GetFloatArrayRegion = (JniAction_JNIEnvPtr_jobject_int_int_IntPtr) Marshal.GetDelegateForFunctionPointer (env.GetFloatArrayRegion, typeof (JniAction_JNIEnvPtr_jobject_int_int_IntPtr));
+					_GetFloatArrayRegion = (JniAction_JNIEnvPtr_jobject_int_int_floatPtr) Marshal.GetDelegateForFunctionPointer (env.GetFloatArrayRegion, typeof (JniAction_JNIEnvPtr_jobject_int_int_floatPtr));
 				return _GetFloatArrayRegion;
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_IntPtr _GetDoubleArrayRegion;
-		public JniAction_JNIEnvPtr_jobject_int_int_IntPtr GetDoubleArrayRegion {
+		JniAction_JNIEnvPtr_jobject_int_int_doublePtr _GetDoubleArrayRegion;
+		public JniAction_JNIEnvPtr_jobject_int_int_doublePtr GetDoubleArrayRegion {
 			get {
 				if (_GetDoubleArrayRegion == null)
-					_GetDoubleArrayRegion = (JniAction_JNIEnvPtr_jobject_int_int_IntPtr) Marshal.GetDelegateForFunctionPointer (env.GetDoubleArrayRegion, typeof (JniAction_JNIEnvPtr_jobject_int_int_IntPtr));
+					_GetDoubleArrayRegion = (JniAction_JNIEnvPtr_jobject_int_int_doublePtr) Marshal.GetDelegateForFunctionPointer (env.GetDoubleArrayRegion, typeof (JniAction_JNIEnvPtr_jobject_int_int_doublePtr));
 				return _GetDoubleArrayRegion;
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_IntPtr _SetBooleanArrayRegion;
-		public JniAction_JNIEnvPtr_jobject_int_int_IntPtr SetBooleanArrayRegion {
+		JniAction_JNIEnvPtr_jobject_int_int_boolPtr _SetBooleanArrayRegion;
+		public JniAction_JNIEnvPtr_jobject_int_int_boolPtr SetBooleanArrayRegion {
 			get {
 				if (_SetBooleanArrayRegion == null)
-					_SetBooleanArrayRegion = (JniAction_JNIEnvPtr_jobject_int_int_IntPtr) Marshal.GetDelegateForFunctionPointer (env.SetBooleanArrayRegion, typeof (JniAction_JNIEnvPtr_jobject_int_int_IntPtr));
+					_SetBooleanArrayRegion = (JniAction_JNIEnvPtr_jobject_int_int_boolPtr) Marshal.GetDelegateForFunctionPointer (env.SetBooleanArrayRegion, typeof (JniAction_JNIEnvPtr_jobject_int_int_boolPtr));
 				return _SetBooleanArrayRegion;
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_IntPtr _SetByteArrayRegion;
-		public JniAction_JNIEnvPtr_jobject_int_int_IntPtr SetByteArrayRegion {
+		JniAction_JNIEnvPtr_jobject_int_int_sbytePtr _SetByteArrayRegion;
+		public JniAction_JNIEnvPtr_jobject_int_int_sbytePtr SetByteArrayRegion {
 			get {
 				if (_SetByteArrayRegion == null)
-					_SetByteArrayRegion = (JniAction_JNIEnvPtr_jobject_int_int_IntPtr) Marshal.GetDelegateForFunctionPointer (env.SetByteArrayRegion, typeof (JniAction_JNIEnvPtr_jobject_int_int_IntPtr));
+					_SetByteArrayRegion = (JniAction_JNIEnvPtr_jobject_int_int_sbytePtr) Marshal.GetDelegateForFunctionPointer (env.SetByteArrayRegion, typeof (JniAction_JNIEnvPtr_jobject_int_int_sbytePtr));
 				return _SetByteArrayRegion;
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_IntPtr _SetCharArrayRegion;
-		public JniAction_JNIEnvPtr_jobject_int_int_IntPtr SetCharArrayRegion {
+		JniAction_JNIEnvPtr_jobject_int_int_charPtr _SetCharArrayRegion;
+		public JniAction_JNIEnvPtr_jobject_int_int_charPtr SetCharArrayRegion {
 			get {
 				if (_SetCharArrayRegion == null)
-					_SetCharArrayRegion = (JniAction_JNIEnvPtr_jobject_int_int_IntPtr) Marshal.GetDelegateForFunctionPointer (env.SetCharArrayRegion, typeof (JniAction_JNIEnvPtr_jobject_int_int_IntPtr));
+					_SetCharArrayRegion = (JniAction_JNIEnvPtr_jobject_int_int_charPtr) Marshal.GetDelegateForFunctionPointer (env.SetCharArrayRegion, typeof (JniAction_JNIEnvPtr_jobject_int_int_charPtr));
 				return _SetCharArrayRegion;
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_IntPtr _SetShortArrayRegion;
-		public JniAction_JNIEnvPtr_jobject_int_int_IntPtr SetShortArrayRegion {
+		JniAction_JNIEnvPtr_jobject_int_int_shortPtr _SetShortArrayRegion;
+		public JniAction_JNIEnvPtr_jobject_int_int_shortPtr SetShortArrayRegion {
 			get {
 				if (_SetShortArrayRegion == null)
-					_SetShortArrayRegion = (JniAction_JNIEnvPtr_jobject_int_int_IntPtr) Marshal.GetDelegateForFunctionPointer (env.SetShortArrayRegion, typeof (JniAction_JNIEnvPtr_jobject_int_int_IntPtr));
+					_SetShortArrayRegion = (JniAction_JNIEnvPtr_jobject_int_int_shortPtr) Marshal.GetDelegateForFunctionPointer (env.SetShortArrayRegion, typeof (JniAction_JNIEnvPtr_jobject_int_int_shortPtr));
 				return _SetShortArrayRegion;
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_IntPtr _SetIntArrayRegion;
-		public JniAction_JNIEnvPtr_jobject_int_int_IntPtr SetIntArrayRegion {
+		JniAction_JNIEnvPtr_jobject_int_int_intPtr _SetIntArrayRegion;
+		public JniAction_JNIEnvPtr_jobject_int_int_intPtr SetIntArrayRegion {
 			get {
 				if (_SetIntArrayRegion == null)
-					_SetIntArrayRegion = (JniAction_JNIEnvPtr_jobject_int_int_IntPtr) Marshal.GetDelegateForFunctionPointer (env.SetIntArrayRegion, typeof (JniAction_JNIEnvPtr_jobject_int_int_IntPtr));
+					_SetIntArrayRegion = (JniAction_JNIEnvPtr_jobject_int_int_intPtr) Marshal.GetDelegateForFunctionPointer (env.SetIntArrayRegion, typeof (JniAction_JNIEnvPtr_jobject_int_int_intPtr));
 				return _SetIntArrayRegion;
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_IntPtr _SetLongArrayRegion;
-		public JniAction_JNIEnvPtr_jobject_int_int_IntPtr SetLongArrayRegion {
+		JniAction_JNIEnvPtr_jobject_int_int_longPtr _SetLongArrayRegion;
+		public JniAction_JNIEnvPtr_jobject_int_int_longPtr SetLongArrayRegion {
 			get {
 				if (_SetLongArrayRegion == null)
-					_SetLongArrayRegion = (JniAction_JNIEnvPtr_jobject_int_int_IntPtr) Marshal.GetDelegateForFunctionPointer (env.SetLongArrayRegion, typeof (JniAction_JNIEnvPtr_jobject_int_int_IntPtr));
+					_SetLongArrayRegion = (JniAction_JNIEnvPtr_jobject_int_int_longPtr) Marshal.GetDelegateForFunctionPointer (env.SetLongArrayRegion, typeof (JniAction_JNIEnvPtr_jobject_int_int_longPtr));
 				return _SetLongArrayRegion;
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_IntPtr _SetFloatArrayRegion;
-		public JniAction_JNIEnvPtr_jobject_int_int_IntPtr SetFloatArrayRegion {
+		JniAction_JNIEnvPtr_jobject_int_int_floatPtr _SetFloatArrayRegion;
+		public JniAction_JNIEnvPtr_jobject_int_int_floatPtr SetFloatArrayRegion {
 			get {
 				if (_SetFloatArrayRegion == null)
-					_SetFloatArrayRegion = (JniAction_JNIEnvPtr_jobject_int_int_IntPtr) Marshal.GetDelegateForFunctionPointer (env.SetFloatArrayRegion, typeof (JniAction_JNIEnvPtr_jobject_int_int_IntPtr));
+					_SetFloatArrayRegion = (JniAction_JNIEnvPtr_jobject_int_int_floatPtr) Marshal.GetDelegateForFunctionPointer (env.SetFloatArrayRegion, typeof (JniAction_JNIEnvPtr_jobject_int_int_floatPtr));
 				return _SetFloatArrayRegion;
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_IntPtr _SetDoubleArrayRegion;
-		public JniAction_JNIEnvPtr_jobject_int_int_IntPtr SetDoubleArrayRegion {
+		JniAction_JNIEnvPtr_jobject_int_int_doublePtr _SetDoubleArrayRegion;
+		public JniAction_JNIEnvPtr_jobject_int_int_doublePtr SetDoubleArrayRegion {
 			get {
 				if (_SetDoubleArrayRegion == null)
-					_SetDoubleArrayRegion = (JniAction_JNIEnvPtr_jobject_int_int_IntPtr) Marshal.GetDelegateForFunctionPointer (env.SetDoubleArrayRegion, typeof (JniAction_JNIEnvPtr_jobject_int_int_IntPtr));
+					_SetDoubleArrayRegion = (JniAction_JNIEnvPtr_jobject_int_int_doublePtr) Marshal.GetDelegateForFunctionPointer (env.SetDoubleArrayRegion, typeof (JniAction_JNIEnvPtr_jobject_int_int_doublePtr));
 				return _SetDoubleArrayRegion;
 			}
 		}
@@ -17631,11 +17494,11 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_IntPtr _GetStringRegion;
-		public JniAction_JNIEnvPtr_jobject_int_int_IntPtr GetStringRegion {
+		JniAction_JNIEnvPtr_jobject_int_int_charPtr _GetStringRegion;
+		public JniAction_JNIEnvPtr_jobject_int_int_charPtr GetStringRegion {
 			get {
 				if (_GetStringRegion == null)
-					_GetStringRegion = (JniAction_JNIEnvPtr_jobject_int_int_IntPtr) Marshal.GetDelegateForFunctionPointer (env.GetStringRegion, typeof (JniAction_JNIEnvPtr_jobject_int_int_IntPtr));
+					_GetStringRegion = (JniAction_JNIEnvPtr_jobject_int_int_charPtr) Marshal.GetDelegateForFunctionPointer (env.GetStringRegion, typeof (JniAction_JNIEnvPtr_jobject_int_int_charPtr));
 				return _GetStringRegion;
 			}
 		}
@@ -17649,11 +17512,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr _GetPrimitiveArrayCritical;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr GetPrimitiveArrayCritical {
+		JniFunc_JNIEnvPtr_jobject_boolPtr_IntPtr _GetPrimitiveArrayCritical;
+		public JniFunc_JNIEnvPtr_jobject_boolPtr_IntPtr GetPrimitiveArrayCritical {
 			get {
 				if (_GetPrimitiveArrayCritical == null)
-					_GetPrimitiveArrayCritical = (JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr) Marshal.GetDelegateForFunctionPointer (env.GetPrimitiveArrayCritical, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_IntPtr));
+					_GetPrimitiveArrayCritical = (JniFunc_JNIEnvPtr_jobject_boolPtr_IntPtr) Marshal.GetDelegateForFunctionPointer (env.GetPrimitiveArrayCritical, typeof (JniFunc_JNIEnvPtr_jobject_boolPtr_IntPtr));
 				return _GetPrimitiveArrayCritical;
 			}
 		}
@@ -17667,11 +17530,11 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_string _GetStringCritical;
-		public JniFunc_JNIEnvPtr_jobject_IntPtr_string GetStringCritical {
+		JniFunc_JNIEnvPtr_jobject_boolPtr_string _GetStringCritical;
+		public JniFunc_JNIEnvPtr_jobject_boolPtr_string GetStringCritical {
 			get {
 				if (_GetStringCritical == null)
-					_GetStringCritical = (JniFunc_JNIEnvPtr_jobject_IntPtr_string) Marshal.GetDelegateForFunctionPointer (env.GetStringCritical, typeof (JniFunc_JNIEnvPtr_jobject_IntPtr_string));
+					_GetStringCritical = (JniFunc_JNIEnvPtr_jobject_boolPtr_string) Marshal.GetDelegateForFunctionPointer (env.GetStringCritical, typeof (JniFunc_JNIEnvPtr_jobject_boolPtr_string));
 				return _GetStringCritical;
 			}
 		}

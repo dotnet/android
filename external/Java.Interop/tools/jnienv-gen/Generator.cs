@@ -9,7 +9,7 @@ namespace Xamarin.Java.Interop
 	static class StringCoda {
 		public static string FixupType (this string t)
 		{
-			return t.Replace ("*", "Ref").Replace ("[]", "Array").Replace (" ", "");
+			return t.Replace ("*", "Ptr").Replace ("[]", "Array").Replace (" ", "");
 		}
 	}
 
@@ -558,7 +558,7 @@ namespace Xamarin.Java.Interop
 			
 			string rt = GetMarshalReturnType (style);
 			if (rt != "void")
-				name.Append ("_").Append (rt);
+				name.Append ("_").Append (rt.FixupType ());
 			
 			return name.ToString ();
 		}
@@ -570,7 +570,7 @@ namespace Xamarin.Java.Interop
 			{ "jvalue*",                    new BuiltinTypeInfo ("jvalue*",                 "JniArgumentValue*") },
 			{ "jbyte",                      new BuiltinTypeInfo ("jbyte",                   "sbyte") },
 			{ "jchar",                      new BuiltinTypeInfo ("jchar",                   "char") },
-			{ "jchar*",                     new BuiltinTypeInfo ("jchar*",                  "IntPtr") },
+			{ "jchar*",                     new BuiltinTypeInfo ("jchar*",                  "char*") },
 			{ "jshort",                     new BuiltinTypeInfo ("jshort",                  "short") },
 			{ "jsize",                      new BuiltinTypeInfo ("jsize",                   "int") },
 			{ "jint",                       new BuiltinTypeInfo ("jint",                    "int") },
@@ -597,6 +597,17 @@ namespace Xamarin.Java.Interop
 			{ "JavaVM**",                   new JavaVMPointerTypeInfo ("JavaVM**") },
 		};
 
+		static readonly Dictionary<string, string> pointerMapping = new Dictionary<string, string> {
+			{ "jboolean*",  "bool*" },
+			{ "jbyte*",     "sbyte*" },
+			{ "jchar*",     "char*" },
+			{ "jdouble*",   "double*" },
+			{ "jfloat*",    "float*" },
+			{ "jint*",      "int*" },
+			{ "jlong*",     "long*" },
+			{ "jshort*",    "short*" },
+		};
+
 		public static TypeInfo Create (string type, string managedType = null)
 		{
 			if (managedType != null)
@@ -606,6 +617,9 @@ namespace Xamarin.Java.Interop
 				return t;
 			if (type.EndsWith ("Array", StringComparison.Ordinal))
 				return new ArrayTypeInfo (type);
+			string p;
+			if (pointerMapping.TryGetValue (type, out p))
+				return new BuiltinTypeInfo (type, p);
 			if (type.EndsWith ("*", StringComparison.Ordinal))
 				return new BuiltinTypeInfo (type, "IntPtr");
 			return new BuiltinTypeInfo (type, type);

@@ -178,6 +178,22 @@ M: Java.Interop.JniStaticMethodInfo Java.Interop.JniType::GetStaticMethod(System
 M: Java.Interop.JniStaticMethodInfo Java.Interop.JniType::GetCachedStaticMethod(Java.Interop.JniStaticMethodInfo&,System.String,System.String)
 
 
+R: Gendarme.Rules.Interoperability.MarshalBooleansInPInvokeDeclarationsRule
+# These aren't `bool`, they're `bool*`, which is a *huge* difference!
+M: System.Char* Java.Interop.NativeMethods::JavaInterop_GetStringChars(System.IntPtr,System.IntPtr,System.Boolean*)
+M: System.Boolean* Java.Interop.NativeMethods::JavaInterop_GetBooleanArrayElements(System.IntPtr,System.IntPtr,System.Boolean*)
+M: System.SByte* Java.Interop.NativeMethods::JavaInterop_GetByteArrayElements(System.IntPtr,System.IntPtr,System.Boolean*)
+M: System.Char* Java.Interop.NativeMethods::JavaInterop_GetCharArrayElements(System.IntPtr,System.IntPtr,System.Boolean*)
+M: System.Int16* Java.Interop.NativeMethods::JavaInterop_GetShortArrayElements(System.IntPtr,System.IntPtr,System.Boolean*)
+M: System.Int32* Java.Interop.NativeMethods::JavaInterop_GetIntArrayElements(System.IntPtr,System.IntPtr,System.Boolean*)
+M: System.Int64* Java.Interop.NativeMethods::JavaInterop_GetLongArrayElements(System.IntPtr,System.IntPtr,System.Boolean*)
+M: System.Single* Java.Interop.NativeMethods::JavaInterop_GetFloatArrayElements(System.IntPtr,System.IntPtr,System.Boolean*)
+M: System.Double* Java.Interop.NativeMethods::JavaInterop_GetDoubleArrayElements(System.IntPtr,System.IntPtr,System.Boolean*)
+M: System.Void Java.Interop.NativeMethods::JavaInterop_ReleaseBooleanArrayElements(System.IntPtr,System.IntPtr,System.Boolean*,System.Int32)
+M: System.Void Java.Interop.NativeMethods::JavaInterop_GetBooleanArrayRegion(System.IntPtr,System.IntPtr&,System.IntPtr,System.Int32,System.Int32,System.Boolean*)
+M: System.Void Java.Interop.NativeMethods::JavaInterop_SetBooleanArrayRegion(System.IntPtr,System.IntPtr&,System.IntPtr,System.Int32,System.Int32,System.Boolean*)
+
+
 R: Gendarme.Rules.Maintainability.AvoidLackOfCohesionOfMethodsRule
 # I'm not sure I understand "lack of cohesion" in this context, and the docs
 # provide no examples. :-/

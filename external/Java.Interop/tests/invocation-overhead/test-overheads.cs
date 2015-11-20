@@ -492,7 +492,7 @@ class App {
 		var Arrays_binarySearch = SafeEnv.StaticMethods.GetStaticMethodID (Arrays_class, "binarySearch", "([II)I");
 		var intArray = SafeEnv.Arrays.NewIntArray (3);
 		fixed (int* p = new int[]{1,2,3})
-			SafeEnv.Arrays.SetIntArrayRegion (intArray, 0, 3, (IntPtr) p);
+			SafeEnv.Arrays.SetIntArrayRegion (intArray, 0, 3, p);
 
 		var t = Stopwatch.StartNew ();
 		var args = stackalloc JniArgumentValue [2];
@@ -519,7 +519,7 @@ class App {
 		var Arrays_binarySearch = JIIntPtrEnv.StaticMethods.GetStaticMethodID (Arrays_class, "binarySearch", "([II)I");
 		var intArray = JIIntPtrEnv.Arrays.NewIntArray (3);
 		fixed (int* p = new int[]{1,2,3})
-			JIIntPtrEnv.Arrays.SetIntArrayRegion (intArray, 0, 3, (IntPtr) p);
+			JIIntPtrEnv.Arrays.SetIntArrayRegion (intArray, 0, 3, p);
 
 		var t = Stopwatch.StartNew ();
 		var args = stackalloc JniArgumentValue [2];
@@ -540,7 +540,7 @@ class App {
 		var Arrays_binarySearch = PinvokeEnv.StaticMethods.GetStaticMethodID (Arrays_class, "binarySearch", "([II)I");
 		var intArray = PinvokeEnv.Arrays.NewIntArray (3);
 		fixed (int* p = new int[]{1,2,3})
-			PinvokeEnv.Arrays.SetIntArrayRegion (intArray, 0, 3, (IntPtr) p);
+			PinvokeEnv.Arrays.SetIntArrayRegion (intArray, 0, 3, p);
 
 		var t = Stopwatch.StartNew ();
 		var args = stackalloc JniArgumentValue [2];
@@ -564,7 +564,7 @@ class App {
 		var Arrays_binarySearch = XAIntPtrEnv.StaticMethods.GetStaticMethodID (Arrays_class, "binarySearch", "([II)I");
 		var intArray = XAIntPtrEnv.Arrays.NewIntArray (3);
 		fixed (int* p = new int[]{1,2,3})
-			XAIntPtrEnv.Arrays.SetIntArrayRegion (intArray, 0, 3, (IntPtr) p);
+			XAIntPtrEnv.Arrays.SetIntArrayRegion (intArray, 0, 3, p);
 
 		var t = Stopwatch.StartNew ();
 		var args = stackalloc JniArgumentValue [2];

@@ -233,7 +233,7 @@ namespace Java.Interop {
 					src_ptr++;
 					dst_ptr++;
 				}
-				return JniEnvironment.Strings.NewString ((IntPtr) dst, length);
+				return JniEnvironment.Strings.NewString (dst, length);
 			}
 		}
 

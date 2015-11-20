@@ -12,7 +12,7 @@ namespace Java.Interop
 				if (value == null)
 					return new JniObjectReference ();
 				fixed (char* s = value)
-					return NewString ((IntPtr) s, value.Length);
+					return NewString (s, value.Length);
 			}
 
 #if !XA_INTEGRATION
@@ -44,7 +44,7 @@ namespace Java.Interop
 				if (!value.IsValid)
 					return null;
 				int len = JniEnvironment.Strings.GetStringLength (value);
-				var p   = JniEnvironment.Strings.GetStringChars (value, IntPtr.Zero);
+				var p   = JniEnvironment.Strings.GetStringChars (value, null);
 				try {
 					return new string ((char*) p, 0, len);
 				} finally {

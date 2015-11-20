@@ -1446,7 +1446,7 @@ namespace Xamarin.Java.Interop
 				Throws        = true,
 				Prototype     = "jstring     (*NewString)(JNIEnv*, const jchar*, jsize);",
 				ReturnType    = "jstring",
-				Parameters    = new ParamInfo [] {new ParamInfo (TypeInfo.Create ("const jchar*", "IntPtr"), "unicodeChars"), new ParamInfo ("jsize", "length")},
+				Parameters    = new ParamInfo [] {new ParamInfo ("jchar*", "unicodeChars"), new ParamInfo ("jsize", "length")},
 			},
 			new JniFunction {
 				DeclaringType = StringOperationsCategory,
@@ -1461,8 +1461,8 @@ namespace Xamarin.Java.Interop
 				Name          = "GetStringChars",
 				Visibility    = "public",
 				Prototype     = "const jchar* (*GetStringChars)(JNIEnv*, jstring, jboolean*);",
-				ReturnType    = TypeInfo.Create ("const jchar*", "IntPtr"),
-				Parameters    = new ParamInfo [] {new ParamInfo ("jstring", "stringInstance"), new ParamInfo ("jboolean*", "isCopy", Modifier.CanBeNull)},
+				ReturnType    = TypeInfo.Create ("const jchar*", "char*"),
+				Parameters    = new ParamInfo [] {new ParamInfo ("jstring", "stringInstance"), new ParamInfo (TypeInfo.Create ("jboolean*", "bool*"), "isCopy", Modifier.CanBeNull)},
 			},
 			new JniFunction {
 				DeclaringType = StringOperationsCategory,
@@ -1470,7 +1470,7 @@ namespace Xamarin.Java.Interop
 				Visibility    = "public",
 				Prototype     = "void        (*ReleaseStringChars)(JNIEnv*, jstring, const jchar*);",
 				ReturnType    = "void",
-				Parameters    = new ParamInfo [] {new ParamInfo ("jstring", "stringInstance"), new ParamInfo (TypeInfo.Create ("const jchar*", "IntPtr"), "chars")},
+				Parameters    = new ParamInfo [] {new ParamInfo ("jstring", "stringInstance"), new ParamInfo ("jchar*", "chars")},
 			},
 			new JniFunction {
 				DeclaringType = StringOperationsCategory,
@@ -1495,7 +1495,7 @@ namespace Xamarin.Java.Interop
 				Visibility    = "private",
 				Prototype     = "const char* (*GetStringUTFChars)(JNIEnv*, jstring, jboolean*);",
 				ReturnType    = "const char*",
-				Parameters    = new ParamInfo [] {new ParamInfo ("jstring", "stringInstance"), new ParamInfo ("jboolean*", "isCopy", Modifier.CanBeNull)},
+				Parameters    = new ParamInfo [] {new ParamInfo ("jstring", "stringInstance"), new ParamInfo (TypeInfo.Create ("jboolean*", "bool*"), "isCopy", Modifier.CanBeNull)},
 			},
 			new JniFunction {
 				DeclaringType = StringOperationsCategory,
@@ -1613,7 +1613,7 @@ namespace Xamarin.Java.Interop
 				Visibility    = "public",
 				Prototype     = "jboolean*   (*GetBooleanArrayElements)(JNIEnv*, jbooleanArray, jboolean*);",
 				ReturnType    = "jboolean*",
-				Parameters    = new ParamInfo [] {new ParamInfo ("jbooleanArray", "array"), new ParamInfo ("jboolean*", "isCopy", Modifier.CanBeNull)},
+				Parameters    = new ParamInfo [] {new ParamInfo ("jbooleanArray", "array"), new ParamInfo (TypeInfo.Create ("jboolean*", "bool*"), "isCopy", Modifier.CanBeNull)},
 			},
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
@@ -1621,7 +1621,7 @@ namespace Xamarin.Java.Interop
 				Visibility    = "public",
 				Prototype     = "jbyte*      (*GetByteArrayElements)(JNIEnv*, jbyteArray, jboolean*);",
 				ReturnType    = "jbyte*",
-				Parameters    = new ParamInfo [] {new ParamInfo ("jbyteArray", "array"), new ParamInfo ("jboolean*", "isCopy", Modifier.CanBeNull)},
+				Parameters    = new ParamInfo [] {new ParamInfo ("jbyteArray", "array"), new ParamInfo (TypeInfo.Create ("jboolean*", "bool*"), "isCopy", Modifier.CanBeNull)},
 			},
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
@@ -1629,7 +1629,7 @@ namespace Xamarin.Java.Interop
 				Visibility    = "public",
 				Prototype     = "jchar*      (*GetCharArrayElements)(JNIEnv*, jcharArray, jboolean*);",
 				ReturnType    = "jchar*",
-				Parameters    = new ParamInfo [] {new ParamInfo ("jcharArray", "array"), new ParamInfo ("jboolean*", "isCopy", Modifier.CanBeNull)},
+				Parameters    = new ParamInfo [] {new ParamInfo ("jcharArray", "array"), new ParamInfo (TypeInfo.Create ("jboolean*", "bool*"), "isCopy", Modifier.CanBeNull)},
 			},
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
@@ -1637,7 +1637,7 @@ namespace Xamarin.Java.Interop
 				Visibility    = "public",
 				Prototype     = "jshort*     (*GetShortArrayElements)(JNIEnv*, jshortArray, jboolean*);",
 				ReturnType    = "jshort*",
-				Parameters    = new ParamInfo [] {new ParamInfo ("jshortArray", "array"), new ParamInfo ("jboolean*", "isCopy", Modifier.CanBeNull)},
+				Parameters    = new ParamInfo [] {new ParamInfo ("jshortArray", "array"), new ParamInfo (TypeInfo.Create ("jboolean*", "bool*"), "isCopy", Modifier.CanBeNull)},
 			},
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
@@ -1645,7 +1645,7 @@ namespace Xamarin.Java.Interop
 				Visibility    = "public",
 				Prototype     = "jint*       (*GetIntArrayElements)(JNIEnv*, jintArray, jboolean*);",
 				ReturnType    = "jint*",
-				Parameters    = new ParamInfo [] {new ParamInfo ("jintArray", "array"), new ParamInfo ("jboolean*", "isCopy", Modifier.CanBeNull)},
+				Parameters    = new ParamInfo [] {new ParamInfo ("jintArray", "array"), new ParamInfo (TypeInfo.Create ("jboolean*", "bool*"), "isCopy", Modifier.CanBeNull)},
 			},
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
@@ -1653,7 +1653,7 @@ namespace Xamarin.Java.Interop
 				Visibility    = "public",
 				Prototype     = "jlong*      (*GetLongArrayElements)(JNIEnv*, jlongArray, jboolean*);",
 				ReturnType    = "jlong*",
-				Parameters    = new ParamInfo [] {new ParamInfo ("jlongArray", "array"), new ParamInfo ("jboolean*", "isCopy", Modifier.CanBeNull)},
+				Parameters    = new ParamInfo [] {new ParamInfo ("jlongArray", "array"), new ParamInfo (TypeInfo.Create ("jboolean*", "bool*"), "isCopy", Modifier.CanBeNull)},
 			},
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
@@ -1661,7 +1661,7 @@ namespace Xamarin.Java.Interop
 				Visibility    = "public",
 				Prototype     = "jfloat*     (*GetFloatArrayElements)(JNIEnv*, jfloatArray, jboolean*);",
 				ReturnType    = "jfloat*",
-				Parameters    = new ParamInfo [] {new ParamInfo ("jfloatArray", "array"), new ParamInfo ("jboolean*", "isCopy", Modifier.CanBeNull)},
+				Parameters    = new ParamInfo [] {new ParamInfo ("jfloatArray", "array"), new ParamInfo (TypeInfo.Create ("jboolean*", "bool*"), "isCopy", Modifier.CanBeNull)},
 			},
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
@@ -1669,7 +1669,7 @@ namespace Xamarin.Java.Interop
 				Visibility    = "public",
 				Prototype     = "jdouble*    (*GetDoubleArrayElements)(JNIEnv*, jdoubleArray, jboolean*);",
 				ReturnType    = "jdouble*",
-				Parameters    = new ParamInfo [] {new ParamInfo ("jdoubleArray", "array"), new ParamInfo ("jboolean*", "isCopy", Modifier.CanBeNull)},
+				Parameters    = new ParamInfo [] {new ParamInfo ("jdoubleArray", "array"), new ParamInfo (TypeInfo.Create ("jboolean*", "bool*"), "isCopy", Modifier.CanBeNull)},
 			},
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
@@ -1814,7 +1814,7 @@ namespace Xamarin.Java.Interop
 				Throws        = true,
 				Prototype     = "void        (*SetBooleanArrayRegion)(JNIEnv*, jbooleanArray, jsize, jsize, const jboolean*);",
 				ReturnType    = "void",
-				Parameters    = new ParamInfo [] {new ParamInfo ("jbooleanArray", "array"), new ParamInfo ("jsize", "start"), new ParamInfo ("jsize", "length"), new ParamInfo ("const jboolean*", "buffer")},
+				Parameters    = new ParamInfo [] {new ParamInfo ("jbooleanArray", "array"), new ParamInfo ("jsize", "start"), new ParamInfo ("jsize", "length"), new ParamInfo ("jboolean*", "buffer")},
 			},
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
@@ -1823,7 +1823,7 @@ namespace Xamarin.Java.Interop
 				Throws        = true,
 				Prototype     = "void        (*SetByteArrayRegion)(JNIEnv*, jbyteArray, jsize, jsize, const jbyte*);",
 				ReturnType    = "void",
-				Parameters    = new ParamInfo [] {new ParamInfo ("jbyteArray", "array"), new ParamInfo ("jsize", "start"), new ParamInfo ("jsize", "length"), new ParamInfo ("const jbyte*", "buffer")},
+				Parameters    = new ParamInfo [] {new ParamInfo ("jbyteArray", "array"), new ParamInfo ("jsize", "start"), new ParamInfo ("jsize", "length"), new ParamInfo ("jbyte*", "buffer")},
 			},
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
@@ -1832,7 +1832,7 @@ namespace Xamarin.Java.Interop
 				Throws        = true,
 				Prototype     = "void        (*SetCharArrayRegion)(JNIEnv*, jcharArray, jsize, jsize, const jchar*);",
 				ReturnType    = "void",
-				Parameters    = new ParamInfo [] {new ParamInfo ("jcharArray", "array"), new ParamInfo ("jsize", "start"), new ParamInfo ("jsize", "length"), new ParamInfo (TypeInfo.Create ("const jchar*", "IntPtr"), "buffer")},
+				Parameters    = new ParamInfo [] {new ParamInfo ("jcharArray", "array"), new ParamInfo ("jsize", "start"), new ParamInfo ("jsize", "length"), new ParamInfo (TypeInfo.Create ("const jchar*", "char*"), "buffer")},
 			},
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
@@ -1841,7 +1841,7 @@ namespace Xamarin.Java.Interop
 				Throws        = true,
 				Prototype     = "void        (*SetShortArrayRegion)(JNIEnv*, jshortArray, jsize, jsize, const jshort*);",
 				ReturnType    = "void",
-				Parameters    = new ParamInfo [] {new ParamInfo ("jshortArray", "array"), new ParamInfo ("jsize", "start"), new ParamInfo ("jsize", "length"), new ParamInfo ("const jshort*", "buffer")},
+				Parameters    = new ParamInfo [] {new ParamInfo ("jshortArray", "array"), new ParamInfo ("jsize", "start"), new ParamInfo ("jsize", "length"), new ParamInfo ("jshort*", "buffer")},
 			},
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
@@ -1850,7 +1850,7 @@ namespace Xamarin.Java.Interop
 				Throws        = true,
 				Prototype     = "void        (*SetIntArrayRegion)(JNIEnv*, jintArray, jsize, jsize, const jint*);",
 				ReturnType    = "void",
-				Parameters    = new ParamInfo [] {new ParamInfo ("jintArray", "array"), new ParamInfo ("jsize", "start"), new ParamInfo ("jsize", "length"), new ParamInfo ("const jint*", "buffer")},
+				Parameters    = new ParamInfo [] {new ParamInfo ("jintArray", "array"), new ParamInfo ("jsize", "start"), new ParamInfo ("jsize", "length"), new ParamInfo ("jint*", "buffer")},
 			},
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
@@ -1859,7 +1859,7 @@ namespace Xamarin.Java.Interop
 				Throws        = true,
 				Prototype     = "void        (*SetLongArrayRegion)(JNIEnv*, jlongArray, jsize, jsize, const jlong*);",
 				ReturnType    = "void",
-				Parameters    = new ParamInfo [] {new ParamInfo ("jlongArray", "array"), new ParamInfo ("jsize", "start"), new ParamInfo ("jsize", "length"), new ParamInfo ("const jlong*", "buffer")},
+				Parameters    = new ParamInfo [] {new ParamInfo ("jlongArray", "array"), new ParamInfo ("jsize", "start"), new ParamInfo ("jsize", "length"), new ParamInfo ("jlong*", "buffer")},
 			},
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
@@ -1868,7 +1868,7 @@ namespace Xamarin.Java.Interop
 				Throws        = true,
 				Prototype     = "void        (*SetFloatArrayRegion)(JNIEnv*, jfloatArray, jsize, jsize, const jfloat*);",
 				ReturnType    = "void",
-				Parameters    = new ParamInfo [] {new ParamInfo ("jfloatArray", "array"), new ParamInfo ("jsize", "start"), new ParamInfo ("jsize", "length"), new ParamInfo ("const jfloat*", "buffer")},
+				Parameters    = new ParamInfo [] {new ParamInfo ("jfloatArray", "array"), new ParamInfo ("jsize", "start"), new ParamInfo ("jsize", "length"), new ParamInfo ("jfloat*", "buffer")},
 			},
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
@@ -1877,7 +1877,7 @@ namespace Xamarin.Java.Interop
 				Throws        = true,
 				Prototype     = "void        (*SetDoubleArrayRegion)(JNIEnv*, jdoubleArray, jsize, jsize, const jdouble*);",
 				ReturnType    = "void",
-				Parameters    = new ParamInfo [] {new ParamInfo ("jdoubleArray", "array"), new ParamInfo ("jsize", "start"), new ParamInfo ("jsize", "length"), new ParamInfo ("const jdouble*", "buffer")},
+				Parameters    = new ParamInfo [] {new ParamInfo ("jdoubleArray", "array"), new ParamInfo ("jsize", "start"), new ParamInfo ("jsize", "length"), new ParamInfo ("jdouble*", "buffer")},
 			},
 			new JniFunction {
 				DeclaringType = ClassesCategory,
@@ -1949,7 +1949,7 @@ namespace Xamarin.Java.Interop
 				Visibility    = "private",
 				Prototype     = "void*       (*GetPrimitiveArrayCritical)(JNIEnv*, jarray, jboolean*);",
 				ReturnType    = "void*",
-				Parameters    = new ParamInfo [] {new ParamInfo ("jarray", "array"), new ParamInfo ("jboolean*", "isCopy", Modifier.CanBeNull)},
+				Parameters    = new ParamInfo [] {new ParamInfo ("jarray", "array"), new ParamInfo (TypeInfo.Create ("jboolean*", "bool*"), "isCopy", Modifier.CanBeNull)},
 			},
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
@@ -1965,7 +1965,7 @@ namespace Xamarin.Java.Interop
 				Visibility    = "private",
 				Prototype     = "const jchar* (*GetStringCritical)(JNIEnv*, jstring, jboolean*);",
 				ReturnType    = "const jchar*",
-				Parameters    = new ParamInfo [] {new ParamInfo ("jstring", "stringInstance"), new ParamInfo ("jboolean*", "isCopy", Modifier.CanBeNull)},
+				Parameters    = new ParamInfo [] {new ParamInfo ("jstring", "stringInstance"), new ParamInfo (TypeInfo.Create ("jboolean*", "bool*"), "isCopy", Modifier.CanBeNull)},
 			},
 			new JniFunction {
 				DeclaringType = StringOperationsCategory,

@@ -220,12 +220,13 @@ namespace Java.Interop {
 			}),
 		};
 	}
+
 	public sealed class JniBooleanArrayElements : JniArrayElements {
 
 		JniObjectReference      arrayHandle;
 
-		internal JniBooleanArrayElements (JniObjectReference arrayHandle, IntPtr elements)
-			: base (elements)
+		internal unsafe JniBooleanArrayElements (JniObjectReference arrayHandle, Boolean* elements)
+			: base ((IntPtr) elements)
 		{
 			this.arrayHandle = arrayHandle;
 		}
@@ -234,9 +235,9 @@ namespace Java.Interop {
 			get {return (Boolean*) base.Elements;}
 		}
 
-		protected override void Synchronize (JniArrayElementsReleaseMode releaseMode)
+		protected override unsafe void Synchronize (JniArrayElementsReleaseMode releaseMode)
 		{
-			JniEnvironment.Arrays.ReleaseBooleanArrayElements (arrayHandle, base.Elements, (int) releaseMode);
+			JniEnvironment.Arrays.ReleaseBooleanArrayElements (arrayHandle, Elements, (int) releaseMode);
 		}
 	}
 
@@ -272,10 +273,10 @@ namespace Java.Interop {
 			return GetElements ();
 		}
 
-		public new JniBooleanArrayElements GetElements ()
+		public new unsafe JniBooleanArrayElements GetElements ()
 		{
-			IntPtr elements = JniEnvironment.Arrays.GetBooleanArrayElements (PeerReference, IntPtr.Zero);
-			return elements == IntPtr.Zero ? null : new JniBooleanArrayElements (PeerReference, elements);
+			var elements = JniEnvironment.Arrays.GetBooleanArrayElements (PeerReference, null);
+			return elements == null ? null : new JniBooleanArrayElements (PeerReference, elements);
 		}
 
 		public override unsafe int IndexOf (Boolean item)
@@ -315,7 +316,7 @@ namespace Java.Interop {
 				return;
 
 			fixed (Boolean* b = destinationArray)
-				JniEnvironment.Arrays.GetBooleanArrayRegion (PeerReference, sourceIndex, length, (IntPtr) (b+destinationIndex));
+				JniEnvironment.Arrays.GetBooleanArrayRegion (PeerReference, sourceIndex, length, (b+destinationIndex));
 		}
 
 		public override unsafe void CopyFrom (Boolean[] sourceArray, int sourceIndex, int destinationIndex, int length)
@@ -327,7 +328,7 @@ namespace Java.Interop {
 				return;
 
 			fixed (Boolean* b = sourceArray)
-				JniEnvironment.Arrays.SetBooleanArrayRegion (PeerReference, destinationIndex, length, (IntPtr) (b+sourceIndex));
+				JniEnvironment.Arrays.SetBooleanArrayRegion (PeerReference, destinationIndex, length, (b+sourceIndex));
 		}
 
 		internal override bool TargetTypeIsCurrentType (Type targetType)
@@ -370,8 +371,8 @@ namespace Java.Interop {
 
 		JniObjectReference      arrayHandle;
 
-		internal JniSByteArrayElements (JniObjectReference arrayHandle, IntPtr elements)
-			: base (elements)
+		internal unsafe JniSByteArrayElements (JniObjectReference arrayHandle, SByte* elements)
+			: base ((IntPtr) elements)
 		{
 			this.arrayHandle = arrayHandle;
 		}
@@ -380,9 +381,9 @@ namespace Java.Interop {
 			get {return (SByte*) base.Elements;}
 		}
 
-		protected override void Synchronize (JniArrayElementsReleaseMode releaseMode)
+		protected override unsafe void Synchronize (JniArrayElementsReleaseMode releaseMode)
 		{
-			JniEnvironment.Arrays.ReleaseByteArrayElements (arrayHandle, base.Elements, (int) releaseMode);
+			JniEnvironment.Arrays.ReleaseByteArrayElements (arrayHandle, Elements, (int) releaseMode);
 		}
 	}
 
@@ -418,10 +419,10 @@ namespace Java.Interop {
 			return GetElements ();
 		}
 
-		public new JniSByteArrayElements GetElements ()
+		public new unsafe JniSByteArrayElements GetElements ()
 		{
-			IntPtr elements = JniEnvironment.Arrays.GetByteArrayElements (PeerReference, IntPtr.Zero);
-			return elements == IntPtr.Zero ? null : new JniSByteArrayElements (PeerReference, elements);
+			var elements = JniEnvironment.Arrays.GetByteArrayElements (PeerReference, null);
+			return elements == null ? null : new JniSByteArrayElements (PeerReference, elements);
 		}
 
 		public override unsafe int IndexOf (SByte item)
@@ -461,7 +462,7 @@ namespace Java.Interop {
 				return;
 
 			fixed (SByte* b = destinationArray)
-				JniEnvironment.Arrays.GetByteArrayRegion (PeerReference, sourceIndex, length, (IntPtr) (b+destinationIndex));
+				JniEnvironment.Arrays.GetByteArrayRegion (PeerReference, sourceIndex, length, (b+destinationIndex));
 		}
 
 		public override unsafe void CopyFrom (SByte[] sourceArray, int sourceIndex, int destinationIndex, int length)
@@ -473,7 +474,7 @@ namespace Java.Interop {
 				return;
 
 			fixed (SByte* b = sourceArray)
-				JniEnvironment.Arrays.SetByteArrayRegion (PeerReference, destinationIndex, length, (IntPtr) (b+sourceIndex));
+				JniEnvironment.Arrays.SetByteArrayRegion (PeerReference, destinationIndex, length, (b+sourceIndex));
 		}
 
 		internal override bool TargetTypeIsCurrentType (Type targetType)
@@ -516,8 +517,8 @@ namespace Java.Interop {
 
 		JniObjectReference      arrayHandle;
 
-		internal JniCharArrayElements (JniObjectReference arrayHandle, IntPtr elements)
-			: base (elements)
+		internal unsafe JniCharArrayElements (JniObjectReference arrayHandle, Char* elements)
+			: base ((IntPtr) elements)
 		{
 			this.arrayHandle = arrayHandle;
 		}
@@ -526,9 +527,9 @@ namespace Java.Interop {
 			get {return (Char*) base.Elements;}
 		}
 
-		protected override void Synchronize (JniArrayElementsReleaseMode releaseMode)
+		protected override unsafe void Synchronize (JniArrayElementsReleaseMode releaseMode)
 		{
-			JniEnvironment.Arrays.ReleaseCharArrayElements (arrayHandle, base.Elements, (int) releaseMode);
+			JniEnvironment.Arrays.ReleaseCharArrayElements (arrayHandle, Elements, (int) releaseMode);
 		}
 	}
 
@@ -564,10 +565,10 @@ namespace Java.Interop {
 			return GetElements ();
 		}
 
-		public new JniCharArrayElements GetElements ()
+		public new unsafe JniCharArrayElements GetElements ()
 		{
-			IntPtr elements = JniEnvironment.Arrays.GetCharArrayElements (PeerReference, IntPtr.Zero);
-			return elements == IntPtr.Zero ? null : new JniCharArrayElements (PeerReference, elements);
+			var elements = JniEnvironment.Arrays.GetCharArrayElements (PeerReference, null);
+			return elements == null ? null : new JniCharArrayElements (PeerReference, elements);
 		}
 
 		public override unsafe int IndexOf (Char item)
@@ -607,7 +608,7 @@ namespace Java.Interop {
 				return;
 
 			fixed (Char* b = destinationArray)
-				JniEnvironment.Arrays.GetCharArrayRegion (PeerReference, sourceIndex, length, (IntPtr) (b+destinationIndex));
+				JniEnvironment.Arrays.GetCharArrayRegion (PeerReference, sourceIndex, length, (b+destinationIndex));
 		}
 
 		public override unsafe void CopyFrom (Char[] sourceArray, int sourceIndex, int destinationIndex, int length)
@@ -619,7 +620,7 @@ namespace Java.Interop {
 				return;
 
 			fixed (Char* b = sourceArray)
-				JniEnvironment.Arrays.SetCharArrayRegion (PeerReference, destinationIndex, length, (IntPtr) (b+sourceIndex));
+				JniEnvironment.Arrays.SetCharArrayRegion (PeerReference, destinationIndex, length, (b+sourceIndex));
 		}
 
 		internal override bool TargetTypeIsCurrentType (Type targetType)
@@ -662,8 +663,8 @@ namespace Java.Interop {
 
 		JniObjectReference      arrayHandle;
 
-		internal JniInt16ArrayElements (JniObjectReference arrayHandle, IntPtr elements)
-			: base (elements)
+		internal unsafe JniInt16ArrayElements (JniObjectReference arrayHandle, Int16* elements)
+			: base ((IntPtr) elements)
 		{
 			this.arrayHandle = arrayHandle;
 		}
@@ -672,9 +673,9 @@ namespace Java.Interop {
 			get {return (Int16*) base.Elements;}
 		}
 
-		protected override void Synchronize (JniArrayElementsReleaseMode releaseMode)
+		protected override unsafe void Synchronize (JniArrayElementsReleaseMode releaseMode)
 		{
-			JniEnvironment.Arrays.ReleaseShortArrayElements (arrayHandle, base.Elements, (int) releaseMode);
+			JniEnvironment.Arrays.ReleaseShortArrayElements (arrayHandle, Elements, (int) releaseMode);
 		}
 	}
 
@@ -710,10 +711,10 @@ namespace Java.Interop {
 			return GetElements ();
 		}
 
-		public new JniInt16ArrayElements GetElements ()
+		public new unsafe JniInt16ArrayElements GetElements ()
 		{
-			IntPtr elements = JniEnvironment.Arrays.GetShortArrayElements (PeerReference, IntPtr.Zero);
-			return elements == IntPtr.Zero ? null : new JniInt16ArrayElements (PeerReference, elements);
+			var elements = JniEnvironment.Arrays.GetShortArrayElements (PeerReference, null);
+			return elements == null ? null : new JniInt16ArrayElements (PeerReference, elements);
 		}
 
 		public override unsafe int IndexOf (Int16 item)
@@ -753,7 +754,7 @@ namespace Java.Interop {
 				return;
 
 			fixed (Int16* b = destinationArray)
-				JniEnvironment.Arrays.GetShortArrayRegion (PeerReference, sourceIndex, length, (IntPtr) (b+destinationIndex));
+				JniEnvironment.Arrays.GetShortArrayRegion (PeerReference, sourceIndex, length, (b+destinationIndex));
 		}
 
 		public override unsafe void CopyFrom (Int16[] sourceArray, int sourceIndex, int destinationIndex, int length)
@@ -765,7 +766,7 @@ namespace Java.Interop {
 				return;
 
 			fixed (Int16* b = sourceArray)
-				JniEnvironment.Arrays.SetShortArrayRegion (PeerReference, destinationIndex, length, (IntPtr) (b+sourceIndex));
+				JniEnvironment.Arrays.SetShortArrayRegion (PeerReference, destinationIndex, length, (b+sourceIndex));
 		}
 
 		internal override bool TargetTypeIsCurrentType (Type targetType)
@@ -808,8 +809,8 @@ namespace Java.Interop {
 
 		JniObjectReference      arrayHandle;
 
-		internal JniInt32ArrayElements (JniObjectReference arrayHandle, IntPtr elements)
-			: base (elements)
+		internal unsafe JniInt32ArrayElements (JniObjectReference arrayHandle, Int32* elements)
+			: base ((IntPtr) elements)
 		{
 			this.arrayHandle = arrayHandle;
 		}
@@ -818,9 +819,9 @@ namespace Java.Interop {
 			get {return (Int32*) base.Elements;}
 		}
 
-		protected override void Synchronize (JniArrayElementsReleaseMode releaseMode)
+		protected override unsafe void Synchronize (JniArrayElementsReleaseMode releaseMode)
 		{
-			JniEnvironment.Arrays.ReleaseIntArrayElements (arrayHandle, base.Elements, (int) releaseMode);
+			JniEnvironment.Arrays.ReleaseIntArrayElements (arrayHandle, Elements, (int) releaseMode);
 		}
 	}
 
@@ -856,10 +857,10 @@ namespace Java.Interop {
 			return GetElements ();
 		}
 
-		public new JniInt32ArrayElements GetElements ()
+		public new unsafe JniInt32ArrayElements GetElements ()
 		{
-			IntPtr elements = JniEnvironment.Arrays.GetIntArrayElements (PeerReference, IntPtr.Zero);
-			return elements == IntPtr.Zero ? null : new JniInt32ArrayElements (PeerReference, elements);
+			var elements = JniEnvironment.Arrays.GetIntArrayElements (PeerReference, null);
+			return elements == null ? null : new JniInt32ArrayElements (PeerReference, elements);
 		}
 
 		public override unsafe int IndexOf (Int32 item)
@@ -899,7 +900,7 @@ namespace Java.Interop {
 				return;
 
 			fixed (Int32* b = destinationArray)
-				JniEnvironment.Arrays.GetIntArrayRegion (PeerReference, sourceIndex, length, (IntPtr) (b+destinationIndex));
+				JniEnvironment.Arrays.GetIntArrayRegion (PeerReference, sourceIndex, length, (b+destinationIndex));
 		}
 
 		public override unsafe void CopyFrom (Int32[] sourceArray, int sourceIndex, int destinationIndex, int length)
@@ -911,7 +912,7 @@ namespace Java.Interop {
 				return;
 
 			fixed (Int32* b = sourceArray)
-				JniEnvironment.Arrays.SetIntArrayRegion (PeerReference, destinationIndex, length, (IntPtr) (b+sourceIndex));
+				JniEnvironment.Arrays.SetIntArrayRegion (PeerReference, destinationIndex, length, (b+sourceIndex));
 		}
 
 		internal override bool TargetTypeIsCurrentType (Type targetType)
@@ -954,8 +955,8 @@ namespace Java.Interop {
 
 		JniObjectReference      arrayHandle;
 
-		internal JniInt64ArrayElements (JniObjectReference arrayHandle, IntPtr elements)
-			: base (elements)
+		internal unsafe JniInt64ArrayElements (JniObjectReference arrayHandle, Int64* elements)
+			: base ((IntPtr) elements)
 		{
 			this.arrayHandle = arrayHandle;
 		}
@@ -964,9 +965,9 @@ namespace Java.Interop {
 			get {return (Int64*) base.Elements;}
 		}
 
-		protected override void Synchronize (JniArrayElementsReleaseMode releaseMode)
+		protected override unsafe void Synchronize (JniArrayElementsReleaseMode releaseMode)
 		{
-			JniEnvironment.Arrays.ReleaseLongArrayElements (arrayHandle, base.Elements, (int) releaseMode);
+			JniEnvironment.Arrays.ReleaseLongArrayElements (arrayHandle, Elements, (int) releaseMode);
 		}
 	}
 
@@ -1002,10 +1003,10 @@ namespace Java.Interop {
 			return GetElements ();
 		}
 
-		public new JniInt64ArrayElements GetElements ()
+		public new unsafe JniInt64ArrayElements GetElements ()
 		{
-			IntPtr elements = JniEnvironment.Arrays.GetLongArrayElements (PeerReference, IntPtr.Zero);
-			return elements == IntPtr.Zero ? null : new JniInt64ArrayElements (PeerReference, elements);
+			var elements = JniEnvironment.Arrays.GetLongArrayElements (PeerReference, null);
+			return elements == null ? null : new JniInt64ArrayElements (PeerReference, elements);
 		}
 
 		public override unsafe int IndexOf (Int64 item)
@@ -1045,7 +1046,7 @@ namespace Java.Interop {
 				return;
 
 			fixed (Int64* b = destinationArray)
-				JniEnvironment.Arrays.GetLongArrayRegion (PeerReference, sourceIndex, length, (IntPtr) (b+destinationIndex));
+				JniEnvironment.Arrays.GetLongArrayRegion (PeerReference, sourceIndex, length, (b+destinationIndex));
 		}
 
 		public override unsafe void CopyFrom (Int64[] sourceArray, int sourceIndex, int destinationIndex, int length)
@@ -1057,7 +1058,7 @@ namespace Java.Interop {
 				return;
 
 			fixed (Int64* b = sourceArray)
-				JniEnvironment.Arrays.SetLongArrayRegion (PeerReference, destinationIndex, length, (IntPtr) (b+sourceIndex));
+				JniEnvironment.Arrays.SetLongArrayRegion (PeerReference, destinationIndex, length, (b+sourceIndex));
 		}
 
 		internal override bool TargetTypeIsCurrentType (Type targetType)
@@ -1100,8 +1101,8 @@ namespace Java.Interop {
 
 		JniObjectReference      arrayHandle;
 
-		internal JniSingleArrayElements (JniObjectReference arrayHandle, IntPtr elements)
-			: base (elements)
+		internal unsafe JniSingleArrayElements (JniObjectReference arrayHandle, Single* elements)
+			: base ((IntPtr) elements)
 		{
 			this.arrayHandle = arrayHandle;
 		}
@@ -1110,9 +1111,9 @@ namespace Java.Interop {
 			get {return (Single*) base.Elements;}
 		}
 
-		protected override void Synchronize (JniArrayElementsReleaseMode releaseMode)
+		protected override unsafe void Synchronize (JniArrayElementsReleaseMode releaseMode)
 		{
-			JniEnvironment.Arrays.ReleaseFloatArrayElements (arrayHandle, base.Elements, (int) releaseMode);
+			JniEnvironment.Arrays.ReleaseFloatArrayElements (arrayHandle, Elements, (int) releaseMode);
 		}
 	}
 
@@ -1148,10 +1149,10 @@ namespace Java.Interop {
 			return GetElements ();
 		}
 
-		public new JniSingleArrayElements GetElements ()
+		public new unsafe JniSingleArrayElements GetElements ()
 		{
-			IntPtr elements = JniEnvironment.Arrays.GetFloatArrayElements (PeerReference, IntPtr.Zero);
-			return elements == IntPtr.Zero ? null : new JniSingleArrayElements (PeerReference, elements);
+			var elements = JniEnvironment.Arrays.GetFloatArrayElements (PeerReference, null);
+			return elements == null ? null : new JniSingleArrayElements (PeerReference, elements);
 		}
 
 		public override unsafe int IndexOf (Single item)
@@ -1191,7 +1192,7 @@ namespace Java.Interop {
 				return;
 
 			fixed (Single* b = destinationArray)
-				JniEnvironment.Arrays.GetFloatArrayRegion (PeerReference, sourceIndex, length, (IntPtr) (b+destinationIndex));
+				JniEnvironment.Arrays.GetFloatArrayRegion (PeerReference, sourceIndex, length, (b+destinationIndex));
 		}
 
 		public override unsafe void CopyFrom (Single[] sourceArray, int sourceIndex, int destinationIndex, int length)
@@ -1203,7 +1204,7 @@ namespace Java.Interop {
 				return;
 
 			fixed (Single* b = sourceArray)
-				JniEnvironment.Arrays.SetFloatArrayRegion (PeerReference, destinationIndex, length, (IntPtr) (b+sourceIndex));
+				JniEnvironment.Arrays.SetFloatArrayRegion (PeerReference, destinationIndex, length, (b+sourceIndex));
 		}
 
 		internal override bool TargetTypeIsCurrentType (Type targetType)
@@ -1246,8 +1247,8 @@ namespace Java.Interop {
 
 		JniObjectReference      arrayHandle;
 
-		internal JniDoubleArrayElements (JniObjectReference arrayHandle, IntPtr elements)
-			: base (elements)
+		internal unsafe JniDoubleArrayElements (JniObjectReference arrayHandle, Double* elements)
+			: base ((IntPtr) elements)
 		{
 			this.arrayHandle = arrayHandle;
 		}
@@ -1256,9 +1257,9 @@ namespace Java.Interop {
 			get {return (Double*) base.Elements;}
 		}
 
-		protected override void Synchronize (JniArrayElementsReleaseMode releaseMode)
+		protected override unsafe void Synchronize (JniArrayElementsReleaseMode releaseMode)
 		{
-			JniEnvironment.Arrays.ReleaseDoubleArrayElements (arrayHandle, base.Elements, (int) releaseMode);
+			JniEnvironment.Arrays.ReleaseDoubleArrayElements (arrayHandle, Elements, (int) releaseMode);
 		}
 	}
 
@@ -1294,10 +1295,10 @@ namespace Java.Interop {
 			return GetElements ();
 		}
 
-		public new JniDoubleArrayElements GetElements ()
+		public new unsafe JniDoubleArrayElements GetElements ()
 		{
-			IntPtr elements = JniEnvironment.Arrays.GetDoubleArrayElements (PeerReference, IntPtr.Zero);
-			return elements == IntPtr.Zero ? null : new JniDoubleArrayElements (PeerReference, elements);
+			var elements = JniEnvironment.Arrays.GetDoubleArrayElements (PeerReference, null);
+			return elements == null ? null : new JniDoubleArrayElements (PeerReference, elements);
 		}
 
 		public override unsafe int IndexOf (Double item)
@@ -1337,7 +1338,7 @@ namespace Java.Interop {
 				return;
 
 			fixed (Double* b = destinationArray)
-				JniEnvironment.Arrays.GetDoubleArrayRegion (PeerReference, sourceIndex, length, (IntPtr) (b+destinationIndex));
+				JniEnvironment.Arrays.GetDoubleArrayRegion (PeerReference, sourceIndex, length, (b+destinationIndex));
 		}
 
 		public override unsafe void CopyFrom (Double[] sourceArray, int sourceIndex, int destinationIndex, int length)
@@ -1349,7 +1350,7 @@ namespace Java.Interop {
 				return;
 
 			fixed (Double* b = sourceArray)
-				JniEnvironment.Arrays.SetDoubleArrayRegion (PeerReference, destinationIndex, length, (IntPtr) (b+sourceIndex));
+				JniEnvironment.Arrays.SetDoubleArrayRegion (PeerReference, destinationIndex, length, (b+sourceIndex));
 		}
 
 		internal override bool TargetTypeIsCurrentType (Type targetType)

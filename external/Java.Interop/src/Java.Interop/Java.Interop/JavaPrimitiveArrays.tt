@@ -67,6 +67,7 @@ namespace Java.Interop {
 #>
 		};
 	}
+
 <#
 	foreach (var info in arrayTypeInfo) {
 #>
@@ -74,8 +75,8 @@ namespace Java.Interop {
 
 		JniObjectReference      arrayHandle;
 
-		internal Jni<#= info.TypeModifier #>ArrayElements (JniObjectReference arrayHandle, IntPtr elements)
-			: base (elements)
+		internal unsafe Jni<#= info.TypeModifier #>ArrayElements (JniObjectReference arrayHandle, <#= info.ManagedType #>* elements)
+			: base ((IntPtr) elements)
 		{
 			this.arrayHandle = arrayHandle;
 		}
@@ -84,9 +85,9 @@ namespace Java.Interop {
 			get {return (<#= info.ManagedType #>*) base.Elements;}
 		}
 
-		protected override void Synchronize (JniArrayElementsReleaseMode releaseMode)
+		protected override unsafe void Synchronize (JniArrayElementsReleaseMode releaseMode)
 		{
-			JniEnvironment.Arrays.Release<#= info.JniMarshalType #>ArrayElements (arrayHandle, base.Elements, (int) releaseMode);
+			JniEnvironment.Arrays.Release<#= info.JniMarshalType #>ArrayElements (arrayHandle, Elements, (int) releaseMode);
 		}
 	}
 
@@ -99,7 +100,7 @@ namespace Java.Interop {
 		}
 
 		public unsafe Java<#= info.TypeModifier #>Array (int length)
-			: base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.Invalid)
+			: base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
 		{
 		    var peer    = JniEnvironment.Arrays.New<#= info.JniMarshalType #>Array (CheckLength (length));
 		    using (SetPeerReference (ref peer, JniObjectReferenceOptions.DisposeSourceReference)) {
@@ -122,10 +123,10 @@ namespace Java.Interop {
 			return GetElements ();
 		}
 
-		public new Jni<#= info.TypeModifier #>ArrayElements GetElements ()
+		public new unsafe Jni<#= info.TypeModifier #>ArrayElements GetElements ()
 		{
-			IntPtr elements = JniEnvironment.Arrays.Get<#= info.JniMarshalType #>ArrayElements (PeerReference, IntPtr.Zero);
-			return elements == IntPtr.Zero ? null : new Jni<#= info.TypeModifier #>ArrayElements (PeerReference, elements);
+			var elements = JniEnvironment.Arrays.Get<#= info.JniMarshalType #>ArrayElements (PeerReference, null);
+			return elements == null ? null : new Jni<#= info.TypeModifier #>ArrayElements (PeerReference, elements);
 		}
 
 		public override unsafe int IndexOf (<#= info.ManagedType #> item)
@@ -165,7 +166,7 @@ namespace Java.Interop {
 				return;
 
 			fixed (<#= info.ManagedType #>* b = destinationArray)
-				JniEnvironment.Arrays.Get<#= info.JniMarshalType #>ArrayRegion (PeerReference, sourceIndex, length, (IntPtr) (b+destinationIndex));
+				JniEnvironment.Arrays.Get<#= info.JniMarshalType #>ArrayRegion (PeerReference, sourceIndex, length, (b+destinationIndex));
 		}
 
 		public override unsafe void CopyFrom (<#= info.ManagedType #>[] sourceArray, int sourceIndex, int destinationIndex, int length)
@@ -177,7 +178,7 @@ namespace Java.Interop {
 				return;
 
 			fixed (<#= info.ManagedType #>* b = sourceArray)
-				JniEnvironment.Arrays.Set<#= info.JniMarshalType #>ArrayRegion (PeerReference, destinationIndex, length, (IntPtr) (b+sourceIndex));
+				JniEnvironment.Arrays.Set<#= info.JniMarshalType #>ArrayRegion (PeerReference, destinationIndex, length, (b+sourceIndex));
 		}
 
 		internal override bool TargetTypeIsCurrentType (Type targetType)
