@@ -49,6 +49,18 @@
     <SignAssembly>True</SignAssembly>
     <DelaySign>True</DelaySign>
   </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'XAIntegrationRelease|AnyCPU' ">
+    <Optimize>True</Optimize>
+    <OutputPath>..\..\bin\XAIntegrationRelease</OutputPath>
+    <DefineConstants>INTEROP;XA_INTEGRATION;FEATURE_JNIENVIRONMENT_JI_PINVOKES;FEATURE_JNIOBJECTREFERENCE_INTPTRS</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>false</ConsolePause>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <JNIEnvGenPath>..\..\bin\Debug</JNIEnvGenPath>
+    <SignAssembly>True</SignAssembly>
+    <DelaySign>True</DelaySign>
+  </PropertyGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Java.Interop\JniArgumentValue.cs" />
