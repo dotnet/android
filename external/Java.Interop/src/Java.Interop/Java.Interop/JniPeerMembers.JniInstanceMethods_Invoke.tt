@@ -55,7 +55,7 @@ namespace Java.Interop {
 				<#= returnType.ReturnType == "void" ? "return;" : "" #>
 			}
 
-			public unsafe <#= returnType.ReturnType #> InvokeNonvirtual<#= returnType.JniCallType #>Method (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			public unsafe <#= returnType.ReturnType #> InvokeNonvirtual<#= returnType.ManagedType #>Method (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 

@@ -104,7 +104,7 @@ namespace Java.Interop {
 				
 			}
 
-			public unsafe sbyte InvokeNonvirtualByteMethod (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			public unsafe sbyte InvokeNonvirtualSByteMethod (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
@@ -176,7 +176,7 @@ namespace Java.Interop {
 				
 			}
 
-			public unsafe short InvokeNonvirtualShortMethod (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			public unsafe short InvokeNonvirtualInt16Method (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
@@ -212,7 +212,7 @@ namespace Java.Interop {
 				
 			}
 
-			public unsafe int InvokeNonvirtualIntMethod (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			public unsafe int InvokeNonvirtualInt32Method (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
@@ -248,7 +248,7 @@ namespace Java.Interop {
 				
 			}
 
-			public unsafe long InvokeNonvirtualLongMethod (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			public unsafe long InvokeNonvirtualInt64Method (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
@@ -284,7 +284,7 @@ namespace Java.Interop {
 				
 			}
 
-			public unsafe float InvokeNonvirtualFloatMethod (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			public unsafe float InvokeNonvirtualSingleMethod (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
