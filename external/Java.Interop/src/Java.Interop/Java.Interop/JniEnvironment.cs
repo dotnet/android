@@ -50,7 +50,7 @@ namespace Java.Interop {
 			Info.Value  = info;
 		}
 
-		public      static  Exception   GetExceptionForLastThrowable ()
+		internal    static  Exception   GetExceptionForLastThrowable ()
 		{
 			var e   = JniEnvironment.Exceptions.ExceptionOccurred ();
 			if (!e.IsValid)
@@ -71,6 +71,7 @@ namespace Java.Interop {
 			JniEnvironment.LogCreateLocalRef (e);
 			return Runtime.GetExceptionForThrowable (ref e, JniObjectReferenceOptions.DisposeSourceReference);
 		}
+
 		internal    static  void        LogCreateLocalRef (JniObjectReference value)
 		{
 			if (!value.IsValid)
