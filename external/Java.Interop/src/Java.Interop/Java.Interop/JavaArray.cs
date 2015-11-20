@@ -295,14 +295,7 @@ namespace Java.Interop
 		}
 	}
 
-	public enum JniArrayElementsReleaseMode {
-		CopyBack        = 0,
-		DoNotCopyBack   = 2
-	}
-
 	public abstract class JniArrayElements : IDisposable {
-
-		internal const int JNI_COMMIT = 1;
 
 		IntPtr elements;
 
@@ -325,14 +318,14 @@ namespace Java.Interop
 			}
 		}
 
-		protected   abstract    void    Synchronize (JniArrayElementsReleaseMode releaseMode);
+		protected   abstract    void    Synchronize (JniReleaseArrayElementsMode releaseMode);
 
 		public void CopyToJava ()
 		{
-			Synchronize ((JniArrayElementsReleaseMode) JNI_COMMIT);
+			Synchronize (JniReleaseArrayElementsMode.Commit);
 		}
 
-		public void Release (JniArrayElementsReleaseMode releaseMode)
+		public void Release (JniReleaseArrayElementsMode releaseMode)
 		{
 			if (IsDisposed)
 				throw new ObjectDisposedException (GetType ().FullName);;
@@ -344,7 +337,7 @@ namespace Java.Interop
 		{
 			if (IsDisposed)
 				return;
-			Release (JniArrayElementsReleaseMode.CopyBack);
+			Release (JniReleaseArrayElementsMode.Default);
 		}
 	}
 	

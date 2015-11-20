@@ -189,6 +189,7 @@ M: System.Int32* Java.Interop.NativeMethods::JavaInterop_GetIntArrayElements(Sys
 M: System.Int64* Java.Interop.NativeMethods::JavaInterop_GetLongArrayElements(System.IntPtr,System.IntPtr,System.Boolean*)
 M: System.Single* Java.Interop.NativeMethods::JavaInterop_GetFloatArrayElements(System.IntPtr,System.IntPtr,System.Boolean*)
 M: System.Double* Java.Interop.NativeMethods::JavaInterop_GetDoubleArrayElements(System.IntPtr,System.IntPtr,System.Boolean*)
+M: System.IntPtr Java.Interop.NativeMethods::JavaInterop_GetPrimitiveArrayCritical(System.IntPtr,System.IntPtr,System.Boolean*)
 M: System.Void Java.Interop.NativeMethods::JavaInterop_ReleaseBooleanArrayElements(System.IntPtr,System.IntPtr,System.Boolean*,System.Int32)
 M: System.Void Java.Interop.NativeMethods::JavaInterop_GetBooleanArrayRegion(System.IntPtr,System.IntPtr&,System.IntPtr,System.Int32,System.Int32,System.Boolean*)
 M: System.Void Java.Interop.NativeMethods::JavaInterop_SetBooleanArrayRegion(System.IntPtr,System.IntPtr&,System.IntPtr,System.Int32,System.Int32,System.Boolean*)

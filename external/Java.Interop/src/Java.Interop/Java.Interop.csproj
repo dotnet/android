@@ -65,6 +65,7 @@
     <Compile Include="Java.Interop\JniInstanceMethodInfo.cs" />
     <Compile Include="Java.Interop\JniMethodInfo.cs" />
     <Compile Include="Java.Interop\JniPeerMembers.cs" />
+    <Compile Include="Java.Interop\JniReleaseArrayElementsMode.cs" />
     <Compile Include="Java.Interop\JniRuntime.cs" />
     <Compile Include="Java.Interop\JniRuntime.JniObjectReferenceManager.cs" />
     <Compile Include="Java.Interop\JniRuntime.JniTypeManager.cs" />

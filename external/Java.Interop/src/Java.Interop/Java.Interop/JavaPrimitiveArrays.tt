@@ -85,9 +85,9 @@ namespace Java.Interop {
 			get {return (<#= info.ManagedType #>*) base.Elements;}
 		}
 
-		protected override unsafe void Synchronize (JniArrayElementsReleaseMode releaseMode)
+		protected override unsafe void Synchronize (JniReleaseArrayElementsMode releaseMode)
 		{
-			JniEnvironment.Arrays.Release<#= info.JniMarshalType #>ArrayElements (arrayHandle, Elements, (int) releaseMode);
+			JniEnvironment.Arrays.Release<#= info.JniMarshalType #>ArrayElements (arrayHandle, Elements, releaseMode);
 		}
 	}
 

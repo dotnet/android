@@ -235,9 +235,9 @@ namespace Java.Interop {
 			get {return (Boolean*) base.Elements;}
 		}
 
-		protected override unsafe void Synchronize (JniArrayElementsReleaseMode releaseMode)
+		protected override unsafe void Synchronize (JniReleaseArrayElementsMode releaseMode)
 		{
-			JniEnvironment.Arrays.ReleaseBooleanArrayElements (arrayHandle, Elements, (int) releaseMode);
+			JniEnvironment.Arrays.ReleaseBooleanArrayElements (arrayHandle, Elements, releaseMode);
 		}
 	}
 
@@ -381,9 +381,9 @@ namespace Java.Interop {
 			get {return (SByte*) base.Elements;}
 		}
 
-		protected override unsafe void Synchronize (JniArrayElementsReleaseMode releaseMode)
+		protected override unsafe void Synchronize (JniReleaseArrayElementsMode releaseMode)
 		{
-			JniEnvironment.Arrays.ReleaseByteArrayElements (arrayHandle, Elements, (int) releaseMode);
+			JniEnvironment.Arrays.ReleaseByteArrayElements (arrayHandle, Elements, releaseMode);
 		}
 	}
 
@@ -527,9 +527,9 @@ namespace Java.Interop {
 			get {return (Char*) base.Elements;}
 		}
 
-		protected override unsafe void Synchronize (JniArrayElementsReleaseMode releaseMode)
+		protected override unsafe void Synchronize (JniReleaseArrayElementsMode releaseMode)
 		{
-			JniEnvironment.Arrays.ReleaseCharArrayElements (arrayHandle, Elements, (int) releaseMode);
+			JniEnvironment.Arrays.ReleaseCharArrayElements (arrayHandle, Elements, releaseMode);
 		}
 	}
 
@@ -673,9 +673,9 @@ namespace Java.Interop {
 			get {return (Int16*) base.Elements;}
 		}
 
-		protected override unsafe void Synchronize (JniArrayElementsReleaseMode releaseMode)
+		protected override unsafe void Synchronize (JniReleaseArrayElementsMode releaseMode)
 		{
-			JniEnvironment.Arrays.ReleaseShortArrayElements (arrayHandle, Elements, (int) releaseMode);
+			JniEnvironment.Arrays.ReleaseShortArrayElements (arrayHandle, Elements, releaseMode);
 		}
 	}
 
@@ -819,9 +819,9 @@ namespace Java.Interop {
 			get {return (Int32*) base.Elements;}
 		}
 
-		protected override unsafe void Synchronize (JniArrayElementsReleaseMode releaseMode)
+		protected override unsafe void Synchronize (JniReleaseArrayElementsMode releaseMode)
 		{
-			JniEnvironment.Arrays.ReleaseIntArrayElements (arrayHandle, Elements, (int) releaseMode);
+			JniEnvironment.Arrays.ReleaseIntArrayElements (arrayHandle, Elements, releaseMode);
 		}
 	}
 
@@ -965,9 +965,9 @@ namespace Java.Interop {
 			get {return (Int64*) base.Elements;}
 		}
 
-		protected override unsafe void Synchronize (JniArrayElementsReleaseMode releaseMode)
+		protected override unsafe void Synchronize (JniReleaseArrayElementsMode releaseMode)
 		{
-			JniEnvironment.Arrays.ReleaseLongArrayElements (arrayHandle, Elements, (int) releaseMode);
+			JniEnvironment.Arrays.ReleaseLongArrayElements (arrayHandle, Elements, releaseMode);
 		}
 	}
 
@@ -1111,9 +1111,9 @@ namespace Java.Interop {
 			get {return (Single*) base.Elements;}
 		}
 
-		protected override unsafe void Synchronize (JniArrayElementsReleaseMode releaseMode)
+		protected override unsafe void Synchronize (JniReleaseArrayElementsMode releaseMode)
 		{
-			JniEnvironment.Arrays.ReleaseFloatArrayElements (arrayHandle, Elements, (int) releaseMode);
+			JniEnvironment.Arrays.ReleaseFloatArrayElements (arrayHandle, Elements, releaseMode);
 		}
 	}
 
@@ -1257,9 +1257,9 @@ namespace Java.Interop {
 			get {return (Double*) base.Elements;}
 		}
 
-		protected override unsafe void Synchronize (JniArrayElementsReleaseMode releaseMode)
+		protected override unsafe void Synchronize (JniReleaseArrayElementsMode releaseMode)
 		{
-			JniEnvironment.Arrays.ReleaseDoubleArrayElements (arrayHandle, Elements, (int) releaseMode);
+			JniEnvironment.Arrays.ReleaseDoubleArrayElements (arrayHandle, Elements, releaseMode);
 		}
 	}
 

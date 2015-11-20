@@ -595,6 +595,7 @@ namespace Xamarin.Java.Interop
 			{ "jweak",                      new WeakGlobalReferenceTypeInfo ("jweak") },
 			{ "jglobal",                    new GlobalReferenceTypeInfo ("jglobal") },
 			{ "JavaVM**",                   new JavaVMPointerTypeInfo ("JavaVM**") },
+			{ "JniReleaseArrayElementsMode",    new JniReleaseArrayElementsModeTypeInfo () },
 		};
 
 		static readonly Dictionary<string, string> pointerMapping = new Dictionary<string, string> {
@@ -772,6 +773,36 @@ namespace Xamarin.Java.Interop
 				string.Format ("if ({0} == null)", variable),
 				string.Format ("\tthrow new ArgumentNullException (\"{0}\");", variableName),
 			};
+		}
+	}
+
+	class JniReleaseArrayElementsModeTypeInfo : TypeInfo {
+
+		public JniReleaseArrayElementsModeTypeInfo ()
+			: base ("jint")
+		{
+		}
+
+		public override string GetMarshalType (HandleStyle style, bool isReturn)
+		{
+			return "int";
+		}
+
+		public override string GetManagedType (HandleStyle style, bool isReturn)
+		{
+			return "JniReleaseArrayElementsMode";
+		}
+
+		public override string[] GetMarshalToManagedStatements (HandleStyle style, string variable)
+		{
+			return new string[] {
+				string.Format ("return (JniReleaseArrayElementsMode) {0};", variable),
+			};
+		}
+
+		public override string GetManagedToMarshalExpression (HandleStyle style, string variable)
+		{
+			return string.Format ("((int) {0})", variable);
 		}
 	}
 

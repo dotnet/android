@@ -624,7 +624,7 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe void ReleaseBooleanArrayElements (JniObjectReference array, bool* elements, int mode)
+		public static unsafe void ReleaseBooleanArrayElements (JniObjectReference array, bool* elements, JniReleaseArrayElementsMode mode)
 		{
 			if (array.SafeHandle == null)
 				throw new ArgumentNullException ("array");
@@ -632,10 +632,10 @@ namespace
 				throw new ArgumentException ("array");
 
 			var __info = JniEnvironment.CurrentInfo;
-			__info.Invoker.ReleaseBooleanArrayElements (__info.EnvironmentPointer, array.SafeHandle, elements, mode);
+			__info.Invoker.ReleaseBooleanArrayElements (__info.EnvironmentPointer, array.SafeHandle, elements, ((int) mode));
 		}
 
-		public static unsafe void ReleaseByteArrayElements (JniObjectReference array, sbyte* elements, int mode)
+		public static unsafe void ReleaseByteArrayElements (JniObjectReference array, sbyte* elements, JniReleaseArrayElementsMode mode)
 		{
 			if (array.SafeHandle == null)
 				throw new ArgumentNullException ("array");
@@ -643,10 +643,10 @@ namespace
 				throw new ArgumentException ("array");
 
 			var __info = JniEnvironment.CurrentInfo;
-			__info.Invoker.ReleaseByteArrayElements (__info.EnvironmentPointer, array.SafeHandle, elements, mode);
+			__info.Invoker.ReleaseByteArrayElements (__info.EnvironmentPointer, array.SafeHandle, elements, ((int) mode));
 		}
 
-		public static unsafe void ReleaseCharArrayElements (JniObjectReference array, char* elements, int mode)
+		public static unsafe void ReleaseCharArrayElements (JniObjectReference array, char* elements, JniReleaseArrayElementsMode mode)
 		{
 			if (array.SafeHandle == null)
 				throw new ArgumentNullException ("array");
@@ -654,10 +654,10 @@ namespace
 				throw new ArgumentException ("array");
 
 			var __info = JniEnvironment.CurrentInfo;
-			__info.Invoker.ReleaseCharArrayElements (__info.EnvironmentPointer, array.SafeHandle, elements, mode);
+			__info.Invoker.ReleaseCharArrayElements (__info.EnvironmentPointer, array.SafeHandle, elements, ((int) mode));
 		}
 
-		public static unsafe void ReleaseShortArrayElements (JniObjectReference array, short* elements, int mode)
+		public static unsafe void ReleaseShortArrayElements (JniObjectReference array, short* elements, JniReleaseArrayElementsMode mode)
 		{
 			if (array.SafeHandle == null)
 				throw new ArgumentNullException ("array");
@@ -665,10 +665,10 @@ namespace
 				throw new ArgumentException ("array");
 
 			var __info = JniEnvironment.CurrentInfo;
-			__info.Invoker.ReleaseShortArrayElements (__info.EnvironmentPointer, array.SafeHandle, elements, mode);
+			__info.Invoker.ReleaseShortArrayElements (__info.EnvironmentPointer, array.SafeHandle, elements, ((int) mode));
 		}
 
-		public static unsafe void ReleaseIntArrayElements (JniObjectReference array, int* elements, int mode)
+		public static unsafe void ReleaseIntArrayElements (JniObjectReference array, int* elements, JniReleaseArrayElementsMode mode)
 		{
 			if (array.SafeHandle == null)
 				throw new ArgumentNullException ("array");
@@ -676,10 +676,10 @@ namespace
 				throw new ArgumentException ("array");
 
 			var __info = JniEnvironment.CurrentInfo;
-			__info.Invoker.ReleaseIntArrayElements (__info.EnvironmentPointer, array.SafeHandle, elements, mode);
+			__info.Invoker.ReleaseIntArrayElements (__info.EnvironmentPointer, array.SafeHandle, elements, ((int) mode));
 		}
 
-		public static unsafe void ReleaseLongArrayElements (JniObjectReference array, long* elements, int mode)
+		public static unsafe void ReleaseLongArrayElements (JniObjectReference array, long* elements, JniReleaseArrayElementsMode mode)
 		{
 			if (array.SafeHandle == null)
 				throw new ArgumentNullException ("array");
@@ -687,10 +687,10 @@ namespace
 				throw new ArgumentException ("array");
 
 			var __info = JniEnvironment.CurrentInfo;
-			__info.Invoker.ReleaseLongArrayElements (__info.EnvironmentPointer, array.SafeHandle, elements, mode);
+			__info.Invoker.ReleaseLongArrayElements (__info.EnvironmentPointer, array.SafeHandle, elements, ((int) mode));
 		}
 
-		public static unsafe void ReleaseFloatArrayElements (JniObjectReference array, float* elements, int mode)
+		public static unsafe void ReleaseFloatArrayElements (JniObjectReference array, float* elements, JniReleaseArrayElementsMode mode)
 		{
 			if (array.SafeHandle == null)
 				throw new ArgumentNullException ("array");
@@ -698,10 +698,10 @@ namespace
 				throw new ArgumentException ("array");
 
 			var __info = JniEnvironment.CurrentInfo;
-			__info.Invoker.ReleaseFloatArrayElements (__info.EnvironmentPointer, array.SafeHandle, elements, mode);
+			__info.Invoker.ReleaseFloatArrayElements (__info.EnvironmentPointer, array.SafeHandle, elements, ((int) mode));
 		}
 
-		public static unsafe void ReleaseDoubleArrayElements (JniObjectReference array, double* elements, int mode)
+		public static unsafe void ReleaseDoubleArrayElements (JniObjectReference array, double* elements, JniReleaseArrayElementsMode mode)
 		{
 			if (array.SafeHandle == null)
 				throw new ArgumentNullException ("array");
@@ -709,7 +709,7 @@ namespace
 				throw new ArgumentException ("array");
 
 			var __info = JniEnvironment.CurrentInfo;
-			__info.Invoker.ReleaseDoubleArrayElements (__info.EnvironmentPointer, array.SafeHandle, elements, mode);
+			__info.Invoker.ReleaseDoubleArrayElements (__info.EnvironmentPointer, array.SafeHandle, elements, ((int) mode));
 		}
 
 		public static unsafe void GetBooleanArrayRegion (JniObjectReference array, int start, int length, bool* buffer)
@@ -5612,76 +5612,76 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe void ReleaseBooleanArrayElements (JniObjectReference array, bool* elements, int mode)
+		public static unsafe void ReleaseBooleanArrayElements (JniObjectReference array, bool* elements, JniReleaseArrayElementsMode mode)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
 
 			var __info = JniEnvironment.CurrentInfo;
-			__info.Invoker.ReleaseBooleanArrayElements (__info.EnvironmentPointer, array.Handle, elements, mode);
+			__info.Invoker.ReleaseBooleanArrayElements (__info.EnvironmentPointer, array.Handle, elements, ((int) mode));
 		}
 
-		public static unsafe void ReleaseByteArrayElements (JniObjectReference array, sbyte* elements, int mode)
+		public static unsafe void ReleaseByteArrayElements (JniObjectReference array, sbyte* elements, JniReleaseArrayElementsMode mode)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
 
 			var __info = JniEnvironment.CurrentInfo;
-			__info.Invoker.ReleaseByteArrayElements (__info.EnvironmentPointer, array.Handle, elements, mode);
+			__info.Invoker.ReleaseByteArrayElements (__info.EnvironmentPointer, array.Handle, elements, ((int) mode));
 		}
 
-		public static unsafe void ReleaseCharArrayElements (JniObjectReference array, char* elements, int mode)
+		public static unsafe void ReleaseCharArrayElements (JniObjectReference array, char* elements, JniReleaseArrayElementsMode mode)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
 
 			var __info = JniEnvironment.CurrentInfo;
-			__info.Invoker.ReleaseCharArrayElements (__info.EnvironmentPointer, array.Handle, elements, mode);
+			__info.Invoker.ReleaseCharArrayElements (__info.EnvironmentPointer, array.Handle, elements, ((int) mode));
 		}
 
-		public static unsafe void ReleaseShortArrayElements (JniObjectReference array, short* elements, int mode)
+		public static unsafe void ReleaseShortArrayElements (JniObjectReference array, short* elements, JniReleaseArrayElementsMode mode)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
 
 			var __info = JniEnvironment.CurrentInfo;
-			__info.Invoker.ReleaseShortArrayElements (__info.EnvironmentPointer, array.Handle, elements, mode);
+			__info.Invoker.ReleaseShortArrayElements (__info.EnvironmentPointer, array.Handle, elements, ((int) mode));
 		}
 
-		public static unsafe void ReleaseIntArrayElements (JniObjectReference array, int* elements, int mode)
+		public static unsafe void ReleaseIntArrayElements (JniObjectReference array, int* elements, JniReleaseArrayElementsMode mode)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
 
 			var __info = JniEnvironment.CurrentInfo;
-			__info.Invoker.ReleaseIntArrayElements (__info.EnvironmentPointer, array.Handle, elements, mode);
+			__info.Invoker.ReleaseIntArrayElements (__info.EnvironmentPointer, array.Handle, elements, ((int) mode));
 		}
 
-		public static unsafe void ReleaseLongArrayElements (JniObjectReference array, long* elements, int mode)
+		public static unsafe void ReleaseLongArrayElements (JniObjectReference array, long* elements, JniReleaseArrayElementsMode mode)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
 
 			var __info = JniEnvironment.CurrentInfo;
-			__info.Invoker.ReleaseLongArrayElements (__info.EnvironmentPointer, array.Handle, elements, mode);
+			__info.Invoker.ReleaseLongArrayElements (__info.EnvironmentPointer, array.Handle, elements, ((int) mode));
 		}
 
-		public static unsafe void ReleaseFloatArrayElements (JniObjectReference array, float* elements, int mode)
+		public static unsafe void ReleaseFloatArrayElements (JniObjectReference array, float* elements, JniReleaseArrayElementsMode mode)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
 
 			var __info = JniEnvironment.CurrentInfo;
-			__info.Invoker.ReleaseFloatArrayElements (__info.EnvironmentPointer, array.Handle, elements, mode);
+			__info.Invoker.ReleaseFloatArrayElements (__info.EnvironmentPointer, array.Handle, elements, ((int) mode));
 		}
 
-		public static unsafe void ReleaseDoubleArrayElements (JniObjectReference array, double* elements, int mode)
+		public static unsafe void ReleaseDoubleArrayElements (JniObjectReference array, double* elements, JniReleaseArrayElementsMode mode)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
 
 			var __info = JniEnvironment.CurrentInfo;
-			__info.Invoker.ReleaseDoubleArrayElements (__info.EnvironmentPointer, array.Handle, elements, mode);
+			__info.Invoker.ReleaseDoubleArrayElements (__info.EnvironmentPointer, array.Handle, elements, ((int) mode));
 		}
 
 		public static unsafe void GetBooleanArrayRegion (JniObjectReference array, int start, int length, bool* buffer)
@@ -10704,68 +10704,68 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe void ReleaseBooleanArrayElements (JniObjectReference array, bool* elements, int mode)
+		public static unsafe void ReleaseBooleanArrayElements (JniObjectReference array, bool* elements, JniReleaseArrayElementsMode mode)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
 
-			NativeMethods.JavaInterop_ReleaseBooleanArrayElements (JniEnvironment.EnvironmentPointer, array.Handle, elements, mode);
+			NativeMethods.JavaInterop_ReleaseBooleanArrayElements (JniEnvironment.EnvironmentPointer, array.Handle, elements, ((int) mode));
 		}
 
-		public static unsafe void ReleaseByteArrayElements (JniObjectReference array, sbyte* elements, int mode)
+		public static unsafe void ReleaseByteArrayElements (JniObjectReference array, sbyte* elements, JniReleaseArrayElementsMode mode)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
 
-			NativeMethods.JavaInterop_ReleaseByteArrayElements (JniEnvironment.EnvironmentPointer, array.Handle, elements, mode);
+			NativeMethods.JavaInterop_ReleaseByteArrayElements (JniEnvironment.EnvironmentPointer, array.Handle, elements, ((int) mode));
 		}
 
-		public static unsafe void ReleaseCharArrayElements (JniObjectReference array, char* elements, int mode)
+		public static unsafe void ReleaseCharArrayElements (JniObjectReference array, char* elements, JniReleaseArrayElementsMode mode)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
 
-			NativeMethods.JavaInterop_ReleaseCharArrayElements (JniEnvironment.EnvironmentPointer, array.Handle, elements, mode);
+			NativeMethods.JavaInterop_ReleaseCharArrayElements (JniEnvironment.EnvironmentPointer, array.Handle, elements, ((int) mode));
 		}
 
-		public static unsafe void ReleaseShortArrayElements (JniObjectReference array, short* elements, int mode)
+		public static unsafe void ReleaseShortArrayElements (JniObjectReference array, short* elements, JniReleaseArrayElementsMode mode)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
 
-			NativeMethods.JavaInterop_ReleaseShortArrayElements (JniEnvironment.EnvironmentPointer, array.Handle, elements, mode);
+			NativeMethods.JavaInterop_ReleaseShortArrayElements (JniEnvironment.EnvironmentPointer, array.Handle, elements, ((int) mode));
 		}
 
-		public static unsafe void ReleaseIntArrayElements (JniObjectReference array, int* elements, int mode)
+		public static unsafe void ReleaseIntArrayElements (JniObjectReference array, int* elements, JniReleaseArrayElementsMode mode)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
 
-			NativeMethods.JavaInterop_ReleaseIntArrayElements (JniEnvironment.EnvironmentPointer, array.Handle, elements, mode);
+			NativeMethods.JavaInterop_ReleaseIntArrayElements (JniEnvironment.EnvironmentPointer, array.Handle, elements, ((int) mode));
 		}
 
-		public static unsafe void ReleaseLongArrayElements (JniObjectReference array, long* elements, int mode)
+		public static unsafe void ReleaseLongArrayElements (JniObjectReference array, long* elements, JniReleaseArrayElementsMode mode)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
 
-			NativeMethods.JavaInterop_ReleaseLongArrayElements (JniEnvironment.EnvironmentPointer, array.Handle, elements, mode);
+			NativeMethods.JavaInterop_ReleaseLongArrayElements (JniEnvironment.EnvironmentPointer, array.Handle, elements, ((int) mode));
 		}
 
-		public static unsafe void ReleaseFloatArrayElements (JniObjectReference array, float* elements, int mode)
+		public static unsafe void ReleaseFloatArrayElements (JniObjectReference array, float* elements, JniReleaseArrayElementsMode mode)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
 
-			NativeMethods.JavaInterop_ReleaseFloatArrayElements (JniEnvironment.EnvironmentPointer, array.Handle, elements, mode);
+			NativeMethods.JavaInterop_ReleaseFloatArrayElements (JniEnvironment.EnvironmentPointer, array.Handle, elements, ((int) mode));
 		}
 
-		public static unsafe void ReleaseDoubleArrayElements (JniObjectReference array, double* elements, int mode)
+		public static unsafe void ReleaseDoubleArrayElements (JniObjectReference array, double* elements, JniReleaseArrayElementsMode mode)
 		{
 			if (array.Handle == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
 
-			NativeMethods.JavaInterop_ReleaseDoubleArrayElements (JniEnvironment.EnvironmentPointer, array.Handle, elements, mode);
+			NativeMethods.JavaInterop_ReleaseDoubleArrayElements (JniEnvironment.EnvironmentPointer, array.Handle, elements, ((int) mode));
 		}
 
 		public static unsafe void GetBooleanArrayRegion (JniObjectReference array, int start, int length, bool* buffer)
@@ -13488,76 +13488,76 @@ namespace
 			return tmp;
 		}
 
-		public static unsafe void ReleaseBooleanArrayElements (IntPtr array, bool* elements, int mode)
+		public static unsafe void ReleaseBooleanArrayElements (IntPtr array, bool* elements, JniReleaseArrayElementsMode mode)
 		{
 			if (array == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
 
 			var __info = JniEnvironment.CurrentInfo;
-			__info.Invoker.ReleaseBooleanArrayElements (__info.EnvironmentPointer, array, elements, mode);
+			__info.Invoker.ReleaseBooleanArrayElements (__info.EnvironmentPointer, array, elements, ((int) mode));
 		}
 
-		public static unsafe void ReleaseByteArrayElements (IntPtr array, sbyte* elements, int mode)
+		public static unsafe void ReleaseByteArrayElements (IntPtr array, sbyte* elements, JniReleaseArrayElementsMode mode)
 		{
 			if (array == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
 
 			var __info = JniEnvironment.CurrentInfo;
-			__info.Invoker.ReleaseByteArrayElements (__info.EnvironmentPointer, array, elements, mode);
+			__info.Invoker.ReleaseByteArrayElements (__info.EnvironmentPointer, array, elements, ((int) mode));
 		}
 
-		public static unsafe void ReleaseCharArrayElements (IntPtr array, char* elements, int mode)
+		public static unsafe void ReleaseCharArrayElements (IntPtr array, char* elements, JniReleaseArrayElementsMode mode)
 		{
 			if (array == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
 
 			var __info = JniEnvironment.CurrentInfo;
-			__info.Invoker.ReleaseCharArrayElements (__info.EnvironmentPointer, array, elements, mode);
+			__info.Invoker.ReleaseCharArrayElements (__info.EnvironmentPointer, array, elements, ((int) mode));
 		}
 
-		public static unsafe void ReleaseShortArrayElements (IntPtr array, short* elements, int mode)
+		public static unsafe void ReleaseShortArrayElements (IntPtr array, short* elements, JniReleaseArrayElementsMode mode)
 		{
 			if (array == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
 
 			var __info = JniEnvironment.CurrentInfo;
-			__info.Invoker.ReleaseShortArrayElements (__info.EnvironmentPointer, array, elements, mode);
+			__info.Invoker.ReleaseShortArrayElements (__info.EnvironmentPointer, array, elements, ((int) mode));
 		}
 
-		public static unsafe void ReleaseIntArrayElements (IntPtr array, int* elements, int mode)
+		public static unsafe void ReleaseIntArrayElements (IntPtr array, int* elements, JniReleaseArrayElementsMode mode)
 		{
 			if (array == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
 
 			var __info = JniEnvironment.CurrentInfo;
-			__info.Invoker.ReleaseIntArrayElements (__info.EnvironmentPointer, array, elements, mode);
+			__info.Invoker.ReleaseIntArrayElements (__info.EnvironmentPointer, array, elements, ((int) mode));
 		}
 
-		public static unsafe void ReleaseLongArrayElements (IntPtr array, long* elements, int mode)
+		public static unsafe void ReleaseLongArrayElements (IntPtr array, long* elements, JniReleaseArrayElementsMode mode)
 		{
 			if (array == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
 
 			var __info = JniEnvironment.CurrentInfo;
-			__info.Invoker.ReleaseLongArrayElements (__info.EnvironmentPointer, array, elements, mode);
+			__info.Invoker.ReleaseLongArrayElements (__info.EnvironmentPointer, array, elements, ((int) mode));
 		}
 
-		public static unsafe void ReleaseFloatArrayElements (IntPtr array, float* elements, int mode)
+		public static unsafe void ReleaseFloatArrayElements (IntPtr array, float* elements, JniReleaseArrayElementsMode mode)
 		{
 			if (array == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
 
 			var __info = JniEnvironment.CurrentInfo;
-			__info.Invoker.ReleaseFloatArrayElements (__info.EnvironmentPointer, array, elements, mode);
+			__info.Invoker.ReleaseFloatArrayElements (__info.EnvironmentPointer, array, elements, ((int) mode));
 		}
 
-		public static unsafe void ReleaseDoubleArrayElements (IntPtr array, double* elements, int mode)
+		public static unsafe void ReleaseDoubleArrayElements (IntPtr array, double* elements, JniReleaseArrayElementsMode mode)
 		{
 			if (array == IntPtr.Zero)
 				throw new ArgumentException ("`array` must not be IntPtr.Zero.", "array");
 
 			var __info = JniEnvironment.CurrentInfo;
-			__info.Invoker.ReleaseDoubleArrayElements (__info.EnvironmentPointer, array, elements, mode);
+			__info.Invoker.ReleaseDoubleArrayElements (__info.EnvironmentPointer, array, elements, ((int) mode));
 		}
 
 		public static unsafe void GetBooleanArrayRegion (IntPtr array, int start, int length, bool* buffer)

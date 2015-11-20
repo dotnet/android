@@ -1677,7 +1677,7 @@ namespace Xamarin.Java.Interop
 				Visibility    = "public",
 				Prototype     = "void        (*ReleaseBooleanArrayElements)(JNIEnv*, jbooleanArray, jboolean*, jint);",
 				ReturnType    = "void",
-				Parameters    = new ParamInfo [] {new ParamInfo ("jbooleanArray", "array"), new ParamInfo ("jboolean*", "elements"), new ParamInfo ("jint", "mode")},
+				Parameters    = new ParamInfo [] {new ParamInfo ("jbooleanArray", "array"), new ParamInfo ("jboolean*", "elements"), new ParamInfo ("JniReleaseArrayElementsMode", "mode")},
 			},
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
@@ -1685,7 +1685,7 @@ namespace Xamarin.Java.Interop
 				Visibility    = "public",
 				Prototype     = "void        (*ReleaseByteArrayElements)(JNIEnv*, jbyteArray, jbyte*, jint);",
 				ReturnType    = "void",
-				Parameters    = new ParamInfo [] {new ParamInfo ("jbyteArray", "array"), new ParamInfo ("jbyte*", "elements"), new ParamInfo ("jint", "mode")},
+				Parameters    = new ParamInfo [] {new ParamInfo ("jbyteArray", "array"), new ParamInfo ("jbyte*", "elements"), new ParamInfo ("JniReleaseArrayElementsMode", "mode")},
 			},
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
@@ -1693,7 +1693,7 @@ namespace Xamarin.Java.Interop
 				Visibility    = "public",
 				Prototype     = "void        (*ReleaseCharArrayElements)(JNIEnv*, jcharArray, jchar*, jint);",
 				ReturnType    = "void",
-				Parameters    = new ParamInfo [] {new ParamInfo ("jcharArray", "array"), new ParamInfo ("jchar*", "elements"), new ParamInfo ("jint", "mode")},
+				Parameters    = new ParamInfo [] {new ParamInfo ("jcharArray", "array"), new ParamInfo ("jchar*", "elements"), new ParamInfo ("JniReleaseArrayElementsMode", "mode")},
 			},
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
@@ -1701,7 +1701,7 @@ namespace Xamarin.Java.Interop
 				Visibility    = "public",
 				Prototype     = "void        (*ReleaseShortArrayElements)(JNIEnv*, jshortArray, jshort*, jint);",
 				ReturnType    = "void",
-				Parameters    = new ParamInfo [] {new ParamInfo ("jshortArray", "array"), new ParamInfo ("jshort*", "elements"), new ParamInfo ("jint", "mode")},
+				Parameters    = new ParamInfo [] {new ParamInfo ("jshortArray", "array"), new ParamInfo ("jshort*", "elements"), new ParamInfo ("JniReleaseArrayElementsMode", "mode")},
 			},
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
@@ -1709,7 +1709,7 @@ namespace Xamarin.Java.Interop
 				Visibility    = "public",
 				Prototype     = "void        (*ReleaseIntArrayElements)(JNIEnv*, jintArray, jint*, jint);",
 				ReturnType    = "void",
-				Parameters    = new ParamInfo [] {new ParamInfo ("jintArray", "array"), new ParamInfo ("jint*", "elements"), new ParamInfo ("jint", "mode")},
+				Parameters    = new ParamInfo [] {new ParamInfo ("jintArray", "array"), new ParamInfo ("jint*", "elements"), new ParamInfo ("JniReleaseArrayElementsMode", "mode")},
 			},
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
@@ -1717,7 +1717,7 @@ namespace Xamarin.Java.Interop
 				Visibility    = "public",
 				Prototype     = "void        (*ReleaseLongArrayElements)(JNIEnv*, jlongArray, jlong*, jint);",
 				ReturnType    = "void",
-				Parameters    = new ParamInfo [] {new ParamInfo ("jlongArray", "array"), new ParamInfo ("jlong*", "elements"), new ParamInfo ("jint", "mode")},
+				Parameters    = new ParamInfo [] {new ParamInfo ("jlongArray", "array"), new ParamInfo ("jlong*", "elements"), new ParamInfo ("JniReleaseArrayElementsMode", "mode")},
 			},
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
@@ -1725,7 +1725,7 @@ namespace Xamarin.Java.Interop
 				Visibility    = "public",
 				Prototype     = "void        (*ReleaseFloatArrayElements)(JNIEnv*, jfloatArray, jfloat*, jint);",
 				ReturnType    = "void",
-				Parameters    = new ParamInfo [] {new ParamInfo ("jfloatArray", "array"), new ParamInfo ("jfloat*", "elements"), new ParamInfo ("jint", "mode")},
+				Parameters    = new ParamInfo [] {new ParamInfo ("jfloatArray", "array"), new ParamInfo ("jfloat*", "elements"), new ParamInfo ("JniReleaseArrayElementsMode", "mode")},
 			},
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
@@ -1733,7 +1733,7 @@ namespace Xamarin.Java.Interop
 				Visibility    = "public",
 				Prototype     = "void        (*ReleaseDoubleArrayElements)(JNIEnv*, jdoubleArray, jdouble*, jint);",
 				ReturnType    = "void",
-				Parameters    = new ParamInfo [] {new ParamInfo ("jdoubleArray", "array"), new ParamInfo ("jdouble*", "elements"), new ParamInfo ("jint", "mode")},
+				Parameters    = new ParamInfo [] {new ParamInfo ("jdoubleArray", "array"), new ParamInfo ("jdouble*", "elements"), new ParamInfo ("JniReleaseArrayElementsMode", "mode")},
 			},
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
@@ -1946,7 +1946,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
 				Name          = "GetPrimitiveArrayCritical",
-				Visibility    = "private",
+				Visibility    = "public",
 				Prototype     = "void*       (*GetPrimitiveArrayCritical)(JNIEnv*, jarray, jboolean*);",
 				ReturnType    = "void*",
 				Parameters    = new ParamInfo [] {new ParamInfo ("jarray", "array"), new ParamInfo (TypeInfo.Create ("jboolean*", "bool*"), "isCopy", Modifier.CanBeNull)},
@@ -1954,10 +1954,10 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
 				Name          = "ReleasePrimitiveArrayCritical",
-				Visibility    = "private",
+				Visibility    = "public",
 				Prototype     = "void        (*ReleasePrimitiveArrayCritical)(JNIEnv*, jarray, void*, jint);",
 				ReturnType    = "void",
-				Parameters    = new ParamInfo [] {new ParamInfo ("jarray", "array"), new ParamInfo ("void*", "carray"), new ParamInfo ("jint", "mode")},
+				Parameters    = new ParamInfo [] {new ParamInfo ("jarray", "array"), new ParamInfo ("void*", "carray"), new ParamInfo ("JniReleaseArrayElementsMode", "mode")},
 			},
 			new JniFunction {
 				DeclaringType = StringOperationsCategory,

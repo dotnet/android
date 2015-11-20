@@ -16,6 +16,12 @@ namespace Java.Interop {
 		WeakGlobal  = 3,
 	}
 
+	public enum JniReleaseArrayElementsMode {
+		Default,
+		Commit,
+		Abort,
+	}
+
 	public struct JniObjectReference
 	{
 		public  JniReferenceSafeHandle      SafeHandle  {get; private set;}
