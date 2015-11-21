@@ -156,15 +156,10 @@ namespace Java.InteropTests
 		public void RegisterWithRuntime ()
 		{
 			using (var Object_class = new JniType ("java/lang/Object")) {
-				Assert.AreEqual (JniObjectReferenceType.Local, Object_class.PeerReference.Type);
+				Assert.AreEqual (JniObjectReferenceType.Global, Object_class.PeerReference.Type);
 				var cur = Object_class.PeerReference;
 				Object_class.RegisterWithRuntime ();
 				Assert.AreEqual (JniObjectReferenceType.Global, Object_class.PeerReference.Type);
-				if (HaveSafeHandles) {
-					Assert.IsFalse (cur.IsValid);
-				} else {
-					Assert.IsTrue (cur.IsValid);    // because struct+copy semantics; is actually no longer valid
-				}
 				Assert.IsTrue (Object_class.PeerReference.IsValid);
 			}
 		}
@@ -173,7 +168,7 @@ namespace Java.InteropTests
 		public void RegisterNativeMethods ()
 		{
 			using (var TestType_class = new JniType ("com/xamarin/interop/CallNonvirtualBase")) {
-				Assert.AreEqual (JniObjectReferenceType.Local, TestType_class.PeerReference.Type);
+				Assert.AreEqual (JniObjectReferenceType.Global, TestType_class.PeerReference.Type);
 				TestType_class.RegisterNativeMethods ();
 				Assert.AreEqual (JniObjectReferenceType.Global, TestType_class.PeerReference.Type);
 			}

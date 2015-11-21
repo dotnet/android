@@ -42,7 +42,7 @@ namespace Java.Interop {
 			if (peerReference.Handle == IntPtr.Zero)
 				throw new ArgumentException ("handle must be valid.", nameof (peerReference));
 			try {
-				this.peerReference  = peerReference.NewLocalRef ();
+				this.peerReference  = peerReference.NewGlobalRef ();
 			} finally {
 				JniObjectReference.Dispose (ref peerReference, transfer);
 			}
@@ -68,15 +68,8 @@ namespace Java.Interop {
 			if (registered)
 				return;
 
-			lock (this) {
-				if (peerReference.Type != JniObjectReferenceType.Global) {
-					var o           = peerReference;
-					peerReference   = o.NewGlobalRef ();
-					JniObjectReference.Dispose (ref o, JniObjectReferenceOptions.DisposeSourceReference);
-				}
-				JniEnvironment.Runtime.Track (this);
-				registered = true;
-			}
+			JniEnvironment.Runtime.Track (this);
+			registered = true;
 		}
 
 		void AssertValid ()
