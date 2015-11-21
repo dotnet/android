@@ -95,17 +95,17 @@ namespace Java.Interop
 #endif  // !FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
 			}
 
-			public static JniType GetTypeFromInstance (JniObjectReference reference)
+			public static JniType GetTypeFromInstance (JniObjectReference instance)
 			{
-				var lref = JniEnvironment.Types.GetObjectClass (reference);
+				var lref = JniEnvironment.Types.GetObjectClass (instance);
 				if (lref.IsValid)
 					return new JniType (ref lref, JniObjectReferenceOptions.DisposeSourceReference);
 				return null;
 			}
 
-			public static string GetJniTypeNameFromInstance (JniObjectReference reference)
+			public static string GetJniTypeNameFromInstance (JniObjectReference instance)
 			{
-				var lref = GetObjectClass (reference);
+				var lref = GetObjectClass (instance);
 				try {
 					return GetJniTypeNameFromClass (lref);
 				}
@@ -114,9 +114,9 @@ namespace Java.Interop
 				}
 			}
 
-			public static string GetJniTypeNameFromClass (JniObjectReference reference)
+			public static string GetJniTypeNameFromClass (JniObjectReference type)
 			{
-				var s = JniEnvironment.InstanceMethods.CallObjectMethod (reference, Class_getName);
+				var s = JniEnvironment.InstanceMethods.CallObjectMethod (type, Class_getName);
 				return JavaClassToJniType (Strings.ToString (ref s, JniObjectReferenceOptions.DisposeSourceReference));
 			}
 
@@ -129,21 +129,28 @@ namespace Java.Interop
 				return value.Replace ('.', '/');
 			}
 
-			public static void RegisterNatives (JniObjectReference klass, JniNativeMethodRegistration [] methods, int numMethods)
+			public static void RegisterNatives (JniObjectReference type, JniNativeMethodRegistration [] methods)
 			{
-				int r   = _RegisterNatives (klass, methods, numMethods);
+				RegisterNatives (type, methods, methods == null ? 0 : methods.Length);
+			}
+
+			public static void RegisterNatives (JniObjectReference type, JniNativeMethodRegistration [] methods, int numMethods)
+			{
+				int r   = _RegisterNatives (type, methods, numMethods);
 
 				if (r != 0) {
-					throw new InvalidOperationException (string.Format ("Could not get JavaVM; JNIEnv::RegisterNatives() returned {0}.", r));
+					throw new InvalidOperationException (
+							string.Format ("Could not register native methods for class '{0}'; JNIEnv::RegisterNatives() returned {1}.", GetJniTypeNameFromClass (type), r));
 				}
 			}
 
-			public static void UnregisterNatives (JniObjectReference klass)
+			public static void UnregisterNatives (JniObjectReference type)
 			{
-				int r   = _UnregisterNatives (klass);
+				int r   = _UnregisterNatives (type);
 
 				if (r != 0) {
-					throw new InvalidOperationException (string.Format ("Could not get JavaVM; JNIEnv::UnregisterNatives() returned {0}.", r));
+					throw new InvalidOperationException (
+							string.Format ("Could not unregister native methods for class '{0}'; JNIEnv::UnregisterNatives() returned {1}.", GetJniTypeNameFromClass (type), r));
 				}
 			}
 		}
