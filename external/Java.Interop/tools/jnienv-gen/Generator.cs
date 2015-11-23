@@ -1017,17 +1017,11 @@ namespace Xamarin.Java.Interop
 				: variable;
 			switch (style) {
 			case HandleStyle.SafeHandle:
-				return new [] {
-					string.Format ("if ({0}.SafeHandle == null)", variable),
-					string.Format ("\tthrow new ArgumentNullException (\"{0}\");", variableName),
-					string.Format ("if ({0}.SafeHandle.IsInvalid)", variable),
-					string.Format ("\tthrow new ArgumentException (\"{0}\");", variableName),
-				};
 			case HandleStyle.JIIntPtr:
 			case HandleStyle.JIIntPtrPinvokeWithErrors:
 				return new [] {
-					string.Format ("if ({0}.Handle == IntPtr.Zero)", variable),
-					string.Format ("\tthrow new ArgumentException (\"`{0}` must not be IntPtr.Zero.\", \"{0}\");", variableName),
+					string.Format ("if (!{0}.IsValid)", variable),
+					string.Format ("\tthrow new ArgumentException (\"Handle must be valid.\", \"{0}\");", variableName),
 				};
 			case HandleStyle.XAIntPtr:
 				return new [] {

@@ -27,7 +27,12 @@ namespace Java.Interop {
 		public  JniReferenceSafeHandle      SafeHandle  {get; private set;}
 		public  IntPtr                      Handle  {get; private set;}
 		public  JniObjectReferenceType      Type    {get; private set;}
-
+		public  bool                        IsValid {
+			get {
+				return (SafeHandle != null && !SafeHandle.IsInvalid) ||
+					Handle != IntPtr.Zero;
+			}
+		}
 
 		public JniObjectReference (JniReferenceSafeHandle handle, JniObjectReferenceType type = JniObjectReferenceType.Invalid)
 		{
