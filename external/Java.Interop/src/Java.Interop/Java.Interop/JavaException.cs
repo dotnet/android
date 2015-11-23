@@ -139,7 +139,7 @@ namespace Java.Interop
 
 		public void Dispose ()
 		{
-			if (PeerReference.Handle == IntPtr.Zero)
+			if (!PeerReference.IsValid)
 				return;
 			JniEnvironment.Runtime.ValueMarshaler.DisposeObject (this);
 			var inner = InnerException as JavaException;

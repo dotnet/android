@@ -39,7 +39,7 @@ namespace Java.Interop {
 
 		void Initialize (ref JniObjectReference peerReference, JniObjectReferenceOptions transfer)
 		{
-			if (peerReference.Handle == IntPtr.Zero)
+			if (!peerReference.IsValid)
 				throw new ArgumentException ("handle must be valid.", nameof (peerReference));
 			try {
 				this.peerReference  = peerReference.NewGlobalRef ();
@@ -74,13 +74,13 @@ namespace Java.Interop {
 
 		void AssertValid ()
 		{
-			if (PeerReference.Handle == IntPtr.Zero)
+			if (!PeerReference.IsValid)
 				throw new ObjectDisposedException (GetType ().FullName);
 		}
 
 		public static JniType GetCachedJniType (ref JniType cachedType, string classname)
 		{
-			if (cachedType != null && cachedType.PeerReference.Handle != IntPtr.Zero)
+			if (cachedType != null && cachedType.PeerReference.IsValid)
 				return cachedType;
 			var t = new JniType (classname);
 			if (Interlocked.CompareExchange (ref cachedType, t, null) != null)
