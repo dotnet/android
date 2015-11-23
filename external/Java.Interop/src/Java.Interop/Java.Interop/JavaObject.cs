@@ -57,7 +57,7 @@ namespace Java.Interop
 			var peer = JniPeerMembers.InstanceMethods.StartCreateInstance ("()V", GetType (), null);
 			using (SetPeerReference (
 					ref peer,
-					JniObjectReferenceOptions.DisposeSourceReference)) {
+					JniObjectReferenceOptions.CopyAndDispose)) {
 				JniPeerMembers.InstanceMethods.FinishCreateInstance ("()V", this, null);
 			}
 		}
@@ -117,7 +117,7 @@ namespace Java.Interop
 					"toString\u0000()Ljava/lang/String;",
 					this,
 					null);
-			return JniEnvironment.Strings.ToString (ref lref, JniObjectReferenceOptions.DisposeSourceReference);
+			return JniEnvironment.Strings.ToString (ref lref, JniObjectReferenceOptions.CopyAndDispose);
 		}
 
 		int IJavaPeerableEx.IdentityHashCode {

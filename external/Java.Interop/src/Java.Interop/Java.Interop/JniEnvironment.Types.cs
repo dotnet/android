@@ -63,7 +63,7 @@ namespace Java.Interop
 				}
 				NativeMethods.JavaInterop_ExceptionClear (info.EnvironmentPointer);
 				NativeMethods.JavaInterop_DeleteLocalRef (info.EnvironmentPointer, ignoreThrown);
-				throw info.Runtime.GetExceptionForThrowable (ref e, JniObjectReferenceOptions.DisposeSourceReference);
+				throw info.Runtime.GetExceptionForThrowable (ref e, JniObjectReferenceOptions.CopyAndDispose);
 #endif  // !FEATURE_JNIENVIRONMENT_JI_PINVOKES
 #if FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
 				var c       = info.Invoker.FindClass (info.EnvironmentPointer, classname);
@@ -91,7 +91,7 @@ namespace Java.Interop
 				LogCreateLocalRef (ignoreThrown);
 				ignoreThrown.Dispose ();
 				var e   = new JniObjectReference (thrown, JniObjectReferenceType.Local);
-				throw info.Runtime.GetExceptionForThrowable (ref e, JniObjectReferenceOptions.DisposeSourceReference);
+				throw info.Runtime.GetExceptionForThrowable (ref e, JniObjectReferenceOptions.CopyAndDispose);
 #endif  // !FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
 			}
 
@@ -99,7 +99,7 @@ namespace Java.Interop
 			{
 				var lref = JniEnvironment.Types.GetObjectClass (instance);
 				if (lref.IsValid)
-					return new JniType (ref lref, JniObjectReferenceOptions.DisposeSourceReference);
+					return new JniType (ref lref, JniObjectReferenceOptions.CopyAndDispose);
 				return null;
 			}
 
@@ -110,14 +110,14 @@ namespace Java.Interop
 					return GetJniTypeNameFromClass (lref);
 				}
 				finally {
-					JniObjectReference.Dispose (ref lref, JniObjectReferenceOptions.DisposeSourceReference);
+					JniObjectReference.Dispose (ref lref, JniObjectReferenceOptions.CopyAndDispose);
 				}
 			}
 
 			public static string GetJniTypeNameFromClass (JniObjectReference type)
 			{
 				var s = JniEnvironment.InstanceMethods.CallObjectMethod (type, Class_getName);
-				return JavaClassToJniType (Strings.ToString (ref s, JniObjectReferenceOptions.DisposeSourceReference));
+				return JavaClassToJniType (Strings.ToString (ref s, JniObjectReferenceOptions.CopyAndDispose));
 			}
 
 			static string JavaClassToJniType (string value)

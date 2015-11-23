@@ -103,7 +103,7 @@ namespace Java.Interop {
 			: base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
 		{
 		    var peer    = JniEnvironment.Arrays.New<#= info.JniMarshalType #>Array (CheckLength (length));
-		    using (SetPeerReference (ref peer, JniObjectReferenceOptions.DisposeSourceReference)) {
+		    using (SetPeerReference (ref peer, JniObjectReferenceOptions.CopyAndDispose)) {
 		    }
 		}
 

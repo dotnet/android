@@ -21,7 +21,7 @@ namespace Java.InteropTests {
 			var peer    = JniPeerMembers.InstanceMethods.StartGenericCreateInstance ("(I)V", GetType (), value);
 			using (SetPeerReference (
 						ref peer,
-						JniObjectReferenceOptions.DisposeSourceReference)) {
+						JniObjectReferenceOptions.CopyAndDispose)) {
 				JniPeerMembers.InstanceMethods.FinishGenericCreateInstance ("(I)V", this, value);
 			}
 		}

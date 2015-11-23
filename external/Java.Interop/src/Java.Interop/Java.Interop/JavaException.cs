@@ -27,7 +27,7 @@ namespace Java.Interop
 			var peer = JniPeerMembers.InstanceMethods.StartCreateInstance ("()V", GetType (), null);
 			using (SetPeerReference (
 					ref peer,
-					JniObjectReferenceOptions.DisposeSourceReference)) {
+					JniObjectReferenceOptions.CopyAndDispose)) {
 				JniPeerMembers.InstanceMethods.FinishCreateInstance ("()V", this, null);
 			}
 			javaStackTrace    = _GetJavaStack (PeerReference);
@@ -44,11 +44,11 @@ namespace Java.Interop
 				var peer = JniPeerMembers.InstanceMethods.StartCreateInstance (signature, GetType (), args);
 				using (SetPeerReference (
 						ref peer,
-						JniObjectReferenceOptions.DisposeSourceReference)) {
+						JniObjectReferenceOptions.CopyAndDispose)) {
 					JniPeerMembers.InstanceMethods.FinishCreateInstance (signature, this, args);
 				}
 			} finally {
-				JniObjectReference.Dispose (ref native_message, JniObjectReferenceOptions.DisposeSourceReference);
+				JniObjectReference.Dispose (ref native_message, JniObjectReferenceOptions.CopyAndDispose);
 			}
 			javaStackTrace    = _GetJavaStack (PeerReference);
 		}
@@ -64,11 +64,11 @@ namespace Java.Interop
 				var peer = JniPeerMembers.InstanceMethods.StartCreateInstance (signature, GetType (), args);
 				using (SetPeerReference (
 						ref peer,
-						JniObjectReferenceOptions.DisposeSourceReference)) {
+						JniObjectReferenceOptions.CopyAndDispose)) {
 					JniPeerMembers.InstanceMethods.FinishCreateInstance (signature, this, args);
 				}
 			} finally {
-				JniObjectReference.Dispose (ref native_message, JniObjectReferenceOptions.DisposeSourceReference);
+				JniObjectReference.Dispose (ref native_message, JniObjectReferenceOptions.CopyAndDispose);
 			}
 			javaStackTrace    = _GetJavaStack (PeerReference);
 		}
@@ -187,7 +187,7 @@ namespace Java.Interop
 
 			var m = _members.InstanceMethods.GetMethodInfo ("getMessage\u0000()Ljava/lang/String;");
 			var s = JniEnvironment.InstanceMethods.CallObjectMethod (reference, m);
-			return JniEnvironment.Strings.ToString (ref s, JniObjectReferenceOptions.DisposeSourceReference);
+			return JniEnvironment.Strings.ToString (ref s, JniObjectReferenceOptions.CopyAndDispose);
 		}
 
 		static Exception _GetCause (ref JniObjectReference reference, JniObjectReferenceOptions transfer)
@@ -197,7 +197,7 @@ namespace Java.Interop
 
 			var m = _members.InstanceMethods.GetMethodInfo ("getCause\u0000()Ljava/lang/Throwable;");
 			var e = JniEnvironment.InstanceMethods.CallObjectMethod (reference, m);
-			return JniEnvironment.Runtime.GetExceptionForThrowable (ref e, JniObjectReferenceOptions.DisposeSourceReference);
+			return JniEnvironment.Runtime.GetExceptionForThrowable (ref e, JniObjectReferenceOptions.CopyAndDispose);
 		}
 
 		unsafe string _GetJavaStack (JniObjectReference handle)
@@ -217,12 +217,12 @@ namespace Java.Interop
 						pst_args [0] = new JniArgumentValue (pwriter);
 						JniEnvironment.InstanceMethods.CallVoidMethod (handle, pst, pst_args);
 						var s = JniEnvironment.Object.ToString (swriter);
-						return JniEnvironment.Strings.ToString (ref s, JniObjectReferenceOptions.DisposeSourceReference);
+						return JniEnvironment.Strings.ToString (ref s, JniObjectReferenceOptions.CopyAndDispose);
 					} finally {
-						JniObjectReference.Dispose (ref pwriter, JniObjectReferenceOptions.DisposeSourceReference);
+						JniObjectReference.Dispose (ref pwriter, JniObjectReferenceOptions.CopyAndDispose);
 					}
 				} finally {
-					JniObjectReference.Dispose (ref swriter, JniObjectReferenceOptions.DisposeSourceReference);
+					JniObjectReference.Dispose (ref swriter, JniObjectReferenceOptions.CopyAndDispose);
 				}
 			}
 		}

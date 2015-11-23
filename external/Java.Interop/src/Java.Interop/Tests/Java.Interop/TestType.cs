@@ -87,9 +87,9 @@ namespace Java.InteropTests
 			Func<IntPtr, IntPtr, IntPtr, bool> h = (jnienv, n_self, n_value) => {
 				var jvm     = JniEnvironment.Runtime;
 				var r_self  = new JniObjectReference (n_self);
-				var self    = jvm.ValueMarshaler.GetObject<TestType>(ref r_self, JniObjectReferenceOptions.DoNotRegisterWithRuntime);
+				var self    = jvm.ValueMarshaler.GetObject<TestType>(ref r_self, JniObjectReferenceOptions.CopyAndDoNotRegister);
 				var r_value = new JniObjectReference (n_self);
-				var value   = jvm.ValueMarshaler.GetObject (ref r_value, JniObjectReferenceOptions.DoNotRegisterWithRuntime);
+				var value   = jvm.ValueMarshaler.GetObject (ref r_value, JniObjectReferenceOptions.CopyAndDoNotRegister);
 
 				try {
 					return self.EqualsThis (value);
@@ -105,7 +105,7 @@ namespace Java.InteropTests
 		{
 			Func<IntPtr, IntPtr, int> h = (jnienv, n_self) => {
 				var r_self  = new JniObjectReference (n_self);
-				var self    = JniEnvironment.Runtime.ValueMarshaler.GetObject<TestType>(ref r_self, JniObjectReferenceOptions.DoNotRegisterWithRuntime);
+				var self    = JniEnvironment.Runtime.ValueMarshaler.GetObject<TestType>(ref r_self, JniObjectReferenceOptions.CopyAndDoNotRegister);
 				try {
 					return self.GetInt32Value ();
 				} finally {
@@ -124,7 +124,7 @@ namespace Java.InteropTests
 		static IntPtr GetStringValueHandler (IntPtr jnienv, IntPtr n_self, int value)
 		{
 			var r_self  = new JniObjectReference (n_self);
-			var self    = JniEnvironment.Runtime.ValueMarshaler.GetObject<TestType>(ref r_self, JniObjectReferenceOptions.DoNotRegisterWithRuntime);
+			var self    = JniEnvironment.Runtime.ValueMarshaler.GetObject<TestType>(ref r_self, JniObjectReferenceOptions.CopyAndDoNotRegister);
 			try {
 				var s = self.GetStringValue (value);
 				var r = JniEnvironment.Strings.NewString (s);
@@ -141,7 +141,7 @@ namespace Java.InteropTests
 		static void MethodThrowsHandler (IntPtr jnienv, IntPtr n_self)
 		{
 			var r_self  = new JniObjectReference (n_self);
-			var self    = JniEnvironment.Runtime.ValueMarshaler.GetObject<TestType>(ref r_self, JniObjectReferenceOptions.DoNotRegisterWithRuntime);
+			var self    = JniEnvironment.Runtime.ValueMarshaler.GetObject<TestType>(ref r_self, JniObjectReferenceOptions.CopyAndDoNotRegister);
 			try {
 				self.MethodThrows ();
 			} finally {

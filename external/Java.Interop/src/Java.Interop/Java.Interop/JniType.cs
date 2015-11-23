@@ -15,7 +15,7 @@ namespace Java.Interop {
 		{
 			fixed (byte* buf = classFileData) {
 				var lref = JniEnvironment.Types.DefineClass (name, loader, (IntPtr) buf, classFileData.Length);
-				return new JniType (ref lref, JniObjectReferenceOptions.DisposeSourceReference);
+				return new JniType (ref lref, JniObjectReferenceOptions.CopyAndDispose);
 			}
 		}
 
@@ -29,7 +29,7 @@ namespace Java.Interop {
 		public JniType (string classname)
 		{
 			var peer    = JniEnvironment.Types.FindClass (classname);
-			Initialize (ref peer, JniObjectReferenceOptions.DisposeSourceReference);
+			Initialize (ref peer, JniObjectReferenceOptions.CopyAndDispose);
 		}
 
 		public JniType (ref JniObjectReference peerReference, JniObjectReferenceOptions transfer)
@@ -106,7 +106,7 @@ namespace Java.Interop {
 
 			var lref = JniEnvironment.Types.GetSuperclass (PeerReference);
 			if (lref.IsValid)
-				return new JniType (ref lref, JniObjectReferenceOptions.DisposeSourceReference);
+				return new JniType (ref lref, JniObjectReferenceOptions.CopyAndDispose);
 			return null;
 		}
 

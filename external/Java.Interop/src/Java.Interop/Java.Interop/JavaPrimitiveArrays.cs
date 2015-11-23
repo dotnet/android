@@ -253,7 +253,7 @@ namespace Java.Interop {
 			: base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
 		{
 		    var peer    = JniEnvironment.Arrays.NewBooleanArray (CheckLength (length));
-		    using (SetPeerReference (ref peer, JniObjectReferenceOptions.DisposeSourceReference)) {
+		    using (SetPeerReference (ref peer, JniObjectReferenceOptions.CopyAndDispose)) {
 		    }
 		}
 
@@ -399,7 +399,7 @@ namespace Java.Interop {
 			: base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
 		{
 		    var peer    = JniEnvironment.Arrays.NewByteArray (CheckLength (length));
-		    using (SetPeerReference (ref peer, JniObjectReferenceOptions.DisposeSourceReference)) {
+		    using (SetPeerReference (ref peer, JniObjectReferenceOptions.CopyAndDispose)) {
 		    }
 		}
 
@@ -545,7 +545,7 @@ namespace Java.Interop {
 			: base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
 		{
 		    var peer    = JniEnvironment.Arrays.NewCharArray (CheckLength (length));
-		    using (SetPeerReference (ref peer, JniObjectReferenceOptions.DisposeSourceReference)) {
+		    using (SetPeerReference (ref peer, JniObjectReferenceOptions.CopyAndDispose)) {
 		    }
 		}
 
@@ -691,7 +691,7 @@ namespace Java.Interop {
 			: base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
 		{
 		    var peer    = JniEnvironment.Arrays.NewShortArray (CheckLength (length));
-		    using (SetPeerReference (ref peer, JniObjectReferenceOptions.DisposeSourceReference)) {
+		    using (SetPeerReference (ref peer, JniObjectReferenceOptions.CopyAndDispose)) {
 		    }
 		}
 
@@ -837,7 +837,7 @@ namespace Java.Interop {
 			: base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
 		{
 		    var peer    = JniEnvironment.Arrays.NewIntArray (CheckLength (length));
-		    using (SetPeerReference (ref peer, JniObjectReferenceOptions.DisposeSourceReference)) {
+		    using (SetPeerReference (ref peer, JniObjectReferenceOptions.CopyAndDispose)) {
 		    }
 		}
 
@@ -983,7 +983,7 @@ namespace Java.Interop {
 			: base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
 		{
 		    var peer    = JniEnvironment.Arrays.NewLongArray (CheckLength (length));
-		    using (SetPeerReference (ref peer, JniObjectReferenceOptions.DisposeSourceReference)) {
+		    using (SetPeerReference (ref peer, JniObjectReferenceOptions.CopyAndDispose)) {
 		    }
 		}
 
@@ -1129,7 +1129,7 @@ namespace Java.Interop {
 			: base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
 		{
 		    var peer    = JniEnvironment.Arrays.NewFloatArray (CheckLength (length));
-		    using (SetPeerReference (ref peer, JniObjectReferenceOptions.DisposeSourceReference)) {
+		    using (SetPeerReference (ref peer, JniObjectReferenceOptions.CopyAndDispose)) {
 		    }
 		}
 
@@ -1275,7 +1275,7 @@ namespace Java.Interop {
 			: base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
 		{
 		    var peer    = JniEnvironment.Arrays.NewDoubleArray (CheckLength (length));
-		    using (SetPeerReference (ref peer, JniObjectReferenceOptions.DisposeSourceReference)) {
+		    using (SetPeerReference (ref peer, JniObjectReferenceOptions.CopyAndDispose)) {
 		    }
 		}
 

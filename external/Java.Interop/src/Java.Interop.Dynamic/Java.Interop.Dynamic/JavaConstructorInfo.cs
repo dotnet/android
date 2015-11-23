@@ -42,7 +42,7 @@ namespace Java.Interop.Dynamic {
 		{
 			if (self == null) {
 				var h   = members.InstanceMethods.StartCreateInstance (JniSignature, typeof (JavaInstanceProxy), arguments);
-				self    = JniEnvironment.Runtime.ValueMarshaler.GetObject<JavaInstanceProxy> (ref h, JniObjectReferenceOptions.DisposeSourceReference);
+				self    = JniEnvironment.Runtime.ValueMarshaler.GetObject<JavaInstanceProxy> (ref h, JniObjectReferenceOptions.CopyAndDispose);
 			}
 			members.InstanceMethods.FinishCreateInstance (JniSignature, self, arguments);
 			return new DynamicJavaInstance (self);

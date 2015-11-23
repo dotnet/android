@@ -6,9 +6,11 @@ namespace Java.Interop
 	public enum JniObjectReferenceOptions
 	{
 		None                        = 0,
-		CreateNewReference          = 1 << 0,   // DoNotTransfer
-		DisposeSourceReference      = 1 << 1,   // Transfer
-		DoNotRegisterWithRuntime    = 1 << 2,
+		Copy                        = 1 << 0,                   // DoNotTransfer
+		// DisposeSource            = 1 << 1,                   // See JniObjectReference.DisposeSource
+		CopyAndDispose              = (1 << 1) + Copy,    // Transfer
+		// DoNotRegisterTarget      = 1 << 2,                   // See JniRuntime.JniValueMarshaler.DoNotRegisterTarget
+		CopyAndDoNotRegister        = (1 << 2) + Copy,
 	}
 }
 

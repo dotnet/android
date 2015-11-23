@@ -27,7 +27,7 @@ namespace Java.Interop
 			: this (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
 		{
 			var peer    = _NewArray (CheckLength (length));
-			using (SetPeerReference (ref peer, JniObjectReferenceOptions.DisposeSourceReference)) {
+			using (SetPeerReference (ref peer, JniObjectReferenceOptions.CopyAndDispose)) {
 			}
 		}
 
@@ -59,14 +59,14 @@ namespace Java.Interop
 		T GetElementAt (int index)
 		{
 			var lref = JniEnvironment.Arrays.GetObjectArrayElement (PeerReference, index);
-			return JniMarshal.GetValue<T> (ref lref, JniObjectReferenceOptions.DisposeSourceReference);
+			return JniMarshal.GetValue<T> (ref lref, JniObjectReferenceOptions.CopyAndDispose);
 		}
 
 		void SetElementAt (int index, T value)
 		{
 			var h = JniMarshal.CreateLocalRef (value);
 			JniEnvironment.Arrays.SetObjectArrayElement (PeerReference, index, h);
-			JniObjectReference.Dispose (ref h, JniObjectReferenceOptions.DisposeSourceReference);
+			JniObjectReference.Dispose (ref h, JniObjectReferenceOptions.CopyAndDispose);
 		}
 
 		public override IEnumerator<T> GetEnumerator ()
@@ -84,7 +84,7 @@ namespace Java.Interop
 			for (int i = 0; i < len; i++) {
 				JniEnvironment.Arrays.SetObjectArrayElement (PeerReference, i, v);
 			}
-			JniObjectReference.Dispose (ref v, JniObjectReferenceOptions.DisposeSourceReference);
+			JniObjectReference.Dispose (ref v, JniObjectReferenceOptions.CopyAndDispose);
 		}
 
 		public override int IndexOf (T item)

@@ -13,7 +13,7 @@ namespace Java.Interop
 		Alloc   = 1 << 16,
 	}
 
-	public struct JniObjectReference : IEquatable<JniObjectReference>
+	public partial struct JniObjectReference : IEquatable<JniObjectReference>
 	{
 		const   uint    FlagsMask   = 0xFFFF0000;
 		const   uint    TypeMask    = 0x0000FFFF;
@@ -164,36 +164,37 @@ namespace Java.Interop
 
 		public static void Dispose (ref JniObjectReference reference)
 		{
-			Dispose (ref reference, JniObjectReferenceOptions.DisposeSourceReference);
+			if (!reference.IsValid)
+				return;
+
+			switch (reference.Type) {
+			case JniObjectReferenceType.Global:
+				JniEnvironment.Runtime.ObjectReferenceManager.DeleteGlobalReference (ref reference);
+				break;
+			case JniObjectReferenceType.Local:
+				JniEnvironment.Runtime.ObjectReferenceManager.DeleteLocalReference (JniEnvironment.CurrentInfo, ref reference);
+				break;
+			case JniObjectReferenceType.WeakGlobal:
+				JniEnvironment.Runtime.ObjectReferenceManager.DeleteWeakGlobalReference (ref reference);
+				break;
+			default:
+				throw new NotImplementedException ("Do not know how to dispose: " + reference.Type.ToString () + ".");
+			}
+
+			reference.Invalidate ();
 		}
 
-		const JniObjectReferenceOptions TransferMask    = JniObjectReferenceOptions.CreateNewReference | JniObjectReferenceOptions.DisposeSourceReference;
+		const   JniObjectReferenceOptions   DisposeSource   = (JniObjectReferenceOptions) (1 << 1);
 
-		public static void Dispose (ref JniObjectReference reference, JniObjectReferenceOptions transfer)
+		public static void Dispose (ref JniObjectReference reference, JniObjectReferenceOptions options)
 		{
 			if (!reference.IsValid)
 				return;
 
-			switch (transfer & TransferMask) {
-			case JniObjectReferenceOptions.CreateNewReference:
-				break;
-			case JniObjectReferenceOptions.DisposeSourceReference:
-				switch (reference.Type) {
-				case JniObjectReferenceType.Global:
-					JniEnvironment.Runtime.ObjectReferenceManager.DeleteGlobalReference (ref reference);
-					break;
-				case JniObjectReferenceType.Local:
-					JniEnvironment.Runtime.ObjectReferenceManager.DeleteLocalReference (JniEnvironment.CurrentInfo, ref reference);
-					break;
-				case JniObjectReferenceType.WeakGlobal:
-					JniEnvironment.Runtime.ObjectReferenceManager.DeleteWeakGlobalReference (ref reference);
-					break;
-				default:
-					throw new NotImplementedException ("Do not know how to dispose: " + reference.Type.ToString () + ".");
-				}
-				reference.Invalidate ();
-				break;
-			}
+			if ((options & DisposeSource) == 0)
+				return;
+
+			Dispose (ref reference);
 		}
 	}
 }

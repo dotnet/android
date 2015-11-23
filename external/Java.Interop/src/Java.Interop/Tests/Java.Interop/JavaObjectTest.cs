@@ -31,7 +31,7 @@ namespace Java.InteropTests
 				var first = array [0];
 				Assert.IsNotNull (JniRuntime.CurrentRuntime.ValueMarshaler.PeekObject (first.PeerReference));
 				var f = first.PeerReference;
-				var o = (JavaObject) JniRuntime.CurrentRuntime.ValueMarshaler.GetObject (ref f, JniObjectReferenceOptions.CreateNewReference);
+				var o = (JavaObject) JniRuntime.CurrentRuntime.ValueMarshaler.GetObject (ref f, JniObjectReferenceOptions.Copy);
 				Assert.AreSame (first, o);
 				if (oldHandle != o.PeerReference.Handle) {
 					Console.WriteLine ("Yay, object handle changed; value survived a GC!");
@@ -68,7 +68,7 @@ namespace Java.InteropTests
 		{
 			using (var original = new JavaObject ()) {
 				var p       = original.PeerReference;
-				Assert.Throws<NotSupportedException> (() => new JavaObject (ref p, JniObjectReferenceOptions.CreateNewReference));
+				Assert.Throws<NotSupportedException> (() => new JavaObject (ref p, JniObjectReferenceOptions.Copy));
 			}
 		}
 
@@ -147,11 +147,11 @@ namespace Java.InteropTests
 				var c = t.GetConstructor ("()V");
 				var lref = t.NewObject (c, null);
 				Assert.IsTrue (lref.IsValid);
-				using (var o = new JavaObject (ref lref, JniObjectReferenceOptions.CreateNewReference)) {
+				using (var o = new JavaObject (ref lref, JniObjectReferenceOptions.Copy)) {
 					Assert.IsTrue (lref.IsValid);
 					Assert.AreNotSame (lref, o.PeerReference);
 				}
-				using (var o = new JavaObject (ref lref, JniObjectReferenceOptions.DisposeSourceReference)) {
+				using (var o = new JavaObject (ref lref, JniObjectReferenceOptions.CopyAndDispose)) {
 					Assert.IsFalse (lref.IsValid);
 					Assert.AreNotSame (lref, o.PeerReference);
 				}
@@ -162,7 +162,7 @@ namespace Java.InteropTests
 		public void Ctor_Exceptions ()
 		{
 			var r   = new JniObjectReference ();
-			Assert.Throws<ArgumentException> (() => new JavaObject (ref r, JniObjectReferenceOptions.DisposeSourceReference));
+			Assert.Throws<ArgumentException> (() => new JavaObject (ref r, JniObjectReferenceOptions.CopyAndDispose));
 
 			// Note: This may break if/when JavaVM provides "default"
 			Assert.Throws<NotSupportedException> (() => new JavaObjectWithNoJavaPeer ());

@@ -53,7 +53,7 @@ namespace Java.InteropTests
 		{
 			const   string  id  = "(Ljava/lang/String;)V";
 			var peer = _members.InstanceMethods.StartGenericCreateInstance (id, GetType (), value);
-			using (SetPeerReference (ref peer, JniObjectReferenceOptions.DisposeSourceReference)) {
+			using (SetPeerReference (ref peer, JniObjectReferenceOptions.CopyAndDispose)) {
 				_members.InstanceMethods.FinishGenericCreateInstance (id, this, value);
 			}
 		}

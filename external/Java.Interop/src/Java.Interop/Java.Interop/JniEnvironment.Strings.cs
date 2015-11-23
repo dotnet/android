@@ -36,7 +36,7 @@ namespace Java.Interop
 
 			public static unsafe string ToString (JniObjectReference value)
 			{
-				return ToString (ref value, JniObjectReferenceOptions.CreateNewReference);
+				return ToString (ref value, JniObjectReferenceOptions.Copy);
 			}
 
 			public static unsafe string ToString (ref JniObjectReference value, JniObjectReferenceOptions transfer)

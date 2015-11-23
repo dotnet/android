@@ -218,7 +218,7 @@ namespace Java.Interop.Dynamic {
 					for (int i  = 0; i < len; ++i) {
 						var field       = JniEnvironment.Arrays.GetObjectArrayElement (fields, i);
 						var n_name      = JniEnvironment.InstanceMethods.CallObjectMethod (field, Field_getName);
-						var name        = JniEnvironment.Strings.ToString (ref n_name, JniObjectReferenceOptions.DisposeSourceReference);
+						var name        = JniEnvironment.Strings.ToString (ref n_name, JniObjectReferenceOptions.CopyAndDispose);
 						var isStatic    = IsStatic (field);
 
 						List<JavaFieldInfo> overloads;
@@ -226,7 +226,7 @@ namespace Java.Interop.Dynamic {
 							Fields.Add (name, overloads = new List<JavaFieldInfo> ());
 
 						var n_type      = JniEnvironment.InstanceMethods.CallObjectMethod (field, Field_getType);
-						using (var type = new JniType (ref n_type, JniObjectReferenceOptions.DisposeSourceReference)) {
+						using (var type = new JniType (ref n_type, JniObjectReferenceOptions.CopyAndDispose)) {
 							var info = JniEnvironment.Runtime.TypeManager.GetTypeSignature (type.Name);
 							overloads.Add (new JavaFieldInfo (Members, name + "\u0000" + info.QualifiedReference, isStatic));
 						}
@@ -258,7 +258,7 @@ namespace Java.Interop.Dynamic {
 					for (int i  = 0; i < len; ++i) {
 						var method      = JniEnvironment.Arrays.GetObjectArrayElement (methods, i);
 						var n_name      = JniEnvironment.InstanceMethods.CallObjectMethod (method, Method_getName);
-						var name        = JniEnvironment.Strings.ToString (ref n_name, JniObjectReferenceOptions.DisposeSourceReference);
+						var name        = JniEnvironment.Strings.ToString (ref n_name, JniObjectReferenceOptions.CopyAndDispose);
 						var isStatic    = IsStatic (method);
 
 						List<JavaMethodInfo> overloads;
@@ -266,7 +266,7 @@ namespace Java.Interop.Dynamic {
 							Methods.Add (name, overloads = new List<JavaMethodInfo> ());
 
 						var nrt = JniEnvironment.InstanceMethods.CallObjectMethod (method, Method_getReturnType);
-						var rt  = new JniType (ref nrt, JniObjectReferenceOptions.DisposeSourceReference);
+						var rt  = new JniType (ref nrt, JniObjectReferenceOptions.CopyAndDispose);
 						var m   = new JavaMethodInfo (Members, method, name, isStatic) {
 							ReturnType  = rt,
 						};
@@ -309,7 +309,7 @@ namespace Java.Interop.Dynamic {
 			}
 			finally {
 				for (int i = 0; margs != null && i < margs.Count; ++i) {
-					margs [i].Cleanup (args [i]);
+					margs [i].Cleanup (args [i].Value);
 				}
 				for (int i = 0; i < jtypes.Count; ++i) {
 					if (jtypes [i] != null)

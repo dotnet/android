@@ -68,7 +68,7 @@ namespace Java.Interop
 
 				if (r.Type != JniObjectReferenceType.Global) {
 					value.SetPeerReference (r.NewGlobalRef ());
-					JniObjectReference.Dispose (ref r, JniObjectReferenceOptions.DisposeSourceReference);
+					JniObjectReference.Dispose (ref r, JniObjectReferenceOptions.CopyAndDispose);
 				}
 				int key = value.IdentityHashCode;
 				lock (RegisteredInstances) {
@@ -99,6 +99,8 @@ namespace Java.Interop
 				}
 			}
 
+			const   JniObjectReferenceOptions   DoNotRegisterTarget = (JniObjectReferenceOptions) (1 << 2);
+
 			internal TCleanup SetObjectPeerReference<T, TCleanup> (T value, ref JniObjectReference reference, JniObjectReferenceOptions options, Func<Action, TCleanup> createCleanup)
 				where T : IJavaPeerable, IJavaPeerableEx
 				where TCleanup : IDisposable
@@ -106,13 +108,17 @@ namespace Java.Interop
 				if (!reference.IsValid)
 					throw new ArgumentException ("handle is invalid.", nameof (reference));
 
-				var newRef      = reference.NewGlobalRef ();
+				var newRef      = reference;
+				if ((options & JniObjectReferenceOptions.Copy) == JniObjectReferenceOptions.Copy) {
+					newRef  = reference.NewGlobalRef ();
+				}
 				value.SetPeerReference (newRef);
+				System.Diagnostics.Debug.WriteLine ("# jonp: SetObjectPeerReference: reference={0}; newRef={1}; options={2}", reference.ToString (), newRef.ToString (), options);
 				JniObjectReference.Dispose (ref reference, options);
 
 				value.IdentityHashCode = JniSystem.IdentityHashCode (newRef);
 
-				if ((options & JniObjectReferenceOptions.DoNotRegisterWithRuntime) != JniObjectReferenceOptions.DoNotRegisterWithRuntime) {
+				if ((options & DoNotRegisterTarget) != DoNotRegisterTarget) {
 					RegisterObject (value);
 				}
 				return createCleanup (null);
@@ -276,10 +282,10 @@ namespace Java.Interop
 						? JniEnvironment.Types.GetJniTypeNameFromClass (super)
 						: null;
 
-					JniObjectReference.Dispose (ref klass, JniObjectReferenceOptions.DisposeSourceReference);
+					JniObjectReference.Dispose (ref klass, JniObjectReferenceOptions.CopyAndDispose);
 					klass      = super;
 				}
-				JniObjectReference.Dispose (ref klass, JniObjectReferenceOptions.DisposeSourceReference);
+				JniObjectReference.Dispose (ref klass, JniObjectReferenceOptions.CopyAndDispose);
 
 				return GetActivationConstructor (fallbackType);
 			}
@@ -305,7 +311,7 @@ namespace Java.Interop
 				if (jniHandle == IntPtr.Zero)
 					return null;
 				var h = new JniObjectReference (jniHandle);
-				return GetObject (ref h, JniObjectReferenceOptions.CreateNewReference, targetType);
+				return GetObject (ref h, JniObjectReferenceOptions.Copy, targetType);
 			}
 
 			public T GetObject<T> (IntPtr jniHandle)

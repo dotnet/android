@@ -58,7 +58,7 @@ namespace Java.Interop {
 			// JniEnvironment.Errors.ExceptionDescribe ();
 			JniEnvironment.Exceptions.ExceptionClear ();
 			JniEnvironment.LogCreateLocalRef (e);
-			return Runtime.GetExceptionForThrowable (ref e, JniObjectReferenceOptions.DisposeSourceReference);
+			return Runtime.GetExceptionForThrowable (ref e, JniObjectReferenceOptions.CopyAndDispose);
 		}
 
 		internal    static  Exception   GetExceptionForLastThrowable (IntPtr thrown)
@@ -69,7 +69,7 @@ namespace Java.Interop {
 			// JniEnvironment.Errors.ExceptionDescribe ();
 			JniEnvironment.Exceptions.ExceptionClear ();
 			JniEnvironment.LogCreateLocalRef (e);
-			return Runtime.GetExceptionForThrowable (ref e, JniObjectReferenceOptions.DisposeSourceReference);
+			return Runtime.GetExceptionForThrowable (ref e, JniObjectReferenceOptions.CopyAndDispose);
 		}
 
 		internal    static  void        LogCreateLocalRef (JniObjectReference value)
