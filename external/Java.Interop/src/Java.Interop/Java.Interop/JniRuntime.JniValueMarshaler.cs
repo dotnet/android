@@ -113,7 +113,6 @@ namespace Java.Interop
 					newRef  = reference.NewGlobalRef ();
 				}
 				value.SetPeerReference (newRef);
-				System.Diagnostics.Debug.WriteLine ("# jonp: SetObjectPeerReference: reference={0}; newRef={1}; options={2}", reference.ToString (), newRef.ToString (), options);
 				JniObjectReference.Dispose (ref reference, options);
 
 				value.IdentityHashCode = JniSystem.IdentityHashCode (newRef);
