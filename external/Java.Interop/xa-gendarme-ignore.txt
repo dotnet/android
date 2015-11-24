@@ -20,6 +20,7 @@ R: Gendarme.Rules.Correctness.EnsureLocalDisposalRule
 # We don't *want* to dispose the value!
 M: System.Void Java.Interop.JniEnvironmentInfo::set_EnvironmentPointer(System.IntPtr)
 M: Java.Interop.JniType Java.Interop.JniPeerMembers::get_JniPeerType()
+M: Java.Interop.JniRuntime Java.Interop.JniRuntime::get_CurrentRuntime()
 
 # These look like gendarme bugs wrt C#2 `yield return` methods.
 M: System.Collections.IEnumerator Java.Interop.JniRuntime/JniTypeManager/<CreateGetTypeSignaturesEnumerator>c__Iterator0::System.Collections.IEnumerable.GetEnumerator()
@@ -214,6 +215,8 @@ R: Gendarme.Rules.Maintainability.VariableNamesShouldNotMatchFieldNamesRule
 # > constructor parameters are used to simply set the property. The only
 # > difference between such parameters and the properties should be casing.
 T: Java.Interop.JniEnvironmentInfo
+T: Java.Interop.JniFieldInfo
+T: Java.Interop.JniMethodInfo
 T: Java.Interop.JniType
 
 

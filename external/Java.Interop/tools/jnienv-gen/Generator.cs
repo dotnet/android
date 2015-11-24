@@ -296,7 +296,7 @@ namespace Xamarin.Java.Interop
 
 		static void GenerateNativeMethods (TextWriter o, HandleStyle style)
 		{
-			o.WriteLine ("\tstatic class NativeMethods {");
+			o.WriteLine ("\tstatic partial class NativeMethods {");
 			o.WriteLine ();
 			o.WriteLine ("\t\tconst string JavaInteropLib = \"JavaInterop\";");
 			foreach (var entry in JNIEnvEntries) {

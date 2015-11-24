@@ -15,7 +15,7 @@ namespace Hello
 			} catch (InvalidOperationException e) {
 				Console.WriteLine (e);
 			}
-			foreach (var h in JreRuntime.GetCreatedJavaVMHandles ()) {
+			foreach (var h in JniRuntime.GetAvailableInvocationPointers ()) {
 				Console.WriteLine ("PRE: GetCreatedJavaVMHandles: {0}", h);
 			}
 			Console.WriteLine ("Part 2!");
@@ -43,12 +43,12 @@ namespace Hello
 				t.Start ();
 				waitForCreation.Wait ();
 				*/
-				foreach (var h in JreRuntime.GetCreatedJavaVMHandles ()) {
+				foreach (var h in JniRuntime.GetAvailableInvocationPointers ()) {
 					Console.WriteLine ("WITHIN: GetCreatedJavaVMs: {0}", h);
 				}
 				// exitThread.Signal ();
 			}
-			foreach (var h in JreRuntime.GetCreatedJavaVMHandles ()) {
+			foreach (var h in JniRuntime.GetAvailableInvocationPointers ()) {
 				Console.WriteLine ("POST: GetCreatedJavaVMs: {0}", h);
 			}
 		}

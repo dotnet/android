@@ -71,45 +71,6 @@ namespace Java.Interop {
 		[DllImport (LibraryName)]
 		static extern int JNI_CreateJavaVM (out IntPtr javavm, out IntPtr jnienv, ref JavaVMInitArgs args);
 
-		[DllImport (LibraryName)]
-		static extern int JNI_GetCreatedJavaVMs ([Out] IntPtr[] handles, int bufLen, out int nVMs);
-
-		public static new JniRuntime Current {
-			get {
-				if (JniRuntime.CurrentRuntime != null)
-					return JniRuntime.CurrentRuntime;
-				IntPtr              h       = IntPtr.Zero;
-				int                 count   = 0;
-				foreach (var vmh in GetCreatedJavaVMHandles ()) {
-					if (count++ == 0)
-						h = vmh;
-				}
-				if (count == 0)
-					throw new InvalidOperationException ("No JavaVM has been created. Please use JreVMBuilder.CreateJreVM().");
-				if (count > 1)
-					throw new NotSupportedException (string.Format ("Found {0} JavaVMs. Don't know which to use. Use JavaVM.SetCurrent().", count));
-				JniRuntime r = GetRegisteredRuntime (h);
-				if (r != null)
-					return r;
-				return new JreRuntime (new JreRuntimeOptions () {
-						InvocationPointer = h,
-				});
-			}
-		}
-
-		public static IEnumerable<IntPtr> GetCreatedJavaVMHandles ()
-		{
-			int nVMs;
-			int r = JNI_GetCreatedJavaVMs (null, 0, out nVMs);
-			if (r != 0)
-				throw new NotSupportedException ("JNI_GetCreatedJavaVMs() returned: " + r);
-			var handles = new IntPtr [nVMs];
-			r = JNI_GetCreatedJavaVMs (handles, handles.Length, out nVMs);
-			if (r != 0)
-				throw new InvalidOperationException ("JNI_GetCreatedJavaVMs() [take 2!] returned: " + r);
-			return handles;
-		}
-
 		static unsafe JreRuntimeOptions CreateJreVM (JreRuntimeOptions builder)
 		{
 			if (builder == null)

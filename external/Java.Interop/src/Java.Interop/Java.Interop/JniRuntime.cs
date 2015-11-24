@@ -72,6 +72,13 @@ namespace Java.Interop
 		}
 	}
 
+	partial class NativeMethods {
+		const string JvmLibrary = "jvm.dll";
+
+		[DllImport (JvmLibrary)]
+		internal static extern int JNI_GetCreatedJavaVMs ([Out] IntPtr[] handles, int bufLen, out int nVMs);
+	}
+
 	public partial class JniRuntime : IDisposable
 	{
 
@@ -90,6 +97,19 @@ namespace Java.Interop
 				: null;
 		}
 
+		public static IEnumerable<IntPtr> GetAvailableInvocationPointers ()
+		{
+			int nVMs;
+			int r = NativeMethods.JNI_GetCreatedJavaVMs (null, 0, out nVMs);
+			if (r != 0)
+				throw new NotSupportedException ("JNI_GetCreatedJavaVMs() returned: " + r.ToString ());
+			var handles = new IntPtr [nVMs];
+			r = NativeMethods.JNI_GetCreatedJavaVMs (handles, handles.Length, out nVMs);
+			if (r != 0)
+				throw new InvalidOperationException ("JNI_GetCreatedJavaVMs() [take 2!] returned: " + r.ToString ());
+			return handles;
+		}
+
 		static JniRuntime current;
 		public static JniRuntime CurrentRuntime {
 			get {
@@ -101,12 +121,22 @@ namespace Java.Interop
 					if (count++ == 0)
 						c = vm;
 				}
-				if (count == 0)
-					throw new InvalidOperationException ("No JavaVM has been created. Please use Java.Interop.JreRuntimeBuilder.CreateJreRuntime().");
+				if (count == 1) {
+					Interlocked.CompareExchange (ref current, c, null);
+					return c;
+				}
 				if (count > 1)
 					throw new NotSupportedException (string.Format ("Found {0} Java Runtimes. Don't know which to use. Use JniRuntime.SetCurrent().", count));
-				Interlocked.CompareExchange (ref current, c, null);
-				return c;
+				Debug.Assert (count == 0);
+				var available   = GetAvailableInvocationPointers ().FirstOrDefault ();
+				if (available == IntPtr.Zero)
+					throw new NotSupportedException ("No available Java runtime to attach to. Please create one.");
+				var options     = new CreationOptions () {
+					DestroyRuntimeOnDispose = false,
+					InvocationPointer       = available,
+				};
+				// Sets `current`
+				return new JniRuntime (options);
 			}
 		}
 
@@ -152,7 +182,9 @@ namespace Java.Interop
 			InvocationPointer   = options.InvocationPointer;
 			Invoker             = CreateInvoker (InvocationPointer);
 
-			Interlocked.CompareExchange (ref current, this, null);
+			if (Interlocked.CompareExchange (ref current, this, null) != null) {
+				Debug.WriteLine ("WARNING: More than one JniRuntime instance created. This is DOOMED TO FAIL.");
+			}
 
 			Runtimes.TryAdd (InvocationPointer, this);
 
@@ -194,10 +226,6 @@ namespace Java.Interop
 		{
 			value.OnSetRuntime (this);
 			return value;
-		}
-
-		protected static void SetRuntime ()
-		{
 		}
 
 		partial void SetValueMarshaler (CreationOptions options);
