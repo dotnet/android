@@ -537,8 +537,8 @@ namespace Java.Interop.PerformanceTests {
 			// throws an exception because `h` is NULL, when it really can't be.
 			// I believe that this is due to the finalizer, which likewise makes
 			// NO SENSE AT ALL, since `p` should be keeping the handle valid!
-			GC.Collect ();
-			GC.WaitForPendingFinalizers ();
+			// GC.Collect ();
+			// GC.WaitForPendingFinalizers ();
 
 			foreach (var method in methodHandles) {
 				var lookupTiming    = Stopwatch.StartNew ();
@@ -550,26 +550,24 @@ namespace Java.Interop.PerformanceTests {
 				var parameterTiming = Stopwatch.StartNew ();
 				var enumTime        = new TimeSpan ();
 				var lrefPs          = JniEnvironment.InstanceMethods.CallObjectMethod (method.PeerReference, Method_getParameterTypes);
-				Stopwatch cleanup;
-				using (var ps = new JavaObjectArray<JavaObject>(ref lrefPs, JniObjectReferenceOptions.CopyAndDispose)) {
-					var enumSw  = Stopwatch.StartNew ();
-					foreach (var p in ps) {
-						var h = p.PeerReference;
-						using (var pt = new JniType (ref h, JniObjectReferenceOptions.Copy)) {
-						}
+				int len = JniEnvironment.Arrays.GetArrayLength (lrefPs);
+				var enumSw          = Stopwatch.StartNew ();
+				for (int i = 0; i < len; ++i) {
+					var p = JniEnvironment.Arrays.GetObjectArrayElement (lrefPs, i);
+					using (var pt = new JniType (ref p, JniObjectReferenceOptions.Copy)) {
 					}
-					enumSw.Stop ();
-					enumTime    = enumSw.Elapsed;
-					cleanup     = Stopwatch.StartNew ();
+					JniObjectReference.Dispose (ref p);
 				}
-				cleanup.Stop ();
+				JniObjectReference.Dispose (ref lrefPs);
+				enumSw.Stop ();
+				enumTime    = enumSw.Elapsed;
 				parameterTiming.Stop ();
 
 				Console.WriteLine ("## method '{0}' timing: Total={1}; Parameters={2} Parameters.Dispose={3}",
 						name,
 						lookupTiming.Elapsed,
 						enumTime,
-						cleanup.Elapsed);
+						parameterTiming.Elapsed);
 			}
 
 			var mhDisposeTiming = Stopwatch.StartNew ();
