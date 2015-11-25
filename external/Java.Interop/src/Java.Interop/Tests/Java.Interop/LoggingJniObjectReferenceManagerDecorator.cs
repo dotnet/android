@@ -96,6 +96,10 @@ namespace Java.InteropTests {
 #endif
 		}
 
+		public override bool LogLocalReferenceMessages {
+			get {return true;}
+		}
+
 		public override void WriteLocalReferenceLine (string format, params object[] args)
 		{
 			if (lrefLog == null)
@@ -169,6 +173,10 @@ namespace Java.InteropTests {
 				LogDeleteLocalRef (localReferenceCount, value.Handle);
 			}
 			return manager.ReleaseLocalReference (ref value, ref localReferenceCount);
+		}
+
+		public override bool LogGlobalReferenceMessages {
+			get {return true;}
 		}
 
 		public override void WriteGlobalReferenceLine (string format, params object[] args)

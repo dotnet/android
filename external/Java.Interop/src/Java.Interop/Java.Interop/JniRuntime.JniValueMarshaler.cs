@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace Java.Interop
 {
@@ -115,6 +116,16 @@ namespace Java.Interop
 
 				value.IdentityHashCode = JniSystem.IdentityHashCode (newRef);
 
+				var o = Runtime.ObjectReferenceManager;
+				if (o.LogGlobalReferenceMessages) {
+					o.WriteGlobalReferenceLine ("Created PeerReference={0} IdentityHashCode=0x{1} Instance=0x{2} Instance.Type={3}, Java.Type={4}",
+							newRef.ToString (),
+							value.IdentityHashCode.ToString ("x"),
+							RuntimeHelpers.GetHashCode (value).ToString ("x"),
+							value.GetType ().FullName,
+							JniEnvironment.Types.GetJniTypeNameFromInstance (newRef));
+				}
+
 				if ((options & DoNotRegisterTarget) != DoNotRegisterTarget) {
 					RegisterObject (value);
 				}
@@ -130,6 +141,17 @@ namespace Java.Interop
 
 				if (value.Registered)
 					UnRegisterObject (value);
+
+				var o = Runtime.ObjectReferenceManager;
+				if (o.LogGlobalReferenceMessages) {
+					o.WriteGlobalReferenceLine ("Disposing PeerReference={0} IdentityHashCode=0x{1} Instance=0x{2} Instance.Type={3} Java.Type={4}",
+							h.ToString (),
+							value.IdentityHashCode.ToString ("x"),
+							RuntimeHelpers.GetHashCode (value).ToString ("x"),
+							value.GetType ().ToString (),
+							JniEnvironment.Types.GetJniTypeNameFromInstance (h));
+				}
+
 				value.Dispose (disposing: true);
 				#if FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
 				var lref = value.PeerReference.SafeHandle as JniLocalReference;
@@ -148,11 +170,19 @@ namespace Java.Interop
 				where T : IJavaPeerable, IJavaPeerableEx
 			{
 				var h = value.PeerReference;
+				var o = Runtime.ObjectReferenceManager;
 				// MUST NOT use SafeHandle.ReferenceType: local refs are tied to a JniEnvironment
 				// and the JniEnvironment's corresponding thread; it's a thread-local value.
 				// Accessing SafeHandle.ReferenceType won't kill anything (so far...), but
 				// instead it always returns JniReferenceType.Invalid.
 				if (!h.IsValid || h.Type == JniObjectReferenceType.Local) {
+					if (o.LogGlobalReferenceMessages) {
+						o.WriteGlobalReferenceLine ("Finalizing PeerReference={0} IdentityHashCode=0x{1} Instance=0x{2} Instance.Type={3}",
+								h.ToString (),
+								value.IdentityHashCode.ToString ("x"),
+								RuntimeHelpers.GetHashCode (value).ToString ("x"),
+								value.GetType ().ToString ());
+					}
 					value.Dispose (disposing: false);
 					value.SetPeerReference (new JniObjectReference ());
 					return;
@@ -164,6 +194,13 @@ namespace Java.Interop
 						value.SetPeerReference (new JniObjectReference ());
 						if (value.Registered)
 							UnRegisterObject (value);
+						if (o.LogGlobalReferenceMessages) {
+							o.WriteGlobalReferenceLine ("Finalizing PeerReference={0} IdentityHashCode=0x{1} Instance=0x{2} Instance.Type={3}",
+									h.ToString (),
+									value.IdentityHashCode.ToString ("x"),
+									RuntimeHelpers.GetHashCode (value).ToString ("x"),
+									value.GetType ().ToString ());
+						}
 						value.Dispose (disposing: false);
 					} else {
 						value.SetPeerReference (h);

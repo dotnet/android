@@ -35,6 +35,10 @@ namespace Java.Interop {
 				 get {return wgrefc;}
 			}
 
+			public virtual bool LogLocalReferenceMessages {
+				get {return false;}
+			}
+
 			public virtual void WriteLocalReferenceLine (string format, params object[] args)
 			{
 			}
@@ -106,6 +110,10 @@ namespace Java.Interop {
 				var h           = reference.Handle;
 				reference.Invalidate ();
 				return h;
+			}
+
+			public virtual bool LogGlobalReferenceMessages {
+				get {return false;}
 			}
 
 			public virtual void WriteGlobalReferenceLine (string format, params object[] args)
