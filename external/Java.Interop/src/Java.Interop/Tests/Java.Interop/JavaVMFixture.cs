@@ -18,7 +18,7 @@ namespace Java.InteropTests {
 		// that  isn't where the jmethodID came from.
 		public  static  bool    CallNonvirtualVoidMethodSupportsDeclaringClassMismatch;
 
-		public  static  readonly    bool    HaveSafeHandles = typeof (JniObjectReference).GetField ("safeHandle", BindingFlags.NonPublic | BindingFlags.Instance) != null;
+		public  static  readonly    bool    HaveSafeHandles = typeof (JniObjectReference).GetField ("gcHandle", BindingFlags.NonPublic | BindingFlags.Instance) != null;
 
 		protected JavaVMFixture ()
 		{

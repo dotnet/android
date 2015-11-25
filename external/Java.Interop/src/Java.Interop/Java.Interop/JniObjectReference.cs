@@ -19,13 +19,13 @@ namespace Java.Interop
 		const   uint    TypeMask    = 0x0000FFFF;
 
 #if FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
-		JniReferenceSafeHandle  safeHandle;
+		GCHandle                gcHandle;
 		internal    JniReferenceSafeHandle  SafeHandle  {
-			get {return safeHandle ?? JniReferenceSafeHandle.Null;}
+			get {return gcHandle.IsAllocated ? ((JniReferenceSafeHandle) gcHandle.Target) : JniReferenceSafeHandle.Null;}
 		}
 		public      IntPtr                  Handle  {
 			get {
-				var h = safeHandle;
+				var h = SafeHandle;
 				return h == null
 					? IntPtr.Zero
 					: h.DangerousGetHandle ();
@@ -60,39 +60,37 @@ namespace Java.Interop
 #if FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
 		internal JniObjectReference (JniReferenceSafeHandle handle, JniObjectReferenceType type = JniObjectReferenceType.Invalid)
 		{
-			safeHandle      = handle;
+			this.gcHandle   = GCHandle.Alloc (handle, GCHandleType.Normal);
 			referenceInfo   = (uint) type;
 		}
 #endif  // FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
 
 		public JniObjectReference (IntPtr handle, JniObjectReferenceType type = JniObjectReferenceType.Invalid)
-		{
-			referenceInfo   = (uint) type;
-
 #if FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
-			if (handle == IntPtr.Zero) {
-				safeHandle = JniReferenceSafeHandle.Null;
-				return;
-			}
-			switch (type) {
-			case JniObjectReferenceType.Local:
-				safeHandle  = new JniLocalReference (handle);
-				break;
-			case JniObjectReferenceType.Global:
-				safeHandle  = new JniGlobalReference (handle);
-				break;
-			case JniObjectReferenceType.WeakGlobal:
-				safeHandle  = new JniWeakGlobalReference (handle);
-				break;
-			default:
-				safeHandle  = new JniInvocationHandle (handle);
-				break;
-			}
+			: this (FromIntPtr (handle, type), type)
 #endif  // FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
+		{
 #if FEATURE_JNIOBJECTREFERENCE_INTPTRS
+			referenceInfo   = (uint) type;
 			Handle  = handle;
 #endif  // FEATURE_JNIOBJECTREFERENCE_INTPTRS
 		}
+
+#if FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
+		static JniReferenceSafeHandle FromIntPtr (IntPtr handle, JniObjectReferenceType type)
+		{
+			if (handle == IntPtr.Zero) {
+				return JniReferenceSafeHandle.Null;
+			}
+			switch (type) {
+			case JniObjectReferenceType.Local:      return new JniLocalReference (handle);
+			case JniObjectReferenceType.Global:     return new JniGlobalReference (handle);
+			case JniObjectReferenceType.WeakGlobal: return new JniWeakGlobalReference (handle);
+			default:
+				return new JniInvocationHandle (handle);
+			}
+		}
+#endif  // #if FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
 
 		public override int GetHashCode ()
 		{
@@ -145,9 +143,10 @@ namespace Java.Interop
 		internal void Invalidate ()
 		{
 #if FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
-			if (safeHandle != null)
-				safeHandle.Invalidate ();
-			safeHandle  = null;
+			var s = SafeHandle;
+			if (s != null)
+				s.Invalidate ();
+			gcHandle.Free ();
 #endif  // FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
 
 #if FEATURE_JNIOBJECTREFERENCE_INTPTRS
@@ -183,8 +182,6 @@ namespace Java.Interop
 
 			reference.Invalidate ();
 		}
-
-		const   JniObjectReferenceOptions   DisposeSource   = (JniObjectReferenceOptions) (1 << 1);
 
 		public static void Dispose (ref JniObjectReference reference, JniObjectReferenceOptions options)
 		{

@@ -18,7 +18,7 @@ namespace Java.Interop
 			ValueMarshaler  = SetRuntime (options.ValueMarshaler ?? new JniValueMarshaler ());
 		}
 
-		public class JniValueMarshaler : ISetRuntime, IDisposable {
+		public partial class JniValueMarshaler : ISetRuntime, IDisposable {
 
 			public      JniRuntime  Runtime { get; private set; }
 
@@ -98,8 +98,6 @@ namespace Java.Interop
 					value.Registered = false;
 				}
 			}
-
-			const   JniObjectReferenceOptions   DoNotRegisterTarget = (JniObjectReferenceOptions) (1 << 2);
 
 			internal TCleanup SetObjectPeerReference<T, TCleanup> (T value, ref JniObjectReference reference, JniObjectReferenceOptions options, Func<Action, TCleanup> createCleanup)
 				where T : IJavaPeerable, IJavaPeerableEx

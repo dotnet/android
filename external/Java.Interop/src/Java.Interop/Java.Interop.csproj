@@ -74,6 +74,7 @@
     <Compile Include="Java.Interop\JniEnvironment.Types.cs" />
     <Compile Include="Java.Interop\JniFieldInfo.cs" />
     <Compile Include="Java.Interop\JniMethodInfo.cs" />
+    <Compile Include="Java.Interop\JniObjectReference.cs" />
     <Compile Include="Java.Interop\JniPeerMembers.cs" />
     <Compile Include="Java.Interop\JniReleaseArrayElementsMode.cs" />
     <Compile Include="Java.Interop\JniRuntime.cs" />
@@ -128,9 +129,6 @@
     <Compile Include="Java.Interop\JniSystem.cs" />
     <Compile Include="Java.Interop\JniWeakGlobalReference.cs" />
     <Compile Include="Java.Interop\ManagedPeer.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Java.Interop\JniObjectReference.cs" />
   </ItemGroup>
   <ItemGroup>
     <CompileJavaInteropJar Include="java\com\xamarin\android\internal\JavaProxyObject.java" />
