@@ -9,17 +9,17 @@ namespace Java.Interop
 	partial class JniRuntime
 	{
 		partial class CreationOptions {
-			public  JniValueMarshaler       ValueMarshaler              {get; set;}
+			public  JniValueManager         ValueManager                {get; set;}
 		}
 
-		public  JniValueMarshaler           ValueMarshaler              {get; private set;}
+		public  JniValueManager             ValueManager                {get; private set;}
 
-		partial void SetValueMarshaler (CreationOptions options)
+		partial void SetValueManager (CreationOptions options)
 		{
-			ValueMarshaler  = SetRuntime (options.ValueMarshaler ?? new JniValueMarshaler ());
+			ValueManager  = SetRuntime (options.ValueManager ?? new JniValueManager ());
 		}
 
-		public partial class JniValueMarshaler : ISetRuntime, IDisposable {
+		public partial class JniValueManager : ISetRuntime, IDisposable {
 
 			public      JniRuntime  Runtime { get; private set; }
 

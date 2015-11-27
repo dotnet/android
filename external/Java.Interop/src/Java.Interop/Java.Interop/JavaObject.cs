@@ -22,7 +22,7 @@ namespace Java.Interop
 
 		~JavaObject ()
 		{
-			JniEnvironment.Runtime.ValueMarshaler.TryCollectObject (this);
+			JniEnvironment.Runtime.ValueManager.TryCollectObject (this);
 		}
 
 		public          JniObjectReference          PeerReference {
@@ -64,7 +64,7 @@ namespace Java.Interop
 
 		protected SetPeerReferenceCompletion SetPeerReference (ref JniObjectReference handle, JniObjectReferenceOptions transfer)
 		{
-			return JniEnvironment.Runtime.ValueMarshaler.SetObjectPeerReference (
+			return JniEnvironment.Runtime.ValueManager.SetObjectPeerReference (
 					this,
 					ref handle,
 					transfer,
@@ -75,12 +75,12 @@ namespace Java.Interop
 		{
 			if (!PeerReference.IsValid)
 				throw new ObjectDisposedException (GetType ().FullName);
-			JniEnvironment.Runtime.ValueMarshaler.UnRegisterObject (this);
+			JniEnvironment.Runtime.ValueManager.UnRegisterObject (this);
 		}
 
 		public void Dispose ()
 		{
-			JniEnvironment.Runtime.ValueMarshaler.DisposeObject (this);
+			JniEnvironment.Runtime.ValueManager.DisposeObject (this);
 		}
 
 		public void DisposeUnlessRegistered ()

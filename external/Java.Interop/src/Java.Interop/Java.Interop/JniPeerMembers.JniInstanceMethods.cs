@@ -161,7 +161,7 @@ namespace Java.Interop
 		{
 			this        = new JniArgumentMarshalInfo<T> ();
 			var jvm     = JniEnvironment.Runtime;
-			var info    = jvm.ValueMarshaler.GetJniMarshalInfoForType (typeof (T));
+			var info    = jvm.ValueManager.GetJniMarshalInfoForType (typeof (T));
 			if (info.CreateJniArgumentValue != null)
 				jvalue = info.CreateJniArgumentValue (value);
 			else if (info.CreateMarshalCollection != null) {

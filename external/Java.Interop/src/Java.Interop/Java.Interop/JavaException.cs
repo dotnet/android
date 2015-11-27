@@ -88,7 +88,7 @@ namespace Java.Interop
 
 		~JavaException ()
 		{
-			JniEnvironment.Runtime.ValueMarshaler.TryCollectObject (this);
+			JniEnvironment.Runtime.ValueManager.TryCollectObject (this);
 		}
 
 		public          JniObjectReference          PeerReference {
@@ -123,7 +123,7 @@ namespace Java.Interop
 
 		protected SetSafeHandleCompletion SetPeerReference (ref JniObjectReference handle, JniObjectReferenceOptions transfer)
 		{
-			return JniEnvironment.Runtime.ValueMarshaler.SetObjectPeerReference (
+			return JniEnvironment.Runtime.ValueManager.SetObjectPeerReference (
 					this,
 					ref handle,
 					transfer,
@@ -134,14 +134,14 @@ namespace Java.Interop
 		{
 			if (!PeerReference.IsValid)
 				throw new ObjectDisposedException (GetType ().FullName);
-			JniEnvironment.Runtime.ValueMarshaler.UnRegisterObject (this);
+			JniEnvironment.Runtime.ValueManager.UnRegisterObject (this);
 		}
 
 		public void Dispose ()
 		{
 			if (!PeerReference.IsValid)
 				return;
-			JniEnvironment.Runtime.ValueMarshaler.DisposeObject (this);
+			JniEnvironment.Runtime.ValueManager.DisposeObject (this);
 			var inner = InnerException as JavaException;
 			if (inner != null) {
 				inner.Dispose ();

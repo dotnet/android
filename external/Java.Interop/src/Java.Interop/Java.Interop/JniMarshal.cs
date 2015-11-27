@@ -45,7 +45,7 @@ namespace Java.Interop {
 				return default (T);
 
 			var jvm     = JniEnvironment.Runtime;
-			var target  = jvm.ValueMarshaler.PeekObject (reference);
+			var target  = jvm.ValueManager.PeekObject (reference);
 			var proxy   = target as JavaProxyObject;
 			if (proxy != null) {
 				JniObjectReference.Dispose (ref reference, transfer);
@@ -57,7 +57,7 @@ namespace Java.Interop {
 				return (T) target;
 			}
 
-			var info = jvm.ValueMarshaler.GetJniMarshalInfoForType (typeof (T));
+			var info = jvm.ValueManager.GetJniMarshalInfoForType (typeof (T));
 			if (info.GetValueFromJni != null) {
 				return (T) info.GetValueFromJni (ref reference, transfer, typeof (T));
 			}
@@ -66,11 +66,11 @@ namespace Java.Interop {
 			var targetType  = jvm.TypeManager.GetType (signature);
 			if (targetType != null &&
 					typeof (T).GetTypeInfo ().IsAssignableFrom (targetType.GetTypeInfo ()) &&
-					(info = jvm.ValueMarshaler.GetJniMarshalInfoForType (targetType)).GetValueFromJni != null) {
+					(info = jvm.ValueManager.GetJniMarshalInfoForType (targetType)).GetValueFromJni != null) {
 				return (T) info.GetValueFromJni (ref reference, transfer, targetType);
 			}
 
-			return (T) jvm.ValueMarshaler.GetObject (ref reference, transfer, typeof (T));
+			return (T) jvm.ValueManager.GetObject (ref reference, transfer, typeof (T));
 		}
 
 		public  static JniObjectReference CreateLocalRef<T> (T value)
@@ -79,9 +79,9 @@ namespace Java.Interop {
 
 			var info    = new JniMarshalInfo ();
 			if (value != null)
-				info = jvm.ValueMarshaler.GetJniMarshalInfoForType (value.GetType ());
+				info = jvm.ValueManager.GetJniMarshalInfoForType (value.GetType ());
 			if (info.CreateLocalRef == null)
-				info = jvm.ValueMarshaler.GetJniMarshalInfoForType (typeof (T));
+				info = jvm.ValueManager.GetJniMarshalInfoForType (typeof (T));
 
 			if (info.CreateLocalRef != null) {
 				return info.CreateLocalRef (value);
@@ -89,7 +89,7 @@ namespace Java.Interop {
 
 			var o = (value as IJavaPeerable) ??
 				JavaProxyObject.GetProxy (value);
-			return jvm.ValueMarshaler.GetJniMarshalInfoForType (typeof (IJavaPeerable)).CreateLocalRef (o);
+			return jvm.ValueManager.GetJniMarshalInfoForType (typeof (IJavaPeerable)).CreateLocalRef (o);
 		}
 	}
 }

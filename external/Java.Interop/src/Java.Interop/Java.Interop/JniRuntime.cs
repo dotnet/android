@@ -174,7 +174,7 @@ namespace Java.Interop
 			ObjectReferenceManager      = SetRuntime (options.ObjectReferenceManager ?? new JniObjectReferenceManager ());
 			TypeManager                 = SetRuntime (options.TypeManager ?? new JniTypeManager ());
 
-			SetValueMarshaler (options);
+			SetValueManager (options);
 			SetExportedMemberBuilder (options);
 
 			NewObjectRequired   = options.NewObjectRequired;
@@ -228,7 +228,7 @@ namespace Java.Interop
 			return value;
 		}
 
-		partial void SetValueMarshaler (CreationOptions options);
+		partial void SetValueManager (CreationOptions options);
 		partial void SetExportedMemberBuilder (CreationOptions options);
 
 		static unsafe JavaVMInterface CreateInvoker (IntPtr handle)
@@ -276,7 +276,7 @@ namespace Java.Interop
 			JniObjectReference.Dispose (ref ClassLoader);
 
 #if !XA_INTEGRATION
-			ValueMarshaler.Dispose ();
+			ValueManager.Dispose ();
 #endif  // !XA_INTEGRATION
 			ClearTrackedReferences ();
 			JniRuntime _;
@@ -331,7 +331,7 @@ namespace Java.Interop
 #if XA_INTEGRATION
 			throw new NotSupportedException ("Do not know h ow to convert a JniObjectReference to a System.Exception!");
 #else   // !XA_INTEGRATION
-			var o   = ValueMarshaler.PeekObject (value);
+			var o   = ValueManager.PeekObject (value);
 			var e   = o as JavaException;
 			if (e != null) {
 				JniObjectReference.Dispose (ref value, transfer);
@@ -340,7 +340,7 @@ namespace Java.Interop
 					return p.Exception;
 				return e;
 			}
-			return ValueMarshaler.GetObject<JavaException> (ref value, transfer);
+			return ValueManager.GetObject<JavaException> (ref value, transfer);
 #endif  // !̣XA_INTEGRATION
 		}
 

@@ -9,7 +9,7 @@ namespace Java.Interop
 		Copy                        = 1 << 0,                   // DoNotTransfer
 		// DisposeSource            = 1 << 1,                   // See JniObjectReference.DisposeSource
 		CopyAndDispose              = (1 << 1) + Copy,          // Transfer
-		// DoNotRegisterTarget      = 1 << 2,                   // See JniRuntime.JniValueMarshaler.DoNotRegisterTarget
+		// DoNotRegisterTarget      = 1 << 2,                   // See JniRuntime.JniValueManager.DoNotRegisterTarget
 		CopyAndDoNotRegister        = (1 << 2) + Copy,
 	}
 
@@ -18,7 +18,7 @@ namespace Java.Interop
 	}
 
 	partial class JniRuntime {
-		partial class JniValueMarshaler {
+		partial class JniValueManager {
 			const   JniObjectReferenceOptions   DoNotRegisterTarget = (JniObjectReferenceOptions) (1 << 2);
 		}
 	}

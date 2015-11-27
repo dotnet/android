@@ -178,7 +178,7 @@ namespace Java.InteropTests
 		ExportTest __this;
 
 		__jvm = JniEnvironment.Runtime;
-		__this = __jvm.ValueMarshaler.GetObject<ExportTest>(__context);
+		__this = __jvm.ValueManager.GetObject<ExportTest>(__context);
 		__this.InstanceAction();
 	}
 	catch (Exception __e)
@@ -304,7 +304,7 @@ namespace Java.InteropTests
 		long __mret;
 
 		__jvm = JniEnvironment.Runtime;
-		__this = __jvm.ValueMarshaler.GetObject<ExportTest>(__context);
+		__this = __jvm.ValueManager.GetObject<ExportTest>(__context);
 		__mret = __this.FuncInt64();
 		__jret = __mret;
 		return __jret;
@@ -343,7 +343,7 @@ namespace Java.InteropTests
 		JavaObject __mret;
 
 		__jvm = JniEnvironment.Runtime;
-		__this = __jvm.ValueMarshaler.GetObject<ExportTest>(__context);
+		__this = __jvm.ValueManager.GetObject<ExportTest>(__context);
 		__mret = __this.FuncIJavaObject();
 		__jret = References.NewReturnToJniRef(__mret);
 		return __jret;

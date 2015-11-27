@@ -125,7 +125,7 @@
     </Compile>
     <Compile Include="Java.Interop\JniReferenceSafeHandle.cs" />
     <Compile Include="Java.Interop\JniRuntime.JniExportedMemberBuilder.cs" />
-    <Compile Include="Java.Interop\JniRuntime.JniValueMarshaler.cs" />
+    <Compile Include="Java.Interop\JniRuntime.JniValueManager.cs" />
     <Compile Include="Java.Interop\JniSystem.cs" />
     <Compile Include="Java.Interop\JniWeakGlobalReference.cs" />
     <Compile Include="Java.Interop\ManagedPeer.cs" />
