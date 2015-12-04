@@ -144,41 +144,5 @@ namespace Java.Interop.Dynamic {
 			}
 		}
 	}
-
-	struct JniArgumentMarshalInfo {
-		JniArgumentValue                jvalue;
-		JniObjectReference              lref;
-		IJavaPeerable                   obj;
-		Action<IJavaPeerable, object>   cleanup;
-
-		internal JniArgumentMarshalInfo (object value, Type valueType)
-		{
-			this        = new JniArgumentMarshalInfo ();
-			var jvm     = JniEnvironment.Runtime;
-			var info    = jvm.ValueManager.GetJniMarshalInfoForType (valueType);
-			if (info.CreateJniArgumentValue != null)
-				jvalue = info.CreateJniArgumentValue (value);
-			else if (info.CreateMarshalCollection != null) {
-				obj     = info.CreateMarshalCollection (value);
-				jvalue  = new JniArgumentValue (obj);
-			} else if (info.CreateLocalRef != null) {
-				lref    = info.CreateLocalRef (value);
-				jvalue  = new JniArgumentValue (lref);
-			} else
-				throw new NotSupportedException ("Don't know how to get a JniArgumentValue for: " + valueType.FullName);
-			cleanup     = info.CleanupMarshalCollection;
-		}
-
-		public JniArgumentValue JniArgumentValue {
-			get {return jvalue;}
-		}
-
-		public  void    Cleanup (object value)
-		{
-			if (cleanup != null && obj != null)
-				cleanup (obj, value);
-			JniObjectReference.Dispose (ref lref);
-		}
-	}
 }
 

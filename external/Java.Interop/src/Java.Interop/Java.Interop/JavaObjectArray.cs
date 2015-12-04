@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 
 namespace Java.Interop
 {
@@ -59,14 +60,15 @@ namespace Java.Interop
 		T GetElementAt (int index)
 		{
 			var lref = JniEnvironment.Arrays.GetObjectArrayElement (PeerReference, index);
-			return JniMarshal.GetValue<T> (ref lref, JniObjectReferenceOptions.CopyAndDispose);
+			return JniEnvironment.Runtime.ValueManager.GetValue<T> (ref lref, JniObjectReferenceOptions.CopyAndDispose);
 		}
 
 		void SetElementAt (int index, T value)
 		{
-			var h = JniMarshal.CreateLocalRef (value);
-			JniEnvironment.Arrays.SetObjectArrayElement (PeerReference, index, h);
-			JniObjectReference.Dispose (ref h, JniObjectReferenceOptions.CopyAndDispose);
+			var vm  = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T> ();
+			var s   = vm.CreateGenericObjectReferenceArgumentState (value);
+			JniEnvironment.Arrays.SetObjectArrayElement (PeerReference, index, s.ReferenceValue);
+			vm.DestroyGenericArgumentState (value, ref s, 0);
 		}
 
 		public override IEnumerator<T> GetEnumerator ()
@@ -80,11 +82,12 @@ namespace Java.Interop
 		public override void Clear ()
 		{
 			int len = Length;
-			var v = JniMarshal.CreateLocalRef (default (T));
+			var vm  = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T> ();
+			var s   = vm.CreateArgumentState (default (T));
 			for (int i = 0; i < len; i++) {
-				JniEnvironment.Arrays.SetObjectArrayElement (PeerReference, i, v);
+				JniEnvironment.Arrays.SetObjectArrayElement (PeerReference, i, s.ReferenceValue);
 			}
-			JniObjectReference.Dispose (ref v, JniObjectReferenceOptions.CopyAndDispose);
+			vm.DestroyGenericArgumentState (default (T), ref s, 0);
 		}
 
 		public override int IndexOf (T item)
@@ -132,28 +135,30 @@ namespace Java.Interop
 				targetType == typeof (JavaObjectArray<T>);
 		}
 
-		internal static object GetValue (ref JniObjectReference handle, JniObjectReferenceOptions transfer, Type targetType)
-		{
-			return JavaArray<T>.GetValueFromJni (ref handle, transfer, targetType, (ref JniObjectReference h, JniObjectReferenceOptions t) => new JavaObjectArray<T> (ref h, t) {
-				forMarshalCollection    = true,
-			});
-		}
+		internal class ValueMarshaler : JniValueMarshaler<IList<T>> {
 
-		internal static JniObjectReference CreateLocalRef (object value)
-		{
-			return JavaArray<T>.CreateLocalRef (value, list => new JavaObjectArray<T>(list));
-		}
+			public override IList<T> CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
+			{
+				return JavaArray<T>.CreateValue (ref reference, options, targetType, (ref JniObjectReference h, JniObjectReferenceOptions t) => new JavaObjectArray<T> (ref h, t) {
+					forMarshalCollection    = true,
+				});
+			}
 
-		internal static IJavaPeerable CreateMarshalCollection (object value)
-		{
-			return JavaArray<T>.CreateMarshalCollection (value, list => new JavaObjectArray<T> (list) {
-				forMarshalCollection    = true,
-			});
-		}
+			public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState (IList<T> value, ParameterAttributes synchronize)
+			{
+				return JavaArray<T>.CreateArgumentState (value, synchronize, (list, copy) => {
+					var a = copy
+						? new JavaObjectArray<T> (list)
+						: new JavaObjectArray<T> (list.Count);
+					a.forMarshalCollection = true;
+					return a;
+				});
+			}
 
-		internal static void CleanupMarshalCollection (IJavaPeerable marshalObject, object value)
-		{
-			JavaArray<T>.CleanupMarshalCollection<JavaObjectArray<T>> (marshalObject, value);
+			public override void DestroyGenericArgumentState (IList<T> value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
+			{
+				JavaArray<T>.DestroyArgumentState<JavaObjectArray<T>> (value, ref state, synchronize);
+			}
 		}
 	}
 }

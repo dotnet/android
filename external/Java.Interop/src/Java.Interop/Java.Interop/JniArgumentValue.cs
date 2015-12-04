@@ -9,7 +9,7 @@ namespace Android.Runtime
 {
 
 	[StructLayout(LayoutKind.Explicit)]
-	public struct JniArgumentValue {
+	public struct JniArgumentValue : IEquatable<JniArgumentValue> {
 #pragma warning disable 0414
 		[FieldOffset(0)] bool z;
 		[FieldOffset(0)] sbyte b;
@@ -91,10 +91,28 @@ namespace Android.Runtime
 				l = IntPtr.Zero;
 		}
 
+		public override int GetHashCode ()
+		{
+			return i;
+		}
+
+		public override bool Equals (object obj)
+		{
+			var o   = obj as JniArgumentValue?;
+			if (!o.HasValue)
+				return false;
+			return Equals (o.Value);
+		}
+
+		public bool Equals (JniArgumentValue value)
+		{
+			return j == value.j;
+		}
+
 		public override string ToString ()
 		{
-			return string.Format ("Java.Interop.JniArgumentValue(z={0},b={1},c={2},s={3},i={4},f={5},d={6},l=0x{7})",
-					z, b, c, s, i, f, d, l.ToString ("x"));
+			return string.Format ("JniArgumentValue(z={0},b={1},c={2},s={3},i={4},j={5},f={6},d={7},l=0x{8})",
+					z, b, c, s, i, j, f, d, l.ToString ("x"));
 		}
 	}
 }

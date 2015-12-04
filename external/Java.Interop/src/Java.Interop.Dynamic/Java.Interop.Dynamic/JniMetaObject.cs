@@ -52,12 +52,14 @@ namespace Java.Interop.Dynamic {
 				return new DynamicMetaObject (typeE, BindingRestrictions.GetTypeRestriction (typeE, binder.Type), type);
 			}
 
-			var marshalInfo = vm.ValueManager.GetJniMarshalInfoForType (binder.Type);
-			if (marshalInfo.GetValueFromJni == null)
+			object value;
+			try {
+				var r   = ConversionTarget;
+				value   = vm.ValueManager.GetValue (ref r, JniObjectReferenceOptions.Copy, binder.Type);
+			} catch {
 				return binder.FallbackConvert (this);
+			}
 
-			var r       = ConversionTarget;
-			var value   = marshalInfo.GetValueFromJni (ref r, JniObjectReferenceOptions.Copy, binder.Type);
 			var valueE  = Expression.Convert (Expression.Constant (value), binder.Type);
 			return new DynamicMetaObject (valueE, BindingRestrictions.GetTypeRestriction (valueE, binder.Type), value);
 		}

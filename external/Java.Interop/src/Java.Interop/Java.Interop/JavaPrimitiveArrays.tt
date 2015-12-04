@@ -7,6 +7,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Reflection;
 
 namespace Java.Interop {
 
@@ -34,34 +35,14 @@ namespace Java.Interop {
 #>
 		};
 
-		static readonly KeyValuePair<Type, JniMarshalInfo>[] JniPrimitiveArrayMarshalers = new []{
+		static readonly KeyValuePair<Type, JniValueMarshaler>[] JniPrimitiveArrayMarshalers = new []{
 <#
 	foreach (var info in arrayTypeInfo) {
 #>
-			new KeyValuePair<Type, JniMarshalInfo>(typeof (<#= info.ManagedType #>[]), new JniMarshalInfo {
-				GetValueFromJni             = Java<#= info.TypeModifier #>Array.GetValueFromJni,
-				CreateLocalRef              = Java<#= info.TypeModifier #>Array.CreateLocalRef,
-				CreateMarshalCollection     = Java<#= info.TypeModifier #>Array.CreateMarshalCollection,
-				CleanupMarshalCollection    = Java<#= info.TypeModifier #>Array.CleanupMarshalCollection,
-			}),
-			new KeyValuePair<Type, JniMarshalInfo>(typeof (JavaArray<<#= info.ManagedType #>>), new JniMarshalInfo {
-				GetValueFromJni             = Java<#= info.TypeModifier #>Array.GetValueFromJni,
-				CreateLocalRef              = Java<#= info.TypeModifier #>Array.CreateLocalRef,
-				CreateMarshalCollection     = Java<#= info.TypeModifier #>Array.CreateMarshalCollection,
-				CleanupMarshalCollection    = Java<#= info.TypeModifier #>Array.CleanupMarshalCollection,
-			}),
-			new KeyValuePair<Type, JniMarshalInfo>(typeof (JavaPrimitiveArray<<#= info.ManagedType #>>), new JniMarshalInfo {
-				GetValueFromJni             = Java<#= info.TypeModifier #>Array.GetValueFromJni,
-				CreateLocalRef              = Java<#= info.TypeModifier #>Array.CreateLocalRef,
-				CreateMarshalCollection     = Java<#= info.TypeModifier #>Array.CreateMarshalCollection,
-				CleanupMarshalCollection    = Java<#= info.TypeModifier #>Array.CleanupMarshalCollection,
-			}),
-			new KeyValuePair<Type, JniMarshalInfo>(typeof (Java<#= info.TypeModifier #>Array), new JniMarshalInfo {
-				GetValueFromJni             = Java<#= info.TypeModifier #>Array.GetValueFromJni,
-				CreateLocalRef              = Java<#= info.TypeModifier #>Array.CreateLocalRef,
-				CreateMarshalCollection     = Java<#= info.TypeModifier #>Array.CreateMarshalCollection,
-				CleanupMarshalCollection    = Java<#= info.TypeModifier #>Array.CleanupMarshalCollection,
-			}),
+			new KeyValuePair<Type, JniValueMarshaler>(typeof (<#= info.ManagedType #>[]),                   Java<#= info.TypeModifier #>Array.ArrayMarshaler),
+			new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaArray<<#= info.ManagedType #>>),          Java<#= info.TypeModifier #>Array.ArrayMarshaler),
+			new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaPrimitiveArray<<#= info.ManagedType #>>), Java<#= info.TypeModifier #>Array.ArrayMarshaler),
+			new KeyValuePair<Type, JniValueMarshaler>(typeof (Java<#= info.TypeModifier #>Array),            Java<#= info.TypeModifier #>Array.ArrayMarshaler),
 <#
 	}
 #>
@@ -93,6 +74,8 @@ namespace Java.Interop {
 
 	[JniTypeSignature ("<#= info.JniType #>", ArrayRank=1, IsKeyword=true)]
 	public sealed partial class Java<#= info.TypeModifier #>Array : JavaPrimitiveArray<<#= info.ManagedType #>> {
+
+		internal    static  readonly    ValueMarshaler   ArrayMarshaler     = new ValueMarshaler ();
 
 		public Java<#= info.TypeModifier #>Array (ref JniObjectReference handle, JniObjectReferenceOptions options)
 			: base (ref handle, options)
@@ -188,32 +171,32 @@ namespace Java.Interop {
 				typeof (Java<#= info.TypeModifier #>Array) == targetType;
 		}
 
-		internal static JniObjectReference CreateLocalRef (object value)
-		{
-		    return JavaArray<<#= info.ManagedType #>>.CreateLocalRef<Java<#= info.TypeModifier #>Array> (
-		            value,
-		            list => new Java<#= info.TypeModifier #>Array (list));
-		}
+		internal sealed class ValueMarshaler : JniValueMarshaler<IList<<#= info.TypeModifier #>>> {
 
-		internal static IList<<#= info.ManagedType #>> GetValueFromJni (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
-		{
-		    return JavaArray<<#= info.ManagedType #>>.GetValueFromJni (
-		            ref reference,
-		            options,
-		            targetType,
-		            (ref JniObjectReference h, JniObjectReferenceOptions o) => new Java<#= info.TypeModifier #>Array (ref h, o));
-		}
+			public override IList<<#= info.TypeModifier #>> CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
+			{
+				return JavaArray<<#= info.TypeModifier #>>.CreateValue (
+						ref reference,
+						options,
+						targetType,
+						(ref JniObjectReference h, JniObjectReferenceOptions o) => new Java<#= info.TypeModifier #>Array (ref h, o));
+			}
 
-		internal static IJavaPeerable CreateMarshalCollection (object value)
-		{
-		    return JavaArray<<#= info.ManagedType #>>.CreateMarshalCollection (value, list => new Java<#= info.TypeModifier #>Array (list) {
-		        forMarshalCollection = true,
-		    });
-		}
+			public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState (IList<<#= info.TypeModifier #>> value, ParameterAttributes synchronize)
+			{
+				return JavaArray<<#= info.TypeModifier #>>.CreateArgumentState (value, synchronize, (list, copy) => {
+					var a = copy
+						? new Java<#= info.TypeModifier #>Array (list)
+						: new Java<#= info.TypeModifier #>Array (list.Count);
+					a.forMarshalCollection = true;
+					return a;
+				});
+			}
 
-		internal static void CleanupMarshalCollection (IJavaPeerable marshalObject, object value)
-		{
-		    JavaArray<<#= info.ManagedType #>>.CleanupMarshalCollection<Java<#= info.TypeModifier #>Array> (marshalObject, value);
+			public override void DestroyGenericArgumentState (IList<<#= info.TypeModifier #>> value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
+			{
+				JavaArray<<#= info.ManagedType #>>.DestroyArgumentState<Java<#= info.TypeModifier #>Array> (value, ref state, synchronize);
+			}
 		}
 	}
 

@@ -119,14 +119,15 @@
     <Compile Include="Java.Interop\JniLocalReference.cs" />
     <Compile Include="Java.Interop\JniMarshal.cs" />
     <Compile Include="Java.Interop\JniMarshalMethod.cs" />
-    <Compile Include="Java.Interop\JniMarshalInfo.cs" />
     <Compile Include="Java.Interop\JniPeerMembers.JniMethods.cs">
       <DependentUpon>JniPeerMembers.JniMethods.tt</DependentUpon>
     </Compile>
     <Compile Include="Java.Interop\JniReferenceSafeHandle.cs" />
     <Compile Include="Java.Interop\JniRuntime.JniExportedMemberBuilder.cs" />
     <Compile Include="Java.Interop\JniRuntime.JniValueManager.cs" />
+    <Compile Include="Java.Interop\JniStringValueMarshaler.cs" />
     <Compile Include="Java.Interop\JniSystem.cs" />
+    <Compile Include="Java.Interop\JniValueMarshaler.cs" />
     <Compile Include="Java.Interop\JniWeakGlobalReference.cs" />
     <Compile Include="Java.Interop\ManagedPeer.cs" />
   </ItemGroup>

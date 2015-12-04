@@ -291,7 +291,8 @@ namespace Java.Interop.Dynamic {
 		internal unsafe bool TryInvokeMember (IJavaPeerable self, JavaMethodBase[] overloads, DynamicMetaObject[] args, out object value)
 		{
 			value       = null;
-			var margs   = (List<JniArgumentMarshalInfo>) null;
+			var vms     = (List<JniValueMarshaler>) null;
+			var states  = (JniValueMarshalerState[]) null;
 
 			var jtypes  = GetJniTypes (args);
 			try {
@@ -300,16 +301,21 @@ namespace Java.Interop.Dynamic {
 				if (invoke == null)
 					return false;
 
-				margs       = args.Select (arg => new JniArgumentMarshalInfo (arg.Value, arg.LimitType)).ToList ();
-				var jargs   = stackalloc JniArgumentValue [margs.Count];
-				for (int i = 0; i < margs.Count; ++i)
-					jargs [i] = margs [i].JniArgumentValue;
+				var jvm     = JniEnvironment.Runtime;
+				vms         = args.Select (arg => jvm.ValueManager.GetValueMarshaler (arg.LimitType)).ToList ();
+				states      = new JniValueMarshalerState [vms.Count];
+				for (int i = 0; i < vms.Count; ++i) {
+					states [i]  = vms [i].CreateArgumentState (args [i].Value);
+				}
+				var jargs   = stackalloc JniArgumentValue [vms.Count];
+				for (int i = 0; i < states.Length; ++i)
+					jargs [i] = states [i].JniArgumentValue;
 				value       = invoke.Invoke (self, jargs);
 				return true;
 			}
 			finally {
-				for (int i = 0; margs != null && i < margs.Count; ++i) {
-					margs [i].Cleanup (args [i].Value);
+				for (int i = 0; vms != null && i < vms.Count; ++i) {
+					vms [i].DestroyArgumentState (args [i].Value, ref states [i]);
 				}
 				for (int i = 0; i < jtypes.Count; ++i) {
 					if (jtypes [i] != null)

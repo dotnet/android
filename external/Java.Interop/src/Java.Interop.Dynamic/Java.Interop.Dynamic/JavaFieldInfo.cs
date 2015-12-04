@@ -137,11 +137,16 @@ namespace Java.Interop.Dynamic {
 			case 'D':   members.StaticFields.SetValue (JniSignature, (double) value);   break;
 			case 'L':
 			case '[':
-				var lref = JniMarshal.CreateLocalRef (value);
+				if (value == null) {
+					members.StaticFields.SetValue (JniSignature, new JniObjectReference ());
+					return;
+				}
+				var vm  = JniEnvironment.Runtime.ValueManager.GetValueMarshaler (value.GetType ());
+				var s   = vm.CreateArgumentState (value);
 				try {
-					members.StaticFields.SetValue (JniSignature, lref);
+					members.StaticFields.SetValue (JniSignature, s.ReferenceValue);
 				} finally {
-					JniObjectReference.Dispose (ref lref);
+					vm.DestroyArgumentState (value, ref s, 0);
 				}
 				return;
 			default:
@@ -163,11 +168,16 @@ namespace Java.Interop.Dynamic {
 			case 'D':   members.InstanceFields.SetValue (JniSignature, self,    (double) value);   break;
 			case 'L':
 			case '[':
-				var lref = JniMarshal.CreateLocalRef (value);
+				if (value == null) {
+					members.InstanceFields.SetValue (JniSignature, self, new JniObjectReference ());
+					return;
+				}
+				var vm  = JniEnvironment.Runtime.ValueManager.GetValueMarshaler (value.GetType ());
+				var s   = vm.CreateArgumentState (value);
 				try {
-					members.InstanceFields.SetValue (JniSignature, self, lref);
+					members.InstanceFields.SetValue (JniSignature, self, s.ReferenceValue);
 				} finally {
-					JniObjectReference.Dispose (ref lref);
+					vm.DestroyArgumentState (value, ref s, 0);
 				}
 				return;
 			default:

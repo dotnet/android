@@ -67,7 +67,10 @@ namespace Java.Interop.GenericMarshaler {
 		{
 <#
 		for (int a = 1; a <= i; ++a) {
-		    WriteLine ("\t\t\tJniArgumentMarshalInfo<{0}> arg{1} = new JniArgumentMarshalInfo<{0}>(value{1});",
+			WriteLine ("\t\t\tvar __vm{1} = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<{0}> ();",
+					i == 1 ? "T" : "T" + a,
+					i == 1 ? "" : a.ToString ());
+			WriteLine ("\t\t\tvar arg{1} = __vm{1}.CreateArgumentState (value{1});",
 		            i == 1 ? "T" : "T" + a,
 		            i == 1 ? "" : a.ToString ());
 		}
@@ -85,7 +88,7 @@ namespace Java.Interop.GenericMarshaler {
 			} finally {
 <#
 		for (int a = 1; a <= i; ++a) {
-		    WriteLine ("\t\t\t\targ{0}.Cleanup (value{0});",
+			WriteLine ("\t\t\t\t__vm{0}.DestroyArgumentState (value{0}, ref arg{0});",
 		            i == 1 ? "" : a.ToString ());
 		}
 #>
@@ -114,7 +117,10 @@ namespace Java.Interop.GenericMarshaler {
 		{
 <#
 		for (int a = 1; a <= i; ++a) {
-		    WriteLine ("\t\t\tJniArgumentMarshalInfo<{0}> arg{1} = new JniArgumentMarshalInfo<{0}>(value{1});",
+			WriteLine ("\t\t\tvar __vm{1} = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<{0}> ();",
+					i == 1 ? "T" : "T" + a,
+					i == 1 ? "" : a.ToString ());
+			WriteLine ("\t\t\tvar arg{1} = __vm{1}.CreateArgumentState (value{1});",
 		            i == 1 ? "T" : "T" + a,
 		            i == 1 ? "" : a.ToString ());
 		}
@@ -134,7 +140,7 @@ namespace Java.Interop.GenericMarshaler {
 			} finally {
 <#
 		for (int a = 1; a <= i; ++a) {
-		    WriteLine ("\t\t\t\targ{0}.Cleanup (value{0});",
+			WriteLine ("\t\t\t\t__vm{0}.DestroyArgumentState (value{0}, ref arg{0});",
 		            i == 1 ? "" : a.ToString ());
 		}
 #>
@@ -186,7 +192,10 @@ namespace Java.Interop.GenericMarshaler {
 		{
 <#
 			for (int a = 1; a <= i; ++a) {
-			    WriteLine ("\t\t\tJniArgumentMarshalInfo<{0}> arg{1} = new JniArgumentMarshalInfo<{0}>(value{1});",
+				WriteLine ("\t\t\tvar __vm{1} = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<{0}> ();",
+						i == 1 ? "T" : "T" + a,
+						i == 1 ? "" : a.ToString ());
+				WriteLine ("\t\t\tvar arg{1} = __vm{1}.CreateArgumentState (value{1});",
 			            i == 1 ? "T" : "T" + a,
 			            i == 1 ? "" : a.ToString ());
 			}
@@ -204,7 +213,7 @@ namespace Java.Interop.GenericMarshaler {
 			} finally {
 <#
 			for (int a = 1; a <= i; ++a) {
-			    WriteLine ("\t\t\t\targ{0}.Cleanup (value{0});",
+				WriteLine ("\t\t\t\t__vm{0}.DestroyArgumentState (value{0}, ref arg{0});",
 			            i == 1 ? "" : a.ToString ());
 			}
 #>
@@ -251,7 +260,10 @@ namespace Java.Interop.GenericMarshaler {
 		{
 <#
 			for (int a = 1; a <= i; ++a) {
-			    WriteLine ("\t\t\tJniArgumentMarshalInfo<{0}> arg{1} = new JniArgumentMarshalInfo<{0}>(value{1});",
+				WriteLine ("\t\t\tvar __vm{1} = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<{0}> ();",
+						i == 1 ? "T" : "T" + a,
+						i == 1 ? "" : a.ToString ());
+				WriteLine ("\t\t\tvar arg{1} = __vm{1}.CreateArgumentState (value{1});",
 			            i == 1 ? "T" : "T" + a,
 			            i == 1 ? "" : a.ToString ());
 			}
@@ -269,7 +281,7 @@ namespace Java.Interop.GenericMarshaler {
 			} finally {
 <#
 			for (int a = 1; a <= i; ++a) {
-			    WriteLine ("\t\t\t\targ{0}.Cleanup (value{0});",
+				WriteLine ("\t\t\t\t__vm{0}.DestroyArgumentState (value{0}, ref arg{0});",
 			            i == 1 ? "" : a.ToString ());
 			}
 #>

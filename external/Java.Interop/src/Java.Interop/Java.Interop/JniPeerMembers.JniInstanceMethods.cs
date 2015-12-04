@@ -149,43 +149,5 @@ namespace Java.Interop
 		}
 	}
 	}
-
-#if !XA_INTEGRATION
-	struct JniArgumentMarshalInfo<T> {
-		JniArgumentValue                  jvalue;
-		JniObjectReference              lref;
-		IJavaPeerable                     obj;
-		Action<IJavaPeerable, object>     cleanup;
-
-		internal JniArgumentMarshalInfo (T value)
-		{
-			this        = new JniArgumentMarshalInfo<T> ();
-			var jvm     = JniEnvironment.Runtime;
-			var info    = jvm.ValueManager.GetJniMarshalInfoForType (typeof (T));
-			if (info.CreateJniArgumentValue != null)
-				jvalue = info.CreateJniArgumentValue (value);
-			else if (info.CreateMarshalCollection != null) {
-				obj     = info.CreateMarshalCollection (value);
-				jvalue  = new JniArgumentValue (obj);
-			} else if (info.CreateLocalRef != null) {
-				lref    = info.CreateLocalRef (value);
-				jvalue  = new JniArgumentValue (lref);
-			} else
-				throw new NotSupportedException ("Don't know how to get a JniArgumentValue for: " + typeof (T).FullName);
-			cleanup     = info.CleanupMarshalCollection;
-		}
-
-		public JniArgumentValue JniArgumentValue {
-			get {return jvalue;}
-		}
-
-		public  void    Cleanup (object value)
-		{
-			if (cleanup != null && obj != null)
-				cleanup (obj, value);
-			JniObjectReference.Dispose (ref lref, JniObjectReferenceOptions.CopyAndDispose);
-		}
-	}
-#endif  // !XA_INTEGRATION
 }
 

@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Reflection;
 
 namespace Java.Interop {
 <#
@@ -33,25 +34,19 @@ namespace Java.Interop {
 	foreach (var type in types) {
 #>
 			new KeyValuePair<Type, JniTypeSignature>(typeof (<#= type.Type #>),     new JniTypeSignature ("<#= type.JniType #>", 0, keyword: true)),
-			new KeyValuePair<Type, JniTypeSignature>(typeof (<#= type.Type #>),     new JniTypeSignature ("java/lang/<#= type.Name #>")),
+			new KeyValuePair<Type, JniTypeSignature>(typeof (<#= type.Type #>?),    new JniTypeSignature ("java/lang/<#= type.Name #>")),
 <#
 	}
 #>
 		};
 
-		static readonly KeyValuePair<Type, JniMarshalInfo>[] JniBuiltinMarshalers = new []{
-			new KeyValuePair<Type, JniMarshalInfo>(typeof (string), new JniMarshalInfo {
-				GetValueFromJni             = JniEnvironment.Strings.ToString,
-				CreateLocalRef              = JniEnvironment.Strings.NewString,
-			}),
+		static readonly KeyValuePair<Type, JniValueMarshaler>[] JniBuiltinMarshalers = new []{
+			new KeyValuePair<Type, JniValueMarshaler>(typeof (string), JniStringValueMarshaler.Instance),
 <#
 	foreach (var type in types) {
 #>
-			new KeyValuePair<Type, JniMarshalInfo>(typeof (<#= type.Type #>), new JniMarshalInfo {
-				CreateJniArgumentValue      = Jni<#= type.Name #>.CreateJniArgumentValue,
-				GetValueFromJni             = Jni<#= type.Name #>.GetValueFromJni,
-				CreateLocalRef              = Jni<#= type.Name #>.CreateLocalRef,
-			}),
+			new KeyValuePair<Type, JniValueMarshaler>(typeof (<#= type.Type #>),   Jni<#= type.Type #>ValueMarshaler.Instance),
+			new KeyValuePair<Type, JniValueMarshaler>(typeof (<#= type.Type #>?),  JniNullable<#= type.Type #>ValueMarshaler.Instance),
 <#
 	}
 #>
@@ -69,25 +64,18 @@ namespace Java.Interop {
 			get {return JniType.GetCachedJniType (ref _TypeRef, JniTypeName);}
 		}
 
-		internal static JniArgumentValue CreateJniArgumentValue (object value)
-		{
-			return new JniArgumentValue ((<#= type.Type #>) value);
-		}
-
 		static JniMethodInfo init;
-		internal static unsafe JniObjectReference CreateLocalRef (object value)
+		internal static unsafe JniObjectReference CreateLocalRef (<#= type.Type #> value)
 		{
-			Debug.Assert (value is <#= type.Type #>, "Expected value of type `<#= type.Type #>`; was: " + (value == null ? "<null>" : value.GetType ().FullName));
-
 			var args    = stackalloc JniArgumentValue [1];
-			args [0]    = new JniArgumentValue ((<#= type.Type #>) value);
+			args [0]    = new JniArgumentValue (value);
 
 			TypeRef.GetCachedConstructor (ref init, "(<#= type.JniType #>)V");
 			return TypeRef.NewObject (init, args);
 		}
 
 		static JniMethodInfo <#= type.GetValue #>;
-		internal static object GetValueFromJni (ref JniObjectReference self, JniObjectReferenceOptions transfer, Type targetType)
+		internal static <#= type.Type #> GetValueFromJni (ref JniObjectReference self, JniObjectReferenceOptions transfer, Type targetType)
 		{
 			Debug.Assert (targetType == null || targetType == typeof (<#= type.Type #>), "Expected targetType==typeof(<#= type.Type #>); was: " + targetType);
 			TypeRef.GetCachedInstanceMethod (ref <#= type.GetValue #>, "<#= type.GetValue #>", "()<#= type.JniType #>");
@@ -96,6 +84,83 @@ namespace Java.Interop {
 			} finally {
 				JniObjectReference.Dispose (ref self, transfer);
 			}
+		}
+	}
+
+	class Jni<#= type.Type #>ValueMarshaler : JniValueMarshaler<<#= type.Type #>> {
+
+		internal    static  readonly    Jni<#= type.Type #>ValueMarshaler   Instance    = new Jni<#= type.Type #>ValueMarshaler ();
+
+		public override bool IsJniValueType {
+			get {return true;}
+		}
+
+		public override object CreateValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
+		{
+			if (!reference.IsValid)
+				return null;
+			return CreateGenericValue (ref reference, options, targetType);
+		}
+
+		public override <#= type.Type #> CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
+		{
+			if (!reference.IsValid)
+				return default (<#= type.Type #>);
+
+			return Jni<#= type.Name #>.GetValueFromJni (ref reference, options, targetType);
+		}
+
+		public override JniValueMarshalerState CreateGenericArgumentState (<#= type.Type #> value, ParameterAttributes synchronize = ParameterAttributes.In)
+		{
+			return new JniValueMarshalerState (new JniArgumentValue (value));
+		}
+
+		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState (<#= type.Type #> value, ParameterAttributes synchronize)
+		{
+			var r = Jni<#= type.Name #>.CreateLocalRef (value);
+			return new JniValueMarshalerState (r);
+		}
+
+		public override void DestroyArgumentState (object value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
+		{
+			var r   = state.ReferenceValue;
+			JniObjectReference.Dispose (ref r);
+			state   = new JniValueMarshalerState ();
+		}
+
+		public override void DestroyGenericArgumentState (<#= type.Type #> value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
+		{
+			var r   = state.ReferenceValue;
+			JniObjectReference.Dispose (ref r);
+			state   = new JniValueMarshalerState ();
+		}
+	}
+
+	class JniNullable<#= type.Type #>ValueMarshaler : JniValueMarshaler<<#= type.Type #>?> {
+
+		internal    static  readonly    JniNullable<#= type.Type #>ValueMarshaler   Instance    = new JniNullable<#= type.Type #>ValueMarshaler ();
+
+		public override <#= type.Type #>? CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
+		{
+			if (!reference.IsValid)
+				return null;
+
+			return Jni<#= type.Name #>.GetValueFromJni (ref reference, options, targetType: null);
+		}
+
+		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState (<#= type.Type #>? value, ParameterAttributes synchronize)
+		{
+		    if (!value.HasValue)
+		        return new JniValueMarshalerState ();
+			var r = Jni<#= type.Name #>.CreateLocalRef (value.Value);
+			return new JniValueMarshalerState (r);
+		}
+
+		public override void DestroyGenericArgumentState (<#= type.Type #>? value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
+		{
+			var r   = state.ReferenceValue;
+			JniObjectReference.Dispose (ref r);
+			state   = new JniValueMarshalerState ();
 		}
 	}
 <#

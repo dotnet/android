@@ -354,7 +354,70 @@ namespace Java.Interop
 				return (T) GetObject (jniHandle, typeof(T));
 			}
 
-			public virtual JniMarshalInfo GetJniMarshalInfoForType (Type type)
+			public object GetValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType = null)
+			{
+				if (!reference.IsValid)
+					return null;
+
+				var target  = PeekObject (reference);
+				var proxy   = target as JavaProxyObject;
+				if (proxy != null) {
+					JniObjectReference.Dispose (ref reference, options);
+					return proxy.Value;
+				}
+
+				if (target != null && (targetType == null || targetType.GetTypeInfo ().IsAssignableFrom (target.GetType ().GetTypeInfo ()))) {
+					JniObjectReference.Dispose (ref reference, options);
+					return target;
+				}
+
+				if (targetType == null) {
+					var signature   = Runtime.TypeManager.GetTypeSignature (JniEnvironment.Types.GetJniTypeNameFromInstance (reference));
+					targetType      = Runtime.TypeManager.GetType (signature);
+				}
+				var vm  = GetValueMarshaler (targetType);
+				return vm.CreateValue (ref reference, options, targetType);
+			}
+
+			public T GetValue<T> (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType = null)
+			{
+				if (!reference.IsValid)
+					return default (T);
+
+				var target  = PeekObject (reference);
+				var proxy   = target as JavaProxyObject;
+				if (proxy != null) {
+					JniObjectReference.Dispose (ref reference, options);
+					return (T) proxy.Value;
+				}
+
+				if (target is T) {
+					JniObjectReference.Dispose (ref reference, options);
+					return (T) target;
+				}
+
+				var vm  = GetValueMarshaler<T> ();
+				return vm.CreateGenericValue (ref reference, options, typeof (T));
+			}
+
+			Dictionary<Type, JniValueMarshaler> Marshalers = new Dictionary<Type, JniValueMarshaler> ();
+
+			public JniValueMarshaler<T> GetValueMarshaler<T>()
+			{
+				var m   = GetValueMarshaler (typeof (T));
+				var r   = m as JniValueMarshaler<T>;
+				if (r != null)
+					return r;
+				lock (Marshalers) {
+					JniValueMarshaler d;
+					if (Marshalers.TryGetValue (typeof (T), out d))
+						return (JniValueMarshaler<T>) d;
+					Marshalers.Add (typeof (T), d = new DelegatingValueMarshaler<T> (m));
+					return (JniValueMarshaler<T>) d;
+				}
+			}
+
+			public JniValueMarshaler GetValueMarshaler (Type type)
 			{
 				if (type == null)
 					throw new ArgumentNullException ("type");
@@ -363,41 +426,41 @@ namespace Java.Interop
 					throw new ArgumentException ("Generic type definitions are not supported.", "type");
 
 				if (typeof (IJavaPeerable) == type)
-					return DefaultObjectMarshaler;
+					return JavaPeerableValueMarshaler.Instance;
 
 				foreach (var marshaler in JniBuiltinMarshalers) {
 					if (marshaler.Key == type)
 						return marshaler.Value;
 				}
 
-				var listType = info.ImplementedInterfaces
-					.FirstOrDefault (i => i.GetTypeInfo ().IsGenericType && i.GetGenericTypeDefinition () == typeof (IList<>));
+				var listIface   = typeof(IList<>).GetTypeInfo ();
+				var listType    =
+					(from iface in info.ImplementedInterfaces.Concat (new[]{type})
+					 let iinfo = iface.GetTypeInfo ()
+					 where (listIface).IsAssignableFrom (iinfo.IsGenericType ? iinfo.GetGenericTypeDefinition ().GetTypeInfo () : iinfo)
+					 select iinfo)
+					.FirstOrDefault ();
 				if (listType != null) {
-					var elementType = listType.GetTypeInfo ().GenericTypeArguments [0];
+					var elementType = listType.GenericTypeArguments [0];
 					if (elementType.GetTypeInfo ().IsValueType) {
 						foreach (var marshaler in JniPrimitiveArrayMarshalers) {
-							if (marshaler.Key == type)
+							if (info.IsAssignableFrom (marshaler.Key.GetTypeInfo ()))
 								return marshaler.Value;
 						}
 					}
-					var arrayType   = typeof (JavaObjectArray<>).MakeGenericType (elementType);
-					var getValue    = CreateMethodDelegate<CreateValueFromJni> (arrayType, "GetValue");
-					var createLRef  = CreateMethodDelegate<Func<object, JniObjectReference>> (arrayType, "CreateLocalRef");
-					var createObj   = CreateMethodDelegate<Func<object, IJavaPeerable>> (arrayType, "CreateMarshalCollection");
-					var cleanup     = CreateMethodDelegate<Action<IJavaPeerable, object>> (arrayType, "CleanupMarshalCollection");
 
-					return new JniMarshalInfo {
-						GetValueFromJni             = getValue,
-						CreateLocalRef              = createLRef,
-						CreateMarshalCollection     = createObj,
-						CleanupMarshalCollection    = cleanup,
-					};
+					return (JniValueMarshaler) Activator.CreateInstance (typeof (JavaObjectArray<>.ValueMarshaler).MakeGenericType (elementType));
 				}
 
-				if (typeof (IJavaPeerable).GetTypeInfo ().IsAssignableFrom (type.GetTypeInfo ())) {
-					return DefaultObjectMarshaler;
+				if (typeof (IJavaPeerable).GetTypeInfo ().IsAssignableFrom (info)) {
+					return JavaPeerableValueMarshaler.Instance;
 				}
-				return new JniMarshalInfo ();
+				return GetValueMarshalerCore (type);
+			}
+
+			protected virtual JniValueMarshaler GetValueMarshalerCore (Type type)
+			{
+				return ProxyValueMarshaler.Instance;
 			}
 
 			static TDelegate CreateMethodDelegate<TDelegate>(Type type, string methodName)
@@ -405,11 +468,118 @@ namespace Java.Interop
 			{
 				return (TDelegate) (object) type.GetTypeInfo ().GetDeclaredMethod (methodName).CreateDelegate (typeof (TDelegate));
 			}
+		}
+	}
 
-			static readonly JniMarshalInfo DefaultObjectMarshaler = new JniMarshalInfo {
-				GetValueFromJni         = JavaPeerableExtensions.GetValue,
-				CreateLocalRef          = JavaPeerableExtensions.CreateLocalRef,
-			};
+	class JavaPeerableValueMarshaler : JniValueMarshaler<IJavaPeerable> {
+
+		internal    static  JavaPeerableValueMarshaler      Instance    = new JavaPeerableValueMarshaler ();
+
+		public override IJavaPeerable CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
+		{
+			return JniEnvironment.Runtime.ValueManager.GetObject (ref reference, options, targetType);
+		}
+
+		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState (IJavaPeerable value, ParameterAttributes synchronize)
+		{
+			if (value == null || !value.PeerReference.IsValid)
+				return new JniValueMarshalerState ();
+			var r   = value.PeerReference.NewLocalRef ();
+			return new JniValueMarshalerState (r);
+		}
+
+		public override void DestroyGenericArgumentState (IJavaPeerable value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
+		{
+			var r   = state.ReferenceValue;
+			JniObjectReference.Dispose (ref r);
+			state   = new JniValueMarshalerState ();
+		}
+	}
+
+	class DelegatingValueMarshaler<T> : JniValueMarshaler<T> {
+
+		JniValueMarshaler   ValueMarshaler;
+
+		public DelegatingValueMarshaler (JniValueMarshaler valueMarshaler)
+		{
+			ValueMarshaler  = valueMarshaler;
+		}
+
+		public override T CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
+		{
+			return (T) ValueMarshaler.CreateValue (ref reference, options, targetType ?? typeof (T));
+		}
+
+		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState (T value, ParameterAttributes synchronize)
+		{
+			System.Diagnostics.Debug.WriteLine ("# jonp: DelegatingValueMarshaler.CreateGenericObjectReferenceArgumentState: ValueMarshaler={0}; synchronize={1}", ValueMarshaler.GetType (), synchronize);
+			return ValueMarshaler.CreateObjectReferenceArgumentState (value, synchronize);
+		}
+
+		public override void DestroyGenericArgumentState (T value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
+		{
+			ValueMarshaler.DestroyArgumentState (value, ref state, synchronize);
+		}
+	}
+
+	class ProxyValueMarshaler : JniValueMarshaler<object> {
+
+		internal    static  ProxyValueMarshaler     Instance    = new ProxyValueMarshaler ();
+
+		public override object CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
+		{
+			var jvm     = JniEnvironment.Runtime;
+
+			if (targetType == null || targetType == typeof (object)) {
+				var signature   = jvm.TypeManager.GetTypeSignature (JniEnvironment.Types.GetJniTypeNameFromInstance (reference));
+				targetType      = jvm.TypeManager.GetType (signature);
+			}
+			if (targetType != null) {
+				var vm  = jvm.ValueManager.GetValueMarshaler (targetType);
+				if (vm != Instance) {
+					return vm.CreateValue (ref reference, options, targetType);
+				}
+			}
+
+			var target  = jvm.ValueManager.PeekObject (reference);
+
+			JniObjectReference.Dispose (ref reference, options);
+
+			var proxy   = target as JavaProxyObject;
+			if (proxy != null) {
+				JniObjectReference.Dispose (ref reference, options);
+				return proxy.Value;
+			}
+			return null;
+		}
+
+		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState (object value, ParameterAttributes synchronize)
+		{
+			if (value == null)
+				return new JniValueMarshalerState ();
+
+			var jvm     = JniEnvironment.Runtime;
+
+			var vm      = jvm.ValueManager.GetValueMarshaler (value.GetType ());
+			if (vm != Instance) {
+				var s   = vm.CreateObjectReferenceArgumentState (value, synchronize);
+				return new JniValueMarshalerState (s, vm);
+			}
+
+			var p   = JavaProxyObject.GetProxy (value);
+			return new JniValueMarshalerState (p.PeerReference.NewLocalRef ());
+		}
+
+		public override void DestroyGenericArgumentState (object value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
+		{
+			var vm  = state.Extra as JniValueMarshaler;
+			if (vm != null) {
+				vm.DestroyArgumentState (value, ref state, synchronize);
+				return;
+			}
+			var r   = state.ReferenceValue;
+			JniObjectReference.Dispose (ref r);
+			state = new JniValueMarshalerState ();
 		}
 	}
 

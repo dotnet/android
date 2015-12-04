@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Reflection;
 
 namespace Java.Interop {
 
@@ -25,199 +26,39 @@ namespace Java.Interop {
 			new KeyValuePair<Type, JniTypeSignature>(typeof (JavaArray<Double>),           new JniTypeSignature ("D", arrayRank: 1, keyword: true)),
 		};
 
-		static readonly KeyValuePair<Type, JniMarshalInfo>[] JniPrimitiveArrayMarshalers = new []{
-			new KeyValuePair<Type, JniMarshalInfo>(typeof (Boolean[]), new JniMarshalInfo {
-				GetValueFromJni             = JavaBooleanArray.GetValueFromJni,
-				CreateLocalRef              = JavaBooleanArray.CreateLocalRef,
-				CreateMarshalCollection     = JavaBooleanArray.CreateMarshalCollection,
-				CleanupMarshalCollection    = JavaBooleanArray.CleanupMarshalCollection,
-			}),
-			new KeyValuePair<Type, JniMarshalInfo>(typeof (JavaArray<Boolean>), new JniMarshalInfo {
-				GetValueFromJni             = JavaBooleanArray.GetValueFromJni,
-				CreateLocalRef              = JavaBooleanArray.CreateLocalRef,
-				CreateMarshalCollection     = JavaBooleanArray.CreateMarshalCollection,
-				CleanupMarshalCollection    = JavaBooleanArray.CleanupMarshalCollection,
-			}),
-			new KeyValuePair<Type, JniMarshalInfo>(typeof (JavaPrimitiveArray<Boolean>), new JniMarshalInfo {
-				GetValueFromJni             = JavaBooleanArray.GetValueFromJni,
-				CreateLocalRef              = JavaBooleanArray.CreateLocalRef,
-				CreateMarshalCollection     = JavaBooleanArray.CreateMarshalCollection,
-				CleanupMarshalCollection    = JavaBooleanArray.CleanupMarshalCollection,
-			}),
-			new KeyValuePair<Type, JniMarshalInfo>(typeof (JavaBooleanArray), new JniMarshalInfo {
-				GetValueFromJni             = JavaBooleanArray.GetValueFromJni,
-				CreateLocalRef              = JavaBooleanArray.CreateLocalRef,
-				CreateMarshalCollection     = JavaBooleanArray.CreateMarshalCollection,
-				CleanupMarshalCollection    = JavaBooleanArray.CleanupMarshalCollection,
-			}),
-			new KeyValuePair<Type, JniMarshalInfo>(typeof (SByte[]), new JniMarshalInfo {
-				GetValueFromJni             = JavaSByteArray.GetValueFromJni,
-				CreateLocalRef              = JavaSByteArray.CreateLocalRef,
-				CreateMarshalCollection     = JavaSByteArray.CreateMarshalCollection,
-				CleanupMarshalCollection    = JavaSByteArray.CleanupMarshalCollection,
-			}),
-			new KeyValuePair<Type, JniMarshalInfo>(typeof (JavaArray<SByte>), new JniMarshalInfo {
-				GetValueFromJni             = JavaSByteArray.GetValueFromJni,
-				CreateLocalRef              = JavaSByteArray.CreateLocalRef,
-				CreateMarshalCollection     = JavaSByteArray.CreateMarshalCollection,
-				CleanupMarshalCollection    = JavaSByteArray.CleanupMarshalCollection,
-			}),
-			new KeyValuePair<Type, JniMarshalInfo>(typeof (JavaPrimitiveArray<SByte>), new JniMarshalInfo {
-				GetValueFromJni             = JavaSByteArray.GetValueFromJni,
-				CreateLocalRef              = JavaSByteArray.CreateLocalRef,
-				CreateMarshalCollection     = JavaSByteArray.CreateMarshalCollection,
-				CleanupMarshalCollection    = JavaSByteArray.CleanupMarshalCollection,
-			}),
-			new KeyValuePair<Type, JniMarshalInfo>(typeof (JavaSByteArray), new JniMarshalInfo {
-				GetValueFromJni             = JavaSByteArray.GetValueFromJni,
-				CreateLocalRef              = JavaSByteArray.CreateLocalRef,
-				CreateMarshalCollection     = JavaSByteArray.CreateMarshalCollection,
-				CleanupMarshalCollection    = JavaSByteArray.CleanupMarshalCollection,
-			}),
-			new KeyValuePair<Type, JniMarshalInfo>(typeof (Char[]), new JniMarshalInfo {
-				GetValueFromJni             = JavaCharArray.GetValueFromJni,
-				CreateLocalRef              = JavaCharArray.CreateLocalRef,
-				CreateMarshalCollection     = JavaCharArray.CreateMarshalCollection,
-				CleanupMarshalCollection    = JavaCharArray.CleanupMarshalCollection,
-			}),
-			new KeyValuePair<Type, JniMarshalInfo>(typeof (JavaArray<Char>), new JniMarshalInfo {
-				GetValueFromJni             = JavaCharArray.GetValueFromJni,
-				CreateLocalRef              = JavaCharArray.CreateLocalRef,
-				CreateMarshalCollection     = JavaCharArray.CreateMarshalCollection,
-				CleanupMarshalCollection    = JavaCharArray.CleanupMarshalCollection,
-			}),
-			new KeyValuePair<Type, JniMarshalInfo>(typeof (JavaPrimitiveArray<Char>), new JniMarshalInfo {
-				GetValueFromJni             = JavaCharArray.GetValueFromJni,
-				CreateLocalRef              = JavaCharArray.CreateLocalRef,
-				CreateMarshalCollection     = JavaCharArray.CreateMarshalCollection,
-				CleanupMarshalCollection    = JavaCharArray.CleanupMarshalCollection,
-			}),
-			new KeyValuePair<Type, JniMarshalInfo>(typeof (JavaCharArray), new JniMarshalInfo {
-				GetValueFromJni             = JavaCharArray.GetValueFromJni,
-				CreateLocalRef              = JavaCharArray.CreateLocalRef,
-				CreateMarshalCollection     = JavaCharArray.CreateMarshalCollection,
-				CleanupMarshalCollection    = JavaCharArray.CleanupMarshalCollection,
-			}),
-			new KeyValuePair<Type, JniMarshalInfo>(typeof (Int16[]), new JniMarshalInfo {
-				GetValueFromJni             = JavaInt16Array.GetValueFromJni,
-				CreateLocalRef              = JavaInt16Array.CreateLocalRef,
-				CreateMarshalCollection     = JavaInt16Array.CreateMarshalCollection,
-				CleanupMarshalCollection    = JavaInt16Array.CleanupMarshalCollection,
-			}),
-			new KeyValuePair<Type, JniMarshalInfo>(typeof (JavaArray<Int16>), new JniMarshalInfo {
-				GetValueFromJni             = JavaInt16Array.GetValueFromJni,
-				CreateLocalRef              = JavaInt16Array.CreateLocalRef,
-				CreateMarshalCollection     = JavaInt16Array.CreateMarshalCollection,
-				CleanupMarshalCollection    = JavaInt16Array.CleanupMarshalCollection,
-			}),
-			new KeyValuePair<Type, JniMarshalInfo>(typeof (JavaPrimitiveArray<Int16>), new JniMarshalInfo {
-				GetValueFromJni             = JavaInt16Array.GetValueFromJni,
-				CreateLocalRef              = JavaInt16Array.CreateLocalRef,
-				CreateMarshalCollection     = JavaInt16Array.CreateMarshalCollection,
-				CleanupMarshalCollection    = JavaInt16Array.CleanupMarshalCollection,
-			}),
-			new KeyValuePair<Type, JniMarshalInfo>(typeof (JavaInt16Array), new JniMarshalInfo {
-				GetValueFromJni             = JavaInt16Array.GetValueFromJni,
-				CreateLocalRef              = JavaInt16Array.CreateLocalRef,
-				CreateMarshalCollection     = JavaInt16Array.CreateMarshalCollection,
-				CleanupMarshalCollection    = JavaInt16Array.CleanupMarshalCollection,
-			}),
-			new KeyValuePair<Type, JniMarshalInfo>(typeof (Int32[]), new JniMarshalInfo {
-				GetValueFromJni             = JavaInt32Array.GetValueFromJni,
-				CreateLocalRef              = JavaInt32Array.CreateLocalRef,
-				CreateMarshalCollection     = JavaInt32Array.CreateMarshalCollection,
-				CleanupMarshalCollection    = JavaInt32Array.CleanupMarshalCollection,
-			}),
-			new KeyValuePair<Type, JniMarshalInfo>(typeof (JavaArray<Int32>), new JniMarshalInfo {
-				GetValueFromJni             = JavaInt32Array.GetValueFromJni,
-				CreateLocalRef              = JavaInt32Array.CreateLocalRef,
-				CreateMarshalCollection     = JavaInt32Array.CreateMarshalCollection,
-				CleanupMarshalCollection    = JavaInt32Array.CleanupMarshalCollection,
-			}),
-			new KeyValuePair<Type, JniMarshalInfo>(typeof (JavaPrimitiveArray<Int32>), new JniMarshalInfo {
-				GetValueFromJni             = JavaInt32Array.GetValueFromJni,
-				CreateLocalRef              = JavaInt32Array.CreateLocalRef,
-				CreateMarshalCollection     = JavaInt32Array.CreateMarshalCollection,
-				CleanupMarshalCollection    = JavaInt32Array.CleanupMarshalCollection,
-			}),
-			new KeyValuePair<Type, JniMarshalInfo>(typeof (JavaInt32Array), new JniMarshalInfo {
-				GetValueFromJni             = JavaInt32Array.GetValueFromJni,
-				CreateLocalRef              = JavaInt32Array.CreateLocalRef,
-				CreateMarshalCollection     = JavaInt32Array.CreateMarshalCollection,
-				CleanupMarshalCollection    = JavaInt32Array.CleanupMarshalCollection,
-			}),
-			new KeyValuePair<Type, JniMarshalInfo>(typeof (Int64[]), new JniMarshalInfo {
-				GetValueFromJni             = JavaInt64Array.GetValueFromJni,
-				CreateLocalRef              = JavaInt64Array.CreateLocalRef,
-				CreateMarshalCollection     = JavaInt64Array.CreateMarshalCollection,
-				CleanupMarshalCollection    = JavaInt64Array.CleanupMarshalCollection,
-			}),
-			new KeyValuePair<Type, JniMarshalInfo>(typeof (JavaArray<Int64>), new JniMarshalInfo {
-				GetValueFromJni             = JavaInt64Array.GetValueFromJni,
-				CreateLocalRef              = JavaInt64Array.CreateLocalRef,
-				CreateMarshalCollection     = JavaInt64Array.CreateMarshalCollection,
-				CleanupMarshalCollection    = JavaInt64Array.CleanupMarshalCollection,
-			}),
-			new KeyValuePair<Type, JniMarshalInfo>(typeof (JavaPrimitiveArray<Int64>), new JniMarshalInfo {
-				GetValueFromJni             = JavaInt64Array.GetValueFromJni,
-				CreateLocalRef              = JavaInt64Array.CreateLocalRef,
-				CreateMarshalCollection     = JavaInt64Array.CreateMarshalCollection,
-				CleanupMarshalCollection    = JavaInt64Array.CleanupMarshalCollection,
-			}),
-			new KeyValuePair<Type, JniMarshalInfo>(typeof (JavaInt64Array), new JniMarshalInfo {
-				GetValueFromJni             = JavaInt64Array.GetValueFromJni,
-				CreateLocalRef              = JavaInt64Array.CreateLocalRef,
-				CreateMarshalCollection     = JavaInt64Array.CreateMarshalCollection,
-				CleanupMarshalCollection    = JavaInt64Array.CleanupMarshalCollection,
-			}),
-			new KeyValuePair<Type, JniMarshalInfo>(typeof (Single[]), new JniMarshalInfo {
-				GetValueFromJni             = JavaSingleArray.GetValueFromJni,
-				CreateLocalRef              = JavaSingleArray.CreateLocalRef,
-				CreateMarshalCollection     = JavaSingleArray.CreateMarshalCollection,
-				CleanupMarshalCollection    = JavaSingleArray.CleanupMarshalCollection,
-			}),
-			new KeyValuePair<Type, JniMarshalInfo>(typeof (JavaArray<Single>), new JniMarshalInfo {
-				GetValueFromJni             = JavaSingleArray.GetValueFromJni,
-				CreateLocalRef              = JavaSingleArray.CreateLocalRef,
-				CreateMarshalCollection     = JavaSingleArray.CreateMarshalCollection,
-				CleanupMarshalCollection    = JavaSingleArray.CleanupMarshalCollection,
-			}),
-			new KeyValuePair<Type, JniMarshalInfo>(typeof (JavaPrimitiveArray<Single>), new JniMarshalInfo {
-				GetValueFromJni             = JavaSingleArray.GetValueFromJni,
-				CreateLocalRef              = JavaSingleArray.CreateLocalRef,
-				CreateMarshalCollection     = JavaSingleArray.CreateMarshalCollection,
-				CleanupMarshalCollection    = JavaSingleArray.CleanupMarshalCollection,
-			}),
-			new KeyValuePair<Type, JniMarshalInfo>(typeof (JavaSingleArray), new JniMarshalInfo {
-				GetValueFromJni             = JavaSingleArray.GetValueFromJni,
-				CreateLocalRef              = JavaSingleArray.CreateLocalRef,
-				CreateMarshalCollection     = JavaSingleArray.CreateMarshalCollection,
-				CleanupMarshalCollection    = JavaSingleArray.CleanupMarshalCollection,
-			}),
-			new KeyValuePair<Type, JniMarshalInfo>(typeof (Double[]), new JniMarshalInfo {
-				GetValueFromJni             = JavaDoubleArray.GetValueFromJni,
-				CreateLocalRef              = JavaDoubleArray.CreateLocalRef,
-				CreateMarshalCollection     = JavaDoubleArray.CreateMarshalCollection,
-				CleanupMarshalCollection    = JavaDoubleArray.CleanupMarshalCollection,
-			}),
-			new KeyValuePair<Type, JniMarshalInfo>(typeof (JavaArray<Double>), new JniMarshalInfo {
-				GetValueFromJni             = JavaDoubleArray.GetValueFromJni,
-				CreateLocalRef              = JavaDoubleArray.CreateLocalRef,
-				CreateMarshalCollection     = JavaDoubleArray.CreateMarshalCollection,
-				CleanupMarshalCollection    = JavaDoubleArray.CleanupMarshalCollection,
-			}),
-			new KeyValuePair<Type, JniMarshalInfo>(typeof (JavaPrimitiveArray<Double>), new JniMarshalInfo {
-				GetValueFromJni             = JavaDoubleArray.GetValueFromJni,
-				CreateLocalRef              = JavaDoubleArray.CreateLocalRef,
-				CreateMarshalCollection     = JavaDoubleArray.CreateMarshalCollection,
-				CleanupMarshalCollection    = JavaDoubleArray.CleanupMarshalCollection,
-			}),
-			new KeyValuePair<Type, JniMarshalInfo>(typeof (JavaDoubleArray), new JniMarshalInfo {
-				GetValueFromJni             = JavaDoubleArray.GetValueFromJni,
-				CreateLocalRef              = JavaDoubleArray.CreateLocalRef,
-				CreateMarshalCollection     = JavaDoubleArray.CreateMarshalCollection,
-				CleanupMarshalCollection    = JavaDoubleArray.CleanupMarshalCollection,
-			}),
+		static readonly KeyValuePair<Type, JniValueMarshaler>[] JniPrimitiveArrayMarshalers = new []{
+			new KeyValuePair<Type, JniValueMarshaler>(typeof (Boolean[]),                   JavaBooleanArray.ArrayMarshaler),
+			new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaArray<Boolean>),          JavaBooleanArray.ArrayMarshaler),
+			new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaPrimitiveArray<Boolean>), JavaBooleanArray.ArrayMarshaler),
+			new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaBooleanArray),            JavaBooleanArray.ArrayMarshaler),
+			new KeyValuePair<Type, JniValueMarshaler>(typeof (SByte[]),                   JavaSByteArray.ArrayMarshaler),
+			new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaArray<SByte>),          JavaSByteArray.ArrayMarshaler),
+			new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaPrimitiveArray<SByte>), JavaSByteArray.ArrayMarshaler),
+			new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaSByteArray),            JavaSByteArray.ArrayMarshaler),
+			new KeyValuePair<Type, JniValueMarshaler>(typeof (Char[]),                   JavaCharArray.ArrayMarshaler),
+			new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaArray<Char>),          JavaCharArray.ArrayMarshaler),
+			new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaPrimitiveArray<Char>), JavaCharArray.ArrayMarshaler),
+			new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaCharArray),            JavaCharArray.ArrayMarshaler),
+			new KeyValuePair<Type, JniValueMarshaler>(typeof (Int16[]),                   JavaInt16Array.ArrayMarshaler),
+			new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaArray<Int16>),          JavaInt16Array.ArrayMarshaler),
+			new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaPrimitiveArray<Int16>), JavaInt16Array.ArrayMarshaler),
+			new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaInt16Array),            JavaInt16Array.ArrayMarshaler),
+			new KeyValuePair<Type, JniValueMarshaler>(typeof (Int32[]),                   JavaInt32Array.ArrayMarshaler),
+			new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaArray<Int32>),          JavaInt32Array.ArrayMarshaler),
+			new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaPrimitiveArray<Int32>), JavaInt32Array.ArrayMarshaler),
+			new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaInt32Array),            JavaInt32Array.ArrayMarshaler),
+			new KeyValuePair<Type, JniValueMarshaler>(typeof (Int64[]),                   JavaInt64Array.ArrayMarshaler),
+			new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaArray<Int64>),          JavaInt64Array.ArrayMarshaler),
+			new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaPrimitiveArray<Int64>), JavaInt64Array.ArrayMarshaler),
+			new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaInt64Array),            JavaInt64Array.ArrayMarshaler),
+			new KeyValuePair<Type, JniValueMarshaler>(typeof (Single[]),                   JavaSingleArray.ArrayMarshaler),
+			new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaArray<Single>),          JavaSingleArray.ArrayMarshaler),
+			new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaPrimitiveArray<Single>), JavaSingleArray.ArrayMarshaler),
+			new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaSingleArray),            JavaSingleArray.ArrayMarshaler),
+			new KeyValuePair<Type, JniValueMarshaler>(typeof (Double[]),                   JavaDoubleArray.ArrayMarshaler),
+			new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaArray<Double>),          JavaDoubleArray.ArrayMarshaler),
+			new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaPrimitiveArray<Double>), JavaDoubleArray.ArrayMarshaler),
+			new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaDoubleArray),            JavaDoubleArray.ArrayMarshaler),
 		};
 	}
 
@@ -243,6 +84,8 @@ namespace Java.Interop {
 
 	[JniTypeSignature ("Z", ArrayRank=1, IsKeyword=true)]
 	public sealed partial class JavaBooleanArray : JavaPrimitiveArray<Boolean> {
+
+		internal    static  readonly    ValueMarshaler   ArrayMarshaler     = new ValueMarshaler ();
 
 		public JavaBooleanArray (ref JniObjectReference handle, JniObjectReferenceOptions options)
 			: base (ref handle, options)
@@ -338,32 +181,32 @@ namespace Java.Interop {
 				typeof (JavaBooleanArray) == targetType;
 		}
 
-		internal static JniObjectReference CreateLocalRef (object value)
-		{
-		    return JavaArray<Boolean>.CreateLocalRef<JavaBooleanArray> (
-		            value,
-		            list => new JavaBooleanArray (list));
-		}
+		internal sealed class ValueMarshaler : JniValueMarshaler<IList<Boolean>> {
 
-		internal static IList<Boolean> GetValueFromJni (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
-		{
-		    return JavaArray<Boolean>.GetValueFromJni (
-		            ref reference,
-		            options,
-		            targetType,
-		            (ref JniObjectReference h, JniObjectReferenceOptions o) => new JavaBooleanArray (ref h, o));
-		}
+			public override IList<Boolean> CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
+			{
+				return JavaArray<Boolean>.CreateValue (
+						ref reference,
+						options,
+						targetType,
+						(ref JniObjectReference h, JniObjectReferenceOptions o) => new JavaBooleanArray (ref h, o));
+			}
 
-		internal static IJavaPeerable CreateMarshalCollection (object value)
-		{
-		    return JavaArray<Boolean>.CreateMarshalCollection (value, list => new JavaBooleanArray (list) {
-		        forMarshalCollection = true,
-		    });
-		}
+			public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState (IList<Boolean> value, ParameterAttributes synchronize)
+			{
+				return JavaArray<Boolean>.CreateArgumentState (value, synchronize, (list, copy) => {
+					var a = copy
+						? new JavaBooleanArray (list)
+						: new JavaBooleanArray (list.Count);
+					a.forMarshalCollection = true;
+					return a;
+				});
+			}
 
-		internal static void CleanupMarshalCollection (IJavaPeerable marshalObject, object value)
-		{
-		    JavaArray<Boolean>.CleanupMarshalCollection<JavaBooleanArray> (marshalObject, value);
+			public override void DestroyGenericArgumentState (IList<Boolean> value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
+			{
+				JavaArray<Boolean>.DestroyArgumentState<JavaBooleanArray> (value, ref state, synchronize);
+			}
 		}
 	}
 
@@ -389,6 +232,8 @@ namespace Java.Interop {
 
 	[JniTypeSignature ("B", ArrayRank=1, IsKeyword=true)]
 	public sealed partial class JavaSByteArray : JavaPrimitiveArray<SByte> {
+
+		internal    static  readonly    ValueMarshaler   ArrayMarshaler     = new ValueMarshaler ();
 
 		public JavaSByteArray (ref JniObjectReference handle, JniObjectReferenceOptions options)
 			: base (ref handle, options)
@@ -484,32 +329,32 @@ namespace Java.Interop {
 				typeof (JavaSByteArray) == targetType;
 		}
 
-		internal static JniObjectReference CreateLocalRef (object value)
-		{
-		    return JavaArray<SByte>.CreateLocalRef<JavaSByteArray> (
-		            value,
-		            list => new JavaSByteArray (list));
-		}
+		internal sealed class ValueMarshaler : JniValueMarshaler<IList<SByte>> {
 
-		internal static IList<SByte> GetValueFromJni (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
-		{
-		    return JavaArray<SByte>.GetValueFromJni (
-		            ref reference,
-		            options,
-		            targetType,
-		            (ref JniObjectReference h, JniObjectReferenceOptions o) => new JavaSByteArray (ref h, o));
-		}
+			public override IList<SByte> CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
+			{
+				return JavaArray<SByte>.CreateValue (
+						ref reference,
+						options,
+						targetType,
+						(ref JniObjectReference h, JniObjectReferenceOptions o) => new JavaSByteArray (ref h, o));
+			}
 
-		internal static IJavaPeerable CreateMarshalCollection (object value)
-		{
-		    return JavaArray<SByte>.CreateMarshalCollection (value, list => new JavaSByteArray (list) {
-		        forMarshalCollection = true,
-		    });
-		}
+			public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState (IList<SByte> value, ParameterAttributes synchronize)
+			{
+				return JavaArray<SByte>.CreateArgumentState (value, synchronize, (list, copy) => {
+					var a = copy
+						? new JavaSByteArray (list)
+						: new JavaSByteArray (list.Count);
+					a.forMarshalCollection = true;
+					return a;
+				});
+			}
 
-		internal static void CleanupMarshalCollection (IJavaPeerable marshalObject, object value)
-		{
-		    JavaArray<SByte>.CleanupMarshalCollection<JavaSByteArray> (marshalObject, value);
+			public override void DestroyGenericArgumentState (IList<SByte> value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
+			{
+				JavaArray<SByte>.DestroyArgumentState<JavaSByteArray> (value, ref state, synchronize);
+			}
 		}
 	}
 
@@ -535,6 +380,8 @@ namespace Java.Interop {
 
 	[JniTypeSignature ("C", ArrayRank=1, IsKeyword=true)]
 	public sealed partial class JavaCharArray : JavaPrimitiveArray<Char> {
+
+		internal    static  readonly    ValueMarshaler   ArrayMarshaler     = new ValueMarshaler ();
 
 		public JavaCharArray (ref JniObjectReference handle, JniObjectReferenceOptions options)
 			: base (ref handle, options)
@@ -630,32 +477,32 @@ namespace Java.Interop {
 				typeof (JavaCharArray) == targetType;
 		}
 
-		internal static JniObjectReference CreateLocalRef (object value)
-		{
-		    return JavaArray<Char>.CreateLocalRef<JavaCharArray> (
-		            value,
-		            list => new JavaCharArray (list));
-		}
+		internal sealed class ValueMarshaler : JniValueMarshaler<IList<Char>> {
 
-		internal static IList<Char> GetValueFromJni (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
-		{
-		    return JavaArray<Char>.GetValueFromJni (
-		            ref reference,
-		            options,
-		            targetType,
-		            (ref JniObjectReference h, JniObjectReferenceOptions o) => new JavaCharArray (ref h, o));
-		}
+			public override IList<Char> CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
+			{
+				return JavaArray<Char>.CreateValue (
+						ref reference,
+						options,
+						targetType,
+						(ref JniObjectReference h, JniObjectReferenceOptions o) => new JavaCharArray (ref h, o));
+			}
 
-		internal static IJavaPeerable CreateMarshalCollection (object value)
-		{
-		    return JavaArray<Char>.CreateMarshalCollection (value, list => new JavaCharArray (list) {
-		        forMarshalCollection = true,
-		    });
-		}
+			public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState (IList<Char> value, ParameterAttributes synchronize)
+			{
+				return JavaArray<Char>.CreateArgumentState (value, synchronize, (list, copy) => {
+					var a = copy
+						? new JavaCharArray (list)
+						: new JavaCharArray (list.Count);
+					a.forMarshalCollection = true;
+					return a;
+				});
+			}
 
-		internal static void CleanupMarshalCollection (IJavaPeerable marshalObject, object value)
-		{
-		    JavaArray<Char>.CleanupMarshalCollection<JavaCharArray> (marshalObject, value);
+			public override void DestroyGenericArgumentState (IList<Char> value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
+			{
+				JavaArray<Char>.DestroyArgumentState<JavaCharArray> (value, ref state, synchronize);
+			}
 		}
 	}
 
@@ -681,6 +528,8 @@ namespace Java.Interop {
 
 	[JniTypeSignature ("S", ArrayRank=1, IsKeyword=true)]
 	public sealed partial class JavaInt16Array : JavaPrimitiveArray<Int16> {
+
+		internal    static  readonly    ValueMarshaler   ArrayMarshaler     = new ValueMarshaler ();
 
 		public JavaInt16Array (ref JniObjectReference handle, JniObjectReferenceOptions options)
 			: base (ref handle, options)
@@ -776,32 +625,32 @@ namespace Java.Interop {
 				typeof (JavaInt16Array) == targetType;
 		}
 
-		internal static JniObjectReference CreateLocalRef (object value)
-		{
-		    return JavaArray<Int16>.CreateLocalRef<JavaInt16Array> (
-		            value,
-		            list => new JavaInt16Array (list));
-		}
+		internal sealed class ValueMarshaler : JniValueMarshaler<IList<Int16>> {
 
-		internal static IList<Int16> GetValueFromJni (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
-		{
-		    return JavaArray<Int16>.GetValueFromJni (
-		            ref reference,
-		            options,
-		            targetType,
-		            (ref JniObjectReference h, JniObjectReferenceOptions o) => new JavaInt16Array (ref h, o));
-		}
+			public override IList<Int16> CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
+			{
+				return JavaArray<Int16>.CreateValue (
+						ref reference,
+						options,
+						targetType,
+						(ref JniObjectReference h, JniObjectReferenceOptions o) => new JavaInt16Array (ref h, o));
+			}
 
-		internal static IJavaPeerable CreateMarshalCollection (object value)
-		{
-		    return JavaArray<Int16>.CreateMarshalCollection (value, list => new JavaInt16Array (list) {
-		        forMarshalCollection = true,
-		    });
-		}
+			public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState (IList<Int16> value, ParameterAttributes synchronize)
+			{
+				return JavaArray<Int16>.CreateArgumentState (value, synchronize, (list, copy) => {
+					var a = copy
+						? new JavaInt16Array (list)
+						: new JavaInt16Array (list.Count);
+					a.forMarshalCollection = true;
+					return a;
+				});
+			}
 
-		internal static void CleanupMarshalCollection (IJavaPeerable marshalObject, object value)
-		{
-		    JavaArray<Int16>.CleanupMarshalCollection<JavaInt16Array> (marshalObject, value);
+			public override void DestroyGenericArgumentState (IList<Int16> value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
+			{
+				JavaArray<Int16>.DestroyArgumentState<JavaInt16Array> (value, ref state, synchronize);
+			}
 		}
 	}
 
@@ -827,6 +676,8 @@ namespace Java.Interop {
 
 	[JniTypeSignature ("I", ArrayRank=1, IsKeyword=true)]
 	public sealed partial class JavaInt32Array : JavaPrimitiveArray<Int32> {
+
+		internal    static  readonly    ValueMarshaler   ArrayMarshaler     = new ValueMarshaler ();
 
 		public JavaInt32Array (ref JniObjectReference handle, JniObjectReferenceOptions options)
 			: base (ref handle, options)
@@ -922,32 +773,32 @@ namespace Java.Interop {
 				typeof (JavaInt32Array) == targetType;
 		}
 
-		internal static JniObjectReference CreateLocalRef (object value)
-		{
-		    return JavaArray<Int32>.CreateLocalRef<JavaInt32Array> (
-		            value,
-		            list => new JavaInt32Array (list));
-		}
+		internal sealed class ValueMarshaler : JniValueMarshaler<IList<Int32>> {
 
-		internal static IList<Int32> GetValueFromJni (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
-		{
-		    return JavaArray<Int32>.GetValueFromJni (
-		            ref reference,
-		            options,
-		            targetType,
-		            (ref JniObjectReference h, JniObjectReferenceOptions o) => new JavaInt32Array (ref h, o));
-		}
+			public override IList<Int32> CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
+			{
+				return JavaArray<Int32>.CreateValue (
+						ref reference,
+						options,
+						targetType,
+						(ref JniObjectReference h, JniObjectReferenceOptions o) => new JavaInt32Array (ref h, o));
+			}
 
-		internal static IJavaPeerable CreateMarshalCollection (object value)
-		{
-		    return JavaArray<Int32>.CreateMarshalCollection (value, list => new JavaInt32Array (list) {
-		        forMarshalCollection = true,
-		    });
-		}
+			public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState (IList<Int32> value, ParameterAttributes synchronize)
+			{
+				return JavaArray<Int32>.CreateArgumentState (value, synchronize, (list, copy) => {
+					var a = copy
+						? new JavaInt32Array (list)
+						: new JavaInt32Array (list.Count);
+					a.forMarshalCollection = true;
+					return a;
+				});
+			}
 
-		internal static void CleanupMarshalCollection (IJavaPeerable marshalObject, object value)
-		{
-		    JavaArray<Int32>.CleanupMarshalCollection<JavaInt32Array> (marshalObject, value);
+			public override void DestroyGenericArgumentState (IList<Int32> value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
+			{
+				JavaArray<Int32>.DestroyArgumentState<JavaInt32Array> (value, ref state, synchronize);
+			}
 		}
 	}
 
@@ -973,6 +824,8 @@ namespace Java.Interop {
 
 	[JniTypeSignature ("J", ArrayRank=1, IsKeyword=true)]
 	public sealed partial class JavaInt64Array : JavaPrimitiveArray<Int64> {
+
+		internal    static  readonly    ValueMarshaler   ArrayMarshaler     = new ValueMarshaler ();
 
 		public JavaInt64Array (ref JniObjectReference handle, JniObjectReferenceOptions options)
 			: base (ref handle, options)
@@ -1068,32 +921,32 @@ namespace Java.Interop {
 				typeof (JavaInt64Array) == targetType;
 		}
 
-		internal static JniObjectReference CreateLocalRef (object value)
-		{
-		    return JavaArray<Int64>.CreateLocalRef<JavaInt64Array> (
-		            value,
-		            list => new JavaInt64Array (list));
-		}
+		internal sealed class ValueMarshaler : JniValueMarshaler<IList<Int64>> {
 
-		internal static IList<Int64> GetValueFromJni (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
-		{
-		    return JavaArray<Int64>.GetValueFromJni (
-		            ref reference,
-		            options,
-		            targetType,
-		            (ref JniObjectReference h, JniObjectReferenceOptions o) => new JavaInt64Array (ref h, o));
-		}
+			public override IList<Int64> CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
+			{
+				return JavaArray<Int64>.CreateValue (
+						ref reference,
+						options,
+						targetType,
+						(ref JniObjectReference h, JniObjectReferenceOptions o) => new JavaInt64Array (ref h, o));
+			}
 
-		internal static IJavaPeerable CreateMarshalCollection (object value)
-		{
-		    return JavaArray<Int64>.CreateMarshalCollection (value, list => new JavaInt64Array (list) {
-		        forMarshalCollection = true,
-		    });
-		}
+			public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState (IList<Int64> value, ParameterAttributes synchronize)
+			{
+				return JavaArray<Int64>.CreateArgumentState (value, synchronize, (list, copy) => {
+					var a = copy
+						? new JavaInt64Array (list)
+						: new JavaInt64Array (list.Count);
+					a.forMarshalCollection = true;
+					return a;
+				});
+			}
 
-		internal static void CleanupMarshalCollection (IJavaPeerable marshalObject, object value)
-		{
-		    JavaArray<Int64>.CleanupMarshalCollection<JavaInt64Array> (marshalObject, value);
+			public override void DestroyGenericArgumentState (IList<Int64> value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
+			{
+				JavaArray<Int64>.DestroyArgumentState<JavaInt64Array> (value, ref state, synchronize);
+			}
 		}
 	}
 
@@ -1119,6 +972,8 @@ namespace Java.Interop {
 
 	[JniTypeSignature ("F", ArrayRank=1, IsKeyword=true)]
 	public sealed partial class JavaSingleArray : JavaPrimitiveArray<Single> {
+
+		internal    static  readonly    ValueMarshaler   ArrayMarshaler     = new ValueMarshaler ();
 
 		public JavaSingleArray (ref JniObjectReference handle, JniObjectReferenceOptions options)
 			: base (ref handle, options)
@@ -1214,32 +1069,32 @@ namespace Java.Interop {
 				typeof (JavaSingleArray) == targetType;
 		}
 
-		internal static JniObjectReference CreateLocalRef (object value)
-		{
-		    return JavaArray<Single>.CreateLocalRef<JavaSingleArray> (
-		            value,
-		            list => new JavaSingleArray (list));
-		}
+		internal sealed class ValueMarshaler : JniValueMarshaler<IList<Single>> {
 
-		internal static IList<Single> GetValueFromJni (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
-		{
-		    return JavaArray<Single>.GetValueFromJni (
-		            ref reference,
-		            options,
-		            targetType,
-		            (ref JniObjectReference h, JniObjectReferenceOptions o) => new JavaSingleArray (ref h, o));
-		}
+			public override IList<Single> CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
+			{
+				return JavaArray<Single>.CreateValue (
+						ref reference,
+						options,
+						targetType,
+						(ref JniObjectReference h, JniObjectReferenceOptions o) => new JavaSingleArray (ref h, o));
+			}
 
-		internal static IJavaPeerable CreateMarshalCollection (object value)
-		{
-		    return JavaArray<Single>.CreateMarshalCollection (value, list => new JavaSingleArray (list) {
-		        forMarshalCollection = true,
-		    });
-		}
+			public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState (IList<Single> value, ParameterAttributes synchronize)
+			{
+				return JavaArray<Single>.CreateArgumentState (value, synchronize, (list, copy) => {
+					var a = copy
+						? new JavaSingleArray (list)
+						: new JavaSingleArray (list.Count);
+					a.forMarshalCollection = true;
+					return a;
+				});
+			}
 
-		internal static void CleanupMarshalCollection (IJavaPeerable marshalObject, object value)
-		{
-		    JavaArray<Single>.CleanupMarshalCollection<JavaSingleArray> (marshalObject, value);
+			public override void DestroyGenericArgumentState (IList<Single> value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
+			{
+				JavaArray<Single>.DestroyArgumentState<JavaSingleArray> (value, ref state, synchronize);
+			}
 		}
 	}
 
@@ -1265,6 +1120,8 @@ namespace Java.Interop {
 
 	[JniTypeSignature ("D", ArrayRank=1, IsKeyword=true)]
 	public sealed partial class JavaDoubleArray : JavaPrimitiveArray<Double> {
+
+		internal    static  readonly    ValueMarshaler   ArrayMarshaler     = new ValueMarshaler ();
 
 		public JavaDoubleArray (ref JniObjectReference handle, JniObjectReferenceOptions options)
 			: base (ref handle, options)
@@ -1360,32 +1217,32 @@ namespace Java.Interop {
 				typeof (JavaDoubleArray) == targetType;
 		}
 
-		internal static JniObjectReference CreateLocalRef (object value)
-		{
-		    return JavaArray<Double>.CreateLocalRef<JavaDoubleArray> (
-		            value,
-		            list => new JavaDoubleArray (list));
-		}
+		internal sealed class ValueMarshaler : JniValueMarshaler<IList<Double>> {
 
-		internal static IList<Double> GetValueFromJni (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
-		{
-		    return JavaArray<Double>.GetValueFromJni (
-		            ref reference,
-		            options,
-		            targetType,
-		            (ref JniObjectReference h, JniObjectReferenceOptions o) => new JavaDoubleArray (ref h, o));
-		}
+			public override IList<Double> CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
+			{
+				return JavaArray<Double>.CreateValue (
+						ref reference,
+						options,
+						targetType,
+						(ref JniObjectReference h, JniObjectReferenceOptions o) => new JavaDoubleArray (ref h, o));
+			}
 
-		internal static IJavaPeerable CreateMarshalCollection (object value)
-		{
-		    return JavaArray<Double>.CreateMarshalCollection (value, list => new JavaDoubleArray (list) {
-		        forMarshalCollection = true,
-		    });
-		}
+			public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState (IList<Double> value, ParameterAttributes synchronize)
+			{
+				return JavaArray<Double>.CreateArgumentState (value, synchronize, (list, copy) => {
+					var a = copy
+						? new JavaDoubleArray (list)
+						: new JavaDoubleArray (list.Count);
+					a.forMarshalCollection = true;
+					return a;
+				});
+			}
 
-		internal static void CleanupMarshalCollection (IJavaPeerable marshalObject, object value)
-		{
-		    JavaArray<Double>.CleanupMarshalCollection<JavaDoubleArray> (marshalObject, value);
+			public override void DestroyGenericArgumentState (IList<Double> value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
+			{
+				JavaArray<Double>.DestroyArgumentState<JavaDoubleArray> (value, ref state, synchronize);
+			}
 		}
 	}
 

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 
 namespace Java.Interop
 {
@@ -102,7 +103,7 @@ namespace Java.Interop
 		{
 			if (TargetTypeIsCurrentType (targetType))
 				return this;
-			if (targetType == typeof (T[])) {
+			if (targetType == typeof (T[]) || targetType.GetTypeInfo ().IsAssignableFrom (typeof (IList<T>).GetTypeInfo ())) {
 				try {
 					return ToArray ();
 				} finally {
@@ -125,22 +126,7 @@ namespace Java.Interop
 						sourceType.FullName, targetType.FullName));
 		}
 
-		internal static JniObjectReference CreateLocalRef<TArray> (object value, Func<IList<T>, TArray> creator)
-			where TArray : JavaArray<T>
-		{
-			if (value == null)
-				return new JniObjectReference ();
-			var array = value as TArray;
-			if (array != null)
-				return array.PeerReference.NewLocalRef ();
-			var items = value as IList<T>;
-			if (items == null)
-				throw CreateMarshalNotSupportedException (value.GetType (), typeof (TArray));
-			using (array = creator (items))
-				return array.PeerReference.NewLocalRef ();
-		}
-
-		internal static IList<T> GetValueFromJni<TArray> (ref JniObjectReference reference, JniObjectReferenceOptions transfer, Type targetType, ArrayCreator<TArray> creator)
+		internal static IList<T> CreateValue<TArray> (ref JniObjectReference reference, JniObjectReferenceOptions transfer, Type targetType, ArrayCreator<TArray> creator)
 			where TArray : JavaArray<T>
 		{
 			var value = JniEnvironment.Runtime.ValueManager.PeekObject (reference);
@@ -153,37 +139,57 @@ namespace Java.Interop
 				.ToTargetType (targetType, dispose: true);
 		}
 
-		internal static IJavaPeerable CreateMarshalCollection<TArray> (object value, Func<IList<T>, TArray> creator)
+		internal    static  JniValueMarshalerState  CreateArgumentState<TArray> (IList<T> value, ParameterAttributes synchronize, Func<IList<T>, bool, TArray> creator)
 			where TArray : JavaArray<T>
 		{
 			if (value == null)
-				return null;
+				return new JniValueMarshalerState ();
 			var v = value as TArray;
-			if (v != null)
-				return v;
+			if (v != null) {
+				return new JniValueMarshalerState (v);
+			}
 			var list = value as IList<T>;
 			if (list == null)
 				throw CreateMarshalNotSupportedException (value.GetType (), typeof (TArray));
-			return creator (list);
+			synchronize = GetCopyDirection (synchronize);
+			var c   = (synchronize & ParameterAttributes.In) == ParameterAttributes.In;
+			var a   = creator (list, c);
+			return new JniValueMarshalerState (a);
 		}
 
-		internal static void CleanupMarshalCollection<TArray> (IJavaPeerable marshalObject, object value)
+		internal static void DestroyArgumentState<TArray> (IList<T> value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
 			where TArray : JavaArray<T>
 		{
-			var source = (TArray) marshalObject;
+			var source = (TArray) state.PeerableValue;
 			if (source == null)
 				return;
 
-			var arrayDest = value as T[];
-			var listDest  = value as IList<T>;
-			if (arrayDest != null)
-				source.CopyTo (arrayDest, 0);
-			else if (listDest != null)
-				source.CopyToList (listDest, 0);
+			Debug.WriteLine ("# jonp: JavaArray<{0}>.DestroyArgumentState<{1}>: synchronize={2}", typeof(T).FullName, typeof(TArray).FullName, synchronize);
+			synchronize = GetCopyDirection (synchronize);
+			if ((synchronize & ParameterAttributes.Out) == ParameterAttributes.Out) {
+				var arrayDest = value as T[];
+				var listDest  = value as IList<T>;
+				if (arrayDest != null)
+					source.CopyTo (arrayDest, 0);
+				else if (listDest != null)
+					source.CopyToList (listDest, 0);
+			}
 
 			if (source.forMarshalCollection) {
 				source.Dispose ();
 			}
+
+			state   = new JniValueMarshalerState ();
+		}
+
+		internal static ParameterAttributes GetCopyDirection (ParameterAttributes value)
+		{
+			// If .In or .Out are specified, use as-is.
+			// Otherwise, we should copy both directions.
+			const   ParameterAttributes     inout   = ParameterAttributes.In | ParameterAttributes.Out;
+			if ((value & inout) != 0)
+				return (value & inout);
+			return inout;
 		}
 
 		internal virtual void CopyToList (IList<T> list, int index)
