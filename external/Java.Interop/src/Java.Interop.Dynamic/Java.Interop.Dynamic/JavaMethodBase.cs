@@ -75,6 +75,7 @@ namespace Java.Interop.Dynamic {
 
 			var vm  = JniEnvironment.Runtime;
 			var sb  = new StringBuilder ();
+			var mgr = vm.TypeManager;
 
 			if (!IsConstructor) {
 				sb.Append (Name).Append ("\u0000");
@@ -91,7 +92,8 @@ namespace Java.Interop.Dynamic {
 				for (int i = 0; i < len; ++i) {
 					var p = JniEnvironment.Arrays.GetObjectArrayElement (parameters, i);
 					try {
-						sb.Append (JniEnvironment.Types.GetJniTypeNameFromClass (p));
+						var sig = mgr.GetTypeSignature (JniEnvironment.Types.GetJniTypeNameFromClass (p));
+						sb.Append (sig.QualifiedReference);
 						arguments.Add (p.NewGlobalRef ());
 					} finally {
 						JniObjectReference.Dispose (ref p);
@@ -123,6 +125,15 @@ namespace Java.Interop.Dynamic {
 					return false;
 			}
 			return true;
+		}
+
+		public override string ToString ()
+		{
+			return string.Format ("{0}{1}({2}) -> {3}",
+					IsStatic ? "static " : "",
+					Name,
+					string.Join (", ", ArgumentTypes.Select (a => JniEnvironment.Types.GetJniTypeNameFromClass (a))),
+					JniReturnType);
 		}
 	}
 

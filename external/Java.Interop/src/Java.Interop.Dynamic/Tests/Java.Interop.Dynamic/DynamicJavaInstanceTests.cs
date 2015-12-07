@@ -61,6 +61,15 @@ namespace Java.Interop.DynamicTests {
 			str.Dispose ();
 			value.Dispose ();
 		}
+
+		[Test]
+		public void Boxing ()
+		{
+			dynamic Integer = new DynamicJavaClass ("java/lang/Integer");
+			dynamic value   = Integer (42);
+			int     c       = value.compareTo ((int?) 42);
+			Assert.AreEqual (0, c);
+		}
 	}
 }
 
