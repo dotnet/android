@@ -129,12 +129,6 @@ namespace Java.Interop
 		internal static IList<T> CreateValue<TArray> (ref JniObjectReference reference, JniObjectReferenceOptions transfer, Type targetType, ArrayCreator<TArray> creator)
 			where TArray : JavaArray<T>
 		{
-			var value = JniEnvironment.Runtime.ValueManager.PeekObject (reference);
-			var array = value as TArray;
-			if (array != null) {
-				JniObjectReference.Dispose (ref reference, transfer);
-				return array.ToTargetType (targetType, dispose: false);
-			}
 			return creator (ref reference, transfer)
 				.ToTargetType (targetType, dispose: true);
 		}

@@ -29,9 +29,9 @@ namespace Java.InteropTests
 				GC.WaitForPendingFinalizers ();
 				GC.WaitForPendingFinalizers ();
 				var first = array [0];
-				Assert.IsNotNull (JniRuntime.CurrentRuntime.ValueManager.PeekObject (first.PeerReference));
+				Assert.IsNotNull (JniRuntime.CurrentRuntime.ValueManager.PeekValue (first.PeerReference));
 				var f = first.PeerReference;
-				var o = (JavaObject) JniRuntime.CurrentRuntime.ValueManager.GetObject (ref f, JniObjectReferenceOptions.Copy);
+				var o = (JavaObject) JniRuntime.CurrentRuntime.ValueManager.GetValue (ref f, JniObjectReferenceOptions.Copy);
 				Assert.AreSame (first, o);
 				if (oldHandle != o.PeerReference.Handle) {
 					Console.WriteLine ("Yay, object handle changed; value survived a GC!");
@@ -53,22 +53,23 @@ namespace Java.InteropTests
 				l   = o.PeerReference.NewLocalRef ();
 				Assert.AreEqual (JniObjectReferenceType.Global, o.PeerReference.Type);
 				Assert.AreEqual (registeredCount+1, JniRuntime.CurrentRuntime.ValueManager.GetSurfacedObjects ().Count);
-				Assert.IsNotNull (JniRuntime.CurrentRuntime.ValueManager.PeekObject (l));
+				Assert.IsNotNull (JniRuntime.CurrentRuntime.ValueManager.PeekValue (l));
 				Assert.AreNotSame (l, o.PeerReference);
-				Assert.AreSame (o, JniRuntime.CurrentRuntime.ValueManager.PeekObject (l));
+				Assert.AreSame (o, JniRuntime.CurrentRuntime.ValueManager.PeekValue (l));
 			}
 			Assert.AreEqual (registeredCount, JniRuntime.CurrentRuntime.ValueManager.GetSurfacedObjects ().Count);
-			Assert.IsNull (JniRuntime.CurrentRuntime.ValueManager.PeekObject (l));
+			Assert.IsNull (JniRuntime.CurrentRuntime.ValueManager.PeekValue (l));
 			JniObjectReference.Dispose (ref l);
 			Assert.Throws<ObjectDisposedException> (() => o.UnregisterFromRuntime ());
 		}
 
 		[Test]
-		public void RegisterWithVM_ThrowsOnDuplicateEntry ()
+		public void RegisterWithVM_PermitsAliases ()
 		{
 			using (var original = new JavaObject ()) {
 				var p       = original.PeerReference;
-				Assert.Throws<NotSupportedException> (() => new JavaObject (ref p, JniObjectReferenceOptions.Copy));
+				var alias   = new JavaObject (ref p, JniObjectReferenceOptions.Copy);
+				alias.Dispose ();
 			}
 		}
 
@@ -89,7 +90,7 @@ namespace Java.InteropTests
 			GC.WaitForPendingFinalizers ();
 			Assert.IsFalse (r.IsAlive);
 			Assert.IsNull (r.Target);
-			Assert.IsNull (JniRuntime.CurrentRuntime.ValueManager.PeekObject (oldHandle));
+			Assert.IsNull (JniRuntime.CurrentRuntime.ValueManager.PeekValue (oldHandle));
 			JniObjectReference.Dispose (ref oldHandle);
 		}
 

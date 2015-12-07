@@ -14,6 +14,7 @@ namespace Java.InteropTests {
 		protected   abstract    T       Value           {get;}
 
 		protected   virtual     bool    IsJniValueType  {get;}
+		protected   virtual     bool    UsesProxy       {get;}
 
 		protected   virtual     bool    Equals (T x, T y)
 		{
@@ -170,6 +171,8 @@ namespace Java.InteropTests {
 			var r   = s.ReferenceValue;
 			var o   = marshaler.CreateValue (ref r, JniObjectReferenceOptions.Copy);
 			Assert.IsTrue (Equals (Value, (T) o));
+			if (!UsesProxy && !typeof(T).IsValueType)
+				Assert.AreNotSame (Value, o);
 			marshaler.DestroyArgumentState (Value, ref s);
 
 			Dispose ((T) o);
@@ -182,6 +185,8 @@ namespace Java.InteropTests {
 			var r   = s.ReferenceValue;
 			var o   = marshaler.CreateGenericValue (ref r, JniObjectReferenceOptions.Copy);
 			Assert.IsTrue (Equals (Value, o));
+			if (!UsesProxy && !typeof(T).IsValueType)
+				Assert.AreNotSame (Value, o);
 			marshaler.DestroyGenericArgumentState (Value, ref s);
 
 			Dispose (o);
@@ -384,6 +389,7 @@ namespace Java.InteropTests {
 		readonly    object      value   = new object ();
 
 		protected   override    object                  Value               {get {return value;}}
+		protected   override    bool                    UsesProxy           {get {return true;}}
 
 		[Test]
 		public void SpecificTypesAreUsed ()

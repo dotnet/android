@@ -75,12 +75,21 @@ namespace Java.Interop
 				lock (RegisteredInstances) {
 					WeakReference   existing;
 					IJavaPeerable     target;
-					if (RegisteredInstances.TryGetValue (key, out existing) && (target = (IJavaPeerable) existing.Target) != null)
-						throw new NotSupportedException (
-							string.Format ("Cannot register instance {0}(0x{1}), as an instance with the same handle {2}(0x{3}) has already been registered.",
-								value.GetType ().FullName, value.PeerReference.ToString (),
-								target.GetType ().FullName, target.PeerReference.ToString ()));
-					RegisteredInstances [key] = new WeakReference (value, trackResurrection: true);
+					if (RegisteredInstances.TryGetValue (key, out existing) && (target = (IJavaPeerable)existing.Target) != null)
+						Runtime.ObjectReferenceManager.WriteGlobalReferenceLine (
+								"Warning: Not registering PeerReference={0} IdentityHashCode=0x{1} Instance={2} Instance.Type={3} Java.Type={4}; " +
+								"keeping previously registered PeerReference={5} Instance={6} Instance.Type={7} Java.Type={8}.",
+								value.PeerReference.ToString (),
+								key.ToString ("x"),
+								RuntimeHelpers.GetHashCode (value).ToString ("x"),
+								value.GetType ().FullName,
+								JniEnvironment.Types.GetJniTypeNameFromInstance (value.PeerReference),
+								target.PeerReference.ToString (),
+								RuntimeHelpers.GetHashCode (target).ToString ("x"),
+								target.GetType ().FullName,
+								JniEnvironment.Types.GetJniTypeNameFromInstance (target.PeerReference));
+					else
+						RegisteredInstances [key] = new WeakReference (value, trackResurrection: true);
 				}
 				value.Registered = true;
 			}
@@ -238,40 +247,71 @@ namespace Java.Interop
 				return !handle.IsValid;
 			}
 
-			public IJavaPeerable PeekObject (JniObjectReference reference)
+			internal protected virtual IJavaPeerable PeekObject (JniObjectReference reference)
 			{
 				if (!reference.IsValid)
 					return null;
+
 				int key = JniSystem.IdentityHashCode (reference);
+
+				WeakReference   wv;
 				lock (RegisteredInstances) {
-					WeakReference               wv;
-					if (RegisteredInstances.TryGetValue (key, out wv)) {
-						IJavaPeerable   t = (IJavaPeerable) wv.Target;
-						if (t != null)
-							return t;
+					if (!RegisteredInstances.TryGetValue (key, out wv)) {
 						RegisteredInstances.Remove (key);
 					}
 				}
-				return null;
+				return wv == null ? null : (IJavaPeerable) wv.Target;
 			}
 
-			public IJavaPeerable GetObject (ref JniObjectReference reference, JniObjectReferenceOptions transfer, Type targetType = null)
+			public object PeekValue (JniObjectReference reference)
 			{
 				if (!reference.IsValid)
 					return null;
 
-				var existing = PeekObject (reference);
-				if (existing != null && (targetType == null || targetType.GetTypeInfo ().IsAssignableFrom (existing.GetType ().GetTypeInfo ()))) {
-					JniObjectReference.Dispose (ref reference, transfer);
-					return existing;
-				}
-
-				return CreateObjectWrapper (ref reference, transfer, targetType);
+				var t   = PeekObject (reference);
+				var b   = Unbox (t);
+				if (b != null)
+					return b;
+				return t;
 			}
 
-			protected virtual IJavaPeerable CreateObjectWrapper (ref JniObjectReference reference, JniObjectReferenceOptions transfer, Type targetType)
+			static object Unbox (IJavaPeerable value)
+			{
+				var p   = value as JavaProxyObject;
+				if (p != null)
+					return p.Value;
+				var x   = value as JavaProxyThrowable;
+				if (x != null)
+					return x.Exception;
+				return null;
+			}
+
+			object PeekBoxedObject (JniObjectReference reference)
+			{
+				var t   = PeekObject (reference);
+				return Unbox (t);
+			}
+
+			static  readonly    KeyValuePair<Type, Type>[]      WrapperTypeMappings = new []{
+				new KeyValuePair<Type, Type>(typeof (object),           typeof (JavaObject)),
+				new KeyValuePair<Type, Type>(typeof (IJavaPeerable),    typeof (JavaObject)),
+				new KeyValuePair<Type, Type>(typeof (Exception),        typeof (JavaException)),
+			};
+
+			static Type GetWrapperType (Type type)
+			{
+				foreach (var m in WrapperTypeMappings) {
+					if (m.Key == type)
+						return m.Value;
+				}
+				return type;
+			}
+
+			internal protected virtual IJavaPeerable CreateObject (ref JniObjectReference reference, JniObjectReferenceOptions transfer, Type targetType)
 			{
 				targetType  = targetType ?? typeof (JavaObject);
+				targetType  = GetWrapperType (targetType);
+
 				if (!typeof (IJavaPeerable).GetTypeInfo ().IsAssignableFrom (targetType.GetTypeInfo ()))
 					throw new ArgumentException ("targetType must implement IJavaPeerable!", "targetType");
 
@@ -334,24 +374,66 @@ namespace Java.Interop
 				.FirstOrDefault ();
 			}
 
-			public T GetObject<T> (ref JniObjectReference reference, JniObjectReferenceOptions transfer)
-				where T : IJavaPeerable
-			{
-				return (T) GetObject (ref reference, transfer, typeof (T));
-			}
 
-			public IJavaPeerable GetObject (IntPtr jniHandle, Type targetType = null)
+			public object CreateValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType = null)
 			{
-				if (jniHandle == IntPtr.Zero)
+				if (!reference.IsValid)
 					return null;
-				var h = new JniObjectReference (jniHandle);
-				return GetObject (ref h, JniObjectReferenceOptions.Copy, targetType);
+
+				if (targetType != null && typeof (IJavaPeerable).GetTypeInfo ().IsAssignableFrom (targetType.GetTypeInfo ())) {
+					return JavaPeerableValueMarshaler.Instance.CreateGenericValue (ref reference, options, targetType);
+				}
+
+				var boxed   = PeekBoxedObject (reference);
+				if (boxed != null) {
+					JniObjectReference.Dispose (ref reference, options);
+					if (targetType != null)
+						return Convert.ChangeType (boxed, targetType);
+					return boxed;
+				}
+
+				targetType = targetType ?? GetRuntimeType (reference);
+				if (targetType == null) {
+					// Let's hope this is an IJavaPeerable!
+					return JavaPeerableValueMarshaler.Instance.CreateGenericValue (ref reference, options, targetType);
+				}
+				var marshaler   = GetValueMarshaler (targetType);
+				return marshaler.CreateValue (ref reference, options, targetType);
 			}
 
-			public T GetObject<T> (IntPtr jniHandle)
-				where T : IJavaPeerable
+			public T CreateValue<T> (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType = null)
 			{
-				return (T) GetObject (jniHandle, typeof(T));
+				if (!reference.IsValid)
+					return default (T);
+
+				if (targetType != null && !typeof (T).GetTypeInfo ().IsAssignableFrom (targetType.GetTypeInfo ()))
+					throw new ArgumentException (
+							string.Format ("Requested runtime '{0}' value of '{1}' is not compatible with requested compile-time type T of '{2}'.",
+								nameof (targetType),
+								targetType,
+								typeof (T)),
+							nameof (targetType));
+
+				var boxed   = PeekBoxedObject (reference);
+				if (boxed != null) {
+					JniObjectReference.Dispose (ref reference, options);
+					return (T) Convert.ChangeType (boxed, targetType ?? typeof (T));
+				}
+
+				targetType  = targetType ?? typeof (T);
+
+				if (typeof (IJavaPeerable).GetTypeInfo ().IsAssignableFrom (targetType.GetTypeInfo ())) {
+					return (T) JavaPeerableValueMarshaler.Instance.CreateGenericValue (ref reference, options, targetType);
+				}
+
+				var marshaler   = GetValueMarshaler<T> ();
+				return marshaler.CreateGenericValue (ref reference, options, targetType);
+			}
+
+			internal Type GetRuntimeType (JniObjectReference reference)
+			{
+				var signature   = Runtime.TypeManager.GetTypeSignature (JniEnvironment.Types.GetJniTypeNameFromInstance (reference));
+				return Runtime.TypeManager.GetType (signature);
 			}
 
 			public object GetValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType = null)
@@ -359,24 +441,29 @@ namespace Java.Interop
 				if (!reference.IsValid)
 					return null;
 
-				var target  = PeekObject (reference);
-				var proxy   = target as JavaProxyObject;
-				if (proxy != null) {
+				var existing = PeekValue (reference);
+				if (existing != null && (targetType == null || targetType.GetTypeInfo ().IsAssignableFrom (existing.GetType ().GetTypeInfo ()))) {
 					JniObjectReference.Dispose (ref reference, options);
-					return proxy.Value;
+					return existing;
 				}
 
-				if (target != null && (targetType == null || targetType.GetTypeInfo ().IsAssignableFrom (target.GetType ().GetTypeInfo ()))) {
-					JniObjectReference.Dispose (ref reference, options);
-					return target;
+				if (targetType != null && typeof (IJavaPeerable).GetTypeInfo ().IsAssignableFrom (targetType.GetTypeInfo ())) {
+					return JavaPeerableValueMarshaler.Instance.CreateGenericValue (ref reference, options, targetType);
 				}
 
+				targetType = targetType ?? GetRuntimeType (reference);
 				if (targetType == null) {
-					var signature   = Runtime.TypeManager.GetTypeSignature (JniEnvironment.Types.GetJniTypeNameFromInstance (reference));
-					targetType      = Runtime.TypeManager.GetType (signature);
+					// Let's hope this is an IJavaPeerable!
+					return JavaPeerableValueMarshaler.Instance.CreateGenericValue (ref reference, options, targetType);
 				}
-				var vm  = GetValueMarshaler (targetType);
-				return vm.CreateValue (ref reference, options, targetType);
+				var marshaler   = GetValueMarshaler (targetType);
+				return marshaler.CreateValue (ref reference, options, targetType);
+			}
+
+			public T GetValue<T> (IntPtr handle)
+			{
+				var r   = new JniObjectReference (handle);
+				return GetValue<T> (ref r, JniObjectReferenceOptions.Copy);
 			}
 
 			public T GetValue<T> (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType = null)
@@ -384,20 +471,28 @@ namespace Java.Interop
 				if (!reference.IsValid)
 					return default (T);
 
-				var target  = PeekObject (reference);
-				var proxy   = target as JavaProxyObject;
-				if (proxy != null) {
+				if (targetType != null && !typeof (T).GetTypeInfo ().IsAssignableFrom (targetType.GetTypeInfo ()))
+					throw new ArgumentException (
+							string.Format ("Requested runtime '{0}' value of '{1}' is not compatible with requested compile-time type T of '{2}'.",
+								nameof (targetType),
+								targetType,
+								typeof (T)),
+							nameof (targetType));
+
+				targetType  = targetType ?? typeof (T);
+
+				var existing = PeekValue (reference);
+				if (existing != null && (targetType == null || targetType.GetTypeInfo ().IsAssignableFrom (existing.GetType ().GetTypeInfo ()))) {
 					JniObjectReference.Dispose (ref reference, options);
-					return (T) proxy.Value;
+					return (T) existing;
 				}
 
-				if (target is T) {
-					JniObjectReference.Dispose (ref reference, options);
-					return (T) target;
+				if (typeof (IJavaPeerable).GetTypeInfo ().IsAssignableFrom (targetType.GetTypeInfo ())) {
+					return (T) JavaPeerableValueMarshaler.Instance.CreateGenericValue (ref reference, options, targetType);
 				}
 
-				var vm  = GetValueMarshaler<T> ();
-				return vm.CreateGenericValue (ref reference, options, typeof (T));
+				var marshaler   = GetValueMarshaler<T> ();
+				return marshaler.CreateGenericValue (ref reference, options, targetType);
 			}
 
 			Dictionary<Type, JniValueMarshaler> Marshalers = new Dictionary<Type, JniValueMarshaler> ();
@@ -462,12 +557,6 @@ namespace Java.Interop
 			{
 				return ProxyValueMarshaler.Instance;
 			}
-
-			static TDelegate CreateMethodDelegate<TDelegate>(Type type, string methodName)
-				where TDelegate : class
-			{
-				return (TDelegate) (object) type.GetTypeInfo ().GetDeclaredMethod (methodName).CreateDelegate (typeof (TDelegate));
-			}
 		}
 	}
 
@@ -477,7 +566,11 @@ namespace Java.Interop
 
 		public override IJavaPeerable CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
 		{
-			return JniEnvironment.Runtime.ValueManager.GetObject (ref reference, options, targetType);
+			var jvm         = JniEnvironment.Runtime;
+			var marshaler   = jvm.ValueManager.GetValueMarshaler (targetType ?? typeof(IJavaPeerable));
+			if (marshaler != Instance)
+				return (IJavaPeerable) marshaler.CreateValue (ref reference, options, targetType);
+			return jvm.ValueManager.CreateObject (ref reference, options, targetType);
 		}
 
 		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState (IJavaPeerable value, ParameterAttributes synchronize)
@@ -512,7 +605,6 @@ namespace Java.Interop
 
 		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState (T value, ParameterAttributes synchronize)
 		{
-			System.Diagnostics.Debug.WriteLine ("# jonp: DelegatingValueMarshaler.CreateGenericObjectReferenceArgumentState: ValueMarshaler={0}; synchronize={1}", ValueMarshaler.GetType (), synchronize);
 			return ValueMarshaler.CreateObjectReferenceArgumentState (value, synchronize);
 		}
 
@@ -531,8 +623,7 @@ namespace Java.Interop
 			var jvm     = JniEnvironment.Runtime;
 
 			if (targetType == null || targetType == typeof (object)) {
-				var signature   = jvm.TypeManager.GetTypeSignature (JniEnvironment.Types.GetJniTypeNameFromInstance (reference));
-				targetType      = jvm.TypeManager.GetType (signature);
+				targetType      = jvm.ValueManager.GetRuntimeType (reference);
 			}
 			if (targetType != null) {
 				var vm  = jvm.ValueManager.GetValueMarshaler (targetType);
@@ -541,16 +632,13 @@ namespace Java.Interop
 				}
 			}
 
-			var target  = jvm.ValueManager.PeekObject (reference);
-
-			JniObjectReference.Dispose (ref reference, options);
-
-			var proxy   = target as JavaProxyObject;
-			if (proxy != null) {
+			var target  = jvm.ValueManager.PeekValue (reference);
+			if (target != null) {
 				JniObjectReference.Dispose (ref reference, options);
-				return proxy.Value;
+				return target;
 			}
-			return null;
+			// Punt! Hope it's a java.lang.Object
+			return jvm.ValueManager.CreateObject (ref reference, options, targetType);
 		}
 
 		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState (object value, ParameterAttributes synchronize)

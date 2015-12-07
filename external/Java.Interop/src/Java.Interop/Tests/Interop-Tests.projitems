@@ -48,6 +48,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\LoggingJniObjectReferenceManagerDecorator.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JniTypeSignatureAttributeTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JniRuntimeTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JniRuntime.JniValueManagerTests.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JniTypeManagerTests.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JniValueMarshalerContractTests.cs" />
   </ItemGroup>

@@ -69,20 +69,21 @@ namespace Java.Interop {
 
 		static bool _Equals (IntPtr jnienv, IntPtr n_self, IntPtr n_value)
 		{
-			var self    = JniEnvironment.Runtime.ValueManager.GetObject<JavaProxyObject> (n_self);
-			var value   = JniEnvironment.Runtime.ValueManager.GetObject (n_value);
+			var self    = (JavaProxyObject) JniEnvironment.Runtime.ValueManager.PeekObject (new JniObjectReference (n_self));
+			var r_value = new JniObjectReference (n_value);
+			var value   = JniEnvironment.Runtime.ValueManager.GetValue (ref r_value, JniObjectReferenceOptions.Copy);
 			return self.Equals (value);
 		}
 
 		static int _GetHashCode (IntPtr jnienv, IntPtr n_self)
 		{
-			var self = JniEnvironment.Runtime.ValueManager.GetObject<JavaProxyObject> (n_self);
+			var self = (JavaProxyObject) JniEnvironment.Runtime.ValueManager.PeekObject (new JniObjectReference (n_self));
 			return self.GetHashCode ();
 		}
 
 		static IntPtr _ToString (IntPtr jnienv, IntPtr n_self)
 		{
-			var self    = JniEnvironment.Runtime.ValueManager.GetObject<JavaProxyObject> (n_self);
+			var self    = (JavaProxyObject) JniEnvironment.Runtime.ValueManager.PeekObject (new JniObjectReference (n_self));
 			var s       = self.ToString ();
 			var r       = JniEnvironment.Strings.NewString (s);
 			try {

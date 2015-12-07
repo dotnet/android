@@ -326,21 +326,12 @@ namespace Java.Interop
 			Invoker.DestroyJavaVM (InvocationPointer);
 		}
 
-		public virtual Exception GetExceptionForThrowable (ref JniObjectReference value, JniObjectReferenceOptions transfer)
+		public virtual Exception GetExceptionForThrowable (ref JniObjectReference reference, JniObjectReferenceOptions options)
 		{
 #if XA_INTEGRATION
 			throw new NotSupportedException ("Do not know h ow to convert a JniObjectReference to a System.Exception!");
 #else   // !XA_INTEGRATION
-			var o   = ValueManager.PeekObject (value);
-			var e   = o as JavaException;
-			if (e != null) {
-				JniObjectReference.Dispose (ref value, transfer);
-				var p   = e as JavaProxyThrowable;
-				if (p != null)
-					return p.Exception;
-				return e;
-			}
-			return ValueManager.GetObject<JavaException> (ref value, transfer);
+			return ValueManager.GetValue<Exception> (ref reference, options);
 #endif  // !̣XA_INTEGRATION
 		}
 

@@ -328,7 +328,7 @@ namespace Java.Interop {
 		{
 			return Expression.Call (
 					Expression.Property (vm, "ValueManager"),
-					"GetObject",
+					"GetValue",
 					new[]{targetType},
 					context);
 		}
