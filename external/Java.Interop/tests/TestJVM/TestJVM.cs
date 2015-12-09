@@ -44,6 +44,23 @@ namespace Java.InteropTests
 				if (mappings != null && mappings.TryGetValue (jniSimpleReference, out target))
 					yield return target;
 			}
+
+			protected override IEnumerable<string> GetSimpleReferences (Type type)
+			{
+				return base.GetSimpleReferences (type)
+					.Concat (CreateSimpleReferencesEnumerator (type));
+			}
+
+			IEnumerable<string> CreateSimpleReferencesEnumerator (Type type)
+			{
+				var mappings = ((TestJVM) Runtime).typeMappings;
+				if (mappings == null)
+					yield break;
+				foreach (var e in mappings) {
+					if (e.Value == type)
+						yield return e.Key;
+				}
+			}
 		}
 	}
 }

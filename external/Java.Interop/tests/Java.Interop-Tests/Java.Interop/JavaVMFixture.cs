@@ -16,6 +16,7 @@ namespace Java.InteropTests {
 					jars:           new[]{ "interop-test.jar" },
 					typeMappings:   new Dictionary<string, Type> () {
 						{ TestType.JniTypeName, typeof (TestType) },
+						{ GenericHolder<int>.JniTypeName,   typeof (GenericHolder<>) },
 					}
 			);
 			JniRuntime.SetCurrent (c);

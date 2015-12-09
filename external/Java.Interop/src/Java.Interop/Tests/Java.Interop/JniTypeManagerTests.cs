@@ -74,6 +74,8 @@ namespace Java.InteropTests
 			AssertGetJniTypeInfoForType (typeof (JavaArray<JavaObject>),    "[Ljava/lang/Object;",  false,  1);
 			AssertGetJniTypeInfoForType (typeof (JavaArray<int[]>),         "[[I",                  true,   2);
 			AssertGetJniTypeInfoForType (typeof (JavaArray<int[]>[]),       "[[[I",                 true,   3);
+
+			AssertGetJniTypeInfoForType (typeof (GenericHolder<int>),       GenericHolder<int>.JniTypeName,    false,   0);
 		}
 
 		static void AssertGetJniTypeInfoForType (Type type, string jniType, bool isKeyword, int arrayRank)
@@ -188,6 +190,12 @@ namespace Java.InteropTests
 			Assert.AreEqual (typeof (string),   GetTypeForSimpleReference ("java/lang/String"));
 			Assert.AreEqual (null,              GetTypeForSimpleReference ("com/example/does/not/exist"));
 		}
+	}
+
+	class GenericHolder<T> : JavaObject {
+		public  const   string  JniTypeName = "com/xamarin/interop/tests/GenericHolder";
+
+		public  T   Value   {get; set;}
 	}
 }
 

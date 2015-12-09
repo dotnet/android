@@ -42,7 +42,8 @@ namespace Java.Interop {
 					type    = type.GetElementType ();
 				}
 
-				if (type.GetTypeInfo ().IsEnum)
+				var info    = type.GetTypeInfo ();
+				if (info.IsEnum)
 					type = Enum.GetUnderlyingType (type);
 
 #if !XA_INTEGRATION
@@ -61,22 +62,33 @@ namespace Java.Interop {
 				}
 #endif  // !XA_INTEGRATION
 
-				var name = type.GetTypeInfo ().GetCustomAttribute<JniTypeSignatureAttribute> (inherit: false);
+				var name = info.GetCustomAttribute<JniTypeSignatureAttribute> (inherit: false);
 				if (name != null) {
 					yield return new JniTypeSignature (name.SimpleReference, name.ArrayRank + rank, name.IsKeyword);
 				}
 
+				var isGeneric   = info.IsGenericType;
+				var genericDef  = isGeneric ? info.GetGenericTypeDefinition () : type;
 #if !XA_INTEGRATION
-				if (type.GetTypeInfo ().IsGenericType) {
-					var def = type.GetGenericTypeDefinition ();
-					if (def == typeof(JavaArray<>) || def == typeof(JavaObjectArray<>)) {
-						var r = GetTypeSignature (type.GetTypeInfo ().GenericTypeArguments [0]);
+				if (isGeneric) {
+					if (genericDef == typeof(JavaArray<>) || genericDef == typeof(JavaObjectArray<>)) {
+						var r = GetTypeSignature (info.GenericTypeArguments [0]);
 						yield return r.AddArrayRank (rank + 1);
 					}
 				}
 #endif  // !XA_INTEGRATION
 				foreach (var simpleRef in GetSimpleReferences (type)) {
+					if (simpleRef == null)
+						continue;
 					yield return new JniTypeSignature (simpleRef, rank, false);
+				}
+
+				if (isGeneric) {
+					foreach (var simpleRef in GetSimpleReferences (genericDef)) {
+						if (simpleRef == null)
+							continue;
+						yield return new JniTypeSignature (simpleRef, rank, false);
+					}
 				}
 			}
 
