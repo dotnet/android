@@ -330,7 +330,7 @@ namespace Java.Interop.Dynamic {
 			var vm  = JniEnvironment.Runtime;
 			foreach (var a in args) {
 				try {
-					var at  = new JniType (vm.TypeManager.GetTypeSignature (a.LimitType).QualifiedReference);
+					var at  = new JniType (vm.TypeManager.GetTypeSignature (a.LimitType).Name);
 					r.Add (at);
 				} catch (JavaException e) {
 					e.Dispose ();
