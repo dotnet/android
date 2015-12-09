@@ -227,8 +227,8 @@ namespace Java.Interop.Dynamic {
 
 						var n_type      = JniEnvironment.InstanceMethods.CallObjectMethod (field, Field_getType);
 						using (var type = new JniType (ref n_type, JniObjectReferenceOptions.CopyAndDispose)) {
-							var info = JniEnvironment.Runtime.TypeManager.GetTypeSignature (type.Name);
-							overloads.Add (new JavaFieldInfo (Members, name + "\u0000" + info.QualifiedReference, isStatic));
+							var sig = JniTypeSignature.Parse (type.Name);
+							overloads.Add (new JavaFieldInfo (Members, name + "\u0000" + sig.QualifiedReference, isStatic));
 						}
 
 						JniObjectReference.Dispose (ref field);

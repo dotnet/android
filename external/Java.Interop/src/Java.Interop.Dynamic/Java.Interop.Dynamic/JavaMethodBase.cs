@@ -92,7 +92,7 @@ namespace Java.Interop.Dynamic {
 				for (int i = 0; i < len; ++i) {
 					var p = JniEnvironment.Arrays.GetObjectArrayElement (parameters, i);
 					try {
-						var sig = mgr.GetTypeSignature (JniEnvironment.Types.GetJniTypeNameFromClass (p));
+						var sig = JniTypeSignature.Parse (JniEnvironment.Types.GetJniTypeNameFromClass (p));
 						sb.Append (sig.QualifiedReference);
 						arguments.Add (p.NewGlobalRef ());
 					} finally {

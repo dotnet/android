@@ -46,7 +46,7 @@ namespace Java.Interop.Dynamic {
 		{
 			var vm = JniEnvironment.Runtime;
 			if (binder.Type == typeof (Type)) {
-				var sig     = vm.TypeManager.GetTypeSignature (info.JniClassName);
+				var sig     = JniTypeSignature.Parse (info.JniClassName);
 				var type    = vm.TypeManager.GetType (sig);
 				var typeE   = Expression.Convert (Expression.Constant (type), binder.Type);
 				return new DynamicMetaObject (typeE, BindingRestrictions.GetTypeRestriction (typeE, binder.Type), type);

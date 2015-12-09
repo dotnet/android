@@ -54,7 +54,7 @@ namespace Java.Interop.Dynamic {
 			get {
 				if (ReturnType == null)
 					return "V";
-				return JniEnvironment.Runtime.TypeManager.GetTypeSignature (ReturnType.Name).QualifiedReference;
+				return JniTypeSignature.Parse (ReturnType.Name).QualifiedReference;
 			}
 		}
 

@@ -90,7 +90,7 @@ namespace Java.InteropTests
 		{
 			var manager = JniRuntime.CurrentRuntime.TypeManager;
 			Func<string, Type> GetType = s => {
-				var sig = manager.GetTypeSignature (s);
+				var sig = JniTypeSignature.Parse (s);
 				return manager.GetType (sig);
 			};
 			Assert.Throws<ArgumentNullException> (() => GetType (null));
@@ -140,39 +140,11 @@ namespace Java.InteropTests
 		}
 
 		[Test]
-		public void GetTypeSignature_String ()
-		{
-			Assert.Throws<ArgumentNullException> (() => JniRuntime.CurrentRuntime.TypeManager.GetTypeSignature ((string) null));
-			Assert.Throws<ArgumentException> (() => JniRuntime.CurrentRuntime.TypeManager.GetTypeSignature ("java.lang.String"));
-			Assert.Throws<ArgumentException> (() => JniRuntime.CurrentRuntime.TypeManager.GetTypeSignature ("Ljava/lang/String;I"));
-			Assert.Throws<ArgumentException> (() => JniRuntime.CurrentRuntime.TypeManager.GetTypeSignature ("ILjava/lang/String;"));
-
-			AssertGetJniTypeInfoForJniTypeReference ("java/lang/String",    "java/lang/String");
-			AssertGetJniTypeInfoForJniTypeReference ("Ljava/lang/String;",  "java/lang/String");
-			AssertGetJniTypeInfoForJniTypeReference ("[I",                  "I",                true,   1);
-			AssertGetJniTypeInfoForJniTypeReference ("[[I",                 "I",                true,   2);
-			AssertGetJniTypeInfoForJniTypeReference ("[Ljava/lang/Object;", "java/lang/Object", false,  1);
-
-			// Yes, these look _really_ weird...
-			// Assume: class II {}
-			AssertGetJniTypeInfoForJniTypeReference ("II",                  "II");
-			// Assume: package Ljava.lang; class String {}
-			AssertGetJniTypeInfoForJniTypeReference ("Ljava/lang/String",   "Ljava/lang/String");
-		}
-
-		static void AssertGetJniTypeInfoForJniTypeReference (string jniTypeReference, string jniTypeName, bool typeIsKeyword = false, int arrayRank = 0)
-		{
-			var info    = JniRuntime.CurrentRuntime.TypeManager.GetTypeSignature (jniTypeReference);
-			Assert.AreEqual (jniTypeName,   info.SimpleReference,   "JniTypeName for: " + jniTypeReference);
-			Assert.AreEqual (arrayRank,     info.ArrayRank,     "ArrayRank for: " + jniTypeReference);
-		}
-
-		[Test]
 		public void GetTypeSignature ()
 		{
 			var jvm = JniRuntime.CurrentRuntime;
 			Func<string, Type> GetTypeForSimpleReference = s => {
-				var sig     = jvm.TypeManager.GetTypeSignature (s);
+				var sig     = JniTypeSignature.Parse (s);
 				return jvm.TypeManager.GetType (sig);
 			};
 			Assert.Throws<ArgumentNullException> (() => GetTypeForSimpleReference (null));
