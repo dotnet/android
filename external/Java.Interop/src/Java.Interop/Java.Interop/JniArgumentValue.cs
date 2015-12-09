@@ -93,7 +93,7 @@ namespace Android.Runtime
 
 		public override int GetHashCode ()
 		{
-			return i;
+			return j.GetHashCode ();
 		}
 
 		public override bool Equals (object obj)
@@ -107,6 +107,16 @@ namespace Android.Runtime
 		public bool Equals (JniArgumentValue value)
 		{
 			return j == value.j;
+		}
+
+		public static bool operator==(JniArgumentValue lhs, JniArgumentValue rhs)
+		{
+			return lhs.j == rhs.j;
+		}
+
+		public static bool operator!=(JniArgumentValue lhs, JniArgumentValue rhs)
+		{
+			return lhs.j != rhs.j;
 		}
 
 		public override string ToString ()

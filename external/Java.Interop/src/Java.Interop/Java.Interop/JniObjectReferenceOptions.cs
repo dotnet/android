@@ -17,10 +17,12 @@ namespace Java.Interop
 		const       JniObjectReferenceOptions   DisposeSource       = (JniObjectReferenceOptions) (1 << 1);
 	}
 
+#if !XA_INTEGRATION
 	partial class JniRuntime {
 		partial class JniValueManager {
 			const   JniObjectReferenceOptions   DoNotRegisterTarget = (JniObjectReferenceOptions) (1 << 2);
 		}
 	}
+#endif  // !XA_INTEGRATION
 }
 
