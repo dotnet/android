@@ -31,8 +31,10 @@ clean:
 	$(XBUILD) /t:Clean
 	rm -Rf bin/$(CONFIGURATION)
 
-JDK     = JavaDeveloper.pkg
-JDK_URL = http://adcdownload.apple.com/Developer_Tools/java_for_os_x_2013005_developer_package/java_for_os_x_2013005_dp__11m4609.dmg
+JDK     = JavaDeveloper-2013005_dp__11m4609.pkg
+JDK_URL = http://storage.bos.xamarin.com/android-sdk-tool/archives/JavaDeveloper-2013005_dp__11m4609.pkg
+
+APPLE_JDK_URL     = http://adcdownload.apple.com/Developer_Tools/java_for_os_x_2013005_developer_package/java_for_os_x_2013005_dp__11m4609.dmg
 
 LOCAL_JDK_HEADERS = LocalJDK/System/Library/Frameworks/JavaVM.framework/Versions/A/Headers
 
@@ -40,8 +42,7 @@ osx-setup: $(LOCAL_JDK_HEADERS)/jni.h
 
 $(LOCAL_JDK_HEADERS)/jni.h:
 	@if [ ! -f $(JDK) ]; then \
-		echo "Please download '$(JDK)', from: $(JDK_URL)" ; \
-		exit 1; \
+		curl -o $(JDK) $(JDK_URL) ; \
 	fi
 	-mkdir LocalJDK
 	_jdk="$$(cd `dirname "$(JDK)"`; pwd)/`basename "$(JDK)"`" ; \

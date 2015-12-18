@@ -30,7 +30,12 @@ The `JNIEnv` API is also huge, unwieldy, and terrible.
 The current Oracle JDK7 installer only provides 64-bit binaries, while
 Mono for OS X is currently a 32-bit binary. These don't work together. :-(
 
-Consequently, you must download the Apple OS X Java 6 developer package:
+To quickly get a JDK that is usable with the OS X `JavaVM.framework`, run:
+
+    $ make osx-setup
+
+If you're instead a glutton for punishment, or you need to check for
+an updated `.pkg` for some future `JavaVM.framework` version:
 
  1. Go to the [Downloads page](https://developer.apple.com/downloads/index.action).  
     Note: This may require you to login first.
