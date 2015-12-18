@@ -209,59 +209,189 @@ namespace Java.InteropTests {
 			var s   = new JniValueMarshalerState ();
 			marshaler.DestroyGenericArgumentState (default (T), ref s);
 		}
+
+		[Test]
+		public void CreateReturnValueFromManagedExpression ()
+		{
+			var runtime = Expression.Variable (typeof (JniRuntime), "__jvm");
+			var value   = Expression.Variable (typeof (T),          "__value");
+			var context = new JniValueMarshalerContext (runtime) {
+				LocalVariables  = {
+					runtime,
+					value,
+				},
+			};
+			var ret     = marshaler.CreateReturnValueFromManagedExpression (context, value);
+			CheckExpression (context, GetExpectedReturnValueFromManagedExpression (runtime.Name, value.Name, ret), ret);
+		}
+
+		protected virtual string GetExpectedReturnValueFromManagedExpression (string jvm, string value, Expression ret)
+		{
+			var valueType       = GetTypeName (typeof (T));
+			var marshalerType   = marshaler.GetType ().Name;
+			return $@"{{
+	JniRuntime {jvm};
+	{valueType} {value};
+	{marshalerType} {value}_marshaler;
+	JniValueMarshalerState {value}_state;
+	IntPtr {value}_val;
+	IntPtr {value}_rtn;
+
+	try
+	{{
+		{value}_marshaler = new {marshalerType}();
+		{value}_state = {value}_marshaler.CreateArgumentState((object){value}, ParameterAttributes.None);
+		{value}_val = {value}_state.ReferenceValue.Handle;
+		{value}_rtn = References.NewReturnToJniRef({value}_state.ReferenceValue);
+		return {value}_rtn;
+	}}
+	finally
+	{{
+		{value}_marshaler.DestroyArgumentState((object){value}, {value}_state, ParameterAttributes.None);
+	}}
+}}";
+		}
+
+		void CheckExpression (JniValueMarshalerContext context, string expected, Expression ret)
+		{
+			var body    = Expression.Block (context.CreationStatements.Concat (new[]{ ret }));
+			var cleanup = context.CleanupStatements.Any ()
+				? (Expression) Expression.Block (context.CleanupStatements.Reverse ())
+				: (Expression) Expression.Empty ();
+			var expr    = Expression.TryFinally (body, cleanup);
+			var block   = Expression.Block (context.LocalVariables, expr);
+			Console.WriteLine ("# jonp: expected: {0}", GetType ().Name);
+			Console.WriteLine (block.ToCSharpCode ());
+			Assert.AreEqual (expected, block.ToCSharpCode ());
+		}
+
+		protected static string GetTypeName (Type type)
+		{
+			switch (type.Name) {
+			case "Boolean":
+				return "bool";
+			case "Char":
+				return "char";
+			case "Double":
+				return "double";
+			case "Int16":
+				return "short";
+			case "Int32":
+				return "int";
+			case "Int64":
+				return "long";
+			case "Object":
+				return "object";
+			case "SByte":
+				return "sbyte";
+			case "Single":
+				return "float";
+			}
+			if (type.IsArray) {
+				return GetTypeName (type.GetElementType ()) + "[]";
+			}
+			if (!type.IsGenericType) {
+				return type.Name;
+			}
+			var n = new System.Text.StringBuilder ();
+			n.Append (type.Name);
+			var b = type.Name.IndexOf ('`');
+			n.Remove (b, type.Name.Length - b);
+			n.Append ("<");
+			n.Append (string.Join (", ", type.GenericTypeArguments.Select (tp => GetTypeName (tp))));
+			n.Append (">");
+			return n.ToString ();
+		}
 	}
 
 	[TestFixture]
 	public class JniValueMarshaler_String_ContractTests : JniValueMarshalerContractTests<string> {
 		protected   override    string      Value       {get {return "value";}}
+
+		protected override string GetExpectedReturnValueFromManagedExpression (string jvm, string value, Expression ret)
+		{
+			var rname       = ((ParameterExpression) ret).Name;
+			return $@"{{
+	JniRuntime {jvm};
+	string {value};
+	JniObjectReference {value}_ref;
+	IntPtr {value}_rtn;
+
+	try
+	{{
+		{value}_ref = Strings.NewString({value});
+		{value}_rtn = References.NewReturnToJniRef({value}_ref);
+		return {rname};
+	}}
+	finally
+	{{
+		JniObjectReference.Dispose(__value_ref);
+	}}
+}}";
+		}
+	}
+
+	public abstract class JniValueMarshaler_BuiltinType_ContractTests<T> : JniValueMarshalerContractTests<T> {
+		protected   override    bool    IsJniValueType  {get {return true;}}
+
+		protected override string GetExpectedReturnValueFromManagedExpression (string jvm, string value, Expression ret)
+		{
+			var valueType   = GetTypeName (typeof (T));
+			var rname       = ((ParameterExpression) ret).Name;
+			return $@"{{
+	JniRuntime {jvm};
+	{valueType} {value};
+
+	try
+	{{
+		return {rname};
+	}}
+	finally
+	{{
+		default(void);
+	}}
+}}";
+		}
 	}
 
 	[TestFixture]
-	public class JniValueMarshaler_Boolean_ContractTests : JniValueMarshalerContractTests<bool> {
+	public class JniValueMarshaler_Boolean_ContractTests : JniValueMarshaler_BuiltinType_ContractTests<bool> {
 		protected   override    bool    Value           {get {return true;}}
-		protected   override    bool    IsJniValueType  {get {return true;}}
 	}
 
 	[TestFixture]
-	public class JniValueMarshaler_SByte_ContractTests : JniValueMarshalerContractTests<sbyte> {
+	public class JniValueMarshaler_SByte_ContractTests : JniValueMarshaler_BuiltinType_ContractTests<sbyte> {
 		protected   override    sbyte   Value           {get {return (sbyte) 2;}}
-		protected   override    bool    IsJniValueType  {get {return true;}}
 	}
 
 	[TestFixture]
-	public class JniValueMarshaler_Char_ContractTests : JniValueMarshalerContractTests<char> {
+	public class JniValueMarshaler_Char_ContractTests : JniValueMarshaler_BuiltinType_ContractTests<char> {
 		protected   override    char    Value           {get {return '3';}}
-		protected   override    bool    IsJniValueType  {get {return true;}}
 	}
 
 	[TestFixture]
-	public class JniValueMarshaler_Int16_ContractTests : JniValueMarshalerContractTests<short> {
+	public class JniValueMarshaler_Int16_ContractTests : JniValueMarshaler_BuiltinType_ContractTests<short> {
 		protected   override    short   Value           {get {return (short) 4;}}
-		protected   override    bool    IsJniValueType  {get {return true;}}
 	}
 
 	[TestFixture]
-	public class JniValueMarshaler_Int32_ContractTests : JniValueMarshalerContractTests<int> {
+	public class JniValueMarshaler_Int32_ContractTests : JniValueMarshaler_BuiltinType_ContractTests<int> {
 		protected   override    int     Value           {get {return 5;}}
-		protected   override    bool    IsJniValueType  {get {return true;}}
 	}
 
 	[TestFixture]
-	public class JniValueMarshaler_Int64_ContractTests : JniValueMarshalerContractTests<long> {
+	public class JniValueMarshaler_Int64_ContractTests : JniValueMarshaler_BuiltinType_ContractTests<long> {
 		protected   override    long    Value           {get {return 6;}}
-		protected   override    bool    IsJniValueType  {get {return true;}}
 	}
 
 	[TestFixture]
-	public class JniValueMarshaler_Single_ContractTests : JniValueMarshalerContractTests<float> {
+	public class JniValueMarshaler_Single_ContractTests : JniValueMarshaler_BuiltinType_ContractTests<float> {
 		protected   override    float   Value           {get {return 7F;}}
-		protected   override    bool    IsJniValueType  {get {return true;}}
 	}
 
 	[TestFixture]
-	public class JniValueMarshaler_Double_ContractTests : JniValueMarshalerContractTests<double> {
+	public class JniValueMarshaler_Double_ContractTests : JniValueMarshaler_BuiltinType_ContractTests<double> {
 		protected   override    double  Value           {get {return 8D;}}
-		protected   override    bool    IsJniValueType  {get {return true;}}
 	}
 
 	[TestFixture]
@@ -308,6 +438,7 @@ namespace Java.InteropTests {
 		where T : IEnumerable<int>
 	{
 		protected   abstract    T       CreateArray (int[] values);
+		protected   abstract    string  ValueMarshalerSourceType    {get;}
 
 		protected   override    T       Value {
 			get {return CreateArray (new[]{ 1, 2, 3 });}
@@ -337,11 +468,38 @@ namespace Java.InteropTests {
 				d.Dispose ();
 			}
 		}
+
+		protected override string GetExpectedReturnValueFromManagedExpression (string jvm, string value, Expression ret)
+		{
+			return $@"{{
+	JniRuntime __jvm;
+	{ValueMarshalerSourceType} __value;
+	ValueMarshaler __value_marshaler;
+	JniValueMarshalerState __value_state;
+	IntPtr __value_val;
+	IntPtr __value_rtn;
+
+	try
+	{{
+		__value_marshaler = new ValueMarshaler();
+		__value_state = __value_marshaler.CreateArgumentState((object)__value, ParameterAttributes.None);
+		__value_val = __value_state.ReferenceValue.Handle;
+		__value_rtn = References.NewReturnToJniRef(__value_state.ReferenceValue);
+		return __value_rtn;
+	}}
+	finally
+	{{
+		__value_marshaler.DestroyArgumentState((object)__value, __value_state, ParameterAttributes.None);
+	}}
+}}";
+		}
 	}
 
 	[TestFixture]
 	public class JniValueMarshaler_Int32Array_ContractTests : JniInt32ArrayValueMarshalerContractTests<int[]> {
 		protected   override    int[]                   CreateArray (int[] values) {return values;}
+
+		protected   override    string                  ValueMarshalerSourceType {get {return "int[]";}}
 
 		[Test]
 		public unsafe void CreateGenericObjectReferenceArgumentState_OutParameterDoesNotCopy ()
@@ -370,21 +528,29 @@ namespace Java.InteropTests {
 	[TestFixture]
 	public class JniValueMarshaler_ListOfInt32_ContractTests : JniInt32ArrayValueMarshalerContractTests<IList<int>> {
 		protected   override    IList<int>              CreateArray (int[] values) {return values;}
+
+		protected   override    string                  ValueMarshalerSourceType {get {return "IList<int>";}}
 	}
 
 	[TestFixture]
 	public class JniValueMarshaler_JavaArray_Int32_ContractTests : JniInt32ArrayValueMarshalerContractTests<JavaArray<int>> {
 		protected   override    JavaArray<int>          CreateArray (int[] values) {return new JavaInt32Array (values);}
+
+		protected   override    string                  ValueMarshalerSourceType {get {return "JavaArray<int>";}}
 	}
 
 	[TestFixture]
 	public class JniValueMarshaler_JavaPrimitiveArray_Int32_ContractTests : JniInt32ArrayValueMarshalerContractTests<JavaPrimitiveArray<int>> {
 		protected   override    JavaPrimitiveArray<int> CreateArray (int[] values) {return new JavaInt32Array (values);}
+
+		protected   override    string                  ValueMarshalerSourceType {get {return "JavaPrimitiveArray<int>";}}
 	}
 
 	[TestFixture]
 	public class JniValueMarshaler_JavaInt32Array_ContractTests : JniInt32ArrayValueMarshalerContractTests<JavaInt32Array> {
 		protected   override    JavaInt32Array          CreateArray (int[] values) {return new JavaInt32Array (values);}
+
+		protected   override    string                  ValueMarshalerSourceType {get {return "JavaInt32Array";}}
 	}
 
 	[TestFixture]
@@ -418,45 +584,95 @@ namespace Java.InteropTests {
 
 		protected   override    IJavaPeerable       Value   {get {return value;}}
 
-		[Test]
-		public void CreateReturnValueFromManagedExpression ()
+		protected override string GetExpectedReturnValueFromManagedExpression (string jvm, string value, Expression ret)
 		{
-			var runtime = Expression.Variable (typeof (JniRuntime), "__jvm");
-			var value   = Expression.Variable (typeof (IJavaPeerable), "__value");
-			var context = new JniValueMarshalerContext (runtime) {
-				LocalVariables  = {
-					runtime,
-					value,
-				},
-			};
-			marshaler.CreateReturnValueFromManagedExpression (context, value);
-			var expected = @"{
-	JniRuntime __jvm;
-	IJavaPeerable __value;
-	JniObjectReference __value_ref;
-	IntPtr __value_handle;
-	IntPtr __value_rtn;
+			var pret    = (ParameterExpression) ret;
+			return $@"{{
+	JniRuntime {jvm};
+	IJavaPeerable {value};
+	JniObjectReference {value}_ref;
+	IntPtr {value}_handle;
+	IntPtr {value}_rtn;
 
-	if (null == __value)
-	{
-		return __value_ref = new JniObjectReference();
+	try
+	{{
+		if (null == {value})
+		{{
+			return {value}_ref = new JniObjectReference();
+		}}
+		else
+		{{
+			return {value}_ref = {value}.PeerReference;
+		}}
+		{value}_handle = {value}_ref.Handle;
+		{value}_rtn = References.NewReturnToJniRef({value}_ref);
+		return {pret.Name};
+	}}
+	finally
+	{{
+		JniObjectReference.Dispose({value}_ref);
+	}}
+}}";
+		}
 	}
-	else
-	{
-		return __value_ref = __value.PeerReference;
+
+	[JniValueMarshaler (typeof (DemoValueTypeValueMarshaler))]
+	struct DemoValueType {
+		public  int Value   {get;}
+
+		public DemoValueType (int value)
+		{
+			Value = value;
+		}
 	}
-	__value_handle = __value_ref.Handle;
-	__value_rtn = References.NewReturnToJniRef(__value_ref);
-	JniObjectReference.Dispose(__value_ref);
-}";
-			CheckExpression (context, expected);
+
+	class DemoValueTypeValueMarshaler : JniValueMarshaler<DemoValueType> {
+
+		JniValueMarshaler<int>  Int32Marshaler;
+
+		public override bool IsJniValueType {
+			get {
+				return Int32Marshaler.IsJniValueType;
+			}
 		}
 
-		static void CheckExpression (JniValueMarshalerContext context, string expected)
+		public DemoValueTypeValueMarshaler ()
 		{
-			var block   = Expression.Block (context.LocalVariables, context.CreationStatements.Concat (context.CleanupStatements));
-			Assert.AreEqual (expected, block.ToCSharpCode ());
+			Int32Marshaler  = JniRuntime.CurrentRuntime.ValueManager.GetValueMarshaler<int> ();
 		}
+
+		public override DemoValueType CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
+		{
+			var v   = Int32Marshaler.CreateGenericValue (ref reference, options, targetType);
+			return new DemoValueType (v);
+		}
+
+		public override JniValueMarshalerState CreateGenericArgumentState (DemoValueType value, ParameterAttributes synchronize)
+		{
+			return Int32Marshaler.CreateGenericArgumentState (value.Value, synchronize);
+		}
+
+		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState (DemoValueType value, ParameterAttributes synchronize)
+		{
+			return Int32Marshaler.CreateGenericObjectReferenceArgumentState (value.Value, synchronize);
+		}
+
+		public override void DestroyArgumentState (object value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
+		{
+			Int32Marshaler.DestroyArgumentState ((value as DemoValueType?)?.Value, ref state, synchronize);
+		}
+
+		public override void DestroyGenericArgumentState (DemoValueType value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
+		{
+			Int32Marshaler.DestroyGenericArgumentState (value.Value, ref state, synchronize);
+		}
+	}
+
+	[TestFixture]
+	class JniValueMarshaler_DemoValueType_ContractTests : JniValueMarshalerContractTests<DemoValueType> {
+
+		protected   override    DemoValueType       Value           {get {return new DemoValueType (42);}}
+		protected   override    bool                IsJniValueType  {get {return true;}}
 	}
 }
 

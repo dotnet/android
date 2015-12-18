@@ -5,10 +5,15 @@ public class ExportType {
 	public static void testStaticMethods () {
 		staticAction ();
 		staticActionInt32String (1, "2");
+
+		int v = staticFuncMyLegacyColorMyColor_MyColor (1, 41);
+		if (v != 42)
+			throw new Error ("staticFuncMyEnum_MyEnum should return 42!");
 	}
 
 	public static native void staticAction ();
 	public static native void staticActionInt32String (int i, String s);
+	public static native int  staticFuncMyLegacyColorMyColor_MyColor (int color1, int color2);
 
 	public void testMethods () {
 	    action ();

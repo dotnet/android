@@ -76,17 +76,25 @@ namespace Java.Interop {
 
 			var signature = new StringBuilder ().Append ("(");
 			foreach (var p in method.GetParameters ()) {
-				var info = Runtime.TypeManager.GetTypeSignature (p.ParameterType);
-				if (info.SimpleReference == null)
-					throw new NotSupportedException ("Don't know how to determine JNI signature for parameter type: " + p.ParameterType.FullName + ".");
-				signature.Append (info.QualifiedReference);
+				signature.Append (GetTypeSignature (p));
 			}
 			signature.Append (")");
-			var ret = Runtime.TypeManager.GetTypeSignature (method.ReturnType);
-			if (ret.SimpleReference == null)
-				throw new NotSupportedException ("Don't know how to determine JNI signature for return type: " + method.ReturnType.FullName + ".");
-			signature.Append (ret.QualifiedReference);
+			signature.Append (GetTypeSignature (method.ReturnParameter));
 			return export.Signature = signature.ToString ();
+		}
+
+		string GetTypeSignature (ParameterInfo p)
+		{
+			var info        = Runtime.TypeManager.GetTypeSignature (p.ParameterType);
+			if (info.IsValid)
+				return info.QualifiedReference;
+
+			var marshaler   = GetValueMarshaler (p);
+			info            = Runtime.TypeManager.GetTypeSignature (marshaler.MarshalType);
+			if (info.IsValid)
+				return info.QualifiedReference;
+
+			throw new NotSupportedException ("Don't know how to determine JNI signature for parameter type: " + p.ParameterType.FullName + ".");
 		}
 
 		Delegate CreateJniMethodMarshaler (JavaCallableAttribute export, Type type, MethodInfo method)
@@ -137,7 +145,7 @@ namespace Java.Interop {
 			var marshalParameters   = new List<ParameterExpression> (methodParameters.Length);
 			var invokeParameters    = new List<Expression> (methodParameters.Length);
 			for (int i = 0; i < methodParameters.Length; ++i) {
-				var marshaler   = Runtime.ValueManager.GetValueMarshaler (methodParameters [i].ParameterType);
+				var marshaler   = GetValueMarshaler (methodParameters [i]);
 				var np          = Expression.Parameter (marshaler.MarshalType, methodParameters [i].Name);
 				var p           = marshaler.CreateParameterToManagedExpression (marshalerContext, np, methodParameters [i].Attributes, methodParameters [i].ParameterType);
 				marshalParameters.Add (np);
@@ -160,7 +168,7 @@ namespace Java.Interop {
 							CreateDisposeJniEnvironment (envp, marshalerContext.CleanupStatements),
 							CreateMarshalException (envp, null)));
 			} else {
-				var rmarshaler  = Runtime.ValueManager.GetValueMarshaler (method.ReturnType);
+				var rmarshaler  = GetValueMarshaler (method.ReturnParameter);
 				var jniRType    = rmarshaler.MarshalType;
 				var exit        = Expression.Label (jniRType, "__exit");
 				var mret        = Expression.Variable (method.ReturnType, "__mret");
@@ -200,6 +208,15 @@ namespace Java.Interop {
 			return Expression.Lambda (marshalerType, body, bodyParams);
 		}
 
+		JniValueMarshaler GetValueMarshaler (ParameterInfo parameter)
+		{
+			var attr = parameter.GetCustomAttribute<JniValueMarshalerAttribute> ();
+			if (attr != null) {
+				return (JniValueMarshaler) Activator.CreateInstance (attr.MarshalerType);
+			}
+			return Runtime.ValueManager.GetValueMarshaler (parameter.ParameterType);
+		}
+
 		void CheckMarshalTypesMatch (MethodInfo method, string signature, ParameterInfo[] methodParameters)
 		{
 			if (signature == null)
@@ -208,7 +225,7 @@ namespace Java.Interop {
 			var mptypes = JniSignature.GetMarshalParameterTypes (signature).ToList ();
 			int len     = Math.Min (methodParameters.Length, mptypes.Count);
 			for (int i = 0; i < len; ++i) {
-				var vm  = Runtime.ValueManager.GetValueMarshaler (methodParameters [i].ParameterType);
+				var vm  = GetValueMarshaler (methodParameters [i]);
 				var jni = vm.MarshalType;
 				if (mptypes [i] != jni)
 					throw new ArgumentException (
@@ -223,7 +240,7 @@ namespace Java.Interop {
 						"signature");
 
 			var jrinfo = JniSignature.GetMarshalReturnType (signature);
-			var mrvm   = Runtime.ValueManager.GetValueMarshaler (method.ReturnType);
+			var mrvm   = GetValueMarshaler (method.ReturnParameter);
 			var mrinfo = mrvm.MarshalType;
 			if (mrinfo != jrinfo)
 				throw new ArgumentException (

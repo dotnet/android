@@ -50,6 +50,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JniRuntimeTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JniRuntime.JniValueManagerTests.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JniTypeManagerTests.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JniValueMarshalerAttributeTests.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JniValueMarshalerContractTests.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -181,13 +181,13 @@ namespace Java.Interop {
 
 			context.LocalVariables.Add (state);
 			context.LocalVariables.Add (ret);
-			context.CreationStatements.Add (Expression.Assign (state, Expression.Call (self, c.GetMethodInfo (), sourceValue, Expression.Constant (synchronize, typeof (ParameterAttributes)))));
+			context.CreationStatements.Add (Expression.Assign (state, Expression.Call (self, c.GetMethodInfo (), Expression.Convert (sourceValue, typeof (object)), Expression.Constant (synchronize, typeof (ParameterAttributes)))));
 			context.CreationStatements.Add (
 					Expression.Assign (ret,
 						Expression.Property (
 							Expression.Property (state, "ReferenceValue"),
 							"Handle")));
-			context.CleanupStatements.Add (Expression.Call (self, d.GetMethodInfo (), sourceValue, state, Expression.Constant (synchronize)));
+			context.CleanupStatements.Add (Expression.Call (self, d.GetMethodInfo (), Expression.Convert (sourceValue, typeof (object)), state, Expression.Constant (synchronize)));
 
 			return ret;
 		}

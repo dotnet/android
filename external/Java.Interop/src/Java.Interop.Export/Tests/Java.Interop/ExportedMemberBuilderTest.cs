@@ -22,7 +22,7 @@ namespace Java.InteropTests
 				var methods = CreateBuilder ()
 					.GetExportedMemberRegistrations (typeof (ExportTest))
 					.ToList ();
-				Assert.AreEqual (5, methods.Count);
+				Assert.AreEqual (6, methods.Count);
 
 				Assert.AreEqual ("action",  methods [0].Name);
 				Assert.AreEqual ("()V",     methods [0].Signature);
@@ -271,6 +271,46 @@ namespace Java.InteropTests
 	catch (Exception __e)
 	{
 		__envp.SetPendingException(__e);
+	}
+	finally
+	{
+		__envp.Dispose();
+	}
+}");
+		}
+
+		[Test]
+		public void CreateMarshalFromJniMethodExpression_StaticFuncMyLegacyColorMyColor_MyColor ()
+		{
+			var t = typeof (ExportTest);
+			var m = ((Func<MyLegacyColor, MyColor, MyColor>) ExportTest.StaticFuncMyLegacyColorMyColor_MyColor);
+			var e = new JavaCallableAttribute () {
+				Signature = "(II)I",
+			};
+			CheckCreateInvocationExpression (e, t, m.Method, typeof (Func<IntPtr, IntPtr, int, int, int>),
+					@"int (IntPtr __jnienv, IntPtr __class, int color1, int color2)
+{
+	JniTransition __envp;
+	JniRuntime __jvm;
+	MyColor __mret;
+	MyLegacyColor color1_val;
+	MyColor color2_val;
+	int __mret_p;
+
+	__envp = new JniTransition(__jnienv);
+	try
+	{
+		__jvm = JniEnvironment.Runtime;
+		color1_val = new MyLegacyColor(color1);
+		color2_val = new MyColor(color2);
+		__mret = ExportTest.StaticFuncMyLegacyColorMyColor_MyColor(color1_val, color2_val);
+		__mret_p = __mret.Value;
+		return __mret_p;
+	}
+	catch (Exception __e)
+	{
+		__envp.SetPendingException(__e);
+		return default(int);
 	}
 	finally
 	{

@@ -523,6 +523,10 @@ namespace Java.Interop
 				if (info.ContainsGenericParameters)
 					throw new ArgumentException ("Generic type definitions are not supported.", "type");
 
+				var marshalerAttr   = info.GetCustomAttribute<JniValueMarshalerAttribute> ();
+				if (marshalerAttr != null)
+					return (JniValueMarshaler) Activator.CreateInstance (marshalerAttr.MarshalerType);
+
 				if (typeof (IJavaPeerable) == type)
 					return JavaPeerableValueMarshaler.Instance;
 
@@ -679,6 +683,21 @@ namespace Java.Interop
 		public override void DestroyGenericArgumentState (T value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
 		{
 			ValueMarshaler.DestroyArgumentState (value, ref state, synchronize);
+		}
+
+		public override Expression CreateParameterFromManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize)
+		{
+			return ValueMarshaler.CreateParameterFromManagedExpression (context, sourceValue, synchronize);
+		}
+
+		public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize, Type targetType)
+		{
+			return ValueMarshaler.CreateParameterToManagedExpression (context, sourceValue, synchronize, targetType);
+		}
+
+		public override Expression CreateReturnValueFromManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue)
+		{
+			return ValueMarshaler.CreateReturnValueFromManagedExpression (context, sourceValue);
 		}
 	}
 
