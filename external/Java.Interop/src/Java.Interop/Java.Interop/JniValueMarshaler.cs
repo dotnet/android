@@ -1,6 +1,36 @@
 using System;
+using System.Collections.ObjectModel;
 using System.Reflection;
+using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
+
+using Java.Interop.Expressions;
+
+namespace Java.Interop.Expressions {
+
+	class VariableCollection : KeyedCollection<string, ParameterExpression> {
+
+		protected override string GetKeyForItem (ParameterExpression item)
+		{
+			return item.Name;
+		}
+	}
+
+	public sealed class JniValueMarshalerContext {
+		public  Expression                                      Runtime             {get;}
+
+		public  KeyedCollection<string, ParameterExpression>    LocalVariables      {get;}  = new VariableCollection ();
+		public  Collection<Expression>                          CreationStatements  {get;}  = new Collection<Expression> ();
+		public  Collection<Expression>                          CleanupStatements   {get;}  = new Collection<Expression> ();
+
+		public JniValueMarshalerContext (Expression runtime)
+		{
+			if (runtime == null)
+				throw new ArgumentNullException (nameof (runtime));
+			Runtime = runtime;
+		}
+	}
+}
 
 namespace Java.Interop {
 
@@ -80,6 +110,11 @@ namespace Java.Interop {
 			get {return false;}
 		}
 
+		static  readonly    Type                    IntPtr_type     = typeof(IntPtr);
+		public  virtual     Type                    MarshalType {
+			get {return IntPtr_type;}
+		}
+
 		public  abstract    object                  CreateValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType = null);
 
 		public  virtual     JniValueMarshalerState  CreateArgumentState (object value, ParameterAttributes synchronize = 0)
@@ -89,6 +124,80 @@ namespace Java.Interop {
 
 		public  abstract    JniValueMarshalerState  CreateObjectReferenceArgumentState (object value, ParameterAttributes synchronize = 0);
 		public  abstract    void                    DestroyArgumentState (object value, ref JniValueMarshalerState state, ParameterAttributes synchronize = 0);
+
+		object CreateValue (IntPtr handle, Type targetType)
+		{
+			var r = new JniObjectReference (handle);
+			return CreateValue (ref r, JniObjectReferenceOptions.Copy, targetType);
+		}
+
+		public  virtual     Expression              CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize = 0, Type targetType = null)
+		{
+			Func<IntPtr, Type, object>  m   = CreateValue;
+
+			var self    = CreateSelf (context, sourceValue);
+
+			var call    = Expression.Call (self, m.GetMethodInfo (), sourceValue, Expression.Constant (targetType, typeof (Type)));
+			return targetType == null
+				? (Expression) call
+				: Expression.Convert (call, targetType);
+		}
+
+		Expression CreateSelf (JniValueMarshalerContext context, ParameterExpression sourceValue)
+		{
+			var self = Expression.Variable (GetType (), sourceValue.Name + "_marshaler");
+			context.LocalVariables.Add (self);
+			context.CreationStatements.Add (Expression.Assign (self, Expression.New (GetType ())));
+			return self;
+		}
+
+		public  virtual     Expression              CreateReturnValueFromManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue)
+		{
+			CreateParameterFromManagedExpression (context, sourceValue, 0);
+			var s   = context.LocalVariables [sourceValue + "_state"];
+			return ReturnObjectReferenceToJni (context, sourceValue.Name, Expression.Property (s, "ReferenceValue"));
+		}
+
+		protected Expression ReturnObjectReferenceToJni (JniValueMarshalerContext context, string namePrefix, Expression sourceValue)
+		{
+			Func<JniObjectReference, IntPtr>    m = JniEnvironment.References.NewReturnToJniRef;
+			var r   = Expression.Variable (MarshalType, namePrefix + "_rtn");
+			context.LocalVariables.Add (r);
+			context.CreationStatements.Add (
+				Expression.Assign (r,
+					Expression.Call (m.GetMethodInfo (), sourceValue)));
+			return r;
+		}
+
+		delegate void DestroyArgumentStateCb (object value, ref JniValueMarshalerState state, ParameterAttributes synchronize);
+		public  virtual     Expression              CreateParameterFromManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize)
+		{
+			Func<object, ParameterAttributes, JniValueMarshalerState>   c   = CreateArgumentState;
+			DestroyArgumentStateCb                                      d   = DestroyArgumentState;
+
+			var self    = CreateSelf (context, sourceValue);
+			var state   = Expression.Variable (typeof(JniValueMarshalerState), sourceValue.Name + "_state");
+			var ret     = Expression.Variable (MarshalType, sourceValue.Name + "_val");
+
+			context.LocalVariables.Add (state);
+			context.LocalVariables.Add (ret);
+			context.CreationStatements.Add (Expression.Assign (state, Expression.Call (self, c.GetMethodInfo (), sourceValue, Expression.Constant (synchronize, typeof (ParameterAttributes)))));
+			context.CreationStatements.Add (
+					Expression.Assign (ret,
+						Expression.Property (
+							Expression.Property (state, "ReferenceValue"),
+							"Handle")));
+			context.CleanupStatements.Add (Expression.Call (self, d.GetMethodInfo (), sourceValue, state, Expression.Constant (synchronize)));
+
+			return ret;
+		}
+
+		delegate void DisposeObjRef (ref JniObjectReference r);
+		protected static Expression DisposeObjectReference (Expression sourceValue)
+		{
+			DisposeObjRef   m   = JniObjectReference.Dispose;
+			return Expression.Call (m.GetMethodInfo (), sourceValue);
+		}
 	}
 
 	public abstract class JniValueMarshaler<T> : JniValueMarshaler {

@@ -167,19 +167,18 @@ namespace Java.InteropTests
 			var t = typeof (ExportTest);
 			var m = t.GetMethod ("InstanceAction");
 			CheckCreateInvocationExpression (null, t, m, typeof (Action<IntPtr, IntPtr>),
-					@"void (IntPtr __jnienv, IntPtr __context)
+					@"void (IntPtr __jnienv, IntPtr __this)
 {
 	JniTransition __envp;
+	JniRuntime __jvm;
+	ExportTest __this_val;
 
 	__envp = new JniTransition(__jnienv);
 	try
 	{
-		JniRuntime __jvm;
-		ExportTest __this;
-
 		__jvm = JniEnvironment.Runtime;
-		__this = __jvm.ValueManager.GetValue<ExportTest>(__context);
-		__this.InstanceAction();
+		__this_val = __jvm.ValueManager.GetValue<ExportTest>(__this);
+		__this_val.InstanceAction();
 	}
 	catch (Exception __e)
 	{
@@ -225,15 +224,14 @@ namespace Java.InteropTests
 			var t       = typeof (ExportTest);
 			Action a    = ExportTest.StaticAction;
 			CheckCreateInvocationExpression (null, t, a.Method, typeof(Action<IntPtr, IntPtr>),
-					@"void (IntPtr __jnienv, IntPtr __context)
+					@"void (IntPtr __jnienv, IntPtr __class)
 {
 	JniTransition __envp;
+	JniRuntime __jvm;
 
 	__envp = new JniTransition(__jnienv);
 	try
 	{
-		JniRuntime __jvm;
-
 		__jvm = JniEnvironment.Runtime;
 		ExportTest.StaticAction();
 	}
@@ -257,19 +255,18 @@ namespace Java.InteropTests
 				Signature = "(ILjava/lang/String;)V",
 			};
 			CheckCreateInvocationExpression (e, t, m.Method, typeof (Action<IntPtr, IntPtr, int, IntPtr>),
-					@"void (IntPtr __jnienv, IntPtr __context, int i, IntPtr native_v)
+					@"void (IntPtr __jnienv, IntPtr __class, int i, IntPtr v)
 {
 	JniTransition __envp;
+	JniRuntime __jvm;
+	string v_val;
 
 	__envp = new JniTransition(__jnienv);
 	try
 	{
-		JniRuntime __jvm;
-		string v;
-
 		__jvm = JniEnvironment.Runtime;
-		v = Strings.ToString(native_v);
-		ExportTest.StaticActionInt32String(i, v);
+		v_val = Strings.ToString(v);
+		ExportTest.StaticActionInt32String(i, v_val);
 	}
 	catch (Exception __e)
 	{
@@ -291,23 +288,20 @@ namespace Java.InteropTests
 				Signature = "()J",
 			};
 			CheckCreateInvocationExpression (e, t, m, typeof (Func<IntPtr, IntPtr, long>),
-					@"long (IntPtr __jnienv, IntPtr __context)
+					@"long (IntPtr __jnienv, IntPtr __this)
 {
 	JniTransition __envp;
-	long __jret;
+	JniRuntime __jvm;
+	long __mret;
+	ExportTest __this_val;
 
 	__envp = new JniTransition(__jnienv);
 	try
 	{
-		JniRuntime __jvm;
-		ExportTest __this;
-		long __mret;
-
 		__jvm = JniEnvironment.Runtime;
-		__this = __jvm.ValueManager.GetValue<ExportTest>(__context);
-		__mret = __this.FuncInt64();
-		__jret = __mret;
-		return __jret;
+		__this_val = __jvm.ValueManager.GetValue<ExportTest>(__this);
+		__mret = __this_val.FuncInt64();
+		return __mret;
 	}
 	catch (Exception __e)
 	{
@@ -330,23 +324,33 @@ namespace Java.InteropTests
 				Signature = "()Ljava/lang/Object;",
 			};
 			CheckCreateInvocationExpression (e, t, m, typeof (Func<IntPtr, IntPtr, IntPtr>),
-					@"IntPtr (IntPtr __jnienv, IntPtr __context)
+					@"IntPtr (IntPtr __jnienv, IntPtr __this)
 {
 	JniTransition __envp;
-	IntPtr __jret;
+	JniRuntime __jvm;
+	JavaObject __mret;
+	ExportTest __this_val;
+	JniObjectReference __mret_ref;
+	IntPtr __mret_handle;
+	IntPtr __mret_rtn;
 
 	__envp = new JniTransition(__jnienv);
 	try
 	{
-		JniRuntime __jvm;
-		ExportTest __this;
-		JavaObject __mret;
-
 		__jvm = JniEnvironment.Runtime;
-		__this = __jvm.ValueManager.GetValue<ExportTest>(__context);
-		__mret = __this.FuncIJavaObject();
-		__jret = References.NewReturnToJniRef(__mret);
-		return __jret;
+		__this_val = __jvm.ValueManager.GetValue<ExportTest>(__this);
+		__mret = __this_val.FuncIJavaObject();
+		if (null == __mret)
+		{
+			return __mret_ref = new JniObjectReference();
+		}
+		else
+		{
+			return __mret_ref = __mret.PeerReference;
+		}
+		__mret_handle = __mret_ref.Handle;
+		__mret_rtn = References.NewReturnToJniRef(__mret_ref);
+		return __mret_rtn;
 	}
 	catch (Exception __e)
 	{
@@ -355,6 +359,7 @@ namespace Java.InteropTests
 	}
 	finally
 	{
+		JniObjectReference.Dispose(__mret_ref);
 		__envp.Dispose();
 	}
 }");

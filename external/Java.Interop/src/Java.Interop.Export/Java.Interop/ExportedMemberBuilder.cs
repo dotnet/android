@@ -6,6 +6,8 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 
+using Java.Interop.Expressions;
+
 namespace Java.Interop {
 
 	public class ExportedMemberBuilder : JniRuntime.JniExportedMemberBuilder
@@ -108,89 +110,73 @@ namespace Java.Interop {
 			CheckMarshalTypesMatch (method, export.Signature, methodParameters);
 
 			var jnienv  = Expression.Parameter (typeof (IntPtr), "__jnienv");
-			var context = Expression.Parameter (typeof (IntPtr), "__context");
+			var context = Expression.Parameter (typeof (IntPtr), method.IsStatic ? "__class" : "__this");
 
 			var envp        = Expression.Variable (typeof (JniTransition), "__envp");
+			var jvm         = Expression.Variable (typeof (JniRuntime), "__jvm");
 			var envpVars    = new List<ParameterExpression> () {
 				envp,
+				jvm,
 			};
 
 			var envpBody    = new List<Expression> () {
 				Expression.Assign (envp, CreateJniTransition (jnienv)),
 			};
 
-			var jvm         = Expression.Variable (typeof (JniRuntime), "__jvm");
-			var variables   = new List<ParameterExpression> () {
-				jvm,
-			};
-
 			var marshalBody = new List<Expression> () {
 				Expression.Assign (jvm, GetRuntime ()),
 			};
 
-			ParameterExpression self = null;
+			Expression self = null;
+			var marshalerContext    = new JniValueMarshalerContext (jvm);
 			if (!method.IsStatic) {
-				self    = Expression.Variable (type, "__this");
-				variables.Add (self);
-				marshalBody.Add (Expression.Assign (self, GetThis (jvm, type, context)));
+				var selfMarshaler   = Runtime.ValueManager.GetValueMarshaler (type);
+				self                = selfMarshaler.CreateParameterToManagedExpression (marshalerContext, context, 0, type);
 			}
 
 			var marshalParameters   = new List<ParameterExpression> (methodParameters.Length);
-			var invokeParameters    = new List<ParameterExpression> (methodParameters.Length);
+			var invokeParameters    = new List<Expression> (methodParameters.Length);
 			for (int i = 0; i < methodParameters.Length; ++i) {
-				var jni = GetMarshalFromJniParameterType (methodParameters [i].ParameterType);
-				if (jni == methodParameters [i].ParameterType) {
-					var p   = Expression.Parameter (jni, methodParameters [i].Name);
-					marshalParameters.Add (p);
-					invokeParameters.Add (p);
-				}
-				else {
-					var np      = Expression.Parameter (jni, "native_" + methodParameters [i].Name);
-					var p       = Expression.Variable (methodParameters [i].ParameterType, methodParameters [i].Name);
-					var fromJni = GetMarshalFromJniExpression (jvm, p.Type, np);
-					if (fromJni == null)
-						throw new NotSupportedException (string.Format ("Cannot convert from '{0}' to '{1}'.", jni, methodParameters [i].ParameterType));
-					variables.Add (p);
-					marshalParameters.Add (np);
-					invokeParameters.Add (p);
-					marshalBody.Add (Expression.Assign (p, fromJni));
-				}
+				var marshaler   = Runtime.ValueManager.GetValueMarshaler (methodParameters [i].ParameterType);
+				var np          = Expression.Parameter (marshaler.MarshalType, methodParameters [i].Name);
+				var p           = marshaler.CreateParameterToManagedExpression (marshalerContext, np, methodParameters [i].Attributes, methodParameters [i].ParameterType);
+				marshalParameters.Add (np);
+				invokeParameters.Add (p);
 			}
+
+			marshalBody.AddRange (marshalerContext.CreationStatements);
 
 			Expression invoke = method.IsStatic
 				? Expression.Call (method, invokeParameters)
 				: Expression.Call (self, method, invokeParameters);
-			ParameterExpression ret = null;
+			Expression ret = null;
 			if (method.ReturnType == typeof (void)) {
+				envpVars.AddRange (marshalerContext.LocalVariables);
+
 				marshalBody.Add (invoke);
 				envpBody.Add (
 						Expression.TryCatchFinally (
-							Expression.Block (variables, marshalBody),
-							CreateDisposeJniEnvironment (envp),
+							Expression.Block (marshalBody),
+							CreateDisposeJniEnvironment (envp, marshalerContext.CleanupStatements),
 							CreateMarshalException (envp, null)));
 			} else {
-				var jniRType    = GetMarshalToJniReturnType (method.ReturnType);
+				var rmarshaler  = Runtime.ValueManager.GetValueMarshaler (method.ReturnType);
+				var jniRType    = rmarshaler.MarshalType;
 				var exit        = Expression.Label (jniRType, "__exit");
-				ret             = Expression.Variable (jniRType, "__jret");
 				var mret        = Expression.Variable (method.ReturnType, "__mret");
-				envpVars.Add (ret);
-				variables.Add (mret);
+				envpVars.Add (mret);
 				marshalBody.Add (Expression.Assign (mret, invoke));
-				if (jniRType == method.ReturnType)
-					marshalBody.Add (Expression.Assign (ret, mret));
-				else {
-					var marshalExpr = GetMarshalToJniExpression (method.ReturnType, mret);
-					if (marshalExpr == null)
-						throw new NotSupportedException (string.Format ("Don't know how to marshal '{0}' to '{1}'.",
-								method.ReturnType, jniRType));
-					marshalBody.Add (Expression.Assign (ret, marshalExpr));
-				}
+				marshalerContext.CreationStatements.Clear ();
+				ret = rmarshaler.CreateReturnValueFromManagedExpression (marshalerContext, mret);
+				marshalBody.AddRange (marshalerContext.CreationStatements);
 				marshalBody.Add (Expression.Return (exit, ret));
+
+				envpVars.AddRange (marshalerContext.LocalVariables);
 
 				envpBody.Add (
 						Expression.TryCatchFinally (
-						Expression.Block (variables, marshalBody),
-							CreateDisposeJniEnvironment (envp),
+							Expression.Block (marshalBody),
+							CreateDisposeJniEnvironment (envp, marshalerContext.CleanupStatements),
 							CreateMarshalException (envp, exit)));
 
 				envpBody.Add (Expression.Label (exit, Expression.Default (jniRType)));
@@ -222,7 +208,8 @@ namespace Java.Interop {
 			var mptypes = JniSignature.GetMarshalParameterTypes (signature).ToList ();
 			int len     = Math.Min (methodParameters.Length, mptypes.Count);
 			for (int i = 0; i < len; ++i) {
-				var jni = GetMarshalFromJniParameterType (methodParameters [i].ParameterType);
+				var vm  = Runtime.ValueManager.GetValueMarshaler (methodParameters [i].ParameterType);
+				var jni = vm.MarshalType;
 				if (mptypes [i] != jni)
 					throw new ArgumentException (
 							string.Format ("JNI parameter type mismatch. Type '{0}' != '{1}.", jni, mptypes [i]),
@@ -236,61 +223,12 @@ namespace Java.Interop {
 						"signature");
 
 			var jrinfo = JniSignature.GetMarshalReturnType (signature);
-			var mrinfo = GetMarshalToJniReturnType (method.ReturnType);
+			var mrvm   = Runtime.ValueManager.GetValueMarshaler (method.ReturnType);
+			var mrinfo = mrvm.MarshalType;
 			if (mrinfo != jrinfo)
 				throw new ArgumentException (
-						string.Format ("JNI return type mismatch. Type '{0}' != '{1}.", jrinfo, mrinfo),
+						string.Format ("JNI return type mismatch. Type '{0}' != '{1}'.", jrinfo, mrinfo),
 						"signature");
-		}
-
-		protected virtual Type GetMarshalFromJniParameterType (Type type)
-		{
-			if (JniBuiltinTypes.Contains (type))
-				return type;
-			return typeof (IntPtr);
-		}
-
-		protected virtual Type GetMarshalToJniReturnType (Type type)
-		{
-			if (JniBuiltinTypes.Contains (type))
-				return type;
-			return typeof (IntPtr);
-		}
-
-		protected virtual Expression GetMarshalFromJniExpression (Expression jvm, Type targetType, Expression jniParameter)
-		{
-			MarshalInfo v;
-			if (Marshalers.TryGetValue (targetType, out v))
-				return v.FromJni (jvm, targetType, jniParameter);
-			if (typeof (IJavaPeerable).GetTypeInfo ().IsAssignableFrom (targetType.GetTypeInfo ()))
-				return Marshalers [typeof (IJavaPeerable)].FromJni (jvm, targetType, jniParameter);
-			return null;
-		}
-
-		protected virtual Expression GetMarshalToJniExpression (Type sourceType, Expression managedParameter)
-		{
-			MarshalInfo v;
-			if (Marshalers.TryGetValue (sourceType, out v))
-				return v.ToJni (managedParameter);
-			if (typeof (IJavaPeerable).GetTypeInfo ().IsAssignableFrom (sourceType.GetTypeInfo ()))
-				return Marshalers [typeof (IJavaPeerable)].ToJni (managedParameter);
-			return null;
-		}
-
-		static readonly Dictionary<Type, MarshalInfo> Marshalers = new Dictionary<Type, MarshalInfo> () {
-			{ typeof (string), new MarshalInfo {
-					FromJni = (vm, t, p) => Expression.Call (F<IntPtr, string> (JniEnvironment.Strings.ToString).GetMethodInfo (), p),
-					ToJni   = p => Expression.Call (F<string, JniObjectReference> (JniEnvironment.Strings.NewString).GetMethodInfo (), p)
-			} },
-			{ typeof (IJavaPeerable), new MarshalInfo {
-					FromJni = (vm, t, p) => GetThis (vm, t, p),
-					ToJni   = p => Expression.Call (F<IJavaPeerable, IntPtr> (JniEnvironment.References.NewReturnToJniRef).GetMethodInfo (), p)
-			} },
-		};
-
-		static Func<T, TRet> F<T, TRet> (Func<T, TRet> func)
-		{
-			return func;
 		}
 
 		static Expression CreateJniTransition (ParameterExpression jnienv)
@@ -319,18 +257,11 @@ namespace Java.Interop {
 			return Expression.Catch (ex, Expression.Block (body));
 		}
 
-		static Expression CreateDisposeJniEnvironment (ParameterExpression envp)
+		static Expression CreateDisposeJniEnvironment (ParameterExpression envp, IList<Expression> cleanup)
 		{
-			return Expression.Call (envp, typeof (JniTransition).GetTypeInfo ().GetDeclaredMethod ("Dispose"));
-		}
-
-		static Expression GetThis (Expression vm, Type targetType, Expression context)
-		{
-			return Expression.Call (
-					Expression.Property (vm, "ValueManager"),
-					"GetValue",
-					new[]{targetType},
-					context);
+			var disposeTransition   = Expression.Call (envp, typeof(JniTransition).GetTypeInfo ().GetDeclaredMethod ("Dispose"));
+			return Expression.Block (
+					cleanup.Reverse ().Concat (new[]{ disposeTransition }));;
 		}
 
 		static Expression GetRuntime ()
@@ -339,26 +270,6 @@ namespace Java.Interop {
 			var runtime = Expression.Property (null, env, "Runtime");
 			return runtime;
 		}
-
-		static readonly ISet<Type> JniBuiltinTypes = new HashSet<Type> {
-			typeof (IntPtr),
-			typeof (void),
-			typeof (bool),
-			typeof (sbyte),
-			typeof (char),
-			typeof (short),
-			typeof (int),
-			typeof (long),
-			typeof (float),
-			typeof (double),
-		};
-
-	}
-
-	class MarshalInfo {
-
-		public Func<Expression /* vm */, Type /* targetType */, Expression /* value */, Expression /* managed rep */>    FromJni;
-		public Func<Expression /* managed rep */, Expression /* jni rep */>    ToJni;
 	}
 
 	static class JniSignature {

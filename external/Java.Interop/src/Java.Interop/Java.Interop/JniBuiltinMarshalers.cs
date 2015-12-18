@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq.Expressions;
 using System.Reflection;
+
+using Java.Interop.Expressions;
 
 namespace Java.Interop {
 
@@ -91,6 +94,10 @@ namespace Java.Interop {
 			get {return true;}
 		}
 
+		public override Type MarshalType {
+		    get {return typeof (Boolean);}
+		}
+
 		public override object CreateValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
 		{
 			if (!reference.IsValid)
@@ -129,6 +136,21 @@ namespace Java.Interop {
 			var r   = state.ReferenceValue;
 			JniObjectReference.Dispose (ref r);
 			state   = new JniValueMarshalerState ();
+		}
+
+		public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize, Type targetType)
+		{
+		    return sourceValue;
+		}
+
+		public override Expression CreateParameterFromManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize)
+		{
+			return sourceValue;
+		}
+
+		public override Expression CreateReturnValueFromManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue)
+		{
+			return sourceValue;
 		}
 	}
 
@@ -199,6 +221,10 @@ namespace Java.Interop {
 			get {return true;}
 		}
 
+		public override Type MarshalType {
+		    get {return typeof (SByte);}
+		}
+
 		public override object CreateValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
 		{
 			if (!reference.IsValid)
@@ -237,6 +263,21 @@ namespace Java.Interop {
 			var r   = state.ReferenceValue;
 			JniObjectReference.Dispose (ref r);
 			state   = new JniValueMarshalerState ();
+		}
+
+		public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize, Type targetType)
+		{
+		    return sourceValue;
+		}
+
+		public override Expression CreateParameterFromManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize)
+		{
+			return sourceValue;
+		}
+
+		public override Expression CreateReturnValueFromManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue)
+		{
+			return sourceValue;
 		}
 	}
 
@@ -307,6 +348,10 @@ namespace Java.Interop {
 			get {return true;}
 		}
 
+		public override Type MarshalType {
+		    get {return typeof (Char);}
+		}
+
 		public override object CreateValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
 		{
 			if (!reference.IsValid)
@@ -345,6 +390,21 @@ namespace Java.Interop {
 			var r   = state.ReferenceValue;
 			JniObjectReference.Dispose (ref r);
 			state   = new JniValueMarshalerState ();
+		}
+
+		public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize, Type targetType)
+		{
+		    return sourceValue;
+		}
+
+		public override Expression CreateParameterFromManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize)
+		{
+			return sourceValue;
+		}
+
+		public override Expression CreateReturnValueFromManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue)
+		{
+			return sourceValue;
 		}
 	}
 
@@ -415,6 +475,10 @@ namespace Java.Interop {
 			get {return true;}
 		}
 
+		public override Type MarshalType {
+		    get {return typeof (Int16);}
+		}
+
 		public override object CreateValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
 		{
 			if (!reference.IsValid)
@@ -453,6 +517,21 @@ namespace Java.Interop {
 			var r   = state.ReferenceValue;
 			JniObjectReference.Dispose (ref r);
 			state   = new JniValueMarshalerState ();
+		}
+
+		public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize, Type targetType)
+		{
+		    return sourceValue;
+		}
+
+		public override Expression CreateParameterFromManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize)
+		{
+			return sourceValue;
+		}
+
+		public override Expression CreateReturnValueFromManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue)
+		{
+			return sourceValue;
 		}
 	}
 
@@ -523,6 +602,10 @@ namespace Java.Interop {
 			get {return true;}
 		}
 
+		public override Type MarshalType {
+		    get {return typeof (Int32);}
+		}
+
 		public override object CreateValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
 		{
 			if (!reference.IsValid)
@@ -561,6 +644,21 @@ namespace Java.Interop {
 			var r   = state.ReferenceValue;
 			JniObjectReference.Dispose (ref r);
 			state   = new JniValueMarshalerState ();
+		}
+
+		public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize, Type targetType)
+		{
+		    return sourceValue;
+		}
+
+		public override Expression CreateParameterFromManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize)
+		{
+			return sourceValue;
+		}
+
+		public override Expression CreateReturnValueFromManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue)
+		{
+			return sourceValue;
 		}
 	}
 
@@ -631,6 +729,10 @@ namespace Java.Interop {
 			get {return true;}
 		}
 
+		public override Type MarshalType {
+		    get {return typeof (Int64);}
+		}
+
 		public override object CreateValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
 		{
 			if (!reference.IsValid)
@@ -669,6 +771,21 @@ namespace Java.Interop {
 			var r   = state.ReferenceValue;
 			JniObjectReference.Dispose (ref r);
 			state   = new JniValueMarshalerState ();
+		}
+
+		public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize, Type targetType)
+		{
+		    return sourceValue;
+		}
+
+		public override Expression CreateParameterFromManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize)
+		{
+			return sourceValue;
+		}
+
+		public override Expression CreateReturnValueFromManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue)
+		{
+			return sourceValue;
 		}
 	}
 
@@ -739,6 +856,10 @@ namespace Java.Interop {
 			get {return true;}
 		}
 
+		public override Type MarshalType {
+		    get {return typeof (Single);}
+		}
+
 		public override object CreateValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
 		{
 			if (!reference.IsValid)
@@ -777,6 +898,21 @@ namespace Java.Interop {
 			var r   = state.ReferenceValue;
 			JniObjectReference.Dispose (ref r);
 			state   = new JniValueMarshalerState ();
+		}
+
+		public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize, Type targetType)
+		{
+		    return sourceValue;
+		}
+
+		public override Expression CreateParameterFromManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize)
+		{
+			return sourceValue;
+		}
+
+		public override Expression CreateReturnValueFromManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue)
+		{
+			return sourceValue;
 		}
 	}
 
@@ -847,6 +983,10 @@ namespace Java.Interop {
 			get {return true;}
 		}
 
+		public override Type MarshalType {
+		    get {return typeof (Double);}
+		}
+
 		public override object CreateValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
 		{
 			if (!reference.IsValid)
@@ -885,6 +1025,21 @@ namespace Java.Interop {
 			var r   = state.ReferenceValue;
 			JniObjectReference.Dispose (ref r);
 			state   = new JniValueMarshalerState ();
+		}
+
+		public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize, Type targetType)
+		{
+		    return sourceValue;
+		}
+
+		public override Expression CreateParameterFromManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize)
+		{
+			return sourceValue;
+		}
+
+		public override Expression CreateReturnValueFromManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue)
+		{
+			return sourceValue;
 		}
 	}
 

@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+
+using Java.Interop.Expressions;
 
 namespace Java.Interop
 {
@@ -523,6 +526,9 @@ namespace Java.Interop
 				if (typeof (IJavaPeerable) == type)
 					return JavaPeerableValueMarshaler.Instance;
 
+				if (typeof (void) == type)
+					return VoidValueMarshaler.Instance;
+
 				foreach (var marshaler in JniBuiltinMarshalers) {
 					if (marshaler.Key == type)
 						return marshaler.Value;
@@ -560,6 +566,30 @@ namespace Java.Interop
 		}
 	}
 
+	class VoidValueMarshaler : JniValueMarshaler {
+
+		internal    static  VoidValueMarshaler              Instance    = new VoidValueMarshaler ();
+
+		public override Type MarshalType {
+			get {return typeof (void);}
+		}
+
+		public override object CreateValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
+		{
+			throw new NotSupportedException ();
+		}
+
+		public override JniValueMarshalerState CreateObjectReferenceArgumentState (object value, ParameterAttributes synchronize)
+		{
+			throw new NotSupportedException ();
+		}
+
+		public override void DestroyArgumentState (object value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
+		{
+			throw new NotSupportedException ();
+		}
+	}
+
 	class JavaPeerableValueMarshaler : JniValueMarshaler<IJavaPeerable> {
 
 		internal    static  JavaPeerableValueMarshaler      Instance    = new JavaPeerableValueMarshaler ();
@@ -586,6 +616,44 @@ namespace Java.Interop
 			var r   = state.ReferenceValue;
 			JniObjectReference.Dispose (ref r);
 			state   = new JniValueMarshalerState ();
+		}
+
+		public override Expression CreateParameterFromManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize)
+		{
+			var r   = Expression.Variable (typeof (JniObjectReference), sourceValue.Name + "_ref");
+			context.LocalVariables.Add (r);
+			context.CreationStatements.Add (
+					Expression.IfThenElse (
+						test:       Expression.Equal (Expression.Constant (null), sourceValue),
+						ifTrue:     Expression.Assign (r, Expression.New (typeof (JniObjectReference))),
+						ifFalse:    Expression.Assign (r, Expression.Property (sourceValue, "PeerReference"))));
+			context.CleanupStatements.Add (DisposeObjectReference (r));
+
+			var h   = Expression.Variable (typeof (IntPtr), sourceValue + "_handle");
+			context.LocalVariables.Add (h);
+			context.CreationStatements.Add (Expression.Assign (h, Expression.Property (r, "Handle")));
+			return h;
+		}
+
+		public override Expression CreateReturnValueFromManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue)
+		{
+			CreateParameterFromManagedExpression (context, sourceValue, 0);
+			var r   = context.LocalVariables [sourceValue + "_ref"];
+			return ReturnObjectReferenceToJni (context, sourceValue.Name, r);
+		}
+
+		public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize, Type targetType)
+		{
+			var r   = Expression.Variable (targetType, sourceValue + "_val");
+			context.LocalVariables.Add (r);
+			context.CreationStatements.Add (
+					Expression.Assign (r,
+						Expression.Call (
+							Expression.Property (context.Runtime, "ValueManager"),
+							"GetValue",
+							new[]{targetType},
+							sourceValue)));
+			return r;
 		}
 	}
 

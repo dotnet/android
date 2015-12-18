@@ -6,7 +6,10 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq.Expressions;
 using System.Reflection;
+
+using Java.Interop.Expressions;
 
 namespace Java.Interop {
 <#
@@ -95,6 +98,10 @@ namespace Java.Interop {
 			get {return true;}
 		}
 
+		public override Type MarshalType {
+		    get {return typeof (<#= type.Type #>);}
+		}
+
 		public override object CreateValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
 		{
 			if (!reference.IsValid)
@@ -133,6 +140,21 @@ namespace Java.Interop {
 			var r   = state.ReferenceValue;
 			JniObjectReference.Dispose (ref r);
 			state   = new JniValueMarshalerState ();
+		}
+
+		public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize, Type targetType)
+		{
+		    return sourceValue;
+		}
+
+		public override Expression CreateParameterFromManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize)
+		{
+			return sourceValue;
+		}
+
+		public override Expression CreateReturnValueFromManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue)
+		{
+			return sourceValue;
 		}
 	}
 

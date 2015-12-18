@@ -1,9 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 
 using Java.Interop;
+using Java.Interop.Expressions;
+
+using Mono.Linq.Expressions;
 
 using NUnit.Framework;
 
@@ -413,6 +417,46 @@ namespace Java.InteropTests {
 		readonly    IJavaPeerable      value   = new JavaObject ();
 
 		protected   override    IJavaPeerable       Value   {get {return value;}}
+
+		[Test]
+		public void CreateReturnValueFromManagedExpression ()
+		{
+			var runtime = Expression.Variable (typeof (JniRuntime), "__jvm");
+			var value   = Expression.Variable (typeof (IJavaPeerable), "__value");
+			var context = new JniValueMarshalerContext (runtime) {
+				LocalVariables  = {
+					runtime,
+					value,
+				},
+			};
+			marshaler.CreateReturnValueFromManagedExpression (context, value);
+			var expected = @"{
+	JniRuntime __jvm;
+	IJavaPeerable __value;
+	JniObjectReference __value_ref;
+	IntPtr __value_handle;
+	IntPtr __value_rtn;
+
+	if (null == __value)
+	{
+		return __value_ref = new JniObjectReference();
+	}
+	else
+	{
+		return __value_ref = __value.PeerReference;
+	}
+	__value_handle = __value_ref.Handle;
+	__value_rtn = References.NewReturnToJniRef(__value_ref);
+	JniObjectReference.Dispose(__value_ref);
+}";
+			CheckExpression (context, expected);
+		}
+
+		static void CheckExpression (JniValueMarshalerContext context, string expected)
+		{
+			var block   = Expression.Block (context.LocalVariables, context.CreationStatements.Concat (context.CleanupStatements));
+			Assert.AreEqual (expected, block.ToCSharpCode ());
+		}
 	}
 }
 
