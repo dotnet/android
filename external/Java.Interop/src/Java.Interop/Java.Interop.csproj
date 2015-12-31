@@ -118,7 +118,6 @@
     <Compile Include="Java.Interop\JniGlobalReference.cs" />
     <Compile Include="Java.Interop\JniLocalReference.cs" />
     <Compile Include="Java.Interop\JniMarshal.cs" />
-    <Compile Include="Java.Interop\JniMarshalMethod.cs" />
     <Compile Include="Java.Interop\JniPeerMembers.JniMethods.cs">
       <DependentUpon>JniPeerMembers.JniMethods.tt</DependentUpon>
     </Compile>

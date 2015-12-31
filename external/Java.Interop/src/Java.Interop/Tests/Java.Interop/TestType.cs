@@ -20,7 +20,7 @@ namespace Java.InteropTests
 					new JniNativeMethodRegistration ("equalsThis", "(Ljava/lang/Object;)Z", GetEqualsThisHandler ()),
 					new JniNativeMethodRegistration ("getInt32Value", "()I", GetInt32ValueHandler ()),
 					new JniNativeMethodRegistration ("getStringValue", "(I)Ljava/lang/String;", _GetStringValueHandler ()),
-					new JniNativeMethodRegistration ("methodThrows", "()V", (Action<IntPtr, IntPtr>) MethodThrowsHandler));
+					new JniNativeMethodRegistration ("methodThrows", "()V", GetMethodThrowsHandler ()));
 		}
 
 		public override JniPeerMembers JniPeerMembers {
@@ -98,7 +98,7 @@ namespace Java.InteropTests
 					value.DisposeUnlessRegistered ();
 				}
 			};
-			return h;
+			return JniEnvironment.Runtime.ExportedMemberBuilder.CreateMarshalToManagedDelegate (h);
 		}
 
 		static Delegate GetInt32ValueHandler ()
@@ -112,13 +112,13 @@ namespace Java.InteropTests
 					self.DisposeUnlessRegistered ();
 				}
 			};
-			return h;
+			return JniEnvironment.Runtime.ExportedMemberBuilder.CreateMarshalToManagedDelegate (h);
 		}
 
 		static Delegate _GetStringValueHandler ()
 		{
 			Func<IntPtr, IntPtr, int, IntPtr> h = GetStringValueHandler;
-			return h;
+			return JniEnvironment.Runtime.ExportedMemberBuilder.CreateMarshalToManagedDelegate (h);
 		}
 
 		static IntPtr GetStringValueHandler (IntPtr jnienv, IntPtr n_self, int value)
@@ -136,6 +136,12 @@ namespace Java.InteropTests
 			} finally {
 				self.DisposeUnlessRegistered ();
 			}
+		}
+
+		static Delegate GetMethodThrowsHandler ()
+		{
+			Action<IntPtr, IntPtr> h = MethodThrowsHandler;
+			return JniEnvironment.Runtime.ExportedMemberBuilder.CreateMarshalToManagedDelegate (h);
 		}
 
 		static void MethodThrowsHandler (IntPtr jnienv, IntPtr n_self)

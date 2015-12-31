@@ -40,9 +40,9 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 			return builder.CreateJreVM ();
 		}
 
-		static ExportedMemberBuilder CreateExportedMemberBuilder ()
+		static JniRuntime.JniExportedMemberBuilder CreateExportedMemberBuilder ()
 		{
-			return new ExportedMemberBuilder (JniEnvironment.Runtime);
+			return JniEnvironment.Runtime.ExportedMemberBuilder;
 		}
 
 		static void CreateMarshalMethodAssembly (string path)
@@ -77,7 +77,7 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 					var mb = dt.DefineMethod (
 							method.Name,
 							MethodAttributes.Public | MethodAttributes.Static);
-					var lambda  = builder.CreateMarshalFromJniMethodExpression (export, type, method);
+					var lambda  = builder.CreateMarshalToManagedExpression (method);
 					lambda.CompileToMethod (mb);
 				}
 				if (dt != null)

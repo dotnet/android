@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 
@@ -140,12 +139,6 @@ namespace Java.Interop {
 
 			if (methods == null)
 				throw new ArgumentNullException ("methods");
-
-#if !XA_INTEGRATION
-			for (int i = 0; i < methods.Length; ++i) {
-				methods [i].Marshaler = JniMarshalMethod.Wrap  (methods [i].Marshaler);
-			}
-#endif  // !XA_INTEGRATION
 
 			JniEnvironment.Types.RegisterNatives (PeerReference, methods, checked ((int)methods.Length));
 			// Prevents method delegates from being GC'd so long as this type remains

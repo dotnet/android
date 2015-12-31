@@ -36,7 +36,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JavaVMFixture.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JniEnvironmentTests.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JniInstanceMethodIDTest.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JniMarshalMethodTests.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JniMarshalTests.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JniPeerMembersTests.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JniTransitionTest.cs" />

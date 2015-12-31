@@ -24,6 +24,14 @@ namespace Java.Interop {
 			OnSetRuntime (runtime);
 		}
 
+		public override LambdaExpression CreateMarshalToManagedExpression (MethodInfo method)
+		{
+			if (method == null)
+				throw new ArgumentNullException (nameof (method));
+
+			return CreateMarshalToManagedExpression (method, null, method.DeclaringType);
+		}
+
 		public override IEnumerable<JniNativeMethodRegistration> GetExportedMemberRegistrations (Type declaringType)
 		{
 			if (declaringType == null)
@@ -38,16 +46,14 @@ namespace Java.Interop {
 				if (exports == null || exports.Length == 0)
 					continue;
 				var export  = exports [0];
-				yield return CreateMarshalFromJniMethodRegistration (export, declaringType, method);
+				yield return CreateMarshalToManagedMethodRegistration (export, method, declaringType);
 			}
 		}
 
-		public JniNativeMethodRegistration CreateMarshalFromJniMethodRegistration (JavaCallableAttribute export, Type type, MethodInfo method)
+		public JniNativeMethodRegistration CreateMarshalToManagedMethodRegistration (JavaCallableAttribute export, MethodInfo method, Type type = null)
 		{
 			if (export == null)
 				throw new ArgumentNullException ("export");
-			if (type == null)
-				throw new ArgumentNullException ("type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
 
@@ -55,16 +61,16 @@ namespace Java.Interop {
 			return new JniNativeMethodRegistration () {
 				Name        = GetJniMethodName (export, method),
 				Signature   = signature,
-				Marshaler   = CreateJniMethodMarshaler (export, type, method),
+				Marshaler   = CreateJniMethodMarshaler (method, export, type),
 			};
 		}
 
-		protected virtual string GetJniMethodName (JavaCallableAttribute export, MethodInfo method)
+		string GetJniMethodName (JavaCallableAttribute export, MethodInfo method)
 		{
 			return export.Name ?? "n_" + method.Name;
 		}
 
-		public virtual string GetJniMethodSignature (JavaCallableAttribute export, MethodInfo method)
+		public string GetJniMethodSignature (JavaCallableAttribute export, MethodInfo method)
 		{
 			if (export == null)
 				throw new ArgumentNullException ("export");
@@ -75,7 +81,8 @@ namespace Java.Interop {
 				return export.Signature;
 
 			var signature = new StringBuilder ().Append ("(");
-			foreach (var p in method.GetParameters ()) {
+			var methodParameters    = method.GetParameters ();
+			foreach (var p in IsDirectMethod (methodParameters) ? methodParameters.Skip (2) : methodParameters) {
 				signature.Append (GetTypeSignature (p));
 			}
 			signature.Append (")");
@@ -97,28 +104,26 @@ namespace Java.Interop {
 			throw new NotSupportedException ("Don't know how to determine JNI signature for parameter type: " + p.ParameterType.FullName + ".");
 		}
 
-		Delegate CreateJniMethodMarshaler (JavaCallableAttribute export, Type type, MethodInfo method)
+		Delegate CreateJniMethodMarshaler (MethodInfo method, JavaCallableAttribute export, Type type)
 		{
-			var e = CreateMarshalFromJniMethodExpression (export, type, method);
+			var e = CreateMarshalToManagedExpression (method, export, type);
 			return e.Compile ();
 		}
 
-		// TODO: make internal, and add [InternalsVisibleTo] for Java.Interop.Export-Tests
-		public virtual LambdaExpression CreateMarshalFromJniMethodExpression (JavaCallableAttribute export, Type type, MethodInfo method)
+		public LambdaExpression CreateMarshalToManagedExpression (MethodInfo method, JavaCallableAttribute callable, Type type = null)
 		{
-			if (export == null)
-				throw new ArgumentNullException ("export");
-			if (type == null)
-				throw new ArgumentNullException ("type");
 			if (method == null)
 				throw new ArgumentNullException ("method");
+			type        = type ?? method.DeclaringType;
 
 			var methodParameters = method.GetParameters ();
 
-			CheckMarshalTypesMatch (method, export.Signature, methodParameters);
+			CheckMarshalTypesMatch (method, callable?.Signature, methodParameters);
 
-			var jnienv  = Expression.Parameter (typeof (IntPtr), "__jnienv");
-			var context = Expression.Parameter (typeof (IntPtr), method.IsStatic ? "__class" : "__this");
+			bool direct = IsDirectMethod (methodParameters);
+
+			var jnienv  = Expression.Parameter (typeof (IntPtr), direct ? methodParameters [0].Name : "__jnienv");
+			var context = Expression.Parameter (typeof (IntPtr), direct ? methodParameters [1].Name : (method.IsStatic ? "__class" : "__this"));
 
 			var envp        = Expression.Variable (typeof (JniTransition), "__envp");
 			var jvm         = Expression.Variable (typeof (JniRuntime), "__jvm");
@@ -146,7 +151,17 @@ namespace Java.Interop {
 			var invokeParameters    = new List<Expression> (methodParameters.Length);
 			for (int i = 0; i < methodParameters.Length; ++i) {
 				var marshaler   = GetValueMarshaler (methodParameters [i]);
-				var np          = Expression.Parameter (marshaler.MarshalType, methodParameters [i].Name);
+				ParameterExpression np;
+				if (i > 1 || !direct)
+					np = Expression.Parameter (marshaler.MarshalType, methodParameters [i].Name);
+				else {
+					if (i == 0)
+						np = jnienv;
+					else if (i == 1)
+						np = context;
+					else
+						throw new InvalidOperationException ("Should not be reached.");
+				}
 				var p           = marshaler.CreateParameterToManagedExpression (marshalerContext, np, methodParameters [i].Attributes, methodParameters [i].ParameterType);
 				marshalParameters.Add (np);
 				invokeParameters.Add (p);
@@ -190,10 +205,14 @@ namespace Java.Interop {
 				envpBody.Add (Expression.Label (exit, Expression.Default (jniRType)));
 			}
 
-			var funcTypeParams = new List<Type> () {
-				typeof (IntPtr),
-				typeof (IntPtr),
-			};
+			var funcTypeParams  = new List<Type> ();
+			var bodyParams      = new List<ParameterExpression> ();
+			if (!direct) {
+				funcTypeParams.Add (typeof (IntPtr));
+				funcTypeParams.Add (typeof (IntPtr));
+				bodyParams.Add (jnienv);
+				bodyParams.Add (context);
+			}
 			foreach (var p in marshalParameters)
 				funcTypeParams.Add (p.Type);
 			if (ret != null)
@@ -202,14 +221,24 @@ namespace Java.Interop {
 				? Expression.GetActionType (funcTypeParams.ToArray ())
 				: Expression.GetFuncType (funcTypeParams.ToArray ());
 
-			var bodyParams = new List<ParameterExpression> { jnienv, context };
 			bodyParams.AddRange (marshalParameters);
 			var body = Expression.Block (envpVars, envpBody);
 			return Expression.Lambda (marshalerType, body, bodyParams);
 		}
 
+		// Heuristic: if first two parameters are IntPtr, this is a "direct" wrapper.
+		static bool IsDirectMethod (ParameterInfo[] methodParameters)
+		{
+			return methodParameters.Length >= 2 &&
+				methodParameters [0].ParameterType == typeof (IntPtr) &&
+				methodParameters [1].ParameterType == typeof (IntPtr);
+		}
+
 		JniValueMarshaler GetValueMarshaler (ParameterInfo parameter)
 		{
+			if (parameter.ParameterType == typeof(IntPtr))
+				return IntPtrValueMarshaler.Instance;
+
 			var attr = parameter.GetCustomAttribute<JniValueMarshalerAttribute> ();
 			if (attr != null) {
 				return (JniValueMarshaler) Activator.CreateInstance (attr.MarshalerType);
@@ -223,8 +252,14 @@ namespace Java.Interop {
 				return;
 
 			var mptypes = JniSignature.GetMarshalParameterTypes (signature).ToList ();
+			int rpcount = methodParameters.Length;
 			int len     = Math.Min (methodParameters.Length, mptypes.Count);
-			for (int i = 0; i < len; ++i) {
+			int start   = 0;
+			if (IsDirectMethod (methodParameters)) {
+				start   += 2;
+				rpcount -= 2;
+			}
+			for (int i = start; i < len; ++i) {
 				var vm  = GetValueMarshaler (methodParameters [i]);
 				var jni = vm.MarshalType;
 				if (mptypes [i] != jni)
@@ -233,11 +268,11 @@ namespace Java.Interop {
 							"signature");
 			}
 
-			if (mptypes.Count != methodParameters.Length)
+			if (mptypes.Count != rpcount)
 				throw new ArgumentException (
 						string.Format ("JNI parametr count mismatch: signature contains {0} parameters, method contains {1}.",
 							mptypes.Count, methodParameters.Length),
-						"signature");
+						nameof (signature));
 
 			var jrinfo = JniSignature.GetMarshalReturnType (signature);
 			var mrvm   = GetValueMarshaler (method.ReturnParameter);
@@ -245,19 +280,20 @@ namespace Java.Interop {
 			if (mrinfo != jrinfo)
 				throw new ArgumentException (
 						string.Format ("JNI return type mismatch. Type '{0}' != '{1}'.", jrinfo, mrinfo),
-						"signature");
+						nameof (signature));
 		}
+
+		static ConstructorInfo  JniTransitionConstructor    =
+			(from c in typeof (JniTransition).GetTypeInfo ().DeclaredConstructors
+			 let  p = c.GetParameters ()
+			 where p.Length == 1 && p [0].ParameterType == typeof (IntPtr)
+			 select c)
+			.First ();
 
 		static Expression CreateJniTransition (ParameterExpression jnienv)
 		{
-			var ctor =
-				(from c in typeof(JniTransition).GetTypeInfo ().DeclaredConstructors
-				 let p = c.GetParameters ()
-				 where p.Length == 1 && p [0].ParameterType == typeof (IntPtr)
-				 select c)
-				.First ();
 			return Expression.New (
-					ctor,
+					JniTransitionConstructor,
 					jnienv);
 		}
 
@@ -362,6 +398,66 @@ namespace Java.Interop {
 				throw new ArgumentException ("Unknown JNI Type '" + signature [i] + "' within: " + signature, "signature");
 			}
 			#endif
+		}
+	}
+
+	class IntPtrValueMarshaler : JniValueMarshaler<IntPtr> {
+		internal    static  IntPtrValueMarshaler Instance = new IntPtrValueMarshaler ();
+
+		public override Expression CreateParameterFromManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize)
+		{
+			return sourceValue;
+		}
+
+		public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize, Type targetType)
+		{
+			return sourceValue;
+		}
+
+		public override Expression CreateReturnValueFromManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue)
+		{
+			return sourceValue;
+		}
+
+
+		public override object CreateValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
+		{
+			throw new NotImplementedException ();
+		}
+
+		public override IntPtr CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
+		{
+			throw new NotImplementedException ();
+		}
+
+		public override JniValueMarshalerState CreateArgumentState (object value, ParameterAttributes synchronize)
+		{
+			throw new NotSupportedException ();
+		}
+
+		public override JniValueMarshalerState CreateGenericArgumentState (IntPtr value, ParameterAttributes synchronize)
+		{
+			throw new NotSupportedException ();
+		}
+
+		public override JniValueMarshalerState CreateObjectReferenceArgumentState (object value, ParameterAttributes synchronize)
+		{
+			throw new NotImplementedException ();
+		}
+
+		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState (IntPtr value, ParameterAttributes synchronize)
+		{
+			throw new NotImplementedException ();
+		}
+
+		public override void DestroyArgumentState (object value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
+		{
+			throw new NotImplementedException ();
+		}
+
+		public override void DestroyGenericArgumentState (IntPtr value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
+		{
+			throw new NotImplementedException ();
 		}
 	}
 }

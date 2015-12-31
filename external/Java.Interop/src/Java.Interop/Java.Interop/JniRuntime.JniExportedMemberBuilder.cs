@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Reflection;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 
 namespace Java.Interop {
 
@@ -52,7 +53,15 @@ namespace Java.Interop {
 				Runtime = runtime;
 			}
 
-			public abstract IEnumerable<JniNativeMethodRegistration> GetExportedMemberRegistrations (Type declaringType);
+			public  Delegate                                                CreateMarshalToManagedDelegate (Delegate value)
+			{
+				if (value == null)
+					throw new ArgumentNullException (nameof (value));
+				return CreateMarshalToManagedExpression (value.GetMethodInfo ()).Compile ();
+			}
+
+			public  abstract    LambdaExpression                            CreateMarshalToManagedExpression (MethodInfo method);
+			public  abstract    IEnumerable<JniNativeMethodRegistration>    GetExportedMemberRegistrations (Type declaringType);
 		}
 	}
 }

@@ -104,8 +104,14 @@ namespace Java.InteropTests
 			Action<string> s    = v => {};
 			Assert.AreEqual ("(Ljava/lang/String;)V", builder.GetJniMethodSignature (new JavaCallableAttribute (), s.Method));
 
+			Action<IntPtr, IntPtr, string> ds   = (e, c, v) => {};
+			Assert.AreEqual ("(Ljava/lang/String;)V", builder.GetJniMethodSignature (new JavaCallableAttribute (), ds.Method));
+
 			Func<string> fs     = () => null;
 			Assert.AreEqual ("()Ljava/lang/String;", builder.GetJniMethodSignature (new JavaCallableAttribute (), fs.Method));
+
+			Func<IntPtr, IntPtr, string> dfs     = (e, c) => null;
+			Assert.AreEqual ("()Ljava/lang/String;", builder.GetJniMethodSignature (new JavaCallableAttribute (), dfs.Method));
 
 			// Note: AppDomain currently has no builtin marshaling defaults
 			// TODO: but should it? We could default wrap to JavaProxyObject...?
@@ -117,48 +123,38 @@ namespace Java.InteropTests
 		}
 
 		[Test]
-		public void CreateMarshalFromJniMethodRegistration_NullChecks ()
+		public void CreateMarshalToManagedExpression_NullChecks ()
 		{
 			Action a    = ExportTest.StaticAction;
 			var builder = CreateBuilder ();
-			Assert.Throws<ArgumentNullException> (() => builder.CreateMarshalFromJniMethodRegistration (null, typeof (ExportTest), a.Method));
-			Assert.Throws<ArgumentNullException> (() => builder.CreateMarshalFromJniMethodRegistration (new JavaCallableAttribute (null), null, a.Method));
-			Assert.Throws<ArgumentNullException> (() => builder.CreateMarshalFromJniMethodRegistration (new JavaCallableAttribute (null), typeof (ExportTest), null));
+			Assert.Throws<ArgumentNullException> (() => builder.CreateMarshalToManagedExpression (null));
+			builder.CreateMarshalToManagedExpression (a.Method, null);
+			builder.CreateMarshalToManagedExpression (a.Method, null, null);
 		}
 
 		[Test]
-		public void CreateInvocationExpression_NullChecks ()
-		{
-			Action    a = ExportTest.StaticAction;
-			var builder = CreateBuilder ();
-			Assert.Throws<ArgumentNullException> (() => builder.CreateMarshalFromJniMethodExpression (null, typeof (ExportTest), a.Method));
-			Assert.Throws<ArgumentNullException> (() => builder.CreateMarshalFromJniMethodExpression (new JavaCallableAttribute (null), null, a.Method));
-			Assert.Throws<ArgumentNullException> (() => builder.CreateMarshalFromJniMethodExpression (new JavaCallableAttribute (null), typeof (ExportTest), null));
-		}
-
-		[Test]
-		public void CreateMarshalFromJniMethodExpression_SignatureMismatch ()
+		public void CreateMarshalToManagedExpression_SignatureMismatch ()
 		{
 			Action<int, string> a   = ExportTest.StaticActionInt32String;
 			var builder             = CreateBuilder ();
 
 			// Parameter count mismatch: 0 != 2
-			Assert.Throws<ArgumentException>(() => builder.CreateMarshalFromJniMethodExpression (
-					new JavaCallableAttribute () { Signature = "()V" }, a.Method.DeclaringType, a.Method));
+			Assert.Throws<ArgumentException>(() => builder.CreateMarshalToManagedExpression (
+					a.Method, new JavaCallableAttribute () { Signature = "()V" }, a.Method.DeclaringType));
 			// Parameter count mismatch: 1 != 2
-			Assert.Throws<ArgumentException>(() => builder.CreateMarshalFromJniMethodExpression (
-					new JavaCallableAttribute () { Signature = "(I)V" }, a.Method.DeclaringType, a.Method));
+			Assert.Throws<ArgumentException>(() => builder.CreateMarshalToManagedExpression (
+					a.Method, new JavaCallableAttribute () { Signature = "(I)V" }, a.Method.DeclaringType));
 			// Parameter type mismatch: (int, int) != (int, string)
-			Assert.Throws<ArgumentException>(() => builder.CreateMarshalFromJniMethodExpression (
-					new JavaCallableAttribute () { Signature = "(II)V" }, a.Method.DeclaringType, a.Method));
+			Assert.Throws<ArgumentException>(() => builder.CreateMarshalToManagedExpression (
+					a.Method, new JavaCallableAttribute () { Signature = "(II)V" }, a.Method.DeclaringType));
 			// return type mismatch: int != void
-			Assert.Throws<ArgumentException>(() => builder.CreateMarshalFromJniMethodExpression (
-					new JavaCallableAttribute () { Signature = "(ILjava/lang/String;)I" }, a.Method.DeclaringType, a.Method));
+			Assert.Throws<ArgumentException>(() => builder.CreateMarshalToManagedExpression (
+					a.Method, new JavaCallableAttribute () { Signature = "(ILjava/lang/String;)I" }, a.Method.DeclaringType));
 			// invalid JNI signatures
-			Assert.Throws<ArgumentException>(() => builder.CreateMarshalFromJniMethodExpression (
-					new JavaCallableAttribute () { Signature = "(IL)I" }, a.Method.DeclaringType, a.Method));
-			Assert.Throws<ArgumentException>(() => builder.CreateMarshalFromJniMethodExpression (
-					new JavaCallableAttribute () { Signature = "(I[)I" }, a.Method.DeclaringType, a.Method));
+			Assert.Throws<ArgumentException>(() => builder.CreateMarshalToManagedExpression (
+					a.Method, new JavaCallableAttribute () { Signature = "(IL)I" }, a.Method.DeclaringType));
+			Assert.Throws<ArgumentException>(() => builder.CreateMarshalToManagedExpression (
+					a.Method, new JavaCallableAttribute () { Signature = "(I[)I" }, a.Method.DeclaringType));
 		}
 
 		[Test]
@@ -195,7 +191,7 @@ namespace Java.InteropTests
 		{
 			export  = export ?? new JavaCallableAttribute ();
 			var b   = CreateBuilder ();
-			var l   = b.CreateMarshalFromJniMethodExpression (export, type, method);
+			var l   = b.CreateMarshalToManagedExpression (method, export, type);
 			Console.WriteLine ("## method: {0}", method.Name);
 			Console.WriteLine (l.ToCSharpCode ());
 			var da = AppDomain.CurrentDomain.DefineDynamicAssembly(
@@ -404,5 +400,39 @@ namespace Java.InteropTests
 	}
 }");
 		}
+
+		static void DirectInvocation (IntPtr jnienv, IntPtr context)
+		{
+		}
+
+		[Test]
+		public void CreateMarshalToManagedExpression_DirectMethod ()
+		{
+			Action<IntPtr, IntPtr> a = DirectInvocation;
+			var e = new JavaCallableAttribute () {
+				Signature = "()V",
+			};
+			CheckCreateInvocationExpression (e, a.Method.DeclaringType, a.Method, typeof (Action<IntPtr, IntPtr>),
+				@"void (IntPtr jnienv, IntPtr context)
+{
+	JniTransition __envp;
+	JniRuntime __jvm;
+
+	__envp = new JniTransition(jnienv);
+	try
+	{
+		__jvm = JniEnvironment.Runtime;
+		ExportedMemberBuilderTest.DirectInvocation(jnienv, context);
 	}
+	catch (Exception __e)
+	{
+		__envp.SetPendingException(__e);
+	}
+	finally
+	{
+		__envp.Dispose();
+	}
+}");
+		}
+			}
 }
