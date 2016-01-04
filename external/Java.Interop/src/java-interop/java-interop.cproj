@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{BB0AB9F7-0979-41A7-B7A9-877260655F94}</ProjectGuid>
+    <Compiler>
+      <Compiler ctype="GccCompiler" />
+    </Compiler>
+    <Language>C</Language>
+    <Target>Bin</Target>
+    <MacJdkHeadersPath>..\..\LocalJDK\System\Library\Frameworks\JavaVM.framework\Versions\A\Headers</MacJdkHeadersPath>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>..\..\bin\Debug</OutputPath>
+    <OutputName>java-interop</OutputName>
+    <CompileTarget>SharedLibrary</CompileTarget>
+    <DefineSymbols>DEBUG MONODEVELOP</DefineSymbols>
+    <SourceDirectory>.</SourceDirectory>
+    <CustomCommands>
+      <CustomCommands>
+        <Command type="AfterBuild" command="cp &quot;bin/Debug/libjava-interop.so&quot; &quot;bin/Debug/libjava-interop.dylib&quot;" workingdir="${SolutionDir}" />
+      </CustomCommands>
+    </CustomCommands>
+    <Includes>
+      <Includes>
+        <Include>/Library/Frameworks/Mono.framework/Headers/mono-2.0</Include>
+        <Include>${CombineDir}/LocalJDK/System/Library/Frameworks/JavaVM.framework/Versions/A/Headers</Include>
+      </Includes>
+    </Includes>
+    <ExtraCompilerArguments>-F /Library/Frameworks -framework Mono</ExtraCompilerArguments>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <OutputPath>..\..\bin\Release</OutputPath>
+    <OutputName>java-interop</OutputName>
+    <CompileTarget>SharedLibrary</CompileTarget>
+    <OptimizationLevel>3</OptimizationLevel>
+    <DefineSymbols>MONODEVELOP</DefineSymbols>
+    <SourceDirectory>.</SourceDirectory>
+    <CustomCommands>
+      <CustomCommands>
+        <Command type="AfterBuild" command="cp &quot;bin/Release/libjava-interop.so&quot; &quot;bin/Release/libjava-interop.dylib&quot;" workingdir="${SolutionDir}" />
+      </CustomCommands>
+    </CustomCommands>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="java-interop.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="mono-jni-bridge.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <Framework Include="Mono" />
+  </ItemGroup>
+  <ItemGroup>
+    <Include Include="\Library\Frameworks\Mono.framework\Headers\mono-2.0" />
+  </ItemGroup>
+  <Target Name="Build" DependsOnTargets="BuildMac" />
+  <Target Name="BuildMac" Condition=" '$(OS)' != 'Windows_NT' ">
+    <PropertyGroup>
+      <_FixedDefines>$(DefineSymbols.Replace(' ', ';'))</_FixedDefines>
+    </PropertyGroup>
+    <ItemGroup>
+      <_Defines Include="$(_FixedDefines)" />
+    </ItemGroup>
+    <Exec Command="gcc -g -shared -o &quot;$(OutputPath)\lib$(OutputName).dylib&quot; @(_Defines -&gt; '-D%(Identity)', ' ') @(Compile -&gt; '%(Identity)', ' ') -F /Library/Frameworks @(Framework -&gt; '-framework %(Identity)', ' ') -m32 -I $(MacJdkHeadersPath) @(Include-&gt;'-I %(Identity)', ' ')" />
+  </Target>
+</Project>
