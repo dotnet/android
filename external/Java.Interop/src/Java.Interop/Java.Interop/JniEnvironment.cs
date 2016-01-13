@@ -31,6 +31,11 @@ namespace Java.Interop {
 			get {return Info.Value.LocalReferenceCount;}
 		}
 
+		public      static  bool                    WithinNewObjectScope {
+			get {return Info.Value.WithinNewObjectScope;}
+			internal set {Info.Value.WithinNewObjectScope = value;}
+		}
+
 		internal    static  void    SetEnvironmentPointer (IntPtr environmentPointer)
 		{
 			Info.Value.EnvironmentPointer   = environmentPointer;
@@ -170,6 +175,7 @@ namespace Java.Interop {
 
 		public      JniRuntime              Runtime                 {get; private set;}
 		public      int                     LocalReferenceCount     {get; internal set;}
+		public      bool                    WithinNewObjectScope    {get; set;}
 
 		public      IntPtr                  EnvironmentPointer {
 			get {return environmentPointer;}

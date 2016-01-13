@@ -233,7 +233,8 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = ObjectOperationsCategory,
 				Name          = "NewObject",
-				Visibility    = "public",
+				ApiName       = "_NewObject",
+				Visibility    = "internal",
 				Throws        = true,
 				Prototype     = "jobject     (*NewObject)(JNIEnv*, jclass, jmethodID, ...);",
 				ReturnType    = "jobject",
@@ -251,8 +252,8 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = ObjectOperationsCategory,
 				Name          = "NewObjectA",
-				ApiName       = "NewObject",
-				Visibility    = "public",
+				ApiName       = "_NewObject",
+				Visibility    = "internal",
 				Throws        = true,
 				Prototype     = "jobject     (*NewObjectA)(JNIEnv*, jclass, jmethodID, jvalue*);",
 				ReturnType    = "jobject",
