@@ -28,11 +28,20 @@
     <Includes>
       <Includes>
         <Include>/Library/Frameworks/Mono.framework/Headers/mono-2.0</Include>
-        <Include>${CombineDir}/LocalJDK/System/Library/Frameworks/JavaVM.framework/Versions/A/Headers</Include>
+        <Include>../../LocalJDK/System/Library/Frameworks/JavaVM.framework/Versions/A/Headers</Include>
       </Includes>
     </Includes>
-    <ExtraLinkerArguments>-m32 -L /Library/Frameworks/Mono.framework/Libraries -lmonosgen-2.0</ExtraLinkerArguments>
-    <ExtraCompilerArguments>-m32 -fvisibility=hidden</ExtraCompilerArguments>
+    <ExtraLinkerArguments>-m32
+-L /Library/Frameworks/Mono.framework/Libraries
+-lmonosgen-2.0</ExtraLinkerArguments>
+    <ExtraCompilerArguments>-m32
+-fvisibility=hidden
+-Wall
+-Wextra
+-Wshadow
+-Wno-missing-field-initializers
+-Wno-zero-length-array
+</ExtraCompilerArguments>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <OutputPath>..\..\bin\Release</OutputPath>
