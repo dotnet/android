@@ -4,6 +4,8 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using System.Threading;
 
 using Java.Interop.Expressions;
 
@@ -19,10 +21,15 @@ namespace Java.Interop
 
 		partial void SetValueManager (CreationOptions options)
 		{
-			ValueManager  = SetRuntime (options.ValueManager ?? new JniValueManager ());
+			var manager     = options.ValueManager;
+			if (manager == null)
+				throw new ArgumentException (
+						"No JniValueManager specified in JniRuntime.CreationOptions.ValueManager.",
+						nameof (options));
+			ValueManager    = SetRuntime (manager);
 		}
 
-		public partial class JniValueManager : ISetRuntime, IDisposable {
+		public abstract partial class JniValueManager : ISetRuntime, IDisposable {
 
 			public      JniRuntime  Runtime { get; private set; }
 
@@ -47,10 +54,14 @@ namespace Java.Interop
 
 				foreach (var o in RegisteredInstances.Values) {
 					var t = (IDisposable) o.Target;
+					if (t == null)
+						continue;
 					t.Dispose ();
 				}
 				RegisteredInstances.Clear ();
 			}
+
+			public abstract void WaitForGCBridgeProcessing ();
 
 			Dictionary<int, WeakReference>  RegisteredInstances = new Dictionary<int, WeakReference>();
 

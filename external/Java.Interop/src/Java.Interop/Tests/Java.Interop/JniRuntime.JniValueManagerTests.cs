@@ -12,7 +12,7 @@ namespace Java.InteropTests {
 		[Test]
 		public void CreateValue ()
 		{
-			using (var vm  = new JniRuntime.JniValueManager ())
+			using (var vm  = new MyValueManager ())
 			using (var o = new JavaObject ()) {
 				vm.OnSetRuntime (JniRuntime.CurrentRuntime);
 
@@ -24,6 +24,13 @@ namespace Java.InteropTests {
 				x = vm.CreateValue<IJavaPeerable> (ref r, JniObjectReferenceOptions.Copy);
 				Assert.AreNotSame (o, x);
 				x.Dispose ();
+			}
+		}
+
+		class MyValueManager : JniRuntime.JniValueManager {
+
+			public override void WaitForGCBridgeProcessing ()
+			{
 			}
 		}
 

@@ -38,6 +38,9 @@ namespace Java.Interop {
 					Path.GetDirectoryName (typeof (JreRuntimeOptions).Assembly.Location),
 					"java-interop.jar"),
 			};
+
+			if (ValueManager == null && Type.GetType ("Mono.Runtime", throwOnError: false) != null)
+				ValueManager    = new MonoRuntimeValueManager ();
 		}
 
 		public JreRuntimeOptions AddOption (string option)

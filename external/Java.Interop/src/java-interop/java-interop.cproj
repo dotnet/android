@@ -18,7 +18,7 @@
     <OutputPath>..\..\bin\Debug</OutputPath>
     <OutputName>java-interop</OutputName>
     <CompileTarget>SharedLibrary</CompileTarget>
-    <DefineSymbols>DEBUG MONODEVELOP</DefineSymbols>
+    <DefineSymbols>DEBUG MONODEVELOP MONO_DLL_EXPORT</DefineSymbols>
     <SourceDirectory>.</SourceDirectory>
     <CustomCommands>
       <CustomCommands>
@@ -31,7 +31,8 @@
         <Include>${CombineDir}/LocalJDK/System/Library/Frameworks/JavaVM.framework/Versions/A/Headers</Include>
       </Includes>
     </Includes>
-    <ExtraCompilerArguments>-F /Library/Frameworks -framework Mono</ExtraCompilerArguments>
+    <ExtraLinkerArguments>-m32 -L /Library/Frameworks/Mono.framework/Libraries -lmonosgen-2.0</ExtraLinkerArguments>
+    <ExtraCompilerArguments>-m32 -fvisibility=hidden</ExtraCompilerArguments>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <OutputPath>..\..\bin\Release</OutputPath>
@@ -48,9 +49,13 @@
   </PropertyGroup>
   <ItemGroup>
     <None Include="java-interop.h" />
+    <None Include="java-interop-gc-bridge.h" />
+    <None Include="java-interop-mono.h" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="mono-jni-bridge.c" />
+    <Compile Include="java-interop.c" />
+    <Compile Include="java-interop-mono.c" />
+    <Compile Include="java-interop-gc-bridge-mono.c" />
   </ItemGroup>
   <ItemGroup>
     <Framework Include="Mono" />
@@ -66,6 +71,6 @@
     <ItemGroup>
       <_Defines Include="$(_FixedDefines)" />
     </ItemGroup>
-    <Exec Command="gcc -g -shared -o &quot;$(OutputPath)\lib$(OutputName).dylib&quot; @(_Defines -&gt; '-D%(Identity)', ' ') @(Compile -&gt; '%(Identity)', ' ') -F /Library/Frameworks @(Framework -&gt; '-framework %(Identity)', ' ') -m32 -I $(MacJdkHeadersPath) @(Include-&gt;'-I %(Identity)', ' ')" />
+    <Exec Command="gcc -g -shared -o &quot;$(OutputPath)\lib$(OutputName).dylib&quot; -fvisibility=hidden @(_Defines -&gt; '-D%(Identity)', ' ') @(Compile -&gt; '%(Identity)', ' ') -L /Library/Frameworks/Mono.framework/Libraries -lmonosgen-2.0 -m32 -I $(MacJdkHeadersPath) @(Include-&gt;'-I %(Identity)', ' ')" />
   </Target>
 </Project>

@@ -171,16 +171,16 @@ namespace Java.Interop
 			TrackIDs     = options.TrackIDs;
 			DestroyRuntimeOnDispose     = options.DestroyRuntimeOnDispose;
 
-			ObjectReferenceManager      = SetRuntime (options.ObjectReferenceManager ?? new JniObjectReferenceManager ());
-			TypeManager                 = SetRuntime (options.TypeManager ?? new JniTypeManager ());
-
-			SetValueManager (options);
-			SetExportedMemberBuilder (options);
-
 			NewObjectRequired   = options.NewObjectRequired;
 
 			InvocationPointer   = options.InvocationPointer;
 			Invoker             = CreateInvoker (InvocationPointer);
+
+			SetValueManager (options);
+			SetExportedMemberBuilder (options);
+
+			ObjectReferenceManager      = SetRuntime (options.ObjectReferenceManager ?? new JniObjectReferenceManager ());
+			TypeManager                 = SetRuntime (options.TypeManager ?? new JniTypeManager ());
 
 			if (Interlocked.CompareExchange (ref current, this, null) != null) {
 				Debug.WriteLine ("WARNING: More than one JniRuntime instance created. This is DOOMED TO FAIL.");

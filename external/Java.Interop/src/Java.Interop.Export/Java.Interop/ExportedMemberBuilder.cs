@@ -136,8 +136,11 @@ namespace Java.Interop {
 				Expression.Assign (envp, CreateJniTransition (jnienv)),
 			};
 
+			var waitForGCBridge     = typeof(JniRuntime.JniValueManager)
+				.GetRuntimeMethod (nameof (JniRuntime.JniValueManager.WaitForGCBridgeProcessing), new Type [0]);
 			var marshalBody = new List<Expression> () {
 				Expression.Assign (jvm, GetRuntime ()),
+				Expression.Call (Expression.Property (jvm, "ValueManager"), waitForGCBridge),
 			};
 
 			Expression self = null;

@@ -173,6 +173,7 @@ namespace Java.InteropTests
 	try
 	{
 		__jvm = JniEnvironment.Runtime;
+		__jvm.ValueManager.WaitForGCBridgeProcessing();
 		__this_val = __jvm.ValueManager.GetValue<ExportTest>(__this);
 		__this_val.InstanceAction();
 	}
@@ -229,6 +230,7 @@ namespace Java.InteropTests
 	try
 	{
 		__jvm = JniEnvironment.Runtime;
+		__jvm.ValueManager.WaitForGCBridgeProcessing();
 		ExportTest.StaticAction();
 	}
 	catch (Exception __e)
@@ -261,6 +263,7 @@ namespace Java.InteropTests
 	try
 	{
 		__jvm = JniEnvironment.Runtime;
+		__jvm.ValueManager.WaitForGCBridgeProcessing();
 		v_val = Strings.ToString(v);
 		ExportTest.StaticActionInt32String(i, v_val);
 	}
@@ -297,6 +300,7 @@ namespace Java.InteropTests
 	try
 	{
 		__jvm = JniEnvironment.Runtime;
+		__jvm.ValueManager.WaitForGCBridgeProcessing();
 		color1_val = new MyLegacyColor(color1);
 		color2_val = new MyColor(color2);
 		__mret = ExportTest.StaticFuncMyLegacyColorMyColor_MyColor(color1_val, color2_val);
@@ -335,6 +339,7 @@ namespace Java.InteropTests
 	try
 	{
 		__jvm = JniEnvironment.Runtime;
+		__jvm.ValueManager.WaitForGCBridgeProcessing();
 		__this_val = __jvm.ValueManager.GetValue<ExportTest>(__this);
 		__mret = __this_val.FuncInt64();
 		return __mret;
@@ -374,6 +379,7 @@ namespace Java.InteropTests
 	try
 	{
 		__jvm = JniEnvironment.Runtime;
+		__jvm.ValueManager.WaitForGCBridgeProcessing();
 		__this_val = __jvm.ValueManager.GetValue<ExportTest>(__this);
 		__mret = __this_val.FuncIJavaObject();
 		if (null == __mret)
@@ -422,6 +428,7 @@ namespace Java.InteropTests
 	try
 	{
 		__jvm = JniEnvironment.Runtime;
+		__jvm.ValueManager.WaitForGCBridgeProcessing();
 		ExportedMemberBuilderTest.DirectInvocation(jnienv, context);
 	}
 	catch (Exception __e)
