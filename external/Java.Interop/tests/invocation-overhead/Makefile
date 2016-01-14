@@ -1,7 +1,7 @@
 JNIENV_GEN        = ../../bin/Debug/jnienv-gen.exe
 LOCAL_JDK_HEADERS = ../../LocalJDK/System/Library/Frameworks/JavaVM.framework/Versions/A/Headers
 
-all: test-overheads.exe libJavaInterop.dylib
+all: test-overheads.exe libjava-interop.dylib
 
 clean:
 	-rm test-overheads.exe test-overheads.exe.mdb
@@ -19,7 +19,7 @@ test-overheads.exe: test-overheads.cs jni.cs
 jni.c jni.cs: $(JNIENV_GEN)
 	mono $< jni.cs jni.c
 
-libJavaInterop.dylib: jni.c
+libjava-interop.dylib: jni.c
 	gcc -g -shared -o $@ $< -m32 -DJI_DLL_EXPORT -fvisibility=hidden -I $(LOCAL_JDK_HEADERS)
 
 run:

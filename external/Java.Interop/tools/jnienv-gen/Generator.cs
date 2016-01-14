@@ -298,7 +298,7 @@ namespace Xamarin.Java.Interop
 		{
 			o.WriteLine ("\tstatic partial class NativeMethods {");
 			o.WriteLine ();
-			o.WriteLine ("\t\tconst string JavaInteropLib = \"JavaInterop\";");
+			o.WriteLine ("\t\tconst string JavaInteropLib = \"java-interop\";");
 			foreach (var entry in JNIEnvEntries) {
 				if (entry.Parameters == null)
 					continue;
@@ -307,15 +307,32 @@ namespace Xamarin.Java.Interop
 
 				o.WriteLine ();
 				o.WriteLine ("\t\t[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]");
-				o.WriteLine ("\t\tinternal static extern unsafe {0} JavaInterop_{1} (IntPtr jnienv{2}{3}{4});",
+				o.WriteLine ("\t\tinternal static extern unsafe {0} {1} (IntPtr jnienv{2}{3}{4});",
 					entry.ReturnType.GetMarshalType (style, isReturn: true),
-					entry.Name,
+					GetPinvokeName (entry.Name),
 					entry.Throws ? ", out IntPtr thrown" : "",
 					entry.Parameters.Length != 0 ? ", " : "",
 					string.Join (", ", entry.Parameters.Select (p => string.Format ("{0} {1}", p.Type.GetMarshalType (style, isReturn: false), Escape (p.Name)))));
 			}
 			o.WriteLine ("\t}");
 			o.WriteLine ();
+		}
+
+		static string GetPinvokeName (string name)
+		{
+			var sb = new StringBuilder ("java_interop_jnienv_".Length + name.Length * 2);
+			sb.Append ("java_interop_jnienv");
+			var uc = false;
+			foreach (var c in name) {
+				if (!uc && char.IsUpper (c)) {
+					sb.Append ("_");
+					uc = true;
+				} else {
+					uc = false;
+				}
+				sb.Append (char.ToLower (c));
+			}
+			return sb.ToString ();
 		}
 
 		static void GenerateJniEnv (TextWriter o, string type, string visibility, HandleStyle style)
@@ -354,7 +371,9 @@ namespace Xamarin.Java.Interop
 					if (!is_void)
 						o.Write ("var tmp = ");
 					if (style == HandleStyle.JIIntPtrPinvokeWithErrors) {
-						o.Write ("NativeMethods.JavaInterop_{0} (JniEnvironment.EnvironmentPointer{1}", entry.Name, entry.Throws ? ", out thrown" : "");
+						o.Write ("NativeMethods.{0} (JniEnvironment.EnvironmentPointer{1}",
+								GetPinvokeName (entry.Name),
+								entry.Throws ? ", out thrown" : "");
 					} else {
 						o.Write ("__info.Invoker.{0} (__info.EnvironmentPointer", entry.Name);
 					}
@@ -455,8 +474,8 @@ namespace Xamarin.Java.Interop
 					continue;
 				o.WriteLine ();
 				o.WriteLine ("JI_API {0}", entry.ReturnType.JniType);
-				o.WriteLine ("JavaInterop_{0} (JNIEnv *env{1}{2}{3})",
-					entry.Name,
+				o.WriteLine ("{0} (JNIEnv *env{1}{2}{3})",
+					GetPinvokeName (entry.Name),
 					entry.Throws ? ", jthrowable *_thrown" : "",
 					entry.Parameters.Length != 0 ? ", " : "",
 					string.Join (", ", entry.Parameters.Select (p => string.Format ("{0} {1}", p.Type.JniType, p.Name))));

@@ -16,9 +16,10 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>..\..\bin\Debug</OutputPath>
+    <JNIEnvGenPath>$(OutputPath)</JNIEnvGenPath>
     <OutputName>java-interop</OutputName>
     <CompileTarget>SharedLibrary</CompileTarget>
-    <DefineSymbols>DEBUG MONODEVELOP MONO_DLL_EXPORT</DefineSymbols>
+    <DefineSymbols>DEBUG JI_DLL_EXPORT MONODEVELOP MONO_DLL_EXPORT</DefineSymbols>
     <SourceDirectory>.</SourceDirectory>
     <CustomCommands>
       <CustomCommands>
@@ -46,9 +47,10 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <OutputPath>..\..\bin\Release</OutputPath>
     <OutputName>java-interop</OutputName>
+    <JNIEnvGenPath>$(OutputPath)</JNIEnvGenPath>
     <CompileTarget>SharedLibrary</CompileTarget>
     <OptimizationLevel>3</OptimizationLevel>
-    <DefineSymbols>MONODEVELOP</DefineSymbols>
+    <DefineSymbols>JI_DLL_EXPORT MONODEVELOP MONO_DLL_EXPORT</DefineSymbols>
     <SourceDirectory>.</SourceDirectory>
     <CustomCommands>
       <CustomCommands>
@@ -62,18 +64,35 @@
     <None Include="java-interop-mono.h" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="jni.c" />
     <Compile Include="java-interop.c" />
     <Compile Include="java-interop-mono.c" />
     <Compile Include="java-interop-gc-bridge-mono.c" />
   </ItemGroup>
   <ItemGroup>
-    <Framework Include="Mono" />
-  </ItemGroup>
-  <ItemGroup>
     <Include Include="\Library\Frameworks\Mono.framework\Headers\mono-2.0" />
   </ItemGroup>
-  <Target Name="Build" DependsOnTargets="BuildMac" />
-  <Target Name="BuildMac" Condition=" '$(OS)' != 'Windows_NT' ">
+  <PropertyGroup>
+    <BuildDependsOn>
+      BuildJni_c;
+      BuildMac;
+      $(BuildDependsOn)
+    </BuildDependsOn>
+  </PropertyGroup>
+  <PropertyGroup>
+    <Runtime Condition="'$(OS)' != 'Windows_NT'">mono</Runtime>
+  </PropertyGroup>
+  <Target Name="Build" DependsOnTargets="$(BuildDependsOn)" />
+  <Target Name="BuildJni_c"
+      Inputs="$(JNIEnvGenPath)\jnienv-gen.exe"
+      Outputs="jni.c">
+    <MakeDir Directories="$(OutputPath)" />
+    <Exec Command="$(Runtime) &quot;$(JNIEnvGenPath)\jnienv-gen.exe&quot; jni.g.cs jni.c" />
+  </Target>
+  <Target Name="BuildMac"
+      Condition=" '$(OS)' != 'Windows_NT' "
+      Inputs="@(Compile)"
+      Outputs="$(OutputPath)\lib$(OutputName).dylib">
     <PropertyGroup>
       <_FixedDefines>$(DefineSymbols.Replace(' ', ';'))</_FixedDefines>
     </PropertyGroup>

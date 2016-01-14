@@ -38,13 +38,13 @@ namespace Java.Interop
 				var info    = JniEnvironment.CurrentInfo;
 #if FEATURE_JNIENVIRONMENT_JI_PINVOKES
 				IntPtr thrown;
-				var c   = NativeMethods.JavaInterop_FindClass (info.EnvironmentPointer, out thrown, classname);
+				var c   = NativeMethods.java_interop_jnienv_find_class (info.EnvironmentPointer, out thrown, classname);
 				if (thrown == IntPtr.Zero) {
 					var r   = new JniObjectReference (c, JniObjectReferenceType.Local);
 					JniEnvironment.LogCreateLocalRef (r);
 					return r;
 				}
-				NativeMethods.JavaInterop_ExceptionClear (info.EnvironmentPointer);
+				NativeMethods.java_interop_jnienv_exception_clear (info.EnvironmentPointer);
 				var e   = new JniObjectReference (thrown, JniObjectReferenceType.Local);
 				LogCreateLocalRef (e);
 
@@ -53,7 +53,7 @@ namespace Java.Interop
 				__args [0]  = new JniArgumentValue (java);
 
 				IntPtr ignoreThrown;
-				c   = NativeMethods.JavaInterop_CallObjectMethodA (info.EnvironmentPointer, out ignoreThrown, info.Runtime.ClassLoader.Handle, info.Runtime.ClassLoader_LoadClass.ID, __args);
+				c   = NativeMethods.java_interop_jnienv_call_object_method_a (info.EnvironmentPointer, out ignoreThrown, info.Runtime.ClassLoader.Handle, info.Runtime.ClassLoader_LoadClass.ID, __args);
 				JniObjectReference.Dispose (ref java);
 				if (ignoreThrown == IntPtr.Zero) {
 					JniObjectReference.Dispose (ref e);
@@ -61,8 +61,8 @@ namespace Java.Interop
 					JniEnvironment.LogCreateLocalRef (r);
 					return r;
 				}
-				NativeMethods.JavaInterop_ExceptionClear (info.EnvironmentPointer);
-				NativeMethods.JavaInterop_DeleteLocalRef (info.EnvironmentPointer, ignoreThrown);
+				NativeMethods.java_interop_jnienv_exception_clear (info.EnvironmentPointer);
+				NativeMethods.java_interop_jnienv_delete_local_ref (info.EnvironmentPointer, ignoreThrown);
 				throw info.Runtime.GetExceptionForThrowable (ref e, JniObjectReferenceOptions.CopyAndDispose);
 #endif  // !FEATURE_JNIENVIRONMENT_JI_PINVOKES
 #if FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES

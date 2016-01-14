@@ -160,7 +160,7 @@ namespace Java.Interop {
 		partial class References {
 			internal static int GetJavaVM (IntPtr jnienv, out IntPtr vm)
 			{
-				return NativeMethods.JavaInterop_GetJavaVM (jnienv, out vm);
+				return NativeMethods.java_interop_jnienv_get_java_vm (jnienv, out vm);
 			}
 		}
 #endif  // !FEATURE_JNIENVIRONMENT_JI_PINVOKES
