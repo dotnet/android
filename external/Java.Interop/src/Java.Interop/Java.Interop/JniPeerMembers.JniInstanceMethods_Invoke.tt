@@ -44,12 +44,12 @@ namespace Java.Interop {
 				JniPeerMembers.AssertSelf (self);
 
 				var declaringType   = DeclaringType;
-				if (self.GetType () == declaringType || declaringType == null || self.GetType () == self.JniPeerMembers.ManagedPeerType) {
+				if (Members.ShouldUseVirtualDispatch (self, declaringType)) {
 					var m   = GetMethodInfo (encodedMember);
 					<#= returnType.ReturnType != "void" ? "return " : "" #>JniEnvironment.InstanceMethods.Call<#= returnType.JniCallType #>Method (self.PeerReference, m, parameters);
 					<#= returnType.ReturnType == "void" ? "return;" : "" #>
 				}
-				var j = self.JniPeerMembers;
+				var j = Members.GetPeerMembers (self);
 				var n = j.InstanceMethods.GetMethodInfo (encodedMember);
 				<#= returnType.ReturnType != "void" ? "return " : "" #>JniEnvironment.InstanceMethods.CallNonvirtual<#= returnType.JniCallType #>Method (self.PeerReference, j.JniPeerType.PeerReference, n, parameters);
 				<#= returnType.ReturnType == "void" ? "return;" : "" #>

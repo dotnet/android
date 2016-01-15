@@ -5,7 +5,7 @@ using System.Reflection;
 
 namespace Java.Interop {
 
-	public sealed partial class JniPeerMembers {
+	public partial class JniPeerMembers {
 
 		public JniPeerMembers (string jniPeerTypeName, Type managedPeerType)
 			: this (jniPeerTypeName, managedPeerType, checkManagedPeerType: true)
@@ -103,25 +103,44 @@ namespace Java.Interop {
 			return value;
 		}
 
-		public static void Dispose (JniPeerMembers members)
+		protected virtual void Dispose (bool disposing)
 		{
-			if (members == null || members.jniPeerType == null)
+			if (!disposing || jniPeerType == null)
 				return;
 
-			members.instanceMethods.Dispose ();
-			members.instanceMethods = null;
+			instanceMethods.Dispose ();
+			instanceMethods = null;
 
-			members.instanceFields.Dispose ();
-			members.instanceFields  = null;
+			instanceFields.Dispose ();
+			instanceFields  = null;
 
-			members.staticMethods.Dispose ();
-			members.staticMethods   = null;
+			staticMethods.Dispose ();
+			staticMethods   = null;
 
-			members.staticFields.Dispose ();
-			members.staticFields    = null;
+			staticFields.Dispose ();
+			staticFields    = null;
 
-			members.jniPeerType.Dispose ();
-			members.jniPeerType     = null;
+			jniPeerType.Dispose ();
+			jniPeerType     = null;
+		}
+
+		public static void Dispose (JniPeerMembers members)
+		{
+			if (members == null)
+				return;
+			members.Dispose (true);
+		}
+
+		protected virtual bool ShouldUseVirtualDispatch (IJavaPeerable value, Type declaringType)
+		{
+			return value.GetType () == declaringType ||
+				declaringType == null ||
+				value.GetType () == value.JniPeerMembers.ManagedPeerType;
+		}
+
+		protected virtual JniPeerMembers GetPeerMembers (IJavaPeerable value)
+		{
+			return value.JniPeerMembers;
 		}
 
 		internal static void AssertSelf (IJavaPeerable self)
