@@ -16,6 +16,8 @@ namespace Java.Interop
 #if FEATURE_JNIOBJECTREFERENCE_INTPTRS
 		IntPtr                  handle;
 		JniObjectReferenceType  handle_type;
+		IntPtr                  weak_handle;
+		int                     refs_added;
 #endif  // FEATURE_JNIOBJECTREFERENCE_INTPTRS
 
 		protected   static  readonly    JniObjectReference*     InvalidJniObjectReference  = null;

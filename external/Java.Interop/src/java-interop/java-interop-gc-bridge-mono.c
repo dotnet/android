@@ -253,6 +253,9 @@ java_interop_gc_bridge_register_bridgeable_type (
 	info->refs_added        = mono_class_get_field_from_name (info->klass,     "refs_added");
 	info->weak_handle       = mono_class_get_field_from_name (info->klass,     "weak_handle");
 
+	if (info->klass == NULL || info->handle == NULL || info->handle_type == NULL ||
+			info->refs_added == NULL || info->weak_handle == NULL)
+		return -1;
 	return 0;
 }
 

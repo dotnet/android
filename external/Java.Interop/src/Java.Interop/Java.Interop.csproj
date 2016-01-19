@@ -18,7 +18,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>..\..\bin\Debug</OutputPath>
-    <DefineConstants>DEBUG;INTEROP;FEATURE_JNIENVIRONMENT_SAFEHANDLES;FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES</DefineConstants>
+    <DefineConstants>DEBUG;INTEROP;FEATURE_JNIENVIRONMENT_JI_PINVOKES;FEATURE_JNIOBJECTREFERENCE_INTPTRS</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <ConsolePause>false</ConsolePause>
@@ -152,7 +152,7 @@
     <Exec Command="$(Runtime) &quot;$(JNIEnvGenPath)\jnienv-gen.exe&quot; Java.Interop\JniEnvironment.g.cs $(OutputPath)\jni.c" />
   </Target>
   <ItemGroup>
-    <JavaInteropJar Include="%24%28OutputPath%29java-interop.jar" />
+    <JavaInteropJar Include="$(OutputPath)java-interop.jar" />
   </ItemGroup>
   <Target Name="BuildInteropJar" Inputs="@(CompileJavaInteropJar)" Outputs="@(JavaInteropJar)">
     <MakeDir Directories="$(OutputPath)ji-classes" />
