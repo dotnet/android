@@ -8,6 +8,14 @@
 #include "java-interop-gc-bridge.h"
 #include "java-interop-mono.h"
 
+#ifdef __linux__
+	#include <unistd.h>
+#endif  /* !defined (__linux__) */
+
+#if defined (ANDROID)
+	#include "logger.h"
+#endif  /* !defined (ANDROID) */
+
 
 typedef struct MonoJavaGCBridgeInfo {
 	MonoClass          *klass;
