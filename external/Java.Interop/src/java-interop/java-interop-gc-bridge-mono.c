@@ -339,8 +339,8 @@ java_interop_gc_bridge_gref_log_message (
 {
 	if (!bridge || !bridge->gref_log || bridge->gref_log_level < level)
 		return;
-	fprintf (bridge->lref_log, "%s", message);
-	fflush (bridge->lref_log);
+	fprintf (bridge->gref_log, "%s", message);
+	fflush (bridge->gref_log);
 }
 
 int
