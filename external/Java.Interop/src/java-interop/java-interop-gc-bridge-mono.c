@@ -432,7 +432,7 @@ gref_inc (JavaInteropGCBridge *bridge)
 static int
 gref_dec (JavaInteropGCBridge *bridge)
 {
-	return __sync_fetch_and_sub (&bridge->gc_gref_count, 1);
+	return __sync_sub_and_fetch (&bridge->gc_gref_count, 1);
 }
 
 #if defined (ANDROID)
