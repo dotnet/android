@@ -17,12 +17,14 @@ namespace Java.Interop {
 
 		GetThreadDescriptionCb                      getThreadDescription;
 
+		IntPtr                                      bridge;
+
 		public override void OnSetRuntime (JniRuntime runtime)
 		{
 			base.OnSetRuntime (runtime);
 			getThreadDescription    = x => java_interop_strdup (runtime.GetCurrentThreadDescription ());
 
-			var bridge = java_interop_gc_bridge_get_current ();
+			bridge  = java_interop_gc_bridge_get_current ();
 			if (bridge != IntPtr.Zero)
 				return;
 
@@ -44,9 +46,10 @@ namespace Java.Interop {
 			}
 			catch (Exception) {
 				java_interop_gc_bridge_free (bridge);
+				bridge  = IntPtr.Zero;
 				throw;
 			}
-			if (java_interop_gc_bridge_register_hooks_once (GCBridgeUseWeakReferenceKind.Jni) < 0)
+			if (java_interop_gc_bridge_register_hooks (bridge, GCBridgeUseWeakReferenceKind.Jni) < 0)
 				throw new NotSupportedException ("Could not register GC Bridge with Mono!");
 		}
 
@@ -54,7 +57,7 @@ namespace Java.Interop {
 		{
 			if (!GCBridgeProcessingIsActive)
 				return;
-			java_interop_gc_bridge_wait_for_bridge_processing ();
+			java_interop_gc_bridge_wait_for_bridge_processing (bridge);
 		}
 
 		const   string JavaInteropLib = "java-interop";
@@ -68,7 +71,7 @@ namespace Java.Interop {
 		static extern int java_interop_gc_bridge_set_current_once (IntPtr bridge);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern int java_interop_gc_bridge_register_hooks_once (GCBridgeUseWeakReferenceKind weak_ref_kind);
+		static extern int java_interop_gc_bridge_register_hooks (IntPtr bridge, GCBridgeUseWeakReferenceKind weak_ref_kind);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
 		static extern IntPtr java_interop_gc_bridge_new (IntPtr jvm);
@@ -89,7 +92,7 @@ namespace Java.Interop {
 		static extern int java_interop_gc_bridge_register_bridgeable_type (IntPtr bridge, RuntimeTypeHandle type_handle);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern void java_interop_gc_bridge_wait_for_bridge_processing ();
+		static extern void java_interop_gc_bridge_wait_for_bridge_processing (IntPtr bridge);
 	}
 }
 

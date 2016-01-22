@@ -1095,9 +1095,11 @@ gc_cross_references (int num_sccs, MonoGCBridgeSCC **sccs, int num_xrefs, MonoGC
 }
 
 int
-java_interop_gc_bridge_register_hooks_once (int weak_ref_kind)
+java_interop_gc_bridge_register_hooks (JavaInteropGCBridge *bridge, int weak_ref_kind)
 {
-	if (mono_bridge == NULL)
+	if (bridge == NULL)
+		return -1;
+	if (mono_bridge != bridge)
 		return -1;
 
 	const char *message = NULL;
@@ -1131,11 +1133,12 @@ java_interop_gc_bridge_register_hooks_once (int weak_ref_kind)
 	return 0;
 }
 
-void
-java_interop_gc_bridge_wait_for_bridge_processing (void)
+int
+java_interop_gc_bridge_wait_for_bridge_processing (JavaInteropGCBridge *bridge)
 {
-	if (mono_bridge == NULL)
-		return;
+	if (bridge == NULL)
+		return -1;
 
 	mono_gc_wait_for_bridge_processing ();
+	return 0;
 }

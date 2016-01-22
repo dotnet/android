@@ -23,11 +23,12 @@ typedef     char       *(*JavaInteropGetThreadDescriptionCb)(void *user_data);
 
 MONO_API    JavaInteropGCBridge    *java_interop_gc_bridge_get_current                  (void);
 MONO_API    int                     java_interop_gc_bridge_set_current_once             (JavaInteropGCBridge *bridge);
-MONO_API    int                     java_interop_gc_bridge_register_hooks_once          (int weak_ref_kind);
-MONO_API    void                    java_interop_gc_bridge_wait_for_bridge_processing   (void);
 
 MONO_API    JavaInteropGCBridge    *java_interop_gc_bridge_new                          (JavaVM *jvm);
 MONO_API    int                     java_interop_gc_bridge_free                         (JavaInteropGCBridge *bridge);
+
+MONO_API    int                     java_interop_gc_bridge_register_hooks               (JavaInteropGCBridge *bridge, int weak_ref_kind);
+MONO_API    int                     java_interop_gc_bridge_wait_for_bridge_processing   (JavaInteropGCBridge *bridge);
 
 MONO_API    int                     java_interop_gc_bridge_set_bridge_processing_field  (JavaInteropGCBridge *bridge,   struct JavaInterop_System_RuntimeTypeHandle type_handle,    const char *field_name);
 MONO_API    int                     java_interop_gc_bridge_register_bridgeable_type     (JavaInteropGCBridge *bridge,   struct JavaInterop_System_RuntimeTypeHandle type_handle);
