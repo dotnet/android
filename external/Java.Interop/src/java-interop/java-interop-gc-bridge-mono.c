@@ -108,6 +108,19 @@ java_interop_gc_bridge_destroy (JavaInteropGCBridge *bridge)
 	return 0;
 }
 
+static char*
+ji_realpath (const char *path)
+{
+	if (path == NULL)
+		return NULL;
+
+	char   *rp = realpath (path, NULL);
+	if (rp == NULL) {
+		return strdup (path);
+	}
+	return rp;
+}
+
 static FILE *
 open_log_file (const char *path, FILE *alt, const char *alt_path, const char *envVar, int *cleanup, char **rpath)
 {
@@ -119,7 +132,7 @@ open_log_file (const char *path, FILE *alt, const char *alt_path, const char *en
 	if (strlen (path) == 0)
 		return stdout;
 
-	char *rp    = realpath (path, NULL);
+	char *rp    = ji_realpath (path);
 	if (rp != NULL && alt_path != NULL && strcmp (rp, alt_path) == 0) {
 	    free (rp);
 		return alt;
