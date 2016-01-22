@@ -799,7 +799,7 @@ add_reference (JavaInteropGCBridge *bridge, JNIEnv *env, MonoObject *obj, MonoJa
 #if DEBUG
 		if (bridge->gref_log_level > 1)
 			log_gref (bridge,
-					"added reference for object of class %s.%s to object of class %s.%s",
+					"added reference for object of class %s.%s to object of class %s.%s\n",
 					mono_class_get_namespace (klass),
 					mono_class_get_name (klass),
 					mono_class_get_namespace (mono_object_get_class (reffed_obj)),
@@ -812,7 +812,7 @@ add_reference (JavaInteropGCBridge *bridge, JNIEnv *env, MonoObject *obj, MonoJa
 #if DEBUG
 	if (bridge->gref_log_level > 1)
 		log_gref (bridge,
-				"Missing monodroidAddReference method for object of class %s.%s",
+				"Missing monodroidAddReference method for object of class %s.%s\n",
 				mono_class_get_namespace (klass),
 				mono_class_get_name (klass));
 #endif
@@ -925,7 +925,7 @@ gc_cleanup_after_java_collection (JavaInteropGCBridge *bridge, JNIEnv *env, int 
 						if (bridge->gref_log_level > 1) {
 							MonoClass *klass = mono_object_get_class (obj);
 							log_gref (bridge,
-									"Missing monodroidClearReferences method for object of class %s.%s",
+									"Missing monodroidClearReferences method for object of class %s.%s\n",
 									mono_class_get_namespace (klass),
 									mono_class_get_name (klass));
 						}
@@ -939,7 +939,7 @@ gc_cleanup_after_java_collection (JavaInteropGCBridge *bridge, JNIEnv *env, int 
 		}
 	}
 #if DEBUG
-	log_gref (bridge, "GC cleanup summary: %d objects tested - resurrecting %d.", total, alive);
+	log_gref (bridge, "GC cleanup summary: %d objects tested - resurrecting %d.\n", total, alive);
 #endif
 
 	set_bridge_processing (bridge, 0);
@@ -996,7 +996,7 @@ gc_bridge_class_kind (MonoClass *klass)
 	i = get_gc_bridge_index (mono_bridge, klass);
 	if (i == -NUM_GC_BRIDGE_TYPES) {
 		log_gref (mono_bridge,
-				"asked if a class %s.%s is a bridge before we inited java.lang.Object", 
+				"asked if a class %s.%s is a bridge before we inited GC Bridge Types!\n",
 				mono_class_get_namespace (klass),
 				mono_class_get_name (klass));
 		return GC_BRIDGE_TRANSPARENT_CLASS;
@@ -1023,7 +1023,7 @@ gc_is_bridge_object (MonoObject *object)
 #if DEBUG
 		MonoClass *mclass = mono_object_get_class (object);
 		log_gref (mono_bridge,
-				"object of class %s.%s with null handle",
+				"object of class %s.%s with null handle\n",
 				mono_class_get_namespace (mclass),
 				mono_class_get_name (mclass));
 #endif
@@ -1045,15 +1045,15 @@ gc_cross_references (int num_sccs, MonoGCBridgeSCC **sccs, int num_xrefs, MonoGC
 
 #if DEBUG
 	if (bridge->gref_log_level > 1) {
-		log_gref (bridge, "cross references callback invoked with %d sccs and %d xrefs.", num_sccs, num_xrefs);
+		log_gref (bridge, "cross references callback invoked with %d sccs and %d xrefs.\n", num_sccs, num_xrefs);
 
 		for (int i = 0; i < num_sccs; ++i) {
-			log_gref (bridge, "group %d with %d objects", i, sccs [i]->num_objs);
+			log_gref (bridge, "group %d with %d objects\n", i, sccs [i]->num_objs);
 			for (int j = 0; j < sccs [i]->num_objs; ++j) {
 				MonoObject *obj     = sccs [i]->objs [j];
 				MonoClass  *klass   = mono_object_get_class (obj);
 				log_gref (bridge,
-						"\tobj %p [%s::%s]",
+						"\tobj %p [%s::%s]\n",
 						obj,
 						mono_class_get_namespace (klass),
 						mono_class_get_name (klass));
@@ -1061,7 +1061,7 @@ gc_cross_references (int num_sccs, MonoGCBridgeSCC **sccs, int num_xrefs, MonoGC
 		}
 
 		for (int i = 0; i < num_xrefs; ++i)
-			log_gref (bridge, "xref [%d] %d -> %d", i, xrefs [i].src_scc_index, xrefs [i].dst_scc_index);
+			log_gref (bridge, "xref [%d] %d -> %d\n", i, xrefs [i].src_scc_index, xrefs [i].dst_scc_index);
 	}
 #endif
 
