@@ -15,7 +15,6 @@
 	#define mono_class_get_namespace                (mono.mono_class_get_namespace)
 	#define mono_class_is_subclass_of               (mono.mono_class_is_subclass_of)
 	#define mono_class_vtable                       (mono.mono_class_vtable)
-	#define mono_domain_foreach                     (mono.mono_domain_foreach)
 	#define mono_domain_get                         (mono.mono_domain_get)
 	#define mono_field_get_value                    (mono.mono_field_get_value)
 	#define mono_field_set_value                    (mono.mono_field_set_value)

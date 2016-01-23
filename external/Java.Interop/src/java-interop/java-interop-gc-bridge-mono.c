@@ -34,6 +34,10 @@ struct JavaInteropGCBridge {
 	MonoClass                          *BridgeProcessing_type;
 	MonoClassField                     *BridgeProcessing_field;
 
+	int                                 BridgeProcessing_vtables_count, BridgeProcessing_vtables_length;
+	MonoDomain                        **BridgeProcessing_domains;
+	MonoVTable                        **BridgeProcessing_vtables;
+
 	int                                 num_bridge_types;
 	MonoJavaGCBridgeInfo                mono_java_gc_bridge_info [NUM_GC_BRIDGE_TYPES];
 
@@ -109,6 +113,13 @@ java_interop_gc_bridge_destroy (JavaInteropGCBridge *bridge)
 
 	free (bridge->lref_path);
 	bridge->lref_path   = NULL;
+
+	free (bridge->BridgeProcessing_domains);
+	free (bridge->BridgeProcessing_vtables);
+	bridge->BridgeProcessing_domains        = NULL;
+	bridge->BridgeProcessing_vtables        = NULL;
+	bridge->BridgeProcessing_vtables_count  = 0;
+	bridge->BridgeProcessing_vtables_length = 0;
 
 	return 0;
 }
@@ -825,27 +836,18 @@ add_reference (JavaInteropGCBridge *bridge, JNIEnv *env, MonoObject *obj, MonoJa
 	return 0;
 }
 
-struct  SetStaticFieldValueInfo {
-	JavaInteropGCBridge    *bridge;
-	mono_bool               value;
-};
-
-static void
-set_bridge_processing_field (MonoDomain *domain, void* user_data)
-{
-	struct SetStaticFieldValueInfo  *p = user_data;
-	MonoVTable  *v = mono_class_vtable (domain, p->bridge->BridgeProcessing_type);
-	if (!v)
-	    return;
-	mono_field_static_set_value (v, p->bridge->BridgeProcessing_field, &p->value);
-}
-
 static void
 set_bridge_processing (JavaInteropGCBridge *bridge, mono_bool value)
 {
-	struct SetStaticFieldValueInfo v = {0};
-	v.bridge    = bridge;
-	v.value     = value;
+	int count   = bridge->BridgeProcessing_vtables_count;
+	for (int i = 0; i < count; ++i) {
+		MonoVTable *v   = bridge->BridgeProcessing_vtables [i];
+		if (!v) {
+			continue;
+		}
+
+		mono_field_static_set_value (v, bridge->BridgeProcessing_field, &value);
+	}
 }
 
 static void
@@ -964,6 +966,76 @@ get_thread_description (JavaInteropGCBridge *bridge)
 	char *b;
 	asprintf (&b, "'finalizer'(%" PRId64 ")", tid);
 	return b;
+}
+
+int
+java_interop_gc_bridge_add_current_app_domain (JavaInteropGCBridge *bridge)
+{
+	if (bridge == NULL)
+		return -1;
+
+	if (bridge->BridgeProcessing_type == NULL)
+		return -1;
+
+	MonoDomain *domain = mono_domain_get ();
+	if (domain == NULL)
+		return -1;
+
+	int count   = bridge->BridgeProcessing_vtables_count;
+	for (int i = 0; i < count; ++i) {
+		MonoDomain    **domains = bridge->BridgeProcessing_domains;
+		MonoVTable    **vtables = bridge->BridgeProcessing_vtables;
+		if (domains [i] == NULL) {
+			domains [i] = domain;
+			vtables [i] = mono_class_vtable (domain, bridge->BridgeProcessing_type);
+			return 0;
+		}
+	}
+
+	if (bridge->BridgeProcessing_vtables_count == bridge->BridgeProcessing_vtables_length) {
+		int             new_length  = bridge->BridgeProcessing_vtables_length + 1;
+		MonoDomain    **new_domains = calloc (new_length, sizeof (MonoDomain*));
+		MonoVTable    **new_vtbles  = calloc (new_length, sizeof (MonoVTable*));
+		if (new_domains == NULL || new_vtbles == NULL) {
+			free (new_domains);
+			free (new_vtbles);
+			return -1;
+		}
+		bridge->BridgeProcessing_vtables_length = new_length;
+		memcpy (new_domains,    bridge->BridgeProcessing_domains,   bridge->BridgeProcessing_vtables_count);
+		memcpy (new_vtbles,     bridge->BridgeProcessing_vtables,   bridge->BridgeProcessing_vtables_count);
+		free (bridge->BridgeProcessing_domains);
+		free (bridge->BridgeProcessing_vtables);
+		bridge->BridgeProcessing_domains    = new_domains;
+		bridge->BridgeProcessing_vtables    = new_vtbles;
+	}
+	int i   = bridge->BridgeProcessing_vtables_count++;
+
+	bridge->BridgeProcessing_domains [i]    = domain;
+	bridge->BridgeProcessing_vtables [i]    = mono_class_vtable (domain, bridge->BridgeProcessing_type);
+
+	return 0;
+}
+
+int
+java_interop_gc_bridge_remove_current_app_domain (JavaInteropGCBridge *bridge)
+{
+	if (bridge == NULL)
+		return -1;
+
+	MonoDomain *domain = mono_domain_get ();
+	if (domain == NULL)
+		return -1;
+
+	int count   = bridge->BridgeProcessing_vtables_count;
+	for (int i  = 0; i < count; ++i) {
+		if (bridge->BridgeProcessing_domains [i] == domain) {
+			bridge->BridgeProcessing_domains [i]    = NULL;
+			bridge->BridgeProcessing_vtables [i]    = NULL;
+			return 0;
+		}
+	}
+	return -1;
 }
 
 static  JavaInteropGCBridge    *mono_bridge;

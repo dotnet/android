@@ -126,6 +126,15 @@ namespace Java.Interop {
 		{
 			return string.Format ("'{0}'({1})", Thread.CurrentThread.Name, Thread.CurrentThread.ManagedThreadId);
 		}
+
+		protected override void Dispose (bool disposing)
+		{
+			var bridge = MonoRuntimeValueManager.java_interop_gc_bridge_get_current ();
+			if (bridge != IntPtr.Zero) {
+				MonoRuntimeValueManager.java_interop_gc_bridge_remove_current_app_domain (bridge);
+			}
+			base.Dispose (disposing);
+		}
 	}
 }
 

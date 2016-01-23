@@ -36,6 +36,8 @@ namespace Java.Interop {
 					if (java_interop_gc_bridge_register_bridgeable_type (bridge, t.TypeHandle) < 0)
 						throw new NotSupportedException ("Could not register type " + t.FullName + "!");
 				}
+				if (java_interop_gc_bridge_add_current_app_domain (bridge) < 0)
+					throw new NotSupportedException ("Could not register current AppDomain!");
 				if (java_interop_gc_bridge_set_current_once (bridge) < 0)
 					throw new NotSupportedException ("Could not set GC Bridge instance!");
 			}
@@ -60,7 +62,7 @@ namespace Java.Interop {
 		delegate    IntPtr  GetThreadDescriptionCb (IntPtr user_data);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern IntPtr java_interop_gc_bridge_get_current ();
+		internal static extern IntPtr java_interop_gc_bridge_get_current ();
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
 		static extern int java_interop_gc_bridge_set_current_once (IntPtr bridge);
@@ -76,6 +78,12 @@ namespace Java.Interop {
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
 		static extern int java_interop_gc_bridge_set_thread_description_creator (IntPtr bridge, GetThreadDescriptionCb creator, IntPtr user_data);
+
+		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
+		static extern int java_interop_gc_bridge_add_current_app_domain (IntPtr bridge);
+
+		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
+		internal static extern int java_interop_gc_bridge_remove_current_app_domain (IntPtr bridge);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
 		static extern IntPtr java_interop_strdup (string value);
