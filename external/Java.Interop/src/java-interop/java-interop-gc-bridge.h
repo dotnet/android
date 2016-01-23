@@ -34,8 +34,6 @@ MONO_API    int                     java_interop_gc_bridge_set_bridge_processing
 MONO_API    int                     java_interop_gc_bridge_register_bridgeable_type     (JavaInteropGCBridge *bridge,   struct JavaInterop_System_RuntimeTypeHandle type_handle);
 MONO_API    int                     java_interop_gc_bridge_enable                       (JavaInteropGCBridge *bridge,   int enable);
 
-MONO_API    int                     java_interop_gc_bridge_set_thread_description_creator   (JavaInteropGCBridge *bridge,   JavaInteropGetThreadDescriptionCb creator,  void *user_data);
-
 MONO_API    int                     java_interop_gc_bridge_get_gref_count           (JavaInteropGCBridge *bridge);
 MONO_API    int                     java_interop_gc_bridge_get_weak_gref_count      (JavaInteropGCBridge *bridge);
 

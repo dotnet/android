@@ -33,6 +33,7 @@
       </Includes>
     </Includes>
     <ExtraLinkerArguments>-m32
+-Wl,-undefined -Wl,suppress -Wl,-flat_namespace
 -L /Library/Frameworks/Mono.framework/Libraries
 -lmonosgen-2.0</ExtraLinkerArguments>
     <ExtraCompilerArguments>-m32
@@ -99,6 +100,14 @@
     <ItemGroup>
       <_Defines Include="$(_FixedDefines)" />
     </ItemGroup>
-    <Exec Command="gcc -g -shared -o &quot;$(OutputPath)\lib$(OutputName).dylib&quot; -fvisibility=hidden @(_Defines -&gt; '-D%(Identity)', ' ') @(Compile -&gt; '%(Identity)', ' ') -L /Library/Frameworks/Mono.framework/Libraries -lmonosgen-2.0 -m32 -I $(MacJdkHeadersPath) @(Include-&gt;'-I %(Identity)', ' ')" />
+    <PropertyGroup>
+      <_Arch>-m32</_Arch>
+      <_CppFlags>@(_Defines -&gt; '-D%(Identity)', ' ')</_CppFlags>
+      <_Includes>-I $(MacJdkHeadersPath) @(Include-&gt;'-I %(Identity)', ' ')</_Includes>
+      <_LinkFlags>-fvisibility=hidden -Wl,-undefined -Wl,suppress -Wl,-flat_namespace</_LinkFlags>
+      <_Libs>-L /Library/Frameworks/Mono.framework/Libraries -lmonosgen-2.0 </_Libs>
+      <_Files>@(Compile -&gt; '%(Identity)', ' ')</_Files>
+    </PropertyGroup>
+    <Exec Command="gcc -g -shared -o &quot;$(OutputPath)\lib$(OutputName).dylib&quot; $(_Arch) $(_CppFlags) $(_LinkFlags) $(_Libs) $(_Includes) $(_Files)" />
   </Target>
 </Project>

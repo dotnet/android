@@ -15,14 +15,11 @@ namespace Java.Interop {
 		static  volatile    bool                    GCBridgeProcessingIsActive;
 		#pragma warning restore 0649
 
-		GetThreadDescriptionCb                      getThreadDescription;
-
 		IntPtr                                      bridge;
 
 		public override void OnSetRuntime (JniRuntime runtime)
 		{
 			base.OnSetRuntime (runtime);
-			getThreadDescription    = x => java_interop_strdup (runtime.GetCurrentThreadDescription ());
 
 			bridge  = java_interop_gc_bridge_get_current ();
 			if (bridge != IntPtr.Zero)
@@ -33,8 +30,6 @@ namespace Java.Interop {
 				throw new NotSupportedException ("Could not initialize JNI::Mono GC Bridge!");
 
 			try {
-				if (java_interop_gc_bridge_set_thread_description_creator (bridge, getThreadDescription, IntPtr.Zero) < 0)
-					throw new NotSupportedException ("Could not set thread description creator!");
 				if (java_interop_gc_bridge_set_bridge_processing_field (bridge, typeof (MonoRuntimeValueManager).TypeHandle, nameof (GCBridgeProcessingIsActive)) < 0)
 					throw new NotSupportedException ("Could not set bridge processing field!");
 				foreach (var t in new[]{typeof (JavaObject), typeof (JavaException)}) {
