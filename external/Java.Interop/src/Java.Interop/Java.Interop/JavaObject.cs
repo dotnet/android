@@ -110,13 +110,13 @@ namespace Java.Interop
 
 		public override unsafe int GetHashCode ()
 		{
-			return _members.InstanceMethods.InvokeVirtualInt32Method ("hashCode\u0000()I", this, null);
+			return _members.InstanceMethods.InvokeVirtualInt32Method ("hashCode.()I", this, null);
 		}
 
 		public override unsafe string ToString ()
 		{
 			var lref = _members.InstanceMethods.InvokeVirtualObjectMethod (
-					"toString\u0000()Ljava/lang/String;",
+					"toString.()Ljava/lang/String;",
 					this,
 					null);
 			return JniEnvironment.Strings.ToString (ref lref, JniObjectReferenceOptions.CopyAndDispose);

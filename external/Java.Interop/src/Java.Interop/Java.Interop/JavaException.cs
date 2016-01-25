@@ -179,7 +179,7 @@ namespace Java.Interop
 
 		public override unsafe int GetHashCode ()
 		{
-			return _members.InstanceMethods.InvokeVirtualInt32Method ("hashCode\u0000()I", this, null);
+			return _members.InstanceMethods.InvokeVirtualInt32Method ("hashCode.()I", this, null);
 		}
 
 		static string _GetMessage (ref JniObjectReference reference, JniObjectReferenceOptions transfer)
@@ -187,7 +187,7 @@ namespace Java.Interop
 			if (transfer == JniObjectReferenceOptions.None)
 				return null;
 
-			var m = _members.InstanceMethods.GetMethodInfo ("getMessage\u0000()Ljava/lang/String;");
+			var m = _members.InstanceMethods.GetMethodInfo ("getMessage.()Ljava/lang/String;");
 			var s = JniEnvironment.InstanceMethods.CallObjectMethod (reference, m);
 			return JniEnvironment.Strings.ToString (ref s, JniObjectReferenceOptions.CopyAndDispose);
 		}
@@ -197,7 +197,7 @@ namespace Java.Interop
 			if (transfer == JniObjectReferenceOptions.None)
 				return null;
 
-			var m = _members.InstanceMethods.GetMethodInfo ("getCause\u0000()Ljava/lang/Throwable;");
+			var m = _members.InstanceMethods.GetMethodInfo ("getCause.()Ljava/lang/Throwable;");
 			var e = JniEnvironment.InstanceMethods.CallObjectMethod (reference, m);
 			return JniEnvironment.Runtime.GetExceptionForThrowable (ref e, JniObjectReferenceOptions.CopyAndDispose);
 		}
@@ -214,7 +214,7 @@ namespace Java.Interop
 					pwriter_args [0] = new JniArgumentValue (swriter);
 					var pwriter = PrintWriter_class.NewObject (PrintWriter_init, pwriter_args);
 					try {
-						var pst = _members.InstanceMethods.GetMethodInfo ("printStackTrace\u0000(Ljava/io/PrintWriter;)V");
+						var pst = _members.InstanceMethods.GetMethodInfo ("printStackTrace.(Ljava/io/PrintWriter;)V");
 						var pst_args = stackalloc JniArgumentValue [1];
 						pst_args [0] = new JniArgumentValue (pwriter);
 						JniEnvironment.InstanceMethods.CallVoidMethod (handle, pst, pst_args);

@@ -40,32 +40,32 @@ namespace Java.InteropTests
 
 		public unsafe void RunTests ()
 		{
-			_members.InstanceMethods.InvokeVirtualVoidMethod ("runTests\u0000()V", this, null);
+			_members.InstanceMethods.InvokeVirtualVoidMethod ("runTests.()V", this, null);
 		}
 
 		public int UpdateInt32Array (int[] value)
 		{
-			return _members.InstanceMethods.InvokeGenericVirtualInt32Method ("updateInt32Array\u0000([I)I", this, value);
+			return _members.InstanceMethods.InvokeGenericVirtualInt32Method ("updateInt32Array.([I)I", this, value);
 		}
 
 		public int UpdateInt32ArrayArray (int[][] value)
 		{
-			return _members.InstanceMethods.InvokeGenericVirtualInt32Method ("updateInt32ArrayArray\u0000([[I)I", this, value);
+			return _members.InstanceMethods.InvokeGenericVirtualInt32Method ("updateInt32ArrayArray.([[I)I", this, value);
 		}
 
 		public int UpdateInt32ArrayArrayArray (int[][][] value)
 		{
-			return _members.InstanceMethods.InvokeGenericVirtualInt32Method ("updateInt32ArrayArrayArray\u0000([[[I)I", this, value);
+			return _members.InstanceMethods.InvokeGenericVirtualInt32Method ("updateInt32ArrayArrayArray.([[[I)I", this, value);
 		}
 
 		public int Identity (int value)
 		{
-			return _members.InstanceMethods.InvokeGenericVirtualInt32Method ("identity\u0000(I)I", this, value);
+			return _members.InstanceMethods.InvokeGenericVirtualInt32Method ("identity.(I)I", this, value);
 		}
 
 		public static int StaticIdentity (int value)
 		{
-			return _members.StaticMethods.InvokeGenericInt32Method ("staticIdentity\u0000(I)I", value);
+			return _members.StaticMethods.InvokeGenericInt32Method ("staticIdentity.(I)I", value);
 		}
 
 		public void MethodThrows ()
@@ -75,11 +75,11 @@ namespace Java.InteropTests
 
 		public unsafe void PropogateException ()
 		{
-			_members.InstanceMethods.InvokeVirtualVoidMethod ("propogateException\u0000()V", this, null);
+			_members.InstanceMethods.InvokeVirtualVoidMethod ("propogateException.()V", this, null);
 		}
 
 		public bool PropogateFinallyBlockExecuted {
-			get {return _members.InstanceFields.GetBooleanValue ("propogateFinallyBlockExecuted\u0000Z", this);}
+			get {return _members.InstanceFields.GetBooleanValue ("propogateFinallyBlockExecuted.Z", this);}
 		}
 
 		static Delegate GetEqualsThisHandler ()

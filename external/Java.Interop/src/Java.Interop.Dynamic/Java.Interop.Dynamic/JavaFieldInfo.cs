@@ -35,7 +35,7 @@ namespace Java.Interop.Dynamic {
 
 		public override string Name {
 			get {
-				var i = JniSignature.IndexOf ('\u0000');
+				var i = JniSignature.IndexOf ('.');
 				return JniSignature.Substring (0, i);
 			}
 		}
@@ -105,7 +105,7 @@ namespace Java.Interop.Dynamic {
 
 		int GetSignatureStartIndex ()
 		{
-			int n = JniSignature.IndexOf ('\u0000');
+			int n = JniSignature.IndexOf ('.');
 			if (n == JniSignature.Length - 1)
 				throw new NotSupportedException (
 						string.Format ("Could not determine field type from signature '{0}'.", JniSignature));

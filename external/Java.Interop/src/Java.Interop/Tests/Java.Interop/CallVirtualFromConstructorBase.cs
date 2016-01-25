@@ -28,7 +28,7 @@ namespace Java.InteropTests {
 
 		public virtual void CalledFromConstructor (int value)
 		{
-			_members.InstanceMethods.InvokeGenericVirtualVoidMethod ("calledFromConstructor\u0000(I)V", this, value);
+			_members.InstanceMethods.InvokeGenericVirtualVoidMethod ("calledFromConstructor.(I)V", this, value);
 		}
 	}
 }

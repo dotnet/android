@@ -169,14 +169,14 @@ namespace Java.Interop {
 		{
 			if (encodedMember == null)
 				throw new ArgumentNullException ("encodedMember");
-			int n = encodedMember.IndexOf ('\u0000');
+			int n = encodedMember.IndexOf ('.');
 			if (n < 0)
 				throw new ArgumentException (
-						"Invalid encoding; 'encodedMember' should be encoded as \"<NAME>\\u0000<SIGNATURE>\".",
+						"Invalid encoding; 'encodedMember' should be encoded as \"<NAME>.<SIGNATURE>\".",
 						"encodedMember");
 			if (encodedMember.Length <= (n+1))
 				throw new ArgumentException (
-						"Invalid encoding; 'encodedMember' is missing a JNI signature, and should be in the format \"<NAME>\\u0000<SIGNATURE>\".",
+						"Invalid encoding; 'encodedMember' is missing a JNI signature, and should be in the format \"<NAME>.<SIGNATURE>\".",
 						"encodedMember");
 			return n;
 		}

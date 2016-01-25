@@ -78,7 +78,7 @@ namespace Java.Interop.Dynamic {
 			var mgr = vm.TypeManager;
 
 			if (!IsConstructor) {
-				sb.Append (Name).Append ("\u0000");
+				sb.Append (Name).Append (".");
 			}
 
 			sb.Append ("(");

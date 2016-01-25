@@ -115,7 +115,7 @@ namespace Java.Interop.PerformanceTests
 			if (GetType () == _members.ManagedPeerType)
 				r = JniEnvironment.InstanceMethods.CallIntMethod (PeerReference, vim1, args);
 			else {
-				JniMethodInfo m = JniPeerMembers.InstanceMethods.GetMethodInfo ("VirtualIntMethod1Args\u0000(I)I");
+				JniMethodInfo m = JniPeerMembers.InstanceMethods.GetMethodInfo ("VirtualIntMethod1Args.(I)I");
 				r = JniEnvironment.InstanceMethods.CallNonvirtualIntMethod (PeerReference, JniPeerMembers.JniPeerType.PeerReference, m, args);
 			}
 			return r;
@@ -126,12 +126,12 @@ namespace Java.Interop.PerformanceTests
 			var args = stackalloc JniArgumentValue [1];
 			args [0] = new JniArgumentValue (value);
 
-			return _members.InstanceMethods.InvokeVirtualInt32Method ("VirtualIntMethod1Args\u0000(I)I", this, args);
+			return _members.InstanceMethods.InvokeVirtualInt32Method ("VirtualIntMethod1Args.(I)I", this, args);
 		}
 
 		public virtual int Timing_VirtualIntMethod_GenericMarshal1Args (int value)
 		{
-			return _members.InstanceMethods.InvokeGenericVirtualInt32Method ("VirtualIntMethod1Args\u0000(I)I", this, value);
+			return _members.InstanceMethods.InvokeGenericVirtualInt32Method ("VirtualIntMethod1Args.(I)I", this, value);
 		}
 
 		static JniMethodInfo vim1_a;
@@ -147,7 +147,7 @@ namespace Java.Interop.PerformanceTests
 				if (GetType () == _members.ManagedPeerType)
 					r = JniEnvironment.InstanceMethods.CallIntMethod (PeerReference, vim1_a, args);
 				else {
-					JniMethodInfo m = JniPeerMembers.InstanceMethods.GetMethodInfo ("VirtualIntMethod1Args\u0000([[[I)I");
+					JniMethodInfo m = JniPeerMembers.InstanceMethods.GetMethodInfo ("VirtualIntMethod1Args.([[[I)I");
 					r = JniEnvironment.InstanceMethods.CallNonvirtualIntMethod (PeerReference, JniPeerMembers.JniPeerType.PeerReference, m, args);
 				}
 				native_array.CopyTo (value, 0);
@@ -161,7 +161,7 @@ namespace Java.Interop.PerformanceTests
 				var args = stackalloc JniArgumentValue [1];
 				args [0] = new JniArgumentValue (native_array);
 				try {
-					return _members.InstanceMethods.InvokeVirtualInt32Method ("VirtualIntMethod1Args\u0000([[[I)I", this, args);
+					return _members.InstanceMethods.InvokeVirtualInt32Method ("VirtualIntMethod1Args.([[[I)I", this, args);
 				} finally {
 					native_array.CopyTo (value, 0);
 				}
@@ -170,7 +170,7 @@ namespace Java.Interop.PerformanceTests
 
 		public virtual int Timing_VirtualIntMethod_GenericMarshal1Args (int[][][] value)
 		{
-			return _members.InstanceMethods.InvokeGenericVirtualInt32Method ("VirtualIntMethod1Args\u0000([[[I)I", this, value);
+			return _members.InstanceMethods.InvokeGenericVirtualInt32Method ("VirtualIntMethod1Args.([[[I)I", this, value);
 		}
 
 		static JniMethodInfo svm1;
@@ -274,7 +274,7 @@ namespace Java.Interop.PerformanceTests
 
 		public unsafe JniObjectReference Timing_ToString_JniPeerMembers ()
 		{
-			const string id = toString_name + "\u0000" + toString_sig;
+			const string id = toString_name + "." + toString_sig;
 			return _members.InstanceMethods.InvokeVirtualObjectMethod (id, this, null);
 		}
 	}

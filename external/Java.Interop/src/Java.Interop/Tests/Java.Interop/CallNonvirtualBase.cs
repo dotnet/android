@@ -21,12 +21,12 @@ namespace Java.InteropTests
 
 		public virtual unsafe void Method ()
 		{
-			_members.InstanceMethods.InvokeVirtualVoidMethod ("method\u0000()V", this, null);
+			_members.InstanceMethods.InvokeVirtualVoidMethod ("method.()V", this, null);
 		}
 
 		public bool MethodInvoked {
-			get {return _members.InstanceFields.GetBooleanValue ("methodInvoked\u0000Z" ,this);}
-			set {_members.InstanceFields.SetValue ("methodInvoked\u0000Z", this, value);}
+			get {return _members.InstanceFields.GetBooleanValue ("methodInvoked.Z" ,this);}
+			set {_members.InstanceFields.SetValue ("methodInvoked.Z", this, value);}
 		}
 	}
 }

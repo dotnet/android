@@ -20,8 +20,8 @@ namespace Java.InteropTests
 		}
 
 		public new bool MethodInvoked {
-			get {return _members.InstanceFields.GetBooleanValue ("methodInvoked\u0000Z", this);}
-			set {_members.InstanceFields.SetValue ("methodInvoked\u0000Z", this, value);}
+			get {return _members.InstanceFields.GetBooleanValue ("methodInvoked.Z", this);}
+			set {_members.InstanceFields.SetValue ("methodInvoked.Z", this, value);}
 		}
 	}
 }
