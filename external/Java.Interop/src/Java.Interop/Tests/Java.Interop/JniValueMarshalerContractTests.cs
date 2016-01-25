@@ -573,7 +573,7 @@ namespace Java.InteropTests {
 
 			// Compare to the default proxy behavior...
 			s       = marshaler.CreateGenericObjectReferenceArgumentState (value);
-			Assert.AreEqual ("com/xamarin/android/internal/JavaProxyObject",    JniEnvironment.Types.GetJniTypeNameFromInstance (s.ReferenceValue));
+			Assert.AreEqual ("com/xamarin/java_interop/internal/JavaProxyObject",   JniEnvironment.Types.GetJniTypeNameFromInstance (s.ReferenceValue));
 			marshaler.DestroyGenericArgumentState (value, ref s);
 		}
 	}

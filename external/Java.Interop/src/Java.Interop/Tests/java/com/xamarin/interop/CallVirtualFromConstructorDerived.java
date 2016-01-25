@@ -4,7 +4,7 @@ public class CallVirtualFromConstructorDerived extends CallVirtualFromConstructo
 
 	public CallVirtualFromConstructorDerived (int value) {
 		super (value);
-		com.xamarin.android.ManagedPeer.runConstructor (
+		com.xamarin.java_interop.ManagedPeer.runConstructor (
 				CallVirtualFromConstructorDerived.class,
 				this,
 				"Java.InteropTests.CallVirtualFromConstructorDerived, Java.Interop-Tests, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",

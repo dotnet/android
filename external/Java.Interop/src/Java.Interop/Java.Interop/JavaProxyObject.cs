@@ -6,7 +6,7 @@ namespace Java.Interop {
 	[JniTypeSignature (JniTypeName)]
 	sealed class JavaProxyObject : JavaObject
 	{
-		internal const string JniTypeName = "com/xamarin/android/internal/JavaProxyObject";
+		internal const string JniTypeName = "com/xamarin/java_interop/internal/JavaProxyObject";
 
 		static  readonly    JniPeerMembers                                  _members        = new JniPeerMembers (JniTypeName, typeof (JavaProxyObject));
 		static  readonly    ConditionalWeakTable<object, JavaProxyObject>   CachedValues    = new ConditionalWeakTable<object, JavaProxyObject> ();

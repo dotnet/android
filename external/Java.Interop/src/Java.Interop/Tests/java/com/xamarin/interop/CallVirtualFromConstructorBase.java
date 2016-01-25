@@ -3,7 +3,7 @@ package com.xamarin.interop;
 public class CallVirtualFromConstructorBase {
 
 	public CallVirtualFromConstructorBase (int value) {
-		com.xamarin.android.ManagedPeer.runConstructor (
+		com.xamarin.java_interop.ManagedPeer.runConstructor (
 				CallVirtualFromConstructorBase.class,
 				this,
 				"Java.InteropTests.CallVirtualFromConstructorBase, Java.Interop-Tests, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",

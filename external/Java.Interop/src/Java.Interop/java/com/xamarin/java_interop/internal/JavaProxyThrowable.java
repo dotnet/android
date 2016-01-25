@@ -1,4 +1,4 @@
-package com.xamarin.android.internal;
+package com.xamarin.java_interop.internal;
 
 /* package */ class JavaProxyThrowable extends java.lang.Throwable {
 

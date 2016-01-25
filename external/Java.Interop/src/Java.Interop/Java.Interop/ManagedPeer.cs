@@ -8,7 +8,7 @@ namespace Java.Interop {
 	[JniTypeSignature (JniTypeName)]
 	/* static */ class ManagedPeer : JavaObject {
 
-		internal const string JniTypeName = "com/xamarin/android/ManagedPeer";
+		internal const string JniTypeName = "com/xamarin/java_interop/ManagedPeer";
 
 
 		static  readonly    JniPeerMembers  _members        = new JniPeerMembers (JniTypeName, typeof (ManagedPeer));

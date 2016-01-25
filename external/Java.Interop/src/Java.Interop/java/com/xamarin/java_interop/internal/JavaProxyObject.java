@@ -1,4 +1,4 @@
-package com.xamarin.android.internal;
+package com.xamarin.java_interop.internal;
 
 /* package */ class JavaProxyObject extends java.lang.Object {
 

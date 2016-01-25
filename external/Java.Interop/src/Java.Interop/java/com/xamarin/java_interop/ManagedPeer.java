@@ -1,4 +1,4 @@
-package com.xamarin.android;
+package com.xamarin.java_interop;
 
 public /* static */ class ManagedPeer {
 	private ManagedPeer () {
