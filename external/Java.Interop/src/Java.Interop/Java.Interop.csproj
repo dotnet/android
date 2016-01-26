@@ -134,6 +134,7 @@
   <ItemGroup>
     <CompileJavaInteropJar Include="java\com\xamarin\java_interop\internal\JavaProxyObject.java" />
     <CompileJavaInteropJar Include="java\com\xamarin\java_interop\internal\JavaProxyThrowable.java" />
+    <CompileJavaInteropJar Include="java\com\xamarin\java_interop\GCUserPeerable.java" />
     <CompileJavaInteropJar Include="java\com\xamarin\java_interop\ManagedPeer.java" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />

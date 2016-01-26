@@ -1,6 +1,12 @@
 package com.xamarin.interop;
 
-public class CallNonvirtualBase {
+import java.util.ArrayList;
+
+import com.xamarin.java_interop.GCUserPeerable;
+
+public class CallNonvirtualBase implements GCUserPeerable {
+
+	ArrayList<Object>       managedReferences     = new ArrayList<Object>();
 
 	public CallNonvirtualBase () {
 		com.xamarin.java_interop.ManagedPeer.runConstructor (
@@ -15,5 +21,15 @@ public class CallNonvirtualBase {
 	public void method () {
 		System.out.println ("CallNonvirtualBase.method() invoked!");
 		methodInvoked = true;
+	}
+
+	public void jiAddManagedReference (java.lang.Object obj)
+	{
+		managedReferences.add (obj);
+	}
+
+	public void jiClearManagedReferences ()
+	{
+		managedReferences.clear ();
 	}
 }

@@ -27,6 +27,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JavaInt16ArrayContractTests.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JavaInt32ArrayContractTests.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JavaInt64ArrayContractTests.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JavaManagedGCBridgeTests.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JavaObjectArrayTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JavaObjectExtensionsTests.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JavaObjectTest.cs" />
@@ -53,6 +54,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JniValueMarshalerContractTests.cs" />
   </ItemGroup>
   <ItemGroup>
+    <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\com\xamarin\interop\CrossReferenceBridge.java" />
     <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\com\xamarin\interop\CallNonvirtualBase.java" />
     <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\com\xamarin\interop\CallNonvirtualDerived.java" />
     <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\com\xamarin\interop\CallNonvirtualDerived2.java" />

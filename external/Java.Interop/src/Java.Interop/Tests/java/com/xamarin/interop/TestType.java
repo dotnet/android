@@ -1,6 +1,12 @@
 package com.xamarin.interop;
 
-public class TestType {
+import java.util.ArrayList;
+
+import com.xamarin.java_interop.GCUserPeerable;
+
+public class TestType implements GCUserPeerable {
+
+	ArrayList<Object>       managedReferences     = new ArrayList<Object>();
 
 	public TestType () {
 		com.xamarin.java_interop.ManagedPeer.runConstructor (
@@ -95,4 +101,14 @@ public class TestType {
 	public  native  int     getInt32Value ();
 	public  native  String  getStringValue (int value);
 	public  native  void    methodThrows ();
+
+	public void jiAddManagedReference (java.lang.Object obj)
+	{
+		managedReferences.add (obj);
+	}
+
+	public void jiClearManagedReferences ()
+	{
+		managedReferences.clear ();
+	}
 }

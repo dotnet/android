@@ -1,6 +1,12 @@
 package com.xamarin.interop;
 
-public class CallVirtualFromConstructorBase {
+import java.util.ArrayList;
+
+import com.xamarin.java_interop.GCUserPeerable;
+
+public class CallVirtualFromConstructorBase implements GCUserPeerable {
+
+	ArrayList<Object>       managedReferences     = new ArrayList<Object>();
 
 	public CallVirtualFromConstructorBase (int value) {
 		com.xamarin.java_interop.ManagedPeer.runConstructor (
@@ -14,6 +20,16 @@ public class CallVirtualFromConstructorBase {
 	}
 
 	public void calledFromConstructor (int value) {
+	}
+
+	public void jiAddManagedReference (java.lang.Object obj)
+	{
+		managedReferences.add (obj);
+	}
+
+	public void jiClearManagedReferences ()
+	{
+		managedReferences.clear ();
 	}
 }
 

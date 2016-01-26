@@ -4,15 +4,15 @@ import java.util.ArrayList;
 
 import com.xamarin.java_interop.GCUserPeerable;
 
-public class SelfRegistration implements GCUserPeerable {
+public class CrossReferenceBridge implements GCUserPeerable {
 
 	ArrayList<Object>       managedReferences     = new ArrayList<Object>();
 
-	public SelfRegistration () {
+	public CrossReferenceBridge () {
 		com.xamarin.java_interop.ManagedPeer.runConstructor (
-				SelfRegistration.class,
+				CrossReferenceBridge.class,
 				this,
-				"Java.InteropTests.SelfRegistration, Java.Interop-Tests, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
+				"Java.InteropTests.CrossReferenceBridge, Java.Interop-Tests, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
 				""
 		);
 	}
