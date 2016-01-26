@@ -1,6 +1,6 @@
 package com.xamarin.java_interop;
 
-public /* static */ class ManagedPeer {
+public /* static */ final class ManagedPeer {
 	private ManagedPeer () {
 	}
 
