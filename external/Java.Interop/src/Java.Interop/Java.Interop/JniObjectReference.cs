@@ -158,7 +158,19 @@ namespace Java.Interop
 
 		public override string ToString ()
 		{
-			return string.Format ("JniObjectReference(Handle=0x{0}, Type={1})", Handle.ToString ("x"), Type.ToString ());
+			return "0x" + Handle.ToString ("x") + "/" + ToString (Type);
+		}
+
+
+		static string ToString (JniObjectReferenceType type)
+		{
+			switch (type) {
+			case JniObjectReferenceType.Global:         return "G";
+			case JniObjectReferenceType.Invalid:        return "I";
+			case JniObjectReferenceType.Local:          return "L";
+			case JniObjectReferenceType.WeakGlobal:     return "W";
+			}
+			return type.ToString ();
 		}
 
 		public static void Dispose (ref JniObjectReference reference)
