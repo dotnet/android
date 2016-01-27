@@ -37,6 +37,7 @@ namespace Java.Interop {
 			if (!LogLocalReferenceMessages)
 				return;
 			NativeMethods.java_interop_gc_bridge_lref_log_message (bridge, 0, string.Format (format, args));
+			NativeMethods.java_interop_gc_bridge_lref_log_message (bridge, 0, "\n");
 		}
 
 		public override JniObjectReference CreateLocalReference (JniObjectReference reference, ref int localReferenceCount)
@@ -124,6 +125,7 @@ namespace Java.Interop {
 			if (!LogGlobalReferenceMessages)
 				return;
 			NativeMethods.java_interop_gc_bridge_gref_log_message (bridge, 0, string.Format (format, args));
+			NativeMethods.java_interop_gc_bridge_gref_log_message (bridge, 0, "\n");
 		}
 
 		public override JniObjectReference CreateGlobalReference (JniObjectReference reference)
