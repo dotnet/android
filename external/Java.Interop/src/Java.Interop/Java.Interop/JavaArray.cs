@@ -158,7 +158,6 @@ namespace Java.Interop
 			if (source == null)
 				return;
 
-			Debug.WriteLine ("# jonp: JavaArray<{0}>.DestroyArgumentState<{1}>: synchronize={2}", typeof(T).FullName, typeof(TArray).FullName, synchronize);
 			synchronize = GetCopyDirection (synchronize);
 			if ((synchronize & ParameterAttributes.Out) == ParameterAttributes.Out) {
 				var arrayDest = value as T[];
