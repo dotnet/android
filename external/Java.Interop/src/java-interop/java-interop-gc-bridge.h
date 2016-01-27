@@ -19,8 +19,6 @@ struct JavaInterop_System_RuntimeTypeHandle {
 	void   *value;
 };
 
-typedef     char       *(*JavaInteropGetThreadDescriptionCb)(void *user_data);
-
 MONO_API    JavaInteropGCBridge    *java_interop_gc_bridge_get_current                  (void);
 MONO_API    int                     java_interop_gc_bridge_set_current_once             (JavaInteropGCBridge *bridge);
 
@@ -44,18 +42,18 @@ MONO_API    int                     java_interop_gc_bridge_lref_set_log_file    
 MONO_API    FILE*                   java_interop_gc_bridge_lref_get_log_file        (JavaInteropGCBridge *bridge);
 MONO_API    int                     java_interop_gc_bridge_lref_set_log_level       (JavaInteropGCBridge *bridge,   int level);
 MONO_API    void                    java_interop_gc_bridge_lref_log_message         (JavaInteropGCBridge *bridge,   int level, const char *message);
-MONO_API    void                    java_interop_gc_bridge_lref_log_new             (JavaInteropGCBridge *bridge,   int lref_count,     jobject curHandle,  char curType,   jobject newHandle,  char newType,   const char *thread_description, const char *from);
-MONO_API    void                    java_interop_gc_bridge_lref_log_delete          (JavaInteropGCBridge *bridge,   int lref_count,     jobject handle,     char type,                                          const char *thread_description, const char *from);
+MONO_API    void                    java_interop_gc_bridge_lref_log_new             (JavaInteropGCBridge *bridge,   int lref_count,     jobject curHandle,  char curType,   jobject newHandle,  char newType,   const char *thread_name,   int64_t thread_id,  const char *from);
+MONO_API    void                    java_interop_gc_bridge_lref_log_delete          (JavaInteropGCBridge *bridge,   int lref_count,     jobject handle,     char type,                                          const char *thread_name,   int64_t thread_id,  const char *from);
 
 MONO_API    int                     java_interop_gc_bridge_gref_set_log_file        (JavaInteropGCBridge *bridge,   const char *gref_log_file);
 MONO_API    FILE*                   java_interop_gc_bridge_gref_get_log_file        (JavaInteropGCBridge *bridge);
 MONO_API    int                     java_interop_gc_bridge_gref_set_log_level       (JavaInteropGCBridge *bridge,   int level);
 MONO_API    void                    java_interop_gc_bridge_gref_log_message         (JavaInteropGCBridge *bridge,   int level, const char *message);
-MONO_API    int                     java_interop_gc_bridge_gref_log_new             (JavaInteropGCBridge *bridge,   jobject curHandle,  char curType,   jobject newHandle,  char newType,   const char *thread_description, const char *from);
-MONO_API    int                     java_interop_gc_bridge_gref_log_delete          (JavaInteropGCBridge *bridge,   jobject handle,     char type,                                          const char *thread_description, const char *from);
+MONO_API    int                     java_interop_gc_bridge_gref_log_new             (JavaInteropGCBridge *bridge,   jobject curHandle,  char curType,   jobject newHandle,  char newType,   const char *thread_name,    int64_t thread_id,  const char *from);
+MONO_API    int                     java_interop_gc_bridge_gref_log_delete          (JavaInteropGCBridge *bridge,   jobject handle,     char type,                                          const char *thread_name,    int64_t thread_id,  const char *from);
 
-MONO_API    int                     java_interop_gc_bridge_weak_gref_log_new        (JavaInteropGCBridge *bridge,   jobject curHandle,  char curType,   jobject newHandle,  char newType,   const char *thread_description, const char *from);
-MONO_API    int                     java_interop_gc_bridge_weak_gref_log_delete     (JavaInteropGCBridge *bridge,   jobject handle,     char type,                                          const char *thread_description, const char *from);
+MONO_API    int                     java_interop_gc_bridge_weak_gref_log_new        (JavaInteropGCBridge *bridge,   jobject curHandle,  char curType,   jobject newHandle,  char newType,   const char *thread_name,    int64_t thread_id,  const char *from);
+MONO_API    int                     java_interop_gc_bridge_weak_gref_log_delete     (JavaInteropGCBridge *bridge,   jobject handle,     char type,                                          const char *thread_name,    int64_t thread_id,  const char *from);
 
 JAVA_INTEROP_END_DECLS
 

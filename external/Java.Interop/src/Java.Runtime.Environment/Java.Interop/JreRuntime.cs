@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -39,8 +40,11 @@ namespace Java.Interop {
 					"java-interop.jar"),
 			};
 
-			if (ValueManager == null && Type.GetType ("Mono.Runtime", throwOnError: false) != null)
-				ValueManager    = new MonoRuntimeValueManager ();
+			bool onMono = Type.GetType ("Mono.Runtime", throwOnError: false) != null;
+			if (onMono) {
+				ValueManager            = ValueManager              ?? new MonoRuntimeValueManager ();
+				ObjectReferenceManager  = ObjectReferenceManager    ?? new MonoRuntimeObjectReferenceManager ();
+			}
 		}
 
 		public JreRuntimeOptions AddOption (string option)
@@ -122,16 +126,22 @@ namespace Java.Interop {
 		{
 		}
 
-		public override string GetCurrentThreadDescription ()
+		public override string GetCurrentManagedThreadName ()
 		{
-			return string.Format ("'{0}'({1})", Thread.CurrentThread.Name, Thread.CurrentThread.ManagedThreadId);
+			return Thread.CurrentThread.Name;
+		}
+
+		public override string GetCurrentManagedThreadStackTrace (int skipFrames, bool fNeedFileInfo)
+		{
+			return new StackTrace (skipFrames, fNeedFileInfo)
+				.ToString ();
 		}
 
 		protected override void Dispose (bool disposing)
 		{
-			var bridge = MonoRuntimeValueManager.java_interop_gc_bridge_get_current ();
+			var bridge = NativeMethods.java_interop_gc_bridge_get_current ();
 			if (bridge != IntPtr.Zero) {
-				MonoRuntimeValueManager.java_interop_gc_bridge_remove_current_app_domain (bridge);
+				NativeMethods.java_interop_gc_bridge_remove_current_app_domain (bridge);
 			}
 			base.Dispose (disposing);
 		}

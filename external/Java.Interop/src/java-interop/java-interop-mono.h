@@ -21,6 +21,7 @@
 	#define mono_field_static_set_value             (mono.mono_field_static_set_value)
 	#define mono_object_get_class                   (mono.mono_object_get_class)
 	#define mono_thread_attach                      (mono.mono_thread_attach)
+	#define mono_thread_current                     (mono.mono_thread_current)
 	#define mono_gc_register_bridge_callbacks       (mono.mono_gc_register_bridge_callbacks)
 	#define mono_gc_wait_for_bridge_processing      (mono.mono_gc_wait_for_bridge_processing)
 

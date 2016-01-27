@@ -16,6 +16,7 @@
 	#include "logger.h"
 #endif  /* !defined (ANDROID) */
 
+#include <dlfcn.h>
 
 typedef struct MonoJavaGCBridgeInfo {
 	MonoClass          *klass;
@@ -63,6 +64,22 @@ struct JavaInteropGCBridge {
 	int                                 gref_cleanup,   lref_cleanup;
 };
 
+typedef char* (*MonoThreadGetNameUtf8)(MonoThread*);
+typedef int32_t (*MonoThreadGetManagedId)(MonoThread*);
+
+static MonoThreadGetManagedId    _mono_thread_get_managed_id;
+static MonoThreadGetNameUtf8     _mono_thread_get_name_utf8;
+
+static void
+lookup_optional_mono_thread_functions (void)
+{
+	void *h = dlopen (NULL, RTLD_LAZY);
+	if (!h)
+		return;
+
+	_mono_thread_get_managed_id     = dlsym (h, "mono_thread_get_managed_id");
+	_mono_thread_get_name_utf8      = dlsym (h, "mono_thread_get_name_utf8");
+}
 
 static jobject
 lref_to_gref (JNIEnv *env, jobject lref)
@@ -182,6 +199,8 @@ java_interop_gc_bridge_new (JavaVM *jvm)
 {
 	if (jvm == NULL)
 		return NULL;
+
+	lookup_optional_mono_thread_functions ();
 
 	JavaInteropGCBridge bridge = {0};
 
@@ -493,7 +512,8 @@ java_interop_gc_bridge_gref_log_new (
 		char                    curType,
 		jobject                 newHandle,
 		char                    newType,
-		const char             *thread_description,
+		const char             *thread_name,
+		int64_t                 thread_id,
 		const char             *from)
 {
 	if (!bridge)
@@ -502,14 +522,15 @@ java_interop_gc_bridge_gref_log_new (
 	int c = gref_inc (bridge);
 
 	WRITE_LOG_MESSAGE_RETURN(c, LOG_GREF, bridge->gref_log, from,
-			"+g+ grefc %i gwrefc %i obj-handle %p/%c -> new-handle %p/%c from thread %s",
+			"+g+ grefc %i gwrefc %i obj-handle %p/%c -> new-handle %p/%c from thread '%s'(%" PRId64 ")",
 			c,
 			bridge->gc_weak_gref_count,
 			curHandle,
 			curType,
 			newHandle,
 			newType,
-			thread_description);
+			thread_name,
+			thread_id);
 
 	return c;
 }
@@ -519,7 +540,8 @@ java_interop_gc_bridge_gref_log_delete (
 		JavaInteropGCBridge    *bridge,
 		jobject                 handle,
 		char                    type,
-		const char             *thread_description,
+		const char             *thread_name,
+		int64_t                 thread_id,
 		const char             *from)
 {
 	if (!bridge)
@@ -528,12 +550,13 @@ java_interop_gc_bridge_gref_log_delete (
 	int c = gref_dec (bridge);
 
 	WRITE_LOG_MESSAGE_RETURN(c, LOG_GREF, bridge->gref_log, from,
-			"-g- grefc %i gwrefc %i handle %p/%c from thread %s",
+			"-g- grefc %i gwrefc %i handle %p/%c from thread '%s'(%" PRId64 ")",
 			c,
 			bridge->gc_weak_gref_count,
 			handle,
 			type,
-			thread_description);
+			thread_name,
+			thread_id);
 
 	return c;
 }
@@ -546,7 +569,8 @@ java_interop_gc_bridge_lref_log_new (
 		char                    curType,
 		jobject                 newHandle,
 		char                    newType,
-		const char             *thread_description,
+		const char             *thread_name,
+		int64_t                 thread_id,
 		const char             *from)
 {
 	if (!bridge)
@@ -554,21 +578,23 @@ java_interop_gc_bridge_lref_log_new (
 
 	if (newHandle) {
 		WRITE_LOG_MESSAGE_RETURN(, LOG_LREF, bridge->lref_log, from,
-				"+l+ lrefc %i obj-handle %p/%c -> new-handle %p/%c from thread %s",
+				"+l+ lrefc %i obj-handle %p/%c -> new-handle %p/%c from thread '%s'(%" PRId64 ")",
 				lref_count,
 				curHandle,
 				curType,
 				newHandle,
 				newType,
-				thread_description);
+				thread_name,
+				thread_id);
 	}
 	else {
 		WRITE_LOG_MESSAGE_RETURN(, LOG_LREF, bridge->lref_log, from,
-				"+l+ lrefc %i handle %p/%c from thread %s",
+				"+l+ lrefc %i handle %p/%c from thread '%s'(%" PRId64 ")",
 				lref_count,
 				curHandle,
 				curType,
-				thread_description);
+				thread_name,
+				thread_id);
 	}
 }
 
@@ -578,18 +604,20 @@ java_interop_gc_bridge_lref_log_delete (
 		int                     lref_count,
 		jobject                 handle,
 		char                    type,
-		const char             *thread_description,
+		const char             *thread_name,
+		int64_t                 thread_id,
 		const char             *from)
 {
 	if (!bridge)
 		return;
 
 	WRITE_LOG_MESSAGE_RETURN(, LOG_LREF, bridge->lref_log, from,
-			"-l- lrefc %i handle %p/%c from thread %s",
+			"-l- lrefc %i handle %p/%c from thread '%s'(%" PRId64 ")",
 			lref_count,
 			handle,
 			type,
-			thread_description);
+			thread_name,
+			thread_id);
 }
 
 int
@@ -599,7 +627,8 @@ java_interop_gc_bridge_weak_gref_log_new (
 		char                    curType,
 		jobject                 newHandle,
 		char                    newType,
-		const char             *thread_description,
+		const char             *thread_name,
+		int64_t                 thread_id,
 		const char             *from)
 {
 	if (!bridge)
@@ -608,14 +637,15 @@ java_interop_gc_bridge_weak_gref_log_new (
 	int c = ++bridge->gc_weak_gref_count;
 
 	WRITE_LOG_MESSAGE_RETURN(c, LOG_GREF, bridge->gref_log, from,
-			"+w+ grefc %i gwrefc %i obj-handle %p/%c -> new-handle %p/%c from thread %s",
+			"+w+ grefc %i gwrefc %i obj-handle %p/%c -> new-handle %p/%c from thread '%s'(%" PRId64 ")",
 			bridge->gc_gref_count,
 			bridge->gc_weak_gref_count,
 			curHandle,
 			curType,
 			newHandle,
 			newType,
-			thread_description);
+			thread_name,
+			thread_id);
 
 	return c;
 }
@@ -625,7 +655,8 @@ java_interop_gc_bridge_weak_gref_log_delete (
 		JavaInteropGCBridge    *bridge,
 		jobject                 handle,
 		char                    type,
-		const char             *thread_description,
+		const char             *thread_name,
+		int64_t                 thread_id,
 		const char             *from)
 {
 	if (!bridge)
@@ -634,12 +665,13 @@ java_interop_gc_bridge_weak_gref_log_delete (
 	int c = bridge->gc_weak_gref_count--;
 
 	WRITE_LOG_MESSAGE_RETURN(c, LOG_GREF, bridge->gref_log, from,
-			"-w- grefc %i gwrefc %i handle %p/%c from thread %s",
+			"-w- grefc %i gwrefc %i handle %p/%c from thread '%s'(%" PRId64 ")",
 			bridge->gc_gref_count,
 			bridge->gc_weak_gref_count,
 			handle,
 			type,
-			thread_description);
+			thread_name,
+			thread_id);
 
 	return c;
 }
@@ -686,13 +718,13 @@ get_gc_bridge_info_for_object (JavaInteropGCBridge *bridge, MonoObject *object)
 	return get_gc_bridge_info_for_class (bridge, mono_object_get_class (object));
 }
 
-typedef mono_bool (*MonodroidGCTakeRefFunc) (JavaInteropGCBridge *bridge, JNIEnv *env, MonoObject *obj, const char *thread_description);
+typedef mono_bool (*MonodroidGCTakeRefFunc) (JavaInteropGCBridge *bridge, JNIEnv *env, MonoObject *obj, const char *thread_name, int64_t thread_id);
 
 static  MonodroidGCTakeRefFunc  take_global_ref;
 static  MonodroidGCTakeRefFunc  take_weak_global_ref;
 
 static mono_bool
-take_global_ref_java (JavaInteropGCBridge *bridge, JNIEnv *env, MonoObject *obj, const char *thread_description)
+take_global_ref_java (JavaInteropGCBridge *bridge, JNIEnv *env, MonoObject *obj, const char *thread_name, int64_t thread_id)
 {
 	MonoJavaGCBridgeInfo    *bridge_info    = get_gc_bridge_info_for_object (bridge, obj);
 	if (bridge_info == NULL)
@@ -709,9 +741,9 @@ take_global_ref_java (JavaInteropGCBridge *bridge, JNIEnv *env, MonoObject *obj,
 		(*env)->DeleteLocalRef (env, handle);
 		handle      = h;
 		java_interop_gc_bridge_gref_log_new (bridge, weak, get_object_ref_type (env, weak),
-				handle, get_object_ref_type (env, handle), thread_description, "take_global_ref_java");
+				handle, get_object_ref_type (env, handle), thread_name, thread_id, "take_global_ref_java");
 	}
-	java_interop_gc_bridge_weak_gref_log_delete (bridge, weak, get_object_ref_type (env, weak), thread_description, "take_global_ref_java");
+	java_interop_gc_bridge_weak_gref_log_delete (bridge, weak, get_object_ref_type (env, weak), thread_name, thread_id, "take_global_ref_java");
 	(*env)->DeleteGlobalRef (env, weak);
 	weak        = NULL;
 	mono_field_set_value (obj, bridge_info->weak_handle, &weak);
@@ -725,7 +757,7 @@ take_global_ref_java (JavaInteropGCBridge *bridge, JNIEnv *env, MonoObject *obj,
 }
 
 static mono_bool
-take_weak_global_ref_java (JavaInteropGCBridge *bridge, JNIEnv *env, MonoObject *obj, const char *thread_description)
+take_weak_global_ref_java (JavaInteropGCBridge *bridge, JNIEnv *env, MonoObject *obj, const char *thread_name, int64_t thread_id)
 {
 	MonoJavaGCBridgeInfo    *bridge_info    = get_gc_bridge_info_for_object (bridge, obj);
 	if (bridge_info == NULL)
@@ -740,9 +772,9 @@ take_weak_global_ref_java (JavaInteropGCBridge *bridge, JNIEnv *env, MonoObject 
 
 	log_gref (bridge, "*take_weak_2_1 obj=%p -> wref=%p handle=%p\n", obj, weakglobal, handle);
 	java_interop_gc_bridge_weak_gref_log_new (bridge, handle, get_object_ref_type (env, handle),
-			weakglobal, get_object_ref_type (env, weakglobal), thread_description, "take_weak_global_ref_2_1_compat");
+			weakglobal, get_object_ref_type (env, weakglobal), thread_name, thread_id, "take_weak_global_ref_2_1_compat");
 
-	java_interop_gc_bridge_gref_log_delete (bridge, handle, get_object_ref_type (env, handle), thread_description, "take_weak_global_ref_2_1_compat");
+	java_interop_gc_bridge_gref_log_delete (bridge, handle, get_object_ref_type (env, handle), thread_name, thread_id, "take_weak_global_ref_2_1_compat");
 	(*env)->DeleteGlobalRef (env, handle);
 
 	mono_field_set_value (obj, bridge_info->weak_handle, &weakglobal);
@@ -751,7 +783,7 @@ take_weak_global_ref_java (JavaInteropGCBridge *bridge, JNIEnv *env, MonoObject 
 }
 
 static mono_bool
-take_global_ref_jni (JavaInteropGCBridge *bridge, JNIEnv *env, MonoObject *obj, const char *thread_description)
+take_global_ref_jni (JavaInteropGCBridge *bridge, JNIEnv *env, MonoObject *obj, const char *thread_name, int64_t thread_id)
 {
 	MonoJavaGCBridgeInfo    *bridge_info    = get_gc_bridge_info_for_object (bridge, obj);
 	if (bridge_info == NULL)
@@ -766,12 +798,12 @@ take_global_ref_jni (JavaInteropGCBridge *bridge, JNIEnv *env, MonoObject *obj, 
 	if (handle) {
 		java_interop_gc_bridge_gref_log_new (bridge, weak, get_object_ref_type (env, weak),
 				handle, get_object_ref_type (env, handle),
-				thread_description,
+				thread_name, thread_id,
 				"take_global_ref_jni");
 	}
 
 	java_interop_gc_bridge_weak_gref_log_delete (bridge, weak, 'W',
-			thread_description, "take_global_ref_jni");
+			thread_name, thread_id, "take_global_ref_jni");
 	(*env)->DeleteWeakGlobalRef (env, weak);
 
 	mono_field_set_value (obj, bridge_info->handle, &handle);
@@ -782,7 +814,7 @@ take_global_ref_jni (JavaInteropGCBridge *bridge, JNIEnv *env, MonoObject *obj, 
 }
 
 static mono_bool
-take_weak_global_ref_jni (JavaInteropGCBridge *bridge, JNIEnv *env, MonoObject *obj, const char *thread_description)
+take_weak_global_ref_jni (JavaInteropGCBridge *bridge, JNIEnv *env, MonoObject *obj, const char *thread_name, int64_t thread_id)
 {
 	MonoJavaGCBridgeInfo    *bridge_info    = get_gc_bridge_info_for_object (bridge, obj);
 	if (bridge_info == NULL)
@@ -796,10 +828,10 @@ take_weak_global_ref_jni (JavaInteropGCBridge *bridge, JNIEnv *env, MonoObject *
 	void *weak  = (*env)->NewWeakGlobalRef (env, handle);
 	java_interop_gc_bridge_weak_gref_log_new (bridge, handle, get_object_ref_type (env, handle),
 			weak, get_object_ref_type (env, weak),
-			thread_description, "take_weak_global_ref_jni");
+			thread_name, thread_id, "take_weak_global_ref_jni");
 
 	java_interop_gc_bridge_gref_log_delete (bridge, handle, get_object_ref_type (env, handle),
-			thread_description, "take_weak_global_ref_jni");
+			thread_name, thread_id, "take_weak_global_ref_jni");
 	(*env)->DeleteGlobalRef (env, handle);
 
 	mono_field_set_value (obj, bridge_info->handle, &weak);
@@ -879,7 +911,7 @@ set_bridge_processing (JavaInteropGCBridge *bridge, mono_bool value)
 }
 
 static void
-gc_prepare_for_java_collection (JavaInteropGCBridge *bridge, JNIEnv *env, int num_sccs, MonoGCBridgeSCC **sccs, int num_xrefs, MonoGCBridgeXRef *xrefs, const char *thread_description)
+gc_prepare_for_java_collection (JavaInteropGCBridge *bridge, JNIEnv *env, int num_sccs, MonoGCBridgeSCC **sccs, int num_xrefs, MonoGCBridgeXRef *xrefs, const char *thread_name, int64_t thread_id)
 {
 	set_bridge_processing (bridge, 1);
 
@@ -915,7 +947,7 @@ gc_prepare_for_java_collection (JavaInteropGCBridge *bridge, JNIEnv *env, int nu
 	// switch to weak refs
 	for (int i = 0; i < num_sccs; i++)
 		for (int j = 0; j < sccs [i]->num_objs; j++)
-			take_weak_global_ref (bridge, env, sccs [i]->objs [j], thread_description);
+			take_weak_global_ref (bridge, env, sccs [i]->objs [j], thread_name, thread_id);
 }
 
 static jmethodID
@@ -935,14 +967,14 @@ get_clear_references_method (JavaInteropGCBridge *bridge, JNIEnv *env, jobject o
 }
 
 static void
-gc_cleanup_after_java_collection (JavaInteropGCBridge *bridge, JNIEnv *env, int num_sccs, MonoGCBridgeSCC **sccs, const char *thread_description)
+gc_cleanup_after_java_collection (JavaInteropGCBridge *bridge, JNIEnv *env, int num_sccs, MonoGCBridgeSCC **sccs, const char *thread_name, int64_t thread_id)
 {
 	int total   = 0;
 	int alive   = 0;
 
 	for (int i = 0; i < num_sccs; i++)
 		for (int j = 0; j < sccs [i]->num_objs; j++, total++)
-			take_global_ref (bridge, env, sccs [i]->objs [j], thread_description);
+			take_global_ref (bridge, env, sccs [i]->objs [j], thread_name, thread_id);
 
 	/* clear the cross references on any remaining items */
 	for (int i = 0; i < num_sccs; i++) {
@@ -994,19 +1026,6 @@ static void
 java_gc (JavaInteropGCBridge *bridge, JNIEnv *env)
 {
 	(*env)->CallVoidMethod (env, bridge->Runtime_instance, bridge->Runtime_gc);
-}
-
-static char *
-get_thread_description (JavaInteropGCBridge *bridge)
-{
-#if __linux__
-	int64_t tid = gettid ();
-#else
-	int64_t tid = (int64_t) pthread_self ();
-#endif
-	char *b;
-	asprintf (&b, "'finalizer'(%" PRId64 ")", tid);
-	return b;
 }
 
 int
@@ -1143,6 +1162,31 @@ gc_is_bridge_object (MonoObject *object)
 	return 1;
 }
 
+static char *
+get_thread_name (void)
+{
+	if (_mono_thread_get_name_utf8) {
+		MonoThread *thread = mono_thread_current ();
+		return _mono_thread_get_name_utf8 (thread);
+	}
+	return strdup ("finalizer");
+}
+
+static int64_t
+get_thread_id (void)
+{
+	if (_mono_thread_get_managed_id) {
+		MonoThread *thread = mono_thread_current ();
+		return _mono_thread_get_managed_id (thread);
+	}
+#if __linux__
+	int64_t tid = gettid ();
+#else
+	int64_t tid = (int64_t) pthread_self ();
+#endif
+	return tid;
+}
+
 static void
 gc_cross_references (int num_sccs, MonoGCBridgeSCC **sccs, int num_xrefs, MonoGCBridgeXRef *xrefs)
 {
@@ -1151,7 +1195,8 @@ gc_cross_references (int num_sccs, MonoGCBridgeSCC **sccs, int num_xrefs, MonoGC
 
 	JavaInteropGCBridge    *bridge  = mono_bridge;
 
-	char   *thread_description  = get_thread_description (bridge);
+	char     *thread_name       = get_thread_name ();
+	int64_t     thread_id       = get_thread_id ();
 
 #if DEBUG
 	if (bridge->gref_log_level > 1) {
@@ -1177,12 +1222,12 @@ gc_cross_references (int num_sccs, MonoGCBridgeSCC **sccs, int num_xrefs, MonoGC
 
 	JNIEnv *env = ensure_jnienv (bridge);
 	if (env != NULL) {
-		gc_prepare_for_java_collection (bridge, env, num_sccs, sccs, num_xrefs, xrefs, thread_description);
+		gc_prepare_for_java_collection (bridge, env, num_sccs, sccs, num_xrefs, xrefs, thread_name, thread_id);
 		java_gc (bridge, env);
-		gc_cleanup_after_java_collection (bridge, env, num_sccs, sccs, thread_description);
+		gc_cleanup_after_java_collection (bridge, env, num_sccs, sccs, thread_name, thread_id);
 	}
 
-	free (thread_description);
+	free (thread_name);
 }
 
 int

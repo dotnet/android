@@ -21,32 +21,32 @@ namespace Java.Interop {
 		{
 			base.OnSetRuntime (runtime);
 
-			bridge  = java_interop_gc_bridge_get_current ();
+			bridge  = NativeMethods.java_interop_gc_bridge_get_current ();
 			if (bridge != IntPtr.Zero)
 				return;
 
-			bridge  = java_interop_gc_bridge_new (runtime.InvocationPointer);
+			bridge  = NativeMethods.java_interop_gc_bridge_new (runtime.InvocationPointer);
 			if (bridge == IntPtr.Zero)
 				throw new NotSupportedException ("Could not initialize JNI::Mono GC Bridge!");
 
 			try {
-				if (java_interop_gc_bridge_set_bridge_processing_field (bridge, typeof (MonoRuntimeValueManager).TypeHandle, nameof (GCBridgeProcessingIsActive)) < 0)
+				if (NativeMethods.java_interop_gc_bridge_set_bridge_processing_field (bridge, typeof (MonoRuntimeValueManager).TypeHandle, nameof (GCBridgeProcessingIsActive)) < 0)
 					throw new NotSupportedException ("Could not set bridge processing field!");
 				foreach (var t in new[]{typeof (JavaObject), typeof (JavaException)}) {
-					if (java_interop_gc_bridge_register_bridgeable_type (bridge, t.TypeHandle) < 0)
+					if (NativeMethods.java_interop_gc_bridge_register_bridgeable_type (bridge, t.TypeHandle) < 0)
 						throw new NotSupportedException ("Could not register type " + t.FullName + "!");
 				}
-				if (java_interop_gc_bridge_add_current_app_domain (bridge) < 0)
+				if (NativeMethods.java_interop_gc_bridge_add_current_app_domain (bridge) < 0)
 					throw new NotSupportedException ("Could not register current AppDomain!");
-				if (java_interop_gc_bridge_set_current_once (bridge) < 0)
+				if (NativeMethods.java_interop_gc_bridge_set_current_once (bridge) < 0)
 					throw new NotSupportedException ("Could not set GC Bridge instance!");
 			}
 			catch (Exception) {
-				java_interop_gc_bridge_free (bridge);
+				NativeMethods.java_interop_gc_bridge_free (bridge);
 				bridge  = IntPtr.Zero;
 				throw;
 			}
-			if (java_interop_gc_bridge_register_hooks (bridge, GCBridgeUseWeakReferenceKind.Jni) < 0)
+			if (NativeMethods.java_interop_gc_bridge_register_hooks (bridge, GCBridgeUseWeakReferenceKind.Jni) < 0)
 				throw new NotSupportedException ("Could not register GC Bridge with Mono!");
 		}
 
@@ -54,48 +54,46 @@ namespace Java.Interop {
 		{
 			if (!GCBridgeProcessingIsActive)
 				return;
-			java_interop_gc_bridge_wait_for_bridge_processing (bridge);
+			NativeMethods.java_interop_gc_bridge_wait_for_bridge_processing (bridge);
 		}
+	}
+
+	partial class NativeMethods {
 
 		const   string JavaInteropLib = "java-interop";
-
-		delegate    IntPtr  GetThreadDescriptionCb (IntPtr user_data);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
 		internal static extern IntPtr java_interop_gc_bridge_get_current ();
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern int java_interop_gc_bridge_set_current_once (IntPtr bridge);
+		internal static extern int java_interop_gc_bridge_set_current_once (IntPtr bridge);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern int java_interop_gc_bridge_register_hooks (IntPtr bridge, GCBridgeUseWeakReferenceKind weak_ref_kind);
+		internal static extern int java_interop_gc_bridge_register_hooks (IntPtr bridge, GCBridgeUseWeakReferenceKind weak_ref_kind);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern IntPtr java_interop_gc_bridge_new (IntPtr jvm);
+		internal static extern IntPtr java_interop_gc_bridge_new (IntPtr jvm);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern int java_interop_gc_bridge_free (IntPtr bridge);
+		internal static extern int java_interop_gc_bridge_free (IntPtr bridge);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern int java_interop_gc_bridge_set_thread_description_creator (IntPtr bridge, GetThreadDescriptionCb creator, IntPtr user_data);
-
-		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern int java_interop_gc_bridge_add_current_app_domain (IntPtr bridge);
+		internal static extern int java_interop_gc_bridge_add_current_app_domain (IntPtr bridge);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
 		internal static extern int java_interop_gc_bridge_remove_current_app_domain (IntPtr bridge);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern IntPtr java_interop_strdup (string value);
+		internal static extern IntPtr java_interop_strdup (string value);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern int java_interop_gc_bridge_set_bridge_processing_field (IntPtr bridge, RuntimeTypeHandle type_handle, string field_name);
+		internal static extern int java_interop_gc_bridge_set_bridge_processing_field (IntPtr bridge, RuntimeTypeHandle type_handle, string field_name);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern int java_interop_gc_bridge_register_bridgeable_type (IntPtr bridge, RuntimeTypeHandle type_handle);
+		internal static extern int java_interop_gc_bridge_register_bridgeable_type (IntPtr bridge, RuntimeTypeHandle type_handle);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		static extern void java_interop_gc_bridge_wait_for_bridge_processing (IntPtr bridge);
+		internal static extern void java_interop_gc_bridge_wait_for_bridge_processing (IntPtr bridge);
 	}
 }
 

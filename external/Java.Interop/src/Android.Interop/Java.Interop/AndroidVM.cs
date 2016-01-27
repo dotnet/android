@@ -26,7 +26,7 @@ namespace Java.Interop {
 			EnvironmentPointer   = JNIEnv.Handle;
 			NewObjectRequired   = ((int) Android.OS.Build.VERSION.SdkInt) <= 10;
 			InvocationPointer   = invocationPointer;
-			ObjectReferenceManager      = Java.InteropTests.LoggingJniObjectReferenceManagerDecorator.GetObjectReferenceManager (new JniRuntime.JniObjectReferenceManager ());
+			ObjectReferenceManager      = new AndroidObjectReferenceManager ();
 			TypeManager                 = new AndroidTypeManager ();
 		}
 
@@ -45,6 +45,16 @@ namespace Java.Interop {
 			Type target = ((AndroidVM) Runtime).GetTypeMapping (jniSimpleReference);
 			if (target != null)
 				yield return target;
+		}
+	}
+
+	class AndroidObjectReferenceManager : JniRuntime.JniObjectReferenceManager {
+		public override int GlobalReferenceCount {
+			get {return Java.Interop.Runtime.GlobalReferenceCount;}
+		}
+
+		public override int WeakGlobalReferenceCount {
+			get {return 0;}
 		}
 	}
 

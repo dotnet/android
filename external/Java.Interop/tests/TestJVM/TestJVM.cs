@@ -19,7 +19,6 @@ namespace Java.InteropTests
 					builder.ClassPath.Add (jar);
 			}
 			builder.AddOption ("-Xcheck:jni");
-			builder.ObjectReferenceManager      = LoggingJniObjectReferenceManagerDecorator.GetObjectReferenceManager (new Java.Interop.JniRuntime.JniObjectReferenceManager ());
 			builder.TypeManager                 = new JreTypeManager ();
 
 			return builder;

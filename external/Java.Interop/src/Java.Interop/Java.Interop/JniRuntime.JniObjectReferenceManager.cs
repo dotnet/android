@@ -12,7 +12,7 @@ namespace Java.Interop {
 
 	partial class JniRuntime {
 
-		public class JniObjectReferenceManager : IDisposable, ISetRuntime {
+		public abstract class JniObjectReferenceManager : IDisposable, ISetRuntime {
 
 			public JniObjectReferenceManager ()
 			{
@@ -25,14 +25,12 @@ namespace Java.Interop {
 				Runtime = runtime;
 			}
 
-			int grefc;
-			public virtual int GlobalReferenceCount {
-				get {return grefc;}
+			public abstract int GlobalReferenceCount {
+				get;
 			}
 
-			int wgrefc;
-			public virtual int WeakGlobalReferenceCount {
-				 get {return wgrefc;}
+			public abstract int WeakGlobalReferenceCount {
+				get;
 			}
 
 			public virtual bool LogLocalReferenceMessages {
@@ -124,9 +122,9 @@ namespace Java.Interop {
 			{
 				if (!reference.IsValid)
 					return reference;
-				AssertCount (grefc, "GREF", reference.ToString ());
-				Interlocked.Increment (ref grefc);
-				return JniEnvironment.References.NewGlobalRef (reference);
+				var n   = JniEnvironment.References.NewGlobalRef (reference);
+				AssertCount (GlobalReferenceCount, "GREF", reference.ToString ());
+				return n;
 			}
 
 			public virtual void DeleteGlobalReference (ref JniObjectReference reference)
@@ -134,8 +132,7 @@ namespace Java.Interop {
 				if (!reference.IsValid)
 					return;
 				AssertReferenceType (ref reference, JniObjectReferenceType.Global);
-				Interlocked.Decrement (ref grefc);
-				AssertCount (grefc, "GREF", reference.ToString ());
+				AssertCount (GlobalReferenceCount, "GREF", reference.ToString ());
 				JniEnvironment.References.DeleteGlobalRef (reference.Handle);
 				reference.Invalidate ();
 			}
@@ -144,9 +141,9 @@ namespace Java.Interop {
 			{
 				if (!reference.IsValid)
 					return reference;
-				AssertCount (wgrefc, "WGREF", reference.ToString ());
-				Interlocked.Increment (ref wgrefc);
-				return JniEnvironment.References.NewWeakGlobalRef (reference);
+				var n   = JniEnvironment.References.NewWeakGlobalRef (reference);
+				AssertCount (WeakGlobalReferenceCount, "WGREF", reference.ToString ());
+				return n;
 			}
 
 			public virtual void DeleteWeakGlobalReference (ref JniObjectReference reference)
@@ -154,8 +151,7 @@ namespace Java.Interop {
 				if (!reference.IsValid)
 					return;
 				AssertReferenceType (ref reference, JniObjectReferenceType.WeakGlobal);
-				Interlocked.Decrement (ref wgrefc);
-				AssertCount (wgrefc, "WGREF", reference.ToString ());
+				AssertCount (WeakGlobalReferenceCount, "WGREF", reference.ToString ());
 				JniEnvironment.References.DeleteWeakGlobalRef (reference.Handle);
 				reference.Invalidate ();
 			}
@@ -181,8 +177,8 @@ namespace Java.Interop {
 			void AssertCount (int count, string type, string value)
 			{
 				Debug.Assert (count >= 0,
-						string.Format ("{0} count is {1}, expected to be >= 0 when dealing with handle {2} on thread {3}",
-							type, count, value, Runtime.GetCurrentThreadDescription ()));
+						string.Format ("{0} count is {1}, expected to be >= 0 when dealing with handle {2} on thread '{3}'({4}).",
+							type, count, value, Runtime.GetCurrentManagedThreadName (), Environment.CurrentManagedThreadId));
 			}
 		}
 	}

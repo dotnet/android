@@ -179,7 +179,7 @@ namespace Java.Interop
 			SetValueManager (options);
 			SetExportedMemberBuilder (options);
 
-			ObjectReferenceManager      = SetRuntime (options.ObjectReferenceManager ?? new JniObjectReferenceManager ());
+			ObjectReferenceManager      = SetRuntime (options.ObjectReferenceManager);
 			TypeManager                 = SetRuntime (options.TypeManager ?? new JniTypeManager ());
 
 			if (Interlocked.CompareExchange (ref current, this, null) != null) {
@@ -222,8 +222,11 @@ namespace Java.Interop
 		}
 
 		T SetRuntime<T> (T value)
-			where T : ISetRuntime
+			where T : class, ISetRuntime
 		{
+			if (value == null)
+				return null;
+
 			value.OnSetRuntime (this);
 			return value;
 		}
@@ -242,10 +245,14 @@ namespace Java.Interop
 			Dispose (false);
 		}
 
-		// In format $"'{Thread.CurrentThread.Name}'({Thread.CurrentThread.ManagedThreadId})"
-		public virtual string GetCurrentThreadDescription ()
+		public virtual string GetCurrentManagedThreadName ()
 		{
-			return string.Empty;
+			return null;
+		}
+
+		public virtual string GetCurrentManagedThreadStackTrace (int skipFrames = 0, bool fNeedFileInfo = false)
+		{
+			return null;
 		}
 
 		public virtual void FailFast (string message)
