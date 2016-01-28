@@ -131,7 +131,7 @@ namespace Java.Interop {
 			members.Dispose (true);
 		}
 
-		protected virtual bool ShouldUseVirtualDispatch (IJavaPeerable value, Type declaringType)
+		protected virtual bool UsesVirtualDispatch (IJavaPeerable value, Type declaringType)
 		{
 			return value.GetType () == declaringType ||
 				declaringType == null ||

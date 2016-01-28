@@ -21,7 +21,7 @@ namespace Java.Interop {
 				JniPeerMembers.AssertSelf (self);
 
 				var declaringType   = DeclaringType;
-				if (Members.ShouldUseVirtualDispatch (self, declaringType)) {
+				if (Members.UsesVirtualDispatch (self, declaringType)) {
 					var m   = GetMethodInfo (encodedMember);
 					JniEnvironment.InstanceMethods.CallVoidMethod (self.PeerReference, m, parameters);
 					return;
@@ -57,7 +57,7 @@ namespace Java.Interop {
 				JniPeerMembers.AssertSelf (self);
 
 				var declaringType   = DeclaringType;
-				if (Members.ShouldUseVirtualDispatch (self, declaringType)) {
+				if (Members.UsesVirtualDispatch (self, declaringType)) {
 					var m   = GetMethodInfo (encodedMember);
 					return JniEnvironment.InstanceMethods.CallBooleanMethod (self.PeerReference, m, parameters);
 					
@@ -93,7 +93,7 @@ namespace Java.Interop {
 				JniPeerMembers.AssertSelf (self);
 
 				var declaringType   = DeclaringType;
-				if (Members.ShouldUseVirtualDispatch (self, declaringType)) {
+				if (Members.UsesVirtualDispatch (self, declaringType)) {
 					var m   = GetMethodInfo (encodedMember);
 					return JniEnvironment.InstanceMethods.CallByteMethod (self.PeerReference, m, parameters);
 					
@@ -129,7 +129,7 @@ namespace Java.Interop {
 				JniPeerMembers.AssertSelf (self);
 
 				var declaringType   = DeclaringType;
-				if (Members.ShouldUseVirtualDispatch (self, declaringType)) {
+				if (Members.UsesVirtualDispatch (self, declaringType)) {
 					var m   = GetMethodInfo (encodedMember);
 					return JniEnvironment.InstanceMethods.CallCharMethod (self.PeerReference, m, parameters);
 					
@@ -165,7 +165,7 @@ namespace Java.Interop {
 				JniPeerMembers.AssertSelf (self);
 
 				var declaringType   = DeclaringType;
-				if (Members.ShouldUseVirtualDispatch (self, declaringType)) {
+				if (Members.UsesVirtualDispatch (self, declaringType)) {
 					var m   = GetMethodInfo (encodedMember);
 					return JniEnvironment.InstanceMethods.CallShortMethod (self.PeerReference, m, parameters);
 					
@@ -201,7 +201,7 @@ namespace Java.Interop {
 				JniPeerMembers.AssertSelf (self);
 
 				var declaringType   = DeclaringType;
-				if (Members.ShouldUseVirtualDispatch (self, declaringType)) {
+				if (Members.UsesVirtualDispatch (self, declaringType)) {
 					var m   = GetMethodInfo (encodedMember);
 					return JniEnvironment.InstanceMethods.CallIntMethod (self.PeerReference, m, parameters);
 					
@@ -237,7 +237,7 @@ namespace Java.Interop {
 				JniPeerMembers.AssertSelf (self);
 
 				var declaringType   = DeclaringType;
-				if (Members.ShouldUseVirtualDispatch (self, declaringType)) {
+				if (Members.UsesVirtualDispatch (self, declaringType)) {
 					var m   = GetMethodInfo (encodedMember);
 					return JniEnvironment.InstanceMethods.CallLongMethod (self.PeerReference, m, parameters);
 					
@@ -273,7 +273,7 @@ namespace Java.Interop {
 				JniPeerMembers.AssertSelf (self);
 
 				var declaringType   = DeclaringType;
-				if (Members.ShouldUseVirtualDispatch (self, declaringType)) {
+				if (Members.UsesVirtualDispatch (self, declaringType)) {
 					var m   = GetMethodInfo (encodedMember);
 					return JniEnvironment.InstanceMethods.CallFloatMethod (self.PeerReference, m, parameters);
 					
@@ -309,7 +309,7 @@ namespace Java.Interop {
 				JniPeerMembers.AssertSelf (self);
 
 				var declaringType   = DeclaringType;
-				if (Members.ShouldUseVirtualDispatch (self, declaringType)) {
+				if (Members.UsesVirtualDispatch (self, declaringType)) {
 					var m   = GetMethodInfo (encodedMember);
 					return JniEnvironment.InstanceMethods.CallDoubleMethod (self.PeerReference, m, parameters);
 					
@@ -345,7 +345,7 @@ namespace Java.Interop {
 				JniPeerMembers.AssertSelf (self);
 
 				var declaringType   = DeclaringType;
-				if (Members.ShouldUseVirtualDispatch (self, declaringType)) {
+				if (Members.UsesVirtualDispatch (self, declaringType)) {
 					var m   = GetMethodInfo (encodedMember);
 					return JniEnvironment.InstanceMethods.CallObjectMethod (self.PeerReference, m, parameters);
 					

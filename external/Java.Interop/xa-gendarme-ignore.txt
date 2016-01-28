@@ -20,7 +20,7 @@ R: Gendarme.Rules.Correctness.CheckParametersNullityInVisibleMethodsRule
 # These methods are protected, and thus we control the (public) callers,
 # and we *do* check that valid values are passed.
 # No check should be needed.
-M: System.Boolean Java.Interop.JniPeerMembers::ShouldUseVirtualDispatch(Java.Interop.IJavaPeerable,System.Type)
+M: System.Boolean Java.Interop.JniPeerMembers::UsesVirtualDispatch(Java.Interop.IJavaPeerable,System.Type)
 M: Java.Interop.JniPeerMembers Java.Interop.JniPeerMembers::GetPeerMembers(Java.Interop.IJavaPeerable)
 
 
