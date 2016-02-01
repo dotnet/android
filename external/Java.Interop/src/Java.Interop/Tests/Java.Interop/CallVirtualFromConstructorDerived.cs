@@ -45,7 +45,7 @@ namespace Java.InteropTests
 				var r_self  = new JniObjectReference (n_self);
 				var self    = JniEnvironment.Runtime.ValueManager.GetValue<CallVirtualFromConstructorDerived>(ref r_self, JniObjectReferenceOptions.Copy);
 				self.CalledFromConstructor (value);
-				self.DisposeUnlessRegistered ();
+				self.DisposeUnlessReferenced ();
 			}
 			catch (Exception e) {
 				envp.SetPendingException (e);

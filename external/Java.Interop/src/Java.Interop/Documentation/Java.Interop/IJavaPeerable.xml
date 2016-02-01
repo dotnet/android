@@ -1,0 +1,342 @@
+<?xml version="1.0"?>
+<docs>
+  <member name="T:IJavaPeerable">
+    <summary>
+      Support for using Java object instances.
+    </summary>
+    <remarks>
+      <para>
+        The <c>IJavaPeerable</c> interface provides access to a Java object
+        instance, invocation of members on that Java instance, control over
+        the lifetime of that object instance, and callbacks for when the
+        wrapper is being disposed or finalized.
+        The following operations are permitted:
+      </para>
+      <list type="bullet">
+        <item><term>
+            Object instance access is available through the
+            <see cref="P:Java.Interop.IJavaPeerable.PeerReference" />
+            property.
+        </term></item>
+        <item><term>
+            Member access and invocation is available through the
+            <see cref="P:Java.Interop.IJavaPeerable.JniPeerMembers" />
+            property.
+        </term></item>
+        <item><term>
+            Object lifetime control through
+            <see cref="M:Java.Interop.IJavaPeerable.Dispose" /> and
+            <see cref="M:Java.Interop.IJavaPeerable.DisposeUnlessReferenced" />
+            methods.
+        </term></item>
+        <item><term>
+            Value visibilty is controlled through
+            <see cref="M:Java.Interop.IJavaPeerable.DisposeUnlessRegistered" />.
+        </term></item>
+        <item><term>
+            Disposal and finalization callbacks through the
+            <see cref="M:Java.Interop.IJavaPeerable.Disposed" /> and
+            <see cref="M:Java.Interop.IJavaPeerable.Finalized" /> methods.
+        </term></item>
+      </list>
+      <block subset="none" type="note">
+        <para>DO NOT IMPLEMENT THIS INTERFACE.</para>
+        <para>
+          Implementations of this interface are useless without a
+          <see cref="P:Java.Interop.IJavaPeerable.PeerReference" />
+          implementation which returns
+          a non-<c>default(JniObjectReference)</c> value, which
+          corresponds to <see langword="null" /> in the Java VM.
+          While this can be done, it frequently isn't, resulting in
+          "unexpected" <c>NullPointerException</c> errors from Java.
+          Additionally, even though you can implement <c>PeerReference</c>,
+          any implementation won't fit in with a garbage collector, resulting
+          in either memory leaks or additional work to clean values up.
+        </para>
+      </block>
+    </remarks>
+  </member>
+  <member name="M:Disposed">
+    <summary>Called when the instance has been disposed.</summary>
+    <remarks>
+      <para>
+        The <c>Disposed</c> method is invoked after the
+        <see cref="M:System.IDisposable.Dispose" /> method has
+        been invoked on the instance.
+        The <see cref="P:Java.Interop.IJavaPeerable.PeerReference" />
+        property is still valid when <c>Disposed</c> is invoked.
+      </para>
+      <block subset="none" type="usage">
+        This method should only be invoked by the
+        <see cref="T:Java.Interop.JniRuntime" /> instance which will
+        be managing the <c>IJavaPeerable</c> value.
+      </block>
+      <block subset="none" type="overrides">
+        <para>
+          If the type is following the typical <c>IDisposable</c>
+          pattern, then the <c>Disposed</c> method should delegate to
+          the <c>Dispose(bool)</c> method.
+          The proscribed implementation template is:
+        </para>
+        <code lang="C#">
+[JniTypeSignature ("my/Example")]
+partial class ExampleBinding : IJavaPeerable {
+
+	public void Dispose ()
+	{
+        JniEnvironment.Runtime.ValueManager.Dispose (this);
+	}
+
+	protected virtual void Dispose (bool disposing)
+	{
+	}
+
+	void IJavaPeerable.Disposed ()
+	{
+	    Dispose (disposing: true);
+	}
+}
+        </code>
+      </block>
+    </remarks>
+  </member>
+  <member name="M:DisposeUnlessReferenced">
+    <summary>
+      If there are no outstanding references to this instance, then
+      calls <c>Dispose()</c>; otherwise, does nothing.
+    </summary>
+    <remarks>
+      <para>
+        Call this method when you would like to allow instances to be
+        collectable as soon as possible, but not if the current instance
+        is referenced anywhere else.
+      </para>
+      <block subset="none" type="note">
+        "not referenced anywhere else" may mean "is not registered".
+      </block>
+      <block subset="none" type="overrides">
+        <para>
+          The proscribed implementation template is:
+        </para>
+        <code lang="C#">
+[JniTypeSignature ("my/Example")]
+partial class ExampleBinding : IJavaPeerable {
+
+	public void DisposeUnlessReferenced ()
+	{
+        JniEnvironment.Runtime.ValueManager.DisposeUnlessReferenced (this);
+	}
+}
+        </code>
+      </block>
+    </remarks>
+    <seealso cref="M:Java.Interop.IJavaPeerable.UnregisterFromRuntime" />
+  </member>
+  <member name="M:Finalized">
+    <summary>Called when the instance has been finalized.</summary>
+    <remarks>
+      <para>
+        The <c>Finalized</c> method is invoked after the finalizer
+        has been invoked on the instance.
+        The <see cref="P:Java.Interop.IJavaPeerable.PeerReference" />
+        property is NOT valid when <c>Finalized</c> is invoked.
+      </para>
+      <block subset="none" type="usage">
+        This method should only be invoked by the
+        <see cref="T:Java.Interop.JniRuntime" /> instance which will
+        be managing the <c>IJavaPeerable</c> value.
+      </block>
+      <block subset="none" type="overrides">
+        <para>
+          If the type is following the typical <c>IDisposable</c>
+          pattern, then the <c>Finalized</c> method should delegate to
+          the <c>Dispose(bool)</c> method.
+          The proscribed implementation template is:
+        </para>
+        <code lang="C#">
+[JniTypeSignature ("my/Example")]
+partial class ExampleBinding : IJavaPeerable {
+
+	~ExampleBinding ()
+	{
+        JniEnvironment.Runtime.ValueManager.TryCollectObject (this);
+	}
+
+	protected virtual void Dispose (bool disposing)
+	{
+	}
+
+	void IJavaPeerable.Finalized ()
+	{
+	    Dispose (disposing: false);
+	}
+}
+        </code>
+      </block>
+    </remarks>
+    <seealso cref="P:Java.Interop.IJavaPeerable.PeerReference" />
+  </member>
+  <member name="P:JniIdentityHashCode">
+    <summary>
+      Returns the value of <c>java.lang.System.identityHashCode()</c>
+      for the wrapped instance.
+    </summary>
+    <remarks>
+      <block subset="none" type="usage">
+        This property <i>will not</i> throw a
+        <see cref="T:System.ObjectDisposedException" /> after the instance
+        has been disposed.
+      </block>
+      <block subset="none" type="overrides">
+        The <c>JniIdentityHashCode</c> property should return the value
+        last passed to
+        <see cref="M:Java.Interop.IJavaPeerable.SetJniIdentityHashCode" />.
+      </block>
+    </remarks>
+    <seealso cref="M:Java.Interop.IJavaPeerable.SetJniIdentityHashCode" />
+  </member>>
+  <member name="P:JniPeerMembers">
+    <summary>
+      Member access and invocation support.
+    </summary>
+    <remarks>
+      <block subset="none" type="usage">
+        This property <i>will not</i> throw a
+        <see cref="T:System.ObjectDisposedException" /> after the instance
+        has been disposed.
+      </block>
+      <block subset="none" type="overrides">
+        <para>
+          The <c>JniPeerMembers</c> property may be accessed before the
+          constructor has executed, as common behavior is for the
+          <c>JniPeerMembers</c> to be access virtually to permit caching
+          of constructor <c>jmethodID</c>s.
+        </para>
+        <para>
+          The proscribed implementation template is:
+        </para>
+        <code lang="C#">
+[JniTypeSignature ("my/Example")]
+partial class ExampleBinding {
+    static readonly JniPeerMembers _members = new JniPeerMembers ("my/Example", typeof (ExampleBinding));
+    public override JniPeerMembers JniPeerMembers {
+        get {return _members;}
+    }
+}
+        </code>
+      </block>
+    </remarks>
+  </member>
+  <member name="P:PeerReference">
+    <summary>
+      Returns a
+      <see cref="T:Java.Interop.JniObjectReference" /> of the wrapped
+      Java object instance.
+    </summary>
+    <remarks>
+      <block subset="none" type="usage">
+        This property <i>will not</i> throw a
+        <see cref="T:System.ObjectDisposedException" /> after the instance
+        has been disposed.
+      </block>
+      <block subset="none" type="note">
+        <para>
+          THIS VALUE WILL CHANGE OVER TIME. It is NOT stable.
+          It may potentially change during any future GC.
+          DO NOT use this value as a key in a dictionary.
+          The <see cref="P:Java.Interop.IJavaPeerable.JniIdentityHashCode" />
+          property may be used for that purpose.
+        </para>
+        <para>
+          While the value can change, the <c>PeerReference</c> property
+          should always refer to the same Java instance.
+          (Multiple different JNI handle values may refer to the same
+          Java instance.)
+        </para>
+      </block>
+      <block subset="none" type="overrides">
+        The <c>JniIdentityHashCode</c> property should return the value
+        last passed to
+        <see cref="M:Java.Interop.IJavaPeerable.SetJniIdentityHashCode" />.
+      </block>
+    </remarks>
+    <seealso cref="M:Java.Interop.IJavaPeerable.SetPeerReference" />
+  </member>>
+  <member name="M:SetJniIdentityHashCode">
+    <summary>Set the value returned by <c>JniIdentityHashCode</c>.</summary>
+    <param name="value">
+      A <see cref="T:System.Int32" /> which contains the value that future
+      invocations of the
+      <see cref="P:Java.Interop.IJavaPeerable.JniIdentityHashCode" />
+      property should return.
+    </param>
+    <remarks>
+      <para>
+        The <c>SetJniIdentityHashCode</c> method is invoked to alter
+        the value returned by future access to the
+        <seealso cref="P:Java.Interop.IJavaPeerable.JniIdentityHashCode" />
+        property.
+      </para>
+      <block subset="none" type="usage">
+        This method should only be invoked by the
+        <see cref="T:Java.Interop.JniRuntime" /> instance which will
+        be managing the <c>IJavaPeerable</c> value.
+      </block>
+    </remarks>
+    <seealso cref="P:Java.Interop.IJavaPeerable.JniIdentityHashCode" />
+  </member>
+  <member name="M:SetPeerReference">
+    <summary>Set the value returned by <c>PeerReference</c>.</summary>
+    <param name="value">
+      A <see cref="T:Java.Interop.JniObjectReference" /> which contains the
+      value that future invocations of the
+      <see cref="P:Java.Interop.IJavaPeerable.PeerReference" />
+      property should return.
+    </param>
+    <remarks>
+      <para>
+        The <c>SetPeerReference</c> method is invoked to alter
+        the value returned by future access to the
+        <seealso cref="P:Java.Interop.IJavaPeerable.PeerReference" />
+        property.
+      </para>
+      <block subset="none" type="usage">
+        This method should only be invoked by the
+        <see cref="T:Java.Interop.JniRuntime" /> instance which will
+        be managing the <c>IJavaPeerable</c> value.
+      </block>
+    </remarks>
+    <seealso cref="P:Java.Interop.IJavaPeerable.PeerReference" />
+  </member>
+  <member name="M:UnregisterFromRuntime">
+    <summary>
+      Unregister this instance so that the runtime will not return
+      it from future
+      <see cref="M:Java.Interop.JniRuntime+JniValueManager.PeekValue" />
+      invocations.
+    </summary>
+    <remarks>
+      <para>
+        Call this method when you would like to prevent this instance
+        from being returned by future
+        <see cref="M:Java.Interop.JniRuntime+JniValueManager.PeekValue" />
+        invocations.
+      </para>
+      <block subset="none" type="overrides">
+        <para>
+          The proscribed implementation template is:
+        </para>
+        <code lang="C#">
+[JniTypeSignature ("my/Example")]
+partial class ExampleBinding : IJavaPeerable {
+
+	public void UnregisterFromRuntime ()
+	{
+        JniEnvironment.Runtime.ValueManager.UnRegisterObject (this);
+	}
+}
+        </code>
+      </block>
+    </remarks>
+  </member>
+</docs>

@@ -94,8 +94,8 @@ namespace Java.InteropTests
 				try {
 					return self.EqualsThis (value);
 				} finally {
-					self.DisposeUnlessRegistered ();
-					value.DisposeUnlessRegistered ();
+					self.DisposeUnlessReferenced ();
+					value.DisposeUnlessReferenced ();
 				}
 			};
 			return JniEnvironment.Runtime.ExportedMemberBuilder.CreateMarshalToManagedDelegate (h);
@@ -109,7 +109,7 @@ namespace Java.InteropTests
 				try {
 					return self.GetInt32Value ();
 				} finally {
-					self.DisposeUnlessRegistered ();
+					self.DisposeUnlessReferenced ();
 				}
 			};
 			return JniEnvironment.Runtime.ExportedMemberBuilder.CreateMarshalToManagedDelegate (h);
@@ -134,7 +134,7 @@ namespace Java.InteropTests
 					JniObjectReference.Dispose (ref r);
 				}
 			} finally {
-				self.DisposeUnlessRegistered ();
+				self.DisposeUnlessReferenced ();
 			}
 		}
 
@@ -151,7 +151,7 @@ namespace Java.InteropTests
 			try {
 				self.MethodThrows ();
 			} finally {
-				self.DisposeUnlessRegistered ();
+				self.DisposeUnlessReferenced ();
 			}
 		}
 

@@ -3,13 +3,12 @@ using System;
 namespace Java.Interop
 {
 	[JniTypeSignature (JniTypeName)]
-	unsafe public class JavaException : Exception, IJavaPeerable, IJavaPeerableEx
+	unsafe public class JavaException : Exception, IJavaPeerable
 	{
 		internal    const   string          JniTypeName = "java/lang/Throwable";
 		readonly    static  JniPeerMembers  _members    = new JniPeerMembers (JniTypeName, typeof (JavaException));
 
 		int     identity;
-		bool    registered;
 		string  javaStackTrace;
 
 #if FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
@@ -107,6 +106,10 @@ namespace Java.Interop
 			}
 		}
 
+		public int JniIdentityHashCode {
+			get {return identity;}
+		}
+
 		// Note: JniPeerMembers is invoked virtually from the constructor;
 		// it MUST be valid before the derived constructor executes!
 		// The pattern MUST be followed.
@@ -144,20 +147,12 @@ namespace Java.Interop
 
 		public void Dispose ()
 		{
-			if (!PeerReference.IsValid)
-				return;
-			JniEnvironment.Runtime.ValueManager.DisposeObject (this);
-			var inner = InnerException as JavaException;
-			if (inner != null) {
-				inner.Dispose ();
-			}
+			JniEnvironment.Runtime.ValueManager.Dispose (this);
 		}
 
-		public void DisposeUnlessRegistered ()
+		public void DisposeUnlessReferenced ()
 		{
-			if (registered)
-				return;
-			Dispose ();
+			JniEnvironment.Runtime.ValueManager.DisposeUnlessReferenced (this);
 		}
 
 		protected virtual void Dispose (bool disposing)
@@ -232,22 +227,22 @@ namespace Java.Interop
 			}
 		}
 
-		int IJavaPeerableEx.IdentityHashCode {
-			get {return identity;}
-			set {identity = value;}
-		}
-
-		bool IJavaPeerableEx.Registered {
-			get {return registered;}
-			set {registered = value;}
-		}
-
-		void IJavaPeerableEx.Dispose (bool disposing)
+		void IJavaPeerable.Disposed ()
 		{
-			Dispose (disposing);
+			Dispose (disposing: true);
 		}
 
-		void IJavaPeerableEx.SetPeerReference (JniObjectReference reference)
+		void IJavaPeerable.Finalized ()
+		{
+			Dispose (disposing: false);
+		}
+
+		void IJavaPeerable.SetJniIdentityHashCode (int value)
+		{
+			identity    = value;
+		}
+
+		void IJavaPeerable.SetPeerReference (JniObjectReference reference)
 		{
 #if FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
 			this.reference  = reference;

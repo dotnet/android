@@ -101,7 +101,7 @@ namespace Java.Interop
 				} finally {
 					var j = at as IJavaPeerable;
 					if (j != null)
-						j.DisposeUnlessRegistered ();
+						j.DisposeUnlessReferenced ();
 				}
 			}
 			return -1;
@@ -124,7 +124,7 @@ namespace Java.Interop
 				if (forMarshalCollection) {
 					var d = item as IJavaPeerable;
 					if (d != null)
-						d.DisposeUnlessRegistered ();
+						d.DisposeUnlessReferenced ();
 				}
 			}
 		}

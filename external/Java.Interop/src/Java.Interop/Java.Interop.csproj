@@ -12,6 +12,7 @@
     <AssemblyName>Java.Interop</AssemblyName>
     <TargetFrameworkProfile>Profile111</TargetFrameworkProfile>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <NoWarn>1591</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -24,6 +25,7 @@
     <ConsolePause>false</ConsolePause>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <JNIEnvGenPath>$(OutputPath)</JNIEnvGenPath>
+    <DocumentationFile>..\..\bin\Debug\Java.Interop.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <Optimize>true</Optimize>
@@ -34,6 +36,7 @@
     <DefineConstants>INTEROP;FEATURE_JNIENVIRONMENT_SAFEHANDLES;FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES</DefineConstants>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <JNIEnvGenPath>$(OutputPath)</JNIEnvGenPath>
+    <DocumentationFile>..\..\bin\Release\Java.Interop.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'XAIntegrationDebug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -100,7 +103,6 @@
     <Compile Include="Java.Interop\JniPeerMembers.JniStaticFields.cs" />
   </ItemGroup>
   <ItemGroup Condition=" !$(Configuration.StartsWith('XAIntegration')) ">
-    <Compile Include="Java.Interop\IJavaPeerableEx.cs" />
     <Compile Include="Java.Interop\JavaArray.cs" />
     <Compile Include="Java.Interop\JavaException.cs" />
     <Compile Include="Java.Interop\JavaObject.cs" />
@@ -181,5 +183,6 @@
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>JniPeerMembers.JniMethods.cs</LastGenOutput>
     </None>
+    <None Include="Documentation\Java.Interop\IJavaPeerable.xml" />
   </ItemGroup>
 </Project>

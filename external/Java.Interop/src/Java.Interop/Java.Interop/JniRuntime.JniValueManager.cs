@@ -73,19 +73,20 @@ namespace Java.Interop
 			}
 
 			internal void RegisterObject<T> (T value)
-				where T : IJavaPeerable, IJavaPeerableEx
+				where T : IJavaPeerable
 			{
 				var r = value.PeerReference;
 				if (!r.IsValid)
 					throw new ObjectDisposedException (value.GetType ().FullName);
-				if (value.Registered)
+				var o = PeekObject (value.PeerReference);
+				if (o != null)
 					return;
 
 				if (r.Type != JniObjectReferenceType.Global) {
 					value.SetPeerReference (r.NewGlobalRef ());
 					JniObjectReference.Dispose (ref r, JniObjectReferenceOptions.CopyAndDispose);
 				}
-				int key = value.IdentityHashCode;
+				int key = value.JniIdentityHashCode;
 				lock (RegisteredInstances) {
 					WeakReference   existing;
 					IJavaPeerable     target;
@@ -105,13 +106,12 @@ namespace Java.Interop
 					else
 						RegisteredInstances [key] = new WeakReference (value, trackResurrection: true);
 				}
-				value.Registered = true;
 			}
 
 			internal void UnRegisterObject<T> (T value)
-				where T : IJavaPeerable, IJavaPeerableEx
+				where T : IJavaPeerable
 			{
-				int key = value.IdentityHashCode;
+				int key = value.JniIdentityHashCode;
 				lock (RegisteredInstances) {
 					WeakReference               wv;
 					IJavaPeerable                 t;
@@ -119,12 +119,11 @@ namespace Java.Interop
 						(t = (IJavaPeerable) wv.Target) != null &&
 						object.ReferenceEquals (value, t))
 						RegisteredInstances.Remove (key);
-					value.Registered = false;
 				}
 			}
 
 			internal TCleanup SetObjectPeerReference<T, TCleanup> (T value, ref JniObjectReference reference, JniObjectReferenceOptions options, Func<Action, TCleanup> createCleanup)
-				where T : IJavaPeerable, IJavaPeerableEx
+				where T : IJavaPeerable
 				where TCleanup : IDisposable
 			{
 				if (!reference.IsValid)
@@ -137,13 +136,13 @@ namespace Java.Interop
 				value.SetPeerReference (newRef);
 				JniObjectReference.Dispose (ref reference, options);
 
-				value.IdentityHashCode = JniSystem.IdentityHashCode (newRef);
+				value.SetJniIdentityHashCode (JniSystem.IdentityHashCode (newRef));
 
 				var o = Runtime.ObjectReferenceManager;
 				if (o.LogGlobalReferenceMessages) {
 					o.WriteGlobalReferenceLine ("Created PeerReference={0} IdentityHashCode=0x{1} Instance=0x{2} Instance.Type={3}, Java.Type={4}",
 							newRef.ToString (),
-							value.IdentityHashCode.ToString ("x"),
+							value.JniIdentityHashCode.ToString ("x"),
 							RuntimeHelpers.GetHashCode (value).ToString ("x"),
 							value.GetType ().FullName,
 							JniEnvironment.Types.GetJniTypeNameFromInstance (newRef));
@@ -155,42 +154,57 @@ namespace Java.Interop
 				return createCleanup (null);
 			}
 
-			internal void DisposeObject<T> (T value)
-				where T : IJavaPeerable, IJavaPeerableEx
+			public virtual void Dispose (IJavaPeerable value)
 			{
 				var h = value.PeerReference;
 				if (!h.IsValid)
 					return;
 
-				if (value.Registered)
-					UnRegisterObject (value);
+				Dispose (h, value);
+			}
 
+			void Dispose (JniObjectReference h, IJavaPeerable value)
+			{
+				value.Disposed ();
+				UnRegisterObject (value);
 				var o = Runtime.ObjectReferenceManager;
 				if (o.LogGlobalReferenceMessages) {
 					o.WriteGlobalReferenceLine ("Disposing PeerReference={0} IdentityHashCode=0x{1} Instance=0x{2} Instance.Type={3} Java.Type={4}",
 							h.ToString (),
-							value.IdentityHashCode.ToString ("x"),
+							value.JniIdentityHashCode.ToString ("x"),
 							RuntimeHelpers.GetHashCode (value).ToString ("x"),
 							value.GetType ().ToString (),
 							JniEnvironment.Types.GetJniTypeNameFromInstance (h));
 				}
-
-				value.Dispose (disposing: true);
-				#if FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
+#if FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
 				var lref = value.PeerReference.SafeHandle as JniLocalReference;
 				if (lref != null && !JniEnvironment.IsHandleValid (lref)) {
 					// `lref` was created on another thread, and CANNOT be disposed on this thread.
 					// Just invalidate the reference and move on.
 					lref.SetHandleAsInvalid ();
 				}
-				#endif  // FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
+#endif  // FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
+
 				JniObjectReference.Dispose (ref h);
 				value.SetPeerReference (new JniObjectReference ());
 				GC.SuppressFinalize (value);
 			}
 
+			public virtual void DisposeUnlessReferenced (IJavaPeerable value)
+			{
+				var h = value.PeerReference;
+				if (!h.IsValid)
+					return;
+
+				var o = PeekObject (h);
+				if (o != null && object.ReferenceEquals (o, value))
+					return;
+
+				Dispose (h, value);
+			}
+
 			internal void TryCollectObject<T> (T value)
-				where T : IJavaPeerable, IJavaPeerableEx
+				where T : IJavaPeerable
 			{
 				var h = value.PeerReference;
 				var o = Runtime.ObjectReferenceManager;
@@ -202,11 +216,11 @@ namespace Java.Interop
 					if (o.LogGlobalReferenceMessages) {
 						o.WriteGlobalReferenceLine ("Finalizing PeerReference={0} IdentityHashCode=0x{1} Instance=0x{2} Instance.Type={3}",
 								h.ToString (),
-								value.IdentityHashCode.ToString ("x"),
+								value.JniIdentityHashCode.ToString ("x"),
 								RuntimeHelpers.GetHashCode (value).ToString ("x"),
 								value.GetType ().ToString ());
 					}
-					value.Dispose (disposing: false);
+					value.Finalized ();
 					value.SetPeerReference (new JniObjectReference ());
 					return;
 				}
@@ -215,16 +229,15 @@ namespace Java.Interop
 					bool collected  = TryGC (value, ref h);
 					if (collected) {
 						value.SetPeerReference (new JniObjectReference ());
-						if (value.Registered)
-							UnRegisterObject (value);
+						UnRegisterObject (value);
 						if (o.LogGlobalReferenceMessages) {
 							o.WriteGlobalReferenceLine ("Finalizing PeerReference={0} IdentityHashCode=0x{1} Instance=0x{2} Instance.Type={3}",
 									h.ToString (),
-									value.IdentityHashCode.ToString ("x"),
+									value.JniIdentityHashCode.ToString ("x"),
 									RuntimeHelpers.GetHashCode (value).ToString ("x"),
 									value.GetType ().ToString ());
 						}
-						value.Dispose (disposing: false);
+						value.Finalized ();
 					} else {
 						value.SetPeerReference (h);
 						GC.ReRegisterForFinalize (value);

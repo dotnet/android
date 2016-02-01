@@ -495,7 +495,7 @@ namespace Java.Interop.PerformanceTests {
 				Console.WriteLine ("# methodHandles(JavaVM.GetObject) creation timing: {0} Count={1}", methodsTiming.Elapsed, methodHandles.Count);
 
 				foreach (var h in methodHandlesGO)
-					h.DisposeUnlessRegistered ();
+					h.DisposeUnlessReferenced ();
 
 				methodsTiming       = Stopwatch.StartNew ();
 				var methodHandlesAr = new List<JavaObject> ();
@@ -679,7 +679,7 @@ namespace Java.Interop.PerformanceTests {
 					}
 					getObjectTime.Stop ();
 					foreach (var o in rlist)
-						o.DisposeUnlessRegistered ();
+						o.DisposeUnlessReferenced ();
 				}
 			}
 

@@ -47,7 +47,7 @@ namespace Java.Interop.Dynamic {
 			if (disposing) {
 				var java    = Value as IJavaPeerable;
 				if (java != null) {
-					java.DisposeUnlessRegistered ();
+					java.DisposeUnlessReferenced ();
 				}
 
 				if (klass != null)

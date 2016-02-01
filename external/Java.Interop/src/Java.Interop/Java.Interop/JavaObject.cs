@@ -3,12 +3,11 @@ using System;
 namespace Java.Interop
 {
 	[JniTypeSignature ("java/lang/Object")]
-	unsafe public class JavaObject : IJavaPeerable, IJavaPeerableEx
+	unsafe public class JavaObject : IJavaPeerable
 	{
 		readonly static JniPeerMembers _members = new JniPeerMembers ("java/lang/Object", typeof (JavaObject));
 
 		int     keyHandle;
-		bool    registered;
 
 #if FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
 		JniObjectReference  reference;
@@ -39,6 +38,10 @@ namespace Java.Interop
 				return new JniObjectReference (handle, handle_type);
 #endif  // FEATURE_JNIOBJECTREFERENCE_INTPTRS
 			}
+		}
+
+		public int JniIdentityHashCode {
+			get {return keyHandle;}
 		}
 
 		// Note: JniPeerMembers is invoked virtually from the constructor;
@@ -85,14 +88,12 @@ namespace Java.Interop
 
 		public void Dispose ()
 		{
-			JniEnvironment.Runtime.ValueManager.DisposeObject (this);
+			JniEnvironment.Runtime.ValueManager.Dispose (this);
 		}
 
-		public void DisposeUnlessRegistered ()
+		public void DisposeUnlessReferenced ()
 		{
-			if (registered)
-				return;
-			Dispose ();
+			JniEnvironment.Runtime.ValueManager.DisposeUnlessReferenced (this);
 		}
 
 		protected virtual void Dispose (bool disposing)
@@ -125,22 +126,23 @@ namespace Java.Interop
 			return JniEnvironment.Strings.ToString (ref lref, JniObjectReferenceOptions.CopyAndDispose);
 		}
 
-		int IJavaPeerableEx.IdentityHashCode {
-			get {return keyHandle;}
-			set {keyHandle = value;}
-		}
-
-		bool IJavaPeerableEx.Registered {
-			get {return registered;}
-			set {registered = value;}
-		}
-
-		void IJavaPeerableEx.Dispose (bool disposing)
+		void IJavaPeerable.Disposed ()
 		{
-			Dispose (disposing);
+			Dispose (disposing: true);
 		}
 
-		void IJavaPeerableEx.SetPeerReference (JniObjectReference reference)
+		void IJavaPeerable.Finalized ()
+		{
+			Dispose (disposing: false);
+		}
+
+		void IJavaPeerable.SetJniIdentityHashCode (int value)
+		{
+			keyHandle   = value;
+		}
+
+
+		void IJavaPeerable.SetPeerReference (JniObjectReference reference)
 		{
 #if FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
 			this.reference  = reference;
