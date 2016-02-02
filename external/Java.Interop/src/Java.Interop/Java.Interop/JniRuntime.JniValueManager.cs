@@ -46,85 +46,21 @@ namespace Java.Interop
 
 			protected virtual void Dispose (bool disposing)
 			{
-				if (!disposing)
-					return;
-
-				if (RegisteredInstances == null)
-					return;
-
-				foreach (var o in RegisteredInstances.Values) {
-					var t = (IDisposable) o.Target;
-					if (t == null)
-						continue;
-					t.Dispose ();
-				}
-				RegisteredInstances.Clear ();
 			}
 
 			public abstract void WaitForGCBridgeProcessing ();
 
-			Dictionary<int, WeakReference>  RegisteredInstances = new Dictionary<int, WeakReference>();
+			public abstract void Collect ();
 
-			public List<WeakReference> GetSurfacedObjects ()
-			{
-				lock (RegisteredInstances) {
-					return RegisteredInstances.Values.ToList ();
-				}
-			}
+			public abstract void Add (IJavaPeerable value);
 
-			internal void RegisterObject<T> (T value)
-				where T : IJavaPeerable
-			{
-				var r = value.PeerReference;
-				if (!r.IsValid)
-					throw new ObjectDisposedException (value.GetType ().FullName);
-				var o = PeekObject (value.PeerReference);
-				if (o != null)
-					return;
+			public abstract void Remove (IJavaPeerable value);
 
-				if (r.Type != JniObjectReferenceType.Global) {
-					value.SetPeerReference (r.NewGlobalRef ());
-					JniObjectReference.Dispose (ref r, JniObjectReferenceOptions.CopyAndDispose);
-				}
-				int key = value.JniIdentityHashCode;
-				lock (RegisteredInstances) {
-					WeakReference   existing;
-					IJavaPeerable     target;
-					if (RegisteredInstances.TryGetValue (key, out existing) && (target = (IJavaPeerable)existing.Target) != null)
-						Runtime.ObjectReferenceManager.WriteGlobalReferenceLine (
-								"Warning: Not registering PeerReference={0} IdentityHashCode=0x{1} Instance={2} Instance.Type={3} Java.Type={4}; " +
-								"keeping previously registered PeerReference={5} Instance={6} Instance.Type={7} Java.Type={8}.",
-								value.PeerReference.ToString (),
-								key.ToString ("x"),
-								RuntimeHelpers.GetHashCode (value).ToString ("x"),
-								value.GetType ().FullName,
-								JniEnvironment.Types.GetJniTypeNameFromInstance (value.PeerReference),
-								target.PeerReference.ToString (),
-								RuntimeHelpers.GetHashCode (target).ToString ("x"),
-								target.GetType ().FullName,
-								JniEnvironment.Types.GetJniTypeNameFromInstance (target.PeerReference));
-					else
-						RegisteredInstances [key] = new WeakReference (value, trackResurrection: true);
-				}
-			}
+			public abstract void Finalize (IJavaPeerable value);
 
-			internal void UnRegisterObject<T> (T value)
-				where T : IJavaPeerable
-			{
-				int key = value.JniIdentityHashCode;
-				lock (RegisteredInstances) {
-					WeakReference               wv;
-					IJavaPeerable                 t;
-					if (RegisteredInstances.TryGetValue (key, out wv) &&
-						(t = (IJavaPeerable) wv.Target) != null &&
-						object.ReferenceEquals (value, t))
-						RegisteredInstances.Remove (key);
-				}
-			}
+			public abstract List<WeakReference<IJavaPeerable>> GetSurfacedObjects ();
 
-			internal TCleanup SetObjectPeerReference<T, TCleanup> (T value, ref JniObjectReference reference, JniObjectReferenceOptions options, Func<Action, TCleanup> createCleanup)
-				where T : IJavaPeerable
-				where TCleanup : IDisposable
+			public void Construct (IJavaPeerable value, ref JniObjectReference reference, JniObjectReferenceOptions options)
 			{
 				if (!reference.IsValid)
 					throw new ArgumentException ("handle is invalid.", nameof (reference));
@@ -149,9 +85,13 @@ namespace Java.Interop
 				}
 
 				if ((options & DoNotRegisterTarget) != DoNotRegisterTarget) {
-					RegisterObject (value);
+					Add (value);
 				}
-				return createCleanup (null);
+			}
+
+			public int GetJniIdentityHashCode (JniObjectReference reference)
+			{
+				return JniSystem.IdentityHashCode (reference);
 			}
 
 			public virtual void Dispose (IJavaPeerable value)
@@ -166,7 +106,7 @@ namespace Java.Interop
 			void Dispose (JniObjectReference h, IJavaPeerable value)
 			{
 				value.Disposed ();
-				UnRegisterObject (value);
+				Remove (value);
 				var o = Runtime.ObjectReferenceManager;
 				if (o.LogGlobalReferenceMessages) {
 					o.WriteGlobalReferenceLine ("Disposing PeerReference={0} IdentityHashCode=0x{1} Instance=0x{2} Instance.Type={3} Java.Type={4}",
@@ -203,92 +143,7 @@ namespace Java.Interop
 				Dispose (h, value);
 			}
 
-			internal void TryCollectObject<T> (T value)
-				where T : IJavaPeerable
-			{
-				var h = value.PeerReference;
-				var o = Runtime.ObjectReferenceManager;
-				// MUST NOT use SafeHandle.ReferenceType: local refs are tied to a JniEnvironment
-				// and the JniEnvironment's corresponding thread; it's a thread-local value.
-				// Accessing SafeHandle.ReferenceType won't kill anything (so far...), but
-				// instead it always returns JniReferenceType.Invalid.
-				if (!h.IsValid || h.Type == JniObjectReferenceType.Local) {
-					if (o.LogGlobalReferenceMessages) {
-						o.WriteGlobalReferenceLine ("Finalizing PeerReference={0} IdentityHashCode=0x{1} Instance=0x{2} Instance.Type={3}",
-								h.ToString (),
-								value.JniIdentityHashCode.ToString ("x"),
-								RuntimeHelpers.GetHashCode (value).ToString ("x"),
-								value.GetType ().ToString ());
-					}
-					value.Finalized ();
-					value.SetPeerReference (new JniObjectReference ());
-					return;
-				}
-
-				try {
-					bool collected  = TryGC (value, ref h);
-					if (collected) {
-						value.SetPeerReference (new JniObjectReference ());
-						UnRegisterObject (value);
-						if (o.LogGlobalReferenceMessages) {
-							o.WriteGlobalReferenceLine ("Finalizing PeerReference={0} IdentityHashCode=0x{1} Instance=0x{2} Instance.Type={3}",
-									h.ToString (),
-									value.JniIdentityHashCode.ToString ("x"),
-									RuntimeHelpers.GetHashCode (value).ToString ("x"),
-									value.GetType ().ToString ());
-						}
-						value.Finalized ();
-					} else {
-						value.SetPeerReference (h);
-						GC.ReRegisterForFinalize (value);
-					}
-				} catch (Exception e) {
-					Runtime.FailFast ("Unable to perform a GC! " + e);
-				}
-			}
-
-			/// <summary>
-			///   Try to garbage collect <paramref name="value"/>.
-			/// </summary>
-			/// <returns>
-			///   <c>true</c>, if <paramref name="value"/> was collected and
-			///   <paramref name="handle"/> is invalid; otherwise <c>false</c>.
-			/// </returns>
-			/// <param name="value">
-			///   The <see cref="T:Java.Interop.IJavaPeerable"/> instance to collect.
-			/// </param>
-			/// <param name="handle">
-			///   The <see cref="T:Java.Interop.JniObjectReference"/> of <paramref name="value"/>.
-			///   This value may be updated, and <see cref="P:Java.Interop.IJavaObject.PeerReference"/>
-			///   will be updated with this value.
-			/// </param>
-			internal protected virtual bool TryGC (IJavaPeerable value, ref JniObjectReference handle)
-			{
-				if (!handle.IsValid)
-					return true;
-				var wgref = handle.NewWeakGlobalRef ();
-				JniObjectReference.Dispose (ref handle);
-				JniGC.Collect ();
-				handle = wgref.NewGlobalRef ();
-				JniObjectReference.Dispose (ref wgref);
-				return !handle.IsValid;
-			}
-
-			internal protected virtual IJavaPeerable PeekObject (JniObjectReference reference)
-			{
-				if (!reference.IsValid)
-					return null;
-
-				int key = JniSystem.IdentityHashCode (reference);
-
-				WeakReference   wv;
-				lock (RegisteredInstances) {
-					if (!RegisteredInstances.TryGetValue (key, out wv)) {
-						RegisteredInstances.Remove (key);
-					}
-				}
-				return wv == null ? null : (IJavaPeerable) wv.Target;
-			}
+			public abstract IJavaPeerable PeekObject (JniObjectReference reference);
 
 			public object PeekValue (JniObjectReference reference)
 			{
@@ -296,27 +151,40 @@ namespace Java.Interop
 					return null;
 
 				var t   = PeekObject (reference);
-				var b   = Unbox (t);
-				if (b != null)
-					return b;
-				return t;
+				if (t == null)
+					return t;
+
+				object r;
+				return TryUnboxObject (t, out r)
+					? r
+					: t;
 			}
 
-			static object Unbox (IJavaPeerable value)
+			protected virtual bool TryUnboxObject (IJavaPeerable value, out object result)
 			{
+				result  = null;
 				var p   = value as JavaProxyObject;
-				if (p != null)
-					return p.Value;
+				if (p != null) {
+					result  = p.Value;
+					return true;
+				}
 				var x   = value as JavaProxyThrowable;
-				if (x != null)
-					return x.Exception;
-				return null;
+				if (x != null) {
+					result  = x.Exception;
+					return true;
+				}
+				return false;
 			}
 
 			object PeekBoxedObject (JniObjectReference reference)
 			{
 				var t   = PeekObject (reference);
-				return Unbox (t);
+				if (t == null)
+					return null;
+				object r;
+				return TryUnboxObject (t, out r)
+					? r
+					: null;
 			}
 
 			static  readonly    KeyValuePair<Type, Type>[]      WrapperTypeMappings = new []{
@@ -334,7 +202,7 @@ namespace Java.Interop
 				return type;
 			}
 
-			internal protected virtual IJavaPeerable CreateObject (ref JniObjectReference reference, JniObjectReferenceOptions transfer, Type targetType)
+			public virtual IJavaPeerable CreateWrapper (ref JniObjectReference reference, JniObjectReferenceOptions transfer, Type targetType)
 			{
 				targetType  = targetType ?? typeof (JavaObject);
 				targetType  = GetWrapperType (targetType);
@@ -628,7 +496,7 @@ namespace Java.Interop
 			var marshaler   = jvm.ValueManager.GetValueMarshaler (targetType ?? typeof(IJavaPeerable));
 			if (marshaler != Instance)
 				return (IJavaPeerable) marshaler.CreateValue (ref reference, options, targetType);
-			return jvm.ValueManager.CreateObject (ref reference, options, targetType);
+			return jvm.ValueManager.CreateWrapper (ref reference, options, targetType);
 		}
 
 		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState (IJavaPeerable value, ParameterAttributes synchronize)
@@ -749,7 +617,7 @@ namespace Java.Interop
 				return target;
 			}
 			// Punt! Hope it's a java.lang.Object
-			return jvm.ValueManager.CreateObject (ref reference, options, targetType);
+			return jvm.ValueManager.CreateWrapper (ref reference, options, targetType);
 		}
 
 		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState (object value, ParameterAttributes synchronize)
@@ -779,40 +647,6 @@ namespace Java.Interop
 			var r   = state.ReferenceValue;
 			JniObjectReference.Dispose (ref r);
 			state = new JniValueMarshalerState ();
-		}
-	}
-
-	static class JavaLangRuntime {
-		static JniType _typeRef;
-		static JniType TypeRef {
-			get {return JniType.GetCachedJniType (ref _typeRef, "java/lang/Runtime");}
-		}
-
-		static JniMethodInfo _getRuntime;
-		internal static JniObjectReference GetRuntime ()
-		{
-			TypeRef.GetCachedStaticMethod (ref _getRuntime, "getRuntime", "()Ljava/lang/Runtime;");
-			return JniEnvironment.StaticMethods.CallStaticObjectMethod (TypeRef.PeerReference, _getRuntime);
-		}
-
-		static JniMethodInfo _gc;
-		internal static void GC (JniObjectReference runtime)
-		{
-			TypeRef.GetCachedInstanceMethod (ref _gc, "gc", "()V");
-			JniEnvironment.InstanceMethods.CallVoidMethod (runtime, _gc);
-		}
-	}
-
-	static class JniGC {
-
-		internal static void Collect ()
-		{
-			var runtime = JavaLangRuntime.GetRuntime ();
-			try {
-				JavaLangRuntime.GC (runtime);
-			} finally {
-				JniObjectReference.Dispose (ref runtime);
-			}
 		}
 	}
 }

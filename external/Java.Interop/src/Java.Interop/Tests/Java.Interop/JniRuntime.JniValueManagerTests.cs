@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 using Java.Interop;
 
@@ -31,6 +32,32 @@ namespace Java.InteropTests {
 
 			public override void WaitForGCBridgeProcessing ()
 			{
+			}
+
+			public override void Collect ()
+			{
+			}
+
+			public override void Add (IJavaPeerable reference)
+			{
+			}
+
+			public override void Remove (IJavaPeerable reference)
+			{
+			}
+
+			public override void Finalize (IJavaPeerable reference)
+			{
+			}
+
+			public override List<WeakReference<IJavaPeerable>> GetSurfacedObjects ()
+			{
+				return null;
+			}
+
+			public override IJavaPeerable PeekObject (JniObjectReference reference)
+			{
+				return null;
 			}
 		}
 

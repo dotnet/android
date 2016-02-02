@@ -26,7 +26,7 @@ namespace Java.Interop
 
 		~JavaObject ()
 		{
-			JniEnvironment.Runtime.ValueManager.TryCollectObject (this);
+			JniEnvironment.Runtime.ValueManager.Finalize (this);
 		}
 
 		public          JniObjectReference          PeerReference {
@@ -51,39 +51,49 @@ namespace Java.Interop
 			get {return _members;}
 		}
 
-		public JavaObject (ref JniObjectReference reference, JniObjectReferenceOptions transfer)
+		public JavaObject (ref JniObjectReference reference, JniObjectReferenceOptions options)
 		{
-			if (transfer == JniObjectReferenceOptions.None)
+			if (options == JniObjectReferenceOptions.None)
 				return;
 
-			using (SetPeerReference (ref reference, transfer)) {
-			}
+			Construct (ref reference, options);
 		}
 
 		public unsafe JavaObject ()
 		{
 			var peer = JniPeerMembers.InstanceMethods.StartCreateInstance ("()V", GetType (), null);
-			using (SetPeerReference (
-					ref peer,
-					JniObjectReferenceOptions.CopyAndDispose)) {
-				JniPeerMembers.InstanceMethods.FinishCreateInstance ("()V", this, null);
-			}
+			Construct (ref peer, JniObjectReferenceOptions.CopyAndDispose);
+			JniPeerMembers.InstanceMethods.FinishCreateInstance ("()V", this, null);
 		}
 
-		protected SetPeerReferenceCompletion SetPeerReference (ref JniObjectReference handle, JniObjectReferenceOptions transfer)
+		protected void Construct (ref JniObjectReference reference, JniObjectReferenceOptions options)
 		{
-			return JniEnvironment.Runtime.ValueManager.SetObjectPeerReference (
-					this,
-					ref handle,
-					transfer,
-					a => new SetPeerReferenceCompletion (a));
+			JniEnvironment.Runtime.ValueManager.Construct (this, ref reference, options);
+		}
+
+		protected void SetPeerReference (ref JniObjectReference reference, JniObjectReferenceOptions options)
+		{
+			if (options == JniObjectReferenceOptions.None) {
+				((IJavaPeerable) this).SetPeerReference (new JniObjectReference ());
+				return;
+			}
+
+#if FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
+			this.reference      = reference;
+#endif  // FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
+#if FEATURE_JNIOBJECTREFERENCE_INTPTRS
+			this.handle         = reference.Handle;
+			this.handle_type    = reference.Type;
+#endif  // FEATURE_JNIOBJECTREFERENCE_INTPTRS
+
+			JniObjectReference.Dispose (ref reference, options);
 		}
 
 		public void UnregisterFromRuntime ()
 		{
 			if (!PeerReference.IsValid)
 				throw new ObjectDisposedException (GetType ().FullName);
-			JniEnvironment.Runtime.ValueManager.UnRegisterObject (this);
+			JniEnvironment.Runtime.ValueManager.Remove (this);
 		}
 
 		public void Dispose ()
@@ -141,32 +151,9 @@ namespace Java.Interop
 			keyHandle   = value;
 		}
 
-
 		void IJavaPeerable.SetPeerReference (JniObjectReference reference)
 		{
-#if FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
-			this.reference  = reference;
-#endif  // FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
-#if FEATURE_JNIOBJECTREFERENCE_INTPTRS
-			this.handle         = reference.Handle;
-			this.handle_type    = reference.Type;
-#endif  // FEATURE_JNIOBJECTREFERENCE_INTPTRS
-		}
-
-		protected struct SetPeerReferenceCompletion : IDisposable {
-
-			readonly    Action  action;
-
-			public SetPeerReferenceCompletion (Action action)
-			{
-				this.action = action;
-			}
-
-			public void Dispose ()
-			{
-				if (action != null)
-					action ();
-			}
+			SetPeerReference (ref reference, JniObjectReferenceOptions.Copy);
 		}
 	}
 }

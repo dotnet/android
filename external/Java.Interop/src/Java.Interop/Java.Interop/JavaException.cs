@@ -29,11 +29,8 @@ namespace Java.Interop
 		public unsafe JavaException ()
 		{
 			var peer = JniPeerMembers.InstanceMethods.StartCreateInstance ("()V", GetType (), null);
-			using (SetPeerReference (
-					ref peer,
-					JniObjectReferenceOptions.CopyAndDispose)) {
-				JniPeerMembers.InstanceMethods.FinishCreateInstance ("()V", this, null);
-			}
+			Construct (ref peer, JniObjectReferenceOptions.CopyAndDispose);
+			JniPeerMembers.InstanceMethods.FinishCreateInstance ("()V", this, null);
 			javaStackTrace    = _GetJavaStack (PeerReference);
 		}
 
@@ -46,11 +43,8 @@ namespace Java.Interop
 				var args = stackalloc JniArgumentValue [1];
 				args [0] = new JniArgumentValue (native_message);
 				var peer = JniPeerMembers.InstanceMethods.StartCreateInstance (signature, GetType (), args);
-				using (SetPeerReference (
-						ref peer,
-						JniObjectReferenceOptions.CopyAndDispose)) {
-					JniPeerMembers.InstanceMethods.FinishCreateInstance (signature, this, args);
-				}
+				Construct (ref peer, JniObjectReferenceOptions.CopyAndDispose);
+				JniPeerMembers.InstanceMethods.FinishCreateInstance (signature, this, args);
 			} finally {
 				JniObjectReference.Dispose (ref native_message, JniObjectReferenceOptions.CopyAndDispose);
 			}
@@ -66,11 +60,8 @@ namespace Java.Interop
 				var args = stackalloc JniArgumentValue [1];
 				args [0] = new JniArgumentValue (native_message);
 				var peer = JniPeerMembers.InstanceMethods.StartCreateInstance (signature, GetType (), args);
-				using (SetPeerReference (
-						ref peer,
-						JniObjectReferenceOptions.CopyAndDispose)) {
-					JniPeerMembers.InstanceMethods.FinishCreateInstance (signature, this, args);
-				}
+				Construct (ref peer, JniObjectReferenceOptions.CopyAndDispose);
+				JniPeerMembers.InstanceMethods.FinishCreateInstance (signature, this, args);
 			} finally {
 				JniObjectReference.Dispose (ref native_message, JniObjectReferenceOptions.CopyAndDispose);
 			}
@@ -85,14 +76,19 @@ namespace Java.Interop
 
 			if (!reference.IsValid)
 				return;
-			using (SetPeerReference (ref reference, transfer)) {
-			}
+
+			Construct (ref reference, transfer);
 			javaStackTrace    = _GetJavaStack (PeerReference);
+		}
+
+		protected void Construct (ref JniObjectReference reference, JniObjectReferenceOptions options)
+		{
+			JniEnvironment.Runtime.ValueManager.Construct (this, ref reference, options);
 		}
 
 		~JavaException ()
 		{
-			JniEnvironment.Runtime.ValueManager.TryCollectObject (this);
+			JniEnvironment.Runtime.ValueManager.Finalize (this);
 		}
 
 		public          JniObjectReference          PeerReference {
@@ -129,20 +125,29 @@ namespace Java.Interop
 			}
 		}
 
-		protected SetSafeHandleCompletion SetPeerReference (ref JniObjectReference handle, JniObjectReferenceOptions transfer)
+		protected void SetPeerReference (ref JniObjectReference reference, JniObjectReferenceOptions options)
 		{
-			return JniEnvironment.Runtime.ValueManager.SetObjectPeerReference (
-					this,
-					ref handle,
-					transfer,
-					a => new SetSafeHandleCompletion (a));
+			if (options == JniObjectReferenceOptions.None) {
+				((IJavaPeerable) this).SetPeerReference (new JniObjectReference ());
+				return;
+			}
+
+#if FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
+			this.reference      = reference;
+#endif  // FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
+#if FEATURE_JNIOBJECTREFERENCE_INTPTRS
+			this.handle         = reference.Handle;
+			this.handle_type    = reference.Type;
+#endif  // FEATURE_JNIOBJECTREFERENCE_INTPTRS
+
+			JniObjectReference.Dispose (ref reference, options);
 		}
 
 		public void UnregisterFromRuntime ()
 		{
 			if (!PeerReference.IsValid)
 				throw new ObjectDisposedException (GetType ().FullName);
-			JniEnvironment.Runtime.ValueManager.UnRegisterObject (this);
+			JniEnvironment.Runtime.ValueManager.Remove (this);
 		}
 
 		public void Dispose ()
@@ -244,29 +249,7 @@ namespace Java.Interop
 
 		void IJavaPeerable.SetPeerReference (JniObjectReference reference)
 		{
-#if FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
-			this.reference  = reference;
-#endif  // FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
-#if FEATURE_JNIOBJECTREFERENCE_INTPTRS
-			this.handle         = reference.Handle;
-			this.handle_type    = reference.Type;
-#endif  // FEATURE_JNIOBJECTREFERENCE_INTPTRS
-		}
-
-		protected struct SetSafeHandleCompletion : IDisposable {
-
-			readonly    Action  action;
-
-			public SetSafeHandleCompletion (Action action)
-			{
-				this.action = action;
-			}
-
-			public void Dispose ()
-			{
-				if (action != null)
-					action ();
-			}
+			SetPeerReference (ref reference, JniObjectReferenceOptions.Copy);
 		}
 	}
 }

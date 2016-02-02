@@ -85,9 +85,8 @@ namespace Java.Interop {
 		public unsafe Java<#= info.TypeModifier #>Array (int length)
 			: base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
 		{
-		    var peer    = JniEnvironment.Arrays.New<#= info.JniMarshalType #>Array (CheckLength (length));
-		    using (SetPeerReference (ref peer, JniObjectReferenceOptions.CopyAndDispose)) {
-		    }
+			var peer    = JniEnvironment.Arrays.New<#= info.JniMarshalType #>Array (CheckLength (length));
+			Construct (ref peer, JniObjectReferenceOptions.CopyAndDispose);
 		}
 
 		public Java<#= info.TypeModifier #>Array (System.Collections.Generic.IList<<#= info.ManagedType #>> value)

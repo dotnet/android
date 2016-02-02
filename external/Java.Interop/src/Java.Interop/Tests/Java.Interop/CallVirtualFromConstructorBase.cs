@@ -19,11 +19,8 @@ namespace Java.InteropTests {
 			: base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
 		{
 			var peer    = JniPeerMembers.InstanceMethods.StartGenericCreateInstance ("(I)V", GetType (), value);
-			using (SetPeerReference (
-						ref peer,
-						JniObjectReferenceOptions.CopyAndDispose)) {
-				JniPeerMembers.InstanceMethods.FinishGenericCreateInstance ("(I)V", this, value);
-			}
+			Construct (ref peer, JniObjectReferenceOptions.CopyAndDispose);
+			JniPeerMembers.InstanceMethods.FinishGenericCreateInstance ("(I)V", this, value);
 		}
 
 		public virtual void CalledFromConstructor (int value)

@@ -33,8 +33,7 @@ namespace Java.Interop.PerformanceTests
 			: base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
 		{
 			var peer    = _NewObject ();
-			using (SetPeerReference (ref peer, JniObjectReferenceOptions.CopyAndDispose)) {
-			}
+			Construct (ref peer, JniObjectReferenceOptions.CopyAndDispose);
 		}
 
 		static JniMethodInfo svm;

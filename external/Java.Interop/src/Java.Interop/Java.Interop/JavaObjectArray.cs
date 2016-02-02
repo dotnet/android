@@ -28,8 +28,7 @@ namespace Java.Interop
 			: this (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
 		{
 			var peer    = _NewArray (CheckLength (length));
-			using (SetPeerReference (ref peer, JniObjectReferenceOptions.CopyAndDispose)) {
-			}
+			Construct (ref peer, JniObjectReferenceOptions.CopyAndDispose);
 		}
 
 		public JavaObjectArray (IList<T> value)

@@ -95,9 +95,8 @@ namespace Java.Interop {
 		public unsafe JavaBooleanArray (int length)
 			: base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
 		{
-		    var peer    = JniEnvironment.Arrays.NewBooleanArray (CheckLength (length));
-		    using (SetPeerReference (ref peer, JniObjectReferenceOptions.CopyAndDispose)) {
-		    }
+			var peer    = JniEnvironment.Arrays.NewBooleanArray (CheckLength (length));
+			Construct (ref peer, JniObjectReferenceOptions.CopyAndDispose);
 		}
 
 		public JavaBooleanArray (System.Collections.Generic.IList<Boolean> value)
@@ -243,9 +242,8 @@ namespace Java.Interop {
 		public unsafe JavaSByteArray (int length)
 			: base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
 		{
-		    var peer    = JniEnvironment.Arrays.NewByteArray (CheckLength (length));
-		    using (SetPeerReference (ref peer, JniObjectReferenceOptions.CopyAndDispose)) {
-		    }
+			var peer    = JniEnvironment.Arrays.NewByteArray (CheckLength (length));
+			Construct (ref peer, JniObjectReferenceOptions.CopyAndDispose);
 		}
 
 		public JavaSByteArray (System.Collections.Generic.IList<SByte> value)
@@ -391,9 +389,8 @@ namespace Java.Interop {
 		public unsafe JavaCharArray (int length)
 			: base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
 		{
-		    var peer    = JniEnvironment.Arrays.NewCharArray (CheckLength (length));
-		    using (SetPeerReference (ref peer, JniObjectReferenceOptions.CopyAndDispose)) {
-		    }
+			var peer    = JniEnvironment.Arrays.NewCharArray (CheckLength (length));
+			Construct (ref peer, JniObjectReferenceOptions.CopyAndDispose);
 		}
 
 		public JavaCharArray (System.Collections.Generic.IList<Char> value)
@@ -539,9 +536,8 @@ namespace Java.Interop {
 		public unsafe JavaInt16Array (int length)
 			: base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
 		{
-		    var peer    = JniEnvironment.Arrays.NewShortArray (CheckLength (length));
-		    using (SetPeerReference (ref peer, JniObjectReferenceOptions.CopyAndDispose)) {
-		    }
+			var peer    = JniEnvironment.Arrays.NewShortArray (CheckLength (length));
+			Construct (ref peer, JniObjectReferenceOptions.CopyAndDispose);
 		}
 
 		public JavaInt16Array (System.Collections.Generic.IList<Int16> value)
@@ -687,9 +683,8 @@ namespace Java.Interop {
 		public unsafe JavaInt32Array (int length)
 			: base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
 		{
-		    var peer    = JniEnvironment.Arrays.NewIntArray (CheckLength (length));
-		    using (SetPeerReference (ref peer, JniObjectReferenceOptions.CopyAndDispose)) {
-		    }
+			var peer    = JniEnvironment.Arrays.NewIntArray (CheckLength (length));
+			Construct (ref peer, JniObjectReferenceOptions.CopyAndDispose);
 		}
 
 		public JavaInt32Array (System.Collections.Generic.IList<Int32> value)
@@ -835,9 +830,8 @@ namespace Java.Interop {
 		public unsafe JavaInt64Array (int length)
 			: base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
 		{
-		    var peer    = JniEnvironment.Arrays.NewLongArray (CheckLength (length));
-		    using (SetPeerReference (ref peer, JniObjectReferenceOptions.CopyAndDispose)) {
-		    }
+			var peer    = JniEnvironment.Arrays.NewLongArray (CheckLength (length));
+			Construct (ref peer, JniObjectReferenceOptions.CopyAndDispose);
 		}
 
 		public JavaInt64Array (System.Collections.Generic.IList<Int64> value)
@@ -983,9 +977,8 @@ namespace Java.Interop {
 		public unsafe JavaSingleArray (int length)
 			: base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
 		{
-		    var peer    = JniEnvironment.Arrays.NewFloatArray (CheckLength (length));
-		    using (SetPeerReference (ref peer, JniObjectReferenceOptions.CopyAndDispose)) {
-		    }
+			var peer    = JniEnvironment.Arrays.NewFloatArray (CheckLength (length));
+			Construct (ref peer, JniObjectReferenceOptions.CopyAndDispose);
 		}
 
 		public JavaSingleArray (System.Collections.Generic.IList<Single> value)
@@ -1131,9 +1124,8 @@ namespace Java.Interop {
 		public unsafe JavaDoubleArray (int length)
 			: base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
 		{
-		    var peer    = JniEnvironment.Arrays.NewDoubleArray (CheckLength (length));
-		    using (SetPeerReference (ref peer, JniObjectReferenceOptions.CopyAndDispose)) {
-		    }
+			var peer    = JniEnvironment.Arrays.NewDoubleArray (CheckLength (length));
+			Construct (ref peer, JniObjectReferenceOptions.CopyAndDispose);
 		}
 
 		public JavaDoubleArray (System.Collections.Generic.IList<Double> value)

@@ -21,7 +21,7 @@ namespace Java.InteropTests {
 				t.Start ();
 				t.Join ();
 
-				GC.Collect ();
+				JniEnvironment.Runtime.ValueManager.Collect ();
 				CrossReferenceBridge a, b;
 				a = b = null;
 				Console.WriteLine ("try get A {0}", root.TryGetTarget (out a));
