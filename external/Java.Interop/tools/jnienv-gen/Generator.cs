@@ -453,11 +453,7 @@ namespace Xamarin.Java.Interop
 			o.WriteLine ();
 			o.WriteLine ("#else   /* defined(_MSC_VER */");
 			o.WriteLine ();
-			o.WriteLine ("	#ifdef __GNUC__");
-			o.WriteLine ("		#define JI_API_EXPORT __attribute__ ((visibility (\"default\")))");
-			o.WriteLine ("	#else");
-			o.WriteLine ("		#define JI_API_EXPORT");
-			o.WriteLine ("	#endif");
+			o.WriteLine ("\t#define JI_API_EXPORT __attribute__ ((visibility (\"default\")))");
 			o.WriteLine ("	#define JI_API_IMPORT");
 			o.WriteLine ();
 			o.WriteLine ("#endif  /* !defined(_MSC_VER) */");
