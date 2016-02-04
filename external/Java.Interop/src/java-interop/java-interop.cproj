@@ -71,6 +71,14 @@
     <Compile Include="java-interop-gc-bridge-mono.c" />
   </ItemGroup>
   <ItemGroup>
+    <MacLibLipo Include="lib$(OutputName)-m32.dylib">
+      <Arch>-m32</Arch>
+    </MacLibLipo>
+    <MacLibLipo Include="lib$(OutputName)-m64.dylib">
+      <Arch>-m64</Arch>
+    </MacLibLipo>
+  </ItemGroup>
+  <ItemGroup>
     <Include Include="\Library\Frameworks\Mono.framework\Headers\mono-2.0" />
   </ItemGroup>
   <PropertyGroup>
@@ -92,8 +100,19 @@
   </Target>
   <Target Name="BuildMac"
       Condition=" '$(OS)' != 'Windows_NT' "
-      Inputs="@(Compile)"
+      DependsOnTargets="BuildMacLibraries"
+      Inputs="@(MacLibLipo)"
       Outputs="$(OutputPath)\lib$(OutputName).dylib">
+    <PropertyGroup>
+      <_Files>@(MacLibLipo -&gt; '%(Identity)', ' ')</_Files>
+    </PropertyGroup>
+    <Message Text="Inputs: MacLibLipo=@(MacLibLipo)" />
+    <Exec Command="lipo $(_Files) -create -output $(OutputPath)\lib$(OutputName).dylib" />
+  </Target>
+  <Target Name="BuildMacLibraries"
+      Condition=" '$(OS)' != 'Windows_NT' "
+      Inputs="@(Compile)"
+      Outputs="@(MacLibLipo)">
     <PropertyGroup>
       <_FixedDefines>$(DefineSymbols.Replace(' ', ';'))</_FixedDefines>
     </PropertyGroup>
@@ -101,13 +120,12 @@
       <_Defines Include="$(_FixedDefines)" />
     </ItemGroup>
     <PropertyGroup>
-      <_Arch>-m32</_Arch>
       <_CppFlags>@(_Defines -&gt; '-D%(Identity)', ' ')</_CppFlags>
       <_Includes>-I $(MacJdkHeadersPath) @(Include-&gt;'-I %(Identity)', ' ')</_Includes>
       <_LinkFlags>-fvisibility=hidden -Wl,-undefined -Wl,suppress -Wl,-flat_namespace</_LinkFlags>
       <_Libs>-L /Library/Frameworks/Mono.framework/Libraries -lmonosgen-2.0 </_Libs>
       <_Files>@(Compile -&gt; '%(Identity)', ' ')</_Files>
     </PropertyGroup>
-    <Exec Command="gcc -g -shared -o &quot;$(OutputPath)\lib$(OutputName).dylib&quot; $(_Arch) $(_CppFlags) $(_LinkFlags) $(_Libs) $(_Includes) $(_Files)" />
+    <Exec Command="gcc -g -shared -o &quot;%(MacLibLipo.Identity)&quot; %(MacLibLipo.Arch) $(_CppFlags) $(_LinkFlags) $(_Libs) $(_Includes) $(_Files)" />
   </Target>
 </Project>
