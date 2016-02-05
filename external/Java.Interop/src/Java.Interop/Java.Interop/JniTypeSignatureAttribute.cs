@@ -33,7 +33,7 @@ namespace Java.Interop
 			}
 		}
 
-		public      bool        GenerateJavaWrapper     {get; set;}
+		public      bool        GenerateJavaPeer        {get; set;}
 	}
 }
 

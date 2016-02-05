@@ -17,7 +17,7 @@ namespace Java.Interop
 			if (info.SimpleReference == null)
 				info = new JniTypeSignature ("java/lang/Object", info.ArrayRank);
 			if (info.IsKeyword && info.ArrayRank == 0) {
-				info = info.GetPrimitiveWrapper ();
+				info = info.GetPrimitivePeerTypeSignature ();
 			}
 			using (var t = new JniType (info.Name)) {
 				return JniEnvironment.Arrays.NewObjectArray (length, t.PeerReference, new JniObjectReference ());

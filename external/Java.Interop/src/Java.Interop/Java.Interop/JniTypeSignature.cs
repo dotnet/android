@@ -57,7 +57,7 @@ namespace Java.Interop
 			return new JniTypeSignature (SimpleReference, ArrayRank + rank, IsKeyword);
 		}
 
-		public JniTypeSignature GetPrimitiveWrapper ()
+		public JniTypeSignature GetPrimitivePeerTypeSignature ()
 		{
 			if (!IsKeyword)
 				return this;

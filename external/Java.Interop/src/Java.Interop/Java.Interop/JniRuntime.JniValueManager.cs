@@ -196,30 +196,30 @@ namespace Java.Interop
 					: null;
 			}
 
-			static  readonly    KeyValuePair<Type, Type>[]      WrapperTypeMappings = new []{
+			static  readonly    KeyValuePair<Type, Type>[]      PeerTypeMappings = new []{
 				new KeyValuePair<Type, Type>(typeof (object),           typeof (JavaObject)),
 				new KeyValuePair<Type, Type>(typeof (IJavaPeerable),    typeof (JavaObject)),
 				new KeyValuePair<Type, Type>(typeof (Exception),        typeof (JavaException)),
 			};
 
-			static Type GetWrapperType (Type type)
+			static Type GetPeerType (Type type)
 			{
-				foreach (var m in WrapperTypeMappings) {
+				foreach (var m in PeerTypeMappings) {
 					if (m.Key == type)
 						return m.Value;
 				}
 				return type;
 			}
 
-			public virtual IJavaPeerable CreateWrapper (ref JniObjectReference reference, JniObjectReferenceOptions transfer, Type targetType)
+			public virtual IJavaPeerable CreatePeer (ref JniObjectReference reference, JniObjectReferenceOptions transfer, Type targetType)
 			{
 				targetType  = targetType ?? typeof (JavaObject);
-				targetType  = GetWrapperType (targetType);
+				targetType  = GetPeerType (targetType);
 
 				if (!typeof (IJavaPeerable).GetTypeInfo ().IsAssignableFrom (targetType.GetTypeInfo ()))
 					throw new ArgumentException ("targetType must implement IJavaPeerable!", "targetType");
 
-				var ctor = GetWrapperConstructor (reference, targetType);
+				var ctor = GetPeerConstructor (reference, targetType);
 				if (ctor == null)
 					throw new NotSupportedException (string.Format ("Could not find an appropriate constructable wrapper type for Java type '{0}', targetType='{1}'.",
 							JniEnvironment.Types.GetJniTypeNameFromInstance (reference), targetType));
@@ -237,7 +237,7 @@ namespace Java.Interop
 
 			static  readonly    Type    ByRefJniObjectReference = typeof (JniObjectReference).MakeByRefType ();
 
-			ConstructorInfo GetWrapperConstructor (JniObjectReference instance, Type fallbackType)
+			ConstructorInfo GetPeerConstructor (JniObjectReference instance, Type fallbackType)
 			{
 				var klass       = JniEnvironment.Types.GetObjectClass (instance);
 				var jniTypeName = JniEnvironment.Types.GetJniTypeNameFromClass (klass);
@@ -505,7 +505,7 @@ namespace Java.Interop
 			var marshaler   = jvm.ValueManager.GetValueMarshaler (targetType ?? typeof(IJavaPeerable));
 			if (marshaler != Instance)
 				return (IJavaPeerable) marshaler.CreateValue (ref reference, options, targetType);
-			return jvm.ValueManager.CreateWrapper (ref reference, options, targetType);
+			return jvm.ValueManager.CreatePeer (ref reference, options, targetType);
 		}
 
 		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState (IJavaPeerable value, ParameterAttributes synchronize)
@@ -626,7 +626,7 @@ namespace Java.Interop
 				return target;
 			}
 			// Punt! Hope it's a java.lang.Object
-			return jvm.ValueManager.CreateWrapper (ref reference, options, targetType);
+			return jvm.ValueManager.CreatePeer (ref reference, options, targetType);
 		}
 
 		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState (object value, ParameterAttributes synchronize)
