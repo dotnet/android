@@ -109,7 +109,7 @@ namespace Java.Interop {
 			lock (RegisteredInstances) {
 				WeakReference<IJavaPeerable>    existing;
 				IJavaPeerable     target;
-				if (RegisteredInstances.TryGetValue (key, out existing) && existing.TryGetTarget (out target))
+				if (RegisteredInstances.TryGetValue (key, out existing) && existing.TryGetTarget (out target) && !Replaceable (target))
 					Runtime.ObjectReferenceManager.WriteGlobalReferenceLine (
 							"Warning: Not registering PeerReference={0} IdentityHashCode=0x{1} Instance={2} Instance.Type={3} Java.Type={4}; " +
 							"keeping previously registered PeerReference={5} Instance={6} Instance.Type={7} Java.Type={8}.",
@@ -125,6 +125,13 @@ namespace Java.Interop {
 				else
 					RegisteredInstances [key] = new WeakReference<IJavaPeerable> (value, trackResurrection: true);
 			}
+		}
+
+		static bool Replaceable (IJavaPeerable peer)
+		{
+			if (peer == null)
+				return true;
+			return (peer.JniManagedPeerState & JniManagedPeerStates.Replaceable) == JniManagedPeerStates.Replaceable;
 		}
 
 		public override void Remove (IJavaPeerable value)

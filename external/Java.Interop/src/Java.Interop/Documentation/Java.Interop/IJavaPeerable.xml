@@ -195,6 +195,19 @@ partial class ExampleBinding : IJavaPeerable {
     </remarks>
     <seealso cref="M:Java.Interop.IJavaPeerable.SetJniIdentityHashCode" />
   </member>>
+  <member name="P:JniManagedPeerState">
+    <summary>State of the managed peer.</summary>
+    <remarks>
+      <para>
+        A <see cref="T:Java.Interop.JniManagedPeerStates" /> value providing
+        the state of the current Managed Peer instance.
+        <format type="text/html">
+          (<a href="https://developer.xamarin.com/guides/android/advanced_topics/garbage_collection/#Cross-VM_Object_Collections"
+          >Definitions</a>)
+        </format>
+      </para>
+    </remarks>
+  </member>
   <member name="P:JniPeerMembers">
     <summary>
       Member access and invocation support.
@@ -284,6 +297,20 @@ partial class ExampleBinding {
       </block>
     </remarks>
     <seealso cref="P:Java.Interop.IJavaPeerable.JniIdentityHashCode" />
+  </member>
+  <member name="P:SetJniManagedPeerState">
+    <summary>Set the state of the managed peer.</summary>
+    <param name="value">
+      A <see cref="T:Java.Interop.JniManagedPeerStates" /> value providing
+      the state of the current Managed Peer instance.
+    </param>
+    <remarks>
+      <para>
+        This should only be called from a
+        <see cref="T:Java.Interop.JniRuntime+JniValueManager" /> instance.
+      </para>
+    </remarks>
+    <seealso cref="P:Java.Interop.IJavaPeerable.JniManagedPeerState" />
   </member>
   <member name="M:SetPeerReference">
     <summary>Set the value returned by <c>PeerReference</c>.</summary>

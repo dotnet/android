@@ -76,6 +76,7 @@
     <Compile Include="Java.Interop\JniEnvironment.Strings.cs" />
     <Compile Include="Java.Interop\JniEnvironment.Types.cs" />
     <Compile Include="Java.Interop\JniFieldInfo.cs" />
+    <Compile Include="Java.Interop\JniManagedPeerStates.cs" />
     <Compile Include="Java.Interop\JniMethodInfo.cs" />
     <Compile Include="Java.Interop\JniObjectReference.cs" />
     <Compile Include="Java.Interop\JniPeerMembers.cs" />
@@ -184,5 +185,6 @@
       <LastGenOutput>JniPeerMembers.JniMethods.cs</LastGenOutput>
     </None>
     <None Include="Documentation\Java.Interop\IJavaPeerable.xml" />
+    <None Include="Documentation\Java.Interop\JniManagedPeerStates.xml" />
   </ItemGroup>
 </Project>

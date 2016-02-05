@@ -11,6 +11,8 @@ namespace Java.Interop
 		int     identity;
 		string  javaStackTrace;
 
+		JniManagedPeerStates     state;
+
 #if FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
 		JniObjectReference  reference;
 #endif  // FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
@@ -232,6 +234,10 @@ namespace Java.Interop
 			}
 		}
 
+		JniManagedPeerStates IJavaPeerable.JniManagedPeerState {
+			get {return state;}
+		}
+
 		void IJavaPeerable.Disposed ()
 		{
 			Dispose (disposing: true);
@@ -245,6 +251,11 @@ namespace Java.Interop
 		void IJavaPeerable.SetJniIdentityHashCode (int value)
 		{
 			identity    = value;
+		}
+
+		void IJavaPeerable.SetJniManagedPeerState (JniManagedPeerStates value)
+		{
+			state   = value;
 		}
 
 		void IJavaPeerable.SetPeerReference (JniObjectReference reference)

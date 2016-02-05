@@ -19,6 +19,12 @@ namespace Java.Interop
 		/// <include file="../Documentation/Java.Interop/IJavaPeerable.xml" path="/docs/member[@name='P:JniPeerMembers']/*" />
 		JniPeerMembers          JniPeerMembers {get;}
 
+		/// <include file="../Documentation/Java.Interop/IJavaPeerable.xml" path="/docs/member[@name='P:JniManagedPeerState']/*" />
+		JniManagedPeerStates    JniManagedPeerState {get;}
+
+		/// <include file="../Documentation/Java.Interop/IJavaPeerable.xml" path="/docs/member[@name='M:SetJniManagedPeerState']/*" />
+		void                    SetJniManagedPeerState (JniManagedPeerStates value);
+
 		// Lifetime management
 		/// <include file="../Documentation/Java.Interop/IJavaPeerable.xml" path="/docs/member[@name='M:UnregisterFromRuntime']/*" />
 		void    UnregisterFromRuntime ();

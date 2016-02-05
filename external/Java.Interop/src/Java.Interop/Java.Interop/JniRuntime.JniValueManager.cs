@@ -65,6 +65,14 @@ namespace Java.Interop
 				if (value == null)
 					throw new ArgumentNullException (nameof (value));
 
+				var activationRef   = value.PeerReference;
+				if (activationRef.IsValid) {
+					value.SetJniManagedPeerState (value.JniManagedPeerState | JniManagedPeerStates.Activatable);
+					JniObjectReference.Dispose (ref reference, options);
+					reference   = activationRef;
+					options     = JniObjectReferenceOptions.Copy;
+				}
+
 				if (!reference.IsValid)
 					throw new ArgumentException ("handle is invalid.", nameof (reference));
 
@@ -229,7 +237,9 @@ namespace Java.Interop
 					transfer,
 				};
 				try {
-					return (IJavaPeerable) ctor.Invoke (acts);
+					var peer    = (IJavaPeerable) ctor.Invoke (acts);
+					peer.SetJniManagedPeerState (peer.JniManagedPeerState | JniManagedPeerStates.Replaceable);
+					return peer;
 				} finally {
 					reference   = (JniObjectReference) acts [0];
 				}

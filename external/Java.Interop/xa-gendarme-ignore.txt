@@ -109,6 +109,7 @@ R: Gendarme.Rules.Design.FlagsShouldNotDefineAZeroValueRule
 # > **AVOID** using flag enum values of zero unless the value represents "all flags are cleared" and is named appropriately, as prescribed by the next guideline
 # "Invalid" implies "all flags are cleared" to *me*...
 # > **DO** name the zero value of flag enums None. For a flag enum, the value must always mean "all flags are cleared."
+T: Java.Interop.JniManagedPeerStates
 T: Java.Interop.JniObjectReferenceOptions
 
 
