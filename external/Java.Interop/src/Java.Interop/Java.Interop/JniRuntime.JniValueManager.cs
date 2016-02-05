@@ -62,6 +62,9 @@ namespace Java.Interop
 
 			public void Construct (IJavaPeerable value, ref JniObjectReference reference, JniObjectReferenceOptions options)
 			{
+				if (value == null)
+					throw new ArgumentNullException (nameof (value));
+
 				if (!reference.IsValid)
 					throw new ArgumentException ("handle is invalid.", nameof (reference));
 
@@ -96,6 +99,9 @@ namespace Java.Interop
 
 			public virtual void Dispose (IJavaPeerable value)
 			{
+				if (value == null)
+					throw new ArgumentNullException (nameof (value));
+
 				var h = value.PeerReference;
 				if (!h.IsValid)
 					return;
@@ -132,6 +138,9 @@ namespace Java.Interop
 
 			public virtual void DisposeUnlessReferenced (IJavaPeerable value)
 			{
+				if (value == null)
+					throw new ArgumentNullException (nameof (value));
+
 				var h = value.PeerReference;
 				if (!h.IsValid)
 					return;
