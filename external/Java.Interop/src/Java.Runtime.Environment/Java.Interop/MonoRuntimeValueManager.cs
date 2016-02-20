@@ -85,10 +85,14 @@ namespace Java.Interop {
 		Dictionary<int, WeakReference<IJavaPeerable>>  RegisteredInstances = new Dictionary<int, WeakReference<IJavaPeerable>>();
 
 
-		public override List<WeakReference<IJavaPeerable>> GetSurfacedObjects ()
+		public override List<JniSurfacedPeerInfo> GetSurfacedPeers ()
 		{
 			lock (RegisteredInstances) {
-				return RegisteredInstances.Values.ToList ();
+				var peers = new List<JniSurfacedPeerInfo> (RegisteredInstances.Count);
+				foreach (var e in RegisteredInstances) {
+					peers.Add (new JniSurfacedPeerInfo (e.Key, e.Value));
+				}
+				return peers;
 			}
 		}
 
@@ -97,7 +101,7 @@ namespace Java.Interop {
 			var r = value.PeerReference;
 			if (!r.IsValid)
 				throw new ObjectDisposedException (value.GetType ().FullName);
-			var o = PeekObject (value.PeerReference);
+			var o = PeekPeer (value.PeerReference);
 			if (o != null)
 				return;
 
@@ -147,7 +151,7 @@ namespace Java.Interop {
 			}
 		}
 
-		public override IJavaPeerable PeekObject (JniObjectReference reference)
+		public override IJavaPeerable PeekPeer (JniObjectReference reference)
 		{
 			if (!reference.IsValid)
 				return null;

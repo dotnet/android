@@ -72,7 +72,7 @@ namespace Java.Interop {
 		{
 			var envp = new JniTransition (jnienv);
 			try {
-				var self    = (JavaProxyObject) JniEnvironment.Runtime.ValueManager.PeekObject (new JniObjectReference (n_self));
+				var self    = (JavaProxyObject) JniEnvironment.Runtime.ValueManager.PeekPeer (new JniObjectReference (n_self));
 				var r_value = new JniObjectReference (n_value);
 				var value   = JniEnvironment.Runtime.ValueManager.GetValue (ref r_value, JniObjectReferenceOptions.Copy);
 				return self.Equals (value);
@@ -91,7 +91,7 @@ namespace Java.Interop {
 		{
 			var envp = new JniTransition (jnienv);
 			try {
-				var self = (JavaProxyObject) JniEnvironment.Runtime.ValueManager.PeekObject (new JniObjectReference (n_self));
+				var self = (JavaProxyObject) JniEnvironment.Runtime.ValueManager.PeekPeer (new JniObjectReference (n_self));
 				return self.GetHashCode ();
 			}
 			catch (Exception e) {
@@ -107,7 +107,7 @@ namespace Java.Interop {
 		{
 			var envp = new JniTransition (jnienv);
 			try {
-				var self    = (JavaProxyObject) JniEnvironment.Runtime.ValueManager.PeekObject (new JniObjectReference (n_self));
+				var self    = (JavaProxyObject) JniEnvironment.Runtime.ValueManager.PeekPeer (new JniObjectReference (n_self));
 				var s       = self.ToString ();
 				var r       = JniEnvironment.Strings.NewString (s);
 				try {

@@ -50,12 +50,12 @@ namespace Java.InteropTests {
 			{
 			}
 
-			public override List<WeakReference<IJavaPeerable>> GetSurfacedObjects ()
+			public override List<JniSurfacedPeerInfo> GetSurfacedPeers ()
 			{
 				return null;
 			}
 
-			public override IJavaPeerable PeekObject (JniObjectReference reference)
+			public override IJavaPeerable PeekPeer (JniObjectReference reference)
 			{
 				return null;
 			}

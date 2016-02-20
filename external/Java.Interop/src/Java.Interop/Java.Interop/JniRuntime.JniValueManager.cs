@@ -11,6 +11,18 @@ using Java.Interop.Expressions;
 
 namespace Java.Interop
 {
+	public class JniSurfacedPeerInfo {
+
+		public  int                             JniIdentityHashCode     {get; private set;}
+		public  WeakReference<IJavaPeerable>    SurfacedPeer            {get; private set;}
+
+		public JniSurfacedPeerInfo (int jniIdentityHashCode, WeakReference<IJavaPeerable> surfacedPeer)
+		{
+			JniIdentityHashCode     = jniIdentityHashCode;
+			SurfacedPeer            = surfacedPeer;
+		}
+	}
+
 	partial class JniRuntime
 	{
 		partial class CreationOptions {
@@ -58,7 +70,7 @@ namespace Java.Interop
 
 			public abstract void Finalize (IJavaPeerable value);
 
-			public abstract List<WeakReference<IJavaPeerable>> GetSurfacedObjects ();
+			public abstract List<JniSurfacedPeerInfo>   GetSurfacedPeers ();
 
 			public void Construct (IJavaPeerable value, ref JniObjectReference reference, JniObjectReferenceOptions options)
 			{
@@ -153,21 +165,21 @@ namespace Java.Interop
 				if (!h.IsValid)
 					return;
 
-				var o = PeekObject (h);
+				var o = PeekPeer (h);
 				if (o != null && object.ReferenceEquals (o, value))
 					return;
 
 				Dispose (h, value);
 			}
 
-			public abstract IJavaPeerable PeekObject (JniObjectReference reference);
+			public abstract IJavaPeerable PeekPeer (JniObjectReference reference);
 
 			public object PeekValue (JniObjectReference reference)
 			{
 				if (!reference.IsValid)
 					return null;
 
-				var t   = PeekObject (reference);
+				var t   = PeekPeer (reference);
 				if (t == null)
 					return t;
 
@@ -195,7 +207,7 @@ namespace Java.Interop
 
 			object PeekBoxedObject (JniObjectReference reference)
 			{
-				var t   = PeekObject (reference);
+				var t   = PeekPeer (reference);
 				if (t == null)
 					return null;
 				object r;
