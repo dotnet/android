@@ -16,11 +16,19 @@ namespace Java.InteropTests {
 		}
 
 		public unsafe CallVirtualFromConstructorBase (int value)
-			: base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
+			: this (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
 		{
+			if (PeerReference.IsValid)
+				return;
+
 			var peer    = JniPeerMembers.InstanceMethods.StartGenericCreateInstance ("(I)V", GetType (), value);
 			Construct (ref peer, JniObjectReferenceOptions.CopyAndDispose);
 			JniPeerMembers.InstanceMethods.FinishGenericCreateInstance ("(I)V", this, value);
+		}
+
+		public CallVirtualFromConstructorBase (ref JniObjectReference reference, JniObjectReferenceOptions options)
+			: base (ref reference, options)
+		{
 		}
 
 		public virtual void CalledFromConstructor (int value)

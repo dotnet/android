@@ -26,6 +26,24 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		public void Constructor ()
+		{
+			using (var t = TestType.NewTestType ()) {
+				Assert.IsTrue (t.ExecutedDefaultConstructor);
+				Assert.IsFalse (t.ExecutedActivationConstructor);
+			}
+		}
+
+		[Test]
+		public void UnboundConstructor ()
+		{
+			var e = Assert.Throws<NotSupportedException> (() => TestType.NewTestTypeWithUnboundConstructor ());
+			var ctorPrototype =
+				typeof (TestType).FullName + "(" + typeof (TestType).FullName + ", System.Int32)";
+			Assert.IsTrue (e.Message.Contains (ctorPrototype));
+		}
+
+		[Test]
 		public void TestCase ()
 		{
 			using (var t = new TestType ()) {

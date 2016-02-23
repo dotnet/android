@@ -17,6 +17,17 @@ public class TestType implements GCUserPeerable {
 		);
 	}
 
+	// For test purposes; DO NOT provide this constructor in the TestType.cs!
+	public TestType (TestType a, int b) {
+		com.xamarin.java_interop.ManagedPeer.runConstructor (
+				TestType.class,
+				this,
+				"Java.InteropTests.TestType, Java.Interop-Tests, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
+				"Java.InteropTests.TestType, Java.Interop-Tests, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null:System.Int32",
+				a, b
+		);
+	}
+
 	public  void    runTests () {
 		int n = getInt32Value ();
 		if (getInt32Value() != 42)
@@ -95,6 +106,16 @@ public class TestType implements GCUserPeerable {
 		} finally {
 			propogateFinallyBlockExecuted = true;
 		}
+	}
+
+	public static TestType newTestType ()
+	{
+		return new TestType ();
+	}
+
+	public static TestType newTestTypeWithUnboundConstructor ()
+	{
+		return new TestType (null, 42);
 	}
 
 	public  native  boolean equalsThis (Object value);

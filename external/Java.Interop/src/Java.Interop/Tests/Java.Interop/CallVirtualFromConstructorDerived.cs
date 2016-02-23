@@ -21,13 +21,24 @@ namespace Java.InteropTests
 
 		int calledValue;
 
+		public  bool    InvokedConstructor;
+
 		public CallVirtualFromConstructorDerived (int value)
 			: base (value)
 		{
+			InvokedConstructor = true;
 			if (value != calledValue)
 				throw new ArgumentException (
 						string.Format ("value '{0}' doesn't match expected value '{1}'.", value, calledValue),
 						"value");
+		}
+
+		public  bool    InvokedActivationConstructor;
+
+		public CallVirtualFromConstructorDerived (ref JniObjectReference reference, JniObjectReferenceOptions options)
+			: base (ref reference, options)
+		{
+			InvokedActivationConstructor    = true;
 		}
 
 		public bool Called;
@@ -36,6 +47,14 @@ namespace Java.InteropTests
 		{
 			Called      = true;
 			calledValue = value;
+		}
+
+		public static unsafe CallVirtualFromConstructorDerived NewInstance (int value)
+		{
+			JniArgumentValue* args = stackalloc JniArgumentValue [1];
+			args [0]    = new JniArgumentValue (value);
+			var o       = _members.StaticMethods.InvokeObjectMethod ("newInstance.(I)Lcom/xamarin/interop/CallVirtualFromConstructorDerived;", args);
+			return JniEnvironment.Runtime.ValueManager.GetValue<CallVirtualFromConstructorDerived> (ref o, JniObjectReferenceOptions.CopyAndDispose);
 		}
 
 		static void CalledFromConstructorHandler (IntPtr jnienv, IntPtr n_self, int value)

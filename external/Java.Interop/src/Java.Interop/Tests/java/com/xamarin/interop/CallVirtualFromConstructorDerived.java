@@ -1,4 +1,4 @@
-package com.xamarin.interop;
+åpackage com.xamarin.interop;
 
 import java.util.ArrayList;
 
@@ -19,6 +19,11 @@ public class CallVirtualFromConstructorDerived
 				"System.Int32",
 				value
 		);
+	}
+
+	public static CallVirtualFromConstructorDerived newInstance (int value)
+	{
+		return new CallVirtualFromConstructorDerived (value);
 	}
 
 	public native void calledFromConstructor (int value);

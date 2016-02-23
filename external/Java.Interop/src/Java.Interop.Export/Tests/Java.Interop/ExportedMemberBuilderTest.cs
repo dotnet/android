@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 
@@ -162,7 +163,7 @@ namespace Java.InteropTests
 		{
 			var t = typeof (ExportTest);
 			var m = t.GetMethod ("InstanceAction");
-			CheckCreateInvocationExpression (null, t, m, typeof (Action<IntPtr, IntPtr>),
+			CheckCreateMarshalToManagedExpression (null, t, m, typeof (Action<IntPtr, IntPtr>),
 					@"void (IntPtr __jnienv, IntPtr __this)
 {
 	JniTransition __envp;
@@ -188,28 +189,33 @@ namespace Java.InteropTests
 }");
 		}
 
-		static void CheckCreateInvocationExpression (JavaCallableAttribute export, Type type, MethodInfo method, Type expectedDelegateType, string expectedBody)
+		static void CheckCreateMarshalToManagedExpression (JavaCallableAttribute export, Type type, MethodInfo method, Type expectedDelegateType, string expectedBody)
 		{
-			export  = export ?? new JavaCallableAttribute ();
-			var b   = CreateBuilder ();
-			var l   = b.CreateMarshalToManagedExpression (method, export, type);
-			Console.WriteLine ("## method: {0}", method.Name);
-			Console.WriteLine (l.ToCSharpCode ());
+			export = export ?? new JavaCallableAttribute ();
+			var b = CreateBuilder ();
+			var l = b.CreateMarshalToManagedExpression (method, export, type);
+			CheckExpression (l, method.Name, expectedDelegateType, expectedBody);
+		}
+
+		static void CheckExpression (LambdaExpression expression, string memberName, Type expressionType, string expectedBody)
+		{
+			Console.WriteLine ("## member: {0}", memberName);
+			Console.WriteLine (expression.ToCSharpCode ());
 			var da = AppDomain.CurrentDomain.DefineDynamicAssembly(
 				new AssemblyName("dyn"), // call it whatever you want
 				System.Reflection.Emit.AssemblyBuilderAccess.Save);
 
-			var _name = "dyn-" + method.Name + ".dll";
+			var _name = "dyn-" + memberName + ".dll";
 			var dm = da.DefineDynamicModule("dyn_mod", _name);
 			var dt = dm.DefineType ("dyn_type", TypeAttributes.Public);
 			var mb = dt.DefineMethod(
-				method.Name,
+				memberName,
 				MethodAttributes.Public | MethodAttributes.Static);
 
-			l.CompileToMethod(mb);
+			expression.CompileToMethod (mb);
 			dt.CreateType();
-			Assert.AreEqual (expectedDelegateType, l.Type);
-			Assert.AreEqual (expectedBody, l.ToCSharpCode ());
+			Assert.AreEqual (expressionType,    expression.Type);
+			Assert.AreEqual (expectedBody,      expression.ToCSharpCode ());
 #if !__ANDROID__
 			da.Save (_name);
 #endif  // !__ANDROID__
@@ -220,7 +226,7 @@ namespace Java.InteropTests
 		{
 			var t       = typeof (ExportTest);
 			Action a    = ExportTest.StaticAction;
-			CheckCreateInvocationExpression (null, t, a.Method, typeof(Action<IntPtr, IntPtr>),
+			CheckCreateMarshalToManagedExpression (null, t, a.Method, typeof(Action<IntPtr, IntPtr>),
 					@"void (IntPtr __jnienv, IntPtr __class)
 {
 	JniTransition __envp;
@@ -252,7 +258,7 @@ namespace Java.InteropTests
 			var e = new JavaCallableAttribute () {
 				Signature = "(ILjava/lang/String;)V",
 			};
-			CheckCreateInvocationExpression (e, t, m.Method, typeof (Action<IntPtr, IntPtr, int, IntPtr>),
+			CheckCreateMarshalToManagedExpression (e, t, m.Method, typeof (Action<IntPtr, IntPtr, int, IntPtr>),
 					@"void (IntPtr __jnienv, IntPtr __class, int i, IntPtr v)
 {
 	JniTransition __envp;
@@ -286,7 +292,7 @@ namespace Java.InteropTests
 			var e = new JavaCallableAttribute () {
 				Signature = "(II)I",
 			};
-			CheckCreateInvocationExpression (e, t, m.Method, typeof (Func<IntPtr, IntPtr, int, int, int>),
+			CheckCreateMarshalToManagedExpression (e, t, m.Method, typeof (Func<IntPtr, IntPtr, int, int, int>),
 					@"int (IntPtr __jnienv, IntPtr __class, int color1, int color2)
 {
 	JniTransition __envp;
@@ -327,7 +333,7 @@ namespace Java.InteropTests
 			var e = new JavaCallableAttribute () {
 				Signature = "()J",
 			};
-			CheckCreateInvocationExpression (e, t, m, typeof (Func<IntPtr, IntPtr, long>),
+			CheckCreateMarshalToManagedExpression (e, t, m, typeof (Func<IntPtr, IntPtr, long>),
 					@"long (IntPtr __jnienv, IntPtr __this)
 {
 	JniTransition __envp;
@@ -364,7 +370,7 @@ namespace Java.InteropTests
 			var e = new JavaCallableAttribute () {
 				Signature = "()Ljava/lang/Object;",
 			};
-			CheckCreateInvocationExpression (e, t, m, typeof (Func<IntPtr, IntPtr, IntPtr>),
+			CheckCreateMarshalToManagedExpression (e, t, m, typeof (Func<IntPtr, IntPtr, IntPtr>),
 					@"IntPtr (IntPtr __jnienv, IntPtr __this)
 {
 	JniTransition __envp;
@@ -418,7 +424,7 @@ namespace Java.InteropTests
 			var e = new JavaCallableAttribute () {
 				Signature = "()V",
 			};
-			CheckCreateInvocationExpression (e, a.Method.DeclaringType, a.Method, typeof (Action<IntPtr, IntPtr>),
+			CheckCreateMarshalToManagedExpression (e, a.Method.DeclaringType, a.Method, typeof (Action<IntPtr, IntPtr>),
 				@"void (IntPtr jnienv, IntPtr context)
 {
 	JniTransition __envp;
@@ -441,5 +447,34 @@ namespace Java.InteropTests
 	}
 }");
 		}
-			}
+
+		[Test]
+		public void CreateConstructActivationPeerExpression_Exceptions ()
+		{
+			var b   = CreateBuilder ();
+			Assert.Throws<ArgumentNullException> (() => b.CreateConstructActivationPeerExpression (null));
+		}
+
+		[Test]
+		public void CreateConstructActivationPeerExpression ()
+		{
+			var b   = CreateBuilder ();
+			var c   = typeof (ExportedMemberBuilderTest).GetConstructor (new Type [0]);
+			var e   = b.CreateConstructActivationPeerExpression (c);
+			CheckExpression (e,
+					"ExportedMemberBuilderTest_ctor",
+					typeof(Func<ConstructorInfo, JniObjectReference, object[], object>),
+					@"object (ConstructorInfo constructor, JniObjectReference reference, object[] parameters)
+{
+	Type type;
+	object self;
+
+	type = constructor.DeclaringType;
+	self = FormatterServices.GetUninitializedObject(type);
+	(IJavaPeerable)self.SetPeerReference(reference);
+	constructor.Invoke(self, parameters);
+	return self;
+}");
+		}
+	}
 }

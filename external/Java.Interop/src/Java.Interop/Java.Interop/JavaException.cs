@@ -29,7 +29,11 @@ namespace Java.Interop
 		protected   static  readonly    JniObjectReference*     InvalidJniObjectReference = null;
 
 		public unsafe JavaException ()
+			: this (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
 		{
+			if (PeerReference.IsValid)
+				return;
+
 			var peer = JniPeerMembers.InstanceMethods.StartCreateInstance ("()V", GetType (), null);
 			Construct (ref peer, JniObjectReferenceOptions.CopyAndDispose);
 			JniPeerMembers.InstanceMethods.FinishCreateInstance ("()V", this, null);
@@ -73,14 +77,9 @@ namespace Java.Interop
 		public JavaException (ref JniObjectReference reference, JniObjectReferenceOptions transfer)
 			: base (_GetMessage (ref reference, transfer), _GetCause (ref reference, transfer))
 		{
-			if (transfer == JniObjectReferenceOptions.None)
-				return;
-
-			if (!reference.IsValid)
-				return;
-
 			Construct (ref reference, transfer);
-			javaStackTrace    = _GetJavaStack (PeerReference);
+			if (PeerReference.IsValid)
+				javaStackTrace    = _GetJavaStack (PeerReference);
 		}
 
 		protected void Construct (ref JniObjectReference reference, JniObjectReferenceOptions options)

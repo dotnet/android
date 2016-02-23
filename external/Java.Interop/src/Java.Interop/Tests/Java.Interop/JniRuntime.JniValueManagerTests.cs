@@ -134,6 +134,7 @@ namespace Java.InteropTests {
 				var o = t.NewObject (c, null);
 				using (var w = JniRuntime.CurrentRuntime.ValueManager.GetValue<IJavaPeerable> (ref o, JniObjectReferenceOptions.CopyAndDispose)) {
 					Assert.AreEqual (typeof (TestType), w.GetType ());
+					Assert.IsTrue (((TestType) w).ExecutedActivationConstructor);
 				}
 			}
 		}

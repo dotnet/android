@@ -59,14 +59,15 @@ namespace Java.Interop
 
 		public JavaObject (ref JniObjectReference reference, JniObjectReferenceOptions options)
 		{
-			if (options == JniObjectReferenceOptions.None)
-				return;
-
 			Construct (ref reference, options);
 		}
 
 		public unsafe JavaObject ()
+			: this (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
 		{
+			if (PeerReference.IsValid)
+				return;
+
 			var peer = JniPeerMembers.InstanceMethods.StartCreateInstance ("()V", GetType (), null);
 			Construct (ref peer, JniObjectReferenceOptions.CopyAndDispose);
 			JniPeerMembers.InstanceMethods.FinishCreateInstance ("()V", this, null);

@@ -326,6 +326,33 @@ namespace Java.Interop {
 			var runtime = Expression.Property (null, env, "Runtime");
 			return runtime;
 		}
+
+		static  MethodInfo  FormatterServices_GetUninitializedObject    = Type.GetType ("System.Runtime.Serialization.FormatterServices", throwOnError: true)
+			.GetRuntimeMethod ("GetUninitializedObject", new[]{typeof (Type)});
+		static  MethodInfo  IJavaPeerable_SetPeerReference              = typeof (IJavaPeerable).GetRuntimeMethod ("SetPeerReference", new[]{typeof (JniObjectReference)});
+
+		public override Expression<Func<ConstructorInfo, JniObjectReference, object[], object>> CreateConstructActivationPeerExpression (ConstructorInfo constructor)
+		{
+			if (constructor == null)
+				throw new ArgumentNullException (nameof (constructor));
+
+			Func<object, object[], object>  mbi = constructor.Invoke;
+
+			var c   = Expression.Parameter (typeof (ConstructorInfo),       "constructor");
+			var r   = Expression.Parameter (typeof (JniObjectReference),    "reference");
+			var p   = Expression.Parameter (typeof (object[]),              "parameters");
+
+			var t   = Expression.Variable (typeof (Type),   "type");
+			var s   = Expression.Variable (typeof (object), "self");
+			var b   = Expression.Block (
+					new []{t, s},
+					Expression.Assign (t, Expression.Property (c, "DeclaringType")),
+					Expression.Assign (s, Expression.Call (FormatterServices_GetUninitializedObject, t)),
+					Expression.Call (Expression.Convert (s, typeof (IJavaPeerable)), IJavaPeerable_SetPeerReference, r),
+					Expression.Call (c, mbi.GetMethodInfo (), s, p),
+					s);
+			return Expression.Lambda<Func<ConstructorInfo, JniObjectReference, object[], object>> (b, new []{c, r, p});
+		}
 	}
 
 	static class JniSignature {

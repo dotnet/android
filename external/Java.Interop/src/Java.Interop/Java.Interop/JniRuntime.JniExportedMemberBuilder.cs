@@ -62,6 +62,17 @@ namespace Java.Interop {
 
 			public  abstract    LambdaExpression                            CreateMarshalToManagedExpression (MethodInfo method);
 			public  abstract    IEnumerable<JniNativeMethodRegistration>    GetExportedMemberRegistrations (Type declaringType);
+
+			public  abstract    Expression<Func<ConstructorInfo, JniObjectReference, object[], object>>     CreateConstructActivationPeerExpression (ConstructorInfo constructor);
+
+			public  Func<ConstructorInfo, JniObjectReference, object[], object>                             CreateConstructActivationPeerFunc (ConstructorInfo constructor)
+			{
+				if (constructor == null)
+					throw new ArgumentNullException (nameof (constructor));
+
+				var e   = CreateConstructActivationPeerExpression (constructor);
+				return e.Compile ();
+			}
 		}
 	}
 }

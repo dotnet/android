@@ -17,6 +17,16 @@ namespace Java.InteropTests {
 				Assert.IsNotNull (JniRuntime.CurrentRuntime.ValueManager.PeekValue (t.PeerReference));
 			}
 		}
+
+		[Test]
+		public void ActivationConstructor ()
+		{
+			var t = CallVirtualFromConstructorDerived.NewInstance (42);
+			using (t) {
+				Assert.IsTrue (t.InvokedActivationConstructor);
+				Assert.IsTrue (t.InvokedConstructor);
+			}
+		}
 	}
 }
 

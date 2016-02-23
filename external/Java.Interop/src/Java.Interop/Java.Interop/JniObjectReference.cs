@@ -197,6 +197,9 @@ namespace Java.Interop
 
 		public static void Dispose (ref JniObjectReference reference, JniObjectReferenceOptions options)
 		{
+			if (options == JniObjectReferenceOptions.None)
+				return;
+
 			if (!reference.IsValid)
 				return;
 

@@ -72,43 +72,47 @@ namespace Java.Interop
 
 			public abstract List<JniSurfacedPeerInfo>   GetSurfacedPeers ();
 
-			public void Construct (IJavaPeerable value, ref JniObjectReference reference, JniObjectReferenceOptions options)
+			public void Construct (IJavaPeerable peer, ref JniObjectReference reference, JniObjectReferenceOptions options)
 			{
-				if (value == null)
-					throw new ArgumentNullException (nameof (value));
+				if (peer == null)
+					throw new ArgumentNullException (nameof (peer));
 
-				var activationRef   = value.PeerReference;
-				if (activationRef.IsValid) {
-					value.SetJniManagedPeerState (value.JniManagedPeerState | JniManagedPeerStates.Activatable);
+				var newRef  = peer.PeerReference;
+				if (newRef.IsValid) {
+					// Activation! See ManagedPeer.RunConstructor
+					peer.SetJniManagedPeerState (peer.JniManagedPeerState | JniManagedPeerStates.Activatable);
 					JniObjectReference.Dispose (ref reference, options);
-					reference   = activationRef;
-					options     = JniObjectReferenceOptions.Copy;
+					newRef   = newRef.NewGlobalRef ();
+				} else if (options == JniObjectReferenceOptions.None) {
+					// `reference` is likely *InvalidJniObjectReference, and can't be touched
+					return;
+				} else if (!reference.IsValid) {
+					throw new ArgumentException ("JNI Object Reference is invalid.", nameof (reference));
+				} else {
+					newRef  = reference;
+
+					if ((options & JniObjectReferenceOptions.Copy) == JniObjectReferenceOptions.Copy) {
+						newRef  = reference.NewGlobalRef ();
+					}
+
+					JniObjectReference.Dispose (ref reference, options);
 				}
 
-				if (!reference.IsValid)
-					throw new ArgumentException ("handle is invalid.", nameof (reference));
-
-				var newRef      = reference;
-				if ((options & JniObjectReferenceOptions.Copy) == JniObjectReferenceOptions.Copy) {
-					newRef  = reference.NewGlobalRef ();
-				}
-				value.SetPeerReference (newRef);
-				JniObjectReference.Dispose (ref reference, options);
-
-				value.SetJniIdentityHashCode (JniSystem.IdentityHashCode (newRef));
+				peer.SetPeerReference (newRef);
+				peer.SetJniIdentityHashCode (JniSystem.IdentityHashCode (newRef));
 
 				var o = Runtime.ObjectReferenceManager;
 				if (o.LogGlobalReferenceMessages) {
 					o.WriteGlobalReferenceLine ("Created PeerReference={0} IdentityHashCode=0x{1} Instance=0x{2} Instance.Type={3}, Java.Type={4}",
 							newRef.ToString (),
-							value.JniIdentityHashCode.ToString ("x"),
-							RuntimeHelpers.GetHashCode (value).ToString ("x"),
-							value.GetType ().FullName,
+							peer.JniIdentityHashCode.ToString ("x"),
+							RuntimeHelpers.GetHashCode (peer).ToString ("x"),
+							peer.GetType ().FullName,
 							JniEnvironment.Types.GetJniTypeNameFromInstance (newRef));
 				}
 
 				if ((options & DoNotRegisterTarget) != DoNotRegisterTarget) {
-					Add (value);
+					Add (peer);
 				}
 			}
 

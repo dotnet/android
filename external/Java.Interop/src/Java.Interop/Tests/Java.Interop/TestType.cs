@@ -29,13 +29,32 @@ namespace Java.InteropTests
 			}
 		}
 
+		public  bool    ExecutedDefaultConstructor;
+
 		public TestType ()
 		{
+			ExecutedDefaultConstructor  = true;
 		}
+
+		public  bool    ExecutedActivationConstructor;
 
 		public TestType (ref JniObjectReference reference, JniObjectReferenceOptions transfer)
 			: base (ref reference, transfer)
 		{
+			ExecutedActivationConstructor   = true;
+		}
+
+		public static unsafe TestType NewTestType ()
+		{
+			var o   = _members.StaticMethods.InvokeObjectMethod ("newTestType.()Lcom/xamarin/interop/TestType;", null);
+			return JniEnvironment.Runtime.ValueManager.GetValue<TestType> (ref o, JniObjectReferenceOptions.CopyAndDispose);
+		}
+
+		public static unsafe TestType NewTestTypeWithUnboundConstructor ()
+		{
+			const string id = "newTestTypeWithUnboundConstructor.()Lcom/xamarin/interop/TestType;";
+			var o   = _members.StaticMethods.InvokeObjectMethod (id, null);
+			return JniEnvironment.Runtime.ValueManager.GetValue<TestType> (ref o, JniObjectReferenceOptions.CopyAndDispose);
 		}
 
 		public unsafe void RunTests ()
