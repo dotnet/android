@@ -73,16 +73,20 @@ namespace Java.Interop {
 			if (RegisteredInstances == null)
 				return;
 
-			foreach (var o in RegisteredInstances.Values) {
-				IJavaPeerable t;
-				if (!o.TryGetTarget (out t))
-					continue;
-				t.Dispose ();
+			lock (RegisteredInstances) {
+				foreach (var o in RegisteredInstances.Values) {
+					foreach (var r in o) {
+						IJavaPeerable t;
+						if (!r.TryGetTarget (out t))
+							continue;
+						t.Dispose ();
+					}
+				}
+				RegisteredInstances.Clear ();
 			}
-			RegisteredInstances.Clear ();
 		}
 
-		Dictionary<int, WeakReference<IJavaPeerable>>  RegisteredInstances = new Dictionary<int, WeakReference<IJavaPeerable>>();
+		Dictionary<int, List<WeakReference<IJavaPeerable>>>     RegisteredInstances = new Dictionary<int, List<WeakReference<IJavaPeerable>>>();
 
 
 		public override List<JniSurfacedPeerInfo> GetSurfacedPeers ()
@@ -90,7 +94,9 @@ namespace Java.Interop {
 			lock (RegisteredInstances) {
 				var peers = new List<JniSurfacedPeerInfo> (RegisteredInstances.Count);
 				foreach (var e in RegisteredInstances) {
-					peers.Add (new JniSurfacedPeerInfo (e.Key, e.Value));
+					foreach (var p in e.Value) {
+						peers.Add (new JniSurfacedPeerInfo (e.Key, p));
+					}
 				}
 				return peers;
 			}
@@ -111,24 +117,50 @@ namespace Java.Interop {
 			}
 			int key = value.JniIdentityHashCode;
 			lock (RegisteredInstances) {
-				WeakReference<IJavaPeerable>    existing;
-				IJavaPeerable     target;
-				if (RegisteredInstances.TryGetValue (key, out existing) && existing.TryGetTarget (out target) && !Replaceable (target))
-					Runtime.ObjectReferenceManager.WriteGlobalReferenceLine (
-							"Warning: Not registering PeerReference={0} IdentityHashCode=0x{1} Instance={2} Instance.Type={3} Java.Type={4}; " +
-							"keeping previously registered PeerReference={5} Instance={6} Instance.Type={7} Java.Type={8}.",
-							value.PeerReference.ToString (),
-							key.ToString ("x"),
-							RuntimeHelpers.GetHashCode (value).ToString ("x"),
-							value.GetType ().FullName,
-							JniEnvironment.Types.GetJniTypeNameFromInstance (value.PeerReference),
-							target.PeerReference.ToString (),
-							RuntimeHelpers.GetHashCode (target).ToString ("x"),
-							target.GetType ().FullName,
-							JniEnvironment.Types.GetJniTypeNameFromInstance (target.PeerReference));
-				else
-					RegisteredInstances [key] = new WeakReference<IJavaPeerable> (value, trackResurrection: true);
+				List<WeakReference<IJavaPeerable>> peers;
+				if (!RegisteredInstances.TryGetValue (key, out peers)) {
+					peers = new List<WeakReference<IJavaPeerable>> () {
+						new WeakReference<IJavaPeerable>(value, trackResurrection: true),
+					};
+					RegisteredInstances.Add (key, peers);
+					return;
+				}
+
+				for (int i = peers.Count - 1; i >= 0; i--) {
+					var wp = peers [i];
+					IJavaPeerable   p;
+					if (!wp.TryGetTarget (out p)) {
+						// Peer was collected
+						peers.RemoveAt (i);
+						continue;
+					}
+					if (!JniEnvironment.Types.IsSameObject (p.PeerReference, value.PeerReference))
+						continue;
+					if (Replaceable (p)) {
+						peers [i] = new WeakReference<IJavaPeerable>(value, trackResurrection: true);
+					} else {
+						WarnNotReplacing (key, value, p);
+					}
+					return;
+				}
+				peers.Add (new WeakReference<IJavaPeerable> (value, trackResurrection: true));
 			}
+		}
+
+		void WarnNotReplacing (int key, IJavaPeerable ignoreValue, IJavaPeerable keepValue)
+		{
+			Runtime.ObjectReferenceManager.WriteGlobalReferenceLine (
+					"Warning: Not registering PeerReference={0} IdentityHashCode=0x{1} Instance={2} Instance.Type={3} Java.Type={4}; " +
+					"keeping previously registered PeerReference={5} Instance={6} Instance.Type={7} Java.Type={8}.",
+					ignoreValue.PeerReference.ToString (),
+					key.ToString ("x"),
+					RuntimeHelpers.GetHashCode (ignoreValue).ToString ("x"),
+					ignoreValue.GetType ().FullName,
+					JniEnvironment.Types.GetJniTypeNameFromInstance (ignoreValue.PeerReference),
+					keepValue.PeerReference.ToString (),
+					RuntimeHelpers.GetHashCode (keepValue).ToString ("x"),
+					keepValue.GetType ().FullName,
+					JniEnvironment.Types.GetJniTypeNameFromInstance (keepValue.PeerReference));
 		}
 
 		static bool Replaceable (IJavaPeerable peer)
@@ -140,13 +172,28 @@ namespace Java.Interop {
 
 		public override void Remove (IJavaPeerable value)
 		{
+			if (value == null)
+				throw new ArgumentNullException (nameof (value));
+
 			int key = value.JniIdentityHashCode;
 			lock (RegisteredInstances) {
-				WeakReference<IJavaPeerable>  wv;
-				IJavaPeerable                 t;
-				if (RegisteredInstances.TryGetValue (key, out wv) &&
-						wv.TryGetTarget (out t) &&
-						object.ReferenceEquals (value, t))
+				List<WeakReference<IJavaPeerable>> peers;
+				if (!RegisteredInstances.TryGetValue (key, out peers))
+					return;
+
+				for (int i = peers.Count - 1; i >= 0; i--) {
+					var wp = peers [i];
+					IJavaPeerable   p;
+					if (!wp.TryGetTarget (out p)) {
+						// Peer was collected
+						peers.RemoveAt (i);
+						continue;
+					}
+					if (object.ReferenceEquals (value, p)) {
+						peers.RemoveAt (i);
+					}
+				}
+				if (peers.Count == 0)
 					RegisteredInstances.Remove (key);
 			}
 		}
@@ -159,13 +206,23 @@ namespace Java.Interop {
 			int key = GetJniIdentityHashCode (reference);
 
 			lock (RegisteredInstances) {
-				WeakReference<IJavaPeerable>    wv;
-				if (RegisteredInstances.TryGetValue (key, out wv)) {
-					IJavaPeerable target;
-					if (wv.TryGetTarget (out target))
-						return target;
+				List<WeakReference<IJavaPeerable>> peers;
+				if (!RegisteredInstances.TryGetValue (key, out peers))
+					return null;
+
+				for (int i = peers.Count - 1; i >= 0; i--) {
+					var wp = peers [i];
+					IJavaPeerable   p;
+					if (!wp.TryGetTarget (out p)) {
+						// Peer was collected
+						peers.RemoveAt (i);
+						continue;
+					}
+					if (JniEnvironment.Types.IsSameObject (reference, p.PeerReference))
+						return p;
 				}
-				RegisteredInstances.Remove (key);
+				if (peers.Count == 0)
+					RegisteredInstances.Remove (key);
 			}
 			return null;
 		}
