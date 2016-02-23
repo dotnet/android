@@ -11,12 +11,13 @@ public class CallNonvirtualDerived2
 	ArrayList<Object>       managedReferences     = new ArrayList<Object>();
 
 	public CallNonvirtualDerived2 () {
-		com.xamarin.java_interop.ManagedPeer.runConstructor (
-				CallNonvirtualDerived2.class,
-				this,
-				"Java.InteropTests.CallNonvirtualDerived2, Java.Interop-Tests, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
-				""
-		);
+		if (CallNonvirtualDerived2.class == getClass ()) {
+			com.xamarin.java_interop.ManagedPeer.construct (
+					this,
+					"Java.InteropTests.CallNonvirtualDerived2, Java.Interop-Tests, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
+					""
+			);
+		}
 	}
 
 	public void jiAddManagedReference (java.lang.Object obj)

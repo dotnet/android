@@ -1,4 +1,4 @@
-åpackage com.xamarin.interop;
+package com.xamarin.interop;
 
 import java.util.ArrayList;
 
@@ -12,13 +12,14 @@ public class CallVirtualFromConstructorDerived
 
 	public CallVirtualFromConstructorDerived (int value) {
 		super (value);
-		com.xamarin.java_interop.ManagedPeer.runConstructor (
-				CallVirtualFromConstructorDerived.class,
-				this,
-				"Java.InteropTests.CallVirtualFromConstructorDerived, Java.Interop-Tests, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
-				"System.Int32",
-				value
-		);
+		if (CallVirtualFromConstructorDerived.class == getClass ()) {
+			com.xamarin.java_interop.ManagedPeer.construct (
+					this,
+					"Java.InteropTests.CallVirtualFromConstructorDerived, Java.Interop-Tests, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
+					"System.Int32",
+					value
+			);
+		}
 	}
 
 	public static CallVirtualFromConstructorDerived newInstance (int value)

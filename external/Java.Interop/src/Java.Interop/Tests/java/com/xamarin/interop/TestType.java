@@ -9,23 +9,25 @@ public class TestType implements GCUserPeerable {
 	ArrayList<Object>       managedReferences     = new ArrayList<Object>();
 
 	public TestType () {
-		com.xamarin.java_interop.ManagedPeer.runConstructor (
-				TestType.class,
-				this,
-				"Java.InteropTests.TestType, Java.Interop-Tests, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
-				""
-		);
+		if (TestType.class == getClass ()) {
+			com.xamarin.java_interop.ManagedPeer.construct (
+					this,
+					"Java.InteropTests.TestType, Java.Interop-Tests, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
+					""
+			);
+		}
 	}
 
 	// For test purposes; DO NOT provide this constructor in the TestType.cs!
 	public TestType (TestType a, int b) {
-		com.xamarin.java_interop.ManagedPeer.runConstructor (
-				TestType.class,
-				this,
-				"Java.InteropTests.TestType, Java.Interop-Tests, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
-				"Java.InteropTests.TestType, Java.Interop-Tests, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null:System.Int32",
-				a, b
-		);
+		if (TestType.class == getClass ()) {
+			com.xamarin.java_interop.ManagedPeer.construct (
+					this,
+					"Java.InteropTests.TestType, Java.Interop-Tests, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
+					"Java.InteropTests.TestType, Java.Interop-Tests, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null:System.Int32",
+					a, b
+			);
+		}
 	}
 
 	public  void    runTests () {

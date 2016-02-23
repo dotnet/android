@@ -9,12 +9,13 @@ public class CallNonvirtualBase implements GCUserPeerable {
 	ArrayList<Object>       managedReferences     = new ArrayList<Object>();
 
 	public CallNonvirtualBase () {
-		com.xamarin.java_interop.ManagedPeer.runConstructor (
-				CallNonvirtualBase.class,
-				this,
-				"Java.InteropTests.CallNonvirtualBase, Java.Interop-Tests, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
-				""
-		);
+		if (CallNonvirtualBase.class == getClass ()) {
+			com.xamarin.java_interop.ManagedPeer.construct (
+					this,
+					"Java.InteropTests.CallNonvirtualBase, Java.Interop-Tests, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
+					""
+			);
+		}
 	}
 
 	boolean methodInvoked;

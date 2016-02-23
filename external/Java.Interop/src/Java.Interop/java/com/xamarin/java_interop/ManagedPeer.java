@@ -6,18 +6,7 @@ public /* static */ final class ManagedPeer {
 
 	// public static native void registerNativeMethods (java.lang.Class<?> nativeClass, String managedType, String methods);
 
-	public static void runConstructor (
-			Class<?> declaringClass,
-			Object self,
-			String assemblyQualifiedName,
-			String constructorSignature,
-			Object... arguments) {
-		if (self.getClass() != declaringClass)
-			return;
-		runConstructor (self, assemblyQualifiedName, constructorSignature, arguments);
-	}
-
-	static native void runConstructor (
+	public static native void construct (
 			Object self,
 			String assemblyQualifiedName,
 			String constructorSignature,
