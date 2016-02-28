@@ -6,13 +6,21 @@ import com.xamarin.java_interop.GCUserPeerable;
 
 public class TestType implements GCUserPeerable {
 
+	static  final   String  assemblyQualifiedName   = "Java.InteropTests.TestType, Java.Interop-Tests, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null";
+	static {
+		com.xamarin.java_interop.ManagedPeer.registerNativeMembers (
+				TestType.class,
+				assemblyQualifiedName,
+				"");
+	}
+
 	ArrayList<Object>       managedReferences     = new ArrayList<Object>();
 
 	public TestType () {
 		if (TestType.class == getClass ()) {
 			com.xamarin.java_interop.ManagedPeer.construct (
 					this,
-					"Java.InteropTests.TestType, Java.Interop-Tests, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
+					assemblyQualifiedName,
 					""
 			);
 		}
@@ -23,8 +31,8 @@ public class TestType implements GCUserPeerable {
 		if (TestType.class == getClass ()) {
 			com.xamarin.java_interop.ManagedPeer.construct (
 					this,
-					"Java.InteropTests.TestType, Java.Interop-Tests, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
-					"Java.InteropTests.TestType, Java.Interop-Tests, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null:System.Int32",
+					assemblyQualifiedName,
+					assemblyQualifiedName + ":System.Int32",
 					a, b
 			);
 		}

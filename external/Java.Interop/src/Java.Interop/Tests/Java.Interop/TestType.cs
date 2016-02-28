@@ -14,7 +14,7 @@ namespace Java.InteropTests
 		internal    const    string         JniTypeName = "com/xamarin/interop/TestType";
 		static      readonly JniPeerMembers _members    = new JniPeerMembers (JniTypeName, typeof (TestType));
 
-		static TestType ()
+		static void __RegisterNativeMembers (JniType type, string members)
 		{
 			_members.JniPeerType.RegisterNativeMethods (
 					new JniNativeMethodRegistration ("equalsThis", "(Ljava/lang/Object;)Z", GetEqualsThisHandler ()),

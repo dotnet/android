@@ -20,7 +20,14 @@ namespace Java.Interop {
 		static ManagedPeer ()
 		{
 			_members.JniPeerType.RegisterNativeMethods (
-					new JniNativeMethodRegistration ("construct",   ConstructSignature,     (Action<IntPtr, IntPtr, IntPtr, IntPtr, IntPtr, IntPtr>) Construct)
+					new JniNativeMethodRegistration (
+						"construct",
+						ConstructSignature,
+						(Action<IntPtr, IntPtr, IntPtr, IntPtr, IntPtr, IntPtr>) Construct),
+					new JniNativeMethodRegistration (
+						"registerNativeMembers",
+						RegisterNativeMembersSignature,
+						(Action<IntPtr, IntPtr, IntPtr, IntPtr, IntPtr>) RegisterNativeMembers)
 			);
 		}
 
@@ -30,7 +37,7 @@ namespace Java.Interop {
 
 		internal static void Init ()
 		{
-			// Present so that JavaVM has _something_ to reference to
+			// Present so that JniRuntime has _something_ to reference to
 			// prompt invocation of the static constructor & registration
 		}
 
@@ -169,6 +176,36 @@ namespace Java.Interop {
 			}
 
 			return pvalues;
+		}
+
+		const   string  RegisterNativeMembersSignature  = "(Ljava/lang/Class;Ljava/lang/String;Ljava/lang/String;)V";
+
+		static void RegisterNativeMembers (
+				IntPtr jnienv,
+				IntPtr klass,
+				IntPtr n_nativeClass,
+				IntPtr n_assemblyQualifiedName,
+				IntPtr n_methods)
+		{
+			var envp = new JniTransition (jnienv);
+			try {
+				var r_nativeClass   = new JniObjectReference (n_nativeClass);
+				var nativeClass     = new JniType (ref r_nativeClass, JniObjectReferenceOptions.Copy);
+
+				var assemblyQualifiedName   = JniEnvironment.Strings.ToString (new JniObjectReference (n_assemblyQualifiedName));
+				var methods                 = JniEnvironment.Strings.ToString (new JniObjectReference (n_methods));
+
+				var type    = Type.GetType (assemblyQualifiedName, throwOnError: true);
+
+				JniEnvironment.Runtime.TypeManager.RegisterNativeMembers (nativeClass, type, methods);
+			}
+			catch (Exception e) {
+				Debug.WriteLine (e.ToString ());
+				envp.SetPendingException (e);
+			}
+			finally {
+				envp.Dispose ();
+			}
 		}
 	}
 

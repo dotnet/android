@@ -4,7 +4,10 @@ public /* static */ final class ManagedPeer {
 	private ManagedPeer () {
 	}
 
-	// public static native void registerNativeMethods (java.lang.Class<?> nativeClass, String managedType, String methods);
+	public static native void registerNativeMembers (
+			java.lang.Class<?> nativeClass,
+			String assemblyQualifiedName,
+			String methods);
 
 	public static native void construct (
 			Object self,

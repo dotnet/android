@@ -119,3 +119,4 @@ run-android: $(ATESTS)
 run-test-jnimarshal: bin/$(CONFIGURATION)/Java.Interop.Export-Tests.dll
 	MONO_TRACE_LISTENER=Console.Out \
 	mono --debug bin/$(CONFIGURATION)/jnimarshalmethod-gen.exe bin/$(CONFIGURATION)/Java.Interop.Export-Tests.dll
+	$(call RUN_TEST,$<)

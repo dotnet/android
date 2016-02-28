@@ -11,7 +11,7 @@ namespace Java.Interop {
 		static  readonly    JniPeerMembers                                  _members        = new JniPeerMembers (JniTypeName, typeof (JavaProxyObject));
 		static  readonly    ConditionalWeakTable<object, JavaProxyObject>   CachedValues    = new ConditionalWeakTable<object, JavaProxyObject> ();
 
-		static JavaProxyObject ()
+		static void __RegisterNativeMembers (JniType type, string members)
 		{
 			_members.JniPeerType.RegisterNativeMethods (
 					new JniNativeMethodRegistration ("equals",      "(Ljava/lang/Object;)Z",    (Func<IntPtr, IntPtr, IntPtr, bool>)    _Equals),

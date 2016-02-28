@@ -1,6 +1,20 @@
 package com.xamarin.interop.export;
 
-public class ExportType {
+import java.util.ArrayList;
+
+import com.xamarin.java_interop.GCUserPeerable;
+
+public class ExportType
+		implements GCUserPeerable
+{
+
+	static  final   String  assemblyQualifiedName   = "Java.InteropTests.ExportTest, Java.Interop.Export-Tests, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null";
+	static {
+		com.xamarin.java_interop.ManagedPeer.registerNativeMembers (
+				ExportType.class,
+				assemblyQualifiedName,
+				"");
+	}
 
 	public static void testStaticMethods () {
 		staticAction ();
@@ -30,4 +44,16 @@ public class ExportType {
 	public native void action ();
 	public native long funcInt64 ();
 	public native Object funcIJavaObject ();
+
+	ArrayList<Object>       managedReferences     = new ArrayList<Object>();
+
+	public void jiAddManagedReference (java.lang.Object obj)
+	{
+		managedReferences.add (obj);
+	}
+
+	public void jiClearManagedReferences ()
+	{
+		managedReferences.clear ();
+	}
 }

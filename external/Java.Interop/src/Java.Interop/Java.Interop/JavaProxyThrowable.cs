@@ -7,6 +7,10 @@ namespace Java.Interop {
 	{
 		new internal    const   string  JniTypeName = "com/xamarin/java_interop/internal/JavaProxyThrowable";
 
+		static void __RegisterNativeMembers (JniType type, string members)
+		{
+		}
+
 		public  Exception   Exception {get; private set;}
 
 		public JavaProxyThrowable (Exception exception)

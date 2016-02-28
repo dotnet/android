@@ -33,8 +33,6 @@ namespace Java.InteropTests
 				Assert.AreEqual ("()V",             methods [1].Signature);
 				Assert.IsTrue (methods [1].Marshaler is Action<IntPtr, IntPtr>);
 
-				t.RegisterNativeMethods (methods.ToArray ());
-
 				var m = t.GetStaticMethod ("testStaticMethods", "()V");
 				JniEnvironment.StaticMethods.CallStaticVoidMethod (t.PeerReference, m);
 				Assert.IsTrue (ExportTest.StaticHelloCalled);

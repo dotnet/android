@@ -9,7 +9,7 @@ namespace Java.InteropTests
 		new internal    const   string          JniTypeName = "com/xamarin/interop/CallVirtualFromConstructorDerived";
 		static  readonly        JniPeerMembers  _members    = new JniPeerMembers (JniTypeName, typeof (CallVirtualFromConstructorDerived));
 
-		static CallVirtualFromConstructorDerived ()
+		static void __RegisterNativeMembers (JniType type, string members)
 		{
 			_members.JniPeerType.RegisterNativeMethods (
 					new JniNativeMethodRegistration ("calledFromConstructor", "(I)V", (Action<IntPtr, IntPtr, int>) CalledFromConstructorHandler));

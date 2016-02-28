@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -10,6 +11,13 @@ namespace Java.InteropTests
 	[JniTypeSignature ("com/xamarin/interop/export/ExportType")]
 	public class ExportTest : JavaObject
 	{
+		static void __RegisterNativeMembers (JniType type, string members)
+		{
+			var methods = JniEnvironment.Runtime.ExportedMemberBuilder
+				.GetExportedMemberRegistrations (typeof (ExportTest));
+			type.RegisterNativeMethods (methods.ToArray ());
+		}
+
 		public ExportTest (ref JniObjectReference reference, JniObjectReferenceOptions transfer)
 			: base (ref reference, transfer)
 		{

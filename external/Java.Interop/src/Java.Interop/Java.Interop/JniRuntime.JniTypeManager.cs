@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 
@@ -173,6 +174,50 @@ namespace Java.Interop {
 				}
 #endif  // !XA_INTEGRATION
 				yield break;
+			}
+
+			public virtual void RegisterNativeMembers (JniType nativeClass, Type type, string methods)
+			{
+				if (!TryLoadExternalJniMarshalMethods (nativeClass, type, methods) &&
+						!TryRegisterNativeMembers (nativeClass, type, methods)) {
+					throw new NotSupportedException ($"Could not register Java.class={nativeClass.Name} Managed.type={type.FullName}");
+				}
+			}
+
+			static bool TryLoadExternalJniMarshalMethods (JniType nativeClass, Type type, string methods)
+			{
+				var marshalMethodAssemblyName   = new AssemblyName (type.GetTypeInfo ().Assembly.GetName ().Name + "-JniMarshalMethods");
+				var marshalMethodsAssembly      = TryLoadAssembly (marshalMethodAssemblyName);
+				if (marshalMethodsAssembly == null)
+					return false;
+
+				var marshalType = marshalMethodsAssembly.GetType (type.FullName);
+				if (marshalType == null)
+					return false;
+				return TryRegisterNativeMembers (nativeClass, marshalType, methods);
+			}
+
+			static Assembly TryLoadAssembly (AssemblyName name)
+			{
+				try {
+					return Assembly.Load (name);
+				}
+				catch (Exception e) {
+					Debug.WriteLine ("Warning: Could not load JNI Marshal Method assembly '{0}': {1}", name, e);
+					return null;
+				}
+			}
+
+			static bool TryRegisterNativeMembers (JniType nativeClass, Type marshalType, string methods)
+			{
+				var registerMethod  = marshalType.GetTypeInfo ().GetDeclaredMethod ("__RegisterNativeMembers");
+				if (registerMethod == null) {
+					return false;
+				}
+
+				var register    = (Action<JniType, string>) registerMethod.CreateDelegate (typeof(Action<JniType, string>));
+				register (nativeClass, methods);
+				return true;
 			}
 		}
 	}
