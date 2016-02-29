@@ -177,7 +177,7 @@ namespace Java.Interop
 			Invoker             = CreateInvoker (InvocationPointer);
 
 			SetValueManager (options);
-			SetExportedMemberBuilder (options);
+			SetMarshalMemberBuilder (options);
 
 			ObjectReferenceManager      = SetRuntime (options.ObjectReferenceManager);
 			TypeManager                 = SetRuntime (options.TypeManager ?? new JniTypeManager ());
@@ -232,7 +232,7 @@ namespace Java.Interop
 		}
 
 		partial void SetValueManager (CreationOptions options);
-		partial void SetExportedMemberBuilder (CreationOptions options);
+		partial void SetMarshalMemberBuilder (CreationOptions options);
 
 		static unsafe JavaVMInterface CreateInvoker (IntPtr handle)
 		{

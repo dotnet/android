@@ -9,8 +9,8 @@
     <Import_RootNamespace>Java.Interop.ExportTests</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\ExportedMemberBuilderTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\ExportTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\MarshalMemberBuilderTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <JavaExportTestJar Include="$(MSBuildThisFileDirectory)java\com\xamarin\interop\export\ExportType.java" />

@@ -14,7 +14,7 @@ using NUnit.Framework;
 namespace Java.InteropTests
 {
 	[TestFixture]
-	class ExportedMemberBuilderTest : JavaVMFixture
+	class MarshalMemberBuilderTest : JavaVMFixture
 	{
 		[Test]
 		public void AddExportMethods ()
@@ -47,9 +47,9 @@ namespace Java.InteropTests
 			}
 		}
 
-		static ExportedMemberBuilder CreateBuilder ()
+		static MarshalMemberBuilder CreateBuilder ()
 		{
-			return new ExportedMemberBuilder (JniRuntime.CurrentRuntime);
+			return new MarshalMemberBuilder (JniRuntime.CurrentRuntime);
 		}
 
 		static JniType CreateExportTestType ()
@@ -433,7 +433,7 @@ namespace Java.InteropTests
 	{
 		__jvm = JniEnvironment.Runtime;
 		__jvm.ValueManager.WaitForGCBridgeProcessing();
-		ExportedMemberBuilderTest.DirectInvocation(jnienv, context);
+		MarshalMemberBuilderTest.DirectInvocation(jnienv, context);
 	}
 	catch (Exception __e)
 	{
@@ -457,7 +457,7 @@ namespace Java.InteropTests
 		public void CreateConstructActivationPeerExpression ()
 		{
 			var b   = CreateBuilder ();
-			var c   = typeof (ExportedMemberBuilderTest).GetConstructor (new Type [0]);
+			var c   = typeof (MarshalMemberBuilderTest).GetConstructor (new Type [0]);
 			var e   = b.CreateConstructActivationPeerExpression (c);
 			CheckExpression (e,
 					"ExportedMemberBuilderTest_ctor",

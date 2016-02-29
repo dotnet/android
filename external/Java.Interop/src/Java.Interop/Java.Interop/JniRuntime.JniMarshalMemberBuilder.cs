@@ -8,11 +8,11 @@ namespace Java.Interop {
 	partial class JniRuntime {
 
 		partial class CreationOptions {
-			public  JniExportedMemberBuilder    ExportedMemberBuilder       {get; set;}
+			public  JniMarshalMemberBuilder    MarshalMemberBuilder        {get; set;}
 		}
 
-		JniExportedMemberBuilder                exportedMemberBuilder;
-		public  JniExportedMemberBuilder        ExportedMemberBuilder       {
+		JniMarshalMemberBuilder                exportedMemberBuilder;
+		public  JniMarshalMemberBuilder        ExportedMemberBuilder       {
 			get {
 				if (exportedMemberBuilder == null)
 					throw new NotSupportedException ("JniRuntime.ExportedMemberBuilder is not supported.");
@@ -20,10 +20,10 @@ namespace Java.Interop {
 			}
 		}
 
-		partial void SetExportedMemberBuilder (CreationOptions options)
+		partial void SetMarshalMemberBuilder (CreationOptions options)
 		{
-			if (options.ExportedMemberBuilder != null) {
-				exportedMemberBuilder   = SetRuntime (options.ExportedMemberBuilder);
+			if (options.MarshalMemberBuilder != null) {
+				exportedMemberBuilder   = SetRuntime (options.MarshalMemberBuilder);
 				return;
 			}
 
@@ -33,18 +33,18 @@ namespace Java.Interop {
 			} catch (Exception) {
 				return;
 			}
-			var t   = jie.GetType ("Java.Interop.ExportedMemberBuilder");
+			var t   = jie.GetType ("Java.Interop.MarshalMemberBuilder");
 			if (t == null)
-				throw new InvalidOperationException ("Could not find Java.Interop.ExportedMemberBuilder from Java.Interop.Export.dll!");
-			var b   = (JniExportedMemberBuilder) Activator.CreateInstance (t);
+				throw new InvalidOperationException ("Could not find Java.Interop.MarshalMemberBuilder from Java.Interop.Export.dll!");
+			var b   = (JniMarshalMemberBuilder) Activator.CreateInstance (t);
 			exportedMemberBuilder   = SetRuntime (b);
 		}
 
-		public abstract class JniExportedMemberBuilder : ISetRuntime
+		public abstract class JniMarshalMemberBuilder : ISetRuntime
 		{
 			public      JniRuntime  Runtime     {get; private set;}
 
-			protected JniExportedMemberBuilder ()
+			protected JniMarshalMemberBuilder ()
 			{
 			}
 

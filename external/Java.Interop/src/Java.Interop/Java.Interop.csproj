@@ -125,7 +125,7 @@
       <DependentUpon>JniPeerMembers.JniMethods.tt</DependentUpon>
     </Compile>
     <Compile Include="Java.Interop\JniReferenceSafeHandle.cs" />
-    <Compile Include="Java.Interop\JniRuntime.JniExportedMemberBuilder.cs" />
+    <Compile Include="Java.Interop\JniRuntime.JniMarshalMemberBuilder.cs" />
     <Compile Include="Java.Interop\JniRuntime.JniValueManager.cs" />
     <Compile Include="Java.Interop\JniStringValueMarshaler.cs" />
     <Compile Include="Java.Interop\JniSystem.cs" />

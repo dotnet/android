@@ -42,7 +42,7 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 			return builder.CreateJreVM ();
 		}
 
-		static JniRuntime.JniExportedMemberBuilder CreateExportedMemberBuilder ()
+		static JniRuntime.JniMarshalMemberBuilder CreateExportedMemberBuilder ()
 		{
 			return JniEnvironment.Runtime.ExportedMemberBuilder;
 		}
@@ -84,7 +84,7 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 					var lambda  = builder.CreateMarshalToManagedExpression (method);
 					lambda.CompileToMethod (mb);
 					var signature = export.Signature ??
-							((ExportedMemberBuilder)builder).GetJniMethodSignature (new JavaCallableAttribute (), method);
+							((MarshalMemberBuilder)builder).GetJniMethodSignature (new JavaCallableAttribute (), method);
 					registrationElements.Add (CreateRegistration (export.Name, signature, lambda, targetType, method.Name));
 				}
 				if (dt != null) {

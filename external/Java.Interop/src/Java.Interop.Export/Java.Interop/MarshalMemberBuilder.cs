@@ -10,13 +10,13 @@ using Java.Interop.Expressions;
 
 namespace Java.Interop {
 
-	public class ExportedMemberBuilder : JniRuntime.JniExportedMemberBuilder
+	public class MarshalMemberBuilder : JniRuntime.JniMarshalMemberBuilder
 	{
-		public ExportedMemberBuilder ()
+		public MarshalMemberBuilder ()
 		{
 		}
 
-		public ExportedMemberBuilder (JniRuntime runtime)
+		public MarshalMemberBuilder (JniRuntime runtime)
 		{
 			if (runtime == null)
 				throw new ArgumentNullException (nameof (runtime));
