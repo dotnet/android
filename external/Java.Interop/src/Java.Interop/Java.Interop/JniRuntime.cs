@@ -383,6 +383,11 @@ namespace Java.Interop
 			}
 			TrackedInstances.Clear ();
 		}
+
+		public virtual bool ExceptionShouldTransitionToJni (Exception e)
+		{
+			return !Debugger.IsAttached;
+		}
 	}
 
 	partial class JniRuntime {

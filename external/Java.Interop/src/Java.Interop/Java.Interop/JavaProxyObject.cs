@@ -77,7 +77,7 @@ namespace Java.Interop {
 				var value   = JniEnvironment.Runtime.ValueManager.GetValue (ref r_value, JniObjectReferenceOptions.Copy);
 				return self.Equals (value);
 			}
-			catch (Exception e) {
+			catch (Exception e) when (JniEnvironment.Runtime.ExceptionShouldTransitionToJni (e)) {
 				envp.SetPendingException (e);
 				return false;
 			}
@@ -94,7 +94,7 @@ namespace Java.Interop {
 				var self = (JavaProxyObject) JniEnvironment.Runtime.ValueManager.PeekPeer (new JniObjectReference (n_self));
 				return self.GetHashCode ();
 			}
-			catch (Exception e) {
+			catch (Exception e) when (JniEnvironment.Runtime.ExceptionShouldTransitionToJni (e)) {
 				envp.SetPendingException (e);
 				return 0;
 			}
@@ -116,7 +116,7 @@ namespace Java.Interop {
 					JniObjectReference.Dispose (ref r);
 				}
 			}
-			catch (Exception e) {
+			catch (Exception e) when (JniEnvironment.Runtime.ExceptionShouldTransitionToJni (e)) {
 				envp.SetPendingException (e);
 				return IntPtr.Zero;
 			}

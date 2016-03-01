@@ -177,7 +177,7 @@ namespace Java.Interop {
 						Expression.TryCatchFinally (
 							Expression.Block (marshalBody),
 							CreateDisposeJniEnvironment (envp, marshalerContext.CleanupStatements),
-							CreateMarshalException (envp, null)));
+							CreateMarshalException (envp, jvm, null)));
 			} else {
 				var rmarshaler  = GetParameterMarshaler (method.ReturnParameter);
 				var jniRType    = rmarshaler.MarshalType;
@@ -196,7 +196,7 @@ namespace Java.Interop {
 						Expression.TryCatchFinally (
 							Expression.Block (marshalBody),
 							CreateDisposeJniEnvironment (envp, marshalerContext.CleanupStatements),
-							CreateMarshalException (envp, exit)));
+							CreateMarshalException (envp, jvm, exit)));
 
 				envpBody.Add (Expression.Label (exit, Expression.Default (jniRType)));
 			}
@@ -273,7 +273,11 @@ namespace Java.Interop {
 					jnienv);
 		}
 
-		static CatchBlock CreateMarshalException  (ParameterExpression envp, LabelTarget exit)
+		static  readonly    MethodInfo  JniRuntime_ExceptionShouldTransitionToJni   = typeof(JniRuntime).GetRuntimeMethod ("ExceptionShouldTransitionToJni", new[] {
+			typeof (Exception),
+		});
+
+		static CatchBlock CreateMarshalException  (ParameterExpression envp, ParameterExpression jvm, LabelTarget exit)
 		{
 			var spe     = typeof (JniTransition).GetTypeInfo ().GetDeclaredMethod ("SetPendingException");
 			var ex      = Expression.Variable (typeof (Exception), "__e");
@@ -283,7 +287,8 @@ namespace Java.Interop {
 			if (exit != null) {
 				body.Add (Expression.Return (exit, Expression.Default (exit.Type)));
 			}
-			return Expression.Catch (ex, Expression.Block (body));
+			var filter  = Expression.Call (jvm, JniRuntime_ExceptionShouldTransitionToJni, ex);
+			return Expression.Catch (ex, Expression.Block (body), filter);
 		}
 
 		static Expression CreateDisposeJniEnvironment (ParameterExpression envp, IList<Expression> cleanup)

@@ -66,7 +66,7 @@ namespace Java.InteropTests
 				self.CalledFromConstructor (value);
 				self.DisposeUnlessReferenced ();
 			}
-			catch (Exception e) {
+			catch (Exception e) when (JniEnvironment.Runtime.ExceptionShouldTransitionToJni (e)) {
 				envp.SetPendingException (e);
 			}
 			finally {

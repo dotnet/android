@@ -118,7 +118,7 @@ namespace Java.Interop {
 					throw new NotSupportedException (m, e);
 				}
 			}
-			catch (Exception e) {
+			catch (Exception e) when (JniEnvironment.Runtime.ExceptionShouldTransitionToJni (e)) {
 				envp.SetPendingException (e);
 			}
 			finally {
@@ -199,7 +199,7 @@ namespace Java.Interop {
 
 				JniEnvironment.Runtime.TypeManager.RegisterNativeMembers (nativeClass, type, methods);
 			}
-			catch (Exception e) {
+			catch (Exception e) when (JniEnvironment.Runtime.ExceptionShouldTransitionToJni (e)) {
 				Debug.WriteLine (e.ToString ());
 				envp.SetPendingException (e);
 			}

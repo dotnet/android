@@ -176,7 +176,7 @@ namespace Java.InteropTests
 		__this_val = __jvm.ValueManager.GetValue<ExportTest>(__this);
 		__this_val.InstanceAction();
 	}
-	catch (Exception __e)
+	catch (Exception __e) if (__jvm.ExceptionShouldTransitionToJni(__e))
 	{
 		__envp.SetPendingException(__e);
 	}
@@ -237,7 +237,7 @@ namespace Java.InteropTests
 		__jvm.ValueManager.WaitForGCBridgeProcessing();
 		ExportTest.StaticAction();
 	}
-	catch (Exception __e)
+	catch (Exception __e) if (__jvm.ExceptionShouldTransitionToJni(__e))
 	{
 		__envp.SetPendingException(__e);
 	}
@@ -271,7 +271,7 @@ namespace Java.InteropTests
 		v_val = Strings.ToString(v);
 		ExportTest.StaticActionInt32String(i, v_val);
 	}
-	catch (Exception __e)
+	catch (Exception __e) if (__jvm.ExceptionShouldTransitionToJni(__e))
 	{
 		__envp.SetPendingException(__e);
 	}
@@ -311,7 +311,7 @@ namespace Java.InteropTests
 		__mret_p = __mret.Value;
 		return __mret_p;
 	}
-	catch (Exception __e)
+	catch (Exception __e) if (__jvm.ExceptionShouldTransitionToJni(__e))
 	{
 		__envp.SetPendingException(__e);
 		return default(int);
@@ -348,7 +348,7 @@ namespace Java.InteropTests
 		__mret = __this_val.FuncInt64();
 		return __mret;
 	}
-	catch (Exception __e)
+	catch (Exception __e) if (__jvm.ExceptionShouldTransitionToJni(__e))
 	{
 		__envp.SetPendingException(__e);
 		return default(long);
@@ -398,7 +398,7 @@ namespace Java.InteropTests
 		__mret_rtn = References.NewReturnToJniRef(__mret_ref);
 		return __mret_rtn;
 	}
-	catch (Exception __e)
+	catch (Exception __e) if (__jvm.ExceptionShouldTransitionToJni(__e))
 	{
 		__envp.SetPendingException(__e);
 		return default(IntPtr);
@@ -435,7 +435,7 @@ namespace Java.InteropTests
 		__jvm.ValueManager.WaitForGCBridgeProcessing();
 		MarshalMemberBuilderTest.DirectInvocation(jnienv, context);
 	}
-	catch (Exception __e)
+	catch (Exception __e) if (__jvm.ExceptionShouldTransitionToJni(__e))
 	{
 		__envp.SetPendingException(__e);
 	}
