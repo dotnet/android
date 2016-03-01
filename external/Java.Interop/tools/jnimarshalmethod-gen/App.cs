@@ -84,7 +84,7 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 					var lambda  = builder.CreateMarshalToManagedExpression (method);
 					lambda.CompileToMethod (mb);
 					var signature = export.Signature ??
-							((MarshalMemberBuilder)builder).GetJniMethodSignature (new JavaCallableAttribute (), method);
+							builder.GetJniMethodSignature (method);
 					registrationElements.Add (CreateRegistration (export.Name, signature, lambda, targetType, method.Name));
 				}
 				if (dt != null) {

@@ -80,14 +80,7 @@ namespace Java.Interop {
 			if (export.Signature != null)
 				return export.Signature;
 
-			var signature = new StringBuilder ().Append ("(");
-			var methodParameters    = method.GetParameters ();
-			foreach (var p in IsDirectMethod (methodParameters) ? methodParameters.Skip (2) : methodParameters) {
-				signature.Append (GetTypeSignature (p));
-			}
-			signature.Append (")");
-			signature.Append (GetTypeSignature (method.ReturnParameter));
-			return export.Signature = signature.ToString ();
+			return export.Signature = GetJniMethodSignature (method);
 		}
 
 		string GetTypeSignature (ParameterInfo p)
@@ -96,7 +89,7 @@ namespace Java.Interop {
 			if (info.IsValid)
 				return info.QualifiedReference;
 
-			var marshaler   = GetValueMarshaler (p);
+			var marshaler   = GetParameterMarshaler (p);
 			info            = Runtime.TypeManager.GetTypeSignature (marshaler.MarshalType);
 			if (info.IsValid)
 				return info.QualifiedReference;
@@ -153,7 +146,7 @@ namespace Java.Interop {
 			var marshalParameters   = new List<ParameterExpression> (methodParameters.Length);
 			var invokeParameters    = new List<Expression> (methodParameters.Length);
 			for (int i = 0; i < methodParameters.Length; ++i) {
-				var marshaler   = GetValueMarshaler (methodParameters [i]);
+				var marshaler   = GetParameterMarshaler (methodParameters [i]);
 				ParameterExpression np;
 				if (i > 1 || !direct)
 					np = Expression.Parameter (marshaler.MarshalType, methodParameters [i].Name);
@@ -186,7 +179,7 @@ namespace Java.Interop {
 							CreateDisposeJniEnvironment (envp, marshalerContext.CleanupStatements),
 							CreateMarshalException (envp, null)));
 			} else {
-				var rmarshaler  = GetValueMarshaler (method.ReturnParameter);
+				var rmarshaler  = GetParameterMarshaler (method.ReturnParameter);
 				var jniRType    = rmarshaler.MarshalType;
 				var exit        = Expression.Label (jniRType, "__exit");
 				var mret        = Expression.Variable (method.ReturnType, "__mret");
@@ -229,26 +222,6 @@ namespace Java.Interop {
 			return Expression.Lambda (marshalerType, body, bodyParams);
 		}
 
-		// Heuristic: if first two parameters are IntPtr, this is a "direct" wrapper.
-		static bool IsDirectMethod (ParameterInfo[] methodParameters)
-		{
-			return methodParameters.Length >= 2 &&
-				methodParameters [0].ParameterType == typeof (IntPtr) &&
-				methodParameters [1].ParameterType == typeof (IntPtr);
-		}
-
-		JniValueMarshaler GetValueMarshaler (ParameterInfo parameter)
-		{
-			if (parameter.ParameterType == typeof(IntPtr))
-				return IntPtrValueMarshaler.Instance;
-
-			var attr = parameter.GetCustomAttribute<JniValueMarshalerAttribute> ();
-			if (attr != null) {
-				return (JniValueMarshaler) Activator.CreateInstance (attr.MarshalerType);
-			}
-			return Runtime.ValueManager.GetValueMarshaler (parameter.ParameterType);
-		}
-
 		void CheckMarshalTypesMatch (MethodInfo method, string signature, ParameterInfo[] methodParameters)
 		{
 			if (signature == null)
@@ -263,7 +236,7 @@ namespace Java.Interop {
 				rpcount -= 2;
 			}
 			for (int i = start; i < len; ++i) {
-				var vm  = GetValueMarshaler (methodParameters [i]);
+				var vm  = GetParameterMarshaler (methodParameters [i]);
 				var jni = vm.MarshalType;
 				if (mptypes [i] != jni)
 					throw new ArgumentException (
@@ -278,7 +251,7 @@ namespace Java.Interop {
 						nameof (signature));
 
 			var jrinfo = JniSignature.GetMarshalReturnType (signature);
-			var mrvm   = GetValueMarshaler (method.ReturnParameter);
+			var mrvm   = GetParameterMarshaler (method.ReturnParameter);
 			var mrinfo = mrvm.MarshalType;
 			if (mrinfo != jrinfo)
 				throw new ArgumentException (
@@ -428,66 +401,6 @@ namespace Java.Interop {
 				throw new ArgumentException ("Unknown JNI Type '" + signature [i] + "' within: " + signature, "signature");
 			}
 			#endif
-		}
-	}
-
-	class IntPtrValueMarshaler : JniValueMarshaler<IntPtr> {
-		internal    static  IntPtrValueMarshaler Instance = new IntPtrValueMarshaler ();
-
-		public override Expression CreateParameterFromManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize)
-		{
-			return sourceValue;
-		}
-
-		public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize, Type targetType)
-		{
-			return sourceValue;
-		}
-
-		public override Expression CreateReturnValueFromManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue)
-		{
-			return sourceValue;
-		}
-
-
-		public override object CreateValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
-		{
-			throw new NotImplementedException ();
-		}
-
-		public override IntPtr CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
-		{
-			throw new NotImplementedException ();
-		}
-
-		public override JniValueMarshalerState CreateArgumentState (object value, ParameterAttributes synchronize)
-		{
-			throw new NotSupportedException ();
-		}
-
-		public override JniValueMarshalerState CreateGenericArgumentState (IntPtr value, ParameterAttributes synchronize)
-		{
-			throw new NotSupportedException ();
-		}
-
-		public override JniValueMarshalerState CreateObjectReferenceArgumentState (object value, ParameterAttributes synchronize)
-		{
-			throw new NotImplementedException ();
-		}
-
-		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState (IntPtr value, ParameterAttributes synchronize)
-		{
-			throw new NotImplementedException ();
-		}
-
-		public override void DestroyArgumentState (object value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
-		{
-			throw new NotImplementedException ();
-		}
-
-		public override void DestroyGenericArgumentState (IntPtr value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
-		{
-			throw new NotImplementedException ();
 		}
 	}
 }

@@ -1,7 +1,9 @@
 ﻿using System;
-using System.Reflection;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
+using System.Text;
 
 namespace Java.Interop {
 
@@ -73,6 +75,122 @@ namespace Java.Interop {
 				var e   = CreateConstructActivationPeerExpression (constructor);
 				return e.Compile ();
 			}
+
+			public string GetJniMethodSignature (MethodBase member)
+			{
+				if (member == null)
+					throw new ArgumentNullException (nameof (member));
+
+				var signature           = new StringBuilder ().Append ("(");
+				var memberParameters    = member.GetParameters ();
+				foreach (var p in IsDirectMethod (memberParameters) ? memberParameters.Skip (2) : memberParameters) {
+					signature.Append (GetTypeSignature (p));
+				}
+				signature.Append (")");
+
+				var method  = member as MethodInfo;
+				if (method != null) {
+					signature.Append (GetTypeSignature (method.ReturnParameter));
+				} else {
+					signature.Append ("V");
+				}
+
+				return signature.ToString ();
+			}
+
+			string GetTypeSignature (ParameterInfo p)
+			{
+				var info        = Runtime.TypeManager.GetTypeSignature (p.ParameterType);
+				if (info.IsValid)
+					return info.QualifiedReference;
+
+				var marshaler   = GetParameterMarshaler (p);
+				info            = Runtime.TypeManager.GetTypeSignature (marshaler.MarshalType);
+				if (info.IsValid)
+					return info.QualifiedReference;
+
+				throw new NotSupportedException ("Don't know how to determine JNI signature for parameter type: " + p.ParameterType.FullName + ".");
+			}
+
+			public JniValueMarshaler GetParameterMarshaler (ParameterInfo parameter)
+			{
+				if (parameter.ParameterType == typeof (IntPtr))
+					return IntPtrValueMarshaler.Instance;
+
+				var attr = parameter.GetCustomAttribute<JniValueMarshalerAttribute> ();
+				if (attr != null) {
+					return (JniValueMarshaler) Activator.CreateInstance (attr.MarshalerType);
+				}
+				return Runtime.ValueManager.GetValueMarshaler (parameter.ParameterType);
+			}
+
+			// Heuristic: if first two parameters are IntPtr, this is a "direct" wrapper.
+			public bool IsDirectMethod (ParameterInfo[] methodParameters)
+			{
+				return methodParameters.Length >= 2 &&
+					methodParameters [0].ParameterType == typeof (IntPtr) &&
+					methodParameters [1].ParameterType == typeof (IntPtr);
+			}
+		}
+	}
+
+	class IntPtrValueMarshaler : JniValueMarshaler<IntPtr> {
+		internal    static  IntPtrValueMarshaler Instance = new IntPtrValueMarshaler ();
+
+		public override Expression CreateParameterFromManagedExpression (Java.Interop.Expressions.JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize)
+		{
+			return sourceValue;
+		}
+
+		public override Expression CreateParameterToManagedExpression (Java.Interop.Expressions.JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize, Type targetType)
+		{
+			return sourceValue;
+		}
+
+		public override Expression CreateReturnValueFromManagedExpression (Java.Interop.Expressions.JniValueMarshalerContext context, ParameterExpression sourceValue)
+		{
+			return sourceValue;
+		}
+
+
+		public override object CreateValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
+		{
+			throw new NotImplementedException ();
+		}
+
+		public override IntPtr CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
+		{
+			throw new NotImplementedException ();
+		}
+
+		public override JniValueMarshalerState CreateArgumentState (object value, ParameterAttributes synchronize)
+		{
+			throw new NotSupportedException ();
+		}
+
+		public override JniValueMarshalerState CreateGenericArgumentState (IntPtr value, ParameterAttributes synchronize)
+		{
+			throw new NotSupportedException ();
+		}
+
+		public override JniValueMarshalerState CreateObjectReferenceArgumentState (object value, ParameterAttributes synchronize)
+		{
+			throw new NotImplementedException ();
+		}
+
+		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState (IntPtr value, ParameterAttributes synchronize)
+		{
+			throw new NotImplementedException ();
+		}
+
+		public override void DestroyArgumentState (object value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
+		{
+			throw new NotImplementedException ();
+		}
+
+		public override void DestroyGenericArgumentState (IntPtr value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
+		{
+			throw new NotImplementedException ();
 		}
 	}
 }
