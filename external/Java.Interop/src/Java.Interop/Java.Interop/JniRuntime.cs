@@ -50,6 +50,8 @@ namespace Java.Interop
 			// Prefer JNIEnv::NewObject() over JNIEnv::AllocObject() + JNIEnv::CallNonvirtualVoidMethod()
 			public  bool                        NewObjectRequired           {get; set;}
 
+			public  JniVersion                  JniVersion                  {get; set;}
+
 			public  IntPtr                      InvocationPointer           {get; set;}
 			public  IntPtr                      EnvironmentPointer          {get; set;}
 
@@ -61,6 +63,7 @@ namespace Java.Interop
 
 			public CreationOptions ()
 			{
+				JniVersion                  = JniVersion.v1_2;
 			}
 		}
 	}
@@ -81,6 +84,10 @@ namespace Java.Interop
 
 	public partial class JniRuntime : IDisposable
 	{
+		const   int     JNI_OK          = 0;
+		const   int     JNI_EDETACHED   = -2;
+		const   int     JNI_EVERSION    = -3;
+
 
 		static ConcurrentDictionary<IntPtr, JniRuntime>     Runtimes = new ConcurrentDictionary<IntPtr, JniRuntime> ();
 
@@ -158,6 +165,8 @@ namespace Java.Interop
 
 		public  IntPtr                                  InvocationPointer   {get; private set;}
 
+		public      JniVersion                          JniVersion          {get; private set;}
+
 		internal    bool                                TrackIDs            {get; private set;}
 		internal    bool                                NewObjectRequired   {get; private set;}
 
@@ -173,6 +182,7 @@ namespace Java.Interop
 
 			NewObjectRequired   = options.NewObjectRequired;
 
+			JniVersion          = options.JniVersion;
 			InvocationPointer   = options.InvocationPointer;
 			Invoker             = CreateInvoker (InvocationPointer);
 
@@ -188,10 +198,15 @@ namespace Java.Interop
 
 			Runtimes.TryAdd (InvocationPointer, this);
 
-			if (options.EnvironmentPointer != IntPtr.Zero) {
-				var env = new JniEnvironmentInfo (options.EnvironmentPointer, this);
-				JniEnvironment.SetEnvironmentInfo (env);
+			var envp    = options.EnvironmentPointer;
+			if (envp == IntPtr.Zero &&
+					Invoker.GetEnv (InvocationPointer, out envp, (int) JniVersion) != JNI_OK &&
+					(envp = _AttachCurrentThread ()) == IntPtr.Zero) {
+				// Shouldn't be reached, as _AttachCurrentThread() throws
+				throw new InvalidOperationException ("Could not obtain JNIEnv* value!");
 			}
+			var env     = new JniEnvironmentInfo (envp, this);
+			JniEnvironment.SetEnvironmentInfo (env);
 
 #if !XA_INTEGRATION
 			ManagedPeer.Init ();
@@ -280,18 +295,31 @@ namespace Java.Interop
 
 			Interlocked.CompareExchange (ref current, null, this);
 
+			Runtimes.TryUpdate (InvocationPointer, null, this);
+
 			JniObjectReference.Dispose (ref ClassLoader);
 
+			if (disposing) {
+				ClearTrackedReferences ();
 #if !XA_INTEGRATION
-			ValueManager.Dispose ();
+				ValueManager.Dispose ();
 #endif  // !XA_INTEGRATION
-			ClearTrackedReferences ();
-			JniRuntime _;
-			Runtimes.TryRemove (InvocationPointer, out _);
-			ObjectReferenceManager.Dispose ();
-			if (DestroyRuntimeOnDispose)
+				ObjectReferenceManager.Dispose ();
+			}
+
+			var environments    = JniEnvironment.Info.Values;
+			for (int i = 0; i < environments.Count; ++i) {
+				var e   = environments [i];
+				if (e.Runtime != this)
+					continue;
+				environments [i].Dispose ();
+			}
+
+			if (DestroyRuntimeOnDispose) {
 				DestroyRuntime ();
-			InvocationPointer    = IntPtr.Zero;
+			}
+			InvocationPointer   = IntPtr.Zero;
+			Invoker             = default (JavaVMInterface);
 		}
 
 		public void AttachCurrentThread (string name = null, JniObjectReference group = default (JniObjectReference))
@@ -304,7 +332,7 @@ namespace Java.Interop
 		{
 			AssertValid ();
 			var threadArgs = new JavaVMThreadAttachArgs () {
-				version = JniVersion.v1_2,
+				version = JniVersion,
 			};
 			try {
 				if (name != null)
@@ -313,7 +341,7 @@ namespace Java.Interop
 					threadArgs.group = group.Handle;
 				IntPtr jnienv;
 				int r = Invoker.AttachCurrentThread (InvocationPointer, out jnienv, ref threadArgs);
-				if (r != 0)
+				if (r != JNI_OK)
 					throw new NotSupportedException ("AttachCurrentThread returned " + r.ToString ());
 				return jnienv;
 			} finally {

@@ -9,18 +9,23 @@ namespace Java.Interop {
 
 	public static partial class JniEnvironment {
 
-		internal    static  readonly    ThreadLocal<JniEnvironmentInfo>     Info    = new ThreadLocal<JniEnvironmentInfo> (() => new JniEnvironmentInfo ());
+		internal    static  readonly    ThreadLocal<JniEnvironmentInfo>     Info    = new ThreadLocal<JniEnvironmentInfo> (() => new JniEnvironmentInfo (), trackAllValues: true);
 
 		internal    static  JniEnvironmentInfo      CurrentInfo {
-			get {return Info.Value;}
+			get {
+				var e = Info.Value;
+				if (!e.IsValid)
+					throw new NotSupportedException ("JNI Environment Information has been invalidated on this thread.");
+				return e;
+			}
 		}
 
 		public      static  JniRuntime              Runtime {
-			get {return Info.Value.Runtime;}
+			get {return CurrentInfo.Runtime;}
 		}
 
 		public      static  IntPtr                  EnvironmentPointer {
-			get {return Info.Value.EnvironmentPointer;}
+			get {return CurrentInfo.EnvironmentPointer;}
 		}
 
 		public      static  JniVersion              JniVersion {
@@ -28,17 +33,17 @@ namespace Java.Interop {
 		}
 
 		public      static  int                     LocalReferenceCount {
-			get {return Info.Value.LocalReferenceCount;}
+			get {return CurrentInfo.LocalReferenceCount;}
 		}
 
 		public      static  bool                    WithinNewObjectScope {
-			get {return Info.Value.WithinNewObjectScope;}
-			internal set {Info.Value.WithinNewObjectScope = value;}
+			get {return CurrentInfo.WithinNewObjectScope;}
+			internal set {CurrentInfo.WithinNewObjectScope = value;}
 		}
 
 		internal    static  void    SetEnvironmentPointer (IntPtr environmentPointer)
 		{
-			Info.Value.EnvironmentPointer   = environmentPointer;
+			CurrentInfo.EnvironmentPointer  = environmentPointer;
 		}
 
 		internal    static  void    SetEnvironmentPointer (IntPtr environmentPointer, JniRuntime runtime)
@@ -47,7 +52,7 @@ namespace Java.Interop {
 				Info.Value = new JniEnvironmentInfo (environmentPointer, runtime);
 				return;
 			}
-			Info.Value.EnvironmentPointer   = environmentPointer;
+			CurrentInfo.EnvironmentPointer  = environmentPointer;
 		}
 
 		internal    static  void    SetEnvironmentInfo (JniEnvironmentInfo info)
@@ -81,7 +86,7 @@ namespace Java.Interop {
 		{
 			if (!value.IsValid)
 				return;
-			Runtime.ObjectReferenceManager.CreatedLocalReference (Info.Value, value);
+			Runtime.ObjectReferenceManager.CreatedLocalReference (CurrentInfo, value);
 		}
 
 #if FEATURE_JNIENVIRONMENT_SAFEHANDLES
@@ -166,7 +171,7 @@ namespace Java.Interop {
 #endif  // !FEATURE_JNIENVIRONMENT_JI_PINVOKES
 	}
 
-	sealed class JniEnvironmentInfo {
+	sealed class JniEnvironmentInfo : IDisposable {
 
 		const   int             NameBufferLength        = 512;
 
@@ -202,6 +207,10 @@ namespace Java.Interop {
 								vmh.ToString ("x")));
 				Runtime = vm;
 			}
+		}
+
+		public      bool                    IsValid {
+			get {return Runtime != null && environmentPointer != IntPtr.Zero;}
 		}
 
 		public JniEnvironmentInfo ()
@@ -241,6 +250,14 @@ namespace Java.Interop {
 				}
 				return JniEnvironment.Strings.NewString (dst, length);
 			}
+		}
+
+		public void Dispose ()
+		{
+			Runtime                 = null;
+			environmentPointer      = IntPtr.Zero;
+			nameBuffer              = null;
+			LocalReferenceCount     = 0;
 		}
 
 #if FEATURE_JNIENVIRONMENT_SAFEHANDLES
