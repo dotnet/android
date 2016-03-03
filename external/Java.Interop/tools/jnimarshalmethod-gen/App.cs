@@ -44,7 +44,7 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 
 		static JniRuntime.JniMarshalMemberBuilder CreateExportedMemberBuilder ()
 		{
-			return JniEnvironment.Runtime.ExportedMemberBuilder;
+			return JniEnvironment.Runtime.MarshalMemberBuilder;
 		}
 
 		static void CreateMarshalMethodAssembly (string path)

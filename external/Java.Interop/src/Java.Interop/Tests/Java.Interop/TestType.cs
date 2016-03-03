@@ -117,7 +117,7 @@ namespace Java.InteropTests
 					value.DisposeUnlessReferenced ();
 				}
 			};
-			return JniEnvironment.Runtime.ExportedMemberBuilder.CreateMarshalToManagedDelegate (h);
+			return JniEnvironment.Runtime.MarshalMemberBuilder.CreateMarshalToManagedDelegate (h);
 		}
 
 		static Delegate GetInt32ValueHandler ()
@@ -131,13 +131,13 @@ namespace Java.InteropTests
 					self.DisposeUnlessReferenced ();
 				}
 			};
-			return JniEnvironment.Runtime.ExportedMemberBuilder.CreateMarshalToManagedDelegate (h);
+			return JniEnvironment.Runtime.MarshalMemberBuilder.CreateMarshalToManagedDelegate (h);
 		}
 
 		static Delegate _GetStringValueHandler ()
 		{
 			Func<IntPtr, IntPtr, int, IntPtr> h = GetStringValueHandler;
-			return JniEnvironment.Runtime.ExportedMemberBuilder.CreateMarshalToManagedDelegate (h);
+			return JniEnvironment.Runtime.MarshalMemberBuilder.CreateMarshalToManagedDelegate (h);
 		}
 
 		static IntPtr GetStringValueHandler (IntPtr jnienv, IntPtr n_self, int value)
@@ -160,7 +160,7 @@ namespace Java.InteropTests
 		static Delegate GetMethodThrowsHandler ()
 		{
 			Action<IntPtr, IntPtr> h = MethodThrowsHandler;
-			return JniEnvironment.Runtime.ExportedMemberBuilder.CreateMarshalToManagedDelegate (h);
+			return JniEnvironment.Runtime.MarshalMemberBuilder.CreateMarshalToManagedDelegate (h);
 		}
 
 		static void MethodThrowsHandler (IntPtr jnienv, IntPtr n_self)

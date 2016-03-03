@@ -104,7 +104,7 @@ namespace Java.Interop {
 				}
 
 				try {
-					var f = JniEnvironment.Runtime.ExportedMemberBuilder.CreateConstructActivationPeerFunc (ctor);
+					var f = JniEnvironment.Runtime.MarshalMemberBuilder.CreateConstructActivationPeerFunc (ctor);
 					f (ctor, new JniObjectReference (n_self), pvalues);
 				}
 				catch (Exception e) {

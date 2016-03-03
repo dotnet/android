@@ -13,7 +13,7 @@ namespace Java.InteropTests
 	{
 		static void __RegisterNativeMembers (JniType type, string members)
 		{
-			var methods = JniEnvironment.Runtime.ExportedMemberBuilder
+			var methods = JniEnvironment.Runtime.MarshalMemberBuilder
 				.GetExportedMemberRegistrations (typeof (ExportTest));
 			type.RegisterNativeMethods (methods.ToArray ());
 		}

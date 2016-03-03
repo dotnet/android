@@ -13,19 +13,19 @@ namespace Java.Interop {
 			public  JniMarshalMemberBuilder    MarshalMemberBuilder        {get; set;}
 		}
 
-		JniMarshalMemberBuilder                exportedMemberBuilder;
-		public  JniMarshalMemberBuilder        ExportedMemberBuilder       {
+		JniMarshalMemberBuilder                marshalMemberBuilder;
+		public  JniMarshalMemberBuilder        MarshalMemberBuilder        {
 			get {
-				if (exportedMemberBuilder == null)
+				if (marshalMemberBuilder == null)
 					throw new NotSupportedException ("JniRuntime.ExportedMemberBuilder is not supported.");
-				return exportedMemberBuilder;
+				return marshalMemberBuilder;
 			}
 		}
 
 		partial void SetMarshalMemberBuilder (CreationOptions options)
 		{
 			if (options.MarshalMemberBuilder != null) {
-				exportedMemberBuilder   = SetRuntime (options.MarshalMemberBuilder);
+				marshalMemberBuilder    = SetRuntime (options.MarshalMemberBuilder);
 				return;
 			}
 
@@ -39,7 +39,7 @@ namespace Java.Interop {
 			if (t == null)
 				throw new InvalidOperationException ("Could not find Java.Interop.MarshalMemberBuilder from Java.Interop.Export.dll!");
 			var b   = (JniMarshalMemberBuilder) Activator.CreateInstance (t);
-			exportedMemberBuilder   = SetRuntime (b);
+			marshalMemberBuilder    = SetRuntime (b);
 		}
 
 		public abstract class JniMarshalMemberBuilder : ISetRuntime
