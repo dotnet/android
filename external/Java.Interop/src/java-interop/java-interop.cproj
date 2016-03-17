@@ -129,4 +129,12 @@
     <MakeDir Directories="obj" />
     <Exec Command="gcc -g -shared -o &quot;%(MacLibLipo.Identity)&quot; %(MacLibLipo.Arch) $(_CppFlags) $(_LinkFlags) $(_Libs) $(_Includes) $(_Files)" />
   </Target>
+  <Target Name="Clean">
+    <RemoveDir Directories="obj" />
+    <Delete Files="jni.c" />
+    <Delete
+        Files="$(OutputPath)\lib$(OutputName).dylib"
+        Condition=" '$(OS)' != 'Windows_NT' "
+    />
+  </Target>
 </Project>
