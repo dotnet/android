@@ -4,6 +4,10 @@ XA_CONFIGURATION  = XAIntegrationDebug
 
 GENDARME_URL = https://cloud.github.com/downloads/spouliot/gendarme/gendarme-2.10-bin.zip
 
+PACKAGES = \
+	packages/NUnit.2.6.3/NUnit.2.6.3.nupkg \
+	packages/NUnit.Runners.2.6.3/NUnit.Runners.2.6.3.nupkg
+
 DEPENDENCIES = \
 	bin/$(CONFIGURATION)/libNativeTiming.dylib
 
@@ -22,14 +26,18 @@ ATESTS = \
 	bin/$(CONFIGURATION)/Android.Interop-Tests.dll
 
 XBUILD = xbuild $(if $(V),/v:diag,)
+NUNIT_CONSOLE = packages/NUnit.Runners.2.6.3/tools/nunit-console.exe
 
-all: $(DEPENDENCIES) $(TESTS) $(XA_INTEGRATION_OUTPUTS)
+all: $(PACKAGES) $(DEPENDENCIES) $(TESTS) $(XA_INTEGRATION_OUTPUTS)
 
 xa-all: $(XA_INTEGRATION_OUTPUTS)
 
 clean:
 	$(XBUILD) /t:Clean
 	rm -Rf bin/$(CONFIGURATION)
+
+$(PACKAGES) $(NUNIT_CONSOLE):
+	nuget restore
 
 JDK     = JavaDeveloper-2013005_dp__11m4609.pkg
 JDK_URL = http://storage.bos.xamarin.com/android-sdk-tool/archives/JavaDeveloper-2013005_dp__11m4609.pkg
@@ -102,7 +110,7 @@ define RUN_TEST
 	MONO_TRACE_LISTENER=Console.Out \
 	JAVA_INTEROP_GREF_LOG=g-$(basename $(notdir $(1))).txt $(if $(2),JAVA_INTEROP_LREF_LOG=l-$(basename $(notdir $(1))).txt,) \
 	mono --debug=casts $$MONO_OPTIONS --runtime=v4.0.0 \
-		lib/NUnit-2.6.3/bin/nunit-console.exe $(NUNIT_EXTRA) $(1) \
+		$(NUNIT_CONSOLE) $(NUNIT_EXTRA) $(1) \
 		$(if $(RUN),-run:$(RUN)) \
 		-output=bin/$(CONFIGURATION)/TestOutput-$(basename $(notdir $(1))).txt ;
 endef
