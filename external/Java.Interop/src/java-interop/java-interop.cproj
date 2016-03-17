@@ -71,10 +71,10 @@
     <Compile Include="java-interop-gc-bridge-mono.c" />
   </ItemGroup>
   <ItemGroup>
-    <MacLibLipo Include="lib$(OutputName)-m32.dylib">
+    <MacLibLipo Include="obj\lib$(OutputName)-m32.dylib">
       <Arch>-m32</Arch>
     </MacLibLipo>
-    <MacLibLipo Include="lib$(OutputName)-m64.dylib">
+    <MacLibLipo Include="obj\lib$(OutputName)-m64.dylib">
       <Arch>-m64</Arch>
     </MacLibLipo>
   </ItemGroup>
@@ -126,6 +126,7 @@
       <_Libs>-L /Library/Frameworks/Mono.framework/Libraries -lmonosgen-2.0 </_Libs>
       <_Files>@(Compile -&gt; '%(Identity)', ' ')</_Files>
     </PropertyGroup>
+    <MakeDir Directories="obj" />
     <Exec Command="gcc -g -shared -o &quot;%(MacLibLipo.Identity)&quot; %(MacLibLipo.Arch) $(_CppFlags) $(_LinkFlags) $(_Libs) $(_Includes) $(_Files)" />
   </Target>
 </Project>
