@@ -153,7 +153,7 @@
   </PropertyGroup>
   <Target Name="BuildJniEnvironment_g_cs" Inputs="$(JNIEnvGenPath)\jnienv-gen.exe" Outputs="Java.Interop\JniEnvironment.g.cs;$(OutputPath)\jni.c">
     <MakeDir Directories="$(OutputPath)" />
-    <Exec Command="$(Runtime) &quot;$(JNIEnvGenPath)\jnienv-gen.exe&quot; Java.Interop\JniEnvironment.g.cs $(OutputPath)\jni.c" />
+    <Exec Command="$(Runtime) &quot;$(JNIEnvGenPath)\jnienv-gen.exe&quot; Java.Interop\JniEnvironment.g.cs $(IntermediateOutputPath)\jni.c" />
   </Target>
   <ItemGroup>
     <Content Include="$(OutputPath)java-interop.jar">
