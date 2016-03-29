@@ -16,7 +16,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>..\..\bin\Debug</OutputPath>
-    <JNIEnvGenPath>$(OutputPath)</JNIEnvGenPath>
+    <JNIEnvGenPath>..\..\bin\BuildDebug</JNIEnvGenPath>
     <OutputName>java-interop</OutputName>
     <CompileTarget>SharedLibrary</CompileTarget>
     <DefineSymbols>DEBUG JI_DLL_EXPORT MONODEVELOP MONO_DLL_EXPORT</DefineSymbols>
@@ -48,7 +48,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <OutputPath>..\..\bin\Release</OutputPath>
     <OutputName>java-interop</OutputName>
-    <JNIEnvGenPath>$(OutputPath)</JNIEnvGenPath>
+    <JNIEnvGenPath>..\..\bin\BuildRelease</JNIEnvGenPath>
     <CompileTarget>SharedLibrary</CompileTarget>
     <OptimizationLevel>3</OptimizationLevel>
     <DefineSymbols>JI_DLL_EXPORT MONODEVELOP MONO_DLL_EXPORT</DefineSymbols>
@@ -137,4 +137,11 @@
         Condition=" '$(OS)' != 'Windows_NT' "
     />
   </Target>
+  <ItemGroup>
+    <ProjectReference Include="..\..\build-tools\jnienv-gen\jnienv-gen.csproj">
+      <Project>{6410DA0F-5E14-4FC0-9AEE-F4C542C96C7A}</Project>
+      <Name>jnienv-gen</Name>
+      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
+    </ProjectReference>
+  </ItemGroup>
 </Project>

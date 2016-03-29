@@ -24,7 +24,7 @@
     <WarningLevel>4</WarningLevel>
     <ConsolePause>false</ConsolePause>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <JNIEnvGenPath>$(OutputPath)</JNIEnvGenPath>
+    <JNIEnvGenPath>..\..\bin\BuildDebug</JNIEnvGenPath>
     <DocumentationFile>..\..\bin\Debug\Java.Interop.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
@@ -35,7 +35,7 @@
     <ConsolePause>false</ConsolePause>
     <DefineConstants>INTEROP;FEATURE_JNIENVIRONMENT_SAFEHANDLES;FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES</DefineConstants>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <JNIEnvGenPath>$(OutputPath)</JNIEnvGenPath>
+    <JNIEnvGenPath>..\..\bin\BuildRelease</JNIEnvGenPath>
     <DocumentationFile>..\..\bin\Release\Java.Interop.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'XAIntegrationDebug|AnyCPU' ">
@@ -48,7 +48,7 @@
     <WarningLevel>4</WarningLevel>
     <ConsolePause>false</ConsolePause>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <JNIEnvGenPath>..\..\bin\Debug</JNIEnvGenPath>
+    <JNIEnvGenPath>..\..\bin\BuildDebug</JNIEnvGenPath>
     <SignAssembly>True</SignAssembly>
     <DelaySign>True</DelaySign>
   </PropertyGroup>
@@ -60,7 +60,7 @@
     <WarningLevel>4</WarningLevel>
     <ConsolePause>false</ConsolePause>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <JNIEnvGenPath>..\..\bin\Debug</JNIEnvGenPath>
+    <JNIEnvGenPath>..\..\bin\BuildDebug</JNIEnvGenPath>
     <SignAssembly>True</SignAssembly>
     <DelaySign>True</DelaySign>
   </PropertyGroup>
@@ -186,5 +186,12 @@
     </None>
     <None Include="Documentation\Java.Interop\IJavaPeerable.xml" />
     <None Include="Documentation\Java.Interop\JniManagedPeerStates.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\build-tools\jnienv-gen\jnienv-gen.csproj">
+      <Project>{6410DA0F-5E14-4FC0-9AEE-F4C542C96C7A}</Project>
+      <Name>jnienv-gen</Name>
+      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
+    </ProjectReference>
   </ItemGroup>
 </Project>
