@@ -9,21 +9,21 @@ PACKAGES = \
 	packages/NUnit.Runners.2.6.3/NUnit.Runners.2.6.3.nupkg
 
 DEPENDENCIES = \
-	bin/$(CONFIGURATION)/libNativeTiming.dylib
+	bin/Test$(CONFIGURATION)/libNativeTiming.dylib
 
 XA_INTEGRATION_OUTPUTS = \
 	bin/$(XA_CONFIGURATION)/Java.Interop.dll
 
 TESTS = \
-	bin/$(CONFIGURATION)/Java.Interop-Tests.dll \
-	bin/$(CONFIGURATION)/Java.Interop.Dynamic-Tests.dll \
-	bin/$(CONFIGURATION)/Java.Interop.Export-Tests.dll
+	bin/Test$(CONFIGURATION)/Java.Interop-Tests.dll \
+	bin/Test$(CONFIGURATION)/Java.Interop.Dynamic-Tests.dll \
+	bin/Test$(CONFIGURATION)/Java.Interop.Export-Tests.dll
 
 PTESTS = \
-	bin/$(CONFIGURATION)/Java.Interop-PerformanceTests.dll
+	bin/Test$(CONFIGURATION)/Java.Interop-PerformanceTests.dll
 
 ATESTS = \
-	bin/$(CONFIGURATION)/Android.Interop-Tests.dll
+	bin/Test$(CONFIGURATION)/Android.Interop-Tests.dll
 
 XBUILD = xbuild $(if $(V),/v:diag,)
 NUNIT_CONSOLE = packages/NUnit.Runners.2.6.3/tools/nunit-console.exe
@@ -65,27 +65,31 @@ lib/gendarme-2.10/gendarme.exe:
 	curl -o lib/gendarme-2.10/gendarme-2.10-bin.zip $(GENDARME_URL)
 	(cd lib/gendarme-2.10 ; unzip gendarme-2.10-bin.zip)
 
-bin/$(CONFIGURATION)/libNativeTiming.dylib: tests/NativeTiming/timing.c $(LOCAL_JDK_HEADERS)/jni.h
+bin/Test$(CONFIGURATION)/libNativeTiming.dylib: tests/NativeTiming/timing.c $(LOCAL_JDK_HEADERS)/jni.h
 	mkdir -p `dirname "$@"`
 	gcc -g -shared -o $@ $< -m32 -I $(LOCAL_JDK_HEADERS)
 
-bin/$(CONFIGURATION)/libJavaInterop.dylib: JniEnvironment.g.c $(LOCAL_JDK_HEADERS)/jni.h
+bin/Test$(CONFIGURATION)/libJavaInterop.dylib: JniEnvironment.g.c $(LOCAL_JDK_HEADERS)/jni.h
 	mkdir -p `dirname "$@"`
 	gcc -g -shared -o $@ $< -m32 -I $(LOCAL_JDK_HEADERS)
 
-bin/$(CONFIGURATION)/Java.Interop-Tests.dll: $(wildcard src/Java.Interop/*/*.cs src/Java.Interop/Tests/*/*.cs)
+bin/Test$(CONFIGURATION)/Java.Interop-Tests.dll: $(wildcard src/Java.Interop/*/*.cs src/Java.Interop/Tests/*/*.cs)
 	$(XBUILD)
 	touch $@
 
-bin/$(CONFIGURATION)/Java.Interop.Export-Tests.dll: $(wildcard src/Java.Interop.Export/*/*.cs src/Java.Interop.Export/Tests/*/*.cs)
+bin/Test$(CONFIGURATION)/Java.Interop.Dynamic-Tests.dll: $(wildcard src/Java.Interop.Dynamic/*/*.cs src/Java.Interop.Dynamic/Tests/*/*.cs)
 	$(XBUILD)
 	touch $@
 
-bin/$(CONFIGURATION)/Java.Interop-PerformanceTests.dll: $(wildcard tests/Java.Interop-PerformanceTests/*.cs) bin/$(CONFIGURATION)/libNativeTiming.dylib
+bin/Test$(CONFIGURATION)/Java.Interop.Export-Tests.dll: $(wildcard src/Java.Interop.Export/*/*.cs src/Java.Interop.Export/Tests/*/*.cs)
 	$(XBUILD)
 	touch $@
 
-bin/$(CONFIGURATION)/Android.Interop-Tests.dll: $(wildcard src/Android.Interop/*/*.cs src/Android.Interop/Tests/*/*.cs)
+bin/Test$(CONFIGURATION)/Java.Interop-PerformanceTests.dll: $(wildcard tests/Java.Interop-PerformanceTests/*.cs) bin/Test$(CONFIGURATION)/libNativeTiming.dylib
+	$(XBUILD)
+	touch $@
+
+bin/Test$(CONFIGURATION)/Android.Interop-Tests.dll: $(wildcard src/Android.Interop/*/*.cs src/Android.Interop/Tests/*/*.cs)
 	$(XBUILD)
 	touch $@
 
@@ -115,11 +119,14 @@ define RUN_TEST
 		-output=bin/$(CONFIGURATION)/TestOutput-$(basename $(notdir $(1))).txt ;
 endef
 
-run-tests: $(TESTS)
+run-tests: $(TESTS) bin/Test$(CONFIGURATION)/libjava-interop.dylib
 	$(foreach t,$(TESTS), $(call RUN_TEST,$(t),1))
 
-run-ptests: $(PTESTS)
+run-ptests: $(PTESTS) bin/Test$(CONFIGURATION)/libjava-interop.dylib
 	$(foreach t,$(PTESTS), $(call RUN_TEST,$(t)))
+
+bin/Test$(CONFIGURATION)/libjava-interop.dylib: bin/$(CONFIGURATION)/libjava-interop.dylib
+	cp $< $@
 
 run-android: $(ATESTS)
 	(cd src/Android.Interop/Tests; $(XBUILD) '/t:Install;RunTests' $(if $(FIXTURE),/p:TestFixture=$(FIXTURE)))

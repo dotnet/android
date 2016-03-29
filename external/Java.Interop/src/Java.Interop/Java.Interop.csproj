@@ -156,12 +156,14 @@
     <Exec Command="$(Runtime) &quot;$(JNIEnvGenPath)\jnienv-gen.exe&quot; Java.Interop\JniEnvironment.g.cs $(OutputPath)\jni.c" />
   </Target>
   <ItemGroup>
-    <JavaInteropJar Include="$(OutputPath)java-interop.jar" />
+    <Content Include="$(OutputPath)java-interop.jar">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
-  <Target Name="BuildInteropJar" Inputs="@(CompileJavaInteropJar)" Outputs="@(JavaInteropJar)">
-    <MakeDir Directories="$(OutputPath)ji-classes" />
-    <Exec Command="javac -source 1.5 -target 1.6 -d &quot;$(OutputPath)ji-classes&quot; @(CompileJavaInteropJar -&gt; '%(Identity)', ' ')" />
-    <Exec Command="jar cf &quot;$(OutputPath)java-interop.jar&quot; -C &quot;$(OutputPath)ji-classes&quot; ." />
+  <Target Name="BuildInteropJar" Inputs="@(CompileJavaInteropJar)" Outputs="$(OutputPath)java-interop.jar">
+    <MakeDir Directories="$(IntermediateOutputPath)ji-classes" />
+    <Exec Command="javac -source 1.5 -target 1.6 -d &quot;$(IntermediateOutputPath)ji-classes&quot; @(CompileJavaInteropJar -&gt; '%(Identity)', ' ')" />
+    <Exec Command="jar cf &quot;$(OutputPath)java-interop.jar&quot; -C &quot;$(IntermediateOutputPath)ji-classes&quot; ." />
   </Target>
   <ItemGroup>
     <None Include="Java.Interop\JavaPrimitiveArrays.tt">

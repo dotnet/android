@@ -23,7 +23,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\..\..\bin\Debug</OutputPath>
+    <OutputPath>..\..\..\bin\TestDebug</OutputPath>
     <DefineConstants>DEBUG;</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -34,7 +34,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>full</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>..\..\..\bin\Release</OutputPath>
+    <OutputPath>..\..\..\bin\TestRelease</OutputPath>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AndroidUseSharedRuntime>false</AndroidUseSharedRuntime>
@@ -108,16 +108,16 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <AndroidJavaLibrary Include="..\..\..\bin\$(Configuration)\export-test.jar">
+    <AndroidJavaLibrary Include="$(OutputPath)export-test.jar">
       <Link>export-test.jar</Link>
     </AndroidJavaLibrary>
-    <AndroidJavaLibrary Include="..\..\..\bin\$(Configuration)\interop-test.jar">
+    <AndroidJavaLibrary Include="$(OutputPath)interop-test.jar">
       <Link>interop-test.jar</Link>
     </AndroidJavaLibrary>
-    <AndroidJavaLibrary Include="..\..\..\bin\$(Configuration)\java-interop.jar">
+    <AndroidJavaLibrary Include="$(OutputPath)..\$(Configuration)\java-interop.jar">
       <Link>java-interop.jar</Link>
     </AndroidJavaLibrary>
-    <AndroidJavaLibrary Include="..\..\..\bin\$(Configuration)\performance-test.jar">
+    <AndroidJavaLibrary Include="$(OutputPath)performance-test.jar">
       <Link>performance-test.jar</Link>
     </AndroidJavaLibrary>
   </ItemGroup>
