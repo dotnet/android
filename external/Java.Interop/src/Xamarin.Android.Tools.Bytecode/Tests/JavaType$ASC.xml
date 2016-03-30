@@ -1,0 +1,18 @@
+<api
+  api-source="class-parse">
+  <package
+    name="com.xamarin"
+    jni-name="com/xamarin">
+    <class
+      abstract="false"
+      deprecated="deprecated"
+      jni-extends="Ljava/lang/Object;"
+      extends="java.lang.Object"
+      extends-generic-aware="java.lang.Object"
+      final="false"
+      name="JavaType.ASC"
+      jni-signature="Lcom/xamarin/JavaType$ASC;"
+      static="true"
+      visibility="" />
+  </package>
+</api>

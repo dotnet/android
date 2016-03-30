@@ -1,0 +1,34 @@
+<api
+  api-source="class-parse">
+  <package
+    name="com.xamarin"
+    jni-name="com/xamarin">
+    <interface
+      abstract="true"
+      deprecated="not deprecated"
+      final="false"
+      name="JavaAnnotation"
+      jni-signature="Lcom/xamarin/JavaAnnotation;"
+      static="false"
+      visibility="public">
+      <implements
+        name="java.lang.annotation.Annotation"
+        name-generic-aware="java.lang.annotation.Annotation"
+        jni-type="Ljava/lang/annotation/Annotation;" />
+      <method
+        abstract="true"
+        deprecated="not deprecated"
+        final="false"
+        name="value"
+        native="false"
+        return="java.lang.String[]"
+        jni-return="[Ljava/lang/String;"
+        static="false"
+        synchronized="false"
+        visibility="public"
+        bridge="false"
+        synthetic="false"
+        jni-signature="()[Ljava/lang/String;" />
+    </interface>
+  </package>
+</api>

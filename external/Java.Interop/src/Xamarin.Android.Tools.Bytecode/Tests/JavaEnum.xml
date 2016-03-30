@@ -1,0 +1,90 @@
+<api
+  api-source="class-parse">
+  <package
+    name="com.xamarin"
+    jni-name="com/xamarin">
+    <class
+      abstract="false"
+      deprecated="not deprecated"
+      jni-extends="Ljava/lang/Enum;"
+      extends="java.lang.Enum"
+      extends-generic-aware="java.lang.Enum&lt;com.xamarin.JavaEnum&gt;"
+      final="true"
+      name="JavaEnum"
+      jni-signature="Lcom/xamarin/JavaEnum;"
+      static="false"
+      visibility="">
+      <method
+        abstract="false"
+        deprecated="not deprecated"
+        final="false"
+        name="switchValue"
+        native="false"
+        return="int"
+        jni-return="I"
+        static="false"
+        synchronized="false"
+        visibility="public"
+        bridge="false"
+        synthetic="false"
+        jni-signature="()I" />
+      <method
+        abstract="false"
+        deprecated="not deprecated"
+        final="false"
+        name="valueOf"
+        native="false"
+        return="com.xamarin.JavaEnum"
+        jni-return="Lcom/xamarin/JavaEnum;"
+        static="true"
+        synchronized="false"
+        visibility="public"
+        bridge="false"
+        synthetic="false"
+        jni-signature="(Ljava/lang/String;)Lcom/xamarin/JavaEnum;">
+        <parameter
+          name="name"
+          type="java.lang.String"
+          jni-type="Ljava/lang/String;" />
+      </method>
+      <method
+        abstract="false"
+        deprecated="not deprecated"
+        final="false"
+        name="values"
+        native="false"
+        return="com.xamarin.JavaEnum[]"
+        jni-return="[Lcom/xamarin/JavaEnum;"
+        static="true"
+        synchronized="false"
+        visibility="public"
+        bridge="false"
+        synthetic="false"
+        jni-signature="()[Lcom/xamarin/JavaEnum;" />
+      <field
+        deprecated="not deprecated"
+        final="true"
+        name="FIRST"
+        static="true"
+        synthetic="false"
+        transient="false"
+        type="com.xamarin.JavaEnum"
+        type-generic-aware="com.xamarin.JavaEnum"
+        jni-signature="Lcom/xamarin/JavaEnum;"
+        visibility="public"
+        volatile="false" />
+      <field
+        deprecated="not deprecated"
+        final="true"
+        name="SECOND"
+        static="true"
+        synthetic="false"
+        transient="false"
+        type="com.xamarin.JavaEnum"
+        type-generic-aware="com.xamarin.JavaEnum"
+        jni-signature="Lcom/xamarin/JavaEnum;"
+        visibility="public"
+        volatile="false" />
+    </class>
+  </package>
+</api>

@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{C9FA4492-DEB0-4932-A6B8-E2C4E0581692}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>Xamarin.Android.Tools.BytecodeTests</RootNamespace>
+    <AssemblyName>Xamarin.Android.Tools.Bytecode-Tests</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>..\..\..\bin\TestDebug</OutputPath>
+    <DefineConstants>DEBUG;</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>false</ConsolePause>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>full</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>..\..\..\bin\TestRelease</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>false</ConsolePause>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="nunit.framework">
+      <HintPath>..\..\..\packages\NUnit.2.6.3\lib\nunit.framework.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="ClassFileFixture.cs" />
+    <Compile Include="ClassFileTests.cs" />
+    <Compile Include="ExpectedFieldDeclaration.cs" />
+    <Compile Include="ExpectedMethodDeclaration.cs" />
+    <Compile Include="ExpectedTypeDeclaration.cs" />
+    <Compile Include="IJavaInterfaceTests.cs" />
+    <Compile Include="JavaAnnotationTests.cs" />
+    <Compile Include="JavaEnumTests.cs" />
+    <Compile Include="JavaTypeTests.cs" />
+    <Compile Include="JavaType.ASCTests.cs" />
+    <Compile Include="JavaType.RNCTests.cs" />
+    <Compile Include="JavaType.RNC.RPNCTests.cs" />
+    <Compile Include="JavaType.PSCTests.cs" />
+    <Compile Include="NonGenericGlobalTypeTests.cs" />
+    <Compile Include="ExpectedInnerClassInfo.cs" />
+    <Compile Include="ParameterFixupTests.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <TestJar Include="java\**\*.java" />
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <BuildDependsOn>
+      BuildClasses;
+      $(BuildDependsOn)
+    </BuildDependsOn>
+  </PropertyGroup>
+  <Target Name="BuildClasses" Inputs="@(TestJar)" Outputs="@(TestJar-&gt;'$(IntermediateOutputPath)classes\%(RecursiveDir)%(Filename).class')">
+    <MakeDir Directories="$(IntermediateOutputPath)classes" />
+    <Exec Command="&quot;javac&quot; -source 1.5 -target 1.6 -g -d &quot;$(IntermediateOutputPath)classes&quot; @(TestJar -&gt; '%(Identity)', ' ')" />
+  </Target>
+  <ItemGroup>
+    <ProjectReference Include="..\Xamarin.Android.Tools.Bytecode.csproj">
+      <Project>{B17475BC-45A2-47A3-B8FC-62F3A0959EE0}</Project>
+      <Name>Xamarin.Android.Tools.Bytecode</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="JavaAnnotation.xml">
+      <LogicalName>JavaAnnotation.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="JavaEnum.xml">
+      <LogicalName>JavaEnum.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="JavaType.xml">
+      <LogicalName>JavaType.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="IJavaInterface.xml">
+      <LogicalName>IJavaInterface.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="NonGenericGlobalType.xml">
+      <LogicalName>NonGenericGlobalType.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ParameterFixup.xml">
+      <LogicalName>ParameterFixup.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ParameterFixupFromDocs.xml">
+      <LogicalName>ParameterFixupFromDocs.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\JavaAnnotation.class">
+      <LogicalName>JavaAnnotation.class</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\JavaEnum.class">
+      <LogicalName>JavaEnum.class</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\JavaType.class">
+      <LogicalName>JavaType.class</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\JavaType%24ASC.class">
+      <LogicalName>JavaType$ASC.class</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="JavaType%24ASC.xml">
+      <LogicalName>JavaType$ASC.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\JavaType%24RNC.class">
+      <LogicalName>JavaType$RNC.class</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="JavaType%24RNC.xml">
+      <LogicalName>JavaType$RNC.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\JavaType%24RNC%24RPNC.class">
+      <LogicalName>JavaType$RNC$RPNC.class</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="JavaType%24RNC%24RPNC.xml">
+      <LogicalName>JavaType$RNC$RPNC.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\JavaType%24PSC.class">
+      <LogicalName>JavaType$PSC.class</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="JavaType%24PSC.xml">
+      <LogicalName>JavaType$PSC.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\IJavaInterface.class">
+      <LogicalName>IJavaInterface.class</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="$(IntermediateOutputPath)classes\NonGenericGlobalType.class">
+      <LogicalName>NonGenericGlobalType.class</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\IParameterInterface.class">
+      <LogicalName>IParameterInterface.class</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\ParameterAbstractClass.class">
+      <LogicalName>ParameterAbstractClass.class</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\ParameterClass.class">
+      <LogicalName>ParameterClass.class</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\ParameterClass2.class">
+      <LogicalName>ParameterClass2.class</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="$(IntermediateOutputPath)classes\java\util\Collection.class">
+      <LogicalName>Collection.class</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+</Project>

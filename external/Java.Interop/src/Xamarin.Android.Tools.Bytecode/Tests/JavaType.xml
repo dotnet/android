@@ -1,0 +1,613 @@
+<api
+  api-source="class-parse">
+  <package
+    name="com.xamarin"
+    jni-name="com/xamarin">
+    <class
+      abstract="false"
+      deprecated="not deprecated"
+      jni-extends="Ljava/lang/Object;"
+      extends="java.lang.Object"
+      extends-generic-aware="java.lang.Object"
+      final="false"
+      name="JavaType"
+      jni-signature="Lcom/xamarin/JavaType;"
+      static="false"
+      visibility="public">
+      <typeParameters>
+        <typeParameter
+          name="E"
+          jni-classBound="Ljava/lang/Object;"
+          classBound="java.lang.Object"
+          interfaceBounds=""
+          jni-interfaceBounds="" />
+      </typeParameters>
+      <implements
+        name="java.lang.Cloneable"
+        name-generic-aware="java.lang.Cloneable"
+        jni-type="Ljava/lang/Cloneable;" />
+      <implements
+        name="java.lang.Comparable"
+        name-generic-aware="java.lang.Comparable&lt;com.xamarin.JavaType&lt;E&gt;&gt;"
+        jni-type="Ljava/lang/Comparable&lt;Lcom/xamarin/JavaType&lt;TE;&gt;;&gt;;" />
+      <implements
+        name="com.xamarin.IJavaInterface"
+        name-generic-aware="com.xamarin.IJavaInterface&lt;java.lang.StringBuilder, java.util.ArrayList&lt;java.lang.StringBuilder&gt;, java.util.List&lt;java.lang.String&gt;&gt;"
+        jni-type="Lcom/xamarin/IJavaInterface&lt;Ljava/lang/StringBuilder;Ljava/util/ArrayList&lt;Ljava/lang/StringBuilder;&gt;;Ljava/util/List&lt;Ljava/lang/String;&gt;;&gt;;" />
+      <constructor
+        deprecated="not deprecated"
+        final="false"
+        name="JavaType"
+        static="false"
+        visibility="public"
+        bridge="false"
+        synthetic="false"
+        jni-signature="()V" />
+      <constructor
+        deprecated="not deprecated"
+        final="false"
+        name="JavaType"
+        static="false"
+        visibility="public"
+        bridge="false"
+        synthetic="false"
+        jni-signature="(Ljava/lang/String;)V">
+        <parameter
+          name="value"
+          type="java.lang.String"
+          jni-type="Ljava/lang/String;" />
+      </constructor>
+      <method
+        abstract="false"
+        deprecated="deprecated"
+        final="false"
+        name="action"
+        native="false"
+        return="void"
+        jni-return="V"
+        static="false"
+        synchronized="false"
+        visibility="public"
+        bridge="false"
+        synthetic="false"
+        jni-signature="(Ljava/lang/Object;)V">
+        <parameter
+          name="value"
+          type="java.lang.Object"
+          jni-type="Ljava/lang/Object;" />
+      </method>
+      <method
+        abstract="false"
+        deprecated="not deprecated"
+        final="false"
+        name="compareTo"
+        native="false"
+        return="int"
+        jni-return="I"
+        static="false"
+        synchronized="false"
+        visibility="public"
+        bridge="false"
+        synthetic="false"
+        jni-signature="(Lcom/xamarin/JavaType;)I">
+        <parameter
+          name="value"
+          type="com.xamarin.JavaType&lt;E&gt;"
+          jni-type="Lcom/xamarin/JavaType&lt;TE;&gt;;" />
+      </method>
+      <method
+        abstract="false"
+        deprecated="not deprecated"
+        final="false"
+        name="compareTo"
+        native="false"
+        return="int"
+        jni-return="I"
+        static="false"
+        synchronized="false"
+        visibility="public"
+        bridge="true"
+        synthetic="true"
+        jni-signature="(Ljava/lang/Object;)I">
+        <parameter
+          name="x0"
+          type="java.lang.Object"
+          jni-type="Ljava/lang/Object;" />
+      </method>
+      <method
+        abstract="false"
+        deprecated="not deprecated"
+        final="false"
+        name="finalize"
+        native="false"
+        return="void"
+        jni-return="V"
+        static="false"
+        synchronized="false"
+        visibility="protected"
+        bridge="false"
+        synthetic="false"
+        jni-signature="()V" />
+      <method
+        abstract="false"
+        deprecated="not deprecated"
+        final="false"
+        name="finalize"
+        native="false"
+        return="int"
+        jni-return="I"
+        static="true"
+        synchronized="false"
+        visibility="public"
+        bridge="false"
+        synthetic="false"
+        jni-signature="(I)I">
+        <parameter
+          name="value"
+          type="int"
+          jni-type="I" />
+      </method>
+      <method
+        abstract="false"
+        deprecated="not deprecated"
+        final="false"
+        name="func"
+        native="false"
+        return="java.lang.Object"
+        jni-return="Ljava/lang/Object;"
+        static="false"
+        synchronized="false"
+        visibility="public"
+        bridge="true"
+        synthetic="true"
+        jni-signature="(Ljava/lang/CharSequence;)Ljava/lang/Object;">
+        <parameter
+          name="x0"
+          type="java.lang.CharSequence"
+          jni-type="Ljava/lang/CharSequence;" />
+      </method>
+      <method
+        abstract="false"
+        deprecated="not deprecated"
+        final="false"
+        name="func"
+        native="false"
+        return="java.util.List&lt;java.lang.String&gt;"
+        jni-return="Ljava/util/List&lt;Ljava/lang/String;&gt;;"
+        static="false"
+        synchronized="false"
+        visibility="public"
+        bridge="false"
+        synthetic="false"
+        jni-signature="(Ljava/lang/StringBuilder;)Ljava/util/List;">
+        <parameter
+          name="value"
+          type="java.lang.StringBuilder"
+          jni-type="Ljava/lang/StringBuilder;" />
+      </method>
+      <method
+        abstract="false"
+        deprecated="not deprecated"
+        final="false"
+        name="func"
+        native="false"
+        return="java.lang.Integer"
+        jni-return="Ljava/lang/Integer;"
+        static="false"
+        synchronized="false"
+        visibility="public"
+        bridge="false"
+        synthetic="false"
+        jni-signature="([Ljava/lang/String;)Ljava/lang/Integer;">
+        <parameter
+          name="values"
+          type="java.lang.String[]"
+          jni-type="[Ljava/lang/String;" />
+      </method>
+      <method
+        abstract="false"
+        deprecated="not deprecated"
+        final="false"
+        name="instanceActionWithGenerics"
+        native="false"
+        return="void"
+        jni-return="V"
+        static="false"
+        synchronized="false"
+        visibility="public"
+        bridge="false"
+        synthetic="false"
+        jni-signature="(Ljava/lang/Object;Ljava/lang/Object;)V">
+        <typeParameters>
+          <typeParameter
+            name="T"
+            jni-classBound="Ljava/lang/Object;"
+            classBound="java.lang.Object"
+            interfaceBounds=""
+            jni-interfaceBounds="" />
+        </typeParameters>
+        <parameter
+          name="value1"
+          type="T"
+          jni-type="TT;" />
+        <parameter
+          name="value2"
+          type="E"
+          jni-type="TE;" />
+      </method>
+      <method
+        abstract="false"
+        deprecated="not deprecated"
+        final="false"
+        name="run"
+        native="false"
+        return="void"
+        jni-return="V"
+        static="false"
+        synchronized="false"
+        visibility="public"
+        bridge="false"
+        synthetic="false"
+        jni-signature="()V" />
+      <method
+        abstract="false"
+        deprecated="not deprecated"
+        final="false"
+        name="staticActionWithGenerics"
+        native="false"
+        return="void"
+        jni-return="V"
+        static="true"
+        synchronized="false"
+        visibility="public"
+        bridge="false"
+        synthetic="false"
+        jni-signature="(Ljava/lang/Object;Ljava/lang/Number;Ljava/util/List;Ljava/util/List;Ljava/util/List;)V">
+        <typeParameters>
+          <typeParameter
+            name="T"
+            jni-classBound="Ljava/lang/Object;"
+            classBound="java.lang.Object"
+            interfaceBounds=""
+            jni-interfaceBounds="" />
+          <typeParameter
+            name="TExtendsNumber"
+            jni-classBound="Ljava/lang/Number;"
+            classBound="java.lang.Number"
+            interfaceBounds="java.lang.Comparable&lt;T&gt;"
+            jni-interfaceBounds="Ljava/lang/Comparable&lt;TT;&gt;;" />
+          <typeParameter
+            name="TThrowable"
+            jni-classBound="Ljava/lang/Throwable;"
+            classBound="java.lang.Throwable"
+            interfaceBounds=""
+            jni-interfaceBounds="" />
+        </typeParameters>
+        <parameter
+          name="value1"
+          type="T"
+          jni-type="TT;" />
+        <parameter
+          name="value2"
+          type="TExtendsNumber"
+          jni-type="TTExtendsNumber;" />
+        <parameter
+          name="unboundedList"
+          type="java.util.List&lt;?&gt;"
+          jni-type="Ljava/util/List&lt;*&gt;;" />
+        <parameter
+          name="extendsList"
+          type="java.util.List&lt;? extends java.lang.Number&gt;"
+          jni-type="Ljava/util/List&lt;+Ljava/lang/Number;&gt;;" />
+        <parameter
+          name="superList"
+          type="java.util.List&lt;? super java.lang.Throwable&gt;"
+          jni-type="Ljava/util/List&lt;-Ljava/lang/Throwable;&gt;;" />
+        <exception
+          name="java/lang/IllegalArgumentException"
+          type="java.lang.IllegalArgumentException"
+          type-generic-aware="java.lang.IllegalArgumentException" />
+        <exception
+          name="java/lang/NumberFormatException"
+          type="java.lang.NumberFormatException"
+          type-generic-aware="java.lang.NumberFormatException" />
+        <exception
+          name="java/lang/Throwable"
+          type="java.lang.Throwable"
+          type-generic-aware="TThrowable" />
+      </method>
+      <method
+        abstract="false"
+        deprecated="not deprecated"
+        final="false"
+        name="sum"
+        native="false"
+        return="int"
+        jni-return="I"
+        static="true"
+        synchronized="false"
+        visibility="public"
+        bridge="false"
+        synthetic="false"
+        jni-signature="(I[I)I">
+        <parameter
+          name="first"
+          type="int"
+          jni-type="I" />
+        <parameter
+          name="remaining"
+          type="int..."
+          jni-type="[I" />
+      </method>
+      <field
+        deprecated="not deprecated"
+        final="true"
+        name="INSTANCE_FINAL_E"
+        static="false"
+        synthetic="false"
+        transient="false"
+        type="java.lang.Object"
+        type-generic-aware="E"
+        jni-signature="Ljava/lang/Object;"
+        visibility="public"
+        volatile="false" />
+      <field
+        deprecated="deprecated"
+        final="true"
+        name="INSTANCE_FINAL_OBJECT"
+        static="false"
+        synthetic="false"
+        transient="false"
+        type="java.lang.Object"
+        type-generic-aware="java.lang.Object"
+        jni-signature="Ljava/lang/Object;"
+        visibility="public"
+        volatile="false" />
+      <field
+        deprecated="not deprecated"
+        final="true"
+        name="NaN"
+        static="true"
+        synthetic="false"
+        transient="false"
+        type="double"
+        type-generic-aware="double"
+        jni-signature="D"
+        value="(0.0 / 0.0)"
+        visibility="public"
+        volatile="false" />
+      <field
+        deprecated="not deprecated"
+        final="true"
+        name="NEGATIVE_INFINITY"
+        static="true"
+        synthetic="false"
+        transient="false"
+        type="double"
+        type-generic-aware="double"
+        jni-signature="D"
+        value="(-1.0 / 0.0)"
+        visibility="public"
+        volatile="false" />
+      <field
+        deprecated="not deprecated"
+        final="true"
+        name="POSITIVE_INFINITY"
+        static="true"
+        synthetic="false"
+        transient="false"
+        type="double"
+        type-generic-aware="double"
+        jni-signature="D"
+        value="(1.0 / 0.0)"
+        visibility="public"
+        volatile="false" />
+      <field
+        deprecated="not deprecated"
+        final="false"
+        name="protectedInstanceEList"
+        static="false"
+        synthetic="false"
+        transient="false"
+        type="java.util.List"
+        type-generic-aware="java.util.List&lt;E&gt;"
+        jni-signature="Ljava/util/List;"
+        visibility="protected"
+        volatile="false" />
+      <field
+        deprecated="not deprecated"
+        final="true"
+        name="STATIC_FINAL_BOOL_FALSE"
+        static="true"
+        synthetic="false"
+        transient="false"
+        type="boolean"
+        type-generic-aware="boolean"
+        jni-signature="Z"
+        value="false"
+        visibility="public"
+        volatile="false" />
+      <field
+        deprecated="not deprecated"
+        final="true"
+        name="STATIC_FINAL_BOOL_TRUE"
+        static="true"
+        synthetic="false"
+        transient="false"
+        type="boolean"
+        type-generic-aware="boolean"
+        jni-signature="Z"
+        value="true"
+        visibility="public"
+        volatile="false" />
+      <field
+        deprecated="not deprecated"
+        final="true"
+        name="STATIC_FINAL_CHAR_MAX"
+        static="true"
+        synthetic="false"
+        transient="false"
+        type="char"
+        type-generic-aware="char"
+        jni-signature="C"
+        value="65535"
+        visibility="public"
+        volatile="false" />
+      <field
+        deprecated="not deprecated"
+        final="true"
+        name="STATIC_FINAL_CHAR_MIN"
+        static="true"
+        synthetic="false"
+        transient="false"
+        type="char"
+        type-generic-aware="char"
+        jni-signature="C"
+        value="0"
+        visibility="public"
+        volatile="false" />
+      <field
+        deprecated="not deprecated"
+        final="true"
+        name="STATIC_FINAL_DOUBLE_MAX"
+        static="true"
+        synthetic="false"
+        transient="false"
+        type="double"
+        type-generic-aware="double"
+        jni-signature="D"
+        value="1.7976931348623157E+308"
+        visibility="public"
+        volatile="false" />
+      <field
+        deprecated="not deprecated"
+        final="true"
+        name="STATIC_FINAL_DOUBLE_MIN"
+        static="true"
+        synthetic="false"
+        transient="false"
+        type="double"
+        type-generic-aware="double"
+        jni-signature="D"
+        value="4.94065645841247E-324"
+        visibility="public"
+        volatile="false" />
+      <field
+        deprecated="not deprecated"
+        final="true"
+        name="STATIC_FINAL_INT32"
+        static="true"
+        synthetic="false"
+        transient="false"
+        type="int"
+        type-generic-aware="int"
+        jni-signature="I"
+        value="42"
+        visibility="public"
+        volatile="false" />
+      <field
+        deprecated="not deprecated"
+        final="true"
+        name="STATIC_FINAL_INT32_MAX"
+        static="true"
+        synthetic="false"
+        transient="false"
+        type="int"
+        type-generic-aware="int"
+        jni-signature="I"
+        value="2147483647"
+        visibility="public"
+        volatile="false" />
+      <field
+        deprecated="not deprecated"
+        final="true"
+        name="STATIC_FINAL_INT32_MIN"
+        static="true"
+        synthetic="false"
+        transient="false"
+        type="int"
+        type-generic-aware="int"
+        jni-signature="I"
+        value="-2147483648"
+        visibility="public"
+        volatile="false" />
+      <field
+        deprecated="not deprecated"
+        final="true"
+        name="STATIC_FINAL_INT64_MAX"
+        static="true"
+        synthetic="false"
+        transient="false"
+        type="long"
+        type-generic-aware="long"
+        jni-signature="J"
+        value="9223372036854775807"
+        visibility="public"
+        volatile="false" />
+      <field
+        deprecated="not deprecated"
+        final="true"
+        name="STATIC_FINAL_INT64_MIN"
+        static="true"
+        synthetic="false"
+        transient="false"
+        type="long"
+        type-generic-aware="long"
+        jni-signature="J"
+        value="-9223372036854775808"
+        visibility="public"
+        volatile="false" />
+      <field
+        deprecated="deprecated"
+        final="true"
+        name="STATIC_FINAL_OBJECT"
+        static="true"
+        synthetic="false"
+        transient="false"
+        type="java.lang.Object"
+        type-generic-aware="java.lang.Object"
+        jni-signature="Ljava/lang/Object;"
+        visibility="public"
+        volatile="false" />
+      <field
+        deprecated="not deprecated"
+        final="true"
+        name="STATIC_FINAL_SINGLE_MAX"
+        static="true"
+        synthetic="false"
+        transient="false"
+        type="float"
+        type-generic-aware="float"
+        jni-signature="F"
+        value="3.40282347E+38"
+        visibility="public"
+        volatile="false" />
+      <field
+        deprecated="not deprecated"
+        final="true"
+        name="STATIC_FINAL_SINGLE_MIN"
+        static="true"
+        synthetic="false"
+        transient="false"
+        type="float"
+        type-generic-aware="float"
+        jni-signature="F"
+        value="1.401298E-45"
+        visibility="public"
+        volatile="false" />
+      <field
+        deprecated="not deprecated"
+        final="true"
+        name="STATIC_FINAL_STRING"
+        static="true"
+        synthetic="false"
+        transient="false"
+        type="java.lang.String"
+        type-generic-aware="java.lang.String"
+        jni-signature="Ljava/lang/String;"
+        value="&quot;Hello, \\\&quot;embedded\u0000Nulls\&quot; and \ud83d\udca9!&quot;"
+        visibility="public"
+        volatile="false" />
+    </class>
+  </package>
+</api>

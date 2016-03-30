@@ -1,0 +1,73 @@
+<api
+  api-source="class-parse">
+  <package
+    name="com.xamarin"
+    jni-name="com/xamarin">
+    <class
+      abstract="true"
+      deprecated="not deprecated"
+      jni-extends="Ljava/lang/Object;"
+      extends="java.lang.Object"
+      extends-generic-aware="java.lang.Object"
+      final="false"
+      name="JavaType.RNC"
+      jni-signature="Lcom/xamarin/JavaType$RNC;"
+      static="false"
+      visibility="protected">
+      <typeParameters>
+        <typeParameter
+          name="E2"
+          jni-classBound="Ljava/lang/Object;"
+          classBound="java.lang.Object"
+          interfaceBounds=""
+          jni-interfaceBounds="" />
+      </typeParameters>
+      <constructor
+        deprecated="not deprecated"
+        final="false"
+        name="JavaType.RNC"
+        static="false"
+        visibility="protected"
+        bridge="false"
+        synthetic="false"
+        jni-signature="(Lcom/xamarin/JavaType;)V" />
+      <constructor
+        deprecated="not deprecated"
+        final="false"
+        name="JavaType.RNC"
+        static="false"
+        visibility="protected"
+        bridge="false"
+        synthetic="false"
+        jni-signature="(Lcom/xamarin/JavaType;Ljava/lang/Object;Ljava/lang/Object;)V">
+        <parameter
+          name="value1"
+          type="E"
+          jni-type="TE;" />
+        <parameter
+          name="value2"
+          type="E2"
+          jni-type="TE2;" />
+      </constructor>
+      <method
+        abstract="true"
+        deprecated="not deprecated"
+        final="false"
+        name="fromE"
+        native="false"
+        return="E2"
+        jni-return="TE2;"
+        static="false"
+        synchronized="false"
+        visibility="public"
+        bridge="false"
+        synthetic="false"
+        jni-signature="(Ljava/lang/Object;)Ljava/lang/Object;">
+        <parameter
+          name="p0"
+          type="E"
+          jni-type="TE;" />
+      </method>
+    </class>
+  </package>
+</api>

@@ -1,0 +1,72 @@
+<api
+  api-source="class-parse">
+  <package
+    name="com.xamarin"
+    jni-name="com/xamarin">
+    <interface
+      abstract="true"
+      deprecated="not deprecated"
+      final="false"
+      name="IJavaInterface"
+      jni-signature="Lcom/xamarin/IJavaInterface;"
+      static="false"
+      visibility="">
+      <typeParameters>
+        <typeParameter
+          name="TString"
+          jni-classBound=""
+          classBound=""
+          interfaceBounds="java.lang.CharSequence:java.lang.Appendable"
+          jni-interfaceBounds="Ljava/lang/CharSequence;:Ljava/lang/Appendable;" />
+        <typeParameter
+          name="TStringList"
+          jni-classBound="Ljava/util/ArrayList&lt;TTString;&gt;;"
+          classBound="java.util.ArrayList&lt;TString&gt;"
+          interfaceBounds="java.util.List&lt;TString&gt;"
+          jni-interfaceBounds="Ljava/util/List&lt;TTString;&gt;;" />
+        <typeParameter
+          name="TReturn"
+          jni-classBound="Ljava/lang/Object;"
+          classBound="java.lang.Object"
+          interfaceBounds=""
+          jni-interfaceBounds="" />
+      </typeParameters>
+      <implements
+        name="java.lang.Runnable"
+        name-generic-aware="java.lang.Runnable"
+        jni-type="Ljava/lang/Runnable;" />
+      <method
+        abstract="true"
+        deprecated="not deprecated"
+        final="false"
+        name="func"
+        native="false"
+        return="TReturn"
+        jni-return="TTReturn;"
+        static="false"
+        synchronized="false"
+        visibility="public"
+        bridge="false"
+        synthetic="false"
+        jni-signature="(Ljava/lang/CharSequence;)Ljava/lang/Object;">
+        <parameter
+          name="p0"
+          type="TString"
+          jni-type="TTString;" />
+      </method>
+      <field
+        deprecated="deprecated"
+        final="true"
+        name="STATIC_FINAL_INT"
+        static="true"
+        synthetic="false"
+        transient="false"
+        type="int"
+        type-generic-aware="int"
+        jni-signature="I"
+        value="1"
+        visibility="public"
+        volatile="false" />
+    </interface>
+  </package>
+</api>

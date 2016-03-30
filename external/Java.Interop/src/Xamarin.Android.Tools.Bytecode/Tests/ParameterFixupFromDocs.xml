@@ -1,0 +1,47 @@
+<api
+  api-source="class-parse">
+  <package
+    name="java.util"
+    jni-name="java/util">
+    <interface
+      abstract="true"
+      deprecated="not deprecated"
+      final="false"
+      name="Collection"
+      jni-signature="Ljava/util/Collection;"
+      static="false"
+      visibility="public">
+      <typeParameters>
+        <typeParameter
+          name="E"
+          jni-classBound="Ljava/lang/Object;"
+          classBound="java.lang.Object"
+          interfaceBounds=""
+          jni-interfaceBounds="" />
+      </typeParameters>
+      <implements
+        name="java.lang.Iterable"
+        name-generic-aware="java.lang.Iterable&lt;E&gt;"
+        jni-type="Ljava/lang/Iterable&lt;TE;&gt;;" />
+      <method
+        abstract="true"
+        deprecated="not deprecated"
+        final="false"
+        name="add"
+        native="false"
+        return="boolean"
+        jni-return="Z"
+        static="false"
+        synchronized="false"
+        visibility="public"
+        bridge="false"
+        synthetic="false"
+        jni-signature="(Ljava/lang/Object;)Z">
+        <parameter
+          name="object"
+          type="E"
+          jni-type="TE;" />
+      </method>
+    </interface>
+  </package>
+</api>

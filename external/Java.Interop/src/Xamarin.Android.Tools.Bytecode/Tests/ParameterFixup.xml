@@ -1,0 +1,290 @@
+<api
+  api-source="class-parse">
+  <package
+    name="com.xamarin"
+    jni-name="com/xamarin">
+    <interface
+      abstract="true"
+      deprecated="not deprecated"
+      final="false"
+      name="IParameterInterface"
+      jni-signature="Lcom/xamarin/IParameterInterface;"
+      static="false"
+      visibility="">
+      <method
+        abstract="true"
+        deprecated="not deprecated"
+        final="false"
+        name="func"
+        native="false"
+        return="void"
+        jni-return="V"
+        static="false"
+        synchronized="false"
+        visibility="public"
+        bridge="false"
+        synthetic="false"
+        jni-signature="(I)V">
+        <parameter
+          name="value"
+          type="int"
+          jni-type="I" />
+      </method>
+      <method
+        abstract="true"
+        deprecated="not deprecated"
+        final="false"
+        name="test"
+        native="false"
+        return="int"
+        jni-return="I"
+        static="false"
+        synchronized="false"
+        visibility="public"
+        bridge="false"
+        synthetic="false"
+        jni-signature="(II)I">
+        <parameter
+          name="param1"
+          type="int"
+          jni-type="I" />
+        <parameter
+          name="param2"
+          type="int"
+          jni-type="I" />
+      </method>
+      <method
+        abstract="true"
+        deprecated="not deprecated"
+        final="false"
+        name="test2"
+        native="false"
+        return="int"
+        jni-return="I"
+        static="false"
+        synchronized="false"
+        visibility="public"
+        bridge="false"
+        synthetic="false"
+        jni-signature="(III)I">
+        <parameter
+          name="param1"
+          type="int"
+          jni-type="I" />
+        <parameter
+          name="param2"
+          type="int"
+          jni-type="I" />
+        <parameter
+          name="param3"
+          type="int"
+          jni-type="I" />
+      </method>
+    </interface>
+    <class
+      abstract="true"
+      deprecated="not deprecated"
+      jni-extends="Ljava/lang/Object;"
+      extends="java.lang.Object"
+      extends-generic-aware="java.lang.Object"
+      final="false"
+      name="ParameterAbstractClass"
+      jni-signature="Lcom/xamarin/ParameterAbstractClass;"
+      static="false"
+      visibility="public">
+      <implements
+        name="com.xamarin.IParameterInterface"
+        name-generic-aware="com.xamarin.IParameterInterface"
+        jni-type="Lcom/xamarin/IParameterInterface;" />
+      <constructor
+        deprecated="not deprecated"
+        final="false"
+        name="ParameterAbstractClass"
+        static="false"
+        visibility="public"
+        bridge="false"
+        synthetic="false"
+        jni-signature="()V" />
+      <method
+        abstract="true"
+        deprecated="not deprecated"
+        final="false"
+        name="func"
+        native="false"
+        return="void"
+        jni-return="V"
+        static="false"
+        synchronized="false"
+        visibility="public"
+        bridge="false"
+        synthetic="false"
+        jni-signature="(I)V">
+        <parameter
+          name="value"
+          type="int"
+          jni-type="I" />
+      </method>
+      <method
+        abstract="true"
+        deprecated="not deprecated"
+        final="false"
+        name="test"
+        native="false"
+        return="int"
+        jni-return="I"
+        static="false"
+        synchronized="false"
+        visibility="public"
+        bridge="false"
+        synthetic="false"
+        jni-signature="(II)I">
+        <parameter
+          name="param1"
+          type="int"
+          jni-type="I" />
+        <parameter
+          name="param2"
+          type="int"
+          jni-type="I" />
+      </method>
+      <method
+        abstract="true"
+        deprecated="not deprecated"
+        final="false"
+        name="test2"
+        native="false"
+        return="int"
+        jni-return="I"
+        static="false"
+        synchronized="false"
+        visibility="public"
+        bridge="false"
+        synthetic="false"
+        jni-signature="(III)I">
+        <parameter
+          name="param1"
+          type="int"
+          jni-type="I" />
+        <parameter
+          name="param2"
+          type="int"
+          jni-type="I" />
+        <parameter
+          name="param3"
+          type="int"
+          jni-type="I" />
+      </method>
+    </class>
+    <class
+      abstract="true"
+      deprecated="not deprecated"
+      jni-extends="Lcom/xamarin/ParameterAbstractClass;"
+      extends="com.xamarin.ParameterAbstractClass"
+      extends-generic-aware="com.xamarin.ParameterAbstractClass"
+      final="false"
+      name="ParameterClass"
+      jni-signature="Lcom/xamarin/ParameterClass;"
+      static="false"
+      visibility="public">
+      <constructor
+        deprecated="not deprecated"
+        final="false"
+        name="ParameterClass"
+        static="false"
+        visibility="public"
+        bridge="false"
+        synthetic="false"
+        jni-signature="()V" />
+      <method
+        abstract="false"
+        deprecated="not deprecated"
+        final="false"
+        name="func"
+        native="false"
+        return="void"
+        jni-return="V"
+        static="false"
+        synchronized="false"
+        visibility="public"
+        bridge="false"
+        synthetic="false"
+        jni-signature="(I)V">
+        <parameter
+          name="value"
+          type="int"
+          jni-type="I" />
+      </method>
+      <method
+        abstract="false"
+        deprecated="not deprecated"
+        final="false"
+        name="test"
+        native="false"
+        return="int"
+        jni-return="I"
+        static="false"
+        synchronized="false"
+        visibility="public"
+        bridge="false"
+        synthetic="false"
+        jni-signature="(II)I">
+        <parameter
+          name="param1"
+          type="int"
+          jni-type="I" />
+        <parameter
+          name="param2"
+          type="int"
+          jni-type="I" />
+      </method>
+    </class>
+    <class
+      abstract="false"
+      deprecated="not deprecated"
+      jni-extends="Lcom/xamarin/ParameterClass;"
+      extends="com.xamarin.ParameterClass"
+      extends-generic-aware="com.xamarin.ParameterClass"
+      final="false"
+      name="ParameterClass2"
+      jni-signature="Lcom/xamarin/ParameterClass2;"
+      static="false"
+      visibility="public">
+      <constructor
+        deprecated="not deprecated"
+        final="false"
+        name="ParameterClass2"
+        static="false"
+        visibility="public"
+        bridge="false"
+        synthetic="false"
+        jni-signature="()V" />
+      <method
+        abstract="false"
+        deprecated="not deprecated"
+        final="false"
+        name="test2"
+        native="false"
+        return="int"
+        jni-return="I"
+        static="false"
+        synchronized="false"
+        visibility="public"
+        bridge="false"
+        synthetic="false"
+        jni-signature="(III)I">
+        <parameter
+          name="param1"
+          type="int"
+          jni-type="I" />
+        <parameter
+          name="param2"
+          type="int"
+          jni-type="I" />
+        <parameter
+          name="param3"
+          type="int"
+          jni-type="I" />
+      </method>
+    </class>
+  </package>
+</api>

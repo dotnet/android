@@ -1,0 +1,77 @@
+<api
+  api-source="class-parse">
+  <package
+    name="com.xamarin"
+    jni-name="com/xamarin">
+    <class
+      abstract="true"
+      deprecated="not deprecated"
+      jni-extends="Ljava/lang/Object;"
+      extends="java.lang.Object"
+      extends-generic-aware="java.lang.Object"
+      final="false"
+      name="JavaType.RNC.RPNC"
+      jni-signature="Lcom/xamarin/JavaType$RNC$RPNC;"
+      static="false"
+      visibility="public">
+      <typeParameters>
+        <typeParameter
+          name="E3"
+          jni-classBound="Ljava/lang/Object;"
+          classBound="java.lang.Object"
+          interfaceBounds=""
+          jni-interfaceBounds="" />
+      </typeParameters>
+      <constructor
+        deprecated="not deprecated"
+        final="false"
+        name="JavaType.RNC.RPNC"
+        static="false"
+        visibility="public"
+        bridge="false"
+        synthetic="false"
+        jni-signature="(Lcom/xamarin/JavaType$RNC;)V" />
+      <constructor
+        deprecated="not deprecated"
+        final="false"
+        name="JavaType.RNC.RPNC"
+        static="false"
+        visibility="public"
+        bridge="false"
+        synthetic="false"
+        jni-signature="(Lcom/xamarin/JavaType$RNC;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)V">
+        <parameter
+          name="value1"
+          type="E"
+          jni-type="TE;" />
+        <parameter
+          name="value2"
+          type="E2"
+          jni-type="TE2;" />
+        <parameter
+          name="value3"
+          type="E3"
+          jni-type="TE3;" />
+      </constructor>
+      <method
+        abstract="true"
+        deprecated="not deprecated"
+        final="false"
+        name="fromE2"
+        native="false"
+        return="E3"
+        jni-return="TE3;"
+        static="false"
+        synchronized="false"
+        visibility="public"
+        bridge="false"
+        synthetic="false"
+        jni-signature="(Ljava/lang/Object;)Ljava/lang/Object;">
+        <parameter
+          name="p0"
+          type="E2"
+          jni-type="TE2;" />
+      </method>
+    </class>
+  </package>
+</api>
