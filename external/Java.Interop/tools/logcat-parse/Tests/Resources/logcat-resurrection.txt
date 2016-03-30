@@ -1,0 +1,13 @@
+# Create gref > wgref > gref; not disposed
+I/monodroid-gref(23777): +g+ grefc 1 gwrefc 0 obj-handle 0x41ff8758/L -> new-handle 0x1d200f1e/G from    at Android.Runtime.JNIEnv.NewGlobalRef(IntPtr jobject)
+I/monodroid-gref(23777):    at Java.Lang.Object.RegisterInstance(IJavaObject instance, IntPtr value, JniHandleOwnership transfer)
+I/monodroid-gref(23777):    at Java.Lang.Object.SetHandle(IntPtr value, JniHandleOwnership transfer)
+I/monodroid-gref(23777):    at Android.Widget.LinearLayout..ctor(Android.Content.Context context)
+I/monodroid-gref(23777):    at Android.Support.V4.App.Fragment.n_OnCreateView_Landroid_view_LayoutInflater_Landroid_view_ViewGroup_Landroid_os_Bundle_(IntPtr jnienv, IntPtr native__this, IntPtr native
+I/monodroid-gref(23777): handle 0x1d200f1e; key_handle 0x41ff8758: Java Type: `android/widget/LinearLayout`; MCW type: `Android.Widget.LinearLayout`
+I/monodroid-gref(23777): *take_weak obj=0x79a78748 -> wref=0x1d9000cb handle=0x1d200f1e
+I/monodroid-gref(23777): +w+ grefc 1 gwrefc 1 obj-handle 0x1d200f1e/G -> new-handle 0x1d9000cb/W from take_weak_global_ref_jni
+I/monodroid-gref(23777): -g- grefc 0 gwrefc 1 handle 0x1d200f1e/G from take_weak_global_ref_jni
+I/monodroid-gref(23777): *try_take_global obj=0x79a78748 -> wref=0x1d9000cb handle=0x1d300eea
+I/monodroid-gref(23777): +g+ grefc 1 gwrefc 1 obj-handle 0x1d9000cb/W -> new-handle 0x1d300eea/G from take_global_ref_jni
+I/monodroid-gref(23777): -w- grefc 1 gwrefc 0 handle 0x1d9000cb/W from take_global_ref_jni

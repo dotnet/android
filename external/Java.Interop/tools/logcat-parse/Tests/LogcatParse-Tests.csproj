@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{DB05D566-0BA0-4935-868D-689E2F03688E}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>Xamarin.Android.Tools.LogcatParse.Tests</RootNamespace>
+    <AssemblyName>LogcatParse-Tests</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>..\..\..\bin\TestDebug</OutputPath>
+    <DefineConstants>DEBUG;</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>false</ConsolePause>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>full</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>..\..\..\bin\TestRelease</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>false</ConsolePause>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="nunit.framework" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="GrefsTest.cs" />
+    <Compile Include="JniHandleInfoTests.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <ItemGroup>
+    <ProjectReference Include="..\logcat-parse.csproj">
+      <Project>{7387E151-48E3-4885-B2CA-A74434A34045}</Project>
+      <Name>logcat-parse</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Resources\" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\logcat-gwd.txt">
+      <LogicalName>logcat-gwd</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\logcat-disposed.txt">
+      <LogicalName>logcat-disposed</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\logcat-resurrection.txt">
+      <LogicalName>logcat-resurrection</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\logcat-ag-rg.txt">
+      <LogicalName>logcat-ag-rg</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\stdout-ag-rg.txt">
+      <LogicalName>stdout-ag-rg</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\timestamp-ag-rg.txt">
+      <LogicalName>timestamp-ag-rg</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\logcat-alias.txt">
+      <LogicalName>logcat-alias</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\logcat-get_class_ref.txt">
+      <LogicalName>logcat-get_class_ref</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\logcat-Invoker-java_class_ref.txt">
+      <LogicalName>logcat-Invoker-java_class_ref</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\stdio-ag-rg.txt">
+      <LogicalName>stdio-ag-rg</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\stdio-JavaList.txt">
+      <LogicalName>stdio-JavaList</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\stdio-Finalized-threads.txt">
+      <LogicalName>stdio-Finalized-threads</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+</Project>

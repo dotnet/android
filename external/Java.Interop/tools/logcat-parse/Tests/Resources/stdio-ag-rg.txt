@@ -1,0 +1,18 @@
+﻿# Output as written to the "new" fopen(3)-based GREF logging.
+# Add gref, remove gref, no intermediary messages
++g+ grefc 1 gwrefc 0 obj-handle 0x41e29370/L -> new-handle 0x1d200276/G from    at Android.Runtime.JNIEnv.NewGlobalRef(IntPtr jobject)
+   at Android.Runtime.JNIEnv.FindClass(System.String classname)
+   at Android.Runtime.JNIEnv.CreateInstance(System.String jniClassName, System.String signature, Android.Runtime.JValue[] constructorParameters)
+   at Java.Lang.Thread+RunnableImplementor..ctor(System.Action handler, Boolean removable)
+   at Java.Lang.Thread+RunnableImplementor..ctor(System.Action handler)
+   at Android.App.Activity.RunOnUiThread(System.Action action)
+   at Android.App.Activity.n_OnCreate_Landroid_os_Bundle_(IntPtr jnienv, IntPtr native__this, IntPtr native_savedInstanceState)
+   at System.Object.71bca0f9-d145-4b62-90c1-4e9ad52c866a(IntPtr , IntPtr , IntPtr 
+-g- grefc 0 gwrefc 0 handle 0x1d200276/G from    at Android.Runtime.JNIEnv.DeleteGlobalRef(IntPtr jobject)
+   at Android.Runtime.JNIEnv.CreateInstance(System.String jniClassName, System.String signature, Android.Runtime.JValue[] constructorParameters)
+   at Java.Lang.Thread+RunnableImplementor..ctor(System.Action handler, Boolean removable)
+   at Java.Lang.Thread+RunnableImplementor..ctor(System.Action handler)
+   at Android.App.Activity.RunOnUiThread(System.Action action)
+   at Android.App.Activity.n_OnCreate_Landroid_os_Bundle_(IntPtr jnienv, IntPtr native__this, IntPtr native_savedInstanceState)
+   at System.Object.71bca0f9-d145-4b62-90c1-4e9ad52c866a(IntPtr , IntPtr , IntPtr )
+

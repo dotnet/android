@@ -1,0 +1,27 @@
+# gref created, explicitly disposed
+I/monodroid-gref(23777): +g+ grefc 1 gwrefc 0 obj-handle 0x41e29778/L -> new-handle 0x1d200282/G from    at Android.Runtime.JNIEnv.NewGlobalRef(IntPtr jobject)
+I/monodroid-gref(23777):    at Java.Lang.Object.RegisterInstance(IJavaObject instance, IntPtr value, JniHandleOwnership transfer)
+I/monodroid-gref(23777):    at Java.Lang.Object.SetHandle(IntPtr value, JniHandleOwnership transfer)
+I/monodroid-gref(23777):    at Java.Lang.String..ctor(System.String string)
+I/monodroid-gref(23777):    at Android.App.ProgressDialog.Show(Android.Content.Context context, System.String title, System.String message, Boolean indeterminate, Boolean cancelable)
+I/monodroid-gref(23777):    at Java.Lang.Thread+RunnableImplementor.Run()
+I/monodroid-gref(23777):    at Java.Lang.IRunnableInvoker.n_Run(IntPtr jnienv, IntPtr native__this)
+I/monodroid-gref(23777):    at System.Object.015d773b-4c56-4e22-ab21-e971886ef628(IntPtr , IntPtr )
+I/monodroid-gref(23777):    at System.Object.wrapper_native_0x408f48fd(IntPtr , IntPtr , IntPtr , Android.Runtime.JValue[] )
+I/monodroid-gref(23777):    at Android.Runtime.JNIEnv.CallVoidMethod(IntPtr jobject, IntPtr jmethod, Android.Runtime.JValue[] parms)
+I/monodroid-gref(23777):    at Android.App
+I/monodroid-gref(23777): handle 0x1d200282; key_handle 0x41e29778: Java Type: `java/lang/String`; MCW type: `Java.Lang.String`
+I/monodroid-gref(23777): Disposing handle 0x1d200282
+I/monodroid-gref(23777): -g- grefc 0 gwrefc 0 handle 0x1d200282/G from    at Android.Runtime.JNIEnv.DeleteGlobalRef(IntPtr jobject)
+I/monodroid-gref(23777):    at Java.Lang.Object.Dispose(System.Object instance, IntPtr handle, IntPtr key_handle, JObjectRefType handle_type)
+I/monodroid-gref(23777):    at Java.Lang.Object.Dispose()
+I/monodroid-gref(23777):    at Android.App.ProgressDialog.Show(Android.Content.Context context, System.String title, System.String message, Boolean indeterminate, Boolean cancelable)
+I/monodroid-gref(23777):    at Java.Lang.Thread+RunnableImplementor.Run()
+I/monodroid-gref(23777):    at Java.Lang.IRunnableInvoker.n_Run(IntPtr jnienv, IntPtr native__this)
+I/monodroid-gref(23777):    at System.Object.015d773b-4c56-4e22-ab21-e971886ef628(IntPtr , IntPtr )
+I/monodroid-gref(23777):    at System.Object.wrapper_native_0x408f48fd(IntPtr , IntPtr , IntPtr , Android.Runtime.JValue[] )
+I/monodroid-gref(23777):    at Android.Runtime.JNIEnv.CallVoidMethod(IntPtr jobject, IntPtr jmethod, Android.Runtime.JValue[] parms)
+I/monodroid-gref(23777):    at Android.App.Activity.RunOnUiThread(IRunnable action)
+I/monodroid-gref(23777):    at Android.App.Activity.RunOnUiThread(System.Action action)
+I/monodroid-gref(23777):    at
+

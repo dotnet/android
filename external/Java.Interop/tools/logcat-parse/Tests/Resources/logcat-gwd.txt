@@ -1,0 +1,13 @@
+# logcat: gref > wgref > dead
+I/monodroid-gref(23777): +g+ grefc 1 gwrefc 0 obj-handle 0x41f008f8/L -> new-handle 0x1d20046a/G from    at Android.Runtime.JNIEnv.NewGlobalRef(IntPtr jobject)
+I/monodroid-gref(23777):    at Java.Lang.Object.RegisterInstance(IJavaObject instance, IntPtr value, JniHandleOwnership transfer)
+I/monodroid-gref(23777):    at Java.Lang.Object.SetHandle(IntPtr value, JniHandleOwnership transfer)
+I/monodroid-gref(23777):    at Android.Widget.ProgressBar..ctor(Android.Content.Context context, IAttributeSet attrs, Int32 defStyle)
+I/monodroid-gref(23777):    at Android.Support.V4.App.Fragment.n_OnCreateView_Landroid_view_LayoutInflater_Landroid_view_ViewGroup_Landroid_os_Bundle_(IntPtr jnienv, IntPtr native__this, 
+I/monodroid-gref(23777): handle 0x1d20046a; key_handle 0x41f008f8: Java Type: `android/widget/ProgressBar`; MCW type: `Android.Widget.ProgressBar`
+I/monodroid-gref(23777): *take_weak obj=0x73702428 -> wref=0x1d200003 handle=0x1d20046a
+I/monodroid-gref(23777): +w+ grefc 1 gwrefc 1 obj-handle 0x1d20046a/G -> new-handle 0x1d200003/W from take_weak_global_ref_jni
+I/monodroid-gref(23777): -g- grefc 0 gwrefc 1 handle 0x1d20046a/G from take_weak_global_ref_jni
+I/monodroid-gref(23777): *try_take_global obj=0x73702428 -> wref=0x1d200003 handle=0x0
+I/monodroid-gref(23777): -w- grefc 0 gwrefc 0 handle 0x1d200003/W from take_global_ref_jni
+

@@ -1,0 +1,19 @@
+# Output as written to the Output panel within Xamarin Studio
+# Add gref, remove gref, no intermediary messages
+[monodroid-gref] +g+ grefc 1 gwrefc 0 obj-handle 0x41e29370/L -> new-handle 0x1d200276/G from    at Android.Runtime.JNIEnv.NewGlobalRef(IntPtr jobject)
+[monodroid-gref]    at Android.Runtime.JNIEnv.FindClass(System.String classname)
+[monodroid-gref]    at Android.Runtime.JNIEnv.CreateInstance(System.String jniClassName, System.String signature, Android.Runtime.JValue[] constructorParameters)
+[monodroid-gref]    at Java.Lang.Thread+RunnableImplementor..ctor(System.Action handler, Boolean removable)
+[monodroid-gref]    at Java.Lang.Thread+RunnableImplementor..ctor(System.Action handler)
+[monodroid-gref]    at Android.App.Activity.RunOnUiThread(System.Action action)
+[monodroid-gref]    at Android.App.Activity.n_OnCreate_Landroid_os_Bundle_(IntPtr jnienv, IntPtr native__this, IntPtr native_savedInstanceState)
+[monodroid-gref]    at System.Object.71bca0f9-d145-4b62-90c1-4e9ad52c866a(IntPtr , IntPtr , IntPtr 
+[monodroid-gref] -g- grefc 0 gwrefc 0 handle 0x1d200276/G from    at Android.Runtime.JNIEnv.DeleteGlobalRef(IntPtr jobject)
+[monodroid-gref]    at Android.Runtime.JNIEnv.CreateInstance(System.String jniClassName, System.String signature, Android.Runtime.JValue[] constructorParameters)
+[monodroid-gref]    at Java.Lang.Thread+RunnableImplementor..ctor(System.Action handler, Boolean removable)
+[monodroid-gref]    at Java.Lang.Thread+RunnableImplementor..ctor(System.Action handler)
+[monodroid-gref]    at Android.App.Activity.RunOnUiThread(System.Action action)
+[monodroid-gref]    at Android.App.Activity.n_OnCreate_Landroid_os_Bundle_(IntPtr jnienv, IntPtr native__this, IntPtr native_savedInstanceState)
+[monodroid-gref]    at System.Object.71bca0f9-d145-4b62-90c1-4e9ad52c866a(IntPtr , IntPtr , IntPtr )
+
+
