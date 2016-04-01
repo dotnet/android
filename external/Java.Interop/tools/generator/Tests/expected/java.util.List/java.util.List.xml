@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<api>
+	<package name="java.lang">
+	    <class abstract="false" deprecated="not deprecated" final="false" name="Object" static="false" visibility="public">
+	    </class>
+	  </package>
+	<package name="xamarin.test">
+	  <class abstract="false" deprecated="not deprecated" extends="java.lang.Object" extends-generic-aware="java.lang.Object" 
+	  		final="false" name="SomeObject" static="false" visibility="public">
+	  		<field abstract="true" deprecated="not deprecated" final="false" name="myStrings" static="false" transient="false" type="java.util.List&lt;java.lang.String&gt;" type-generic-aware="java.util.List&lt;java.lang.String&gt;" value="null" visibility="public" volatile="false">
+	        </field>
+	        <field abstract="true" deprecated="not deprecated" final="false" name="myInts" static="false" transient="false" type="java.util.List&lt;int&gt;" type-generic-aware="java.util.List&lt;int&gt;" value="null" visibility="public" volatile="false">
+	        </field>
+	        <field abstract="true" deprecated="not deprecated" final="false" name="mybools" static="false" transient="false" type="java.util.List&lt;bool&gt;" type-generic-aware="java.util.List&lt;bool&gt;" value="null" visibility="public" volatile="false">
+	        </field>
+	        <field abstract="true" deprecated="not deprecated" final="false" name="myObjects" static="false" transient="false" type="java.util.List&lt;java.lang.Object&gt;" type-generic-aware="java.util.List&lt;java.lang.Object&gt;" value="null" visibility="public" volatile="false">
+	        </field>
+	        <field abstract="true" deprecated="not deprecated" final="false" name="myfloats" static="false" transient="false" type="java.util.List&lt;float&gt;" type-generic-aware="java.util.List&lt;float&gt;" value="null" visibility="public" volatile="false">
+	        </field>
+	        <field abstract="true" deprecated="not deprecated" final="false" name="mydoubles" static="false" transient="false" type="java.util.List&lt;double&gt;" type-generic-aware="java.util.List&lt;double&gt;" value="null" visibility="public" volatile="false">
+	        </field>
+	        <field abstract="true" deprecated="not deprecated" final="false" name="mylongs" static="false" transient="false" type="java.util.List&lt;long&gt;" type-generic-aware="java.util.List&lt;long&gt;" value="null" visibility="public" volatile="false">
+	        </field>
+	    </class>
+	</package>
+</api>
+
+
+

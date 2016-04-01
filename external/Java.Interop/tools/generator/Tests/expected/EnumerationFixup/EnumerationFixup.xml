@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<api>
+	<package name="java.lang">
+	    <class abstract="false" deprecated="not deprecated" final="false" name="Object" static="false" visibility="public">
+	    </class>
+	  </package>
+	<package name="xamarin.test">
+	  <class abstract="false" deprecated="not deprecated" extends="java.lang.Object" extends-generic-aware="java.lang.Object" 
+	  		final="false" name="SomeObject" static="false" visibility="public">
+	  		<field deprecated="not deprecated" final="true" name="SOME_VALUE" static="false" transient="false" type="Xamarin.Test.SomeValues" type-generic-aware="int" visibility="public" volatile="false">
+	        </field>
+	        <field deprecated="not deprecated" final="true" name="SOME_VALUE2" static="false" transient="false" type="Xamarin.Test.SomeValues" type-generic-aware="int" visibility="public" volatile="false">
+	        </field>
+	        <method abstract="false" deprecated="not deprecated" final="false" name="getSomeObjectProperty" native="false" return="int" enumReturn="Xamarin.Test.SomeValues" static="false" synchronized="false" visibility="public">
+	  		</method>
+	  		<method abstract="false" deprecated="not deprecated" final="false" name="setSomeObjectProperty" native="false" return="void" static="false" synchronized="false" visibility="public">
+	  		   <parameter name="newvalue" type="int" enumType="Xamarin.Test.SomeValues">
+        	   </parameter>
+      		</method>
+	    </class>
+		<class abstract="false" deprecated="not deprecated" extends="xamarin.test.SomeObject" extends-generic-aware="xamarin.test.SomeObject" 
+	  		final="false" name="SomeObject2" static="false" visibility="public">
+	  		<method abstract="false" deprecated="not deprecated" final="false" name="getSomeObjectProperty" native="false" return="int" enumReturn="Xamarin.Test.SomeValues" static="false" synchronized="false" visibility="public">
+	  		</method>
+	  		<method abstract="false" deprecated="not deprecated" final="false" name="setSomeObjectProperty" native="false" return="void" static="false" synchronized="false" visibility="public">
+	  		   <parameter name="newvalue" type="int" enumType="Xamarin.Test.SomeValues">
+        	   </parameter>
+      		</method>
+	  		<method abstract="false" deprecated="not deprecated" final="false" name="getSomeObjectPropertyArray" native="false" return="int[]" enumReturn="Xamarin.Test.SomeValues[]" static="false" synchronized="false" visibility="public">
+	  		</method>
+	  		<method abstract="false" deprecated="not deprecated" final="false" name="setSomeObjectPropertyArray" native="false" return="void" static="false" synchronized="false" visibility="public">
+	  		   <parameter name="newvalue" type="int[]" enumType="Xamarin.Test.SomeValues[]">
+        	   </parameter>
+      		</method>
+	  	</class>
+	</package>
+	<enum name="Xamarin.Test.SomeValues"/>
+</api>

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<api>
+  <package name="android.view" managedName="Android.Views">
+    <class abstract="false" deprecated="not deprecated" extends="java.lang.Object" extends-generic-aware="java.lang.Object" final="false" name="View" static="false" visibility="public">
+      <method abstract="false" deprecated="not deprecated" final="false" name="setOnClickListener" native="false" return="void" static="false" synchronized="false" visibility="public">
+        <parameter name="l" type="android.view.View.OnClickListener">
+        </parameter>
+      </method>
+      <method abstract="false" deprecated="not deprecated" final="false" name="addTouchables" native="false" return="void" static="false" synchronized="false" visibility="public">
+        <parameter name="views" type="java.util.ArrayList&lt;android.view.View&gt;">
+        </parameter>
+      </method>
+    </class>
+    <interface abstract="true" deprecated="not deprecated" final="false" name="View.OnClickListener" static="true" visibility="public">
+      <method abstract="true" deprecated="not deprecated" final="false" name="onClick" native="false" return="void" static="false" synchronized="false" visibility="public">
+        <parameter name="v" type="android.view.View" sender="true">
+        </parameter>
+      </method>
+    </interface>
+  </package>
+  <package name="android.text">
+    <class abstract="true" deprecated="not deprecated" extends="java.lang.Object" extends-generic-aware="java.lang.Object" final="false" name="SpannableStringInternal" static="false" visibility="public">
+      <method abstract="false" deprecated="not deprecated" final="false" name="getSpanFlags" native="false" return="int" static="false" synchronized="false" visibility="public">
+        <parameter name="p0" type="java.lang.Object">
+        </parameter>
+      </method>
+    </class>
+    <class abstract="false" deprecated="not deprecated" extends="android.text.SpannableStringInternal" extends-generic-aware="android.text.SpannableStringInternal" final="false" name="SpannableString" static="false" visibility="public">
+      <implements name="android.text.Spannable" name-generic-aware="android.text.Spannable">
+      </implements>
+      <constructor deprecated="not deprecated" final="false" name="SpannableString" static="false" type="android.text.SpannableString" visibility="public">
+        <parameter name="source" type="java.lang.CharSequence">
+        </parameter>
+      </constructor>
+      <method abstract="false" deprecated="not deprecated" final="false" name="getSpanFlags" native="false" return="int" static="false" synchronized="false" visibility="public" merge.SourceFile="api-10.xml.in">
+        <parameter name="what" type="java.lang.Object" />
+      </method>
+    </class>
+    <interface abstract="true" deprecated="not deprecated" final="false" name="Spannable" static="false" visibility="public">
+      <implements name="android.text.Spanned" name-generic-aware="android.text.Spanned">
+      </implements>
+    </interface>
+    <interface abstract="true" deprecated="not deprecated" final="false" name="Spanned" static="false" visibility="public">
+      <method abstract="true" deprecated="not deprecated" final="false" name="getSpanFlags" native="false" return="int" static="false" synchronized="false" visibility="public">
+        <parameter name="tag" type="java.lang.Object">
+        </parameter>
+      </method>
+      <field deprecated="not deprecated" final="true" name="SPAN_COMPOSING" static="true" transient="false" type="int" type-generic-aware="int" value="256" visibility="public" volatile="false">
+      </field>
+    </interface>
+  </package>
+  <package name="java.lang">
+    <class abstract="false" deprecated="not deprecated" final="false" name="Object" static="false" visibility="public">
+    </class>
+  </package>
+</api>
+

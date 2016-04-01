@@ -1,0 +1,132 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<api>
+	<package name="java.lang">
+		<class abstract="false" deprecated="not deprecated" final="false" name="Object" static="false" visibility="public">
+		</class>
+	</package>
+	<package name="java.io">
+		<!--
+			public abstract class OutputStream extends java.lang.Object {
+				public void close () throws IOException {}
+				public void flish () throws IOException {}
+				public void write (byte[] buffer) throws IOException {}
+				public void write (byte[] buffer, offset int, count int) throws IOException {}
+				public void write (int oneByte) throws IOException {}
+			}
+		-->
+		<class abstract="true" deprecated="not deprecated" extends="java.lang.Object" extends-generic-aware="java.lang.Object" final="false" name="OutputStream" static="false" visibility="public">
+			<constructor deprecated="not deprecated" final="false" name="OutputStream" static="false" type="java.io.OutputStream" visibility="public">
+			</constructor>
+			<method abstract="false" deprecated="not deprecated" final="false" name="close" native="false" return="void" static="false" synchronized="false" visibility="public">
+				<exception name="IOException" type="java.io.IOException">
+				</exception>
+			</method>
+			<method abstract="false" deprecated="not deprecated" final="false" name="flush" native="false" return="void" static="false" synchronized="false" visibility="public">
+				<exception name="IOException" type="java.io.IOException">
+				</exception>
+			</method>
+			<method abstract="false" deprecated="not deprecated" final="false" name="write" native="false" return="void" static="false" synchronized="false" visibility="public">
+				<parameter name="buffer" type="byte[]">
+				</parameter>
+				<exception name="IOException" type="java.io.IOException">
+				</exception>
+			</method>
+			<method abstract="false" deprecated="not deprecated" final="false" name="write" native="false" return="void" static="false" synchronized="false" visibility="public">
+				<parameter name="buffer" type="byte[]">
+				</parameter>
+				<parameter name="offset" type="int">
+				</parameter>
+				<parameter name="count" type="int">
+				</parameter>
+				<exception name="IOException" type="java.io.IOException">
+				</exception>
+			</method>
+			<method abstract="true" deprecated="not deprecated" final="false" name="write" native="false" return="void" static="false" synchronized="false" visibility="public">
+				<parameter name="oneByte" type="int">
+				</parameter>
+				<exception name="IOException" type="java.io.IOException">
+				</exception>
+			</method>
+		</class>
+		<!--
+			public abstract class InputStream extends java.lang.Object {
+				public int available () throws IOException {}
+				public void close () throws IOException {}
+				public void mark (int readlimit) {}
+				public boolean markSupported () {}
+				public abstract int read () throws IOException {}
+				public int read (byte[] buffer) throws IOException {}
+				public int read (byte[] buffer, int byteOffset, int byteCount) throws IOException {}
+				public void reset () throws IOException {}
+				public long skip (long byteCount) throws IOException {}
+			}
+		-->
+		<class abstract="true" deprecated="not deprecated" extends="java.lang.Object" extends-generic-aware="java.lang.Object" final="false" name="InputStream" static="false" visibility="public">
+			<constructor deprecated="not deprecated" final="false" name="InputStream" static="false" type="java.io.InputStream" visibility="public">
+			</constructor>
+			<method abstract="false" deprecated="not deprecated" final="false" name="available" native="false" return="int" static="false" synchronized="false" visibility="public">
+				<exception name="IOException" type="java.io.IOException">
+				</exception>
+			</method>
+			<method abstract="false" deprecated="not deprecated" final="false" name="close" native="false" return="void" static="false" synchronized="false" visibility="public">
+				<exception name="IOException" type="java.io.IOException">
+				</exception>
+			</method>
+			<method abstract="false" deprecated="not deprecated" final="false" name="mark" native="false" return="void" static="false" synchronized="true" visibility="public">
+				<parameter name="readlimit" type="int">
+				</parameter>
+			</method>
+			<method abstract="false" deprecated="not deprecated" final="false" name="markSupported" native="false" return="boolean" static="false" synchronized="false" visibility="public">
+			</method>
+			<method abstract="true" deprecated="not deprecated" final="false" name="read" native="false" return="int" static="false" synchronized="false" visibility="public">
+				<exception name="IOException" type="java.io.IOException">
+				</exception>
+			</method>
+			<method abstract="false" deprecated="not deprecated" final="false" name="read" native="false" return="int" static="false" synchronized="false" visibility="public">
+				<parameter name="buffer" type="byte[]">
+				</parameter>
+				<exception name="IOException" type="java.io.IOException">
+				</exception>
+			</method>
+			<method abstract="false" deprecated="not deprecated" final="false" name="read" native="false" return="int" static="false" synchronized="false" visibility="public">
+				<parameter name="buffer" type="byte[]">
+				</parameter>
+				<parameter name="byteOffset" type="int">
+				</parameter>
+				<parameter name="byteCount" type="int">
+				</parameter>
+				<exception name="IOException" type="java.io.IOException">
+				</exception>
+			</method>
+			<method abstract="false" deprecated="not deprecated" final="false" name="reset" native="false" return="void" static="false" synchronized="true" visibility="public">
+				<exception name="IOException" type="java.io.IOException">
+				</exception>
+			</method>
+			<method abstract="false" deprecated="not deprecated" final="false" name="skip" native="false" return="long" static="false" synchronized="false" visibility="public">
+				<parameter name="byteCount" type="long">
+				</parameter>
+				<exception name="IOException" type="java.io.IOException">
+				</exception>
+			</method>
+		</class>
+		<!--
+			public class FilterOutputStream extens OutputStream {
+				@Override
+				public void write (int oneByte) throws IOException {}
+			}
+		-->
+		<class abstract="false" deprecated="not deprecated" extends="java.io.OutputStream" extends-generic-aware="java.io.OutputStream" final="false" name="FilterOutputStream" static="false" visibility="public">
+			<constructor deprecated="not deprecated" final="false" name="FilterOutputStream" static="false" type="java.io.FilterOutputStream" visibility="public">
+				<parameter name="out" type="java.io.OutputStream">
+				</parameter>
+			</constructor>
+			<method abstract="false" deprecated="not deprecated" final="false" name="write" native="false" return="void" static="false" synchronized="false" visibility="public">
+				<parameter name="oneByte" type="int">
+				</parameter>
+				<exception name="IOException" type="java.io.IOException">
+				</exception>
+			</method>
+		</class>
+	</package>
+</api>
+

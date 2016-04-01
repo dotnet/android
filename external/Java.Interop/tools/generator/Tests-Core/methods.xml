@@ -1,0 +1,9 @@
+<enum-method-mappings>
+  <mapping jni-interface="android/text/Spanned">
+		<method jni-name="getSpanFlags"       parameter="return"      clr-enum-type="Android.Text.SpanTypes" />
+	</mapping>
+  <mapping jni-class="android/text/SpannableStringInternal">
+		<method jni-name="getSpanFlags"       parameter="return"      clr-enum-type="Android.Text.SpanTypes" />
+	</mapping>
+</enum-method-mappings>
+

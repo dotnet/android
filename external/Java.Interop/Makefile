@@ -19,6 +19,8 @@ TESTS = \
 	bin/Test$(CONFIGURATION)/Java.Interop.Dynamic-Tests.dll \
 	bin/Test$(CONFIGURATION)/Java.Interop.Export-Tests.dll \
 	bin/Test$(CONFIGURATION)/LogcatParse-Tests.dll \
+	bin/Test$(CONFIGURATION)/generator-Tests.dll \
+	bin/Test$(CONFIGURATION)/Xamarin.Android.Tools.ApiXmlAdjuster-Tests.dll \
 	bin/Test$(CONFIGURATION)/Xamarin.Android.Tools.Bytecode-Tests.dll
 
 PTESTS = \
@@ -137,3 +139,50 @@ run-test-jnimarshal: bin/$(CONFIGURATION)/Java.Interop.Export-Tests.dll
 	MONO_TRACE_LISTENER=Console.Out \
 	mono --debug bin/$(CONFIGURATION)/jnimarshalmethod-gen.exe bin/$(CONFIGURATION)/Java.Interop.Export-Tests.dll
 	$(call RUN_TEST,$<)
+
+
+GENERATOR_EXPECTED_TARGETS  = tools/generator/Tests/expected.targets
+
+# $(call GEN_CORE_OUTPUT, outdir)
+define GEN_CORE_OUTPUT
+	-$(RM) -Rf $(1)
+	mkdir -p $(1)
+	mono --debug bin/Test$(CONFIGURATION)/generator.exe -o $(1) $(2) tools/generator/Tests-Core/api.xml \
+		--enummethods=tools/generator/Tests-Core/methods.xml \
+		--enumfields=tools/generator/Tests-Core/fields.xml \
+		--enumdir=$(1)
+endef
+
+run-test-generator-core:
+	$(call GEN_CORE_OUTPUT,bin/Test$(CONFIGURATION)/generator-core)
+	diff -rup tools/generator/Tests-Core/expected bin/Test$(CONFIGURATION)/generator-core
+	$(call GEN_CORE_OUTPUT,bin/Test$(CONFIGURATION)/generator-core,--codegen-target=JavaInterop1)
+	diff -rup tools/generator/Tests-Core/expected.ji bin/Test$(CONFIGURATION)/generator-core
+
+update-test-generator-core:
+	$(call GEN_CORE_OUTPUT,tools/generator/Tests-Core/expected)
+	$(call GEN_CORE_OUTPUT,tools/generator/Tests-Core/expected.ji,--codegen-target=JavaInterop1)
+
+update-test-generator-nunit:
+	-$(MAKE) run-tests TESTS=bin/Test$(CONFIGURATION)/generator-Tests.dll
+	for f in `find tools/generator/Tests/expected -name \*.cs` ; do \
+		source=`echo $$f | sed 's#^tools/generator/Tests/expected#bin/Test$(CONFIGURATION)/out#'` ; \
+		if [ -f "$$source" ]; then \
+			cp -f "$$source" "$$f" ; \
+		fi; \
+	done
+	for source in `find bin/Test$(CONFIGURATION)/out.ji -type f` ; do \
+		f=`echo $$source | sed 's#^bin/Test$(CONFIGURATION)/out.ji#tools/generator/Tests/expected.ji#'` ; \
+		mkdir -p `dirname $$f`; \
+		cp -f "$$source" "$$f" ; \
+	done
+	echo '<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">' > $(GENERATOR_EXPECTED_TARGETS)
+	echo '  <ItemGroup>' >> $(GENERATOR_EXPECTED_TARGETS)
+	for f in `find tools/generator/Tests/expected* -type f | sort -i` ; do \
+		include=`echo $$f | sed 's#^tools/generator/Tests/##' | tr / \\\\` ; \
+		echo "    <Content Include='$$include'>" >> $(GENERATOR_EXPECTED_TARGETS); \
+		echo "      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>" >> $(GENERATOR_EXPECTED_TARGETS); \
+		echo "    </Content>" >> $(GENERATOR_EXPECTED_TARGETS); \
+	done
+	echo '  </ItemGroup>' >> $(GENERATOR_EXPECTED_TARGETS)
+	echo '</Project>' >> $(GENERATOR_EXPECTED_TARGETS)

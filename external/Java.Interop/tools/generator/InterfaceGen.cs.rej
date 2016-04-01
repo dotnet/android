@@ -1,0 +1,17 @@
+***************
+*** 602,608 ****
+  			GenerateAdapter (sw, indent);
+  			GenerateInvoker (sw, indent);
+  			GenerateEventHandler (sw, indent);
+- 			GenerateJava (gen_info);
+  		}
+  
+  		public override void Generate (GenerationInfo gen_info)
+--- 602,608 ----
+  			GenerateAdapter (sw, indent);
+  			GenerateInvoker (sw, indent);
+  			GenerateEventHandler (sw, indent);
++ 			// GenerateJava (gen_info);
+  		}
+  
+  		public override void Generate (GenerationInfo gen_info)

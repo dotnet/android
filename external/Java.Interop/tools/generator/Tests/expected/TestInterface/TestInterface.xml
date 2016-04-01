@@ -1,0 +1,82 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<api>
+	<package name="java.lang">
+		<class abstract="false" deprecated="not deprecated" final="false" name="Object" static="false" visibility="public">
+		</class>
+		<class abstract="false" deprecated="not deprecated" extends="java.lang.Object" extends-generic-aware="java.lang.Object"
+			final="false" name="String" static="false" visibility="public">
+		</class>
+	</package>
+	<package name="test.me">
+		<!--
+			public interface TestInterface {
+				public static final int SPAN_COMPOSING = 256;
+				public static final java.lang.Object DEFAULT_FOO = new ...;
+
+				int getSpanFlags(java.lang.Object tag);
+
+				default void defaultInterfaceMethod()
+				{
+				}
+			}
+		-->
+		<interface abstract="true" deprecated="not deprecated" final="false" name="TestInterface" static="false" visibility="public">
+			<method abstract="false" deprecated="not deprecated" final="false" name="defaultInterfaceMethod" native="false" return="void" static="false" synchronized="false" visibility="public">
+			</method>
+			<method abstract="true" deprecated="not deprecated" final="false" name="getSpanFlags" native="false" return="int" static="false" synchronized="false" visibility="public">
+				<parameter name="tag" type="java.lang.Object">
+				</parameter>
+			</method>
+			<field deprecated="not deprecated" final="true" name="SPAN_COMPOSING" static="true" transient="false" type="int" type-generic-aware="int" value="256" visibility="public" volatile="false">
+			</field>
+			<field deprecated="not deprecated" final="true" name="DEFAULT_FOO" static="true" transient="false" type="java.lang.Object" type-generic-aware="java.lang.Object" visibility="public" volatile="false">
+			</field>
+		</interface>
+		<!--
+			public abstract class TestInterfaceImplementation implements TestInterface {
+				// does NOT declare getSpanFlags(); it's implicitly included via `implements`
+			}
+		-->
+		<class abstract="true" deprecated="not deprecated" extends="java.lang.Object" extends-generic-aware="java.lang.Object" final="false" name="TestInterfaceImplementation" static="false" visibility="public">
+			<implements name="test.me.TestInterface" name-generic-aware="test.me.TestInterface" />
+			<constructor deprecated="not deprecated" final="false" name="TestInterfaceImplementation" static="false" visibility="public" />
+		</class>
+		<!-- 
+			public interface GenericInterface<T> {
+				void SetObject(T item);
+			}
+		-->
+		<interface abstract="true" deprecated="not deprecated" final="false" name="GenericInterface" static="false" visibility="public">
+			<typeParameters>
+				<typeParameter name="T" classBound="java.lang.Object" interfaceBounds="" />
+			</typeParameters>
+			<method abstract="true" deprecated="not deprecated" final="false" name="SetObject" native="false" return="void" static="false" synchronized="false" visibility="public">
+				<parameter name="value" type="T" />
+			</method>
+		</interface>
+		<!--
+			public class GenericImplementation implements GenericInterface<byte[]> {
+				public void SetObject(byte[] item);
+			}
+		-->
+		<class abstract="false" deprecated="not deprecated" extends="java.lang.Object" extends-generic-aware="java.lang.Object" final="false" name="GenericImplementation" static="false" visibility="public">
+			<implements name="test.me.GenericInterface" name-generic-aware="test.me.GenericInterface&lt;byte[]&gt;" />
+			<constructor deprecated="not deprecated" final="false" name="GenericImplementation" static="false" visibility="public" />
+			<method abstract="false" deprecated="not deprecated" final="false" name="SetObject" native="false" return="void" static="false" synchronized="false" visibility="public">
+				<parameter name="value" type="byte[]" />
+			</method>
+		</class>
+		<!--
+			public class GenericStringImplementation implements GenericInterface<java.lang.String> {
+				public void SetObject(java.lang.String[] item);
+			}
+		-->
+		<class abstract="false" deprecated="not deprecated" extends="java.lang.Object" extends-generic-aware="java.lang.Object" final="false" name="GenericStringImplementation" static="false" visibility="public">
+			<implements name="test.me.GenericInterface" name-generic-aware="test.me.GenericInterface&lt;java.lang.String[]&gt;" />
+			<constructor deprecated="not deprecated" final="false" name="GenericImplementation" static="false" visibility="public" />
+			<method abstract="false" deprecated="not deprecated" final="false" name="SetObject" native="false" return="void" static="false" synchronized="false" visibility="public">
+				<parameter name="value" type="java.lang.String[]" />
+			</method>
+		</class>
+	</package>
+</api>

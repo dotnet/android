@@ -1,0 +1,34 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<api>
+	<package name="java.lang">
+		<class abstract="false" deprecated="not deprecated" final="false" name="Object" static="false" visibility="public">
+		</class>
+		<class abstract="false" deprecated="not deprecated" extends="java.lang.Object" extends-generic-aware="java.lang.Object"
+			final="false" name="Integer" static="false" visibility="public">
+		</class>
+	</package>
+	<package name="xamarin.test">
+		<!--
+			public class A<T extends java.lang.Object> extends java.lang.Object {
+				pubic void setA(T p0);
+			}
+		-->
+		<class abstract="false" deprecated="not deprecated" extends="java.lang.Object" extends-generic-aware="java.lang.Object"
+			final="false" name="A&lt;T&gt;" static="false" visibility="public">
+			<typeParameters>
+				<typeParameter name="T">
+					<genericConstraints>
+						<genericConstraint type="java.lang.Object">
+						</genericConstraint>
+					</genericConstraints>
+				</typeParameter>
+			</typeParameters>
+			<method abstract="false" deprecated="not deprecated" final="false" name="setA" native="false" return="void" static="false" synchronized="false" visibility="public">
+				<parameter name="adapter" type="T" />
+			</method>
+			<method abstract="false" deprecated="not deprecated" final="false" name="listTest" native="false" return="void" static="false" synchronized="false" visibility="public">
+				<parameter name="p0" type="java.util.List&lt;java.lang.Integer&gt;" />
+			</method>
+		</class>
+	</package>
+</api>

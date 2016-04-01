@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<api>
+	<package name="java.lang">
+	    <class abstract="false" deprecated="not deprecated" final="false" name="Object" static="false" visibility="public">
+	    </class>
+	  </package>
+	<package name="xamarin.test">
+	  <class abstract="true" deprecated="not deprecated" extends="java.lang.Object" extends-generic-aware="java.lang.Object" 
+	  		final="false" name="SomeObject" static="false" visibility="public">
+	  		<method abstract="true" deprecated="not deprecated" final="false" name="getSomeInteger" native="false" return="int" static="false" synchronized="false" visibility="public">
+	  		</method>
+	  		<method abstract="true" deprecated="not deprecated" final="false" name="setSomeInteger" native="false" return="void" static="false" synchronized="false" visibility="public">
+	  		   <parameter name="newvalue" type="int">
+        	   </parameter>
+      		</method>
+			<method abstract="true" deprecated="not deprecated" final="false" name="getSomeString" native="false" return="java.lang.String" static="false" synchronized="false" visibility="public">
+	  		</method>
+	  		<method abstract="true" deprecated="not deprecated" final="false" name="setSomeString" native="false" return="void" static="false" synchronized="false" visibility="public">
+	  		   <parameter name="newvalue" type="java.lang.String">
+        	   </parameter>
+      		</method>
+			<method abstract="true" deprecated="not deprecated" final="false" name="getSomeObjectProperty" native="false" return="java.lang.Object" static="false" synchronized="false" visibility="public">
+	  		</method>
+	  		<method abstract="true" deprecated="not deprecated" final="false" name="setSomeObjectProperty" native="false" return="void" static="false" synchronized="false" visibility="public">
+	  		   <parameter name="newvalue" type="java.lang.Object">
+        	   </parameter>
+      		</method>
+	    </class>
+	</package>
+</api>
+
+
+

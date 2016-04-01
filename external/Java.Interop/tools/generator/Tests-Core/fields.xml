@@ -1,0 +1,6 @@
+<enum-field-mappings>
+  <mapping jni-interface="android/text/Spanned" clr-enum-type="Android.Text.SpanTypes">
+    <field jni-name="SPAN_COMPOSING"  clr-name="Composing"  value="256" />
+  </mapping>
+</enum-field-mappings>
+
