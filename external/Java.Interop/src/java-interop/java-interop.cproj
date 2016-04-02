@@ -11,7 +11,6 @@
     </Compiler>
     <Language>C</Language>
     <Target>Bin</Target>
-    <MacJdkHeadersPath>..\..\LocalJDK\System\Library\Frameworks\JavaVM.framework\Versions\A\Headers</MacJdkHeadersPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -29,7 +28,6 @@
     <Includes>
       <Includes>
         <Include>/Library/Frameworks/Mono.framework/Headers/mono-2.0</Include>
-        <Include>../../LocalJDK/System/Library/Frameworks/JavaVM.framework/Versions/A/Headers</Include>
       </Includes>
     </Includes>
     <ExtraLinkerArguments>-m32
@@ -59,6 +57,7 @@
       </CustomCommands>
     </CustomCommands>
   </PropertyGroup>
+  <Import Project="$(JNIEnvGenPath)\JdkHeaders.props" Condition="Exists('$(JNIEnvGenPath)\JdkHeaders.props')" />
   <ItemGroup>
     <None Include="java-interop.h" />
     <None Include="java-interop-gc-bridge.h" />
@@ -121,7 +120,7 @@
     </ItemGroup>
     <PropertyGroup>
       <_CppFlags>@(_Defines -&gt; '-D%(Identity)', ' ')</_CppFlags>
-      <_Includes>-I $(MacJdkHeadersPath) @(Include-&gt;'-I %(Identity)', ' ')</_Includes>
+      <_Includes>@(Include-&gt;'-I %(Identity)', ' ') @(JdkIncludePath-&gt;'-I %(Identity)', ' ')</_Includes>
       <_LinkFlags>-fvisibility=hidden -Wl,-undefined -Wl,suppress -Wl,-flat_namespace</_LinkFlags>
       <_Libs>-L /Library/Frameworks/Mono.framework/Libraries -lmonosgen-2.0 </_Libs>
       <_Files>@(Compile -&gt; '%(Identity)', ' ')</_Files>
