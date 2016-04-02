@@ -38,6 +38,8 @@ all: bin/Build$(CONFIGURATION)/JdkHeaders.props $(PACKAGES) $(DEPENDENCIES) $(TE
 
 xa-all: $(XA_INTEGRATION_OUTPUTS)
 
+run-all-tests: run-tests run-test-jnimarshal run-test-generator-core run-ptests
+
 clean:
 	$(XBUILD) /t:Clean
 	rm -Rf bin/$(CONFIGURATION)
@@ -58,7 +60,16 @@ lib/gendarme-2.10/gendarme.exe:
 	curl -o lib/gendarme-2.10/gendarme-2.10-bin.zip $(GENDARME_URL)
 	(cd lib/gendarme-2.10 ; unzip gendarme-2.10-bin.zip)
 
-bin/Test$(CONFIGURATION)/libNativeTiming.dylib: tests/NativeTiming/timing.c $(wildcard $(JI_JDK_INCLUDE_PATHS)/jni.h)
+ifeq ($(OS),Darwin)
+JAVA_INTEROP_LIB    = libjava-interop.dylib
+NATIVE_TIMING_LIB   = libNativeTiming.dylib
+endif
+ifeq ($(OS),Linux)
+JAVA_INTEROP_LIB    = libjava-interop.so
+NATIVE_TIMING_LIB   = libNativeTiming.so
+endif
+
+bin/Test$(CONFIGURATION)/$(NATIVE_TIMING_LIB): tests/NativeTiming/timing.c $(wildcard $(JI_JDK_INCLUDE_PATHS)/jni.h)
 	mkdir -p `dirname "$@"`
 	gcc -g -shared -o $@ $< -m32 $(JI_JDK_INCLUDE_PATHS:%=-I%)
 
@@ -74,7 +85,7 @@ bin/Test$(CONFIGURATION)/Java.Interop.Export-Tests.dll: $(wildcard src/Java.Inte
 	$(XBUILD)
 	touch $@
 
-bin/Test$(CONFIGURATION)/Java.Interop-PerformanceTests.dll: $(wildcard tests/Java.Interop-PerformanceTests/*.cs) bin/Test$(CONFIGURATION)/libNativeTiming.dylib
+bin/Test$(CONFIGURATION)/Java.Interop-PerformanceTests.dll: $(wildcard tests/Java.Interop-PerformanceTests/*.cs) bin/Test$(CONFIGURATION)/$(NATIVE_TIMING_LIB)
 	$(XBUILD)
 	touch $@
 
@@ -108,19 +119,19 @@ define RUN_TEST
 		-output=bin/Test$(CONFIGURATION)/TestOutput-$(basename $(notdir $(1))).txt ;
 endef
 
-run-tests: $(TESTS) bin/Test$(CONFIGURATION)/libjava-interop.dylib
+run-tests: $(TESTS) bin/Test$(CONFIGURATION)/$(JAVA_INTEROP_LIB)
 	$(foreach t,$(TESTS), $(call RUN_TEST,$(t),1))
 
-run-ptests: $(PTESTS) bin/Test$(CONFIGURATION)/libjava-interop.dylib
+run-ptests: $(PTESTS) bin/Test$(CONFIGURATION)/$(JAVA_INTEROP_LIB)
 	$(foreach t,$(PTESTS), $(call RUN_TEST,$(t)))
 
-bin/Test$(CONFIGURATION)/libjava-interop.dylib: bin/$(CONFIGURATION)/libjava-interop.dylib
+bin/Test$(CONFIGURATION)/$(JAVA_INTEROP_LIB): bin/$(CONFIGURATION)/$(JAVA_INTEROP_LIB)
 	cp $< $@
 
 run-android: $(ATESTS)
 	(cd src/Android.Interop/Tests; $(XBUILD) '/t:Install;RunTests' $(if $(FIXTURE),/p:TestFixture=$(FIXTURE)))
 
-run-test-jnimarshal: bin/$(CONFIGURATION)/Java.Interop.Export-Tests.dll
+run-test-jnimarshal: bin/Test$(CONFIGURATION)/Java.Interop.Export-Tests.dll bin/Test$(CONFIGURATION)/$(JAVA_INTEROP_LIB)
 	MONO_TRACE_LISTENER=Console.Out \
 	mono --debug bin/$(CONFIGURATION)/jnimarshalmethod-gen.exe bin/$(CONFIGURATION)/Java.Interop.Export-Tests.dll
 	$(call RUN_TEST,$<)
