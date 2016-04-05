@@ -50,8 +50,6 @@ $(PACKAGES) $(NUNIT_CONSOLE):
 	nuget restore
 
 
-osx-setup: bin/$(CONFIGURATION)/JdkHeaders
-
 xa-fxcop: lib/gendarme-2.10/gendarme.exe bin/$(XA_CONFIGURATION)/Java.Interop.dll
 	mono --debug $< --html xa-gendarme.html $(if @(GENDARME_XML),--xml xa-gendarme.xml) --ignore xa-gendarme-ignore.txt bin/$(XA_CONFIGURATION)/Java.Interop.dll
 
