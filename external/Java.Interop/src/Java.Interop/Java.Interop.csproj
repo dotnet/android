@@ -161,7 +161,7 @@
     </Content>
   </ItemGroup>
   <Target Name="BuildInteropJar" Inputs="@(CompileJavaInteropJar)" Outputs="$(OutputPath)java-interop.jar">
-    <MakeDir Directories="$(IntermediateOutputPath)ji-classes" />
+    <MakeDir Directories="$(OutputPath);$(IntermediateOutputPath)ji-classes" />
     <Exec Command="javac -source 1.5 -target 1.6 -d &quot;$(IntermediateOutputPath)ji-classes&quot; @(CompileJavaInteropJar -&gt; '%(Identity)', ' ')" />
     <Exec Command="jar cf &quot;$(OutputPath)java-interop.jar&quot; -C &quot;$(IntermediateOutputPath)ji-classes&quot; ." />
   </Target>
