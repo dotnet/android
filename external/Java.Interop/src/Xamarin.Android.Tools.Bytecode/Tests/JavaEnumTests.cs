@@ -22,7 +22,7 @@ namespace Xamarin.Android.Tools.BytecodeTests {
 			new ExpectedTypeDeclaration {
 				MajorVersion        = 0x32,
 				MinorVersion        = 0,
-				ConstantPoolCount   = 51,
+				ConstantPoolCount   = 50,
 				AccessFlags         = ClassAccessFlags.Final | ClassAccessFlags.Super | ClassAccessFlags.Enum,
 				FullName            = "com/xamarin/JavaEnum",
 				Superclass          = new TypeInfo ("java/lang/Enum",   "Ljava/lang/Enum<Lcom/xamarin/JavaEnum;>;"),

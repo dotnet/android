@@ -110,7 +110,7 @@
         synthetic="true"
         jni-signature="(Ljava/lang/Object;)I">
         <parameter
-          name="x0"
+          name="p0"
           type="java.lang.Object"
           jni-type="Ljava/lang/Object;" />
       </method>
@@ -162,7 +162,7 @@
         synthetic="true"
         jni-signature="(Ljava/lang/CharSequence;)Ljava/lang/Object;">
         <parameter
-          name="x0"
+          name="p0"
           type="java.lang.CharSequence"
           jni-type="Ljava/lang/CharSequence;" />
       </method>
