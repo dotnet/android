@@ -2,7 +2,7 @@ OS           ?= $(shell uname)
 
 CONFIGURATION = Debug
 
-RUNTIME       = mono --debug=casts
+RUNTIME       := $(shell if `which mono64` ; then echo mono64 ; else echo mono; fi) --debug=casts
 
 XA_CONFIGURATION  = XAIntegrationDebug
 
@@ -53,7 +53,8 @@ include build-tools/scripts/jdk.mk
 $(PACKAGES) $(NUNIT_CONSOLE):
 	nuget restore
 
-src/Java.Runtime.Environment/Java.Runtime.Environment.dll.config: src/Java.Runtime.Environment/Java.Runtime.Environment.dll.config.in
+src/Java.Runtime.Environment/Java.Runtime.Environment.dll.config: src/Java.Runtime.Environment/Java.Runtime.Environment.dll.config.in \
+		bin/Build$(CONFIGURATION)/JdkInfo.props
 	sed 's#@JI_JVM_PATH@#$(JI_JVM_PATH)#g' < $< > $@
 
 xa-fxcop: lib/gendarme-2.10/gendarme.exe bin/$(XA_CONFIGURATION)/Java.Interop.dll
