@@ -57,7 +57,7 @@
       </CustomCommands>
     </CustomCommands>
   </PropertyGroup>
-  <Import Project="$(JNIEnvGenPath)\JdkHeaders.props" Condition="Exists('$(JNIEnvGenPath)\JdkHeaders.props')" />
+  <Import Project="$(JNIEnvGenPath)\JdkInfo.props" Condition="Exists('$(JNIEnvGenPath)\JdkInfo.props')" />
   <ItemGroup>
     <None Include="java-interop.h" />
     <None Include="java-interop-gc-bridge.h" />

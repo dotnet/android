@@ -2,6 +2,8 @@ OS           ?= $(shell uname)
 
 CONFIGURATION = Debug
 
+RUNTIME       = mono --debug=casts
+
 XA_CONFIGURATION  = XAIntegrationDebug
 
 GENDARME_URL = https://cloud.github.com/downloads/spouliot/gendarme/gendarme-2.10-bin.zip
@@ -34,24 +36,28 @@ ATESTS = \
 XBUILD = xbuild $(if $(V),/v:diag,)
 NUNIT_CONSOLE = packages/NUnit.Runners.2.6.3/tools/nunit-console.exe
 
-all: bin/Build$(CONFIGURATION)/JdkHeaders.props $(PACKAGES) $(DEPENDENCIES) $(TESTS) $(XA_INTEGRATION_OUTPUTS)
+all: bin/Build$(CONFIGURATION)/JdkInfo.props src/Java.Runtime.Environment/Java.Runtime.Environment.dll.config \
+		$(PACKAGES) $(DEPENDENCIES) $(TESTS) $(XA_INTEGRATION_OUTPUTS)
 
 xa-all: $(XA_INTEGRATION_OUTPUTS)
 
 run-all-tests: run-tests run-test-jnimarshal run-test-generator-core run-ptests
 
 clean:
-	$(XBUILD) /t:Clean
-	rm -Rf bin/$(CONFIGURATION)
+	-$(XBUILD) /t:Clean
+	-rm -Rf bin/$(CONFIGURATION) bin/Build$(CONFIGURATION) bin/Test$(CONFIGURATION) bin/XAIntegration$(CONFIGURATION)
+	-rm src/Java.Runtime.Environment/Java.Runtime.Environment.dll.config
 
 include build-tools/scripts/jdk.mk
 
 $(PACKAGES) $(NUNIT_CONSOLE):
 	nuget restore
 
+src/Java.Runtime.Environment/Java.Runtime.Environment.dll.config: src/Java.Runtime.Environment/Java.Runtime.Environment.dll.config.in
+	sed 's#@JI_JVM_PATH@#$(JI_JVM_PATH)#g' < $< > $@
 
 xa-fxcop: lib/gendarme-2.10/gendarme.exe bin/$(XA_CONFIGURATION)/Java.Interop.dll
-	mono --debug $< --html xa-gendarme.html $(if @(GENDARME_XML),--xml xa-gendarme.xml) --ignore xa-gendarme-ignore.txt bin/$(XA_CONFIGURATION)/Java.Interop.dll
+	$(RUNTIME) $< --html xa-gendarme.html $(if @(GENDARME_XML),--xml xa-gendarme.xml) --ignore xa-gendarme-ignore.txt bin/$(XA_CONFIGURATION)/Java.Interop.dll
 
 lib/gendarme-2.10/gendarme.exe:
 	-mkdir -p `dirname "$@"`
@@ -111,7 +117,7 @@ shell:
 define RUN_TEST
 	MONO_TRACE_LISTENER=Console.Out \
 	JAVA_INTEROP_GREF_LOG=g-$(basename $(notdir $(1))).txt $(if $(2),JAVA_INTEROP_LREF_LOG=l-$(basename $(notdir $(1))).txt,) \
-	mono --debug=casts $$MONO_OPTIONS --runtime=v4.0.0 \
+	$(RUNTIME) $$MONO_OPTIONS --runtime=v4.0.0 \
 		$(NUNIT_CONSOLE) $(NUNIT_EXTRA) $(1) \
 		$(if $(RUN),-run:$(RUN)) \
 		-output=bin/Test$(CONFIGURATION)/TestOutput-$(basename $(notdir $(1))).txt ;
@@ -131,7 +137,7 @@ run-android: $(ATESTS)
 
 run-test-jnimarshal: bin/Test$(CONFIGURATION)/Java.Interop.Export-Tests.dll bin/Test$(CONFIGURATION)/$(JAVA_INTEROP_LIB)
 	MONO_TRACE_LISTENER=Console.Out \
-	mono --debug bin/$(CONFIGURATION)/jnimarshalmethod-gen.exe "$<"
+	$(RUNTIME) bin/$(CONFIGURATION)/jnimarshalmethod-gen.exe "$<"
 	$(call RUN_TEST,$<)
 
 
@@ -141,7 +147,7 @@ GENERATOR_EXPECTED_TARGETS  = tools/generator/Tests/expected.targets
 define GEN_CORE_OUTPUT
 	-$(RM) -Rf $(1)
 	mkdir -p $(1)
-	mono --debug bin/Test$(CONFIGURATION)/generator.exe -o $(1) $(2) tools/generator/Tests-Core/api.xml \
+	$(RUNTIME) bin/Test$(CONFIGURATION)/generator.exe -o $(1) $(2) tools/generator/Tests-Core/api.xml \
 		--enummethods=tools/generator/Tests-Core/methods.xml \
 		--enumfields=tools/generator/Tests-Core/fields.xml \
 		--enumdir=$(1)

@@ -1,0 +1,3 @@
+<configuration>
+  <dllmap dll="jvm.dll" os="osx" target="@JI_JVM_PATH@"/>
+</configuration>

@@ -8,17 +8,27 @@
 #
 # Outputs:
 #
-#   bin/Build$(CONFIGURATION)/JdkHeaders.props:
+#   bin/Build$(CONFIGURATION)/JdkInfo.props:
 #       MSBuild property file which contains a @(JdkIncludePath) MSBuild
-#       ItemGroup which contains the $(JI_JDK_INCLUDE_PATHS) values
+#       ItemGroup which contains the $(JI_JDK_INCLUDE_PATHS) values, and
+#       a $(JdkJvmPath) MSBuild Property which contains $(JI_JVM_PATH).
 #   $(JI_JDK_INCLUDE_PATHS):
 #       One or more space separated paths which contain directories to pass as
 #       -Ipath values to the compiler.
 #       It DOES NOT contain the -I itself; use $(JI_JDK_INCLUDE_PATHS:%=-I%) for that.
+#   $(JI_JVM_PATH):
+#       Location of the Java native library that contains e.g. JNI_CreateJavaVM().
 
 
 
 ifeq ($(OS),Darwin)
+
+_MONO_BITNESS = $(shell file `which $(word 1, $(RUNTIME))` | awk 'BEGIN { val = "32-bit" } /64-bit/ { val = "64-bit" } END { print val; }')
+
+ifeq ($(_MONO_BITNESS),32-bit)
+# The only 32-bit JVM I know of is the Apple-provided one.
+JI_JVM_PATH	= /System/Library/Frameworks/JavaVM.framework/JavaVM
+endif # 32-bit
 
 # Darwin supports three possible search locations:
 #
@@ -51,6 +61,11 @@ _DARWIN_JDK_ROOT      := $(shell ls -dtr $(_DARWIN_JDK_FALLBACK_DIRS) | sort | t
 JI_JDK_INCLUDE_PATHS  = \
 	$(_DARWIN_JDK_ROOT)/$(_DARWIN_JDK_JNI_INCLUDE_DIR) \
 	$(_DARWIN_JDK_ROOT)/$(_DARWIN_JDK_JNI_OS_INCLUDE_DIR)
+
+ifeq ($(_MONO_BITNESS),64-bit)
+JI_JVM_PATH	= $(_DARWIN_JDK_ROOT)/Contents/Home/jre/lib/server/libjvm.dylib
+endif # 64-bit
+
 else    # (1) failed; try Xcode.app's copy?
 ifneq ($(_XCODE_APP_JAVAVM_FRAMEWORK_PATH),)
 JI_JDK_INCLUDE_PATHS  = $(_XCODE_APP_JAVAVM_FRAMEWORK_PATH)
@@ -92,11 +107,17 @@ endif
 
 endif   # Linux
 
+$(JI_JVM_PATH):
+	@echo "error: No JVM found\!";
+	@exit 1
 
-bin/Build$(CONFIGURATION)/JdkHeaders.props: $(JI_JDK_INCLUDE_PATHS)
+bin/Build$(CONFIGURATION)/JdkInfo.props: $(JI_JDK_INCLUDE_PATHS) $(JI_JVM_PATH)
 	-mkdir -p `dirname "$@"`
 	-rm "$@"
 	echo '<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">' > "$@"
+	echo '  <PropertyGroup>' >> "$@"
+	echo "    <JdkJvmPath>$(JI_JVM_PATH)</JdkJvmPath>" >> "$@"
+	echo '  </PropertyGroup>' >> "$@"
 	echo '  <ItemGroup>' >> "$@"
 	for p in $(JI_JDK_INCLUDE_PATHS); do \
 		echo "    <JdkIncludePath Include=\"$$p\" />" >> "$@"; \
