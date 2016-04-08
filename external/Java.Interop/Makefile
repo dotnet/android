@@ -105,14 +105,13 @@ CSHARP_REFS = \
 	bin/$(CONFIGURATION)/Java.Interop.dll               \
 	bin/$(CONFIGURATION)/Java.Interop.Export.dll        \
 	bin/$(CONFIGURATION)/Java.Runtime.Environment.dll   \
-	bin/$(CONFIGURATION)/TestJVM.dll                    \
+	bin/Test$(CONFIGURATION)/TestJVM.dll                    \
 	$(PTESTS)                                           \
 	$(TESTS)
 
 shell:
-	cd bin/$(CONFIGURATION) && \
 	MONO_TRACE_LISTENER=Console.Out \
-	MONO_OPTIONS=--debug=casts csharp $(patsubst %,-r:%,$(notdir $(CSHARP_REFS)))
+	MONO_OPTIONS=--debug=casts csharp $(patsubst %,-r:%,$(CSHARP_REFS))
 
 # $(call RUN_TEST,filename,log-lref?)
 define RUN_TEST
