@@ -177,6 +177,7 @@ namespace Java.Interop {
 
 		IntPtr                  environmentPointer;
 		char[]                  nameBuffer;
+		bool                    disposed;
 
 		public      JniRuntime              Runtime                 {get; private set;}
 		public      int                     LocalReferenceCount     {get; internal set;}
@@ -185,6 +186,8 @@ namespace Java.Interop {
 		public      IntPtr                  EnvironmentPointer {
 			get {return environmentPointer;}
 			set {
+				if (disposed)
+					throw new ObjectDisposedException (nameof (JniEnvironmentInfo));
 				if (environmentPointer == value)
 					return;
 
@@ -254,10 +257,13 @@ namespace Java.Interop {
 
 		public void Dispose ()
 		{
+			if (disposed)
+				return;
 			Runtime                 = null;
 			environmentPointer      = IntPtr.Zero;
 			nameBuffer              = null;
 			LocalReferenceCount     = 0;
+			disposed                = true;
 		}
 
 #if FEATURE_JNIENVIRONMENT_SAFEHANDLES

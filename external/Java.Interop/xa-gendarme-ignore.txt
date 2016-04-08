@@ -13,6 +13,7 @@ T: Java.Interop.JniObjectReference
 
 R: Gendarme.Rules.BadPractice.PreferSafeHandleRule
 # No, we don't want/need a SafeHandle for JniRuntime.InvocationPointer!
+T: Java.Interop.JniEnvironmentInfo
 T: Java.Interop.JniRuntime
 
 
@@ -98,6 +99,10 @@ T: Java.Interop.JniRuntime/JniObjectReferenceManager
 T: Java.Interop.JniRuntime/JniTypeManager
 
 
+R: Gendarme.Rules.Design.DisposableTypesShouldHaveFinalizerRule
+# No, not all IDisposable types should have finalizers.
+T: Java.Interop.JniEnvironmentInfo
+
 R: Gendarme.Rules.Design.EnumsShouldUseInt32Rule
 # It's a `uint` because I'm using bitwise operators and want to keep things sane.
 T: Java.Interop.JniObjectReferenceFlags
@@ -152,6 +157,10 @@ R: Gendarme.Rules.Design.Generic.AvoidDeclaringCustomDelegatesRule
 # These are delegate types passed via P/Invoke, and thus *can't* be Func/Action
 T: Java.Interop.DestroyJavaVMDelegate
 T: Java.Interop.DetachCurrentThreadDelegate
+
+
+R: Gendarme.Rules.Exceptions.DoNotSwallowErrorsCatchingNonSpecificExceptionsRule
+M: System.Reflection.Assembly Java.Interop.JniRuntime/JniTypeManager::TryLoadAssembly(System.Reflection.AssemblyName)
 
 
 R: Gendarme.Rules.Exceptions.UseObjectDisposedExceptionRule
