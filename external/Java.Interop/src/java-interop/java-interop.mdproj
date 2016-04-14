@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ItemType>GenericProject</ItemType>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{BB0AB9F7-0979-41A7-B7A9-877260655F94}</ProjectGuid>
+    <Includes>
+      <Includes>
+        <Include>/Library/Frameworks/Mono.framework/Headers/mono-2.0</Include>
+      </Includes>
+    </Includes>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>..\..\bin\Debug</OutputPath>
+    <JNIEnvGenPath>..\..\bin\BuildDebug</JNIEnvGenPath>
+    <OutputName>java-interop</OutputName>
+    <CompileTarget>SharedLibrary</CompileTarget>
+    <DefineSymbols>DEBUG JI_DLL_EXPORT MONODEVELOP MONO_DLL_EXPORT</DefineSymbols>
+    <SourceDirectory>.</SourceDirectory>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <OutputPath>..\..\bin\Release</OutputPath>
+    <OutputName>java-interop</OutputName>
+    <JNIEnvGenPath>..\..\bin\BuildRelease</JNIEnvGenPath>
+    <CompileTarget>SharedLibrary</CompileTarget>
+    <OptimizationLevel>3</OptimizationLevel>
+    <DefineSymbols>JI_DLL_EXPORT MONODEVELOP MONO_DLL_EXPORT</DefineSymbols>
+    <SourceDirectory>.</SourceDirectory>
+  </PropertyGroup>
+  <Import Project="$(JNIEnvGenPath)\JdkInfo.props" Condition="Exists('$(JNIEnvGenPath)\JdkInfo.props')" />
+  <ItemGroup>
+    <None Include="java-interop.h" />
+    <None Include="java-interop-gc-bridge.h" />
+    <None Include="java-interop-mono.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="jni.c" />
+    <Compile Include="java-interop.c" />
+    <Compile Include="java-interop-mono.c" />
+    <Compile Include="java-interop-gc-bridge-mono.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <MacLibLipo Include="obj\lib$(OutputName)-m32.dylib">
+      <Arch>-m32</Arch>
+    </MacLibLipo>
+    <MacLibLipo Include="obj\lib$(OutputName)-m64.dylib">
+      <Arch>-m64</Arch>
+    </MacLibLipo>
+  </ItemGroup>
+  <ItemGroup>
+    <Include Include="\Library\Frameworks\Mono.framework\Headers\mono-2.0" />
+  </ItemGroup>
+  <PropertyGroup>
+    <BuildDependsOn>
+      BuildJni_c;
+      BuildMac;
+      $(BuildDependsOn)
+    </BuildDependsOn>
+  </PropertyGroup>
+  <PropertyGroup>
+    <Runtime Condition="'$(OS)' != 'Windows_NT'">mono</Runtime>
+  </PropertyGroup>
+  <Target Name="Build" DependsOnTargets="$(BuildDependsOn)" />
+  <Target Name="BuildJni_c"
+      Inputs="$(JNIEnvGenPath)\jnienv-gen.exe"
+      Outputs="jni.c">
+    <MakeDir Directories="$(OutputPath)" />
+    <Exec Command="$(Runtime) &quot;$(JNIEnvGenPath)\jnienv-gen.exe&quot; jni.g.cs jni.c" />
+  </Target>
+  <Target Name="BuildMac"
+      Condition=" '$(OS)' != 'Windows_NT' "
+      DependsOnTargets="BuildMacLibraries"
+      Inputs="@(MacLibLipo)"
+      Outputs="$(OutputPath)\lib$(OutputName).dylib">
+    <PropertyGroup>
+      <_Files>@(MacLibLipo -&gt; '%(Identity)', ' ')</_Files>
+    </PropertyGroup>
+    <Message Text="Inputs: MacLibLipo=@(MacLibLipo)" />
+    <Exec Command="lipo $(_Files) -create -output $(OutputPath)\lib$(OutputName).dylib" />
+  </Target>
+  <Target Name="BuildMacLibraries"
+      Condition=" '$(OS)' != 'Windows_NT' "
+      Inputs="@(Compile)"
+      Outputs="@(MacLibLipo)">
+    <PropertyGroup>
+      <_FixedDefines>$(DefineSymbols.Replace(' ', ';'))</_FixedDefines>
+    </PropertyGroup>
+    <ItemGroup>
+      <_Defines Include="$(_FixedDefines)" />
+    </ItemGroup>
+    <PropertyGroup>
+      <_CppFlags>@(_Defines -&gt; '-D%(Identity)', ' ')</_CppFlags>
+      <_Includes>@(Include-&gt;'-I %(Identity)', ' ') @(JdkIncludePath-&gt;'-I %(Identity)', ' ')</_Includes>
+      <_LinkFlags>-fvisibility=hidden -Wl,-undefined -Wl,suppress -Wl,-flat_namespace</_LinkFlags>
+      <_Libs>-L /Library/Frameworks/Mono.framework/Libraries -lmonosgen-2.0 </_Libs>
+      <_Files>@(Compile -&gt; '%(Identity)', ' ')</_Files>
+    </PropertyGroup>
+    <MakeDir Directories="obj" />
+    <Exec Command="gcc -g -shared -o &quot;%(MacLibLipo.Identity)&quot; %(MacLibLipo.Arch) $(_CppFlags) $(_LinkFlags) $(_Libs) $(_Includes) $(_Files)" />
+  </Target>
+  <Target Name="Clean">
+    <RemoveDir Directories="obj" />
+    <Delete Files="jni.c" />
+    <Delete
+        Files="$(OutputPath)\lib$(OutputName).dylib"
+        Condition=" '$(OS)' != 'Windows_NT' "
+    />
+  </Target>
+  <ItemGroup>
+    <ProjectReference Include="..\..\build-tools\jnienv-gen\jnienv-gen.csproj">
+      <Project>{6410DA0F-5E14-4FC0-9AEE-F4C542C96C7A}</Project>
+      <Name>jnienv-gen</Name>
+      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
+    </ProjectReference>
+  </ItemGroup>
+</Project>
