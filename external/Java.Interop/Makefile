@@ -2,7 +2,7 @@ OS           ?= $(shell uname)
 
 CONFIGURATION = Debug
 
-RUNTIME       := $(shell if `which mono64` ; then echo mono64 ; else echo mono; fi) --debug=casts
+RUNTIME       := $(shell if [ -f `which mono64` ] ; then echo mono64 ; else echo mono; fi) --debug=casts
 
 XA_CONFIGURATION  = XAIntegrationDebug
 
