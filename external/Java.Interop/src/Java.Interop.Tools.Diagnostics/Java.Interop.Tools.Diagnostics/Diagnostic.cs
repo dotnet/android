@@ -2,11 +2,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
 
 using Mono.Cecil.Cil;
 
-namespace Xamarin.Android {
+namespace Java.Interop.Tools.Diagnostics {
 
 	// Error allocation (not all used; values from MonoTouch)
 	//
@@ -145,47 +144,7 @@ namespace Xamarin.Android {
 	//					--- these are listed in activation/src/utils/activation.cs ---
 	//
 
-	class XamarinAndroidException : Exception {
-		
-		public XamarinAndroidException (int code, string message, params object[] args)
-			: this (code, null, message, args)
-		{
-		}
-
-		// http://blogs.msdn.com/b/msbuild/archive/2006/11/03/msbuild-visual-studio-aware-error-messages-and-message-formats.aspx
-		static string GetMessage (int code, string message, object[] args)
-		{
-			var m = new StringBuilder ();
-			m.Append ("error ");
-			m.AppendFormat ("XA{0:0000}", code);
-			m.Append (": ");
-			m.AppendFormat (message, args);
-			return m.ToString ();
-		}
-
-		public XamarinAndroidException (int code, Exception innerException, string message, params object[] args)
-			: base (GetMessage (code, message, args), innerException)
-		{
-			Code = code;
-			MessageWithoutCode  = string.Format (message, args);
-		}
-
-		public string MessageWithoutCode {get; private set;}
-
-		public int Code { get; private set; }
-
-		public SequencePoint Location { get; set; }
-
-		public string SourceFile {
-			get { return Location == null ? null : Location.Document.Url; }
-		}
-
-		public int SourceLine {
-			get { return Location == null ? 0 : Location.StartLine; }
-		}
-	}
-
-	static class Diagnostic {
+	public static class Diagnostic {
 		public static void Error (int code, SequencePoint location, string message, params object[] args)
 		{
 			throw new XamarinAndroidException (code, message, args) {
@@ -204,25 +163,8 @@ namespace Xamarin.Android {
 			throw new XamarinAndroidException (code, innerException, message, args);
 		}
 
-		public static void Warning (int code, string message, params object[] args)
-		{
-			Console.Error.Write ("mandroid: warning XA{0:0000}: ", code);
-			Console.Error.WriteLine (message, args);
-		}
-
 		public static void WriteTo (System.IO.TextWriter destination, Exception message, bool verbose = false)
 		{
-			var cfe = message as MonoDroid.Utils.CommandFailedException;
-			if (cfe != null) {
-				// We don't want this to end up in the VS error pane
-				if (verbose)
-					destination.WriteLine (cfe.ToString ());
-
-				// We *do* want this to show in VS
-				destination.WriteLine (cfe.VSFormattedErrorLog);
-				return;
-			}
-
 			var xae = message as XamarinAndroidException;
 			if (xae != null) {
 				destination.WriteLine ("monodroid: {0}", xae.Message);

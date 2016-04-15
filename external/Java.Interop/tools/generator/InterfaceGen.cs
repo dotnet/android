@@ -485,7 +485,7 @@ namespace MonoDroid.Generation {
 					else if (method.Name.StartsWith ("Add") &&
 					         (rm = "Remove" + method.Name.Substring ("Add".Length)) != null &&
 					         methods.Where (m => m.Name == rm).Any ())
-						remove = rm;
+						remove = string.Format ("__v => {0} (__v)", rm);
 					else
 						remove = string.Format ("__v => {{throw new NotSupportedException (\"Cannot unregister from {0}.{1}\");}}",
 							FullName, method.Name);

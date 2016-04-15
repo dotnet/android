@@ -6,6 +6,8 @@ using System.Xml;
 using Mono.Cecil;
 using MonoDroid.Utils;
 
+using Java.Interop.Tools.TypeNameMappings;
+
 using Xamarin.Android.Tools;
 
 namespace MonoDroid.Generation {

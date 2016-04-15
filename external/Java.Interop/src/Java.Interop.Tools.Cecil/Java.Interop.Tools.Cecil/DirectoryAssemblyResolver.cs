@@ -34,11 +34,13 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 
+using Java.Interop.Tools.Diagnostics;
+
 using Mono.Cecil;
 
-namespace Xamarin.Android.Tuner {
+namespace Java.Interop.Tools.Cecil {
 
-	static class AssemblyResolverCoda {
+	public static class AssemblyResolverCoda {
 
 		public static AssemblyDefinition GetAssembly (this IAssemblyResolver resolver, string fileName)
 		{
@@ -54,15 +56,15 @@ namespace Xamarin.Android.Tuner {
 	 * mscorlib.dll and tries a directory based on
 	 * `typeof (object).Module.FullyQualifiedName`, which will never be valid.
 	 */
-	class DirectoryAssemblyResolver : IAssemblyResolver {
+	public class DirectoryAssemblyResolver : IAssemblyResolver {
 
 		public ICollection<string> SearchDirectories {get; private set;}
-		
+
 		Dictionary<string, AssemblyDefinition> cache;
 		bool loadDebugSymbols;
-		Action<string> logWarnings;
+		Action<string, object[]> logWarnings;
 
-		public DirectoryAssemblyResolver (Action<string> logWarnings, bool loadDebugSymbols)
+		public DirectoryAssemblyResolver (Action<string, object[]> logWarnings, bool loadDebugSymbols)
 		{
 			if (logWarnings == null)
 				throw new ArgumentNullException (nameof (logWarnings));
@@ -109,8 +111,10 @@ namespace Xamarin.Android.Tuner {
 			try {
 				return AssemblyDefinition.ReadAssembly (file, reader_parameters);
 			} catch (Exception ex) {
-				logWarnings (string.Format ("Failed to read '{0}' with debugging symbols. Retrying to load it without it. Error details are logged below.", file));
-				logWarnings (ex.ToString ());
+				logWarnings (
+						"Failed to read '{0}' with debugging symbols. Retrying to load it without it. Error details are logged below.",
+						new [] { file });
+				logWarnings ("{0}", new [] { ex.ToString () });
 				reader_parameters.ReadSymbols = false;
 				return AssemblyDefinition.ReadAssembly (file, reader_parameters);
 			}
@@ -125,7 +129,7 @@ namespace Xamarin.Android.Tuner {
 		{
 			return Resolve (fullName, null);
 		}
-		
+
 		public AssemblyDefinition Resolve (string fullName, ReaderParameters parameters)
 		{
 			return Resolve (AssemblyNameReference.Parse (fullName), parameters);
@@ -135,7 +139,7 @@ namespace Xamarin.Android.Tuner {
 		{
 			return Resolve (reference, null);
 		}
-		
+
 		public string FindAssemblyFile (string fullName)
 		{
 			return FindAssemblyFile (AssemblyNameReference.Parse (fullName));
@@ -149,15 +153,15 @@ namespace Xamarin.Android.Tuner {
 			foreach (var dir in SearchDirectories)
 				if ((assembly = SearchDirectory (name, dir)) != null)
 					return assembly;
-			
+
 			throw new System.IO.FileNotFoundException (
 				string.Format ("Could not load assembly '{0}, Version={1}, Culture={2}, PublicKeyToken={3}'. Perhaps it doesn't exist in the Mono for Android profile?",
-			               name, 
-			               reference.Version, 
-			               string.IsNullOrEmpty (reference.Culture) ? "neutral" : reference.Culture, 
-			               reference.PublicKeyToken == null
-			               ? "null"
-			               : string.Join ("", reference.PublicKeyToken.Select(b => b.ToString ("x2")))),
+						name,
+						reference.Version,
+						string.IsNullOrEmpty (reference.Culture) ? "neutral" : reference.Culture,
+						reference.PublicKeyToken == null
+						? "null"
+						: string.Join ("", reference.PublicKeyToken.Select(b => b.ToString ("x2")))),
 				name + ".dll");
 		}
 

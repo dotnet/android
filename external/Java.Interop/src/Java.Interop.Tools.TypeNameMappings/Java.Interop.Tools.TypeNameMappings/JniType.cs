@@ -8,27 +8,27 @@ using Java.Interop;
 
 #if HAVE_CECIL
 using Mono.Cecil;
+using Java.Interop.Tools.Cecil;
 #if !GENERATOR
-using Monodroid;
-using Xamarin.Android.Tasks;
 using Android.Runtime;
-#endif
-#endif
+using Java.Interop.Tools.JavaCallableWrappers;
+#endif  // !GENERATOR
+#endif  // HAVE_CECIL
 
-namespace MonoDroid.Utils {
+namespace Java.Interop.Tools.TypeNameMappings {
 
 	enum PackageNamingPolicy {
 		LowercaseHash,
 		Lowercase,
 		LowercaseWithAssemblyName,
 	}
-	
+
 	class JniType {
 
 		public static PackageNamingPolicy PackageNamingPolicy { get; set; }
-		
+
 		public static string ApplicationJavaClass { get; set; }
-		
+
 		public string Type {get; private set;}
 		public bool   IsKeyword { get; private set;}
 
@@ -49,7 +49,7 @@ namespace MonoDroid.Utils {
 			while ((t = ExtractType (signature, ref i)) != null)
 				yield return t;
 		}
-		
+
 		public static JniType ReturnTypeFromSignature (string signature)
 		{
 			int idx = signature.LastIndexOf (')') + 1;
@@ -139,7 +139,7 @@ namespace MonoDroid.Utils {
 			return ToJniName (type, ExportParameterKind.Unspecified) ??
 				"java/lang/Object";
 		}
-		
+
 		public static string ToJniName (Type type, ExportParameterKind exportKind)
 		{
 			if (type == null)
@@ -173,7 +173,7 @@ namespace MonoDroid.Utils {
 				jniType = "L" + jniType + ";";
 			return new string ('[', rank) + jniType;
 		}
-		
+
 		static bool IsPackageNamePreservedForAssembly (string assemblyName)
 		{
 			return assemblyName == "Mono.Android";
@@ -182,7 +182,7 @@ namespace MonoDroid.Utils {
 		public static string GetPackageName (Type type)
 		{
 			if (IsPackageNamePreservedForAssembly (type.Assembly.GetName ().Name))
-				return type.Namespace.ToLowerInvariant (); 
+				return type.Namespace.ToLowerInvariant ();
 			switch (PackageNamingPolicy) {
 			case PackageNamingPolicy.Lowercase:
 				return type.Namespace.ToLowerInvariant ();
@@ -226,10 +226,9 @@ namespace MonoDroid.Utils {
 				return "Z";
 			return null;
 		}
-		
+
 		static string GetSpecialExportJniType (string typeName, ExportParameterKind exportKind)
 		{
-			
 			switch (exportKind) {
 			case ExportParameterKind.InputStream:
 				if (typeName != "System.IO.Stream")
@@ -340,7 +339,7 @@ namespace MonoDroid.Utils {
 			}
 			return rank == 0 && pJniName.Length > 1 ? "L" + pJniName + ";" : ToJniName (pJniName, rank);
 		}
-		
+
 		public static ExportParameterKind GetExportKind (System.Reflection.ICustomAttributeProvider p)
 		{
 			foreach (ExportParameterAttribute a in p.GetCustomAttributes (typeof (ExportParameterAttribute), false))
@@ -363,7 +362,7 @@ namespace MonoDroid.Utils {
 		{
 			return GetJniTypeName (typeRef, ExportParameterKind.Unspecified);
 		}
-		
+
 		public static string GetJniTypeName (Type typeRef, ExportParameterKind exportKind)
 		{
 			return GetJniTypeName<Type,Type> (typeRef, exportKind, t => t, t => {
@@ -372,7 +371,7 @@ namespace MonoDroid.Utils {
 				return new KeyValuePair<int,Type> (rank, etype);
 			}, t => t.FullName, (t, k) => ToJniNameWhichShouldReplaceExistingToJniName (t, k));
 		}
-		
+
 		static string ToJniNameWhichShouldReplaceExistingToJniName (Type type, ExportParameterKind exportKind)
 		{
 			// we need some method that exactly does the same as ToJniName(TypeDefinition)
@@ -382,14 +381,29 @@ namespace MonoDroid.Utils {
 #endif
 
 #if HAVE_CECIL && !GENERATOR
-		
-		public static ExportParameterKind GetExportKind (Mono.Cecil.ICustomAttributeProvider p)
+
+		internal static ExportParameterKind GetExportKind (Mono.Cecil.ICustomAttributeProvider p)
 		{
 			foreach (CustomAttribute a in p.GetCustomAttributes (typeof (ExportParameterAttribute)))
-				return JavaTypeInfo.ToExportParameterAttribute (a).Kind;
+				return ToExportParameterAttribute (a).Kind;
 			return ExportParameterKind.Unspecified;
 		}
-		
+
+		internal static ExportParameterAttribute ToExportParameterAttribute (CustomAttribute attr)
+		{
+			return new ExportParameterAttribute ((ExportParameterKind)attr.ConstructorArguments [0].Value);
+		}
+
+		internal static bool IsApplication (TypeDefinition type)
+		{
+			return type.GetBaseTypes ().Any (b => b.FullName == "Android.App.Application");
+		}
+
+		internal static bool IsInstrumentation (TypeDefinition type)
+		{
+			return type.GetBaseTypes ().Any (b => b.FullName == "Android.App.Instrumentation");
+		}
+
 		// moved from JavaTypeInfo
 		public static string GetJniSignature (MethodDefinition method)
 		{
@@ -408,7 +422,7 @@ namespace MonoDroid.Utils {
 		{
 			return GetJniTypeName (typeRef, ExportParameterKind.Unspecified);
 		}
-		
+
 		public static string GetJniTypeName (TypeReference typeRef, ExportParameterKind exportKind)
 		{
 			return GetJniTypeName<TypeReference, TypeDefinition> (typeRef, exportKind, t => t.Resolve (), t => {
@@ -427,14 +441,14 @@ namespace MonoDroid.Utils {
 		{
 			return type.Namespace;
 		}
-		
+
 		// Keep in sync with ToJniNameFromAttributes(Type) and ToJniName(Type)
 		public static string ToJniName (Mono.Cecil.TypeDefinition type)
 		{
 			return ToJniName (type, ExportParameterKind.Unspecified) ??
 				"java/lang/Object";
 		}
-		
+
 		public static string ToJniName (TypeDefinition type, ExportParameterKind exportKind)
 		{
 			if (type == null)
@@ -472,7 +486,7 @@ namespace MonoDroid.Utils {
 					"Android.Content.BroadcastReceiverAttribute",
 					"Android.Content.ContentProviderAttribute",
 					}) {
-				attr = type.GetCustomAttributes (attributeType).SingleOrDefault (); 
+				attr = type.GetCustomAttributes (attributeType).SingleOrDefault ();
 				if (attr != null) {
 					var ap = attr.Properties.FirstOrDefault (p => p.Name == "Name");
 					string name = null;
@@ -557,7 +571,7 @@ namespace MonoDroid.Utils {
 				var n   = name (declType).Replace ('`', '_');
 #if HAVE_CECIL
 				var td  = declType as TypeDefinition;
-				if (JavaTypeInfo.IsNonStaticInnerClass (td)) {
+				if (IsNonStaticInnerClass (td)) {
 					n = "$" + name (decl (declType)) + "_" + n;
 				}
 #endif
@@ -576,11 +590,33 @@ namespace MonoDroid.Utils {
 			// Results in namespace/parts/OuterType_InnerType
 			// We do this to simplify monodroid type generation
 			typeName = nestedSuffix;
-			var _ns = StringRocks.ToLowerCase (ns (nsType));
+			var _ns = ToLowerCase (ns (nsType));
 			return string.IsNullOrEmpty (_ns)
 				? typeName
 				: _ns.Replace ('.', '/') + "/" + typeName;
 		}
+
+#if HAVE_CECIL
+		internal static bool IsNonStaticInnerClass (TypeDefinition type)
+		{
+			if (!type.IsNested)
+				return false;
+
+			if (!type.DeclaringType.IsSubclassOf ("Java.Lang.Object"))
+				return false;
+
+			return GetBaseConstructors (type)
+				.Any (ctor => ctor.Parameters.Cast<ParameterDefinition> ().Any (p => p.Name == "__self"));
+		}
+
+		static IEnumerable<MethodDefinition> GetBaseConstructors (TypeDefinition type)
+		{
+			var baseType = type.GetBaseTypes ().FirstOrDefault (t => t.GetCustomAttributes (typeof (RegisterAttribute)).Any ());
+			if (baseType != null)
+				return baseType.Methods.Where (m => m.IsConstructor && !m.IsStatic).Cast<MethodDefinition> ();
+			return Enumerable.Empty<MethodDefinition> ();
+		}
+#endif  // HAVE_CECIL
 
 		static string ToMd5 (string value)
 		{
@@ -592,6 +628,17 @@ namespace MonoDroid.Utils {
 					buf.AppendFormat ("{0:x2}", b);
 				return buf.ToString ();
 			}
+		}
+
+		static string ToLowerCase (string value)
+		{
+			if (string.IsNullOrEmpty (value))
+				return value;
+			string[] parts = value.Split ('.');
+			for (int i = 0; i < parts.Length; ++i) {
+				parts [i] = parts [i].ToLowerInvariant ();
+			}
+			return string.Join (".", parts);
 		}
 	}
 }

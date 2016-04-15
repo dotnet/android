@@ -9,9 +9,10 @@ using Mono.Cecil;
 using Mono.Options;
 using MonoDroid.Generation;
 using Xamarin.Android.Binder;
-using Xamarin.Android.Tuner;
 using Xamarin.AndroidTools.AnnotationSupport;
 using Xamarin.Android.Tools.ApiXmlAdjuster;
+
+using Java.Interop.Tools.Cecil;
 
 namespace Xamarin.Android.Binder {
 

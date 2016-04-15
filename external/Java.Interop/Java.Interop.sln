@@ -17,7 +17,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Core", "Core", "{4C173212-3
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Java.Interop", "src\Java.Interop\Java.Interop.csproj", "{94BD81F7-B06F-4295-9636-F8A3B6BDC762}"
 EndProject
-Project("{2857B73E-F847-4B02-9238-064979017E93}") = "java-interop", "src\java-interop\java-interop.mdproj", "{BB0AB9F7-0979-41A7-B7A9-877260655F94}"
+Project("{9344BDBB-3E7F-41FC-A0DD-8665D75EE146}") = "java-interop", "src\java-interop\java-interop.mdproj", "{BB0AB9F7-0979-41A7-B7A9-877260655F94}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Java.Interop.Dynamic", "src\Java.Interop.Dynamic\Java.Interop.Dynamic.csproj", "{AD4468F8-8883-434B-9D4C-E1801BB3B52A}"
 EndProject
@@ -78,6 +78,14 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build-Tools", "Build-Tools", "{172B608B-E6F3-41CC-9949-203A76BA247C}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "jnienv-gen", "build-tools\jnienv-gen\jnienv-gen.csproj", "{6410DA0F-5E14-4FC0-9AEE-F4C542C96C7A}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Xamarin.Android.NamingCustomAttributes", "src\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.shproj", "{74598F5C-B8CC-4CE6-8EE2-AB9CA1400076}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Java.Interop.Tools.Cecil", "src\Java.Interop.Tools.Cecil\Java.Interop.Tools.Cecil.csproj", "{D48EE8D0-0A0A-4493-AEF5-DAF5F8CF86AD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Java.Interop.Tools.Diagnostics", "src\Java.Interop.Tools.Diagnostics\Java.Interop.Tools.Diagnostics.csproj", "{64CC4E44-CE3A-4319-BF3F-6CF8BD513870}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Java.Interop.Tools.TypeNameMappings", "src\Java.Interop.Tools.TypeNameMappings\Java.Interop.Tools.TypeNameMappings.shproj", "{E706B6F2-5562-4765-8F07-8CF84A797B30}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -357,6 +365,30 @@ Global
 		{9ECA2816-41D2-4796-8CA2-758EDCFB5C68}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9ECA2816-41D2-4796-8CA2-758EDCFB5C68}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9ECA2816-41D2-4796-8CA2-758EDCFB5C68}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D48EE8D0-0A0A-4493-AEF5-DAF5F8CF86AD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D48EE8D0-0A0A-4493-AEF5-DAF5F8CF86AD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D48EE8D0-0A0A-4493-AEF5-DAF5F8CF86AD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D48EE8D0-0A0A-4493-AEF5-DAF5F8CF86AD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D48EE8D0-0A0A-4493-AEF5-DAF5F8CF86AD}.XAIntegrationDebug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D48EE8D0-0A0A-4493-AEF5-DAF5F8CF86AD}.XAIntegrationDebug|Any CPU.Build.0 = Debug|Any CPU
+		{D48EE8D0-0A0A-4493-AEF5-DAF5F8CF86AD}.XAIntegrationRelease|Any CPU.ActiveCfg = Debug|Any CPU
+		{D48EE8D0-0A0A-4493-AEF5-DAF5F8CF86AD}.XAIntegrationRelease|Any CPU.Build.0 = Debug|Any CPU
+		{D48EE8D0-0A0A-4493-AEF5-DAF5F8CF86AD}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{D48EE8D0-0A0A-4493-AEF5-DAF5F8CF86AD}.Debug|x86.Build.0 = Debug|Any CPU
+		{D48EE8D0-0A0A-4493-AEF5-DAF5F8CF86AD}.Release|x86.ActiveCfg = Release|Any CPU
+		{D48EE8D0-0A0A-4493-AEF5-DAF5F8CF86AD}.Release|x86.Build.0 = Release|Any CPU
+		{64CC4E44-CE3A-4319-BF3F-6CF8BD513870}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{64CC4E44-CE3A-4319-BF3F-6CF8BD513870}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{64CC4E44-CE3A-4319-BF3F-6CF8BD513870}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{64CC4E44-CE3A-4319-BF3F-6CF8BD513870}.Release|Any CPU.Build.0 = Release|Any CPU
+		{64CC4E44-CE3A-4319-BF3F-6CF8BD513870}.XAIntegrationDebug|Any CPU.ActiveCfg = Debug|Any CPU
+		{64CC4E44-CE3A-4319-BF3F-6CF8BD513870}.XAIntegrationDebug|Any CPU.Build.0 = Debug|Any CPU
+		{64CC4E44-CE3A-4319-BF3F-6CF8BD513870}.XAIntegrationRelease|Any CPU.ActiveCfg = Debug|Any CPU
+		{64CC4E44-CE3A-4319-BF3F-6CF8BD513870}.XAIntegrationRelease|Any CPU.Build.0 = Debug|Any CPU
+		{64CC4E44-CE3A-4319-BF3F-6CF8BD513870}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{64CC4E44-CE3A-4319-BF3F-6CF8BD513870}.Debug|x86.Build.0 = Debug|Any CPU
+		{64CC4E44-CE3A-4319-BF3F-6CF8BD513870}.Release|x86.ActiveCfg = Release|Any CPU
+		{64CC4E44-CE3A-4319-BF3F-6CF8BD513870}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{0C001D50-4176-45AE-BDC8-BA626508B0CC} = {C8F58966-94BF-407F-914A-8654F8B8AE3B}
@@ -390,5 +422,9 @@ Global
 		{4EEAB1A7-99C1-4302-9C18-01A7B481409B} = {271C9F30-F679-4793-942B-0D9527CB3E2F}
 		{F3ECB73D-9263-4E42-A5B4-3FC0D1D829F9} = {D5A93398-AEB1-49F3-89DC-3904A47DB0C7}
 		{6410DA0F-5E14-4FC0-9AEE-F4C542C96C7A} = {172B608B-E6F3-41CC-9949-203A76BA247C}
+		{74598F5C-B8CC-4CE6-8EE2-AB9CA1400076} = {0998E45F-8BCE-4791-A944-962CD54E2D80}
+		{D48EE8D0-0A0A-4493-AEF5-DAF5F8CF86AD} = {0998E45F-8BCE-4791-A944-962CD54E2D80}
+		{64CC4E44-CE3A-4319-BF3F-6CF8BD513870} = {0998E45F-8BCE-4791-A944-962CD54E2D80}
+		{E706B6F2-5562-4765-8F07-8CF84A797B30} = {0998E45F-8BCE-4791-A944-962CD54E2D80}
 	EndGlobalSection
 EndGlobal

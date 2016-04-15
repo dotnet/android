@@ -6,6 +6,8 @@ using System.Text;
 using System.Xml;
 using Mono.Cecil;
 
+using Java.Interop.Tools.TypeNameMappings;
+
 using Xamarin.Android.Binder;
 using Xamarin.Android.Tools;
 

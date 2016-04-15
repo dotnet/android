@@ -22,10 +22,11 @@
     <DebugType>full</DebugType>
     <Optimize>False</Optimize>
     <OutputPath>..\..\bin\Debug</OutputPath>
-    <DefineConstants>DEBUG;GENERATOR;USE_CECIL</DefineConstants>
+    <DefineConstants>DEBUG;GENERATOR;USE_CECIL;JCW_ONLY_TYPE_NAMES</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <ConsolePause>false</ConsolePause>
+    <PlatformTarget>anycpu</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <DebugType>none</DebugType>
@@ -34,7 +35,8 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Externalconsole>True</Externalconsole>
-    <DefineConstants>GENERATOR;USE_CECIL</DefineConstants>
+    <DefineConstants>GENERATOR;USE_CECIL;JCW_ONLY_TYPE_NAMES</DefineConstants>
+    <PlatformTarget>anycpu</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -55,26 +57,14 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\..\src\utils\JniType.cs">
-      <Link>utils\JniType.cs</Link>
-    </Compile>
     <Compile Include="..\..\src\utils\StringRocks.cs">
       <Link>utils\StringRocks.cs</Link>
-    </Compile>
-    <Compile Include="..\..\src\utils\ExportParameterKind.cs">
-      <Link>utils\ExportParameterKind.cs</Link>
     </Compile>
     <Compile Include="..\..\src\utils\EnumMappings.Xml.cs">
       <Link>utils\EnumMappings.Xml.cs</Link>
     </Compile>
     <Compile Include="..\..\src\utils\XmlExtensions.cs">
       <Link>utils\XmlExtensions.cs</Link>
-    </Compile>
-    <Compile Include="..\..\src\utils\DirectoryAssemblyResolver.cs">
-      <Link>utils\DirectoryAssemblyResolver.cs</Link>
-    </Compile>
-    <Compile Include="..\..\src\utils\error.cs">
-      <Link>utils\error.cs</Link>
     </Compile>
     <Compile Include="ApiFixup.cs" />
     <Compile Include="ApiTransform.cs" />
@@ -132,6 +122,8 @@
   <ItemGroup>
     <Folder Include="MonoDroid.Generation\" />
   </ItemGroup>
+  <Import Project="..\..\src\Java.Interop.Tools.TypeNameMappings\Java.Interop.Tools.TypeNameMappings.projitems" Label="Shared" Condition="Exists('..\..\src\Java.Interop.Tools.TypeNameMappings\Java.Interop.Tools.TypeNameMappings.projitems')" />
+  <Import Project="..\..\src\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems" Label="Shared" Condition="Exists('..\..\src\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems')" />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
     <ProjectReference Include="..\..\src\Xamarin.Android.Tools.AnnotationSupport\Xamarin.Android.Tools.AnnotationSupport.csproj">
@@ -141,6 +133,14 @@
     <ProjectReference Include="..\..\src\Xamarin.Android.Tools.ApiXmlAdjuster\Xamarin.Android.Tools.ApiXmlAdjuster.csproj">
       <Project>{1268EADF-8344-431C-81F6-FCB7CBC99F49}</Project>
       <Name>Xamarin.Android.Tools.ApiXmlAdjuster</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\src\Java.Interop.Tools.Diagnostics\Java.Interop.Tools.Diagnostics.csproj">
+      <Project>{64CC4E44-CE3A-4319-BF3F-6CF8BD513870}</Project>
+      <Name>Java.Interop.Tools.Diagnostics</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\src\Java.Interop.Tools.Cecil\Java.Interop.Tools.Cecil.csproj">
+      <Project>{D48EE8D0-0A0A-4493-AEF5-DAF5F8CF86AD}</Project>
+      <Name>Java.Interop.Tools.Cecil</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
