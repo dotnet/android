@@ -101,6 +101,8 @@
     </PropertyGroup>
     <MakeDir Directories="obj" />
     <Exec Command="gcc -g -shared -o &quot;%(MacLibLipo.Identity)&quot; %(MacLibLipo.Arch) $(_CppFlags) $(_LinkFlags) $(_Libs) $(_Includes) $(_Files)" />
+    <!-- Mono 4.4.0 (mono-4.4.0-branch/a3fabf1) has an incorrect shared library name. Fix it -->
+    <Exec Command="install_name_tool -change /private/tmp/source-mono-4.4.0/bockbuild-mono-4.4.0-branch/profiles/mono-mac-xamarin/package-root/lib/libmonosgen-2.0.1.dylib /Library/Frameworks/Mono.framework/Libraries/libmonosgen-2.0.1.dylib &quot;%(MacLibLipo.Identity)&quot;" />
   </Target>
   <Target Name="Clean">
     <RemoveDir Directories="obj" />
