@@ -319,8 +319,11 @@ namespace Xamarin.Android.Binder {
 			ClassGen.GenerateEnumList (gen_info);
 
 			// Create the .cs files for the enums
-			if (enums != null)
-				enummap.WriteEnumerations (enumdir, enums, FlattenNestedTypes (gens).ToArray (), opt.UseShortFileNames);
+			var enumFiles = enums == null
+				? null
+				: enummap.WriteEnumerations (enumdir, enums, FlattenNestedTypes (gens).ToArray (), opt.UseShortFileNames);
+
+			gen_info.GenerateLibraryProjectFile (enumFiles);
 		}
 
 		static IEnumerable<GenBase> FlattenNestedTypes (IEnumerable<GenBase> gens)

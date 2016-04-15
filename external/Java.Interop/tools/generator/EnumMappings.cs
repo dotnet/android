@@ -132,13 +132,16 @@ namespace MonoDroid.Generation {
 			}
 		}
 
-		internal void WriteEnumerations (string output_dir, Dictionary<string, EnumDescription> enums, GenBase [] gens, bool useShortFileNames)
+		internal List<string> WriteEnumerations (string output_dir, Dictionary<string, EnumDescription> enums, GenBase [] gens, bool useShortFileNames)
 		{
 			if (!Directory.Exists (output_dir))
 				Directory.CreateDirectory (output_dir);
 
+			var files   = new List<string> ();
 			foreach (var enu in enums) {
-				using (StreamWriter sw = new StreamWriter (Path.Combine (output_dir, GetFileName (enu.Key, useShortFileNames) + ".cs"), false)) {
+				var path    = Path.Combine (output_dir, GetFileName (enu.Key, useShortFileNames) + ".cs");
+				files.Add (path);
+				using (StreamWriter sw = new StreamWriter (path, append: false)) {
 					string ns = enu.Key.Substring (0, enu.Key.LastIndexOf ('.')).Trim ();
 					string enoom = enu.Key.Substring (enu.Key.LastIndexOf ('.') + 1).Trim ();
 
@@ -157,6 +160,7 @@ namespace MonoDroid.Generation {
 					sw.WriteLine ("}");
 				}
 			}
+			return files;
 		}
 
 		string FindManagedMember (string ns, string enumName, EnumDescription desc, string enumFieldName, IEnumerable<GenBase> gens)

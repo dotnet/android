@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Xml.Linq;
 
 namespace MonoDroid.Generation {
 
@@ -73,21 +74,40 @@ namespace MonoDroid.Generation {
 			get { return type_registrations; }
 		}
 
-		public void GenerateLibraryProjectFile ()
+		internal void GenerateLibraryProjectFile (IEnumerable<string> enumFiles, string path = null)
 		{
-			int idx = Assembly.IndexOf (',');
-			string name = idx < 0 ? Assembly : Assembly.Substring (0, idx);
-			string filename = Path.Combine (csdir, name + ".csproj");
-			string template;
-			using (var res = typeof (GenerationInfo).Assembly.GetManifestResourceStream ("library-project-template.txt"))
-				template = new StreamReader (res).ReadToEnd ();
-			string [] files = (from s in GeneratedFiles 
-				select "    <Compile Include=\"" + s.Substring (csdir.Length + 1) + "\" />").ToArray ();
-			string proj = template.Replace ("$$$$$$$$ ASSEMBLY NAME HERE $$$$$$$$", name)
-		 		.Replace ("$$$$$$$$ ROOT NAMESPACE HERE $$$$$$$$", name)
-				.Replace ("$$$$$$$$ FILENAMES HERE $$$$$$$$", String.Join ("\n", files));
-			using (var output = File.CreateText (filename))
-				output.WriteLine (proj);
+			if (path == null) {
+				var     name    = Assembly ?? "GeneratedFiles";
+				int     idx     = name.IndexOf (',');
+				name            = idx < 0 ? name : name.Substring (0, idx);
+				path            = Path.Combine (csdir, name + ".csproj");
+			}
+
+			var msbuild = XNamespace.Get ("http://schemas.microsoft.com/developer/msbuild/2003");
+			var compile = msbuild + "Compile";
+			var project = new XElement (
+				msbuild + "Project",
+				new XComment (" Classes "),
+				new XElement (
+					msbuild + "ItemGroup",
+					GeneratedFiles
+						.OrderBy (f => f, StringComparer.OrdinalIgnoreCase)
+						.Select (f => ToCompileElement (compile, f))),
+				new XComment (" Enums "),
+				new XElement (
+					msbuild + "ItemGroup",
+					enumFiles
+						?.OrderBy (f => f, StringComparer.OrdinalIgnoreCase)
+						?.Select (f => ToCompileElement (compile, f))));
+
+			project.Save (path);
+		}
+
+		XElement ToCompileElement (XName compile, string path)
+		{
+			path = path.Replace (CSharpDir, "$(MSBuildThisFileDirectory)")
+				.Replace ('/', '\\');
+			return new XElement (compile, new XAttribute ("Include", path));
 		}
 	}
 }
