@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="Configuration.Override.props" Condition="Exists('Configuration.Override.props')" />
+  <PropertyGroup>
+    <HostOS Condition=" '$(HostOS)' == '' And '$(OS)' == 'Windows_NT' ">Windows</HostOS>
+    <HostOS Condition=" '$(HostOS)' == '' And '$(OS)' == 'Unix' And Exists ('/Applications') ">Darwin</HostOS>
+    <HostOS Condition=" '$(HostOS)' == '' And '$(OS)' == 'Unix' ">Linux</HostOS>
+    <HOME Condition=" '$(HOME)' == '' ">$(HOMEDRIVE)$(HOMEPATH)</HOME>
+    <AndroidToolchainCacheDirectory Condition=" '$(AndroidToolchainCacheDirectory)' == '' ">$(HOME)\android-archives</AndroidToolchainCacheDirectory>
+    <AndroidToolchainDirectory Condition=" '$(AndroidToolchainDirectory)' == '' ">$(HOME)\android-toolchain</AndroidToolchainDirectory>
+  </PropertyGroup>
+</Project>

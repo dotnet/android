@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="android-toolchain.projitems" />
+  <Target Name="_CopyBootstrapTasksAssembly"
+      Outputs="$(OutputPath)\Xamarin.Android.Tools.BootstrapTasks.dll">
+    <MSBuild
+        Projects="..\..\src\Xamarin.Android.Tools.BootstrapTasks\Xamarin.Android.Tools.BootstrapTasks.csproj"
+        Properties="OutputPath=$(AndroidToolchainDirectory)"
+    />
+  </Target>
+  <UsingTask AssemblyFile="$(OutputPath)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.CreateTemporaryDirectory" />
+  <UsingTask AssemblyFile="$(OutputPath)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.DownloadUri" />
+  <UsingTask AssemblyFile="$(OutputPath)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.UnzipDirectoryChildren" />
+  <Target Name="_DownloadItems"
+      Outputs="@(AndroidSdkItem->'$(AndroidToolchainCacheDirectory)\%(Identity)');@(AndroidNdkItems->'$(AndroidToolchainCacheDirectory)\%(Identity)')">
+    <DownloadUri
+        SourceUris="@(AndroidSdkItem->'$(AndroidUri)/%(Identity)');@(AndroidNdkItem->'$(AndroidUri)/%(Identity)')"
+        DestinationFiles="@(AndroidSdkItem->'$(AndroidToolchainCacheDirectory)\%(Identity)');@(AndroidNdkItem->'$(AndroidToolchainCacheDirectory)\%(Identity)')"
+    />
+  </Target>
+  <Target Name="_UnzipFiles"
+      Inputs="@(AndroidSdkItem->'$(AndroidToolchainCacheDirectory)\%(Identity)')"
+      Outputs="$(AndroidToolchainDirectory)\.stamp-sdk">
+    <CreateItem
+        Include="@(AndroidSdkItem->'$(AndroidToolchainCacheDirectory)\%(Identity)"
+        Condition=" '%(AndroidSdkItem.HostOS)' == '$(HostOS)' Or '%(AndroidSdkItem.HostOS)' == '' ">
+			<Output TaskParameter="Include" ItemName="_AndroidSdkItems"/>
+    </CreateItem>
+    <CreateItem
+        Include="@(AndroidNdkItem->'$(AndroidToolchainCacheDirectory)\%(Identity)"
+        Condition=" '%(AndroidSdkItem.HostOS)' == '$(HostOS)' Or '%(AndroidSdkItem.HostOS)' == '' ">
+      <Output TaskParameter="Include" ItemName="_AndroidNdkItems"/>
+    </CreateItem>
+
+    <RemoveDir Directories="$(AndroidToolchainDirectory)\sdk;$(AndroidToolchainDirectory)\ndk" />
+    <MakeDir Directories="$(AndroidToolchainDirectory)\sdk;$(AndroidToolchainDirectory)\ndk" />
+
+    <UnzipDirectoryChildren
+        SourceFiles="@(AndroidSdkItem->'$(AndroidToolchainCacheDirectory)\%(Identity)')"
+        DestinationFolder="$(AndroidToolchainDirectory)\sdk"
+    />
+    <UnzipDirectoryChildren
+        SourceFiles="@(AndroidNdkItem->'$(AndroidToolchainCacheDirectory)\%(Identity)')"
+        DestinationFolder="$(AndroidToolchainDirectory)\ndk"
+    />
+    <Touch
+        Files="$(AndroidToolchainDirectory)\.stamp-sdk"
+        AlwaysCreate="True"
+    />
+  </Target>
+  <ItemGroup>
+    <_NdkToolchain Include="arm-linux-androideabi-clang">
+      <Platform>android-4</Platform>
+      <Arch>arm</Arch>
+    </_NdkToolchain>
+  </ItemGroup>
+  <Target Name="_CreateNdkToolchains"
+      Condition=" '$(OS)' == 'Unix' "
+      Inputs="$(AndroidToolchainDirectory)\.stamp-sdk"
+      Outputs="@(_NdkToolchain->'$(AndroidToolchainDirectory)\.stamp-toolchains-%(Identity)')">
+    <PropertyGroup>
+      <_Script>$(AndroidToolchainDirectory)\ndk\build\tools\make-standalone-toolchain.sh</_Script>
+      <_Install>@(_NdkToolchain->'$(AndroidToolchainDirectory)\toolchains\%(Identity)')</_Install>
+      <_Arch>@(_NdkToolchain->'%(Arch)')</_Arch>
+      <_Toolchain>@(_NdkToolchain->'%(Identity)')</_Toolchain>
+    </PropertyGroup>
+    <Exec Command="bash &quot;$(_Script)&quot; --platform=%(_NdkToolchain.Platform) &quot;--install-dir=$(_Install)&quot; --arch=$(_Arch) --toolchain=$(_Toolchain)" />
+    <Touch
+        Files="@(_NdkToolchain->'$(AndroidToolchainDirectory)\.stamp-toolchains-%(Identity)')"
+        AlwaysCreate="True"
+    />
+  </Target>
+</Project>

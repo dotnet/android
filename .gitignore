@@ -1,0 +1,5 @@
+*.userprefs
+bin
+Configuration.Override.props
+obj
+packages

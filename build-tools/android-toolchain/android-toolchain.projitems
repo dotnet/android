@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <AndroidUri Condition=" '$(AndroidUri)' == '' ">https://dl-ssl.google.com/android/repository</AndroidUri>
+  </PropertyGroup>
+  <ItemGroup>
+    <AndroidNdkItem Include="android-ndk-r11c-darwin-x86_64.zip">
+      <HostOS>Darwin</HostOS>
+    </AndroidNdkItem>
+    <AndroidSdkItem Include="build-tools_r23-macosx.zip">
+      <HostOS>Darwin</HostOS>
+      <DestDir>build-tools\23.0.0</DestDir>
+    </AndroidSdkItem>
+    <AndroidSdkItem Include="platform-tools_r23-macosx.zip">
+      <HostOS>Darwin</HostOS>
+      <DestDir>platform-tools</DestDir>
+    </AndroidSdkItem>
+    <AndroidSdkItem Include="android-sdk_r24.4.1-macosx.zip">
+      <HostOS>Darwin</HostOS>
+    </AndroidSdkItem>
+    <AndroidSdkItem Include="platform-N_r01.zip">
+      <DestDir>platforms\android-N</DestDir>
+    </AndroidSdkItem>
+    <AndroidSdkItem Include="android-23_r01.zip">
+      <DestDir>platforms\android-23</DestDir>
+    </AndroidSdkItem>
+  </ItemGroup>
+</Project>

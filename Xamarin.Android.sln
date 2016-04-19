@@ -1,9 +1,35 @@
 
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build-Tools", "Build-Tools", "{E351F97D-EA4F-4E7F-AAA0-8EBB1F2A4A62}"
+EndProject
+Project("{9344BDBB-3E7F-41FC-A0DD-8665D75EE146}") = "android-toolchain", "build-tools\android-toolchain\android-toolchain.mdproj", "{8FF78EB6-6FC8-46A7-8A15-EBBA9045C5FA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.Tools.BootstrapTasks", "src\Xamarin.Android.Tools.BootstrapTasks\Xamarin.Android.Tools.BootstrapTasks.csproj", "{E8492EFB-D14A-4F32-AA28-88848322ECEA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|AnyCPU = Debug|AnyCPU
+		Release|AnyCPU = Release|AnyCPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8FF78EB6-6FC8-46A7-8A15-EBBA9045C5FA}.Release|AnyCPU.ActiveCfg = Release|AnyCPU
+		{8FF78EB6-6FC8-46A7-8A15-EBBA9045C5FA}.Release|AnyCPU.Build.0 = Release|AnyCPU
+		{8FF78EB6-6FC8-46A7-8A15-EBBA9045C5FA}.Debug|AnyCPU.ActiveCfg = Debug|Any CPU
+		{8FF78EB6-6FC8-46A7-8A15-EBBA9045C5FA}.Debug|AnyCPU.Build.0 = Debug|Any CPU
+		{E8492EFB-D14A-4F32-AA28-88848322ECEA}.Release|AnyCPU.ActiveCfg = Release|AnyCPU
+		{E8492EFB-D14A-4F32-AA28-88848322ECEA}.Release|AnyCPU.Build.0 = Release|AnyCPU
+		{E8492EFB-D14A-4F32-AA28-88848322ECEA}.Debug|AnyCPU.ActiveCfg = Debug|Any CPU
+		{E8492EFB-D14A-4F32-AA28-88848322ECEA}.Debug|AnyCPU.Build.0 = Debug|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{8FF78EB6-6FC8-46A7-8A15-EBBA9045C5FA} = {E351F97D-EA4F-4E7F-AAA0-8EBB1F2A4A62}
+		{E8492EFB-D14A-4F32-AA28-88848322ECEA} = {E351F97D-EA4F-4E7F-AAA0-8EBB1F2A4A62}
+	EndGlobalSection
+	GlobalSection(MonoDevelopProperties) = preSolution
+		Policies = $0
+		$0.DotNetNamingPolicy = $1
+		$1.DirectoryNamespaceAssociation = None
+		$1.ResourceNamePolicy = FileFormatDefault
 	EndGlobalSection
 EndGlobal
