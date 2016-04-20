@@ -4,6 +4,20 @@
     <AndroidUri Condition=" '$(AndroidUri)' == '' ">https://dl-ssl.google.com/android/repository</AndroidUri>
   </PropertyGroup>
   <ItemGroup>
+    <AndroidNdkItem Include="android-ndk-r11c-linux-x86_64.zip">
+      <HostOS>Linux</HostOS>
+    </AndroidNdkItem>
+    <AndroidSdkItem Include="build-tools_r23-linux.zip">
+      <HostOS>Linux</HostOS>
+      <DestDir>build-tools\23.0.0</DestDir>
+    </AndroidSdkItem>
+    <AndroidSdkItem Include="platform-tools_r23-linux.zip">
+      <HostOS>Linux</HostOS>
+      <DestDir>platform-tools</DestDir>
+    </AndroidSdkItem>
+    <AndroidSdkItem Include="tools_r24.4.1-linux.zip">
+      <HostOS>Linux</HostOS>
+    </AndroidSdkItem>
     <AndroidNdkItem Include="android-ndk-r11c-darwin-x86_64.zip">
       <HostOS>Darwin</HostOS>
     </AndroidNdkItem>
@@ -15,13 +29,15 @@
       <HostOS>Darwin</HostOS>
       <DestDir>platform-tools</DestDir>
     </AndroidSdkItem>
-    <AndroidSdkItem Include="android-sdk_r24.4.1-macosx.zip">
+    <AndroidSdkItem Include="tools_r24.4.1-macosx.zip">
       <HostOS>Darwin</HostOS>
     </AndroidSdkItem>
     <AndroidSdkItem Include="platform-N_r01.zip">
+      <HostOS></HostOS>
       <DestDir>platforms\android-N</DestDir>
     </AndroidSdkItem>
     <AndroidSdkItem Include="android-23_r01.zip">
+      <HostOS></HostOS>
       <DestDir>platforms\android-23</DestDir>
     </AndroidSdkItem>
   </ItemGroup>
