@@ -195,7 +195,7 @@ namespace Xamarin.Android.Binder {
 			if (options == null)
 				throw new ArgumentNullException ("options");
 
-			string assembly         = options.AssemblyQualifiedName;
+			string assemblyQN       = options.AssemblyQualifiedName;
 			string api_level        = options.ApiLevel;
 			int product_version     = options.ProductVersion;
 			bool preserve_enums     = options.PreserveEnums;
@@ -233,8 +233,8 @@ namespace Xamarin.Android.Binder {
 			foreach (var reference in references) {
 				try {
 					Report.Verbose (0, "resolving assembly {0}.", reference);
-					var ass = resolver.Load (reference);
-					foreach (var md in ass.Modules)
+					var assembly    = resolver.Load (reference);
+					foreach (var md in assembly.Modules)
 						foreach (var td in md.Types) {
 							// FIXME: at some stage we want to import generic types.
 							// For now generator fails to load generic types that have conflicting type e.g.
@@ -304,7 +304,7 @@ namespace Xamarin.Android.Binder {
 
 			//SymbolTable.Dump ();
 
-			GenerationInfo gen_info = new GenerationInfo (csdir, javadir, assembly);
+			GenerationInfo gen_info = new GenerationInfo (csdir, javadir, assemblyQN);
 			opt.AssemblyName = gen_info.Assembly;
 
 			if (mapping_file != null)

@@ -70,8 +70,8 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 			var Assemblies  = assemblies.ToList ();
 			var resolver    = new DirectoryAssemblyResolver (Log, loadDebugSymbols: true);
 
-			foreach (var ass in Assemblies) {
-				resolver.Load (Path.GetFullPath (ass));
+			foreach (var assembly in Assemblies) {
+				resolver.Load (Path.GetFullPath (assembly));
 			}
 
 			Types       = JavaTypeScanner.GetJavaTypes (Assemblies, resolver, logMessage);
