@@ -11,24 +11,37 @@
   <UsingTask AssemblyFile="$(OutputPath)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.CreateTemporaryDirectory" />
   <UsingTask AssemblyFile="$(OutputPath)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.DownloadUri" />
   <UsingTask AssemblyFile="$(OutputPath)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.UnzipDirectoryChildren" />
+  <Target Name="_DetermineItems">
+    <CreateItem
+        Include="@(AndroidSdkItem)"
+        Condition=" '%(HostOS)' == '$(HostOS)' Or '%(HostOS)' == '' ">
+			<Output TaskParameter="Include" ItemName="_PlatformAndroidSdkItem"/>
+    </CreateItem>
+    <CreateItem
+        Include="@(AndroidNdkItem)"
+        Condition=" '%(HostOS)' == '$(HostOS)' Or '%(HostOS)' == '' ">
+			<Output TaskParameter="Include" ItemName="_PlatformAndroidNdkItem"/>
+    </CreateItem>
+  </Target>
   <Target Name="_DownloadItems"
-      Outputs="@(AndroidSdkItem->'$(AndroidToolchainCacheDirectory)\%(Identity)');@(AndroidNdkItems->'$(AndroidToolchainCacheDirectory)\%(Identity)')">
+      DependsOnTargets="_DetermineItems"
+      Outputs="@(_PlatformAndroidSdkItem->'$(AndroidToolchainCacheDirectory)\%(Identity)');@(_PlatformAndroidNdkItem->'$(AndroidToolchainCacheDirectory)\%(Identity)')">
     <DownloadUri
-        SourceUris="@(AndroidSdkItem->'$(AndroidUri)/%(Identity)');@(AndroidNdkItem->'$(AndroidUri)/%(Identity)')"
-        DestinationFiles="@(AndroidSdkItem->'$(AndroidToolchainCacheDirectory)\%(Identity)');@(AndroidNdkItem->'$(AndroidToolchainCacheDirectory)\%(Identity)')"
+        SourceUris="@(_PlatformAndroidSdkItem->'$(AndroidUri)/%(Identity)');@(_PlatformAndroidNdkItem->'$(AndroidUri)/%(Identity)')"
+        DestinationFiles="@(_PlatformAndroidSdkItem->'$(AndroidToolchainCacheDirectory)\%(Identity)');@(_PlatformAndroidNdkItem->'$(AndroidToolchainCacheDirectory)\%(Identity)')"
     />
   </Target>
   <Target Name="_UnzipFiles"
-      Inputs="@(AndroidSdkItem->'$(AndroidToolchainCacheDirectory)\%(Identity)')"
+      DependsOnTargets="_DetermineItems"
+      Inputs="@(_PlatformAndroidSdkItem->'$(AndroidToolchainCacheDirectory)\%(Identity)')"
       Outputs="$(AndroidToolchainDirectory)\.stamp-sdk">
     <CreateItem
-        Include="@(AndroidSdkItem->'$(AndroidToolchainCacheDirectory)\%(Identity)"
-        Condition=" '%(AndroidSdkItem.HostOS)' == '$(HostOS)' Or '%(AndroidSdkItem.HostOS)' == '' ">
-			<Output TaskParameter="Include" ItemName="_AndroidSdkItems"/>
+        Include="@(_PlatformAndroidSdkItem->'$(AndroidToolchainCacheDirectory)\%(_PlatformAndroidSdkItem.Identity)">
+      <Output TaskParameter="Include" ItemName="_AndroidSdkItems"/>
     </CreateItem>
     <CreateItem
-        Include="@(AndroidNdkItem->'$(AndroidToolchainCacheDirectory)\%(Identity)"
-        Condition=" '%(AndroidSdkItem.HostOS)' == '$(HostOS)' Or '%(AndroidSdkItem.HostOS)' == '' ">
+        Include="@(_PlatformAndroidNdkItem->'$(AndroidToolchainCacheDirectory)\%(_PlatformAndroidNdkItem.Identity)"
+        Condition=" '%(HostOS)' == '$(HostOS)' Or '%(HostOS)' == '' ">
       <Output TaskParameter="Include" ItemName="_AndroidNdkItems"/>
     </CreateItem>
 

@@ -42,6 +42,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks {
 
 			var tasks   = new TTask [SourceUris.Length];
 			using (var client = new HttpClient ()) {
+				client.Timeout = TimeSpan.FromHours (3);
 				for (int i = 0; i < SourceUris.Length; ++i) {
 					tasks [i] = DownloadFile (client, SourceUris [i], DestinationFiles [i].ItemSpec);
 				}
@@ -57,6 +58,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks {
 				Log.LogMessage (MessageImportance.Normal, $"Skipping uri '{uri}' as destination file already exists '{destinationFile}'.");
 				return;
 			}
+			Log.LogMessage (MessageImportance.Low, $"Downloading '{uri}'.");
 			using (var r = await client.GetAsync (uri))
 			using (var o = File.OpenWrite (destinationFile)) {
 				await r.Content.CopyToAsync (o);

@@ -1,5 +1,5 @@
 CONFIGURATION = Debug
-MSBUILD       = xbuild /p:Configuration=$(CONFIGURATION)
+MSBUILD       = xbuild /p:Configuration=$(CONFIGURATION) $(MSBUILD_ARGS)
 
 all:
 	$(MSBUILD)
