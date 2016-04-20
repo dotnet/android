@@ -2,7 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Xml.Linq;
+
+using Xamarin.Android.Binder;
 
 namespace MonoDroid.Generation {
 
@@ -74,7 +77,7 @@ namespace MonoDroid.Generation {
 			get { return type_registrations; }
 		}
 
-		internal void GenerateLibraryProjectFile (IEnumerable<string> enumFiles, string path = null)
+		internal void GenerateLibraryProjectFile (CodeGeneratorOptions options, IEnumerable<string> enumFiles, string path = null)
 		{
 			if (path == null) {
 				var     name    = Assembly ?? "GeneratedFiles";
@@ -87,6 +90,7 @@ namespace MonoDroid.Generation {
 			var compile = msbuild + "Compile";
 			var project = new XElement (
 				msbuild + "Project",
+				ToDefineConstants (options, msbuild),
 				new XComment (" Classes "),
 				new XElement (
 					msbuild + "ItemGroup",
@@ -101,6 +105,25 @@ namespace MonoDroid.Generation {
 						?.Select (f => ToCompileElement (compile, f))));
 
 			project.Save (path);
+		}
+
+		XElement ToDefineConstants (CodeGeneratorOptions options, XNamespace msbuild)
+		{
+			if (options.ApiLevel == null)
+				return null;
+			int level;
+			if (!int.TryParse (options.ApiLevel, out level))
+				return null;
+			var defines = new StringBuilder ()
+				.Append ("$(DefineConstants);ANDROID_1");
+			for (int i = 2; i <= level; ++i) {
+				defines.AppendFormat (";ANDROID_{0}", i.ToString ());
+			}
+			return new XElement (
+				msbuild + "PropertyGroup",
+				new XElement (
+					msbuild + "DefineConstants",
+					defines));
 		}
 
 		XElement ToCompileElement (XName compile, string path)

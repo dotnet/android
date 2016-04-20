@@ -147,7 +147,7 @@ GENERATOR_EXPECTED_TARGETS  = tools/generator/Tests/expected.targets
 define GEN_CORE_OUTPUT
 	-$(RM) -Rf $(1)
 	mkdir -p $(1)
-	$(RUNTIME) bin/Test$(CONFIGURATION)/generator.exe -o $(1) $(2) tools/generator/Tests-Core/api.xml \
+	$(RUNTIME) bin/Test$(CONFIGURATION)/generator.exe -o $(1) $(2) --api-level=20 tools/generator/Tests-Core/api.xml \
 		--enummethods=tools/generator/Tests-Core/methods.xml \
 		--enumfields=tools/generator/Tests-Core/fields.xml \
 		--enumdir=$(1)
