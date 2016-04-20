@@ -151,8 +151,13 @@ namespace Xamarin.Android.Binder {
 
 			if (apis.Count == 0)
 				throw new InvalidOperationException ("A .xml file must be specified.");
-			if (apis.Count != 1)
+			if (apis.Count != 1) {
+				Console.Error.WriteLine ("generator: Found {0} API descriptions; only one is supported", apis.Count);
+				foreach (var api in apis) {
+					Console.Error.WriteLine ("generator:   API description: {0}", api);
+				}
 				throw new InvalidOperationException ("Only one .xml file may be specified.");
+			}
 
 			opts.ApiDescriptionFile = apis [0];
 
