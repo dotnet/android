@@ -36,11 +36,11 @@
       Inputs="@(_PlatformAndroidSdkItem->'$(AndroidToolchainCacheDirectory)\%(Identity)')"
       Outputs="$(AndroidToolchainDirectory)\.stamp-sdk">
     <CreateItem
-        Include="@(_PlatformAndroidSdkItem->'$(AndroidToolchainCacheDirectory)\%(Identity)">
+        Include="@(_PlatformAndroidSdkItem->'$(AndroidToolchainCacheDirectory)\%(_PlatformAndroidSdkItem.Identity)">
       <Output TaskParameter="Include" ItemName="_AndroidSdkItems"/>
     </CreateItem>
     <CreateItem
-        Include="@(_PlatformAndroidNdkItem->'$(AndroidToolchainCacheDirectory)\%(Identity)"
+        Include="@(_PlatformAndroidNdkItem->'$(AndroidToolchainCacheDirectory)\%(_PlatformAndroidNdkItem.Identity)"
         Condition=" '%(HostOS)' == '$(HostOS)' Or '%(HostOS)' == '' ">
       <Output TaskParameter="Include" ItemName="_AndroidNdkItems"/>
     </CreateItem>
