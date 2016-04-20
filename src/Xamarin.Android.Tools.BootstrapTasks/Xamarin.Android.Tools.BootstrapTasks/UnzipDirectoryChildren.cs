@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Text;
@@ -22,6 +23,8 @@ namespace Xamarin.Android.Tools.BootstrapTasks {
 		public  ITaskItem[]     SourceFiles         { get; set; }
 
 		public  string          EntryNameEncoding   { get; set; }
+
+		public  string          HostOS              { get; set; }
 
 		[Required]
 		public  ITaskItem       DestinationFolder   { get; set; }
@@ -64,7 +67,6 @@ namespace Xamarin.Android.Tools.BootstrapTasks {
 				var enc             = encoding;
 				var destFolder      = DestinationFolder.ItemSpec;
 				tasks [i] = TTask.Run (() => ExtractFile (td, sourceFile, relativeDestDir, destFolder, enc));
-				tasks [i].Wait ();
 			}
 
 			TTask.WaitAll (tasks);
@@ -86,7 +88,18 @@ namespace Xamarin.Android.Tools.BootstrapTasks {
 
 			relativeDestDir = relativeDestDir?.Replace ('\\', Path.DirectorySeparatorChar);
 
-			ZipFile.ExtractToDirectory (sourceFile, nestedTemp, encoding);
+			if (string.Equals (HostOS, "Windows", StringComparison.OrdinalIgnoreCase)) {
+				ZipFile.ExtractToDirectory (sourceFile, nestedTemp, encoding);
+			}
+			else {
+				var start   = new ProcessStartInfo ("unzip", $"\"{sourceFile}\" -d \"{nestedTemp}\"") {
+					CreateNoWindow  = true,
+					UseShellExecute = false,
+				};
+				Log.LogMessage (MessageImportance.Low, $"unzip \"{sourceFile}\" -d \"{nestedTemp}\"");
+				var p       = Process.Start (start);
+				p.WaitForExit ();
+			}
 
 			foreach (var dir in Directory.EnumerateDirectories (nestedTemp, "*")) {
 				foreach (var fse in Directory.EnumerateFileSystemEntries (dir)) {

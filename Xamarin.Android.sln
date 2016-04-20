@@ -7,6 +7,8 @@ Project("{9344BDBB-3E7F-41FC-A0DD-8665D75EE146}") = "android-toolchain", "build-
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.Tools.BootstrapTasks", "src\Xamarin.Android.Tools.BootstrapTasks\Xamarin.Android.Tools.BootstrapTasks.csproj", "{E8492EFB-D14A-4F32-AA28-88848322ECEA}"
 EndProject
+Project("{9344BDBB-3E7F-41FC-A0DD-8665D75EE146}") = "mono-runtimes", "build-tools\mono-runtimes\mono-runtimes.mdproj", "{C03E6CF1-7460-4CDC-A4AB-292BBC0F61F2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|AnyCPU = Debug|AnyCPU
@@ -21,10 +23,15 @@ Global
 		{E8492EFB-D14A-4F32-AA28-88848322ECEA}.Release|AnyCPU.Build.0 = Release|AnyCPU
 		{E8492EFB-D14A-4F32-AA28-88848322ECEA}.Debug|AnyCPU.ActiveCfg = Debug|Any CPU
 		{E8492EFB-D14A-4F32-AA28-88848322ECEA}.Debug|AnyCPU.Build.0 = Debug|Any CPU
+		{C03E6CF1-7460-4CDC-A4AB-292BBC0F61F2}.Debug|AnyCPU.ActiveCfg = Debug|Any CPU
+		{C03E6CF1-7460-4CDC-A4AB-292BBC0F61F2}.Debug|AnyCPU.Build.0 = Debug|Any CPU
+		{C03E6CF1-7460-4CDC-A4AB-292BBC0F61F2}.Release|AnyCPU.ActiveCfg = Release|Any CPU
+		{C03E6CF1-7460-4CDC-A4AB-292BBC0F61F2}.Release|AnyCPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{8FF78EB6-6FC8-46A7-8A15-EBBA9045C5FA} = {E351F97D-EA4F-4E7F-AAA0-8EBB1F2A4A62}
 		{E8492EFB-D14A-4F32-AA28-88848322ECEA} = {E351F97D-EA4F-4E7F-AAA0-8EBB1F2A4A62}
+		{C03E6CF1-7460-4CDC-A4AB-292BBC0F61F2} = {E351F97D-EA4F-4E7F-AAA0-8EBB1F2A4A62}
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
 		Policies = $0

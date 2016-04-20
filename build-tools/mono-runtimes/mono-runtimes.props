@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <_CommonCFlags Condition=" '$(Configuration)' == 'Debug' ">-ggdb3 -O0 -fno-omit-frame-pointer</_CommonCFlags>
+    <_CommonCFlags Condition=" '$(Configuration)' == 'Release' ">-g -O2</_CommonCFlags>
+    <_CommonConfigureFlags>--without-ikvm-native --enable-maintainer-mode --with-profile2=no --with-profile4=no --with-profile4_5=no --with-monodroid --enable-nls=no --with-sigaltstack=yes --with-tls=pthread mono_cv_uscore=yes</_CommonConfigureFlags>
+    <_TargetConfigureFlags>$(_CommonConfigureFlags) --enable-minimal=ssa,portability,attach,verifier,full_messages,sgen_remset,sgen_marksweep_par,sgen_marksweep_fixed,sgen_marksweep_fixed_par,sgen_copying,logging,security,shared_handles --disable-mcs-build --disable-executables</_TargetConfigureFlags>
+    <_SecurityCFlags>-Wl,-z,now -Wl,-z,relro -Wl,-z,noexecstack -fstack-protector</_SecurityCFlags>
+    <_TargetCFlags>$(_SecurityCFlags) -DMONODROID=1</_TargetCFlags>
+    <_TargetCxxFlags>$(_SecurityCFlags) -DMONODROID=1</_TargetCxxFlags>
+    <_TargetLdFlags>-ldl -lm -llog -lc -lgcc</_TargetLdFlags>
+    <_ArmNdkPlatformPath>$(AndroidToolchainDirectory)\ndk\platforms\android-4</_ArmNdkPlatformPath>
+    <_ArmAr>$(AndroidToolchainDirectory)\toolchains\arm-linux-androideabi-clang\bin\arm-linux-androideabi-ar</_ArmAr>
+    <_ArmAs>$(AndroidToolchainDirectory)\toolchains\arm-linux-androideabi-clang\bin\arm-linux-androideabi-as</_ArmAs>
+    <_ArmCc>$(AndroidToolchainDirectory)\toolchains\arm-linux-androideabi-clang\bin\arm-linux-androideabi-clang</_ArmCc>
+    <_ArmCFlags>$(_CommonCFlags) -D__POSIX_VISIBLE=201002 -DSK_RELEASE -DNDEBUG -UDEBUG -fpic</_ArmCFlags>
+    <_ArmCpp>$(AndroidToolchainDirectory)\toolchains\arm-linux-androideabi-clang\bin\arm-linux-androideabi-cpp</_ArmCpp>
+    <_ArmCppFlags>-I$(_ArmNdkPlatformPath)\arch-arm\usr\include\</_ArmCppFlags>
+    <_ArmCxx>$(AndroidToolchainDirectory)\toolchains\arm-linux-androideabi-clang\bin\arm-linux-androideabi-clang++</_ArmCxx>
+    <_ArmCxxFlags>-I$(_ArmNdkPlatformPath)\arch-arm\usr\include\</_ArmCxxFlags>
+    <_ArmCxxCpp>$(AndroidToolchainDirectory)\toolchains\arm-linux-androideabi-clang\bin\arm-linux-androideabi-cpp</_ArmCxxCpp>
+    <_ArmLd>$(AndroidToolchainDirectory)\toolchains\arm-linux-androideabi-clang\bin\arm-linux-androideabi-ld</_ArmLd>
+    <_ArmLdFlags>$(_TargetLdFlags) -Wl,--fix-cortex-a8 -Wl,-rpath-link=$(_ArmNdkPlatformPath)\arch-arm\usr\lib,-dynamic-linker=/system/bin/linker -L$(_ArmNdkPlatformPath)\arch-arm\usr\lib</_ArmLdFlags>
+    <_ArmRanLib>$(AndroidToolchainDirectory)\toolchains\arm-linux-androideabi-clang\bin\arm-linux-androideabi-ranlib</_ArmRanLib>
+    <_ArmStrip>$(AndroidToolchainDirectory)\toolchains\arm-linux-androideabi-clang\bin\arm-linux-androideabi-strip</_ArmStrip>
+  </PropertyGroup>
+</Project>

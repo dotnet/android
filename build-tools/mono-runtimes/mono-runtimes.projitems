@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <_MonoRuntime Include="armeabi-v7a">
+      <Ar>$(_ArmAr)</Ar>
+      <As>$(_ArmAs)</As>
+      <Cc>$(_ArmCc)</Cc>
+      <Cpp>$(_ArmCpp) $(_ArmCppFlags)</Cpp>
+      <CFlags>$(_ArmCFlags) -mtune=cortex-a8 -march=armv7-a -mfpu=vfp -mfloat-abi=softfp $(_TargetCFlags)</CFlags>
+      <Cxx>$(_ArmCxx)</Cxx>
+      <CxxFlags>$(_ArmCxxFlags) -mtune=cortex-a8 -march=armv7-a -mfpu=vfp -mfloat-abi=softfp $(_TargetCxxFlags) </CxxFlags>
+      <CxxCpp>$(_ArmCxxCpp) $(_ArmCppFlags)</CxxCpp>
+      <Ld>$(_ArmLd)</Ld>
+      <LdFlags>$(_ArmLdFlags)</LdFlags>
+      <RanLib>$(_ArmRanLib)</RanLib>
+      <Strip>$(_ArmStrip)</Strip>
+      <ConfigureFlags>--host=armv5-linux-androideabi $(_TargetConfigureFlags)</ConfigureFlags>
+      <OutputRuntime>libmonosgen-2.0.so</OutputRuntime>
+      <OutputProfiler>libmono-profiler-log.so</OutputProfiler>
+      <OutputMonoPosixHelper>libMonoPosixHelper.so</OutputMonoPosixHelper>
+    </_MonoRuntime>
+    <_MonoRuntime Include="host">
+      <Ar>ar</Ar>
+      <As>as</As>
+      <Cc>clang</Cc>
+      <CFlags>$(_CommonCFlags) -mmacosx-version-min=10.9</CFlags>
+      <Cxx>clang++</Cxx>
+      <CxxCpp>cpp</CxxCpp>
+      <CxxFlags></CxxFlags>
+      <Ld>ld</Ld>
+      <LdFlags></LdFlags>
+      <RanLib>ranlib</RanLib>
+      <Strip>strip -S</Strip>
+      <ConfigureFlags>--enable-maintainer-mode --without-ikvm-native --with-monodroid --with-mcs-docs=no --disable-mono-debugger --with-profile2=no --with-profile4=no --with-profile4_5=yes --disable-boehm --enable-nls=no --disable-iconv</ConfigureFlags>
+      <OutputRuntime>libmonosgen-2.0.dylib</OutputRuntime>
+      <OutputProfiler>libmono-profiler-log.dylib</OutputProfiler>
+      <OutputMonoPosixHelper>libMonoPosixHelper.dylib</OutputMonoPosixHelper>
+    </_MonoRuntime>
+  </ItemGroup>
+</Project>

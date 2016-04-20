@@ -1,0 +1,3 @@
+[submodule "external/mono"]
+	path = external/mono
+	url = git@github.com:mono/mono.git

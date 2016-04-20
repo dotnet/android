@@ -44,5 +44,36 @@ URL to download files from is controlled by the `$(AndroidUri)` property.
 At this point in time, building Xamarin.Android is only supported on OS X.
 We will work to improve this.
 
-To build Xamarin.Android, load `Xamarin.Android.sln` into Xamarin Studio 6
-and Build the project.
+To build Xamarin.Android, first prepare the project:
+
+    make prepare
+
+This will perform `git submodule update`, and any other pre-build tasks
+that need to be performed.
+
+Then, you may do one of the following:
+
+1. Run make:
+
+        make
+
+2. Load `Xamarin.Android.sln` into Xamarin Studio and Build the project.
+
+# Build Output Directory Structure
+
+There are two configurations, `Debug` and `Release`, controlled by the
+`$(Configuration)` MSBuild property.
+
+The `bin\Build$(Configuration)` directory, e.g. `bin\BuildDebug`, contains
+artifacts needed for *building* the repository. They should not be needed
+for later execution.
+
+The `bin\$(Configuration)` directory, e.g. `bin\Debug`, contains
+*redistributable* artifacts, such as tooling and runtimes. This directory
+acts as a *local installation prefix*, in which the directory structure
+mirrors that of the OS X Xamarin.Android.framework directory structure:
+
+* `bin\$(Configuration)\lib\xbuild\Xamarin\Android`: MSBuild-related support
+    files and required runtimes used by the MSBuild tooling.
+* `bin\$(Configuration)\lib\xbuild-frameworks\MonoAndroid`: Xamarin.Android
+    profile assemblies and facade assemblies.

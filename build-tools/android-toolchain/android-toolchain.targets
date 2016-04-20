@@ -36,10 +36,12 @@
     <MakeDir Directories="$(AndroidToolchainDirectory)\sdk;$(AndroidToolchainDirectory)\ndk" />
 
     <UnzipDirectoryChildren
+        HostOS="$(HostOS)"
         SourceFiles="@(AndroidSdkItem->'$(AndroidToolchainCacheDirectory)\%(Identity)')"
         DestinationFolder="$(AndroidToolchainDirectory)\sdk"
     />
     <UnzipDirectoryChildren
+        HostOS="$(HostOS)"
         SourceFiles="@(AndroidNdkItem->'$(AndroidToolchainCacheDirectory)\%(Identity)')"
         DestinationFolder="$(AndroidToolchainDirectory)\ndk"
     />
