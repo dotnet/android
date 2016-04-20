@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
+    <_HostClangCc>clang</_HostClangCc>
+    <_HostClangCpp>clang++</_HostClangCpp>
     <_CommonCFlags Condition=" '$(Configuration)' == 'Debug' ">-ggdb3 -O0 -fno-omit-frame-pointer</_CommonCFlags>
     <_CommonCFlags Condition=" '$(Configuration)' == 'Release' ">-g -O2</_CommonCFlags>
     <_CommonConfigureFlags>--without-ikvm-native --enable-maintainer-mode --with-profile2=no --with-profile4=no --with-profile4_5=no --with-monodroid --enable-nls=no --with-sigaltstack=yes --with-tls=pthread mono_cv_uscore=yes</_CommonConfigureFlags>
