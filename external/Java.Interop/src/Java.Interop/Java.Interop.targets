@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Runtime Condition="'$(OS)' != 'Windows_NT'">mono</Runtime>
+  </PropertyGroup>
+  <Target Name="BuildJnienvGen"
+      Inputs="..\..\build-tools\jnienv-gen\jnienv-gen.csproj"
+      Outputs="..\..\bin\BuildDebug\jnienv-gen.exe">
+    <MSBuild
+        Projects="..\..\build-tools\jnienv-gen\jnienv-gen.csproj"
+        Properties="Configuration=Debug"
+    />
+  </Target>
+  <Target Name="BuildJniEnvironment_g_cs"
+      Inputs="$(JNIEnvGenPath)\jnienv-gen.exe"
+      Outputs="Java.Interop\JniEnvironment.g.cs;$(IntermediateOutputPath)\jni.c">
+    <MakeDir Directories="$(IntermediateOutputPath)" />
+    <Exec
+        Command="$(Runtime) &quot;..\..\bin\BuildDebug\jnienv-gen.exe&quot; Java.Interop\JniEnvironment.g.cs $(IntermediateOutputPath)\jni.c"
+    />
+  </Target>
+  <Target Name="BuildInteropJar"
+      Inputs="@(CompileJavaInteropJar)"
+      Outputs="$(OutputPath)java-interop.jar">
+    <MakeDir Directories="$(OutputPath);$(IntermediateOutputPath)ji-classes" />
+    <Exec Command="javac -source 1.5 -target 1.6 -d &quot;$(IntermediateOutputPath)ji-classes&quot; @(CompileJavaInteropJar -&gt; '%(Identity)', ' ')" />
+    <Exec Command="jar cf &quot;$(OutputPath)java-interop.jar&quot; -C &quot;$(IntermediateOutputPath)ji-classes&quot; ." />
+  </Target>
+</Project>

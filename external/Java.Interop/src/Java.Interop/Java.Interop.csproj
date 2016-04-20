@@ -24,7 +24,6 @@
     <WarningLevel>4</WarningLevel>
     <ConsolePause>false</ConsolePause>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <JNIEnvGenPath>..\..\bin\BuildDebug</JNIEnvGenPath>
     <DocumentationFile>..\..\bin\Debug\Java.Interop.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
@@ -35,7 +34,6 @@
     <ConsolePause>false</ConsolePause>
     <DefineConstants>INTEROP;FEATURE_JNIENVIRONMENT_SAFEHANDLES;FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES</DefineConstants>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <JNIEnvGenPath>..\..\bin\BuildRelease</JNIEnvGenPath>
     <DocumentationFile>..\..\bin\Release\Java.Interop.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'XAIntegrationDebug|AnyCPU' ">
@@ -141,30 +139,20 @@
     <CompileJavaInteropJar Include="java\com\xamarin\java_interop\ManagedPeer.java" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
+  <Import Project="Java.Interop.targets" />
   <PropertyGroup>
     <BuildDependsOn>
+      BuildJnienvGen;
       BuildJniEnvironment_g_cs;
       BuildInteropJar;
       $(BuildDependsOn)
     </BuildDependsOn>
   </PropertyGroup>
-  <PropertyGroup>
-    <Runtime Condition="'$(OS)' != 'Windows_NT'">mono</Runtime>
-  </PropertyGroup>
-  <Target Name="BuildJniEnvironment_g_cs" Inputs="$(JNIEnvGenPath)\jnienv-gen.exe" Outputs="Java.Interop\JniEnvironment.g.cs;$(IntermediateOutputPath)\jni.c">
-    <MakeDir Directories="$(IntermediateOutputPath)" />
-    <Exec Command="$(Runtime) &quot;$(JNIEnvGenPath)\jnienv-gen.exe&quot; Java.Interop\JniEnvironment.g.cs $(IntermediateOutputPath)\jni.c" />
-  </Target>
   <ItemGroup>
     <Content Include="$(OutputPath)java-interop.jar">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
-  <Target Name="BuildInteropJar" Inputs="@(CompileJavaInteropJar)" Outputs="$(OutputPath)java-interop.jar">
-    <MakeDir Directories="$(OutputPath);$(IntermediateOutputPath)ji-classes" />
-    <Exec Command="javac -source 1.5 -target 1.6 -d &quot;$(IntermediateOutputPath)ji-classes&quot; @(CompileJavaInteropJar -&gt; '%(Identity)', ' ')" />
-    <Exec Command="jar cf &quot;$(OutputPath)java-interop.jar&quot; -C &quot;$(IntermediateOutputPath)ji-classes&quot; ." />
-  </Target>
   <ItemGroup>
     <None Include="Java.Interop\JavaPrimitiveArrays.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
@@ -188,12 +176,5 @@
     </None>
     <None Include="Documentation\Java.Interop\IJavaPeerable.xml" />
     <None Include="Documentation\Java.Interop\JniManagedPeerStates.xml" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\build-tools\jnienv-gen\jnienv-gen.csproj">
-      <Project>{6410DA0F-5E14-4FC0-9AEE-F4C542C96C7A}</Project>
-      <Name>jnienv-gen</Name>
-      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
-    </ProjectReference>
   </ItemGroup>
 </Project>
