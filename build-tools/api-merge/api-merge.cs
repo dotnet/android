@@ -17,6 +17,7 @@ namespace Xamarin.Android.ApiMerge {
 			bool show_help = false, show_version = false;
 			string dest = null;
 			string glob = null;
+			string lastDescription = null;
 			var options = new OptionSet () {
 				"Usage: api-merge -o=FILE DESCRIPTIONS+",
 				"",
@@ -29,6 +30,9 @@ namespace Xamarin.Android.ApiMerge {
 				{ "s|sort-glob=",
 				  "{GLOB} pattern for sorting DESCRIPTIONS.",
 				  v => glob = v },
+				{ "last-description=",
+				  "Last {DESCRIPTION} to process. Any later descriptions are ignored.",
+				  v => lastDescription = v },
 				{ "version",
 				  "Output version information and exit.",
 				  v => show_version = v != null },
@@ -65,6 +69,8 @@ namespace Xamarin.Android.ApiMerge {
 			SortSources (sources, glob);
 			ApiDescription context = new ApiDescription (sources [0]);
 			for (int i = 1; i < sources.Count; i++) {
+				if (sources [i-1] == lastDescription)
+					break;
 				context.Merge (sources [i]);
 			}
 			context.Save (dest);
