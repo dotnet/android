@@ -45,21 +45,12 @@ namespace Android.Widget {
 		static IntPtr id_setAdapter_Landroid_widget_Adapter_;
 #pragma warning restore 0169
 
-#if FEATURE_NEED_API_MERGE
 		public abstract override IListAdapter Adapter {
 			[Register ("getAdapter", "()Landroid/widget/ListAdapter;", "GetGetAdapterHandler")]
 			get;
 			[Register ("setAdapter", "(Landroid/widget/ListAdapter;)V", "GetSetAdapter_Landroid_widget_ListAdapter_Handler")]
 			set;
 		}
-#else   // FEATURE_NEED_API_MERGE
-		public override IListAdapter Adapter {
-			[Register ("getAdapter", "()Landroid/widget/ListAdapter;", "GetGetAdapterHandler")]
-			get {return null;}
-			[Register ("setAdapter", "(Landroid/widget/ListAdapter;)V", "GetSetAdapter_Landroid_widget_ListAdapter_Handler")]
-			set {}
-		}
-#endif  // FEATURE_NEED_API_MERGE
 
 #if ANDROID_12
 		static IntPtr id_setAdapter_Landroid_widget_ListAdapter_;

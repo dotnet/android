@@ -1,4 +1,3 @@
-#if FEATURE_NEED_API_MERGE
 namespace Org.Apache.Http.Impl.Cookie
 {
 	public partial class BasicClientCookie
@@ -34,4 +33,3 @@ namespace Org.Apache.Http.Impl.Cookie
 		}
 	}
 }
-#endif  // FEATURE_NEED_API_MERGE

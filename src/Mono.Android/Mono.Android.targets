@@ -24,9 +24,28 @@
         Command="$(ManagedRuntime) ..\..\bin\Build$(Configuration)\jnienv-gen.exe -o Android.Runtime\JNIEnv.g.cs --use-java-interop"
     />
   </Target>
+  <ItemGroup>
+    <_AndroidProfile Include="Profiles\api-*.xml.in" />
+  </ItemGroup>
+  <Target Name="_GenerateApiDescription"
+      BeforeTargets="_GenerateBinding"
+      Inputs="Profiles\api-$(ApiLevel).xml.in"
+      Outputs="$(IntermediateOutputPath)android-$(ApiLevel)\api.xml">
+    <MakeDir Directories="$(IntermediateOutputPath)android-$(ApiLevel)" />
+    <PropertyGroup>
+      <ApiMerge>..\..\bin\Build$(Configuration)\api-merge.exe</ApiMerge>
+      <_Profiles>@(_AndroidProfile->'%(Identity)', ' ')</_Profiles>
+      <_Glob>-s 'Profiles\api-*.xml.in'</_Glob>
+      <_LastProfile>--last-description=Profiles\api-$(ApiLevel).xml.in</_LastProfile>
+      <_Out>-o "$(IntermediateOutputPath)android-$(ApiLevel)\api.xml"</_Out>
+    </PropertyGroup>
+    <Exec
+        Command="$(ManagedRuntime) $(ApiMerge) $(_Out) $(_Glob) $(_Profiles) $(_LastProfile)"
+    />
+  </Target>
   <Target Name="_GenerateBinding"
       BeforeTargets="CoreCompile"
-      Inputs="Profiles\api-$(ApiLevel).xml.in"
+      Inputs="$(IntermediateOutputPath)android-$(ApiLevel)\api.xml"
       Outputs="$(IntermediateOutputPath)android-$(ApiLevel)\Mono.Android.projitems">
     <MakeDir Directories="$(IntermediateOutputPath)android-$(ApiLevel)" />
     <PropertyGroup>
@@ -41,7 +60,7 @@
       <_Annotations>--annotations=$(AndroidToolchainDirectory)\sdk\platform-tools\api\annotations.zip</_Annotations>
       <_Assembly>--assembly="Mono.Android, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null"</_Assembly>
       <_TypeMap>--type-map-report=$(IntermediateOutputPath)android-$(ApiLevel)\type-mapping.txt</_TypeMap>
-      <_Api>Profiles\api-$(ApiLevel).xml.in</_Api>
+      <_Api>$(IntermediateOutputPath)android-$(ApiLevel)\api.xml</_Api>
       <_Dirs>--enumdir=$(IntermediateOutputPath)android-$(ApiLevel)</_Dirs>
     </PropertyGroup>
     <Exec

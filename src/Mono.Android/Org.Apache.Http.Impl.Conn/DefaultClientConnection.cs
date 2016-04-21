@@ -1,4 +1,3 @@
-#if FEATURE_NEED_API_MERGE
 namespace Org.Apache.Http.Impl.Conn
 {
 	public partial class DefaultClientConnection
@@ -8,4 +7,3 @@ namespace Org.Apache.Http.Impl.Conn
 		}
 	}
 }
-#endif  // FEATURE_NEED_API_MERGE

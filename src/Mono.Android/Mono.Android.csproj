@@ -291,6 +291,11 @@
     <ImplicitlyExpandDesignTimeFacades>False</ImplicitlyExpandDesignTimeFacades>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\build-tools\api-merge\api-merge.csproj">
+      <Project>{3FC3E78B-F7D4-42EA-BBE8-4535DF42BFF8}</Project>
+      <Name>api-merge</Name>
+      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
+    </ProjectReference>
     <ProjectReference Include="..\..\build-tools\jnienv-gen\jnienv-gen.csproj">
       <Project>{AFB8F6D1-6EA9-42C3-950B-98F34C669AD2}</Project>
       <Name>jnienv-gen</Name>
