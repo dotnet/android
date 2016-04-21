@@ -153,11 +153,14 @@ define GEN_CORE_OUTPUT
 		--enumdir=$(1)
 endef
 
-run-test-generator-core:
+run-test-generator-core: bin/Test$(CONFIGURATION)/generator.exe
 	$(call GEN_CORE_OUTPUT,bin/Test$(CONFIGURATION)/generator-core)
 	diff -rup tools/generator/Tests-Core/expected bin/Test$(CONFIGURATION)/generator-core
 	$(call GEN_CORE_OUTPUT,bin/Test$(CONFIGURATION)/generator-core,--codegen-target=JavaInterop1)
 	diff -rup tools/generator/Tests-Core/expected.ji bin/Test$(CONFIGURATION)/generator-core
+
+bin/Test$(CONFIGURATION)/generator.exe: bin/$(CONFIGURATION)/generator.exe
+	cp $<* `dirname "$@"`
 
 update-test-generator-core:
 	$(call GEN_CORE_OUTPUT,tools/generator/Tests-Core/expected)

@@ -83,7 +83,7 @@ namespace MonoDroid.Generation {
 				var     name    = Assembly ?? "GeneratedFiles";
 				int     idx     = name.IndexOf (',');
 				name            = idx < 0 ? name : name.Substring (0, idx);
-				path            = Path.Combine (csdir, name + ".csproj");
+				path            = Path.Combine (csdir, name + ".projitems");
 			}
 
 			var msbuild = XNamespace.Get ("http://schemas.microsoft.com/developer/msbuild/2003");
