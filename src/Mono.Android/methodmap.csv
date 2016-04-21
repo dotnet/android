@@ -1,0 +1,1943 @@
+// CharBuffer is sort of special to treat ICharSequence.
+// We need to remap it to CharSequence to have valid overrides.
+0, java.nio, CharBuffer, subSequence, return, Java.Lang.ICharSequence
+
+14, android.accessibilityservice, AccessibilityServiceInfo, feedbackTypeToString, feedbackType, Android.AccessibilityServices.FeedbackFlags
+11, android.animation,LayoutTransition,getAnimator,transitionType,Android.Animation.LayoutTransitionType
+11, android.animation,LayoutTransition,getDuration,transitionType,Android.Animation.LayoutTransitionType
+11, android.animation,LayoutTransition,getInterpolator,transitionType,Android.Animation.LayoutTransitionType
+11, android.animation,LayoutTransition,getStagger,transitionType,Android.Animation.LayoutTransitionType
+11, android.animation,LayoutTransition,getStartDelay,transitionType,Android.Animation.LayoutTransitionType
+11, android.animation,LayoutTransition,setAnimator,transitionType,Android.Animation.LayoutTransitionType
+11, android.animation,LayoutTransition,setDuration,transitionType,Android.Animation.LayoutTransitionType
+11, android.animation,LayoutTransition,setInterpolator,transitionType,Android.Animation.LayoutTransitionType
+11, android.animation,LayoutTransition,setStagger,transitionType,Android.Animation.LayoutTransitionType
+11, android.animation,LayoutTransition,setStartDelay,transitionType,Android.Animation.LayoutTransitionType
+11, android.animation,[Interface]LayoutTransition.TransitionListener,endTransition,transitionType,Android.Animation.LayoutTransitionType
+11, android.animation,[Interface]LayoutTransition.TransitionListener,startTransition,transitionType,Android.Animation.LayoutTransitionType
+11, android.animation,ValueAnimator,getRepeatMode,return,Android.Animation.ValueAnimatorRepeatMode
+11, android.animation,ValueAnimator,setRepeatMode,value,Android.Animation.ValueAnimatorRepeatMode
+11, android.app,ActionBar,getDisplayOptions,return,Android.App.ActionBarDisplayOptions
+11, android.app,ActionBar,setDisplayOptions,options,Android.App.ActionBarDisplayOptions
+11, android.app,ActionBar,getNavigationMode,return,Android.App.ActionBarNavigationMode
+11, android.app,ActionBar,setNavigationMode,mode,Android.App.ActionBarNavigationMode
+1, android.app,Activity,setDefaultKeyMode,mode,Android.App.DefaultKey
+1, android.app,Activity,setResult,resultCode,Android.App.Result
+1, android.app,Activity,onActivityResult,resultCode,Android.App.Result
+1, android.app,Activity,requestWindowFeature,featureId,Android.Views.WindowFeatures
+0, android.app,Activity,setFeatureDrawable,featureId,Android.Views.WindowFeatures
+1, android.app,Activity,setFeatureDrawableAlpha,featureId,Android.Views.WindowFeatures
+1, android.app,Activity,setFeatureDrawableResource,featureId,Android.Views.WindowFeatures
+1, android.app,Activity,setFeatureDrawableUri,featureId,Android.Views.WindowFeatures
+1, android.app,Activity,setRequestedOrientation,requestedOrientation,Android.Content.PM.ScreenOrientation
+1, android.app,Activity,getPreferences,mode,Android.Content.FileCreationMode
+11, android.app,ActivityManager,moveTaskToFront,flags,Android.App.MoveTaskFlags
+0, android.app,ActivityManager,getRecentTasks,flags,Android.App.RecentTaskFlags
+0, android.app,AlarmManager,set,type,Android.App.AlarmType
+0, android.app,AlarmManager,setInexactRepeating,type,Android.App.AlarmType
+0, android.app,AlarmManager,setRepeating,type,Android.App.AlarmType
+11, android.app,DialogFragment,getTheme,return,Android.App.DialogFragmentStyle
+11, android.app,DialogFragment,setStyle,style,Android.App.DialogFragmentStyle
+11, android.app,FragmentTransaction,setTransition,transit,Android.App.FragmentTransit
+0, android.app,Instrumentation,finish,resultCode,Android.App.Result
+0, android.app,Instrumentation,sendCharacterSync,keyCode,Android.Views.Keycode
+0, android.app,Instrumentation,sendStatus,resultCode,Android.App.Result
+0, android.app,Notification,flags,,Android.App.NotificationFlags
+0, android.app,Notification,defaults,,Android.App.NotificationDefaults
+0, android.app,PendingIntent,getActivity,flags,Android.App.PendingIntentFlags
+0, android.app,PendingIntent,getBroadcast,flags,Android.App.PendingIntentFlags
+0, android.app,PendingIntent,getService,flags,Android.App.PendingIntentFlags
+0, android.app,ProgressDialog,setProgressStyle,style,Android.App.ProgressDialogStyle
+5, android.app,Service,onStartCommand,flags,Android.App.StartCommandFlags
+5, android.app,Service,onStartCommand,return,Android.App.StartCommandResult
+8, android.app.admin,DevicePolicyManager,getPasswordQuality,return,Android.App.Admin.PasswordQuality
+11, android.app.admin,DevicePolicyManager,getStorageEncryptionStatus,return,Android.App.Admin.EncryptionStatus
+11, android.app.admin,DevicePolicyManager,setStorageEncryption,return,Android.App.Admin.EncryptionStatus
+8, android.app.admin,DevicePolicyManager,setPasswordQuality,quality,Android.App.Admin.PasswordQuality
+0, android.accessibilityservice,AccessibilityServiceInfo,feedbackType,,Android.AccessibilityServices.FeedbackFlags
+11, android.bluetooth,[Interface]BluetoothProfile,getConnectionState,return,Android.Bluetooth.ProfileState
+11, android.bluetooth,[Interface]BluetoothProfile,getDevicesMatchingConnectionStates,states,Android.Bluetooth.ProfileState[]
+5, android.bluetooth,BluetoothAdapter,getScanMode,return,Android.Bluetooth.ScanMode
+5, android.bluetooth,BluetoothAdapter,getState,return,Android.Bluetooth.State
+5, android.bluetooth,BluetoothClass,getDeviceClass,return,Android.Bluetooth.DeviceClass
+5, android.bluetooth,BluetoothClass,getMajorDeviceClass,return,Android.Bluetooth.MajorDeviceClass
+5, android.bluetooth,BluetoothClass,hasService,service,Android.Bluetooth.ServiceClass
+5, android.bluetooth,BluetoothDevice,getBondState,return,Android.Bluetooth.Bond
+0, android.content,Context,bindService,flags,Android.Content.Bind
+0, android.content,Context,createPackageContext,flags,Android.Content.PackageContextFlags
+0, android.content,Context,getDir,mode,Android.Content.FileCreationMode
+0, android.content,Context,getSharedPreferences,mode,Android.Content.FileCreationMode
+0, android.content,Context,openFileOutput,mode,Android.Content.FileCreationMode
+0, android.content,Context,openOrCreateDatabase,mode,Android.Content.FileCreationMode
+0, android.content,Intent,fillIn,flags,Android.Content.FillInFlags
+0, android.content,Intent,fillIn,return,Android.Content.FillInFlags
+0, android.content,Intent,getFlags,return,Android.Content.ActivityFlags
+0, android.content,Intent,setFlags,flags,Android.Content.ActivityFlags
+0, android.content,Intent,addFlags,flags,Android.Content.ActivityFlags
+0, android.content,IntentFilter,match,return,Android.Content.MatchResults
+0, android.content,IntentFilter,matchData,return,Android.Content.MatchResults
+0, android.content,IntentFilter,matchDataAuthority,return,Android.Content.MatchResults
+0, android.content.pm,ActivityInfo,configChanges,,Android.Content.PM.ConfigChanges
+0, android.content.pm,ActivityInfo,flags,,Android.Content.PM.ActivityInfoFlags
+0, android.content.pm,ActivityInfo,launchMode,,Android.Content.PM.LaunchMode
+0, android.content.pm,ActivityInfo,screenOrientation,,Android.Content.PM.ScreenOrientation
+0, android.content.pm,ApplicationInfo,flags,,Android.Content.PM.ApplicationInfoFlags
+0, android.content.pm,PackageManager,getComponentEnabledSetting,return,Android.Content.PM.ComponentEnabledState
+0, android.content.pm,PackageManager,setComponentEnabledSetting,newState,Android.Content.PM.ComponentEnabledState
+0, android.content.pm,PackageManager,checkPermission,return,Android.Content.PM.Permission
+0, android.content.pm,PackageManager,checkSignatures,return,Android.Content.PM.SignatureResult
+0, android.content.pm,PackageManager,getInstalledPackages,flags,Android.Content.PM.PackageInfoFlags
+0, android.content.pm,PackageManager,getPackageArchiveInfo,flags,Android.Content.PM.PackageInfoFlags
+0, android.content.pm,PackageManager,getPackageInfo,flags,Android.Content.PM.PackageInfoFlags
+0, android.content.pm,PackageManager,getPreferredPackages,flags,Android.Content.PM.PackageInfoFlags
+0, android.content.pm,PermissionInfo,protectionLevel,,Android.Content.PM.Protection
+0, android.content.res,AssetManager,open,accessMode,Android.Content.Res.Access
+0, android.content.res,Configuration,hardKeyboardHidden,,Android.Content.Res.HardKeyboardHidden
+0, android.content.res,Configuration,keyboardHidden,,Android.Content.Res.KeyboardHidden
+0, android.content.res,Configuration,keyboard,,Android.Content.Res.KeyboardType
+5, android.content.res,Configuration,navigationHidden,,Android.Content.Res.NavigationHidden
+0, android.content.res,Configuration,navigation,,Android.Content.Res.Navigation
+0, android.content.res,Configuration,orientation,,Android.Content.Res.Orientation
+0, android.content.res,Configuration,screenLayout,,Android.Content.Res.ScreenLayout
+0, android.content.res,Configuration,touchscreen,,Android.Content.Res.TouchScreenType
+0, android.content,SearchRecentSuggestionsProvider,setupSuggestions,mode,Android.Content.DatabaseMode
+11, android.database,[Interface]Cursor,getType,return,Android.Database.FieldType
+11, android.database,CursorWindow,getType,return,Android.Database.FieldType
+11, android.database,DatabaseUtils,getSqlStatementType,return,Android.Database.StatementType
+// darn, the docs changed the parameter name.
+11, android.drm,DrmConvertedStatus,ctor,_statusCode,Android.Drm.DrmConvertedStatusCode
+11, android.drm,DrmConvertedStatus,ctor,statusCode,Android.Drm.DrmConvertedStatusCode
+11, android.drm,DrmInfoRequest,ctor,infoType,Android.Drm.DrmInfoRequestType
+11, android.drm,DrmInfoRequest,getInfoType,return,Android.Drm.DrmInfoRequestType
+// darn, the docs changed the parameter name.
+11, android.drm,DrmInfoStatus,ctor,_statusCode,Android.Drm.DrmInfoStatusCode
+11, android.drm,DrmInfoStatus,ctor,statusCode,Android.Drm.DrmInfoStatusCode
+11, android.drm,DrmInfoStatus,ctor,_infoType,Android.Drm.DrmInfoRequestType
+11, android.drm,DrmInfoStatus,ctor,infoType,Android.Drm.DrmInfoRequestType
+11, android.drm,DrmManagerClient,acquireRights,return,Android.Drm.DrmManagerClientErrorCode
+11, android.drm,DrmManagerClient,checkRightsStatus,action,Android.Drm.DrmStoreActionCode
+11, android.drm,DrmManagerClient,checkRightsStatus,return,Android.Drm.DrmStoreRightsStatusCode
+11, android.drm,DrmManagerClient,getConstraints,action,Android.Drm.DrmStoreActionCode
+11, android.drm,DrmManagerClient,getDrmObjectType,return,Android.Drm.DrmStoreObjectTypeCode
+11, android.drm,DrmManagerClient,processDrmInfo,return,Android.Drm.DrmManagerClientErrorCode
+11, android.drm,DrmManagerClient,removeAllRights,return,Android.Drm.DrmManagerClientErrorCode
+11, android.drm,DrmManagerClient,removeRights,return,Android.Drm.DrmManagerClientErrorCode
+11, android.drm,DrmManagerClient,saveRights,return,Android.Drm.DrmManagerClientErrorCode
+0, android.graphics,PixelFormat,formatHasAlpha,format,Android.Graphics.Format
+0, android.graphics,PixelFormat,getPixelFormatInfo,format,Android.Graphics.Format
+0, android.graphics,Canvas,save,saveFlags,Android.Graphics.SaveFlags
+0, android.graphics,Canvas,saveLayer,saveFlags,Android.Graphics.SaveFlags
+0, android.graphics,Canvas,saveLayerAlpha,saveFlags,Android.Graphics.SaveFlags
+0, android.graphics.drawable,GradientDrawable,setShape,shape,Android.Graphics.Drawables.ShapeType
+0, android.graphics.drawable,GradientDrawable,setGradientType,gradient,Android.Graphics.Drawables.GradientType
+0, android.graphics,Paint,ctor,flags,Android.Graphics.PaintFlags
+0, android.graphics,Paint,getFlags,return,Android.Graphics.PaintFlags
+0, android.graphics,Paint,setFlags,flags,Android.Graphics.PaintFlags
+0, android.graphics,PathMeasure,getMatrix,flags,Android.Graphics.MatrixFlags
+0, android.graphics,Typeface,create,style,Android.Graphics.TypefaceStyle
+0, android.graphics,Typeface,defaultFromStyle,style,Android.Graphics.TypefaceStyle
+0, android.graphics,Typeface,getStyle,return,Android.Graphics.TypefaceStyle
+0, android.hardware,Sensor,getType,return,Android.Hardware.SensorType
+0, android.hardware,[Interface]Camera.ErrorCallback,onError,error,Android.Hardware.CameraError
+0, android.hardware,SensorManager,getDefaultSensor,type,Android.Hardware.SensorType
+0, android.hardware,SensorManager,getSensorList,type,Android.Hardware.SensorType
+0, android.hardware,SensorManager,remapCoordinateSystem,X,Android.Hardware.Axis
+0, android.hardware,SensorManager,remapCoordinateSystem,Y,Android.Hardware.Axis
+0, android.hardware,SensorManager,registerListener,rate,Android.Hardware.SensorDelay
+0, android.hardware,SensorManager,registerListener,rateUs,Android.Hardware.SensorDelay
+0, android.hardware,SensorManager,registerListener,samplingPeriodUs,Android.Hardware.SensorDelay
+12, android.hardware.usb,UsbDevice,getDeviceClass,return,Android.Hardware.Usb.UsbClass
+12, android.hardware.usb,UsbDevice,getDeviceSubclass,return,Android.Hardware.Usb.UsbClass
+12, android.hardware.usb,UsbEndpoint,getAddress,return,Android.Hardware.Usb.UsbAddressing
+12, android.hardware.usb,UsbEndpoint,getDirection,return,Android.Hardware.Usb.UsbAddressing
+12, android.hardware.usb,UsbEndpoint,getDirection,return,Android.Hardware.Usb.UsbAddressing
+12, android.hardware.usb,UsbEndpoint,getType,return,Android.Hardware.Usb.UsbAddressing
+12, android.hardware.usb,UsbInterface,getInterfaceClass,return,Android.Hardware.Usb.UsbClass
+12, android.hardware.usb,UsbInterface,getInterfaceSubclass,return,Android.Hardware.Usb.UsbClass
+11, android.inputmethodservice,InputMethodService,getBackDisposition,return,Android.InputMethodServices.BackDisposition
+11, android.inputmethodservice,InputMethodService,setBackDisposition,disposition,Android.InputMethodServices.BackDisposition
+0, android.media,ToneGenerator,startTone,toneType,Android.Media.Tone
+3, android.media,AudioRecord,getChannelConfiguration,return,Android.Media.ChannelIn
+3, android.media,AudioTrack,getChannelConfiguration,return,Android.Media.ChannelOut
+3, android.media,AudioRecord,getAudioFormat,return,Android.Media.Encoding
+3, android.media,AudioTrack,getAudioFormat,return,Android.Media.Encoding
+3, android.media,AudioRecord,getMinBufferSize,channelConfig,Android.Media.ChannelIn
+3, android.media,AudioTrack,getMinBufferSize,audioFormat,Android.Media.Encoding
+1, android.media,AudioManager,adjustStreamVolume,direction,Android.Media.Adjust
+1, android.media,AudioManager,adjustSuggestedStreamVolume,direction,Android.Media.Adjust
+1, android.media,AudioManager,adjustVolume,direction,Android.Media.Adjust
+1, android.media,AudioManager,adjustStreamVolume,flags,Android.Media.VolumeNotificationFlags
+1, android.media,AudioManager,adjustSuggestedStreamVolume,flags,Android.Media.VolumeNotificationFlags
+1, android.media,AudioManager,adjustVolume,flags,Android.Media.VolumeNotificationFlags
+3, android.media,AudioManager,playSoundEffect,effectType,Android.Media.SoundEffect
+1, android.media,AudioManager,getMode,return,Android.Media.Mode
+1, android.media,AudioManager,setMode,mode,Android.Media.Mode
+1, android.media,AudioManager,getRingerMode,return,Android.Media.RingerMode
+1, android.media,AudioManager,setRingerMode,ringerMode,Android.Media.RingerMode
+1, android.media,AudioManager,setRouting,mode,Android.Media.Mode
+1, android.media,AudioManager,setRouting,routes,Android.Media.Route
+1, android.media,AudioManager,setRouting,mask,Android.Media.Route
+1, android.media,AudioManager,getRouting,mode,Android.Media.Mode
+1, android.media,AudioManager,getRouting,return,Android.Media.Route
+1, android.media,AudioManager,adjustStreamVolume,streamType,Android.Media.Stream
+1, android.media,AudioManager,getStreamMaxVolume,streamType,Android.Media.Stream
+1, android.media,AudioManager,getStreamVolume,streamType,Android.Media.Stream
+8, android.media,AudioManager,requestAudioFocus,streamType,Android.Media.Stream
+1, android.media,AudioManager,setStreamMute,streamType,Android.Media.Stream
+1, android.media,AudioManager,setStreamSolo,streamType,Android.Media.Stream
+1, android.media,AudioManager,setStreamVolume,streamType,Android.Media.Stream
+1, android.media,AudioManager,getVibrateSetting,vibrateType,Android.Media.VibrateType
+1, android.media,AudioManager,setVibrateSetting,vibrateSetting,Android.Media.VibrateSetting
+1, android.media,AudioManager,setVibrateSetting,vibrateType,Android.Media.VibrateType
+1, android.media,AudioManager,getVibrateSetting,return,Android.Media.VibrateSetting
+1, android.media,AudioManager,shouldVibrate,vibrateType,Android.Media.VibrateType
+3, android.media,AudioRecord,setNotificationMarkerPosition,return,Android.Media.RecordStatus
+3, android.media,AudioRecord,setPositionNotificationPeriod,return,Android.Media.RecordStatus
+3, android.media,AudioRecord,getState,return,Android.Media.State
+3, android.media,AudioRecord,getRecordingState,return,Android.Media.RecordState
+3, android.media,AudioTrack,ctor,mode,Android.Media.AudioTrackMode
+3, android.media,AudioTrack,getPlayState,return,Android.Media.PlayState
+3, android.media,AudioTrack,getState,return,Android.Media.AudioTrackState
+8, android.media,CamcorderProfile,get,quality,Android.Media.CamcorderQuality
+11, android.media,CamcorderProfile,hasProfile,quality,Android.Media.CamcorderQuality
+1, android.media,FaceDetector.Face,pose,euler,Android.Media.Euler
+1, android.media,[Interface]MediaPlayer.OnErrorListener,onError,what,Android.Media.MediaError
+3, android.media,[Interface]MediaPlayer.OnInfoListener,onInfo,what,Android.Media.MediaInfo
+3, android.media,[Interface]MediaRecorder.OnInfoListener,onInfo,what,Android.Media.MediaRecorderInfo
+1, android.media,MediaPlayer,setAudioStreamType,streamtype,Android.Media.Stream
+1, android.media,MediaRecorder,setAudioEncoder,audio_encoder,Android.Media.AudioEncoder
+1, android.media,MediaRecorder,setAudioSource,audio_source,Android.Media.AudioSource
+1, android.media,MediaRecorder,setOutputFormat,output_format,Android.Media.OutputFormat
+1, android.media,MediaRecorder,setVideoEncoder,video_encoder,Android.Media.VideoEncoder
+1, android.media,MediaRecorder,setVideoSource,video_source,Android.Media.VideoSource
+1, android.media,RingtoneManager,getActualDefaultRingtoneUri,type,Android.Media.RingtoneType
+1, android.media,RingtoneManager,setActualDefaultRingtoneUri,type,Android.Media.RingtoneType
+1, android.media,RingtoneManager,setType,type,Android.Media.RingtoneType
+12, android.mtp,MtpDevice,getObjectHandles,format,Android.Mtp.MtpFormat
+12, android.mtp,MtpObjectInfo,getFormat,return,Android.Mtp.MtpFormat
+12, android.mtp,MtpObjectInfo,getProtectionStatus,return,Android.Mtp.ProtectionStatus
+12, android.mtp,MtpObjectInfo,getThumbFormat,return,Android.Mtp.MtpFormat
+12, android.net.rtp,AudioGroup,getMode,return,Android.Net.Rtp.AudioGroupMode
+12, android.net.rtp,AudioGroup,setMode,mode,Android.Net.Rtp.AudioGroupMode
+12, android.net.rtp,RtpStream,getMode,return,Android.Net.Rtp.RtpStreamMode
+12, android.net.rtp,RtpStream,setMode,mode,Android.Net.Rtp.RtpStreamMode
+11, android.renderscript,Allocation,createCubemapFromBitmap,usage,Android.Renderscripts.AllocationUsage
+11, android.renderscript,Allocation,createCubemapFromCubeFaces,usage,Android.Renderscripts.AllocationUsage
+11, android.renderscript,Allocation,createFromBitmap,usage,Android.Renderscripts.AllocationUsage
+11, android.renderscript,Allocation,createFromBitmapResource,usage,Android.Renderscripts.AllocationUsage
+11, android.renderscript,Allocation,createFromString,usage,Android.Renderscripts.AllocationUsage
+11, android.renderscript,Allocation,createSized,usage,Android.Renderscripts.AllocationUsage
+11, android.renderscript,Allocation,createTyped,usage,Android.Renderscripts.AllocationUsage
+11, android.renderscript,Mesh.TriangleMeshBuilder,ctor,flags,Android.Renderscripts.TriangleFlags
+0, android.view.accessibility,AccessibilityEvent,getEventType,return,Android.Views.Accessibility.EventTypes
+0, android.view.accessibility,AccessibilityEvent,setEventType,eventType,Android.Views.Accessibility.EventTypes
+0, android.view.animation,Animation,getZAdjustment,return,Android.Views.Animations.ContentZorder
+0, android.view.animation,Animation,setZAdjustment,zAdjustment,Android.Views.Animations.ContentZorder
+0, android.view.animation,Animation,resolveSize,type,Android.Views.Animations.Dimension
+0, android.view.animation,Animation,getRepeatMode,return,Android.Views.Animations.RepeatMode
+0, android.view.animation,Animation,setRepeatMode,repeatMode,Android.Views.Animations.RepeatMode
+0, android.view.animation,GridLayoutAnimationController,getDirection,return,Android.Views.Animations.Direction
+0, android.view.animation,GridLayoutAnimationController,setDirection,direction,Android.Views.Animations.Direction
+0, android.view.animation,GridLayoutAnimationController,getDirectionPriority,return,Android.Views.Animations.Priority
+0, android.view.animation,GridLayoutAnimationController,setDirectionPriority,directionPriority,Android.Views.Animations.Priority
+0, android.view.animation,LayoutAnimationController,getOrder,return,Android.Views.Animations.DelayOrder
+0, android.view.animation,LayoutAnimationController,setOrder,order,Android.Views.Animations.DelayOrder
+11, android.view,DragEvent,getAction,return,Android.Views.DragAction
+0, android.view,Gravity,apply,gravity,Android.Views.GravityFlags
+0, android.view,Gravity,applyDisplay,gravity,Android.Views.GravityFlags
+0, android.view,Gravity,isHorizontal,gravity,Android.Views.GravityFlags
+0, android.view,Gravity,isVertical,gravity,Android.Views.GravityFlags
+11, android.view,KeyCharacterMap,getModifierBehavior,return,Android.Views.KeyModifierBehavior
+11, android.view,[Interface]MenuItem,setShowAsAction,actionEnum,Android.Views.ShowAsAction
+12, android.view,InputDevice.MotionRange,getAxis,return,Android.Views.Axis
+9, android.view,InputDevice,getMotionRange,rangeType,Android.Views.Axis
+12, android.view,InputDevice,getMotionRange,axis,Android.Views.Axis
+// in API Level 16 it was renamed to rangeType. Stupid.
+16, android.view,InputDevice,getMotionRange,rangeType,Android.Views.Axis
+0, android.view,View,performHapticFeedback,feedbackConstant,Android.Views.FeedbackConstants
+0, android.view,View,performHapticFeedback,flags,Android.Views.FeedbackFlags
+11, android.view,[Interface]View.OnSystemUiVisibilityChangeListener,onSystemUiVisibilityChange,visibility,Android.Views.StatusBarVisibility
+0, android.view,[Interface]Menu,performShortcut,flags,Android.Views.MenuPerformFlags
+0, android.view,[Interface]SurfaceHolder,setType,type,Android.Views.SurfaceType
+0, android.view,WindowManager.LayoutParams,flags,,Android.Views.WindowManagerFlags
+0, android.view,WindowManager.LayoutParams,ctor,_flags,Android.Views.WindowManagerFlags
+0, android.view,WindowManager.LayoutParams,type,,Android.Views.WindowManagerTypes
+0, android.view,WindowManager.LayoutParams,ctor,_type,Android.Views.WindowManagerTypes
+0, android.view,WindowManager.LayoutParams,memoryType,,Android.Views.MemoryType
+0, android.view,WindowManager.LayoutParams,softInputMode,,Android.Views.SoftInput
+0, android.view.inputmethod,ExtractedText,flags,,Android.Views.InputMethods.ExtractedTextFlags
+0, android.view.inputmethod,[Interface]InputMethod,showSoftInput,flags,Android.Views.InputMethods.ShowSoftInputFlags
+0, android.inputmethodservice,InputMethodService.InputMethodImpl,showSoftInput,flags,Android.Views.InputMethods.ShowSoftInputFlags
+0, android.view.inputmethod,InputMethodManager,hideSoftInputFromWindow,flags,Android.Views.InputMethods.HideSoftInputFlags
+0, android.view.inputmethod,InputMethodManager,toggleSoftInput,showFlags,Android.Views.InputMethods.ShowFlags
+0, android.view.inputmethod,InputMethodManager,toggleSoftInput,hideFlags,Android.Views.InputMethods.HideSoftInputFlags
+0, android.view.inputmethod,InputMethodManager,toggleSoftInputFromWindow,showFlags,Android.Views.InputMethods.ShowSoftInputFlags
+0, android.view.inputmethod,InputMethodManager,toggleSoftInputFromWindow,hideFlags,Android.Views.InputMethods.HideSoftInputFlags
+0, android.view,KeyCharacterMap,getKeyboardType,return,Android.Views.KeyboardType
+1, android.view,KeyEvent,getAction,return,Android.Views.KeyEventActions
+3, android.view,KeyEvent,changeFlags,flags,Android.Views.KeyEventFlags
+3, android.view,KeyEvent,changeAction,action,Android.Views.KeyEventActions
+1, android.view,KeyEvent,getFlags,return,Android.Views.KeyEventFlags
+1, android.view,KeyEvent,getKeyCode,return,Android.Views.Keycode
+1, android.view,KeyEvent,isModifierKey,keyCode,Android.Views.Keycode
+12, android.view,KeyEvent,isGamepadButton,keyCode,Android.Views.Keycode
+12, android.view,KeyEvent,keyCodeFromString,return,Android.Views.Keycode
+12, android.view,KeyEvent,keyCodeToString,keyCode,Android.Views.Keycode
+1, android.view,KeyEvent,getMetaState,return,Android.Views.MetaKeyStates
+13, android.view,KeyEvent,getModifiers,return,Android.Views.MetaKeyStates
+11, android.view,KeyEvent,metaStateHasModifiers,metaState,Android.Views.MetaKeyStates
+11, android.view,KeyEvent,metaStateHasNoModifiers,metaState,Android.Views.MetaKeyStates
+11, android.view,KeyEvent,normalizeMetaState,metaState,Android.Views.MetaKeyStates
+11, android.view,KeyEvent,normalizeMetaState,return,Android.Views.MetaKeyStates
+0, android.view,KeyEvent,ctor,action,Android.Views.KeyEventActions
+0, android.view,KeyEvent,ctor,code,Android.Views.Keycode
+0, android.view,KeyEvent,ctor,metaState,Android.Views.MetaKeyStates
+12, android.view,MotionEvent,axisFromString,return,Android.Views.Axis
+12, android.view,MotionEvent,axisToString,axis,Android.Views.Axis
+12, android.view,MotionEvent,getAxisValue,axis,Android.Views.Axis
+12, android.view,MotionEvent,getHistoricalAxisValue,axis,Android.Views.Axis
+12, android.view,MotionEvent.PointerCoords,getAxisValue,axis,Android.Views.Axis
+12, android.view,MotionEvent.PointerCoords,setAxisValue,axis,Android.Views.Axis
+0, android.view,MotionEvent,getAction,return,Android.Views.MotionEventActions
+0, android.view,MotionEvent,setAction,action,Android.Views.MotionEventActions
+0, android.view,MotionEvent,setEdgeFlags,flags,Android.Views.Edge
+0, android.view,MotionEvent,getEdgeFlags,return,Android.Views.Edge
+0, android.view,View,playSoundEffect,soundConstant,Android.Views.SoundEffects
+0, android.view,Surface,setOrientation,orientation,Android.Views.SurfaceOrientation
+0, android.view,View,addFocusables,focusableMode,Android.Views.FocusablesFlags
+0, android.view,View,addFocusables,direction,Android.Views.FocusSearchDirection
+0, android.view,View,dispatchUnhandledMove,direction,Android.Views.FocusSearchDirection
+0, android.view,View,focusSearch,direction,Android.Views.FocusSearchDirection
+0, android.view,View,getFocusables,direction,Android.Views.FocusSearchDirection
+0, android.view,View,requestFocus,direction,Android.Views.FocusSearchDirection
+0, android.view,View,onFocusChanged,direction,Android.Views.FocusSearchDirection
+11, android.view,View,getLayerType,return,Android.Views.LayerType
+11, android.view,View,setLayerType,layerType,Android.Views.LayerType
+11, android.view,View,getVerticalScrollbarPosition,return,Android.Views.ScrollbarPosition
+11, android.view,View,setVerticalScrollbarPosition,position,Android.Views.ScrollbarPosition
+11, android.view,View,getSystemUiVisibility,return,Android.Views.StatusBarVisibility
+11, android.view,View,setSystemUiVisibility,visibility,Android.Views.StatusBarVisibility
+0, android.view,View,getWindowVisibility,return,Android.Views.ViewStates
+8, android.view,View,onVisibilityChanged,visibility,Android.Views.ViewStates
+0, android.view,View,onWindowVisibilityChanged,visibility,Android.Views.ViewStates
+0, android.view,View,dispatchWindowVisibilityChanged,visibility,Android.Views.ViewStates
+0, android.view,View,getVisibility,return,Android.Views.ViewStates
+0, android.view,View,setVisibility,visibility,Android.Views.ViewStates
+8, android.view,View,dispatchVisibilityChanged,visibility,Android.Views.ViewStates
+0, android.view,View,getScrollBarStyle,return,Android.Views.ScrollbarStyles
+0, android.view,View,setScrollBarStyle,style,Android.Views.ScrollbarStyles
+0, android.view,View.MeasureSpec,getMode,return,Android.Views.MeasureSpecMode
+0, android.view,View.MeasureSpec,makeMeasureSpec,mode,Android.Views.MeasureSpecMode
+0, android.view,ViewGroup,getDescendantFocusability,return,Android.Views.DescendantFocusability
+0, android.view,ViewGroup,setDescendantFocusability,focusability,Android.Views.DescendantFocusability
+0, android.view,ViewGroup,getPersistentDrawingCache,return,Android.Views.PersistentDrawingCaches
+0, android.view,ViewGroup,setPersistentDrawingCache,drawingCacheToKeep,Android.Views.PersistentDrawingCaches
+11, android.view,Window,hasFeature,feature,Android.Views.WindowFeatures
+11, android.view,Window,invalidatePanelMenu,featureId,Android.Views.WindowFeatures
+0, android.view,Window,setFlags,flags,Android.Views.WindowManagerFlags
+0, android.view,Window,setFlags,mask,Android.Views.WindowManagerFlags
+0, android.view,Window,addFlags,flags,Android.Views.WindowManagerFlags
+0, android.view,Window,clearFlags,flags,Android.Views.WindowManagerFlags
+0, android.view,Window,setFeatureDrawable,featureId,Android.Views.WindowFeatures
+0, android.view,Window,setFeatureDrawableAlpha,featureId,Android.Views.WindowFeatures
+0, android.view,Window,setFeatureDrawableResource,featureId,Android.Views.WindowFeatures
+0, android.view,Window,setFeatureDrawableUri,featureId,Android.Views.WindowFeatures
+0, android.view,Window,setFeatureInt,featureId,Android.Views.WindowFeatures
+0, android.view,Window,requestFeature,featureId,Android.Views.WindowFeatures
+0, android.database.sqlite,SQLiteDatabase,openDatabase,flags,Android.Database.Sqlite.DatabaseOpenFlags
+4, android.gesture,GestureOverlayView,getGestureStrokeType,return,Android.Gestures.GestureStrokeType
+4, android.gesture,GestureOverlayView,setGestureStrokeType,gestureStrokeType,Android.Gestures.GestureStrokeType
+4, android.gesture,GestureOverlayView,getOrientation,return,Android.Gestures.GestureOrientation
+4, android.gesture,GestureOverlayView,setOrientation,orientation,Android.Gestures.GestureOrientation
+4, android.gesture,GestureStore,getOrientationStyle,return,Android.Gestures.OrientationStyle
+4, android.gesture,GestureStore,setOrientationStyle,style,Android.Gestures.OrientationStyle
+4, android.gesture,GestureStore,getSequenceType,return,Android.Gestures.SequenceStyle
+4, android.gesture,GestureStore,setSequenceType,type,Android.Gestures.SequenceStyle
+0, android.inputmethodservice,InputMethodService.Insets,touchableInsets,,Android.InputMethodServices.TouchableInsets
+1, android.location,Criteria,getAccuracy,return,Android.Locations.Accuracy
+1, android.location,Criteria,setAccuracy,accuracy,Android.Locations.Accuracy
+1, android.location,Criteria,getPowerRequirement,return,Android.Locations.Power
+1, android.location,Criteria,setPowerRequirement,level,Android.Locations.Power
+0, android.location,[Interface]GpsStatus.Listener,onGpsStatusChanged,event,Android.Locations.GpsEvent
+0, android.location,Location,convert,outputType,Android.Locations.Format
+1, android.location,[Interface]LocationListener,onStatusChanged,status,Android.Locations.Availability
+0, android.net,ConnectivityManager,getNetworkInfo,networkType,Android.Net.ConnectivityType
+0, android.net,ConnectivityManager,isNetworkTypeValid,networkType,Android.Net.ConnectivityType
+0, android.net,ConnectivityManager,requestRouteToHost,networkType,Android.Net.ConnectivityType
+0, android.net,ConnectivityManager,startUsingNetworkFeature,networkType,Android.Net.ConnectivityType
+0, android.net,ConnectivityManager,stopUsingNetworkFeature,networkType,Android.Net.ConnectivityType
+0, android.net,ConnectivityManager,getNetworkPreference,return,Android.Net.ConnectivityType
+0, android.net,ConnectivityManager,setNetworkPreference,preference,Android.Net.ConnectivityType
+0, android.net,UrlQuerySanitizer.IllegalCharacterValueSanitizer,ctor,flags,Android.Net.IllegalCharacterFlags
+0, android.net.wifi,WifiManager,createWifiLock,lockType,Android.Net.WifiMode
+0, android.net.wifi,WifiManager,getWifiState,return,Android.Net.WifiState
+0, android.os,FileObserver,onEvent,event,Android.OS.FileObserverEvents
+0, android.os,ParcelFileDescriptor,open,mode,Android.OS.ParcelFileMode
+0, android.os,PatternMatcher,ctor,type,Android.OS.Pattern
+0, android.os,PatternMatcher,getType,return,Android.OS.Pattern
+0, android.os,PowerManager,newWakeLock,flags,Android.OS.WakeLockFlags
+0, android.os,PowerManager,newWakeLock,levelAndFlags,Android.OS.WakeLockFlags
+0, android.os,Process,sendSignal,signal,Android.OS.Signal
+0, android.os,Process,getThreadPriority,return,Android.OS.ThreadPriority
+0, android.os,Process,setThreadPriority,priority,Android.OS.ThreadPriority
+5, android.provider,ContactsContract.CommonDataKinds.Email,getTypeLabel,type,Android.Provider.EmailDataKind
+5, android.provider,ContactsContract.CommonDataKinds.Email,getTypeLabelResource,type,Android.Provider.EmailDataKind
+5, android.provider,ContactsContract.CommonDataKinds.Event,getTypeResource,type,Android.Provider.EventDataKind
+5, android.provider,ContactsContract.CommonDataKinds.Im,getProtocolLabel,type,Android.Provider.IMProtocolDataKind
+5, android.provider,ContactsContract.CommonDataKinds.Im,getProtocolLabelResource,type,Android.Provider.IMProtocolDataKind
+5, android.provider,ContactsContract.CommonDataKinds.Im,getTypeLabel,type,Android.Provider.IMTypeDataKind
+5, android.provider,ContactsContract.CommonDataKinds.Im,getTypeLabelResource,type,Android.Provider.IMTypeDataKind
+5, android.provider,ContactsContract.CommonDataKinds.Organization,getTypeLabel,type,Android.Provider.OrganizationDataKind
+5, android.provider,ContactsContract.CommonDataKinds.Organization,getTypeLabelResource,type,Android.Provider.OrganizationDataKind
+5, android.provider,ContactsContract.CommonDataKinds.Phone,getTypeLabel,type,Android.Provider.PhoneDataKind
+5, android.provider,ContactsContract.CommonDataKinds.Phone,getTypeLabelResource,type,Android.Provider.PhoneDataKind
+5, android.provider,ContactsContract.CommonDataKinds.StructuredPostal,getTypeLabel,type,Android.Provider.AddressDataKind
+5, android.provider,ContactsContract.CommonDataKinds.StructuredPostal,getTypeLabelResource,type,Android.Provider.AddressDataKind
+5, android.provider,ContactsContract.QuickContact,showQuickContact,mode,Android.Provider.QuickContactMode
+5, android.provider,MediaStore.Images.Thumbnails,getThumbnail,kind,Android.Provider.ThumbnailKind
+0, android.provider,MediaStore.Images.Thumbnails,queryMiniThumbnail,kind,Android.Provider.ThumbnailKind
+0, android.provider,UserDictionary.Words,addWord,localeType,Android.Provider.LocaleType
+4, android.speech.tts,TextToSpeech,addEarcon,return,Android.Speech.Tts.OperationResult
+4, android.speech.tts,TextToSpeech,addSpeech,return,Android.Speech.Tts.OperationResult
+4, android.speech.tts,TextToSpeech,playEarcon,return,Android.Speech.Tts.OperationResult
+4, android.speech.tts,TextToSpeech,playSilence,return,Android.Speech.Tts.OperationResult
+8, android.speech.tts,TextToSpeech,setEngineByPackageName,return,Android.Speech.Tts.OperationResult
+4, android.speech.tts,TextToSpeech,setOnUtteranceCompletedListener,return,Android.Speech.Tts.OperationResult
+15, android.speech.tts,TextToSpeech,setOnUtteranceProgressListener,return,Android.Speech.Tts.OperationResult
+4, android.speech.tts,TextToSpeech,setPitch,return,Android.Speech.Tts.OperationResult
+4, android.speech.tts,TextToSpeech,setSpeechRate,return,Android.Speech.Tts.OperationResult
+4, android.speech.tts,TextToSpeech,speak,return,Android.Speech.Tts.OperationResult
+4, android.speech.tts,TextToSpeech,stop,return,Android.Speech.Tts.OperationResult
+4, android.speech.tts,TextToSpeech,synthesizeToFile,return,Android.Speech.Tts.OperationResult
+4, android.speech.tts,TextToSpeech,isLanguageAvailable,return,Android.Speech.Tts.LanguageAvailableResult
+4, android.speech.tts,TextToSpeech,setLanguage,return,Android.Speech.Tts.LanguageAvailableResult
+4, android.speech.tts,TextToSpeech,playEarcon,queueMode,Android.Speech.Tts.QueueMode
+4, android.speech.tts,TextToSpeech,playSilence,queueMode,Android.Speech.Tts.QueueMode
+4, android.speech.tts,TextToSpeech,speak,queueMode,Android.Speech.Tts.QueueMode
+4, android.telephony,SmsMessage,getStatusOnIcc,return,Android.Telephony.SmsStatus
+1, android.telephony,PhoneNumberUtils,formatNumber,defaultFormattingType,Android.Telephony.PhoneNumberFormat
+1, android.telephony,PhoneStateListener,onCallStateChanged,state,Android.Telephony.CallState
+1, android.telephony,PhoneStateListener,onDataActivity,direction,Android.Telephony.DataActivity
+1, android.telephony,PhoneStateListener,onDataConnectionStateChanged,state,Android.Telephony.DataConnectionStatus
+7, android.telephony,PhoneStateListener,onDataConnectionStateChanged,networkType,Android.Telephony.NetworkType
+0, android.telephony,ServiceState,getState,return,Android.Telephony.PhoneState
+0, android.telephony,ServiceState,setState,state,Android.Telephony.PhoneState
+1, android.telephony,TelephonyManager,getCallState,return,Android.Telephony.CallState
+1, android.telephony,TelephonyManager,getDataActivity,return,Android.Telephony.DataActivity
+1, android.telephony,TelephonyManager,getDataState,return,Android.Telephony.DataConnectionStatus
+1, android.telephony,TelephonyManager,getNetworkType,return,Android.Telephony.NetworkType
+1, android.telephony,TelephonyManager,getPhoneType,return,Android.Telephony.PhoneType
+1, android.telephony,TelephonyManager,getSimState,return,Android.Telephony.SimState
+3, android.text.format,DateUtils,formatDateRange,flags,Android.Text.Format.FormatStyleFlags
+3, android.text.format,DateUtils,formatDateTime,flags,Android.Text.Format.FormatStyleFlags
+3, android.text.format,DateUtils,getRelativeDateTimeString,flags,Android.Text.Format.FormatStyleFlags
+3, android.text.format,DateUtils,getRelativeTimeSpanString,flags,Android.Text.Format.FormatStyleFlags
+3, android.text.format,Time,getActualMaximum,field,Android.Text.Format.TimeFormatValues
+3, android.text.format,Time,weekDay,,Android.Text.Format.DayOfWeek
+0, android.text,Layout,getParagraphDirection,return,Android.Text.TextLayoutDirection
+0, android.text,BoringLayout,getParagraphDirection,return,Android.Text.TextLayoutDirection
+0, android.text,DynamicLayout,getParagraphDirection,return,Android.Text.TextLayoutDirection
+0, android.text,StaticLayout,getParagraphDirection,return,Android.Text.TextLayoutDirection
+1, android.text.method,MetaKeyKeyListener,getMetaState,meta,Android.Text.Method.MetaStates
+0, android.text.style,DynamicDrawableSpan,getVerticalAlignment,return,Android.Text.Style.SpanAlign
+0, android.text,TextUtils,getCapsMode,reqModes,Android.Text.CapitalizationMode
+0, android.text.util,Linkify,addLinks,mask,Android.Text.Util.MatchOptions
+0, android.webkit,WebSettings,setCacheMode,mode,Android.Webkit.CacheModes
+0, android.webkit,WebSettings,getCacheMode,return,Android.Webkit.CacheModes
+0, android.webkit,WebView.HitTestResult,getType,return,Android.Webkit.HitTestResult
+0, android.webkit,WebViewClient,onReceivedError,errorCode,Android.Webkit.ClientError
+0, android.widget,AbsListView,getChoiceMode,return,Android.Widget.ChoiceMode
+0, android.widget,AbsListView,setChoiceMode,choiceMode,Android.Widget.ChoiceMode
+0, android.widget,AbsListView,setTranscriptMode,mode,Android.Widget.TranscriptMode
+0, android.widget,AbsListView,getTranscriptMode,return,Android.Widget.TranscriptMode
+0, android.widget,ListView,getChoiceMode,return,Android.Widget.ChoiceMode
+0, android.widget,ListView,setChoiceMode,choiceMode,Android.Widget.ChoiceMode
+// This is a mess by api-merge.
+// It brings back some totally obsoleted and even disappeared method.
+// Then it does not exist in droiddoc. Thus, parameter name retrieval fails.
+// Even for that case, we still need enumification, but it does not happen because the "named" parameter here does not exist!
+// To fix this issue, add "nameless" version of the method argument description too.
+12, android.widget,ListView,setChoiceMode,p0,Android.Widget.ChoiceMode
+11, android.widget,CursorAdapter,ctor,flags,Android.Widget.CursorAdapterFlags
+11, android.widget,ResourceCursorAdapter,ctor,flags,Android.Widget.CursorAdapterFlags
+11, android.widget,SimpleCursorAdapter,ctor,flags,Android.Widget.CursorAdapterFlags
+0, android.widget,[Interface]AbsListView.OnScrollListener,onScrollStateChanged,scrollState,Android.Widget.ScrollState
+0, android.widget,DialerFilter,getMode,return,Android.Widget.DialerMode
+0, android.widget,DialerFilter,setMode,newMode,Android.Widget.DialerMode
+0, android.widget,ExpandableListView,getPackedPositionType,return,Android.Widget.PackedPositionType
+0, android.widget,GridView,getStretchMode,return,Android.Widget.StretchMode
+0, android.widget,GridView,setStretchMode,stretchMode,Android.Widget.StretchMode
+0, android.widget,LinearLayout,getOrientation,return,Android.Widget.Orientation
+0, android.widget,LinearLayout,setOrientation,orientation,Android.Widget.Orientation
+11, android.widget,LinearLayout,getShowDividers,return,Android.Widget.ShowDividers
+11, android.widget,LinearLayout,setShowDividers,showDividers,Android.Widget.ShowDividers
+0, android.widget,LinearLayout,setGravity,gravity,Android.Views.GravityFlags
+11, android.widget,ListPopupWindow,getInputMethodMode,return,Android.Widget.ListPopupWindowInputMethodMode
+11, android.widget,ListPopupWindow,setInputMethodMode,mode,Android.Widget.ListPopupWindowInputMethodMode
+11, android.widget,[Interface]NumberPicker.OnScrollListener,onScrollStateChange,scrollState,Android.Widget.NumberPickerScrollState
+0, android.widget,PopupWindow,getInputMethodMode,return,Android.Widget.InputMethod
+0, android.widget,PopupWindow,setInputMethodMode,mode,Android.Widget.InputMethod
+0, android.widget,RelativeLayout,setGravity,gravity,Android.Views.GravityFlags
+0, android.widget,ScrollView,fullScroll,direction,Android.Views.FocusSearchDirection
+11, android.widget,Spinner,ctor,mode,Android.Widget.SpinnerMode
+0, android.widget,Toast,setGravity,gravity,Android.Views.GravityFlags
+0, android.widget,Toast,getGravity,return,Android.Views.GravityFlags
+0, android.widget,Toast,makeText,duration,Android.Widget.ToastLength
+0, android.widget,Toast,setDuration,duration,Android.Widget.ToastLength
+0, android.widget,Toast,getDuration,return,Android.Widget.ToastLength
+0, android.widget,TextView,setGravity,gravity,Android.Views.GravityFlags
+0, android.widget,TextView,getGravity,return,Android.Views.GravityFlags
+0, android.widget,TextView,getImeOptions,return,Android.Views.InputMethods.ImeAction
+0, android.widget,TextView,setImeOptions,imeOptions,Android.Views.InputMethods.ImeAction
+0, android.widget,TextView,setImeActionLabel,actionId,Android.Views.InputMethods.ImeAction
+0, android.widget,TextView,setRawInputType,type,Android.Text.InputTypes
+0, android.widget,TextView,setTextSize,unit,Android.Util.ComplexUnitType
+0, android.util,TypedValue,applyDimension,unit,Android.Util.ComplexUnitType
+0, android.widget,TextView,setTypeface,style,Android.Graphics.TypefaceStyle
+0, android.widget,[Interface]TextView.OnEditorActionListener,onEditorAction,actionId,Android.Views.InputMethods.ImeAction
+0, android.view,[Interface]KeyEvent.Callback,onKeyDown,keyCode,Android.Views.Keycode
+0, android.inputmethodservice,InputMethodService,onKeyDown,keyCode,Android.Views.Keycode
+5, android.view,[Interface]KeyEvent.Callback,onKeyLongPress,keyCode,Android.Views.Keycode
+5, android.inputmethodservice,InputMethodService,onKeyLongPress,keyCode,Android.Views.Keycode
+0, android.view,[Interface]KeyEvent.Callback,onKeyMultiple,keyCode,Android.Views.Keycode
+0, android.inputmethodservice,InputMethodService,onKeyMultiple,keyCode,Android.Views.Keycode
+0, android.view,[Interface]KeyEvent.Callback,onKeyUp,keyCode,Android.Views.Keycode
+0, android.inputmethodservice,InputMethodService,onKeyUp,keyCode,Android.Views.Keycode
+0, android.text.style,StyleSpan,ctor,style,Android.Graphics.TypefaceStyle
+0, android.text,[Interface]Spannable,setSpan,flags,Android.Text.SpanTypes
+0, android.media,AudioTrack,ctor,streamType,Android.Media.Stream
+0, android.media,AudioTrack,ctor,channelConfig,Android.Media.ChannelOut
+0, android.media,AudioTrack,ctor,audioFormat,Android.Media.Encoding
+1, android.media,SoundPool,ctor,streamType,Android.Media.Stream
+0, android.telephony,TelephonyManager,listen,events,Android.Telephony.PhoneStateListenerFlags
+8, android.view,Display,getRotation,return,Android.Views.SurfaceOrientation
+0, android.util,Log,isLoggable,level,Android.Util.LogPriority
+0, android.util,Log,println,priority,Android.Util.LogPriority
+0, android.view,Window,setFormat,format,Android.Graphics.Format
+0, android.widget,RelativeLayout.LayoutParams,addRule,verb,Android.Widget.LayoutRules
+0, android.content,[Interface]DialogInterface.OnKeyListener,onKey,keyCode,Android.Views.Keycode
+0, android.view,View,onKeyShortcut,keyCode,Android.Views.Keycode
+11, android.text.method,BaseMovementMethod,handleMovementKey,keyCode,Android.Views.Keycode
+1, android.text.method,[Interface]MovementMethod,onKeyDown,keyCode,Android.Views.Keycode
+1, android.text.method,[Interface]MovementMethod,onKeyUp,keyCode,Android.Views.Keycode
+0, android.text.method,[Interface]KeyListener,onKeyDown,keyCode,Android.Views.Keycode
+0, android.text.method,[Interface]KeyListener,onKeyUp,keyCode,Android.Views.Keycode
+0, android.view,View,onKeyPreIme,keyCode,Android.Views.Keycode
+0, android.view,[Interface]View.OnKeyListener,onKey,keyCode,Android.Views.Keycode
+0, android.text.method,MetaKeyKeyListener,onKeyDown,keyCode,Android.Views.Keycode
+0, android.text.method,MetaKeyKeyListener,onKeyUp,keyCode,Android.Views.Keycode
+
+// lots of Context permission methods (and those in derived types)
+1, android.content, Context, checkCallingOrSelfPermission, return, Android.Content.PM.Permission
+1, android.content, Context, checkCallingOrSelfUriPermission, modeFlags, Android.Content.ActivityFlags
+1, android.content, Context, checkCallingOrSelfUriPermission, return, Android.Content.PM.Permission
+1, android.content, Context, checkCallingPermission, return, Android.Content.PM.Permission
+1, android.content, Context, checkCallingUriPermission, return, Android.Content.PM.Permission
+1, android.content, Context, checkCallingUriPermission, modeFlags, Android.Content.ActivityFlags
+1, android.content, Context, checkPermission, return, Android.Content.PM.Permission
+1, android.content, Context, checkUriPermission, return, Android.Content.PM.Permission
+1, android.content, Context, checkUriPermission, modeFlags, Android.Content.ActivityFlags
+1, android.content, Context, enforceCallingOrSelfUriPermission, modeFlags, Android.Content.ActivityFlags
+1, android.content, Context, enforceCallingUriPermission, modeFlags, Android.Content.ActivityFlags
+1, android.content, Context, enforceUriPermission, modeFlags, Android.Content.ActivityFlags
+1, android.content, Context, grantUriPermission, modeFlags, Android.Content.ActivityFlags
+1, android.content, Context, revokeUriPermission, modeFlags, Android.Content.ActivityFlags
+
+// Context send/start methods
+1, android.content, Context, sendOrderedBroadcast, initialCode, Android.App.Result
+17, android.content, Context, sendOrderedBroadcastAsUser, initialCode, Android.App.Result
+5, android.content, Context, sendStickyOrderedBroadcast, initialCode, Android.App.Result
+17, android.content, Context, sendStickyOrderedBroadcastAsUser, initialCode, Android.App.Result
+5, android.content, Context, startIntentSender, flagsMask, Android.Content.ActivityFlags
+5, android.content, Context, startIntentSender, flagsValues, Android.Content.ActivityFlags
+// startIntentSender() int extraFlags parameter is OK
+
+5, android.app, Activity, startIntentSenderForResult, flagsMask, Android.Content.ActivityFlags
+5, android.app, Activity, startIntentSenderForResult, flagsValues, Android.Content.ActivityFlags
+5, android.app, Activity, startIntentSenderFromChild, flagsMask, Android.Content.ActivityFlags
+5, android.app, Activity, startIntentSenderFromChild, flagsValues, Android.Content.ActivityFlags
+
+11, android.app, ActionBar.LayoutParams, ctor, gravity, Android.Views.GravityFlags
+0, android.graphics.drawable, ClipDrawable, ctor, gravity, Android.Views.GravityFlags
+0, android.graphics.drawable, ScaleDrawable, ctor, gravity, Android.Views.GravityFlags
+14, android.view, Gravity, getAbsoluteGravity, gravity, Android.Views.GravityFlags
+0, android.view, Window, setGravity, gravity, Android.Views.GravityFlags
+0, android.widget, FrameLayout.LayoutParams, ctor, gravity, Android.Views.GravityFlags
+0, android.widget, Gallery, setGravity, gravity, Android.Views.GravityFlags
+0, android.widget, GridView, setGravity, gravity, Android.Views.GravityFlags
+0, android.widget, LinearLayout, setHorizontalGravity, horizontalGravity, Android.Views.GravityFlags
+0, android.widget, LinearLayout, setVerticalGravity, verticalGravity, Android.Views.GravityFlags
+0, android.widget, PopupWindow, showAtLocation, gravity, Android.Views.GravityFlags
+0, android.widget, RelativeLayout, setHorizontalGravity, horizontalGravity, Android.Views.GravityFlags
+0, android.widget, RelativeLayout, setVerticalGravity, verticalGravity, Android.Views.GravityFlags
+11, android.widget, Spinner, setGravity, gravity, Android.Views.GravityFlags
+
+0, android.view.animation, Transformation, getTransformationType, return, Android.Views.Animations.TransformationTypes
+0, android.view.animation, Transformation, setTransformationType, transformationType, Android.Views.Animations.TransformationTypes
+
+0, org.xmlpull.v1, [Interface]XmlPullParser, getEventType, return, Org.XmlPull.V1.XmlPullParserNode
+0, org.xmlpull.v1, [Interface]XmlPullParser, require, type, Org.XmlPull.V1.XmlPullParserNode
+0, org.xmlpull.v1, [Interface]XmlPullParser, next, return, Org.XmlPull.V1.XmlPullParserNode
+0, org.xmlpull.v1, [Interface]XmlPullParser, nextTag, return, Org.XmlPull.V1.XmlPullParserNode
+0, org.xmlpull.v1, [Interface]XmlPullParser, nextToken, return, Org.XmlPull.V1.XmlPullParserNode
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// I'm making these changes so far only in this extra mappings.
+// Things will change significantly so it had better be done all at once...
+
+0, android.app, Activity, onKeyShortcut, keyCode, Android.Views.Keycode
+0, android.app, Activity, getRequestedOrientation, return, Android.Content.PM.ScreenOrientation
+0, android.app, Activity, setRequestedOrientation, requestedOrientation, Android.Content.PM.ScreenOrientation
+0, android.app, Dialog, onKeyShortcut, keyCode, Android.Views.Keycode
+0, android.app, Notification.Builder, setDefaults, defaults, Android.App.NotificationDefaults
+0, android.app, [Interface]PendingIntent.OnFinished, onSendFinished, resultCode, Android.App.Result
+12, android.appwidget, AppWidgetProviderInfo, resizeMode, , Android.Appwidget.ResizeMode
+17, android.appwidget, AppWidgetProviderInfo, widgetCategory, , Android.Appwidget.AppWidgetCategory
+0, android.content, BroadcastReceiver, setResult, code, Android.App.Result
+0, android.content, BroadcastReceiver, getResultCode, return, Android.App.Result
+0, android.content, BroadcastReceiver, setResultCode, code, Android.App.Result
+0, android.content, BroadcastReceiver.PendingResult, getResultCode, return, Android.App.Result
+0, android.content, BroadcastReceiver.PendingResult, setResult, code, Android.App.Result
+0, android.content, BroadcastReceiver.PendingResult, setResultCode, code, Android.App.Result
+0, android.app, Instrumentation.ActivityResult, getResultCode, return, Android.App.Result
+0, android.content, [Interface]IntentSender.OnFinished, onSendFinished, resultCode, Android.App.Result
+0, android.content, Intent, resolveActivityInfo, flags, Android.Content.PM.PackageInfoFlags
+0, android.content, IntentFilter, match, return, Android.Content.MatchResults
+0, android.content, IntentFilter.AuthorityEntry, match, return, Android.Content.MatchResults
+0, android.content, IntentFilter, addDataPath, type, Android.OS.Pattern
+0, android.content, [Interface]SyncStatusObserver, onStatusChanged, which, Android.Content.SyncObserverType
+0, android.content.pm, PackageManager, addPreferredActivity, match, Android.Content.MatchResults
+0, android.test.mock, MockPackageManager, addPreferredActivity, match, Android.Content.MatchResults
+// I don't like this "MatchResults" name and believe it should be renamed...
+0, android.app, Activity, getChangingConfigurations, return, Android.Content.PM.ConfigChanges
+0, android.content.res, Configuration, diff, return, Android.Content.PM.ConfigChanges
+0, android.content.res, Configuration, updateFrom, return, Android.Content.PM.ConfigChanges
+0, android.content.res, Configuration, needNewResources, configChanges, Android.Content.PM.ConfigChanges
+0, android.content.res, Configuration, needNewResources, interestingChanges, Android.Content.PM.ConfigChanges
+0, android.content.res, Resources.Theme, dump, priority, Android.Util.LogPriority
+0, android.content, IntentFilter, match, return, Android.Content.MatchResults
+0, android.database.sqlite, SQLiteDatabase, insertWithOnConflict, conflictAlgorithm, Android.Database.Sqlite.Conflict
+0, android.database.sqlite, SQLiteDatabase, updateWithOnConflict, conflictAlgorithm, Android.Database.Sqlite.Conflict
+0, android.graphics.drawable, Drawable, getChangingConfigurations, return, Android.Content.PM.ConfigChanges
+0, android.graphics.drawable, Drawable, setChangingConfigurations, configs, Android.Content.PM.ConfigChanges
+0, android.graphics.drawable, Drawable.ConstantState, getChangingConfigurations, return, Android.Content.PM.ConfigChanges
+0, android.graphics.drawable, DrawableContainer.DrawableContainerState, getChangingConfigurations, return, Android.Content.PM.ConfigChanges
+0, android.graphics.drawable, ClipDrawable, ctor, orientation, Android.Graphics.Drawables.ClipDrawableOrientation
+0, android.graphics, PaintFlagsDrawFilter, ctor, clearBits, Android.Graphics.PaintFlags
+0, android.graphics, PaintFlagsDrawFilter, ctor, setBits, Android.Graphics.PaintFlags
+0, android.hardware, [Interface]SensorListener, onAccuracyChanged, sensor, Android.Hardware.SensorType
+0, android.hardware, [Interface]SensorListener, onSensorChanged, sensor, Android.Hardware.SensorType
+0, android.net.http, AndroidHttpClient, enableCurlLogging, level, Android.Util.LogPriority
+0, android.speech.tts, SynthesisCallback, start, return, Android.Speech.Tts.OperationResult
+0, java.io, ObjectOutputStream, useProtocolVersion, version, Java.IO.ObjectStreamProtocol
+
+0, android.gesture, Gesture, toBitmap, edge, Android.Views.Edge
+0, android.gesture, Gesture, toPath, edge, Android.Views.Edge
+0, android.view, MotionEvent, obtain, edgeFlags, Android.Views.Edge
+
+0, android.hardware, [Interface]SensorEventListener, onAccuracyChanged, accuracy, Android.Hardware.SensorStatus
+0, android.hardware, [Interface]SensorListener, onAccuracyChanged, accuracy, Android.Hardware.SensorStatus
+0, android.location, LocationManager, addTestProvider, accuracy, Android.Hardware.SensorStatus
+
+// I don't like this "Stream" name and believe it should be renamed...
+0, android.app, Activity, getVolumeControlStream, return, Android.Media.Stream
+0, android.app, Activity, setVolumeControlStream, streamType, Android.Media.Stream
+0, android.app, Dialog, getVolumeControlStream, return, Android.Media.Stream
+0, android.app, Dialog, setVolumeControlStream, streamType, Android.Media.Stream
+0, android.app, Notification.Builder, setSound, streamType, Android.Media.Stream
+0, android.media, AudioManager, adjustSuggestedStreamVolume, suggestedStreamType, Android.Media.Stream
+0, android.media, AsyncPlayer, play, stream, Android.Media.Stream
+0, android.media, AudioTrack, getNativeOutputSampleRate, streamType, Android.Media.Stream
+0, android.media, AudioTrack, getStreamType, return, Android.Media.Stream
+0, android.media, Ringtone, getStreamType, return, Android.Media.Stream
+0, android.media, Ringtone, setStreamType, streamType, Android.Media.Stream
+0, android.media, RingtoneManager, inferStreamType, return, Android.Media.Stream
+0, android.media, ToneGenerator, ctor, streamType, Android.Media.Stream
+
+0, android.inputmethodservice, [Interface]KeyboardView.OnKeyboardActionListener, onKey, primaryCode, Android.Views.Keycode
+0, android.inputmethodservice, [Interface]KeyboardView.OnKeyboardActionListener, onKey, keyCodes, Android.Views.Keycode[]
+0, android.inputmethodservice, [Interface]KeyboardView.OnKeyboardActionListener, onPress, primaryCode, Android.Views.Keycode
+0, android.inputmethodservice, [Interface]KeyboardView.OnKeyboardActionListener, onRelease, primaryCode, Android.Views.Keycode
+0, android.text.method, BaseKeyListener, backspace, keyCode, Android.Views.Keycode
+0, android.text.method, BaseKeyListener, forwardDelete, keyCode, Android.Views.Keycode
+0, android.text.method, MetaKeyKeyListener, handleKeyDown, keyCode, Android.Views.Keycode
+0, android.text.method, MetaKeyKeyListener, handleKeyUp, keyCode, Android.Views.Keycode
+0, android.view, [Interface]Menu, isShortcutKey, keyCode, Android.Views.Keycode
+0, android.view, [Interface]Menu, performShortcut, keyCode, Android.Views.Keycode
+0, android.view, KeyCharacterMap, deviceHasKey, keyCode, Android.Views.Keycode
+0, android.view, KeyCharacterMap, deviceHasKeys, keyCodes, Android.Views.Keycode[]
+0, android.view, KeyCharacterMap, get, keyCode, Android.Views.Keycode
+0, android.view, KeyCharacterMap, getDisplayLabel, keyCode, Android.Views.Keycode
+0, android.view, KeyCharacterMap, getKeyData, keyCode, Android.Views.Keycode
+0, android.view, KeyCharacterMap, getMatch, keyCode, Android.Views.Keycode
+0, android.view, KeyCharacterMap, getNumber, keyCode, Android.Views.Keycode
+0, android.view, KeyCharacterMap, isPrintingKey, keyCode, Android.Views.Keycode
+0, android.view, KeyEvent, getMaxKeyCode, return, Android.Views.Keycode
+0, android.view, Window, isShortcutKey, keyCode, Android.Views.Keycode
+0, android.view, Window, performPanelShortcut, keyCode, Android.Views.Keycode
+0, android.widget, ListPopupWindow, onKeyDown, keyCode, Android.Views.Keycode
+0, android.widget, ListPopupWindow, onKeyPreIme, keyCode, Android.Views.Keycode
+0, android.widget, ListPopupWindow, onKeyUp, keyCode, Android.Views.Keycode
+0, android.app, Instrumentation, sendKeyDownUpSync, key, Android.Views.Keycode
+0, android.inputmethodservice, InputMethodService, sendDownUpKeyEvents, keyEventCode, Android.Views.Keycode
+
+// ... ArrowKey and Scrolling override are only in lower API levels :(
+0, android.text.method, [Interface]MovementMethod, onTakeFocus, direction, Android.Views.FocusSearchDirection
+0, android.text.method, [Interface]TransformationMethod, onFocusChanged, direction, Android.Views.FocusSearchDirection
+0, android.view, FocusFinder, findNearestTouchable, direction, Android.Views.FocusSearchDirection
+0, android.view, FocusFinder, findNextFocus, direction, Android.Views.FocusSearchDirection
+0, android.view, FocusFinder, findNextFocusFromRect, direction, Android.Views.FocusSearchDirection
+0, android.view, [Interface]ViewParent, focusSearch, direction, Android.Views.FocusSearchDirection
+0, android.view, SoundEffectConstants, getContantForFocusDirection, direction, Android.Views.FocusSearchDirection
+0, android.view, SoundEffectConstants, getContantForFocusDirection, return, Android.Views.SoundEffects
+// ... I'm kind of sure this name will be fixed (if android devs ever noticed)
+0, android.view, SoundEffectConstants, getConstantForFocusDirection, direction, Android.Views.FocusSearchDirection
+0, android.view, SoundEffectConstants, getConstantForFocusDirection, return, Android.Views.SoundEffects
+// 0, android.view, View, canScrollHorizontally, direction, Android.Views.FocusSearchDirection
+// 0, android.view, View, canScrollVertically, direction, Android.Views.FocusSearchDirection
+0, android.widget, HorizontalScrollView, arrowScroll, direction, Android.Views.FocusSearchDirection
+0, android.widget, HorizontalScrollView, fullScroll, direction, Android.Views.FocusSearchDirection
+0, android.widget, HorizontalScrollView, pageScroll, direction, Android.Views.FocusSearchDirection
+0, android.widget, ScrollView, arrowScroll, direction, Android.Views.FocusSearchDirection
+0, android.widget, ScrollView, pageScroll, direction, Android.Views.FocusSearchDirection
+
+0, android.app, Fragment, onActivityResult, resultCode, Android.App.Result
+0, android.app, Instrumentation.ActivityResult, ctor, resultCode, Android.App.Result
+0, android.app, PendingIntent, send, code, Android.App.Result
+0, android.content, BroadcastReceiver, setResult, code, Android.App.Result
+0, android.content, IntentSender, sendIntent, code, Android.App.Result
+0, android.os, ResultReceiver, send, resultCode, Android.App.Result
+0, android.preference, PreferenceActivity, finishPreferencePanel, resultCode, Android.App.Result
+0, android.preference, [Interface]PreferenceManager.OnActivityResultListener, onActivityResult, resultCode, Android.App.Result
+
+0, android.accounts, AccountAuthenticatorResponse, onError, errorCode, Android.Accounts.ErrorCode
+0, android.app, ActionBar, setDisplayOptions, mask, Android.App.ActionBarDisplayOptions
+0, android.app, Activity, createPendingResult, flags, Android.App.PendingIntentFlags
+0, android.app, ApplicationErrorReport, getErrorReportReceiver, appFlags, Android.Content.PM.ApplicationInfoFlags
+
+0, android.view, [Interface]SurfaceHolder.Callback, surfaceChanged, format, Android.Graphics.Format
+
+0, android.app, PendingIntent, getActivities, flags, Android.App.PendingIntentFlags
+0, android.content.pm, PathPermission, ctor, type, Android.OS.Pattern
+0, android.app, Fragment, onCreateAnimator, transit, Android.App.FragmentTransit
+
+0, android.content.pm, PackageManager, getActivityInfo, flags, Android.Content.PM.PackageInfoFlags
+0, android.content.pm, PackageManager, getAllPermissionGroups, flags, Android.Content.PM.PackageInfoFlags
+0, android.content.pm, PackageManager, getApplicationEnabledSetting, return, Android.Content.PM.ComponentEnabledState
+0, android.content.pm, PackageManager, getApplicationInfo, flags, Android.Content.PM.PackageInfoFlags
+0, android.content.pm, PackageManager, getInstalledApplications, flags, Android.Content.PM.PackageInfoFlags
+0, android.content.pm, PackageManager, getInstrumentationInfo, flags, Android.Content.PM.PackageInfoFlags
+0, android.content.pm, PackageManager, getPermissionGroupInfo, flags, Android.Content.PM.PackageInfoFlags
+0, android.content.pm, PackageManager, getPermissionInfo, flags, Android.Content.PM.PackageInfoFlags
+0, android.content.pm, PackageManager, getProviderInfo, flags, Android.Content.PM.PackageInfoFlags
+0, android.content.pm, PackageManager, getReceiverInfo, flags, Android.Content.PM.PackageInfoFlags
+0, android.content.pm, PackageManager, getServiceInfo, flags, Android.Content.PM.PackageInfoFlags
+0, android.content.pm, PackageManager, queryBroadcastReceivers, flags, Android.Content.PM.PackageInfoFlags
+0, android.content.pm, PackageManager, queryContentProviders, flags, Android.Content.PM.PackageInfoFlags
+0, android.content.pm, PackageManager, queryInstrumentation, flags, Android.Content.PM.PackageInfoFlags
+0, android.content.pm, PackageManager, queryIntentActivities, flags, Android.Content.PM.PackageInfoFlags
+0, android.content.pm, PackageManager, queryIntentActivityOptions, flags, Android.Content.PM.PackageInfoFlags
+0, android.content.pm, PackageManager, queryIntentServices, flags, Android.Content.PM.PackageInfoFlags
+0, android.content.pm, PackageManager, queryPermissionsByGroup, flags, Android.Content.PM.PackageInfoFlags
+0, android.content.pm, PackageManager, resolveActivity, flags, Android.Content.PM.PackageInfoFlags
+0, android.content.pm, PackageManager, resolveContentProvider, flags, Android.Content.PM.PackageInfoFlags
+0, android.content.pm, PackageManager, resolveService, flags, Android.Content.PM.PackageInfoFlags
+0, android.content.pm, PackageManager, setApplicationEnabledSetting, newState, Android.Content.PM.ComponentEnabledState
+0, android.content.pm, PackageManager, setApplicationEnabledSetting, flags, Android.Content.PM.ComponentEnableOption
+0, android.content.pm, PackageManager, setComponentEnabledSetting, flags, Android.Content.PM.ComponentEnableOption
+0, android.test.mock, MockPackageManager, getActivityInfo, flags, Android.Content.PM.PackageInfoFlags
+0, android.test.mock, MockPackageManager, getAllPermissionGroups, flags, Android.Content.PM.PackageInfoFlags
+0, android.test.mock, MockPackageManager, getApplicationEnabledSetting, return, Android.Content.PM.ComponentEnabledState
+0, android.test.mock, MockPackageManager, getApplicationInfo, flags, Android.Content.PM.PackageInfoFlags
+0, android.test.mock, MockPackageManager, getInstalledApplications, flags, Android.Content.PM.PackageInfoFlags
+0, android.test.mock, MockPackageManager, getInstrumentationInfo, flags, Android.Content.PM.PackageInfoFlags
+0, android.test.mock, MockPackageManager, getPermissionGroupInfo, flags, Android.Content.PM.PackageInfoFlags
+0, android.test.mock, MockPackageManager, getPermissionInfo, flags, Android.Content.PM.PackageInfoFlags
+0, android.test.mock, MockPackageManager, getProviderInfo, flags, Android.Content.PM.PackageInfoFlags
+0, android.test.mock, MockPackageManager, getReceiverInfo, flags, Android.Content.PM.PackageInfoFlags
+0, android.test.mock, MockPackageManager, getServiceInfo, flags, Android.Content.PM.PackageInfoFlags
+0, android.test.mock, MockPackageManager, queryBroadcastReceivers, flags, Android.Content.PM.PackageInfoFlags
+0, android.test.mock, MockPackageManager, queryContentProviders, flags, Android.Content.PM.PackageInfoFlags
+0, android.test.mock, MockPackageManager, queryInstrumentation, flags, Android.Content.PM.PackageInfoFlags
+0, android.test.mock, MockPackageManager, queryIntentActivities, flags, Android.Content.PM.PackageInfoFlags
+0, android.test.mock, MockPackageManager, queryIntentActivityOptions, flags, Android.Content.PM.PackageInfoFlags
+0, android.test.mock, MockPackageManager, queryIntentServices, flags, Android.Content.PM.PackageInfoFlags
+0, android.test.mock, MockPackageManager, queryPermissionsByGroup, flags, Android.Content.PM.PackageInfoFlags
+0, android.test.mock, MockPackageManager, resolveActivity, flags, Android.Content.PM.PackageInfoFlags
+0, android.test.mock, MockPackageManager, resolveContentProvider, flags, Android.Content.PM.PackageInfoFlags
+0, android.test.mock, MockPackageManager, resolveService, flags, Android.Content.PM.PackageInfoFlags
+0, android.test.mock, MockPackageManager, setApplicationEnabledSetting, newState, Android.Content.PM.ComponentEnabledState
+0, android.test.mock, MockPackageManager, setApplicationEnabledSetting, flags, Android.Content.PM.ComponentEnableOption
+0, android.test.mock, MockPackageManager, setComponentEnabledSetting, flags, Android.Content.PM.ComponentEnableOption
+
+0, android.view, Window, setUiOptions, uiOptions, Android.Content.PM.UiOptions
+0, android.view, Window, setUiOptions, mask, Android.Content.PM.UiOptions
+
+// I had to find out these flags usage from sources, they lack documentation.
+0, android.app, Instrumentation, invokeContextMenuAction, flag, Android.Views.MenuPerformFlags
+0, android.app, Instrumentation, invokeMenuActionSync, flag, Android.Views.MenuPerformFlags
+0, android.view, Window, performContextMenuIdentifierAction, flags, Android.Views.MenuPerformFlags
+0, android.view, Window, performPanelIdentifierAction, flags, Android.Views.MenuPerformFlags
+0, android.view, Window, performPanelShortcut, flags, Android.Views.MenuPerformFlags
+
+0, android.drm, DrmEvent, getType, return, Android.Drm.DrmEventType
+0, android.drm, DrmErrorEvent, ctor, type, Android.Drm.DrmErrorEventType
+0, android.drm, DrmInfo, ctor, infoType, Android.Drm.DrmInfoEventType
+0, android.drm, DrmInfo, getInfoType, return, Android.Drm.DrmInfoEventType
+0, android.drm, DrmInfoEvent, ctor, type, Android.Drm.DrmInfoEventType
+0, android.gesture, GestureLibrary, getOrientationStyle, return, Android.Gestures.OrientationStyle
+0, android.gesture, GestureLibrary, setOrientationStyle, style, Android.Gestures.OrientationStyle
+0, android.gesture, GestureLibrary, getSequenceType, return, Android.Gestures.SequenceStyle
+0, android.gesture, GestureLibrary, setSequenceType, type, Android.Gestures.SequenceStyle
+0, android.graphics.drawable, BitmapDrawable, getGravity, return, Android.Views.GravityFlags
+0, android.graphics.drawable, BitmapDrawable, setGravity, gravity, Android.Views.GravityFlags
+0, android.graphics, Paint, getHinting, return, Android.Graphics.PaintHinting
+0, android.graphics, Paint, setHinting, mode, Android.Graphics.PaintHinting
+0, android.hardware, Camera.Parameters, getPictureFormat, return, Android.Graphics.ImageFormatType
+0, android.hardware, Camera.Parameters, setPictureFormat, pixel_format, Android.Graphics.ImageFormatType
+0, android.hardware, Camera.Parameters, getPreviewFormat, return, Android.Graphics.ImageFormatType
+0, android.hardware, Camera.Parameters, setPreviewFormat, pixel_format, Android.Graphics.ImageFormatType
+0, android.inputmethodservice, InputMethodService, getCandidatesHiddenVisibility, return, Android.Views.ViewStates
+0, android.inputmethodservice, InputMethodService, getTextForImeAction, imeOptions, Android.Views.InputMethods.ImeAction
+0, android.inputmethodservice, InputMethodService, onShowInputRequested, flags, Android.Views.InputMethods.ShowFlags
+0, android.inputmethodservice, InputMethodService, requestHideSelf, flags, Android.Views.InputMethods.HideSoftInputFlags
+0, android.media, AudioManager, requestAudioFocus, durationHint, Android.Media.AudioFocus
+0, android.media, CameraProfile, getJpegEncodingQualityParameter, quality, Android.Media.CameraQuality
+
+0, android.graphics, ImageFormat, getBitsPerPixel, format, Android.Graphics.ImageFormatType
+0, android.graphics, YuvImage, ctor, format, Android.Graphics.ImageFormatType
+0, android.graphics, YuvImage, getYuvFormat, return, Android.Graphics.ImageFormatType
+
+0, android.media, RingtoneManager, getDefaultType, return, Android.Media.RingtoneType
+0, android.media, RingtoneManager, getDefaultUri, type, Android.Media.RingtoneType
+
+0, android.mtp, MtpConstants, isAbstractObject, format, Android.Mtp.MtpFormat
+0, android.service.wallpaper, WallpaperService.Engine, onSurfaceChanged, format, Android.Graphics.Format
+
+0, android.text.method, [Interface]KeyListener, clearMetaKeyState, states, Android.Views.MetaKeyStates
+0, android.text.method, MetaKeyKeyListener, clearMetaKeyState, states, Android.Views.MetaKeyStates
+0, android.text.method, MetaKeyKeyListener, clearMetaKeyState, state, Android.Views.MetaKeyStates
+0, android.text.method, MetaKeyKeyListener, clearMetaKeyState, which, Android.Text.Method.MetaStates
+0, android.text.method, MetaKeyKeyListener, getMetaState, state, Android.Views.MetaKeyStates
+// for getMetaState return values, they are chaotic, could be either Keycode, or some non-enumerated 0, 1, 2 value, and possibly MetaKeyStates. I can't help it. The API sucks.
+0, android.view, KeyEvent, getModifierMetaStateMask, return, Android.Views.MetaKeyStates
+
+0, android.view, KeyCharacterMap, get, meta, Android.Views.MetaKeyStates
+11, android.view, KeyCharacterMap, get, metaState, Android.Views.MetaKeyStates
+0, android.view, KeyCharacterMap, getMatch, metaState, Android.Views.MetaKeyStates
+0, android.view, KeyCharacterMap, getMatch, modifiers, Android.Views.MetaKeyStates
+// API Level 17 doc *renamed* some parameters, hence it also needs to be tracked...
+0, android.view, KeyEvent, getMatch, modifiers, Android.Views.MetaKeyStates
+11, android.view, KeyEvent, getMatch, metaState, Android.Views.MetaKeyStates
+0, android.view, KeyEvent, getUnicodeChar, meta, Android.Views.MetaKeyStates
+11, android.view, KeyEvent, getUnicodeChar, metaState, Android.Views.MetaKeyStates
+0, android.view, MotionEvent, getMetaState, return, Android.Views.MetaKeyStates
+0, android.view, MotionEvent, addBatch, metaState, Android.Views.MetaKeyStates
+0, android.view, MotionEvent, obtain, metaState, Android.Views.MetaKeyStates
+
+0, android.view, [Interface]SurfaceHolder, setFormat, format, Android.Graphics.Format
+0, android.widget, GridLayout, getOrientation, return, Android.Widget.GridOrientation
+0, android.widget, GridLayout, setOrientation, orientation, Android.Widget.GridOrientation
+
+
+// additional mappings
+
+// android.accessibilityservice
+14, android.accessibilityservice, AccessibilityServiceInfo, flagToString, flag, Android.AccessibilityServices.AccessibilityServiceFlags
+
+1, android.os, [Interface]Parcelable, writeToParcel, flags, Android.OS.ParcelableWriteFlags
+// PackageItemInfo does *not* implement Parcelable, but the subclasses *does* implement.
+// Since we cannot (should not) predict such derivation when we are processing this
+// *base* class, we still leave PackageItemInfo untouched in the automatic upgrade
+// process and need this metadata fixup.
+1, android.content.pm, PackageItemInfo, writeToParcel, parcelableFlags, Android.OS.ParcelableWriteFlags
+// These guys does not implement Parcelable(!)
+14, android.app, ApplicationErrorReport.AnrInfo, writeToParcel, flags, Android.OS.ParcelableWriteFlags
+14, android.app, ApplicationErrorReport.BatteryInfo, writeToParcel, flags, Android.OS.ParcelableWriteFlags
+14, android.app, ApplicationErrorReport.CrashInfo, writeToParcel, flags, Android.OS.ParcelableWriteFlags
+14, android.app, ApplicationErrorReport.RunningServiceInfo, writeToParcel, flags, Android.OS.ParcelableWriteFlags
+// 16, android.app, Notification, priority, , Android.App.NotificationPriority
+// 16, android.app, Notification.Builder, setPriority, pri, Android.App.NotificationPriority
+
+1, android.os, Parcel, writeParcelable, parcelableFlags, Android.OS.ParcelableWriteFlags
+1, android.os, Parcel, writeParcelableArray, parcelableFlags, Android.OS.ParcelableWriteFlags
+1, android.os, Parcel, writeTypedArray, parcelableFlags, Android.OS.ParcelableWriteFlags
+1, android.text, TextUtils, writeToParcel, parcelableFlags, Android.OS.ParcelableWriteFlags
+
+0, java.nio.channels, SelectionKey, interestOps, return, Java.Nio.Channels.Operations
+0, java.nio.channels, SelectionKey, readyOps, return, Java.Nio.Channels.Operations
+0, java.nio.channels, SelectableChannel, validOps, return, Java.Nio.Channels.Operations
+0, java.nio.channels, DatagramChannel, validOps, return, Java.Nio.Channels.Operations
+0, java.nio.channels, Pipe.SinkChannel, validOps, return, Java.Nio.Channels.Operations
+0, java.nio.channels, Pipe.SourceChannel, validOps, return, Java.Nio.Channels.Operations
+0, java.nio.channels, ServerSocketChannel, validOps, return, Java.Nio.Channels.Operations
+0, java.nio.channels, SocketChannel, validOps, return, Java.Nio.Channels.Operations
+0, java.nio.channels, SelectableChannel, register, operations, Java.Nio.Channels.Operations
+0, java.nio.channels, SelectableChannel, register, ops, Java.Nio.Channels.Operations
+0, java.nio.channels.spi, AbstractSelectableChannel, register, interestSet, Java.Nio.Channels.Operations
+
+0, android.content, [Interface]ComponentCallbacks2, onTrimMemory, level, Android.Content.TrimMemory
+0, android.app, UiModeManager, disableCarMode, flags, Android.App.DisableCarModeFlags
+0, android.app, UiModeManager, enableCarMode, flags, Android.App.EnableCarModeFlags
+0, android.app.admin, DeviceAdminInfo, getTagForPolicy, policyIdent, Android.App.Admin.DeviceAdminUses
+0, android.app.admin, DeviceAdminInfo, usesPolicy, policyIdent, Android.App.Admin.DeviceAdminUses
+0, android.app.admin, DevicePolicyManager, addCrossProfileIntentFilter, flags, Android.App.Admin.DevicePolicyManagerFlags
+0, android.app.admin, DevicePolicyManager, getPasswordMaximumLength, quality, Android.App.Admin.PasswordQuality
+0, android.app.admin, DevicePolicyManager, setPasswordQuality, quality, Android.App.Admin.PasswordQuality
+0, android.app.admin, DevicePolicyManager, hasGrantedPolicy, usesPolicy, Android.App.Admin.DeviceAdminUses
+0, android.app.admin, DevicePolicyManager, resetPassword, flags, Android.App.Admin.ResetPasswordFlags
+0, android.app.admin, DevicePolicyManager, wipeData, flags, Android.App.Admin.WipeDataFlags
+0, android.app.backup, BackupAgent, onRestoreFile, type, Android.App.Backup.BackupFileType
+0, android.app, DownloadManager.Query, setFilterByStatus, flags, Android.App.DownloadStatus
+0, android.app, DownloadManager.Request, setAllowedNetworkTypes, flags, Android.App.DownloadNetwork
+0, android.app, DownloadManager.Request, setNotificationVisibility, visibility, Android.App.DownloadVisibility
+0, android.app, [Interface]FragmentBreadCrumbs.OnBreadCrumbClickListener, onBreadCrumbClick, flags, Android.App.BreadCrumbClickFlags
+0, android.app, FragmentManager, popBackStack, flags, Android.App.PopBackStackFlags
+0, android.app, FragmentManager, popBackStackImmediate, flags, Android.App.PopBackStackFlags
+
+0, android.location, Criteria, getBearingAccuracy, return, Android.Locations.Accuracy
+0, android.location, Criteria, setBearingAccuracy, accuracy, Android.Locations.Accuracy
+0, android.location, Criteria, getHorizontalAccuracy, return, Android.Locations.Accuracy
+0, android.location, Criteria, setHorizontalAccuracy, accuracy, Android.Locations.Accuracy
+0, android.location, Criteria, getSpeedAccuracy, return, Android.Locations.Accuracy
+0, android.location, Criteria, setSpeedAccuracy, accuracy, Android.Locations.Accuracy
+0, android.location, Criteria, getVerticalAccuracy, return, Android.Locations.Accuracy
+0, android.location, Criteria, setVerticalAccuracy, accuracy, Android.Locations.Accuracy
+0, android.location, LocationProvider, getAccuracy, return, Android.Locations.Accuracy
+
+0, android.media, [Interface]AudioManager.OnAudioFocusChangeListener, onAudioFocusChange, focusChange, Android.Media.AudioFocus
+0, android.media, AudioManager, abandonAudioFocus, return, Android.Media.AudioFocusRequest
+0, android.media, AudioManager, requestAudioFocus, return, Android.Media.AudioFocusRequest
+0, android.media, AudioManager, setStreamVolume, flags, Android.Media.VolumeNotificationFlags
+0, android.media, AudioRecord, ctor, audioSource, Android.Media.AudioSource
+0, android.media, AudioRecord, ctor, channelConfig, Android.Media.ChannelIn
+0, android.media, AudioRecord, getAudioSource, return, Android.Media.AudioSource
+0, android.media, AudioRecord, ctor, audioFormat, Android.Media.Encoding
+0, android.media, AudioRecord, getMinBufferSize, audioFormat, Android.Media.Encoding
+0, android.media, AudioTrack, getMinBufferSize, channelConfig, Android.Media.ChannelOut
+0, android.media, AudioTrack, attachAuxEffect, return, Android.Media.TrackStatus
+0, android.media, AudioTrack, reloadStaticData, return, Android.Media.TrackStatus
+0, android.media, AudioTrack, setAuxEffectSendLevel, return, Android.Media.TrackStatus
+0, android.media, AudioTrack, setLoopPoints, return, Android.Media.TrackStatus
+0, android.media, AudioTrack, setNotificationMarkerPosition, return, Android.Media.TrackStatus
+0, android.media, AudioTrack, setPlaybackHeadPosition, return, Android.Media.TrackStatus
+0, android.media, AudioTrack, setPositionNotificationPeriod, return, Android.Media.TrackStatus
+0, android.media, AudioTrack, setStereoVolume, return, Android.Media.TrackStatus
+0, android.media, MediaMetadataRetriever, extractMetadata, keyCode, Android.Media.MetadataKey
+// it somehow fails to retrieve parameter name in API Level 17...
+0, android.media, MediaMetadataRetriever, extractMetadata, p0, Android.Media.MetadataKey
+// "Option" sounds too general too...
+10, android.media, MediaMetadataRetriever, getFrameAtTime, option, Android.Media.Option
+10, android.media, MediaMetadataRetriever, getFrameAtTime, p1, Android.Media.Option
+0, android.media, [Interface]MediaRecorder.OnErrorListener, onError, what, Android.Media.MediaRecorderError
+0, android.media, MediaPlayer, setWakeMode, mode, Android.OS.WakeLockFlags
+0, android.media, ThumbnailUtils, createVideoThumbnail, kind, Android.Provider.ThumbnailKind
+0, android.media, ThumbnailUtils, extractThumbnail, options, Android.Media.ThumnailExtractOptions
+0, android.media, RemoteControlClient.MetadataEditor, putBitmap, key, Android.Media.BitmapKey
+0, android.media, RemoteControlClient.MetadataEditor, putLong, key, Android.Media.MetadataKey
+0, android.media, RemoteControlClient.MetadataEditor, putString, key, Android.Media.MetadataKey
+0, android.media, RemoteControlClient, setPlaybackState, state, Android.Media.RemoteControlPlayState
+0, android.media, RemoteControlClient, setTransportControlFlags, transportControlFlags, Android.Media.RemoteControlFlags
+
+0, android.media.audiofx, AudioEffect, setEnabled, return, Android.Media.Audiofx.AudioEffectStatus
+0, android.media.audiofx, [Interface]BassBoost.OnParameterChangeListener, onParameterChange, status, Android.Media.Audiofx.AudioEffectStatus
+0, android.media.audiofx, [Interface]EnvironmentalReverb.OnParameterChangeListener, onParameterChange, status, Android.Media.Audiofx.AudioEffectStatus
+0, android.media.audiofx, [Interface]Equalizer.OnParameterChangeListener, onParameterChange, status, Android.Media.Audiofx.AudioEffectStatus
+0, android.media.audiofx, [Interface]PresetReverb.OnParameterChangeListener, onParameterChange, status, Android.Media.Audiofx.AudioEffectStatus
+0, android.media.audiofx, [Interface]Virtualizer.OnParameterChangeListener, onParameterChange, status, Android.Media.Audiofx.AudioEffectStatus
+0, android.media.audiofx, [Interface]BassBoost.OnParameterChangeListener, onParameterChange, param, Android.Media.Audiofx.BassBoostParam
+0, android.media.audiofx, [Interface]EnvironmentalReverb.OnParameterChangeListener, onParameterChange, param, Android.Media.Audiofx.EnvironmentalReverbParam
+0, android.media.audiofx, [Interface]Equalizer.OnParameterChangeListener, onParameterChange, param1, Android.Media.Audiofx.EqualizerParam
+0, android.media.audiofx, [Interface]PresetReverb.OnParameterChangeListener, onParameterChange, param, Android.Media.Audiofx.PresetReverbParam
+0, android.media.audiofx, [Interface]Virtualizer.OnParameterChangeListener, onParameterChange, param, Android.Media.Audiofx.VirtualizerParam
+
+0, android.media.audiofx, Visualizer, getFft, return, Android.Media.Audiofx.VisualizerStatus
+0, android.media.audiofx, Visualizer, getWaveForm, return, Android.Media.Audiofx.VisualizerStatus
+0, android.media.audiofx, Visualizer, setDataCaptureListener, return, Android.Media.Audiofx.VisualizerStatus
+0, android.media.audiofx, Visualizer, setEnabled, return, Android.Media.Audiofx.VisualizerStatus
+
+0, android.mtp, MtpObjectInfo, getAssociationType, return, Android.Mtp.AssociationType
+
+0, android.net.http, SslError, ctor, error, Android.Net.Http.SslErrorType
+0, android.net.http, SslError, addError, error, Android.Net.Http.SslErrorType
+0, android.net.http, SslError, hasError, error, Android.Net.Http.SslErrorType
+0, android.net.http, SslError, getPrimaryError, return, Android.Net.Http.SslErrorType
+0, android.net, NetworkInfo, getType, return, Android.Net.ConnectivityType
+0, android.net, NetworkInfo, getSubtype, return, Android.Net.ConnectivityType
+
+0, android.net.sip, [Interface]SipRegistrationListener, onRegistrationFailed, errorCode, Android.Net.Sip.SipErrorCodes
+0, android.net.sip, SipAudioCall.Listener, onError, errorCode, Android.Net.Sip.SipErrorCodes
+0, android.net.sip, SipAudioCall, getState, return, Android.Net.Sip.SipSessionState
+0, android.net.sip, SipErrorCode, toString, errorCode, Android.Net.Sip.SipErrorCodes
+0, android.net.sip, SipSession.Listener, onCallChangeFailed, errorCode, Android.Net.Sip.SipErrorCodes
+0, android.net.sip, SipSession.Listener, onError, errorCode, Android.Net.Sip.SipErrorCodes
+0, android.net.sip, SipSession.Listener, onRegistrationFailed, errorCode, Android.Net.Sip.SipErrorCodes
+0, android.net.sip, SipSession.State, toString, state, Android.Net.Sip.SipSessionState
+0, android.net.sip, SipSession, getState, return, Android.Net.Sip.SipSessionState
+
+0, android.net.wifi.p2p, [Interface]WifiP2pManager.ActionListener, onFailure, reason, Android.Net.Wifi.P2p.WifiP2pFailureReason
+
+0, android.nfc.tech, MifareClassic, getType, return, Android.Nfc.Tech.MifareClassicType
+0, android.nfc.tech, MifareUltralight, getType, return, Android.Nfc.Tech.MifareUltralightType
+
+0, android.os, Debug, printLoadedClasses, flags, Android.OS.DebugShow
+0, android.os, Debug, startMethodTracing, flags, Android.OS.DebugTraceOptions
+0, android.os.storage, OnObbStateChangeListener, onObbStateChange, state, Android.OS.Storage.ObbState
+
+0, android.opengl, GLSurfaceView, getDebugFlags, return, Android.Opengl.DebugFlags
+0, android.opengl, GLSurfaceView, setDebugFlags, debugFlags, Android.Opengl.DebugFlags
+0, android.opengl, GLSurfaceView, getRenderMode, return, Android.Opengl.Rendermode
+0, android.opengl, GLSurfaceView, setRenderMode, renderMode, Android.Opengl.Rendermode
+
+0, android.preference, PreferenceManager, getSharedPreferencesMode, return, Android.Content.FileCreationMode
+0, android.preference, PreferenceManager, setSharedPreferencesMode, sharedPreferencesMode, Android.Content.FileCreationMode
+0, android.preference, PreferenceManager, setDefaultValues, sharedPreferencesMode, Android.Content.FileCreationMode
+0, android.preference, RingtonePreference, getRingtoneType, return, Android.Media.RingtoneType
+0, android.preference, RingtonePreference, setRingtoneType, type, Android.Media.RingtoneType
+
+0, android.provider, ContactsContract.CommonDataKinds.Relation, getTypeLabel, type, Android.Provider.RelationDataKind
+0, android.provider, ContactsContract.CommonDataKinds.Relation, getTypeLabelResource, type, Android.Provider.RelationDataKind
+0, android.provider, ContactsContract.CommonDataKinds.SipAddress, getTypeLabel, type, Android.Provider.SipAddressDataKind
+0, android.provider, ContactsContract.CommonDataKinds.SipAddress, getTypeLabelResource, type, Android.Provider.SipAddressDataKind
+0, android.provider, Contacts.ContactMethods, getDisplayLabel, type, Android.Provider.ContactMethodColumn
+0, android.provider, Contacts.Organizations, getDisplayLabel, type, Android.Provider.ContactOrganizationColumn
+0, android.provider, Contacts.Phones, getDisplayLabel, type, Android.Provider.ContactPhoneColumn
+
+0, android.provider, Contacts.ContactMethods, getDisplayLabel, kind, Android.Provider.ContactKind
+0, android.provider, ContactsContract.StatusUpdates, getPresenceIconResourceId, status, Android.Provider.StatusPresence
+0, android.provider, ContactsContract.StatusUpdates, getPresenceIconResourceId, status, Android.Provider.StatusPresence
+0, android.provider, ContactsContract.StatusUpdates, getPresencePrecedence, status, Android.Provider.StatusPresence
+
+0, android.provider, MediaStore.Images.Thumbnails, getThumbnail, kind, Android.Provider.ThumbnailKind
+0, android.provider, MediaStore.Images.Thumbnails, queryMiniThumbnails, kind, Android.Provider.ThumbnailKind
+0, android.provider, MediaStore.Video.Thumbnails, getThumbnail, kind, Android.Provider.VideoThumbnailKind
+0, android.provider, SearchRecentSuggestions, ctor, mode, Android.Content.DatabaseMode
+
+0, android.bluetooth, BluetoothAdapter, closeProfileProxy, profile, Android.Bluetooth.ProfileType
+0, android.bluetooth, BluetoothAdapter, getProfileConnectionState, profile, Android.Bluetooth.ProfileType
+0, android.bluetooth, BluetoothAdapter, getProfileProxy, profile, Android.Bluetooth.ProfileType
+0, android.bluetooth, [Interface]BluetoothProfile.ServiceListener, onServiceConnected, profile, Android.Bluetooth.ProfileType
+0, android.bluetooth, [Interface]BluetoothProfile.ServiceListener, onServiceDisconnected, profile, Android.Bluetooth.ProfileType
+
+0, android.bluetooth, BluetoothAdapter, getProfileConnectionState, return, Android.Bluetooth.ProfileState
+0, android.bluetooth, BluetoothHealthCallback, onHealthAppConfigurationStatusChange, status, Android.Bluetooth.HealthApplicationConfig
+0, android.bluetooth, BluetoothHealthCallback, onHealthChannelStateChange, prevState, Android.Bluetooth.HealthState
+0, android.bluetooth, BluetoothHealthCallback, onHealthChannelStateChange, newState, Android.Bluetooth.HealthState
+
+0, android.app, SearchableInfo, getImeOptions, return, Android.Views.InputMethods.ImeAction
+0, android.app, SearchableInfo, getInputType, return, Android.Text.InputTypes
+0, android.app, UiModeManager, getCurrentModeType, return, Android.Content.Res.UiMode
+0, android.app, UiModeManager, getNightMode, return, Android.App.UiNightMode
+0, android.app, UiModeManager, setNightMode, mode, Android.App.UiNightMode
+0, android.bluetooth, BluetoothHealthAppConfiguration, getRole, return, Android.Bluetooth.RoleType
+0, android.content, ContentResolver, addStatusChangeListener, mask, Android.Content.SyncObserverType
+0, android.content, Intent, parseUri, flags, Android.Content.IntentUriType
+0, android.content, Intent, toUri, flags, Android.Content.IntentUriType
+0, android.content.pm, PackageManager, verifyPendingInstall, verificationCode, Android.Content.PM.PackageInstallVerification
+0, android.hardware.usb, UsbDeviceConnection, controlTransfer, requestType, Android.Hardware.Usb.UsbAddressing
+0, android.location, LocationManager, addTestProvider, powerRequirement, Android.Locations.Power
+0, android.location, LocationProvider, getPowerRequirement, return, Android.Locations.Power
+0, android.location, LocationManager, setTestProviderStatus, status, Android.Locations.Availability
+0, android.os, [Interface]IBinder, transact, flags, Android.OS.TransactionFlags
+0, android.os, DropBoxManager.Entry, ctor, flags, Android.OS.DropBoxManagerFlags
+0, android.os, DropBoxManager.Entry, getFlags, return, Android.OS.DropBoxManagerFlags
+0, android.os, DropBoxManager, addData, flags, Android.OS.DropBoxManagerFlags
+0, android.os, DropBoxManager, addFile, flags, Android.OS.DropBoxManagerFlags
+0, android.os, FileObserver, ctor, mask, Android.OS.FileObserverEvents
+0, android.speech, [Interface]RecognitionListener, onError, error, Android.Speech.SpeechRecognizerError
+0, android.speech, RecognitionService.Callback, error, error, Android.Speech.SpeechRecognizerError
+0, android.speech.tts, [Interface]TextToSpeech.OnInitListener, onInit, status, Android.Speech.Tts.OperationResult
+0, android.speech.tts, [Interface]SynthesisCallback, audioAvailable, return, Android.Speech.Tts.OperationResult
+0, android.speech.tts, [Interface]SynthesisCallback, done, return, Android.Speech.Tts.OperationResult
+0, android.speech.tts, [Interface]SynthesisCallback, start, return, Android.Speech.Tts.OperationResult
+0, android.speech.tts, [Interface]SynthesisCallback, start, audioFormat, Android.Media.Encoding
+0, android.telephony, NeighboringCellInfo, ctor, radioType, Android.Telephony.NetworkType
+0, android.telephony, NeighboringCellInfo, getRadioType, return, Android.Telephony.NetworkType
+0, android.telephony, PhoneNumberUtils, getFormatTypeForLocale, return, Android.Telephony.PhoneNumberFormat
+0, android.telephony, SmsMessage, getStatusOnSim, return, Android.Telephony.Gsm.SmsStatusOnSim
+0, android.test.mock, MockPackageManager, verifyPendingInstall, verificationCode, Android.Content.PM.PackageInstallVerification
+0, android.util, LogPrinter, ctor, priority, Android.Util.LogPriority
+
+0, android.text, [Interface]Spanned, getSpanFlags, return, Android.Text.SpanTypes
+// FIXME: This does *not* implement Spanned, but the derived type (SpannableString) does
+// implement it, so this needs to change the return type and this method needs to be
+// interpreted as an implementation. A messy factor is, this class is *not* public!
+0, android.text, SpannableStringInternal, getSpanFlags, return, Android.Text.SpanTypes
+
+0, android.text.format, DateUtils, getDayOfWeekString, abbrev, Android.Text.Format.AbbreviationLength
+0, android.text.format, DateUtils, getMonthString, abbrev, Android.Text.Format.AbbreviationLength
+
+0, android.text.method, [Interface]KeyListener, getInputType, return, Android.Text.InputTypes
+0, android.text.method, BaseKeyListener, getInputType, return, Android.Text.InputTypes
+0, android.text.method, DateKeyListener, getInputType, return, Android.Text.InputTypes
+0, android.text.method, DateTimeKeyListener, getInputType, return, Android.Text.InputTypes
+0, android.text.method, DialerKeyListener, getInputType, return, Android.Text.InputTypes
+0, android.text.method, DigitsKeyListener, getInputType, return, Android.Text.InputTypes
+0, android.text.method, MultiTapKeyListener, getInputType, return, Android.Text.InputTypes
+0, android.text.method, NumberKeyListener, getInputType, return, Android.Text.InputTypes
+0, android.text.method, QwertyKeyListener, getInputType, return, Android.Text.InputTypes
+0, android.text.method, TextKeyListener, getInputType, return, Android.Text.InputTypes
+0, android.text.method, TimeKeyListener, getInputType, return, Android.Text.InputTypes
+
+0, android.text.style, ImageSpan, ctor, verticalAlignment, Android.Text.Style.SpanAlign
+0, android.text.style, StyleSpan, ctor, style, Android.Graphics.TypefaceStyle
+0, android.text.style, StyleSpan, getStyle, return, Android.Graphics.TypefaceStyle
+0, android.text.style, TextAppearanceSpan, ctor, style, Android.Graphics.TypefaceStyle
+0, android.text.style, TextAppearanceSpan, getTextStyle, return, Android.Graphics.TypefaceStyle
+0, android.text.style, SuggestionSpan, ctor, flags, Android.Text.Style.SuggestionSpanFlags
+0, android.text.style, SuggestionSpan, getFlags, return, Android.Text.Style.SuggestionSpanFlags
+0, android.text.style, SuggestionSpan, setFlags, flags, Android.Text.Style.SuggestionSpanFlags
+
+0, android.text, TextPaint, ctor, flags, Android.Graphics.PaintFlags
+0, android.text, TextUtils, getCapsMode, return, Android.Text.CapitalizationMode
+
+0, android.inputmethodservice, InputMethodService.InputMethodSessionImpl, toggleSoftInput, showFlags, Android.Views.InputMethods.ShowFlags
+0, android.view.inputmethod, [Interface]InputMethodSession, toggleSoftInput, showFlags, Android.Views.InputMethods.ShowFlags
+0, android.inputmethodservice, InputMethodService.InputMethodSessionImpl, toggleSoftInput, hideFlags, Android.Views.InputMethods.HideSoftInputFlags
+0, android.view.inputmethod, [Interface]InputMethodSession, toggleSoftInput, hideFlags, Android.Views.InputMethods.HideSoftInputFlags
+
+0, android.util, Base64, decode, flags, Android.Util.Base64Flags
+0, android.util, Base64, encode, flags, Android.Util.Base64Flags
+0, android.util, Base64, encodeToString, flags, Android.Util.Base64Flags
+0, android.util, TypedValue, coerceToString, type, Android.Util.DataType
+
+0, android.view.accessibility, AccessibilityEvent, eventTypeToString, eventType, Android.Views.Accessibility.EventTypes
+0, android.view.accessibility, AccessibilityEvent, obtain, eventType, Android.Views.Accessibility.EventTypes
+0, android.view.accessibility, [Interface]AccessibilityEventSource, sendAccessibilityEvent, eventType, Android.Views.Accessibility.EventTypes
+0, android.view.accessibility, AccessibilityManager, getEnabledAccessibilityServiceList, feedbackTypeFlags, Android.AccessibilityServices.FeedbackFlags
+0, android.view.accessibility, AccessibilityNodeInfo, getActions, return, Android.Views.Accessibility.Action
+0, android.view.accessibility, AccessibilityNodeInfo, addAction, action, Android.Views.Accessibility.Action
+0, android.view.accessibility, AccessibilityNodeInfo, performAction, action, Android.Views.Accessibility.Action
+
+0, android.view.animation, RotateAnimation, ctor, pivotXType, Android.Views.Animations.Dimension
+0, android.view.animation, RotateAnimation, ctor, pivotYType, Android.Views.Animations.Dimension
+0, android.view.animation, ScaleAnimation, ctor, pivotXType, Android.Views.Animations.Dimension
+0, android.view.animation, ScaleAnimation, ctor, pivotYType, Android.Views.Animations.Dimension
+0, android.view.animation, TranslateAnimation, ctor, fromXType, Android.Views.Animations.Dimension
+0, android.view.animation, TranslateAnimation, ctor, fromYType, Android.Views.Animations.Dimension
+0, android.view.animation, TranslateAnimation, ctor, toXType, Android.Views.Animations.Dimension
+0, android.view.animation, TranslateAnimation, ctor, toYType, Android.Views.Animations.Dimension
+
+0, android.view, Display, getPixelFormat, return, Android.Graphics.Format
+0, android.view, Gravity, getAbsoluteGravity, layoutDirection, Android.Views.GravityFlags
+0, android.view, Gravity, getAbsoluteGravity, return, Android.Views.GravityFlags
+0, android.view, [Interface]Menu, addIntentOptions, flags, Android.Views.MenuAppendFlags
+0, android.view, [Interface]Menu, performIdentifierAction, flags, Android.Views.MenuPerformFlags
+0, android.view, [Interface]MenuItem, setShowAsActionFlags, actionEnum, Android.Views.ShowAsAction
+0, android.view, WindowManager.LayoutParams, ctor, _flags, Android.Views.WindowManagerFlags
+0, android.view, WindowManager.LayoutParams, ctor, _format, Android.Graphics.Format
+0, android.view, WindowManager.LayoutParams, mayUseInputMethod, flags, Android.Views.WindowManagerFlags
+0, android.view, InputDevice.MotionRange, getSource, return, Android.Views.InputSourceType
+0, android.view, InputDevice, getMotionRange, source, Android.Views.InputSourceType
+0, android.view, InputDevice, getSources, return, Android.Views.InputSourceType
+0, android.view, InputDevice, getKeyboardType, return, Android.Views.InputKeyboardType
+0, android.view, InputEvent, getSource, return, Android.Views.InputSourceType
+0, android.view, KeyEvent, getSource, return, Android.Views.InputSourceType
+0, android.view, KeyEvent, setSource, source, Android.Views.InputSourceType
+0, android.view, MotionEvent, getSource, return, Android.Views.InputSourceType
+0, android.view, MotionEvent, setSource, source, Android.Views.InputSourceType
+
+0, android.view, KeyEvent, ctor, flags, Android.Views.KeyEventFlags
+0, android.view, KeyEvent, ctor, source, Android.Views.InputSourceType
+0, android.view, KeyEvent, changeTimeRepeat, newFlags, Android.Views.KeyEventFlags
+0, android.view, KeyEvent, hasModifiers, modifiers, Android.Views.MetaKeyStates
+0, android.view, KeyEvent, metaStateHasModifiers, modifiers, Android.Views.MetaKeyStates
+0, android.view, MotionEvent, getActionMasked, return, Android.Views.MotionEventActions
+0, android.view, MotionEvent, getButtonState, return, Android.Views.MotionEventButtonState
+0, android.view, MotionEvent, getFlags, return, Android.Views.MotionEventFlags
+0, android.view, MotionEvent, getToolType, return, Android.Views.MotionEventToolType
+0, android.view, MotionEvent, obtain, action, Android.Views.MotionEventActions
+0, android.view, MotionEvent, obtain, buttonState, Android.Views.MotionEventButtonState
+0, android.view, MotionEvent, obtain, source, Android.Views.InputSourceType
+0, android.view, MotionEvent, obtain, flags, Android.Views.MotionEventFlags
+
+0, android.view, View.AccessibilityDelegate, sendAccessibilityEvent, eventType, Android.Views.Accessibility.EventTypes
+0, android.view, View, getDrawingCacheQuality, return, Android.Views.DrawingCacheQuality
+0, android.view, View, setDrawingCacheQuality, quality, Android.Views.DrawingCacheQuality
+0, android.view, View, getOverScrollMode, return, Android.Views.OverScrollMode
+0, android.view, View, setOverScrollMode, overScrollMode, Android.Views.OverScrollMode
+0, android.view, View, dispatchDisplayHint, hint, Android.Views.ViewStates
+14, android.view, View, dispatchSystemUiVisibilityChanged, visibility, Android.Views.SystemUiFlags
+0, android.view, View, findViewsWithText, flags, Android.Views.FindViewsWith
+
+0, android.view.inputmethod, [Interface]InputConnection, getSelectedText, flags, Android.Views.InputMethods.GetTextFlags
+0, android.view.inputmethod, [Interface]InputConnection, getTextAfterCursor, flags, Android.Views.InputMethods.GetTextFlags
+0, android.view.inputmethod, [Interface]InputConnection, getTextBeforeCursor, flags, Android.Views.InputMethods.GetTextFlags
+0, android.view.inputmethod, [Interface]InputConnection, getExtractedText, flags, Android.Views.InputMethods.GetTextFlags
+
+0, android.view.inputmethod, [Interface]InputConnection, clearMetaKeyStates, states, Android.Views.MetaKeyStates
+0, android.view.inputmethod, [Interface]InputConnection, getCursorCapsMode, reqModes, Android.Text.CapitalizationMode
+0, android.view.inputmethod, [Interface]InputConnection, getCursorCapsMode, return, Android.Text.CapitalizationMode
+0, android.view.inputmethod, [Interface]InputConnection, performEditorAction, editorAction, Android.Views.InputMethods.ImeAction
+
+0, android.view.inputmethod, EditorInfo, makeCompatible, targetSdkVersion, Android.OS.BuildVersionCodes
+0, android.view.inputmethod, InputMethodManager, hideSoftInputFromInputMethod, flags, Android.Views.InputMethods.HideSoftInputFlags
+0, android.view.inputmethod, InputMethodManager, showSoftInput, flags, Android.Views.InputMethods.ShowFlags
+0, android.view.inputmethod, InputMethodManager, showSoftInputFromInputMethod, flags, Android.Views.InputMethods.ShowFlags
+
+0, android.view, OrientationEventListener, ctor, rate, Android.Hardware.SensorDelay
+0, android.view, OrientationListener, ctor, rate, Android.Hardware.SensorDelay
+
+0, android.view, Window, getVolumeControlStream, return, Android.Media.Stream
+0, android.view, Window, setVolumeControlStream, streamType, Android.Media.Stream
+0, android.view, Window, setSoftInputMode, mode, Android.Views.SoftInput
+0, android.view, Window, setType, type, Android.Views.WindowManagerTypes
+
+0, android.webkit, CacheManager.CacheResult, getHttpStatusCode, return, Java.Net.HttpStatus
+0, android.webkit, WebChromeClient, onShowCustomView, requestedOrientation, Android.Content.PM.ScreenOrientation
+
+0, android.widget, FrameLayout.LayoutParams, ctor, gravity, Android.Views.GravityFlags
+0, android.widget, FrameLayout, setForegroundGravity, foregroundGravity, Android.Views.GravityFlags
+0, android.widget, GridLayout.LayoutParams, setGravity, gravity, Android.Views.GravityFlags
+0, android.widget, GridLayout, getAlignmentMode, return, Android.Widget.GridAlign
+0, android.widget, GridLayout, setAlignmentMode, alignmentMode, Android.Widget.GridAlign
+0, android.widget, HorizontalScrollView, arrowScroll, direction, Android.Views.FocusSearchDirection
+0, android.widget, HorizontalScrollView, fullScroll, direction, Android.Views.FocusSearchDirection
+0, android.widget, HorizontalScrollView, pageScroll, direction, Android.Views.FocusSearchDirection
+0, android.widget, HorizontalScrollView, onRequestFocusInDescendants, direction, Android.Views.FocusSearchDirection
+
+0, android.widget, LinearLayout, setHorizontalGravity, horizontalGravity, Android.Views.GravityFlags
+0, android.widget, LinearLayout, setVerticalGravity, verticalGravity, Android.Views.GravityFlags
+0, android.widget, RelativeLayout, setHorizontalGravity, horizontalGravity, Android.Views.GravityFlags
+0, android.widget, RelativeLayout, setVerticalGravity, verticalGravity, Android.Views.GravityFlags
+
+0, android.widget, ListPopupWindow, getSoftInputMode, return, Android.Views.SoftInput
+0, android.widget, ListPopupWindow, setSoftInputMode, mode, Android.Views.SoftInput
+0, android.widget, PopupWindow, getSoftInputMode, return, Android.Views.SoftInput
+0, android.widget, PopupWindow, setSoftInputMode, mode, Android.Views.SoftInput
+0, android.widget, RemoteViews, setViewVisibility, visibility, Android.Views.ViewStates
+0, android.widget, SearchView, setImeOptions, imeOptions, Android.Views.InputMethods.ImeAction
+0, android.widget, SearchView, setInputType, inputType, Android.Text.InputTypes
+0, android.widget, Switch, setSwitchTypeface, style, Android.Graphics.TypefaceStyle
+
+0, android.widget, TextView, getAutoLinkMask, return, Android.Text.Util.MatchOptions
+0, android.widget, TextView, setAutoLinkMask, mask, Android.Text.Util.MatchOptions
+0, android.widget, TextView, getInputType, return, Android.Text.InputTypes
+0, android.widget, TextView, setInputType, type, Android.Text.InputTypes
+0, android.widget, TextView, getPaintFlags, return, Android.Graphics.PaintFlags
+0, android.widget, TextView, setPaintFlags, flags, Android.Graphics.PaintFlags
+0, android.widget, TextView, onEditorAction, actionCode, Android.Views.InputMethods.ImeAction
+
+0, java.awt.font, NumericShaper, getRanges, return, Java.Awt.Font.Ranges
+0, java.awt.font, NumericShaper, getContextualShaper, ranges, Java.Awt.Font.Ranges
+0, java.awt.font, NumericShaper, getShaper, singleRange, Java.Awt.Font.Ranges
+
+0, java.io, StreamTokenizer, nextToken, return, Java.IO.TokenType
+
+0, java.math, RoundingMode, valueOf, mode, Java.Math.RoundOptions
+
+0, java.net, HttpRetryException, ctor, code, Java.Net.HttpStatus
+0, java.net, HttpRetryException, responseCode, return, Java.Net.HttpStatus
+0, java.net, HttpURLConnection, getResponseCode, return, Java.Net.HttpStatus
+0, java.net, IDN, toASCII, flags, Java.Net.IDNFlags
+0, java.net, IDN, toUnicode, flags, Java.Net.IDNFlags
+0, java.nio.channels, SelectionKey, interestOps, operations, Java.Nio.Channels.Operations
+
+0, java.util, Calendar, add, field, Java.Util.CalendarField
+0, java.util, Calendar, clear, field, Java.Util.CalendarField
+0, java.util, Calendar, get, field, Java.Util.CalendarField
+0, java.util, Calendar, getActualMaximum, field, Java.Util.CalendarField
+0, java.util, Calendar, getActualMinimum, field, Java.Util.CalendarField
+// 0, java.util, Calendar, getDisplayName, field, Java.Util.CalendarField
+// 0, java.util, Calendar, getDisplayNames, field, Java.Util.CalendarField
+0, java.util, Calendar, getGreatestMinimum, field, Java.Util.CalendarField
+0, java.util, Calendar, getLeastMaximum, field, Java.Util.CalendarField
+0, java.util, Calendar, getMaximum, field, Java.Util.CalendarField
+0, java.util, Calendar, getMinimum, field, Java.Util.CalendarField
+0, java.util, Calendar, isSet, field, Java.Util.CalendarField
+0, java.util, Calendar, roll, field, Java.Util.CalendarField
+0, java.util, Calendar, set, field, Java.Util.CalendarField
+0, java.util, GregorianCalendar, add, field, Java.Util.CalendarField
+0, java.util, GregorianCalendar, get, field, Java.Util.CalendarField
+0, java.util, GregorianCalendar, getActualMaximum, field, Java.Util.CalendarField
+0, java.util, GregorianCalendar, getActualMinimum, field, Java.Util.CalendarField
+0, java.util, GregorianCalendar, getGreatestMinimum, field, Java.Util.CalendarField
+0, java.util, GregorianCalendar, getLeastMaximum, field, Java.Util.CalendarField
+0, java.util, GregorianCalendar, getMaximum, field, Java.Util.CalendarField
+0, java.util, GregorianCalendar, getMinimum, field, Java.Util.CalendarField
+0, java.util, GregorianCalendar, roll, field, Java.Util.CalendarField
+
+// 0, java.util, Calendar, getDisplayName, style, Java.Util.CalendarStyle
+// 0, java.util, Calendar, getDisplayNames, style, Java.Util.CalendarStyle
+0, java.util, [Interface]Formattable, formatTo, flags, Java.Util.FormatFlags
+0, java.util.regex, Pattern, compile, flags, Java.Util.Regex.RegexOptions
+0, java.util.regex, Pattern, flags, return, Java.Util.Regex.RegexOptions
+0, java.util, TimeZone, getDisplayName, style, Java.Util.TimeZoneStyle
+
+0, javax.crypto, Cipher, unwrap, wrappedKeyType, Javax.Crypto.KeyType
+0, javax.crypto, Cipher, init, opmode, Javax.Crypto.CipherMode
+
+// API Level 16
+
+16, android.accessibilityservice, AccessibilityService, performGlobalAction, action, Android.AccessibilityServices.GlobalAction
+16, android.animation, LayoutTransition, isTransitionTypeEnabled, transitionType, Android.Animation.LayoutTransitionType
+16, android.animation, LayoutTransition, disableTransitionType, transitionType, Android.Animation.LayoutTransitionType
+16, android.animation, LayoutTransition, enableTransitionType, transitionType, Android.Animation.LayoutTransitionType
+16, android.animation, LayoutTransition, hideChild, newVisibility, Android.Views.ViewStates
+16, android.animation, LayoutTransition, showChild, oldVisibility, Android.Views.ViewStates
+16, android.app, MediaRouteActionProvider, setRouteTypes, types, Android.Media.MediaRouteType
+16, android.app, MediaRouteButton, getRouteTypes, return, Android.Media.MediaRouteType
+16, android.app, MediaRouteButton, setRouteTypes, types, Android.Media.MediaRouteType
+16, android.app, TaskStackBuilder, getPendingIntent, flags, Android.App.PendingIntentFlags
+16, android.media, MediaActionSound, load, soundName, Android.Media.MediaActionSoundType
+16, android.media, MediaActionSound, play, soundName, Android.Media.MediaActionSoundType
+16, android.media, MediaCodec.CryptoInfo, set, newMode, Android.Media.MediaCodecCryptoMode
+16, android.media, MediaCodec.BufferInfo, set, newFlags, Android.Media.MediaCodecBufferFlags
+16, android.media, MediaCodec, configure, flags, Android.Media.MediaCodecConfigFlags
+16, android.media, MediaCodec, queueInputBuffer, flags, Android.Media.MediaCodecBufferFlags
+16, android.media, MediaCodec, queueSecureInputBuffer, flags, Android.Media.MediaCodecBufferFlags
+16, android.media, MediaCodec, setVideoScalingMode, mode, Android.Media.VideoScalingMode
+16, android.media.audiofx, Visualizer, getScalingMode, return, Android.Media.Audiofx.VisualizerScalingMode
+16, android.media.audiofx, Visualizer, setScalingMode, mode, Android.Media.Audiofx.VisualizerScalingMode
+16, android.media, MediaExtractor, getSampleFlags, return, Android.Media.MediaExtractorSampleFlags
+16, android.media, MediaExtractor, seekTo, mode, Android.Media.MediaExtractorSeekTo
+16, android.media, MediaPlayer.TrackInfo, getTrackType, return, Android.Media.MediaTrackType
+16, android.media, MediaPlayer, setVideoScalingMode, mode, Android.Media.VideoScalingMode
+16, android.media, MediaRouter.Callback, onRouteSelected, type, Android.Media.MediaRouteType
+16, android.media, MediaRouter.Callback, onRouteUnselected, type, Android.Media.MediaRouteType
+16, android.media, MediaRouter.SimpleCallback, onRouteSelected, type, Android.Media.MediaRouteType
+16, android.media, MediaRouter.SimpleCallback, onRouteUnselected, type, Android.Media.MediaRouteType
+16, android.media, MediaRouter.RouteCategory, getSupportedTypes, return, Android.Media.MediaTrackType
+16, android.media, MediaRouter.RouteInfo, getSupportedTypes, return, Android.Media.MediaTrackType
+16, android.media, MediaRouter.RouteInfo, getPlaybackStream, return, Android.Media.Stream
+16, android.media, MediaRouter.RouteInfo, getPlaybackType, return, Android.Media.MediaPlaybackType
+16, android.media, MediaRouter.UserRouteInfo, setPlaybackType, type, Android.Media.MediaPlaybackType
+16, android.media, MediaRouter.RouteInfo, getVolumeHandling, return, Android.Media.VolumeHandling
+16, android.media, MediaRouter.UserRouteInfo, setPlaybackStream, stream, Android.Media.Stream
+16, android.media, MediaRouter.UserRouteInfo, setVolumeHandling, volumeHandling, Android.Media.VolumeHandling
+16, android.media, MediaRouter, getSelectedRoute, type, Android.Media.MediaRouteType
+16, android.media, MediaRouter, addCallback, types, Android.Media.MediaRouteType
+16, android.media, MediaRouter, selectRoute, types, Android.Media.MediaRouteType
+16, android.media, MediaSyncEvent, createEvent, eventType, Android.Media.MediaSyncEventType
+16, android.media, MediaSyncEvent, getType, return, Android.Media.MediaSyncEventType
+16, android.net.nsd, [Interface]NsdManager.RegistrationListener, onRegistrationFailed, errorCode, Android.Net.Nsd.NsdFailure
+16, android.net.nsd, [Interface]NsdManager.RegistrationListener, onUnregistrationFailed, errorCode, Android.Net.Nsd.NsdFailure
+16, android.net.nsd, [Interface]NsdManager.DiscoveryListener, onStartDiscoveryFailed, errorCode, Android.Net.Nsd.NsdFailure
+16, android.net.nsd, [Interface]NsdManager.DiscoveryListener, onStopDiscoveryFailed, errorCode, Android.Net.Nsd.NsdFailure
+16, android.net.nsd, [Interface]NsdManager.ResolveListener, onResolveFailed, errorCode, Android.Net.Nsd.NsdFailure
+16, android.net.nsd, NsdManager, discoverServices, protocolType, Android.Net.Nsd.NsdProtocol
+16, android.net.nsd, NsdManager, registerService, protocolType, Android.Net.Nsd.NsdProtocol
+16, android.net.wifi.p2p.nsd, WifiP2pServiceRequest, newInstance, protocolType, Android.Net.Wifi.P2p.Nsd.ServiceType
+16, android.net.wifi.p2p, [Interface]WifiP2pManager.ServiceResponseListener, onServiceAvailable, protocolType, Android.Net.Wifi.P2p.Nsd.ServiceType
+0, android.telephony, PhoneNumberUtils, stringFromStringAndTOA, TOA, Android.Telephony.PhoneNumberToa
+16, android.view.accessibility, AccessibilityEvent, getAction, return, Android.AccessibilityServices.GlobalAction
+16, android.view.accessibility, AccessibilityEvent, setAction, action, Android.AccessibilityServices.GlobalAction
+16, android.view.accessibility, AccessibilityEvent, getMovementGranularity, return, Android.Views.Accessibility.MovementGranularity
+16, android.view.accessibility, AccessibilityEvent, setMovementGranularity, granularity, Android.Views.Accessibility.MovementGranularity
+16, android.view.accessibility, AccessibilityNodeInfo, findFocus, focus, Android.Views.Accessibility.NodeFocus
+16, android.view.accessibility, AccessibilityNodeInfo, focusSearch, direction, Android.Views.FocusSearchDirection
+16, android.view.accessibility, AccessibilityNodeInfo, getMovementGranularities, return, Android.Views.Accessibility.MovementGranularity
+16, android.view.accessibility, AccessibilityNodeInfo, setMovementGranularities, granularities, Android.Views.Accessibility.MovementGranularity
+16, android.view.accessibility, AccessibilityNodeProvider, performAction, action, Android.AccessibilityServices.GlobalAction
+16, android.view, View, performAccessibilityAction, action, Android.AccessibilityServices.GlobalAction
+16, android.view, View.AccessibilityDelegate, performAccessibilityAction, action, Android.AccessibilityServices.GlobalAction
+16, android.view, View, getImportantForAccessibility, return, Android.Views.ImportantForAccessibility
+16, android.view, View, setImportantForAccessibility, mode, Android.Views.ImportantForAccessibility
+16, android.view, View, getWindowSystemUiVisibility, return, Android.Views.SystemUiFlags
+16, android.view, View, onWindowSystemUiVisibilityChanged, visible, Android.Views.SystemUiFlags
+// huh, visiblity...
+16, android.view, View, dispatchWindowSystemUiVisiblityChanged, visible, Android.Views.SystemUiFlags
+16, android.view, View, dispatchWindowSystemUiVisibilityChanged, visible, Android.Views.SystemUiFlags
+16, android.view, View, dispatchWindowVisibilityChanged, visibility, Android.Views.ViewStates
+16, android.view, View, onScreenStateChanged, screenState, Android.Views.ScreenState
+16, android.widget, CheckedTextView, layoutDirection, layoutDirection, Android.Views.FocusSearchDirection
+16, android.widget, FrameLayout, getForegroundGravity, return, Android.Views.GravityFlags
+16, android.widget, FrameLayout, setForegroundGravity, foregroundGravity, Android.Views.GravityFlags
+16, android.widget, GridView, getGravity, return, Android.Views.GravityFlags
+16, android.widget, RelativeLayout, getGravity, return, Android.Views.GravityFlags
+16, android.widget, Spinner, getGravity, return, Android.Views.GravityFlags
+16, android.widget, SearchView, getImeOptions, return, Android.Views.InputMethods.ImeAction
+16, android.widget, SearchView, getInputType, return, Android.Text.InputTypes
+
+// API Level 17
+17, android.app.admin, DevicePolicyManager, getKeyguardDisabledFeatures, return, Android.App.Admin.KeyguardDisable
+17, android.app.admin, DevicePolicyManager, setKeyguardDisabledFeatures, which, Android.App.Admin.KeyguardDisable
+17, android.content.pm, PackageManager, extendVerificationTimeout, verificationCodeAtTimeout, Android.Content.PM.PackageInstallVerification
+17, android.test.mock, MockPackageManager, extendVerificationTimeout, verificationCodeAtTimeout, Android.Content.PM.PackageInstallVerification
+17, android.content.pm, PermissionInfo, flags, , Android.Content.PM.PermissionInfoFlags
+17, android.content.pm, PermissionGroupInfo, flags, , Android.Content.PM.PermissionGroupInfoFlags
+17, android.content.pm, ProviderInfo, flags, , Android.Content.PM.ProviderInfoFlags
+17, android.content.res, Configuration, getLayoutDirection, return, Android.Views.LayoutDirection
+17, android.nfc.tech, NfcBarcode, getType, return, Android.Nfc.Tech.NfcBarcodeType
+17, android.text, TextUtils, getLayoutDirectionFromLocale, return, Android.Views.TextDirection
+17, android.view, Display, getFlags, return, Android.Views.DisplayFlags
+17, android.view, View, getLayoutDirection, return, Android.Views.LayoutDirection
+17, android.view, View, onRtlPropertiesChanged, layoutDirection, Android.Views.LayoutDirection
+17, android.view, View, setLayoutDirection, layoutDirection, Android.Views.LayoutDirection
+17, android.view, View, getTextAlignment, return, Android.Views.TextAlignment
+17, android.view, View, setTextAlignment, textAlignment, Android.Views.TextAlignment
+17, android.view, View, getTextDirection, return, Android.Views.TextDirection
+17, android.view, View, setTextDirection, textDirection, Android.Views.TextDirection
+17, android.view, ViewGroup.MarginLayoutParams, getLayoutDirection, return, Android.Views.LayoutDirection
+17, android.view, ViewGroup.MarginLayoutParams, setLayoutDirection, layoutDirection, Android.Views.LayoutDirection
+17, android.view, ViewGroup.LayoutParams, resolveLayoutDirection, layoutDirection, Android.Views.LayoutDirection
+17, android.widget, RelativeLayout.LayoutParams, removeRule, verb, Android.Widget.LayoutRules
+
+// API Level 18
+18, android.accessibilityservice, AccessibilityServiceInfo, capabilityToString, capability, Android.AccessibilityServices.AccessibilityServiceCapabilities
+18, android.accessibilityservice, AccessibilityServiceInfo, getCapabilities, return, Android.AccessibilityServices.AccessibilityServiceCapabilities
+18, android.app, UiAutomation, performGlobalAction, action, Android.AccessibilityServices.GlobalAction
+18, android.app, UiAutomation, setRotation, rotation, Android.App.UiAutomationRotation
+18, android.bluetooth, BluetoothDevice, getType, return, Android.Bluetooth.BluetoothDeviceType
+18, android.bluetooth, BluetoothGattCallback, onCharacteristicRead, status, Android.Bluetooth.GattStatus
+18, android.bluetooth, BluetoothGattCallback, onCharacteristicWrite, status, Android.Bluetooth.GattStatus
+18, android.bluetooth, BluetoothGattCallback, onConnectionStateChange, status, Android.Bluetooth.GattStatus
+18, android.bluetooth, BluetoothGattCallback, onConnectionStateChange, newState, Android.Bluetooth.ProfileState
+18, android.bluetooth, BluetoothGattCallback, onDescriptorRead, status, Android.Bluetooth.GattStatus
+18, android.bluetooth, BluetoothGattCallback, onDescriptorWrite, status, Android.Bluetooth.GattStatus
+18, android.bluetooth, BluetoothGattCallback, onReadRemoteRssi, status, Android.Bluetooth.GattStatus
+18, android.bluetooth, BluetoothGattCallback, onReliableWriteCompleted, status, Android.Bluetooth.GattStatus
+18, android.bluetooth, BluetoothGattCallback, onServicesDiscovered, status, Android.Bluetooth.GattStatus
+18, android.bluetooth, BluetoothGattCharacteristic, ctor, properties, Android.Bluetooth.GattProperty
+18, android.bluetooth, BluetoothGattCharacteristic, ctor, permissions, Android.Bluetooth.GattPermission
+18, android.bluetooth, BluetoothGattCharacteristic, getFloatValue, formatType, Android.Bluetooth.GattFormat
+18, android.bluetooth, BluetoothGattCharacteristic, getIntValue, formatType, Android.Bluetooth.GattFormat
+18, android.bluetooth, BluetoothGattCharacteristic, getPermissions, return, Android.Bluetooth.GattPermission
+18, android.bluetooth, BluetoothGattCharacteristic, getProperties, return, Android.Bluetooth.GattProperty
+18, android.bluetooth, BluetoothGattCharacteristic, getWriteType, return, Android.Bluetooth.GattWriteType
+18, android.bluetooth, BluetoothGattCharacteristic, setValue, formatType, Android.Bluetooth.GattFormat
+18, android.bluetooth, BluetoothGattCharacteristic, setWriteType, writeType, Android.Bluetooth.GattWriteType
+18, android.bluetooth, BluetoothGattDescriptor, ctor, permissions, Android.Bluetooth.GattDescriptorPermission
+18, android.bluetooth, BluetoothGattDescriptor, getPermissions, return, Android.Bluetooth.GattDescriptorPermission
+18, android.bluetooth, BluetoothGattServer, getConnectionState, return, Android.Bluetooth.ProfileState
+18, android.bluetooth, BluetoothGattServer, sendResponse, status, Android.Bluetooth.ProfileState
+18, android.bluetooth, BluetoothGattServerCallback, onConnectionStateChange, status, Android.Bluetooth.ProfileState
+18, android.bluetooth, BluetoothGattServerCallback, onConnectionStateChange, newState, Android.Bluetooth.ProfileState
+18, android.bluetooth, BluetoothGattServerCallback, onServiceAdded, status, Android.Bluetooth.ProfileState
+18, android.bluetooth, BluetoothGattService, ctor, serviceType, Android.Bluetooth.GattServiceType
+18, android.bluetooth, BluetoothGattService, getType, return, Android.Bluetooth.GattServiceType
+18, android.bluetooth, BluetoothManager, getConnectedDevices, profile, Android.Bluetooth.ProfileType
+18, android.bluetooth, BluetoothManager, getConnectionState, profile, Android.Bluetooth.ProfileType
+18, android.bluetooth, BluetoothManager, getConnectionState, return, Android.Bluetooth.ProfileState
+18, android.bluetooth, BluetoothManager, getDevicesMatchingConnectionStates, profile, Android.Bluetooth.ProfileType
+18, android.content, RestrictionEntry, getType, return, Android.Content.RestrictionEntryType
+18, android.content, RestrictionEntry, setType, type, Android.Content.RestrictionEntryType
+18, android.content.pm, PackageManager, getPackagesHoldingPermissions, flags, Android.Content.PM.PackageInfoFlags
+18, android.hardware.location, GeofenceHardware, addGeofence, monitoringType, Android.Hardware.Location.GeofenceMonitoringType
+18, android.hardware.location, GeofenceHardware, pauseGeofence, monitoringType, Android.Hardware.Location.GeofenceMonitoringType
+18, android.hardware.location, GeofenceHardware, registerForMonitorStateChangeCallback, monitoringType, Android.Hardware.Location.GeofenceMonitoringType
+18, android.hardware.location, GeofenceHardware, removeGeofence, monitoringType, Android.Hardware.Location.GeofenceMonitoringType
+18, android.hardware.location, GeofenceHardware, resumeGeofence, monitoringType, Android.Hardware.Location.GeofenceMonitoringType
+18, android.hardware.location, GeofenceHardware, resumeGeofence, monitorTransition, Android.Hardware.Location.GeofenceTransition
+18, android.hardware.location, GeofenceHardware, unregisterForMonitorStateChangeCallback, monitoringType, Android.Hardware.Location.GeofenceMonitoringType
+18, android.hardware.location, GeofenceHardware, getStatusOfMonitoringType, monitoringType, Android.Hardware.Location.GeofenceMonitoringType
+18, android.hardware.location, GeofenceHardwareCallback, onGeofenceAdd, status, Android.Hardware.Location.GeofenceMonitorStatus
+18, android.hardware.location, GeofenceHardwareCallback, onGeofencePause, status, Android.Hardware.Location.GeofenceMonitorStatus
+18, android.hardware.location, GeofenceHardwareCallback, onGeofenceRemove, status, Android.Hardware.Location.GeofenceMonitorStatus
+18, android.hardware.location, GeofenceHardwareCallback, onGeofenceResume, status, Android.Hardware.Location.GeofenceMonitorStatus
+18, android.hardware.location, GeofenceHardwareCallback, onGeofenceTransition, transition, Android.Hardware.Location.GeofenceTransition
+18, android.hardware.location, GeofenceHardwareCallback, onGeofenceTransition, status, Android.Hardware.Location.GeofenceMonitorStatus
+18, android.hardware.location, GeofenceHardwareMonitorCallback, onMonitoringSystemChange, monitoringType, Android.Hardware.Location.GeofenceMonitoringType
+18, android.hardware.location, GeofenceHardwareRequest, getLastTransition, return, Android.Hardware.Location.GeofenceTransition
+18, android.hardware.location, GeofenceHardwareRequest, setLastTransition, lastTransition, Android.Hardware.Location.GeofenceTransition
+18, android.hardware.location, GeofenceHardwareRequest, getMonitorTransitions, return, Android.Hardware.Location.GeofenceTransition
+18, android.hardware.location, GeofenceHardwareRequest, setMonitorTransitions, monitorTransitions, Android.Hardware.Location.GeofenceTransition
+// 18, android.media, MediaDrm, getKeyRequest, keyType, Android.Media.MediaDrmKeyRequestType
+18, android.media, [Interface]MediaDrm.OnEventListener, onEvent, event, Android.Media.MediaDrmEventType
+18, android.media, MediaMuxer, ctor, format, Android.Media.MuxerOutputType
+18, android.media, MediaRouter, addCallback, flags, Android.Media.MediaRouterCallbackFlags
+18, android.net.wifi, WifiEnterpriseConfig, getEapMethod, return, Android.Net.Wifi.WifiEapMethod
+18, android.net.wifi, WifiEnterpriseConfig, setEapMethod, eapMethod, Android.Net.Wifi.WifiEapMethod
+18, android.net.wifi, WifiEnterpriseConfig, getPhase2Method, return, Android.Net.Wifi.WifiPhase2Method
+18, android.net.wifi, WifiEnterpriseConfig, setPhase2Method, phase2Method, Android.Net.Wifi.WifiPhase2Method
+// 18, android.util, Base64InputStream, ctor, flags, Android.Util.Base64Flags
+// 18, android.util, Base64OutputStream, ctor, flags, Android.Util.Base64Flags
+18, android.view, WindowManager.LayoutParams, rotationAnimation, , Android.Views.WindowRotationAnimation
+18, android.view, InputDevice.MotionRange, isFromSource, source, Android.Views.InputSourceType
+18, android.view, InputEvent, isFromSource, source, Android.Views.InputSourceType
+18, android.view, ViewGroup, getLayoutMode, return, Android.Views.ViewLayoutMode
+18, android.view, ViewGroup, setLayoutMode, layoutMode, Android.Views.ViewLayoutMode
+// this caused build error - could we get this override automatically changed to use enum?
+18, android.test.mock, MockPackageManager, getPackagesHoldingPermissions, flags, Android.Content.PM.PackageInfoFlags
+
+// API Level 19
+19, android.app, AppOpsManager, checkOp, return, Android.App.AppOpsManagerMode
+19, android.app, AppOpsManager, checkOpNoThrow, return, Android.App.AppOpsManagerMode
+19, android.app, AppOpsManager, noteOp, return, Android.App.AppOpsManagerMode
+19, android.app, AppOpsManager, noteOpNoThrow, return, Android.App.AppOpsManagerMode
+19, android.app, AppOpsManager, startOp, return, Android.App.AppOpsManagerMode
+19, android.app, AppOpsManager, startOpNoThrow, return, Android.App.AppOpsManagerMode
+19, android.app, AppOpsManager, startOpNoThrow, return, Android.App.AppOpsManagerMode
+19, android.hardware.display, DisplayManager, createVirtualDisplay, flags, Android.Hardware.Display.VirtualDisplayFlags
+19, android.media.audiofx, Visualizer, getMeasurementMode, return, Android.Media.Audiofx.VisualizerMeasurementMode
+19, android.media.audiofx, Visualizer, setMeasurementMode, mode, Android.Media.Audiofx.VisualizerMeasurementMode
+// They were added at API Level 16, but did not come up with corresponding error code until API Level 19 (!)
+16, android.media, MediaCodec.CryptoException, ctor, errorCode, Android.Media.MediaCodecCryptoErrorType
+16, android.media, MediaCodec.CryptoException, getErrorCode, return, Android.Media.MediaCodecCryptoErrorType
+19, android.media, MediaMetadataEditor, addEditableKey, key, Android.Media.MediaMetadataEditKey
+19, android.media, MediaMetadataEditor, getBitmap, key, Android.Media.MediaMetadataEditKey
+19, android.media, MediaMetadataEditor, getEditableKeys, return, Android.Media.MediaMetadataEditKey[]
+19, android.media, MediaMetadataEditor, getLong, key, Android.Media.MediaMetadataEditKey
+19, android.media, MediaMetadataEditor, getObject, key, Android.Media.MediaMetadataEditKey
+19, android.media, MediaMetadataEditor, getString, key, Android.Media.MediaMetadataEditKey
+19, android.media, MediaMetadataEditor, putBitmap, key, Android.Media.MediaMetadataEditKey
+19, android.media, MediaMetadataEditor, putLong, key, Android.Media.MediaMetadataEditKey
+19, android.media, MediaMetadataEditor, putObject, key, Android.Media.MediaMetadataEditKey
+19, android.media, MediaMetadataEditor, putString, key, Android.Media.MediaMetadataEditKey
+19, android.media, Rating, getRatingStyle, return, Android.Media.RatingStyle
+19, android.media, Rating, newStarRating, starRatingStyle, Android.Media.RatingStyle
+19, android.media, Rating, newUnratedRating, ratingStyle, Android.Media.RatingStyle
+19, android.media, RemoteController, setSynchronizationMode, sync, Android.Media.SynchronizationPosition
+19, android.net, LocalSocket, ctor, sockType, Android.Net.SocketType
+19, android.nfc.cardemulation, CardEmulation, getSelectionModeForCategory, return, Android.Nfc.CardEmulators.CardSelectionMode
+19, android.nfc.cardemulation, HostApduService, onDeactivated, reason, Android.Nfc.CardEmulators.DeactivationReason
+19, android.nfc, NfcAdapter, enableReaderMode, flags, Android.Nfc.NfcReaderFlags
+19, android.print, PrintAttributes, getColorMode, return, Android.Print.PrintColorMode
+19, android.print, PrintAttributes.Builder, setColorMode, colorMode, Android.Print.PrintColorMode
+19, android.print, PrintDocumentInfo, getContentType, return, Android.Print.PrintContentType
+19, android.print, PrintDocumentInfo.Builder, setContentType, type, Android.Print.PrintContentType
+19, android.print, PrintJobInfo, getState, return, Android.Print.PrintJobState
+19, android.print, PrinterInfo, getStatus, return, Android.Print.PrinterStatus
+19, android.print, PrinterInfo.Builder, ctor, status, Android.Print.PrinterStatus
+19, android.print, PrinterInfo.Builder, setStatus, status, Android.Print.PrinterStatus
+19, android.transition, Fade, ctor, fadingMode, Android.Transitions.FadingMode
+19, android.transition, TransitionSet, getOrdering, return, Android.Transitions.TransitionOrdering
+19, android.transition, TransitionSet, setOrdering, ordering, Android.Transitions.TransitionOrdering
+19, android.view.accessibility, AccessibilityEvent, getContentChangeTypes, return, Android.Views.Accessibility.ContentChangeTypes
+19, android.view.accessibility, AccessibilityEvent, setContentChangeTypes, changeTypes, Android.Views.Accessibility.ContentChangeTypes
+19, android.view.accessibility, AccessibilityNodeInfo.RangeInfo, getType, return, Android.Views.Accessibility.RangeType
+19, android.view.accessibility, AccessibilityNodeInfo.RangeInfo, obtain, type, Android.Views.Accessibility.RangeType
+19, android.view.accessibility, AccessibilityNodeInfo, getInputType, return, Android.Text.InputTypes
+19, android.view.accessibility, AccessibilityNodeInfo, setInputType, inputType, Android.Text.InputTypes
+19, android.view.accessibility, AccessibilityNodeInfo, getLiveRegion, return, Android.Views.AccessibilityLiveRegion
+19, android.view.accessibility, AccessibilityNodeInfo, setLiveRegion, mode, Android.Views.AccessibilityLiveRegion
+19, android.view.accessibility, CaptioningManager.CaptionStyle, edgeType, , Android.Views.Accessibility.CaptionStyles
+19, android.view, View, getAccessibilityLiveRegion, return, Android.Views.AccessibilityLiveRegion
+19, android.view, View, setAccessibilityLiveRegion, mode, Android.Views.AccessibilityLiveRegion
+19, android.app, AlarmManager, setExact, type, Android.App.AlarmType
+19, android.app, AlarmManager, setWindow, type, Android.App.AlarmType
+19, android.content, ContentResolver, releasePersistableUriPermission, modeFlags, Android.Content.ActivityFlags
+19, android.content, ContentResolver, takePersistableUriPermission, modeFlags, Android.Content.ActivityFlags
+19, android.content, IntentFilter, addDataSchemeSpecificPart, type, Android.OS.Pattern
+19, android.content.pm, PackageManager, queryIntentContentProviders, flags, Android.Content.PM.PackageInfoFlags
+19, android.location,SettingInjectorService,onStartCommand,flags,Android.App.StartCommandFlags
+19, android.location,SettingInjectorService,onStartCommand,return,Android.App.StartCommandResult
+19, android.media, Image, getFormat, return, Android.Graphics.ImageFormatType
+19, android.media, ImageReader, getImageFormat, return, Android.Graphics.ImageFormatType
+19, android.media, ImageReader, newInstance, format, Android.Graphics.ImageFormatType
+19, android.media, [Interface]RemoteControlClient.OnMetadataUpdateListener, onMetadataUpdate, key, Android.Media.MediaMetadataEditKey
+19, android.media, [Interface]RemoteController.OnClientUpdateListener, onClientPlaybackStateUpdate, state, Android.Media.RemoteControlPlayState
+19, android.media, [Interface]RemoteController.OnClientUpdateListener, onClientTransportControlUpdate, transportControlFlags, Android.Media.RemoteControlFlags
+19, android.os, ParcelFileDescriptor, parseMode, return, Android.OS.ParcelFileMode
+19, android.test.mock, MockPackageManager, queryIntentContentProviders, flags, Android.Content.PM.PackageInfoFlags
+19, android.view, [Interface]ViewParent, getLayoutDirection, return, Android.Views.LayoutDirection
+19, android.view, [Interface]ViewParent, getTextAlignment, return, Android.Views.TextAlignment
+19, android.view, [Interface]ViewParent, getTextDirection, return, Android.Views.TextDirection
+19, android.view.accessibility, AccessibilityNodeProvider, findFocus, focus, Android.Views.Accessibility.NodeFocus
+19, android.view, [Interface]ViewParent, notifySubtreeAccessibilityStateChanged, changeType, Android.Views.Accessibility.ContentChangeTypes
+19, android.view, MotionEvent, actionToString, action, Android.Views.MotionEventActions
+19, android.widget, ListPopupWindow, setDropDownGravity, gravity, Android.Views.GravityFlags
+19, android.widget, PopupMenu, ctor, gravity, Android.Views.GravityFlags
+19, android.widget, PopupWindow, showAsDropDown, gravity, Android.Views.GravityFlags
+
+// API Level 20
+20, android.app, Notification.WearableExtender, getContentIconGravity, return, Android.Views.GravityFlags
+20, android.app, Notification.WearableExtender, getCustomSizePreset, return, Android.App.WearableSizePreset
+20, android.app, Notification.WearableExtender, getGravity, return, Android.Views.GravityFlags
+20, android.app, Notification.WearableExtender, setContentIconGravity, contentIconGravity, Android.Views.GravityFlags
+20, android.app, Notification.WearableExtender, setCustomSizePreset, sizePreset, Android.App.WearableSizePreset
+20, android.app, Notification.WearableExtender, setGravity, gravity, Android.Views.GravityFlags
+20, android.view, Display, getState, return, Android.Views.DisplayState
+
+// API Level 21
+21, android.accessibilityservice, AccessibilityService, findFocus, focus, Android.Views.Accessibility.NodeFocus
+21, android.app.job, JobInfo, getBackoffPolicy, return, Android.App.Job.BackoffPolicy
+21, android.app.job, JobInfo, getNetworkType, return, Android.App.Job.NetworkType
+21, android.app.job, JobInfo.Builder, setBackoffCriteria, backoffPolicy, Android.App.Job.BackoffPolicy
+21, android.app.job, JobInfo.Builder, setRequiredNetworkType, networkType, Android.App.Job.NetworkType
+21, android.app, Notification.Builder, setVisibility, visibility, Android.App.NotificationVisibility
+21, android.app, Notification, visibility, , Android.App.NotificationVisibility
+21, android.app, UiAutomation, findFocus, focus, Android.Views.Accessibility.NodeFocus
+21, android.app.usage, UsageEvents.Event, getEventType, return, Android.App.Usage.UsageEventType
+21, android.app.usage, UsageStatsManager, queryConfigurations, intervalType, Android.App.Usage.UsageStatsInterval
+21, android.app.usage, UsageStatsManager, queryUsageStats, intervalType, Android.App.Usage.UsageStatsInterval
+21, android.appwidget, AppWidgetHost, startAppWidgetConfigureActivityForResult, intentFlags, Android.Content.ActivityFlags
+21, android.bluetooth, BluetoothGatt, requestConnectionPriority, connectionPriority, Android.Bluetooth.GattConnectionPriority
+21, android.bluetooth, BluetoothGattCallback, onMtuChanged, status, Android.Bluetooth.GattStatus
+21, android.bluetooth, BluetoothGattServerCallback, onNotificationSent, status, Android.Bluetooth.GattStatus
+21, android.bluetooth.le, AdvertiseCallback, onFailure, errorCode, Android.Bluetooth.LE.AdvertiseFailure
+21, android.bluetooth.le, AdvertiseSettings, getMode, return, Android.Bluetooth.LE.AdvertiseMode
+21, android.bluetooth.le, AdvertiseCallback, onStartFailure, errorCode, Android.Bluetooth.LE.AdvertiseFailure
+21, android.bluetooth.le, AdvertiseSettings, getTxPowerLevel, return, Android.Bluetooth.LE.AdvertiseTx
+21, android.bluetooth.le, AdvertiseSettings, getType, return, Android.Bluetooth.LE.AdvertiseType
+21, android.bluetooth.le, AdvertiseSettings.Builder, setAdvertiseMode, advertiseMode, Android.Bluetooth.LE.AdvertiseMode
+21, android.bluetooth.le, AdvertiseSettings.Builder, setTxPowerLevel, txPowerLevel, Android.Bluetooth.LE.AdvertiseTx
+21, android.bluetooth.le, AdvertiseSettings.Builder, setType, type, Android.Bluetooth.LE.AdvertiseType
+21, android.bluetooth.le, ScanCallback, onScanFailed, errorCode, Android.Bluetooth.LE.ScanFailure
+21, android.bluetooth.le, ScanCallback, onScanResult, callbackType, Android.Bluetooth.LE.ScanCallbackType
+21, android.bluetooth.le, ScanRecord, getTxPowerLevel, return, Android.Bluetooth.LE.AdvertiseTx
+21, android.bluetooth.le, ScanSettings, getCallbackType, return, Android.Bluetooth.LE.ScanCallbackType
+21, android.bluetooth.le, ScanSettings, getScanMode, return, Android.Bluetooth.LE.ScanMode
+21, android.bluetooth.le, ScanSettings.Builder, setCallbackType, callbackType, Android.Bluetooth.LE.ScanCallbackType
+21, android.bluetooth.le, ScanSettings.Builder, setScanMode, scanMode, Android.Bluetooth.LE.ScanMode
+21, android.content, RestrictionEntry, ctor, type, Android.Content.RestrictionEntryType
+21, android.content.pm, ActivityInfo, persistableMode, , Android.Content.PM.ActivityPersistableMode
+21, android.content.pm, ActivityInfo, documentLaunchMode, , Android.Content.PM.DocumentLaunchMode
+21, android.content.pm, PackageInfo, installLocation, , Android.Content.PM.PackageInstallLocation
+21, android.content.pm, PackageInstaller.SessionParams, ctor, mode, Android.Content.PM.PackageInstallMode
+21, android.content.pm, PackageInstaller.SessionParams, setInstallLocation, installLocation, Android.Content.PM.PackageInstallLocation
+21, android.graphics.pdf, PdfRenderer.Page, render, renderMode, Android.Graphics.Pdf.PdfRenderMode
+21, android.hardware, Sensor, getReportingMode, return, Android.Hardware.ReportingMode
+21, android.hardware.camera2, CameraAccessException, ctor, problem, Android.Hardware.Camera2.CameraAccessErrorType
+21, android.hardware.camera2, CameraAccessException, getReason, return, Android.Hardware.Camera2.CameraAccessErrorType
+21, android.hardware.camera2, CameraDevice, createCaptureRequest, templateType, Android.Hardware.Camera2.CameraTemplate
+21, android.hardware.camera2, CameraDevice.StateCallback, onError, error, Android.Hardware.Camera2.CameraError
+21, android.hardware.camera2, CaptureFailure, getReason, return, Android.Hardware.Camera2.CaptureFailureReason
+21, android.hardware.camera2, DngCreator, setOrientation, orientation, Android.Media.Orientation
+21, android.inputmethodservice, InputMethodService, setCursorAnchorMonitorMode, monitorMode, Android.InputMethodServices.CursorAnchorMonitorMode
+21, android.media, AudioAttributes, getContentType, return, Android.Media.AudioContentType
+21, android.media, AudioAttributes, getFlags, return, Android.Media.AudioFlags
+21, android.media, AudioAttributes, getLegacyStreamType, return, Android.Media.Stream
+21, android.media, AudioAttributes, getUsage, return, Android.Media.AudioUsageKind
+21, android.media, AudioAttributes.Builder, setContentType, contentType, Android.Media.AudioContentType
+21, android.media, AudioAttributes.Builder, setFlags, flags, Android.Media.AudioFlags
+21, android.media, AudioAttributes.Builder, setLegacyStreamType, streamType, Android.Media.Stream
+21, android.media, AudioAttributes.Builder, setUsage, usage, Android.Media.AudioUsageKind
+21, android.media, AudioFormat, getChannelMask, return, Android.Media.ChannelOut
+21, android.media, AudioFormat, getEncoding, return, Android.Media.Encoding
+21, android.media, AudioFormat.Builder, setChannelMask, channelMask, Android.Media.ChannelOut
+21, android.media, AudioFormat.Builder, setEncoding, encoding, Android.Media.Encoding
+21, android.media, AudioTrack, write, writeMode, Android.Media.WriteMode
+21, android.media, AudioTrack, setVolume, return, Android.Media.TrackStatus
+21, android.media, MediaCodecInfo.CodecCapabilities, createFromProfileLevel, profile, Android.Media.MediaCodecProfileLevel
+21, android.media, MediaCodecInfo.EncoderCapabilities, isBitrateModeSupported, mode, Android.Media.BitrateMode
+21, android.media, MediaCodecList, ctor, kind, Android.Media.MediaCodecListKind
+21, android.media, MediaPlayer, getSelectedTrack, trackType, Android.Media.MediaTrackType
+21, android.media, MediaRouter.RouteInfo, getPlaybackStream, return, Android.Media.Stream
+21, android.media, VolumeProvider, ctor, volumeControl, Android.Media.Session.VolumeControlType
+21, android.media, VolumeProvider, getVolumeControl, return, Android.Media.Session.VolumeControlType
+21, android.media, VolumeProvider, onAdjustVolume, direction, Android.Media.Adjust
+21, android.media.projection, MediaProjection, createVirtualDisplay, flags, Android.Views.DisplayFlags
+21, android.media.audiofx, Virtualizer, canVirtualize, inputChannelMask, Android.Media.ChannelIn
+21, android.media.audiofx, Virtualizer, canVirtualize, virtualizationMode, Android.Media.Audiofx.VirtualizationMode
+21, android.media.audiofx, Virtualizer, forceVirtualizationMode, virtualizationMode, Android.Media.Audiofx.VirtualizationMode
+21, android.media.audiofx, Virtualizer, getVirtualizationMode, return, Android.Media.Audiofx.VirtualizationMode
+21, android.media.audiofx, Virtualizer, getSpeakerAngles, inputChannelMask, Android.Media.ChannelIn
+21, android.media.audiofx, Virtualizer, getSpeakerAngles, virtualizationMode, Android.Media.Audiofx.VirtualizationMode
+21, android.media.browse, MediaBrowser.MediaItem, ctor, flags, Android.Media.Browse.MediaItemFlags
+21, android.media.browse, MediaBrowser.MediaItem, getFlags, return, Android.Media.Browse.MediaItemFlags
+21, android.media.session, MediaController, adjustVolume, direction, Android.Media.Adjust
+21, android.media.session, MediaController, adjustVolume, flags, Android.Media.AudioFlags
+21, android.media.session, MediaController, getRatingType, return, Android.Media.RatingStyle
+21, android.media.session, MediaController.PlaybackInfo, getPlaybackType, return, Android.Media.MediaPlaybackType
+21, android.media.session, MediaController.PlaybackInfo, getVolumeControl, return, Android.Media.MediaVolumeControlType
+21, android.media.session, MediaController, setVolumeTo, flags, Android.Media.AudioFlags
+21, android.media.session, MediaSession, setFlags, flags, Android.Media.Session.MediaSessionFlags
+21, android.media.session, MediaSession, setPlaybackToLocal, stream, Android.Media.Stream
+21, android.media.session, PlaybackState, getState, return, Android.Media.Session.PlaybackStateCode
+21, android.media.session, PlaybackState.Builder, setState, state, Android.Media.Session.PlaybackStateCode
+21, android.media.session, RemoteVolumeProvider, ctor, volumeControl, Android.Media.Session.VolumeControlType
+21, android.media.session, RemoteVolumeProvider, getVolumeControl, return, Android.Media.Session.VolumeControlType
+21, android.media.tv, TvInputInfo, getType, return, Android.Media.TV.TvInputType
+21, android.media.tv, TvInputManager.TvInputCallback, onInputStateChanged, state, Android.Media.TV.TvInputState
+21, android.media.tv, TvInputManager, getInputState, return, Android.Media.TV.TvInputState
+21, android.media.tv, TvInputService.Session, onSelectTrack, type, Android.Media.TV.TvTrackInfoType
+21, android.media.tv, TvInputService.Session, notifyTrackSelected, type, Android.Media.TV.TvTrackInfoType
+21, android.media.tv, TvInputService.Session, notifyVideoUnavailable, reason, Android.Media.TV.VideoUnavailableReason
+21, android.media.tv, TvInputService.HardwareSession, onHardwareVideoUnavailable, reason, Android.Media.TV.VideoUnavailableReason
+21, android.media.tv, TvInputService.Session, onSurfaceChanged, format, Android.Graphics.Format
+21, android.media.tv, TvTrackInfo, getType, return, Android.Media.TV.TvTrackInfoType
+21, android.media.tv, TvTrackInfo.Builder, ctor, type, Android.Media.TV.TvTrackInfoType
+21, android.media.tv, TvView, getTracks, type, Android.Media.TV.TvTrackInfoType
+21, android.media.tv, TvView, getSelectedTrack, type, Android.Media.TV.TvTrackInfoType
+21, android.media.tv, TvView, selectTrack, type, Android.Media.TV.TvTrackInfoType
+21, android.media.tv, TvView.TvInputCallback, onError, errorCode, Android.Media.TV.TvErrorType
+21, android.media.tv, TvView.TvInputCallback, onTrackSelected, type, Android.Media.TV.TvTrackInfoType
+21, android.media.tv, TvView.TvInputCallback, onVideoUnavailable, reason, Android.Media.TV.VideoUnavailableReason
+21, android.net, NetworkCapabilities, hasCapability, capability, Android.Net.NetCapability
+21, android.net, NetworkCapabilities, hasTransport, transportType, Android.Net.TransportType
+21, android.net, NetworkRequest.Builder, addCapability, capability, Android.Net.NetCapability
+21, android.net, NetworkRequest.Builder, addTransportType, transportType, Android.Net.TransportType
+21, android.net, NetworkRequest.Builder, removeCapability, capability, Android.Net.NetCapability
+21, android.net, NetworkRequest.Builder, removeTransportType, transportType, Android.Net.TransportType
+21, android.net.wifi, WifiManager.WpsCallback, onFailed, reason, Android.Net.WpsFailureReason
+21, android.os, PowerManager.WakeLock, release, flags, Android.OS.WakeLockFlags
+21, android.provider, ContactsContract.CommonDataKinds.Event, getTypeLabel, type, Android.Provider.EventDataKind
+21, android.service.notification, NotificationListenerService, getCurrentInterruptionFilter, return, Android.Service.Notification.InterruptionFilterType
+21, android.service.notification, NotificationListenerService, getCurrentListenerHints, return, Android.Service.Notification.NotificationListenerServiceHint
+21, android.service.notification, NotificationListenerService, onInterruptionFilterChanged, interruptionFilter, Android.Service.Notification.InterruptionFilterType
+21, android.service.notification, NotificationListenerService, onListenerHintsChanged, hints, Android.Service.Notification.NotificationListenerServiceHint
+21, android.service.notification, NotificationListenerService, requestInterruptionFilter, interruptionFilter, Android.Service.Notification.InterruptionFilterType
+21, android.service.notification, NotificationListenerService, requestListenerHints, hints, Android.Service.Notification.NotificationListenerServiceHint
+21, android.service.voice, AlwaysOnHotwordDetector.Callback, onAvailabilityChanged, status, Android.Service.Voice.HotwordDetectorState
+21, android.service.voice, AlwaysOnHotwordDetector, startRecognition, recognitionFlags, Android.Service.Voice.RecognitionFlag
+21, android.service.voice, AlwaysOnHotwordDetector, getSupportedRecognitionModes, return, Android.Service.Voice.RecognitionMode
+21, android.service.voice, VoiceInteractionSession.Insets, touchableInsets, , Android.Service.Voice.ToucheableInsetsType
+21, android.speech.tts, [Interface]SynthesisCallback, error, errorCode, Android.Speech.Tts.TextToSpeechError
+21, android.speech.tts, TextToSpeech, playSilentUtterance, queueMode, Android.Speech.Tts.QueueMode
+21, android.speech.tts, TextToSpeech, playSilentUtterance, return, Android.Speech.Tts.OperationResult
+21, android.speech.tts, TextToSpeech, setAudioAttributes, return, Android.Speech.Tts.OperationResult
+21, android.speech.tts, TextToSpeech, setVoice, return, Android.Speech.Tts.OperationResult
+21, android.speech.tts, TextToSpeechService, onIsValidVoiceName, return, Android.Speech.Tts.OperationResult
+21, android.speech.tts, TextToSpeechService, onLoadVoice, return, Android.Speech.Tts.OperationResult
+21, android.speech.tts, UtteranceProgressListener, onError, errorCode, Android.Speech.Tts.TextToSpeechError
+21, android.speech.tts, Voice, ctor, latency, Android.Speech.Tts.VoiceLatency
+21, android.speech.tts, Voice, ctor, quality, Android.Speech.Tts.VoiceQuality
+21, android.speech.tts, Voice, getLatency, return, Android.Speech.Tts.VoiceLatency
+21, android.speech.tts, Voice, getQuality, return, Android.Speech.Tts.VoiceQuality
+21, android.text, SpannableStringBuilder, append, flags, Android.Text.SpanTypes
+21, android.text.style, TtsSpan.DateBuilder, setWeekday, weekday, Android.Text.Format.DayOfWeek
+21, android.transition, SidePropagation, setSide, side, Android.Views.GravityFlags
+21, android.transition, Slide, ctor, slideEdge, Android.Views.GravityFlags
+21, android.transition, Slide, getSlideEdge, return, Android.Views.GravityFlags
+21, android.transition, Slide, setSlideEdge, slideEdge, Android.Views.GravityFlags
+21, android.transition, Visibility, getMode, return, Android.Transitions.VisibilityMode
+21, android.transition, Visibility, setMode, mode, Android.Transitions.VisibilityMode
+21, android.transition, VisibilityPropagation, getViewVisibility, return, Android.Views.ViewStates
+21, android.view.accessibility, AccessibilityNodeInfo.CollectionInfo, obtain, selectionMode, Android.Views.Accessibility.SelectionMode
+21, android.view.accessibility, AccessibilityWindowInfo, getType, return, Android.Views.Accessibility.AccessibilityWindowType
+21, android.view, [Interface]ViewParent, onStartNestedScroll, nestedScrollAxes, Android.Views.ScrollAxis
+21, android.view, [Interface]ViewParent, onNestedScrollAccepted, nestedScrollAxes, Android.Views.ScrollAxis
+21, android.view, [Interface]ViewParent, onNestedScrollAccepted, axes, Android.Views.ScrollAxis
+21, android.view, InputDevice, supportsSource, source, Android.Views.InputSourceType
+21, android.view, MotionEvent, isButtonPressed, button, Android.Views.MotionEventButtonState
+21, android.view, View, startNestedScroll, axes, Android.Views.ScrollAxis
+21, android.view, ViewGroup, getNestedScrollAxes, return, Android.Views.ScrollAxis
+21, android.view, ViewGroup, onStartNestedScroll, nestedScrollAxes, Android.Views.ScrollAxis
+21, android.view, ViewGroup, onNestedScrollAccepted, axes, Android.Views.ScrollAxis
+21, android.view.inputmethod, CursorAnchorInfo, getCharacterBoundsFlags, return, Android.Views.InputMethods.CursorAnchorFlags
+21, android.view.inputmethod, CursorAnchorInfo, getInsertionMarkerFlags, return, Android.Views.InputMethods.CursorAnchorFlags
+21, android.view.inputmethod, CursorAnchorInfo.Builder, addCharacterBounds, flags, Android.Views.InputMethods.CursorAnchorFlags
+21, android.view.inputmethod, CursorAnchorInfo.Builder, setInsertionMarkerLocation, flags, Android.Views.InputMethods.CursorAnchorFlags
+21, android.webkit, WebChromeClient.FileChooserParams, getMode, return, Android.Webkit.ChromeFileChooserMode
+21, android.webkit, WebSettings, getMixedContentMode, return, Android.Webkit.MixedContentHandling
+21, android.webkit, WebSettings, setMixedContentMode, mode, Android.Webkit.MixedContentHandling
+21, android.widget, Toolbar.LayoutParams, ctor, gravity, Android.Views.GravityFlags
+
+// API Level 22
+22, android.media.session, MediaSession, setRatingType, type, Android.Media.RatingStyle
+22, android.service.carrier, CarrierMessagingService.SendMmsResult, getSendStatus, return, Android.Service.Carrier.MessageSendStatus
+22, android.service.carrier, CarrierMessagingService.SendMultipartSmsResult, getSendStatus, return, Android.Service.Carrier.MessageSendStatus
+22, android.service.carrier, CarrierMessagingService.SendSmsResult, getSendStatus, return, Android.Service.Carrier.MessageSendStatus
+22, android.service.carrier, CarrierMessagingService.SendMmsResult, ctor, sendStatus, Android.Service.Carrier.MessageSendStatus
+22, android.service.carrier, CarrierMessagingService.SendMultipartSmsResult, ctor, sendStatus, Android.Service.Carrier.MessageSendStatus
+22, android.service.carrier, CarrierMessagingService.SendSmsResult, ctor, sendStatus, Android.Service.Carrier.MessageSendStatus
+22, android.telephony, SubscriptionInfo, getDataRoaming, return, Android.Telephony.DataRoamingMode
+22, android.util, TypedValue, getComplexUnit, return, Android.Util.ComplexUnitType
+22, android.view, [Interface]ViewParent, onNestedPrePerformAccessibilityAction, action, Android.Views.Accessibility.Action
+22, android.view, View, dispatchNestedPrePerformAccessibilityAction, action, Android.Views.Accessibility.Action
+22, android.view, ViewGroup, onNestedPrePerformAccessibilityAction, action, Android.Views.Accessibility.Action
+22, android.view, Window, getDefaultFeatures, return, Android.Views.WindowFeatures
+
+
+// API Level 23
+
+// this was required for build
+23, android.view, View, setForegroundGravity, gravity, Android.Views.GravityFlags
+
+23, android.view, [Interface]Window.Callback, onWindowStartingActionMode, type, Android.Views.ActionModeType
+23, android.app, Activity, onWindowStartingActionMode, type, Android.Views.ActionModeType
+23, android.app, Dialog, onWindowStartingActionMode, type, Android.Views.ActionModeType
+23, android.service.dreams, DreamService, onWindowStartingActionMode, type, Android.Views.ActionModeType
+
+23, android.app, Activity, onRequestPermissionsResult, grantResults, Android.Content.PM.Permission[]
+23, android.app, Fragment, onRequestPermissionsResult, grantResults, Android.Content.PM.Permission[]
+23, android.app, Activity, startActionMode, type, Android.Views.ActionModeType
+23, android.app, ActivityManager, getLockTaskModeState, return, Android.App.LockTaskMode
+23, android.app.admin, DevicePolicyManager, getPermissionGrantState, return, Android.App.Admin.PermissionGrantState
+23, android.app.admin, DevicePolicyManager, setPermissionGrantState, grantState, Android.App.Admin.PermissionGrantState
+23, android.app.admin, DevicePolicyManager, getPermissionPolicy, return, Android.App.Admin.PermissionPolicy
+23, android.app.admin, DevicePolicyManager, setPermissionPolicy, policy, Android.App.Admin.PermissionPolicy
+23, android.app.admin, SystemUpdatePolicy, getPolicyType, return, Android.App.Admin.SystemUpdatePolicyType
+23, android.app, AlarmManager, setAndAllowWhileIdle, type, Android.App.AlarmType
+23, android.app, AlarmManager, setExactAndAllowWhileIdle, type, Android.App.AlarmType
+23, android.app, AppOpsManager, noteProxyOpNoThrow, return, Android.App.AppOpsManagerMode
+23, android.app, AppOpsManager, noteProxyOp, return, Android.App.AppOpsManagerMode
+23, android.app.assist, AssistStructure.ViewNode, getTextStyle, return, Android.App.Assist.AssistTextStyle
+23, android.app.assist, AssistStructure.ViewNode, getVisibility, return, Android.Views.ViewStates
+23, android.app, NotificationManager.Policy, priorityCallSenders, , Android.App.NotificationPrioritySenders
+23, android.app, NotificationManager.Policy, priorityCategories, , Android.App.NotificationPriorityCategory
+23, android.app, NotificationManager.Policy, priorityMessageSenders, , Android.App.NotificationPrioritySenders
+23, android.app, NotificationManager.Policy, priorityCategoriesToString, priorityCategories, Android.App.NotificationPriorityCategory
+23, android.app, NotificationManager.Policy, prioritySendersToString, prioritySenders, Android.App.NotificationPrioritySenders
+23, android.app, NotificationManager.Policy, ctor, priorityCategories, Android.App.NotificationPriorityCategory
+23, android.app, NotificationManager.Policy, ctor, priorityCallSenders, Android.App.NotificationPrioritySenders
+23, android.app, NotificationManager.Policy, ctor, priorityMessageSenders, Android.App.NotificationPrioritySenders
+23, android.app, NotificationManager, getCurrentInterruptionFilter, return, Android.App.InterruptionFilter
+23, android.app, NotificationManager, setInterruptionFilter, interruptionFilter, Android.App.InterruptionFilter
+23, android.app.usage, NetworkStats.Bucket, getState, return, Android.App.Usage.NetworkUsageState
+23, android.app.usage, NetworkStatsManager, querySummaryForDevice, networkType, Android.Net.ConnectivityType
+23, android.app.usage, NetworkStatsManager, querySummaryForUser, networkType, Android.Net.ConnectivityType
+23, android.app.usage, NetworkStatsManager, queryDetailsForUid, networkType, Android.Net.ConnectivityType
+23, android.app.usage, NetworkStatsManager, queryDetails, networkType, Android.Net.ConnectivityType
+23, android.app.usage, NetworkStatsManager, querySummary, networkType, Android.Net.ConnectivityType
+
+23, android.bluetooth, BluetoothDevice, connectGatt, transport, Android.Bluetooth.BluetoothTransports
+23, android.bluetooth, BluetoothSocket, getConnectionType, return, Android.Bluetooth.BluetoothConnectionType
+23, android.bluetooth.le, ScanSettings.Builder, setMatchMode, matchMode, Android.Bluetooth.LE.BluetoothScanMatchMode
+23, android.content, Context, checkSelfPermission, return, Android.Content.PM.Permission
+23, android.content, ContextWrapper, checkSelfPermission, return, Android.Content.PM.Permission
+23, android.content.res, ColorStateList, getChangingConfigurations, return, Android.Content.PM.ConfigChanges
+23, android.content.res, Resources.Theme, getChangingConfigurations, return, Android.Content.PM.ConfigChanges
+
+23, android.graphics.drawable, Drawable, getLayoutDirection, return, Android.Views.LayoutDirection
+23, android.graphics.drawable, Drawable, setLayoutDirection, layoutDirection, Android.Views.LayoutDirection
+23, android.graphics.drawable, LayerDrawable, getLayerGravity, return, Android.Views.GravityFlags
+23, android.graphics.drawable, LayerDrawable, setLayerGravity, gravity, Android.Views.GravityFlags
+
+23, android.hardware.fingerprint, FingerprintManager, authenticate, flags, Android.Hardware.Fingerprints.FingerprintAuthenticationFlags
+23, android.hardware.fingerprint, FingerprintManager.AuthenticationCallback, onAuthenticationError, errorCode, Android.Hardware.Fingerprints.FingerprintState
+23, android.hardware.fingerprint, FingerprintManager.AuthenticationCallback, onAuthenticationHelp, helpCode, Android.Hardware.Fingerprints.FingerprintState
+
+23, android.media, AudioDeviceInfo, getType, return, Android.Media.AudioDeviceType
+23, android.media, AudioDeviceInfo, getEncodings, return, Android.Media.Encoding[]
+23, android.media, AudioManager, getDevices, flags, Android.Media.GetDevicesTargets
+23, android.media, AudioManager, isStreamMute, streamType, Android.Media.Stream
+23, android.media, AudioRecord.Builder, setAudioSource, source, Android.Media.AudioSource
+23, android.media, AudioTrack.Builder, setTransferMode, mode, Android.Media.AudioTrackMode
+23, android.media, ImageWriter, getFormat, return, Android.Graphics.ImageFormatType
+23, android.media, MediaCodec.CodecException, getErrorCode, return, Android.Media.MediaCodecErrorCode
+23, android.media, MediaCodec.CryptoException, getErrorCode, return, Android.Media.MediaCodecCryptoErrorType
+23, android.media, MediaDrm.KeyStatus, getStatusCode, return, Android.Media.MediaDrmStatusCode
+23, android.media, [Interface]MediaSync.OnErrorListener, onError, what, Android.Media.MediaSyncErrorCode
+23, android.media.midi, MidiDeviceInfo, getType, return, Android.Media.Midi.MidiDeviceType
+23, android.media.midi, MidiDeviceInfo.PortInfo, getType, return, Android.Media.Midi.MidiPortType
+23, android.media, PlaybackParams, getAudioFallbackMode, return, Android.Media.AudioFallbackMode
+23, android.media, SyncParams, getAudioAdjustMode, return, Android.Media.AudioAdjustMode
+23, android.media, SyncParams, getSyncSource, return, Android.Media.AudioSyncSource
+23, android.media.tv, TvInputService.Session, notifyTimeShiftStatusChanged, status, Android.Media.TV.TimeShiftStatus
+23, android.media.tv, TvView.TvInputCallback, onTimeShiftStatusChanged, status, Android.Media.TV.TimeShiftStatus
+
+23, android.os, [Interface]MessageQueue.OnFileDescriptorEventListener, onFileDescriptorEvents, events, Android.OS.MessageQueueEventType
+23, android.os, Parcel, writeTypedObject, parcelableFlags, Android.OS.ParcelableWriteFlags
+23, android.print, PrintAttributes.Builder, setDuplexMode, duplexMode, Android.Print.DuplexMode
+23, android.print, PrintAttributes, getDuplexMode, return, Android.Print.DuplexMode
+23, android.print, PrinterCapabilitiesInfo.Builder, setDuplexModes, duplexModes, Android.Print.DuplexMode
+23, android.print, PrinterCapabilitiesInfo.Builder, setDuplexModes, defaultDuplexMode, Android.Print.DuplexMode
+23, android.print, PrinterCapabilitiesInfo, getDuplexModes, return, Android.Print.DuplexMode
+
+23, android.security.keystore, KeyGenParameterSpec.Builder, ctor, purposes, Android.Security.Keystore.KeyStorePurpose
+23, android.security.keystore, KeyGenParameterSpec, getPurposes, return, Android.Security.Keystore.KeyStorePurpose
+23, android.security.keystore, KeyInfo, getOrigin, return, Android.Security.Keystore.KeyInfoOrigin
+23, android.security.keystore, KeyInfo, getPurposes, return, Android.Security.Keystore.KeyStorePurpose
+23, android.security.keystore, KeyProtection.Builder, ctor, purposes, Android.Security.Keystore.KeyStorePurpose
+23, android.security.keystore, KeyProtection, getPurposes, return, Android.Security.Keystore.KeyStorePurpose
+
+23, android.service.voice, VoiceInteractionService, getDisabledShowContext, return, Android.Service.Voice.ShowFlags
+23, android.service.voice, VoiceInteractionService, setDisabledShowContext, flags, Android.Service.Voice.ShowFlags
+23, android.service.voice, VoiceInteractionService, showSession, flags, Android.Service.Voice.ShowFlags
+23, android.service.voice, VoiceInteractionSession, getDisabledShowContext, return, Android.Service.Voice.ShowFlags
+23, android.service.voice, VoiceInteractionSession, setDisabledShowContext, flags, Android.Service.Voice.ShowFlags
+23, android.service.voice, VoiceInteractionSession, getUserDisabledShowContext, return, Android.Service.Voice.ShowFlags
+23, android.service.voice, VoiceInteractionSession, onShow, showFlags, Android.Service.Voice.ShowFlags
+23, android.service.voice, VoiceInteractionSession, show, flags, Android.Service.Voice.ShowFlags
+
+23, android.telecom, CallAudioState, audioRouteToString, route, Android.Telecom.CallAudioRoute
+23, android.telecom, CallAudioState, ctor, route, Android.Telecom.CallAudioRoute
+23, android.telecom, CallAudioState, ctor, supportedRouteMask, Android.Telecom.CallAudioRoute
+23, android.telecom, CallAudioState, getRoute, return, Android.Telecom.CallAudioRoute
+23, android.telecom, CallAudioState, getSupportedRouteMask, return, Android.Telecom.CallAudioRoute
+23, android.telecom, Call.Details, can, capabilities, Android.Telecom.ConnectionCapability
+23, android.telecom, Call.Details, can, capability, Android.Telecom.ConnectionCapability
+23, android.telecom, Call.Details, hasProperty, properties, Android.Telecom.CallProperty
+23, android.telecom, Call.Details, hasProperty, property, Android.Telecom.CallProperty
+23, android.telecom, Call.Details, capabilitiesToString, capabilities, Android.Telecom.ConnectionCapability
+23, android.telecom, Call.Details, propertiesToString, properties, Android.Telecom.CallProperty
+23, android.telecom, Call, getState, return, Android.Telecom.CallState
+23, android.telecom, Call, answer, videoState, Android.Telecom.VideoProfileState
+23, android.telecom, Call.Details, getCallCapabilities, return,  Android.Telecom.ConnectionCapability
+23, android.telecom, Call.Details, getCallerDisplayNamePresentation, return,  Android.Telecom.Presentation
+23, android.telecom, Call.Details, getCallProperties, return,  Android.Telecom.CallProperty
+23, android.telecom, Call.Details, getHandlePresentation, return,  Android.Telecom.Presentation
+23, android.telecom, Call.Details, getVideoState, return, Android.Telecom.VideoProfileState
+23, android.telecom, Call.Callback, onStateChanged, state, Android.Telecom.CallState
+23, android.telecom, Conference, getConnectionCapabilities, return, Android.Telecom.ConnectionCapability
+23, android.telecom, Conference, setConnectionCapabilities, connectionCapabilities, Android.Telecom.ConnectionCapability
+23, android.telecom, Conference, getConnectionCapabilities, return, Android.Telecom.ConnectionState
+23, android.telecom, Conference, getVideoState, return, Android.Telecom.VideoProfileState
+23, android.telecom, Conference, setVideoState, videoState, Android.Telecom.VideoProfileState
+23, android.telecom, Conference, getState, return, Android.Telecom.CallState
+23, android.telecom, Connection, capabilitiesToString, capabilities, Android.Telecom.ConnectionCapability
+23, android.telecom, Connection, stateToString, state, Android.Telecom.ConnectionState
+23, android.telecom, Connection, getAddressPresentation, return,  Android.Telecom.Presentation
+23, android.telecom, Connection, getCallerDisplayNamePresentation, return,  Android.Telecom.Presentation
+23, android.telecom, Connection, getConnectionCapabilities, return, Android.Telecom.ConnectionCapability
+23, android.telecom, Connection, setConnectionCapabilities, connectionCapabilities, Android.Telecom.ConnectionCapability
+23, android.telecom, Connection, getState, return, Android.Telecom.CallState
+23, android.telecom, Connection, setAddress, presentation, Android.Telecom.Presentation
+23, android.telecom, Connection, setCallerDisplayName, presentation, Android.Telecom.Presentation
+23, android.telecom, Connection, setVideoState, videoState, Android.Telecom.VideoProfileState
+23, android.telecom, Connection.VideoProvider, changeVideoQuality, videoQuality, Android.Telecom.VideoQuality
+23, android.telecom, Connection.VideoProvider, handleCallSessionEvent, event, Android.Telecom.VideoSessionEvent
+23, android.telecom, Connection, onAnswer, videoState, Android.Telecom.VideoProfileState
+23, android.telecom, Connection, onStateChanged, state, Android.Telecom.CallState
+23, android.telecom, Connection.VideoProvider, receiveSessionModifyResponse, status, Android.Telecom.ModifyRequestResult
+23, android.telecom, ConnectionRequest, ctor, videoState, Android.Telecom.VideoProfileState
+23, android.telecom, ConnectionRequest, getVideoState, return, Android.Telecom.VideoProfileState
+
+23, android.telecom, DisconnectCause, ctor, code, Android.Telecom.Causes
+23, android.telecom, DisconnectCause, ctor, toneToPlay, Android.Media.Tone
+23, android.telecom, DisconnectCause, getCode, return, Android.Telecom.Causes
+23, android.telecom, DisconnectCause, getTone, return, Android.Media.Tone
+23, android.telecom, InCallService.VideoCall.Callback, onCallSessionEvent, event, Android.Telecom.VideoSessionEvent
+23, android.telecom, InCallService.VideoCall.Callback, onSessionModifyResponseReceived, status, Android.Telecom.ModifyRequestResult
+23, android.telecom, InCallService.VideoCall.Callback, onVideoQualityChanged, videoQuality, Android.Telecom.VideoQuality
+23, android.telecom, InCallService, setAudioRoute, route, Android.Telecom.VideoQuality
+23, android.telecom, PhoneAccount, hasCapabilities, capability, Android.Telecom.ConnectionCapability
+23, android.telecom, PhoneAccount, getCapabilities, return, Android.Telecom.ConnectionCapability
+23, android.telecom, RemoteConference, getConnectionCapabilities, return, Android.Telecom.ConnectionCapability
+23, android.telecom, RemoteConference, getState, return, Android.Telecom.CallState
+23, android.telecom, RemoteConference.Callback, onConnectionCapabilitiesChanged, connectionCapabilities, Android.Telecom.ConnectionCapability
+23, android.telecom, RemoteConference.Callback, onStateChanged, oldState, Android.Telecom.CallState
+23, android.telecom, RemoteConference.Callback, onStateChanged, newState, Android.Telecom.CallState
+23, android.telecom, RemoteConnection, getAddressPresentation, return, Android.Telecom.Presentation
+23, android.telecom, RemoteConnection, getCallerDisplayNamePresentation, return, Android.Telecom.Presentation
+23, android.telecom, RemoteConnection, getConnectionCapabilities, return, Android.Telecom.ConnectionCapability
+23, android.telecom, RemoteConnection, getState, return, Android.Telecom.CallState
+23, android.telecom, RemoteConnection, getVideoState, return, Android.Telecom.VideoQuality
+23, android.telecom, RemoteConnection.Callback, onAddressChanged, presentation, Android.Telecom.Presentation
+23, android.telecom, RemoteConnection.Callback, onCallerDisplayNameChanged, presentation, Android.Telecom.Presentation
+23, android.telecom, RemoteConnection.VideoProvider.Callback, onCallSessionEvent, event, Android.Telecom.VideoSessionEvent
+23, android.telecom, RemoteConnection.Callback, onConnectionCapabilitiesChanged, connectionCapabilities, Android.Telecom.ConnectionCapability
+23, android.telecom, RemoteConnection.VideoProvider.Callback, onSessionModifyResponseReceived, status, Android.Telecom.VideoProfileState
+23, android.telecom, RemoteConnection.Callback, onStateChanged, state, Android.Telecom.CallState
+23, android.telecom, RemoteConnection.VideoProvider.Callback, onVideoQualityChanged, videoQuality, Android.Telecom.VideoQuality
+23, android.telecom, RemoteConnection.Callback, onVideoStateChanged, videoState, Android.Telecom.VideoProfileState
+23, android.telecom, VideoProfile, isAudioOnly, videoState, Android.Telecom.VideoProfileState
+23, android.telecom, VideoProfile, isBidirectional, videoState, Android.Telecom.VideoProfileState
+23, android.telecom, VideoProfile, isPaused, videoState, Android.Telecom.VideoProfileState
+23, android.telecom, VideoProfile, isReceptionEnabled, videoState, Android.Telecom.VideoProfileState
+23, android.telecom, VideoProfile, isTransmissionEnabled, videoState, Android.Telecom.VideoProfileState
+23, android.telecom, VideoProfile, isVideo, videoState, Android.Telecom.VideoProfileState
+23, android.telecom, VideoProfile, videoStateToString, videoState, Android.Telecom.VideoProfileState
+23, android.telecom, VideoProfile, ctor, videoState, Android.Telecom.VideoProfileState
+23, android.telecom, VideoProfile, getQuality, return, Android.Telecom.VideoQuality
+23, android.telecom, VideoProfile, getVideoState, return, Android.Telecom.VideoProfileState
+
+23, android.text, StaticLayout.Builder, setBreakStrategy, breakStrategy, Android.Text.BreakStrategy
+23, android.text, StaticLayout.Builder, setHyphenationFrequency, hyphenationFrequency, Android.Text.HyphenationFrequency
+
+23, android.view, ActionMode, getType, return, Android.Views.ActionModeType
+23, android.view, ActionMode, setType, type, Android.Views.ActionModeType
+23, android.view, [Interface]ViewParent, startActionModeForChild, type, Android.Views.ActionModeType
+23, android.view, MotionEvent, getActionButton, return, Android.Views.MotionEventButtonState
+23, android.view, View, startActionMode, type, Android.Views.ActionModeType
+23, android.view, View, getScrollIndicators, return, Android.Views.ScrollIndicatorPosition
+23, android.view, ViewGroup, startActionModeForChild, type, Android.Views.ActionModeType
+23, android.view, ViewStructure, setTextStyle, style, Android.App.Assist.AssistTextStyle
+23, android.view, ViewStructure, setVisibility, visibility, Android.Views.ViewStates
+
+23, android.webkit, WebResourceError, getErrorCode, return, Android.Webkit.ClientError
+
+23, android.widget, ListPopupWindow, setWindowLayoutType, layoutType, Android.Views.WindowManagerTypes
+23, android.widget, PopupMenu, getGravity, return, Android.Views.GravityFlags
+23, android.widget, PopupMenu, setGravity, gravity, Android.Views.GravityFlags
+23, android.widget, PopupWindow, getWindowLayoutType, return, Android.Views.WindowManagerTypes
+23, android.widget, PopupWindow, setWindowLayoutType, layoutType, Android.Views.WindowManagerTypes
+23, android.widget, RelativeLayout.LayoutParams, getRule, verb, Android.Widget.LayoutRules
+23, android.widget, TextView, getBreakStrategy, return, Android.Text.BreakStrategy
+23, android.widget, TextView, setBreakStrategy, breakStrategy, Android.Text.BreakStrategy
+23, android.widget, TextView, getHyphenationFrequency, return, Android.Text.HyphenationFrequency
+23, android.widget, TextView, setHyphenationFrequency, hyphenationFrequency, Android.Text.HyphenationFrequency

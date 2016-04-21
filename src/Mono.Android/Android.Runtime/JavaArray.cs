@@ -1,0 +1,188 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+
+
+namespace Android.Runtime {
+
+	[Register ("mono/android/runtime/JavaArray", DoNotGenerateAcw=true)]
+	public sealed class JavaArray<T> : Java.Lang.Object, IList<T> {
+
+		public JavaArray (IntPtr handle, JniHandleOwnership transfer)
+			: base (handle, transfer)
+		{
+		}
+
+		public int Count {
+			get { return JNIEnv.GetArrayLength (Handle); }
+		}
+
+#if false
+		public bool IsFixedSize {
+			get { return true; }
+		}
+
+		public bool IsSynchronized {
+			get { return false; }
+		}
+
+		public object SyncRoot {
+			get { return null; }
+		}
+
+		public T this [int index] {
+			get {
+				if (index < 0 || index >= Count)
+					throw new ArgumentOutOfRangeException ("index");
+				return JavaTypeConverter<object>.Default.FromNative (Get (index));
+			}
+			set { Set (index, JavaTypeConverter<object>.Default.ToNative (value)); }
+		}
+
+		public int Add (object item)
+		{
+			Add (JavaTypeConverter<object>.Default.ToNative (item));
+			return Count - 1;
+		}
+
+			if (id_clear == IntPtr.Zero)
+				id_clear = JNIEnv.GetMethodID (arraylist_class, "clear", "()V");
+			JNIEnv.CallVoidMethod (Handle, id_clear);
+		}
+
+		public bool Contains (object item)
+		{
+			return Contains (JavaTypeConverter<object>.Default.ToNative (item));
+		}
+
+		public void CopyTo (Array array, int array_index)
+		{
+			for (int i = 0; i < Count; i++)
+				array.SetValue (this [i], array_index + i);
+		}
+
+		public IEnumerator GetEnumerator ()
+		{
+			using (Java.Util.IIterator iterator = Iterator ())
+				while (iterator.HasNext)
+					yield return JavaTypeConverter<object>.Default.FromNative (iterator.Next ());
+		}
+
+		public int IndexOf (object item)
+		{
+			return IndexOf (JavaTypeConverter<object>.Default.ToNative (item));
+		}
+
+		public void Insert (int index, object item)
+		{
+			Insert (index, JavaTypeConverter<object>.Default.ToNative (item));
+		}
+
+		public void Remove (object item)
+		{
+			int i = IndexOf (JavaTypeConverter<object>.Default.ToNative (item));
+			if (i < 0 && i >= Count)
+				return;
+			Remove (i);
+		}
+
+
+#endif
+		public bool IsReadOnly {
+			get { return false; }
+		}
+
+		public T this [int index] {
+			get {
+				if (index < 0 || index >= Count)
+					throw new ArgumentOutOfRangeException ("index");
+				return JNIEnv.GetArrayItem<T> (Handle, index);
+			}
+			set { JNIEnv.SetArrayItem<T> (Handle, index, value); }
+		}
+
+		public void Add (T item)
+		{
+			throw new InvalidOperationException ();
+		}
+
+		public void Clear ()
+		{
+			throw new InvalidOperationException ();
+		}
+
+		public bool Contains (T item)
+		{
+			return IndexOf (item) >= 0;
+		}
+
+		public void CopyTo (T[] array, int array_index)
+		{
+			T[] items = JNIEnv.GetArray<T> (Handle);
+			for (int i = 0; i < Count; i++)
+				array [array_index + i] = items [i];
+		}
+
+		System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator ()
+		{
+			return GetEnumerator ();
+		}
+
+		public IEnumerator<T> GetEnumerator ()
+		{
+			T[] items = JNIEnv.GetArray<T> (Handle);
+                        for (int i = 0; i < items.Length; i++)
+                                yield return items [i];
+		}
+
+		public int IndexOf (T item)
+		{
+			T[] items = JNIEnv.GetArray<T> (Handle);
+			return Array.IndexOf (items, item);
+		}
+
+		public void Insert (int index, T item)
+		{
+			throw new InvalidOperationException ();
+		}
+
+		public bool Remove (T item)
+		{
+			throw new InvalidOperationException ();
+		}
+
+		public void RemoveAt (int index)
+		{
+			throw new InvalidOperationException ();
+		}
+
+		[Preserve (Conditional=true)]
+		public static JavaArray<T> FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
+		{
+			if (handle == IntPtr.Zero)
+				return null;
+
+			var existing = Java.Lang.Object.PeekObject (handle) as JavaArray<T>;
+			if (existing != null) {
+				JNIEnv.DeleteRef (handle, transfer);
+				return existing;
+			}
+			return new JavaArray<T>(handle, transfer);
+		}
+
+		[Preserve (Conditional=true)]
+		public static IntPtr ToLocalJniHandle (IList<T> value)
+		{
+			if (value == null)
+				return IntPtr.Zero;
+
+			var c = value as JavaArray<T>;
+			if (c != null)
+				return JNIEnv.ToLocalJniHandle (c);
+
+			var a = value.ToArray ();
+			return  JNIEnv.NewArray (a, typeof (T));
+		}
+	}
+}

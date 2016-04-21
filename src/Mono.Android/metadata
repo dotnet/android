@@ -1,0 +1,1256 @@
+<metadata>
+  <!-- FIXME: hack to workaround api-merge bug that brings two identical methods (it doesn't care generic type params) -->
+  <remove-node path="/api/package[@name='android.animation']/interface[@name='TypeEvaluator']/method[@name='evaluate' and @merge.SourceFile]" />
+
+  <!-- FIXME: this should NOT be exposed as public, but needs to exist. -->
+  <attr api-since="5" api-until="8" path="/api/package[@name='java.util.concurrent.locks']/class[@name='AbstractOwnableSynchronizer']" name="visibility">public</attr>
+
+  <!-- FIXME: hack to workaround api-merge bug that brings two identical methods (it doesn't care generic type params) -->
+  <remove-node path="/api/package[@name='java.util']/class[@name='EventListenerProxy']/constructor[parameter[@name='p0']]" />
+
+  <!-- API-18 made EventListenerProxy *non*-generic, which "changed" getListener(); ALL OTHER API-LEVELS HAVE A GENERIC INTERFACE (!) -->
+  <add-node path="/api/package[@name='java.util']/class[@name='EventListenerProxy' and count(typeParameters)=0]">
+    <typeParameters>
+      <typeParameter name="T">
+        <genericConstraints>
+          <genericConstraint type="java.util.EventListener"></genericConstraint>
+        </genericConstraints>
+      </typeParameter>
+    </typeParameters>
+  </add-node>
+  <attr path="/api/package[@name='java.util']/class[@name='EventListenerProxy']/method[@name='getListener']" name="return">T</attr>
+
+  <remove-node path="/api/package[@name='java.lang']/class[@name='String']/constructor[count(parameter)=0]" />
+  <remove-node path="/api/package[@name='java.lang']/class[@name='String']/constructor[count(parameter)=1 and parameter[1]/@type='char[]']" />
+  <remove-node path="/api/package[@name='java.lang']/class[@name='String']/constructor[count(parameter)=1 and parameter[1]/@type='java.lang.String']" />
+  <remove-node path="/api/package[@name='java.lang']/class[@name='String']/constructor[count(parameter)=3 and parameter[1][@type='char[]'] and parameter[2][@type='int'] and parameter[3][@type='int']]" />
+
+  <!-- This is removed only because it is reportedly increases size of packaged app by having it mandatory in Mono.Android.dll.
+	It should be a linker issue, but so far no one resolved it there. -->
+  <remove-node path="/api/package[@name='java.lang']/class[@name='Class']/implements[@name='java.lang.reflect.AnnotatedElement']" />
+
+  <!-- BLOODY JAVAP LIES!!! -->
+  <remove-node path="/api/package[@name='java.lang']
+    /class[@name='Exception' or @name='RuntimeException']
+    /constructor[
+      count(parameter)=4 and
+      parameter[1]/@type='java.lang.String' and
+      parameter[2]/@type='java.lang.Throwable' and
+      parameter[3]/@type='boolean' and
+      parameter[4]/@type='boolean']"
+  />
+
+  <!-- generateDispatchingSetter -->
+  <attr path="/api/package[@name='android.graphics.drawable']/class[@name='Drawable']/method[@name='setAlpha']" name="generateDispatchingSetter" api-since="19">true</attr>
+  <attr path="/api/package[@name='android.graphics.drawable']/class[@name='ColorDrawable']/method[@name='setAlpha']" name="generateDispatchingSetter">true</attr>
+
+  <!--
+  These setter methods were incorrectly treated as public, but they are actually protected.
+  Getters are public and generator used to ignore mismatching visibility.
+  
+  Unfortunately, there is no way to define "partial" properties and we cannot
+  manually add setter-only properties in other sources.
+  So far the only way to fix it is, to fake API and treat them as public.
+  -->
+  <attr path="/api/package[@name='android.content']/class[@name='ContentProvider']/method[@name='setReadPermission']" name="visibility">public</attr>
+  <attr path="/api/package[@name='android.content']/class[@name='ContentProvider']/method[@name='setReadPermission']" name="deprecated">
+  Please use SetReadPermission() instead. This setter is not really public in Android API and will vanish in the future versions.
+  </attr>
+  <attr path="/api/package[@name='android.content']/class[@name='ContentProvider']/method[@name='setWritePermission']" name="visibility">public</attr>
+  <attr path="/api/package[@name='android.content']/class[@name='ContentProvider']/method[@name='setWritePermission']" name="deprecated">
+  Please use SetWritePermission() instead. This setter is not really public in Android API and will vanish in the future versions.
+  </attr>
+  <attr path="/api/package[@name='android.inputmethodservice']/class[@name='KeyboardView']/method[@name='getOnKeyboardActionListener']" name="visibility">public</attr>
+  <attr path="/api/package[@name='android.inputmethodservice']/class[@name='KeyboardView']/method[@name='getOnKeyboardActionListener']" name="deprecated">
+  Please use GetOnKeyboardActionListener() instead. This getter is not really public in Android API and will vanish in the future versions.
+  </attr>
+  <attr path="/api/package[@name='java.io']/class[@name='ObjectStreamField']/method[@name='setOffset']" name="visibility">public</attr>
+  <attr path="/api/package[@name='java.io']/class[@name='ObjectStreamField']/method[@name='setOffset']" name="deprecated">
+  Please use SetOffset() instead. This setter is not really public in Android API and will vanish in the future versions.
+  </attr>
+  <attr path="/api/package[@name='java.security']/class[@name='IdentityScope']/method[@name='setSystemScope']" name="visibility">public</attr>
+  <attr path="/api/package[@name='java.security']/class[@name='IdentityScope']/method[@name='setSystemScope']" name="deprecated">
+  Please use SetSystemScope() instead. This setter is not really public in Android API and will vanish in the future versions.
+  </attr>
+
+  <!-- Non-public intermediaries -->
+  <!-- starting with API Level 15 *updated* doc (docs-15-r02.zip), java.lang.Closeable implements nonpublic java.lang.AutoCloseable,
+    which does NOT exist in the API documentation. It is not added by jar2xml either, so here we have to either add one as a dummy or remove "implements". -->
+  <remove-node path="/api/package/class/implements[@name='java.lang.AutoCloseable']" />
+  <remove-node path="/api/package/interface/implements[@name='java.lang.AutoCloseable']" />
+  <!-- Same for some java.nio.channels stuff -->
+  <remove-node path="/api/package/class/implements[@name='java.nio.channels.SeekableByteChannel']" />
+  <!-- Same for java.util.zip.ZipConstants -->
+  <remove-node path="/api/package/class/implements[@name='java.util.zip.ZipConstants']" />
+
+  <!-- Also, it seems to lack some non-public types even in android.jar but the derived types still reference...!
+    - java.lang.ClassNotFoundException is marked as derived from java.lang.ReflectiveOperationException which does not exist.
+    Also, this class has disappeared at some stage. -->
+  <attr path="/api/package/class[@extends='java.lang.ReflectiveOperationException']" api-until="17" name="extends-generic-aware">java.lang.Exception</attr>
+  <attr path="/api/package/class[@extends='java.lang.ReflectiveOperationException']" api-until="17" name="extends">java.lang.Exception</attr>
+
+  <!-- Those are internal classes that are derived by public classes -->
+  <attr api-since="8" path="/api/package[@name='android.app.backup']/class[@name='FileBackupHelperBase']" name="visibility">public</attr>
+  <attr api-since="10" path="/api/package[@name='android.nfc.tech']/class[@name='BasicTagTechnology']" name="visibility">public</attr>
+  <attr api-since="11" path="/api/package[@name='android.renderscript']/class[@name='BaseObj']" name="visibility">public</attr>
+  <attr path="/api/package[@name='android.text']/class[@name='SpannableStringInternal']" name="visibility">public</attr>
+  <attr path="/api/package[@name='android.webkit']/class[@name='CallbackProxy']" name="visibility">public</attr>
+  <attr path="/api/package[@name='android.webkit']/class[@name='WebSyncManager']" name="visibility">public</attr>
+  <attr path="/api/package[@name='java.lang']/class[@name='AbstractStringBuilder']" name="visibility">public</attr>
+
+  <attr path="/api/package[@name='android']/class[@name='R']" name="managedName">Resource</attr>
+  <attr path="/api/package[@name='android']/class[@name='R.anim']" name="managedName">Animation</attr>
+  <attr path="/api/package[@name='android']/class[@name='R.attr']" name="managedName">Attribute</attr>
+  <attr path="/api/package[@name='android']/class[@name='R.attr']/field[@name='handle']" name="managedName">ChildHandle</attr>
+  <attr path="/api/package[@name='android']/class[@name='R.attr']/field[@name='imeFullscreenBackground']" name="managedName">ImeFullScreenBackground</attr>
+  <attr path="/api/package[@name='android']/class[@name='R.attr']/field[@name='windowFullscreen']" name="managedName">WindowFullScreen</attr>
+  <attr path="/api/package[@name='android']/class[@name='R.bool']" name="managedName">Boolean</attr>
+  <attr path="/api/package[@name='android']/class[@name='R.color']/field[@name='primary_text_dark_nodisable']" name="managedName">PrimaryTextDarkNoDisable</attr>
+  <attr path="/api/package[@name='android']/class[@name='R.color']/field[@name='primary_text_light_nodisable']" name="managedName">PrimaryTextLightNoDisable</attr>
+  <attr path="/api/package[@name='android']/class[@name='R.color']/field[@name='secondary_text_dark_nodisable']" name="managedName">SecondaryTextDarkNoDisable</attr>
+  <attr path="/api/package[@name='android']/class[@name='R.color']/field[@name='secondary_text_light_nodisable']" name="managedName">SecondaryTextLightNoDisable</attr>
+  <attr path="/api/package[@name='android']/class[@name='R.color']/field[@name='widget_edittext_dark']" name="managedName">WidgetEditTextDark</attr>
+  <attr path="/api/package[@name='android']/class[@name='R.dimen']" name="managedName">Dimension</attr>
+  <attr path="/api/package[@name='android']/class[@name='R.drawable']/field[@name='btn_default']" name="managedName">ButtonDefault</attr>
+  <attr path="/api/package[@name='android']/class[@name='R.drawable']/field[@name='btn_default_small']" name="managedName">ButtonDefaultSmall</attr>
+  <attr path="/api/package[@name='android']/class[@name='R.drawable']/field[@name='btn_dialog']" name="managedName">ButtonDialog</attr>
+  <attr path="/api/package[@name='android']/class[@name='R.drawable']/field[@name='btn_dropdown']" name="managedName">ButtonDropDown</attr>
+  <attr path="/api/package[@name='android']/class[@name='R.drawable']/field[@name='btn_minus']" name="managedName">ButtonMinus</attr>
+  <attr path="/api/package[@name='android']/class[@name='R.drawable']/field[@name='btn_plus']" name="managedName">ButtonPlus</attr>
+  <attr path="/api/package[@name='android']/class[@name='R.drawable']/field[@name='btn_radio']" name="managedName">ButtonRadio</attr>
+  <attr path="/api/package[@name='android']/class[@name='R.drawable']/field[@name='btn_star']" name="managedName">ButtonStar</attr>
+  <attr path="/api/package[@name='android']/class[@name='R.drawable']/field[@name='btn_star_big_off']" name="managedName">ButtonStarBigOff</attr>
+  <attr path="/api/package[@name='android']/class[@name='R.drawable']/field[@name='btn_star_big_on']" name="managedName">ButtonStarBigOn</attr>
+  <attr path="/api/package[@name='android']/class[@name='R.drawable']/field[@name='editbox_background']" name="managedName">EditBoxBackground</attr>
+  <attr path="/api/package[@name='android']/class[@name='R.drawable']/field[@name='editbox_background_normal']" name="managedName">EditBoxBackgroundNormal</attr>
+  <attr path="/api/package[@name='android']/class[@name='R.drawable']/field[@name='editbox_dropdown_dark_frame']" name="managedName">EditBoxDropDownDarkFrame</attr>
+  <attr path="/api/package[@name='android']/class[@name='R.drawable']/field[@name='editbox_dropdown_light_frame']" name="managedName">EditBoxDropDownLightFrame</attr>
+  <attr path="/api/package[@name='android']/class[@name='R.drawable']/field[@name='ic_btn_speak_now']" name="managedName">IcButtonSpeakNow</attr>
+  <attr path="/api/package[@name='android']/class[@name='R.drawable']/field[@name='ic_menu_mylocation']" name="managedName">IcMenuMyLocation</attr>
+  <attr path="/api/package[@name='android']/class[@name='R.drawable']/field[@name='ic_menu_myplaces']" name="managedName">IcMenuMyPlaces</attr>
+  <attr path="/api/package[@name='android']/class[@name='R.drawable']/field[@name='spinner_dropdown_background']" name="managedName">SpinnerDropDownBackground</attr>
+  <attr path="/api/package[@name='android']/class[@name='R.drawable']/field[@name='stat_notify_sdcard']" name="managedName">StatNotifySdCard</attr>
+  <attr path="/api/package[@name='android']/class[@name='R.drawable']/field[@name='stat_notify_sdcard_usb']" name="managedName">StatNotifySdCardUsb</attr>
+  <attr path="/api/package[@name='android']/class[@name='R.drawable']/field[@name='stat_notify_sync_noanim']" name="managedName">StatNotifySyncNoAnim</attr>
+  <attr path="/api/package[@name='android']/class[@name='R.id']/field[@name='tabcontent']" name="managedName">TabContent</attr>
+  <attr path="/api/package[@name='android']/class[@name='R.id']/field[@name='tabhost']" name="managedName">TabHost</attr>
+  <attr path="/api/package[@name='android']/class[@name='R.layout']/field[@name='select_dialog_multichoice']" name="managedName">SelectDialogMultiChoice</attr>
+  <attr path="/api/package[@name='android']/class[@name='R.layout']/field[@name='select_dialog_singlechoice']" name="managedName">SelectDialogSingleChoice</attr>
+  <attr path="/api/package[@name='android']/class[@name='R.layout']/field[@name='simple_dropdown_item_1line']" name="managedName">SimpleDropDownItem1Line</attr>
+  <attr path="/api/package[@name='android']/class[@name='R.layout']/field[@name='simple_spinner_dropdown_item']" name="managedName">SimpleSpinnerDropDownItem</attr>
+  <attr path="/api/package[@name='android']/class[@name='R.style']/field[@name='Theme_Black_NoTitleBar_Fullscreen']" name="managedName">ThemeBlackNoTitleBarFullScreen</attr>
+  <attr path="/api/package[@name='android']/class[@name='R.style']/field[@name='Theme_Light_NoTitleBar_Fullscreen']" name="managedName">ThemeLightNoTitleBarFullScreen</attr>
+  <attr path="/api/package[@name='android']/class[@name='R.style']/field[@name='Theme_NoTitleBar_Fullscreen']" name="managedName">ThemeNoTitleBarFullScreen</attr>
+  <attr path="/api/package[@name='android']/class[@name='R.style']/field[@name='Theme_Translucent_NoTitleBar_Fullscreen']" name="managedName">ThemeTranslucentNoTitleBarFullScreen</attr>
+  <attr path="/api/package[@name='android']/class[@name='R.style']/field[@name='Theme_Black_NoTitleBar_Fullscreen']" name="managedName">ThemeBlackNoTitleBarFullScreen</attr>
+  <attr path="/api/package[@name='android']/class[@name='R.style']/field[@name='Theme_Black_NoTitleBar_Fullscreen']" name="managedName">ThemeBlackNoTitleBarFullScreen</attr>
+  <!-- TypeEvaluator itself is added at 11, but typeParameters seems to be added at 13 or 14 -->
+  <remove-node api-since="14" path="/api/package[@name='android.animation']/interface[@name='TypeEvaluator']/typeParameters" />
+  <attr api-since="11" path="/api/package[@name='android.animation']/interface[@name='TypeEvaluator']/method[@name='evaluate']" name="return">java.lang.Object</attr>
+  <attr api-since="11" path="/api/package[@name='android.animation']/interface[@name='TypeEvaluator']/method[@name='evaluate']/parameter[@name='startValue']" name="type">java.lang.Object</attr>
+  <attr api-since="11" path="/api/package[@name='android.animation']/interface[@name='TypeEvaluator']/method[@name='evaluate']/parameter[@name='endValue']" name="type">java.lang.Object</attr>
+  <attr path="/api/package[@name='android.accessibilityservice']" name="managedName">Android.AccessibilityServices</attr>
+  <attr api-since="11" path="/api/package[@name='android.app']/class[@name='ActionBar.LayoutParams']/field[@name='gravity']" name="type">Android.Views.GravityFlags</attr>
+  <attr path="/api/package[@name='android.app']/class[@name='Dialog']/method[@name='setOnKeyListener']" name="eventName">KeyPress</attr>
+  <attr path="/api/package[@name='android.app']/interface[@name='DatePickerDialog.OnDateSetListener']/method[@name='onDateSet']/parameter[@name='view']" name="sender">true</attr>
+  <attr path="/api/package[@name='android.app']/interface[@name='TimePickerDialog.OnTimeSetListener']/method[@name='onTimeSet']/parameter[@name='view']" name="sender">true</attr>
+  <attr api-since="12" path="/api/package[@name='android.appwidget']/class[@name='AppWidgetProviderInfo']/field[@name='resizeMode']" name="type">Android.Appwidget.ResizeMode</attr>
+  <attr path="/api/package[@name='android.content']/interface[@name='DialogInterface.OnCancelListener']/method[@name='onCancel']/parameter[@name='dialog']" name="sender">true</attr>
+  <attr path="/api/package[@name='android.content']/interface[@name='DialogInterface.OnClickListener']" name="argsType">DialogClickEventArgs</attr>
+  <attr path="/api/package[@name='android.content']/interface[@name='DialogInterface.OnClickListener']/method[@name='onClick']/parameter[@name='dialog']" name="sender">true</attr>
+  <attr path="/api/package[@name='android.content']/interface[@name='DialogInterface.OnDismissListener']/method[@name='onDismiss']/parameter[@name='dialog']" name="sender">true</attr>
+  <attr path="/api/package[@name='android.content']/interface[@name='DialogInterface.OnKeyListener']" name="argsType">DialogKeyEventArgs</attr>
+  <attr path="/api/package[@name='android.content']/interface[@name='DialogInterface.OnKeyListener']/method[@name='onKey']/parameter[@name='dialog']" name="sender">true</attr>
+  <attr path="/api/package[@name='android.content']/interface[@name='DialogInterface.OnMultiChoiceClickListener']" name="argsType">DialogMultiChoiceClickEventArgs</attr>
+  <attr path="/api/package[@name='android.content']/interface[@name='DialogInterface.OnMultiChoiceClickListener']/method[@name='onClick']/parameter[@name='dialog']" name="sender">true</attr>
+  <attr api-since="8" path="/api/package[@name='android.content']/interface[@name='DialogInterface.OnShowListener']/method[@name='onShow']/parameter[@name='dialog']" name="sender">true</attr>
+  <attr path="/api/package[@name='android.content']/interface[@name='SharedPreferences.OnSharedPreferenceChangeListener']/method[@name='onSharedPreferenceChanged']/parameter[@name='sharedPreferences']" name="sender">true</attr>
+  <attr api-since="14" path="/api/package[@name='android.content.pm']/class[@name='ActivityInfo']/field[@name='uiOptions']" name="type">Android.Content.PM.UiOptions</attr>
+  <attr api-since="14" path="/api/package[@name='android.content.pm']/class[@name='ApplicationInfo']/field[@name='uiOptions']" name="type">Android.Content.PM.UiOptions</attr>
+  <attr path="/api/package[@name='android.content.pm']/class[@name='ApplicationInfo.DisplayNameComparator']/implements[@name='java.util.Comparator']" name="name">java.util.Comparator&lt;android.content.pm.ApplicationInfo&gt;</attr>
+  <attr path="/api/package[@name='android.content.pm']/class[@name='PackageItemInfo.DisplayNameComparator']/implements[@name='java.util.Comparator']" name="name">java.util.Comparator&lt;android.content.pm.PackageItemInfo&gt;</attr>
+  <attr path="/api/package[@name='android.content.pm']/class[@name='ResolveInfo.DisplayNameComparator']/implements[@name='java.util.Comparator']" name="name">java.util.Comparator&lt;android.content.pm.ResolveInfo&gt;</attr>
+  <attr path="/api/package[@name='android.database']/class[@name='CursorJoiner']/implements[@name='java.lang.Iterable']" name="name">java.lang.Iterable&lt;android.database.CursorJoiner.Result&gt;</attr>
+  <attr path="/api/package[@name='android.database']/class[@name='CursorJoiner']/implements[@name='java.util.Iterator']" name="name">java.util.Iterator&lt;android.database.CursorJoiner.Result&gt;</attr>
+  <attr path="/api/package[@name='android.drm']/class[@name='DrmConvertedStatus']/field[@name='statusCode']" name="type" api-since="11">Android.Drm.DrmConvertedStatusCode</attr>
+  <attr path="/api/package[@name='android.drm']/class[@name='DrmInfoStatus']/field[@name='infoType']" name="type" api-since="11">Android.Drm.DrmInfoRequestType</attr>
+  <attr path="/api/package[@name='android.drm']/class[@name='DrmInfoStatus']/field[@name='statusCode']" name="type" api-since="11">Android.Drm.DrmInfoStatusCode</attr>
+  <attr path="/api/package[@name='android.gesture']" name="managedName">Android.Gestures</attr>
+  <attr path="/api/package[@name='android.gesture']/interface[@name='GestureOverlayView.OnGesturePerformedListener']/method[@name='onGesturePerformed']/parameter[@name='overlay']" name="sender">true</attr>
+  <attr path="/api/package[@name='android.graphics.drawable']" name="managedName">Android.Graphics.Drawables</attr>
+  <attr path="/api/package[@name='android.graphics.drawable.shapes']" name="managedName">Android.Graphics.Drawables.Shapes</attr>
+  <attr api-since="8" path="/api/package[@name='android.hardware']/interface[@name='Camera.OnZoomChangeListener']/method[@name='onZoomChange']/parameter[@name='camera']" name="sender">true</attr>
+  <attr api-since="23" path="/api/package[@name='android.hardware.fingerprint']" name="managedName">Android.Hardware.Fingerprints</attr>
+  <attr path="/api/package[@name='android.inputmethodservice']" name="managedName">Android.InputMethodServices</attr>
+  <attr path="/api/package[@name='android.location']" name="managedName">Android.Locations</attr>
+  <attr api-since="8" path="/api/package[@name='android.media']/class[@name='CamcorderProfile']/field[@name='quality']" name="type">Android.Media.CamcorderQuality</attr>
+  <attr path="/api/package[@name='android.media']/interface[@name='MediaPlayer.OnBufferingUpdateListener']/method[@name='onBufferingUpdate']/parameter[@name='mp']" name="sender">true</attr>
+  <attr path="/api/package[@name='android.media']/interface[@name='MediaPlayer.OnCompletionListener']/method[@name='onCompletion']/parameter[@name='mp']" name="sender">true</attr>
+  <attr path="/api/package[@name='android.media']/interface[@name='MediaPlayer.OnPreparedListener']/method[@name='onPrepared']/parameter[@name='mp']" name="sender">true</attr>
+  <attr path="/api/package[@name='android.media']/interface[@name='MediaPlayer.OnSeekCompleteListener']/method[@name='onSeekComplete']/parameter[@name='mp']" name="sender">true</attr>
+  <attr path="/api/package[@name='android.media']/interface[@name='MediaPlayer.OnVideoSizeChangedListener']/method[@name='onVideoSizeChanged']/parameter[@name='mp']" name="sender">true</attr>
+  <attr path="/api/package[@name='android.media']/interface[@name='MediaRecorder.OnErrorListener']/method[@name='onError']/parameter[@name='mr']" name="sender">true</attr>
+  <attr path="/api/package[@name='android.media']/interface[@name='MediaRecorder.OnInfoListener']/method[@name='onInfo']/parameter[@name='mr']" name="sender">true</attr>
+  <attr api-since="8" path="/api/package[@name='android.media']/interface[@name='SoundPool.OnLoadCompleteListener']/method[@name='onLoadComplete']/parameter[@name='soundPool']" name="sender">true</attr>
+  <attr path="/api/package[@name='android.media.audiofx']/interface[@name='AudioEffect.OnControlStatusChangeListener']/method[@name='onControlStatusChange']/parameter[@name='effect']" name="sender" api-since="9">true</attr>
+  <attr path="/api/package[@name='android.media.audiofx']/interface[@name='AudioEffect.OnEnableStatusChangeListener']/method[@name='onEnableStatusChange']/parameter[@name='effect']" name="sender" api-since="9">true</attr>
+  <attr path="/api/package[@name='android.media.audiofx']/interface[@name='BassBoost.OnParameterChangeListener']/method[@name='onParameterChange']/parameter[@name='effect']" name="sender" api-since="9">true</attr>
+  <attr path="/api/package[@name='android.media.audiofx']/interface[@name='EnvironmentalReverb.OnParameterChangeListener']/method[@name='onParameterChange']/parameter[@name='effect']" name="sender" api-since="9">true</attr>
+  <attr path="/api/package[@name='android.media.audiofx']/interface[@name='Equalizer.OnParameterChangeListener']/method[@name='onParameterChange']/parameter[@name='effect']" name="sender" api-since="9">true</attr>
+  <attr path="/api/package[@name='android.media.audiofx']/interface[@name='PresetReverb.OnParameterChangeListener']/method[@name='onParameterChange']/parameter[@name='effect']" name="sender" api-since="9">true</attr>
+  <attr path="/api/package[@name='android.media.audiofx']/interface[@name='Virtualizer.OnParameterChangeListener']/method[@name='onParameterChange']/parameter[@name='effect']" name="sender" api-since="9">true</attr>
+  <attr path="/api/package[@name='android.nfc']/class[@name='NdefRecord']/method[@name='getType']" name="managedName" api-since="9">GetTypeInfo</attr>
+  <attr path="/api/package[@name='android.os']/class[@name='AsyncTask']" name="name">AsyncTask&lt;Params, Progress, Result&gt;</attr>
+  <attr path="/api/package[@name='android.os']/interface[@name='IBinder']" name="managedName">IBinder</attr>
+  <attr path="/api/package[@name='android.os']/interface[@name='IInterface']" name="managedName">IInterface</attr>
+  <attr path="/api/package[@name='android.preference']" name="managedName">Android.Preferences</attr>
+  <attr path="/api/package[@name='android.preference']/class[@name='PreferenceScreen']/method[@name='onItemClick']/parameter[@name='parent']" name="type">android.widget.AdapterView&lt;?&gt;</attr>
+  <attr api-since="14" path="/api/package[@name='android.provider']/class[@name='ContactsContract.CommonDataKinds.Identity']/field[@name='IDENTITY']" name="managedName">IdentityColumnId</attr>
+  <attr api-since="5" path="/api/package[@name='android.provider']/class[@name='ContactsContract.CommonDataKinds.Note']/field[@name='NOTE']" name="managedName">NoteColumnId</attr>
+  <attr api-since="5" path="/api/package[@name='android.provider']/class[@name='ContactsContract.CommonDataKinds.Photo']/field[@name='PHOTO']" name="managedName">PhotoColumnId</attr>
+  <attr api-since="9" path="/api/package[@name='android.provider']/class[@name='ContactsContract.CommonDataKinds.SipAddress']/field[@name='SIP_ADDRESS']" name="managedName">SipAddressColumnId</attr>
+  <attr api-since="5" path="/api/package[@name='android.provider']/interface[@name='ContactsContract.ContactsColumns']" name="visibility">public</attr>
+  <attr api-since="11" path="/api/package[@name='android.provider']/class[@name='ContactsContract.Contacts.Photo']/field[@name='PHOTO']" name="managedName">PhotoColumnId</attr>
+  <attr api-since="11" path="/api/package[@name='android.renderscript']" name="managedName">Android.Renderscripts</attr>
+
+  <attr path="/api/package[@name='android.test']/class[@name='ActivityInstrumentationTestCase']/method[@name='getActivity']" name="return">Android.App.Activity</attr>
+  <attr path="/api/package[@name='android.test']/class[@name='ActivityInstrumentationTestCase']/method[@name='getActivity']" name="visibility">protected</attr><!-- FIXME: should this be corrected in generator? -->
+  <attr path="/api/package[@name='android.test']/class[@name='ActivityInstrumentationTestCase2']/method[@name='getActivity']" name="return">Android.App.Activity</attr>
+  <attr path="/api/package[@name='android.test']/class[@name='ActivityInstrumentationTestCase2']/method[@name='getActivity']" name="visibility">protected</attr><!-- FIXME: should this be corrected in generator? -->
+  <attr path="/api/package[@name='android.test']/class[@name='ActivityUnitTestCase']/method[@name='getActivity']" name="return">Android.App.Activity</attr>
+  <attr path="/api/package[@name='android.test']/class[@name='ActivityUnitTestCase']/method[@name='getActivity']" name="visibility">protected</attr><!-- FIXME: should this be corrected in generator? -->
+
+  <attr path="/api/package[@name='android.text']/class[@name='SpannableStringBuilder']/method[@name='append']" name="managedReturn">Java.Lang.IAppendable</attr>
+  <attr path="/api/package[@name='android.text']/class[@name='SpannableStringBuilder']/method[@name='delete']" name="managedReturn">Android.Text.IEditable</attr>
+  <attr path="/api/package[@name='android.text']/class[@name='SpannableStringBuilder']/method[@name='getSpans']" name="return">java.lang.Object[]</attr>
+  <attr path="/api/package[@name='android.text']/class[@name='SpannableStringBuilder']/method[@name='getSpans']/parameter[@name='kind']" name="type">java.lang.Class</attr>
+  <attr path="/api/package[@name='android.text']/class[@name='SpannableStringBuilder']/method[@name='insert']" name="managedReturn">Android.Text.IEditable</attr>
+  <attr path="/api/package[@name='android.text']/class[@name='SpannableStringBuilder']/method[@name='replace']" name="managedReturn">Android.Text.IEditable</attr>
+  <attr path="/api/package[@name='android.text']/class[@name='SpannableStringInternal']/method[@name='getSpans']" name="return">java.lang.Object[]</attr>
+  <attr path="/api/package[@name='android.text']/class[@name='SpannableStringInternal']/method[@name='getSpans']/parameter[@name='p2']" name="type">java.lang.Class</attr>
+  <attr path="/api/package[@name='android.text']/class[@name='TextUtils']/method[@name='join']/parameter[@type='java.lang.Iterable']" name="type">java.lang.Iterable&lt;java.lang.Object&gt;</attr>
+  <attr path="/api/package[@name='android.text']/interface[@name='Editable']/method[@name='append']" name="managedReturn">Java.Lang.IAppendable</attr>
+  <attr path="/api/package[@name='android.text']/interface[@name='GetChars']" name="managedName">IGetChars</attr>
+  <attr path="/api/package[@name='android.text']/interface[@name='Spanned']/method[@name='getSpans']" name="return">java.lang.Object[]</attr>
+  <attr path="/api/package[@name='android.text']/interface[@name='Spanned']/method[@name='getSpans']/parameter[@name='type']" name="type">java.lang.Class</attr>
+  <attr path="/api/package[@name='android.text.format']/class[@name='Time']/field[@name='MONTH']" name="managedName">MonthValue</attr>
+  <attr path="/api/package[@name='android.text.format']/class[@name='Time']/field[@name='MONTH_DAY']" name="managedName">MonthDayValue</attr>
+  <attr path="/api/package[@name='android.text.format']/class[@name='Time']/field[@name='HOUR']" name="managedName">HourValue</attr>
+  <attr path="/api/package[@name='android.text.format']/class[@name='Time']/field[@name='MINUTE']" name="managedName">MinuteValue</attr>
+  <attr path="/api/package[@name='android.text.format']/class[@name='Time']/field[@name='SECOND']" name="managedName">SecondValue</attr>
+  <attr path="/api/package[@name='android.text.format']/class[@name='Time']/field[@name='WEEK_DAY']" name="managedName">WeekdayValue</attr>
+  <attr path="/api/package[@name='android.text.format']/class[@name='Time']/field[@name='YEAR']" name="managedName">YearValue</attr>
+  <attr path="/api/package[@name='android.text.format']/class[@name='Time']/field[@name='YEAR_DAY']" name="managedName">YearDayValue</attr>
+  <attr path="/api/package[@name='android.text.method']/class[@name='CharacterPickerDialog']/method[@name='onItemClick']/parameter[@name='parent']" name="type">android.widget.AdapterView&lt;?&gt;</attr>
+  <attr path="/api/package[@name='android.view']" name="managedName">Android.Views</attr>
+  <attr path="/api/package[@name='android.view']/class[@name='View']/method[@name='getLayoutParams']" name="managedName">GetLayoutParameters</attr>
+  <attr path="/api/package[@name='android.view']/class[@name='View']/method[@name='setLayoutParams']" name="managedName">SetLayoutParameters</attr>
+  <attr path="/api/package[@name='android.view']/class[@name='View']/method[@name='setOnCreateContextMenuListener']" name="eventName">ContextMenuCreated</attr>
+  <attr path="/api/package[@name='android.view']/class[@name='View']/method[@name='setOnKeyListener']" name="eventName">KeyPress</attr>
+  <attr api-since="12" path="/api/package[@name='android.view']/interface[@name='View.OnAttachStateChangeListener']/method[@name='onViewAttachedToWindow']/parameter[@name='v']" name="name">attachedView</attr>
+  <attr api-since="12" path="/api/package[@name='android.view']/interface[@name='View.OnAttachStateChangeListener']/method[@name='onViewDetachedFromWindow']/parameter[@name='v']" name="name">detachedView</attr>
+  <attr path="/api/package[@name='android.view']/interface[@name='View.OnClickListener']/method[@name='onClick']/parameter[@name='v']" name="sender">true</attr>
+  <attr path="/api/package[@name='android.view']/interface[@name='View.OnCreateContextMenuListener']/method[@name='onCreateContextMenu']/parameter[@name='v']" name="sender">true</attr>
+  <attr api-since="11" path="/api/package[@name='android.view']/interface[@name='View.OnDragListener']/method[@name='onDrag']/parameter[@name='v']" name="sender">true</attr>
+  <attr path="/api/package[@name='android.view']/interface[@name='View.OnFocusChangeListener']/method[@name='onFocusChange']/parameter[@name='v']" name="sender">true</attr>
+  <attr api-since="12" path="/api/package[@name='android.view']/interface[@name='View.OnGenericMotionListener']/method[@name='onGenericMotion']/parameter[@name='v']" name="sender">true</attr>
+  <attr api-since="14" path="/api/package[@name='android.view']/interface[@name='View.OnHoverListener']/method[@name='onHover']/parameter[@name='v']" name="sender">true</attr>
+  <attr path="/api/package[@name='android.view']/interface[@name='View.OnKeyListener']/method[@name='onKey']/parameter[@name='v']" name="sender">true</attr>
+  <attr api-since="11" path="/api/package[@name='android.view']/interface[@name='View.OnLayoutChangeListener']/method[@name='onLayoutChange']/parameter[@name='v']" name="sender">true</attr>
+  <attr path="/api/package[@name='android.view']/interface[@name='View.OnLongClickListener']/method[@name='onLongClick']/parameter[@name='v']" name="sender">true</attr>
+  <attr path="/api/package[@name='android.view']/interface[@name='View.OnTouchListener']/method[@name='onTouch']/parameter[@name='v']" name="sender">true</attr>
+  <attr path="/api/package[@name='android.view']/interface[@name='ViewStub.OnInflateListener']/method[@name='onInflate']/parameter[@name='stub']" name="sender">true</attr>
+  <attr api-since="11" path="/api/package[@name='android.view']/class[@name='WindowManager.LayoutParams']/field[@name='systemUiVisibility']" name="type">Android.Views.StatusBarVisibility</attr>
+  <attr path="/api/package[@name='android.view.accessibility']" name="managedName">Android.Views.Accessibility</attr>
+  <attr path="/api/package[@name='android.view.animation']" name="managedName">Android.Views.Animations</attr>
+  <attr path="/api/package[@name='android.view.animation']/class[@name='Animation.Description']/field[@name='type']" name="type">Android.Views.Animations.Dimension</attr>
+  <attr path="/api/package[@name='android.view.inputmethod']" name="managedName">Android.Views.InputMethods</attr>
+  <attr path="/api/package[@name='android.view.inputmethod']/class[@name='EditorInfo']/field[@name='initialCapsMode']" name="type">Android.Text.CapitalizationMode</attr>
+  <attr path="/api/package[@name='android.view.inputmethod']/class[@name='EditorInfo']/field[@name='imeOptions']" name="type">Android.Views.InputMethods.ImeFlags</attr>
+  <attr api-since="14" path="/api/package[@name='android.view.textservice']" name="managedName">Android.Views.TextService</attr>
+  <attr path="/api/package[@name='android.webkit']/interface[@name='WebView.PictureListener']/method[@name='onNewPicture']/parameter[@name='view']" name="sender">true</attr>
+
+  <!--
+	They bring special relationship in AdapterView and its descendants.
+	Basically they were hack and should have been removed, but it's too
+	late to fix without breaking API so much...
+  -->
+  <attr path="/api/package[@name='android.widget']/class[@name='AbsListView']" name="extends">android.widget.AdapterView&lt;android.widget.ListAdapter&gt;</attr>
+  <attr path="/api/package[@name='android.widget']/class[@name='AbsSpinner']" name="extends">android.widget.AdapterView&lt;android.widget.SpinnerAdapter&gt;</attr>
+
+  <attr path="/api/package[@name='android.hardware']/interface[@name='SensorListener']/method[@name='onAccuracyChanged']" name="argsType">SensorListenerAccuracyChangedEventArgs</attr>
+  <attr path="/api/package[@name='android.hardware']/interface[@name='SensorListener']/method[@name='onSensorChanged']" name="argsType">SensorListenerSensorChangedEventArgs</attr>
+
+  <attr path="/api/package[@name='android.widget']/class[@name='AdapterView']" name="name">AdapterView&lt;T&gt;</attr>
+  <attr path="/api/package[@name='android.widget']/class[@name='ArrayAdapter']" name="name">ArrayAdapter&lt;T&gt;</attr>
+  <attr path="/api/package[@name='android.widget']/class[@name='AutoCompleteTextView']/method[@name='setAdapter']/parameter[@name='adapter']" name="type">android.widget.ListAdapter</attr>
+  <attr path="/api/package[@name='android.widget']/class[@name='CursorTreeAdapter']/method[@name='getChild']" name="return">java.lang.Object</attr>
+  <attr path="/api/package[@name='android.widget']/class[@name='CursorTreeAdapter']/method[@name='getGroup']" name="return">java.lang.Object</attr>
+  <attr path="/api/package[@name='android.widget']/class[@name='CursorTreeAdapter']/method[@name='newChildView']" name="visibility">public</attr>
+  <attr path="/api/package[@name='android.widget']/class[@name='CursorTreeAdapter']/method[@name='newGroupView']" name="visibility">public</attr>
+  <attr path="/api/package[@name='android.widget']/class[@name='PopupWindow']/method[@name='setTouchInterceptor']" name="eventName">TouchIntercepted</attr>
+  <attr path="/api/package[@name='android.widget']/interface[@name='Chronometer.OnChronometerTickListener']/method[@name='onChronometerTick']/parameter[@name='chronometer']" name="sender">true</attr>
+  <attr path="/api/package[@name='android.widget']/interface[@name='CompoundButton.OnCheckedChangeListener']/method[@name='onCheckedChanged']/parameter[@name='buttonView']" name="sender">true</attr>
+  <attr path="/api/package[@name='android.widget']/interface[@name='DatePicker.OnDateChangedListener']/method[@name='onDateChanged']/parameter[@name='view']" name="sender">true</attr>
+  <attr path="/api/package[@name='android.widget']/interface[@name='ExpandableListView.OnChildClickListener']/method[@name='onChildClick']/parameter[@name='v']" name="name">clickedView</attr>
+  <attr path="/api/package[@name='android.widget']/interface[@name='ExpandableListView.OnGroupClickListener']/method[@name='onGroupClick']/parameter[@name='v']" name="name">clickedView</attr>
+  <attr path="/api/package[@name='android.widget']/class[@name='LinearLayout.LayoutParams']/field[@name='gravity']" name="type">Android.Views.GravityFlags</attr>
+  <attr path="/api/package[@name='android.widget']/interface[@name='RadioGroup.OnCheckedChangeListener']/method[@name='onCheckedChanged']/parameter[@name='group']" name="sender">true</attr>
+  <attr path="/api/package[@name='android.widget']/interface[@name='RatingBar.OnRatingBarChangeListener']/method[@name='onRatingChanged']/parameter[@name='ratingBar']" name="sender">true</attr>
+  <attr path="/api/package[@name='android.widget']/interface[@name='TextView.OnEditorActionListener']/method[@name='onEditorAction']/parameter[@name='v']" name="sender">true</attr>
+  <attr path="/api/package[@name='android.widget']/interface[@name='TimePicker.OnTimeChangedListener']/method[@name='onTimeChanged']/parameter[@name='view']" name="sender">true</attr>
+  <attr path="/api/package[@name='java.io']/class[@name='PrintStream']/method[@name='append']" name="return">java.lang.Appendable</attr>
+  <attr path="/api/package[@name='java.io']/class[@name='Writer']/method[@name='append']" name="return">java.lang.Appendable</attr>
+  <attr path="/api/package[@name='java.lang']/class[@name='Class']/method[@name='newInstance']" name="return">java.lang.Object</attr>
+  <attr path="/api/package[@name='java.lang']/class[@name='Class']/method[@name='cast']" name="return">java.lang.Object</attr>
+  <attr path="/api/package[@name='java.lang']/class[@name='Object']/method[@name='finalize']" name="managedName">JavaFinalize</attr>
+  <attr path="/api/package[@name='java.lang']/class[@name='StringBuffer']/method[@name='append']" name="managedReturn">Java.Lang.IAppendable</attr>
+  <attr path="/api/package[@name='java.lang']/class[@name='StringBuilder']/method[@name='append']" name="managedReturn">Java.Lang.IAppendable</attr>
+  <attr path="/api/package[@name='java.lang']/interface[@name='CharSequence']" name="managedName">ICharSequence</attr>
+  <attr path="/api/package[@name='java.lang']/interface[@name='Iterable']" name="name">Iterable&lt;T&gt;</attr>
+  <attr path="/api/package[@name='java.nio.channels']/class[@name='Channels']/method[@name='newChannel' and @return='java.nio.channels.ReadableByteChannel']" name="managedName">NewReadableChannel</attr>
+  <attr path="/api/package[@name='java.nio.channels']/class[@name='Channels']/method[@name='newChannel' and @return='java.nio.channels.WritableByteChannel']" name="managedName">NewWritableChannel</attr>
+  <attr path="/api/package[@name='java.util']/class[@name='Dictionary']/method/parameter[@name='key']" name="type">K</attr>
+  <attr path="/api/package[@name='java.util']/class[@name='Dictionary']/method/parameter[@name='value']" name="type">V</attr>
+  <attr path="/api/package[@name='java.util']/class[@name='Dictionary']" name="name">Dictionary&lt;K, V&gt;</attr>
+  <attr path="/api/package[@name='java.util']/class[@name='Hashtable']/method/parameter[@name='key']" name="type">K</attr>
+  <attr path="/api/package[@name='java.util']/class[@name='Hashtable']/method/parameter[@name='value']" name="type">V</attr>
+  <attr path="/api/package[@name='java.util']/class[@name='Hashtable']/implements[@name='java.util.Map']" name="name">java.util.Map&lt;K, V&gt;</attr>
+  <attr path="/api/package[@name='java.util']/class[@name='Hashtable']" name="extends">java.util.Dictionary&lt;K, V&gt;</attr>
+  <attr path="/api/package[@name='java.util']/class[@name='Hashtable']" name="name">Hashtable&lt;K, V&gt;</attr>
+  <attr path="/api/package[@name='java.util']/class[@name='Properties']" name="extends">java.lang.Object</attr>
+  <attr path="/api/package[@name='java.util']/class[@name='ResourceBundle']/method[@name='handleGetObject']" name="visibility">public</attr>
+  <attr path="/api/package[@name='java.util']/class[@name='Scanner']/implements[@name='java.util.Iterator']" name="name">java.lang.Iterator&lt;java.lang.String&gt;</attr>
+  <attr path="/api/package[@name='java.util']/interface[@name='Collection']/implements[@name='java.lang.Iterable']" name="name">java.lang.Iterable&lt;E&gt;</attr>
+  <attr path="/api/package[@name='java.util']/interface[@name='Collection']/method[@name='containsAll']/parameter[@type='java.util.Collection&lt;?&gt;']" name="type">java.util.Collection&lt;E&gt;</attr>
+  <attr path="/api/package[@name='java.util']/interface[@name='Collection']/method[@name='removeAll']/parameter[@type='java.util.Collection&lt;?&gt;']" name="type">java.util.Collection&lt;E&gt;</attr>
+  <attr path="/api/package[@name='java.util']/interface[@name='Collection']/method[@name='retainAll']/parameter[@type='java.util.Collection&lt;?&gt;']" name="type">java.util.Collection&lt;E&gt;</attr>
+  <attr path="/api/package[@name='java.util']/interface[@name='Collection']/method[@name='toArray']/parameter[@type='T[]']" name="type">E[]</attr>
+  <attr path="/api/package[@name='java.util']/interface[@name='Collection']/method[@name='toArray' and count(parameter)=1]" name="return">E[]</attr>
+  <attr path="/api/package[@name='java.util']/interface[@name='Collection']" name="name">Collection&lt;E&gt;</attr>
+  <attr path="/api/package[@name='java.util']/interface[@name='Comparator']" name="name">Comparator&lt;T&gt;</attr>
+  <attr path="/api/package[@name='java.util']/interface[@name='Iterator']" name="name">Iterator&lt;E&gt;</attr>
+  <attr path="/api/package[@name='java.util']/interface[@name='Map']/method/parameter[@name='key']" name="type">K</attr>
+  <attr path="/api/package[@name='java.util']/interface[@name='Map']/method/parameter[@name='value']" name="type">V</attr>
+  <attr path="/api/package[@name='java.util']/interface[@name='Map']" name="name">Map&lt;K, V&gt;</attr>
+  <attr path="/api/package[@name='java.util']/interface[@name='Map.Entry']" name="name">Map.Entry&lt;K, V&gt;</attr>
+  <attr path="/api/package[@name='javax.security.auth.callback']/interface[@name='CallbackHandler']/method[@name='handle']" name="managedName">HandleCallbacks</attr>
+  <attr path="/api/package[@name='org.xmlpull.v1']" name="managedName">Org.XmlPull.V1</attr>
+  <attr path="/api/package[@name='android.util']/class[@name='Log']/method[@name='d']" name="managedName">Debug</attr>
+  <attr path="/api/package[@name='android.util']/class[@name='Log']/method[@name='e']" name="managedName">Error</attr>
+  <attr path="/api/package[@name='android.util']/class[@name='Log']/method[@name='i']" name="managedName">Info</attr>
+  <attr path="/api/package[@name='android.util']/class[@name='Log']/method[@name='v']" name="managedName">Verbose</attr>
+  <attr path="/api/package[@name='android.util']/class[@name='Log']/method[@name='w']" name="managedName">Warn</attr>
+  <attr path="/api/package[@name='android.util']/class[@name='Log']/method[@name='println']" name="managedName">WriteLine</attr>
+  <!-- we hide the (string,string,Throwable) methods so we can provide (string, Throwable, string) overloads -->
+  <attr path="/api/package[@name='android.util']/class[@name='Log']/method[@name='d' and count(parameter) = 3 and parameter[3][@type='java.lang.Throwable']]" name="visibility">private</attr>
+  <attr path="/api/package[@name='android.util']/class[@name='Log']/method[@name='e' and count(parameter) = 3 and parameter[3][@type='java.lang.Throwable']]" name="visibility">private</attr>
+  <attr path="/api/package[@name='android.util']/class[@name='Log']/method[@name='i' and count(parameter) = 3 and parameter[3][@type='java.lang.Throwable']]" name="visibility">private</attr>
+  <attr path="/api/package[@name='android.util']/class[@name='Log']/method[@name='v' and count(parameter) = 3 and parameter[3][@type='java.lang.Throwable']]" name="visibility">private</attr>
+  <attr path="/api/package[@name='android.util']/class[@name='Log']/method[@name='w' and count(parameter) = 3 and parameter[3][@type='java.lang.Throwable']]" name="visibility">private</attr>
+  <attr api-since="8" path="/api/package[@name='android.util']/class[@name='Log']/method[@name='wtf' and count(parameter) = 3 and parameter[3][@type='java.lang.Throwable']]" name="visibility">private</attr>
+
+	<!-- Color properties should be of type Color; https://bugzilla.xamarin.com/show_bug.cgi?id=374 ; will need to wait for when we can break API :-(
+	<attr path="/api/package/*[local-name()='class' or local-name()='interface']/field[@final='false' and @type='int' and (@name='color' or substring(@name, string-length(@name) - 5 + 1)='Color')]" name="type">Android.Graphics.Color</attr>
+
+	  ~~ get*Color(), hsvToColor(), parseColor() etc. ~~
+	<attr path="/api/package/*[local-name()='class' or local-name()='interface']/method[@return='int' and substring(@name, string-length(@name) - 5 + 1)='Color']" name="return">Android.Graphics.Color</attr>
+
+	  ~~ remaining Color methods, manually enumified ~~
+	<attr path="/api/package[@name='android.content.res']/class[@name='ColorStateList']/method[@name='getColorForState']" name="return">Android.Graphics.Color</attr>
+	-->
+	<attr api-since="21" path="/api/package[@name='android.app']/class[@name='ActivityManager.TaskDescription']/constructor/parameter[@name='colorPrimary']" name="type">Android.Graphics.Color</attr>
+	<attr path="/api/package[@name='android.content.res']/class[@name='Resources']/method[@name='getColor']" name="return">Android.Graphics.Color</attr>
+	<attr path="/api/package[@name='android.content.res']/class[@name='TypedArray']/method[@name='getColor']" name="return">Android.Graphics.Color</attr>
+	<attr path="/api/package[@name='android.graphics']/class[@name='Paint']/method[@name='getColor']" name="return">Android.Graphics.Color</attr>
+	<attr path="/api/package[@name='android.graphics']/class[@name='Paint']/method[@name='setColor']/parameter[position()=1]" name="type">Android.Graphics.Color</attr>
+	<attr api-since="11" path="/api/package[@name='android.graphics.drawable']/class[@name='ColorDrawable']/method[@name='getColor']" name="return">Android.Graphics.Color</attr>
+	<attr api-since="11" path="/api/package[@name='android.graphics.drawable']/class[@name='ColorDrawable']/method[@name='setColor']/parameter[position()=1]" name="type">Android.Graphics.Color</attr>
+	<attr api-since="21" path="/api/package[@name='android.graphics']/class[@name='Paint']/method[@name='setShadowColor']/parameter[@name='shadowColor']" name="type">Android.Graphics.Color</attr>
+	<attr api-since="21" path="/api/package[@name='android.graphics']/class[@name='RadialGradient']/constructor/parameter[@name='centerColor']" name="type">Android.Graphics.Color</attr>
+	<attr api-since="21" path="/api/package[@name='android.graphics']/class[@name='RadialGradient']/constructor/parameter[@name='edgeColor']" name="type">Android.Graphics.Color</attr>
+	<attr path="/api/package[@name='android.text.style']/class[@name='QuoteSpan']/method[@name='getColor']" name="return">Android.Graphics.Color</attr>
+	<attr path="/api/package[@name='android.widget']/class[@name='CalendarView']/method[@name='getFocusedMonthDateColor']" name="return" api-since="16">Android.Graphics.Color</attr>
+	<attr path="/api/package[@name='android.widget']/class[@name='CalendarView']/method[@name='getSelectedWeekBackgroundColor']" name="return" api-since="16">Android.Graphics.Color</attr>
+	<attr path="/api/package[@name='android.widget']/class[@name='CalendarView']/method[@name='getUnfocusedMonthDateColor']" name="return" api-since="16">Android.Graphics.Color</attr>
+	<attr path="/api/package[@name='android.widget']/class[@name='CalendarView']/method[@name='getWeekNumberColor']" name="return" api-since="16">Android.Graphics.Color</attr>
+	<attr path="/api/package[@name='android.widget']/class[@name='CalendarView']/method[@name='getWeekSeparatorLineColor']" name="return" api-since="16">Android.Graphics.Color</attr>
+	<attr path="/api/package[@name='android.widget']/class[@name='TextView']/method[@name='getHighlightColor']" name="return" api-since="16">Android.Graphics.Color</attr>
+	<attr path="/api/package[@name='android.widget']/class[@name='TextView']/method[@name='getShadowColor']" name="return" api-since="16">Android.Graphics.Color</attr>
+
+	<!-- TODO in 5.0!
+	s/int[] colors/Color[] colors/g
+	TextView.getTextColor() should return Color
+	-->
+
+	<!-- Color parameters... -->
+	<!-- cosmetic fix for non-conformant name
+	<attr path="/api/package[@name='android.view.animation']/class[@name='Animation']/method[@name='setBackgroundColor']/parameter[@name='bg']" name="type">Android.Graphics.Color</attr>
+	-->
+
+	<attr path="/api/package/*[local-name()='class' or local-name()='interface']/*[local-name()='constructor' or local-name()='method']/parameter[@type='int' and (@name='color' or @name='color0' or @name='color1' or @name='defaultColor' or @name='opColor' or @name='srcColor' or @name='textColor' or @name='shadowColor' or @name='centerColor' or @name='edgeColor' or @name='colorPrimary')]" name="type">Android.Graphics.Color</attr>
+	<attr path="/api/package[@name='android.hardware.camera2.params']/*[local-name()='class' or local-name()='interface']/*[local-name()='constructor' or local-name()='method']/parameter[@type='int' and @name='colorChannel']" name="type">Android.Graphics.Color</attr>
+	<!-- Fixup related methods so that properties remain properties -->
+	<attr path="/api/package[@name='android.app']/class[@name='Activity']/method[@name='getTitleColor']" name="return">Android.Graphics.Color</attr>
+	<attr path="/api/package[@name='android.gesture']/class[@name='GestureOverlayView']/method[@name='getGestureColor']" name="return">Android.Graphics.Color</attr>
+	<attr path="/api/package[@name='android.gesture']/class[@name='GestureOverlayView']/method[@name='getUncertainGestureColor']" name="return">Android.Graphics.Color</attr>
+	<attr path="/api/package[@name='android.view']/class[@name='View']/method[@name='getDrawingCacheBackgroundColor']" name="return">Android.Graphics.Color</attr>
+	<attr path="/api/package[@name='android.widget']/class[@name='AbsListView']/method[@name='getCacheColorHint']" name="return">Android.Graphics.Color</attr>
+	<attr path="/api/package[@name='android.telephony']/class[@name='SubscriptionInfo']/method[@name='getIconTint']" name="return">Android.Graphics.Color</attr>
+
+	<!-- For compatibility, retain property setters on these methods -->
+	<attr path="/api/package[@name='android.graphics.drawable']/class[@name='Drawable']/method[@name='setCallback']" name="generateDispatchingSetter">true</attr>
+	<attr api-since="10" path="/api/package[@name='android.nfc.tech']/class[@name='IsoDep']/method[@name='setTimeout']" name="generateDispatchingSetter">true</attr>
+	<attr path="/api/package[@name='android.os']/class[@name='Bundle']/method[@name='setClassLoader']" name="generateDispatchingSetter">true</attr>
+	<attr path="/api/package[@name='android.webkit']/class[@name='CallbackProxy']/method[@name='setWebChromeClient']" name="generateDispatchingSetter">true</attr>
+	<attr path="/api/package[@name='android.widget']/class[@name='FrameLayout']/method[@name='setMeasureAllChildren']" name="generateDispatchingSetter">true</attr>
+	<attr path="/api/package[@name='android.widget']/class[@name='GridView']/method[@name='setNumColumns']" name="generateDispatchingSetter">true</attr>
+
+  <remove-node api-since="11" path="/api/package[@name='android.animation']/class[@name='AnimatorSet']/method[@name='setDuration']" />
+  <remove-node api-since="11" path="/api/package[@name='android.animation']/class[@name='ValueAnimator']/method[@name='setDuration']" />
+  <!-- FIXME: this should be correctly generated by jar2xml -->
+  <remove-node api-since="11" path="/api/package[@name='android.animation']/class[@name='ValueAnimator']/method[@name='getInterpolator']" />
+
+  <attr path="/api/package[@name='android.graphics']/class[@name='Color']" name="managedName">_Color</attr>
+  <attr path="/api/package[@name='android.graphics']/class[@name='Color']" name="visibility">internal</attr>
+
+  <!-- removed to workaround generator issue regarding non-generic type overriding generic type (FIXME: remove them) -->
+  <remove-node api-since="11" path="/api/package[@name='android.widget']/class[@name='AdapterViewAnimator']/method[@name='getAdapter']" />
+  <remove-node api-since="11" path="/api/package[@name='android.widget']/class[@name='AdapterViewAnimator']/method[@name='setAdapter']" />
+
+  <!-- FIXME:
+	SQLiteDatabase.getAttachedDbs() returns List<Pair<String,String>> which we don't
+	map well. Pair<String,String> becomes Pair<string,string>, but Pair.ctor()
+	accepts two JLOs (first and second), which does not apply to strings (while
+	Java.Lang.String does).
+  -->
+  <remove-node api-since="11" path="/api/package[@name='android.database.sqlite']/class[@name='SQLiteDatabase']/method[@name='getAttachedDbs']" />
+
+  <!-- FIXME:
+	This method is an override of another method in the base types.
+	The base method expects JLO, but this method returns Cursor.
+	So we somehow have to fill the gap between them.
+  -->
+  <remove-node api-since="11" path="/api/package[@name='android.content']/class[@name='CursorLoader']/method[@name='loadInBackground']" />
+
+  <!-- FIXME: remove this, array should be supported in the future -->
+  <remove-node path="/api/package[@name='android.app']/class[@name='Notification']/field[@name='vibrate']" />
+
+  <remove-node path="/api/package[@name='android.content']/class[@name='ContentValues']/method[@name='getAsBoolean']" />
+  <remove-node path="/api/package[@name='android.content']/class[@name='ContentValues']/method[@name='getAsByte']" />
+  <remove-node path="/api/package[@name='android.content']/class[@name='ContentValues']/method[@name='getAsShort']" />
+  <remove-node path="/api/package[@name='android.content']/class[@name='ContentValues']/method[@name='getAsInteger']" />
+  <remove-node path="/api/package[@name='android.content']/class[@name='ContentValues']/method[@name='getAsLong']" />
+  <remove-node path="/api/package[@name='android.content']/class[@name='ContentValues']/method[@name='getAsFloat']" />
+  <remove-node path="/api/package[@name='android.content']/class[@name='ContentValues']/method[@name='getAsDouble']" />
+  <remove-node path="/api/package[@name='android.content']/class[@name='ContentValues']/method[@name='put']/parameter[@type='java.lang.Boolean']/.." />
+  <remove-node path="/api/package[@name='android.content']/class[@name='ContentValues']/method[@name='put']/parameter[@type='java.lang.Byte']/.." />
+  <remove-node path="/api/package[@name='android.content']/class[@name='ContentValues']/method[@name='put']/parameter[@type='java.lang.Double']/.." />
+  <remove-node path="/api/package[@name='android.content']/class[@name='ContentValues']/method[@name='put']/parameter[@type='java.lang.Float']/.." />
+  <remove-node path="/api/package[@name='android.content']/class[@name='ContentValues']/method[@name='put']/parameter[@type='java.lang.Integer']/.." />
+  <remove-node path="/api/package[@name='android.content']/class[@name='ContentValues']/method[@name='put']/parameter[@type='java.lang.Long']/.." />
+  <remove-node path="/api/package[@name='android.content']/class[@name='ContentValues']/method[@name='put']/parameter[@type='java.lang.Short']/.." />
+  <remove-node path="/api/package[@name='android.content']/class[@name='ContentValues']/method[@name='valueSet']" />
+  <remove-node api-since="8" path="/api/package[@name='android.content']/interface[@name='EntityIterator']" />
+  <remove-node path="/api/package[@name='android.content.res']/class[@name='AssetManager.AssetInputStream']" />
+  <remove-node path="/api/package[@name='com.android.internal.util']" />
+  <remove-node path="/api/package[@name='android.text.method']/class[@name='PasswordTransformationMethod']/implements[@name='android.text.TextWatcher']" />
+  <!-- Adding global:: to everywhere before System.* is annoying, so let's just rename it to SystemInterop -->
+  <attr path="/api/package[@name='dalvik.system']" name="managedName">Dalvik.SystemInterop</attr>
+  <remove-node path="/api/package[@name='java.io']/interface[@name='ObjectOutput']/method[@name='write']" />
+  <attr path="/api/package[@name='java.lang']/class[@name='Object']/constructor" name="visibility">protected</attr>
+  <remove-node path="/api/package[@name='java.lang']/class[@name='Enum']/method[@name='finalize']" />
+  <remove-node path="/api/package[@name='java.lang']/class[@name='Float']/field[@name='MAX_VALUE']" />
+  <remove-node path="/api/package[@name='java.lang']/class[@name='Float']/field[@name='MIN_VALUE']" />
+  <remove-node path="/api/package[@name='java.lang']/class[@name='Float']/field[@name='NaN']" />
+  <remove-node path="/api/package[@name='java.lang']/class[@name='Float']/field[@name='NEGATIVE_INFINITY']" />
+  <remove-node path="/api/package[@name='java.lang']/class[@name='Float']/field[@name='POSITIVE_INFINITY']" />
+  <attr path="/api/package[@name='java.lang']/class[@name='System']" name="managedName">JavaSystem</attr>
+  <remove-node path="/api/package[@name='java.nio']/class/method[@name='array']" />
+
+  <attr path="/api/package[@name='java.text']/class[@name='Format']" name="managedName">_Format</attr>
+
+  <attr path="/api/package[@name='java.util.concurrent.locks']/class[@name='ReentrantReadWriteLock']/method[@name='readLock']" name="return">java.util.concurrent.locks.Lock</attr>
+  <attr path="/api/package[@name='java.util.concurrent.locks']/class[@name='ReentrantReadWriteLock']/method[@name='writeLock']" name="return">java.util.concurrent.locks.Lock</attr>
+  <attr path="/api/package[@name='java.util.concurrent.locks']/class[@name='ReentrantReadWriteLock.ReadLock']" name="managedName">ReentrantReadLock</attr>
+  <attr path="/api/package[@name='java.util.concurrent.locks']/class[@name='ReentrantReadWriteLock.WriteLock']" name="managedName">ReentrantWriteLock</attr>
+
+  <!-- For these types' constructors, both Map and SortedMap are mapped to IDictionary and one results in duplicate definition. So one needs to be removed. -->
+  <remove-node path="/api/package[@name='java.util']/class[@name='TreeMap']/constructor[parameter[1][@type='java.util.SortedMap&lt;K, ? extends V>']]" />
+  <remove-node path="/api/package[@name='java.util.concurrent']/class[@name='ConcurrentSkipListMap']/constructor[parameter[1][@type='java.util.SortedMap&lt;K, ? extends V>']]" api-since="10" />
+  
+  <!-- FIXME: they bring too messy breakages, so just kill 'em so far -->
+  <remove-node path="/api/package[@name='java.util.concurrent']/class[@name='ConcurrentSkipListSet']" api-since="10" />
+  <remove-node path="/api/package[@name='java.util.concurrent']/interface[@name='ConcurrentNavigableMap']" api-since="10" />
+  
+  <!-- generic collections have those generic inheritance which we cannot support - remove type parameters for now -->
+  <!-- comment out them so far, as removing them somehow rather causes more API removal.
+  <remove-node path="/api/package[@name='java.util']/interface[@name='Queue']/typeParameters" />
+  <remove-node path="/api/package[@name='java.util']/class[@name='AbstractCollection' or @name='AbstractQueue']/typeParameters" />
+  <remove-node path="/api/package[@name='java.util.concurrent']/interface[@name='BlockingQueue']/typeParameters" />
+  <remove-node path="/api/package[@name='java.util.concurrent']/class[@name='DelayQueue']/typeParameters" />
+  -->
+  <!-- attr path="/api/package[@name='java.util']/interface[@name='Queue']/field[@type='E']" name="type">java.lang.Object</attr -->
+  <attr path="/api/package[@name='java.util']/interface[@name='Queue']/method[@return='E']" name="return">java.lang.Object</attr>
+  <attr path="/api/package[@name='java.util']/interface[@name='Queue']/method/parameter[@type='E']" name="type">java.lang.Object</attr>
+  <!-- attr path="/api/package[@name='java.util']/class[@name='AbstractCollection' or @name='AbstractQueue']/field[@type='E']" name="type">java.lang.Object</attr -->
+  <attr path="/api/package[@name='java.util']/class[@name='AbstractCollection' or @name='AbstractQueue']/method[@return='E']" name="return">java.lang.Object</attr>
+  <attr path="/api/package[@name='java.util']/class[@name='AbstractCollection' or @name='AbstractQueue']/method/parameter[@type='E']" name="type">java.lang.Object</attr>
+  <!-- attr path="/api/package[@name='java.util.concurrent']/interface[@name='BlockingQueue']/field[@type='E']" name="type">java.lang.Object</attr -->
+  <attr path="/api/package[@name='java.util.concurrent']/interface[@name='BlockingQueue']/method[@return='E']" name="return">java.lang.Object</attr>
+  <attr path="/api/package[@name='java.util.concurrent']/interface[@name='BlockingQueue']/method/parameter[@type='E']" name="type">java.lang.Object</attr>
+  <!-- attr path="/api/package[@name='java.util.concurrent']/class[@name='ArrayBlockingQueue' or @name='ConcurrentLinkedQueue' or @name='LinkedBlockingQueue' or @name='DelayQueue' or @name='PriorityBlockingQueue' or @name='SynchronousQueue']/field[@type='E']" name="type">java.lang.Object</attr -->
+  <attr path="/api/package[@name='java.util.concurrent']/class[@name='ArrayBlockingQueue' or @name='ConcurrentLinkedQueue' or @name='LinkedBlockingQueue' or @name='DelayQueue' or @name='PriorityBlockingQueue' or @name='SynchronousQueue']/method[@return='E']" name="return">java.lang.Object</attr>
+  <attr path="/api/package[@name='java.util.concurrent']/class[@name='ArrayBlockingQueue' or @name='ConcurrentLinkedQueue' or @name='LinkedBlockingQueue' or @name='DelayQueue' or @name='PriorityBlockingQueue' or @name='SynchronousQueue']/method/parameter[@type='E']" name="type">java.lang.Object</attr>
+
+  <!-- attr path="/api/package[@name='java.util.jar']/class[@name='Attributes']/method[starts-with(@return, 'java.util.Map&lt;')]" name="return">java.util.Map</attr -->
+  <attr path="/api/package[@name='java.util.jar']/class[@name='Attributes']/method/parameter[starts-with(@type, 'java.util.Map&lt;')]" name="type">java.util.Map</attr>
+  <attr path="/api/package[@name='java.util.jar']/class[@name='Attributes']/method[starts-with(@return, 'java.util.Set&lt;')]" name="return">java.util.Set</attr>
+  <!-- attr path="/api/package[@name='java.util.jar']/class[@name='Attributes']/method/parameter[starts-with(@type, 'java.util.Set&lt;')]" name="type">java.util.Set</attr -->
+  <attr path="/api/package[@name='java.util.jar']/class[@name='Attributes']/method[starts-with(@return, 'java.util.Collection&lt;')]" name="return">java.util.Collection</attr>
+  <!--attr path="/api/package[@name='java.util.jar']/class[@name='Attributes']/method/parameter[starts-with(@type, 'java.util.Collection&lt;')]" name="type">java.util.Collection</attr-->
+  <remove-node path="/api/package[@name='junit.framework']" />
+  <remove-node path="/api/package[@name='junit.runner']" />
+
+  <attr api-since="14" path="/api/package[@name='android.view']/class[@name='View']/field[@name='SCALE_X']" name="managedName">ScaleXs</attr>
+  <attr api-since="14" path="/api/package[@name='android.view']/class[@name='View']/field[@name='SCALE_Y']" name="managedName">ScaleYs</attr>
+
+  <!-- they conflict with View.get*() based properties (bug #14210) -->
+  <attr api-since="14" path="/api/package[@name='android.widget']/class[@name='GridLayout']/field[@name='TOP']" name="managedName">TopAlighment</attr>
+  <attr api-since="14" path="/api/package[@name='android.widget']/class[@name='GridLayout']/field[@name='LEFT']" name="managedName">LeftAlighment</attr>
+  <attr api-since="14" path="/api/package[@name='android.widget']/class[@name='GridLayout']/field[@name='BOTTOM']" name="managedName">BottomAlighment</attr>
+  <attr api-since="14" path="/api/package[@name='android.widget']/class[@name='GridLayout']/field[@name='RIGHT']" name="managedName">RightAlighment</attr>
+  <attr api-since="14" path="/api/package[@name='android.widget']/class[@name='GridLayout']/field[@name='BASELINE']" name="managedName">BaselineAlighment</attr>
+
+  <attr path="/api/package[@name='org.apache.http.entity']/class[@name='AbstractHttpEntity']/field[@name='chunked']" name="managedName">ChunkedField</attr>
+  <attr path="/api/package[@name='org.apache.http.entity']/class[@name='AbstractHttpEntity']/field[@name='contentEncoding']" name="managedName">ContentEncodingField</attr>
+  <attr path="/api/package[@name='org.apache.http.entity']/class[@name='AbstractHttpEntity']/field[@name='contentType']" name="managedName">ContentTypeField</attr>
+  <!-- FIXME: they should not be required, but generator tries to convert them to property setters -->
+  <remove-node path="/api/package[@name='org.apache.http.entity']/class[@name='BasicHttpEntity']/method[@name='setContent']" />
+  <remove-node path="/api/package[@name='org.apache.http.entity']/class[@name='BasicHttpEntity']/method[@name='setContentLength']" />
+  <!-- protected fields in final class! why oh why apache -->  
+  <remove-node path="/api/package[@name='org.apache.http.protocol']/class[@name='BasicHttpProcessor']/field[@name='requestInterceptors']" />
+  <remove-node path="/api/package[@name='org.apache.http.protocol']/class[@name='BasicHttpProcessor']/field[@name='responseInterceptors']" />
+
+  <!-- FIXME: generator results in too long name -->
+  <remove-node path="/api/package[@name='org.apache.http.impl.client']/class[@name='AbstractHttpClient']/method[@name='createClientRequestDirector']" />
+  <remove-node path="/api/package[@name='org.apache.http.impl.client']/class[@name='DefaultRequestDirector']/constructor" />
+  <!-- FIXME: generator should either add "operator" as a keyword or escape keywords -->
+  <attr path="/api/package[@name='org.apache.http.impl.conn.tsccm']/class[@name='ConnPoolByRoute']/constructor/parameter[@name='operator']" name="managedName">oper</attr>
+  <!-- FIXME: generator generates wrong property setter that cannot exist -->
+  <remove-node path="/api/package[@name='org.apache.http.impl.client']/class[@name='RequestWrapper']/method[@name='setProtocolVersion']" />
+
+  <!-- this btw results in missing interface implementation (sigh) so we have additional source for explicit interface implementation. -->
+  <attr path="/api/package[@name='org.apache.http.impl.conn']/class[@name='DefaultClientConnection']/method[@name='getSocket']" name="visibility">protected</attr>
+  
+  <!-- FIXME: these generateDispatchingSetter attributes SHOULD work, but generator somehow ignores them. Giving "additional" sources so far 
+  
+  <attr path="/api/package[@name='org.apache.http.impl.cookie']/class[@name='BasicClientCookie']/method[@name='setComment']" name="generateDispatchingSetter">true</attr>
+  <attr path="/api/package[@name='org.apache.http.impl.cookie']/class[@name='BasicClientCookie']/method[@name='setDomain']" name="generateDispatchingSetter">true</attr>
+  <attr path="/api/package[@name='org.apache.http.impl.cookie']/class[@name='BasicClientCookie']/method[@name='setExpiryDate']" name="generateDispatchingSetter">true</attr>
+  <attr path="/api/package[@name='org.apache.http.impl.cookie']/class[@name='BasicClientCookie']/method[@name='setPath']" name="generateDispatchingSetter">true</attr>
+  <attr path="/api/package[@name='org.apache.http.impl.cookie']/class[@name='BasicClientCookie']/method[@name='setValue']" name="generateDispatchingSetter">true</attr>
+  <attr path="/api/package[@name='org.apache.http.impl.cookie']/class[@name='BasicClientCookie']/method[@name='setVersion']" name="generateDispatchingSetter">true</attr>
+  -->
+
+  <attr path="/api/package[@name='org.apache.http.auth']" name="managedName">Org.Apache.Http.Authentication</attr>
+  <attr path="/api/package[@name='org.apache.http.cookie']" name="managedName">Org.Apache.Http.Cookies</attr>
+  <attr path="/api/package[@name='org.apache.http.conn.scheme']" name="managedName">Org.Apache.Http.Conn.Schemes</attr>
+  <!-- FIXME: we need to fix generator to deal with cast-to-JLO-from-Java-interface (cast not allowed). -->
+  <!-- attr path="/api/package[@name='org.apache.http.cookie']/class[@name='CookieIdentityComparator']/implements[@name='java.util.Comparator']" name="name">java.util.Comparator&lt;org.apache.http.cookie.Cookie&gt;</attr -->
+  <!-- attr path="/api/package[@name='org.apache.http.cookie']/class[@name='CookiePathComparer']/implements[@name='java.util.Comparator']" name="name">java.util.Comparator&lt;org.apache.http.cookie.Cookie&gt;</attr -->
+  <remove-node path="/api/package[@name='org.apache.http.cookie']/class[@name='CookieIdentityComparator']" />
+  <remove-node path="/api/package[@name='org.apache.http.cookie']/class[@name='CookiePathComparator']" />
+  <attr path="/api/package[@name='org.apache.http.protocol']/interface[@name='HttpRequestHandler']/method[@name='handle']" name="managedName">handleRequest</attr>
+  <attr api-since="8" path="/api/package[@name='org.w3c.dom']/interface[@name='UserDataHandler']/method[@name='handle']" name="managedName">handleData</attr>
+  <add-node path="/api/package[@name='android.app']/class[@name='IntentService']">
+    <constructor name="IntentService"
+      type="mono.android.app.IntentService"
+      static="false"
+      final="false"
+      deprecated="not deprecated"
+      visibility="protected">
+    </constructor>
+  </add-node>
+  <add-node path="/api">
+    <package name="mono.android.app" managedName="Android.App">
+    </package>
+  </add-node>
+  <move-node path="/api/package[@name='android.app']/class[@name='IntentService']">/api/package[@name='mono.android.app']</move-node>
+
+  <!-- FIXME: they should be removed in 5.0 API -->
+  <add-node api-since="16" path="/api/package[@name='android.annotation']">
+    <class abstract="true" deprecated="Use ISuppressLint interface instead" final="false" name="SuppressLint" static="false" visibility="public">
+      <implements name="java.lang.annotation.Annotation" name-generic-aware="java.lang.annotation.Annotation">
+      </implements>
+      <method abstract="true" deprecated="not deprecated" final="false" name="value" native="false" return="java.lang.String[]" static="false" synchronized="false" visibility="public">
+      </method>
+    </class>
+    <class abstract="true" deprecated="Use ITargetApi interface instead" final="false" name="TargetApi" static="false" visibility="public">
+      <implements name="java.lang.annotation.Annotation" name-generic-aware="java.lang.annotation.Annotation">
+      </implements>
+      <method abstract="true" deprecated="not deprecated" final="false" name="value" native="false" return="int" static="false" synchronized="false" visibility="public">
+      </method>
+    </class>
+  </add-node>
+  <add-node path="/api/package[@name='android.test']">
+    <class abstract="true" deprecated="Use IFlakyTest interface instead" final="false" name="FlakyTest" static="false" visibility="public">
+      <implements name="java.lang.annotation.Annotation" name-generic-aware="java.lang.annotation.Annotation">
+      </implements>
+      <method abstract="true" deprecated="not deprecated" final="false" name="tolerance" native="false" return="int" static="false" synchronized="false" visibility="public">
+      </method>
+    </class>
+    <class abstract="true" deprecated="Use IUiThreadTest interface instead" final="false" name="UiThreadTest" static="false" visibility="public">
+      <implements name="java.lang.annotation.Annotation" name-generic-aware="java.lang.annotation.Annotation">
+      </implements>
+    </class>
+  </add-node>
+  <add-node path="/api/package[@name='android.test.suitebuilder.annotation']">
+    <class abstract="true" deprecated="Use ILargeTest interface instead" final="false" name="LargeTest" static="false" visibility="public">
+      <implements name="java.lang.annotation.Annotation" name-generic-aware="java.lang.annotation.Annotation">
+      </implements>
+    </class>
+    <class abstract="true" deprecated="Use IMediumTest interface instead" final="false" name="MediumTest" static="false" visibility="public">
+      <implements name="java.lang.annotation.Annotation" name-generic-aware="java.lang.annotation.Annotation">
+      </implements>
+    </class>
+    <class abstract="true" deprecated="Use ISmallTest interface instead" final="false" name="SmallTest" static="false" visibility="public">
+      <implements name="java.lang.annotation.Annotation" name-generic-aware="java.lang.annotation.Annotation">
+      </implements>
+    </class>
+    <class abstract="true" deprecated="Use ISmoke interface instead" final="false" name="Smoke" static="false" visibility="public">
+      <implements name="java.lang.annotation.Annotation" name-generic-aware="java.lang.annotation.Annotation">
+      </implements>
+    </class>
+    <class abstract="true" deprecated="Use ISuppress interface instead" final="false" name="Suppress" static="false" visibility="public">
+      <implements name="java.lang.annotation.Annotation" name-generic-aware="java.lang.annotation.Annotation">
+      </implements>
+    </class>
+  </add-node>
+  <add-node path="/api/package[@name='android.view']">
+    <class abstract="true" deprecated="Use ViewDebug.ICapturedViewProperty interface instead" final="false" name="ViewDebug.CapturedViewProperty" static="true" visibility="public">
+      <implements name="java.lang.annotation.Annotation" name-generic-aware="java.lang.annotation.Annotation">
+      </implements>
+      <method abstract="true" deprecated="not deprecated" final="false" name="retrieveReturn" native="false" return="boolean" static="false" synchronized="false" visibility="public">
+      </method>
+    </class>
+    <class abstract="true" deprecated="Use ViewDebug.IExportedProperty interface instead" final="false" name="ViewDebug.ExportedProperty" static="true" visibility="public">
+      <implements name="java.lang.annotation.Annotation" name-generic-aware="java.lang.annotation.Annotation">
+      </implements>
+      <method abstract="true" deprecated="not deprecated" final="false" name="category" native="false" return="java.lang.String" static="false" synchronized="false" visibility="public">
+      </method>
+      <method abstract="true" deprecated="not deprecated" final="false" name="deepExport" native="false" return="boolean" static="false" synchronized="false" visibility="public">
+      </method>
+      <method abstract="true" deprecated="not deprecated" final="false" name="flagMapping" native="false" return="android.view.ViewDebug.FlagToString[]" static="false" synchronized="false" visibility="public">
+      </method>
+      <method abstract="true" deprecated="not deprecated" final="false" name="indexMapping" native="false" return="android.view.ViewDebug.IntToString[]" static="false" synchronized="false" visibility="public">
+      </method>
+      <method abstract="true" deprecated="not deprecated" final="false" name="mapping" native="false" return="android.view.ViewDebug.IntToString[]" static="false" synchronized="false" visibility="public">
+      </method>
+      <method abstract="true" deprecated="not deprecated" final="false" name="prefix" native="false" return="java.lang.String" static="false" synchronized="false" visibility="public">
+      </method>
+      <method abstract="true" deprecated="not deprecated" final="false" name="resolveId" native="false" return="boolean" static="false" synchronized="false" visibility="public">
+      </method>
+    </class>
+    <class abstract="true" deprecated="Use ViewDebug.FlagToString interface instead" final="false" name="ViewDebug.FlagToString" static="true" visibility="public">
+      <implements name="java.lang.annotation.Annotation" name-generic-aware="java.lang.annotation.Annotation">
+      </implements>
+      <method abstract="true" deprecated="not deprecated" final="false" name="equals" native="false" return="int" static="false" synchronized="false" visibility="public">
+      </method>
+      <method abstract="true" deprecated="not deprecated" final="false" name="mask" native="false" return="int" static="false" synchronized="false" visibility="public">
+      </method>
+      <method abstract="true" deprecated="not deprecated" final="false" name="name" native="false" return="java.lang.String" static="false" synchronized="false" visibility="public">
+      </method>
+      <method abstract="true" deprecated="not deprecated" final="false" name="outputIf" native="false" return="boolean" static="false" synchronized="false" visibility="public">
+      </method>
+    </class>
+    <class abstract="true" deprecated="Use ViewDebug.IIntToString interface instead" final="false" name="ViewDebug.IntToString" static="true" visibility="public">
+      <implements name="java.lang.annotation.Annotation" name-generic-aware="java.lang.annotation.Annotation">
+      </implements>
+      <method abstract="true" deprecated="not deprecated" final="false" name="from" native="false" return="int" static="false" synchronized="false" visibility="public">
+      </method>
+      <method abstract="true" deprecated="not deprecated" final="false" name="to" native="false" return="java.lang.String" static="false" synchronized="false" visibility="public">
+      </method>
+    </class>
+  </add-node>
+  <add-node path="/api/package[@name='android.webkit']">
+    <class abstract="true" deprecated="Use IJavascriptInterface interface instead" final="false" name="JavascriptInterface" static="false" visibility="public">
+      <implements name="java.lang.annotation.Annotation" name-generic-aware="java.lang.annotation.Annotation">
+      </implements>
+    </class>
+  </add-node>
+  <add-node path="/api/package[@name='android.widget']">
+    <class abstract="true" deprecated="Use RemoteViews.IRemoteView interface instead" final="false" name="RemoteViews.RemoteView" static="true" visibility="public">
+      <implements name="java.lang.annotation.Annotation" name-generic-aware="java.lang.annotation.Annotation">
+      </implements>
+    </class>
+  </add-node>
+  <add-node path="/api/package[@name='dalvik.annotation']">
+    <class abstract="true" deprecated="deprecated" final="false" name="TestTarget" static="false" visibility="public">
+      <implements name="java.lang.annotation.Annotation" name-generic-aware="java.lang.annotation.Annotation">
+      </implements>
+      <method abstract="true" deprecated="not deprecated" final="false" name="conceptName" native="false" return="java.lang.String" static="false" synchronized="false" visibility="public">
+      </method>
+      <method abstract="true" deprecated="not deprecated" final="false" name="methodArgs" native="false" return="java.lang.Class&lt;?>[]" static="false" synchronized="false" visibility="public">
+      </method>
+      <method abstract="true" deprecated="not deprecated" final="false" name="methodName" native="false" return="java.lang.String" static="false" synchronized="false" visibility="public">
+      </method>
+    </class>
+    <class abstract="true" deprecated="deprecated" final="false" name="TestTargetClass" static="false" visibility="public">
+      <implements name="java.lang.annotation.Annotation" name-generic-aware="java.lang.annotation.Annotation">
+      </implements>
+      <method abstract="true" deprecated="not deprecated" final="false" name="value" native="false" return="java.lang.Class&lt;?>" static="false" synchronized="false" visibility="public">
+      </method>
+    </class>
+  </add-node>
+  <add-node path="/api/package[@name='java.lang']">
+    <class abstract="true" deprecated="Use IDeprecated interface instead" final="false" name="Deprecated" static="false" visibility="public">
+      <implements name="java.lang.annotation.Annotation" name-generic-aware="java.lang.annotation.Annotation">
+      </implements>
+    </class>
+    <class abstract="true" deprecated="Use IOverride interface instead" final="false" name="Override" static="false" visibility="public">
+      <implements name="java.lang.annotation.Annotation" name-generic-aware="java.lang.annotation.Annotation">
+      </implements>
+    </class>
+    <class abstract="true" deprecated="Use ISuppressWarnings interface instead" final="false" name="SuppressWarnings" static="false" visibility="public">
+      <implements name="java.lang.annotation.Annotation" name-generic-aware="java.lang.annotation.Annotation">
+      </implements>
+      <method abstract="true" deprecated="not deprecated" final="false" name="value" native="false" return="java.lang.String[]" static="false" synchronized="false" visibility="public">
+      </method>
+    </class>
+  </add-node>
+  <add-node path="/api/package[@name='java.lang.annotation']">
+    <class abstract="true" deprecated="Use IDocumented interface instead" final="false" name="Documented" static="false" visibility="public">
+      <implements name="java.lang.annotation.Annotation" name-generic-aware="java.lang.annotation.Annotation">
+      </implements>
+    </class>
+    <class abstract="true" deprecated="Use IInherited interface instead" final="false" name="Inherited" static="false" visibility="public">
+      <implements name="java.lang.annotation.Annotation" name-generic-aware="java.lang.annotation.Annotation">
+      </implements>
+    </class>
+    <class abstract="true" deprecated="Use IRetention interface instead" final="false" name="Retention" static="false" visibility="public">
+      <implements name="java.lang.annotation.Annotation" name-generic-aware="java.lang.annotation.Annotation">
+      </implements>
+      <method abstract="true" deprecated="not deprecated" final="false" name="value" native="false" return="java.lang.annotation.RetentionPolicy" static="false" synchronized="false" visibility="public">
+      </method>
+    </class>
+    <class abstract="true" deprecated="Use ITarget interface instead" final="false" name="Target" static="false" visibility="public">
+      <implements name="java.lang.annotation.Annotation" name-generic-aware="java.lang.annotation.Annotation">
+      </implements>
+      <method abstract="true" deprecated="not deprecated" final="false" name="value" native="false" return="java.lang.annotation.ElementType[]" static="false" synchronized="false" visibility="public">
+      </method>
+    </class>
+  </add-node>
+  <!-- end of annotations -->
+
+<!--
+	This is hack with related to AdapterView inheritance ...
+-->
+  <remove-node api-since="11" path="/api/package[@name='android.widget']/class[@name='AbsListView']/method[@name='setAdapter' and count(parameter)=1 and parameter[1][@type='android.widget.ListAdapter']]" />
+
+  <attr path="/api/package[@name='javax.microedition.khronos.opengles']/interface[@name='GL10']/field[@name='GL_CULL_FACE']" name="managedName">GlCullFaceCapability</attr>
+
+
+  <!-- Field mappings. Umm, they could be moved to methodmap.csv (it also has field remappings) or totally new file instead... -->
+  <attr path="/api/package[@name='android.content.pm']/class[@name='ConfigurationInfo']/field[@name='reqKeyboardType']" name="type">Android.Content.Res.KeyboardType</attr>
+  <attr path="/api/package[@name='android.content.pm']/class[@name='ConfigurationInfo']/field[@name='reqNavigation']" name="type">Android.Content.Res.Navigation</attr>
+  <attr path="/api/package[@name='android.content.pm']/class[@name='ConfigurationInfo']/field[@name='reqTouchScreen']" name="type">Android.Content.Res.TouchScreenType</attr>
+  <attr path="/api/package[@name='android.content.pm']/class[@name='ResolveInfo']/field[@name='match']" name="type">Android.Content.MatchResults</attr>
+  <attr path="/api/package[@name='android.inputmethodservice']/class[@name='Keyboard.Key']/field[@name='edgeFlags']" name="type">Android.Views.Edge</attr>
+  <attr path="/api/package[@name='android.inputmethodservice']/class[@name='Keyboard.Row']/field[@name='rowEdgeFlags']" name="type">Android.Views.Edge</attr>
+
+
+  <attr path="/api/package[@name='android.accessibilityservice']/class[@name='AccessibilityServiceInfo']/field[@name='eventTypes']" name="type">Android.Views.Accessibility.EventTypes</attr>
+  <attr path="/api/package[@name='android.accessibilityservice']/class[@name='AccessibilityServiceInfo']/field[@name='flags']" name="type">Android.AccessibilityServices.AccessibilityServiceFlags</attr>
+  <attr path="/api/package[@name='android.app']/class[@name='ActivityManager.ProcessErrorStateInfo']/field[@name='condition']" name="type">Android.App.ProcessError</attr>
+  <attr path="/api/package[@name='android.app']/class[@name='ActivityManager.RunningAppProcessInfo']/field[@name='importance']" name="type">Android.App.Importance</attr>
+  <attr api-since="5" path="/api/package[@name='android.app']/class[@name='ActivityManager.RunningAppProcessInfo']/field[@name='importanceReasonCode']" name="type">Android.App.ImportanceReason</attr>
+  <attr api-since="5" path="/api/package[@name='android.app']/class[@name='ActivityManager.RunningServiceInfo']/field[@name='flags']" name="type">Android.App.ServiceInfoFlags</attr>
+  <attr api-since="14" path="/api/package[@name='android.app']/class[@name='ApplicationErrorReport']/field[@name='type']" name="type">Android.App.ApplicationErrorReportType</attr>
+  <attr path="/api/package[@name='android.app']/class[@name='Notification']/field[@name='audioStreamType']" name="type">Android.Media.Stream</attr>
+  <attr path="/api/package[@name='android.content.pm']/class[@name='ActivityInfo']/field[@name='softInputMode']" name="type">Android.Views.SoftInput</attr>
+  <attr path="/api/package[@name='android.content.pm']/class[@name='ApplicationInfo']/field[@name='targetSdkVersion']" name="type">Android.OS.BuildVersionCodes</attr>
+  <attr path="/api/package[@name='android.content.pm']/class[@name='ConfigurationInfo']/field[@name='reqInputFeatures']" name="type">Android.Content.PM.InputFeature</attr>
+  <attr api-since="5" path="/api/package[@name='android.content.pm']/class[@name='FeatureInfo']/field[@name='flags']" name="type">Android.Content.PM.FeatureFlags</attr>
+  <attr api-since="14" path="/api/package[@name='android.content.pm']/class[@name='ServiceInfo']/field[@name='flags']" name="type">Android.Content.PM.ServiceInfoFlags</attr>
+  <attr api-since="8" path="/api/package[@name='android.content.res']/class[@name='Configuration']/field[@name='uiMode']" name="type">Android.Content.Res.UiMode</attr>
+  <attr api-since="9" path="/api/package[@name='android.content.res']/class[@name='ObbInfo']/field[@name='flags']" name="type">Android.Content.Res.ObbFlags</attr>
+  <attr api-since="9" path="/api/package[@name='android.hardware']/class[@name='Camera.CameraInfo']/field[@name='facing']" name="type">Android.Hardware.CameraFacing</attr>
+  <attr path="/api/package[@name='android.hardware']/class[@name='SensorEvent']/field[@name='accuracy']" name="type">Android.Hardware.SensorStatus</attr>
+  <attr api-since="8" path="/api/package[@name='android.media']/class[@name='CamcorderProfile']/field[@name='audioCodec']" name="type">Android.Media.AudioEncoder</attr>
+  <attr api-since="8" path="/api/package[@name='android.media']/class[@name='CamcorderProfile']/field[@name='fileFormat']" name="type">Android.Media.OutputFormat</attr>
+  <attr api-since="8" path="/api/package[@name='android.media']/class[@name='CamcorderProfile']/field[@name='videoCodec']" name="type">Android.Media.VideoEncoder</attr>
+  <attr path="/api/package[@name='android.media']/interface[@name='MediaDrm.OnEventListener']" name="argsType" api-since="18">MediaDrmEventArgs</attr><!-- to prevent "EventEventArgs" -->
+  <attr path="/api/package[@name='android.media']/class[@name='MediaDrm']/method[@name='setOnEventListener']" name="eventName" api-since="18">MediaDrmEvent</attr><!-- to bring consistency with above -->
+  <attr path="/api/package[@name='android.net.wifi']/class[@name='WifiConfiguration']/field[@name='status']" name="type">Android.Net.Wifi.WifiStatus</attr>
+  <attr api-since="14" path="/api/package[@name='android.net.wifi.p2p']/class[@name='WifiP2pDevice']/field[@name='status']" name="type">Android.Net.Wifi.P2p.WifiP2pDeviceState</attr>
+  <attr path="/api/package[@name='android.util']/class[@name='DisplayMetrics']/field[@name='densityDpi']" name="type">Android.Util.DisplayMetricsDensity</attr>
+  <attr path="/api/package[@name='android.util']/class[@name='TypedValue']/field[@name='changingConfigurations']" name="type">Android.Content.PM.ConfigChanges</attr>
+  <attr path="/api/package[@name='android.util']/class[@name='TypedValue']/field[@name='type']" name="type">Android.Util.DataType</attr>
+  <attr api-since="14" path="/api/package[@name='android.view']/class[@name='MotionEvent.PointerProperties']/field[@name='toolType']" name="type">Android.Views.MotionEventToolType</attr>
+  <attr path="/api/package[@name='android.view']/class[@name='WindowManager.LayoutParams']/field[@name='format']" name="type">Android.Graphics.Format</attr>
+  <attr path="/api/package[@name='android.view']/class[@name='WindowManager.LayoutParams']/field[@name='gravity']" name="type">Android.Views.GravityFlags</attr>
+  <attr path="/api/package[@name='android.view']/class[@name='WindowManager.LayoutParams']/field[@name='screenOrientation']" name="type">Android.Content.PM.ScreenOrientation</attr>
+  <attr path="/api/package[@name='android.view.inputmethod']/class[@name='EditorInfo']/field[@name='inputType']" name="type">Android.Text.InputTypes</attr>
+  <attr path="/api/package[@name='android.view.inputmethod']/class[@name='ExtractedTextRequest']/field[@name='flags']" name="type">Android.Views.InputMethods.GetTextFlags</attr>
+  <attr path="/api/package[@name='android.widget']/class[@name='FrameLayout.LayoutParams']/field[@name='gravity']" name="type">Android.Views.GravityFlags</attr>
+  <attr path="/api/package[@name='java.io']/class[@name='StreamTokenizer']/field[@name='ttype']" name="type">Java.IO.TokenType</attr>
+  <attr path="/api/package[@name='java.net']/class[@name='HttpURLConnection']/field[@name='responseCode']" name="type">Java.Net.HttpStatus</attr>
+  <attr path="/api/package[@name='java.security']/class[@name='Signature']/field[@name='state']" name="type">Java.Security.SignatureState</attr>
+  
+  <!-- below are constant fields -->
+  <attr path="/api/package[@name='android.os']/class[@name='Build.VERSION']/field[@name='SDK_INT']" name="type">Android.OS.BuildVersionCodes</attr>
+
+  <!-- Below are special rules for java.math.BigDecimal methods: they have "roundingMode" parameter in both *our* enum and *their* enum, in the same name. -->
+  <attr path="/api/package[@name='java.math']/class[@name='BigDecimal']/method[@name='divide']/parameter[@name='roundingMode' and @type='int']" name="type">Java.Math.RoundOptions</attr>
+  <attr path="/api/package[@name='java.math']/class[@name='BigDecimal']/method[@name='setScale']/parameter[@name='roundingMode' and @type='int']" name="type">Java.Math.RoundOptions</attr>
+
+  <!-- bug #17257 -->
+  <!-- Fix for #17257 disabled as short-term workaround for #29730
+  <attr path="/api/package[@name='android.view']/interface[@name='ViewTreeObserver.OnGlobalLayoutListener']/method[@name='onGlobalLayout']" name="eventName"></attr>
+    -->
+
+  <!-- API Level 16 -->
+  <attr api-since="16" path="/api/package[@name='android.app']/class[@name='ActivityManager.RunningAppProcessInfo']/field[@name='lastTrimLevel']" name="type">Android.Content.TrimMemory</attr>
+  <attr api-since="16" path="/api/package[@name='android.media']/class[@name='MediaCodec.BufferInfo']/field[@name='flags']" name="type">Android.Media.MediaCodecBufferFlags</attr>
+  <attr api-since="16" path="/api/package[@name='android.media']/class[@name='MediaCodec.CryptoInfo']/field[@name='mode']" name="type">Android.Media.MediaCodecCryptoMode</attr>
+  <attr api-since="16" path="/api/package[@name='android.media']/class[@name='MediaCodecInfo.CodecProfileLevel']/field[@name='level']" name="type">Android.Media.MediaCodecProfileLevel</attr>
+  <attr api-since="16" path="/api/package[@name='android.media']/class[@name='MediaCodecInfo.CodecProfileLevel']/field[@name='profile']" name="type">Android.Media.MediaCodecProfileType</attr>
+
+  <!-- API Level 19 -->
+  <attr api-since="19" path="/api/package[@name='android.nfc.cardemulation']" name="managedName">Android.Nfc.CardEmulators</attr>
+  <attr api-since="19" path="/api/package[@name='android.printservice']" name="managedName">Android.PrintServices</attr>
+  <attr api-since="19" path="/api/package[@name='android.transition']" name="managedName">Android.Transitions</attr>
+  <!-- This class is SO MESSY.
+       This interface is a "multi-methods event listener" and ALSO it contains method overloads (causes event name conflicts) AND those overloads share the same argument name (causes conflict in the event args property)!
+       Still, instead of totally killing this shit, we rename one event and one parameter for argument.
+       This caused new generator/metadata feature: parameter/@managedName
+              
+       STILL, this was not even enough! It even required to rename managed method name because event handler implementor requires OnBlahEventHandler based on method name!
+   -->
+  <attr path="/api/package[@name='android.media']/interface[@name='RemoteController.OnClientUpdateListener']/method[@name='onClientPlaybackStateUpdate' and count(parameter)=1]/parameter[1]" name="managedName" api-since="19">stateSimple</attr>
+  <attr path="/api/package[@name='android.media']/interface[@name='RemoteController.OnClientUpdateListener']/method[@name='onClientPlaybackStateUpdate' and count(parameter)=1]" name="eventName" api-since="19">ClientPlaybackStateUpdateSimple</attr>
+  <attr path="/api/package[@name='android.media']/interface[@name='RemoteController.OnClientUpdateListener']/method[@name='onClientPlaybackStateUpdate' and count(parameter)=1]" name="managedName" api-since="19">OnClientPlaybackStateUpdateSimple</attr>
+  <!-- this getter is brought only at API Level 19, causing conflicts with existing types that only expects setter. So, disable property. -->
+  <!-- attr path="/api/package[@name='android.graphics.drawable']/class[@name='Drawable']/method[@name='getAlpha']" name="propertyName" api-since="19"></attr -->
+  <!-- this method is exposed as abstract again in this derived class of Service (which also has abstract onBind(). Remove this override. -->
+  <remove-node path="/api/package[@name='android.nfc.cardemulation']/class[@name='OffHostApduService']/method[@name='onBind']" api-since="19" />
+
+  <!-- This is a workaround for api-merge failure...
+    There is TestSuite.ctor(java.lang.Class) since API Level 1, and it became
+    TestSuite.ctor(java.lang.Class<?>) at API Level 16. They are essentially the same,
+    but since the Java signature changed, they are regarded as different and causes
+    duplicate output.
+    This mess is not only ours, Android SDK Reference website also suffers.
+    
+    Of course this has no effect until we enable JUnit...
+  <remove-node path="/api/package[@name='junit.framework']/class[@name='TestSuite']/constructor[parameter[@type='java.lang.Class']]" api-since="16" />
+  <remove-node path="/api/package[@name='junit.framework']/class[@name='TestSuite']/method[parameter[@type='java.lang.Class']]" api-since="16" />
+     -->
+
+  <!-- Preserve Mono.Android.App.IntentService::.ctor if the
+       type is used anywhere. -->
+
+  <attr path="/api/package[@name='mono.android.app']/class[@name='IntentService']/constructor[count(parameter) = 0]" name="customAttributes">[Preserve(Conditional = true)]</attr>
+
+  <!--    Asyncification    -->
+
+  <!-- Interfaces -->
+
+  <attr api-since="5" path="/api/package[@name='android.accounts']/interface[@name='AccountManagerFuture']/method[@name='getResult']" name="generateAsyncWrapper">true</attr>
+
+  <attr api-since="8" path="/api/package[@name='android.app.backup']/interface[@name='BackupHelper']/method[@name='performBackup']" name="generateAsyncWrapper">true</attr>
+
+  <attr api-since="10" path="/api/package[@name='android.nfc.tech']/interface[@name='TagTechnology']/method[@name='connect']" name="generateAsyncWrapper">true</attr>
+
+  <attr path="/api/package[@name='android.util']/interface[@name='Printer']/method[@name='println']" name="generateAsyncWrapper">true</attr>
+
+  <attr path="/api/package[@name='java.io']/interface[@name='DataInput']/method[@name='readBoolean' or @name='readByte' or @name='readChar' or @name='readDouble' or @name='readFloat' or @name='readFully' or @name='readInt' or @name='readLine' or @name='readLong' or @name='readShort' or @name='readUnsignedByte' or @name='readUnsignedShort' or @name='readUTF' or @name='skipBytes']" name="generateAsyncWrapper">true</attr>
+  <attr path="/api/package[@name='java.io']/interface[@name='DataOutput']/method[@name='write' or @name='writeBoolean' or @name='writeByte' or @name='writeBytes' or @name='writeChar' or @name='writeChars' or @name='writeDouble' or @name='writeFloat' or @name='writeInt' or @name='writeLong' or @name='writeShort' or @name='writeUTF']" name="generateAsyncWrapper">true</attr>
+  <attr path="/api/package[@name='java.io']/interface[@name='Externalizable']/method[@name='readExternal' or @name='writeExternal']" name="generateAsyncWrapper">true</attr>
+  <attr path="/api/package[@name='java.io']/interface[@name='Flushable']/method[@name='flush']" name="generateAsyncWrapper">true</attr>
+  <attr path="/api/package[@name='java.io']/interface[@name='ObjectInput']/method[@name='read' or @name='readObject' or @name='skip']" name="generateAsyncWrapper">true</attr>
+  <attr path="/api/package[@name='java.io']/interface[@name='ObjectOutput']/method[@name='flush' or @name='writeObject']" name="generateAsyncWrapper">true</attr>
+
+  <attr path="/api/package[@name='java.nio.channels']/interface[@name='GatheringByteChannel']/method[@name='write']" name="generateAsyncWrapper">true</attr>
+  <attr path="/api/package[@name='java.nio.channels']/interface[@name='ReadableByteChannel']/method[@name='read']" name="generateAsyncWrapper">true</attr>
+  <attr path="/api/package[@name='java.nio.channels']/interface[@name='ScatteringByteChannel']/method[@name='read']" name="generateAsyncWrapper">true</attr>
+  <attr path="/api/package[@name='java.nio.channels']/interface[@name='WritableByteChannel']/method[@name='write']" name="generateAsyncWrapper">true</attr>
+
+  <attr path="/api/package[@name='java.sql']/interface[@name='Driver']/method[@name='connect']" name="generateAsyncWrapper">true</attr>
+
+  <attr api-since="9" path="/api/package[@name='java.util.concurrent']/interface[@name='BlockingDeque']/method[@name='putFirst' or @name='putLast' or @name='takeFirst' or @name='takeLast' or ((@name='offerFirst' or @name='offerLast' or @name='pollFirst' or @name='pollLast') and count(//parameter) > 1)]" name="generateAsyncWrapper">true</attr>
+  <attr api-since="9" path="/api/package[@name='java.util.concurrent']/interface[@name='BlockingQueue']/method[@name='put' or @name='take' or ((@name='offer' or @name='poll') and count(//parameter) > 1)]" name="generateAsyncWrapper">true</attr>
+  <attr path="/api/package[@name='java.util.concurrent']/interface[@name='ExecutorService']/method[@name='awaitTermination' or @name='invokeAny']" name="generateAsyncWrapper">true</attr>
+  <attr path="/api/package[@name='java.util.concurrent']/interface[@name='Future']/method[@name='get']" name="generateAsyncWrapper">true</attr>
+
+  <attr path="/api/package[@name='java.util.jar']/interface[@name='Pack200.Packer']/method[@name='pack']" name="generateAsyncWrapper">true</attr>
+  <attr path="/api/package[@name='java.util.jar']/interface[@name='Pack200.Unpacker']/method[@name='unpack']" name="generateAsyncWrapper">true</attr>
+
+  <attr path="/api/package[@name='org.apache.http']/interface[@name='HttpClientConnection']/method[@name='flush' or @name='receivveResponseEntity' or @name='receiveResponseHeader' or @name='sendRequestEntity' or @name='sendRequestHeader']" name="generateAsyncWrapper">true</attr>
+  <attr path="/api/package[@name='org.apache.http']/interface[@name='HttpEntity']/method[@name='writeTo']" name="generateAsyncWrapper">true</attr>
+  <attr path="/api/package[@name='org.apache.http']/interface[@name='HttpServerConnection']/method[@name='flush' or @name='receivveRequestEntity' or @name='receiveRequestHeader' or @name='sendResponseEntity' or @name='sendResponseHeader']" name="generateAsyncWrapper">true</attr>
+
+  <attr path="/api/package[@name='org.apache.http.client']/interface[@name='HttpClient']/method[@name='execute']" name="generateAsyncWrapper">true</attr>
+
+  <attr path="/api/package[@name='org.apache.http.conn']/interface[@name='ClientConnectionOperator']/method[@name='openConnection' or @name='updateSecureConnection']" name="generateAsyncWrapper">true</attr>
+  <attr path="/api/package[@name='org.apache.http.conn']/interface[@name='ManagedClientConnection']/method[@name='open']" name="generateAsyncWrapper">true</attr>
+
+  <attr path="/api/package[@name='org.apache.http.conn.scheme']/interface[@name='SocketFactory']/method[@name='connectSocket']" name="generateAsyncWrapper">true</attr>
+  <attr path="/api/package[@name='org.apache.http.conn.scheme']/interface[@name='LayeredSocketFactory']/method[@name='createSocket']" name="generateAsyncWrapper">true</attr>
+
+  <attr path="/api/package[@name='org.apache.http.io']/interface[@name='HttpMessageParser']/method[@name='parse']" name="generateAsyncWrapper">true</attr>
+  <attr path="/api/package[@name='org.apache.http.io']/interface[@name='HttpMessageWriter']/method[@name='write']" name="generateAsyncWrapper">true</attr>
+  <attr path="/api/package[@name='org.apache.http.io']/interface[@name='SessionInputBuffer']/method[@name='read' or @name='readLine']" name="generateAsyncWrapper">true</attr>
+  <attr path="/api/package[@name='org.apache.http.io']/interface[@name='SessionOutputBuffer']/method[@name='write' or @name='writeLine']" name="generateAsyncWrapper">true</attr>
+
+  <attr api-since="8" path="/api/package[@name='org.w3c.dom.ls']/interface[@name='LSSerializer']/method[@name='write' or @name='writeToURI']" name="generateAsyncWrapper">true</attr>
+  <attr api-since="8" path="/api/package[@name='org.w3c.dom.ls']/interface[@name='LSParser']/method[@name='parse' or @name='parseURI' or @name='parseWithContext']" name="generateAsyncWrapper">true</attr>
+
+  <attr path="/api/package[@name='org.xml.sax']/interface[@name='Parser']/method[@name='parse']" name="generateAsyncWrapper">true</attr>
+  <attr path="/api/package[@name='org.xml.sax']/interface[@name='XMLReader']/method[@name='parse']" name="generateAsyncWrapper">true</attr>
+
+  <attr path="/api/package[@name='org.xmlpull.v1']/interface[@name='XmlPullParser']/method[@name='next' or @name='nextTag' or @name='nextText' or @name='nextToken']" name="generateAsyncWrapper">true</attr>
+  <attr path="/api/package[@name='org.xmlpull.v1']/interface[@name='XmlSerializer']/method[@name='attribute' or @name='cdsect' or @name='comment' or @name='docdecl' or @name='endDocument' or @name='endTag' or @name='entityRef' or @name='flush' or @name='ignorableWhitespace' or @name='processingInstruction' or @name='startDocument' or @name='startTag' or @name='text']" name="generateAsyncWrapper">true</attr>
+
+  <!-- Abstract classes -->
+
+  <attr api-since="18" path="/api/package[@name='android.content']/class[@name='ContentProvider']/method[@name='dump']" name="generateAsyncWrapper">true</attr>
+
+  <attr path="/api/package[@name='android.os']/class[@name='AsyncTask&lt;Params, Progress, Result&gt;']/method[@name='get']" name="generateAsyncWrapper">true</attr>
+
+  <attr api-since="14" path="/api/package[@name='android.app.backup']/class[@name='BackupAgent']/method[@name='fullBackupFile']" name="generateAsyncWrapper">true</attr>
+
+  <attr path="/api/package[@name='java.io']/class[@name='InputStream']/method[@name='read' or @name='skip']" name="generateAsyncWrapper">true</attr>
+  <attr path="/api/package[@name='java.io']/class[@name='OutputStream']/method[@name='write']" name="generateAsyncWrapper">true</attr>
+  <attr path="/api/package[@name='java.io']/class[@name='Reader']/method[@name='read' or @name='skip']" name="generateAsyncWrapper">true</attr>
+  <attr path="/api/package[@name='java.io']/class[@name='Writer']/method[@name='append' or @name='write']" name="generateAsyncWrapper">true</attr>
+
+  <attr path="/api/package[@name='java.lang']/class[@name='ClassLoader']/method[@name='loadClass']" name="generateAsyncWrapper">true</attr>
+  <attr path="/api/package[@name='java.lang']/class[@name='Process']/method[@name='waitFor']" name="generateAsyncWrapper">true</attr>
+
+  <attr path="/api/package[@name='java.net']/class[@name='DatagramSocketImpl']/method[@name='connect' or @name='peek' or @name='peekData' or @name='receive' or @name='send']" name="generateAsyncWrapper">true</attr>
+  <attr path="/api/package[@name='java.net']/class[@name='URLConnection']/method[@name='connect']" name="generateAsyncWrapper">true</attr>
+  <attr path="/api/package[@name='java.net']/class[@name='SocketImpl']/method[@name='accept' or @name='connect' or @name='sendUrgentData']" name="generateAsyncWrapper">true</attr>
+
+  <attr path="/api/package[@name='java.nio']/class[@name='MappedByteBuffer']/method[@name='force' or @name='load']" name="generateAsyncWrapper">true</attr>
+
+  <attr path="/api/package[@name='java.nio.channels']/class[@name='DatagramChannel']/method[@name='connect' or @name='receive' or @name='send']" name="generateAsyncWrapper">true</attr>
+  <attr path="/api/package[@name='java.nio.channels']/class[@name='FileChannel']/method[@name='force' or @name='read' or @name='transferFrom' or @name='transferTo' or @name='truncate' or @name='write']" name="generateAsyncWrapper">true</attr>
+  <attr path="/api/package[@name='java.nio.channels']/class[@name='ServerSocketChannel']/method[@name='accept']" name="generateAsyncWrapper">true</attr>
+  <attr path="/api/package[@name='java.nio.channels']/class[@name='SocketChannel']/method[@name='connect' or @name='finishConnect']" name="generateAsyncWrapper">true</attr>
+
+  <attr path="/api/package[@name='java.security.cert']/class[@name='CertificateFactory']/method[@name='generateCRL' or @name='generateCertPath' or @name='generateCertificate' or @name='generateCertificates']" name="generateAsyncWrapper">true</attr>
+
+  <attr path="/api/package[@name='java.util.prefs']/class[@name='Preferences']/method[@name='exportNode' or @name='exportSubtree' or @name='flush' or @name='importPreferences' or @name='sync']" name="generateAsyncWrapper">true</attr>
+
+  <attr path="/api/package[@name='javax.security.cert']/class[@name='X509Certificate']/method[@name='getInstance']" name="generateAsyncWrapper">true</attr>
+
+  <attr path="/api/package[@name='javax.xml.parsers']/class[@name='DocumentBuilder']/method[@name='parse']" name="generateAsyncWrapper">true</attr>
+  <attr path="/api/package[@name='javax.xml.parsers']/class[@name='SAXParser']/method[@name='parse']" name="generateAsyncWrapper">true</attr>
+
+  <attr api-since="8" path="/api/package[@name='javax.xml.transform']/class[@name='Transformer']/method[@name='transform']" name="generateAsyncWrapper">true</attr>
+
+  <attr api-since="8" path="/api/package[@name='javax.xml.validation']/class[@name='Validator']/method[@name='validate']" name="generateAsyncWrapper">true</attr>
+
+  <!-- Concrete classes -->
+
+  <attr api-since="19" path="/api/package[@name='android.app']/class[@name='ActivityManager']/method[@name='dumpPackageState']" name="generateAsyncWrapper">true</attr>
+
+  <attr api-since="8" path="/api/package[@name='android.app.backup']/class[@name='BackupDataInput']/method[@name='readEntityData' or @name='readNextHeader' or @name='skipEntityData']" name="generateAsyncWrapper">true</attr>
+  <attr api-since="8" path="/api/package[@name='android.app.backup']/class[@name='BackupDataOutput']/method[@name='writeEntityData' or @name='writeEntityHeader']" name="generateAsyncWrapper">true</attr>
+
+  <attr api-since="5" path="/api/package[@name='android.bluetooth']/class[@name='BluetoothServerSocket']/method[@name='accept']" name="generateAsyncWrapper">true</attr>
+  <attr api-since="5" path="/api/package[@name='android.bluetooth']/class[@name='BluetoothSocket']/method[@name='connect']" name="generateAsyncWrapper">true</attr>
+
+  <attr api-since="11" path="/api/package[@name='android.content']/class[@name='Loader']/method[@name='dump']" name="generateAsyncWrapper">true</attr>
+  <attr api-since="19" path="/api/package[@name='android.content.pm']/class[@name='ProviderInfo']/method[@name='dump']" name="generateAsyncWrapper">true</attr>
+  <attr path="/api/package[@name='android.content.res']/class[@name='AssetManager']/method[@name='list']" name="generateAsyncWrapper">true</attr>
+
+  <attr path="/api/package[@name='android.gesture']/class[@name='GestureStore']/method[@name='load' or @name='save']" name="generateAsyncWrapper">true</attr>
+
+  <attr path="/api/package[@name='android.graphics']/class[@name='Bitmap']/method[@name='compress' or @name='copyPixelsFromBuffer' or @name='copyPixelsToBuffer']" name="generateAsyncWrapper">true</attr>
+  <attr path="/api/package[@name='android.graphics']/class[@name='BitmapFactory']/method[@name='decodeByteArray' or @name='decodeFile' or @name='decodeFileDescriptor' or @name='decodeResource' or @name='decodeResourceStream' or @name='decodeStream']" name="generateAsyncWrapper">true</attr>
+  <attr path="/api/package[@name='android.graphics']/class[@name='Movie']/method[@name='decodeByteArray' or @name='decodeFile' or @name='decodeStream']" name="generateAsyncWrapper">true</attr>
+  <attr path="/api/package[@name='android.graphics']/class[@name='Picture']/method[@name='createFromStream' or @name='writeToStream']" name="generateAsyncWrapper">true</attr>
+  <attr api-since="8" path="/api/package[@name='android.graphics']/class[@name='YuvImage']/method[@name='compressToJpeg']" name="generateAsyncWrapper">true</attr>
+
+  <attr path="/api/package[@name='android.graphics.drawable']/class[@name='Drawable']/method[@name='createFromPath' or @name='createFromResourceStream' or @name='createFromStream' or @name='createFromXml']" name="generateAsyncWrapper">true</attr>
+  <attr path="/api/package[@name='android.graphics.drawable']/class[substring(@name, string-length(@name) - 7) = 'Drawable']/method[@name='inflate']" name="generateAsyncWrapper">true</attr>
+
+  <attr path="/api/package[@name='android.graphics.pdf']/class[@name='PdfDocument']/method[@name='writeTo']" name="generateAsyncWrapper" api-since="19">true</attr>
+
+  <attr api-since="19" path="/api/package[@name='android.hardware']/class[@name='ConsumerIrManager']/method[@name='transmit']" name="generateAsyncWrapper">true</attr>
+
+  <attr api-since="12" path="/api/package[@name='android.hardware.usb']/class[@name='UsbDeviceConnection']/method[@name='bulkTransfer' or @name='controlTransfer' or @name='requestWait']" name="generateAsyncWrapper">true</attr>
+
+  <attr path="/api/package[@name='android.location']/class[@name='Geocoder']/method[@name='getFromLocation' or @name='getFromLocationName']" name="generateAsyncWrapper">true</attr>
+
+  <attr path="/api/package[@name='android.media']/class[@name='AudioManager']/method[@name='loadSoundEffects']" name="generateAsyncWrapper">true</attr>
+  <attr path="/api/package[@name='android.media']/class[@name='AudioRecord']/method[@name='read']" name="generateAsyncWrapper">true</attr>
+  <attr path="/api/package[@name='android.media']/class[@name='AudioTrack']/method[@name='write']" name="generateAsyncWrapper">true</attr>
+  <attr path="/api/package[@name='android.media']/class[@name='FaceDetector']/method[@name='findFaces']" name="generateAsyncWrapper">true</attr>
+  <attr path="/api/package[@name='android.media']/class[@name='JetPlayer']/method[@name='loadJetFile']" name="generateAsyncWrapper">true</attr>
+  <attr api-since="16" path="/api/package[@name='android.media']/class[@name='MediaActionSound']/method[@name='load']" name="generateAsyncWrapper">true</attr>
+  <attr api-since="16" path="/api/package[@name='android.media']/class[@name='MediaExtractor']/method[@name='advance' or @name='readSampleData' or @name='setDataSource']" name="generateAsyncWrapper">true</attr>
+  <attr api-since="10" path="/api/package[@name='android.media']/class[@name='MediaMetadataRetriever']/method[@name='setDataSource']" name="generateAsyncWrapper">true</attr>
+  <attr path="/api/package[@name='android.media']/class[@name='MediaPlayer']/method[@name='setDataSource']" name="generateAsyncWrapper">true</attr>
+  <attr path="/api/package[@name='android.media']/class[@name='SoundPool']/method[@name='load']" name="generateAsyncWrapper">true</attr>
+  <attr api-since="8" path="/api/package[@name='android.media']/class[@name='ThumbnailUtils']/method[@name='createVideoThumbnail' or @name='extractThumbnail']" name="generateAsyncWrapper">true</attr>
+
+  <attr api-since="12" path="/api/package[@name='android.mtp']/class[@name='MtpDevice']/method[@name='deleteObject' or @name='getObject' or @name='getThumbnail' or @name='importFile']" name="generateAsyncWrapper">true</attr>
+
+  <attr path="/api/package[@name='android.net']/class[@name='ConnectivityManager']/method[@name='requestRouteToHost']" name="generateAsyncWrapper">true</attr>
+  <attr path="/api/package[@name='android.net']/class[@name='LocalServerSocket']/method[@name='accept']" name="generateAsyncWrapper">true</attr>
+  <attr path="/api/package[@name='android.net']/class[@name='LocalSocket']/method[@name='connect']" name="generateAsyncWrapper">true</attr>
+
+  <attr api-since="8" path="/api/package[@name='android.net.http']/class[@name='AndroidHttpClient']/method[@name='execute']" name="generateAsyncWrapper">true</attr>
+
+  <attr api-since="10" path="/api/package[@name='android.nfc.tech']/class[@name='IsoDep']/method[@name='transceive']" name="generateAsyncWrapper">true</attr>
+  <attr api-since="10" path="/api/package[@name='android.nfc.tech']/class[@name='MifareClassic']/method[@name='decrement' or @name='increment' or @name='readBlock' or @name='restore' or @name='transceive' or @name='transfer' or @name='writeBlock']" name="generateAsyncWrapper">true</attr>
+  <attr api-since="10" path="/api/package[@name='android.nfc.tech']/class[@name='MifareUltralight']/method[@name='readPages' or @name='transceive' or @name='writePage']" name="generateAsyncWrapper">true</attr>
+  <attr api-since="10" path="/api/package[@name='android.nfc.tech']/class[@name='Ndef']/method[@name='getNdefMessage' or @name='makeReadOnly' or @name='writeNdefMessage']" name="generateAsyncWrapper">true</attr>
+  <attr api-since="10" path="/api/package[@name='android.nfc.tech']/class[@name='NdefFormatable']/method[@name='format' or @name='formatReadOnly']" name="generateAsyncWrapper">true</attr>
+  <attr api-since="10" path="/api/package[@name='android.nfc.tech']/class[@name='NfcA']/method[@name='transceive']" name="generateAsyncWrapper">true</attr>
+  <attr api-since="10" path="/api/package[@name='android.nfc.tech']/class[@name='NfcB']/method[@name='transceive']" name="generateAsyncWrapper">true</attr>
+  <attr api-since="10" path="/api/package[@name='android.nfc.tech']/class[@name='NfcF']/method[@name='transceive']" name="generateAsyncWrapper">true</attr>
+  <attr api-since="10" path="/api/package[@name='android.nfc.tech']/class[@name='NfcV']/method[@name='transceive']" name="generateAsyncWrapper">true</attr>
+
+  <attr path="/api/package[@name='android.os']/class[@name='Debug']/method[@name='dumpHprofData' or @name='dumpService']" name="generateAsyncWrapper">true</attr>
+  <attr path="/api/package[@name='android.os']/class[@name='Handler']/method[@name='dump']" name="generateAsyncWrapper">true</attr>
+
+  <attr api-since="19" path="/api/package[@name='android.transition']/class[@name='TransitionInflater']/method[@name='inflateTransition' or @name='inflateTransitionManager']" name="generateAsyncWrapper">true</attr>
+
+  <attr api-since="18" path="/api/package[@name='android.util']/class[@name='AtomicFile']/method[@name='failWrite' or @name='finishWrite' or @name='readFully' or @name='startWrite']" name="generateAsyncWrapper">true</attr>
+  <attr api-since="8" path="/api/package[@name='android.util']/class[@name='EventLog']/method[@name='readEvents' or @name='writeEvent']" name="generateAsyncWrapper">true</attr>
+  <attr api-since="11" path="/api/package[@name='android.util']/class[@name='JsonReader']/method[@name='beginArray' or @name='beginObject' or @name='endArray' or @name='endObject' or @name='nextBoolean' or @name='nextDouble' or @name='nextInt' or @name='nextLong' or @name='nextName' or @name='nextNull' or @name='nextString' or @name='peek' or @name='skipValue']" name="generateAsyncWrapper">true</attr>
+  <attr api-since="11" path="/api/package[@name='android.util']/class[@name='JsonWriter']/method[@name='beginArray' or @name='beginObject' or @name='endArray' or @name='endObject' or @name='flush' or @name='name' or @name='nullValue' or @name='value']" name="generateAsyncWrapper">true</attr>
+  <attr path="/api/package[@name='android.util']/class[@name='Xml']/method[@name='parse']" name="generateAsyncWrapper">true</attr>
+
+  <attr path="/api/package[@name='java.io']/class[@name='BufferedReader']/method[@name='readLine']" name="generateAsyncWrapper">true</attr>
+  <attr path="/api/package[@name='java.io']/class[@name='BufferedWriter']/method[@name='newLine']" name="generateAsyncWrapper">true</attr>
+  <attr path="/api/package[@name='java.io']/class[@name='ByteArrayOutputStream']/method[@name='writeTo']" name="generateAsyncWrapper">true</attr>
+  <attr path="/api/package[@name='java.io']/class[@name='CharArrayWriter']/method[@name='writeTo']" name="generateAsyncWrapper">true</attr>
+  <attr api-since="9" path="/api/package[@name='java.io']/class[@name='Console']/method[@name='format' or @name='printf' or @name='readLine' or @name='readPassword']" name="generateAsyncWrapper">true</attr>
+  <attr path="/api/package[@name='java.io']/class[@name='File']/method[@name='list' or @name='listFiles' or @name='listRoots']" name="generateAsyncWrapper">true</attr>
+  <attr path="/api/package[@name='java.io']/class[@name='PipedInputStream']/method[@name='receive']" name="generateAsyncWrapper">true</attr>
+  <attr path="/api/package[@name='java.io']/class[@name='PrintStream']/method[@name='append' or @name='format' or @name='print' or @name='printf' or @name='println']" name="generateAsyncWrapper">true</attr>
+  <attr path="/api/package[@name='java.io']/class[@name='PrintWriter']/method[@name='format' or @name='print' or @name='printf' or @name='println']" name="generateAsyncWrapper">true</attr>
+  <attr path="/api/package[@name='java.io']/class[@name='RandomAccessFile']/method[@name='read' or @name='readBoolean' or @name='readByte' or @name='readChar' or @name='readDouble' or @name='readFloat' or @name='readFully' or @name='readInt' or @name='readLine' or @name='readLong' or @name='readShort' or @name='readUnsignedByte' or @name='readUnsignedShort' or @name='readUTF' or @name='skipBytes' or @name='write' or @name='writeBoolean' or @name='writeByte' or @name='writeBytes' or @name='writeChar' or @name='writeChars' or @name='writeDouble' or @name='writeFloat' or @name='writeInt' or @name='writeLong' or @name='writeShort' or @name='writeUTF']" name="generateAsyncWrapper">true</attr>
+
+  <attr path="/api/package[@name='java.lang']/class[@name='Runtime']/method[@name='load' or @name='loadLibrary']" name="generateAsyncWrapper">true</attr>
+  <attr path="/api/package[@name='java.lang']/class[@name='System']/method[@name='load' or @name='loadLibrary']" name="generateAsyncWrapper">true</attr>
+
+  <attr path="/api/package[@name='java.net']/class[@name='DatagramSocket']/method[@name='connect' or @name='receive' or @name='send']" name="generateAsyncWrapper">true</attr>
+  <attr path="/api/package[@name='java.net']/class[@name='ServerSocket']/method[@name='accept' or @name='implAccept']" name="generateAsyncWrapper">true</attr>
+  <attr path="/api/package[@name='java.net']/class[@name='Socket']/method[@name='connect' or @name='sendUrgentData']" name="generateAsyncWrapper">true</attr>
+
+  <attr path="/api/package[@name='java.sql']/class[@name='DriverManager']/method[@name='println']" name="generateAsyncWrapper">true</attr>
+
+  <attr path="/api/package[@name='java.util.concurrent']/class[@name='ExecutorCompletionService']/method[@name='take' or (@name='poll' and count(//parameter) > 0)]" name="generateAsyncWrapper">true</attr>
+  <attr path="/api/package[@name='java.util.concurrent']/class[@name='CountDownLatch']/method[@name='await']" name="generateAsyncWrapper">true</attr>
+  <attr path="/api/package[@name='java.util.concurrent']/class[@name='CyclicBarrier']/method[@name='await']" name="generateAsyncWrapper">true</attr>
+
+  <attr path="/api/package[@name='java.util.jar']/class[@name='JarInputStream']/method[@name='getNextJarEntry']" name="generateAsyncWrapper">true</attr>
+  <attr path="/api/package[@name='java.util.jar']/class[@name='Manifest']/method[@name='read' or @name='write']" name="generateAsyncWrapper">true</attr>
+
+  <attr path="/api/package[@name='java.util.zip']/class[@name='CheckedInputStream']/method[@name='getChecksum']" name="generateAsyncWrapper">true</attr>
+  <attr path="/api/package[@name='java.util.zip']/class[@name='CheckedOutputStream']/method[@name='getChecksum']" name="generateAsyncWrapper">true</attr>
+  <attr path="/api/package[@name='java.util.zip']/class[@name='Deflater']/method[@name='deflate']" name="generateAsyncWrapper">true</attr>
+  <attr path="/api/package[@name='java.util.zip']/class[@name='Inflater']/method[@name='inflate']" name="generateAsyncWrapper">true</attr>
+  <attr path="/api/package[@name='java.util.zip']/class[@name='ZipInputStream']/method[@name='getNextEntry']" name="generateAsyncWrapper">true</attr>
+  <attr path="/api/package[@name='java.util.zip']/class[@name='ZipOutputStream']/method[@name='putNextEntry']" name="generateAsyncWrapper">true</attr>
+
+  <attr path="/api/package[@name='org.apache.http.conn.ssl']/class[@name='SSLSocketFactory']/method[@name='connectSocket' or (@name='createSocket' and count(//parameter) > 0)]" name="generateAsyncWrapper">true</attr>
+
+  <attr path="/api/package[@name='org.xmlpull.v1.sax2']/class[@name='Driver']/method[@name='parse' or @name='parseSubTree']" name="generateAsyncWrapper">true</attr>
+
+  <!-- API Level 21 -->
+  <!-- This is required because "System" causes several namespace resolution problem... -->
+  <attr api-since="21" path="/api/package[@name='android.system']" name="managedName">Android.Systems</attr>
+  <attr api-since="21" path="/api/package[@name='android.app.job']/class[@name='JobInfo']/method[@name='getBackoffPolicy']" name="managedName">GetBackoffPolicyValue</attr>
+  <!-- Thanks to the deprecated API, somehow we cannot add binding for the non-deprecated version of the API.
+       FIXME: It might be overkill, we can revisit here later. -->
+  <remove-node api-since="21" path="/api/package[@name='android.view.accessibility']/class[@name='AccessibilityNodeInfo']/method[@name='addAction'][parameter/@type='android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction']" name="eventName" />
+
+  <!-- FIXME: this should be fixed in generator ("Raw" method resolution is complicated). Since we can call base method, it can be even ignored... -->
+  <remove-node api-since="21" path="/api/package[@name='java.util.concurrent']/class[@name='RecursiveAction']/method[@name='getRawResult']" />
+  <remove-node api-since="21" path="/api/package[@name='java.util.concurrent']/class[@name='RecursiveAction']/method[@name='setRawResult']" />
+  <remove-node api-since="21" path="/api/package[@name='java.util.concurrent']/class[@name='RecursiveTask']/method[@name='getRawResult']" />
+  <remove-node api-since="21" path="/api/package[@name='java.util.concurrent']/class[@name='RecursiveTask']/method[@name='setRawResult']" />
+
+  <!-- This is likely FIXME - CharSequence as a property name breaks compilation, so we need to rename it -->
+  <attr api-since="21" path="/api/package[@name='android.view.textservice']/class[@name='TextInfo']/method[@name='getCharSequence']" name="managedName">GetCharacterSequence</attr>
+
+  <!-- API-19 only had Notification.Builder.setExtras(), so the setter wasn't part of a property. Keep it separate. -->
+  <attr api-since="19" path="/api/package[@name='android.view.textservice']/class[@name='Notification.Builder']/method[@name='setExtras']" name="propertyName" />
+
+  <!-- Similarly, API-18 only had android.graphics.Bitmap.isPremultiplied(); Don't merge with the API-19+ Bitmap.setPremultiplied() method. -->
+  <attr api-since="19" path="/api/package[@name='android.graphics']/class[@name='Bitmap']/method[@name='setPremultiplied']" name="propertyName" />
+
+  <!-- Deprecate Any Class in the API less than 10. Do This last so we override any other deprecate comments -->
+  <attr api-until="9" path="/api/package/class" name="deprecated">This platform is deprecated. Please re-target your app for a minumum of API-10</attr>
+  <attr api-until="9" path="/api/package/interface" name="deprecated">This platform is deprecated. Please re-target your app for a minumum of API-10</attr>
+
+  <add-node api-until="12" path="/api">
+    <enum name="Android.Views.Axis" />
+  </add-node>
+  <add-node api-until="14" path="/api">
+    <enum name="Android.Views.SystemUiFlags" />
+  </add-node>
+
+  <attr path="/api/package[@name='android.view.textservice']/interface[@name='SpellCheckerSession.SpellCheckerSessionListener']/method[@name='onGetSuggestions']"
+      name="argsType"
+  >SpellCheckerSessionEventArgs</attr>
+
+
+  <!--
+    ~~GOOGLE API BREAKAGE~~
+
+    Sometimes Google removes members, e.g. https://bugzilla.xamarin.com/show_bug.cgi?id=21159#c5
+
+    The problem with this is that our tooling doesn't have any real support for stating that
+    a method was removed; api-merge assumes that once an API is added, it's present for ALL TIME.
+    -->
+  <!-- View.fitsSystemWindows() was removed from docs/android.jar, but still appears to exist on-device. -->
+  <attr api-since="14" path="/api/package[@name='android.view']/class[@name='View']/method[@name='fitsSystemWindows' and count(parameters)=0]"
+      name="managedName"
+  >InvokeFitsSystemWindows</attr>
+  <attr api-since="14" path="/api/package[@name='android.view']/class[@name='View']/method[@name='fitsSystemWindows' and count(parameters)=0]"
+      name="deprecated"
+  >The View.fitsSystemWindows() method was REMOVED by Google in API-16. DO NOT USE.</attr>
+  <remove-node api-since="11" path="/api/package[@name='android.graphics']/class[@name='Canvas']/constructor[parameter[1]/@type='javax.microedition.khronos.opengles.GL']" />
+
+  <!-- name conflict resolution -->
+  <attr path="/api/package[@name='android.net.wifi']/class[@name='WifiConfiguration']/field[@name='status']" name="managedName">StatusField</attr>
+
+  <!-- Android M -->
+
+  <!-- FIXME: there is another M-preview specific build error:
+
+	platforms/android-23/src/generated/Android.Media.Image.cs(416,25): error CS0534: `Android.Media.ImageInvoker' does not implement inherited abstract member `Android.Media.Image.Timestamp.get'
+	platforms/android-23/src/generated/Android.Media.Image.cs(347,65): (Location of the symbol related to previous error)
+	platforms/android-23/src/generated/Android.Media.Image.cs(416,25): error CS0534: `Android.Media.ImageInvoker' does not implement inherited abstract member `Android.Media.Image.Timestamp.set'
+	platforms/android-23/src/generated/Android.Media.Image.cs(349,68): (Location of the symbol related to previous error)
+  -->
+  <remove-node path="/api/package[@name='android.media']/class[@name='Image']/method[@name='setTimestamp']" api-since="23" />
+  
+  <attr path="/api/package[@name='android.app']/class[@name='Notification']/method[@name='getLargeIcon']" name="propertyName"></attr>
+
+  <!-- Android N Preview -->
+
+  <attr path="/api/package[@name='java.util.function']" name="managedName">Java.Util.Functions</attr>
+  <attr path="/api/package[@name='java.util.stream']" name="managedName">Java.Util.Streams</attr>
+
+  <attr path="/api/package[@name='android.icu.text']/class[@name='MeasureFormat']/method[@name='parseObject']" name="managedReturn">Java.Lang.Object</attr>
+
+  <!-- seems like conlicting other base method definition -->
+  <remove-node path="/api/package[@name='android.icu.text']/class[@name='UnicodeSet']/method[@name='addAll' and count(typeParameters) &gt; 0]" /> 
+
+  <!-- FIXME: We have enumified this method's int overload, which had
+   (and has) to be done by parameter name. Unfortunately the parameter
+   name is exactly same as the new one that we don't want to enumify.
+   
+   Until we introduce some decent enumification filters, we have to disable the new method.
+   
+   Another mess: we should be able to use 'api-since' here, but that information is provided by platform-tools/api/annotations.zip which is NOT part of N preview 1. So we use api-merge info instead...
+  -->
+  <remove-node path="/api/package[@name='java.awt.font']/class[@name='NumericShaper']/method[@name='getContextualShaper' and @merge.SourceFile = 'api-24.xml.in']" /> 
+  <remove-node path="/api/package[@name='java.awt.font']/class[@name='NumericShaper']/method[@name='getShaper' and @merge.SourceFile = 'api-24.xml.in']" /> 
+
+  <!-- StringBuffer.Append(bool) is newly added, and it causes override
+    resolution conflict with base AbstractStringBuilder. However, that "forcibly exposed internal-only" class returned AbstractStringBuilder itself, which doesn't match the expected return type. For this case, we need to modify the internal type.
+  -->
+  <attr path="/api/package[@name='java.lang']/class[@name='AbstractStringBuilder']/method[@name='append']" name="managedReturn">Java.Lang.IAppendable</attr> 
+
+  <!--
+  Google had renamed DateTimePickerDialog constructor arguments to
+  make sense ("monthInYear" is "month"). That however broke our
+  event code generation which didn't do good job to expect explicit
+  naming and should be improved to not rely on unstable part of the
+  API, but so far we need workaround.
+  -->
+  <attr path="/api/package[@name='android.app']/class[@name='DatePickerDialog']/constructor/parameter[@name='monthInYear']" api-until="23" name="name">month</attr> 
+
+  <!-- invariant method overrides fixup -->
+  <attr path="/api/package[@name='android.icu.util']/class[@name='CECalendar']" name="visibility">public</attr>
+
+  <!-- FIXME: Enable below only after we enable NetworkChannel
+    
+  <attr path="/api/package[@name='java.nio.channels']/class[@name='DatagramChannel']/method[@name='bind']" name="managedReturn">Java.Nio.Channels.INetworkChannel</attr>
+  <attr path="/api/package[@name='java.nio.channels']/class[@name='SocketChannel']/method[@name='bind']" name="managedReturn">Java.Nio.Channels.INetworkChannel</attr>
+  <attr path="/api/package[@name='java.nio.channels']/class[@name='ServerSocketChannel']/method[@name='bind']" name="managedReturn">Java.Nio.Channels.INetworkChannel</attr>
+
+  Similar changed are needed for getOption() and setOption().
+  
+  At this state, it is impossible to generate bindings for
+  getOpion() and setOption() (generic methods).
+
+  "Fixing" this is either impossible by design, or impossible
+  because we cannot introduce API breakers, or impossible because
+  there are too many changes involved in generator code base.
+  
+  Manually bound API is still an option.
+
+  -->
+  
+  <remove-node path="/api/package[@name='java.nio.channels']/interface[@name='NetworkChannel']" /> 
+  <remove-node path="/api/package[@name='java.nio.channels']/class[implements/@name='java.nio.channels.NetworkChannel']" /> 
+
+  <attr path="/api/package[@name='java.util.concurrent.atomic']/class[@name='Striped64']" name="visibility">public</attr>
+
+  <!-- non-public intermediate CollectionView brings a lot of issues, just kill it -->
+  <remove-node path="/api/package[@name='java.util.concurrent']/class[@name='ConcurrentHashMap.CollectionView']" name="visibility" />
+<!--
+  <attr path="/api/package[@name='java.util.concurrent']/class[@name='ConcurrentHashMap.KeySetView']" name="extends">java.lang.Object</attr>
+-->
+
+  <attr path="/api/package[@name='java.util.concurrent']/class[@name='CompletableFuture']/method[@static='false' and starts-with (@return, 'java.util.concurrent.CompletableFuture') and @name!='toCompletableFuture']" name="managedReturn">Java.Util.Concurrent.ICompletionStage</attr>
+
+  <!--
+  
+  Spliterator had brought TONS of issues that cannot really be easily resolved. Considering that those Java8 API is primarily useful
+  only for Java developers, they should not be regarded as major
+  binding blockers. So, just remove them.
+  
+  We had been removing EntityIterator for exactly same reason
+  (non-generic derived interfaces from generic interface, that has variant return values are regarded as our unsupported use of
+  generics; we slightly removed limitation by some manual metadata
+  fixes and .cs additions, but this is "unsupported" in principle.
+  
+  -->
+
+  <remove-node path="/api/package[@name='java.util']/interface[starts-with (@name, 'Spliterator.Of')]" />
+
+  <!--
+    This is more like a workaround for a generator issue - some
+    interface default method within generic types don't get marked
+    as override as expected. For example, some Spliterator.AbstractIntSpliterator#forEachRemaining() overload
+    (among many) isn't marked as override, while it should be.
+    
+    Here we are removing interface default method. Usually removing
+    interface method cannot be done as Java stub generator will
+    not emit required Java methods for the ACWs and then javac
+    will reject such incomplete interface implementation.
+    But here it is about default methods which don't have to be
+    necessarily implemented.
+    
+    Same goes for other spliterator methods, streams and
+    PrimitiveIterators.
+
+  <remove-node path="/api/package[@name='java.util']/interface[starts-with (@name, 'Spliterator.Of')]/method[@name='forEachRemaining']" />
+  -->
+
+  <attr path="/api/package[@name='java.util.stream']/interface[@name='IntStream' or @name='LongStream' or @name='DoubleStream']/method[@name='spliterator']" name="managedReturn">Java.Util.ISpliterator</attr>
+  <attr path="/api/package[@name='java.util.stream']/interface[@name='IntStream' or @name='LongStream' or @name='DoubleStream']/method[@name='sequential' or @name='parallel']" name="managedReturn">Java.Lang.Object</attr>
+  <attr path="/api/package[@name='java.util.stream']/interface[@name='IntStream' or @name='LongStream' or @name='DoubleStream']/method[@name='iterator']" name="managedReturn">Java.Util.IIterator</attr>
+
+  <attr path="/api/package[@name='java.util']/interface[starts-with (@name, 'PrimitiveIterator.Of')]/method[@name='next']" name="managedReturn">Java.Lang.Object</attr>
+  
+  <!--
+  The return value is generic argument and it is not respected here,
+  and thus treated as Java.Lang.Object. It needs to be fixed.
+  --> 
+  <attr path="/api/package[@name='java.util']/class[starts-with (@name, 'Spliterators.Abstract')]/method[@name='trySplit']" name="managedReturn">Java.Util.ISpliterator</attr>
+
+</metadata>

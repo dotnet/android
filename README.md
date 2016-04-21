@@ -59,6 +59,10 @@ Then, you may do one of the following:
 
 2. Load `Xamarin.Android.sln` into Xamarin Studio and Build the project.
 
+    *Note*: The `Mono.Android` project may *fail* on the first build
+    because it generates sources, and those sources won't exist on the
+    initial project load. Rebuild the project should this happen.
+
 # Build Output Directory Structure
 
 There are two configurations, `Debug` and `Release`, controlled by the
@@ -76,4 +80,35 @@ mirrors that of the OS X Xamarin.Android.framework directory structure:
 * `bin\$(Configuration)\lib\xbuild\Xamarin\Android`: MSBuild-related support
     files and required runtimes used by the MSBuild tooling.
 * `bin\$(Configuration)\lib\xbuild-frameworks\MonoAndroid`: Xamarin.Android
-    profile assemblies and facade assemblies.
+    profiles.
+* `bin\$(Configuration)\lib\xbuild-frameworks\MonoAndroid\v1.0`: Xamarin.Android
+    Base Class Library assemblies such as `mscorlib.dll`.
+* `bin\$(Configuration)\lib\xbuild-frameworks\MonoAndroid\*`: Contains
+    `Mono.Android.dll` for a given Xamarin.Android `$(TargetFrameworkVersion)`.
+
+# Xamarin.Android `$(TargetFrameworkVersion)`s
+
+Xamarin.Android uses the MSBuild `$(TargetFrameworkVersion)` mechanism
+to provide a separate `Mono.Android.dll` *binding assembly* for each API
+level.
+
+This means there is no *single* `Mono.Android.dll`, there is instead a *set*
+of them.
+
+This complicates the "mental model" for the `Mono.Android` project, as
+a *project* can have only one output, not many (...within reason...).
+As such, building the `Mono.Android` project will only generate a single
+`Mono.Android.dll`.
+
+To control which API level is bound, set the `$(ApiLevel)` and
+`$(XAFrameworkVersion)` properties. `$(ApiLevel)` is the Android API level,
+*usually* a number, while `$(XAFrameworkVersion)` is the Xamarin.Android
+`$(TargetFrameworkVersion)`.
+
+The default values will target Android API-23, Android 6.0.
+
+For example, to generate `Mono.Android.dll` for API-19 (Android 4.4):
+
+    cd src/Mono.Android
+    xbuild /p:ApiLevel=19 /p:XAFrameworkVersion=v4.4
+    # creates bin\Debug\lib\xbuild-frameworks\MonoAndroid\v4.4\Mono.Android.dll

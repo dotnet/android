@@ -1,3 +1,6 @@
 [submodule "external/mono"]
 	path = external/mono
 	url = git@github.com:mono/mono.git
+[submodule "external/Java.Interop"]
+	path = external/Java.Interop
+	url = git@github.com:xamarin/Java.Interop.git

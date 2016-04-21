@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Target Name="_BuildJavaInterop"
+      BeforeTargets="ResolveReferences"
+      Inputs="..\..\external\Java.Interop\src\Java.Interop\Java.Interop.csproj"
+      Outputs="$(OutputPath)\..\v1.0\Java.Interop.dll">
+    <MSBuild
+        Projects="..\..\external\Java.Interop\src\Java.Interop\Java.Interop.csproj"
+        Properties="Configuration=XAIntegration$(Configuration)"
+    />
+    <ItemGroup>
+      <Assembly Include="..\..\external\Java.Interop\bin\XAIntegration$(Configuration)\*.dll*" />
+    </ItemGroup>
+    <Copy
+        SourceFiles="@(Assembly)"
+        DestinationFolder="$(OutputPath)\..\v1.0"
+    />
+  </Target>
+  <Target Name="_BuildJNIEnv"
+      BeforeTargets="CoreCompile"
+      Inputs="..\..\bin\Build$(Configuration)\jnienv-gen.exe"
+      Outputs="Android.Runtime\JNIEnv.g.cs">
+    <Exec
+        Command="$(ManagedRuntime) ..\..\bin\Build$(Configuration)\jnienv-gen.exe -o Android.Runtime\JNIEnv.g.cs --use-java-interop"
+    />
+  </Target>
+  <Target Name="_GenerateBinding"
+      BeforeTargets="CoreCompile"
+      Inputs="Profiles\api-$(ApiLevel).xml.in"
+      Outputs="$(IntermediateOutputPath)android-$(ApiLevel)\Mono.Android.projitems">
+    <MakeDir Directories="$(IntermediateOutputPath)android-$(ApiLevel)" />
+    <PropertyGroup>
+      <Generator>..\..\external\Java.Interop\bin\$(Configuration)\generator.exe</Generator>
+      <_ApiLevel>--api-level=$(ApiLevel)</_ApiLevel>
+      <_Out>-o "$(IntermediateOutputPath)android-$(ApiLevel)"</_Out>
+      <_Codegen>--codegen-target=XAJavaInterop1</_Codegen>
+      <_Fixup>--fixup=metadata</_Fixup>
+      <_Enums1>--preserve-enums --enumflags=enumflags --enumfields=map.csv --enummethods=methodmap.csv</_Enums1>
+      <_Enums2>--enummetadata=$(IntermediateOutputPath)android-$(ApiLevel)\enummetadata</_Enums2>
+      <_Versions>--apiversions=$(AndroidToolchainDirectory)\sdk\platform-tools\api\api-versions.xml</_Versions>
+      <_Annotations>--annotations=$(AndroidToolchainDirectory)\sdk\platform-tools\api\annotations.zip</_Annotations>
+      <_Assembly>--assembly="Mono.Android, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null"</_Assembly>
+      <_TypeMap>--type-map-report=$(IntermediateOutputPath)android-$(ApiLevel)\type-mapping.txt</_TypeMap>
+      <_Api>Profiles\api-$(ApiLevel).xml.in</_Api>
+      <_Dirs>--enumdir=$(IntermediateOutputPath)android-$(ApiLevel)</_Dirs>
+    </PropertyGroup>
+    <Exec
+        Command="$(ManagedRuntime) $(Generator) $(_ApiLevel) $(_Out) $(_Codegen) $(_Fixup) $(_Enums1) $(_Enums2) $(_Versions) $(_Annotations) $(_Assembly) $(_TypeMap) $(_Dirs) $(_Api)"
+    />
+  </Target>
+  <Target Name="_CleanBinding"
+      AfterTargets="Clean">
+    <RemoveDir Directories="$(IntermediateOutputPath)android-$(ApiLevel)" />
+  </Target>
+</Project>
