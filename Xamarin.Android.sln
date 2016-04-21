@@ -25,6 +25,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mono.Android", "src\Mono.An
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "api-merge", "build-tools\api-merge\api-merge.csproj", "{3FC3E78B-F7D4-42EA-BBE8-4535DF42BFF8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mono.Android.Export", "src\Mono.Android.Export\Mono.Android.Export.csproj", "{B8105878-D423-4159-A3E7-028298281EC6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|AnyCPU = Debug|AnyCPU
@@ -95,8 +97,16 @@ Global
 		{3FC3E78B-F7D4-42EA-BBE8-4535DF42BFF8}.XAIntegrationDebug|Any CPU.ActiveCfg = Debug|Any CPU
 		{3FC3E78B-F7D4-42EA-BBE8-4535DF42BFF8}.XAIntegrationDebug|Any CPU.Build.0 = Debug|Any CPU
 		{3FC3E78B-F7D4-42EA-BBE8-4535DF42BFF8}.XAIntegrationRelease|Any CPU.ActiveCfg = Debug|An yCPU
-		{3FC3E78B-F7D4-42EA-BBE8-4535DF42BFF8}.XAIntegrationRelease|Any CPU.Build.0 = Debug|Any CPU
+		{3FC3E78B-F7D4-42EA-BBE8-4535DF42BFF8}.XAIntegrationRelease|Any CPU.Build.0 = Debug|An yCPU
 		{3FC3E78B-F7D4-42EA-BBE8-4535DF42BFF8}.Debug|AnyCPU.Build.0 = Debug|Any CPU
+		{B8105878-D423-4159-A3E7-028298281EC6}.Debug|AnyCPU.ActiveCfg = Debug|Any CPU
+		{B8105878-D423-4159-A3E7-028298281EC6}.Debug|AnyCPU.Build.0 = Debug|Any CPU
+		{B8105878-D423-4159-A3E7-028298281EC6}.Release|AnyCPU.ActiveCfg = Release|Any CPU
+		{B8105878-D423-4159-A3E7-028298281EC6}.Release|AnyCPU.Build.0 = Release|Any CPU
+		{B8105878-D423-4159-A3E7-028298281EC6}.XAIntegrationDebug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B8105878-D423-4159-A3E7-028298281EC6}.XAIntegrationDebug|Any CPU.Build.0 = Debug|Any CPU
+		{B8105878-D423-4159-A3E7-028298281EC6}.XAIntegrationRelease|Any CPU.ActiveCfg = Debug|Any CPU
+		{B8105878-D423-4159-A3E7-028298281EC6}.XAIntegrationRelease|Any CPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{8FF78EB6-6FC8-46A7-8A15-EBBA9045C5FA} = {E351F97D-EA4F-4E7F-AAA0-8EBB1F2A4A62}
@@ -109,6 +119,7 @@ Global
 		{E706B6F2-5562-4765-8F07-8CF84A797B30} = {04E3E11E-B47D-4599-8AFC-50515A95E715}
 		{66CF299A-CE95-4131-BCD8-DB66E30C4BF7} = {04E3E11E-B47D-4599-8AFC-50515A95E715}
 		{3FC3E78B-F7D4-42EA-BBE8-4535DF42BFF8} = {E351F97D-EA4F-4E7F-AAA0-8EBB1F2A4A62}
+		{B8105878-D423-4159-A3E7-028298281EC6} = {04E3E11E-B47D-4599-8AFC-50515A95E715}
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
 		Policies = $0

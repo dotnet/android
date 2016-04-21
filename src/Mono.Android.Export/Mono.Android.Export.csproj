@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{B8105878-D423-4159-A3E7-028298281EC6}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>Mono.Android.Export</RootNamespace>
+    <AssemblyName>Mono.Android.Export</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+  </PropertyGroup>
+  <Import Project="..\..\Configuration.props" />
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>..\..\bin\Debug\lib\xbuild-frameworks\MonoAndroid\$(AndroidFrameworkVersion)</OutputPath>
+    <DefineConstants>DEBUG;</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>false</ConsolePause>
+    <NoStdLib>true</NoStdLib>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <Optimize>true</Optimize>
+    <OutputPath>..\..\bin\Release\lib\xbuild-frameworks\MonoAndroid\$(AndroidFrameworkVersion)</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>false</ConsolePause>
+    <NoStdLib>true</NoStdLib>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="mscorlib">
+      <HintPath>$(OutputPath)..\v1.0\mscorlib.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.dll">
+      <HintPath>$(OutputPath)..\v1.0\System.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Core.dll">
+      <HintPath>$(OutputPath)..\v1.0\System.Core.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Xml.dll">
+      <HintPath>$(OutputPath)..\v1.0\System.Xml.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Mono.CodeGeneration\CodeAdd.cs" />
+    <Compile Include="Mono.CodeGeneration\CodeAnd.cs" />
+    <Compile Include="Mono.CodeGeneration\CodeArgument.cs" />
+    <Compile Include="Mono.CodeGeneration\CodeArgumentReference.cs" />
+    <Compile Include="Mono.CodeGeneration\CodeArithmeticOperation.cs" />
+    <Compile Include="Mono.CodeGeneration\CodeArrayItem.cs" />
+    <Compile Include="Mono.CodeGeneration\CodeArrayLength.cs" />
+    <Compile Include="Mono.CodeGeneration\CodeAssignment.cs" />
+    <Compile Include="Mono.CodeGeneration\CodeBinaryComparison.cs" />
+    <Compile Include="Mono.CodeGeneration\CodeBinaryOperation.cs" />
+    <Compile Include="Mono.CodeGeneration\CodeBlock.cs" />
+    <Compile Include="Mono.CodeGeneration\CodeBuilder.cs" />
+    <Compile Include="Mono.CodeGeneration\CodeCast.cs" />
+    <Compile Include="Mono.CodeGeneration\CodeClass.cs" />
+    <Compile Include="Mono.CodeGeneration\CodeCustomAttribute.cs" />
+    <Compile Include="Mono.CodeGeneration\CodeDecrement.cs" />
+    <Compile Include="Mono.CodeGeneration\CodeEquals.cs" />
+    <Compile Include="Mono.CodeGeneration\CodeExpression.cs" />
+    <Compile Include="Mono.CodeGeneration\CodeFieldReference.cs" />
+    <Compile Include="Mono.CodeGeneration\CodeFor.cs" />
+    <Compile Include="Mono.CodeGeneration\CodeForeach.cs" />
+    <Compile Include="Mono.CodeGeneration\CodeGenerationHelper.cs" />
+    <Compile Include="Mono.CodeGeneration\CodeIf.cs" />
+    <Compile Include="Mono.CodeGeneration\CodeIncrement.cs" />
+    <Compile Include="Mono.CodeGeneration\CodeIs.cs" />
+    <Compile Include="Mono.CodeGeneration\CodeItem.cs" />
+    <Compile Include="Mono.CodeGeneration\CodeLiteral.cs" />
+    <Compile Include="Mono.CodeGeneration\CodeMethod.cs" />
+    <Compile Include="Mono.CodeGeneration\CodeMethodCall.cs" />
+    <Compile Include="Mono.CodeGeneration\CodeModule.cs" />
+    <Compile Include="Mono.CodeGeneration\CodeNew.cs" />
+    <Compile Include="Mono.CodeGeneration\CodeNewArray.cs" />
+    <Compile Include="Mono.CodeGeneration\CodeNotEquals.cs" />
+    <Compile Include="Mono.CodeGeneration\CodeOr.cs" />
+    <Compile Include="Mono.CodeGeneration\CodeProperty.cs" />
+    <Compile Include="Mono.CodeGeneration\CodePropertyReference.cs" />
+    <Compile Include="Mono.CodeGeneration\CodeReturn.cs" />
+    <Compile Include="Mono.CodeGeneration\CodeSelect.cs" />
+    <Compile Include="Mono.CodeGeneration\CodeSelfIncrement.cs" />
+    <Compile Include="Mono.CodeGeneration\CodeTryBlock.cs" />
+    <Compile Include="Mono.CodeGeneration\CodeUnaryOperation.cs" />
+    <Compile Include="Mono.CodeGeneration\CodeValueReference.cs" />
+    <Compile Include="Mono.CodeGeneration\CodeVariableDeclaration.cs" />
+    <Compile Include="Mono.CodeGeneration\CodeVariableReference.cs" />
+    <Compile Include="Mono.CodeGeneration\CodeWhen.cs" />
+    <Compile Include="Mono.CodeGeneration\CodeWhile.cs" />
+    <Compile Include="Mono.CodeGeneration\CodeWriter.cs" />
+    <Compile Include="Mono.CodeGeneration\Exp.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <ImplicitlyExpandDesignTimeFacades>False</ImplicitlyExpandDesignTimeFacades>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Mono.Android\Mono.Android.csproj">
+      <Project>{66CF299A-CE95-4131-BCD8-DB66E30C4BF7}</Project>
+      <Name>Mono.Android</Name>
+    </ProjectReference>
+  </ItemGroup>
+</Project>
