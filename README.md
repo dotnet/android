@@ -24,6 +24,9 @@ and will override any default values specified in `Configuration.props`.
 
 Overridable MSBuild properties include:
 
+* `$(AndroidApiLevel)`: The Android API level to bind in `src/Mono.Android`.
+* `$(AndroidFrameworkVersion)`: The Xamarin.Android `$(TargetFrameworkVersion)`
+    version which corresponds to `$(AndroidApiLevel)`.
 * `$(AndroidToolchainCacheDirectory)`: The directory to cache the downloaded
     Android NDK and SDK files. This value defaults to
     `$(HOME)\android-archives`.
@@ -115,15 +118,15 @@ a *project* can have only one output, not many (...within reason...).
 As such, building the `Mono.Android` project will only generate a single
 `Mono.Android.dll`.
 
-To control which API level is bound, set the `$(ApiLevel)` and
-`$(XAFrameworkVersion)` properties. `$(ApiLevel)` is the Android API level,
-*usually* a number, while `$(XAFrameworkVersion)` is the Xamarin.Android
-`$(TargetFrameworkVersion)`.
+To control which API level is bound, set the `$(AndroidApiLevel)` and
+`$(AndroidFrameworkVersion)` properties. `$(AndroidApiLevel)` is the
+Android API level, *usually* a number, while `$(AndroidFrameworkVersion)`
+is the Xamarin.Android `$(TargetFrameworkVersion)`.
 
 The default values will target Android API-23, Android 6.0.
 
 For example, to generate `Mono.Android.dll` for API-19 (Android 4.4):
 
     cd src/Mono.Android
-    xbuild /p:ApiLevel=19 /p:XAFrameworkVersion=v4.4
+    xbuild /p:AndroidApiLevel=19 /p:AndroidFrameworkVersion=v4.4
     # creates bin\Debug\lib\xbuild-frameworks\MonoAndroid\v4.4\Mono.Android.dll

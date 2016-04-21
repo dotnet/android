@@ -29,15 +29,15 @@
   </ItemGroup>
   <Target Name="_GenerateApiDescription"
       BeforeTargets="_GenerateBinding"
-      Inputs="Profiles\api-$(ApiLevel).xml.in"
-      Outputs="$(IntermediateOutputPath)android-$(ApiLevel)\api.xml">
-    <MakeDir Directories="$(IntermediateOutputPath)android-$(ApiLevel)" />
+      Inputs="Profiles\api-$(AndroidApiLevel).xml.in"
+      Outputs="$(IntermediateOutputPath)android-$(AndroidApiLevel)\api.xml">
+    <MakeDir Directories="$(IntermediateOutputPath)android-$(AndroidApiLevel)" />
     <PropertyGroup>
       <ApiMerge>..\..\bin\Build$(Configuration)\api-merge.exe</ApiMerge>
       <_Profiles>@(_AndroidProfile->'%(Identity)', ' ')</_Profiles>
       <_Glob>-s 'Profiles\api-*.xml.in'</_Glob>
-      <_LastProfile>--last-description=Profiles\api-$(ApiLevel).xml.in</_LastProfile>
-      <_Out>-o "$(IntermediateOutputPath)android-$(ApiLevel)\api.xml"</_Out>
+      <_LastProfile>--last-description=Profiles\api-$(AndroidApiLevel).xml.in</_LastProfile>
+      <_Out>-o "$(IntermediateOutputPath)android-$(AndroidApiLevel)\api.xml"</_Out>
     </PropertyGroup>
     <Exec
         Command="$(ManagedRuntime) $(ApiMerge) $(_Out) $(_Glob) $(_Profiles) $(_LastProfile)"
@@ -45,23 +45,23 @@
   </Target>
   <Target Name="_GenerateBinding"
       BeforeTargets="CoreCompile"
-      Inputs="$(IntermediateOutputPath)android-$(ApiLevel)\api.xml"
-      Outputs="$(IntermediateOutputPath)android-$(ApiLevel)\Mono.Android.projitems">
-    <MakeDir Directories="$(IntermediateOutputPath)android-$(ApiLevel)" />
+      Inputs="$(IntermediateOutputPath)android-$(AndroidApiLevel)\api.xml"
+      Outputs="$(IntermediateOutputPath)android-$(AndroidApiLevel)\Mono.Android.projitems">
+    <MakeDir Directories="$(IntermediateOutputPath)android-$(AndroidApiLevel)" />
     <PropertyGroup>
       <Generator>..\..\external\Java.Interop\bin\$(Configuration)\generator.exe</Generator>
-      <_ApiLevel>--api-level=$(ApiLevel)</_ApiLevel>
-      <_Out>-o "$(IntermediateOutputPath)android-$(ApiLevel)"</_Out>
+      <_ApiLevel>--api-level=$(AndroidApiLevel)</_ApiLevel>
+      <_Out>-o "$(IntermediateOutputPath)android-$(AndroidApiLevel)"</_Out>
       <_Codegen>--codegen-target=XAJavaInterop1</_Codegen>
       <_Fixup>--fixup=metadata</_Fixup>
       <_Enums1>--preserve-enums --enumflags=enumflags --enumfields=map.csv --enummethods=methodmap.csv</_Enums1>
-      <_Enums2>--enummetadata=$(IntermediateOutputPath)android-$(ApiLevel)\enummetadata</_Enums2>
+      <_Enums2>--enummetadata=$(IntermediateOutputPath)android-$(AndroidApiLevel)\enummetadata</_Enums2>
       <_Versions>--apiversions=$(AndroidToolchainDirectory)\sdk\platform-tools\api\api-versions.xml</_Versions>
       <_Annotations>--annotations=$(AndroidToolchainDirectory)\sdk\platform-tools\api\annotations.zip</_Annotations>
       <_Assembly>--assembly="Mono.Android, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null"</_Assembly>
-      <_TypeMap>--type-map-report=$(IntermediateOutputPath)android-$(ApiLevel)\type-mapping.txt</_TypeMap>
-      <_Api>$(IntermediateOutputPath)android-$(ApiLevel)\api.xml</_Api>
-      <_Dirs>--enumdir=$(IntermediateOutputPath)android-$(ApiLevel)</_Dirs>
+      <_TypeMap>--type-map-report=$(IntermediateOutputPath)android-$(AndroidApiLevel)\type-mapping.txt</_TypeMap>
+      <_Api>$(IntermediateOutputPath)android-$(AndroidApiLevel)\api.xml</_Api>
+      <_Dirs>--enumdir=$(IntermediateOutputPath)android-$(AndroidApiLevel)</_Dirs>
     </PropertyGroup>
     <Exec
         Command="$(ManagedRuntime) $(Generator) $(_ApiLevel) $(_Out) $(_Codegen) $(_Fixup) $(_Enums1) $(_Enums2) $(_Versions) $(_Annotations) $(_Assembly) $(_TypeMap) $(_Dirs) $(_Api)"
@@ -69,6 +69,6 @@
   </Target>
   <Target Name="_CleanBinding"
       AfterTargets="Clean">
-    <RemoveDir Directories="$(IntermediateOutputPath)android-$(ApiLevel)" />
+    <RemoveDir Directories="$(IntermediateOutputPath)android-$(AndroidApiLevel)" />
   </Target>
 </Project>
