@@ -4,7 +4,34 @@ Xamarin.Android
 Xamarin.Android provides open-source bindings of the Android SDK for use with
 .NET managed languages such as C#.
 
-# Build Configuration
+# Configuration.Overrides.props
+
+The Xamarin.Android build is heavily dependent on MSBuild, with the *intention*
+that it should (eventually?) be possible to build the project simply by
+checking out the repo, loading `Xamarin.Android.sln` into an IDE, and Building
+the solution. (This isn't currently possible, and may never be, but it's
+the *vision*.)
+
+However, some properties may need to be altered in order to suit your
+requirements, such as the location of a cache directory to store
+the Android SDK and NDK.
+
+To modify the build process, copy
+[`Configuration.Override.props.in`][Configuration.Override.props.in]
+to `Configuration.Override.props`, and edit the file as appropriate.
+`Configuration.Override.props` is `<Import/>`ed by `Configuration.props`
+and will override any default values specified in `Configuration.props`.
+
+Overridable MSBuild properties include:
+
+* `$(AndroidToolchainCacheDirectory)`: The directory to cache the downloaded
+    Android NDK and SDK files. This value defaults to
+    `$(HOME)\android-archives`.
+* `$(AndroidToolchainDirectory)`: The directory to install the downloaded
+    Android NDK and SDK files. This value defaults to
+    `$(HOME)\android-toolchain`.
+
+# Build Requirements
 
 Building Xamarin.Android requires the Java Development Kit (JDK), several
 pieces of the Android SDK, and the Android NDK.
@@ -17,20 +44,8 @@ The Java Development Kit may be downloaded from the
 To simplify building Xamarin.Android, important pieces of the Android SDK
 and Android NDK will be automatically downloaded and installed from
 Google's website. Downloaded files are cached locally, by default into
-`$(HOME)\android-archives`. The Android NDK and SDK will be installed by
-default into `$(HOME)\android-toolchain`.
-
-These directories may be changed by creating the file
-`Configuration.Override.props` in the toplevel directory and editing
-the MSBuild properties:
-
-* `$(AndroidToolchainCacheDirectory)`: The directory to cache the downloaded
-    Android NDK and SDK files.
-* `$(AndroidToolchainDirectory)`: The directory to install the downloaded
-    Android NDK and SDK files.
-
-The file [Configuration.Override.props.in][Configuration.Override.props.in]
-may be used as a template file for creating `Configuration.Override.props`.
+`$(AndroidToolchainDirectory)`. The Android NDK and SDK will be installed by
+default into `$(AndroidToolchainDirectory)`.
 
 The files that will be downloaded and installed are controlled by
 [build-tools/android-toolchain/android-toolchain.projitems][android-toolchain.projitems]
