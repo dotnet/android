@@ -304,5 +304,10 @@
       <Name>generator</Name>
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
     </ProjectReference>
+    <ProjectReference Include="..\..\external\Java.Interop\tools\jcw-gen\jcw-gen.csproj">
+      <Project>{52C7D9B6-E8C8-47D0-9471-652D278D7D77}</Project>
+      <Name>jcw-gen</Name>
+      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
+    </ProjectReference>
   </ItemGroup>
 </Project>

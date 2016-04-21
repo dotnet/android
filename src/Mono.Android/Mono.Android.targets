@@ -67,8 +67,45 @@
         Command="$(ManagedRuntime) $(Generator) $(_ApiLevel) $(_Out) $(_Codegen) $(_Fixup) $(_Enums1) $(_Enums2) $(_Versions) $(_Annotations) $(_Assembly) $(_TypeMap) $(_Dirs) $(_Api)"
     />
   </Target>
+  <ItemGroup>
+    <_CommonJavaSources Include="java\**\*.java" />
+  </ItemGroup>
+  <Target Name="_GenerateJavaCallableWrappers"
+      AfterTargets="CoreCompile"
+      Inputs="$(OutputPath)$(AssemblyName).dll"
+      Outputs="$(OutputPath)mono.android.jar">
+    <MakeDir Directories="$(IntermediateOutputPath)android-$(AndroidApiLevel).jcw\bin" />
+    <PropertyGroup>
+      <JcwGen>..\..\external\Java.Interop\bin\$(Configuration)\jcw-gen.exe</JcwGen>
+      <_LibDirs>-L "$(OutputPath)" -L "$(OutputPath)..\v1.0\" -L "$(OutputPath)..\v1.0\Facades"</_LibDirs>
+      <_Assembly>"$(OutputPath)$(AssemblyName).dll"</_Assembly>
+      <_Out>-o "$(IntermediateOutputPath)android-$(AndroidApiLevel).jcw\src"</_Out>
+    </PropertyGroup>
+    <Exec
+        Command="$(ManagedRuntime) $(JcwGen) $(_Out) $(_LibDirs) $(_Assembly)"
+    />
+    <ItemGroup>
+      <_JavaSources Include="$(IntermediateOutputPath)android-$(AndroidApiLevel).jcw\src\**\*.java" />
+    </ItemGroup>
+    <WriteLinesToFile
+        File="$(IntermediateOutputPath)android-$(AndroidApiLevel).jcw\classes.txt"
+        Lines="@(_CommonJavaSources);@(_JavaSources)"
+        Overwrite="True"
+    />
+    <PropertyGroup>
+      <_Target>-source 1.6 -target 1.6</_Target>
+      <_D>-d "$(IntermediateOutputPath)android-$(AndroidApiLevel).jcw\bin"</_D>
+      <_AndroidJar>"$(AndroidToolchainDirectory)\sdk\platforms\android-$(AndroidApiLevel)\android.jar"</_AndroidJar>
+    </PropertyGroup>
+    <Exec
+        Command="javac $(_Target) $(_D) -bootclasspath $(_AndroidJar) @$(IntermediateOutputPath)android-$(AndroidApiLevel).jcw\classes.txt"
+    />
+    <Exec
+        Command="jar cf &quot;$(OutputPath)mono.android.jar&quot; -C &quot;$(IntermediateOutputPath)android-$(AndroidApiLevel).jcw\bin&quot; ."
+    />
+  </Target>
   <Target Name="_CleanBinding"
       AfterTargets="Clean">
-    <RemoveDir Directories="$(IntermediateOutputPath)android-$(AndroidApiLevel)" />
+    <RemoveDir Directories="$(IntermediateOutputPath)android-$(AndroidApiLevel);$(IntermediateOutputPath)android-$(AndroidApiLevel).jcw" />
   </Target>
 </Project>
