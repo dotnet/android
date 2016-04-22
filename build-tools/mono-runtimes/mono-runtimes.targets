@@ -16,52 +16,52 @@
   </Target>
   <Target Name="_ConfigureRuntimes"
       Inputs="$(_MonoPath)\configure"
-      Outputs="@(_MonoRuntime->'obj\%(Identity)\.stamp')">
-    <MakeDir Directories="@(_MonoRuntime->'obj\%(Identity)')" />
+      Outputs="@(_MonoRuntime->'$(IntermediateOutputPath)\%(Identity)\.stamp')">
+    <MakeDir Directories="@(_MonoRuntime->'$(IntermediateOutputPath)\%(Identity)')" />
     <Exec
-        Command="..\..\$(_MonoPath)\configure LDFLAGS=&quot;%(_MonoRuntime.LdFlags)&quot; CFLAGS=&quot;%(_MonoRuntime.CFlags)&quot; CXXFLAGS=&quot;%(_MonoRuntime.CxxFlags)&quot; CC=&quot;%(_MonoRuntime.Cc)&quot; CXX=&quot;%(_MonoRuntime.Cxx)&quot; CPP=&quot;%(_MonoRuntime.Cpp)&quot; CXXCPP=&quot;%(_MonoRuntime.CxxCpp)&quot; LD=&quot;%(_MonoRuntime.Ld)&quot; AR=&quot;%(_MonoRuntime.Ar)&quot; AS=&quot;%(_MonoRuntime.As)&quot; RANLIB=&quot;%(_MonoRuntime.RanLib)&quot; STRIP=&quot;%(_MonoRuntime.Strip)&quot; --cache-file=..\%(_MonoRuntime.Identity).config.cache %(_MonoRuntime.ConfigureFlags)"
-        WorkingDirectory="@(_MonoRuntime->'obj\%(Identity)')"
+        Command="..\..\..\$(_MonoPath)\configure LDFLAGS=&quot;%(_MonoRuntime.LdFlags)&quot; CFLAGS=&quot;%(_MonoRuntime.CFlags)&quot; CXXFLAGS=&quot;%(_MonoRuntime.CxxFlags)&quot; CC=&quot;%(_MonoRuntime.Cc)&quot; CXX=&quot;%(_MonoRuntime.Cxx)&quot; CPP=&quot;%(_MonoRuntime.Cpp)&quot; CXXCPP=&quot;%(_MonoRuntime.CxxCpp)&quot; LD=&quot;%(_MonoRuntime.Ld)&quot; AR=&quot;%(_MonoRuntime.Ar)&quot; AS=&quot;%(_MonoRuntime.As)&quot; RANLIB=&quot;%(_MonoRuntime.RanLib)&quot; STRIP=&quot;%(_MonoRuntime.Strip)&quot; --cache-file=..\%(_MonoRuntime.Identity).config.cache %(_MonoRuntime.ConfigureFlags)"
+        WorkingDirectory="@(_MonoRuntime->'$(IntermediateOutputPath)\%(Identity)')"
     />
     <Touch
-        Files="@(_MonoRuntime->'obj\%(Identity)\.stamp')"
+        Files="@(_MonoRuntime->'$(IntermediateOutputPath)\%(Identity)\.stamp')"
         AlwaysCreate="True"
     />
   </Target>
   <Target Name="_BuildRuntimes"
-      Inputs="@(_MonoRuntime->'obj\%(Identity)\.stamp')"
-      Outputs="@(_MonoRuntime->'obj\%(Identity)\mono\mini\.libs\%(OutputRuntime)');@(_MonoRuntime->'obj\%(Identity)\mono\profiler\.libs\%(OutputProfiler)');@(_MonoRuntime->'obj\%(Identity)\support\.libs\%(OutputMonoPosixHelper)')">
+      Inputs="@(_MonoRuntime->'$(IntermediateOutputPath)\%(Identity)\.stamp')"
+      Outputs="@(_MonoRuntime->'$(IntermediateOutputPath)\%(Identity)\mono\mini\.libs\%(OutputRuntime)');@(_MonoRuntime->'obj\%(Identity)\mono\profiler\.libs\%(OutputProfiler)');@(_MonoRuntime->'obj\%(Identity)\support\.libs\%(OutputMonoPosixHelper)')">
     <Exec
         Command="make $(MAKEFLAGS) # %(_MonoRuntime.Identity)"
-        WorkingDirectory="@(_MonoRuntime->'obj\%(Identity)')"
+        WorkingDirectory="@(_MonoRuntime->'$(IntermediateOutputPath)\%(Identity)')"
     />
   </Target>
   <Target Name="_InstallRuntimes"
-      Inputs="@(_MonoRuntime->'obj\%(Identity)\mono\mini\.libs\%(OutputRuntime)');@(_MonoRuntime->'obj\%(Identity)\mono\profiler\.libs\%(OutputProfiler)');@(_MonoRuntime->'obj\%(Identity)\support\.libs\%(OutputMonoPosixHelper)')"
+      Inputs="@(_MonoRuntime->'$(IntermediateOutputPath)\%(Identity)\mono\mini\.libs\%(OutputRuntime)');@(_MonoRuntime->'$(IntermediateOutputPath)\%(Identity)\mono\profiler\.libs\%(OutputProfiler)');@(_MonoRuntime->'$(IntermediateOutputPath)\%(Identity)\support\.libs\%(OutputMonoPosixHelper)')"
       Outputs="@(_MonoRuntime->'$(OutputPath)\lib\xbuild\Xamarin\Android\lib\%(Identity)\%(OutputRuntime)');@(_MonoRuntime->'$(OutputPath)\lib\xbuild\Xamarin\Android\lib\%(Identity)\%(OutputProfiler)');@(_MonoRuntime->'$(OutputPath)\lib\xbuild\Xamarin\Android\lib\%(Identity)\%(OutputMonoPosixHelper)')">
     <MakeDir Directories="@(_MonoRuntime->'$(OutputPath)\lib\xbuild\Xamarin\Android\lib\%(Identity)')" />
     <Copy
-        SourceFiles="@(_MonoRuntime->'obj\%(Identity)\mono\mini\.libs\%(OutputRuntime)')"
+        SourceFiles="@(_MonoRuntime->'$(IntermediateOutputPath)\%(Identity)\mono\mini\.libs\%(OutputRuntime)')"
         DestinationFiles="@(_MonoRuntime->'$(OutputPath)\lib\xbuild\Xamarin\Android\lib\%(Identity)\%(OutputRuntime)')"
     />
     <Touch
         Files="@(_MonoRuntime->'$(OutputPath)\lib\xbuild\Xamarin\Android\lib\%(Identity)\%(OutputRuntime)')"
     />
     <Copy
-        SourceFiles="@(_MonoRuntime->'obj\%(Identity)\mono\mini\.libs\%(OutputRuntime)')"
+        SourceFiles="@(_MonoRuntime->'$(IntermediateOutputPath)\%(Identity)\mono\mini\.libs\%(OutputRuntime)')"
         DestinationFiles="@(_MonoRuntime->'$(OutputPath)\lib\xbuild\Xamarin\Android\lib\%(Identity)\%(OutputRuntime)-unstripped')"
     />
     <Exec
         Command="%(_MonoRuntime.Strip) &quot;@(_MonoRuntime->'$(OutputPath)\lib\xbuild\Xamarin\Android\lib\%(Identity)\%(OutputRuntime)')&quot;"
     />
     <Copy
-        SourceFiles="@(_MonoRuntime->'obj\%(Identity)\mono\profiler\.libs\%(OutputProfiler)')"
+        SourceFiles="@(_MonoRuntime->'$(IntermediateOutputPath)\%(Identity)\mono\profiler\.libs\%(OutputProfiler)')"
         DestinationFiles="@(_MonoRuntime->'$(OutputPath)\lib\xbuild\Xamarin\Android\lib\%(Identity)\%(OutputProfiler)')"
     />
     <Touch
         Files="@(_MonoRuntime->'$(OutputPath)\lib\xbuild\Xamarin\Android\lib\%(Identity)\%(OutputProfiler)')"
     />
     <Copy
-        SourceFiles="@(_MonoRuntime->'obj\%(Identity)\support\.libs\%(OutputMonoPosixHelper)')"
+        SourceFiles="@(_MonoRuntime->'$(IntermediateOutputPath)\%(Identity)\support\.libs\%(OutputMonoPosixHelper)')"
         DestinationFiles="@(_MonoRuntime->'$(OutputPath)\lib\xbuild\Xamarin\Android\lib\%(Identity)\%(OutputMonoPosixHelper)')"
     />
     <Touch
@@ -88,5 +88,9 @@
     <Touch
         Files="$(OutputPath)\lib\xbuild-frameworks\MonoAndroid\v1.0\mscorlib.dll"
     />
+  </Target>
+  <Target Name="_CleanRuntimes"
+      AfterTargets="Clean">
+    <RemoveDir Directories="@(_MonoRuntime->'$(IntermediateOutputPath)\%(Identity)')" />
   </Target>
 </Project>
