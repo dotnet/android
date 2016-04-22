@@ -22,9 +22,9 @@
     <_MonoRuntime Include="host">
       <Ar>ar</Ar>
       <As>as</As>
-      <Cc>clang</Cc>
+      <Cc>$(HostCc)</Cc>
       <CFlags>$(_CommonCFlags) -mmacosx-version-min=10.9</CFlags>
-      <Cxx>clang++</Cxx>
+      <Cxx>$(HostCxx)</Cxx>
       <CxxCpp>cpp</CxxCpp>
       <CxxFlags></CxxFlags>
       <Ld>ld</Ld>

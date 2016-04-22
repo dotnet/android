@@ -33,6 +33,8 @@ Overridable MSBuild properties include:
 * `$(AndroidToolchainDirectory)`: The directory to install the downloaded
     Android NDK and SDK files. This value defaults to
     `$(HOME)\android-toolchain`.
+* `$(HostCc)`, `$(HostCxx)`: The C and C++ compilers to use to generate
+    host-native binaries.
 
 # Build Requirements
 

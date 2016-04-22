@@ -6,6 +6,10 @@
     <!-- The Xamarin.Android $(TargetFrameworkVersion) value that corresponds to $(AndroidApiLevel) -->
     <AndroidFrameworkVersion>v6.0</AndroidFrameworkVersion>
 
+    <!-- C and C++ compilers to emit host-native binaries -->
+    <HostCc>clang</HostCc>
+    <HostCxx>clang++</HostCxx>
+
     <!-- These must be FULL PATHS -->
     <AndroidToolchainCacheDirectory>$(HOME)\android-archives</AndroidToolchainCacheDirectory>
     <AndroidToolchainDirectory>$(HOME)\android-toolchain</AndroidToolchainDirectory>
