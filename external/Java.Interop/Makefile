@@ -2,6 +2,13 @@ OS           ?= $(shell uname)
 
 CONFIGURATION = Debug
 
+ifeq ($(OS),Darwin)
+NATIVE_EXT = .dylib
+endif
+ifeq ($(OS),Linux)
+NATIVE_EXT = .so
+endif
+
 RUNTIME       := $(shell if [ -f `which mono64` ] ; then echo mono64 ; else echo mono; fi) --debug=casts
 
 XA_CONFIGURATION  = XAIntegrationDebug
@@ -13,7 +20,7 @@ PACKAGES = \
 	packages/NUnit.Runners.2.6.3/NUnit.Runners.2.6.3.nupkg
 
 DEPENDENCIES = \
-	bin/Test$(CONFIGURATION)/libNativeTiming.dylib
+	bin/Test$(CONFIGURATION)/libNativeTiming$(NATIVE_EXT)
 
 XA_INTEGRATION_OUTPUTS = \
 	bin/$(XA_CONFIGURATION)/Java.Interop.dll
@@ -65,14 +72,8 @@ lib/gendarme-2.10/gendarme.exe:
 	curl -o lib/gendarme-2.10/gendarme-2.10-bin.zip $(GENDARME_URL)
 	(cd lib/gendarme-2.10 ; unzip gendarme-2.10-bin.zip)
 
-ifeq ($(OS),Darwin)
-JAVA_INTEROP_LIB    = libjava-interop.dylib
-NATIVE_TIMING_LIB   = libNativeTiming.dylib
-endif
-ifeq ($(OS),Linux)
-JAVA_INTEROP_LIB    = libjava-interop.so
-NATIVE_TIMING_LIB   = libNativeTiming.so
-endif
+JAVA_INTEROP_LIB    = libjava-interop$(NATIVE_EXT)
+NATIVE_TIMING_LIB   = libNativeTiming$(NATIVE_EXT)
 
 bin/Test$(CONFIGURATION)/$(NATIVE_TIMING_LIB): tests/NativeTiming/timing.c $(wildcard $(JI_JDK_INCLUDE_PATHS)/jni.h)
 	mkdir -p `dirname "$@"`
