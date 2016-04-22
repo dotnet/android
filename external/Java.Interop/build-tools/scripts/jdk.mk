@@ -98,7 +98,7 @@ _LINUX_JAVA_JNI_OS_INCLUDE_DIR    = $(DESKTOP_JAVA_JNI_INCLUDE_DIR)/linux
 
 
 ifeq ($(wildcard $(DESKTOP_JAVA_INCLUDE_DIRS)),)
-JI_JDK_INCLUDE_PATHS  = $(wildcard $(JAVA_HOME)/include)
+JI_JDK_INCLUDE_PATHS  = $(wildcard $(JAVA_HOME)/include) $(wildcard $(JAVA_HOME)/include/linux)
 endif
 ifeq ($(wildcard $(JI_JDK_INCLUDE_PATHS)),)
 LATEST_JDK            := $(shell ls -dtr $(_LINUX_JAVA_FALLBACK_DIRS) | sort | tail -1)
