@@ -71,15 +71,16 @@
     <_CommonJavaSources Include="java\**\*.java" />
   </ItemGroup>
   <Target Name="_GenerateJavaCallableWrappers"
-      AfterTargets="CoreCompile"
+      AfterTargets="CoreBuild"
       Inputs="$(OutputPath)$(AssemblyName).dll"
       Outputs="$(OutputPath)mono.android.jar">
     <MakeDir Directories="$(IntermediateOutputPath)android-$(AndroidApiLevel).jcw\bin" />
     <PropertyGroup>
+      <OutputPathAbs>$(MSBuildProjectDirectory)\$(OutputPath)</OutputPathAbs>
       <JcwGen>..\..\external\Java.Interop\bin\$(Configuration)\jcw-gen.exe</JcwGen>
-      <_LibDirs>-L "$(OutputPath)" -L "$(OutputPath)..\v1.0\" -L "$(OutputPath)..\v1.0\Facades"</_LibDirs>
-      <_Assembly>"$(OutputPath)$(AssemblyName).dll"</_Assembly>
-      <_Out>-o "$(IntermediateOutputPath)android-$(AndroidApiLevel).jcw\src"</_Out>
+      <_LibDirs>-L "$(OutputPathAbs)" -L "$(OutputPathAbs)..\v1.0\" -L "$(OutputPathAbs)..\v1.0\Facades"</_LibDirs>
+      <_Assembly>"$(OutputPathAbs)$(AssemblyName).dll"</_Assembly>
+      <_Out>-o "$(MSBuildProjectDirectory)\$(IntermediateOutputPath)android-$(AndroidApiLevel).jcw\src"</_Out>
     </PropertyGroup>
     <Exec
         Command="$(ManagedRuntime) $(JcwGen) $(_Out) $(_LibDirs) $(_Assembly)"
