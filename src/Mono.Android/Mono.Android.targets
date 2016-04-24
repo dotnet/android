@@ -66,6 +66,18 @@
     <Exec
         Command="$(ManagedRuntime) $(Generator) $(_ApiLevel) $(_Out) $(_Codegen) $(_Fixup) $(_Enums1) $(_Enums2) $(_Versions) $(_Annotations) $(_Assembly) $(_TypeMap) $(_Dirs) $(_Api)"
     />
+    <ItemGroup>
+      <Compile Include="$(IntermediateOutputPath)android-$(AndroidApiLevel)\**\*.cs" />
+    </ItemGroup>
+    <XmlPeek
+        Namespaces="&lt;Namespace Prefix='msbuild' Uri='http://schemas.microsoft.com/developer/msbuild/2003' /&gt;"
+        XmlInputPath="$(IntermediateOutputPath)android-$(AndroidApiLevel)\Mono.Android.projitems" 
+        Query="/msbuild:Project/msbuild:PropertyGroup/msbuild:DefineConstants/text()" >
+      <Output TaskParameter="Result" PropertyName="_GeneratedDefineConstants" />
+    </XmlPeek>
+    <PropertyGroup>
+      <DefineConstants>$(DefineConstants);$([System.String]::Copy('$(_GeneratedDefineConstants)').Replace ('%24(DefineConstants);', ''))</DefineConstants>
+    </PropertyGroup>
   </Target>
   <ItemGroup>
     <_CommonJavaSources Include="java\**\*.java" />
