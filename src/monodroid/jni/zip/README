@@ -1,0 +1,17 @@
+The files in this directory come from the MiniZip unzip101e.zip
+distribution, the original distribution can be found here:
+
+	http://www.winimage.com/zLibDll/minizip.html
+
+	"The Zlib library allows to deflate compressed files and to
+	create gzip (.gz) files. Zlib is free software and small.
+
+	An archive in ZIP format can contain several files compressed
+	with this method, while a .gz archive can containt only one
+	file. It is a very popular format, that is why I have written
+	a package for reading files compressed within a Zip archive."
+
+There is no README included with the original minizip library.
+
+This is a subset of the minizip library, we only use the unzip
+capability and do not ship the actual command line tools (zip, unzip).

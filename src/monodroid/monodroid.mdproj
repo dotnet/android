@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ItemType>GenericProject</ItemType>
+    <ProjectGuid>{53EE4C57-1C03-405A-8243-8DA539546C88}</ProjectGuid>
+  </PropertyGroup>
+  <Import Project="..\..\Configuration.props" />
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <OutputPath>..\..\bin\Debug\lib\xbuild\Xamarin\Android\lib</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <OutputPath>..\..\bin\Release\lib\xbuild\Xamarin\Android\lib</OutputPath>
+  </PropertyGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.Common.targets" />
+  <PropertyGroup>
+    <BuildDependsOn>
+      ResolveReferences;
+      _BuildRuntimes;
+    </BuildDependsOn>
+  </PropertyGroup>
+  <Import Project="monodroid.targets" />
+  <ItemGroup>
+    <ProjectReference Include="..\..\build-tools\android-toolchain\android-toolchain.mdproj">
+      <Project>{8FF78EB6-6FC8-46A7-8A15-EBBA9045C5FA}</Project>
+      <Name>android-toolchain</Name>
+      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
+    </ProjectReference>
+  </ItemGroup>
+</Project>
