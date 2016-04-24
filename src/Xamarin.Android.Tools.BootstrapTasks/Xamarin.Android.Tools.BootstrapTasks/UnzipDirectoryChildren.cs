@@ -109,8 +109,11 @@ namespace Xamarin.Android.Tools.BootstrapTasks {
 						: Path.Combine (destinationFolder, relativeDestDir);
 					Directory.CreateDirectory (destDir);
 					var dest    = Path.Combine (destDir, name);
-					Log.LogMessage (MessageImportance.Low, "mv '{0}' '{1}'", fse, dest);
-					File.Move (fse, dest);
+					Log.LogMessage (MessageImportance.Low, $"mv '{fse}' '{dest}'");
+					if (Directory.Exists (fse))
+						Process.Start ("/bin/mv", $@"""{fse}"" ""{dest}""").WaitForExit ();
+					else
+						File.Move (fse, dest);
 				}
 			}
 		}
