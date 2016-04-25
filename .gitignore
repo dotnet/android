@@ -3,3 +3,4 @@ bin
 Configuration.Override.props
 obj
 packages
+.DS_Store

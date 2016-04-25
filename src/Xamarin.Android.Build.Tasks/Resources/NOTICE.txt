@@ -1,0 +1,4 @@
+Xamarin built applications contain open source software.
+For detailed attribution and licensing notices, please visit:
+
+	http://xamarin.com/mobile-licensing
