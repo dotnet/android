@@ -28,14 +28,14 @@
     />
   </Target>
   <Target Name="_BuildRuntimes"
-      Inputs="@(_MonoRuntime->'$(IntermediateOutputPath)\%(Identity)\.stamp')"
-      Outputs="@(_MonoRuntime->'$(IntermediateOutputPath)\%(Identity)\mono\mini\.libs\%(OutputRuntime)');@(_MonoRuntime->'obj\%(Identity)\mono\profiler\.libs\%(OutputProfiler)');@(_MonoRuntime->'obj\%(Identity)\support\.libs\%(OutputMonoPosixHelper)')">
+      Inputs="@(_MonoRuntime->'$(IntermediateOutputPath)%(Identity)\.stamp')"
+      Outputs="@(_MonoRuntime->'$(IntermediateOutputPath)%(Identity)\mono\mini\.libs\%(OutputRuntime)');@(_MonoRuntime->'$(IntermediateOutputPath)%(Identity)\mono\profiler\.libs\%(OutputProfiler)');@(_MonoRuntime->'$(IntermediateOutputPath)%(Identity)\support\.libs\%(OutputMonoPosixHelper)')">
     <Exec
         Command="make $(MAKEFLAGS) # %(_MonoRuntime.Identity)"
         WorkingDirectory="@(_MonoRuntime->'$(IntermediateOutputPath)\%(Identity)')"
     />
     <Touch
-        Files="@(_MonoRuntime->'$(IntermediateOutputPath)\%(Identity)\mono\mini\.libs\%(OutputRuntime)');@(_MonoRuntime->'obj\%(Identity)\mono\profiler\.libs\%(OutputProfiler)');@(_MonoRuntime->'obj\%(Identity)\support\.libs\%(OutputMonoPosixHelper)')"
+        Files="@(_MonoRuntime->'$(IntermediateOutputPath)\%(Identity)\mono\mini\.libs\%(OutputRuntime)');@(_MonoRuntime->'$(IntermediateOutputPath)%(Identity)\mono\profiler\.libs\%(OutputProfiler)');@(_MonoRuntime->'$(IntermediateOutputPath)%(Identity)\support\.libs\%(OutputMonoPosixHelper)')"
     />
   </Target>
   <Target Name="_InstallRuntimes"
