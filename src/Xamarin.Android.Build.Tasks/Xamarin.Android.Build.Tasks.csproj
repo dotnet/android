@@ -1,0 +1,638 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\..\external\Java.Interop\src\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems" Label="Shared" Condition="Exists('..\..\external\Java.Interop\src\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems')" />
+  <Import Project="..\..\external\Java.Interop\src\Java.Interop.Tools.TypeNameMappings\Java.Interop.Tools.TypeNameMappings.projitems" Label="Shared" Condition="Exists('..\..\external\Java.Interop\src\Java.Interop.Tools.TypeNameMappings\Java.Interop.Tools.TypeNameMappings.projitems')" />
+  <Import Project="..\..\Configuration.props" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{3F1F2F50-AF1A-4A5A-BEDB-193372F068D7}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Xamarin.Android.Tasks</RootNamespace>
+    <AssemblyName>Xamarin.Android.Build.Tasks</AssemblyName>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>True</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>False</Optimize>
+    <OutputPath>..\..\bin\$(Configuration)\lib\xbuild\Xamarin\Android</OutputPath>
+    <DefineConstants Condition="'$(MonoDroidTiming)' == ''">TRACE;DEBUG;HAVE_CECIL;MSBUILD;JCW_ONLY_TYPE_NAMES</DefineConstants>
+    <DefineConstants Condition="'$(MonoDroidTiming)' == ''">TRACE;DEBUG;HAVE_CECIL;MSBUILD</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType></DebugType>
+    <Optimize>True</Optimize>
+    <OutputPath>..\..\bin\$(Configuration)\lib\xbuild\Xamarin\Android</OutputPath>
+    <DefineConstants>TRACE;HAVE_CECIL;MSBUILD;JCW_ONLY_TYPE_NAMES</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <DefineConstants Condition="'$(__XA_NO_PREVIEW_L_SUPPORT__)' != ''">$(DefineConstants);XA_NO_PREVIEW_L_SUPPORT</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.Build.Framework" />
+    <Reference Include="Microsoft.Build.Utilities.v4.0" />
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Xml" />
+    <Reference Include="Mono.Cecil">
+      <HintPath>..\..\packages\Mono.Cecil.0.9.6.1\lib\net45\Mono.Cecil.dll</HintPath>
+    </Reference>
+    <Reference Include="Mono.Cecil.Mdb">
+      <HintPath>..\..\packages\Mono.Cecil.0.9.6.1\lib\net45\Mono.Cecil.Mdb.dll</HintPath>
+    </Reference>
+    <Reference Include="Mono.Cecil.Pdb">
+      <HintPath>..\..\packages\Mono.Cecil.0.9.6.1\lib\net45\Mono.Cecil.Pdb.dll</HintPath>
+    </Reference>
+    <Reference Include="Mono.Cecil.Rocks">
+      <HintPath>..\..\packages\Mono.Cecil.0.9.6.1\lib\net45\Mono.Cecil.Rocks.dll</HintPath>
+    </Reference>
+    <Reference Include="Irony">
+      <HintPath>..\..\packages\Irony.0.9.1\lib\net40\Irony.dll</HintPath>
+    </Reference>
+    <Reference Include="Ionic.Zip">
+      <HintPath>..\..\packages\Unofficial.Ionic.Zip.1.9.1.8\lib\Ionic.Zip.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="FSharp.Compiler.CodeDom">
+      <HintPath>..\..\packages\FSharp.Compiler.CodeDom.1.0.0.1\lib\net40\FSharp.Compiler.CodeDom.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Linker\LinkModes.cs" />
+    <Compile Include="Generator\Generator.cs" />
+    <Compile Include="Linker\MonoDroid.Tuner\FixAbstractMethodsStep.cs" />
+    <Compile Include="Linker\MonoDroid.Tuner\Linker.cs" />
+    <Compile Include="Linker\MonoDroid.Tuner\LinkerOptions.cs" />
+    <Compile Include="Linker\MonoDroid.Tuner\MonoDroidMarkStep.cs" />
+    <Compile Include="Tasks\Aapt.cs" />
+    <Compile Include="Tasks\AndroidZipAlign.cs" />
+    <Compile Include="Tasks\BuildApk.cs" />
+    <Compile Include="Tasks\CilStrip.cs" />
+    <Compile Include="Tasks\ConvertDebuggingFiles.cs" />
+    <Compile Include="Tasks\CopyMdbFiles.cs" />
+    <Compile Include="Tasks\Generator.cs" />
+    <Compile Include="Tasks\JarToXml.cs" />
+    <Compile Include="Tasks\GetJavaPlatformJar.cs" />
+    <Compile Include="Tasks\GetFilesThatExist.cs" />
+    <Compile Include="Tasks\RemoveRegisterAttribute.cs" />
+    <Compile Include="Tasks\GetMonoPlatformJar.cs" />
+    <Compile Include="Tasks\GeneratePackageManagerJava.cs" />
+    <Compile Include="Tasks\GenerateJavaStubs.cs" />
+    <Compile Include="Tasks\Javac.cs" />
+    <Compile Include="Tasks\LinkAssemblies.cs" />
+    <Compile Include="Tasks\CopyResource.cs" />
+    <Compile Include="Tasks\ResolveAssemblies.cs" />
+    <Compile Include="Tasks\GetAppSettingsDirectory.cs" />
+    <Compile Include="Tasks\CopyIfChanged.cs" />
+    <Compile Include="Tasks\CreateResgenManifest.cs" />
+    <Compile Include="Tasks\CreateTemporaryDirectory.cs" />
+    <Compile Include="Tasks\GenerateResourceDesigner.cs" />
+    <Compile Include="Tasks\GetAndroidDefineConstants.cs" />
+    <Compile Include="Tasks\GetAndroidPackageName.cs" />
+    <Compile Include="Tasks\AndroidUpdateResDir.cs" />
+    <Compile Include="Tasks\AndroidSignPackage.cs" />
+    <Compile Include="Tasks\RemoveDirFixed.cs" />
+    <Compile Include="Tasks\ResolveSdksTask.cs" />
+    <Compile Include="Tasks\CompileToDalvik.cs" />
+    <Compile Include="Tasks\AndroidToolTask.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Mono.Android\ApplicationAttribute.Partial.cs" />
+    <Compile Include="Mono.Android\BroadcastReceiverAttribute.Partial.cs" />
+    <Compile Include="Mono.Android\ActivityAttribute.Partial.cs" />
+    <Compile Include="Mono.Android\ContentProviderAttribute.Partial.cs" />
+    <Compile Include="Utilities\AndroidAddOnManifest.cs" />
+    <Compile Include="Mono.Android\IntentFilterAttribute.Partial.cs" />
+    <Compile Include="Mono.Android\GrantUriPermissionAttribute.Partial.cs" />
+    <Compile Include="Utilities\InvalidActivityNameException.cs" />
+    <Compile Include="Utilities\JavaResourceParser.cs" />
+    <Compile Include="Utilities\ManifestDocumentElement.cs" />
+    <Compile Include="Utilities\ManifestDocument.cs" />
+    <Compile Include="Mono.Android\MetaDataAttribute.Partial.cs" />
+    <Compile Include="Utilities\MonoAndroidHelper.cs" />
+    <None Include="Linker\MonoDroid.Tuner\PreserveCode.cs" />
+    <Compile Include="Linker\MonoDroid.Tuner\PreserveTypeConverters.cs" />
+    <Compile Include="Linker\Mobile.Tuner\MobileProfile.cs" />
+    <Compile Include="Linker\MonoDroid.Tuner\ApplyPreserveAttribute.cs" />
+    <Compile Include="Linker\MonoDroid.Tuner\Extensions.cs" />
+    <Compile Include="Linker\MonoDroid.Tuner\MarkJavaObjects.cs" />
+    <Compile Include="Linker\MonoDroid.Tuner\MonoDroidProfile.cs" />
+    <Compile Include="Linker\MonoDroid.Tuner\PreserveApplications.cs" />
+    <Compile Include="Linker\MonoDroid.Tuner\PreserveJavaExceptions.cs" />
+    <Compile Include="Linker\MonoDroid.Tuner\PreserveJavaTypeRegistrations.cs" />
+    <Compile Include="Linker\MonoDroid.Tuner\RemoveAttributes.cs" />
+    <Compile Include="Utilities\MSBuildExtensions.cs" />
+    <Compile Include="Mono.Android\ServiceAttribute.Partial.cs" />
+    <Compile Include="..\..\..\mono\mcs\tools\tuner\Mono.Tuner\AdjustVisibility.cs">
+      <Link>Linker\Mono.Tuner\AdjustVisibility.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\mono\mcs\tools\tuner\Mono.Tuner\CecilRocks.cs">
+      <Link>Linker\Mono.Tuner\CecilRocks.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\mono\mcs\tools\tuner\Mono.Tuner\CheckVisibility.cs">
+      <Link>Linker\Mono.Tuner\CheckVisibility.cs</Link>
+    </Compile>
+    <Compile Include="Mono.Android\UsesLibraryAttribute.Partial.cs" />
+    <Compile Include="Mono.Android\UsesPermissionAttribute.Partial.cs" />
+    <Compile Include="Linker\MonoDroid.Tuner\PreserveCode.cs" />
+    <None Include="Xamarin.Android.Bindings.targets">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="Xamarin.Android.VisualBasic.targets">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <Compile Include="Mono.Android\InstrumentationAttribute.Partial.cs" />
+    <Compile Include="Tasks\CreateLibraryResourceArchive.cs" />
+    <Compile Include="Tasks\ResolveLibraryProjectImports.cs" />
+    <Compile Include="Linker\MonoDroid.Tuner\PreserveExportedTypes.cs" />
+    <Compile Include="Linker\MonoDroid.Tuner\RemoveLibraryResourceZip.cs" />
+    <Compile Include="Linker\MonoDroid.Tuner\PreserveDynamicTypes.cs" />
+    <Compile Include="Linker\MonoDroid.Tuner\PreserveLinqExpressions.cs" />
+    <Compile Include="Tasks\NdkUtils.cs" />
+    <Compile Include="Tasks\MakeBundleNativeCodeExternal.cs" />
+    <Compile Include="Tasks\GetExtraPackages.cs" />
+    <Compile Include="Tasks\CopyGeneratedJavaResourceClasses.cs" />
+    <Compile Include="Tasks\GenerateManagedAidlProxies.cs" />
+    <Compile Include="Utilities\ResourceDesignerImportGenerator.cs" />
+    <Compile Include="Tasks\CreateManagedLibraryResourceArchive.cs" />
+    <Compile Include="Tasks\CheckForRemovedItems.cs" />
+    <Compile Include="Tasks\StripEmbeddedLibraries.cs" />
+    <None Include="Xamarin.Android.Common.targets">
+      <SubType>Designer</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Xamarin.Android.Common.props">
+      <SubType>Designer</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Xamarin.Android.PCLSupport.targets">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Xamarin.Android.CSharp.targets">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Novell.MonoDroid.Common.targets" />
+    <None Include="Novell.MonoDroid.CSharp.targets" />
+    <Compile Include="Tasks\CheckProjectItems.cs" />
+    <Compile Include="Tasks\CheckDuplicateJavaLibraries.cs" />
+    <Compile Include="Mono.Android\PermissionAttribute.Partial.cs" />
+    <Compile Include="Mono.Android\PermissionGroupAttribute.Partial.cs" />
+    <Compile Include="Mono.Android\PermissionTreeAttribute.Partial.cs" />
+    <Compile Include="Mono.Android\UsesFeatureAttribute.Partial.cs" />
+    <Compile Include="Mono.Android\SupportsGLTextureAttribute.Partial.cs" />
+    <Compile Include="Tasks\CreateNativeLibraryArchive.cs" />
+    <Compile Include="Tasks\GetImportedLibraries.cs" />
+    <Compile Include="Tasks\CopyConfigFiles.cs" />
+    <None Include="Xamarin.Android.FSharp.targets">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="MonoDroid.FSharp.targets" />
+    <Compile Include="Tasks\GetAdditionalResourcesFromAssemblies.cs" />
+    <Compile Include="Tasks\CreateAndroidResourceStamp.cs" />
+    <Compile Include="Tasks\CollectLibraryAssets.cs" />
+    <Compile Include="Tasks\ImportJavaDoc.cs" />
+    <Compile Include="Tasks\MDoc.cs" />
+    <Compile Include="Tasks\GetAddOnPlatformLibraries.cs" />
+    <Compile Include="Tasks\ParseAndroidWearProjectAndManifest.cs" />
+    <Compile Include="Tasks\PrepareWearApplicationFiles.cs" />
+    <Compile Include="Tasks\CopyAndConvertResources.cs" />
+    <Compile Include="Tasks\Crunch.cs" />
+    <Compile Include="Tasks\ConvertResourcesCases.cs" />
+    <Compile Include="Tasks\Aot.cs" />
+    <Compile Include="Tasks\Proguard.cs" />
+    <Compile Include="Linker\MonoDroid.Tuner\GenerateProguardConfiguration.cs" />
+    <Compile Include="Tasks\ClassParse.cs" />
+    <Compile Include="Tasks\AdjustJavacVersionArguments.cs" />
+    <Compile Include="Tasks\LogErrorsForFiles.cs" />
+    <Compile Include="Tasks\CreateAdditionalLibraryResourceCache.cs" />
+    <Compile Include="Tasks\CalculateAdditionalResourceCacheDirectories.cs" />
+    <Compile Include="Tasks\KeyTool.cs" />
+    <Compile Include="Tasks\AndroidCreateDebugKey.cs" />
+    <Compile Include="Tasks\LogWarningsForFiles.cs" />
+    <Compile Include="Tasks\DetermineJavaLibrariesToCompile.cs" />
+    <Compile Include="Tasks\CreateMultiDexMainDexClassList.cs" />
+    <Compile Include="Tasks\ReadAdditionalResourcesFromAssemblyCache.cs" />
+    <Compile Include="Tasks\JavaToolTask.cs" />
+    <Compile Include="..\..\..\mono\mcs\tools\pdb2mdb\BitAccess.cs">
+      <Link>pdb2mdb\BitAccess.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\mono\mcs\tools\pdb2mdb\BitSet.cs">
+      <Link>pdb2mdb\BitSet.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\mono\mcs\tools\pdb2mdb\CvInfo.cs">
+      <Link>pdb2mdb\CvInfo.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\mono\mcs\tools\pdb2mdb\DataStream.cs">
+      <Link>pdb2mdb\DataStream.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\mono\mcs\tools\pdb2mdb\DbiDbgHdr.cs">
+      <Link>pdb2mdb\DbiDbgHdr.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\mono\mcs\tools\pdb2mdb\DbiHeader.cs">
+      <Link>pdb2mdb\DbiHeader.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\mono\mcs\tools\pdb2mdb\DbiModuleInfo.cs">
+      <Link>pdb2mdb\DbiModuleInfo.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\mono\mcs\tools\pdb2mdb\DbiSecCon.cs">
+      <Link>pdb2mdb\DbiSecCon.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\mono\mcs\tools\pdb2mdb\Driver.cs">
+      <Link>pdb2mdb\Driver.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\mono\mcs\tools\pdb2mdb\IntHashTable.cs">
+      <Link>pdb2mdb\IntHashTable.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\mono\mcs\tools\pdb2mdb\Interfaces.cs">
+      <Link>pdb2mdb\Interfaces.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\mono\mcs\tools\pdb2mdb\MsfDirectory.cs">
+      <Link>pdb2mdb\MsfDirectory.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\mono\mcs\tools\pdb2mdb\PdbConstant.cs">
+      <Link>pdb2mdb\PdbConstant.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\mono\mcs\tools\pdb2mdb\PdbDebugException.cs">
+      <Link>pdb2mdb\PdbDebugException.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\mono\mcs\tools\pdb2mdb\PdbException.cs">
+      <Link>pdb2mdb\PdbException.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\mono\mcs\tools\pdb2mdb\PdbFile.cs">
+      <Link>pdb2mdb\PdbFile.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\mono\mcs\tools\pdb2mdb\PdbFileHeader.cs">
+      <Link>pdb2mdb\PdbFileHeader.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\mono\mcs\tools\pdb2mdb\PdbFunction.cs">
+      <Link>pdb2mdb\PdbFunction.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\mono\mcs\tools\pdb2mdb\PdbLine.cs">
+      <Link>pdb2mdb\PdbLine.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\mono\mcs\tools\pdb2mdb\PdbLines.cs">
+      <Link>pdb2mdb\PdbLines.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\mono\mcs\tools\pdb2mdb\PdbReader.cs">
+      <Link>pdb2mdb\PdbReader.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\mono\mcs\tools\pdb2mdb\PdbScope.cs">
+      <Link>pdb2mdb\PdbScope.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\mono\mcs\tools\pdb2mdb\PdbSlot.cs">
+      <Link>pdb2mdb\PdbSlot.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\mono\mcs\tools\pdb2mdb\PdbSource.cs">
+      <Link>pdb2mdb\PdbSource.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\mono\mcs\tools\pdb2mdb\PdbWriter.cs">
+      <Link>pdb2mdb\PdbWriter.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\mono\mcs\tools\pdb2mdb\SourceLocationProvider.cs">
+      <Link>pdb2mdb\SourceLocationProvider.cs</Link>
+    </Compile>
+    <Compile Include="Tasks\Lint.cs" />
+    <None Include="packages.config" />
+    <Compile Include="Tasks\ReadResolvedSdksCache.cs" />
+    <Compile Include="Tasks\ReadLibraryProjectImportsCache.cs" />
+    <Compile Include="Tasks\ReadImportedLibrariesCache.cs" />
+    <Compile Include="Utilities\XDocumentExtensions.cs" />
+    <Compile Include="Linker\MonoDroid.Tuner\PreserveRuntimeSerialization.cs" />
+    <None Include="Xamarin.Android.Analysis.targets">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <Compile Include="..\..\..\mono\mcs\tools\linker\Mono.Linker\Annotations.cs">
+      <Link>Linker\Mono.Linker\Annotations.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\mono\mcs\tools\linker\Mono.Linker\AssemblyAction.cs">
+      <Link>Linker\Mono.Linker\AssemblyAction.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\mono\mcs\tools\linker\Mono.Linker\AssemblyResolver.cs">
+      <Link>Linker\Mono.Linker\AssemblyResolver.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\mono\mcs\tools\linker\Mono.Linker\I18nAssemblies.cs">
+      <Link>Linker\Mono.Linker\I18nAssemblies.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\mono\mcs\tools\linker\Mono.Linker\IXApiVisitor.cs">
+      <Link>Linker\Mono.Linker\IXApiVisitor.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\mono\mcs\tools\linker\Mono.Linker\LinkContext.cs">
+      <Link>Linker\Mono.Linker\LinkContext.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\mono\mcs\tools\linker\Mono.Linker\MethodAction.cs">
+      <Link>Linker\Mono.Linker\MethodAction.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\mono\mcs\tools\linker\Mono.Linker\Pipeline.cs">
+      <Link>Linker\Mono.Linker\Pipeline.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\mono\mcs\tools\linker\Mono.Linker\TypePreserve.cs">
+      <Link>Linker\Mono.Linker\TypePreserve.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\mono\mcs\tools\linker\Mono.Linker\XApiReader.cs">
+      <Link>Linker\Mono.Linker\XApiReader.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\mono\mcs\tools\linker\Mono.Linker.Steps\BlacklistStep.cs">
+      <Link>Linker\Mono.Linker.Steps\BlacklistStep.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\mono\mcs\tools\linker\Mono.Linker.Steps\BaseStep.cs">
+      <Link>Linker\Mono.Linker.Steps\BaseStep.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\mono\mcs\tools\linker\Mono.Linker.Steps\CleanStep.cs">
+      <Link>Linker\Mono.Linker.Steps\CleanStep.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\mono\mcs\tools\linker\Mono.Linker.Steps\IStep.cs">
+      <Link>Linker\Mono.Linker.Steps\IStep.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\mono\mcs\tools\linker\Mono.Linker.Steps\LoadI18nAssemblies.cs">
+      <Link>Linker\Mono.Linker.Steps\LoadI18nAssemblies.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\mono\mcs\tools\linker\Mono.Linker.Steps\LoadReferencesStep.cs">
+      <Link>Linker\Mono.Linker.Steps\LoadReferencesStep.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\mono\mcs\tools\linker\Mono.Linker.Steps\OutputStep.cs">
+      <Link>Linker\Mono.Linker.Steps\OutputStep.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\mono\mcs\tools\linker\Mono.Linker.Steps\RegenerateGuidStep.cs">
+      <Link>Linker\Mono.Linker.Steps\RegenerateGuidStep.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\mono\mcs\tools\linker\Mono.Linker.Steps\ResolveFromAssemblyStep.cs">
+      <Link>Linker\Mono.Linker.Steps\ResolveFromAssemblyStep.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\mono\mcs\tools\linker\Mono.Linker.Steps\ResolveFromXApiStep.cs">
+      <Link>Linker\Mono.Linker.Steps\ResolveFromXApiStep.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\mono\mcs\tools\linker\Mono.Linker.Steps\ResolveFromXmlStep.cs">
+      <Link>Linker\Mono.Linker.Steps\ResolveFromXmlStep.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\mono\mcs\tools\linker\Mono.Linker.Steps\ResolveStep.cs">
+      <Link>Linker\Mono.Linker.Steps\ResolveStep.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\mono\mcs\tools\linker\Mono.Linker.Steps\TypeMapStep.cs">
+      <Link>Linker\Mono.Linker.Steps\TypeMapStep.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\mono\mcs\tools\linker\Mono.Linker.Steps\SweepStep.cs">
+      <Link>Linker\Mono.Linker.Steps\SweepStep.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\mono\mcs\tools\linker\Mono.Linker.Steps\MarkStep.cs">
+      <Link>Linker\Mono.Linker.Steps\MarkStep.cs</Link>
+    </Compile>
+    <Compile Include="Tasks\MergeResources.cs" />
+    <Compile Include="Tasks\GetConvertedJavaLibraries.cs" />
+    <Compile Include="Tasks\Jack.cs" />
+    <Compile Include="Tasks\Jill.cs" />
+    <Compile Include="Tasks\JavaCompileToolTask.cs" />
+    <Compile Include="Tasks\AsyncTask.cs" />
+    <Compile Include="Utilities\ResourceMerger.cs" />
+    <Compile Include="Tasks\CheckTargetFrameworks.cs" />
+    <Compile Include="Tasks\Dx.cs" />
+    <Compile Include="Tasks\CreateMsymManifest.cs" />
+    <Compile Include="Utilities\AndroidResource.cs">
+      <Link>Utilities\AndroidResource.cs</Link>
+    </Compile>
+    <Compile Include="Utilities\Features.cs">
+      <Link>Utilities\Features.cs</Link>
+    </Compile>
+    <Compile Include="Utilities\LinePreservedXmlWriter.cs">
+      <Link>Utilities\LinePreservedXmlWriter.cs</Link>
+    </Compile>
+    <Compile Include="Utilities\Files.cs">
+      <Link>Utilities\Files.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\mono\mcs\tools\tuner\Mono.Tuner\ApplyPreserveAttributeBase.cs">
+      <Link>Linker\Mono.Tuner\ApplyPreserveAttributeBase.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\mono\mcs\tools\tuner\Mono.Tuner\Dispatcher.cs">
+      <Link>Linker\Mono.Tuner\Dispatcher.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\mono\mcs\tools\tuner\Mono.Tuner\CustomizeActions.cs">
+      <Link>Linker\Mono.Tuner\CustomizeActions.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\mono\mcs\tools\tuner\Mono.Tuner\Extensions.cs">
+      <Link>Linker\Mono.Tuner\Extensions.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\mono\mcs\tools\tuner\Mono.Tuner\FixModuleFlags.cs">
+      <Link>Linker\Mono.Tuner\FixModuleFlags.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\mono\mcs\tools\tuner\Mono.Tuner\PrintTypeMap.cs">
+      <Link>Linker\Mono.Tuner\PrintTypeMap.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\mono\mcs\tools\tuner\Mono.Tuner\PreserveCrypto.cs">
+      <Link>Linker\Mono.Tuner\PreserveCrypto.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\mono\mcs\tools\tuner\Mono.Tuner\PreserveSoapHttpClients.cs">
+      <Link>Linker\Mono.Tuner\PreserveSoapHttpClients.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\mono\mcs\tools\tuner\Mono.Tuner\Profile.cs">
+      <Link>Linker\Mono.Tuner\Profile.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\mono\mcs\tools\tuner\Mono.Tuner\RemoveAttributesBase.cs">
+      <Link>Linker\Mono.Tuner\RemoveAttributesBase.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\mono\mcs\tools\tuner\Mono.Tuner\RemoveResources.cs">
+      <Link>Linker\Mono.Tuner\RemoveResources.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\mono\mcs\tools\tuner\Mono.Tuner\RemoveSecurity.cs">
+      <Link>Linker\Mono.Tuner\RemoveSecurity.cs</Link>
+    </Compile>
+    <Compile Include="..\Mono.Android\\Android.App\IntentFilterAttribute.cs">
+      <Link>Mono.Android\IntentFilterAttribute.cs</Link>
+    </Compile>
+    <Compile Include="..\Mono.Android\\Android.App\MetaDataAttribute.cs">
+      <Link>Mono.Android\MetaDataAttribute.cs</Link>
+    </Compile>
+    <Compile Include="..\Mono.Android\\Android.Content\GrantUriPermissionAttribute.cs">
+      <Link>Mono.Android\GrantUriPermissionAttribute.cs</Link>
+    </Compile>
+    <Compile Include="..\..\src\Mono.Android\obj\$(Configuration)\android-$(AndroidApiLevel)\Android.Content.PM.LaunchMode.cs">
+      <Link>Mono.Android\Android.Content.PM.LaunchMode.cs</Link>
+    </Compile>
+    <Compile Include="..\..\src\Mono.Android\obj\$(Configuration)\android-$(AndroidApiLevel)\Android.Content.PM.ScreenOrientation.cs">
+      <Link>Mono.Android\Android.Content.PM.ScreenOrientation.cs</Link>
+    </Compile>
+    <Compile Include="..\..\src\Mono.Android\obj\$(Configuration)\android-$(AndroidApiLevel)\Android.Content.PM.ConfigChanges.cs">
+      <Link>Mono.Android\Android.Content.PM.ConfigChanges.cs</Link>
+    </Compile>
+    <Compile Include="..\..\src\Mono.Android\obj\$(Configuration)\android-$(AndroidApiLevel)\Android.Content.PM.UiOptions.cs">
+      <Link>Mono.Android\Android.Content.PM.UiOptions.cs</Link>
+    </Compile>
+    <Compile Include="..\..\src\Mono.Android\obj\$(Configuration)\android-$(AndroidApiLevel)\Android.Views.SoftInput.cs">
+      <Link>Mono.Android\Android.Views.SoftInput.cs</Link>
+    </Compile>
+    <Compile Include="..\..\src\Mono.Android\obj\$(Configuration)\android-$(AndroidApiLevel)\Android.Content.PM.Protection.cs">
+      <Link>Mono.Android\Android.Content.PM.Protection.cs</Link>
+    </Compile>
+    <Compile Include="..\..\src\Mono.Android\obj\$(Configuration)\android-$(AndroidApiLevel)\Android.Views.LayoutDirection.cs">
+      <Link>Mono.Android\Android.Views.LayoutDirection.cs</Link>
+    </Compile>
+    <Compile Include="..\Mono.Android\Android.Runtime\IntDefinitionAttribute.cs">
+      <Link>Mono.Android\IntDefinitionAttribute.cs</Link>
+    </Compile>
+    <Compile Include="..\..\external\Java.Interop\src\utils\StringRocks.cs">
+      <Link>Utilities\StringRocks.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\mono\mcs\tools\tuner\Mono.Tuner\FilterAttributes.cs">
+      <Link>Linker\Mono.Tuner\FilterAttributes.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\mono\mcs\tools\tuner\Mono.Tuner\InjectSecurityAttributes.cs">
+      <Link>Linker\Mono.Tuner\InjectSecurityAttributes.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\mono\mcs\tools\tuner\Mono.Tuner\PrintStatus.cs">
+      <Link>Linker\Mono.Tuner\PrintStatus.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\mono\mcs\tools\tuner\Mono.Tuner\RemoveSerialization.cs">
+      <Link>Linker\Mono.Tuner\RemoveSerialization.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\mono\mcs\tools\tuner\Mono.Tuner\TunerAnnotations.cs">
+      <Link>Linker\Mono.Tuner\TunerAnnotations.cs</Link>
+    </Compile>
+    <Compile Include="..\Mono.Android\\Android.App\UsesLibraryAttribute.cs">
+      <Link>Mono.Android\UsesLibraryAttribute.cs</Link>
+    </Compile>
+    <Compile Include="..\Mono.Android\\Android.App\UsesPermissionAttribute.cs">
+      <Link>Mono.Android\UsesPermissionAttribute.cs</Link>
+    </Compile>
+    <Compile Include="..\Mono.Android\\Android.App\PermissionAttribute.cs">
+      <Link>Mono.Android\PermissionAttribute.cs</Link>
+    </Compile>
+    <Compile Include="..\Mono.Android\\Android.App\PermissionGroupAttribute.cs">
+      <Link>Mono.Android\PermissionGroupAttribute.cs</Link>
+    </Compile>
+    <Compile Include="..\Mono.Android\\Android.App\PermissionTreeAttribute.cs">
+      <Link>Mono.Android\PermissionTreeAttribute.cs</Link>
+    </Compile>
+    <Compile Include="..\Mono.Android\\Android.App\UsesFeatureAttribute.cs">
+      <Link>Mono.Android\UsesFeatureAttribute.cs</Link>
+    </Compile>
+    <Compile Include="..\Mono.Android\\Android.App\SupportsGLTextureAttribute.cs">
+      <Link>Mono.Android\SupportsGLTextureAttribute.cs</Link>
+    </Compile>
+    <Compile Include="..\Mono.Android\\Java.Interop\JavaLibraryReferenceAttribute.cs">
+      <Link>Mono.Android\JavaLibraryReferenceAttribute.cs</Link>
+    </Compile>
+    <Compile Include="..\Mono.Android\\Android\IncludeAndroidResourcesFromAttribute.cs">
+      <Link>Mono.Android\IncludeAndroidResourcesFromAttribute.cs</Link>
+    </Compile>
+    <Compile Include="..\Mono.Android\\Android\ReferenceFilesAttribute.cs">
+      <Link>Mono.Android\ReferenceFilesAttribute.cs</Link>
+    </Compile>
+    <Compile Include="..\Mono.Android\\Android\NativeLibraryReferenceAttribute.cs">
+      <Link>Mono.Android\NativeLibraryReferenceAttribute.cs</Link>
+    </Compile>
+    <Compile Include="Utilities\MD2Managed.cs">
+      <Link>Utilities\MD2Managed.cs</Link>
+    </Compile>
+    <None Include="Ionic.Zip.xml" />
+    <Compile Include="Utilities\Profile.cs" />
+    <None Include="Xamarin.Android.Build.Tasks.targets" />
+  </ItemGroup>
+  <Import Project="Xamarin.Android.Build.Tasks.targets" />
+  <!-- MD doesn't handle MSBuildToolsPath yet
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  -->
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\NOTICE.txt">
+      <LogicalName>NOTICE.txt</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\machine.config">
+      <LogicalName>machine.config</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\MonoPackageManager.java">
+      <LogicalName>MonoPackageManager.java</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Seppuku.java">
+      <LogicalName>Seppuku.java</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Linker\PreserveLists\mscorlib.xml">
+      <LogicalName>mscorlib.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Linker\PreserveLists\System.xml">
+      <LogicalName>System.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Linker\PreserveLists\System.Data.Services.Client.xml">
+      <LogicalName>System.Data.Services.Client.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Linker\PreserveLists\System.ServiceModel.xml">
+      <LogicalName>System.ServiceModel.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Linker\PreserveLists\OpenTK.xml">
+      <LogicalName>OpenTK.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Linker\PreserveLists\Mono.Android.xml">
+      <LogicalName>Mono.Android.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\proguard_xamarin.cfg">
+      <LogicalName>proguard_xamarin.cfg</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\MonoPackageManager.api4.java">
+      <LogicalName>MonoPackageManager.api4.java</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\NotifyTimeZoneChanges.java">
+      <LogicalName>NotifyTimeZoneChanges.java</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\ApplicationRegistration.java">
+      <LogicalName>ApplicationRegistration.java</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\IncrementalClassLoader.java">
+      <LogicalName>IncrementalClassLoader.java</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Placeholder.java">
+      <LogicalName>Placeholder.java</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\StubApplication.java">
+      <LogicalName>StubApplication.java</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Xamarin.AndroidTools.Aidl\Xamarin.AndroidTools.Aidl.csproj">
+      <Project>{D27AD8F7-7710-40BE-B03B-55EFBEC13C44}</Project>
+      <Name>Xamarin.AndroidTools.Aidl</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop.Tools.Diagnostics\Java.Interop.Tools.Diagnostics.csproj">
+      <Project>{64CC4E44-CE3A-4319-BF3F-6CF8BD513870}</Project>
+      <Name>Java.Interop.Tools.Diagnostics</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop.Tools.Cecil\Java.Interop.Tools.Cecil.csproj">
+      <Project>{D48EE8D0-0A0A-4493-AEF5-DAF5F8CF86AD}</Project>
+      <Name>Java.Interop.Tools.Cecil</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers.csproj">
+      <Project>{D18FCF91-8876-48A0-A693-2DC1E7D3D80A}</Project>
+      <Name>Java.Interop.Tools.JavaCallableWrappers</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Xamarin.Android.Build.Utilities\Xamarin.Android.Build.Utilities.csproj">
+      <Project>{91713046-C358-4647-B162-ED4E1442F3D8}</Project>
+      <Name>Xamarin.Android.Build.Utilities</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\external\Java.Interop\src\Xamarin.Android.Tools.Bytecode\Xamarin.Android.Tools.Bytecode.csproj">
+      <Project>{B17475BC-45A2-47A3-B8FC-62F3A0959EE0}</Project>
+      <Name>Xamarin.Android.Tools.Bytecode</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\src\Mono.Android\Mono.Android.csproj">
+      <Project>{66CF299A-CE95-4131-BCD8-DB66E30C4BF7}</Project>
+      <Name>Mono.Android</Name>
+      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="pdb2mdb\" />
+    <Folder Include="Linker\Mono.Linker\" />
+    <Folder Include="utils\" />
+  </ItemGroup>
+</Project>

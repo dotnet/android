@@ -1,0 +1,567 @@
+<!--
+***********************************************************************************************
+Xamarin.Android.Bindings.targets
+
+WARNING:  DO NOT MODIFY this file unless you are knowledgeable about MSBuild and have
+  created a backup copy.  Incorrect changes to this file will make it
+  impossible to load or build your projects from the command-line or the IDE.
+
+This file imports the version- and platform-specific targets for the project importing
+this file. This file also defines targets to produce an error if the specified targets
+file does not exist, but the project is built anyway (command-line or IDE build).
+
+Copyright (C) 2012 Xamarin Inc. All rights reserved.
+***********************************************************************************************
+-->
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <UsingTask TaskName="Xamarin.Android.Tasks.ApiXmlAnalyzer" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.BindingsGenerator" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.GetApiLevelFromFramework" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.GetImportedLibraries" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.JarToXml" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.ClassParse" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.CollectLibraryInputJars" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.CreateLibraryResourceArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.CreateTemporaryDirectory" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.GetAdditionalResourcesFromAssemblies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.ReadAdditionalResourcesFromAssemblyCache" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.RemoveDirFixed" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.ResolveAssemblies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.ResolveLibraryProjectImports" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.ResolveSdks" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.ReadResolvedSdksCache" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.ReadLibraryProjectImportsCache" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.ReadImportedLibrariesCache" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.CreateNativeLibraryArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.ImportJavaDoc" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.MDoc" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+
+  <!--
+  *******************************************
+    Extensibility hook that allows VS to
+    provide extra behavior without modifying 
+    the core targets.
+  *******************************************
+  -->
+  <Import Project="$(MSBuildThisFileDirectory)$(MSBuildThisFileName).Before.targets" 
+          Condition="Exists('$(MSBuildThisFileDirectory)$(MSBuildThisFileName).Before.targets')"/>
+
+  <!--
+  *******************************************
+          Common Properties
+  *******************************************
+  -->
+
+  <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Common.props"
+          Condition="Exists('$(MSBuildThisFileDirectory)Xamarin.Android.Common.props')" />
+
+  <PropertyGroup>
+    <AndroidUseLatestPlatformSdk Condition="'$(AndroidUseLatestPlatformSdk)' == ''">False</AndroidUseLatestPlatformSdk>
+    <TargetFrameworkIdentifier>MonoAndroid</TargetFrameworkIdentifier>
+    <MonoAndroidVersion>v5.0</MonoAndroidVersion>
+    <TargetFrameworkVersion Condition="'$(TargetFrameworkVersion)' == '' And '$(AndroidUseLatestPlatformSdk)' == 'False'">v2.3</TargetFrameworkVersion>
+	<UseShortFileNames Condition="'$(UseShortFileNames)' != 'True'">False</UseShortFileNames>
+	<AndroidClassParser Condition="'$(AndroidClassParser)' == ''">jar2xml</AndroidClassParser>
+  </PropertyGroup>
+  
+  <!-- Get our Build Actions to show up in VS -->
+  <ItemGroup>
+    <AvailableItemName Include="EmbeddedJar" />
+    <AvailableItemName Include="EmbeddedNativeLibrary" />
+    <AvailableItemName Include="EmbeddedReferenceJar" />
+    <AvailableItemName Include="InputJar" />
+    <AvailableItemName Include="ReferenceJar" />
+    <AvailableItemName Include="TransformFile" />
+    <AvailableItemName Include="LibraryProjectProperties" />
+    <AvailableItemName Include="LibraryProjectZip" />
+    <AvailableItemName Include="JavaDocIndex" />
+  </ItemGroup>
+
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.Targets" />
+
+  <PropertyGroup>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <GetReferenceAssemblyPathsDependsOn>_SetLatestTargetFrameworkVersion</GetReferenceAssemblyPathsDependsOn>
+  </PropertyGroup>
+
+  <Target Name="_ResolveMonoAndroidFramework" DependsOnTargets="GetReferenceAssemblyPaths" >
+  </Target>
+
+  <PropertyGroup>
+    <GeneratedOutputPath Condition="'$(GeneratedOutputPath)' == ''">$(IntermediateOutputPath)generated\</GeneratedOutputPath>
+    <ApiOutputFile Condition="'$(ApiOutputFile)' == ''">$(IntermediateOutputPath)api.xml</ApiOutputFile>
+    <_GeneratorStampFile>$(IntermediateOutputPath)generator.stamp</_GeneratorStampFile>
+    <AndroidSequencePointsMode Condition=" '$(AndroidSequencePointsMode)' == ''">None</AndroidSequencePointsMode>
+    <!--
+    <_LibraryProjectImportsDirectoryName Condition="$(UseShortFileNames)">jlibs</_LibraryProjectImportsDirectoryName>
+    <_LibraryProjectImportsDirectoryName Condition="!$(UseShortFileNames)">library_project_imports</_LibraryProjectImportsDirectoryName>
+    <_NativeLibraryImportsDirectoryName Condition="$(UseShortFileNames)">libs</_NativeLibraryImportsDirectoryName>
+    <_NativeLibraryImportsDirectoryName Condition="!$(UseShortFileNames)">native_library_imports</_NativeLibraryImportsDirectoryName>
+    -->
+    <_LibraryProjectImportsDirectoryName>library_project_imports</_LibraryProjectImportsDirectoryName>
+	<_NativeLibraryImportsDirectoryName>native_library_imports</_NativeLibraryImportsDirectoryName>
+	<_AndroidResourcePathsCache>$(IntermediateOutputPath)resourcepaths.cache</_AndroidResourcePathsCache>
+	<_AndroidSdksCache>$(IntermediateOutputPath)sdks.cache</_AndroidSdksCache>
+	<_AndroidLibraryImportsCache>$(IntermediateOutputPath)libraryimports.cache</_AndroidLibraryImportsCache>
+	<_AndroidLibraryProjectImportsCache>$(IntermediateOutputPath)libraryprojectimports.cache</_AndroidLibraryProjectImportsCache>
+
+
+	<!-- Prevent warnings about assembly version conflicts -->
+	<AutoUnifyAssemblyReferences>True</AutoUnifyAssemblyReferences>
+	<AutoGenerateBindingRedirects>False</AutoGenerateBindingRedirects>
+
+	<!-- The .NET SGEN tool cannot process Xamarin.Android assemblies because
+	     our mscorlib.dll isn't properly signed, as far as its concerned.
+	     Disable generation to avoid "bizarre" build errors. -->
+	<GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <BuildDependsOn>
+      AddLibraryJarsToBind;
+      $(BuildDependsOn);
+      BuildDocumentation;
+    </BuildDependsOn>
+
+    <ResolveReferencesDependsOn>
+      $(ResolveReferencesDependsOn);
+      AddBindingsToCompile;
+      AddEmbeddedJarsAsResources;
+      AddEmbeddedReferenceJarsAsResources;
+      AddLibraryProjectsToCompile;
+      _AddNativeLibraryArchiveToCompile
+    </ResolveReferencesDependsOn>
+
+    <CleanDependsOn>
+      $(CleanDependsOn);
+      CleanBindingsOutput;
+      CleanLibraryProjectIntermediaries;
+      CleanNativeLibraryIntermediaries;
+    </CleanDependsOn>
+  </PropertyGroup>
+  
+<Target Name="_GetReferenceAssemblyPaths">
+	<GetReferenceAssemblyPaths
+			TargetFrameworkMoniker="$(TargetFrameworkIdentifier),Version=v1.0"
+			RootPath="$(TargetFrameworkRootPath)">
+		<Output TaskParameter="ReferenceAssemblyPaths" PropertyName="_XATargetFrameworkDirectories" />
+	</GetReferenceAssemblyPaths>
+</Target>
+
+<Target Name="_BuildSdkCache"
+		Inputs="$(MSBuildProjectFullPath);$(_AndroidBuildPropertiesCache)"
+		Outputs="$(_AndroidSdksCache)"
+		DependsOnTargets="_GetReferenceAssemblyPaths">
+	<ResolveSdks
+			CacheFile="$(_AndroidSdksCache)"
+			AndroidApiLevel="$(AndroidApiLevel)"
+			AndroidSdkBuildToolsVersion="$(AndroidSdkBuildToolsVersion)"
+			AndroidSdkPath="$(AndroidSdkDirectory)"
+			AndroidNdkPath="$(AndroidNdkDirectory)"
+			BuildingInsideVisualStudio="$(BuildingInsideVisualStudio)"
+			JavaSdkPath="$(JavaSdkDirectory)"
+			MonoAndroidBinPath="$(MonoAndroidBinDirectory)"
+			MonoAndroidToolsPath="$(MonoAndroidToolsDirectory)"
+			ProjectFilePath="$(MSBuildProjectFullPath)"
+			ReferenceAssemblyPaths="$(_XATargetFrameworkDirectories)"
+			TargetFrameworkVersion="$(TargetFrameworkVersion)"
+			SequencePointsMode="$(AndroidSequencePointsMode)"
+			UseLatestAndroidPlatformSdk="$(AndroidUseLatestPlatformSdk)">
+	</ResolveSdks>
+</Target>
+
+<Target Name="_SetLatestTargetFrameworkVersion" DependsOnTargets="_BuildSdkCache">
+	<ReadResolvedSdksCache
+			CacheFile="$(_AndroidSdksCache)">
+		<Output TaskParameter="AndroidApiLevel"           PropertyName="_AndroidApiLevel" />
+		<Output TaskParameter="AndroidApiLevelName"       PropertyName="_AndroidApiLevelName" />
+		<Output TaskParameter="TargetFrameworkVersion"    PropertyName="_TargetFrameworkVersion" />
+		<Output TaskParameter="TargetFrameworkVersion"    PropertyName="TargetFrameworkVersion" />
+		<Output TaskParameter="AndroidNdkPath"            PropertyName="AndroidNdkDirectory"        Condition="'$(AndroidNdkDirectory)' == ''" />
+		<Output TaskParameter="AndroidSdkPath"            PropertyName="AndroidSdkDirectory"        Condition="'$(AndroidSdkDirectory)' == ''" />
+		<Output TaskParameter="AndroidSdkBuildToolsPath"  PropertyName="AndroidSdkBuildToolsPath"   Condition="'$(AndroidSdkBuildToolsPath)' == ''" />
+		<Output TaskParameter="JavaSdkPath"               PropertyName="JavaSdkDirectory"           Condition="'$(JavaSdkDirectory)' == ''" />
+		<Output TaskParameter="MonoAndroidToolsPath"      PropertyName="MonoAndroidToolsDirectory"  Condition="'$(MonoAndroidToolsDirectory)' == ''" />
+		<Output TaskParameter="MonoAndroidBinPath"        PropertyName="MonoAndroidBinDirectory"    Condition="'$(MonoAndroidBinDirectory)' == ''" />
+		<Output TaskParameter="AndroidSdkBuildToolsBinPath" PropertyName="AndroidSdkBuildToolsBinPath" Condition="'$(AndroidSdkBuildToolsBinPath)' == ''" />
+	</ReadResolvedSdksCache>
+    <CreateProperty Value="$(TargetFrameworkIdentifier),Version=$(TargetFrameworkVersion),Profile=$(TargetFrameworkProfile)">
+      <Output TaskParameter="Value" PropertyName="TargetFrameworkMoniker"
+          Condition="'$(TargetFrameworkProfile)' != ''"
+      />
+    </CreateProperty>
+    <CreateProperty Value="$(TargetFrameworkIdentifier),Version=$(TargetFrameworkVersion)">
+      <Output TaskParameter="Value" PropertyName="TargetFrameworkMoniker"
+          Condition="'$(TargetFrameworkProfile)' == ''"
+      />
+    </CreateProperty>
+    <CreateItem Include="$(_JavaInteropReferences)">
+      <Output TaskParameter="Include" ItemName="Reference" />
+    </CreateItem>
+  </Target>
+
+  <!-- Find all the needed SDKs -->
+  <Target Name="_ResolveMonoAndroidSdks" DependsOnTargets="_ResolveMonoAndroidFramework">
+
+    <Error Text="Could not locate MonoAndroid SDK." Condition="'$(MonoAndroidToolsDirectory)'==''" />
+    <Error Text="Could not locate Android SDK." Condition="'$(AndroidSdkDirectory)'==''" />
+    <Error Text="Could not locate Java 6 or 7 SDK.  (Download from http://www.oracle.com/technetwork/java/javase/downloads.)" Condition="'$(JavaSdkDirectory)'==''" />
+
+    <!-- ensure a version of paths with trailing slashes even if overridden by /p:foo=bar -->
+    <CreateProperty Value="$(MonoAndroidToolsDirectory)">
+      <Output TaskParameter="Value" PropertyName="_MonoAndroidToolsDirectory"/>
+    </CreateProperty>
+    <CreateProperty Value="$(_MonoAndroidToolsDirectory)\">
+      <Output TaskParameter="Value" PropertyName="_MonoAndroidToolsDirectory"
+        Condition="!HasTrailingSlash('$(_MonoAndroidToolsDirectory)')" />
+    </CreateProperty>
+
+    <CreateProperty Value="$(MonoAndroidBinDirectory)">
+      <Output TaskParameter="Value" PropertyName="_MonoAndroidBinDirectory"/>
+    </CreateProperty>
+    <CreateProperty Value="$(_MonoAndroidBinDirectory)\">
+      <Output TaskParameter="Value" PropertyName="_MonoAndroidBinDirectory"
+        Condition="!HasTrailingSlash('$(_MonoAndroidBinDirectory)')" />
+    </CreateProperty>
+
+    <CreateProperty Value="$(AndroidNdkDirectory)">
+      <Output TaskParameter="Value" PropertyName="_AndroidNdkDirectory"/>
+    </CreateProperty>
+    <CreateProperty Value="$(_AndroidNdkDirectory)\">
+      <Output TaskParameter="Value" PropertyName="_AndroidNdkDirectory"
+        Condition="!HasTrailingSlash('$(_AndroidNdkDirectory)')" />
+    </CreateProperty>
+
+    <CreateProperty Value="$(AndroidSdkDirectory)">
+      <Output TaskParameter="Value" PropertyName="_AndroidSdkDirectory"/>
+    </CreateProperty>
+    <CreateProperty Value="$(_AndroidSdkDirectory)\">
+      <Output TaskParameter="Value" PropertyName="_AndroidSdkDirectory"
+        Condition="!HasTrailingSlash('$(_AndroidSdkDirectory)')" />
+    </CreateProperty>
+
+    <CreateProperty Value="$(JavaSdkDirectory)">
+      <Output TaskParameter="Value" PropertyName="_JavaSdkDirectory"/>
+    </CreateProperty>
+    <CreateProperty Value="$(_JavaSdkDirectory)\">
+      <Output TaskParameter="Value" PropertyName="_JavaSdkDirectory"
+        Condition="!HasTrailingSlash('$(_JavaSdkDirectory)')" />
+    </CreateProperty>
+
+    <Message Text="MonoAndroid Tools: $(_MonoAndroidToolsDirectory)"/>
+	<Message Text="MonoAndroid Binaries: $(_MonoAndroidBinDirectory)"/>
+    <Message Text="Android NDK: $(_AndroidNdkDirectory)"/>
+    <Message Text="Android SDK: $(_AndroidSdkDirectory)"/>
+    <Message Text="Java SDK: $(_JavaSdkDirectory)"/>
+    <Message Text="Android Platform API level: $(_AndroidApiLevel)"/>
+    <Message Text="TargetFrameworkVersion: $(_TargetFrameworkVersion)"/>
+
+
+    <!-- Misc paths -->
+    <CreateProperty Value="$(_AndroidSdkDirectory)tools\">
+      <Output TaskParameter="Value" PropertyName="_AndroidToolsDirectory"/>
+    </CreateProperty>
+
+    <CreateProperty Value="$(_AndroidSdkDirectory)platform-tools\">
+      <Output TaskParameter="Value" PropertyName="_AndroidPlatformToolsDirectory"/>
+    </CreateProperty>
+
+    <CreateProperty Value="smcs" Condition="'$(OS)' == 'Unix'">
+      <Output TaskParameter="Value" PropertyName="CscToolExe"/>
+    </CreateProperty>
+    <CreateProperty Value="$(_MonoAndroidBinDirectory)" Condition="'$(OS)' == 'Unix'">
+      <Output TaskParameter="Value" PropertyName="CscToolPath"/>
+    </CreateProperty>
+  </Target>
+
+  <Target Name="_BuildAdditionalResourcesCache"
+    Inputs="@(ReferencePath);@(ReferenceDependencyPaths)"
+    Outputs="$(_AndroidResourcePathsCache)"
+  >
+    <GetAdditionalResourcesFromAssemblies
+      AndroidSdkDirectory="$(_AndroidSdkDirectory)"
+      AndroidNdkDirectory="$(_AndroidNdkDirectory)"
+      Assemblies="@(ReferencePath);@(ReferenceDependencyPaths)"
+      CacheFile="$(IntermediateOutputPath)resourcepaths.cache"
+    />
+  </Target>
+
+  <Target Name="_GetAdditionalResourcesFromAssemblies" DependsOnTargets="_BuildAdditionalResourcesCache">
+	<ReadAdditionalResourcesFromAssemblyCache
+			CacheFile="$(_AndroidResourcePathsCache)"
+	>
+		<Output TaskParameter="AdditionalAndroidResourcePaths"  ItemName="_AdditionalAndroidResourcePaths" />
+		<Output TaskParameter="AdditionalJavaLibraryReferences" ItemName="_AdditionalJavaLibraryReferences" />
+		<Output TaskParameter="AdditionalNativeLibraryReferences" ItemName="_AdditionalNativeLibraryReferences" />
+	</ReadAdditionalResourcesFromAssemblyCache>
+  </Target>
+
+<Target Name="_ResolveLibraryProjectImports"
+		Inputs="$(MSBuildProjectFullPath);$(_AndroidBuildPropertiesCache)"
+		Outputs="$(_AndroidLibraryProjectImportsCache)">
+	<ResolveLibraryProjectImports
+		CacheFile="$(_AndroidLibraryProjectImportsCache)"
+		Assemblies="@(ReferencePath);@(ReferenceDependencyPaths)"
+		ImportsDirectory="$(_LibraryProjectImportsDirectoryName)"
+		UseShortFileNames="$(UseShortFileNames)"
+		OutputDirectory="$(IntermediateOutputPath)"
+		OutputImportDirectory="$(IntermediateOutputPath)__library_projects__\">
+	</ResolveLibraryProjectImports>
+</Target>
+
+
+<Target Name="_ExtractLibraryProjectImports" DependsOnTargets="_ResolveLibraryProjectImports">
+	<ReadLibraryProjectImportsCache
+			CacheFile="$(_AndroidLibraryProjectImportsCache)">
+		<Output TaskParameter="Jars" PropertyName="ZippedLibraryProjectJars" />
+	</ReadLibraryProjectImportsCache>
+</Target>
+
+<Target Name="_BuildLibraryImportsCache"
+		Inputs="$(MSBuildProjectFullPath)"
+		Outputs="$(_AndroidLibraryImportsCache)">
+	<GetImportedLibraries TargetDirectory="$(IntermediateOutputPath)__library_projects__\"
+			CacheFile="$(_AndroidLibraryImportsCache)">
+		<Output TaskParameter="Jars" ItemName="ExtractedJarImports" />
+	</GetImportedLibraries>
+</Target>
+
+<Target Name="_GetLibraryImports" DependsOnTargets="_BuildLibraryImportsCache">
+	<ReadImportedLibrariesCache
+			CacheFile="$(_AndroidLibraryImportsCache)">
+		<Output TaskParameter="Jars" ItemName="ExtractedJarImports" />
+	</ReadImportedLibrariesCache>
+</Target>
+
+<PropertyGroup>
+	<ExportJarToXmlDependsOnTargets>
+		_ResolveMonoAndroidSdks
+		;_GetAdditionalResourcesFromAssemblies
+		;_ExtractLibraryProjectImports
+		;_GetLibraryImports
+	</ExportJarToXmlDependsOnTargets>
+</PropertyGroup>
+
+  <Target Name="ExportJarToXml"
+          DependsOnTargets="$(ExportJarToXmlDependsOnTargets)"
+          Inputs="@(EmbeddedJar);@(EmbeddedReferenceJar);@(InputJar);@(ReferenceJar);$(MSBuildAllProjects);@(_AdditionalJavaLibraryReferences)"
+          Outputs="$(ApiOutputFile)">
+
+    <CreateItem Include="@(ZippedLibraryProjectJars);@(ExtractedJarImports)">
+      <Output TaskParameter="Include" ItemName="ReferenceJar" />
+    </CreateItem>
+
+    <!-- Extract the API from the .jar file and store as .xml, using either class-parse or jar2xml -->
+	
+    <ClassParse Condition="'$(AndroidClassParser)' == 'class-parse'"
+      OutputFile="$(ApiOutputFile)"
+      SourceJars="@(EmbeddedJar);@(InputJar)"
+      JavaDocPaths="$(JavaDocPaths)"
+      Java7DocPaths="$(Java7DocPaths)"
+      Java8DocPaths="$(Java8DocPaths)"
+      DroidDocPaths="$(DroidDocPaths)"
+    />
+
+    <JarToXml Condition="'$(AndroidClassParser)' == 'jar2xml'"
+      JavaMaximumHeapSize="$(JavaMaximumHeapSize)"
+      JavaOptions="$(JavaOptions)"
+      AndroidSdkDirectory="$(_AndroidSdkDirectory)"
+      MonoAndroidToolsDirectory="$(MonoAndroidToolsDirectory)"
+      JavaSdkDirectory="$(_JavaSdkDirectory)"
+      AndroidApiLevel="$(_AndroidApiLevel)"
+      OutputFile="$(ApiOutputFile)"
+      SourceJars="@(EmbeddedJar);@(InputJar)"
+      ReferenceJars="@(EmbeddedReferenceJar);@(ReferenceJar);@(_AdditionalJavaLibraryReferences)"
+      DroidDocPaths="$(DroidDocPaths)"
+      JavaDocPaths="$(JavaDocPaths)"
+      Java7DocPaths="$(Java7DocPaths)"
+      Java8DocPaths="$(Java8DocPaths)"
+      JavaDocs="@(JavaDocIndex)"
+      LibraryProjectJars="$(IntermediateOutputPath)__library_projects__\*.jar"
+    />
+
+  </Target>
+
+  <Target Name="GenerateBindings"
+          DependsOnTargets="ExportJarToXml;_ResolveMonoAndroidSdks"
+          Inputs="$(ApiOutputFile);@(TransformFile);@(ReferencePath);@(ReferenceDependencyPaths);$(MSBuildAllProjects)"
+          Outputs="$(_GeneratorStampFile)">
+
+    <!-- Delete previous generated files if they still exist -->
+    <RemoveDirFixed Directories="$(GeneratedOutputPath)" Condition="Exists ('$(GeneratedOutputPath)')" />
+
+    <CreateItem Include="$(IntermediateOutputPath)library_project_annotations\\*.zip">
+      <Output TaskParameter="Include" ItemName="AnnotationsZip" />
+    </CreateItem>
+		
+	<!-- Create the .cs binding source files -->
+    <BindingsGenerator
+      OutputDirectory="$(GeneratedOutputPath)src"
+      EnumDirectory="$(GeneratedOutputPath)enums"
+      EnumMetadataDirectory="$(GeneratedOutputPath)metadata"
+      CodegenTarget="$(AndroidCodegenTarget)"
+      AndroidApiLevel="$(_AndroidApiLevel)"
+      ApiXmlInput="$(ApiOutputFile)"
+      AnnotationsZipFiles="@(AnnotationsZip)"
+      AssemblyName="$(AssemblyName)"
+      TransformFiles="@(TransformFile)"
+      ReferencedManagedLibraries="@(ReferencePath);@(ReferenceDependencyPaths)"
+      MonoAndroidFrameworkDirectories="$(_TargetFrameworkDirectories)"
+      TypeMappingReportFile="$(GeneratedOutputPath)type-mapping.txt"
+      ToolPath="$(_MonoAndroidBinDirectory)"
+      ToolExe="$(BindingsGeneratorToolExe)"
+      UseShortFileNames="$(UseShortFileNames)"
+    />
+
+    <!-- Write a flag so we won't redo this target if nothing changed -->
+    <Touch Files="$(_GeneratorStampFile)" AlwaysCreate="true" />
+
+  </Target>
+
+  <Target Name="AddBindingsToCompile" DependsOnTargets="GenerateBindings">
+    <!-- Add the files to list of things to be compiled -->
+    <CreateItem Include="$(IntermediateOutputPath)generated\*\*.cs">
+      <Output TaskParameter="Include" ItemName="Compile" />
+    </CreateItem>
+  </Target>
+
+  <Target Name="AddEmbeddedJarsAsResources" DependsOnTargets="GenerateBindings">
+    <CreateItem Include="@(EmbeddedJar)"
+        AdditionalMetadata="LogicalName=%(Filename)%(Extension)">
+      <Output TaskParameter="Include" ItemName="EmbeddedResource" />
+    </CreateItem>
+  </Target>
+
+  <Target Name="AddEmbeddedReferenceJarsAsResources" DependsOnTargets="GenerateBindings">
+    <CreateItem Include="@(EmbeddedReferenceJar)"
+                AdditionalMetadata="LogicalName=__reference__%(FileName)%(Extension)">
+      <Output TaskParameter="Include" ItemName="EmbeddedResource" />
+    </CreateItem>
+  </Target>
+
+  <Target Name="AddLibraryProjectsToCompile" DependsOnTargets="ResolveLibraryProjects">
+    <CreateItem Include="$(IntermediateOutputPath)__AndroidLibraryProjects__.zip"
+        Condition="Exists ('$(IntermediateOutputPath)__AndroidLibraryProjects__.zip')"
+        AdditionalMetadata="LogicalName=__AndroidLibraryProjects__.zip">
+      <Output TaskParameter="Include" ItemName="EmbeddedResource" />
+    </CreateItem>
+  </Target>
+  
+  <Target Name="ResolveLibraryProjects"
+      Inputs="@(LibraryProjectProperties);@(LibraryProjectZip)"
+      Outputs="$(IntermediateOutputPath)__AndroidLibraryProjects__.zip">
+    <CreateLibraryResourceArchive
+      OutputDirectory="$(IntermediateOutputPath)$(_LibraryProjectImportsDirectoryName)"
+      OutputJarsDirectory="$(IntermediateOutputPath)library_project_jars"
+      OutputAnnotationsDirectory="$(IntermediateOutputPath)library_project_annotations"
+      LibraryProjectPropertiesFiles="@(LibraryProjectProperties)"
+      LibraryProjectZipFiles="@(LibraryProjectZip)" />
+  </Target>
+
+  <Target Name="AddLibraryJarsToBind" DependsOnTargets="ResolveLibraryProjects">
+    <CreateItem Include="$(IntermediateOutputPath)library_project_jars\\*.jar">
+      <Output TaskParameter="Include" ItemName="InputJar" />
+    </CreateItem>
+  </Target>
+
+  <Target Name="BuildDocumentation"
+	  	Inputs="@(JavaDocIndex)"
+	  	Outputs="@(IntermediateAssembly->'$(OutputPath)%(filename).xml')"
+	  	Condition="'@(JavaDocIndex)' != ''">
+    <MDoc
+    	References="@(ReferencePath);@(ReferenceDependencyPaths)"
+    	TargetAssembly="@(IntermediateAssembly)"
+    	OutputDocDirectory="$(IntermediateOutputPath)docs"
+		ToolPath="$(_MonoAndroidBinDirectory)"
+		ToolExe="$(MDocToolExe)"
+    	 />
+    <ImportJavaDoc
+    	JavaDocs="@(JavaDocIndex)"
+    	References="@(ReferencePath);@(ReferenceDependencyPaths)"
+    	Transforms="@(TransformFile)"
+    	TargetAssembly="@(IntermediateAssembly)"
+    	OutputDocDirectory="$(IntermediateOutputPath)docs" />
+   	<!-- "extra" mdoc needed to "fix" formatting, reducing diff size due to XML formatting -->
+    <MDoc
+    	References="@(ReferencePath);@(ReferenceDependencyPaths)"
+    	TargetAssembly="@(IntermediateAssembly)"
+    	OutputDocDirectory="$(IntermediateOutputPath)docs"
+		ToolPath="$(_MonoAndroidBinDirectory)"
+		ToolExe="$(MDocToolExe)"
+    	 />
+    <!-- Then export .NET doc xml -->
+    <MDoc
+    	RunExport="True"
+    	TargetAssembly="@(IntermediateAssembly)"
+    	OutputDocDirectory="$(IntermediateOutputPath)docs"
+		ToolPath="$(_MonoAndroidBinDirectory)"
+		ToolExe="$(MDocToolExe)"
+    	 />
+    <Copy
+    	SourceFiles="@(IntermediateAssembly->'$(IntermediateOutputPath)%(filename).xml')"
+    	DestinationFiles="@(IntermediateAssembly->'$(OutputPath)%(filename).xml')"
+    	SkipUnchangedFiles="true" />
+  </Target>
+
+  <Target Name="CleanBindingsOutput">
+
+    <Delete Files="$(ApiOutputFile)" />
+    <Delete Files="$(ApiOutputFile).adjusted" />
+    <Delete Files="$(_GeneratorStampFile)" />
+
+    <RemoveDirFixed Directories="$(GeneratedOutputPath)" Condition="Exists ('$(GeneratedOutputPath)')" />
+
+    <Delete Files="@(IntermediateAssembly->'$(OutputPath)%(filename).xml')" />
+    <Delete Files="@(IntermediateAssembly->'$(IntermediateOutputPath)%(filename).xml')" />
+    <RemoveDirFixed Directories="$(IntermediateOutputPath)docs" Condition="Exists ('$(IntermediateOutputPath)docs')" />
+
+  </Target>
+  
+  <Target Name="CleanLibraryProjectIntermediaries">
+    <Delete Files="$(IntermediateOutputPath)__AndroidLibraryProjects__.zip" />
+    <Delete Files="$(_AndroidResourcePathsCache)" />
+    <Delete Files="$(_AndroidSdksCache)" />
+    <Delete Files="$(_AndroidLibraryImportsCache)" />
+    <Delete Files="$(_AndroidLibraryProjectImportsCache)" />
+    <RemoveDirFixed Directories="$(IntermediateOutputPath)library_project_jars" Condition="Exists ('$(IntermediateOutputPath)library_project_jars')" />
+    <RemoveDirFixed Directories="$(IntermediateOutputPath)library_project_annotations" Condition="Exists ('$(IntermediateOutputPath)library_project_annotations')" />
+    <RemoveDirFixed Directories="$(IntermediateOutputPath)$(_LibraryProjectImportsDirectoryName)" Condition="Exists ('$(IntermediateOutputPath)$(_LibraryProjectImportsDirectoryName)')" />
+    <RemoveDirFixed Directories="$(IntermediateOutputPath)__library_projects__" Condition="Exists ('$(IntermediateOutputPath)__library_projects__')"/>
+  </Target>
+
+  <Target Name="CleanNativeLibraryIntermediaries">
+    <Delete Files="$(IntermediateOutputPath)__AndroidNativeLibraries__.zip" />
+    <RemoveDirFixed Directories="$(IntermediateOutputPath)native_library_imports" Condition="Exists ('$(IntermediateOutputPath)native_library_imports')" />
+    <RemoveDirFixed Directories="$(IntermediateOutputPath)libs" Condition="Exists ('$(IntermediateOutputPath)libs')" />
+    <RemoveDirFixed Directories="$(IntermediateOutputPath)$(_NativeLibraryImportsDirectoryName)" Condition="Exists ('$(IntermediateOutputPath)$(_NativeLibraryImportsDirectoryName)')" />
+  </Target>
+
+  <Target Name="_CreateNativeLibraryArchive"
+          Condition="@(EmbeddedNativeLibrary) != ''" 
+          Inputs="@(EmbeddedNativeLibrary)"
+          Outputs="$(IntermediateOutputPath)__AndroidNativeLibraries__.zip">
+    <CreateNativeLibraryArchive
+      OutputDirectory="$(IntermediateOutputPath)$(_NativeLibraryImportsDirectoryName)"
+      EmbeddedNativeLibraries="@(EmbeddedNativeLibrary)" />
+  </Target>
+
+  <Target Name="_AddNativeLibraryArchiveToCompile" DependsOnTargets="_CreateNativeLibraryArchive">
+    <CreateItem Include="$(IntermediateOutputPath)__AndroidNativeLibraries__.zip"
+                Condition="Exists ('$(IntermediateOutputPath)__AndroidNativeLibraries__.zip')"
+                AdditionalMetadata="LogicalName=__AndroidNativeLibraries__.zip">
+      <Output TaskParameter="Include" ItemName="EmbeddedResource" />
+    </CreateItem>
+  </Target>
+
+  <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.PCLSupport.targets" />
+
+  <!--
+  *******************************************
+    Extensibility hook that allows VS to
+    provide extra behavior without modifying 
+    the core targets.
+  *******************************************
+  -->
+  <Import Project="$(MSBuildThisFileDirectory)$(MSBuildThisFileName).After.targets" 
+          Condition="Exists('$(MSBuildThisFileDirectory)$(MSBuildThisFileName).After.targets')"/>
+</Project>

@@ -1,0 +1,48 @@
+<!--
+***********************************************************************************************
+Xamarin.Android.FSharp.targets
+
+WARNING:  DO NOT MODIFY this file unless you are knowledgeable about MSBuild and have
+  created a backup copy.  Incorrect changes to this file will make it
+  impossible to load or build your projects from the command-line or the IDE.
+
+This file imports the version- and platform-specific targets for the project importing
+this file. This file also defines targets to produce an error if the specified targets
+file does not exist, but the project is built anyway (command-line or IDE build).
+
+Copyright (C) 2012 Xamarin. All rights reserved.
+***********************************************************************************************
+-->
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <!--
+    *******************************************
+      Extensibility hook that allows VS to
+      provide extra behavior without modifying 
+      the core targets.
+    *******************************************
+    -->
+    <Import Project="$(MSBuildThisFileDirectory)$(MSBuildThisFileName).Before.targets" 
+            Condition="Exists('$(MSBuildThisFileDirectory)$(MSBuildThisFileName).Before.targets')"/>
+    <PropertyGroup>
+        <TargetFrameworkIdentifier>MonoAndroid</TargetFrameworkIdentifier>
+        <TargetFrameworkVersion Condition="'$(TargetFrameworkVersion)' == ''">v2.3</TargetFrameworkVersion>
+        <AndroidLinkMode Condition="'$(AndroidLinkMode)' == ''">SdkOnly</AndroidLinkMode>
+        <!-- The .NET SGEN tool cannot process Xamarin.Android assemblies because
+             our mscorlib.dll isn't properly signed, as far as its concerned.
+             Disable generation to avoid "bizarre" build errors. -->
+        <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
+        <_AndroidResourceDesigner>Resource.Designer.fs</_AndroidResourceDesigner>
+    </PropertyGroup>
+    <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.0\Framework\v4.0\Microsoft.FSharp.Targets" Condition="Exists('$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.0\Framework\v4.0\Microsoft.FSharp.Targets') AND !Exists('$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.1\Framework\v4.0\Microsoft.FSharp.Targets')" />
+    <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.1\Framework\v4.0\Microsoft.FSharp.Targets" Condition="Exists('$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.1\Framework\v4.0\Microsoft.FSharp.Targets')" />
+    <Import Project="Xamarin.Android.Common.targets" />
+    <!--
+    *******************************************
+      Extensibility hook that allows VS to
+      provide extra behavior without modifying 
+      the core targets.
+    *******************************************
+    -->
+    <Import Project="$(MSBuildThisFileDirectory)$(MSBuildThisFileName).After.targets" 
+            Condition="Exists('$(MSBuildThisFileDirectory)$(MSBuildThisFileName).After.targets')"/>    
+</Project>
