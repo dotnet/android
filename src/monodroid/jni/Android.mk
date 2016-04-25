@@ -2,14 +2,10 @@ LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)
 
-jonp:
-	echo LOCAL_PATH=$(LOCAL_PATH)
-
-
-ifeq ($(ENABLE_MONO_DEBUG),true)
+ifeq ($(CONFIGURATION),Debug)
 COMMON_CFLAGS ?= -ggdb3 -O0 -fno-omit-frame-pointer
 else
-COMMON_CFLAGS ?= -g -O2
+COMMON_CFLAGS ?= -g -O2 -DRELEASE=1
 endif
 
 LOCAL_CFLAGS =	$(COMMON_FLAGS) \

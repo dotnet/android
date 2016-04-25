@@ -11,7 +11,7 @@
       Inputs="@(CFiles);jni\Android.mk;jni\Application.mk"
       Outputs="@(_MonoRuntime->'$(OutputPath)\%(Identity)\libmono-android.$(_Conf).%(Identity).so')">
     <Exec
-        Command="$(AndroidToolchainDirectory)\ndk\ndk-build CONFIGURATION=$(Configuration)"
+        Command="$(AndroidToolchainDirectory)\ndk\ndk-build CONFIGURATION=$(Configuration) V=1"
     />
     <Copy
         SourceFiles="@(_MonoRuntime->'obj\local\%(Identity)\libmonodroid.so')"
