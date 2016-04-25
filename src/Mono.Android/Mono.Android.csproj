@@ -309,5 +309,10 @@
       <Name>jcw-gen</Name>
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
     </ProjectReference>
+    <ProjectReference Include="..\..\build-tools\mono-runtimes\mono-runtimes.mdproj">
+      <Project>{C03E6CF1-7460-4CDC-A4AB-292BBC0F61F2}</Project>
+      <Name>mono-runtimes</Name>
+      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
+    </ProjectReference>
   </ItemGroup>
 </Project>
