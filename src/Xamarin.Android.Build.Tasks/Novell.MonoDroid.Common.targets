@@ -1,0 +1,4 @@
+<Project>
+  <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.Common.targets" />
+</Project>
+
