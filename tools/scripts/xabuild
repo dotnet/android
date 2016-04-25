@@ -1,0 +1,25 @@
+#!/bin/bash -e
+topdir="$(cd `dirname "$0"`/../.. && pwd)"
+
+if [ -z "$CONFIGURATION" ] ; then
+	CONFIGURATION=Debug
+fi
+
+export TARGETS_DIR="$topdir/bin/$CONFIGURATION/lib/xbuild"
+export MSBuildExtensionsPath="$TARGETS_DIR" 
+export MONO_ANDROID_PATH="$topdir/bin/$CONFIGURATION"
+export XBUILD_FRAMEWORK_FOLDERS_PATH="$topdir/bin/$CONFIGURATION/lib/xbuild-frameworks"
+ANDROID_NDK_PATH=$(cd $topdir/build-tools/android-toolchain && xbuild /nologo /v:minimal /t:_GetAndroidNdkDirectory android-toolchain.targets)
+ANDROID_SDK_PATH=$(cd $topdir/build-tools/android-toolchain && xbuild /nologo /v:minimal /t:_GetAndroidSdkDirectory android-toolchain.targets)
+
+ANDROID_NDK_PATH=$(echo $ANDROID_NDK_PATH | sed 's/^\w*//g')
+ANDROID_SDK_PATH=$(echo $ANDROID_SDK_PATH | sed 's/^\w*//g')
+
+export ANDROID_NDK_PATH
+export ANDROID_SDK_PATH
+
+exec xbuild $MSBUILD_OPTIONS \
+	/p:AndroidNdkDirectory="$ANDROID_NDK_PATH" \
+	/p:AndroidSdkDirectory="$ANDROID_SDK_PATH" \
+	/p:MonoDroidInstallDirectory="$MONO_ANDROID_PATH" \
+	"$@"

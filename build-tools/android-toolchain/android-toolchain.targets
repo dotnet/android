@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\..\Configuration.props" />
   <Import Project="android-toolchain.projitems" />
   <Target Name="_CopyBootstrapTasksAssembly"
       Outputs="$(OutputPath)\Xamarin.Android.Tools.BootstrapTasks.dll">
@@ -83,6 +84,18 @@
     <Touch
         Files="@(_NdkToolchain->'$(AndroidToolchainDirectory)\.stamp-toolchains-%(Identity)')"
         AlwaysCreate="True"
+    />
+  </Target>
+  <Target Name="_GetAndroidSdkDirectory">
+    <Message
+        Text="$(AndroidToolchainDirectory)\sdk"
+        Importance="High"
+    />
+  </Target>
+  <Target Name="_GetAndroidNdkDirectory">
+    <Message
+        Text="$(AndroidToolchainDirectory)\ndk"
+        Importance="High"
     />
   </Target>
 </Project>

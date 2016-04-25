@@ -6,7 +6,7 @@
     <ItemType>GenericProject</ItemType>
     <ProjectGuid>{8FF78EB6-6FC8-46A7-8A15-EBBA9045C5FA}</ProjectGuid>
   </PropertyGroup>
-  <Import Project="..\..\Configuration.props" />
+  <Import Project="android-toolchain.targets" />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <OutputPath>$(AndroidToolchainDirectory)</OutputPath>
   </PropertyGroup>
@@ -23,7 +23,6 @@
 			_CreateNdkToolchains;
     </BuildDependsOn>
   </PropertyGroup>
-  <Import Project="android-toolchain.targets" />
   <ItemGroup>
     <ProjectReference Include="..\..\src\Xamarin.Android.Tools.BootstrapTasks\Xamarin.Android.Tools.BootstrapTasks.csproj">
       <Project>{E8492EFB-D14A-4F32-AA28-88848322ECEA}</Project>

@@ -425,7 +425,7 @@ namespace Xamarin.Android.Tasks
 				apk.AddEntry (string.Format ("lib/{0}/libmonodroid.so", abi), File.OpenRead (path));
 				if (!use_shared_runtime) {
 					// include the sgen
-					library = string.Format ("libmonosgen-2.0.{0}.so", abi);
+					library = "libmonosgen-2.0.so";
 					path = Path.Combine (root, "lib", abi, library);
 					apk.AddEntry (string.Format ("lib/{0}/libmonosgen-2.0.so", abi), File.OpenRead (path));
 				}
