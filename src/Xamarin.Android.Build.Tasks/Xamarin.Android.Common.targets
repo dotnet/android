@@ -800,13 +800,6 @@ because xbuild doesn't support framework reference assemblies.
 	<CreateProperty Value="$(DefineConstants);$(AndroidDefineConstants)">
 		<Output TaskParameter="Value" PropertyName="DefineConstants" />
 	</CreateProperty>
-
-	<CreateProperty Value="smcs" Condition="'$(OS)' == 'Unix'">
-		<Output TaskParameter="Value" PropertyName="CscToolExe"/>
-	</CreateProperty>
-	<CreateProperty Value="$(_MonoAndroidBinDirectory)" Condition="'$(OS)' == 'Unix'">
-		<Output TaskParameter="Value" PropertyName="CscToolPath"/>
-	</CreateProperty>
 </Target>
 
 <!-- uploadflags.txt

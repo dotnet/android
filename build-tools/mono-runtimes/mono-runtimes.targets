@@ -73,8 +73,9 @@
   </Target>
   <Target Name="_InstallBcl"
       Inputs="$(_MonoPath)\mcs\class\lib\monodroid\mscorlib.dll"
-      Outputs="$(OutputPath)\lib\xbuild-frameworks\MonoAndroid\v1.0\mscorlib.dll">
+      Outputs="$(OutputPath)lib\xbuild-frameworks\MonoAndroid\v1.0\mscorlib.dll;$(OutputPath)lib\xbuild-frameworks\MonoAndroid\v1.0\RedistList\FrameworkList.xml">
     <MakeDir Directories="$(OutputPath)\lib\xbuild-frameworks\MonoAndroid\v1.0" />
+    <MakeDir Directories="$(OutputPath)\lib\xbuild-frameworks\MonoAndroid\v1.0\RedistList" />
     <MakeDir Directories="$(OutputPath)\lib\xbuild-frameworks\MonoAndroid\v1.0\Facades" />
     <ItemGroup>
       <_Assemblies Include="$(_MonoPath)\mcs\class\lib\monodroid\*.dll" />
@@ -90,6 +91,15 @@
     />
     <Touch
         Files="$(OutputPath)\lib\xbuild-frameworks\MonoAndroid\v1.0\mscorlib.dll"
+    />
+    <ItemGroup>
+      <FrameworkList Include="&lt;FileList Redist=&quot;MonoAndroid&quot; Name=&quot;Xamarin.Android Base Class Libraries&quot;&gt;" />
+      <FrameworkList Include="&lt;/FileList&gt;" />
+    </ItemGroup>
+    <WriteLinesToFile
+        File="$(OutputPath)lib\xbuild-frameworks\MonoAndroid\v1.0\RedistList\FrameworkList.xml"
+        Lines="@(FrameworkList)"
+        Overwrite="True"
     />
   </Target>
   <Target Name="_CleanRuntimes"

@@ -117,6 +117,21 @@
         Command="jar cf &quot;$(OutputPath)mono.android.jar&quot; -C &quot;$(IntermediateOutputPath)android-$(AndroidApiLevel).jcw\bin&quot; ."
     />
   </Target>
+  <Target Name="_GenerateJavaCallableWrappers"
+      AfterTargets="CoreBuild"
+      Inputs="$(OutputPath)$(AssemblyName).dll"
+      Outputs="$(OutputPath)RedistList\FrameworkList.xml">
+   <MakeDir Directories="$(OutputPath)RedistList" />
+   <ItemGroup>
+     <FrameworkList Include="&lt;FileList Redist=&quot;MonoAndroid&quot; Name=&quot;Xamarin.Android $(AndroidFrameworkVersion) Support&quot; IncludeFramework=&quot;v1.0&quot;&gt;" />
+     <FrameworkList Include="&lt;/FileList&gt;" />
+   </ItemGroup>
+   <WriteLinesToFile
+       File="$(OutputPath)RedistList\FrameworkList.xml"
+       Lines="@(FrameworkList)"
+       Overwrite="True"
+   />
+  </Target>
   <Target Name="_CleanBinding"
       AfterTargets="Clean">
     <RemoveDir Directories="$(IntermediateOutputPath)android-$(AndroidApiLevel);$(IntermediateOutputPath)android-$(AndroidApiLevel).jcw" />
