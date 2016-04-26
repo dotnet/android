@@ -5,8 +5,8 @@ all:
 	$(MSBUILD)
 
 prepare:
-	nuget restore
 	git submodule update --init --recursive
+	nuget restore
 	(cd external/Java.Interop && nuget restore)
 
 clean:
