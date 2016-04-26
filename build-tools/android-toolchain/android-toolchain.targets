@@ -27,6 +27,7 @@
   <Target Name="_DownloadItems"
       DependsOnTargets="_DetermineItems"
       Outputs="@(_PlatformAndroidSdkItem->'$(AndroidToolchainCacheDirectory)\%(Identity)');@(_PlatformAndroidNdkItem->'$(AndroidToolchainCacheDirectory)\%(Identity)')">
+    <MakeDir Directories="$(AndroidToolchainCacheDirectory)" />
     <DownloadUri
         SourceUris="@(_PlatformAndroidSdkItem->'$(AndroidUri)/%(Identity)');@(_PlatformAndroidNdkItem->'$(AndroidUri)/%(Identity)')"
         DestinationFiles="@(_PlatformAndroidSdkItem->'$(AndroidToolchainCacheDirectory)\%(Identity)');@(_PlatformAndroidNdkItem->'$(AndroidToolchainCacheDirectory)\%(Identity)')"
