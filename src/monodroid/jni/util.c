@@ -287,6 +287,51 @@ monodroid_runtime_invoke (struct DylibMono *mono, MonoDomain *domain, MonoMethod
 	}
 }
 
+static int
+make_directory (const char *path, int mode)
+{
+#if WINDOWS
+	return mkdir (path);
+#else
+	return mkdir (path, mode);
+#endif
+}
+
+int
+create_directory (const char *pathname, int mode)
+{
+	if (mode <= 0)
+		mode = DEFAULT_DIRECTORY_MODE;
+
+	if  (!pathname || *pathname == '\0') {
+		errno = EINVAL;
+		return -1;
+	}
+
+	mode_t oldumask = umask (022);
+	char *path = strdup (pathname);
+	int rv, ret = 0;
+	for (char *d = path; *d; ++d) {
+		if (*d != '/')
+			continue;
+		*d = 0;
+		if (*path) {
+			rv = make_directory (path, mode);
+			if  (rv == -1 && errno != EEXIST)  {
+				ret = -1;
+				break;
+			}
+		}
+		*d = '/';
+	}
+	free (path);
+	if (ret == 0)
+		ret = make_directory (pathname, mode);
+	umask (oldumask);
+
+	return ret;
+}
+
 void create_public_directory (const char *dir)
 {
 #ifndef WINDOWS

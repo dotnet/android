@@ -1,3 +1,4 @@
+
 #include <stdlib.h>
 #include <stdarg.h>
 #include <jni.h>
@@ -2950,13 +2951,52 @@ static const unsigned char monodroid_machine_config[];
 static const unsigned int monodroid_machine_config_len;
 
 static void
-set_environment_variable (JNIEnv *env, const char *name, jstring value)
+set_environment_variable_for_directory_full (JNIEnv *env, const char *name, jstring value, int createDirectory, int mode )
 {
 	const char *v;
 
 	v = (*env)->GetStringUTFChars (env, value, NULL);
+	if (createDirectory) {
+		int rv = create_directory (v, mode);
+		if (rv < 0 && errno != EEXIST)
+			log_warn (LOG_DEFAULT, "Failed to create directory for environment variable %s. %s", name, strerror (errno));
+	}
 	setenv (name, v, 1);
 	(*env)->ReleaseStringUTFChars (env, value, v);
+}
+
+static void
+set_environment_variable_for_directory (JNIEnv *env, const char *name, jstring value)
+{
+	set_environment_variable_for_directory_full (env, name, value, 1, DEFAULT_DIRECTORY_MODE);
+}
+
+static void
+set_environment_variable (JNIEnv *env, const char *name, jstring value)
+{
+	set_environment_variable_for_directory_full (env, name, value, 0, 0);
+}
+
+static void
+create_xdg_directory (const char *home, const char *relativePath, const char *environmentVariableName)
+{
+	char *dir = monodroid_strdup_printf ("%s/%s", home, relativePath);
+	log_info (LOG_DEFAULT, "Creating XDG directory: %s", dir);
+	int rv = create_directory (dir, DEFAULT_DIRECTORY_MODE);
+	if (rv < 0 && errno != EEXIST)
+		log_warn (LOG_DEFAULT, "Failed to create XDG directory %s. %s", dir, strerror (errno));
+	if (environmentVariableName)
+		setenv (environmentVariableName, dir, 1);
+	free (dir);
+}
+
+static void
+create_xdg_directories_and_environment (JNIEnv *env, jstring homeDir)
+{
+	const char *home = (*env)->GetStringUTFChars (env, homeDir, NULL);
+	create_xdg_directory (home, ".local/share", "XDG_DATA_HOME");
+	create_xdg_directory (home, ".config", "XDG_CONFIG_HOME");
+	(*env)->ReleaseStringUTFChars (env, homeDir, home);
 }
 
 #if DEBUG
@@ -3494,9 +3534,11 @@ Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobject
 
 	log_info (LOG_TIMING, "Runtime.init: start: %lli ms\n", current_time_millis ());
 
+	jstring homeDir = (*env)->GetObjectArrayElement (env, appDirs, 0);
 	set_environment_variable (env, "LANG", lang);
-	set_environment_variable (env, "HOME", (*env)->GetObjectArrayElement (env, appDirs, 0));
-	set_environment_variable (env, "TMPDIR", (*env)->GetObjectArrayElement (env, appDirs, 1));
+	set_environment_variable_for_directory (env, "HOME", homeDir);
+	set_environment_variable_for_directory (env, "TMPDIR", (*env)->GetObjectArrayElement (env, appDirs, 1));
+	create_xdg_directories_and_environment (env,  homeDir);
 
 	setup_environment (env, runtimeApks);
 

@@ -17,10 +17,13 @@
 
 #include <stdlib.h>
 #include <unistd.h>
+#include <sys/stat.h>
 
 #include "dylib-mono.h"
 #include "monodroid.h"
 #include "logger.h"
+
+#define DEFAULT_DIRECTORY_MODE S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH
 
 MONO_API  void    monodroid_strfreev (char **str_array);
 MONO_API  char  **monodroid_strsplit (const char *string, const char *delimiter, int max_tokens);
@@ -80,6 +83,7 @@ wchar_t* utf8_to_utf16 (const char *mbstr);
 #endif // def WINDOWS
 
 void create_public_directory (const char *dir);
+int create_directory (const char *pathname, int mode);
 void set_world_accessable (const char *path);
 
 typedef void  MonoAssembly;
