@@ -11,7 +11,6 @@ using System.Xml.Linq;
 using Microsoft.Build.Utilities;
 using Microsoft.Build.Framework;
 using System.Text.RegularExpressions;
-using Xamarin.AndroidTools;
 using Xamarin.Android.Build.Utilities;
 
 namespace Xamarin.Android.Tasks

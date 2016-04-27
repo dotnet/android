@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Mono.Cecil;
 
-namespace Xamarin.AndroidTools.Aidl
+namespace Xamarin.Android.Tools.Aidl
 {
 	public class BindingDatabase
 	{

@@ -9,7 +9,7 @@ using Mono.Cecil;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Monodroid;
-using Xamarin.AndroidTools.Aidl;
+using Xamarin.Android.Tools.Aidl;
 
 namespace Xamarin.Android.Tasks
 {

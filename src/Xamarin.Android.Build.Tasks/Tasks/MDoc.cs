@@ -3,8 +3,8 @@ using System.IO;
 using System.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using Xamarin.AndroidTools;
 using Xamarin.Android.Build.Utilities;
+using Xamarin.Android.Tools.Aidl;
 
 namespace Xamarin.Android.Tasks
 {

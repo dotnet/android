@@ -6,7 +6,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using Xamarin.AndroidTools;
 using Xamarin.Android.Build.Utilities;
 
 

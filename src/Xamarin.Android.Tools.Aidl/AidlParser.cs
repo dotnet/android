@@ -3,7 +3,7 @@ using System.Linq;
 using Irony.Parsing;
 using Irony.Ast;
 
-namespace Xamarin.AndroidTools.Aidl
+namespace Xamarin.Android.Tools.Aidl
 {
 	[Language ("AIDL", "1.0", "AIDL pseudo grammar")]
 	public partial class AidlGrammar : Grammar

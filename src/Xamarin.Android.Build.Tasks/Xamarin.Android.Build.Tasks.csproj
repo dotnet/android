@@ -598,9 +598,9 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Xamarin.AndroidTools.Aidl\Xamarin.AndroidTools.Aidl.csproj">
+    <ProjectReference Include="..\Xamarin.Android.Tools.Aidl\Xamarin.Android.Tools.Aidl.csproj">
       <Project>{D27AD8F7-7710-40BE-B03B-55EFBEC13C44}</Project>
-      <Name>Xamarin.AndroidTools.Aidl</Name>
+      <Name>Xamarin.Android.Tools.Aidl</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop.Tools.Diagnostics\Java.Interop.Tools.Diagnostics.csproj">
       <Project>{64CC4E44-CE3A-4319-BF3F-6CF8BD513870}</Project>

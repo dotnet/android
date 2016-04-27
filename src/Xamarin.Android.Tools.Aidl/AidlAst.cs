@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 using Irony.Parsing;
 
-namespace Xamarin.AndroidTools.Aidl
+namespace Xamarin.Android.Tools.Aidl
 {
 	public class CompilationUnit
 	{

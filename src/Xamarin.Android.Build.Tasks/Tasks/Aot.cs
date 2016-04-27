@@ -7,7 +7,6 @@ using System.Linq;
 using System.Reflection;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using Xamarin.AndroidTools;
 
 using Java.Interop.Tools.Diagnostics;
 using Xamarin.Android.Build.Utilities;

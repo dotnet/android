@@ -27,7 +27,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mono.Android", "src\Mono.An
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mono.Android.Export", "src\Mono.Android.Export\Mono.Android.Export.csproj", "{B8105878-D423-4159-A3E7-028298281EC6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.AndroidTools.Aidl", "src\Xamarin.AndroidTools.Aidl\Xamarin.AndroidTools.Aidl.csproj", "{D27AD8F7-7710-40BE-B03B-55EFBEC13C44}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.Tools.Aidl", "src\Xamarin.Android.Tools.Aidl\Xamarin.Android.Tools.Aidl.csproj", "{D27AD8F7-7710-40BE-B03B-55EFBEC13C44}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.Build.Tasks", "src\Xamarin.Android.Build.Tasks\Xamarin.Android.Build.Tasks.csproj", "{3F1F2F50-AF1A-4A5A-BEDB-193372F068D7}"
 EndProject

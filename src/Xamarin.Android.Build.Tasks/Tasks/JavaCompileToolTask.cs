@@ -7,7 +7,6 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using System.Text;
 using System.Collections.Generic;
-using Xamarin.AndroidTools;
 using Xamarin.Android.Build.Utilities;
 
 namespace Xamarin.Android.Tasks

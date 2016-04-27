@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Xamarin.AndroidTools.Aidl
+namespace Xamarin.Android.Tools.Aidl
 {
 	public enum ParcelableHandling
 	{

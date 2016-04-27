@@ -3,7 +3,6 @@ using Microsoft.Build.Utilities;
 using Microsoft.Build.Framework;
 using System.IO;
 using System.Diagnostics;
-using Xamarin.AndroidTools;
 using Xamarin.Android.Build.Utilities;
 
 namespace Xamarin.Android.Tasks

@@ -1,6 +1,5 @@
 ﻿using System;
 using Microsoft.Build.Framework;
-using Xamarin.AndroidTools;
 using Microsoft.Build.Utilities;
 using System.Text.RegularExpressions;
 using System.IO;

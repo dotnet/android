@@ -7,7 +7,6 @@ using System.IO;
 
 using Microsoft.Build.Utilities;
 using Microsoft.Build.Framework;
-using Xamarin.AndroidTools;
 using System.Collections.Specialized;
 using Xamarin.Android.Build.Utilities;
 

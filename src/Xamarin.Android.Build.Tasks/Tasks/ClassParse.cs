@@ -7,7 +7,6 @@ using System.IO;
 using System.Reflection;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using Xamarin.AndroidTools;
 using System.Text;
 using Bytecode = Xamarin.Android.Tools.Bytecode;
 using System.Diagnostics;

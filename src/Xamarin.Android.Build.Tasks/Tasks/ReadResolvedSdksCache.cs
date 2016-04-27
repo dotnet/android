@@ -29,7 +29,6 @@ using System.Linq;
 using System.Xml.Linq;
 using Microsoft.Build.Utilities;
 using Microsoft.Build.Framework;
-using Xamarin.AndroidTools;
 
 namespace Xamarin.Android.Tasks
 {

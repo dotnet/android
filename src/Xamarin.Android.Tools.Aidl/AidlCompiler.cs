@@ -6,7 +6,7 @@ using System.Text;
 using Irony.Parsing;
 using Mono.Cecil;
 
-namespace Xamarin.AndroidTools.Aidl
+namespace Xamarin.Android.Tools.Aidl
 {
 	public class AidlCompiler
 	{

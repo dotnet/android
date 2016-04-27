@@ -4,7 +4,7 @@ using Microsoft.CSharp;
 using System.IO;
 using System.Linq;
 
-namespace Xamarin.AndroidTools.Aidl
+namespace Xamarin.Android.Tools.Aidl
 {
 	public class CSharpCodeGenerator
 	{

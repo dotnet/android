@@ -6,7 +6,7 @@
     <ProjectGuid>{D27AD8F7-7710-40BE-B03B-55EFBEC13C44}</ProjectGuid>
     <OutputType>Library</OutputType>
     <RootNamespace>Xamarin.AndroidTools.Aidl</RootNamespace>
-    <AssemblyName>Xamarin.AndroidTools.Aidl</AssemblyName>
+    <AssemblyName>Xamarin.Android.Tools.Aidl</AssemblyName>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>True</DebugSymbols>
