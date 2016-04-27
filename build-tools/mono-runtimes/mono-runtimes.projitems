@@ -19,7 +19,7 @@
       <OutputProfiler>libmono-profiler-log.so</OutputProfiler>
       <OutputMonoPosixHelper>libMonoPosixHelper.so</OutputMonoPosixHelper>
     </_MonoRuntime>
-    <_MonoRuntime Include="host">
+    <_MonoRuntime Include="host" Condition="'$(HostOS)'=='Darwin'">
       <Ar>ar</Ar>
       <As>as</As>
       <Cc>$(HostCc)</Cc>
@@ -35,6 +35,23 @@
       <OutputRuntime>libmonosgen-2.0.dylib</OutputRuntime>
       <OutputProfiler>libmono-profiler-log.dylib</OutputProfiler>
       <OutputMonoPosixHelper>libMonoPosixHelper.dylib</OutputMonoPosixHelper>
+    </_MonoRuntime>
+    <_MonoRuntime Include="host" Condition="'$(HostOS)'=='Linux'">
+      <Ar>ar</Ar>
+      <As>as</As>
+      <Cc>$(HostCc)</Cc>
+      <CFlags>$(_CommonCFlags) -mmacosx-version-min=10.9</CFlags>
+      <Cxx>$(HostCxx)</Cxx>
+      <CxxCpp>cpp</CxxCpp>
+      <CxxFlags></CxxFlags>
+      <Ld>ld</Ld>
+      <LdFlags></LdFlags>
+      <RanLib>ranlib</RanLib>
+      <Strip>strip -S</Strip>
+      <ConfigureFlags>--enable-maintainer-mode --without-ikvm-native --with-monodroid --with-mcs-docs=no --disable-mono-debugger --with-profile2=no --with-profile4=no --with-profile4_5=yes --disable-boehm --enable-nls=no --disable-iconv</ConfigureFlags>
+      <OutputRuntime>libmonosgen-2.0.so</OutputRuntime>
+      <OutputProfiler>libmono-profiler-log.so</OutputProfiler>
+      <OutputMonoPosixHelper>libMonoPosixHelper.so</OutputMonoPosixHelper>
     </_MonoRuntime>
   </ItemGroup>
 </Project>
