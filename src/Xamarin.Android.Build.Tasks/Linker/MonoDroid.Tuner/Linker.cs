@@ -20,8 +20,8 @@ namespace MonoDroid.Tuner
 
 			pipeline.PrependStep (new ResolveFromAssemblyStep (options.MainAssembly));
 			if (options.RetainAssemblies != null)
-				foreach (var ass in options.RetainAssemblies)
-					pipeline.PrependStep (new ResolveFromAssemblyStep (ass));
+				foreach (var assembly in options.RetainAssemblies)
+					pipeline.PrependStep (new ResolveFromAssemblyStep (assembly));
 
 			context = CreateLinkContext (options, pipeline);
 			context.Resolver.AddSearchDirectory (options.OutputDirectory);

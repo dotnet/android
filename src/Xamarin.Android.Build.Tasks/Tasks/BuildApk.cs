@@ -437,11 +437,11 @@ namespace Xamarin.Android.Tasks
 		{
 			var abis = supportedAbis.Split (new char[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
 			var res = new DirectoryAssemblyResolver (Console.WriteLine, loadDebugSymbols: false);
-			foreach (var ass in EmbeddedNativeLibraryAssemblies)
-				res.Load (ass.ItemSpec);
-			foreach (var assPath in EmbeddedNativeLibraryAssemblies) {
-				var ass = res.GetAssembly (assPath.ItemSpec);
-				foreach (var mod in ass.Modules) {
+			foreach (var assembly in EmbeddedNativeLibraryAssemblies)
+				res.Load (assembly.ItemSpec);
+			foreach (var assemblyPath in EmbeddedNativeLibraryAssemblies) {
+				var assembly = res.GetAssembly (assemblyPath.ItemSpec);
+				foreach (var mod in assembly.Modules) {
 					var ressozip = mod.Resources.FirstOrDefault (r => r.Name == "__AndroidNativeLibraries__.zip") as EmbeddedResource;
 					if (ressozip == null)
 						continue;

@@ -118,17 +118,17 @@ namespace Xamarin.Android.Tasks
 			return !Log.HasLoggedErrors;
 		}
 
-		static string GetTargetAssembly (ITaskItem assname)
+		static string GetTargetAssembly (ITaskItem assemblyName)
 		{
-			var suffix = assname.ItemSpec.EndsWith (".dll") ? String.Empty : ".dll";
-			string hintPath = assname.GetMetadata ("HintPath").Replace (Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
-			string fileName = assname.ItemSpec + suffix;
+			var suffix = assemblyName.ItemSpec.EndsWith (".dll") ? String.Empty : ".dll";
+			string hintPath = assemblyName.GetMetadata ("HintPath").Replace (Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
+			string fileName = assemblyName.ItemSpec + suffix;
 			if (!String.IsNullOrEmpty (hintPath) && !File.Exists (hintPath))
 				hintPath = null;
-			string assPath = String.IsNullOrEmpty (hintPath) ? fileName : hintPath;
+			string assemblyPath = String.IsNullOrEmpty (hintPath) ? fileName : hintPath;
 			if (MonoAndroidHelper.IsFrameworkAssembly (fileName) && !MonoAndroidHelper.FrameworkEmbeddedJarLookupTargets.Contains (Path.GetFileName (fileName)))
 				return null;
-			return Path.GetFullPath (assPath);
+			return Path.GetFullPath (assemblyPath);
 		}
 
 		// Extracts library project contents under e.g. obj/Debug/[__library_projects__/*.jar | res/*/*]
@@ -143,16 +143,16 @@ namespace Xamarin.Android.Tasks
 				outdir.Create ();
 
 			var res = new DirectoryAssemblyResolver (Log.LogWarning, loadDebugSymbols: false);
-			foreach (var ass in Assemblies)
-				res.Load (ass.ItemSpec);
+			foreach (var assembly in Assemblies)
+				res.Load (assembly.ItemSpec);
 
 			// FIXME: reorder references by import priority (not sure how to do that yet)
-			foreach (var assPath in Assemblies
+			foreach (var assemblyPath in Assemblies
 					.Select (a => GetTargetAssembly (a))
 					.Where (a => a != null)
 					.Distinct ()) {
 				foreach (var imp in new string [] {imports_dir, "library_project_imports"}.Distinct ()) {
-					string assemblyIdentName = Path.GetFileNameWithoutExtension (assPath);
+					string assemblyIdentName = Path.GetFileNameWithoutExtension (assemblyPath);
 					if (UseShortFileNames) {
 						assemblyIdentName = Xamarin.Android.Tasks.MonoAndroidHelper.GetLibraryImportDirectoryNameForAssembly (assemblyIdentName);
 					}
@@ -162,27 +162,27 @@ namespace Xamarin.Android.Tasks
 					// FIXME: review these binResDir thing and enable this. Eclipse does this.
 					// Enabling these blindly causes build failure on ActionBarSherlock.
 					//string binResDir = Path.Combine (importsDir, "bin", "res");
-					//string binAssDir = Path.Combine (importsDir, "bin", "assets");
+					//string binAssemblyDir = Path.Combine (importsDir, "bin", "assets");
 #endif
 					string resDir = Path.Combine (importsDir, "res");
-					string assDir = Path.Combine (importsDir, "assets");
+					string assemblyDir = Path.Combine (importsDir, "assets");
 
 					// Skip already-extracted resources.
 					var stamp = new FileInfo (Path.Combine (outdir.FullName, assemblyIdentName + ".stamp"));
-					if (stamp.Exists && stamp.LastWriteTime > new FileInfo (assPath).LastWriteTime) {
-						Log.LogDebugMessage ("Skipped resource lookup for {0}: extracted files are up to date", assPath);
+					if (stamp.Exists && stamp.LastWriteTime > new FileInfo (assemblyPath).LastWriteTime) {
+						Log.LogDebugMessage ("Skipped resource lookup for {0}: extracted files are up to date", assemblyPath);
 #if SEPARATE_CRUNCH
-						// FIXME: review these binResDir/binAssDir thing and enable this. Eclipse does this.
+						// FIXME: review these binResDir/binAssemblyDir thing and enable this. Eclipse does this.
 						// Enabling these blindly causes build failure on ActionBarSherlock.
 						if (Directory.Exists (binResDir))
 							resolvedResourceDirectories.Add (binResDir);
-						if (Directory.Exists (binAssDir))
-							resolvedAssetDirectories.Add (binAssDir);
+						if (Directory.Exists (binAssemblyDir))
+							resolvedAssetDirectories.Add (binAssemblyDir);
 #endif
 						if (Directory.Exists (resDir))
 							resolvedResourceDirectories.Add (resDir);
-						if (Directory.Exists (assDir))
-							resolvedAssetDirectories.Add (assDir);
+						if (Directory.Exists (assemblyDir))
+							resolvedAssetDirectories.Add (assemblyDir);
 						continue;
 					}
 
@@ -191,9 +191,9 @@ namespace Xamarin.Android.Tasks
 
 					Directory.CreateDirectory (importsDir);
 
-					var ass = res.GetAssembly (assPath);
+					var assembly = res.GetAssembly (assemblyPath);
 
-					foreach (var mod in ass.Modules) {
+					foreach (var mod in assembly.Modules) {
 						// android environment files
 						foreach (var envtxt in mod.Resources
 								.Where (r => r.Name.StartsWith ("__AndroidEnvironment__", StringComparison.OrdinalIgnoreCase))
@@ -240,17 +240,17 @@ namespace Xamarin.Android.Tasks
 							// which resulted in missing resource issue.
 							// Here we replaced copy with use of '-S' option and made it to work.
 #if SEPARATE_CRUNCH
-							// FIXME: review these binResDir/binAssDir thing and enable this. Eclipse does this.
+							// FIXME: review these binResDir/binAssemblyDir thing and enable this. Eclipse does this.
 							// Enabling these blindly causes build failure on ActionBarSherlock.
 							if (Directory.Exists (binResDir))
 								resolvedResourceDirectories.Add (binResDir);
-							if (Directory.Exists (binAssDir))
-								resolvedAssetDirectories.Add (binAssDir);
+							if (Directory.Exists (binAssemblyDir))
+								resolvedAssetDirectories.Add (binAssemblyDir);
 #endif
 							if (Directory.Exists (resDir))
 								resolvedResourceDirectories.Add (resDir);
-							if (Directory.Exists (assDir))
-								resolvedAssetDirectories.Add (assDir);
+							if (Directory.Exists (assemblyDir))
+								resolvedAssetDirectories.Add (assemblyDir);
 
 							finfo.Delete ();
 						}

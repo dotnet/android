@@ -47,13 +47,13 @@ namespace Xamarin.Android.Tasks
 		IEnumerable<AssemblyDefinition> GetRetainAssemblies (DirectoryAssemblyResolver res)
 		{
 			List<AssemblyDefinition> retainList = null;
-			foreach (var ass in ResolvedAssemblies) {
-				var filename = Path.GetFileName (ass.ItemSpec);
+			foreach (var assembly in ResolvedAssemblies) {
+				var filename = Path.GetFileName (assembly.ItemSpec);
 				if (!MonoAndroidHelper.IsForceRetainedAssembly (filename))
 					continue;
 				if (retainList == null)
 					retainList = new List<AssemblyDefinition> ();
-				retainList.Add (res.GetAssembly (ass.ItemSpec));
+				retainList.Add (res.GetAssembly (assembly.ItemSpec));
 			}
 			return retainList;
 		}
@@ -78,8 +78,8 @@ namespace Xamarin.Android.Tasks
 			var res = new DirectoryAssemblyResolver (Log.LogWarning, loadDebugSymbols: false);
 			
 			// Put every assembly we'll need in the resolver
-			foreach (var ass in ResolvedAssemblies) {
-				res.Load (Path.GetFullPath (ass.ItemSpec));
+			foreach (var assembly in ResolvedAssemblies) {
+				res.Load (Path.GetFullPath (assembly.ItemSpec));
 			}
 
 			var resolver = new AssemblyResolver (res.ToResolverCache ());
@@ -111,8 +111,8 @@ namespace Xamarin.Android.Tasks
 
 			// Add LinkSkip options
 			if (!string.IsNullOrWhiteSpace (LinkSkip))
-				foreach (var ass in LinkSkip.Split (',', ';'))
-					skiplist.Add (ass);
+				foreach (var assembly in LinkSkip.Split (',', ';'))
+					skiplist.Add (assembly);
 
 			options.SkippedAssemblies = skiplist;
 
@@ -126,9 +126,9 @@ namespace Xamarin.Android.Tasks
 
 				var copydst = OptionalDestinationDirectory ?? OutputDirectory;
 				
-				foreach (var ass in ResolvedAssemblies) {
-					var copysrc = ass.ItemSpec;
-					var filename = Path.GetFileName (ass.ItemSpec);
+				foreach (var assembly in ResolvedAssemblies) {
+					var copysrc = assembly.ItemSpec;
+					var filename = Path.GetFileName (assembly.ItemSpec);
 
 					if (options.LinkNone) {
 						if (skiplist.Any (s => Path.GetFileNameWithoutExtension (filename) == s)) {
@@ -138,11 +138,11 @@ namespace Xamarin.Android.Tasks
 							// the dll in the OptionalDestinationDirectory must retain old and unchanged.
 							if (File.Exists (Path.Combine (copydst, filename)))
 								continue;
-							copysrc = ass.ItemSpec;
+							copysrc = assembly.ItemSpec;
 						} else {
 							// Prefer fixup assemblies if exists, otherwise just copy the original.
 							copysrc = Path.Combine (OutputDirectory, filename);
-							copysrc = File.Exists (copysrc) ? copysrc : ass.ItemSpec;
+							copysrc = File.Exists (copysrc) ? copysrc : assembly.ItemSpec;
 						}
 					}
 					else if (!MonoAndroidHelper.IsForceRetainedAssembly (filename))
@@ -150,7 +150,7 @@ namespace Xamarin.Android.Tasks
 
 					MonoAndroidHelper.CopyIfChanged (copysrc, Path.Combine (copydst, filename));
 					try {
-						MonoAndroidHelper.CopyIfChanged (ass.ItemSpec + ".mdb", Path.Combine (copydst, filename + ".mdb"));
+						MonoAndroidHelper.CopyIfChanged (assembly.ItemSpec + ".mdb", Path.Combine (copydst, filename + ".mdb"));
 					} catch (Exception) { // skip it, mdb sometimes fails to read and it's optional
 					}
 				}

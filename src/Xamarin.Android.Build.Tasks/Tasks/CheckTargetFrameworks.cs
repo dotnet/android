@@ -52,12 +52,12 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugTaskItems ("  ResolvedUserAssemblies: {0}", ResolvedAssemblies);
 
 			res = new DirectoryAssemblyResolver (Log.LogWarning, loadDebugSymbols: false);
-			foreach (var ass in ResolvedAssemblies) {
-				res.Load (Path.GetFullPath (ass.ItemSpec));
-				var apiLevel = ExtractApiLevel (ass);
+			foreach (var assembly in ResolvedAssemblies) {
+				res.Load (Path.GetFullPath (assembly.ItemSpec));
+				var apiLevel = ExtractApiLevel (assembly);
 				if (apiLevel > 0) {
-					Log.LogDebugMessage ("{0}={1}", Path.GetFileNameWithoutExtension (ass.ItemSpec), apiLevel);
-					apiLevels.Add (ass, apiLevel);
+					Log.LogDebugMessage ("{0}={1}", Path.GetFileNameWithoutExtension (assembly.ItemSpec), apiLevel);
+					apiLevels.Add (assembly, apiLevel);
 				}
 			}
 

@@ -25,8 +25,8 @@ namespace Mono.Tuner {
 			switch (assembly.Name.Name) {
 			case "Microsoft.CSharp":
 				preserve_dynamic = true;
-				foreach (var ass in saved)
-					ResolveFromAssemblyStep.ProcessLibrary (context, ass);
+				foreach (var savedAssembly in saved)
+					ResolveFromAssemblyStep.ProcessLibrary (context, savedAssembly);
 				ResolveFromAssemblyStep.ProcessLibrary (context, assembly);
 				break;
 			case "Mono.CSharp":

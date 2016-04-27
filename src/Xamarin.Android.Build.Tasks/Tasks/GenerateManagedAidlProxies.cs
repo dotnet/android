@@ -64,7 +64,7 @@ namespace Xamarin.Android.Tasks
 			using (var fsw = TextWriter.Null/*File.AppendText (Path.Combine (IntermediateOutputDirectory, "AidlFilesWrittenAbsolute.txt"))*/) {
 				tool.FileWritten += (file, source) => Log.LogDebugMessage ("Written ... {0}", file);
 				string outPath = Path.Combine (IntermediateOutputDirectory, "aidl");
-				var ret = tool.Run (opts, assfile => AssemblyDefinition.ReadAssembly (assfile), (dir, file) => {
+				var ret = tool.Run (opts, assemblyFile => AssemblyDefinition.ReadAssembly (assemblyFile), (dir, file) => {
 					var dst = Path.GetFullPath (Path.Combine (outPath, Path.ChangeExtension (file, ".cs")));
 					if (!dst.StartsWith (outPath))
 						dst = Path.Combine (outPath, Path.ChangeExtension (Path.GetFileName (file), ".cs"));

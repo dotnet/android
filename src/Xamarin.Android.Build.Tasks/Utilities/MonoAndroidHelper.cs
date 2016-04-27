@@ -225,11 +225,11 @@ namespace Xamarin.Android.Tasks
 
 		public static bool IsFrameworkAssembly (string assembly, bool checkSdkPath)
 		{
-			var ass = Path.GetFileName (assembly);
+			var assemblyName = Path.GetFileName (assembly);
 
-			if (Profile.SharedRuntimeAssemblies.Contains (ass, StringComparer.InvariantCultureIgnoreCase)) {
+			if (Profile.SharedRuntimeAssemblies.Contains (assemblyName, StringComparer.InvariantCultureIgnoreCase)) {
 #if MSBUILD
-				bool treatAsUser = Array.BinarySearch (FrameworkAssembliesToTreatAsUserAssemblies, ass, StringComparer.OrdinalIgnoreCase) >= 0;
+				bool treatAsUser = Array.BinarySearch (FrameworkAssembliesToTreatAsUserAssemblies, assemblyName, StringComparer.OrdinalIgnoreCase) >= 0;
 				// Framework assemblies don't come from outside the SDK Path;
 				// user assemblies do
 				if (checkSdkPath && treatAsUser && TargetFrameworkDirectories != null) {

@@ -103,26 +103,26 @@ namespace Xamarin.Android.Tasks
 				Namespace = string.Empty;
 
 			// Create static resource overwrite methods for each Resource class in libraries.
-			var assNames = new List<string> ();
+			var assemblyNames = new List<string> ();
 			if (IsApplication && References != null && References.Any ()) {
 				// FIXME: should this be unified to some better code with ResolveLibraryProjectImports?
 				var resolver = new DirectoryAssemblyResolver (Log.LogWarning, loadDebugSymbols: false);
-				foreach (var assname in References) {
-					var suffix = assname.ItemSpec.EndsWith (".dll") ? String.Empty : ".dll";
-					string hintPath = assname.GetMetadata ("HintPath").Replace (Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
-					string fileName = assname.ItemSpec + suffix;
-					resolver.Load (Path.GetFullPath (assname.ItemSpec));
+				foreach (var assemblyName in References) {
+					var suffix = assemblyName.ItemSpec.EndsWith (".dll") ? String.Empty : ".dll";
+					string hintPath = assemblyName.GetMetadata ("HintPath").Replace (Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
+					string fileName = assemblyName.ItemSpec + suffix;
+					resolver.Load (Path.GetFullPath (assemblyName.ItemSpec));
 					if (!String.IsNullOrEmpty (hintPath) && !File.Exists (hintPath)) // ignore invalid HintPath
 						hintPath = null;
-					string assPath = String.IsNullOrEmpty (hintPath) ? fileName : hintPath;
+					string assemblyPath = String.IsNullOrEmpty (hintPath) ? fileName : hintPath;
 					if (MonoAndroidHelper.IsFrameworkAssembly (fileName) && !MonoAndroidHelper.FrameworkEmbeddedJarLookupTargets.Contains (Path.GetFileName (fileName)))
 						continue;
 					Log.LogDebugMessage ("Scan assembly {0} for resource generator", fileName);
-					assNames.Add (assPath);
+					assemblyNames.Add (assemblyPath);
 				}
-				var asses = assNames.Select (ass => resolver.GetAssembly (ass));
+				var assemblies = assemblyNames.Select (assembly => resolver.GetAssembly (assembly));
 				new ResourceDesignerImportGenerator (Namespace, resources)
-					.CreateImportMethods (asses);
+					.CreateImportMethods (assemblies);
 			}
 
 			AdjustConstructor (isFSharp, resources);

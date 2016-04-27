@@ -122,10 +122,10 @@ namespace Android.Runtime {
 		static Delegate CreateDynamicCallback (MethodInfo method)
 		{
 			if (dynamic_callback_gen == null) {
-				var ass = Assembly.Load ("Mono.Android.Export");
-				if (ass == null)
+				var assembly = Assembly.Load ("Mono.Android.Export");
+				if (assembly == null)
 					throw new InvalidOperationException ("To use methods marked with ExportAttribute, Mono.Android.Export.dll needs to be referenced in the application");
-				var type = ass.GetType ("Java.Interop.DynamicCallbackCodeGenerator");
+				var type = assembly.GetType ("Java.Interop.DynamicCallbackCodeGenerator");
 				if (type == null)
 					throw new InvalidOperationException ("The referenced Mono.Android.Export.dll does not match the expected version. The required type was not found.");
 				dynamic_callback_gen = type.GetMethod ("Create");

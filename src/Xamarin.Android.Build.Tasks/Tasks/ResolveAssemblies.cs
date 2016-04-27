@@ -61,18 +61,18 @@ namespace Xamarin.Android.Tasks
 			var topAssemblyReferences = new List<AssemblyDefinition> ();
 
 			try {
-				foreach (var ass in Assemblies) {
-					var ass_path = Path.GetDirectoryName (ass.ItemSpec);
+				foreach (var assembly in Assemblies) {
+					var assembly_path = Path.GetDirectoryName (assembly.ItemSpec);
 
-					if (!resolver.SearchDirectories.Contains (ass_path))
-						resolver.SearchDirectories.Add (ass_path);
+					if (!resolver.SearchDirectories.Contains (assembly_path))
+						resolver.SearchDirectories.Add (assembly_path);
 
 					// Add each user assembly and all referenced assemblies (recursive)
-					var assembly = resolver.Load (ass.ItemSpec);
-					if (assembly == null)
-						throw new InvalidOperationException ("Failed to load assembly " + ass.ItemSpec);
-					topAssemblyReferences.Add (assembly);
-					assemblies.Add (assembly.MainModule.FullyQualifiedName);
+					var assemblyDef = resolver.Load (assembly.ItemSpec);
+					if (assemblyDef == null)
+						throw new InvalidOperationException ("Failed to load assembly " + assembly.ItemSpec);
+					topAssemblyReferences.Add (assemblyDef);
+					assemblies.Add (assemblyDef.MainModule.FullyQualifiedName);
 				}
 			} catch (Exception ex) {
 				Log.LogError ("Exception while loading assemblies: {0}", ex);

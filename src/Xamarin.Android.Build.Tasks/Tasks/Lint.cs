@@ -157,7 +157,7 @@ namespace Xamarin.Android.Tasks
 		{
 			// We need to hard code this test in because Lint will issue an Error 
 			// if android:debuggable appears in the manifest. We actually need that
-			// in debug mode. It seems the android tools do some voodoo/magic to
+			// in debug mode. It seems the android tools do some magic to
 			// decide if its needed or not.
 			if (string.IsNullOrEmpty (DisabledIssues) || !DisabledIssues.Contains ("HardcodedDebugMode"))
 				DisabledIssues = "HardcodedDebugMode" + (!string.IsNullOrEmpty(DisabledIssues) ? ","+DisabledIssues : "");

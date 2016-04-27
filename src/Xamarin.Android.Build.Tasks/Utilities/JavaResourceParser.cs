@@ -43,8 +43,8 @@ namespace Xamarin.Android.Tasks
 
 		// public finall class R {
 		//	 public static fnal class string|anim|styleable|etc. {
-		//     public static final int foobar = 0xZZ;
-		//     public static final int [] foobar = {
+		//     public static final int field = 0xZZ;
+		//     public static final int [] array = {
 		//       0xXX, 0xYY, 0xZZ
 		//     }
 		//   }

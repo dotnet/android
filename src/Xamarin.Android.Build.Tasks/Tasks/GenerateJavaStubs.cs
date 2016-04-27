@@ -104,10 +104,10 @@ namespace Xamarin.Android.Tasks
 			var selectedWhitelistAssemblies = new List<string> ();
 			
 			// Put every assembly we'll need in the resolver
-			foreach (var ass in ResolvedAssemblies) {
-				res.Load (Path.GetFullPath (ass.ItemSpec));
-				if (MonoAndroidHelper.FrameworkAttributeLookupTargets.Any (a => Path.GetFileName (ass.ItemSpec) == a))
-					selectedWhitelistAssemblies.Add (Path.GetFullPath (ass.ItemSpec));
+			foreach (var assembly in ResolvedAssemblies) {
+				res.Load (Path.GetFullPath (assembly.ItemSpec));
+				if (MonoAndroidHelper.FrameworkAttributeLookupTargets.Any (a => Path.GetFileName (assembly.ItemSpec) == a))
+					selectedWhitelistAssemblies.Add (Path.GetFullPath (assembly.ItemSpec));
 			}
 
 			// However we only want to look for JLO types in user code
@@ -124,7 +124,13 @@ namespace Xamarin.Android.Tasks
 			var java_types = all_java_types.Where (t => !JavaTypeScanner.ShouldSkipJavaCallableWrapperGeneration (t));
 
 			// Step 2 - Generate Java stub code
-			var keep_going = Generator.CreateJavaSources (Log, java_types, temp, UseSharedRuntime, int.Parse (AndroidSdkPlatform) <= 10, ResolvedAssemblies.Any (ass => Path.GetFileName (ass.ItemSpec) == "Mono.Android.Export.dll"));
+			var keep_going = Generator.CreateJavaSources (
+				Log,
+				java_types,
+				temp,
+				UseSharedRuntime,
+				int.Parse (AndroidSdkPlatform) <= 10,
+				ResolvedAssemblies.Any (assembly => Path.GetFileName (assembly.ItemSpec) == "Mono.Android.Export.dll"));
 
 			var temp_map_file = Path.Combine (temp, "acw-map.temp");
 
