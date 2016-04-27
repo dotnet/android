@@ -7,11 +7,6 @@
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{BB0AB9F7-0979-41A7-B7A9-877260655F94}</ProjectGuid>
-    <Includes>
-      <Includes>
-        <Include>/Library/Frameworks/Mono.framework/Headers/mono-2.0</Include>
-      </Includes>
-    </Includes>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -32,6 +27,7 @@
     <SourceDirectory>.</SourceDirectory>
   </PropertyGroup>
   <Import Project="$(JNIEnvGenPath)\JdkInfo.props" Condition="Exists('$(JNIEnvGenPath)\JdkInfo.props')" />
+  <Import Project="$(JNIEnvGenPath)\MonoInfo.props" Condition="Exists('$(JNIEnvGenPath)\MonoInfo.props')" />
   <ItemGroup>
     <None Include="java-interop.h" />
     <None Include="java-interop-gc-bridge.h" />
@@ -51,13 +47,11 @@
       <Arch>-m64</Arch>
     </MacLibLipo>
   </ItemGroup>
-  <ItemGroup>
-    <Include Include="\Library\Frameworks\Mono.framework\Headers\mono-2.0" />
-  </ItemGroup>
   <PropertyGroup>
     <BuildDependsOn>
       BuildJni_c;
       BuildMac;
+      BuildUnixLibraries;
       $(BuildDependsOn)
     </BuildDependsOn>
   </PropertyGroup>
@@ -72,7 +66,7 @@
     <Exec Command="$(Runtime) &quot;$(JNIEnvGenPath)\jnienv-gen.exe&quot; jni.g.cs jni.c" />
   </Target>
   <Target Name="BuildMac"
-      Condition=" '$(OS)' != 'Windows_NT' "
+      Condition=" '$(OS)' != 'Windows_NT' And Exists ('/Library/Frameworks/')"
       DependsOnTargets="BuildMacLibraries"
       Inputs="@(MacLibLipo)"
       Outputs="$(OutputPath)\lib$(OutputName).dylib">
@@ -83,7 +77,7 @@
     <Exec Command="lipo $(_Files) -create -output $(OutputPath)\lib$(OutputName).dylib" />
   </Target>
   <Target Name="BuildMacLibraries"
-      Condition=" '$(OS)' != 'Windows_NT' "
+      Condition=" '$(OS)' != 'Windows_NT' And Exists ('/Library/Frameworks/')"
       Inputs="@(Compile)"
       Outputs="@(MacLibLipo)">
     <PropertyGroup>
@@ -94,15 +88,35 @@
     </ItemGroup>
     <PropertyGroup>
       <_CppFlags>@(_Defines -&gt; '-D%(Identity)', ' ')</_CppFlags>
-      <_Includes>@(Include-&gt;'-I %(Identity)', ' ') @(JdkIncludePath-&gt;'-I %(Identity)', ' ')</_Includes>
+      <_Includes>@(MonoIncludePath-&gt;'-I %(Identity)', ' ') @(JdkIncludePath-&gt;'-I %(Identity)', ' ')</_Includes>
       <_LinkFlags>-fvisibility=hidden -Wl,-undefined -Wl,suppress -Wl,-flat_namespace</_LinkFlags>
-      <_Libs>-L /Library/Frameworks/Mono.framework/Libraries -lmonosgen-2.0 </_Libs>
+      <_Libs>$(MonoLibs)</_Libs>
       <_Files>@(Compile -&gt; '%(Identity)', ' ')</_Files>
     </PropertyGroup>
     <MakeDir Directories="obj" />
     <Exec Command="gcc -g -shared -std=c99 -o &quot;%(MacLibLipo.Identity)&quot; %(MacLibLipo.Arch) $(_CppFlags) $(_LinkFlags) $(_Libs) $(_Includes) $(_Files)" />
     <!-- Mono 4.4.0 (mono-4.4.0-branch/a3fabf1) has an incorrect shared library name. Fix it -->
     <Exec Command="install_name_tool -change /private/tmp/source-mono-4.4.0/bockbuild-mono-4.4.0-branch/profiles/mono-mac-xamarin/package-root/lib/libmonosgen-2.0.1.dylib /Library/Frameworks/Mono.framework/Libraries/libmonosgen-2.0.1.dylib &quot;%(MacLibLipo.Identity)&quot;" />
+  </Target>
+  <Target Name="BuildUnixLibraries"
+      Condition=" '$(OS)' != 'Windows_NT' And !Exists ('/Library/Frameworks/')"
+      Inputs="@(Compile)"
+      Outputs="$(OutputPath)\lib$(OutputName).so">
+    <PropertyGroup>
+      <_FixedDefines>$(DefineSymbols.Replace(' ', ';'))</_FixedDefines>
+    </PropertyGroup>
+    <ItemGroup>
+      <_Defines Include="$(_FixedDefines)" />
+    </ItemGroup>
+    <PropertyGroup>
+      <_CppFlags>@(_Defines -&gt; '-D%(Identity)', ' ')</_CppFlags>
+      <_Includes>@(MonoIncludePath-&gt;'-I %(Identity)', ' ') @(JdkIncludePath-&gt;'-I %(Identity)', ' ')</_Includes>
+      <_LinkFlags>-fvisibility=hidden -Wl,-undefined -Wl,suppress -Wl,-flat_namespace -fPIC</_LinkFlags>
+      <_Libs>$(MonoLibs)</_Libs>
+      <_Files>@(Compile -&gt; '%(Identity)', ' ')</_Files>
+    </PropertyGroup>
+    <MakeDir Directories="obj" />
+    <Exec Command="gcc -g -shared -std=c99 -o $(OutputPath)\lib$(OutputName).so $(_CppFlags) $(_LinkFlags) $(_Libs) $(_Includes) $(_Files)" />
   </Target>
   <Target Name="Clean">
     <RemoveDir Directories="obj" />

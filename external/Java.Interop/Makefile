@@ -43,7 +43,9 @@ ATESTS = \
 XBUILD = xbuild $(if $(V),/v:diag,)
 NUNIT_CONSOLE = packages/NUnit.Runners.2.6.3/tools/nunit-console.exe
 
-all: bin/Build$(CONFIGURATION)/JdkInfo.props src/Java.Runtime.Environment/Java.Runtime.Environment.dll.config \
+BUILD_PROPS = bin/Build$(CONFIGURATION)/JdkInfo.props bin/Build$(CONFIGURATION)/MonoInfo.props
+
+all: $(BUILD_PROPS)  src/Java.Runtime.Environment/Java.Runtime.Environment.dll.config \
 		$(PACKAGES) $(DEPENDENCIES) $(TESTS) $(XA_INTEGRATION_OUTPUTS)
 
 xa-all: $(XA_INTEGRATION_OUTPUTS)
@@ -56,6 +58,7 @@ clean:
 	-rm src/Java.Runtime.Environment/Java.Runtime.Environment.dll.config
 
 include build-tools/scripts/jdk.mk
+include build-tools/scripts/mono.mk
 
 $(PACKAGES) $(NUNIT_CONSOLE):
 	nuget restore
