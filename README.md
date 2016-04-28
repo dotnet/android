@@ -132,3 +132,18 @@ For example, to generate `Mono.Android.dll` for API-19 (Android 4.4):
     cd src/Mono.Android
     xbuild /p:AndroidApiLevel=19 /p:AndroidFrameworkVersion=v4.4
     # creates bin\Debug\lib\xbuild-frameworks\MonoAndroid\v4.4\Mono.Android.dll
+
+## Contributing ##
+
+### Mailing Lists
+
+To discuss this project, and participate in the design, we use the [macios-devel@lists.xamarin.com](http://lists.xamarin.com/mailman/listinfo/android-devel) mailing list.   
+
+### Coding Guidelines
+
+We use [Mono's Coding Guidelines](http://www.mono-project.com/community/contributing/coding-guidelines/).
+
+### Reporting Bugs
+
+We use [Bugzilla](https://bugzilla.xamarin.com/newbug) to track issues.
+
