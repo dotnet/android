@@ -137,7 +137,7 @@ For example, to generate `Mono.Android.dll` for API-19 (Android 4.4):
 
 ### Mailing Lists
 
-To discuss this project, and participate in the design, we use the [macios-devel@lists.xamarin.com](http://lists.xamarin.com/mailman/listinfo/android-devel) mailing list.   
+To discuss this project, and participate in the design, we use the [android-devel@lists.xamarin.com](http://lists.xamarin.com/mailman/listinfo/android-devel) mailing list.   
 
 ### Coding Guidelines
 
