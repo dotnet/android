@@ -4,6 +4,8 @@ Xamarin.Android
 Xamarin.Android provides open-source bindings of the Android SDK for use with
 .NET managed languages such as C#.
 
+[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/xamarin/xamarin-android?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 # Configuration.Overrides.props
 
 The Xamarin.Android build is heavily dependent on MSBuild, with the *intention*
@@ -145,5 +147,5 @@ We use [Mono's Coding Guidelines](http://www.mono-project.com/community/contribu
 
 ### Reporting Bugs
 
-We use [Bugzilla](https://bugzilla.xamarin.com/newbug) to track issues.
+We use [Bugzilla](https://bugzilla.xamarin.com/enter_bug.cgi?product=Android) to track issues.
 
