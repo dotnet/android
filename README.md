@@ -40,13 +40,53 @@ Overridable MSBuild properties include:
 
 # Build Requirements
 
-Building Xamarin.Android requires the Java Development Kit (JDK), several
-pieces of the Android SDK, and the Android NDK.
+Building Xamarin.Android requires:
+
+* [Mono 4.4 or later](#mono-sdk)
+* [The Java Development Kit (JDK)](#jdk)
+* [Autotools (`autoconf`, `automake`, etc.)](#autotools)
+* [`xxd`](#xxd)
+* [The Android SDK and NDK](#ndk)
+
+<a name="mono-sdk" />
+## Mono MDK
+
+Mono 4.4 or later is required to build on [OS X][osx-mono] and Linux.
+
+(This is because the build system uses the [XmlPeek][xmlpeek] task, which
+was first added in Mono 4.4.)
+
+[osx-mono]: http://www.mono-project.com/download/#download-mac
+[xmlpeek]: https://msdn.microsoft.com/en-us/library/ff598684.aspx
+
+<a name="jdk" />
+## Java Development Kit
 
 The Java Development Kit may be downloaded from the
 [Oracle Java SE Downloads page][download-jdk].
 
 [download-jdk]: http://www.oracle.com/technetwork/java/javase/downloads/
+
+<a name="autotools" />
+## Autotools
+
+Autotools -- including `autoconf` and `automake` -- are required to build
+the Mono runtimes.
+
+On OS X, autotools are distributed with [Mono.framework][osx-mono].
+
+<a name="xxd" />
+## `xxd`
+
+The [xxd][xxd] utility is used to build [src/monodroid](src/monodroid).
+It is installed by default on OS X. Linux users may need to separately
+install it; it may be part of the [**vim-common** package][sid-vim-common].
+
+[xxd]: http://linux.die.net/man/1/xxd
+[sid-vim-common]: https://packages.debian.org/sid/vim-common
+
+<a name="ndk" />
+## Android NDK, SDK
 
 To simplify building Xamarin.Android, important pieces of the Android SDK
 and Android NDK will be automatically downloaded and installed from
