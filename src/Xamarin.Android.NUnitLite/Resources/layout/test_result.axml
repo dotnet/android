@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent">
+    <Button
+        android:id="@+id/ResultRunSingleMethodTest"
+        android:text="run this test"
+        android:textSize="18dp"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content" />
+    <TextView
+        android:id="@+id/ResultFullName"
+        android:text="name"
+        android:textSize="18dp"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content" />
+    <TextView
+        android:id="@+id/ResultResultState"
+        android:text="result"
+        android:textSize="18dp"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content" />
+    <TextView
+        android:id="@+id/ResultMessage"
+        android:text="message"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content" />
+    <TextView
+        android:id="@+id/ResultStackTrace"
+        android:text="stacktrace"
+        android:scrollbars="vertical"
+        android:layout_width="fill_parent"
+        android:layout_height="match_parent" />
+</LinearLayout>

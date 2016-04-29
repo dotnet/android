@@ -1,0 +1,364 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{4D603AA3-3BFD-43C8-8050-0CD6C2601126}</ProjectGuid>
+    <ProjectTypeGuids>{EFBA0AD7-5A72-4C68-AF49-83D382785DCF};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <OutputType>Library</OutputType>
+    <RootNamespace>Xamarin.Android.NUnitLite</RootNamespace>
+    <MonoAndroidAssetsPrefix>Assets</MonoAndroidAssetsPrefix>
+    <MonoAndroidResourcePrefix>Resources</MonoAndroidResourcePrefix>
+    <AssemblyName>Xamarin.Android.NUnitLite</AssemblyName>
+    <AndroidResgenFile>Resources\Resource.designer.cs</AndroidResgenFile>
+  </PropertyGroup>
+  <Import Project="..\..\Configuration.props" />
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>..\..\bin\Debug\lib\xbuild-frameworks\MonoAndroid\v1.0</OutputPath>
+    <DefineConstants>DEBUG;NUNITLITE;CLR_4_0;NET_4_5;__MOBILE__;MONOTOUCH</DefineConstants>
+    <DocumentationFile>$(OutputPath)\$(AssemblyName).xml</DocumentationFile>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>false</ConsolePause>
+    <GenerateDocumentation>True</GenerateDocumentation>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <Optimize>true</Optimize>
+    <OutputPath>..\..\bin\Release\lib\xbuild-frameworks\MonoAndroid\v1.0</OutputPath>
+    <DefineConstants>NUNITLITE;SILVERLIGHT;CLR_4_0;NET_4_5;__MOBILE__;MONOTOUCH</DefineConstants>
+    <DocumentationFile>$(OutputPath)\$(AssemblyName).xml</DocumentationFile>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>false</ConsolePause>
+    <GenerateDocumentation>True</GenerateDocumentation>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="mscorlib">
+      <HintPath>$(OutputPath)..\v1.0\mscorlib.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System">
+      <HintPath>$(OutputPath)..\v1.0\System.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Core">
+      <HintPath>$(OutputPath)..\v1.0\System.Core.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Xml">
+      <HintPath>$(OutputPath)..\v1.0\System.Xml.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Java.Interop">
+      <HintPath>$(OutputPath)..\v1.0\Java.Interop.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Runtime">
+      <HintPath>$(OutputPath)..\v1.0\Facades\System.Runtime.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Resources\Resource.designer.cs" />
+    <Compile Include="Gui\AndroidRunner.cs" />
+    <Compile Include="Gui\Activities\TestSuiteActivity.cs" />
+    <Compile Include="Gui\Instrumentations\TestSuiteInstrumentation.cs" />
+    <Compile Include="NUnitLite\Assert.cs" />
+    <Compile Include="NUnitLite\AssertionHelper.cs" />
+    <Compile Include="NUnitLite\Assume.cs" />
+    <Compile Include="NUnitLite\Contains.cs" />
+    <Compile Include="NUnitLite\Env.cs" />
+    <Compile Include="NUnitLite\GlobalSettings.cs" />
+    <Compile Include="NUnitLite\Guard.cs" />
+    <Compile Include="NUnitLite\Has.cs" />
+    <Compile Include="NUnitLite\IExpectException.cs" />
+    <Compile Include="NUnitLite\Is.cs" />
+    <Compile Include="NUnitLite\Iz.cs" />
+    <Compile Include="NUnitLite\ListMapper.cs" />
+    <Compile Include="NUnitLite\MessageMatch.cs" />
+    <Compile Include="NUnitLite\ObjectList.cs" />
+    <Compile Include="NUnitLite\SpecialValue.cs" />
+    <Compile Include="NUnitLite\TestCaseData.cs" />
+    <Compile Include="NUnitLite\TestContext.cs" />
+    <Compile Include="NUnitLite\Throws.cs" />
+    <Compile Include="NUnitLite\Api\ExpectedExceptionData.cs" />
+    <Compile Include="NUnitLite\Api\IParameterDataSource.cs" />
+    <Compile Include="NUnitLite\Api\IPropertyBag.cs" />
+    <Compile Include="NUnitLite\Api\ITest.cs" />
+    <Compile Include="NUnitLite\Api\ITestAssemblyBuilder.cs" />
+    <Compile Include="NUnitLite\Api\ITestAssemblyRunner.cs" />
+    <Compile Include="NUnitLite\Api\ITestCaseData.cs" />
+    <Compile Include="NUnitLite\Api\ITestCaseSource.cs" />
+    <Compile Include="NUnitLite\Api\ITestCaseSourceProvider.cs" />
+    <Compile Include="NUnitLite\Api\ITestFilter.cs" />
+    <Compile Include="NUnitLite\Api\ITestListener.cs" />
+    <Compile Include="NUnitLite\Api\ITestResult.cs" />
+    <Compile Include="NUnitLite\Api\IXmlNodeBuilder.cs" />
+    <Compile Include="NUnitLite\Api\PropertyEntry.cs" />
+    <Compile Include="NUnitLite\Api\ResultState.cs" />
+    <Compile Include="NUnitLite\Api\RunState.cs" />
+    <Compile Include="NUnitLite\Api\TestOutput.cs" />
+    <Compile Include="NUnitLite\Api\TestStatus.cs" />
+    <Compile Include="NUnitLite\Api\XmlNode.cs" />
+    <Compile Include="NUnitLite\Attributes\CategoryAttribute.cs" />
+    <Compile Include="NUnitLite\Attributes\CombinatorialAttribute.cs" />
+    <Compile Include="NUnitLite\Attributes\CultureAttribute.cs" />
+    <Compile Include="NUnitLite\Attributes\DataAttribute.cs" />
+    <Compile Include="NUnitLite\Attributes\DatapointAttribute.cs" />
+    <Compile Include="NUnitLite\Attributes\DatapointSourceAttribute.cs" />
+    <Compile Include="NUnitLite\Attributes\DatapointsAttribute.cs" />
+    <Compile Include="NUnitLite\Attributes\DescriptionAttribute.cs" />
+    <Compile Include="NUnitLite\Attributes\ExpectedExceptionAttribute.cs" />
+    <Compile Include="NUnitLite\Attributes\ExplicitAttribute.cs" />
+    <Compile Include="NUnitLite\Attributes\IgnoreAttribute.cs" />
+    <Compile Include="NUnitLite\Attributes\IncludeExcludeAttribute.cs" />
+    <Compile Include="NUnitLite\Attributes\MaxTimeAttribute.cs" />
+    <Compile Include="NUnitLite\Attributes\NUnitAttribute.cs" />
+    <Compile Include="NUnitLite\Attributes\PairwiseAttribute.cs" />
+    <Compile Include="NUnitLite\Attributes\PlatformAttribute.cs" />
+    <Compile Include="NUnitLite\Attributes\PropertyAttribute.cs" />
+    <Compile Include="NUnitLite\Attributes\RandomAttribute.cs" />
+    <Compile Include="NUnitLite\Attributes\RangeAttribute.cs" />
+    <Compile Include="NUnitLite\Attributes\RepeatAttribute.cs" />
+    <Compile Include="NUnitLite\Attributes\SequentialAttribute.cs" />
+    <Compile Include="NUnitLite\Attributes\SetCultureAttribute.cs" />
+    <Compile Include="NUnitLite\Attributes\SetUICultureAttribute.cs" />
+    <Compile Include="NUnitLite\Attributes\SetUpAttribute.cs" />
+    <Compile Include="NUnitLite\Attributes\TearDownAttribute.cs" />
+    <Compile Include="NUnitLite\Attributes\TestAttribute.cs" />
+    <Compile Include="NUnitLite\Attributes\TestCaseAttribute.cs" />
+    <Compile Include="NUnitLite\Attributes\TestCaseSourceAttribute.cs" />
+    <Compile Include="NUnitLite\Attributes\TestFixtureAttribute.cs" />
+    <Compile Include="NUnitLite\Attributes\TestFixtureSetUpAttribute.cs" />
+    <Compile Include="NUnitLite\Attributes\TestFixtureTearDownAttribute.cs" />
+    <Compile Include="NUnitLite\Attributes\TheoryAttribute.cs" />
+    <Compile Include="NUnitLite\Attributes\TimeoutAttribute.cs" />
+    <Compile Include="NUnitLite\Attributes\ValueSourceAttribute.cs" />
+    <Compile Include="NUnitLite\Attributes\ValuesAttribute.cs" />
+    <Compile Include="NUnitLite\Constraints\AllItemsConstraint.cs" />
+    <Compile Include="NUnitLite\Constraints\AndConstraint.cs" />
+    <Compile Include="NUnitLite\Constraints\AssignableFromConstraint.cs" />
+    <Compile Include="NUnitLite\Constraints\AssignableToConstraint.cs" />
+    <Compile Include="NUnitLite\Constraints\AttributeConstraint.cs" />
+    <Compile Include="NUnitLite\Constraints\AttributeExistsConstraint.cs" />
+    <Compile Include="NUnitLite\Constraints\BasicConstraint.cs" />
+    <Compile Include="NUnitLite\Constraints\BinaryConstraint.cs" />
+    <Compile Include="NUnitLite\Constraints\BinarySerializableConstraint.cs" />
+    <Compile Include="NUnitLite\Constraints\CollectionConstraint.cs" />
+    <Compile Include="NUnitLite\Constraints\CollectionContainsConstraint.cs" />
+    <Compile Include="NUnitLite\Constraints\CollectionEquivalentConstraint.cs" />
+    <Compile Include="NUnitLite\Constraints\CollectionItemsEqualConstraint.cs" />
+    <Compile Include="NUnitLite\Constraints\CollectionOrderedConstraint.cs" />
+    <Compile Include="NUnitLite\Constraints\CollectionSubsetConstraint.cs" />
+    <Compile Include="NUnitLite\Constraints\CollectionTally.cs" />
+    <Compile Include="NUnitLite\Constraints\ComparisonAdapter.cs" />
+    <Compile Include="NUnitLite\Constraints\ComparisonConstraint.cs" />
+    <Compile Include="NUnitLite\Constraints\Constraint.cs" />
+    <Compile Include="NUnitLite\Constraints\ConstraintBuilder.cs" />
+    <Compile Include="NUnitLite\Constraints\ConstraintExpression.cs" />
+    <Compile Include="NUnitLite\Constraints\ConstraintExpressionBase.cs" />
+    <Compile Include="NUnitLite\Constraints\ConstraintFactory.cs" />
+    <Compile Include="NUnitLite\Constraints\ContainsConstraint.cs" />
+    <Compile Include="NUnitLite\Constraints\DelayedConstraint.cs" />
+    <Compile Include="NUnitLite\Constraints\EmptyCollectionConstraint.cs" />
+    <Compile Include="NUnitLite\Constraints\EmptyConstraint.cs" />
+    <Compile Include="NUnitLite\Constraints\EmptyDirectoryConstraint.cs" />
+    <Compile Include="NUnitLite\Constraints\EmptyStringConstraint.cs" />
+    <Compile Include="NUnitLite\Constraints\EndsWithConstraint.cs" />
+    <Compile Include="NUnitLite\Constraints\EqualConstraint.cs" />
+    <Compile Include="NUnitLite\Constraints\EqualityAdapter.cs" />
+    <Compile Include="NUnitLite\Constraints\ExactCountConstraint.cs" />
+    <Compile Include="NUnitLite\Constraints\ExactTypeConstraint.cs" />
+    <Compile Include="NUnitLite\Constraints\ExceptionTypeConstraint.cs" />
+    <Compile Include="NUnitLite\Constraints\FalseConstraint.cs" />
+    <Compile Include="NUnitLite\Constraints\FloatingPointNumerics.cs" />
+    <Compile Include="NUnitLite\Constraints\GreaterThanConstraint.cs" />
+    <Compile Include="NUnitLite\Constraints\GreaterThanOrEqualConstraint.cs" />
+    <Compile Include="NUnitLite\Constraints\IResolveConstraint.cs" />
+    <Compile Include="NUnitLite\Constraints\InstanceOfTypeConstraint.cs" />
+    <Compile Include="NUnitLite\Constraints\LessThanConstraint.cs" />
+    <Compile Include="NUnitLite\Constraints\LessThanOrEqualConstraint.cs" />
+    <Compile Include="NUnitLite\Constraints\MessageWriter.cs" />
+    <Compile Include="NUnitLite\Constraints\MsgUtils.cs" />
+    <Compile Include="NUnitLite\Constraints\NUnitComparer.cs" />
+    <Compile Include="NUnitLite\Constraints\NUnitEqualityComparer.cs" />
+    <Compile Include="NUnitLite\Constraints\NaNConstraint.cs" />
+    <Compile Include="NUnitLite\Constraints\NoItemConstraint.cs" />
+    <Compile Include="NUnitLite\Constraints\NotConstraint.cs" />
+    <Compile Include="NUnitLite\Constraints\NullConstraint.cs" />
+    <Compile Include="NUnitLite\Constraints\NullOrEmptyStringConstraint.cs" />
+    <Compile Include="NUnitLite\Constraints\Numerics.cs" />
+    <Compile Include="NUnitLite\Constraints\OrConstraint.cs" />
+    <Compile Include="NUnitLite\Constraints\PathConstraint.cs" />
+    <Compile Include="NUnitLite\Constraints\PredicateConstraint.cs" />
+    <Compile Include="NUnitLite\Constraints\PrefixConstraint.cs" />
+    <Compile Include="NUnitLite\Constraints\PropertyConstraint.cs" />
+    <Compile Include="NUnitLite\Constraints\PropertyExistsConstraint.cs" />
+    <Compile Include="NUnitLite\Constraints\RangeConstraint.cs" />
+    <Compile Include="NUnitLite\Constraints\RegexConstraint.cs" />
+    <Compile Include="NUnitLite\Constraints\ResolvableConstraintExpression.cs" />
+    <Compile Include="NUnitLite\Constraints\ReusableConstraint.cs" />
+    <Compile Include="NUnitLite\Constraints\SameAsConstraint.cs" />
+    <Compile Include="NUnitLite\Constraints\SamePathConstraint.cs" />
+    <Compile Include="NUnitLite\Constraints\SamePathOrUnderConstraint.cs" />
+    <Compile Include="NUnitLite\Constraints\SomeItemsConstraint.cs" />
+    <Compile Include="NUnitLite\Constraints\StartsWithConstraint.cs" />
+    <Compile Include="NUnitLite\Constraints\StringConstraint.cs" />
+    <Compile Include="NUnitLite\Constraints\SubstringConstraint.cs" />
+    <Compile Include="NUnitLite\Constraints\ThrowsConstraint.cs" />
+    <Compile Include="NUnitLite\Constraints\ThrowsNothingConstraint.cs" />
+    <Compile Include="NUnitLite\Constraints\Tolerance.cs" />
+    <Compile Include="NUnitLite\Constraints\ToleranceMode.cs" />
+    <Compile Include="NUnitLite\Constraints\TrueConstraint.cs" />
+    <Compile Include="NUnitLite\Constraints\TypeConstraint.cs" />
+    <Compile Include="NUnitLite\Constraints\UniqueItemsConstraint.cs" />
+    <Compile Include="NUnitLite\Constraints\XmlSerializableConstraint.cs" />
+    <Compile Include="NUnitLite\Constraints\Operators\AndOperator.cs" />
+    <Compile Include="NUnitLite\Constraints\Operators\AttributeOperator.cs" />
+    <Compile Include="NUnitLite\Constraints\Operators\BinaryOperator.cs" />
+    <Compile Include="NUnitLite\Constraints\Operators\CollectionOperator.cs" />
+    <Compile Include="NUnitLite\Constraints\Operators\ConstraintOperator.cs" />
+    <Compile Include="NUnitLite\Constraints\Operators\ExactCountOperator.cs" />
+    <Compile Include="NUnitLite\Constraints\Operators\NotOperator.cs" />
+    <Compile Include="NUnitLite\Constraints\Operators\OrOperator.cs" />
+    <Compile Include="NUnitLite\Constraints\Operators\PrefixOperator.cs" />
+    <Compile Include="NUnitLite\Constraints\Operators\PropOperator.cs" />
+    <Compile Include="NUnitLite\Constraints\Operators\SelfResolvingOperator.cs" />
+    <Compile Include="NUnitLite\Constraints\Operators\ThrowsOperator.cs" />
+    <Compile Include="NUnitLite\Constraints\Operators\WithOperator.cs" />
+    <Compile Include="NUnitLite\Exceptions\AssertionException.cs" />
+    <Compile Include="NUnitLite\Exceptions\IgnoreException.cs" />
+    <Compile Include="NUnitLite\Exceptions\InconclusiveException.cs" />
+    <Compile Include="NUnitLite\Exceptions\SuccessException.cs" />
+    <Compile Include="NUnitLite\Extensibility\IParameterDataProvider.cs" />
+    <Compile Include="NUnitLite\Extensibility\ISuiteBuilder.cs" />
+    <Compile Include="NUnitLite\Extensibility\ITestCaseBuilder.cs" />
+    <Compile Include="NUnitLite\Extensibility\ITestCaseProvider.cs" />
+    <Compile Include="NUnitLite\Internal\AssemblyHelper.cs" />
+    <Compile Include="NUnitLite\Internal\CultureDetector.cs" />
+    <Compile Include="NUnitLite\Internal\ExceptionHelper.cs" />
+    <Compile Include="NUnitLite\Internal\IApplyToContext.cs" />
+    <Compile Include="NUnitLite\Internal\IApplyToTest.cs" />
+    <Compile Include="NUnitLite\Internal\InvalidTestFixtureException.cs" />
+    <Compile Include="NUnitLite\Internal\MethodHelper.cs" />
+    <Compile Include="NUnitLite\Internal\NUnitException.cs" />
+    <Compile Include="NUnitLite\Internal\NUnitLiteTestAssemblyBuilder.cs" />
+    <Compile Include="NUnitLite\Internal\NUnitLiteTestAssemblyRunner.cs" />
+    <Compile Include="NUnitLite\Internal\OSPlatform.cs" />
+    <Compile Include="NUnitLite\Internal\ParameterSet.cs" />
+    <Compile Include="NUnitLite\Internal\PlatformHelper.cs" />
+    <Compile Include="NUnitLite\Internal\PropertyBag.cs" />
+    <Compile Include="NUnitLite\Internal\PropertyNames.cs" />
+    <Compile Include="NUnitLite\Internal\Randomizer.cs" />
+    <Compile Include="NUnitLite\Internal\Reflect.cs" />
+    <Compile Include="NUnitLite\Internal\RuntimeFramework.cs" />
+    <Compile Include="NUnitLite\Internal\StackFilter.cs" />
+    <Compile Include="NUnitLite\Internal\TestExecutionContext.cs" />
+    <Compile Include="NUnitLite\Internal\TestFilter.cs" />
+    <Compile Include="NUnitLite\Internal\TestFixtureBuilder.cs" />
+    <Compile Include="NUnitLite\Internal\TestListener.cs" />
+    <Compile Include="NUnitLite\Internal\TextMessageWriter.cs" />
+    <Compile Include="NUnitLite\Internal\ThreadUtility.cs" />
+    <Compile Include="NUnitLite\Internal\TypeHelper.cs" />
+    <Compile Include="NUnitLite\Internal\Builders\CombinatorialStrategy.cs" />
+    <Compile Include="NUnitLite\Internal\Builders\CombinatorialTestCaseProvider.cs" />
+    <Compile Include="NUnitLite\Internal\Builders\CombiningStrategy.cs" />
+    <Compile Include="NUnitLite\Internal\Builders\DataAttributeTestCaseProvider.cs" />
+    <Compile Include="NUnitLite\Internal\Builders\DatapointProvider.cs" />
+    <Compile Include="NUnitLite\Internal\Builders\NUnitTestCaseBuilder.cs" />
+    <Compile Include="NUnitLite\Internal\Builders\NUnitTestFixtureBuilder.cs" />
+    <Compile Include="NUnitLite\Internal\Builders\PairwiseStrategy.cs" />
+    <Compile Include="NUnitLite\Internal\Builders\ParameterDataProvider.cs" />
+    <Compile Include="NUnitLite\Internal\Builders\ProviderCache.cs" />
+    <Compile Include="NUnitLite\Internal\Builders\SequentialStrategy.cs" />
+    <Compile Include="NUnitLite\Internal\Commands\ApplyChangesToContextCommand.cs" />
+    <Compile Include="NUnitLite\Internal\Commands\CommandDecoratorList.cs" />
+    <Compile Include="NUnitLite\Internal\Commands\CommandStage.cs" />
+    <Compile Include="NUnitLite\Internal\Commands\DelegatingTestCommand.cs" />
+    <Compile Include="NUnitLite\Internal\Commands\ExpectedExceptionCommand.cs" />
+    <Compile Include="NUnitLite\Internal\Commands\ICommandDecorator.cs" />
+    <Compile Include="NUnitLite\Internal\Commands\MaxTimeCommand.cs" />
+    <Compile Include="NUnitLite\Internal\Commands\RepeatedTestCommand.cs" />
+    <Compile Include="NUnitLite\Internal\Commands\SetUpTearDownCommand.cs" />
+    <Compile Include="NUnitLite\Internal\Commands\SkipCommand.cs" />
+    <Compile Include="NUnitLite\Internal\Commands\TestCommand.cs" />
+    <Compile Include="NUnitLite\Internal\Commands\TestMethodCommand.cs" />
+    <Compile Include="NUnitLite\Internal\Extensibility\ParameterDataProviders.cs" />
+    <Compile Include="NUnitLite\Internal\Extensibility\TestCaseProviders.cs" />
+    <Compile Include="NUnitLite\Internal\Filters\AndFilter.cs" />
+    <Compile Include="NUnitLite\Internal\Filters\CategoryExpression.cs" />
+    <Compile Include="NUnitLite\Internal\Filters\CategoryFilter.cs" />
+    <Compile Include="NUnitLite\Internal\Filters\NotFilter.cs" />
+    <Compile Include="NUnitLite\Internal\Filters\OrFilter.cs" />
+    <Compile Include="NUnitLite\Internal\Filters\SimpleNameFilter.cs" />
+    <Compile Include="NUnitLite\Internal\Results\TestCaseResult.cs" />
+    <Compile Include="NUnitLite\Internal\Results\TestResult.cs" />
+    <Compile Include="NUnitLite\Internal\Results\TestSuiteResult.cs" />
+    <Compile Include="NUnitLite\Internal\Tests\ParameterizedFixtureSuite.cs" />
+    <Compile Include="NUnitLite\Internal\Tests\ParameterizedMethodSuite.cs" />
+    <Compile Include="NUnitLite\Internal\Tests\Test.cs" />
+    <Compile Include="NUnitLite\Internal\Tests\TestAssembly.cs" />
+    <Compile Include="NUnitLite\Internal\Tests\TestFixture.cs" />
+    <Compile Include="NUnitLite\Internal\Tests\TestMethod.cs" />
+    <Compile Include="NUnitLite\Internal\Tests\TestSuite.cs" />
+    <Compile Include="NUnitLite\Internal\WorkItems\CompositeWorkItem.cs" />
+    <Compile Include="NUnitLite\Internal\WorkItems\CountdownEvent.cs" />
+    <Compile Include="NUnitLite\Internal\WorkItems\SimpleWorkItem.cs" />
+    <Compile Include="NUnitLite\Internal\WorkItems\WorkItem.cs" />
+    <Compile Include="NUnitLite\Internal\WorkItems\WorkItemState.cs" />
+    <Compile Include="NUnitLite\Runner\CommandLineOptions.cs" />
+    <Compile Include="NUnitLite\Runner\ConsoleWriter.cs" />
+    <Compile Include="NUnitLite\Runner\DebugWriter.cs" />
+    <Compile Include="NUnitLite\Runner\ResultSummary.cs" />
+    <Compile Include="NUnitLite\Runner\TcpWriter.cs" />
+    <Compile Include="NUnitLite\Runner\TextUI.cs" />
+    <Compile Include="NUnitLite\Runner\OutputWriters\NUnit2XmlOutputWriter.cs" />
+    <Compile Include="NUnitLite\Runner\OutputWriters\NUnit3XmlOutputWriter.cs" />
+    <Compile Include="NUnitLite\Runner\OutputWriters\OutputWriter.cs" />
+    <Compile Include="Gui\Activities\TestResultActivity.cs" />
+    <Compile Include="Gui\Activities\OptionsActivity.cs" />
+    <Compile Include="Gui\Options.cs" />
+    <Compile Include="Gui\TcpTextWriter.cs" />
+    <Compile Include="NUnitLite\AssemblyInfo.cs" />
+    <Compile Include="NUnitLite\Compatibility\SerializableAttribute.cs" />
+    <Compile Include="NUnitLite\Constraints\FailurePoint.cs" />
+    <Compile Include="NUnitLite\Constraints\SubPathConstraint.cs" />
+    <Compile Include="NUnitLite\Constraints\Operators\AllOperator.cs" />
+    <Compile Include="NUnitLite\Constraints\Operators\NoneOperator.cs" />
+    <Compile Include="NUnitLite\Constraints\Operators\SomeOperator.cs" />
+    <Compile Include="NUnitLite\Internal\AsyncInvocationRegion.cs" />
+    <Compile Include="NUnitLite\Internal\AsyncSynchronizationContext.cs" />
+    <Compile Include="NUnitLite\Internal\RandomGenerator.cs" />
+    <Compile Include="NUnitLite\Internal\StringUtil.cs" />
+    <Compile Include="NUnitLite\Internal\Commands\OneTimeSetUpCommand.cs" />
+    <Compile Include="NUnitLite\Internal\Commands\OneTimeTearDownCommand.cs" />
+    <Compile Include="NUnitLite\Internal\Commands\TheoryResultCommand.cs" />
+    <Compile Include="NUnitLite\Internal\Filters\SimpleCategoryExpression.cs" />
+    <Compile Include="NUnitLite\Runner\ResultReporter.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <AndroidResource Include="Resources\layout\options.axml" />
+    <AndroidResource Include="Resources\layout\results.axml" />
+    <AndroidResource Include="Resources\layout\test_result.axml" />
+    <AndroidResource Include="Resources\layout\test_suite.axml" />
+  </ItemGroup>
+  <Import Project="$(OutputPath)\..\..\..\xbuild\Xamarin\Android\Xamarin.Android.CSharp.targets" />
+  <PropertyGroup>
+    <ImplicitlyExpandDesignTimeFacades>False</ImplicitlyExpandDesignTimeFacades>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Mono.Android\Mono.Android.csproj">
+      <Project>{66CF299A-CE95-4131-BCD8-DB66E30C4BF7}</Project>
+      <Name>Mono.Android</Name>
+      <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\Xamarin.Android.Build.Tasks\Xamarin.Android.Build.Tasks.csproj">
+      <Project>{3F1F2F50-AF1A-4A5A-BEDB-193372F068D7}</Project>
+      <Name>Xamarin.Android.Build.Tasks</Name>
+      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
+    </ProjectReference>
+  </ItemGroup>
+</Project>

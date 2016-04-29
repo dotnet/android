@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent">
+    <TextView
+        android:text="Test Suites"
+        android:textColor="#666666"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content" />
+    <ListView
+        android:id="@+id/TestSuiteListView"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content" />
+    <TextView
+        android:text="Options"
+        android:textColor="#666666"
+        android:textSize="22dp"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content" />
+    <TextView
+        android:id="@+id/RunEverythingButton"
+        android:text="Run Everything"
+        android:textSize="22dp"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content" />
+    <TextView
+        android:id="@+id/OptionsButton"
+        android:text="Options"
+        android:textSize="22dp"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content" />
+    <TextView
+        android:id="@+id/CreditsButton"
+        android:text="Credits"
+        android:textSize="22dp"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content" />
+</LinearLayout>
