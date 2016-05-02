@@ -19,7 +19,7 @@ requirements, such as the location of a cache directory to store
 the Android SDK and NDK.
 
 To modify the build process, copy
-[`Configuration.Override.props.in`][Configuration.Override.props.in]
+[`Configuration.Override.props.in`](Configuration.Override.props.in)
 to `Configuration.Override.props`, and edit the file as appropriate.
 `Configuration.Override.props` is `<Import/>`ed by `Configuration.props`
 and will override any default values specified in `Configuration.props`.
@@ -27,8 +27,11 @@ and will override any default values specified in `Configuration.props`.
 Overridable MSBuild properties include:
 
 * `$(AndroidApiLevel)`: The Android API level to bind in `src/Mono.Android`.
+    This is an integer value, e.g. `15` for
+    [API-15 (Android 4.0.3)](http://developer.android.com/about/versions/android-4.0.3.html).
 * `$(AndroidFrameworkVersion)`: The Xamarin.Android `$(TargetFrameworkVersion)`
-    version which corresponds to `$(AndroidApiLevel)`.
+    version which corresponds to `$(AndroidApiLevel)`. This is *usually* the
+    Android version number with a leading `v`, e.g. `v4.0.3` for API-15.
 * `$(AndroidToolchainCacheDirectory)`: The directory to cache the downloaded
     Android NDK and SDK files. This value defaults to
     `$(HOME)\android-archives`.
