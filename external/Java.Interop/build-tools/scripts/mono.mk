@@ -1,6 +1,6 @@
 
 ifeq ($(OS),Darwin)
-JI_MONO_FRAMEWORK_PATH = /Library/Frameworks/Mono.framework/monosgen-2.0.1.dylib
+JI_MONO_FRAMEWORK_PATH = /Library/Frameworks/Mono.framework/Libraries/libmonosgen-2.0.1.dylib
 JI_MONO_INCLUDE_PATHS = /Library/Frameworks/Mono.framework/Headers/mono-2.0
 JI_MONO_LIBS = -L /Library/Frameworks/Mono.framework/Libraries -lmonosgen-2.0
 endif
