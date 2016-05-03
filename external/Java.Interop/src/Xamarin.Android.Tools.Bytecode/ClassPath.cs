@@ -11,11 +11,20 @@ using System.Text;
 
 namespace Xamarin.Android.Tools.Bytecode {
 
+	public enum JavaDocletType {
+		DroidDoc,
+		Java6,
+		Java7,
+		Java8,
+	}
+
 	public class ClassPath {
 
 		IList<ClassFile> classFiles = new List<ClassFile> ();
 
 		public string ApiSource { get; set; }
+
+		public JavaDocletType DocletType { get; set; }
 
 		public IEnumerable<string> DocumentationPaths { get; set; }
 
@@ -213,9 +222,19 @@ namespace Xamarin.Android.Tools.Bytecode {
 			}
 		}
 
+		AndroidDocScraper CreateDocScraper (string dir)
+		{
+			switch (DocletType) {
+			default: return new DroidDocScraper (dir);
+			case JavaDocletType.Java6: return new JavaDocScraper (dir);
+			case JavaDocletType.Java7: return new Java7DocScraper (dir);
+			case JavaDocletType.Java8: return new Java8DocScraper (dir);
+			}
+		}
+
 		void FixupParametersFromDocs (XElement api, string path)
 		{
-			var jdoc = new DroidDocScraper (path);
+			var jdoc = CreateDocScraper (path);
 			var elements = api.XPathSelectElements ("./package/class[@visibility = 'public' or @visibility = 'protected']").ToList ();
 			elements.AddRange (api.XPathSelectElements ("./package/interface[@visibility = 'public' or @visibility = 'protected']"));
 			foreach (var elem in elements) {
