@@ -1,5 +1,7 @@
 # Java.Interop
 
+[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/xamarin/xamarin-android?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 **Java.Interop** is a brain-delusional [Second System Syndrome][sss] rebuild
  of the monodroid/Xamarin.Android core, intended to fix some of the shortcomings
   and design mistakes I've made over the years.
