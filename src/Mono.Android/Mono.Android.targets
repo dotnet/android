@@ -117,7 +117,7 @@
         Command="jar cf &quot;$(OutputPath)mono.android.jar&quot; -C &quot;$(IntermediateOutputPath)android-$(AndroidApiLevel).jcw\bin&quot; ."
     />
   </Target>
-  <Target Name="_GenerateJavaCallableWrappers"
+  <Target Name="_GenerateFrameworkList"
       AfterTargets="CoreBuild"
       Inputs="$(OutputPath)$(AssemblyName).dll"
       Outputs="$(OutputPath)RedistList\FrameworkList.xml">
