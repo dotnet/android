@@ -2075,8 +2075,8 @@ because xbuild doesn't support framework reference assemblies.
     SkipUnchangedFiles="true" />
 
   <CopyConfigFiles
-    SourceFiles="@(_ResolvedFrameworkAssemblies)"
-    DestinationFiles="@(_ShrunkFrameworkAssemblies)" />
+    SourceFiles="@(_ResolvedFrameworkAssemblies->'%(Identity).config')"
+    DestinationFiles="@(_ShrunkFrameworkAssemblies->'%(Identity).config')" />
   
   <!-- Shrink Mono.Android.dll by removing attribute only needed for GenerateJavaStubs -->
   <RemoveRegisterAttribute
