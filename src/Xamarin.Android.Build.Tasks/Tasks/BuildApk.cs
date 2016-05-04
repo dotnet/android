@@ -278,7 +278,7 @@ namespace Xamarin.Android.Tasks
 				apk.AddFile (assembly.ItemSpec, "assemblies").CompressionLevel = CompressionLevel.None;
 				var config = Path.ChangeExtension (assembly.ItemSpec, "dll.config");
 				if (File.Exists (config))
-					apk.AddFile (config).CompressionLevel = CompressionLevel.None;
+					apk.AddFile (config, "assemblies").CompressionLevel = CompressionLevel.None;
 				// Try to add symbols if Debug
 				if (debug) {
 					var symbols = Path.ChangeExtension (assembly.ItemSpec, "dll.mdb");
