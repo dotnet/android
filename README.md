@@ -178,17 +178,37 @@ For example, to generate `Mono.Android.dll` for API-19 (Android 4.4):
     xbuild /p:AndroidApiLevel=19 /p:AndroidFrameworkVersion=v4.4
     # creates bin\Debug\lib\xbuild-frameworks\MonoAndroid\v4.4\Mono.Android.dll
 
-## Contributing ##
+# Samples
 
-### Mailing Lists
+The [HelloWorld](samples/HelloWorld) sample may be built with the
+[xabuild](tools/scripts/xabuild) script:
+
+    $ tools/scripts/xabuild /t:SignAndroidPackage samples/HelloWorld/HelloWorld.csproj
+
+`xabuild /t:SignAndroidPackage` will generate an `.apk` file, which may be
+installed onto an Android device with the [`adb install`][adb-commands]
+command:
+
+[adb-commands]: http://developer.android.com/tools/help/adb.html#commandsummary
+
+    $ adb install samples/HelloWorld/bin/Debug/com.xamarin.android.helloworld-Signed.apk
+
+**HelloWorld** may be launched manually through the Android app launcher,
+or via `adb shell am`:
+
+    $ adb shell am start com.xamarin.android.helloworld/example.MainActivity
+
+# Contributing
+
+## Mailing Lists
 
 To discuss this project, and participate in the design, we use the [android-devel@lists.xamarin.com](http://lists.xamarin.com/mailman/listinfo/android-devel) mailing list.   
 
-### Coding Guidelines
+## Coding Guidelines
 
 We use [Mono's Coding Guidelines](http://www.mono-project.com/community/contributing/coding-guidelines/).
 
-### Reporting Bugs
+## Reporting Bugs
 
 We use [Bugzilla](https://bugzilla.xamarin.com/enter_bug.cgi?product=Android) to track issues.
 
