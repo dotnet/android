@@ -112,8 +112,11 @@ namespace Xamarin.Android.Tools.BootstrapTasks {
 					Log.LogMessage (MessageImportance.Low, $"mv '{fse}' '{dest}'");
 					if (Directory.Exists (fse))
 						Process.Start ("/bin/mv", $@"""{fse}"" ""{dest}""").WaitForExit ();
-					else
+					else {
+						if (File.Exists (dest))
+							File.Delete (dest);
 						File.Move (fse, dest);
+					}
 				}
 			}
 		}
