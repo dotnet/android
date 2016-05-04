@@ -19,7 +19,7 @@
       <OutputProfiler>libmono-profiler-log.so</OutputProfiler>
       <OutputMonoPosixHelper>libMonoPosixHelper.so</OutputMonoPosixHelper>
     </_MonoRuntime>
-    <_MonoRuntime Include="host" Condition="'$(HostOS)'=='Darwin'">
+    <_MonoRuntime Include="host-Darwin" Condition=" '$(HostOS)' == 'Darwin' ">
       <Ar>ar</Ar>
       <As>as</As>
       <Cc>$(HostCc)</Cc>
@@ -36,11 +36,11 @@
       <OutputProfiler>libmono-profiler-log.dylib</OutputProfiler>
       <OutputMonoPosixHelper>libMonoPosixHelper.dylib</OutputMonoPosixHelper>
     </_MonoRuntime>
-    <_MonoRuntime Include="host" Condition="'$(HostOS)'=='Linux'">
+    <_MonoRuntime Include="host-Linux" Condition=" '$(HostOS)' == 'Linux' ">
       <Ar>ar</Ar>
       <As>as</As>
       <Cc>$(HostCc)</Cc>
-      <CFlags>$(_CommonCFlags) -mmacosx-version-min=10.9</CFlags>
+      <CFlags>$(_CommonCFlags)</CFlags>
       <Cxx>$(HostCxx)</Cxx>
       <CxxCpp>cpp</CxxCpp>
       <CxxFlags></CxxFlags>
