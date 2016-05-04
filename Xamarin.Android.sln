@@ -53,6 +53,10 @@ Project("{9344BDBB-3E7F-41FC-A0DD-8665D75EE146}") = "monodroid", "src\monodroid\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "api-xml-adjuster", "tools\api-xml-adjuster\api-xml-adjuster.csproj", "{8A6CB07C-E493-4A4F-AB94-038645A27118}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Samples", "Samples", "{99CBCF85-E4EB-41C8-9089-1A2B740681F0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HelloWorld", "samples\HelloWorld\HelloWorld.csproj", "{2305B00D-DE81-4744-B0DA-357835CAFE5A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|AnyCPU = Debug|AnyCPU
@@ -194,6 +198,18 @@ Global
 		{E8492EFB-D14A-4F32-AA28-88848322ECEA}.XAIntegrationDebug|Any CPU.Build.0 = Debug|Any CPU
 		{E8492EFB-D14A-4F32-AA28-88848322ECEA}.XAIntegrationRelease|Any CPU.ActiveCfg = Debug|Any CPU
 		{E8492EFB-D14A-4F32-AA28-88848322ECEA}.XAIntegrationRelease|Any CPU.Build.0 = Debug|Any CPU
+		{2305B00D-DE81-4744-B0DA-357835CAFE5A}.Debug|AnyCPU.ActiveCfg = Debug|Any CPU
+		{2305B00D-DE81-4744-B0DA-357835CAFE5A}.Debug|AnyCPU.Build.0 = Debug|Any CPU
+		{2305B00D-DE81-4744-B0DA-357835CAFE5A}.Release|AnyCPU.ActiveCfg = Release|Any CPU
+		{2305B00D-DE81-4744-B0DA-357835CAFE5A}.Release|AnyCPU.Build.0 = Release|Any CPU
+		{2305B00D-DE81-4744-B0DA-357835CAFE5A}.XAIntegrationDebug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2305B00D-DE81-4744-B0DA-357835CAFE5A}.XAIntegrationDebug|Any CPU.Build.0 = Debug|Any CPU
+		{2305B00D-DE81-4744-B0DA-357835CAFE5A}.XAIntegrationRelease|Any CPU.ActiveCfg = Debug|Any CPU
+		{2305B00D-DE81-4744-B0DA-357835CAFE5A}.XAIntegrationRelease|Any CPU.Build.0 = Debug|Any CPU
+		{2305B00D-DE81-4744-B0DA-357835CAFE5A}.XAIntegrationDebug|AnyCPU.ActiveCfg = Debug|Any CPU
+		{2305B00D-DE81-4744-B0DA-357835CAFE5A}.XAIntegrationDebug|AnyCPU.Build.0 = Debug|Any CPU
+		{2305B00D-DE81-4744-B0DA-357835CAFE5A}.XAIntegrationRelease|AnyCPU.ActiveCfg = Debug|Any CPU
+		{2305B00D-DE81-4744-B0DA-357835CAFE5A}.XAIntegrationRelease|AnyCPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{8FF78EB6-6FC8-46A7-8A15-EBBA9045C5FA} = {E351F97D-EA4F-4E7F-AAA0-8EBB1F2A4A62}
@@ -219,6 +235,7 @@ Global
 		{D48EE8D0-0A0A-4493-AEF5-DAF5F8CF86AD} = {864062D3-A415-4A6F-9324-5820237BA058}
 		{53EE4C57-1C03-405A-8243-8DA539546C88} = {04E3E11E-B47D-4599-8AFC-50515A95E715}
 		{8A6CB07C-E493-4A4F-AB94-038645A27118} = {864062D3-A415-4A6F-9324-5820237BA058}
+		{2305B00D-DE81-4744-B0DA-357835CAFE5A} = {99CBCF85-E4EB-41C8-9089-1A2B740681F0}
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
 		Policies = $0
