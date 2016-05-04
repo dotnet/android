@@ -1,16 +1,18 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <UsingTask TaskName="Xamarin.Android.Tools.BootstrapTasks.GenerateProfile" AssemblyFile="..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" />
-  <Target Name="_Foo" BeforeTargets="CoreCompile">
-    <PropertyGroup>
-       <_GeneratedProfileClass>$(IntermediateOutputPath)Profile.g.cs</_GeneratedProfileClass>
-    </PropertyGroup>
-    <ItemGroup>
-        <SharedRuntimeBuildPath Include="..\..\bin\$(Configuration)\lib\xbuild-frameworks\MonoAndroid\" />
-    </ItemGroup>
-    <CreateItem Include="@(SharedRuntimeBuildPath->'%(Identity)\\v1.0\*.dll');@(SharedRuntimeBuildPath->'%(Identity)\\v6.0\*.dll')">
-        <Output TaskParameter="Include" ItemName="_SharedRuntimeAssemblies" />
-    </CreateItem>
+  <PropertyGroup>
+    <_SharedRuntimeBuildPath>..\..\bin\$(Configuration)\lib\xbuild-frameworks\MonoAndroid\</_SharedRuntimeBuildPath>
+    <_GeneratedProfileClass>$(IntermediateOutputPath)Profile.g.cs</_GeneratedProfileClass>
+  </PropertyGroup>
+  <ItemGroup>
+    <_SharedRuntimeAssemblies Include="$(_SharedRuntimeBuildPath)v1.0\*.dll;$(_SharedRuntimeBuildPath)$(AndroidFrameworkVersion)\*.dll"/>
+  </ItemGroup>
+
+  <Target Name="_GenerateProfileClass" BeforeTargets="CoreCompile"
+	  Inputs="@(_SharedRuntimeAssemblies)"
+	  Outputs="$(_GeneratedProfileClass)"
+	  >
     <GenerateProfile Files="@(_SharedRuntimeAssemblies)" OutputFile="$(_GeneratedProfileClass)" />
     <ItemGroup>
         <Compile Include="$(_GeneratedProfileClass)" />
