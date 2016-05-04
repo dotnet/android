@@ -48,7 +48,7 @@ BUILD_PROPS = bin/Build$(CONFIGURATION)/JdkInfo.props bin/Build$(CONFIGURATION)/
 all: $(BUILD_PROPS)  src/Java.Runtime.Environment/Java.Runtime.Environment.dll.config \
 		$(PACKAGES) $(DEPENDENCIES) $(TESTS) $(XA_INTEGRATION_OUTPUTS)
 
-xa-all: $(XA_INTEGRATION_OUTPUTS)
+xa-all: $(PACKAGES) $(XA_INTEGRATION_OUTPUTS)
 
 run-all-tests: run-tests run-test-jnimarshal run-test-generator-core run-ptests
 
