@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="..\..\Configuration.props" />
+  <PropertyGroup>
+    <_SourceTopDir>..\..</_SourceTopDir>
+    <_BclFrameworkDir>$(OutputPath)\lib\xbuild-frameworks\MonoAndroid\v1.0</_BclFrameworkDir>
+    <_MonoPath>$(_SourceTopDir)\external\mono</_MonoPath>
+  </PropertyGroup>
+  <UsingTask AssemblyFile="$(_SourceTopDir)\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.GetNugetPackageBasePath" />
+  <Import Project="$(_SourceTopDir)\Configuration.props" />
   <Import Project="mono-runtimes.props" />
   <Import Project="mono-runtimes.projitems" />
-  <PropertyGroup>
-    <_MonoPath>..\..\external\mono</_MonoPath>
-  </PropertyGroup>
   <Target Name="_Autogen"
       Inputs="$(_MonoPath)\autogen.sh"
       Outputs="$(_MonoPath)\configure">
@@ -74,23 +77,34 @@
   <Target Name="_InstallBcl"
       Inputs="$(_MonoPath)\mcs\class\lib\monodroid\mscorlib.dll"
       Outputs="$(OutputPath)lib\xbuild-frameworks\MonoAndroid\v1.0\mscorlib.dll;$(OutputPath)lib\xbuild-frameworks\MonoAndroid\v1.0\RedistList\FrameworkList.xml">
-    <MakeDir Directories="$(OutputPath)\lib\xbuild-frameworks\MonoAndroid\v1.0" />
-    <MakeDir Directories="$(OutputPath)\lib\xbuild-frameworks\MonoAndroid\v1.0\RedistList" />
-    <MakeDir Directories="$(OutputPath)\lib\xbuild-frameworks\MonoAndroid\v1.0\Facades" />
+    <MakeDir Directories="$(_BclFrameworkDir)" />
+    <MakeDir Directories="$(_BclFrameworkDir)\RedistList" />
+    <MakeDir Directories="$(_BclFrameworkDir)\Facades" />
     <ItemGroup>
+      <_PackageConfigFiles Include="$(_SourceTopDir)\src\Xamarin.Android.Build.Tasks\packages.config" />
+    </ItemGroup>
+    <GetNugetPackageBasePath PackageConfigFiles="@(_PackageConfigFiles)" PackageName="FSharp.Core">
+      <Output TaskParameter="BasePath" PropertyName="_FSharpCorePackagePath" />
+    </GetNugetPackageBasePath>
+    <ItemGroup>
+      <_FSharp Include="$(_SourceTopDir)\$(_FSharpCorePackagePath)\lib\portable-net45+monoandroid10+monotouch10+xamarinios10\FSharp.Core*" />
       <_Assemblies Include="$(_MonoPath)\mcs\class\lib\monodroid\*.dll" />
       <_Facades Include="$(_MonoPath)\mcs\class\lib\monodroid\Facades\*.dll" />
     </ItemGroup>
     <Copy
         SourceFiles="@(_Assemblies)"
-        DestinationFolder="$(OutputPath)\lib\xbuild-frameworks\MonoAndroid\v1.0"
+        DestinationFolder="$(_BclFrameworkDir)"
     />
     <Copy
         SourceFiles="@(_Facades)"
-        DestinationFolder="$(OutputPath)\lib\xbuild-frameworks\MonoAndroid\v1.0\Facades"
+        DestinationFolder="$(_BclFrameworkDir)\Facades"
+    />
+    <Copy
+        SourceFiles="@(_FSharp)"
+        DestinationFolder="$(_BclFrameworkDir)"
     />
     <Touch
-        Files="$(OutputPath)\lib\xbuild-frameworks\MonoAndroid\v1.0\mscorlib.dll"
+        Files="$(_BclFrameworkDir)\mscorlib.dll"
     />
     <ItemGroup>
       <FrameworkList Include="&lt;FileList Redist=&quot;MonoAndroid&quot; Name=&quot;Xamarin.Android Base Class Libraries&quot;&gt;" />
