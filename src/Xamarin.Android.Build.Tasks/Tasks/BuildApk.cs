@@ -215,6 +215,10 @@ namespace Xamarin.Android.Tasks
 			}
 			debugServer = androidDebugServer.Value;
 
+			if (string.IsNullOrEmpty (AndroidEmbedProfilers) && _Debug) {
+				AndroidEmbedProfilers = "log";
+			}
+
 			var outputFiles = new List<string> ();
 
 			ExecuteWithAbi (SupportedAbis, ApkInputPath, ApkOutputPath);
@@ -409,7 +413,7 @@ namespace Xamarin.Android.Tasks
 				foreach (var profiler in ParseProfilers (AndroidEmbedProfilers)) {
 					var library = string.Format ("libmono-profiler-{1}.{0}.so", abi, profiler);
 					var path = Path.Combine (root, "lib", abi, library);
-					apk.AddEntry (string.Format ("lib/{0}/libmono-profiler.so", abi), File.OpenRead (path));
+					apk.AddEntry (string.Format ("lib/{0}/libmono-profiler-{1}.so", abi, profiler), File.OpenRead (path));
 				}
 			}
 		}
