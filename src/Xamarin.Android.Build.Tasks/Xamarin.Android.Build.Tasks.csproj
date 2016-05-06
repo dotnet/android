@@ -65,6 +65,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="$(IntermediateOutputPath)Profile.g.cs" />
     <Compile Include="Linker\LinkModes.cs" />
     <Compile Include="Generator\Generator.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\FixAbstractMethodsStep.cs" />
@@ -532,11 +533,11 @@
     <Compile Include="Utilities\Profile.cs" />
     <None Include="Xamarin.Android.Build.Tasks.targets" />
   </ItemGroup>
-  <Import Project="Xamarin.Android.Build.Tasks.targets" />
   <!-- MD doesn't handle MSBuildToolsPath yet
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   -->
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <Import Project="Xamarin.Android.Build.Tasks.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
