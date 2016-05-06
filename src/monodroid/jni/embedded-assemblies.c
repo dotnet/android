@@ -92,6 +92,7 @@ open_from_bundles (MonoAssemblyName *aname, char **assemblies_path, void *user_d
 			if (strcmp (e->name, name) == 0 &&
 					(image  = mono->mono_image_open_from_data_with_name ((char*) e->data, e->size, 0, NULL, ref_only, name)) != NULL &&
 					(a      = mono->mono_assembly_load_from_full (image, name, &status, ref_only)) != NULL) {
+				mono->mono_config_for_assembly (image);
 				break;
 			}
 		}
