@@ -258,8 +258,7 @@ namespace Xamarin.Android.Tasks
 
 				// Try to add config if exists
 				var config = Path.ChangeExtension (assembly.ItemSpec, "dll.config");
-				if (File.Exists (config))
-					apk.AddFile (config, "assemblies").CompressionLevel = CompressionLevel.None;
+				AddAssemblyConfigEntry (apk, config);
 
 				// Try to add symbols if Debug
 				if (debug) {
@@ -277,8 +276,7 @@ namespace Xamarin.Android.Tasks
 			foreach (ITaskItem assembly in ResolvedFrameworkAssemblies) {
 				apk.AddFile (assembly.ItemSpec, "assemblies").CompressionLevel = CompressionLevel.None;
 				var config = Path.ChangeExtension (assembly.ItemSpec, "dll.config");
-				if (File.Exists (config))
-					apk.AddFile (config, "assemblies").CompressionLevel = CompressionLevel.None;
+				AddAssemblyConfigEntry (apk, config);
 				// Try to add symbols if Debug
 				if (debug) {
 					var symbols = Path.ChangeExtension (assembly.ItemSpec, "dll.mdb");
@@ -288,6 +286,21 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 		}
+
+		void AddAssemblyConfigEntry (ZipFile apk, string configFile)
+		{
+			if (!File.Exists (configFile))
+				return;
+
+			using (var source = File.OpenRead (configFile)) {
+				var dest = new MemoryStream ();
+				source.CopyTo (dest);
+				dest.WriteByte (0);
+				dest.Position = 0;
+				apk.AddEntry ("assemblies/" + Path.GetFileName (configFile), dest).CompressionLevel = CompressionLevel.None;
+			}
+		}
+
 		static string GetTargetDirectory (string path)
 		{
 			string culture, file;

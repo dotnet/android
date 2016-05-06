@@ -77,6 +77,7 @@ int monodroid_dylib_mono_init (struct DylibMono *mono_imports, const char *libmo
 	LOAD_SYMBOL(mono_class_get_namespace)
 	LOAD_SYMBOL(mono_class_is_subclass_of)
 	LOAD_SYMBOL(mono_class_vtable)
+	LOAD_SYMBOL(mono_config_for_assembly)
 	LOAD_SYMBOL(mono_config_parse_memory)
 	LOAD_SYMBOL(mono_counters_dump)
 	LOAD_SYMBOL(mono_counters_enable)

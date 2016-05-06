@@ -192,6 +192,7 @@ typedef void*           (*monodroid_mono_class_get_field_from_name_fptr) (MonoCl
 typedef MonoClassField* (*monodroid_mono_class_get_fields_fptr) (MonoClass *arg0, void **arg1);
 typedef void*           (*monodroid_mono_class_get_method_from_name_fptr) (MonoClass *arg0, char *arg1, int arg2);
 typedef MonoVTable*     (*monodroid_mono_class_vtable_fptr) (MonoDomain *domain, MonoClass *class);
+typedef void            (*monodroid_mono_config_for_assembly_fptr) (MonoImage *assembly);
 typedef void            (*monodroid_mono_counters_dump_fptr) (int section_mask, FILE* outfile);
 typedef void            (*monodroid_mono_counters_enable_fptr) (int arg0);
 typedef void*           (*monodroid_mono_debug_init_fptr) (int format);
@@ -316,6 +317,7 @@ struct DylibMono {
 	monodroid_mono_check_corlib_version_fptr                mono_check_corlib_version;
 
 	monodroid_mono_add_internal_call_fptr                   mono_add_internal_call;
+	monodroid_mono_config_for_assembly_fptr                 mono_config_for_assembly;
 };
 
 MONO_API  struct  DylibMono*  monodroid_dylib_mono_new (const char *libmono_path);
