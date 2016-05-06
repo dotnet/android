@@ -9,14 +9,11 @@
     <_SharedRuntimeAssemblies Include="$(_SharedRuntimeBuildPath)v1.0\*.dll;$(_SharedRuntimeBuildPath)$(AndroidFrameworkVersion)\*.dll"/>
   </ItemGroup>
 
-  <Target Name="_GenerateProfileClass" BeforeTargets="CoreCompile"
-	  Inputs="@(_SharedRuntimeAssemblies)"
-	  Outputs="$(_GeneratedProfileClass)"
-	  >
+  <Target Name="_GenerateProfileClass"
+      BeforeTargets="CoreCompile"
+      Inputs="@(_SharedRuntimeAssemblies)"
+      Outputs="$(_GeneratedProfileClass)">
     <GenerateProfile Files="@(_SharedRuntimeAssemblies)" OutputFile="$(_GeneratedProfileClass)" />
-    <ItemGroup>
-        <Compile Include="$(_GeneratedProfileClass)" />
-    </ItemGroup>
     <WriteLinesToFile
         File="$(IntermediateOutputPath)$(CleanFile)"
         Lines="$(_GeneratedProfileClass)"
