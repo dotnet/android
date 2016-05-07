@@ -16,5 +16,6 @@
     <AndroidFrameworkVersion Condition=" '$(AndroidFrameworkVersion)' == '' ">v6.0</AndroidFrameworkVersion>
     <AndroidToolchainCacheDirectory Condition=" '$(AndroidToolchainCacheDirectory)' == '' ">$(HOME)\android-archives</AndroidToolchainCacheDirectory>
     <AndroidToolchainDirectory Condition=" '$(AndroidToolchainDirectory)' == '' ">$(HOME)\android-toolchain</AndroidToolchainDirectory>
+    <MonoDevelopPoliciesFile>$(MSBuildThisFileDirectory)MonoDevelopPolicies.xml</MonoDevelopPoliciesFile>
   </PropertyGroup>
 </Project>
