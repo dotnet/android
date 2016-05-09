@@ -1,0 +1,6 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<string name="hello_rect">I\'m Rect. Tap Me!</string>
+	<string name="hello_round">I\'m Round. Tap Me!</string>
+	<string name="app_name">${PROJECT_NAME}</string>
+</resources>

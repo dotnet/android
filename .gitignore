@@ -4,3 +4,5 @@ Configuration.Override.props
 obj
 packages
 .DS_Store
+.nuget
+TestResult.xml

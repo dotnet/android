@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\..\..\..\Configuration.props" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{2DD1EE75-6D8D-4653-A800-0A24367F7F38}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>Xamarin.ProjectTools</RootNamespace>
+    <AssemblyName>Xamarin.ProjectTools</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>..\..\..\..\bin\TestDebug</OutputPath>
+    <DefineConstants>DEBUG;</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>false</ConsolePause>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>full</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>..\..\..\..\bin\TestRelease</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>false</ConsolePause>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Xml" />
+    <Reference Include="Microsoft.Build.Framework" />
+    <Reference Include="Microsoft.Build" />
+    <Reference Condition=" '$(OS)' != 'Unix' " Include="Microsoft.Build.Engine" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="Ionic.Zip">
+      <HintPath>..\..\..\..\packages\Unofficial.Ionic.Zip.1.9.1.8\lib\Ionic.Zip.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Microsoft.Web.XmlTransform">
+      <HintPath>..\..\..\..\packages\Microsoft.Web.Xdt.2.1.1\lib\net40\Microsoft.Web.XmlTransform.dll</HintPath>
+    </Reference>
+    <Reference Include="NuGet.Core">
+      <HintPath>..\..\..\..\packages\NuGet.Core.2.11.1\lib\net40-Client\NuGet.Core.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Common\BuildActions.cs" />
+    <Compile Include="Common\BuildItem.cs" />
+    <Compile Include="Common\Package.cs" />
+    <Compile Include="Common\ProjectLanguage.cs" />
+    <Compile Include="Common\ProjectResource.cs" />
+    <Compile Include="Common\Property.cs" />
+    <Compile Include="Common\PropertyGroup.cs" />
+    <Compile Include="Common\XamarinProject.cs" />
+    <Compile Include="Android\AndroidBuildActions.cs" />
+    <Compile Include="Android\XamarinAndroidApplicationProject.cs" />
+    <Compile Include="Android\XamarinAndroidBindingProject.cs" />
+    <Compile Include="Android\XamarinAndroidCommonProject.cs" />
+    <Compile Include="Android\XamarinAndroidLibraryProject.cs" />
+    <Compile Include="Android\XamarinAndroidProject.cs" />
+    <Compile Include="Android\XamarinAndroidProjectLanguage.cs" />
+    <Compile Include="Android\XamarinAndroidWearApplicationProject.cs" />
+    <Compile Include="Android\AndroidItem.cs" />
+    <Compile Include="Common\DownloadedCache.cs" />
+    <Compile Include="Common\ProjectBuilder.cs" />
+    <Compile Include="Android\Versions.cs" />
+    <Compile Include="Android\KnownPackages.cs" />
+    <Compile Include="Android\KnownProperties.cs" />
+    <Compile Include="Android\AndroidLinkMode.cs" />
+    <Compile Include="Common\FailedBuildException.cs" />
+    <Compile Include="Utilities\PNGChecker.cs" />
+    <Compile Include="Utilities\ZipHelper.cs" />
+    <Compile Include="Common\XamarinPCLProject.cs" />
+    <Compile Include="Common\Import.cs" />
+    <Compile Include="Common\SolutionBuilder.cs" />
+    <Compile Include="Common\Builder.cs" />
+    <Compile Include="Common\BuildOutput.cs" />
+    <Compile Include="Android\ApkContents.cs" />
+    <Compile Include="Common\BuildOutputFiles.cs" />
+    <Compile Include="Utilities\FileSystemUtils.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <ItemGroup>
+    <Folder Include="Common\" />
+    <Folder Include="Android\" />
+    <Folder Include="Resources\" />
+    <Folder Include="Resources\Wear\" />
+    <Folder Include="Resources\Base\" />
+    <Folder Include="Utilities\" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Wear\LayoutMain.axml" />
+    <EmbeddedResource Include="Resources\Wear\LayoutRectMain.axml" />
+    <EmbeddedResource Include="Resources\Wear\LayoutRoundMain.axml" />
+    <EmbeddedResource Include="Resources\Wear\MainActivity.cs" />
+    <EmbeddedResource Include="Resources\Wear\Strings.xml" />
+    <EmbeddedResource Include="Resources\Base\AndroidManifest.xml" />
+    <EmbeddedResource Include="Resources\Base\Icon.png" />
+    <EmbeddedResource Include="Resources\Base\LayoutMain.axml" />
+    <EmbeddedResource Include="Resources\Base\MainActivity.cs" />
+    <EmbeddedResource Include="Resources\Base\MainActivity.fs" />
+    <EmbeddedResource Include="Resources\Base\AssemblyInfo.fs" />
+    <EmbeddedResource Include="Resources\Base\Image.9.png" />
+    <EmbeddedResource Include="Resources\Base\Image2.9.png" />
+    <EmbeddedResource Include="Resources\Base\test.keystore" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Ionic.Zip.xml" />
+    <None Include="packages.config" />
+  </ItemGroup>
+</Project>
