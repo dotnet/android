@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\..\..\Configuration.props" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>10.0.0</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{40EAD437-216B-4DF4-8258-3F47E1672C3A}</ProjectGuid>
+    <ProjectTypeGuids>{EFBA0AD7-5A72-4C68-AF49-83D382785DCF};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <OutputType>Library</OutputType>
+    <RootNamespace>Xamarin.Android.RuntimeTests</RootNamespace>
+    <AndroidApplication>True</AndroidApplication>
+    <AndroidResgenFile>Resources\Resource.designer.cs</AndroidResgenFile>
+    <AndroidResgenClass>Resource</AndroidResgenClass>
+    <MonoAndroidResourcePrefix>Resources</MonoAndroidResourcePrefix>
+    <MonoAndroidAssetsPrefix>Assets</MonoAndroidAssetsPrefix>
+    <AssemblyName>Mono.Android-Tests</AssemblyName>
+    <AndroidManifest>Properties\AndroidManifest.xml</AndroidManifest>
+    <TargetFrameworkVersion>v4.2</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <Optimize>false</Optimize>
+    <OutputPath>..\..\..\bin\TestDebug</OutputPath>
+    <DefineConstants>DEBUG;</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AndroidLinkMode>None</AndroidLinkMode>
+    <ConsolePause>false</ConsolePause>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <Optimize>true</Optimize>
+    <OutputPath>..\..\..\bin\TestRelease</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>false</ConsolePause>
+    <AndroidUseSharedRuntime>false</AndroidUseSharedRuntime>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AndroidSupportedAbis>armeabi-v7a;x86</AndroidSupportedAbis>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="Mono.Android" />
+    <Reference Include="Mono.Android.Export" />
+    <Reference Include="Xamarin.Android.NUnitLite" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Resources\Resource.designer.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Android.App\ApplicationTest.cs" />
+    <Compile Include="Android.Content\IntentTest.cs" />
+    <Compile Include="Android.Runtime\CharSequenceTest.cs" />
+    <Compile Include="Android.Runtime\JavaCollectionTest.cs" />
+    <Compile Include="Android.Runtime\JnienvArrayMarshaling.cs" />
+    <Compile Include="Android.Runtime\XmlReaderPullParserTest.cs" />
+    <Compile Include="Android.Runtime\XmlReaderResourceParserTest.cs" />
+    <Compile Include="Android.Widget\AdapterTests.cs" />
+    <Compile Include="Java.Interop\JavaConvertTest.cs" />
+    <Compile Include="Java.Lang\ObjectArrayMarshaling.cs" />
+    <Compile Include="Java.Lang\ObjectTest.cs" />
+    <Compile Include="Java.Interop\JnienvTest.cs" />
+    <Compile Include="System\AppDomainTest.cs" />
+    <Compile Include="System\ExceptionTest.cs" />
+    <Compile Include="System\TimeZoneTest.cs" />
+    <Compile Include="System.IO\DriveInfoTest.cs" />
+    <Compile Include="System.IO.Compression\GZipStreamTest.cs" />
+    <Compile Include="System.Net\ProxyTest.cs" />
+    <Compile Include="System.Net\SslTest.cs" />
+    <Compile Include="System.Net\NetworkInterfaces.cs" />
+    <Compile Include="System.Threading\InterlockedTest.cs" />
+    <Compile Include="Java.Interop\JavaObjectExtensionsTests.cs" />
+    <Compile Include="Xamarin.Android.Net\AndroidClientHandlerTests.cs" />
+    <Compile Include="Xamarin.Android.Net\HttpClientIntegrationTests.cs" />
+    <Compile Include="Xamarin.Android.RuntimeTests\MainActivity.cs" />
+    <Compile Include="Xamarin.Android.RuntimeTests\MyIntent.cs" />
+    <Compile Include="Xamarin.Android.RuntimeTests\NonJavaObject.cs" />
+    <Compile Include="Xamarin.Android.RuntimeTests\TestInstrumentation.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\AboutResources.txt" />
+    <None Include="Assets\AboutAssets.txt" />
+    <None Include="Properties\AndroidManifest.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <AndroidResource Include="Resources\drawable\Icon.png" />
+    <AndroidResource Include="Resources\drawable\AndroidPressed.png" />
+    <AndroidResource Include="Resources\drawable\android_focused.png" />
+    <AndroidResource Include="Resources\drawable\android_normal.png" />
+    <AndroidResource Include="Resources\drawable\android_button.xml" />
+    <AndroidResource Include="Resources\xml\XmlReaderResourceParser.xml" />
+  </ItemGroup>
+  <Import Project="..\..\..\bin\$(Configuration)\lib\xbuild\Xamarin\Android\Xamarin.Android.CSharp.targets" />
+  <Import Project="Mono.Android-Tests.targets" />
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\build-tools\android-toolchain\android-toolchain.mdproj">
+      <Name>android-toolchain</Name>
+      <Project>{8FF78EB6-6FC8-46A7-8A15-EBBA9045C5FA}</Project>
+      <Private>False</Private>
+      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Xamarin.Android.Build.Tasks\Xamarin.Android.Build.Tasks.csproj">
+      <Name>Xamarin.Android.Build.Tasks</Name>
+      <Project>{3F1F2F50-AF1A-4A5A-BEDB-193372F068D7}</Project>
+      <Private>False</Private>
+      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
+    </ProjectReference>
+  </ItemGroup>
+</Project>

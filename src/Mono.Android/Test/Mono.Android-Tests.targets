@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <AndroidNativeLibrary Include="libs\arm64-v8a\libreuse-threads.so" />
+    <AndroidNativeLibrary Include="libs\armeabi\libreuse-threads.so" />
+    <AndroidNativeLibrary Include="libs\armeabi-v7a\libreuse-threads.so" />
+    <AndroidNativeLibrary Include="libs\x86\libreuse-threads.so" />
+    <AndroidNativeLibrary Include="libs\x86_64\libreuse-threads.so" />
+  </ItemGroup>
+  <Target Name="BuildNativeLibs"
+      BeforeTargets="Build"
+      DependsOnTargets="_ResolveMonoAndroidSdks"
+      Inputs="jni\reuse-threads.c;jni\Android.mk"
+      Outputs="@(AndroidNativeLibrary)">
+    <Error Text="Could not locate Android NDK." Condition="!Exists ('$(AndroidNdkDirectory)\ndk-build')" />
+    <Exec Command="&quot;$(AndroidNdkDirectory)\ndk-build&quot;" />
+  </Target>
+  <Target Name="UnDeploy"
+      DependsOnTargets="_ValidateAndroidPackageProperties">
+    <Exec Command="&quot;$(AndroidSdkDirectory)\platform-tools\adb&quot; $(AdbTarget) $(AdbOptions) uninstall $(_AndroidPackage)" />
+  </Target>
+  <Target Name="Deploy">
+    <Exec Command="&quot;$(AndroidSdkDirectory)\platform-tools\adb&quot; $(AdbTarget) $(AdbOptions) install $(OutputPath)\Mono.Android_Tests-Signed.apk" />
+  </Target>
+  <Target Name="RunTests"
+      DependsOnTargets="_ValidateAndroidPackageProperties">
+    <Exec Command="&quot;$(AndroidSdkDirectory)\platform-tools\adb&quot; $(AdbTarget) $(AdbOptions) shell am instrument -w $(_AndroidPackage)/xamarin.android.runtimetests.TestInstrumentation" />
+  </Target>
+  <Target Name="RunSdbTests"
+      DependsOnTargets="_ValidateAndroidPackageProperties">
+    <Exec Command="&quot;$(AndroidSdkDirectory)\platform-tools\adb&quot; $(AdbTarget) $(AdbOptions) shell am start -n $(_AndroidPackage)/xamarin.android.runtimetests.MainActivity" />
+  </Target>
+</Project>

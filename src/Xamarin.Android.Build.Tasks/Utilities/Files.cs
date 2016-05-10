@@ -206,6 +206,7 @@ namespace Xamarin.Android.Tools {
 				if (string.Equals(entry.FileName, "__MACOSX", StringComparison.OrdinalIgnoreCase) ||
 					string.Equals(entry.FileName, ".DS_Store", StringComparison.OrdinalIgnoreCase))
 					continue;
+				Console.Error.WriteLine ("# jonp: Files.ExtractAll: extracting entry: {0} to destination='{1}' extractExitingFileAction={2}", entry.FileName, destination, extractExitingFileAction);
 				entry.Extract (destination, extractExitingFileAction);
 			}
 		}
