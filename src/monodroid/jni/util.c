@@ -332,6 +332,32 @@ create_directory (const char *pathname, int mode)
 	return ret;
 }
 
+MonoClass*
+monodroid_get_class_from_name (struct DylibMono *mono, MonoDomain *domain, const char* assembly, const char *namespace, const char *type)
+{
+	MonoAssembly *assm = NULL;
+	MonoImage *image = NULL;
+	MonoClass *result = NULL;
+	MonoAssemblyName *aname = mono->mono_assembly_name_new (assembly);
+	MonoDomain *current = mono->mono_domain_get ();
+
+	if (domain != current)
+		mono->mono_domain_set (domain, FALSE);
+
+	assm = mono->mono_assembly_loaded (aname);
+	if (assm != NULL) {
+		image = mono->mono_assembly_get_image (assm);
+		result = mono->mono_class_from_name (image, namespace, type);
+	}
+
+	if (domain != current)
+		mono->mono_domain_set (current, FALSE);
+
+	mono->mono_assembly_name_free (aname);
+
+	return result;
+}
+
 void create_public_directory (const char *dir)
 {
 #ifndef WINDOWS
