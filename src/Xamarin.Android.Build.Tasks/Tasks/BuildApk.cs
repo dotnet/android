@@ -424,7 +424,7 @@ namespace Xamarin.Android.Tasks
 			var root = Path.GetDirectoryName (typeof(BuildApk).Assembly.Location);
 			if (!string.IsNullOrEmpty (AndroidEmbedProfilers)) {
 				foreach (var profiler in ParseProfilers (AndroidEmbedProfilers)) {
-					var library = string.Format ("libmono-profiler-{1}.{0}.so", abi, profiler);
+					var library = string.Format ("libmono-profiler-{0}.so", profiler);
 					var path = Path.Combine (root, "lib", abi, library);
 					apk.AddEntry (string.Format ("lib/{0}/libmono-profiler-{1}.so", abi, profiler), File.OpenRead (path));
 				}
