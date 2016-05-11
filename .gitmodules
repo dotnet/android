@@ -5,4 +5,4 @@
 [submodule "external/mono"]
 	path = external/mono
 	url = https://github.com/mono/mono.git
-	branch = mono-4.4.0-branch
+	branch = mono-4.5.0-branch
