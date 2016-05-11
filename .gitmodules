@@ -1,6 +1,8 @@
-[submodule "external/mono"]
-	path = external/mono
-	url = ../../mono/mono.git
 [submodule "external/Java.Interop"]
 	path = external/Java.Interop
-	url = ../../xamarin/Java.Interop.git
+	url = https://github.com/xamarin/java.interop.git
+	branch = master
+[submodule "external/mono"]
+	path = external/mono
+	url = https://github.com/mono/mono.git
+	branch = mono-4.4.0-branch
