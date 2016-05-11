@@ -29,7 +29,7 @@
       <HostOS>Darwin</HostOS>
       <DestDir>platform-tools</DestDir>
     </AndroidSdkItem>
-    <AndroidSdkItem Include="tools_r24.4.1-macosx.zip">
+    <AndroidSdkItem Include="android-sdk_r24.4.1-macosx.zip">
       <HostOS>Darwin</HostOS>
     </AndroidSdkItem>
     <AndroidSdkItem Include="platform-N_r01.zip">
