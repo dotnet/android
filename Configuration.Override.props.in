@@ -6,6 +6,18 @@
     <!-- The Xamarin.Android $(TargetFrameworkVersion) value that corresponds to $(AndroidApiLevel) -->
     <AndroidFrameworkVersion>v6.0</AndroidFrameworkVersion>
 
+    <!--
+      Comma-separated list of ABIs to build mono for.
+      Supported ABIs include:
+      - armeabi
+      - armeabi-v7a
+      - arm64-v8a
+      - x86
+      - x86_64
+      Note: Why comma? Because ';' can't be specified on the command-line.
+      -->
+    <AndroidSupportedAbis>armeabi,armeabi-v7a,arm64-v8a,x86,x86_64</AndroidSupportedAbis>
+
     <!-- C and C++ compilers to emit host-native binaries -->
     <HostCc>clang</HostCc>
     <HostCxx>clang++</HostCxx>

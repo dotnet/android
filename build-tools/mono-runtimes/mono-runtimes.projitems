@@ -1,7 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <_MonoRuntime Include="armeabi-v7a">
+    <_MonoRuntime Include="armeabi" Condition="$(AndroidSupportedAbisForConditionalChecks.Contains (',armeabi,'))">
+      <Ar>$(_ArmAr)</Ar>
+      <As>$(_ArmAs)</As>
+      <Cc>$(_ArmCc)</Cc>
+      <Cpp>$(_ArmCpp) $(_ArmCppFlags)</Cpp>
+      <CFlags>$(_ArmCFlags) -march=armv5te $(_TargetCFlags)</CFlags>
+      <Cxx>$(_ArmCxx)</Cxx>
+      <CxxFlags>$(_ArmCxxFlags) -march=armv5te $(_TargetCxxFlags)</CxxFlags>
+      <CxxCpp>$(_ArmCxxCpp) $(_ArmCppFlags)</CxxCpp>
+      <Ld>$(_ArmLd)</Ld>
+      <LdFlags>$(_ArmLdFlags)</LdFlags>
+      <RanLib>$(_ArmRanLib)</RanLib>
+      <Strip>$(_ArmStrip)</Strip>
+      <ConfigureFlags>--host=armv5-linux-androideabi $(_TargetConfigureFlags)</ConfigureFlags>
+      <OutputRuntime>libmonosgen-2.0.so</OutputRuntime>
+      <OutputProfiler>libmono-profiler-log.so</OutputProfiler>
+      <OutputMonoPosixHelper>libMonoPosixHelper.so</OutputMonoPosixHelper>
+    </_MonoRuntime>
+    <_MonoRuntime Include="armeabi-v7a" Condition="$(AndroidSupportedAbisForConditionalChecks.Contains (',armeabi-v7a,'))">
       <Ar>$(_ArmAr)</Ar>
       <As>$(_ArmAs)</As>
       <Cc>$(_ArmCc)</Cc>
@@ -15,6 +33,60 @@
       <RanLib>$(_ArmRanLib)</RanLib>
       <Strip>$(_ArmStrip)</Strip>
       <ConfigureFlags>--host=armv5-linux-androideabi $(_TargetConfigureFlags)</ConfigureFlags>
+      <OutputRuntime>libmonosgen-2.0.so</OutputRuntime>
+      <OutputProfiler>libmono-profiler-log.so</OutputProfiler>
+      <OutputMonoPosixHelper>libMonoPosixHelper.so</OutputMonoPosixHelper>
+    </_MonoRuntime>
+    <_MonoRuntime Include="arm64-v8a" Condition="$(AndroidSupportedAbisForConditionalChecks.Contains (',arm64-v8a,'))">
+      <Ar>$(_Arm64Ar)</Ar>
+      <As>$(_Arm64As)</As>
+      <Cc>$(_Arm64Cc)</Cc>
+      <Cpp>$(_Arm64Cpp) $(_Arm64CppFlags)</Cpp>
+      <CFlags>$(_Arm64CFlags) $(_TargetCFlags)</CFlags>
+      <Cxx>$(_Arm64Cxx)</Cxx>
+      <CxxFlags>$(_Arm64CxxFlags) $(_TargetCxxFlags) </CxxFlags>
+      <CxxCpp>$(_Arm64CxxCpp) $(_Arm64CppFlags)</CxxCpp>
+      <Ld>$(_Arm64Ld)</Ld>
+      <LdFlags>$(_Arm64LdFlags)</LdFlags>
+      <RanLib>$(_Arm64RanLib)</RanLib>
+      <Strip>$(_Arm64Strip)</Strip>
+      <ConfigureFlags>--host=aarch64-linux-android $(_TargetConfigureFlags)</ConfigureFlags>
+      <OutputRuntime>libmonosgen-2.0.so</OutputRuntime>
+      <OutputProfiler>libmono-profiler-log.so</OutputProfiler>
+      <OutputMonoPosixHelper>libMonoPosixHelper.so</OutputMonoPosixHelper>
+    </_MonoRuntime>
+    <_MonoRuntime Include="x86" Condition="$(AndroidSupportedAbisForConditionalChecks.Contains (',x86,'))">
+      <Ar>$(_X86Ar)</Ar>
+      <As>$(_X86As)</As>
+      <Cc>$(_X86Cc)</Cc>
+      <Cpp>$(_X86Cpp) $(_X86CppFlags)</Cpp>
+      <CFlags>$(_X86CFlags) $(_TargetCFlags)</CFlags>
+      <Cxx>$(_X86Cxx)</Cxx>
+      <CxxFlags>$(_X86CxxFlags) $(_TargetCxxFlags) </CxxFlags>
+      <CxxCpp>$(_X86CxxCpp) $(_X86CppFlags)</CxxCpp>
+      <Ld>$(_X86Ld)</Ld>
+      <LdFlags>$(_X86LdFlags)</LdFlags>
+      <RanLib>$(_X86RanLib)</RanLib>
+      <Strip>$(_X86Strip)</Strip>
+      <ConfigureFlags>--host=i686-linux-android $(_TargetConfigureFlags)</ConfigureFlags>
+      <OutputRuntime>libmonosgen-2.0.so</OutputRuntime>
+      <OutputProfiler>libmono-profiler-log.so</OutputProfiler>
+      <OutputMonoPosixHelper>libMonoPosixHelper.so</OutputMonoPosixHelper>
+    </_MonoRuntime>
+    <_MonoRuntime Include="x86_64" Condition="$(AndroidSupportedAbisForConditionalChecks.Contains (',x86_64,'))">
+      <Ar>$(_X86_64Ar)</Ar>
+      <As>$(_X86_64As)</As>
+      <Cc>$(_X86_64Cc)</Cc>
+      <Cpp>$(_X86_64Cpp) $(_X86_64CppFlags)</Cpp>
+      <CFlags>$(_X86_64CFlags) $(_TargetCFlags)</CFlags>
+      <Cxx>$(_X86_64Cxx)</Cxx>
+      <CxxFlags>$(_X86_64CxxFlags) $(_TargetCxxFlags) </CxxFlags>
+      <CxxCpp>$(_X86_64CxxCpp) $(_X86_64CppFlags)</CxxCpp>
+      <Ld>$(_X86_64Ld)</Ld>
+      <LdFlags>$(_X86_64LdFlags)</LdFlags>
+      <RanLib>$(_X86_64RanLib)</RanLib>
+      <Strip>$(_X86_64Strip)</Strip>
+      <ConfigureFlags>--host=x86_64-linux-android $(_TargetConfigureFlags)</ConfigureFlags>
       <OutputRuntime>libmonosgen-2.0.so</OutputRuntime>
       <OutputProfiler>libmono-profiler-log.so</OutputProfiler>
       <OutputMonoPosixHelper>libMonoPosixHelper.so</OutputMonoPosixHelper>

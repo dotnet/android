@@ -8,8 +8,16 @@
     <CFiles Include="jni\**\*.c" />
   </ItemGroup>
   <Target Name="_BuildRuntimes"
-      Inputs="@(CFiles);jni\Android.mk;jni\Application.mk"
+      Inputs="@(CFiles);jni\Android.mk"
       Outputs="@(_MonoRuntime->'$(OutputPath)\%(Identity)\libmono-android.$(_Conf).%(Identity).so')">
+    <PropertyGroup>
+      <_AppAbi>$(AndroidSupportedAbis.Replace(',', ' ')</_AppAbi>
+    </PropertyGroup>
+    <WriteLinesToFile
+        File="jni\Application.mk"
+        Lines="APP_ABI := $(_AppAbi)"
+        Overwrite="True"
+    />
     <Exec
         Command="$(AndroidToolchainDirectory)\ndk\ndk-build CONFIGURATION=$(Configuration) V=1"
     />
@@ -25,7 +33,7 @@
   <Target Name="_CleanRuntimes"
       AfterTargets="Clean">
     <RemoveDir Directories="obj\local;libs" />
-    <Delete Files="jni\config.include;jni\machine.config.include" />
+    <Delete Files="jni\config.include;jni\machine.config.include;jni\Application.mk" />
     <Delete Files="@(_MonoRuntime->'$(OutputPath)\%(Identity)\libmono-android.$(_Conf).%(Identity).so')" />
     <Delete Files="@(_MonoRuntime->'$(OutputPath)\%(Identity)\libmono-android.$(_Conf).%(Identity).d.so')" />
   </Target>

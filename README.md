@@ -32,6 +32,17 @@ Overridable MSBuild properties include:
 * `$(AndroidFrameworkVersion)`: The Xamarin.Android `$(TargetFrameworkVersion)`
     version which corresponds to `$(AndroidApiLevel)`. This is *usually* the
     Android version number with a leading `v`, e.g. `v4.0.3` for API-15.
+* `$(AndroidSupportedAbis)`: The Android ABIs to build for inclusion within
+    apps. This is a `,`-separated list of ABIs to build. Supported values are:
+
+    * `armeabi`
+    * `armeabi-v7a`
+    * `arm64-v8a`
+    * `x86`
+    * `x86_64`
+
+    The default value is `armeabi-v7a`.
+
 * `$(AndroidToolchainCacheDirectory)`: The directory to cache the downloaded
     Android NDK and SDK files. This value defaults to
     `$(HOME)\android-archives`.
