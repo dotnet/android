@@ -4,11 +4,60 @@
     <_SourceTopDir>..\..</_SourceTopDir>
     <_BclFrameworkDir>$(OutputPath)\lib\xbuild-frameworks\MonoAndroid\v1.0</_BclFrameworkDir>
     <_MonoPath>$(_SourceTopDir)\external\mono</_MonoPath>
+    <_MonoProfileDir>$(_MonoPath)\mcs\class\lib\monodroid</_MonoProfileDir>
   </PropertyGroup>
   <UsingTask AssemblyFile="$(_SourceTopDir)\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.GetNugetPackageBasePath" />
   <Import Project="$(_SourceTopDir)\Configuration.props" />
   <Import Project="mono-runtimes.props" />
   <Import Project="mono-runtimes.projitems" />
+  <ItemGroup>
+      <_BclAssembly Include="I18N.CJK.dll"/>
+      <_BclAssembly Include="I18N.dll"/>
+      <_BclAssembly Include="I18N.MidEast.dll"/>
+      <_BclAssembly Include="I18N.Other.dll"/>
+      <_BclAssembly Include="I18N.Rare.dll"/>
+      <_BclAssembly Include="I18N.West.dll"/>
+      <_BclAssembly Include="Microsoft.CSharp.dll"/>
+      <_BclAssembly Include="Mono.Cairo.dll"/>
+      <_BclAssembly Include="Mono.CompilerServices.SymbolWriter.dll"/>
+      <_BclAssembly Include="Mono.CSharp.dll"/>
+      <_BclAssembly Include="Mono.Data.Tds.dll"/>
+      <_BclAssembly Include="Mono.Security.dll"/>
+      <_BclAssembly Include="Mono.Security.Providers.DotNet.dll"/>
+      <_BclAssembly Include="Mono.Security.Providers.NewSystemSource.dll"/>
+      <_BclAssembly Include="Mono.Security.Providers.NewTls.dll"/>
+      <_BclAssembly Include="mscorlib.dll"/>
+      <_BclAssembly Include="SMDiagnostics.dll"/>
+      <_BclAssembly Include="System.ComponentModel.Composition.dll"/>
+      <_BclAssembly Include="System.ComponentModel.DataAnnotations.dll"/>
+      <_BclAssembly Include="System.Core.dll"/>
+      <_BclAssembly Include="System.Data.dll"/>
+      <_BclAssembly Include="System.Data.Services.Client.dll"/>
+      <_BclAssembly Include="System.dll"/>
+      <_BclAssembly Include="System.IO.Compression.dll"/>
+      <_BclAssembly Include="System.IO.Compression.FileSystem.dll"/>
+      <_BclAssembly Include="System.Json.dll"/>
+      <_BclAssembly Include="System.Net.dll"/>
+      <_BclAssembly Include="System.Net.Http.dll"/>
+      <_BclAssembly Include="System.Net.Http.WebRequest.dll"/>
+      <_BclAssembly Include="System.Numerics.dll"/>
+      <_BclAssembly Include="System.Runtime.Serialization.dll"/>
+      <_BclAssembly Include="System.ServiceModel.dll"/>
+      <_BclAssembly Include="System.ServiceModel.Internals.dll"/>
+      <_BclAssembly Include="System.ServiceModel.Web.dll"/>
+      <_BclAssembly Include="System.Transactions.dll"/>
+      <_BclAssembly Include="System.Web.Services.dll"/>
+      <_BclAssembly Include="System.Windows.dll"/>
+      <_BclAssembly Include="System.Xml.dll"/>
+      <_BclAssembly Include="System.Xml.Linq.dll"/>
+      <_BclAssembly Include="System.Xml.Serialization.dll"/>
+  </ItemGroup>
+  <ItemGroup>
+    <_BclProfileItems Include="@(_BclAssembly->'$(_MonoProfileDir)\%(Identity)')" />
+  </ItemGroup>
+  <ItemGroup>
+    <_BclInstalledItem Include="@(_BclAssembly->'$(OutputPath)lib\xbuild-frameworks\MonoAndroid\v1.0\%(Identity)')" />
+  </ItemGroup>
   <Target Name="_SetAutogenShTimeToLastCommitTimestamp">
     <Exec
         Command="touch -m -t `git log -1 --format=%25cd --date=format-local:%25Y%25m%25d%25H%25M.%25S` autogen.sh"
@@ -39,7 +88,7 @@
   </Target>
   <Target Name="_BuildRuntimes"
       Inputs="@(_MonoRuntime->'$(IntermediateOutputPath)%(Identity)\.stamp')"
-      Outputs="@(_MonoRuntime->'$(IntermediateOutputPath)%(Identity)\mono\mini\.libs\%(OutputRuntime)');@(_MonoRuntime->'$(IntermediateOutputPath)%(Identity)\mono\profiler\.libs\%(OutputProfiler)');@(_MonoRuntime->'$(IntermediateOutputPath)%(Identity)\support\.libs\%(OutputMonoPosixHelper)')">
+      Outputs="@(_MonoRuntime->'$(IntermediateOutputPath)%(Identity)\mono\mini\.libs\%(OutputRuntime)');@(_MonoRuntime->'$(IntermediateOutputPath)%(Identity)\mono\profiler\.libs\%(OutputProfiler)');@(_MonoRuntime->'$(IntermediateOutputPath)%(Identity)\support\.libs\%(OutputMonoPosixHelper)');@(_BclProfileItems)">
     <Exec
         Command="make $(MAKEFLAGS) # %(_MonoRuntime.Identity)"
         WorkingDirectory="@(_MonoRuntime->'$(IntermediateOutputPath)\%(Identity)')"
@@ -82,8 +131,8 @@
     />
   </Target>
   <Target Name="_InstallBcl"
-      Inputs="$(_MonoPath)\mcs\class\lib\monodroid\mscorlib.dll"
-      Outputs="$(OutputPath)lib\xbuild-frameworks\MonoAndroid\v1.0\mscorlib.dll;$(OutputPath)lib\xbuild-frameworks\MonoAndroid\v1.0\RedistList\FrameworkList.xml">
+      Inputs="@(_BclProfileItems)"
+      Outputs="@(_BclInstalledItem);$(OutputPath)lib\xbuild-frameworks\MonoAndroid\v1.0\RedistList\FrameworkList.xml">
     <MakeDir Directories="$(_BclFrameworkDir)" />
     <MakeDir Directories="$(_BclFrameworkDir)\RedistList" />
     <MakeDir Directories="$(_BclFrameworkDir)\Facades" />
@@ -95,8 +144,8 @@
     </GetNugetPackageBasePath>
     <ItemGroup>
       <_FSharp Include="$(_SourceTopDir)\$(_FSharpCorePackagePath)\lib\portable-net45+monoandroid10+monotouch10+xamarinios10\FSharp.Core*" />
-      <_Assemblies Include="$(_MonoPath)\mcs\class\lib\monodroid\*.dll" />
-      <_Facades Include="$(_MonoPath)\mcs\class\lib\monodroid\Facades\*.dll" />
+      <_Assemblies Include="$(_MonoProfileDir)\*.dll" />
+      <_Facades Include="$(_MonoProfileDir)\Facades\*.dll" />
     </ItemGroup>
     <Copy
         SourceFiles="@(_Assemblies)"
