@@ -1,0 +1,73 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Xml;
+using Microsoft.Build.Construction;
+
+namespace Xamarin.ProjectTools
+{
+	public abstract class XamarinAndroidProjectLanguage : ProjectLanguage
+	{
+		public abstract string NormalProjectImport { get; }
+		public abstract string BindingProjectImport { get; }
+
+		public static XamarinAndroidProjectLanguage CSharp = new CSharpLanguage ();
+		public static XamarinAndroidProjectLanguage FSharp = new FSharpLanguage ();
+
+
+		static readonly string default_assembly_info_cs, default_assembly_info_fs;
+
+		static XamarinAndroidProjectLanguage ()
+		{
+			default_assembly_info_cs = string.Empty;
+			using (var sr = new StreamReader (typeof (XamarinAndroidProjectLanguage).Assembly.GetManifestResourceStream ("Xamarin.ProjectTools.Resources.Base.AssemblyInfo.fs")))
+				default_assembly_info_fs = sr.ReadToEnd ();
+		}
+
+		class FSharpLanguage : XamarinAndroidProjectLanguage
+		{
+			public override string ProjectTypeGuid {
+				get { return "EFBA0AD7-5A72-4C68-AF49-83D382785DCF"; }
+			}
+			public override string DefaultExtension {
+				get { return ".fs"; }
+			}
+			public override string DefaultProjectExtension {
+				get { return ".fsproj"; }
+			}
+			public override string NormalProjectImport {
+				get { return "$(MSBuildExtensionsPath)\\Xamarin\\Android\\Xamarin.Android.FSharp.targets"; }
+			}
+			public override string BindingProjectImport {
+				get { throw new NotSupportedException (); }
+			}
+			public override string DefaultAssemblyInfo {
+				get { return default_assembly_info_fs; }
+			}
+		}
+
+		class CSharpLanguage : XamarinAndroidProjectLanguage
+		{
+			public override string ProjectTypeGuid {
+				get { return "EFBA0AD7-5A72-4C68-AF49-83D382785DCF"; }
+			}
+			public override string DefaultExtension {
+				get { return ".cs"; }
+			}
+			public override string DefaultProjectExtension {
+				get { return ".csproj"; }
+			}
+			public override string NormalProjectImport {
+				get { return "$(MSBuildExtensionsPath)\\Xamarin\\Android\\Xamarin.Android.CSharp.targets"; }
+			}
+			public override string BindingProjectImport {
+				get { return "$(MSBuildExtensionsPath)\\Xamarin\\Android\\Xamarin.Android.Bindings.targets"; }
+			}
+			public override string DefaultAssemblyInfo {
+				get { return default_assembly_info_cs; }
+			}
+		}
+	}
+
+}
