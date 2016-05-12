@@ -23,6 +23,9 @@
         Condition=" '%(HostOS)' == '$(HostOS)' Or '%(HostOS)' == '' ">
 			<Output TaskParameter="Include" ItemName="_PlatformAndroidNdkItem"/>
     </CreateItem>
+    <ItemGroup>
+        <_SdkStampFiles Include="@(_PlatformAndroidSdkItem->'$(AndroidToolchainDirectory)\sdk\.stamp-%(Identity)')" />
+    </ItemGroup>
   </Target>
   <Target Name="_DownloadItems"
       DependsOnTargets="_DetermineItems"
@@ -36,7 +39,7 @@
   <Target Name="_UnzipFiles"
       DependsOnTargets="_DetermineItems"
       Inputs="@(_PlatformAndroidSdkItem->'$(AndroidToolchainCacheDirectory)\%(Identity)')"
-      Outputs="$(AndroidToolchainDirectory)\.stamp-sdk">
+      Outputs="@(_SdkStampFiles);$(AndroidToolchainDirectory)\ndk\.stamp-ndk">
     <CreateItem
         Include="@(_PlatformAndroidSdkItem->'$(AndroidToolchainCacheDirectory)\%(_PlatformAndroidSdkItem.Identity)">
       <Output TaskParameter="Include" ItemName="_AndroidSdkItems"/>
@@ -61,7 +64,7 @@
         DestinationFolder="$(AndroidToolchainDirectory)\ndk"
     />
     <Touch
-        Files="$(AndroidToolchainDirectory)\.stamp-sdk"
+        Files="@(_SdkStampFiles);$(AndroidToolchainDirectory)\ndk\.stamp-ndk"
         AlwaysCreate="True"
     />
   </Target>
@@ -73,7 +76,7 @@
   </ItemGroup>
   <Target Name="_CreateNdkToolchains"
       Condition=" '$(OS)' == 'Unix' "
-      Inputs="$(AndroidToolchainDirectory)\.stamp-sdk"
+      Inputs="$(AndroidToolchainDirectory)\ndk\.stamp-ndk"
       Outputs="@(_NdkToolchain->'$(AndroidToolchainDirectory)\.stamp-toolchains-%(Identity)')">
     <PropertyGroup>
       <_Script>$(AndroidToolchainDirectory)\ndk\build\tools\make-standalone-toolchain.sh</_Script>
