@@ -43,4 +43,22 @@
       <DestDir>platforms\android-23</DestDir>
     </AndroidSdkItem>
   </ItemGroup>
+  <ItemGroup>
+    <_NdkToolchain Include="arm-linux-androideabi-clang" Condition="$(AndroidSupportedAbisForConditionalChecks.Contains(',armeabi,')) Or $(AndroidSupportedAbisForConditionalChecks.Contains(',armeabi-v7a,'))">
+      <Platform>android-4</Platform>
+      <Arch>arm</Arch>
+    </_NdkToolchain>
+    <_NdkToolchain Include="aarch64-linux-android-clang" Condition="$(AndroidSupportedAbisForConditionalChecks.Contains(',arm64-v8a,'))">
+      <Platform>android-21</Platform>
+      <Arch>arm64</Arch>
+    </_NdkToolchain>
+    <_NdkToolchain Include="x86-clang" Condition="$(AndroidSupportedAbisForConditionalChecks.Contains(',x86,'))">
+      <Platform>android-9</Platform>
+      <Arch>x86</Arch>
+    </_NdkToolchain>
+    <_NdkToolchain Include="x86_64-clang" Condition="$(AndroidSupportedAbisForConditionalChecks.Contains(',x86_64,'))">
+      <Platform>android-21</Platform>
+      <Arch>x86_64</Arch>
+    </_NdkToolchain>
+  </ItemGroup>
 </Project>

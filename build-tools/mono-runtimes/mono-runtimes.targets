@@ -75,7 +75,7 @@
   </Target>
   <Target Name="_ConfigureRuntimes"
       Inputs="$(_MonoPath)\configure"
-      Outputs="@(_MonoRuntime->'$(IntermediateOutputPath)\%(Identity)\.stamp')">
+      Outputs="@(_MonoRuntime->'$(IntermediateOutputPath)\%(Identity)\Makefile')">
     <MakeDir Directories="@(_MonoRuntime->'$(IntermediateOutputPath)\%(Identity)')" />
     <Exec
         Command="..\..\..\$(_MonoPath)\configure LDFLAGS=&quot;%(_MonoRuntime.LdFlags)&quot; CFLAGS=&quot;%(_MonoRuntime.CFlags)&quot; CXXFLAGS=&quot;%(_MonoRuntime.CxxFlags)&quot; CC=&quot;%(_MonoRuntime.Cc)&quot; CXX=&quot;%(_MonoRuntime.Cxx)&quot; CPP=&quot;%(_MonoRuntime.Cpp)&quot; CXXCPP=&quot;%(_MonoRuntime.CxxCpp)&quot; LD=&quot;%(_MonoRuntime.Ld)&quot; AR=&quot;%(_MonoRuntime.Ar)&quot; AS=&quot;%(_MonoRuntime.As)&quot; RANLIB=&quot;%(_MonoRuntime.RanLib)&quot; STRIP=&quot;%(_MonoRuntime.Strip)&quot; --cache-file=..\%(_MonoRuntime.Identity).config.cache %(_MonoRuntime.ConfigureFlags)"
@@ -113,7 +113,7 @@
         DestinationFiles="@(_MonoRuntime->'$(OutputPath)\lib\xbuild\Xamarin\Android\lib\%(Identity)\%(OutputRuntime)-unstripped')"
     />
     <Exec
-        Command="%(_MonoRuntime.Strip) &quot;@(_MonoRuntime->'$(OutputPath)\lib\xbuild\Xamarin\Android\lib\%(Identity)\%(OutputRuntime)')&quot;"
+        Command="%(_MonoRuntime.Strip) &quot;$(OutputPath)\lib\xbuild\Xamarin\Android\lib\%(Identity)\%(OutputRuntime)&quot;"
     />
     <Copy
         SourceFiles="@(_MonoRuntime->'$(IntermediateOutputPath)\%(Identity)\mono\profiler\.libs\%(OutputProfiler)')"
@@ -160,7 +160,7 @@
         DestinationFolder="$(_BclFrameworkDir)"
     />
     <Touch
-        Files="$(_BclFrameworkDir)\mscorlib.dll"
+        Files="@(_BclInstalledItem)"
     />
     <ItemGroup>
       <FrameworkList Include="&lt;FileList Redist=&quot;MonoAndroid&quot; Name=&quot;Xamarin.Android Base Class Libraries&quot;&gt;" />
@@ -175,5 +175,6 @@
   <Target Name="_CleanRuntimes"
       AfterTargets="Clean">
     <RemoveDir Directories="@(_MonoRuntime->'$(IntermediateOutputPath)\%(Identity)')" />
+    <Delete Files="@(_MonoRuntime->'$(IntermediateOutputPath)\%(Identity).config.cache')" />
   </Target>
 </Project>

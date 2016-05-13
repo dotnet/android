@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <_SupportedAbis>$(AndroidSupportedAbis.Replace(',', ';')</_SupportedAbis>
+  </PropertyGroup>
   <ItemGroup>
-    <_MonoRuntime Include="armeabi-v7a" />
+    <_MonoRuntime Include="$(_SupportedAbis)" />
   </ItemGroup>
 </Project>

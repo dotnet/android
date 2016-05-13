@@ -68,26 +68,19 @@
         AlwaysCreate="True"
     />
   </Target>
-  <ItemGroup>
-    <_NdkToolchain Include="arm-linux-androideabi-clang">
-      <Platform>android-4</Platform>
-      <Arch>arm</Arch>
-    </_NdkToolchain>
-  </ItemGroup>
   <Target Name="_CreateNdkToolchains"
       Condition=" '$(OS)' == 'Unix' "
       Inputs="$(AndroidToolchainDirectory)\ndk\.stamp-ndk"
-      Outputs="@(_NdkToolchain->'$(AndroidToolchainDirectory)\.stamp-toolchains-%(Identity)')">
+      Outputs="@(_NdkToolchain->'$(AndroidToolchainDirectory)\toolchains\%(Identity)\AndroidVersion.txt')">
     <PropertyGroup>
       <_Script>$(AndroidToolchainDirectory)\ndk\build\tools\make-standalone-toolchain.sh</_Script>
       <_Install>@(_NdkToolchain->'$(AndroidToolchainDirectory)\toolchains\%(Identity)')</_Install>
-      <_Arch>@(_NdkToolchain->'%(Arch)')</_Arch>
       <_Toolchain>@(_NdkToolchain->'%(Identity)')</_Toolchain>
     </PropertyGroup>
-    <Exec Command="bash &quot;$(_Script)&quot; --platform=%(_NdkToolchain.Platform) &quot;--install-dir=$(_Install)&quot; --arch=$(_Arch) --toolchain=$(_Toolchain)" />
+    <Exec Command="bash &quot;$(_Script)&quot; --platform=%(_NdkToolchain.Platform) &quot;--install-dir=$(_Install)&quot; --arch=%(_NdkToolchain.Arch) --toolchain=$(_Toolchain)" />
     <Touch
-        Files="@(_NdkToolchain->'$(AndroidToolchainDirectory)\.stamp-toolchains-%(Identity)')"
-        AlwaysCreate="True"
+        Files="@(_NdkToolchain->'$(AndroidToolchainDirectory)\toolchains\%(Identity)\AndroidVersion.txt')"
+        AlwaysCreate="False"
     />
   </Target>
   <Target Name="_GetAndroidSdkDirectory">
