@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
@@ -9,7 +10,6 @@ using Mono.Cecil;
 using Microsoft.Build.Utilities;
 using Microsoft.Build.Framework;
 using System.Text.RegularExpressions;
-using Ionic.Zip;
 
 using Java.Interop.Tools.Cecil;
 
@@ -232,9 +232,7 @@ namespace Xamarin.Android.Tasks
 
 							// temporarily extracted directory will look like:
 							//    __library_projects__/[dllname]/[library_project_imports | jlibs]/bin
-							using (var zip = new ZipFile (finfo.FullName)) {
-								Files.ExtractAll (zip, outDirForDll);
-							}
+							ZipFile.ExtractToDirectory (finfo.FullName, outDirForDll);
 
 							// We used to *copy* the resources to overwrite other resources,
 							// which resulted in missing resource issue.
