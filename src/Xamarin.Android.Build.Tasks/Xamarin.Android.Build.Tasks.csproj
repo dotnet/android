@@ -34,6 +34,7 @@
   </PropertyGroup>
   <PropertyGroup>
     <DefineConstants Condition="'$(__XA_NO_PREVIEW_L_SUPPORT__)' != ''">$(DefineConstants);XA_NO_PREVIEW_L_SUPPORT</DefineConstants>
+    <AndroidGeneratedClassDirectory Condition=" '$(AndroidGeneratedClassDirectory)' == '' "  >..\..\src\Mono.Android\obj\$(Configuration)\android-$(AndroidApiLevel)</AndroidGeneratedClassDirectory>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.Build.Framework" />
@@ -455,25 +456,25 @@
     <Compile Include="..\Mono.Android\\Android.Content\GrantUriPermissionAttribute.cs">
       <Link>Mono.Android\GrantUriPermissionAttribute.cs</Link>
     </Compile>
-    <Compile Include="..\..\src\Mono.Android\obj\$(Configuration)\android-$(AndroidApiLevel)\Android.Content.PM.LaunchMode.cs">
+    <Compile Include="$(AndroidGeneratedClassDirectory)\Android.Content.PM.LaunchMode.cs">
       <Link>Mono.Android\Android.Content.PM.LaunchMode.cs</Link>
     </Compile>
-    <Compile Include="..\..\src\Mono.Android\obj\$(Configuration)\android-$(AndroidApiLevel)\Android.Content.PM.ScreenOrientation.cs">
+    <Compile Include="$(AndroidGeneratedClassDirectory)\Android.Content.PM.ScreenOrientation.cs">
       <Link>Mono.Android\Android.Content.PM.ScreenOrientation.cs</Link>
     </Compile>
-    <Compile Include="..\..\src\Mono.Android\obj\$(Configuration)\android-$(AndroidApiLevel)\Android.Content.PM.ConfigChanges.cs">
+    <Compile Include="$(AndroidGeneratedClassDirectory)\Android.Content.PM.ConfigChanges.cs">
       <Link>Mono.Android\Android.Content.PM.ConfigChanges.cs</Link>
     </Compile>
-    <Compile Include="..\..\src\Mono.Android\obj\$(Configuration)\android-$(AndroidApiLevel)\Android.Content.PM.UiOptions.cs">
+    <Compile Include="$(AndroidGeneratedClassDirectory)\Android.Content.PM.UiOptions.cs">
       <Link>Mono.Android\Android.Content.PM.UiOptions.cs</Link>
     </Compile>
-    <Compile Include="..\..\src\Mono.Android\obj\$(Configuration)\android-$(AndroidApiLevel)\Android.Views.SoftInput.cs">
+    <Compile Include="$(AndroidGeneratedClassDirectory)\Android.Views.SoftInput.cs">
       <Link>Mono.Android\Android.Views.SoftInput.cs</Link>
     </Compile>
-    <Compile Include="..\..\src\Mono.Android\obj\$(Configuration)\android-$(AndroidApiLevel)\Android.Content.PM.Protection.cs">
+    <Compile Include="$(AndroidGeneratedClassDirectory)\Android.Content.PM.Protection.cs">
       <Link>Mono.Android\Android.Content.PM.Protection.cs</Link>
     </Compile>
-    <Compile Include="..\..\src\Mono.Android\obj\$(Configuration)\android-$(AndroidApiLevel)\Android.Views.LayoutDirection.cs">
+    <Compile Include="$(AndroidGeneratedClassDirectory)\Android.Views.LayoutDirection.cs">
       <Link>Mono.Android\Android.Views.LayoutDirection.cs</Link>
     </Compile>
     <Compile Include="..\Mono.Android\Android.Runtime\IntDefinitionAttribute.cs">
