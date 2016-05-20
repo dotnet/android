@@ -543,8 +543,13 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 
 		void GenerateBody (StreamWriter sw)
 		{
-			foreach (Signature ctor in ctors)
+			foreach (Signature ctor in ctors) {
+				if (string.IsNullOrEmpty (ctor.Params) && JniType.IsApplication (type))
+					continue;
 				GenerateConstructor (ctor, sw);
+			}
+
+			GenerateApplicationConstructor (sw);
 
 			foreach (JavaFieldInfo field in exported_fields)
 				GenerateExportedField (field, sw);
@@ -752,6 +757,19 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 				sw.WriteLine ("\t\tif (getClass () == {0}.class)", name);
 				sw.WriteLine ("\t\t\tmono.android.TypeManager.Activate (\"{0}\", \"{1}\", this, new java.lang.Object[] {{ {2} }});", type.GetAssemblyQualifiedName (), ctor.ManagedParameters, ctor.ActivateCall);
 			}
+			sw.WriteLine ("\t}");
+		}
+
+		void GenerateApplicationConstructor (StreamWriter sw)
+		{
+			if (!JniType.IsApplication (type)) {
+				return;
+			}
+
+			sw.WriteLine ();
+			sw.WriteLine ("\tpublic {0} ()", name);
+			sw.WriteLine ("\t{");
+			sw.WriteLine ("\t\tmono.MonoPackageManager.setContext (this);");
 			sw.WriteLine ("\t}");
 		}
 
