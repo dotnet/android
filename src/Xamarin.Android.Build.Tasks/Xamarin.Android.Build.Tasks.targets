@@ -2,7 +2,7 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <UsingTask TaskName="Xamarin.Android.Tools.BootstrapTasks.GenerateProfile" AssemblyFile="..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" />
   <PropertyGroup>
-    <_SharedRuntimeBuildPath>..\..\bin\$(Configuration)\lib\xbuild-frameworks\MonoAndroid\</_SharedRuntimeBuildPath>
+    <_SharedRuntimeBuildPath Condition=" '$(_SharedRuntimeBuildPath)' == '' ">..\..\bin\$(Configuration)\lib\xbuild-frameworks\MonoAndroid\</_SharedRuntimeBuildPath>
     <_GeneratedProfileClass>$(IntermediateOutputPath)Profile.g.cs</_GeneratedProfileClass>
   </PropertyGroup>
   <ItemGroup>
