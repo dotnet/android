@@ -84,5 +84,8 @@
     <EmbeddedResource Include="Resources\stdio-Finalized-threads.txt">
       <LogicalName>stdio-Finalized-threads</LogicalName>
     </EmbeddedResource>
+    <EmbeddedResource Include="Resources\stdio-repeated-handles.txt">
+      <LogicalName>stdio-repeated-handles</LogicalName>
+    </EmbeddedResource>
   </ItemGroup>
 </Project>

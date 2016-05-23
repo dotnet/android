@@ -146,6 +146,10 @@ namespace Xamarin.Android.Tools.LogcatParse {
 			set {state |= PeerInfoState.Finalized;}
 		}
 
+		public bool Alive {
+			get {return state == PeerInfoState.Alive;}
+		}
+
 		public string                       JniType     {get; internal set;}
 		public string                       McwType     {get; internal set;}
 

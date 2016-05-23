@@ -398,6 +398,56 @@ namespace Xamarin.Android.Tools.LogcatParse.Tests {
 					peer.GetStackTraceForHandle ("0x100492/G"));
 			}
 		}
+
+		[Test]
+		public void RepeatedThreadHandles ()
+		{
+			using (var source = new StreamReader (Assembly.GetExecutingAssembly ().GetManifestResourceStream ("stdio-repeated-handles"))) {
+				var info = Grefs.Parse (source, options: GrefParseOptions.ThrowOnCountMismatch);
+				Assert.AreEqual (2, info.AllocatedPeers.Count);
+				Assert.AreEqual (1, info.AlivePeers.Count ());
+				Assert.AreEqual (1, info.GrefCount);
+				Assert.AreEqual (0, info.WeakGrefCount);
+
+				var peer = info.AllocatedPeers [0];
+				Assert.IsTrue (peer.Collected);
+				Assert.IsTrue (peer.Disposed);
+				Assert.IsFalse (peer.Finalized);
+				Assert.AreEqual ("java/lang/String", peer.JniType);
+				Assert.AreEqual ("Java.Lang.String", peer.McwType);
+
+				Assert.AreEqual ("'(null)'(3)", peer.CreatedOnThread);
+				Assert.AreEqual ("'(null)'(3)", peer.DestroyedOnThread);
+
+				Assert.AreEqual ("0x41e29778", peer.KeyHandle);
+				Assert.AreEqual (2, peer.Handles.Count);
+				Assert.IsTrue (peer.Handles.Contains ("0x4a00009/L"));
+				Assert.IsTrue (peer.Handles.Contains ("0x19004aa/G"));
+
+				Assert.AreEqual (
+					"  at Doesn't Matter",
+					peer.GetStackTraceForHandle ("0x19004aa/G"));
+
+				peer = info.AllocatedPeers [1];
+				Assert.IsFalse (peer.Collected);
+				Assert.IsFalse (peer.Disposed);
+				Assert.IsFalse (peer.Finalized);
+				Assert.AreEqual ("java/lang/String", peer.JniType);
+				Assert.AreEqual ("Java.Lang.String", peer.McwType);
+
+				Assert.AreEqual ("'(null)'(3)", peer.CreatedOnThread);
+				Assert.AreEqual (null,          peer.DestroyedOnThread);
+
+				Assert.AreEqual ("0x41e29778", peer.KeyHandle);
+				Assert.AreEqual (2, peer.Handles.Count);
+				Assert.IsTrue (peer.Handles.Contains ("0x4a00009/L"));
+				Assert.IsTrue (peer.Handles.Contains ("0x19004aa/G"));
+
+				Assert.AreEqual (
+					"  at Doesn't Matter",
+					peer.GetStackTraceForHandle ("0x19004aa/G"));
+			}
+		}
 	}
 }
 

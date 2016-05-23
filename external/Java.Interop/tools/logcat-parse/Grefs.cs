@@ -13,7 +13,7 @@ namespace Xamarin.Android.Tools.LogcatParse {
 		const string ThreadAndStack       = @"(thread (?<thread>'[^']+'\([^)]+\)))?(?<stack>.*)$";
 		const string AddGrefFormat        = Prefix + @"\+g\+ grefc (?<gcount>\d+) gwrefc (?<wgcount>\d+) obj-handle (?<handle>0x[0-9A-Fa-f]+)/(?<handle_type>.) -> new-handle (?<ghandle>0x[0-9A-Fa-f]+)/(?<ghandle_type>.) from " + ThreadAndStack;
 		const string AddWgrefFormat       = Prefix + @"\+w\+ grefc (?<gcount>\d+) gwrefc (?<wgcount>\d+) obj-handle (?<handle>0x[0-9A-Fa-f]+)/(?<handle_type>.) -> new-handle (?<whandle>0x[0-9A-Fa-f]+)/(?<whandle_type>.) from " + ThreadAndStack;
-		const string AtFormat             = Prefix + @"(?<stack>   at.*$)";
+		const string AtFormat             = Prefix + @"(?<stack>\s+at.*$)";
 		const string DisposingFormat      = Prefix + @"Disposing handle (?<handle>0x[0-9A-Fa-f]+)$";
 		const string FinalizingFormat     = Prefix + @"Finalizing (?<type>[^ ]+) handle (?<handle>0x[0-9A-Fa-f]+)$";
 		const string HandleFormat         = Prefix + @"handle (?<handle>0x[0-9A-Fa-f]+); key_handle (?<key_handle>0x[0-9A-Fa-f]+): Java Type: `(?<jtype>[^`]+)`; MCW type: `(?<mtype>.*)`$";
@@ -53,11 +53,12 @@ namespace Xamarin.Android.Tools.LogcatParse {
 		HashSet<JniHandleInfo>      WeakRefs    = new HashSet<JniHandleInfo>();
 
 		List<PeerInfo>      allocated   = new List<PeerInfo> ();
+		List<PeerInfo>      alive       = new List<PeerInfo> ();
 
 		public GrefParseOptions         ParseOptions    {get; private set;}
 		public IList<PeerInfo>          AllocatedPeers  {get; private set;}
 		public IEnumerable<PeerInfo>    AlivePeers {
-			get {return allocated.Where (p => !p.Collected && !p.Disposed && !p.Finalized);}
+			get {return alive;}
 		}
 
 		public int                      GrefCount {
@@ -145,6 +146,7 @@ namespace Xamarin.Android.Tools.LogcatParse {
 						if (!WeakRefs.Any (w => p.Handles.Contains (w))) {
 							p.Collected = true;
 							p.DestroyedOnThread = m.Groups ["thread"].Value;
+							alive.Remove (p);
 						}
 						CheckCounts (m, l);
 
@@ -158,6 +160,7 @@ namespace Xamarin.Android.Tools.LogcatParse {
 						if (!GlobalRefs.Any (g => p.Handles.Contains (g))) {
 							p.Collected = true;
 							p.DestroyedOnThread = m.Groups ["thread"].Value;
+							alive.Remove (p);
 						}
 						CheckCounts (m, l);
 
@@ -208,9 +211,9 @@ namespace Xamarin.Android.Tools.LogcatParse {
 		PeerInfo GetPeerInfo (Match m)
 		{
 			var h = GetHandle (m, "handle");
-			var i = allocated.FindLastIndex (p => p.Handles.Contains (h));
+			var i = alive.FindLastIndex (p => p.Handles.Contains (h));
 			if (i >= 0)
-				return allocated [i];
+				return alive [i];
 			var pid = m.Groups ["pid"].Value;
 			var peer = new PeerInfo (pid) {
 				CreatedOnThread = m.Groups ["thread"].Value,
@@ -219,6 +222,7 @@ namespace Xamarin.Android.Tools.LogcatParse {
 				},
 			};
 			allocated.Add (peer);
+			alive.Add (peer);
 			return peer;
 		}
 	}
