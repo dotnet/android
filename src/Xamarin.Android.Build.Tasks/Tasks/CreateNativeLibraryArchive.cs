@@ -8,7 +8,7 @@ using System.Xml.Linq;
 using Microsoft.Build.Utilities;
 using Microsoft.Build.Framework;
 using System.Text.RegularExpressions;
-using Ionic.Zip;
+using System.IO.Compression;
 
 using Xamarin.Android.Tools;
 
@@ -61,13 +61,19 @@ namespace Xamarin.Android.Tasks
 					outDirInfo.CreateSubdirectory (abi);
 				MonoAndroidHelper.CopyIfChanged (lib.ItemSpec, Path.Combine (OutputDirectory, abi, Path.GetFileName (lib.ItemSpec)));
 			}
-				
+
 			// Archive native libraries in a zip.
-			var zip = new ZipFile (new System.Text.UTF8Encoding (false));
-			zip.AddDirectory (OutputDirectory, outDirInfo.Name);
-			string outpath = Path.Combine (outDirInfo.Parent.FullName, "__AndroidNativeLibraries__.zip");
-			if (Files.ArchiveZip (outpath, f => zip.Save (f)))
-				Log.LogDebugMessage ("Saving contents to " + outpath);
+			using (var stream = new MemoryStream ())
+			using (var zip = new ZipArchive (stream, ZipArchiveMode.Create, true, new System.Text.UTF8Encoding (false))) {
+				zip.AddDirectory (OutputDirectory, outDirInfo.Name);
+				string outpath = Path.Combine (outDirInfo.Parent.FullName, "__AndroidNativeLibraries__.zip");
+				if (Files.ArchiveZip (outpath, f => {
+					using (var fs = new FileStream (f, FileMode.CreateNew)) {
+						stream.CopyTo (fs);
+					}
+				}))
+					Log.LogDebugMessage ("Saving contents to " + outpath);
+			}
 			
 			return true;
 		}

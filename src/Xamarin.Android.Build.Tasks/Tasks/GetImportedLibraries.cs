@@ -9,7 +9,6 @@ using Mono.Cecil;
 using Microsoft.Build.Utilities;
 using Microsoft.Build.Framework;
 using System.Text.RegularExpressions;
-using Ionic.Zip;
 
 namespace Xamarin.Android.Tasks
 {

@@ -8,7 +8,7 @@ using System.Xml.Linq;
 using Microsoft.Build.Utilities;
 using Microsoft.Build.Framework;
 using System.Text.RegularExpressions;
-using Ionic.Zip;
+using System.IO.Compression;
 
 using Xamarin.Android.Tools;
 
@@ -79,10 +79,8 @@ namespace Xamarin.Android.Tasks
 					string tmpname = Path.Combine (Path.GetTempPath (), "monodroid_import_" + Guid.NewGuid ().ToString ());
 					try {
 						Directory.CreateDirectory (tmpname);
-						using (var lz = new ZipFile (p, new System.Text.UTF8Encoding (false))) {
-							Files.ExtractAll (lz, tmpname, ExtractExistingFileAction.DoNotOverwrite);
-						}
-						
+						ZipFile.ExtractToDirectory (p, tmpname, new System.Text.UTF8Encoding (false));
+
 						if (!CopyLibraryContent (tmpname, p.EndsWith (".aar", StringComparison.OrdinalIgnoreCase)))
 							return false;
 					} finally {
@@ -90,15 +88,20 @@ namespace Xamarin.Android.Tasks
 					}
 				}
 			}
-				
-			// Archive them in a zip.
-			var zip = new ZipFile (new System.Text.UTF8Encoding (false));
-			zip.AddDirectory (OutputDirectory, outDirInfo.Name);
 
-			string outpath = Path.Combine (outDirInfo.Parent.FullName, "__AndroidLibraryProjects__.zip");
-			if (Files.ArchiveZip (outpath, f => zip.Save (f)))
-				Log.LogDebugMessage ("Saving contents to " + outpath);
-			
+			// Archive them in a zip.
+			using (var stream = new MemoryStream ())
+			using (var zip = new ZipArchive (stream, ZipArchiveMode.Create, true, new System.Text.UTF8Encoding (false))) {
+				zip.AddDirectory (OutputDirectory, outDirInfo.Name);
+
+				string outpath = Path.Combine (outDirInfo.Parent.FullName, "__AndroidLibraryProjects__.zip");
+				if (Files.ArchiveZip (outpath, f => {
+					using (var fs = new FileStream (f, FileMode.CreateNew)) {
+						stream.CopyTo (fs);
+					}
+				}))
+					Log.LogDebugMessage ("Saving contents to " + outpath);
+			}
 			return true;
 		}
 			

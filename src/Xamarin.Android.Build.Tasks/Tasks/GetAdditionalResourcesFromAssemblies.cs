@@ -163,13 +163,12 @@ namespace Xamarin.Android.Tasks {
 					using (var zip = MonoAndroidHelper.ReadZipFile (file)) {
 						int extracted = 0;
 						var o = Math.Max(1, (zip.Entries.Count / 10));
-						zip.ExtractProgress += (object sender, Ionic.Zip.ExtractProgressEventArgs e) => {
-							if ((e.EntriesExtracted % o) != 0 || extracted == e.EntriesExtracted || e.EntriesExtracted == 0)
+						Files.ExtractAll (zip, contentDir, (progress, total) => {
+							if ((progress % o) != 0 || extracted == progress || progress == 0)
 								return;
-							LogMessage ("Extracted {0} of {1} files", e.EntriesExtracted, e.EntriesTotal);
-							extracted = e.EntriesExtracted;
-						};
-						Files.ExtractAll (zip, contentDir);
+							LogMessage ("Extracted {0} of {1} files", progress, total);
+							extracted = progress;
+						});
 					}
 				}
 				catch (Exception e) {
