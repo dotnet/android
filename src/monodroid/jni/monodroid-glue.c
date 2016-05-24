@@ -1299,22 +1299,15 @@ add_reference (JNIEnv *env, MonoObject *obj, MonoJavaGCBridgeInfo *bridge_info, 
 }
 
 static void
-gc_prepare_for_java_collection (JNIEnv *env, MonoDomain *domain, MonoClass *android_runtime_jnienv, MonoClassField *android_runtime_jnienv_bridge_processing_field, MonoVTable *jnienv_vtable, int num_sccs, MonoGCBridgeSCC **sccs, int num_xrefs, MonoGCBridgeXRef *xrefs)
+gc_prepare_for_java_collection (JNIEnv *env, int num_sccs, MonoGCBridgeSCC **sccs, int num_xrefs, MonoGCBridgeXRef *xrefs)
 {
 	MonoGCBridgeSCC *scc;
 	int i, j, ref_val;
-	mono_bool true_value = 1;
-
-	mono.mono_field_static_set_value (jnienv_vtable, android_runtime_jnienv_bridge_processing_field, &true_value);
 
 	ref_val = 1;
 	/* add java refs for items on the list which reference each other */
 	for (i = 0; i < num_sccs; i++) {
 		scc = sccs [i];
-
-		/* only handle objects part of our current domain */
-		if (mono.mono_object_get_domain (scc->objs [0]) != domain)
-			continue;
 
 		MonoJavaGCBridgeInfo    *bridge_info = NULL;
 		/* start at the second item, ref j from j-1 */
@@ -1337,9 +1330,9 @@ gc_prepare_for_java_collection (JNIEnv *env, MonoDomain *domain, MonoClass *andr
 	for (i = 0; i < num_xrefs; i++) {
 		MonoObject *src_obj = sccs [xrefs [i].src_scc_index]->objs [0];
 		MonoObject *dst_obj = sccs [xrefs [i].dst_scc_index]->objs [0];
-		MonoJavaGCBridgeInfo    *bridge_info    = get_gc_bridge_info_for_object (src_obj);
+		MonoJavaGCBridgeInfo *bridge_info = get_gc_bridge_info_for_object (src_obj);
 
-		if (bridge_info == NULL || mono.mono_object_get_domain (src_obj) != domain || mono.mono_object_get_domain (dst_obj) != domain)
+		if (bridge_info == NULL)
 			continue;
 
 		if (add_reference (env, src_obj, bridge_info, dst_obj)) {
@@ -1350,12 +1343,11 @@ gc_prepare_for_java_collection (JNIEnv *env, MonoDomain *domain, MonoClass *andr
 	// switch to weak refs
 	for (i = 0; i < num_sccs; i++)
 		for (j = 0; j < sccs [i]->num_objs; j++)
-			if (mono.mono_object_get_domain (sccs [i]->objs [j]) == domain)
-				take_weak_global_ref (env, sccs [i]->objs [j]);
+			take_weak_global_ref (env, sccs [i]->objs [j]);
 }
 
 static void
-gc_cleanup_after_java_collection (JNIEnv *env, MonoDomain *domain, MonoClass *android_runtime_jnienv, MonoClassField *android_runtime_jnienv_bridge_processing_field, MonoVTable *jnienv_vtable, int num_sccs, MonoGCBridgeSCC **sccs)
+gc_cleanup_after_java_collection (JNIEnv *env, int num_sccs, MonoGCBridgeSCC **sccs)
 {
 #if DEBUG
 	MonoClass *klass;
@@ -1365,15 +1357,13 @@ gc_cleanup_after_java_collection (JNIEnv *env, MonoDomain *domain, MonoClass *an
 	jobject jref;
 	jmethodID clear_method_id;
 	int i, j, total, alive, refs_added;
-	mono_bool false_value = 0;
 
 	total = alive = 0;
 
 	/* try to switch back to global refs to analyze what stayed alive */
 	for (i = 0; i < num_sccs; i++)
 		for (j = 0; j < sccs [i]->num_objs; j++, total++)
-			if (mono.mono_object_get_domain (sccs [i]->objs [j]) == domain)
-				take_global_ref (env, sccs [i]->objs [j]);
+			take_global_ref (env, sccs [i]->objs [j]);
 
 	/* clear the cross references on any remaining items */
 	for (i = 0; i < num_sccs; i++) {
@@ -1382,8 +1372,6 @@ gc_cleanup_after_java_collection (JNIEnv *env, MonoDomain *domain, MonoClass *an
 			MonoJavaGCBridgeInfo    *bridge_info;
 
 			obj = sccs [i]->objs [j];
-			if (mono.mono_object_get_domain (obj) != domain)
-				continue;
 
 			bridge_info = get_gc_bridge_info_for_object (obj);
 			if (bridge_info == NULL)
@@ -1421,14 +1409,18 @@ gc_cleanup_after_java_collection (JNIEnv *env, MonoDomain *domain, MonoClass *an
 #if DEBUG
 	log_info (LOG_GC, "GC cleanup summary: %d objects tested - resurrecting %d.", total, alive);
 #endif
-
-	mono.mono_field_static_set_value (jnienv_vtable, android_runtime_jnienv_bridge_processing_field, &false_value);
 }
 
 static void
 java_gc (JNIEnv *env)
 {
 	(*env)->CallVoidMethod (env, Runtime_instance, Runtime_gc);
+}
+
+static void
+set_bridge_processing_field (MonoVTable *jnienv_vtable, MonoClassField *android_runtime_jnienv_bridge_processing_field, mono_bool value)
+{
+	mono.mono_field_static_set_value (jnienv_vtable, android_runtime_jnienv_bridge_processing_field, &value);
 }
 
 struct MonoDroidDomainId {
@@ -1489,8 +1481,6 @@ remove_monodroid_domain (int domain_id)
 #define FOREACH_DOMAIN(list,statement) do { \
 		MonoDroidDomainId *node = list; \
 		while (node != NULL) { \
-			MonoDomain *domain = mono.mono_domain_get_by_id (node->domain_id); \
-			MonoClass *jnienv = node->android_runtime_jnienv; \
 			MonoClassField *bridge_processing_field = node->android_runtime_jnienv_bridge_processing_field; \
 			MonoVTable *jnienv_vtable = node->jnienv_vtable; \
 			statement; \
@@ -1530,11 +1520,13 @@ gc_cross_references (int num_sccs, MonoGCBridgeSCC **sccs, int num_xrefs, MonoGC
 	
 	env = ensure_jnienv ();
 
-	FOREACH_DOMAIN(domains_list, gc_prepare_for_java_collection (env, domain, jnienv, bridge_processing_field, jnienv_vtable, num_sccs, sccs, num_xrefs, xrefs));
+	FOREACH_DOMAIN(domains_list, set_bridge_processing_field(jnienv_vtable, bridge_processing_field, 1));
+	gc_prepare_for_java_collection (env, num_sccs, sccs, num_xrefs, xrefs);
 
 	java_gc (env);
 
-	FOREACH_DOMAIN(domains_list, gc_cleanup_after_java_collection (env, domain, jnienv, bridge_processing_field, jnienv_vtable, num_sccs, sccs));
+	gc_cleanup_after_java_collection (env, num_sccs, sccs);
+	FOREACH_DOMAIN(domains_list, set_bridge_processing_field(jnienv_vtable, bridge_processing_field, 0));
 }
 
 static int

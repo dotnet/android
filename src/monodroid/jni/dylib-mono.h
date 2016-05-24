@@ -223,7 +223,6 @@ typedef MonoDomain*     (*monodroid_mono_jit_thread_attach) (MonoDomain *domain)
 typedef void            (*monodroid_mono_jit_set_aot_mode) (MonoAotMode mode);
 typedef char*           (*monodroid_mono_method_full_name_fptr) (MonoMethod *method, mono_bool signature);
 typedef MonoClass*      (*monodroid_mono_object_get_class_fptr) (MonoObject *obj);
-typedef MonoDomain*     (*monodroid_mono_object_get_domain_fptr) (MonoObject *obj);
 typedef void*           (*monodroid_mono_object_unbox_fptr) (MonoObject *obj);
 typedef void            (*monodroid_mono_profiler_install_fptr) (void *profiler, void *callback);
 typedef void            (*monodroid_mono_profiler_install_jit_end_fptr) (MonoProfileJitResult end);
@@ -322,7 +321,6 @@ struct DylibMono {
 	monodroid_mono_config_for_assembly_fptr                 mono_config_for_assembly;
 
 	monodroid_mono_assembly_loaded_fptr                     mono_assembly_loaded;
-	monodroid_mono_object_get_domain_fptr                   mono_object_get_domain;
 };
 
 MONO_API  struct  DylibMono*  monodroid_dylib_mono_new (const char *libmono_path);

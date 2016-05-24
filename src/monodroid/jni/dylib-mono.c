@@ -111,7 +111,6 @@ int monodroid_dylib_mono_init (struct DylibMono *mono_imports, const char *libmo
 	LOAD_SYMBOL(mono_jit_cleanup)
 	LOAD_SYMBOL(mono_method_full_name)
 	LOAD_SYMBOL(mono_object_get_class)
-	LOAD_SYMBOL(mono_object_get_domain)
 	LOAD_SYMBOL(mono_object_unbox)
 	LOAD_SYMBOL(mono_profiler_install)
 	LOAD_SYMBOL(mono_profiler_install_jit_end)
