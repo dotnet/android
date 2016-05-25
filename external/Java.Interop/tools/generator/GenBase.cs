@@ -729,6 +729,25 @@ namespace MonoDroid.Generation {
 					}
 				}
 			}
+
+			// Interface default methods can be overriden. We want to process them differently.
+			foreach (Method m in methods.Where (m => m.IsInterfaceDefaultMethod)) {
+				foreach (var bt in this.GetAllDerivedInterfaces ()) {
+					var bm = bt.Methods.FirstOrDefault (mm => mm.Name == m.Name && ParameterList.Equals (mm.Parameters, m.Parameters));
+					if (bm != null) {
+						m.IsInterfaceDefaultMethodOverride = true;
+						break;
+					}
+				}
+			}
+
+			foreach (Method m in methods) {
+				if (m.Name == Name || ContainsProperty (m.Name, true) || HasNestedType (m.Name))
+					m.Name = "Invoke" + m.Name;
+				if ((m.Name == "ToString" && m.Parameters.Count == 0) || (BaseGen != null && BaseGen.ContainsMethod (m, true)))
+					m.IsOverride = true;
+			}
+
 			foreach (var nt in NestedTypes)
 				nt.FixupMethodOverrides ();
 		}
