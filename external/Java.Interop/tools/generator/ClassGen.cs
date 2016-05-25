@@ -475,7 +475,7 @@ namespace MonoDroid.Generation {
 					GenericSymbol gs = isym as GenericSymbol;
 					if (gs.IsConcrete) {
 						// FIXME: not sure if excluding default methods is a valid idea...
-						foreach (Method m in gs.Gen.Methods.Where (m => !m.IsInterfaceDefaultMethod))
+						foreach (Method m in gs.Gen.Methods.Where (m => !m.IsInterfaceDefaultMethod && !m.IsStatic))
 							if (m.IsGeneric)
 								m.GenerateExplicitIface (sw, indent + "\t", opt, gs);
 					}
