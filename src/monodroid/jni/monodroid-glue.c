@@ -718,9 +718,6 @@ typedef struct MonoJavaGCBridgeInfo {
 
 static MonoJavaGCBridgeInfo mono_java_gc_bridge_info [NUM_GC_BRIDGE_TYPES];
 
-static MonoClass *android_runtime_jnienv;
-static MonoClassField *android_runtime_jnienv_bridge_processing_field;
-
 static jclass weakrefClass;
 static jmethodID weakrefCtor;
 static jmethodID weakrefGet;
@@ -1306,16 +1303,12 @@ gc_prepare_for_java_collection (JNIEnv *env, int num_sccs, MonoGCBridgeSCC **scc
 {
 	MonoGCBridgeSCC *scc;
 	int i, j, ref_val;
-	mono_bool true_value = 1;
-
-	MonoVTable *jnienv_vtable = mono.mono_class_vtable (mono.mono_get_root_domain (), android_runtime_jnienv);
-
-	mono.mono_field_static_set_value (jnienv_vtable, android_runtime_jnienv_bridge_processing_field, &true_value);
 
 	ref_val = 1;
 	/* add java refs for items on the list which reference each other */
 	for (i = 0; i < num_sccs; i++) {
 		scc = sccs [i];
+
 		MonoJavaGCBridgeInfo    *bridge_info = NULL;
 		/* start at the second item, ref j from j-1 */
 		for (j = 1; j < scc->num_objs; j++) {
@@ -1335,9 +1328,15 @@ gc_prepare_for_java_collection (JNIEnv *env, int num_sccs, MonoGCBridgeSCC **scc
 
 	/* add the cross scc refs */
 	for (i = 0; i < num_xrefs; i++) {
-		MonoJavaGCBridgeInfo    *bridge_info    = get_gc_bridge_info_for_object (sccs [xrefs [i].src_scc_index]->objs [0]);
-		if (bridge_info != NULL && add_reference (env, sccs [xrefs [i].src_scc_index]->objs [0], bridge_info, sccs [xrefs [i].dst_scc_index]->objs [0])) {
-			mono.mono_field_set_value (sccs [xrefs [i].src_scc_index]->objs [0], bridge_info->refs_added, &ref_val);
+		MonoObject *src_obj = sccs [xrefs [i].src_scc_index]->objs [0];
+		MonoObject *dst_obj = sccs [xrefs [i].dst_scc_index]->objs [0];
+		MonoJavaGCBridgeInfo *bridge_info = get_gc_bridge_info_for_object (src_obj);
+
+		if (bridge_info == NULL)
+			continue;
+
+		if (add_reference (env, src_obj, bridge_info, dst_obj)) {
+			mono.mono_field_set_value (src_obj, bridge_info->refs_added, &ref_val);
 		}
 	}
 
@@ -1358,10 +1357,10 @@ gc_cleanup_after_java_collection (JNIEnv *env, int num_sccs, MonoGCBridgeSCC **s
 	jobject jref;
 	jmethodID clear_method_id;
 	int i, j, total, alive, refs_added;
-	mono_bool false_value = 0;
-	MonoVTable *jnienv_vtable = mono.mono_class_vtable (mono.mono_get_root_domain (), android_runtime_jnienv);
 
 	total = alive = 0;
+
+	/* try to switch back to global refs to analyze what stayed alive */
 	for (i = 0; i < num_sccs; i++)
 		for (j = 0; j < sccs [i]->num_objs; j++, total++)
 			take_global_ref (env, sccs [i]->objs [j]);
@@ -1373,6 +1372,7 @@ gc_cleanup_after_java_collection (JNIEnv *env, int num_sccs, MonoGCBridgeSCC **s
 			MonoJavaGCBridgeInfo    *bridge_info;
 
 			obj = sccs [i]->objs [j];
+
 			bridge_info = get_gc_bridge_info_for_object (obj);
 			if (bridge_info == NULL)
 				continue;
@@ -1409,14 +1409,75 @@ gc_cleanup_after_java_collection (JNIEnv *env, int num_sccs, MonoGCBridgeSCC **s
 #if DEBUG
 	log_info (LOG_GC, "GC cleanup summary: %d objects tested - resurrecting %d.", total, alive);
 #endif
-
-	mono.mono_field_static_set_value (jnienv_vtable, android_runtime_jnienv_bridge_processing_field, &false_value);
 }
 
 static void
 java_gc (JNIEnv *env)
 {
 	(*env)->CallVoidMethod (env, Runtime_instance, Runtime_gc);
+}
+
+struct MonodroidBridgeProcessingInfo {
+	MonoDomain *domain;
+	MonoClassField *bridge_processing_field;
+	MonoVTable *jnienv_vtable;
+
+	struct MonodroidBridgeProcessingInfo* next;
+};
+
+typedef struct MonodroidBridgeProcessingInfo MonodroidBridgeProcessingInfo;
+MonodroidBridgeProcessingInfo *domains_list;
+
+static void
+add_monodroid_domain (MonoDomain *domain)
+{
+	MonodroidBridgeProcessingInfo *node = calloc (1, sizeof (MonodroidBridgeProcessingInfo));
+
+	/* We need to prefetch all these information prior to using them in gc_cross_reference as all those functions
+	 * use GC API to allocate memory and thus can't be called from within the GC callback as it causes a deadlock
+	 * (the routine allocating the memory waits for the GC round to complete first)
+	 */
+	MonoClass *jnienv = monodroid_get_class_from_name (&mono, domain, "Mono.Android", "Android.Runtime", "JNIEnv");;
+	node->domain = domain;
+	node->bridge_processing_field = mono.mono_class_get_field_from_name (jnienv, "BridgeProcessing");
+	node->jnienv_vtable = mono.mono_class_vtable (domain, jnienv);
+	node->next = domains_list;
+
+	domains_list = node;
+}
+
+static void
+remove_monodroid_domain (MonoDomain *domain)
+{
+	MonodroidBridgeProcessingInfo *node = domains_list;
+	MonodroidBridgeProcessingInfo *prev = NULL;
+
+	while (node != NULL) {
+		if (node->domain != domain) {
+			prev = node;
+			node = node->next;
+			continue;
+		}
+
+		if (prev != NULL)
+			prev->next = node->next;
+		else
+			domains_list = node->next;
+
+		free (node);
+
+		break;
+	}
+}
+
+static void
+set_bridge_processing_field (MonodroidBridgeProcessingInfo *list, mono_bool value)
+{
+	for ( ; list != NULL; list = list->next) {
+		MonoClassField *bridge_processing_field = list->bridge_processing_field;
+		MonoVTable *jnienv_vtable = list->jnienv_vtable;
+		mono.mono_field_static_set_value (jnienv_vtable, bridge_processing_field, &value);
+	}
 }
 
 static void
@@ -1450,9 +1511,14 @@ gc_cross_references (int num_sccs, MonoGCBridgeSCC **sccs, int num_xrefs, MonoGC
 #endif
 	
 	env = ensure_jnienv ();
+
+	set_bridge_processing_field (domains_list, 1);
 	gc_prepare_for_java_collection (env, num_sccs, sccs, num_xrefs, xrefs);
+
 	java_gc (env);
+
 	gc_cleanup_after_java_collection (env, num_sccs, sccs);
+	set_bridge_processing_field (domains_list, 0);
 }
 
 static int
@@ -2757,10 +2823,10 @@ init_android_runtime (MonoDomain *domain, JNIEnv *env, jobject loader)
 		log_fatal (LOG_DEFAULT, "INTERNAL ERROR: Unable to find Android.Runtime.JNIEnv.RegisterJniNatives!");
 		exit (FATAL_EXIT_CANNOT_FIND_JNIENV);
 	}
-	android_runtime_jnienv                          = runtime;
-	android_runtime_jnienv_bridge_processing_field  = mono.mono_class_get_field_from_name (runtime, "BridgeProcessing");
+	MonoClass *android_runtime_jnienv = runtime;
+	MonoClassField *bridge_processing_field = mono.mono_class_get_field_from_name (runtime, "BridgeProcessing");
 	runtime_GetDisplayDPI                           = mono.mono_class_get_method_from_name (environment, "GetDisplayDPI", 2);
-	if (!android_runtime_jnienv || !android_runtime_jnienv_bridge_processing_field) {
+	if (!android_runtime_jnienv || !bridge_processing_field) {
 		log_fatal (LOG_DEFAULT, "INTERNAL_ERROR: Unable to find Android.Runtime.JNIEnv.BridgeProcessing");
 		exit (FATAL_EXIT_CANNOT_FIND_JNIENV);
 	}
@@ -3506,6 +3572,8 @@ create_and_initialize_domain (JNIEnv* env, jobjectArray runtimeApks, jobjectArra
 	init_android_runtime (domain, env, loader);
 	register_packages (domain, env, assemblies);
 
+	add_monodroid_domain (domain);
+
 	return domain;
 }
 
@@ -3528,9 +3596,6 @@ Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobject
 	(*env)->ReleaseStringUTFChars (env, packageName, pkgName);
 
 	disable_external_signal_handlers ();
-	// FIXME: bridge isn't quite supported on normal Java yet so disable for now
-	if (is_running_on_desktop)
-		monodroid_disable_gc_hooks ();
 
 	log_info (LOG_TIMING, "Runtime.init: start: %lli ms\n", current_time_millis ());
 
@@ -3788,13 +3853,15 @@ JNICALL Java_mono_android_Runtime_destroyContexts (JNIEnv *env, jclass klass, ji
 
 	int i;
 	for (i = 0; i < count; i++) {
-		MonoDomain *domain = mono.mono_domain_get_by_id (contextIDs[i]);
+		int domain_id = contextIDs[i];
+		MonoDomain *domain = mono.mono_domain_get_by_id (domain_id);
 
 		if (domain == NULL)
 			continue;
 		log_info (LOG_DEFAULT, "Unloading domain `%d'", contextIDs[i]);
 		shutdown_android_runtime (domain);
 		mono.mono_domain_unload (domain);
+		remove_monodroid_domain (domain);
 	}
 
 	(*env)->ReleaseIntArrayElements (env, array, contextIDs, JNI_ABORT);

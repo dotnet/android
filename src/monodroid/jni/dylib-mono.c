@@ -62,6 +62,7 @@ int monodroid_dylib_mono_init (struct DylibMono *mono_imports, const char *libmo
 	LOAD_SYMBOL(mono_assembly_get_image)
 	LOAD_SYMBOL(mono_assembly_load_from_full)
 	LOAD_SYMBOL(mono_assembly_load_full)
+	LOAD_SYMBOL(mono_assembly_loaded)
 	LOAD_SYMBOL(mono_assembly_name_free)
 	LOAD_SYMBOL(mono_assembly_name_get_culture)
 	LOAD_SYMBOL(mono_assembly_name_get_name)

@@ -177,6 +177,7 @@ typedef void            (*monodroid_mono_add_internal_call_fptr) (const char *na
 typedef void*           (*monodroid_mono_assembly_get_image_fptr) (void *arg0);
 typedef void*           (*monodroid_mono_assembly_load_from_full_fptr) (MonoImage *image, const char *fname, MonoImageOpenStatus *status, mono_bool refonly);
 typedef void*           (*monodroid_mono_assembly_load_full_fptr) (MonoAssemblyName *aname, const char *basedir, MonoImageOpenStatus* status, mono_bool refonly);
+typedef void*           (*monodroid_mono_assembly_loaded_fptr) (MonoAssemblyName *aname);
 typedef void*           (*monodroid_mono_assembly_name_get_culture_fptr) (MonoAssemblyName *aname);
 typedef void*           (*monodroid_mono_assembly_name_get_name_fptr) (MonoAssemblyName *aname);
 typedef void*           (*monodroid_mono_assembly_name_new_fptr) (const char *name);
@@ -318,6 +319,8 @@ struct DylibMono {
 
 	monodroid_mono_add_internal_call_fptr                   mono_add_internal_call;
 	monodroid_mono_config_for_assembly_fptr                 mono_config_for_assembly;
+
+	monodroid_mono_assembly_loaded_fptr                     mono_assembly_loaded;
 };
 
 MONO_API  struct  DylibMono*  monodroid_dylib_mono_new (const char *libmono_path);
