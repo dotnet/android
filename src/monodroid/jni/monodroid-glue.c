@@ -2831,10 +2831,10 @@ init_android_runtime (MonoDomain *domain, JNIEnv *env, jobject loader)
 		log_fatal (LOG_DEFAULT, "INTERNAL ERROR: Unable to find Android.Runtime.JNIEnv.RegisterJniNatives!");
 		exit (FATAL_EXIT_CANNOT_FIND_JNIENV);
 	}
-	MonoClass *android_runtime_jnienv                              = runtime;
-	MonoClassField *android_runtime_jnienv_bridge_processing_field = mono.mono_class_get_field_from_name (runtime, "BridgeProcessing");
+	MonoClass *android_runtime_jnienv = runtime;
+	MonoClassField *bridge_processing_field = mono.mono_class_get_field_from_name (runtime, "BridgeProcessing");
 	runtime_GetDisplayDPI                           = mono.mono_class_get_method_from_name (environment, "GetDisplayDPI", 2);
-	if (!android_runtime_jnienv || !android_runtime_jnienv_bridge_processing_field) {
+	if (!android_runtime_jnienv || !bridge_processing_field) {
 		log_fatal (LOG_DEFAULT, "INTERNAL_ERROR: Unable to find Android.Runtime.JNIEnv.BridgeProcessing");
 		exit (FATAL_EXIT_CANNOT_FIND_JNIENV);
 	}
