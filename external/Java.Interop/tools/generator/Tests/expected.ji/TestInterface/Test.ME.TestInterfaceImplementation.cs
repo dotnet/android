@@ -86,7 +86,7 @@ namespace Test.ME {
 		}
 #pragma warning restore 0169
 
-		// Metadata.xml XPath method reference: path="/api/package[@name='test.me']/class[@name='TestInterfaceImplementation']/method[@name='defaultInterfaceMethod' and count(parameter)=0]"
+		// Metadata.xml XPath method reference: path="/api/package[@name='test.me']/interface[@name='TestInterface']/method[@name='defaultInterfaceMethod' and count(parameter)=0]"
 		[Register ("defaultInterfaceMethod", "()V", "GetDefaultInterfaceMethodHandler")]
 		public virtual unsafe void DefaultInterfaceMethod ()
 		{
@@ -115,7 +115,7 @@ namespace Test.ME {
 		}
 #pragma warning restore 0169
 
-		// Metadata.xml XPath method reference: path="/api/package[@name='test.me']/class[@name='TestInterfaceImplementation']/method[@name='getSpanFlags' and count(parameter)=1 and parameter[1][@type='java.lang.Object']]"
+		// Metadata.xml XPath method reference: path="/api/package[@name='test.me']/interface[@name='TestInterface']/method[@name='getSpanFlags' and count(parameter)=1 and parameter[1][@type='java.lang.Object']]"
 		[Register ("getSpanFlags", "(Ljava/lang/Object;)I", "GetGetSpanFlags_Ljava_lang_Object_Handler")]
 		public abstract int GetSpanFlags (global::Java.Lang.Object tag);
 
@@ -136,7 +136,7 @@ namespace Test.ME {
 			get { return _members.ManagedPeerType; }
 		}
 
-		// Metadata.xml XPath method reference: path="/api/package[@name='test.me']/class[@name='TestInterfaceImplementation']/method[@name='getSpanFlags' and count(parameter)=1 and parameter[1][@type='java.lang.Object']]"
+		// Metadata.xml XPath method reference: path="/api/package[@name='test.me']/interface[@name='TestInterface']/method[@name='getSpanFlags' and count(parameter)=1 and parameter[1][@type='java.lang.Object']]"
 		[Register ("getSpanFlags", "(Ljava/lang/Object;)I", "GetGetSpanFlags_Ljava_lang_Object_Handler")]
 		public override unsafe int GetSpanFlags (global::Java.Lang.Object tag)
 		{
