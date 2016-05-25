@@ -9,7 +9,7 @@
   </ItemGroup>
   <Target Name="_BuildRuntimes"
       Inputs="@(CFiles);jni\Android.mk"
-      Outputs="@(_MonoRuntime->'$(OutputPath)\%(Identity)\libmono-android.$(_Conf).%(Identity).so')">
+      Outputs="@(_MonoRuntime->'$(OutputPath)\%(Identity)\libmono-android.$(_Conf).so')">
     <PropertyGroup>
       <_AppAbi>$(AndroidSupportedAbis.Replace(',', ' ')</_AppAbi>
     </PropertyGroup>
@@ -23,18 +23,18 @@
     />
     <Copy
         SourceFiles="@(_MonoRuntime->'obj\local\%(Identity)\libmonodroid.so')"
-        DestinationFiles="@(_MonoRuntime->'$(OutputPath)\%(Identity)\libmono-android.$(_Conf).%(Identity).d.so')"
+        DestinationFiles="@(_MonoRuntime->'$(OutputPath)\%(Identity)\libmono-android.$(_Conf).d.so')"
     />
     <Copy
         SourceFiles="@(_MonoRuntime->'libs\%(Identity)\libmonodroid.so')"
-        DestinationFiles="@(_MonoRuntime->'$(OutputPath)\%(Identity)\libmono-android.$(_Conf).%(Identity).so')"
+        DestinationFiles="@(_MonoRuntime->'$(OutputPath)\%(Identity)\libmono-android.$(_Conf).so')"
     />
   </Target>
   <Target Name="_CleanRuntimes"
       AfterTargets="Clean">
     <RemoveDir Directories="obj\local;libs" />
     <Delete Files="jni\config.include;jni\machine.config.include;jni\Application.mk" />
-    <Delete Files="@(_MonoRuntime->'$(OutputPath)\%(Identity)\libmono-android.$(_Conf).%(Identity).so')" />
-    <Delete Files="@(_MonoRuntime->'$(OutputPath)\%(Identity)\libmono-android.$(_Conf).%(Identity).d.so')" />
+    <Delete Files="@(_MonoRuntime->'$(OutputPath)\%(Identity)\libmono-android.$(_Conf).so')" />
+    <Delete Files="@(_MonoRuntime->'$(OutputPath)\%(Identity)\libmono-android.$(_Conf).d.so')" />
   </Target>
 </Project>
