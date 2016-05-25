@@ -321,21 +321,22 @@ namespace MonoDroid.Generation {
 
 		void GenMethods (StreamWriter sw, string indent, CodeGenerationOptions opt)
 		{
-			var defaultMethods = GetAllDerivedInterfaces ().SelectMany (i => i.Methods)
-			                                                   .Where (m => m.IsInterfaceDefaultMethod)
-			                                                   .Where (m => !ContainsMethod (m, false, false));
+			// This does not exclude overrides (unlike virtual methods) because we're not sure
+			// if calling the base interface default method via JNI expectedly dispatches to
+			// the derived method.
+			var defaultMethods = GetAllDerivedInterfaces ()
+				.SelectMany (i => i.Methods)
+				.Where (m => m.IsInterfaceDefaultMethod)
+				.Where (m => !ContainsMethod (m, false, false));
+			var overrides = defaultMethods.Where (m => m.IsInterfaceDefaultMethodOverride);
 
-			// FIXME: this should be moved to GenBase.FixupMethodOverrides(). So far, avoid unnecessary changes that might regress.
-			foreach (Method m in Methods) {
-				if (m.Name == Name || ContainsProperty (m.Name, true) || HasNestedType (m.Name))
-					m.Name = "Invoke" + m.Name;
-				if ((m.Name == "ToString" && m.Parameters.Count == 0) || (BaseGen != null && BaseGen.ContainsMethod (m, true)))
-					m.IsOverride = true;
-			}
-			foreach (Method m in Methods.Concat (defaultMethods)) {
+			var overridens = defaultMethods.Where (m => overrides.Where (_ => _.Name == m.Name && _.JniSignature == m.JniSignature)
+				.Any (mm => mm.DeclaringType.GetAllDerivedInterfaces ().Contains (m.DeclaringType)));
+
+			foreach (Method m in Methods.Concat (defaultMethods.Except (overridens))) {
 				bool virt = m.IsVirtual;
 				m.IsVirtual = !IsFinal && virt;
-				if (m.IsAbstract && !m.IsInterfaceDefaultMethod)
+				if (m.IsAbstract && !m.IsInterfaceDefaultMethodOverride && !m.IsInterfaceDefaultMethod)
 					m.GenerateAbstractDeclaration (sw, indent, opt, null, this);
 				else
 					m.Generate (sw, indent, opt, this, true);
@@ -474,7 +475,7 @@ namespace MonoDroid.Generation {
 					GenericSymbol gs = isym as GenericSymbol;
 					if (gs.IsConcrete) {
 						// FIXME: not sure if excluding default methods is a valid idea...
-						foreach (Method m in gs.Gen.Methods.Where (m => !m.IsInterfaceDefaultMethod))
+						foreach (Method m in gs.Gen.Methods.Where (m => !m.IsInterfaceDefaultMethod && !m.IsStatic))
 							if (m.IsGeneric)
 								m.GenerateExplicitIface (sw, indent + "\t", opt, gs);
 					}

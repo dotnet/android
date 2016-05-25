@@ -94,7 +94,7 @@ namespace MonoDroid.Generation {
 				string.Format ("{0} {1} = global::Java.Lang.Object.GetObject<{0}> ({2}, {3});",
 						opt.GetOutputName (FullName),
 						var_name,
-						SymbolTable.GetNativeName (var_name),
+						opt.GetSafeIdentifier (SymbolTable.GetNativeName (var_name)),
 						owned ? "JniHandleOwnership.TransferLocalRef" : "JniHandleOwnership.DoNotTransfer"),
 			};
 		}
@@ -109,7 +109,7 @@ namespace MonoDroid.Generation {
 		{
 			return new string[] {
 				string.Format ("IntPtr {0} = JNIEnv.ToLocalJniHandle ({1});",
-						SymbolTable.GetNativeName (var_name), var_name),
+						opt.GetSafeIdentifier (SymbolTable.GetNativeName (var_name)), opt.GetSafeIdentifier (var_name)),
 			};
 		}
 

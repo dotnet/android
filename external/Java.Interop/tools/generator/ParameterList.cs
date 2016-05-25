@@ -37,16 +37,15 @@ namespace MonoDroid.Generation {
 			return GetEnumerator ();
 		}
 
-		public string Call {
-			get {
-				StringBuilder sb = new StringBuilder ();
-				foreach (Parameter p in items) {
-					if (sb.Length > 0)
-						sb.Append (", ");
-					sb.Append (p.Name);
-				}
-				return sb.ToString ();
+		public string GetCall (CodeGenerationOptions opt)
+		{
+			StringBuilder sb = new StringBuilder ();
+			foreach (Parameter p in items) {
+				if (sb.Length > 0)
+					sb.Append (", ");
+				sb.Append (opt.GetSafeIdentifier (p.Name));
 			}
+			return sb.ToString ();
 		}
 
 		public string CallDropSender {
@@ -138,17 +137,16 @@ namespace MonoDroid.Generation {
 			return result;
 		}
 
-		public string CallbackSignature {
-			get {
-				StringBuilder sb = new StringBuilder ();
-				foreach (Parameter p in items) {
-					sb.Append (", ");
-					sb.Append (p.NativeType);
-					sb.Append (" ");
-					sb.Append (p.UnsafeNativeName);
-				}
-				return sb.ToString ();
+		public string GetCallbackSignature (CodeGenerationOptions opt)
+		{
+			StringBuilder sb = new StringBuilder ();
+			foreach (Parameter p in items) {
+				sb.Append (", ");
+				sb.Append (p.NativeType);
+				sb.Append (" ");
+				sb.Append (opt.GetSafeIdentifier (p.UnsafeNativeName));
 			}
+			return sb.ToString ();
 		}
 
 		public int Count {

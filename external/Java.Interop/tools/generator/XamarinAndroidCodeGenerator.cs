@@ -183,7 +183,7 @@ namespace MonoDroid.Generation {
 			string arg;
 			bool have_prep = false;
 			if (field.Symbol.IsArray) {
-				arg = SymbolTable.GetNativeName ("value");
+				arg = opt.GetSafeIdentifier (SymbolTable.GetNativeName ("value"));
 				sw.WriteLine ("{0}IntPtr {1} = global::Android.Runtime.JavaArray<{2}>.ToLocalJniHandle (value);", indent, arg, opt.GetOutputName (field.Symbol.ElementType));
 			} else {
 				foreach (string prep in field.SetParameters.GetCallPrep (opt)) {
@@ -193,7 +193,7 @@ namespace MonoDroid.Generation {
 
 				arg = field.SetParameters [0].ToNative (opt);
 				if (field.SetParameters.HasCleanup && !have_prep) {
-					arg = SymbolTable.GetNativeName ("value");
+					arg = opt.GetSafeIdentifier (SymbolTable.GetNativeName ("value"));
 					sw.WriteLine ("{0}IntPtr {1} = JNIEnv.ToLocalJniHandle (value);", indent, arg);
 				}
 			}

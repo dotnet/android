@@ -680,7 +680,15 @@ namespace MonoDroid.Generation {
 		}
 		
 		bool property_filling;
-		
+
+		public void StripNonBindables ()
+		{
+			// As of now, if we generate bindings for interface default methods, that means users will
+			// have to "implement" those methods because they are declared and you have to implement
+			// any declared methods in C#. That is going to be problematic a lot.
+			methods = methods.Where (m => !m.IsInterfaceDefaultMethod).ToList ();
+		}
+
 		public void FillProperties ()
 		{
 			if (property_filled)
@@ -729,6 +737,25 @@ namespace MonoDroid.Generation {
 					}
 				}
 			}
+
+			// Interface default methods can be overriden. We want to process them differently.
+			foreach (Method m in methods.Where (m => m.IsInterfaceDefaultMethod)) {
+				foreach (var bt in this.GetAllDerivedInterfaces ()) {
+					var bm = bt.Methods.FirstOrDefault (mm => mm.Name == m.Name && ParameterList.Equals (mm.Parameters, m.Parameters));
+					if (bm != null) {
+						m.IsInterfaceDefaultMethodOverride = true;
+						break;
+					}
+				}
+			}
+
+			foreach (Method m in methods) {
+				if (m.Name == Name || ContainsProperty (m.Name, true) || HasNestedType (m.Name))
+					m.Name = "Invoke" + m.Name;
+				if ((m.Name == "ToString" && m.Parameters.Count == 0) || (BaseGen != null && BaseGen.ContainsMethod (m, true)))
+					m.IsOverride = true;
+			}
+
 			foreach (var nt in NestedTypes)
 				nt.FixupMethodOverrides ();
 		}
@@ -783,8 +810,8 @@ namespace MonoDroid.Generation {
 			return new string[]{
 				string.Format ("{0} {1} = {5}global::Java.Lang.Object.GetObject<{4}> ({2}, {3});",
 				               opt.GetOutputName (FullName),
-				               var_name,
-				               SymbolTable.GetNativeName (var_name),
+				               opt.GetSafeIdentifier (var_name),
+				               opt.GetSafeIdentifier (SymbolTable.GetNativeName (var_name)),
 				               owned ? "JniHandleOwnership.TransferLocalRef" : "JniHandleOwnership.DoNotTransfer",
 				               opt.GetOutputName (rgm != null ? (rgm.GetGenericJavaObjectTypeOverride () ?? FullName) : FullName),
 				               rgm != null ? "(" + opt.GetOutputName (FullName) + ")" : string.Empty)

@@ -368,6 +368,8 @@ namespace MonoDroid.Generation {
 			set { is_override = value; }
 		}
 
+		public bool IsInterfaceDefaultMethodOverride { get; set; }
+
 		public bool IsVoid {
 			get { return RetVal.JavaName == "void"; }
 		}
@@ -486,20 +488,20 @@ namespace MonoDroid.Generation {
 			sw.WriteLine ("{0}\treturn {1};", indent, EscapedCallbackName);
 			sw.WriteLine ("{0}}}", indent);
 			sw.WriteLine ();
-			sw.WriteLine ("{0}static {1} n_{2} (IntPtr jnienv, IntPtr native__this{3})", indent, RetVal.NativeType, Name + IDSignature, Parameters.CallbackSignature);
+			sw.WriteLine ("{0}static {1} n_{2} (IntPtr jnienv, IntPtr native__this{3})", indent, RetVal.NativeType, Name + IDSignature, Parameters.GetCallbackSignature (opt));
 			sw.WriteLine ("{0}{{", indent);
 			sw.WriteLine ("{0}\t{1} __this = global::Java.Lang.Object.GetObject<{1}> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);", indent, opt.GetOutputName (type.FullName));
 			foreach (string s in Parameters.GetCallbackPrep (opt))
 				sw.WriteLine ("{0}\t{1}", indent, s);
 			if (String.IsNullOrEmpty (property_name)) {
-				string call = "__this." + Name + (as_formatted ? "Formatted" : String.Empty) + " (" + Parameters.Call + ")";
+				string call = "__this." + Name + (as_formatted ? "Formatted" : String.Empty) + " (" + Parameters.GetCall (opt) + ")";
 				if (IsVoid)
 					sw.WriteLine ("{0}\t{1};", indent, call);
 				else
 					sw.WriteLine ("{0}\t{1} {2};", indent, Parameters.HasCleanup ? RetVal.NativeType + " __ret =" : "return", RetVal.ToNative (opt, call));
 			} else {
 				if (IsVoid)
-					sw.WriteLine ("{0}\t__this.{1} = {2};", indent, property_name, Parameters.Call);
+					sw.WriteLine ("{0}\t__this.{1} = {2};", indent, property_name, Parameters.GetCall (opt));
 				else
 					sw.WriteLine ("{0}\t{1} {2};", indent, Parameters.HasCleanup ? RetVal.NativeType + " __ret =" : "return", RetVal.ToNative (opt, "__this." + property_name));
 			}
@@ -534,7 +536,7 @@ namespace MonoDroid.Generation {
 			GenerateCustomAttributes (sw, indent);
 			sw.WriteLine ("{0}{1} {2}.{3} ({4})", indent, opt.GetOutputName (RetVal.FullName), opt.GetOutputName (iface.FullName), Name, GenBase.GetSignature (this, opt));
 			sw.WriteLine ("{0}{{", indent);
-			sw.WriteLine ("{0}\treturn {1} ({2});", indent, Name, Parameters.Call);
+			sw.WriteLine ("{0}\treturn {1} ({2});", indent, Name, Parameters.GetCall (opt));
 			sw.WriteLine ("{0}}}", indent);
 			sw.WriteLine ();
 		}
@@ -564,7 +566,7 @@ namespace MonoDroid.Generation {
 				bool gen_as_formatted = IsReturnCharSequence;
 				string name = AdjustedName;
 				GenerateCallback (sw, indent, opt, impl, null, gen_as_formatted);
-				sw.WriteLine ("{0}// Metadata.xml XPath method reference: path=\"{1}\"", indent, GetMetadataXPathReference (impl));
+				sw.WriteLine ("{0}// Metadata.xml XPath method reference: path=\"{1}\"", indent, GetMetadataXPathReference (this.DeclaringType));
 				sw.WriteLine ("{0}[Register (\"{1}\", \"{2}\", \"{3}\"{4})]", indent, JavaName, JniSignature, ConnectorName, this.AdditionalAttributeString ());
 				GenerateCustomAttributes (sw, indent);
 				sw.WriteLine ("{0}{1} abstract {2} {3} ({4});", indent, Visibility, opt.GetOutputName (RetVal.FullName), name, GenBase.GetSignature (this, opt));
@@ -579,7 +581,7 @@ namespace MonoDroid.Generation {
 
 		public void GenerateDeclaration (StreamWriter sw, string indent, CodeGenerationOptions opt, GenBase type, string adapter)
 		{
-			sw.WriteLine ("{0}// Metadata.xml XPath method reference: path=\"{1}\"", indent, GetMetadataXPathReference (type));
+			sw.WriteLine ("{0}// Metadata.xml XPath method reference: path=\"{1}\"", indent, GetMetadataXPathReference (this.DeclaringType));
 			if (Deprecated != null)
 				sw.WriteLine ("[Obsolete (@\"{0}\")]", Deprecated.Replace ("\"", "\"\""));
 			if (IsReturnEnumified)
@@ -758,7 +760,7 @@ namespace MonoDroid.Generation {
 
 			sw.WriteLine ("{0}{1}{2} {3} {4}Async ({5})", indent, Visibility, static_arg, ret, AdjustedName, GenBase.GetSignature (this, opt));
 			sw.WriteLine ("{0}{{", indent);
-			sw.WriteLine ("{0}\treturn global::System.Threading.Tasks.Task.Run (() => {1} ({2}));", indent, AdjustedName, Parameters.Call);
+			sw.WriteLine ("{0}\treturn global::System.Threading.Tasks.Task.Run (() => {1} ({2}));", indent, AdjustedName, Parameters.GetCall (opt));
 			sw.WriteLine ("{0}}}", indent);
 			sw.WriteLine ();
 		}
@@ -777,7 +779,7 @@ namespace MonoDroid.Generation {
 
 			sw.WriteLine ("{0}public static {1} {2}Async (this {3} self{4}{5})", indent, ret, AdjustedName, selfType, Parameters.Count > 0 ? ", " : string.Empty, GenBase.GetSignature (this, opt));
 			sw.WriteLine ("{0}{{", indent);
-			sw.WriteLine ("{0}\treturn global::System.Threading.Tasks.Task.Run (() => self.{1} ({2}));", indent, AdjustedName, Parameters.Call);
+			sw.WriteLine ("{0}\treturn global::System.Threading.Tasks.Task.Run (() => self.{1} ({2}));", indent, AdjustedName, Parameters.GetCall (opt));
 			sw.WriteLine ("{0}}}", indent);
 			sw.WriteLine ();
 		}
@@ -799,7 +801,7 @@ namespace MonoDroid.Generation {
 			string seal = IsOverride && IsFinal ? " sealed" : null;
 			string ret = opt.GetOutputName (RetVal.FullName);
 			GenerateIdField (sw, indent, opt);
-			sw.WriteLine ("{0}// Metadata.xml XPath method reference: path=\"{1}\"", indent, GetMetadataXPathReference (type));
+			sw.WriteLine ("{0}// Metadata.xml XPath method reference: path=\"{1}\"", indent, GetMetadataXPathReference (this.DeclaringType));
 			if (Deprecated != null)
 				sw.WriteLine ("{0}[Obsolete (@\"{1}\")]", indent, Deprecated.Replace ("\"", "\"\""));
 			if (IsReturnEnumified)

@@ -5,6 +5,7 @@ using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Xml;
+using Microsoft.CSharp;
 using Mono.Cecil;
 using Mono.Options;
 using MonoDroid.Generation;
@@ -287,6 +288,10 @@ namespace Xamarin.Android.Binder {
 			}
 			apiSource = p.ApiSource;
 			opt.Gens = gens;
+
+			// disable interface default methods here, especially before validation.
+			foreach (var gen in gens)
+				gen.StripNonBindables ();
 
 			Validate (gens, opt);
 
@@ -611,8 +616,16 @@ namespace MonoDroid.Generation {
 			return GetOutputName (s.Substring (0, idx)) + '<' + String.Join (", ", typeParams.ToArray ()) + '>';
 		}
 
+		CSharpCodeProvider code_provider = new CSharpCodeProvider ();
+
 		public string GetSafeIdentifier (string name)
 		{
+			// In the ideal world, it should not be applied twice.
+			// Sadly that is not true in reality, so we need to exclude non-symbols
+			// when replacing the argument name with a valid identifier.
+			// (ReturnValue.ToNative() takes an argument which could be either an expression or mere symbol.)
+			if (name.LastOrDefault () != ')' && !name.Contains ('.'))
+				name = code_provider.IsValidIdentifier (name) ? name : name + '_';
 			return name.Replace ('$', '_');
 		}
 
