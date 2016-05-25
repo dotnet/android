@@ -1417,37 +1417,29 @@ java_gc (JNIEnv *env)
 	(*env)->CallVoidMethod (env, Runtime_instance, Runtime_gc);
 }
 
-static void
-set_bridge_processing_field (MonoVTable *jnienv_vtable, MonoClassField *android_runtime_jnienv_bridge_processing_field, mono_bool value)
-{
-	mono.mono_field_static_set_value (jnienv_vtable, android_runtime_jnienv_bridge_processing_field, &value);
-}
-
-struct MonoDroidDomainId {
-	int domain_id;
-	MonoClass *android_runtime_jnienv;
-	MonoClassField *android_runtime_jnienv_bridge_processing_field;
+struct MonodroidBridgeProcessingInfo {
+	MonoDomain *domain;
+	MonoClassField *bridge_processing_field;
 	MonoVTable *jnienv_vtable;
 
-	struct MonoDroidDomainId* next;
+	struct MonodroidBridgeProcessingInfo* next;
 };
 
-typedef struct MonoDroidDomainId MonoDroidDomainId;
-MonoDroidDomainId *domains_list;
+typedef struct MonodroidBridgeProcessingInfo MonodroidBridgeProcessingInfo;
+MonodroidBridgeProcessingInfo *domains_list;
 
 static void
 add_monodroid_domain (MonoDomain *domain)
 {
-	MonoDroidDomainId *node = calloc (1, sizeof (MonoDroidDomainId));
+	MonodroidBridgeProcessingInfo *node = calloc (1, sizeof (MonodroidBridgeProcessingInfo));
 
 	/* We need to prefetch all these information prior to using them in gc_cross_reference as all those functions
 	 * use GC API to allocate memory and thus can't be called from within the GC callback as it causes a deadlock
 	 * (the routine allocating the memory waits for the GC round to complete first)
 	 */
 	MonoClass *jnienv = monodroid_get_class_from_name (&mono, domain, "Mono.Android", "Android.Runtime", "JNIEnv");;
-	node->domain_id = mono.mono_domain_get_id (domain);
-	node->android_runtime_jnienv = jnienv;
-	node->android_runtime_jnienv_bridge_processing_field = mono.mono_class_get_field_from_name (jnienv, "BridgeProcessing");
+	node->domain = domain;
+	node->bridge_processing_field = mono.mono_class_get_field_from_name (jnienv, "BridgeProcessing");
 	node->jnienv_vtable = mono.mono_class_vtable (domain, jnienv);
 	node->next = domains_list;
 
@@ -1455,13 +1447,13 @@ add_monodroid_domain (MonoDomain *domain)
 }
 
 static void
-remove_monodroid_domain (int domain_id)
+remove_monodroid_domain (MonoDomain *domain)
 {
-	MonoDroidDomainId *node = domains_list;
-	MonoDroidDomainId *prev = NULL;
+	MonodroidBridgeProcessingInfo *node = domains_list;
+	MonodroidBridgeProcessingInfo *prev = NULL;
 
 	while (node != NULL) {
-		if (node->domain_id != domain_id) {
+		if (node->domain != domain) {
 			prev = node;
 			node = node->next;
 			continue;
@@ -1478,15 +1470,15 @@ remove_monodroid_domain (int domain_id)
 	}
 }
 
-#define FOREACH_DOMAIN(list,statement) do { \
-		MonoDroidDomainId *node = list; \
-		while (node != NULL) { \
-			MonoClassField *bridge_processing_field = node->android_runtime_jnienv_bridge_processing_field; \
-			MonoVTable *jnienv_vtable = node->jnienv_vtable; \
-			statement; \
-			node = node->next; \
-		} \
-	} while (0)
+static void
+set_bridge_processing_field (MonodroidBridgeProcessingInfo *list, mono_bool value)
+{
+	for ( ; list != NULL; list = list->next) {
+		MonoClassField *bridge_processing_field = list->bridge_processing_field;
+		MonoVTable *jnienv_vtable = list->jnienv_vtable;
+		mono.mono_field_static_set_value (jnienv_vtable, bridge_processing_field, &value);
+	}
+}
 
 static void
 gc_cross_references (int num_sccs, MonoGCBridgeSCC **sccs, int num_xrefs, MonoGCBridgeXRef *xrefs)
@@ -1520,13 +1512,13 @@ gc_cross_references (int num_sccs, MonoGCBridgeSCC **sccs, int num_xrefs, MonoGC
 	
 	env = ensure_jnienv ();
 
-	FOREACH_DOMAIN(domains_list, set_bridge_processing_field(jnienv_vtable, bridge_processing_field, 1));
+	set_bridge_processing_field (domains_list, 1);
 	gc_prepare_for_java_collection (env, num_sccs, sccs, num_xrefs, xrefs);
 
 	java_gc (env);
 
 	gc_cleanup_after_java_collection (env, num_sccs, sccs);
-	FOREACH_DOMAIN(domains_list, set_bridge_processing_field(jnienv_vtable, bridge_processing_field, 0));
+	set_bridge_processing_field (domains_list, 0);
 }
 
 static int
@@ -3869,7 +3861,7 @@ JNICALL Java_mono_android_Runtime_destroyContexts (JNIEnv *env, jclass klass, ji
 		log_info (LOG_DEFAULT, "Unloading domain `%d'", contextIDs[i]);
 		shutdown_android_runtime (domain);
 		mono.mono_domain_unload (domain);
-		remove_monodroid_domain (domain_id);
+		remove_monodroid_domain (domain);
 	}
 
 	(*env)->ReleaseIntArrayElements (env, array, contextIDs, JNI_ABORT);
