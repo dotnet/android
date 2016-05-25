@@ -32,7 +32,6 @@ namespace MonoDroid.Generation {
 			var c   = rgm != null
 				? opt.GetSafeIdentifier (rgm.ToInteroperableJavaObject (Name))
 				: ToNative (opt);
-			c = opt.GetSafeIdentifier (c);
 			if (opt.CodeGenerationTarget == CodeGenerationTarget.XamarinAndroid)
 				return c;
 			if (sym.NativeType != "IntPtr")
@@ -207,7 +206,7 @@ namespace MonoDroid.Generation {
 			else if (NeedsPrep)
 				return sym.PreCallback (opt, Name, false);
 			else
-				return new string[] { opt.GetOutputName (Type) + " " + Name + " = " + FromNative (opt, false) + ";" };
+				return new string[] { opt.GetOutputName (Type) + " " + opt.GetSafeIdentifier (Name) + " = " + FromNative (opt, false) + ";" };
 		}
 
 		public string Type {

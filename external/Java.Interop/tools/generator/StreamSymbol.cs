@@ -103,7 +103,7 @@ namespace MonoDroid.Generation {
 				string.Format ("System.IO.Stream {0} = global::Android.Runtime.{1}Invoker.FromJniHandle ({2}, {3});",
 						var_name,
 						base_name,
-						SymbolTable.GetNativeName (var_name),
+						opt.GetSafeIdentifier (SymbolTable.GetNativeName (var_name)),
 						owned ? "JniHandleOwnership.TransferLocalRef" : "JniHandleOwnership.DoNotTransfer"),
 			};
 		}

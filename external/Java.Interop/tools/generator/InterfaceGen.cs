@@ -451,7 +451,7 @@ namespace MonoDroid.Generation {
 				sw.WriteLine ("{0}\t\treturn __e.Handled;", indent);
 			} else {
 				sw.WriteLine ("{0}\t\tvar __h = {1}Handler;", indent, methodSpec);
-				sw.WriteLine ("{0}\t\treturn __h != null ? __h ({1}) : default ({2});", indent, m.Parameters.Call, opt.GetOutputName (m.RetVal.FullName));
+				sw.WriteLine ("{0}\t\treturn __h != null ? __h ({1}) : default ({2});", indent, m.Parameters.GetCall (opt), opt.GetOutputName (m.RetVal.FullName));
 			}
 			sw.WriteLine ("{0}\t}}", indent);
 		}
