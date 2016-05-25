@@ -70,33 +70,6 @@ namespace Test.ME {
 			}
 		}
 
-		static Delegate cb_defaultInterfaceMethod;
-#pragma warning disable 0169
-		static Delegate GetDefaultInterfaceMethodHandler ()
-		{
-			if (cb_defaultInterfaceMethod == null)
-				cb_defaultInterfaceMethod = JNINativeWrapper.CreateDelegate ((Action<IntPtr, IntPtr>) n_DefaultInterfaceMethod);
-			return cb_defaultInterfaceMethod;
-		}
-
-		static void n_DefaultInterfaceMethod (IntPtr jnienv, IntPtr native__this)
-		{
-			global::Test.ME.TestInterfaceImplementation __this = global::Java.Lang.Object.GetObject<global::Test.ME.TestInterfaceImplementation> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			__this.DefaultInterfaceMethod ();
-		}
-#pragma warning restore 0169
-
-		// Metadata.xml XPath method reference: path="/api/package[@name='test.me']/interface[@name='TestInterface']/method[@name='defaultInterfaceMethod' and count(parameter)=0]"
-		[Register ("defaultInterfaceMethod", "()V", "GetDefaultInterfaceMethodHandler")]
-		public virtual unsafe void DefaultInterfaceMethod ()
-		{
-			const string __id = "defaultInterfaceMethod.()V";
-			try {
-				_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, null);
-			} finally {
-			}
-		}
-
 		static Delegate cb_getSpanFlags_Ljava_lang_Object_;
 #pragma warning disable 0169
 		static Delegate GetGetSpanFlags_Ljava_lang_Object_Handler ()

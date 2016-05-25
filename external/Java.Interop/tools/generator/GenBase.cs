@@ -680,7 +680,15 @@ namespace MonoDroid.Generation {
 		}
 		
 		bool property_filling;
-		
+
+		public void StripNonBindables ()
+		{
+			// As of now, if we generate bindings for interface default methods, that means users will
+			// have to "implement" those methods because they are declared and you have to implement
+			// any declared methods in C#. That is going to be problematic a lot.
+			methods = methods.Where (m => !m.IsInterfaceDefaultMethod).ToList ();
+		}
+
 		public void FillProperties ()
 		{
 			if (property_filled)

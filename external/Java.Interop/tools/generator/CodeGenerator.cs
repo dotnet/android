@@ -289,6 +289,10 @@ namespace Xamarin.Android.Binder {
 			apiSource = p.ApiSource;
 			opt.Gens = gens;
 
+			// disable interface default methods here, especially before validation.
+			foreach (var gen in gens)
+				gen.StripNonBindables ();
+
 			Validate (gens, opt);
 
 			if (api_versions_xml != null)
