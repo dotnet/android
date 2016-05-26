@@ -53,6 +53,9 @@
     <Reference Include="Mono.Cecil.Rocks">
       <HintPath>..\..\packages\Mono.Cecil.0.9.6.1\lib\net45\Mono.Cecil.Rocks.dll</HintPath>
     </Reference>
+    <Reference Include="Mono.Options">
+      <HintPath>..\..\packages\Mono.Options.4.4.0.0\lib\net4-client\Mono.Options.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\..\src\utils\StringRocks.cs">
@@ -111,7 +114,6 @@
     <Compile Include="XamarinAndroidCodeGenerator.cs" />
     <Compile Include="XmlPullParserSymbol.cs" />
     <Compile Include="XmlResourceParserSymbol.cs" />
-    <Compile Include="Mono.Options-PCL.cs" />
     <Compile Include="ApiXmlAdjuster.cs" />
     <Compile Include="JavaApiDllLoaderExtensions.cs" />
     <Compile Include="ManagedTypeFinderGeneratorTypeSystem.cs" />
