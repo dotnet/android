@@ -86,6 +86,7 @@ namespace Xamarin.Android.Tasks
 		{
 			Log.LogDebugMessage ("Task ReadResolvedSdksCache");
 			Log.LogDebugMessage ("  CacheFile: {0}", CacheFile);
+			MonoAndroidHelper.InitializeAndroidLogger (Log);
 			if (!File.Exists (CacheFile)) {
 				Log.LogWarning ("{0} does not exist. No Resolved Sdks found", CacheFile);
 				return !Log.HasLoggedErrors;

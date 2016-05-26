@@ -25,7 +25,8 @@ namespace Xamarin.Android.Build.Utilities
 					Info (task, format);
 				else
 					Info (task, String.Format (format, args));
-			}
+			} else
+				throw new InvalidOperationException ("Internal Error: should initialize Info");
 		}
 
 		public static void LogWarning (string format, params object[] args)
@@ -40,7 +41,8 @@ namespace Xamarin.Android.Build.Utilities
 					Warning (task, format);
 				else
 					Warning (task, String.Format (format, args));
-			}
+			} else
+				throw new InvalidOperationException ("Internal Error: should initialize Warning");
 		}
 
 		public static void LogError (string format, params object[] args)
@@ -61,7 +63,8 @@ namespace Xamarin.Android.Build.Utilities
 					Error (task, format);
 				else
 					Error (task, String.Format (format, args));
-			}
+			} else
+				throw new InvalidOperationException ("Internal Error: should initialize Error");
 		}
 
 		public static void LogDebug (string format, params object[] args)
@@ -76,13 +79,16 @@ namespace Xamarin.Android.Build.Utilities
 					Debug (task, format);
 				else
 					Debug (task, String.Format (format, args));
-			}
+			} else
+				throw new InvalidOperationException ("Internal Error: should initialize Debug");
 		}
 
 		public static void LogTask (AndroidTaskLog log)
 		{
 			if (Task != null)
 				Task (log);
+			else
+				throw new InvalidOperationException ("Internal Error: should initialize Task");
 		}
 	}
 
