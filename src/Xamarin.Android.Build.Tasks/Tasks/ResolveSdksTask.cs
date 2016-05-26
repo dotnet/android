@@ -114,6 +114,8 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ("  UseLatestAndroidPlatformSdk: {0}", UseLatestAndroidPlatformSdk);
 			Log.LogDebugMessage ("  SequencePointsMode: {0}", SequencePointsMode);
 
+			MonoAndroidHelper.InitializeAndroidLogger (Log);
+
 			MonoAndroidHelper.RefreshAndroidSdk (AndroidSdkPath, AndroidNdkPath, JavaSdkPath);
 			MonoAndroidHelper.RefreshMonoDroidSdk (MonoAndroidToolsPath, MonoAndroidBinPath, ReferenceAssemblyPaths);
 
