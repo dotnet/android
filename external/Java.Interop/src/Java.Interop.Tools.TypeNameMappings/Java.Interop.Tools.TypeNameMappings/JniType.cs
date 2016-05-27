@@ -253,7 +253,7 @@ namespace Java.Interop.Tools.TypeNameMappings {
 		}
 
 #if !GEN_JAVA_STUBS && !GENERATOR && !JAVADOC_TO_MDOC
-		// Keep in sync with ToJniName(TypeDefinition)
+		// Keep in sync with ToJniNameFromAttributes(TypeDefinition)
 		public static string ToJniNameFromAttributes (Type type)
 		{
 			var ras = (Android.Runtime.RegisterAttribute[]) type.GetCustomAttributes (typeof (Android.Runtime.RegisterAttribute), false);
@@ -279,6 +279,10 @@ namespace Java.Interop.Tools.TypeNameMappings {
 			var cpas = (Android.Content.ContentProviderAttribute[]) type.GetCustomAttributes (typeof (Android.Content.ContentProviderAttribute), false);
 			if (cpas.Length > 0 && !string.IsNullOrEmpty (cpas [0].Name))
 				return cpas [0].Name.Replace ('.', '/');
+
+			var ias = (Android.App.InstrumentationAttribute[])type.GetCustomAttributes (typeof (Android.App.InstrumentationAttribute), false);
+			if (ias.Length > 0 && !string.IsNullOrEmpty (ias [0].Name))
+				return ias [0].Name.Replace ('.', '/');
 
 			return null;
 		}
@@ -599,6 +603,8 @@ namespace Java.Interop.Tools.TypeNameMappings {
 #if HAVE_CECIL
 		internal static bool IsNonStaticInnerClass (TypeDefinition type)
 		{
+			if (type == null)
+				return false;
 			if (!type.IsNested)
 				return false;
 

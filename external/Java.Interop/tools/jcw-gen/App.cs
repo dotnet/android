@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.IO;
+using System.Threading.Tasks;
 
 using Java.Interop.Tools.Cecil;
 using Java.Interop.Tools.JavaCallableWrappers;
@@ -59,11 +60,10 @@ namespace Java.Interop.Tools
 					resolver.SearchDirectories.Add (Path.GetDirectoryName (assembly));
 					resolver.Load (assembly);
 				}
-				var types = JavaTypeScanner.GetJavaTypes (assemblies, resolver, log: Console.WriteLine)
-					.Where (td => !JavaTypeScanner.ShouldSkipJavaCallableWrapperGeneration (td));
-				foreach (var type in types) {
-					GenerateJavaCallableWrapper (type, outputPath);
-				}
+				var tasks = JavaTypeScanner.GetJavaTypes (assemblies, resolver, log: Console.WriteLine)
+					.Where (td => !JavaTypeScanner.ShouldSkipJavaCallableWrapperGeneration (td))
+					.Select (td => Task.Run (() => GenerateJavaCallableWrapper (td, outputPath)));
+				Task.WaitAll (tasks.ToArray ());
 				return 0;
 			}
 			catch (Exception e) {

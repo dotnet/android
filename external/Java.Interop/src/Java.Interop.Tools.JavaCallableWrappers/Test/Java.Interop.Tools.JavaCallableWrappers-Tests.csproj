@@ -16,7 +16,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>..\..\..\bin\TestDebug</OutputPath>
-    <DefineConstants>DEBUG;JCW_ONLY_TYPE_NAMES</DefineConstants>
+    <DefineConstants>DEBUG;HAVE_CECIL;JCW_ONLY_TYPE_NAMES</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <ConsolePause>false</ConsolePause>
@@ -24,7 +24,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <Optimize>true</Optimize>
     <OutputPath>..\..\..\bin\TestRelease</OutputPath>
-    <DefineConstants>JCW_ONLY_TYPE_NAMES</DefineConstants>
+    <DefineConstants>HAVE_CECIL;JCW_ONLY_TYPE_NAMES</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <ConsolePause>false</ConsolePause>
@@ -56,10 +56,6 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\jcw-gen.csproj">
-      <Project>{52C7D9B6-E8C8-47D0-9471-652D278D7D77}</Project>
-      <Name>jcw-gen</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Java.Interop.Tools.JavaCallableWrappers.csproj">
       <Project>{D18FCF91-8876-48A0-A693-2DC1E7D3D80A}</Project>
       <Name>Java.Interop.Tools.JavaCallableWrappers</Name>
@@ -76,6 +72,7 @@
   <ItemGroup>
     <Folder Include="Java.Interop.Tools.JavaCallableWrappers\" />
   </ItemGroup>
+  <Import Project="..\..\Java.Interop.Tools.TypeNameMappings\Java.Interop.Tools.TypeNameMappings.projitems" Label="Shared" Condition="Exists('..\..\Java.Interop.Tools.TypeNameMappings\Java.Interop.Tools.TypeNameMappings.projitems')" />
   <Import Project="..\..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems" Label="Shared" Condition="Exists('..\..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems')" />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

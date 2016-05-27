@@ -1,5 +1,7 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 
 using Mono.Cecil;
 
@@ -8,6 +10,7 @@ using NUnit.Framework;
 using Java.Interop.Tools.Diagnostics;
 using Java.Interop.Tools.JavaCallableWrappers;
 using Java.Interop.Tools.JavaCallableWrappersTests;
+using Java.Interop.Tools.TypeNameMappings;
 
 using Xamarin.Android.ToolsTests;
 
@@ -25,6 +28,69 @@ namespace Java.Interop.Tools.JavaCallableWrappersTests
 			var td  = SupportDeclarations.GetTypeDefinition (typeof (int));
 			var e   = Assert.Throws<XamarinAndroidException> (() => new JavaCallableWrapperGenerator (td, logger));
 			Assert.AreEqual (4200, e.Code);
+		}
+
+		[Test]
+		public void GenerateInParallel ()
+		{
+			var assemblyDef = AssemblyDefinition.ReadAssembly (typeof (DefaultName).Assembly.Location);
+			var types       = new []{
+				typeof (AbstractClassInvoker),
+				typeof (AbstractClass),
+				typeof (ActivityName),
+				typeof (ApplicationName),
+				typeof (DefaultName),
+				typeof (DefaultName.A),
+				typeof (DefaultName.A.B),
+				typeof (DefaultName.C.D),
+				// Skip because this will produce nested types
+				// typeof (ExampleOuterClass),
+				// typeof (ExampleOuterClass.ExampleInnerClass),
+				typeof (InstrumentationName),
+				// Skip because this will produce nested types
+				// typeof (NonStaticOuterClass),
+				// typeof (NonStaticOuterClass.NonStaticInnerClass),
+				typeof (ProviderName),
+				typeof (ReceiverName),
+				typeof (RegisterName),
+				typeof (RegisterName.DefaultNestedName),
+				typeof (RegisterName.OverrideNestedName),
+				typeof (ServiceName),
+			};
+			var typeDefs    = types.Select (t => SupportDeclarations.GetTypeDefinition (t, assemblyDef))
+				.ToList ();
+
+			var tasks       = typeDefs.Select (type => Task.Run (() => {
+					var g = new JavaCallableWrapperGenerator (type, log: Console.WriteLine);
+					var o = new StringWriter ();
+					g.Generate (o);
+					var r = new StringReader (o.ToString ());
+					var l = r.ReadLine ();
+					if (!l.StartsWith ("package ", StringComparison.Ordinal))
+						throw new InvalidOperationException ($"Invalid JCW for {type.FullName}!");
+					var p = l.Substring ("package ".Length);
+					p = p.Substring (0, p.Length - 1);
+					l = r.ReadLine ();
+					if (l.Length != 0)
+						throw new InvalidOperationException ($"Invalid JCW for {type.FullName}! (Missing newline)");
+					l = r.ReadLine ();
+					if (l.Length != 0)
+						throw new InvalidOperationException ($"Invalid JCW for {type.FullName}! (Missing 2nd newline)");
+					l = r.ReadLine ();
+					string c = null;
+					if (l.StartsWith ("public class ", StringComparison.Ordinal))
+						c = l.Substring ("public class ".Length);
+					else if (l.StartsWith ("public abstract class ", StringComparison.Ordinal))
+						c = l.Substring ("public abstract class ".Length);
+					else
+						throw new InvalidOperationException ($"Invalid JCW for {type.FullName}! (Missing class)");
+					return p + "/" + c;
+			})).ToArray ();
+			Task.WaitAll (tasks);
+			for (int i = 0; i < types.Length; ++i) {
+				Assert.AreEqual (JniType.ToJniName (typeDefs [i]),  tasks [i].Result);
+				Assert.AreEqual (JniType.ToJniName (types [i]),     tasks [i].Result);
+			}
 		}
 
 		[Test]
