@@ -60,7 +60,7 @@ namespace Xamarin.Test {
 
 				public IFactoryInvoker (IntPtr handle, JniHandleOwnership transfer) : base (Validate (handle), transfer)
 				{
-					IntPtr local_ref = JNIEnv.GetObjectClass (Handle);
+					IntPtr local_ref = JNIEnv.GetObjectClass (((global::Java.Lang.Object) this).Handle);
 					this.class_ref = JNIEnv.NewGlobalRef (local_ref);
 					JNIEnv.DeleteLocalRef (local_ref);
 				}
@@ -88,7 +88,7 @@ namespace Xamarin.Test {
 						id_build_I = JNIEnv.GetMethodID (class_ref, "build", "(I)Lxamarin/test/NotificationCompatBase$Action;");
 					JValue* __args = stackalloc JValue [1];
 					__args [0] = new JValue (p0);
-					return global::Java.Lang.Object.GetObject<global::Xamarin.Test.NotificationCompatBase.Action> (JNIEnv.CallObjectMethod (Handle, id_build_I, __args), JniHandleOwnership.TransferLocalRef);
+					return global::Java.Lang.Object.GetObject<global::Xamarin.Test.NotificationCompatBase.Action> (JNIEnv.CallObjectMethod (((global::Java.Lang.Object) this).Handle, id_build_I, __args), JniHandleOwnership.TransferLocalRef);
 				}
 
 			}
@@ -137,7 +137,7 @@ namespace Xamarin.Test {
 			public unsafe InstanceInner (global::Xamarin.Test.NotificationCompatBase __self)
 				: base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
 			{
-				if (Handle != IntPtr.Zero)
+				if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
 					return;
 
 				try {
@@ -147,7 +147,7 @@ namespace Xamarin.Test {
 						SetHandle (
 								global::Android.Runtime.JNIEnv.StartCreateInstance (GetType (), "(L" + global::Android.Runtime.JNIEnv.GetJniName (GetType ().DeclaringType) + ";)V", __args),
 								JniHandleOwnership.TransferLocalRef);
-						global::Android.Runtime.JNIEnv.FinishCreateInstance (Handle, "(L" + global::Android.Runtime.JNIEnv.GetJniName (GetType ().DeclaringType) + ";)V", __args);
+						global::Android.Runtime.JNIEnv.FinishCreateInstance (((global::Java.Lang.Object) this).Handle, "(L" + global::Android.Runtime.JNIEnv.GetJniName (GetType ().DeclaringType) + ";)V", __args);
 						return;
 					}
 
@@ -156,7 +156,7 @@ namespace Xamarin.Test {
 					SetHandle (
 							global::Android.Runtime.JNIEnv.StartCreateInstance (class_ref, id_ctor_Lxamarin_test_NotificationCompatBase_, __args),
 							JniHandleOwnership.TransferLocalRef);
-					JNIEnv.FinishCreateInstance (Handle, class_ref, id_ctor_Lxamarin_test_NotificationCompatBase_, __args);
+					JNIEnv.FinishCreateInstance (((global::Java.Lang.Object) this).Handle, class_ref, id_ctor_Lxamarin_test_NotificationCompatBase_, __args);
 				} finally {
 				}
 			}

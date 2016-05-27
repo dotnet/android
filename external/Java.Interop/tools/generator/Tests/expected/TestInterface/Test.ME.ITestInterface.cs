@@ -88,7 +88,7 @@ namespace Test.ME {
 
 		public ITestInterfaceInvoker (IntPtr handle, JniHandleOwnership transfer) : base (Validate (handle), transfer)
 		{
-			IntPtr local_ref = JNIEnv.GetObjectClass (Handle);
+			IntPtr local_ref = JNIEnv.GetObjectClass (((global::Java.Lang.Object) this).Handle);
 			this.class_ref = JNIEnv.NewGlobalRef (local_ref);
 			JNIEnv.DeleteLocalRef (local_ref);
 		}
@@ -118,7 +118,7 @@ namespace Test.ME {
 				id_getSpanFlags_Ljava_lang_Object_ = JNIEnv.GetMethodID (class_ref, "getSpanFlags", "(Ljava/lang/Object;)I");
 			JValue* __args = stackalloc JValue [1];
 			__args [0] = new JValue (tag);
-			int __ret = JNIEnv.CallIntMethod (Handle, id_getSpanFlags_Ljava_lang_Object_, __args);
+			int __ret = JNIEnv.CallIntMethod (((global::Java.Lang.Object) this).Handle, id_getSpanFlags_Ljava_lang_Object_, __args);
 			return __ret;
 		}
 

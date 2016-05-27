@@ -122,6 +122,46 @@ namespace Java.Lang {
 			throw new NotImplementedException ();
 		}
 	}
+
+	public partial class Throwable : global::System.Exception, IJavaObject, IDisposable {
+
+		public IntPtr Handle { get; set; }
+
+		protected virtual IntPtr ThresholdClass {
+			get;
+			set;
+		}
+
+		protected virtual global::System.Type ThresholdType {
+			get;
+			set;
+		}
+
+		public Throwable ()
+		{
+			throw new NotImplementedException ();
+		}
+
+		public Throwable (IntPtr handle, JniHandleOwnership transfer)
+		{
+			throw new NotImplementedException ();
+		}
+
+		protected void SetHandle(IntPtr instance, JniHandleOwnership ownership)
+		{
+			throw new NotImplementedException ();
+		}
+
+		public void Dispose()
+		{
+			throw new NotImplementedException ();
+		}
+
+		protected virtual void Dispose (bool disposing)
+		{
+			throw new NotImplementedException ();
+		}
+	}
 }
 namespace Java.Lang {
 

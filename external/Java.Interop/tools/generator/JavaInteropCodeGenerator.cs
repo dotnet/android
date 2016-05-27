@@ -115,7 +115,7 @@ namespace MonoDroid.Generation {
 					? "(" + ctor.Parameters.JniNestedDerivedSignature + ")V"
 					: ctor.JniSignature);
 			sw.WriteLine ();
-			sw.WriteLine ("{0}if (Handle != IntPtr.Zero)", indent);
+			sw.WriteLine ("{0}if ({1} != IntPtr.Zero)", indent, opt.ContextType.GetObjectHandleProperty ("this"));
 			sw.WriteLine ("{0}\treturn;", indent);
 			sw.WriteLine ();
 			foreach (string prep in ctor.Parameters.GetCallPrep (opt))

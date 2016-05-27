@@ -37,7 +37,7 @@ namespace Java.IO {
 		{
 			const string __id = "()V";
 
-			if (Handle != IntPtr.Zero)
+			if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
 				return;
 
 			try {

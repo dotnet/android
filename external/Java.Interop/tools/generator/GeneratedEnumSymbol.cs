@@ -77,6 +77,11 @@ namespace MonoDroid.Generation
 			get { return enum_type; }
 		}
 
+		public string GetObjectHandleProperty (string variable)
+		{
+			return null;
+		}
+
 		public string[] PreCallback (CodeGenerationOptions opt, string var_name, bool owned)
 		{
 			throw new NotSupportedException (string.Format ("{0} does not support PreCallback", this.GetType ().Name));

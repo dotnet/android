@@ -56,7 +56,7 @@ namespace Android.Views {
 
 			public IOnClickListenerInvoker (IntPtr handle, JniHandleOwnership transfer) : base (Validate (handle), transfer)
 			{
-				IntPtr local_ref = JNIEnv.GetObjectClass (Handle);
+				IntPtr local_ref = JNIEnv.GetObjectClass (((global::Java.Lang.Object) this).Handle);
 				this.class_ref = JNIEnv.NewGlobalRef (local_ref);
 				JNIEnv.DeleteLocalRef (local_ref);
 			}
@@ -85,7 +85,7 @@ namespace Android.Views {
 					id_onClick_Landroid_view_View_ = JNIEnv.GetMethodID (class_ref, "onClick", "(Landroid/view/View;)V");
 				JValue* __args = stackalloc JValue [1];
 				__args [0] = new JValue (v);
-				JNIEnv.CallVoidMethod (Handle, id_onClick_Landroid_view_View_, __args);
+				JNIEnv.CallVoidMethod (((global::Java.Lang.Object) this).Handle, id_onClick_Landroid_view_View_, __args);
 			}
 
 		}
@@ -98,7 +98,7 @@ namespace Android.Views {
 					global::Android.Runtime.JNIEnv.StartCreateInstance ("mono/android/view/View_OnClickListenerImplementor", "()V"),
 					JniHandleOwnership.TransferLocalRef)
 			{
-				global::Android.Runtime.JNIEnv.FinishCreateInstance (Handle, "()V");
+				global::Android.Runtime.JNIEnv.FinishCreateInstance (((global::Java.Lang.Object) this).Handle, "()V");
 			}
 
 #pragma warning disable 0649
@@ -165,9 +165,9 @@ namespace Android.Views {
 				__args [0] = new JValue (l);
 
 				if (GetType () == ThresholdType)
-					JNIEnv.CallVoidMethod  (Handle, id_setOnClickListener_Landroid_view_View_OnClickListener_, __args);
+					JNIEnv.CallVoidMethod (((global::Java.Lang.Object) this).Handle, id_setOnClickListener_Landroid_view_View_OnClickListener_, __args);
 				else
-					JNIEnv.CallNonvirtualVoidMethod  (Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "setOnClickListener", "(Landroid/view/View$OnClickListener;)V"), __args);
+					JNIEnv.CallNonvirtualVoidMethod (((global::Java.Lang.Object) this).Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "setOnClickListener", "(Landroid/view/View$OnClickListener;)V"), __args);
 			} finally {
 			}
 		}
@@ -202,9 +202,9 @@ namespace Android.Views {
 				__args [0] = new JValue (native_views);
 
 				if (GetType () == ThresholdType)
-					JNIEnv.CallVoidMethod  (Handle, id_addTouchables_Ljava_util_ArrayList_, __args);
+					JNIEnv.CallVoidMethod (((global::Java.Lang.Object) this).Handle, id_addTouchables_Ljava_util_ArrayList_, __args);
 				else
-					JNIEnv.CallNonvirtualVoidMethod  (Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "addTouchables", "(Ljava/util/ArrayList;)V"), __args);
+					JNIEnv.CallNonvirtualVoidMethod (((global::Java.Lang.Object) this).Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "addTouchables", "(Ljava/util/ArrayList;)V"), __args);
 			} finally {
 				JNIEnv.DeleteLocalRef (native_views);
 			}

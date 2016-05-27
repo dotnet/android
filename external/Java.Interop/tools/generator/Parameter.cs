@@ -38,8 +38,9 @@ namespace MonoDroid.Generation {
 				return c;
 			if (!NeedsPrep)
 				return c;
+			var h = sym.GetObjectHandleProperty (c);
 			if (sym.PreCall (opt, Name).Length == 0)
-				return string.Format ("({0} == null) ? IntPtr.Zero : {0}.Handle", c);
+				return string.Format ("({0} == null) ? IntPtr.Zero : {1}", c, h);
 			return c;
 		}
 

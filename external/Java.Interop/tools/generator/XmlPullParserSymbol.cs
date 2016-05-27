@@ -41,6 +41,11 @@ namespace MonoDroid.Generation {
 			get { return null; }
 		}
 
+		public string GetObjectHandleProperty (string variable)
+		{
+			return $"((global::Java.Lang.Object) {variable}).Handle";
+		}
+
 		public string GetGenericType (Dictionary<string, string> mappings)
 		{
 			return null;

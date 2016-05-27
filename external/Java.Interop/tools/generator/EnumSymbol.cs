@@ -46,6 +46,11 @@ namespace MonoDroid.Generation {
 			get { return null; }
 		}
 
+		public string GetObjectHandleProperty (string variable)
+		{
+			return null;
+		}
+
 		public string GetGenericType (Dictionary<string, string> mappings)
 		{
 			return null;

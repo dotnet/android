@@ -37,7 +37,7 @@ namespace Java.Lang {
 			try {
 				JValue* __args = stackalloc JValue [1];
 				__args [0] = new JValue (native_o);
-				int __ret = JNIEnv.CallIntMethod  (Handle, id_compareTo_Ljava_lang_Enum_, __args);
+				int __ret = JNIEnv.CallIntMethod (((global::Java.Lang.Object) this).Handle, id_compareTo_Ljava_lang_Enum_, __args);
 				return __ret;
 			} finally {
 				JNIEnv.DeleteLocalRef (native_o);

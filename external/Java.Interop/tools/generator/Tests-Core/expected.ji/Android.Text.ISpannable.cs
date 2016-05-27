@@ -57,7 +57,7 @@ namespace Android.Text {
 
 		public ISpannableInvoker (IntPtr handle, JniHandleOwnership transfer) : base (Validate (handle), transfer)
 		{
-			IntPtr local_ref = JNIEnv.GetObjectClass (Handle);
+			IntPtr local_ref = JNIEnv.GetObjectClass (((global::Java.Lang.Object) this).Handle);
 			this.class_ref = JNIEnv.NewGlobalRef (local_ref);
 			JNIEnv.DeleteLocalRef (local_ref);
 		}
@@ -86,8 +86,8 @@ namespace Android.Text {
 			if (id_getSpanFlags_Ljava_lang_Object_ == IntPtr.Zero)
 				id_getSpanFlags_Ljava_lang_Object_ = JNIEnv.GetMethodID (class_ref, "getSpanFlags", "(Ljava/lang/Object;)I");
 			JValue* __args = stackalloc JValue [1];
-			__args [0] = new JValue ((tag == null) ? IntPtr.Zero : tag.Handle);
-			Android.Text.SpanTypes __ret = (Android.Text.SpanTypes) JNIEnv.CallIntMethod (Handle, id_getSpanFlags_Ljava_lang_Object_, __args);
+			__args [0] = new JValue ((tag == null) ? IntPtr.Zero : ((global::Java.Lang.Object) tag).Handle);
+			Android.Text.SpanTypes __ret = (Android.Text.SpanTypes) JNIEnv.CallIntMethod (((global::Java.Lang.Object) this).Handle, id_getSpanFlags_Ljava_lang_Object_, __args);
 			return __ret;
 		}
 

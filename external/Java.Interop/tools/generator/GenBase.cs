@@ -175,6 +175,15 @@ namespace MonoDroid.Generation {
 			}
 		}
 
+		public string GetObjectHandleProperty (string variable)
+		{
+			var handleType  = "Java.Lang.Object";
+			if (FullName == "Java.Lang.Throwable" || Ancestors ().Any (a => a.FullName == "Java.Lang.Throwable"))
+				handleType  = "Java.Lang.Throwable";
+
+			return $"((global::{handleType}) {variable}).Handle";
+		}
+
 		protected IEnumerable<InterfaceGen> GetAllImplementedInterfaces ()
 		{
 			var set = new HashSet<InterfaceGen> ();

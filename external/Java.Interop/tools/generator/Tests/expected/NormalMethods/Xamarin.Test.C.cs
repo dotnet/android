@@ -54,9 +54,9 @@ namespace Xamarin.Test {
 				__args [0] = new JValue (index);
 
 				if (GetType () == ThresholdType)
-					return (Java.Lang.Object) global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (JNIEnv.CallObjectMethod  (Handle, id_setCustomDimension_I, __args), JniHandleOwnership.TransferLocalRef);
+					return (Java.Lang.Object) global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (JNIEnv.CallObjectMethod (((global::Java.Lang.Object) this).Handle, id_setCustomDimension_I, __args), JniHandleOwnership.TransferLocalRef);
 				else
-					return (Java.Lang.Object) global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (JNIEnv.CallNonvirtualObjectMethod  (Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "setCustomDimension", "(I)Lxamarin/test/C;"), __args), JniHandleOwnership.TransferLocalRef);
+					return (Java.Lang.Object) global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (JNIEnv.CallNonvirtualObjectMethod (((global::Java.Lang.Object) this).Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "setCustomDimension", "(I)Lxamarin/test/C;"), __args), JniHandleOwnership.TransferLocalRef);
 			} finally {
 			}
 		}

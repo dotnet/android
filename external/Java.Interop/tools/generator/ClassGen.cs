@@ -371,6 +371,7 @@ namespace MonoDroid.Generation {
 
 		public override void Generate (StreamWriter sw, string indent, CodeGenerationOptions opt, GenerationInfo gen_info)
 		{
+			opt.ContextTypes.Push (this);
 			gen_info.TypeRegistrations.Add (new KeyValuePair<string, string>(RawJniName, AssemblyQualifiedName));
 			bool is_enum = base_symbol != null && base_symbol.FullName == "Java.Lang.Enum";
 			if (is_enum)
@@ -497,6 +498,7 @@ namespace MonoDroid.Generation {
 				sw.WriteLine ();
 				GenerateInvoker (sw, indent, opt);
 			}
+			opt.ContextTypes.Pop ();
 		}
 
 		class InterfaceExtensionInfo {

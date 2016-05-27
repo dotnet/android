@@ -25,6 +25,77 @@ namespace Xamarin.Test {
 
 		protected SomeObject (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer) {}
 
+		static IntPtr id_ctor_Ljava_lang_Class_;
+		// Metadata.xml XPath constructor reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/constructor[@name='SomeObject' and count(parameter)=1 and parameter[1][@type='java.lang.Class&lt;? extends xamarin.test.SomeObject&gt;']]"
+		[Register (".ctor", "(Ljava/lang/Class;)V", "")]
+		public unsafe SomeObject (global::Java.Lang.Class c)
+			: base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
+		{
+			if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
+				return;
+
+			try {
+				JValue* __args = stackalloc JValue [1];
+				__args [0] = new JValue (c);
+				if (GetType () != typeof (SomeObject)) {
+					SetHandle (
+							global::Android.Runtime.JNIEnv.StartCreateInstance (GetType (), "(Ljava/lang/Class;)V", __args),
+							JniHandleOwnership.TransferLocalRef);
+					global::Android.Runtime.JNIEnv.FinishCreateInstance (((global::Java.Lang.Object) this).Handle, "(Ljava/lang/Class;)V", __args);
+					return;
+				}
+
+				if (id_ctor_Ljava_lang_Class_ == IntPtr.Zero)
+					id_ctor_Ljava_lang_Class_ = JNIEnv.GetMethodID (class_ref, "<init>", "(Ljava/lang/Class;)V");
+				SetHandle (
+						global::Android.Runtime.JNIEnv.StartCreateInstance (class_ref, id_ctor_Ljava_lang_Class_, __args),
+						JniHandleOwnership.TransferLocalRef);
+				JNIEnv.FinishCreateInstance (((global::Java.Lang.Object) this).Handle, class_ref, id_ctor_Ljava_lang_Class_, __args);
+			} finally {
+			}
+		}
+
+		static Delegate cb_handle_Ljava_lang_Object_Ljava_lang_Throwable_;
+#pragma warning disable 0169
+		static Delegate GetHandle_Ljava_lang_Object_Ljava_lang_Throwable_Handler ()
+		{
+			if (cb_handle_Ljava_lang_Object_Ljava_lang_Throwable_ == null)
+				cb_handle_Ljava_lang_Object_Ljava_lang_Throwable_ = JNINativeWrapper.CreateDelegate ((Func<IntPtr, IntPtr, IntPtr, IntPtr, int>) n_Handle_Ljava_lang_Object_Ljava_lang_Throwable_);
+			return cb_handle_Ljava_lang_Object_Ljava_lang_Throwable_;
+		}
+
+		static int n_Handle_Ljava_lang_Object_Ljava_lang_Throwable_ (IntPtr jnienv, IntPtr native__this, IntPtr native_o, IntPtr native_t)
+		{
+			global::Xamarin.Test.SomeObject __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			global::Java.Lang.Object o = global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (native_o, JniHandleOwnership.DoNotTransfer);
+			global::Java.Lang.Throwable t = global::Java.Lang.Object.GetObject<global::Java.Lang.Throwable> (native_t, JniHandleOwnership.DoNotTransfer);
+			int __ret = __this.Handle (o, t);
+			return __ret;
+		}
+#pragma warning restore 0169
+
+		static IntPtr id_handle_Ljava_lang_Object_Ljava_lang_Throwable_;
+		// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/method[@name='handle' and count(parameter)=2 and parameter[1][@type='java.lang.Object'] and parameter[2][@type='java.lang.Throwable']]"
+		[Register ("handle", "(Ljava/lang/Object;Ljava/lang/Throwable;)I", "GetHandle_Ljava_lang_Object_Ljava_lang_Throwable_Handler")]
+		public virtual unsafe int Handle (global::Java.Lang.Object o, global::Java.Lang.Throwable t)
+		{
+			if (id_handle_Ljava_lang_Object_Ljava_lang_Throwable_ == IntPtr.Zero)
+				id_handle_Ljava_lang_Object_Ljava_lang_Throwable_ = JNIEnv.GetMethodID (class_ref, "handle", "(Ljava/lang/Object;Ljava/lang/Throwable;)I");
+			try {
+				JValue* __args = stackalloc JValue [2];
+				__args [0] = new JValue (o);
+				__args [1] = new JValue (t);
+
+				int __ret;
+				if (GetType () == ThresholdType)
+					__ret = JNIEnv.CallIntMethod (((global::Java.Lang.Object) this).Handle, id_handle_Ljava_lang_Object_Ljava_lang_Throwable_, __args);
+				else
+					__ret = JNIEnv.CallNonvirtualIntMethod (((global::Java.Lang.Object) this).Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "handle", "(Ljava/lang/Object;Ljava/lang/Throwable;)I"), __args);
+				return __ret;
+			} finally {
+			}
+		}
+
 		static Delegate cb_IntegerMethod;
 #pragma warning disable 0169
 		static Delegate GetIntegerMethodHandler ()
@@ -51,9 +122,9 @@ namespace Xamarin.Test {
 			try {
 
 				if (GetType () == ThresholdType)
-					return JNIEnv.CallIntMethod  (Handle, id_IntegerMethod);
+					return JNIEnv.CallIntMethod (((global::Java.Lang.Object) this).Handle, id_IntegerMethod);
 				else
-					return JNIEnv.CallNonvirtualIntMethod  (Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "IntegerMethod", "()I"));
+					return JNIEnv.CallNonvirtualIntMethod (((global::Java.Lang.Object) this).Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "IntegerMethod", "()I"));
 			} finally {
 			}
 		}
@@ -84,9 +155,9 @@ namespace Xamarin.Test {
 			try {
 
 				if (GetType () == ThresholdType)
-					JNIEnv.CallVoidMethod  (Handle, id_VoidMethod);
+					JNIEnv.CallVoidMethod (((global::Java.Lang.Object) this).Handle, id_VoidMethod);
 				else
-					JNIEnv.CallNonvirtualVoidMethod  (Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "VoidMethod", "()V"));
+					JNIEnv.CallNonvirtualVoidMethod (((global::Java.Lang.Object) this).Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "VoidMethod", "()V"));
 			} finally {
 			}
 		}
@@ -117,9 +188,9 @@ namespace Xamarin.Test {
 			try {
 
 				if (GetType () == ThresholdType)
-					return JNIEnv.GetString (JNIEnv.CallObjectMethod  (Handle, id_StringMethod), JniHandleOwnership.TransferLocalRef);
+					return JNIEnv.GetString (JNIEnv.CallObjectMethod (((global::Java.Lang.Object) this).Handle, id_StringMethod), JniHandleOwnership.TransferLocalRef);
 				else
-					return JNIEnv.GetString (JNIEnv.CallNonvirtualObjectMethod  (Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "StringMethod", "()Ljava/lang/String;")), JniHandleOwnership.TransferLocalRef);
+					return JNIEnv.GetString (JNIEnv.CallNonvirtualObjectMethod (((global::Java.Lang.Object) this).Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "StringMethod", "()Ljava/lang/String;")), JniHandleOwnership.TransferLocalRef);
 			} finally {
 			}
 		}
@@ -150,9 +221,9 @@ namespace Xamarin.Test {
 			try {
 
 				if (GetType () == ThresholdType)
-					return global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (JNIEnv.CallObjectMethod  (Handle, id_ObjectMethod), JniHandleOwnership.TransferLocalRef);
+					return global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (JNIEnv.CallObjectMethod (((global::Java.Lang.Object) this).Handle, id_ObjectMethod), JniHandleOwnership.TransferLocalRef);
 				else
-					return global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (JNIEnv.CallNonvirtualObjectMethod  (Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "ObjectMethod", "()Ljava/lang/Object;")), JniHandleOwnership.TransferLocalRef);
+					return global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (JNIEnv.CallNonvirtualObjectMethod (((global::Java.Lang.Object) this).Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "ObjectMethod", "()Ljava/lang/Object;")), JniHandleOwnership.TransferLocalRef);
 			} finally {
 			}
 		}
@@ -190,9 +261,9 @@ namespace Xamarin.Test {
 				__args [2] = new JValue (anObject);
 
 				if (GetType () == ThresholdType)
-					JNIEnv.CallVoidMethod  (Handle, id_VoidMethodWithParams_Ljava_lang_String_ILjava_lang_Object_, __args);
+					JNIEnv.CallVoidMethod (((global::Java.Lang.Object) this).Handle, id_VoidMethodWithParams_Ljava_lang_String_ILjava_lang_Object_, __args);
 				else
-					JNIEnv.CallNonvirtualVoidMethod  (Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "VoidMethodWithParams", "(Ljava/lang/String;ILjava/lang/Object;)V"), __args);
+					JNIEnv.CallNonvirtualVoidMethod (((global::Java.Lang.Object) this).Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "VoidMethodWithParams", "(Ljava/lang/String;ILjava/lang/Object;)V"), __args);
 			} finally {
 				JNIEnv.DeleteLocalRef (native_astring);
 			}
@@ -225,9 +296,9 @@ namespace Xamarin.Test {
 			try {
 
 				if (GetType () == ThresholdType)
-					return JNIEnv.CallIntMethod  (Handle, id_ObsoleteMethod);
+					return JNIEnv.CallIntMethod (((global::Java.Lang.Object) this).Handle, id_ObsoleteMethod);
 				else
-					return JNIEnv.CallNonvirtualIntMethod  (Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "ObsoleteMethod", "()I"));
+					return JNIEnv.CallNonvirtualIntMethod (((global::Java.Lang.Object) this).Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "ObsoleteMethod", "()I"));
 			} finally {
 			}
 		}
@@ -262,9 +333,9 @@ namespace Xamarin.Test {
 				__args [0] = new JValue (native_p0);
 
 				if (GetType () == ThresholdType)
-					JNIEnv.CallVoidMethod  (Handle, id_ArrayListTest_Ljava_util_ArrayList_, __args);
+					JNIEnv.CallVoidMethod (((global::Java.Lang.Object) this).Handle, id_ArrayListTest_Ljava_util_ArrayList_, __args);
 				else
-					JNIEnv.CallNonvirtualVoidMethod  (Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "ArrayListTest", "(Ljava/util/ArrayList;)V"), __args);
+					JNIEnv.CallNonvirtualVoidMethod (((global::Java.Lang.Object) this).Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "ArrayListTest", "(Ljava/util/ArrayList;)V"), __args);
 			} finally {
 				JNIEnv.DeleteLocalRef (native_p0);
 			}

@@ -164,7 +164,7 @@ namespace Xamarin.Test {
 				if (id_getSomeInteger == IntPtr.Zero)
 					id_getSomeInteger = JNIEnv.GetMethodID (class_ref, "getSomeInteger", "()I");
 				try {
-					return JNIEnv.CallIntMethod  (Handle, id_getSomeInteger);
+					return JNIEnv.CallIntMethod (((global::Java.Lang.Object) this).Handle, id_getSomeInteger);
 				} finally {
 				}
 			}
@@ -176,7 +176,7 @@ namespace Xamarin.Test {
 				try {
 					JValue* __args = stackalloc JValue [1];
 					__args [0] = new JValue (value);
-					JNIEnv.CallVoidMethod  (Handle, id_setSomeInteger_I, __args);
+					JNIEnv.CallVoidMethod (((global::Java.Lang.Object) this).Handle, id_setSomeInteger_I, __args);
 				} finally {
 				}
 			}
@@ -191,7 +191,7 @@ namespace Xamarin.Test {
 				if (id_getSomeObjectProperty == IntPtr.Zero)
 					id_getSomeObjectProperty = JNIEnv.GetMethodID (class_ref, "getSomeObjectProperty", "()Ljava/lang/Object;");
 				try {
-					return global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (JNIEnv.CallObjectMethod  (Handle, id_getSomeObjectProperty), JniHandleOwnership.TransferLocalRef);
+					return global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (JNIEnv.CallObjectMethod (((global::Java.Lang.Object) this).Handle, id_getSomeObjectProperty), JniHandleOwnership.TransferLocalRef);
 				} finally {
 				}
 			}
@@ -203,7 +203,7 @@ namespace Xamarin.Test {
 				try {
 					JValue* __args = stackalloc JValue [1];
 					__args [0] = new JValue (value);
-					JNIEnv.CallVoidMethod  (Handle, id_setSomeObjectProperty_Ljava_lang_Object_, __args);
+					JNIEnv.CallVoidMethod (((global::Java.Lang.Object) this).Handle, id_setSomeObjectProperty_Ljava_lang_Object_, __args);
 				} finally {
 				}
 			}
@@ -218,7 +218,7 @@ namespace Xamarin.Test {
 				if (id_getSomeString == IntPtr.Zero)
 					id_getSomeString = JNIEnv.GetMethodID (class_ref, "getSomeString", "()Ljava/lang/String;");
 				try {
-					return JNIEnv.GetString (JNIEnv.CallObjectMethod  (Handle, id_getSomeString), JniHandleOwnership.TransferLocalRef);
+					return JNIEnv.GetString (JNIEnv.CallObjectMethod (((global::Java.Lang.Object) this).Handle, id_getSomeString), JniHandleOwnership.TransferLocalRef);
 				} finally {
 				}
 			}
@@ -231,7 +231,7 @@ namespace Xamarin.Test {
 				try {
 					JValue* __args = stackalloc JValue [1];
 					__args [0] = new JValue (native_value);
-					JNIEnv.CallVoidMethod  (Handle, id_setSomeString_Ljava_lang_String_, __args);
+					JNIEnv.CallVoidMethod (((global::Java.Lang.Object) this).Handle, id_setSomeString_Ljava_lang_String_, __args);
 				} finally {
 					JNIEnv.DeleteLocalRef (native_value);
 				}

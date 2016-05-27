@@ -14,6 +14,8 @@ namespace MonoDroid.Generation {
 		bool   IsArray { get; }
 		string ElementType { get; }
 
+		string GetObjectHandleProperty (string variable);
+
 		string GetGenericType (Dictionary<string, string> mappings);
 
 		string FromNative (CodeGenerationOptions opt, string var_name, bool owned);

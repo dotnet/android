@@ -37,7 +37,7 @@ namespace Android.Text {
 		{
 			const string __id = "(Ljava/lang/CharSequence;)V";
 
-			if (Handle != IntPtr.Zero)
+			if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
 				return;
 
 			IntPtr native_source = CharSequence.ToLocalJniHandle (source);
@@ -58,7 +58,7 @@ namespace Android.Text {
 		{
 			const string __id = "(Ljava/lang/CharSequence;)V";
 
-			if (Handle != IntPtr.Zero)
+			if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
 				return;
 
 			IntPtr native_source = CharSequence.ToLocalJniHandle (source);
@@ -98,7 +98,7 @@ namespace Android.Text {
 			const string __id = "getSpanFlags.(Ljava/lang/Object;)I";
 			try {
 				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue ((what == null) ? IntPtr.Zero : what.Handle);
+				__args [0] = new JniArgumentValue ((what == null) ? IntPtr.Zero : ((global::Java.Lang.Object) what).Handle);
 				var __rm = _members.InstanceMethods.InvokeVirtualInt32Method (__id, this, __args);
 				return (Android.Text.SpanTypes) __rm;
 			} finally {

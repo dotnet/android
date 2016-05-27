@@ -3,8 +3,16 @@
 	<package name="java.lang">
 		<class abstract="false" deprecated="not deprecated" final="false" name="Object" static="false" visibility="public">
 		</class>
+		<class abstract="false" deprecated="not deprecated" extends="java.lang.Object" final="false" name="Throwable" static="false" visibility="public">
+			<method abstract="false" deprecated="not deprecated" final="false" name="getMessage" native="false" return="java.lang.String" static="false" synchronized="false" visibility="public">
+			</method>
+		</class>
 	</package>
 	<package name="java.io">
+		<class abstract="true" deprecated="not deprecated" extends="java.lang.Throwable" extends-generic-aware="java.lang.Throwable" final="false" name="IOException" static="false" visibility="public">
+			<method abstract="false" deprecated="not deprecated" final="false" name="printStackTrace" native="false" return="void" static="false" synchronized="false" visibility="public">
+			</method>
+		</class>
 		<!--
 			public abstract class OutputStream extends java.lang.Object {
 				public void close () throws IOException {}
