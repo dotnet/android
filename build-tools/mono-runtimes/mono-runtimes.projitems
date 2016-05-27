@@ -15,9 +15,10 @@
       <RanLib>$(_ArmRanLib)</RanLib>
       <Strip>$(_ArmStrip)</Strip>
       <ConfigureFlags>--host=armv5-linux-androideabi $(_TargetConfigureFlags)</ConfigureFlags>
-      <OutputRuntime>libmonosgen-2.0.so</OutputRuntime>
-      <OutputProfiler>libmono-profiler-log.so</OutputProfiler>
-      <OutputMonoPosixHelper>libMonoPosixHelper.so</OutputMonoPosixHelper>
+      <OutputRuntimeFilename>libmonosgen-2.0</OutputRuntimeFilename>
+      <NativeLibraryExtension>so</NativeLibraryExtension>
+      <OutputProfilerFilename>libmono-profiler-log</OutputProfilerFilename>
+      <OutputMonoPosixHelperFilename>libMonoPosixHelper</OutputMonoPosixHelperFilename>
     </_MonoRuntime>
     <_MonoRuntime Include="armeabi-v7a" Condition="$(AndroidSupportedAbisForConditionalChecks.Contains (',armeabi-v7a,'))">
       <Ar>$(_ArmAr)</Ar>
@@ -33,9 +34,10 @@
       <RanLib>$(_ArmRanLib)</RanLib>
       <Strip>$(_ArmStrip)</Strip>
       <ConfigureFlags>--host=armv5-linux-androideabi $(_TargetConfigureFlags)</ConfigureFlags>
-      <OutputRuntime>libmonosgen-2.0.so</OutputRuntime>
-      <OutputProfiler>libmono-profiler-log.so</OutputProfiler>
-      <OutputMonoPosixHelper>libMonoPosixHelper.so</OutputMonoPosixHelper>
+      <OutputRuntimeFilename>libmonosgen-2.0</OutputRuntimeFilename>
+      <NativeLibraryExtension>so</NativeLibraryExtension>
+      <OutputProfilerFilename>libmono-profiler-log</OutputProfilerFilename>
+      <OutputMonoPosixHelperFilename>libMonoPosixHelper</OutputMonoPosixHelperFilename>
     </_MonoRuntime>
     <_MonoRuntime Include="arm64-v8a" Condition="$(AndroidSupportedAbisForConditionalChecks.Contains (',arm64-v8a,'))">
       <Ar>$(_Arm64Ar)</Ar>
@@ -51,9 +53,10 @@
       <RanLib>$(_Arm64RanLib)</RanLib>
       <Strip>$(_Arm64Strip)</Strip>
       <ConfigureFlags>--host=aarch64-linux-android $(_TargetConfigureFlags)</ConfigureFlags>
-      <OutputRuntime>libmonosgen-2.0.so</OutputRuntime>
-      <OutputProfiler>libmono-profiler-log.so</OutputProfiler>
-      <OutputMonoPosixHelper>libMonoPosixHelper.so</OutputMonoPosixHelper>
+      <OutputRuntimeFilename>libmonosgen-2.0</OutputRuntimeFilename>
+      <NativeLibraryExtension>so</NativeLibraryExtension>
+      <OutputProfilerFilename>libmono-profiler-log</OutputProfilerFilename>
+      <OutputMonoPosixHelperFilename>libMonoPosixHelper</OutputMonoPosixHelperFilename>
     </_MonoRuntime>
     <_MonoRuntime Include="x86" Condition="$(AndroidSupportedAbisForConditionalChecks.Contains (',x86,'))">
       <Ar>$(_X86Ar)</Ar>
@@ -69,9 +72,10 @@
       <RanLib>$(_X86RanLib)</RanLib>
       <Strip>$(_X86Strip)</Strip>
       <ConfigureFlags>--host=i686-linux-android $(_TargetConfigureFlags)</ConfigureFlags>
-      <OutputRuntime>libmonosgen-2.0.so</OutputRuntime>
-      <OutputProfiler>libmono-profiler-log.so</OutputProfiler>
-      <OutputMonoPosixHelper>libMonoPosixHelper.so</OutputMonoPosixHelper>
+      <OutputRuntimeFilename>libmonosgen-2.0</OutputRuntimeFilename>
+      <NativeLibraryExtension>so</NativeLibraryExtension>
+      <OutputProfilerFilename>libmono-profiler-log</OutputProfilerFilename>
+      <OutputMonoPosixHelperFilename>libMonoPosixHelper</OutputMonoPosixHelperFilename>
     </_MonoRuntime>
     <_MonoRuntime Include="x86_64" Condition="$(AndroidSupportedAbisForConditionalChecks.Contains (',x86_64,'))">
       <Ar>$(_X86_64Ar)</Ar>
@@ -87,9 +91,10 @@
       <RanLib>$(_X86_64RanLib)</RanLib>
       <Strip>$(_X86_64Strip)</Strip>
       <ConfigureFlags>--host=x86_64-linux-android $(_TargetConfigureFlags)</ConfigureFlags>
-      <OutputRuntime>libmonosgen-2.0.so</OutputRuntime>
-      <OutputProfiler>libmono-profiler-log.so</OutputProfiler>
-      <OutputMonoPosixHelper>libMonoPosixHelper.so</OutputMonoPosixHelper>
+      <OutputRuntimeFilename>libmonosgen-2.0</OutputRuntimeFilename>
+      <NativeLibraryExtension>so</NativeLibraryExtension>
+      <OutputProfilerFilename>libmono-profiler-log</OutputProfilerFilename>
+      <OutputMonoPosixHelperFilename>libMonoPosixHelper</OutputMonoPosixHelperFilename>
     </_MonoRuntime>
     <_MonoRuntime Include="host-Darwin" Condition=" '$(HostOS)' == 'Darwin' ">
       <Ar>ar</Ar>
@@ -104,9 +109,10 @@
       <RanLib>ranlib</RanLib>
       <Strip>strip -S</Strip>
       <ConfigureFlags>--enable-maintainer-mode --without-ikvm-native --with-monodroid --with-mcs-docs=no --disable-mono-debugger --with-profile2=no --with-profile4=no --with-profile4_5=yes --disable-boehm --enable-nls=no --disable-iconv</ConfigureFlags>
-      <OutputRuntime>libmonosgen-2.0.dylib</OutputRuntime>
-      <OutputProfiler>libmono-profiler-log.dylib</OutputProfiler>
-      <OutputMonoPosixHelper>libMonoPosixHelper.dylib</OutputMonoPosixHelper>
+      <OutputRuntimeFilename>libmonosgen-2.0</OutputRuntimeFilename>
+      <NativeLibraryExtension>dylib</NativeLibraryExtension>
+      <OutputProfilerFilename>libmono-profiler-log</OutputProfilerFilename>
+      <OutputMonoPosixHelperFilename>libMonoPosixHelper</OutputMonoPosixHelperFilename>
     </_MonoRuntime>
     <_MonoRuntime Include="host-Linux" Condition=" '$(HostOS)' == 'Linux' ">
       <Ar>ar</Ar>
@@ -121,9 +127,10 @@
       <RanLib>ranlib</RanLib>
       <Strip>strip -S</Strip>
       <ConfigureFlags>--enable-maintainer-mode --without-ikvm-native --with-monodroid --with-mcs-docs=no --disable-mono-debugger --with-profile2=no --with-profile4=no --with-profile4_5=yes --disable-boehm --enable-nls=no --disable-iconv</ConfigureFlags>
-      <OutputRuntime>libmonosgen-2.0.so</OutputRuntime>
-      <OutputProfiler>libmono-profiler-log.so</OutputProfiler>
-      <OutputMonoPosixHelper>libMonoPosixHelper.so</OutputMonoPosixHelper>
+      <OutputRuntimeFilename>libmonosgen-2.0</OutputRuntimeFilename>
+      <NativeLibraryExtension>so</NativeLibraryExtension>
+      <OutputProfilerFilename>libmono-profiler-log</OutputProfilerFilename>
+      <OutputMonoPosixHelperFilename>libMonoPosixHelper</OutputMonoPosixHelperFilename>
     </_MonoRuntime>
   </ItemGroup>
 </Project>
