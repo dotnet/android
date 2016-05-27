@@ -5,9 +5,9 @@ using System.Linq;
 using System.Text;
 using System.IO;
 using System.Security.Cryptography;
-using Ionic.Zip;
 using Mono.Security.Cryptography;
 using Xamarin.Android.Build.Utilities;
+using System.IO.Compression;
 
 
 #if MSBUILD
@@ -320,7 +320,7 @@ namespace Xamarin.Android.Tasks
 			return Files.CopyIfZipChanged (source, destination);
 		}
 
-		public static ZipFile ReadZipFile (string filename)
+		public static ZipArchive ReadZipFile (string filename)
 		{
 			return Files.ReadZipFile (filename);
 		}

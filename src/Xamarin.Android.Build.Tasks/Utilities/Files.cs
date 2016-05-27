@@ -2,9 +2,10 @@ using System;
 using System.IO;
 using System.Security.Cryptography;
 
-using Ionic.Zip;
+using System.IO.Compression;
 #if MSBUILD
 using Microsoft.Build.Utilities;
+using Xamarin.Android.Tasks;
 #endif
 
 namespace Xamarin.Android.Tools {
@@ -156,12 +157,9 @@ namespace Xamarin.Android.Tools {
 			string hashes = String.Empty;
 
 			try {
-				var ro = new ReadOptions () {
-					Encoding = System.Text.Encoding.UTF8,
-				};
-				using (var zip = Ionic.Zip.ZipFile.Read (stream, ro)) {
-					foreach (var item in zip) {
-						hashes += String.Format ("{0}{1}", item.FileName, item.Crc);
+				using (var zip = new ZipArchive (stream, ZipArchiveMode.Read)) {
+					foreach (var item in zip.Entries) {
+						hashes += String.Format ("{0}{1}", item.FullName, item.Hash());
 					}
 				}
 			} catch {
@@ -180,8 +178,8 @@ namespace Xamarin.Android.Tools {
 					return File.ReadAllText (filename + ".hash");
 
 				using (var zip = ReadZipFile (filename)) {
-					foreach (var item in zip) {
-						hashes += String.Format ("{0}{1}", item.FileName, item.Crc);
+					foreach (var item in zip.Entries) {
+						hashes += String.Format ("{0}{1}", item.FullName, item.Hash());
 					}
 				}
 			} catch {
@@ -190,24 +188,27 @@ namespace Xamarin.Android.Tools {
 			return hashes;
 		}
 
-		public static ZipFile ReadZipFile (string filename)
+		public static ZipArchive ReadZipFile (string filename)
 		{
-			var zip = new ZipFile (new System.Text.UTF8Encoding (false));
-			zip.CaseSensitiveRetrieval = true;
-			zip.Initialize (filename);
-			return zip;
+			return ZipFile.Open (filename, ZipArchiveMode.Read, new System.Text.UTF8Encoding (false));
 		}
 
-		public static void ExtractAll(ZipFile zip, string destination,
-			ExtractExistingFileAction extractExitingFileAction = ExtractExistingFileAction.OverwriteSilently)
+		public static void ExtractAll(ZipArchive zip, string destination, Action<int, int> progressCallback = null)
 		{
+			int i = 0;
+			int total = zip.Entries.Count;
 			foreach (var entry in zip.Entries) {
 
-				if (string.Equals(entry.FileName, "__MACOSX", StringComparison.OrdinalIgnoreCase) ||
-					string.Equals(entry.FileName, ".DS_Store", StringComparison.OrdinalIgnoreCase))
+				if (string.Equals(entry.FullName, "__MACOSX", StringComparison.OrdinalIgnoreCase) ||
+						string.Equals(entry.FullName, ".DS_Store", StringComparison.OrdinalIgnoreCase))
 					continue;
-				Console.Error.WriteLine ("# jonp: Files.ExtractAll: extracting entry: {0} to destination='{1}' extractExitingFileAction={2}", entry.FileName, destination, extractExitingFileAction);
-				entry.Extract (destination, extractExitingFileAction);
+				if (entry.IsDirectory ()) {
+					Directory.CreateDirectory (Path.Combine (destination, entry.FullName));
+					continue;
+				}
+				if (progressCallback != null)
+					progressCallback (i++, total);
+				entry.ExtractToFile (Path.Combine (destination, entry.FullName), overwrite: true);
 			}
 		}
 

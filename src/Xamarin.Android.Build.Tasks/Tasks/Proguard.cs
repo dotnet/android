@@ -12,6 +12,7 @@ using Microsoft.Build.Utilities;
 using Microsoft.Build.Framework;
 using System.Text.RegularExpressions;
 using Xamarin.Android.Build.Utilities;
+using System.IO.Compression;
 
 namespace Xamarin.Android.Tasks
 {
@@ -122,11 +123,10 @@ namespace Xamarin.Android.Tasks
 
 			if (File.Exists (ProguardJarInput))
 				File.Delete (ProguardJarInput);
-			var zip = new Ionic.Zip.ZipFile (ProguardJarInput, new System.Text.UTF8Encoding (false));
-			foreach (var file in Directory.GetFiles (classesFullPath, "*", SearchOption.AllDirectories))
-				zip.AddFile (file, Path.GetDirectoryName (file.Substring (classesFullPath.Length)));
-			zip.Save ();
-			zip.Dispose ();
+			using (var zip = ZipFile.Open (ProguardJarInput, ZipArchiveMode.Create, new System.Text.UTF8Encoding (false))) {
+				foreach (var file in Directory.GetFiles (classesFullPath, "*", SearchOption.AllDirectories))
+					zip.AddFile (file, Path.GetDirectoryName (file.Substring (classesFullPath.Length)));
+			}
 
 			var acwLines = File.ReadAllLines (AcwMapFile);
 			using (var appcfg = File.CreateText (ProguardGeneratedApplicationConfiguration))

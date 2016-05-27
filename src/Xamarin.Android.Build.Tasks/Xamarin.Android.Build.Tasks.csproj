@@ -60,9 +60,6 @@
     <Reference Include="Irony">
       <HintPath>..\..\packages\Irony.0.9.1\lib\net40\Irony.dll</HintPath>
     </Reference>
-    <Reference Include="Ionic.Zip">
-      <HintPath>..\..\packages\Unofficial.Ionic.Zip.1.9.1.8\lib\Ionic.Zip.dll</HintPath>
-    </Reference>
     <Reference Include="FSharp.Compiler.CodeDom">
       <HintPath>..\..\packages\FSharp.Compiler.CodeDom.1.0.0.1\lib\net40\FSharp.Compiler.CodeDom.dll</HintPath>
     </Reference>
@@ -120,6 +117,7 @@
     <Compile Include="Utilities\JavaResourceParser.cs" />
     <Compile Include="Utilities\ManifestDocumentElement.cs" />
     <Compile Include="Utilities\ManifestDocument.cs" />
+    <Compile Include="Utilities\ZipArchiveExtensions.cs" />    
     <Compile Include="Mono.Android\MetaDataAttribute.Partial.cs" />
     <Compile Include="Utilities\MonoAndroidHelper.cs" />
     <None Include="Linker\MonoDroid.Tuner\PreserveCode.cs" />
@@ -534,7 +532,6 @@
     <Compile Include="Utilities\MD2Managed.cs">
       <Link>Utilities\MD2Managed.cs</Link>
     </Compile>
-    <None Include="Ionic.Zip.xml" />
     <Compile Include="Utilities\Profile.cs" />
     <None Include="Xamarin.Android.Build.Tasks.targets" />
   </ItemGroup>
