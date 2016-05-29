@@ -436,7 +436,7 @@ namespace Xamarin.Android.Tasks
 			bool use_shared_runtime = String.Equals (UseSharedRuntime, "true", StringComparison.OrdinalIgnoreCase);
 			var abis = supportedAbis.Split (new char[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
 			foreach (var abi in abis) {
-				string library = string.Format ("libmono-android.{0}.{1}.so", _Debug ? "debug" : "release", abi);
+				string library = string.Format ("libmono-android.{0}.so", _Debug ? "debug" : "release");
 				var path = Path.Combine (root, "lib", abi, library);
 				apk.AddEntry (string.Format ("lib/{0}/libmonodroid.so", abi), File.OpenRead (path));
 				if (!use_shared_runtime) {
