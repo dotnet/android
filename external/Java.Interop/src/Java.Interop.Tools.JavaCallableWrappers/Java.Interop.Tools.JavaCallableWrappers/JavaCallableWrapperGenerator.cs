@@ -94,7 +94,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 			this.type = type;
 			this.log = log;
 
-			if (!type.IsClass)
+			if (type.IsEnum || type.IsInterface || type.IsValueType)
 				Diagnostic.Error (4200, LookupSource (type), "Can only generate Java wrappers for 'class' types, not type '{0}'.", type.FullName);
 
 			string jniName = JniType.ToJniName (type);
@@ -431,42 +431,47 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 		//    private native void n_onCreate (android.os.Bundle bundle);
 		// }
 
+		public void Generate (TextWriter writer)
+		{
+			if (!string.IsNullOrEmpty (package)) {
+				writer.WriteLine ("package " + package + ";");
+				writer.WriteLine ();
+			}
+
+			GenerateHeader (writer);
+
+			writer.WriteLine ("/** @hide */");
+			writer.WriteLine ("\tpublic static final String __md_methods;");
+			if (children != null) {
+				foreach (var i in Enumerable.Range (1, children.Count))
+					writer.WriteLine ("\tstatic final String __md_{0}_methods;", i);
+			}
+			writer.WriteLine ("\tstatic {");
+			GenerateRegisterType (writer, this, "__md_methods");
+			if (children != null) {
+				for (int i = 0; i < children.Count; ++i) {
+					string methods = string.Format ("__md_{0}_methods", i + 1);
+					GenerateRegisterType (writer, children [i], methods);
+				}
+			}
+			writer.WriteLine ("\t}");
+
+			GenerateBody (writer);
+
+			if (children != null)
+				foreach (JavaCallableWrapperGenerator child in children) {
+					child.GenerateHeader (writer);
+					child.GenerateBody (writer);
+					child.GenerateFooter (writer);
+				}
+
+			GenerateFooter (writer);
+		}
+
 		public void Generate (string outputPath)
 		{
 			using (StreamWriter sw = OpenStream (outputPath)) {
-				if (!string.IsNullOrEmpty (package)) {
-					sw.WriteLine ("package " + package + ";");
-					sw.WriteLine ();
-				}
-
-				GenerateHeader (sw);
-
-				sw.WriteLine ("/** @hide */");
-				sw.WriteLine ("\tpublic static final String __md_methods;");
-				if (children != null) {
-					foreach (var i in Enumerable.Range(1, children.Count))
-						sw.WriteLine ("\tstatic final String __md_{0}_methods;", i);
-				}
-				sw.WriteLine ("\tstatic {");
-				GenerateRegisterType (sw, this, "__md_methods");
-				if (children != null) {
-					for (int i = 0; i < children.Count; ++i) {
-						string methods = string.Format ("__md_{0}_methods", i+1);
-						GenerateRegisterType (sw, children [i], methods);
-					}
-				}
-				sw.WriteLine ("\t}");
-
-				GenerateBody (sw);
-
-				if (children != null)
-					foreach (JavaCallableWrapperGenerator child in children) {
-						child.GenerateHeader (sw);
-						child.GenerateBody (sw);
-						child.GenerateFooter (sw);
-					}
-
-				GenerateFooter (sw);
+				Generate (sw);
 			}
 		}
 
@@ -515,7 +520,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 				return value.ToString ();
 		}
 
-		void GenerateHeader (StreamWriter sw)
+		void GenerateHeader (TextWriter sw)
 		{
 			sw.WriteLine ();
 
@@ -541,7 +546,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 			sw.WriteLine ("{");
 		}
 
-		void GenerateBody (StreamWriter sw)
+		void GenerateBody (TextWriter sw)
 		{
 			foreach (Signature ctor in ctors) {
 				if (string.IsNullOrEmpty (ctor.Params) && JniType.IsApplication (type))
@@ -584,7 +589,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 			sw.WriteLine ("\t}");
 		}
 
-		static void GenerateRegisterType (StreamWriter sw, JavaCallableWrapperGenerator self, string field)
+		static void GenerateRegisterType (TextWriter sw, JavaCallableWrapperGenerator self, string field)
 		{
 			sw.WriteLine ("\t\t{0} = ", field);
 			foreach (Signature method in self.methods)
@@ -595,7 +600,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 						self.type.GetAssemblyQualifiedName (), self.name, field);
 		}
 
-		void GenerateFooter (StreamWriter sw)
+		void GenerateFooter (TextWriter sw)
 		{
 			sw.WriteLine ("}");
 		}
@@ -738,7 +743,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 			public readonly string Annotations;
 		}
 
-		void GenerateConstructor (Signature ctor, StreamWriter sw)
+		void GenerateConstructor (Signature ctor, TextWriter sw)
 		{
 			// TODO:  we only generate constructors so that Android types w/ no
 			//        default constructor can be subclasses by our generated code.
@@ -760,7 +765,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 			sw.WriteLine ("\t}");
 		}
 
-		void GenerateApplicationConstructor (StreamWriter sw)
+		void GenerateApplicationConstructor (TextWriter sw)
 		{
 			if (!JniType.IsApplication (type)) {
 				return;
@@ -773,7 +778,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 			sw.WriteLine ("\t}");
 		}
 
-		void GenerateExportedField (JavaFieldInfo field, StreamWriter sw)
+		void GenerateExportedField (JavaFieldInfo field, TextWriter sw)
 		{
 			sw.WriteLine ();
 			if (field.Annotations != null)
@@ -781,7 +786,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 			sw.WriteLine ("\t{0} {1}{2} {3} = {4} ();", field.GetJavaAccess (), field.IsStatic ? "static " : null, field.TypeName, field.FieldName, field.InitializerName);
 		}
 
-		void GenerateMethod (Signature method, StreamWriter sw)
+		void GenerateMethod (Signature method, TextWriter sw)
 		{
 			sw.WriteLine ();
 			if (method.Annotations != null)
@@ -798,7 +803,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 			sw.WriteLine ("\tprivate {0}native {1} n_{2} ({3});", method.IsStatic ? "static " : null, method.Retval, method.Name, method.Params);
 		}
 
-		void WriteApplicationOnCreate (StreamWriter sw, Action<StreamWriter> extra)
+		void WriteApplicationOnCreate (TextWriter sw, Action<TextWriter> extra)
 		{
 			sw.WriteLine ();
 			sw.WriteLine ("\tpublic void onCreate ()");
@@ -807,7 +812,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 			sw.WriteLine ("\t}");
 		}
 
-		void WriteInstrumentationOnCreate (StreamWriter sw, Action<StreamWriter> extra)
+		void WriteInstrumentationOnCreate (TextWriter sw, Action<TextWriter> extra)
 		{
 			sw.WriteLine ();
 			sw.WriteLine ("\tpublic void onCreate (android.os.Bundle arguments)");
