@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectTypeGuids>{EFBA0AD7-5A72-4C68-AF49-83D382785DCF};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <ProjectGuid>{1A4B041A-842F-40B3-A50D-49E01D30BD18}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>Mono.Posix</RootNamespace>
+    <MonoAndroidAssetsPrefix>Assets</MonoAndroidAssetsPrefix>
+    <MonoAndroidResourcePrefix>Resources</MonoAndroidResourcePrefix>
+    <AndroidResgenClass>Resource</AndroidResgenClass>
+    <AndroidResgenFile>Resources\Resource.designer.cs</AndroidResgenFile>
+    <AndroidUseLatestPlatformSdk>True</AndroidUseLatestPlatformSdk>
+    <AssemblyName>Mono.Posix</AssemblyName>
+    <TargetFrameworkVersion>v5.0</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>..\..\bin\$(Configuration)\lib\xbuild-frameworks\MonoAndroid\v1.0</OutputPath>
+    <DefineConstants>DEBUG;TRACE;NET_4_0;NET_4_5;MONO;DISABLE_CAS_USE;MONODROID</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AndroidLinkMode>None</AndroidLinkMode>
+    <ConsolePause>false</ConsolePause>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <Optimize>true</Optimize>
+    <OutputPath>..\..\bin\$(Configuration)\lib\xbuild-frameworks\MonoAndroid\v1.0</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AndroidUseSharedRuntime>false</AndroidUseSharedRuntime>
+    <ConsolePause>false</ConsolePause>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DefineConstants>NET_4_0;NET_4_5;MONO;DISABLE_CAS_USE;MONODROID</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="mscorlib">
+      <HintPath>$(OutputPath)..\v1.0\mscorlib.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System">
+      <HintPath>$(OutputPath)..\v1.0\System.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Core">
+      <HintPath>$(OutputPath)..\v1.0\System.Core.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Xml">
+      <HintPath>$(OutputPath)..\v1.0\System.Xml.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+  <Import Project="..\..\Configuration.props" />
+  <ItemGroup>
+    <Compile Include="Mono.Unix.Native\NativeConvert.Android.cs" />
+    <Compile Include="Mono.Unix.Android\AndroidUtils.cs" />
+
+    <Compile Include="$(XamarinAndroidSourcePath)\src\Mono.Android\Android.Runtime\CPUArchitecture.cs">
+      <Link>Android.Runtime\CPUArchitecture.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Assembly\AssemblyInfo.cs">
+      <Link>Assembly\AssemblyInfo.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Remoting.Channels.Unix\UnixBinaryClientFormatterSink.cs">
+      <Link>Mono.Remoting.Channels.Unix\UnixBinaryClientFormatterSink.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Remoting.Channels.Unix\UnixBinaryClientFormatterSinkProvider.cs">
+      <Link>Mono.Remoting.Channels.Unix\UnixBinaryClientFormatterSinkProvider.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Remoting.Channels.Unix\UnixBinaryCore.cs">
+      <Link>Mono.Remoting.Channels.Unix\UnixBinaryCore.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Remoting.Channels.Unix\UnixBinaryServerFormatterSink.cs">
+      <Link>Mono.Remoting.Channels.Unix\UnixBinaryServerFormatterSink.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Remoting.Channels.Unix\UnixBinaryServerFormatterSinkProvider.cs">
+      <Link>Mono.Remoting.Channels.Unix\UnixBinaryServerFormatterSinkProvider.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Remoting.Channels.Unix\UnixChannel.cs">
+      <Link>Mono.Remoting.Channels.Unix\UnixChannel.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Remoting.Channels.Unix\UnixClientChannel.cs">
+      <Link>Mono.Remoting.Channels.Unix\UnixClientChannel.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Remoting.Channels.Unix\UnixClientTransportSink.cs">
+      <Link>Mono.Remoting.Channels.Unix\UnixClientTransportSink.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Remoting.Channels.Unix\UnixClientTransportSinkProvider.cs">
+      <Link>Mono.Remoting.Channels.Unix\UnixClientTransportSinkProvider.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Remoting.Channels.Unix\UnixConnectionPool.cs">
+      <Link>Mono.Remoting.Channels.Unix\UnixConnectionPool.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Remoting.Channels.Unix\UnixMessageIO.cs">
+      <Link>Mono.Remoting.Channels.Unix\UnixMessageIO.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Remoting.Channels.Unix\UnixServerChannel.cs">
+      <Link>Mono.Remoting.Channels.Unix\UnixServerChannel.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Remoting.Channels.Unix\UnixServerTransportSink.cs">
+      <Link>Mono.Remoting.Channels.Unix\UnixServerTransportSink.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix.Native\CdeclFunction.cs">
+      <Link>Mono.Unix.Native\CdeclFunction.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix.Native\FileNameMarshaler.cs">
+      <Link>Mono.Unix.Native\FileNameMarshaler.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix.Native\MapAttribute.cs">
+      <Link>Mono.Unix.Native\MapAttribute.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix.Native\NativeConvert.cs">
+      <Link>Mono.Unix.Native\NativeConvert.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix.Native\NativeConvert.generated.cs">
+      <Link>Mono.Unix.Native\NativeConvert.generated.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix.Native\RealTimeSignum.cs">
+      <Link>Mono.Unix.Native\RealTimeSignum.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix.Native\Stdlib.cs">
+      <Link>Mono.Unix.Native\Stdlib.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix.Native\Syscall.cs">
+      <Link>Mono.Unix.Native\Syscall.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix.Native\TypeAttributes.cs">
+      <Link>Mono.Unix.Native\TypeAttributes.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix\AbstractUnixEndPoint.cs">
+      <Link>Mono.Unix\AbstractUnixEndPoint.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix\Catalog.cs">
+      <Link>Mono.Unix\Catalog.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix\FileAccessPattern.cs">
+      <Link>Mono.Unix\FileAccessPattern.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix\FileAccessPermissions.cs">
+      <Link>Mono.Unix\FileAccessPermissions.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix\FileHandleOperations.cs">
+      <Link>Mono.Unix\FileHandleOperations.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix\FileSpecialAttributes.cs">
+      <Link>Mono.Unix\FileSpecialAttributes.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix\FileTypes.cs">
+      <Link>Mono.Unix\FileTypes.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix\PeerCred.cs">
+      <Link>Mono.Unix\PeerCred.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix\StdioFileStream.cs">
+      <Link>Mono.Unix\StdioFileStream.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix\UnixClient.cs">
+      <Link>Mono.Unix\UnixClient.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix\UnixDirectoryInfo.cs">
+      <Link>Mono.Unix\UnixDirectoryInfo.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix\UnixDriveInfo.cs">
+      <Link>Mono.Unix\UnixDriveInfo.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix\UnixEncoding.cs">
+      <Link>Mono.Unix\UnixEncoding.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix\UnixEndPoint.cs">
+      <Link>Mono.Unix\UnixEndPoint.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix\UnixEnvironment.cs">
+      <Link>Mono.Unix\UnixEnvironment.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix\UnixFileInfo.cs">
+      <Link>Mono.Unix\UnixFileInfo.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix\UnixFileSystemInfo.cs">
+      <Link>Mono.Unix\UnixFileSystemInfo.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix\UnixGroupInfo.cs">
+      <Link>Mono.Unix\UnixGroupInfo.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix\UnixIOException.cs">
+      <Link>Mono.Unix\UnixIOException.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix\UnixListener.cs">
+      <Link>Mono.Unix\UnixListener.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix\UnixMarshal.cs">
+      <Link>Mono.Unix\UnixMarshal.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix\UnixPath.cs">
+      <Link>Mono.Unix\UnixPath.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix\UnixPipes.cs">
+      <Link>Mono.Unix\UnixPipes.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix\UnixProcess.cs">
+      <Link>Mono.Unix\UnixProcess.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix\UnixSignal.cs">
+      <Link>Mono.Unix\UnixSignal.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix\UnixStream.cs">
+      <Link>Mono.Unix\UnixStream.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix\UnixSymbolicLinkInfo.cs">
+      <Link>Mono.Unix\UnixSymbolicLinkInfo.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix\UnixUserInfo.cs">
+      <Link>Mono.Unix\UnixUserInfo.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\build\common\Locale.cs">
+      <Link>Locale.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\build\common\Consts.cs">
+      <Link>Consts.cs</Link>
+    </Compile>
+  </ItemGroup>
+  <Import Project="$(OutputPath)\..\..\..\xbuild\Xamarin\Android\Xamarin.Android.CSharp.targets" />
+  <ItemGroup>
+    <Folder Include="MonoPosixHelper\" />
+    <Folder Include="Assembly\" />
+    <Folder Include="Mono.Posix\" />
+    <Folder Include="Mono.Remoting.Channels.Unix\" />
+    <Folder Include="Mono.Unix.Native\" />
+    <Folder Include="Mono.Unix\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Mono.Android\Mono.Android.csproj">
+      <Project>{66CF299A-CE95-4131-BCD8-DB66E30C4BF7}</Project>
+      <Name>Mono.Android</Name>
+      <Private>False</Private>
+    </ProjectReference>
+  </ItemGroup>
+  <PropertyGroup>
+    <XANativeLibsDir>$(OutputPath)\..\..\..\xbuild\Xamarin\Android\lib</XANativeLibsDir>
+  </PropertyGroup>
+  <ItemGroup>
+    <EmbeddedNativeLibrary Include="$(XANativeLibsDir)\arm64-v8a\libMonoPosixHelper.so" Condition="$(AndroidSupportedAbisForConditionalChecks.Contains (',arm64-v8a,'))">
+      <Link>MonoPosixHelper\arm64-v8a\libMonoPosixHelper.so</Link>
+    </EmbeddedNativeLibrary>
+    <EmbeddedNativeLibrary Include="$(XANativeLibsDir)\armeabi\libMonoPosixHelper.so" Condition="$(AndroidSupportedAbisForConditionalChecks.Contains (',armeabi,'))">
+      <Link>MonoPosixHelper\armeabi\libMonoPosixHelper.so</Link>
+    </EmbeddedNativeLibrary>
+    <EmbeddedNativeLibrary Include="$(XANativeLibsDir)\armeabi-v7a\libMonoPosixHelper.so" Condition="$(AndroidSupportedAbisForConditionalChecks.Contains (',armeabi-v7a,'))">
+      <Link>MonoPosixHelper\armeabi-v7a\libMonoPosixHelper.so</Link>
+    </EmbeddedNativeLibrary>
+    <EmbeddedNativeLibrary Include="$(XANativeLibsDir)\x86\libMonoPosixHelper.so" Condition="$(AndroidSupportedAbisForConditionalChecks.Contains (',x86,'))">
+      <Link>MonoPosixHelper\x86\libMonoPosixHelper.so</Link>
+    </EmbeddedNativeLibrary>
+    <EmbeddedNativeLibrary Include="$(XANativeLibsDir)\x86_64\libMonoPosixHelper.so" Condition="$(AndroidSupportedAbisForConditionalChecks.Contains (',x86_64,'))">
+      <Link>MonoPosixHelper\x86_64\libMonoPosixHelper.so</Link>
+    </EmbeddedNativeLibrary>
+  </ItemGroup>
+</Project>
