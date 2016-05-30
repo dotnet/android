@@ -57,8 +57,8 @@
   </ItemGroup>
   <Import Project="..\..\Configuration.props" />
   <ItemGroup>
-    <Compile Include="Mono.Unix.Native\NativeConvert.Android.cs" />
-    <Compile Include="Mono.Unix.Android\AndroidUtils.cs" />
+    <Compile Include="$(XamarinAndroidSourcePath)\src\Mono.Posix\Mono.Unix.Native\NativeConvert.Android.cs" />
+    <Compile Include="$(XamarinAndroidSourcePath)\src\Mono.Posix\Mono.Unix.Android\AndroidUtils.cs" />
 
     <Compile Include="$(XamarinAndroidSourcePath)\src\Mono.Android\Android.Runtime\CPUArchitecture.cs">
       <Link>Android.Runtime\CPUArchitecture.cs</Link>
