@@ -17,13 +17,13 @@ namespace Xamarin.Test {
 			get {
 				if (Value_jfieldId == IntPtr.Zero)
 					Value_jfieldId = JNIEnv.GetFieldID (class_ref, "Value", "I");
-				return JNIEnv.GetIntField (Handle, Value_jfieldId);
+				return JNIEnv.GetIntField (((global::Java.Lang.Object) this).Handle, Value_jfieldId);
 			}
 			set {
 				if (Value_jfieldId == IntPtr.Zero)
 					Value_jfieldId = JNIEnv.GetFieldID (class_ref, "Value", "I");
 				try {
-					JNIEnv.SetField (Handle, Value_jfieldId, value);
+					JNIEnv.SetField (((global::Java.Lang.Object) this).Handle, Value_jfieldId, value);
 				} finally {
 				}
 			}

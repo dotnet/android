@@ -37,7 +37,7 @@ namespace Xamarin.Test {
 		{
 			const string __id = "()V";
 
-			if (Handle != IntPtr.Zero)
+			if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
 				return;
 
 			try {
@@ -55,7 +55,7 @@ namespace Xamarin.Test {
 		{
 			const string __id = "(I)V";
 
-			if (Handle != IntPtr.Zero)
+			if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
 				return;
 
 			try {

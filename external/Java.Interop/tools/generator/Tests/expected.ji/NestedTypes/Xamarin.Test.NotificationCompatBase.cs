@@ -69,7 +69,7 @@ namespace Xamarin.Test {
 
 				public IFactoryInvoker (IntPtr handle, JniHandleOwnership transfer) : base (Validate (handle), transfer)
 				{
-					IntPtr local_ref = JNIEnv.GetObjectClass (Handle);
+					IntPtr local_ref = JNIEnv.GetObjectClass (((global::Java.Lang.Object) this).Handle);
 					this.class_ref = JNIEnv.NewGlobalRef (local_ref);
 					JNIEnv.DeleteLocalRef (local_ref);
 				}
@@ -97,7 +97,7 @@ namespace Xamarin.Test {
 						id_build_I = JNIEnv.GetMethodID (class_ref, "build", "(I)Lxamarin/test/NotificationCompatBase$Action;");
 					JValue* __args = stackalloc JValue [1];
 					__args [0] = new JValue (p0);
-					return global::Java.Lang.Object.GetObject<global::Xamarin.Test.NotificationCompatBase.Action> (JNIEnv.CallObjectMethod (Handle, id_build_I, __args), JniHandleOwnership.TransferLocalRef);
+					return global::Java.Lang.Object.GetObject<global::Xamarin.Test.NotificationCompatBase.Action> (JNIEnv.CallObjectMethod (((global::Java.Lang.Object) this).Handle, id_build_I, __args), JniHandleOwnership.TransferLocalRef);
 				}
 
 			}
@@ -157,12 +157,12 @@ namespace Xamarin.Test {
 			{
 				string __id = "(L" + global::Android.Runtime.JNIEnv.GetJniName (GetType ().DeclaringType) + ";)V";
 
-				if (Handle != IntPtr.Zero)
+				if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
 					return;
 
 				try {
 					JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-					__args [0] = new JniArgumentValue ((__self == null) ? IntPtr.Zero : __self.Handle);
+					__args [0] = new JniArgumentValue ((__self == null) ? IntPtr.Zero : ((global::Java.Lang.Object) __self).Handle);
 					var __r = _members.InstanceMethods.StartCreateInstance (__id, GetType (), __args);
 					SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
 					_members.InstanceMethods.FinishCreateInstance (__id, this, __args);

@@ -67,7 +67,54 @@ namespace Xamarin.Test {
 
 		}
 
+		internal            static  readonly    JniPeerMembers  _members    = new JniPeerMembers ("xamarin/test/A", typeof (A));
+		internal static IntPtr class_ref {
+			get {
+				return _members.JniPeerType.PeerReference.Handle;
+			}
+		}
+
+		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
+			get { return _members; }
+		}
+
+		protected override IntPtr ThresholdClass {
+			get { return _members.JniPeerType.PeerReference.Handle; }
+		}
+
+		protected override global::System.Type ThresholdType {
+			get { return _members.ManagedPeerType; }
+		}
+
 		protected A (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer) {}
+
+		static Delegate cb_getHandle;
+#pragma warning disable 0169
+		static Delegate GetGetHandleHandler ()
+		{
+			if (cb_getHandle == null)
+				cb_getHandle = JNINativeWrapper.CreateDelegate ((Func<IntPtr, IntPtr, int>) n_GetHandle);
+			return cb_getHandle;
+		}
+
+		static int n_GetHandle (IntPtr jnienv, IntPtr native__this)
+		{
+			global::Xamarin.Test.A __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.A> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			return __this.GetHandle ();
+		}
+#pragma warning restore 0169
+
+		// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='A']/method[@name='getHandle' and count(parameter)=0]"
+		[Register ("getHandle", "()I", "GetGetHandleHandler")]
+		public virtual unsafe int GetHandle ()
+		{
+			const string __id = "getHandle.()I";
+			try {
+				var __rm = _members.InstanceMethods.InvokeVirtualInt32Method (__id, this, null);
+				return __rm;
+			} finally {
+			}
+		}
 
 	}
 }

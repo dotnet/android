@@ -37,7 +37,7 @@ namespace Java.IO {
 		{
 			const string __id = "(Ljava/io/OutputStream;)V";
 
-			if (Handle != IntPtr.Zero)
+			if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
 				return;
 
 			IntPtr native__out = global::Android.Runtime.OutputStreamAdapter.ToLocalJniHandle (@out);

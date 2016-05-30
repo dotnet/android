@@ -62,7 +62,7 @@ namespace Test.ME {
 
 		public IGenericInterfaceInvoker (IntPtr handle, JniHandleOwnership transfer) : base (Validate (handle), transfer)
 		{
-			IntPtr local_ref = JNIEnv.GetObjectClass (Handle);
+			IntPtr local_ref = JNIEnv.GetObjectClass (((global::Java.Lang.Object) this).Handle);
 			this.class_ref = JNIEnv.NewGlobalRef (local_ref);
 			JNIEnv.DeleteLocalRef (local_ref);
 		}
@@ -92,7 +92,7 @@ namespace Test.ME {
 			IntPtr native_value = JNIEnv.ToLocalJniHandle (value);
 			JValue* __args = stackalloc JValue [1];
 			__args [0] = new JValue (native_value);
-			JNIEnv.CallVoidMethod (Handle, id_SetObject_Ljava_lang_Object_, __args);
+			JNIEnv.CallVoidMethod (((global::Java.Lang.Object) this).Handle, id_SetObject_Ljava_lang_Object_, __args);
 			JNIEnv.DeleteLocalRef (native_value);
 		}
 

@@ -63,6 +63,11 @@ namespace MonoDroid.Generation {
 			get { return type_params; }
 		}
 
+		public string GetObjectHandleProperty (string variable)
+		{
+			return gen.GetObjectHandleProperty (variable);
+		}
+
 		string MapTypeParams (Dictionary<string, string> mappings)
 		{
 			StringBuilder sb = new StringBuilder ();

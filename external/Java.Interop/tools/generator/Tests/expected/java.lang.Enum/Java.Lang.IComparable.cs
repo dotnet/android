@@ -53,7 +53,7 @@ namespace Java.Lang {
 
 		public IComparableInvoker (IntPtr handle, JniHandleOwnership transfer) : base (Validate (handle), transfer)
 		{
-			IntPtr local_ref = JNIEnv.GetObjectClass (Handle);
+			IntPtr local_ref = JNIEnv.GetObjectClass (((global::Java.Lang.Object) this).Handle);
 			this.class_ref = JNIEnv.NewGlobalRef (local_ref);
 			JNIEnv.DeleteLocalRef (local_ref);
 		}
@@ -84,7 +84,7 @@ namespace Java.Lang {
 			IntPtr native_another = JNIEnv.ToLocalJniHandle (another);
 			JValue* __args = stackalloc JValue [1];
 			__args [0] = new JValue (native_another);
-			int __ret = JNIEnv.CallIntMethod (Handle, id_compareTo_Ljava_lang_Object_, __args);
+			int __ret = JNIEnv.CallIntMethod (((global::Java.Lang.Object) this).Handle, id_compareTo_Ljava_lang_Object_, __args);
 			JNIEnv.DeleteLocalRef (native_another);
 			return __ret;
 		}

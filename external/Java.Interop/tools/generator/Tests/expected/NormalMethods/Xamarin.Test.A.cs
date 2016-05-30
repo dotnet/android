@@ -58,16 +58,64 @@ namespace Xamarin.Test {
 					__args [0] = new JValue (index);
 
 					if (GetType () == ThresholdType)
-						return (Java.Lang.Object) global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (JNIEnv.CallObjectMethod  (Handle, id_setCustomDimension_I, __args), JniHandleOwnership.TransferLocalRef);
+						return (Java.Lang.Object) global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (JNIEnv.CallObjectMethod (((global::Java.Lang.Object) this).Handle, id_setCustomDimension_I, __args), JniHandleOwnership.TransferLocalRef);
 					else
-						return (Java.Lang.Object) global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (JNIEnv.CallNonvirtualObjectMethod  (Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "setCustomDimension", "(I)Lxamarin/test/A$B;"), __args), JniHandleOwnership.TransferLocalRef);
+						return (Java.Lang.Object) global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (JNIEnv.CallNonvirtualObjectMethod (((global::Java.Lang.Object) this).Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "setCustomDimension", "(I)Lxamarin/test/A$B;"), __args), JniHandleOwnership.TransferLocalRef);
 				} finally {
 				}
 			}
 
 		}
 
+		internal static IntPtr java_class_handle;
+		internal static IntPtr class_ref {
+			get {
+				return JNIEnv.FindClass ("xamarin/test/A", ref java_class_handle);
+			}
+		}
+
+		protected override IntPtr ThresholdClass {
+			get { return class_ref; }
+		}
+
+		protected override global::System.Type ThresholdType {
+			get { return typeof (A); }
+		}
+
 		protected A (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer) {}
+
+		static Delegate cb_getHandle;
+#pragma warning disable 0169
+		static Delegate GetGetHandleHandler ()
+		{
+			if (cb_getHandle == null)
+				cb_getHandle = JNINativeWrapper.CreateDelegate ((Func<IntPtr, IntPtr, int>) n_GetHandle);
+			return cb_getHandle;
+		}
+
+		static int n_GetHandle (IntPtr jnienv, IntPtr native__this)
+		{
+			global::Xamarin.Test.A __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.A> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			return __this.GetHandle ();
+		}
+#pragma warning restore 0169
+
+		static IntPtr id_getHandle;
+		// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='A']/method[@name='getHandle' and count(parameter)=0]"
+		[Register ("getHandle", "()I", "GetGetHandleHandler")]
+		public virtual unsafe int GetHandle ()
+		{
+			if (id_getHandle == IntPtr.Zero)
+				id_getHandle = JNIEnv.GetMethodID (class_ref, "getHandle", "()I");
+			try {
+
+				if (GetType () == ThresholdType)
+					return JNIEnv.CallIntMethod (((global::Java.Lang.Object) this).Handle, id_getHandle);
+				else
+					return JNIEnv.CallNonvirtualIntMethod (((global::Java.Lang.Object) this).Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "getHandle", "()I"));
+			} finally {
+			}
+		}
 
 	}
 }

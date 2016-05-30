@@ -17,14 +17,14 @@ namespace Xamarin.Test {
 			get {
 				if (backColor_jfieldId == IntPtr.Zero)
 					backColor_jfieldId = JNIEnv.GetFieldID (class_ref, "backColor", "I");
-				int __ret = JNIEnv.GetIntField (Handle, backColor_jfieldId);
+				int __ret = JNIEnv.GetIntField (((global::Java.Lang.Object) this).Handle, backColor_jfieldId);
 				return new global::Android.Graphics.Color (__ret);
 			}
 			set {
 				if (backColor_jfieldId == IntPtr.Zero)
 					backColor_jfieldId = JNIEnv.GetFieldID (class_ref, "backColor", "I");
 				try {
-					JNIEnv.SetField (Handle, backColor_jfieldId, value.ToArgb ());
+					JNIEnv.SetField (((global::Java.Lang.Object) this).Handle, backColor_jfieldId, value.ToArgb ());
 				} finally {
 				}
 			}
@@ -106,7 +106,7 @@ namespace Xamarin.Test {
 				if (id_getSomeColor == IntPtr.Zero)
 					id_getSomeColor = JNIEnv.GetMethodID (class_ref, "getSomeColor", "()I");
 				try {
-					return new global::Android.Graphics.Color (JNIEnv.CallIntMethod  (Handle, id_getSomeColor));
+					return new global::Android.Graphics.Color (JNIEnv.CallIntMethod (((global::Java.Lang.Object) this).Handle, id_getSomeColor));
 				} finally {
 				}
 			}
@@ -118,7 +118,7 @@ namespace Xamarin.Test {
 				try {
 					JValue* __args = stackalloc JValue [1];
 					__args [0] = new JValue (value.ToArgb ());
-					JNIEnv.CallVoidMethod  (Handle, id_setSomeColor_I, __args);
+					JNIEnv.CallVoidMethod (((global::Java.Lang.Object) this).Handle, id_setSomeColor_I, __args);
 				} finally {
 				}
 			}

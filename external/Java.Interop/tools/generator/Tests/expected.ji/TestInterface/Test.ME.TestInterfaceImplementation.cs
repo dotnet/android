@@ -59,7 +59,7 @@ namespace Test.ME {
 		{
 			const string __id = "()V";
 
-			if (Handle != IntPtr.Zero)
+			if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
 				return;
 
 			try {
@@ -116,7 +116,7 @@ namespace Test.ME {
 			const string __id = "getSpanFlags.(Ljava/lang/Object;)I";
 			try {
 				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue ((tag == null) ? IntPtr.Zero : tag.Handle);
+				__args [0] = new JniArgumentValue ((tag == null) ? IntPtr.Zero : ((global::Java.Lang.Object) tag).Handle);
 				var __rm = _members.InstanceMethods.InvokeAbstractInt32Method (__id, this, __args);
 				return __rm;
 			} finally {

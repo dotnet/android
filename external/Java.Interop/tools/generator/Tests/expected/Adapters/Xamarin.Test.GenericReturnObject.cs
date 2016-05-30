@@ -51,9 +51,9 @@ namespace Xamarin.Test {
 			try {
 
 				if (GetType () == ThresholdType)
-					return global::Java.Lang.Object.GetObject<global::Xamarin.Test.AdapterView> (JNIEnv.CallObjectMethod  (Handle, id_GenericReturn), JniHandleOwnership.TransferLocalRef);
+					return global::Java.Lang.Object.GetObject<global::Xamarin.Test.AdapterView> (JNIEnv.CallObjectMethod (((global::Java.Lang.Object) this).Handle, id_GenericReturn), JniHandleOwnership.TransferLocalRef);
 				else
-					return global::Java.Lang.Object.GetObject<global::Xamarin.Test.AdapterView> (JNIEnv.CallNonvirtualObjectMethod  (Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "GenericReturn", "()Lxamarin/test/AdapterView;")), JniHandleOwnership.TransferLocalRef);
+					return global::Java.Lang.Object.GetObject<global::Xamarin.Test.AdapterView> (JNIEnv.CallNonvirtualObjectMethod (((global::Java.Lang.Object) this).Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "GenericReturn", "()Lxamarin/test/AdapterView;")), JniHandleOwnership.TransferLocalRef);
 			} finally {
 			}
 		}

@@ -207,7 +207,7 @@ namespace Xamarin.Test {
 				const string __id = "setSomeObjectProperty.(Ljava/lang/Object;)V";
 				try {
 					JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-					__args [0] = new JniArgumentValue ((value == null) ? IntPtr.Zero : value.Handle);
+					__args [0] = new JniArgumentValue ((value == null) ? IntPtr.Zero : ((global::Java.Lang.Object) value).Handle);
 					_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
 				} finally {
 				}

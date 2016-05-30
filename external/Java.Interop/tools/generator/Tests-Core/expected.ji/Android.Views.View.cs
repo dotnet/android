@@ -65,7 +65,7 @@ namespace Android.Views {
 
 			public IOnClickListenerInvoker (IntPtr handle, JniHandleOwnership transfer) : base (Validate (handle), transfer)
 			{
-				IntPtr local_ref = JNIEnv.GetObjectClass (Handle);
+				IntPtr local_ref = JNIEnv.GetObjectClass (((global::Java.Lang.Object) this).Handle);
 				this.class_ref = JNIEnv.NewGlobalRef (local_ref);
 				JNIEnv.DeleteLocalRef (local_ref);
 			}
@@ -93,8 +93,8 @@ namespace Android.Views {
 				if (id_onClick_Landroid_view_View_ == IntPtr.Zero)
 					id_onClick_Landroid_view_View_ = JNIEnv.GetMethodID (class_ref, "onClick", "(Landroid/view/View;)V");
 				JValue* __args = stackalloc JValue [1];
-				__args [0] = new JValue ((v == null) ? IntPtr.Zero : v.Handle);
-				JNIEnv.CallVoidMethod (Handle, id_onClick_Landroid_view_View_, __args);
+				__args [0] = new JValue ((v == null) ? IntPtr.Zero : ((global::Java.Lang.Object) v).Handle);
+				JNIEnv.CallVoidMethod (((global::Java.Lang.Object) this).Handle, id_onClick_Landroid_view_View_, __args);
 			}
 
 		}
@@ -107,7 +107,7 @@ namespace Android.Views {
 					global::Android.Runtime.JNIEnv.StartCreateInstance ("mono/android/view/View_OnClickListenerImplementor", "()V"),
 					JniHandleOwnership.TransferLocalRef)
 			{
-				global::Android.Runtime.JNIEnv.FinishCreateInstance (Handle, "()V");
+				global::Android.Runtime.JNIEnv.FinishCreateInstance (((global::Java.Lang.Object) this).Handle, "()V");
 			}
 
 #pragma warning disable 0649
@@ -173,7 +173,7 @@ namespace Android.Views {
 			const string __id = "setOnClickListener.(Landroid/view/View$OnClickListener;)V";
 			try {
 				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue ((l == null) ? IntPtr.Zero : l.Handle);
+				__args [0] = new JniArgumentValue ((l == null) ? IntPtr.Zero : ((global::Java.Lang.Object) l).Handle);
 				_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
 			} finally {
 			}

@@ -126,7 +126,7 @@ namespace MonoDroid.Generation {
 			if (String.IsNullOrEmpty (Marshaler))
 				return String.Format ("JNIEnv.ToLocalJniHandle ({0})", varname);
 			else
-				return String.Format ("{0}.Handle", varname);
+				return GetObjectHandleProperty (varname);
 			*/
 		}
 
@@ -242,7 +242,7 @@ namespace MonoDroid.Generation {
 			sw.WriteLine ();
 			sw.WriteLine ("{0}\tpublic {1}Invoker (IntPtr handle, JniHandleOwnership transfer) : base (Validate (handle), transfer)", indent, Name);
 			sw.WriteLine ("{0}\t{{", indent);
-			sw.WriteLine ("{0}\t\tIntPtr local_ref = JNIEnv.GetObjectClass (Handle);", indent);
+			sw.WriteLine ("{0}\t\tIntPtr local_ref = JNIEnv.GetObjectClass ({1});", indent, opt.ContextType.GetObjectHandleProperty ("this"));
 			sw.WriteLine ("{0}\t\tthis.class_ref = JNIEnv.NewGlobalRef (local_ref);", indent);
 			sw.WriteLine ("{0}\t\tJNIEnv.DeleteLocalRef (local_ref);", indent);
 			sw.WriteLine ("{0}\t}}", indent);
@@ -399,7 +399,7 @@ namespace MonoDroid.Generation {
 			sw.WriteLine ("{0}\t\t\tglobal::Android.Runtime.JNIEnv.StartCreateInstance (\"{1}\", \"()V\"),", indent, jniClass);
 			sw.WriteLine ("{0}\t\t\tJniHandleOwnership.TransferLocalRef)", indent);
 			sw.WriteLine ("{0}\t{{", indent);
-			sw.WriteLine ("{0}\t\tglobal::Android.Runtime.JNIEnv.FinishCreateInstance (Handle, \"()V\");", indent);
+			sw.WriteLine ("{0}\t\tglobal::Android.Runtime.JNIEnv.FinishCreateInstance ({1}, \"()V\");", indent, GetObjectHandleProperty ("this"));
 			if (needs_sender)
 				sw.WriteLine ("{0}\t\tthis.sender = sender;", indent);
 			sw.WriteLine ("{0}\t}}", indent);
@@ -660,6 +660,7 @@ namespace MonoDroid.Generation {
 
 		public override void Generate (StreamWriter sw, string indent, CodeGenerationOptions opt, GenerationInfo gen_info)
 		{
+			opt.ContextTypes.Push (this);
 			// interfaces don't nest, so generate as siblings
 			foreach (GenBase nest in NestedTypes) {
 				nest.Generate (sw, indent, opt, gen_info);
@@ -719,6 +720,7 @@ namespace MonoDroid.Generation {
 				GenerateExtensionsDeclaration (sw, indent, opt, null);
 			GenerateInvoker (sw, indent, opt);
 			GenerateEventHandler (sw, indent, opt);
+			opt.ContextTypes.Pop ();
 		}
 
 		public override void Generate (CodeGenerationOptions opt, GenerationInfo gen_info)

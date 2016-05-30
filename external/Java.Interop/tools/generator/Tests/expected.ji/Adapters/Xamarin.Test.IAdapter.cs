@@ -57,7 +57,7 @@ namespace Xamarin.Test {
 
 		public IAdapterInvoker (IntPtr handle, JniHandleOwnership transfer) : base (Validate (handle), transfer)
 		{
-			IntPtr local_ref = JNIEnv.GetObjectClass (Handle);
+			IntPtr local_ref = JNIEnv.GetObjectClass (((global::Java.Lang.Object) this).Handle);
 			this.class_ref = JNIEnv.NewGlobalRef (local_ref);
 			JNIEnv.DeleteLocalRef (local_ref);
 		}

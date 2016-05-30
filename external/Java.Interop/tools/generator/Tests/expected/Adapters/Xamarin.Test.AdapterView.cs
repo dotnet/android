@@ -86,7 +86,7 @@ namespace Xamarin.Test {
 				if (id_getAdapter == IntPtr.Zero)
 					id_getAdapter = JNIEnv.GetMethodID (class_ref, "getAdapter", "()Lxamarin/test/Adapter;");
 				try {
-					return (Java.Lang.Object) global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (JNIEnv.CallObjectMethod  (Handle, id_getAdapter), JniHandleOwnership.TransferLocalRef);
+					return (Java.Lang.Object) global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (JNIEnv.CallObjectMethod (((global::Java.Lang.Object) this).Handle, id_getAdapter), JniHandleOwnership.TransferLocalRef);
 				} finally {
 				}
 			}
@@ -99,7 +99,7 @@ namespace Xamarin.Test {
 				try {
 					JValue* __args = stackalloc JValue [1];
 					__args [0] = new JValue (native_value);
-					JNIEnv.CallVoidMethod  (Handle, id_setAdapter_Lxamarin_test_Adapter_, __args);
+					JNIEnv.CallVoidMethod (((global::Java.Lang.Object) this).Handle, id_setAdapter_Lxamarin_test_Adapter_, __args);
 				} finally {
 					JNIEnv.DeleteLocalRef (native_value);
 				}

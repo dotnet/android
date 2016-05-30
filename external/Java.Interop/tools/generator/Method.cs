@@ -657,7 +657,8 @@ namespace MonoDroid.Generation {
 				sw.WriteLine ("{0}{1}", indent, prep);
 			Parameters.WriteCallArgs (sw, indent, opt, invoker:true);
 			string env_method = "Call" + RetVal.CallMethodPrefix + "Method";
-			string call = "JNIEnv." + env_method + " (Handle, " + EscapedIdName + Parameters.GetCallArgs (opt, invoker:true) + ")";
+			string call = "JNIEnv." + env_method + " (" +
+				opt.ContextType.GetObjectHandleProperty ("this") + ", " + EscapedIdName + Parameters.GetCallArgs (opt, invoker:true) + ")";
 			if (IsVoid)
 				sw.WriteLine ("{0}{1};", indent, call);
 			else

@@ -30,6 +30,60 @@ namespace Xamarin.Test {
 
 		protected SomeObject (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer) {}
 
+		// Metadata.xml XPath constructor reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/constructor[@name='SomeObject' and count(parameter)=1 and parameter[1][@type='java.lang.Class&lt;? extends xamarin.test.SomeObject&gt;']]"
+		[Register (".ctor", "(Ljava/lang/Class;)V", "")]
+		public unsafe SomeObject (global::Java.Lang.Class c)
+			: base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
+		{
+			const string __id = "(Ljava/lang/Class;)V";
+
+			if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
+				return;
+
+			try {
+				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+				__args [0] = new JniArgumentValue ((c == null) ? IntPtr.Zero : ((global::Java.Lang.Object) c).Handle);
+				var __r = _members.InstanceMethods.StartCreateInstance (__id, GetType (), __args);
+				SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
+				_members.InstanceMethods.FinishCreateInstance (__id, this, __args);
+			} finally {
+			}
+		}
+
+		static Delegate cb_handle_Ljava_lang_Object_Ljava_lang_Throwable_;
+#pragma warning disable 0169
+		static Delegate GetHandle_Ljava_lang_Object_Ljava_lang_Throwable_Handler ()
+		{
+			if (cb_handle_Ljava_lang_Object_Ljava_lang_Throwable_ == null)
+				cb_handle_Ljava_lang_Object_Ljava_lang_Throwable_ = JNINativeWrapper.CreateDelegate ((Func<IntPtr, IntPtr, IntPtr, IntPtr, int>) n_Handle_Ljava_lang_Object_Ljava_lang_Throwable_);
+			return cb_handle_Ljava_lang_Object_Ljava_lang_Throwable_;
+		}
+
+		static int n_Handle_Ljava_lang_Object_Ljava_lang_Throwable_ (IntPtr jnienv, IntPtr native__this, IntPtr native_o, IntPtr native_t)
+		{
+			global::Xamarin.Test.SomeObject __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			global::Java.Lang.Object o = global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (native_o, JniHandleOwnership.DoNotTransfer);
+			global::Java.Lang.Throwable t = global::Java.Lang.Object.GetObject<global::Java.Lang.Throwable> (native_t, JniHandleOwnership.DoNotTransfer);
+			int __ret = __this.Handle (o, t);
+			return __ret;
+		}
+#pragma warning restore 0169
+
+		// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/method[@name='handle' and count(parameter)=2 and parameter[1][@type='java.lang.Object'] and parameter[2][@type='java.lang.Throwable']]"
+		[Register ("handle", "(Ljava/lang/Object;Ljava/lang/Throwable;)I", "GetHandle_Ljava_lang_Object_Ljava_lang_Throwable_Handler")]
+		public virtual unsafe int Handle (global::Java.Lang.Object o, global::Java.Lang.Throwable t)
+		{
+			const string __id = "handle.(Ljava/lang/Object;Ljava/lang/Throwable;)I";
+			try {
+				JniArgumentValue* __args = stackalloc JniArgumentValue [2];
+				__args [0] = new JniArgumentValue ((o == null) ? IntPtr.Zero : ((global::Java.Lang.Object) o).Handle);
+				__args [1] = new JniArgumentValue ((t == null) ? IntPtr.Zero : ((global::Java.Lang.Throwable) t).Handle);
+				var __rm = _members.InstanceMethods.InvokeVirtualInt32Method (__id, this, __args);
+				return __rm;
+			} finally {
+			}
+		}
+
 		static Delegate cb_IntegerMethod;
 #pragma warning disable 0169
 		static Delegate GetIntegerMethodHandler ()
@@ -169,7 +223,7 @@ namespace Xamarin.Test {
 				JniArgumentValue* __args = stackalloc JniArgumentValue [3];
 				__args [0] = new JniArgumentValue (native_astring);
 				__args [1] = new JniArgumentValue (anint);
-				__args [2] = new JniArgumentValue ((anObject == null) ? IntPtr.Zero : anObject.Handle);
+				__args [2] = new JniArgumentValue ((anObject == null) ? IntPtr.Zero : ((global::Java.Lang.Object) anObject).Handle);
 				_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
 			} finally {
 				JNIEnv.DeleteLocalRef (native_astring);

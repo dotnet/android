@@ -80,7 +80,7 @@ namespace Xamarin.Test {
 				const string __id = "setAdapter.(Lxamarin/test/SpinnerAdapter;)V";
 				try {
 					JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-					__args [0] = new JniArgumentValue ((value == null) ? IntPtr.Zero : value.Handle);
+					__args [0] = new JniArgumentValue ((value == null) ? IntPtr.Zero : ((global::Java.Lang.Object) value).Handle);
 					_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
 				} finally {
 				}

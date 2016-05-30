@@ -31,7 +31,7 @@ namespace Java.IO {
 		public unsafe OutputStream ()
 			: base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
 		{
-			if (Handle != IntPtr.Zero)
+			if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
 				return;
 
 			try {
@@ -39,7 +39,7 @@ namespace Java.IO {
 					SetHandle (
 							global::Android.Runtime.JNIEnv.StartCreateInstance (GetType (), "()V"),
 							JniHandleOwnership.TransferLocalRef);
-					global::Android.Runtime.JNIEnv.FinishCreateInstance (Handle, "()V");
+					global::Android.Runtime.JNIEnv.FinishCreateInstance (((global::Java.Lang.Object) this).Handle, "()V");
 					return;
 				}
 
@@ -48,7 +48,7 @@ namespace Java.IO {
 				SetHandle (
 						global::Android.Runtime.JNIEnv.StartCreateInstance (class_ref, id_ctor),
 						JniHandleOwnership.TransferLocalRef);
-				JNIEnv.FinishCreateInstance (Handle, class_ref, id_ctor);
+				JNIEnv.FinishCreateInstance (((global::Java.Lang.Object) this).Handle, class_ref, id_ctor);
 			} finally {
 			}
 		}
@@ -79,9 +79,9 @@ namespace Java.IO {
 			try {
 
 				if (GetType () == ThresholdType)
-					JNIEnv.CallVoidMethod  (Handle, id_close);
+					JNIEnv.CallVoidMethod (((global::Java.Lang.Object) this).Handle, id_close);
 				else
-					JNIEnv.CallNonvirtualVoidMethod  (Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "close", "()V"));
+					JNIEnv.CallNonvirtualVoidMethod (((global::Java.Lang.Object) this).Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "close", "()V"));
 			} finally {
 			}
 		}
@@ -112,9 +112,9 @@ namespace Java.IO {
 			try {
 
 				if (GetType () == ThresholdType)
-					JNIEnv.CallVoidMethod  (Handle, id_flush);
+					JNIEnv.CallVoidMethod (((global::Java.Lang.Object) this).Handle, id_flush);
 				else
-					JNIEnv.CallNonvirtualVoidMethod  (Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "flush", "()V"));
+					JNIEnv.CallNonvirtualVoidMethod (((global::Java.Lang.Object) this).Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "flush", "()V"));
 			} finally {
 			}
 		}
@@ -151,9 +151,9 @@ namespace Java.IO {
 				__args [0] = new JValue (native_buffer);
 
 				if (GetType () == ThresholdType)
-					JNIEnv.CallVoidMethod  (Handle, id_write_arrayB, __args);
+					JNIEnv.CallVoidMethod (((global::Java.Lang.Object) this).Handle, id_write_arrayB, __args);
 				else
-					JNIEnv.CallNonvirtualVoidMethod  (Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "write", "([B)V"), __args);
+					JNIEnv.CallNonvirtualVoidMethod (((global::Java.Lang.Object) this).Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "write", "([B)V"), __args);
 			} finally {
 				if (buffer != null) {
 					JNIEnv.CopyArray (native_buffer, buffer);
@@ -196,9 +196,9 @@ namespace Java.IO {
 				__args [2] = new JValue (count);
 
 				if (GetType () == ThresholdType)
-					JNIEnv.CallVoidMethod  (Handle, id_write_arrayBII, __args);
+					JNIEnv.CallVoidMethod (((global::Java.Lang.Object) this).Handle, id_write_arrayBII, __args);
 				else
-					JNIEnv.CallNonvirtualVoidMethod  (Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "write", "([BII)V"), __args);
+					JNIEnv.CallNonvirtualVoidMethod (((global::Java.Lang.Object) this).Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "write", "([BII)V"), __args);
 			} finally {
 				if (buffer != null) {
 					JNIEnv.CopyArray (native_buffer, buffer);
@@ -248,7 +248,7 @@ namespace Java.IO {
 			try {
 				JValue* __args = stackalloc JValue [1];
 				__args [0] = new JValue (oneByte);
-				JNIEnv.CallVoidMethod  (Handle, id_write_I, __args);
+				JNIEnv.CallVoidMethod (((global::Java.Lang.Object) this).Handle, id_write_I, __args);
 			} finally {
 			}
 		}

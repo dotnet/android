@@ -90,6 +90,9 @@
     <Content Include="SupportFiles\Java_Lang_Object.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="SupportFiles\Java_Lang_Throwable.cs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="SupportFiles\GeneratedEnumAttribute.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

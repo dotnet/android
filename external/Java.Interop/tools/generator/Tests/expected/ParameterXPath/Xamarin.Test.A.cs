@@ -56,9 +56,9 @@ namespace Xamarin.Test {
 				__args [0] = new JValue (native_adapter);
 
 				if (GetType () == ThresholdType)
-					JNIEnv.CallVoidMethod  (Handle, id_setA_Ljava_lang_Object_, __args);
+					JNIEnv.CallVoidMethod (((global::Java.Lang.Object) this).Handle, id_setA_Ljava_lang_Object_, __args);
 				else
-					JNIEnv.CallNonvirtualVoidMethod  (Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "setA", "(Ljava/lang/Object;)V"), __args);
+					JNIEnv.CallNonvirtualVoidMethod (((global::Java.Lang.Object) this).Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "setA", "(Ljava/lang/Object;)V"), __args);
 			} finally {
 				JNIEnv.DeleteLocalRef (native_adapter);
 			}
@@ -94,9 +94,9 @@ namespace Xamarin.Test {
 				__args [0] = new JValue (native_p0);
 
 				if (GetType () == ThresholdType)
-					JNIEnv.CallVoidMethod  (Handle, id_listTest_Ljava_util_List_, __args);
+					JNIEnv.CallVoidMethod (((global::Java.Lang.Object) this).Handle, id_listTest_Ljava_util_List_, __args);
 				else
-					JNIEnv.CallNonvirtualVoidMethod  (Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "listTest", "(Ljava/util/List;)V"), __args);
+					JNIEnv.CallNonvirtualVoidMethod (((global::Java.Lang.Object) this).Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "listTest", "(Ljava/util/List;)V"), __args);
 			} finally {
 				JNIEnv.DeleteLocalRef (native_p0);
 			}

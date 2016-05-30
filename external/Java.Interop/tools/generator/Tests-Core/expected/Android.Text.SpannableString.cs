@@ -31,7 +31,7 @@ namespace Android.Text {
 		public unsafe SpannableString (Java.Lang.ICharSequence source)
 			: base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
 		{
-			if (Handle != IntPtr.Zero)
+			if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
 				return;
 
 			IntPtr native_source = CharSequence.ToLocalJniHandle (source);
@@ -42,7 +42,7 @@ namespace Android.Text {
 					SetHandle (
 							global::Android.Runtime.JNIEnv.StartCreateInstance (GetType (), "(Ljava/lang/CharSequence;)V", __args),
 							JniHandleOwnership.TransferLocalRef);
-					global::Android.Runtime.JNIEnv.FinishCreateInstance (Handle, "(Ljava/lang/CharSequence;)V", __args);
+					global::Android.Runtime.JNIEnv.FinishCreateInstance (((global::Java.Lang.Object) this).Handle, "(Ljava/lang/CharSequence;)V", __args);
 					return;
 				}
 
@@ -51,7 +51,7 @@ namespace Android.Text {
 				SetHandle (
 						global::Android.Runtime.JNIEnv.StartCreateInstance (class_ref, id_ctor_Ljava_lang_CharSequence_, __args),
 						JniHandleOwnership.TransferLocalRef);
-				JNIEnv.FinishCreateInstance (Handle, class_ref, id_ctor_Ljava_lang_CharSequence_, __args);
+				JNIEnv.FinishCreateInstance (((global::Java.Lang.Object) this).Handle, class_ref, id_ctor_Ljava_lang_CharSequence_, __args);
 			} finally {
 				JNIEnv.DeleteLocalRef (native_source);
 			}
@@ -61,7 +61,7 @@ namespace Android.Text {
 		public unsafe SpannableString (string source)
 			: base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
 		{
-			if (Handle != IntPtr.Zero)
+			if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
 				return;
 
 			IntPtr native_source = CharSequence.ToLocalJniHandle (source);
@@ -72,7 +72,7 @@ namespace Android.Text {
 					SetHandle (
 							global::Android.Runtime.JNIEnv.StartCreateInstance (GetType (), "(Ljava/lang/CharSequence;)V", __args),
 							JniHandleOwnership.TransferLocalRef);
-					global::Android.Runtime.JNIEnv.FinishCreateInstance (Handle, "(Ljava/lang/CharSequence;)V", __args);
+					global::Android.Runtime.JNIEnv.FinishCreateInstance (((global::Java.Lang.Object) this).Handle, "(Ljava/lang/CharSequence;)V", __args);
 					return;
 				}
 
@@ -81,7 +81,7 @@ namespace Android.Text {
 				SetHandle (
 						global::Android.Runtime.JNIEnv.StartCreateInstance (class_ref, id_ctor_Ljava_lang_CharSequence_, __args),
 						JniHandleOwnership.TransferLocalRef);
-				JNIEnv.FinishCreateInstance (Handle, class_ref, id_ctor_Ljava_lang_CharSequence_, __args);
+				JNIEnv.FinishCreateInstance (((global::Java.Lang.Object) this).Handle, class_ref, id_ctor_Ljava_lang_CharSequence_, __args);
 			} finally {
 				JNIEnv.DeleteLocalRef (native_source);
 			}
@@ -118,9 +118,9 @@ namespace Android.Text {
 
 				Android.Text.SpanTypes __ret;
 				if (GetType () == ThresholdType)
-					__ret = (Android.Text.SpanTypes) JNIEnv.CallIntMethod  (Handle, id_getSpanFlags_Ljava_lang_Object_, __args);
+					__ret = (Android.Text.SpanTypes) JNIEnv.CallIntMethod (((global::Java.Lang.Object) this).Handle, id_getSpanFlags_Ljava_lang_Object_, __args);
 				else
-					__ret = (Android.Text.SpanTypes) JNIEnv.CallNonvirtualIntMethod  (Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "getSpanFlags", "(Ljava/lang/Object;)I"), __args);
+					__ret = (Android.Text.SpanTypes) JNIEnv.CallNonvirtualIntMethod (((global::Java.Lang.Object) this).Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "getSpanFlags", "(Ljava/lang/Object;)I"), __args);
 				return __ret;
 			} finally {
 			}

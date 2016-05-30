@@ -31,7 +31,7 @@ namespace Java.IO {
 		public unsafe InputStream ()
 			: base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
 		{
-			if (Handle != IntPtr.Zero)
+			if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
 				return;
 
 			try {
@@ -39,7 +39,7 @@ namespace Java.IO {
 					SetHandle (
 							global::Android.Runtime.JNIEnv.StartCreateInstance (GetType (), "()V"),
 							JniHandleOwnership.TransferLocalRef);
-					global::Android.Runtime.JNIEnv.FinishCreateInstance (Handle, "()V");
+					global::Android.Runtime.JNIEnv.FinishCreateInstance (((global::Java.Lang.Object) this).Handle, "()V");
 					return;
 				}
 
@@ -48,7 +48,7 @@ namespace Java.IO {
 				SetHandle (
 						global::Android.Runtime.JNIEnv.StartCreateInstance (class_ref, id_ctor),
 						JniHandleOwnership.TransferLocalRef);
-				JNIEnv.FinishCreateInstance (Handle, class_ref, id_ctor);
+				JNIEnv.FinishCreateInstance (((global::Java.Lang.Object) this).Handle, class_ref, id_ctor);
 			} finally {
 			}
 		}
@@ -79,9 +79,9 @@ namespace Java.IO {
 			try {
 
 				if (GetType () == ThresholdType)
-					return JNIEnv.CallIntMethod  (Handle, id_available);
+					return JNIEnv.CallIntMethod (((global::Java.Lang.Object) this).Handle, id_available);
 				else
-					return JNIEnv.CallNonvirtualIntMethod  (Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "available", "()I"));
+					return JNIEnv.CallNonvirtualIntMethod (((global::Java.Lang.Object) this).Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "available", "()I"));
 			} finally {
 			}
 		}
@@ -112,9 +112,9 @@ namespace Java.IO {
 			try {
 
 				if (GetType () == ThresholdType)
-					JNIEnv.CallVoidMethod  (Handle, id_close);
+					JNIEnv.CallVoidMethod (((global::Java.Lang.Object) this).Handle, id_close);
 				else
-					JNIEnv.CallNonvirtualVoidMethod  (Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "close", "()V"));
+					JNIEnv.CallNonvirtualVoidMethod (((global::Java.Lang.Object) this).Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "close", "()V"));
 			} finally {
 			}
 		}
@@ -147,9 +147,9 @@ namespace Java.IO {
 				__args [0] = new JValue (readlimit);
 
 				if (GetType () == ThresholdType)
-					JNIEnv.CallVoidMethod  (Handle, id_mark_I, __args);
+					JNIEnv.CallVoidMethod (((global::Java.Lang.Object) this).Handle, id_mark_I, __args);
 				else
-					JNIEnv.CallNonvirtualVoidMethod  (Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "mark", "(I)V"), __args);
+					JNIEnv.CallNonvirtualVoidMethod (((global::Java.Lang.Object) this).Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "mark", "(I)V"), __args);
 			} finally {
 			}
 		}
@@ -180,9 +180,9 @@ namespace Java.IO {
 			try {
 
 				if (GetType () == ThresholdType)
-					return JNIEnv.CallBooleanMethod  (Handle, id_markSupported);
+					return JNIEnv.CallBooleanMethod (((global::Java.Lang.Object) this).Handle, id_markSupported);
 				else
-					return JNIEnv.CallNonvirtualBooleanMethod  (Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "markSupported", "()Z"));
+					return JNIEnv.CallNonvirtualBooleanMethod (((global::Java.Lang.Object) this).Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "markSupported", "()Z"));
 			} finally {
 			}
 		}
@@ -241,9 +241,9 @@ namespace Java.IO {
 
 				int __ret;
 				if (GetType () == ThresholdType)
-					__ret = JNIEnv.CallIntMethod  (Handle, id_read_arrayB, __args);
+					__ret = JNIEnv.CallIntMethod (((global::Java.Lang.Object) this).Handle, id_read_arrayB, __args);
 				else
-					__ret = JNIEnv.CallNonvirtualIntMethod  (Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "read", "([B)I"), __args);
+					__ret = JNIEnv.CallNonvirtualIntMethod (((global::Java.Lang.Object) this).Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "read", "([B)I"), __args);
 				return __ret;
 			} finally {
 				if (buffer != null) {
@@ -289,9 +289,9 @@ namespace Java.IO {
 
 				int __ret;
 				if (GetType () == ThresholdType)
-					__ret = JNIEnv.CallIntMethod  (Handle, id_read_arrayBII, __args);
+					__ret = JNIEnv.CallIntMethod (((global::Java.Lang.Object) this).Handle, id_read_arrayBII, __args);
 				else
-					__ret = JNIEnv.CallNonvirtualIntMethod  (Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "read", "([BII)I"), __args);
+					__ret = JNIEnv.CallNonvirtualIntMethod (((global::Java.Lang.Object) this).Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "read", "([BII)I"), __args);
 				return __ret;
 			} finally {
 				if (buffer != null) {
@@ -327,9 +327,9 @@ namespace Java.IO {
 			try {
 
 				if (GetType () == ThresholdType)
-					JNIEnv.CallVoidMethod  (Handle, id_reset);
+					JNIEnv.CallVoidMethod (((global::Java.Lang.Object) this).Handle, id_reset);
 				else
-					JNIEnv.CallNonvirtualVoidMethod  (Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "reset", "()V"));
+					JNIEnv.CallNonvirtualVoidMethod (((global::Java.Lang.Object) this).Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "reset", "()V"));
 			} finally {
 			}
 		}
@@ -362,9 +362,9 @@ namespace Java.IO {
 				__args [0] = new JValue (byteCount);
 
 				if (GetType () == ThresholdType)
-					return JNIEnv.CallLongMethod  (Handle, id_skip_J, __args);
+					return JNIEnv.CallLongMethod (((global::Java.Lang.Object) this).Handle, id_skip_J, __args);
 				else
-					return JNIEnv.CallNonvirtualLongMethod  (Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "skip", "(J)J"), __args);
+					return JNIEnv.CallNonvirtualLongMethod (((global::Java.Lang.Object) this).Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "skip", "(J)J"), __args);
 			} finally {
 			}
 		}
@@ -388,7 +388,7 @@ namespace Java.IO {
 			if (id_read == IntPtr.Zero)
 				id_read = JNIEnv.GetMethodID (class_ref, "read", "()I");
 			try {
-				return JNIEnv.CallIntMethod  (Handle, id_read);
+				return JNIEnv.CallIntMethod (((global::Java.Lang.Object) this).Handle, id_read);
 			} finally {
 			}
 		}

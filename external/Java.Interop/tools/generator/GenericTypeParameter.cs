@@ -63,6 +63,11 @@ namespace MonoDroid.Generation {
 			get { return null; }
 		}
 
+		public string GetObjectHandleProperty (string variable)
+		{
+			return null;
+		}
+
 		public string FromNative (CodeGenerationOptions opt, string varname, bool owned)
 		{
 			return String.Format ("({0}) global::Java.Lang.Object.GetObject<{3}> ({1}, {2})", type, varname, owned ? "JniHandleOwnership.TransferLocalRef" : "JniHandleOwnership.DoNotTransfer", opt.GetOutputName (FullName));

@@ -17,7 +17,7 @@ namespace Xamarin.Test {
 			get {
 				if (myStrings_jfieldId == IntPtr.Zero)
 					myStrings_jfieldId = JNIEnv.GetFieldID (class_ref, "myStrings", "Ljava/util/List;");
-				IntPtr __ret = JNIEnv.GetObjectField (Handle, myStrings_jfieldId);
+				IntPtr __ret = JNIEnv.GetObjectField (((global::Java.Lang.Object) this).Handle, myStrings_jfieldId);
 				return global::Android.Runtime.JavaList<string>.FromJniHandle (__ret, JniHandleOwnership.TransferLocalRef);
 			}
 			set {
@@ -25,7 +25,7 @@ namespace Xamarin.Test {
 					myStrings_jfieldId = JNIEnv.GetFieldID (class_ref, "myStrings", "Ljava/util/List;");
 				IntPtr native_value = global::Android.Runtime.JavaList<string>.ToLocalJniHandle (value);
 				try {
-					JNIEnv.SetField (Handle, myStrings_jfieldId, native_value);
+					JNIEnv.SetField (((global::Java.Lang.Object) this).Handle, myStrings_jfieldId, native_value);
 				} finally {
 					JNIEnv.DeleteLocalRef (native_value);
 				}
@@ -40,7 +40,7 @@ namespace Xamarin.Test {
 			get {
 				if (myInts_jfieldId == IntPtr.Zero)
 					myInts_jfieldId = JNIEnv.GetFieldID (class_ref, "myInts", "Ljava/util/List;");
-				IntPtr __ret = JNIEnv.GetObjectField (Handle, myInts_jfieldId);
+				IntPtr __ret = JNIEnv.GetObjectField (((global::Java.Lang.Object) this).Handle, myInts_jfieldId);
 				return global::Android.Runtime.JavaList<int>.FromJniHandle (__ret, JniHandleOwnership.TransferLocalRef);
 			}
 			set {
@@ -48,7 +48,7 @@ namespace Xamarin.Test {
 					myInts_jfieldId = JNIEnv.GetFieldID (class_ref, "myInts", "Ljava/util/List;");
 				IntPtr native_value = global::Android.Runtime.JavaList<int>.ToLocalJniHandle (value);
 				try {
-					JNIEnv.SetField (Handle, myInts_jfieldId, native_value);
+					JNIEnv.SetField (((global::Java.Lang.Object) this).Handle, myInts_jfieldId, native_value);
 				} finally {
 					JNIEnv.DeleteLocalRef (native_value);
 				}
@@ -63,7 +63,7 @@ namespace Xamarin.Test {
 			get {
 				if (mybools_jfieldId == IntPtr.Zero)
 					mybools_jfieldId = JNIEnv.GetFieldID (class_ref, "mybools", "Ljava/util/List;");
-				IntPtr __ret = JNIEnv.GetObjectField (Handle, mybools_jfieldId);
+				IntPtr __ret = JNIEnv.GetObjectField (((global::Java.Lang.Object) this).Handle, mybools_jfieldId);
 				return global::Android.Runtime.JavaList<bool>.FromJniHandle (__ret, JniHandleOwnership.TransferLocalRef);
 			}
 			set {
@@ -71,7 +71,7 @@ namespace Xamarin.Test {
 					mybools_jfieldId = JNIEnv.GetFieldID (class_ref, "mybools", "Ljava/util/List;");
 				IntPtr native_value = global::Android.Runtime.JavaList<bool>.ToLocalJniHandle (value);
 				try {
-					JNIEnv.SetField (Handle, mybools_jfieldId, native_value);
+					JNIEnv.SetField (((global::Java.Lang.Object) this).Handle, mybools_jfieldId, native_value);
 				} finally {
 					JNIEnv.DeleteLocalRef (native_value);
 				}
@@ -86,7 +86,7 @@ namespace Xamarin.Test {
 			get {
 				if (myObjects_jfieldId == IntPtr.Zero)
 					myObjects_jfieldId = JNIEnv.GetFieldID (class_ref, "myObjects", "Ljava/util/List;");
-				IntPtr __ret = JNIEnv.GetObjectField (Handle, myObjects_jfieldId);
+				IntPtr __ret = JNIEnv.GetObjectField (((global::Java.Lang.Object) this).Handle, myObjects_jfieldId);
 				return global::Android.Runtime.JavaList<global::Java.Lang.Object>.FromJniHandle (__ret, JniHandleOwnership.TransferLocalRef);
 			}
 			set {
@@ -94,7 +94,7 @@ namespace Xamarin.Test {
 					myObjects_jfieldId = JNIEnv.GetFieldID (class_ref, "myObjects", "Ljava/util/List;");
 				IntPtr native_value = global::Android.Runtime.JavaList<global::Java.Lang.Object>.ToLocalJniHandle (value);
 				try {
-					JNIEnv.SetField (Handle, myObjects_jfieldId, native_value);
+					JNIEnv.SetField (((global::Java.Lang.Object) this).Handle, myObjects_jfieldId, native_value);
 				} finally {
 					JNIEnv.DeleteLocalRef (native_value);
 				}
@@ -109,7 +109,7 @@ namespace Xamarin.Test {
 			get {
 				if (myfloats_jfieldId == IntPtr.Zero)
 					myfloats_jfieldId = JNIEnv.GetFieldID (class_ref, "myfloats", "Ljava/util/List;");
-				IntPtr __ret = JNIEnv.GetObjectField (Handle, myfloats_jfieldId);
+				IntPtr __ret = JNIEnv.GetObjectField (((global::Java.Lang.Object) this).Handle, myfloats_jfieldId);
 				return global::Android.Runtime.JavaList<float>.FromJniHandle (__ret, JniHandleOwnership.TransferLocalRef);
 			}
 			set {
@@ -117,7 +117,7 @@ namespace Xamarin.Test {
 					myfloats_jfieldId = JNIEnv.GetFieldID (class_ref, "myfloats", "Ljava/util/List;");
 				IntPtr native_value = global::Android.Runtime.JavaList<float>.ToLocalJniHandle (value);
 				try {
-					JNIEnv.SetField (Handle, myfloats_jfieldId, native_value);
+					JNIEnv.SetField (((global::Java.Lang.Object) this).Handle, myfloats_jfieldId, native_value);
 				} finally {
 					JNIEnv.DeleteLocalRef (native_value);
 				}
@@ -132,7 +132,7 @@ namespace Xamarin.Test {
 			get {
 				if (mydoubles_jfieldId == IntPtr.Zero)
 					mydoubles_jfieldId = JNIEnv.GetFieldID (class_ref, "mydoubles", "Ljava/util/List;");
-				IntPtr __ret = JNIEnv.GetObjectField (Handle, mydoubles_jfieldId);
+				IntPtr __ret = JNIEnv.GetObjectField (((global::Java.Lang.Object) this).Handle, mydoubles_jfieldId);
 				return global::Android.Runtime.JavaList<double>.FromJniHandle (__ret, JniHandleOwnership.TransferLocalRef);
 			}
 			set {
@@ -140,7 +140,7 @@ namespace Xamarin.Test {
 					mydoubles_jfieldId = JNIEnv.GetFieldID (class_ref, "mydoubles", "Ljava/util/List;");
 				IntPtr native_value = global::Android.Runtime.JavaList<double>.ToLocalJniHandle (value);
 				try {
-					JNIEnv.SetField (Handle, mydoubles_jfieldId, native_value);
+					JNIEnv.SetField (((global::Java.Lang.Object) this).Handle, mydoubles_jfieldId, native_value);
 				} finally {
 					JNIEnv.DeleteLocalRef (native_value);
 				}
@@ -155,7 +155,7 @@ namespace Xamarin.Test {
 			get {
 				if (mylongs_jfieldId == IntPtr.Zero)
 					mylongs_jfieldId = JNIEnv.GetFieldID (class_ref, "mylongs", "Ljava/util/List;");
-				IntPtr __ret = JNIEnv.GetObjectField (Handle, mylongs_jfieldId);
+				IntPtr __ret = JNIEnv.GetObjectField (((global::Java.Lang.Object) this).Handle, mylongs_jfieldId);
 				return global::Android.Runtime.JavaList<long>.FromJniHandle (__ret, JniHandleOwnership.TransferLocalRef);
 			}
 			set {
@@ -163,7 +163,7 @@ namespace Xamarin.Test {
 					mylongs_jfieldId = JNIEnv.GetFieldID (class_ref, "mylongs", "Ljava/util/List;");
 				IntPtr native_value = global::Android.Runtime.JavaList<long>.ToLocalJniHandle (value);
 				try {
-					JNIEnv.SetField (Handle, mylongs_jfieldId, native_value);
+					JNIEnv.SetField (((global::Java.Lang.Object) this).Handle, mylongs_jfieldId, native_value);
 				} finally {
 					JNIEnv.DeleteLocalRef (native_value);
 				}

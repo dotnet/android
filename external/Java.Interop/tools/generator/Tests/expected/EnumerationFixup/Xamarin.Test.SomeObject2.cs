@@ -69,9 +69,9 @@ namespace Xamarin.Test {
 				try {
 
 					if (GetType () == ThresholdType)
-						return (global::Xamarin.Test.SomeValues) JNIEnv.CallIntMethod  (Handle, id_getSomeObjectProperty);
+						return (global::Xamarin.Test.SomeValues) JNIEnv.CallIntMethod (((global::Java.Lang.Object) this).Handle, id_getSomeObjectProperty);
 					else
-						return (global::Xamarin.Test.SomeValues) JNIEnv.CallNonvirtualIntMethod  (Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "getSomeObjectProperty", "()I"));
+						return (global::Xamarin.Test.SomeValues) JNIEnv.CallNonvirtualIntMethod (((global::Java.Lang.Object) this).Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "getSomeObjectProperty", "()I"));
 				} finally {
 				}
 			}
@@ -85,9 +85,9 @@ namespace Xamarin.Test {
 					__args [0] = new JValue ((int) value);
 
 					if (GetType () == ThresholdType)
-						JNIEnv.CallVoidMethod  (Handle, id_setSomeObjectProperty_I, __args);
+						JNIEnv.CallVoidMethod (((global::Java.Lang.Object) this).Handle, id_setSomeObjectProperty_I, __args);
 					else
-						JNIEnv.CallNonvirtualVoidMethod  (Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "setSomeObjectProperty", "(I)V"), __args);
+						JNIEnv.CallNonvirtualVoidMethod (((global::Java.Lang.Object) this).Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "setSomeObjectProperty", "(I)V"), __args);
 				} finally {
 				}
 			}
@@ -120,9 +120,9 @@ namespace Xamarin.Test {
 			try {
 
 				if (GetType () == ThresholdType)
-					return (global::Xamarin.Test.SomeValues[]) JNIEnv.GetArray (JNIEnv.CallObjectMethod  (Handle, id_getSomeObjectPropertyArray), JniHandleOwnership.TransferLocalRef, typeof (global::Xamarin.Test.SomeValues));
+					return (global::Xamarin.Test.SomeValues[]) JNIEnv.GetArray (JNIEnv.CallObjectMethod (((global::Java.Lang.Object) this).Handle, id_getSomeObjectPropertyArray), JniHandleOwnership.TransferLocalRef, typeof (global::Xamarin.Test.SomeValues));
 				else
-					return (global::Xamarin.Test.SomeValues[]) JNIEnv.GetArray (JNIEnv.CallNonvirtualObjectMethod  (Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "getSomeObjectPropertyArray", "()[I")), JniHandleOwnership.TransferLocalRef, typeof (global::Xamarin.Test.SomeValues));
+					return (global::Xamarin.Test.SomeValues[]) JNIEnv.GetArray (JNIEnv.CallNonvirtualObjectMethod (((global::Java.Lang.Object) this).Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "getSomeObjectPropertyArray", "()[I")), JniHandleOwnership.TransferLocalRef, typeof (global::Xamarin.Test.SomeValues));
 			} finally {
 			}
 		}
@@ -159,9 +159,9 @@ namespace Xamarin.Test {
 				__args [0] = new JValue (native_newvalue);
 
 				if (GetType () == ThresholdType)
-					JNIEnv.CallVoidMethod  (Handle, id_setSomeObjectPropertyArray_arrayI, __args);
+					JNIEnv.CallVoidMethod (((global::Java.Lang.Object) this).Handle, id_setSomeObjectPropertyArray_arrayI, __args);
 				else
-					JNIEnv.CallNonvirtualVoidMethod  (Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "setSomeObjectPropertyArray", "([I)V"), __args);
+					JNIEnv.CallNonvirtualVoidMethod (((global::Java.Lang.Object) this).Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "setSomeObjectPropertyArray", "([I)V"), __args);
 			} finally {
 				if (newvalue != null) {
 					JNIEnv.CopyArray (native_newvalue, newvalue);
