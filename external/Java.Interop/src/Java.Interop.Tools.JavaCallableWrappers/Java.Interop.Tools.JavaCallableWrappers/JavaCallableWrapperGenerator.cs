@@ -65,6 +65,8 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 			}
 		}
 
+		public  string          ApplicationJavaClass            { get; set; }
+
 		public bool UseSharedRuntime;
 
 		public bool GenerateOnCreateOverrides { get; set; }
@@ -530,6 +532,8 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 			sw.WriteLine ("public " + (type.IsAbstract ? "abstract " : "") + "class " + name);
 
 			string extendsType = GetJavaTypeName (type.BaseType);
+			if (extendsType == "android.app.Application" && !string.IsNullOrEmpty (ApplicationJavaClass))
+				extendsType = ApplicationJavaClass;
 			sw.WriteLine ("\textends " + extendsType);
 			sw.WriteLine ("\timplements");
 			sw.Write ("\t\tmono.android.IGCUserPeer");
