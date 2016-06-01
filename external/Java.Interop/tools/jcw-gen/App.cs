@@ -60,10 +60,11 @@ namespace Java.Interop.Tools
 					resolver.SearchDirectories.Add (Path.GetDirectoryName (assembly));
 					resolver.Load (assembly);
 				}
-				var tasks = JavaTypeScanner.GetJavaTypes (assemblies, resolver, log: Console.WriteLine)
-					.Where (td => !JavaTypeScanner.ShouldSkipJavaCallableWrapperGeneration (td))
-					.Select (td => Task.Run (() => GenerateJavaCallableWrapper (td, outputPath)));
-				Task.WaitAll (tasks.ToArray ());
+				var types = JavaTypeScanner.GetJavaTypes (assemblies, resolver, log: Console.WriteLine)
+					.Where (td => !JavaTypeScanner.ShouldSkipJavaCallableWrapperGeneration (td));
+				foreach (var type in types) {
+					GenerateJavaCallableWrapper (type, outputPath);
+				}
 				return 0;
 			}
 			catch (Exception e) {
