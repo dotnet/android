@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectTypeGuids>{EFBA0AD7-5A72-4C68-AF49-83D382785DCF};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <ProjectGuid>{26781D3A-FF20-4F55-9824-C8A06AA9E484}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>Mono.Data.Sqlite</RootNamespace>
+    <MonoAndroidAssetsPrefix>Assets</MonoAndroidAssetsPrefix>
+    <MonoAndroidResourcePrefix>Resources</MonoAndroidResourcePrefix>
+    <AndroidResgenClass>Resource</AndroidResgenClass>
+    <AndroidResgenFile>Resources\Resource.designer.cs</AndroidResgenFile>
+    <AndroidUseLatestPlatformSdk>True</AndroidUseLatestPlatformSdk>
+    <AssemblyName>Mono.Data.Sqlite</AssemblyName>
+    <TargetFrameworkVersion>v5.0</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>..\..\bin\$(Configuration)\lib\xbuild-frameworks\MonoAndroid\v1.0</OutputPath>
+    <DefineConstants>DEBUG;TRACE;NET_4_0;NET_4_5;MONO;DISABLE_CAS_USE;SQLITE_STANDARD;MONODROID</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AndroidLinkMode>None</AndroidLinkMode>
+    <ConsolePause>false</ConsolePause>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <Optimize>true</Optimize>
+    <OutputPath>..\..\bin\$(Configuration)\lib\xbuild-frameworks\MonoAndroid\v1.0</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AndroidUseSharedRuntime>false</AndroidUseSharedRuntime>
+    <ConsolePause>false</ConsolePause>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DefineConstants>NET_4_0;NET_4_5;MONO;DISABLE_CAS_USE;SQLITE_STANDARD;MONODROID</DefineConstants>
+  </PropertyGroup>
+  <Import Project="..\..\Configuration.props" />
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Transactions" />
+    <Reference Include="Mono.Android" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Mono.Data.Sqlite.dll.config">
+		<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	</None>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="$(XamarinAndroidSourcePath)\src\Mono.Android\Android.Runtime\CPUArchitecture.cs">
+	    <Link>Android.Runtime\CPUArchitecture.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Data.Sqlite\Assembly\AssemblyInfo.cs">
+		<Link>Assembly\AssemblyInfo.cs</Link>
+    </Compile>                                                                  
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Data.Sqlite\Mono.Data.Sqlite_2.0\MonoPInvokeCallbackAttribute.cs">
+      <Link>Mono.Data.Sqlite_2.0\MonoPInvokeCallbackAttribute.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Data.Sqlite\Mono.Data.Sqlite_2.0\SQLite3.cs">
+      <Link>Mono.Data.Sqlite_2.0\SQLite3.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Data.Sqlite\Mono.Data.Sqlite_2.0\SQLite3_UTF16.cs">
+      <Link>Mono.Data.Sqlite_2.0\SQLite3_UTF16.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Data.Sqlite\Mono.Data.Sqlite_2.0\SQLiteBase.cs">
+      <Link>Mono.Data.Sqlite_2.0\SQLiteBase.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Data.Sqlite\Mono.Data.Sqlite_2.0\SQLiteCommandBuilder.cs">
+      <Link>Mono.Data.Sqlite_2.0\SQLiteCommandBuilder.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Data.Sqlite\Mono.Data.Sqlite_2.0\SQLiteCommand.cs">
+      <Link>Mono.Data.Sqlite_2.0\SQLiteCommand.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Data.Sqlite\Mono.Data.Sqlite_2.0\SQLiteConnection.cs">
+      <Link>Mono.Data.Sqlite_2.0\SQLiteConnection.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Data.Sqlite\Mono.Data.Sqlite_2.0\LINQ\SQLiteConnection_Linq.cs">
+      <Link>Mono.Data.Sqlite_2.0\LINQ\SQLiteConnection_Linq.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Data.Sqlite\Mono.Data.Sqlite_2.0\SQLiteConnectionPool.cs">
+      <Link>Mono.Data.Sqlite_2.0\SQLiteConnectionPool.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Data.Sqlite\Mono.Data.Sqlite_2.0\SQLiteConnectionStringBuilder.cs">
+      <Link>Mono.Data.Sqlite_2.0\SQLiteConnectionStringBuilder.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Data.Sqlite\Mono.Data.Sqlite_2.0\SQLiteConvert.cs">
+      <Link>Mono.Data.Sqlite_2.0\SQLiteConvert.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Data.Sqlite\Mono.Data.Sqlite_2.0\SQLiteDataAdapter.cs">
+      <Link>Mono.Data.Sqlite_2.0\SQLiteDataAdapter.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Data.Sqlite\Mono.Data.Sqlite_2.0\SQLiteDataReader.cs">
+      <Link>Mono.Data.Sqlite_2.0\SQLiteDataReader.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Data.Sqlite\Mono.Data.Sqlite_2.0\SqliteDataSourceEnumerator.cs">
+      <Link>Mono.Data.Sqlite_2.0\SqliteDataSourceEnumerator.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Data.Sqlite\Mono.Data.Sqlite_2.0\SQLiteEnlistment.cs">
+      <Link>Mono.Data.Sqlite_2.0\SQLiteEnlistment.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Data.Sqlite\Mono.Data.Sqlite_2.0\SQLiteException.cs">
+      <Link>Mono.Data.Sqlite_2.0\SQLiteException.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Data.Sqlite\Mono.Data.Sqlite_2.0\SQLiteFactory.cs">
+      <Link>Mono.Data.Sqlite_2.0\SQLiteFactory.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Data.Sqlite\Mono.Data.Sqlite_2.0\LINQ\SQLiteFactory_Linq.cs">
+      <Link>Mono.Data.Sqlite_2.0\LINQ\SQLiteFactory_Linq.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Data.Sqlite\Mono.Data.Sqlite_2.0\SQLiteFunctionAttribute.cs">
+      <Link>Mono.Data.Sqlite_2.0\SQLiteFunctionAttribute.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Data.Sqlite\Mono.Data.Sqlite_2.0\SQLiteFunction.cs">
+      <Link>Mono.Data.Sqlite_2.0\SQLiteFunction.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Data.Sqlite\Mono.Data.Sqlite_2.0\SQLiteKeyReader.cs">
+      <Link>Mono.Data.Sqlite_2.0\SQLiteKeyReader.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Data.Sqlite\Mono.Data.Sqlite_2.0\SQLiteMetaDataCollectionNames.cs">
+      <Link>Mono.Data.Sqlite_2.0\SQLiteMetaDataCollectionNames.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Data.Sqlite\Mono.Data.Sqlite_2.0\SQLiteParameterCollection.cs">
+      <Link>Mono.Data.Sqlite_2.0\SQLiteParameterCollection.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Data.Sqlite\Mono.Data.Sqlite_2.0\SQLiteParameter.cs">
+      <Link>Mono.Data.Sqlite_2.0\SQLiteParameter.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Data.Sqlite\Mono.Data.Sqlite_2.0\SQLiteStatement.cs">
+      <Link>Mono.Data.Sqlite_2.0\SQLiteStatement.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Data.Sqlite\Mono.Data.Sqlite_2.0\SQLiteTransaction.cs">
+      <Link>Mono.Data.Sqlite_2.0\SQLiteTransaction.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Data.Sqlite\Mono.Data.Sqlite_2.0\SR.Designer.cs">
+      <Link>Mono.Data.Sqlite_2.0\SR.Designer.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Data.Sqlite\Mono.Data.Sqlite_2.0\UnsafeNativeMethods.cs">
+      <Link>Mono.Data.Sqlite_2.0\UnsafeNativeMethods.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\build\common\Locale.cs">
+      <Link>Locale.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\build\common\Consts.cs">
+      <Link>Consts.cs</Link>
+    </Compile>
+  </ItemGroup>
+  <Import Project="$(OutputPath)\..\..\..\xbuild\Xamarin\Android\Xamarin.Android.CSharp.targets" />
+  <ItemGroup>
+    <Folder Include="Assembly\" />
+    <Folder Include="Mono.Data.Sqlite\" />
+  </ItemGroup>
+  <ItemGroup>
+    <_SupportedAbi Include="$(AndroidSupportedAbis)" />
+    <EmbeddedNativeLibrary Include="@(_SuppportedAbi->'..\sqlite-xamarin\src\main\libs\@(_SupportedAbi)\libsqlite3_xamarin.so')" />
+  </ItemGroup>
+</Project>
