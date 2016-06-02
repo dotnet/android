@@ -12,12 +12,12 @@ namespace Xamarin.Android.Tasks
 {
 	class Generator
 	{
-		public static bool CreateJavaSources (TaskLoggingHelper log, IEnumerable<TypeDefinition> javaTypes, string outputPath, bool useSharedRuntime, bool generateOnCreateOverrides, bool hasExportReference)
+		public static bool CreateJavaSources (TaskLoggingHelper log, IEnumerable<TypeDefinition> javaTypes, string outputPath, string applicationJavaClass, bool useSharedRuntime, bool generateOnCreateOverrides, bool hasExportReference)
 		{
 			bool ok = true;
 			foreach (var t in javaTypes) {
 				try {
-					GenerateJavaSource (log, t, outputPath, useSharedRuntime, generateOnCreateOverrides, hasExportReference);
+					GenerateJavaSource (log, t, outputPath, applicationJavaClass, useSharedRuntime, generateOnCreateOverrides, hasExportReference);
 				} catch (XamarinAndroidException xae) {
 					ok = false;
 					log.LogError (
@@ -37,12 +37,13 @@ namespace Xamarin.Android.Tasks
 			return ok;
 		}
 
-		static void GenerateJavaSource (TaskLoggingHelper log, TypeDefinition t, string outputPath, bool useSharedRuntime, bool generateOnCreateOverrides, bool hasExportReference)
+		static void GenerateJavaSource (TaskLoggingHelper log, TypeDefinition t, string outputPath, string applicationJavaClass, bool useSharedRuntime, bool generateOnCreateOverrides, bool hasExportReference)
 		{
 			try {
 				var jti = new JavaCallableWrapperGenerator (t, log.LogWarning) {
 					UseSharedRuntime = useSharedRuntime,
 					GenerateOnCreateOverrides = generateOnCreateOverrides,
+					ApplicationJavaClass        = applicationJavaClass,
 				};
 
 				jti.Generate (outputPath);
