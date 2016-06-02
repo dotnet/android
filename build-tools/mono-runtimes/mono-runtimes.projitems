@@ -12,6 +12,7 @@
       <CxxCpp>$(_ArmCxxCpp) $(_ArmCppFlags)</CxxCpp>
       <Ld>$(_ArmLd)</Ld>
       <LdFlags>$(_ArmLdFlags)</LdFlags>
+      <Objdump>$(_ArmObjdump)</Objdump>
       <RanLib>$(_ArmRanLib)</RanLib>
       <Strip>$(_ArmStrip)</Strip>
       <ConfigureFlags>--host=armv5-linux-androideabi $(_TargetConfigureFlags)</ConfigureFlags>
@@ -31,6 +32,7 @@
       <CxxCpp>$(_ArmCxxCpp) $(_ArmCppFlags)</CxxCpp>
       <Ld>$(_ArmLd)</Ld>
       <LdFlags>$(_ArmLdFlags)</LdFlags>
+      <Objdump>$(_ArmObjdump)</Objdump>
       <RanLib>$(_ArmRanLib)</RanLib>
       <Strip>$(_ArmStrip)</Strip>
       <ConfigureFlags>--host=armv5-linux-androideabi $(_TargetConfigureFlags)</ConfigureFlags>
@@ -50,6 +52,7 @@
       <CxxCpp>$(_Arm64CxxCpp) $(_Arm64CppFlags)</CxxCpp>
       <Ld>$(_Arm64Ld)</Ld>
       <LdFlags>$(_Arm64LdFlags)</LdFlags>
+      <Objdump>$(_Arm64Objdump)</Objdump>
       <RanLib>$(_Arm64RanLib)</RanLib>
       <Strip>$(_Arm64Strip)</Strip>
       <ConfigureFlags>--host=aarch64-linux-android $(_TargetConfigureFlags)</ConfigureFlags>
@@ -69,6 +72,7 @@
       <CxxCpp>$(_X86CxxCpp) $(_X86CppFlags)</CxxCpp>
       <Ld>$(_X86Ld)</Ld>
       <LdFlags>$(_X86LdFlags)</LdFlags>
+      <Objdump>$(_X86Objdump)</Objdump>
       <RanLib>$(_X86RanLib)</RanLib>
       <Strip>$(_X86Strip)</Strip>
       <ConfigureFlags>--host=i686-linux-android $(_TargetConfigureFlags)</ConfigureFlags>
@@ -89,6 +93,7 @@
       <Ld>$(_X86_64Ld)</Ld>
       <LdFlags>$(_X86_64LdFlags)</LdFlags>
       <RanLib>$(_X86_64RanLib)</RanLib>
+      <Objdump>$(_X86_64Objdump)</Objdump>
       <Strip>$(_X86_64Strip)</Strip>
       <ConfigureFlags>--host=x86_64-linux-android $(_TargetConfigureFlags)</ConfigureFlags>
       <OutputRuntimeFilename>libmonosgen-2.0</OutputRuntimeFilename>
@@ -96,7 +101,28 @@
       <OutputProfilerFilename>libmono-profiler-log</OutputProfilerFilename>
       <OutputMonoPosixHelperFilename>libMonoPosixHelper</OutputMonoPosixHelperFilename>
     </_MonoRuntime>
-    <_MonoRuntime Include="host-Darwin" Condition=" '$(HostOS)' == 'Darwin' ">
+    <_MonoRuntime Include="host-Win64" Condition="$(AndroidSupportedAbisForConditionalChecks.Contains (',host-win64,'))">
+      <Ar>$(AndroidMxeFullPath)\bin\x86_64-w64-mingw32.static-ar</Ar>
+      <As>$(AndroidMxeFullPath)\bin\x86_64-w64-mingw32.static-as</As>
+      <Cc>$(AndroidMxeFullPath)\bin\x86_64-w64-mingw32.static-gcc</Cc>
+      <Cpp></Cpp>
+      <CFlags>$(_HostWin64CFlags)</CFlags>
+      <Cxx>$(AndroidMxeFullPath)\bin\x86_64-w64-mingw32.static-g++</Cxx>
+      <CxxFlags>$(_HostWin64CFlags)</CxxFlags>
+      <CxxCpp></CxxCpp>
+      <DllTool>$(AndroidMxeFullPath)\bin\x86_64-w64-mingw32.static-dlltool</DllTool>
+      <Ld>$(AndroidMxeFullPath)\bin\x86_64-w64-mingw32.static-ld</Ld>
+      <LdFlags></LdFlags>
+      <Objdump>$(AndroidMxeFullPath)\bin\x86_64-w64-mingw32.static-objdump</Objdump>
+      <RanLib>$(AndroidMxeFullPath)\bin\x86_64-w64-mingw32.static-ranlib</RanLib>
+      <Strip>$(AndroidMxeFullPath)\bin\x86_64-w64-mingw32.static-strip</Strip>
+      <ConfigureFlags>PATH="$PATH:$(AndroidMxeFullPath)\bin" --host=x86_64-w64-mingw32.static --target=x86_64-w64-mingw32.static --disable-boehm --enable-mcs-build=no --enable-nls=no --enable-maintainer-mode --with-monodroid --disable-llvm</ConfigureFlags>
+      <NativeLibraryExtension>dll</NativeLibraryExtension>
+      <OutputRuntimeFilename>libmonosgen-2.0</OutputRuntimeFilename>
+      <OutputProfilerFilename></OutputProfilerFilename>
+      <OutputMonoPosixHelperFilename>libMonoPosixHelper</OutputMonoPosixHelperFilename>
+    </_MonoRuntime>
+    <_MonoRuntime Include="host-Darwin" Condition="$(AndroidSupportedAbisForConditionalChecks.Contains (',host-Darwin,'))">
       <Ar>ar</Ar>
       <As>as</As>
       <Cc>$(HostCc)</Cc>
@@ -114,7 +140,7 @@
       <OutputProfilerFilename>libmono-profiler-log</OutputProfilerFilename>
       <OutputMonoPosixHelperFilename>libMonoPosixHelper</OutputMonoPosixHelperFilename>
     </_MonoRuntime>
-    <_MonoRuntime Include="host-Linux" Condition=" '$(HostOS)' == 'Linux' ">
+    <_MonoRuntime Include="host-Linux" Condition="$(AndroidSupportedAbisForConditionalChecks.Contains (',host-Linux,'))">
       <Ar>ar</Ar>
       <As>as</As>
       <Cc>$(HostCc)</Cc>

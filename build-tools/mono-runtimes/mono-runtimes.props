@@ -3,6 +3,8 @@
   <PropertyGroup>
     <_CommonCFlags Condition=" '$(Configuration)' == 'Debug' ">-ggdb3 -O0 -fno-omit-frame-pointer</_CommonCFlags>
     <_CommonCFlags Condition=" '$(Configuration)' == 'Release' ">-g -O2</_CommonCFlags>
+    <_HostWinCFlags Condition=" '$(Configuration)' == 'Debug' ">-ggdb3 -O0 -DXAMARIN_PRODUCT_VERSION=0</_HostWinCFlags>
+    <_HostWinCFlags Condition=" '$(Configuration)' == 'Release' ">-g -O2 -DXAMARIN_PRODUCT_VERSION=0</_HostWinCFlags>
     <_CommonConfigureFlags>--without-ikvm-native --enable-maintainer-mode --with-profile2=no --with-profile4=no --with-profile4_5=no --with-monodroid --enable-nls=no --with-sigaltstack=yes --with-tls=pthread mono_cv_uscore=yes</_CommonConfigureFlags>
     <_TargetConfigureFlags>$(_CommonConfigureFlags) --enable-minimal=ssa,portability,attach,verifier,full_messages,sgen_remset,sgen_marksweep_par,sgen_marksweep_fixed,sgen_marksweep_fixed_par,sgen_copying,logging,security,shared_handles --disable-mcs-build --disable-executables --disable-iconv</_TargetConfigureFlags>
     <_SecurityCFlags>-Wl,-z,now -Wl,-z,relro -Wl,-z,noexecstack -fstack-protector</_SecurityCFlags>
@@ -23,6 +25,7 @@
     <_ArmCxxCpp>$(AndroidToolchainDirectory)\toolchains\arm-linux-androideabi-clang\bin\arm-linux-androideabi-cpp</_ArmCxxCpp>
     <_ArmLd>$(AndroidToolchainDirectory)\toolchains\arm-linux-androideabi-clang\bin\arm-linux-androideabi-ld</_ArmLd>
     <_ArmLdFlags>$(_TargetLdFlags) -Wl,--fix-cortex-a8 -Wl,-rpath-link=$(_ArmNdkPlatformPath)\arch-arm\usr\lib,-dynamic-linker=/system/bin/linker -L$(_ArmNdkPlatformPath)\arch-arm\usr\lib</_ArmLdFlags>
+    <_ArmObjdump>$(AndroidToolchainDirectory)\toolchains\arm-linux-androideabi-clang\bin\arm-linux-androideabi-objdump</_ArmObjdump>
     <_ArmRanLib>$(AndroidToolchainDirectory)\toolchains\arm-linux-androideabi-clang\bin\arm-linux-androideabi-ranlib</_ArmRanLib>
     <_ArmStrip>$(AndroidToolchainDirectory)\toolchains\arm-linux-androideabi-clang\bin\arm-linux-androideabi-strip</_ArmStrip>
   </PropertyGroup>
@@ -39,6 +42,7 @@
     <_Arm64CxxCpp>$(AndroidToolchainDirectory)\toolchains\aarch64-linux-android-clang\bin\aarch64-linux-android-cpp</_Arm64CxxCpp>
     <_Arm64Ld>$(AndroidToolchainDirectory)\toolchains\aarch64-linux-android-clang\bin\aarch64-linux-android-ld</_Arm64Ld>
     <_Arm64LdFlags>$(_TargetLdFlags) -Wl,-rpath-link=$(_Arm64NdkPlatformPath)\arch-arm64\usr\lib,-dynamic-linker=/system/bin/linker -L$(_Arm64NdkPlatformPath)\arch-arm64\usr\lib</_Arm64LdFlags>
+    <_Arm64Objdump>$(AndroidToolchainDirectory)\toolchains\aarch64-linux-android-clang\bin\aarch64-linux-android-objdump</_Arm64Objdump>
     <_Arm64RanLib>$(AndroidToolchainDirectory)\toolchains\aarch64-linux-android-clang\bin\aarch64-linux-android-ranlib</_Arm64RanLib>
     <_Arm64Strip>$(AndroidToolchainDirectory)\toolchains\aarch64-linux-android-clang\bin\aarch64-linux-android-strip</_Arm64Strip>
   </PropertyGroup>
@@ -55,6 +59,7 @@
     <_X86CxxCpp>$(AndroidToolchainDirectory)\toolchains\x86-clang\bin\i686-linux-android-cpp</_X86CxxCpp>
     <_X86Ld>$(AndroidToolchainDirectory)\toolchains\x86-clang\bin\i686-linux-android-ld</_X86Ld>
     <_X86LdFlags>$(_TargetLdFlags) -Wl,-rpath-link=$(_X86NdkPlatformPath)\arch-x86\usr\lib,-dynamic-linker=/system/bin/linker -L$(_X86NdkPlatformPath)\arch-x86\usr\lib</_X86LdFlags>
+    <_X86Objdump>$(AndroidToolchainDirectory)\toolchains\x86-clang\bin\i686-linux-android-objdump</_X86Objdump>
     <_X86RanLib>$(AndroidToolchainDirectory)\toolchains\x86-clang\bin\i686-linux-android-ranlib</_X86RanLib>
     <_X86Strip>$(AndroidToolchainDirectory)\toolchains\x86-clang\bin\i686-linux-android-strip</_X86Strip>
   </PropertyGroup>
@@ -71,7 +76,11 @@
     <_X86_64CxxCpp>$(AndroidToolchainDirectory)\toolchains\x86_64-clang\bin\x86_64-linux-android-cpp</_X86_64CxxCpp>
     <_X86_64Ld>$(AndroidToolchainDirectory)\toolchains\x86_64-clang\bin\x86_64-linux-android-ld</_X86_64Ld>
     <_X86_64LdFlags>$(_TargetLdFlags) -Wl,-rpath-link=$(_X86_64NdkPlatformPath)\arch-x86_64\usr\lib,-dynamic-linker=/system/bin/linker -L$(_X86_64NdkPlatformPath)\arch-x86_64\usr\lib</_X86_64LdFlags>
+    <_X86_64Objdump>$(AndroidToolchainDirectory)\toolchains\x86_64-clang\bin\x86_64-linux-android-objdump</_X86_64Objdump>
     <_X86_64RanLib>$(AndroidToolchainDirectory)\toolchains\x86_64-clang\bin\x86_64-linux-android-ranlib</_X86_64RanLib>
     <_X86_64Strip>$(AndroidToolchainDirectory)\toolchains\x86_64-clang\bin\x86_64-linux-android-strip</_X86_64Strip>
+  </PropertyGroup>
+  <PropertyGroup>
+    <_HostWin64CFlags>$(_HostWinCFlags)</_HostWin64CFlags>
   </PropertyGroup>
 </Project>

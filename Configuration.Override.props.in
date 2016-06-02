@@ -25,5 +25,6 @@
     <!-- These must be FULL PATHS -->
     <AndroidToolchainCacheDirectory>$(HOME)\android-archives</AndroidToolchainCacheDirectory>
     <AndroidToolchainDirectory>$(HOME)\android-toolchain</AndroidToolchainDirectory>
+    <AndroidMxeInstallPrefix>$(AndroidToolchainDirectory)\mxe</AndroidMxeInstallPrefix>
   </PropertyGroup>
 </Project>

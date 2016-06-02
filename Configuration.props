@@ -9,18 +9,22 @@
     <HostOS Condition=" '$(HostOS)' == '' And '$(OS)' == 'Unix' And Exists ('/Applications') ">Darwin</HostOS>
     <HostOS Condition=" '$(HostOS)' == '' And '$(OS)' == 'Unix' ">Linux</HostOS>
     <HostCc Condition=" '$(HostCc)' == '' ">clang</HostCc>
-    <HostCxx Condition=" '$(HostCc)' == '' ">clang++</HostCxx>
+    <HostCxx Condition=" '$(HostCxx)' == '' ">clang++</HostCxx>
     <ManagedRuntime Condition=" '$(ManagedRuntime)' == '' And '$(OS)' != 'Windows_NT' ">mono</ManagedRuntime>
     <HOME Condition=" '$(HOME)' == '' ">$(HOMEDRIVE)$(HOMEPATH)</HOME>
     <AndroidApiLevel Condition=" '$(AndroidApiLevel)' == '' ">23</AndroidApiLevel>
     <AndroidFrameworkVersion Condition=" '$(AndroidFrameworkVersion)' == '' ">v6.0</AndroidFrameworkVersion>
     <AndroidToolchainCacheDirectory Condition=" '$(AndroidToolchainCacheDirectory)' == '' ">$(HOME)\android-archives</AndroidToolchainCacheDirectory>
     <AndroidToolchainDirectory Condition=" '$(AndroidToolchainDirectory)' == '' ">$(HOME)\android-toolchain</AndroidToolchainDirectory>
+    <AndroidMxeInstallPrefix Condition=" '$(AndroidMxeInstallPrefix)' == '' ">$(AndroidToolchainDirectory)\mxe</AndroidMxeInstallPrefix>
     <AndroidSdkDirectory>$(AndroidToolchainDirectory)\sdk</AndroidSdkDirectory>
     <AndroidNdkDirectory>$(AndroidToolchainDirectory)\ndk</AndroidNdkDirectory>
-    <AndroidSupportedAbis Condition=" '$(AndroidSupportedAbis)' == '' ">armeabi-v7a</AndroidSupportedAbis>
+    <AndroidSupportedAbis Condition=" '$(AndroidSupportedAbis)' == '' ">host-$(HostOS),armeabi-v7a</AndroidSupportedAbis>
     <MonoSourceDirectory>$(MSBuildThisFileDirectory)external\mono</MonoSourceDirectory>
     <XamarinAndroidSourcePath>$(MSBuildThisFileDirectory)</XamarinAndroidSourcePath>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AndroidMxeFullPath>$([System.IO.Path]::GetFullPath ('$(AndroidMxeInstallPrefix)'))</AndroidMxeFullPath>
   </PropertyGroup>
   <!--
     "Fixup" $(AndroidSupportedAbis) so that Condition attributes elsewhere

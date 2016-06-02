@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.Which" />
   <Import Project="monodroid.projitems" />
   <PropertyGroup>
     <_Conf>$(Configuration.ToLowerInvariant())</_Conf>
@@ -10,6 +11,7 @@
   <Target Name="_BuildRuntimes"
       Inputs="@(CFiles);jni\Android.mk"
       Outputs="@(_MonoRuntime->'$(OutputPath)\%(Identity)\libmono-android.$(_Conf).so')">
+    <Which Program="%(_RequiredProgram.Identity)" Required="True" />
     <PropertyGroup>
       <_AppAbi>$(AndroidSupportedAbis.Replace(',', ' ')</_AppAbi>
     </PropertyGroup>
