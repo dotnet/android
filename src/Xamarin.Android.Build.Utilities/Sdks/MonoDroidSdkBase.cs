@@ -9,6 +9,8 @@ namespace Xamarin.Android.Build.Utilities
 	abstract class MonoDroidSdkBase
 	{
 		protected readonly static string DebugRuntime = "Mono.Android.DebugRuntime-debug.apk";
+		protected readonly static string GeneratorExe = "generator.exe";
+		protected readonly static string GeneratorScript = "generator";
 
 		// I can never remember the difference between SdkPath and anything else...
 		[Obsolete ("Do not use.")]
@@ -31,16 +33,18 @@ namespace Xamarin.Android.Build.Utilities
 
 		public int SharedRuntimeVersion { get; private set; }
 
-		// runtimePath: contains Mono.Android.DebugRuntime-*.apk
+		// expectedRuntimePath: contains Mono.Android.DebugRuntime-*.apk
 		// binPath:     contains mandroid
 		// mscorlibDir: contains mscorlib.dll
-		public void Initialize (string runtimePath = null, string binPath = null, string bclPath = null)
+		public void Initialize (string expectedRuntimePath = null, string binPath = null, string bclPath = null)
 		{
-			runtimePath = GetValidPath ("MonoAndroidToolsPath", runtimePath,  ValidateRuntime, () => FindRuntime ());
+			var runtimePath = GetValidPath ("MonoAndroidToolsPath", expectedRuntimePath,  ValidateRuntime, () => FindRuntime ());
 			if (runtimePath != null) {
 				binPath = GetValidPath ("MonoAndroidBinPath", binPath, ValidateBin, () => FindBin (runtimePath));
 				bclPath = GetValidPath ("mscorlib.dll", bclPath, ValidateFramework, () => FindFramework (runtimePath));
 			} else {
+				if (expectedRuntimePath != null)
+					AndroidLogger.LogWarning (null, "Runtime was not found at {0}", expectedRuntimePath);
 				binPath = bclPath = null;
 			}
 
@@ -67,14 +71,21 @@ namespace Xamarin.Android.Build.Utilities
 
 		static string GetValidPath (string description, string path, Func<string, bool> validator, Func<string> defaultPath)
 		{
-			if (!string.IsNullOrEmpty (path) && Directory.Exists (path)) {
-				if (validator (path))
-					return path;
-				AndroidLogger.LogWarning ("{0} path {1} is not valid; skipping.", description, path);
+			if (!string.IsNullOrEmpty (path)) {
+				if (Directory.Exists (path)) {
+					if (validator (path))
+						return path;
+					AndroidLogger.LogWarning (null, "{0} path '{1}' is explicitly specified, but it was not valid; skipping.", description, path);
+				} else
+					AndroidLogger.LogWarning (null, "{0} path '{1}' is explicitly specified, but it was not found; skipping.", description, path);
 			}
 			path = defaultPath ();
 			if (path != null && validator (path))
 				return path;
+			if (path != null)
+				AndroidLogger.LogWarning (null, "{0} path is defaulted to '{1}', but it was not valid; skipping", description, path);
+			else
+				AndroidLogger.LogWarning (null, "{0} path is not found and no default location is provided; skipping", description);
 			return null;
 		}
 
@@ -96,6 +107,7 @@ namespace Xamarin.Android.Build.Utilities
 		{
 			return !string.IsNullOrWhiteSpace (loc) &&
 				(File.Exists (Path.Combine (loc, DebugRuntime)) ||    // Normal/expected
+				 File.Exists (Path.Combine (loc, GeneratorExe)) ||    // Normal/expected
 					File.Exists (Path.Combine (loc, "Ionic.Zip.dll")));  // Wrench builds
 		}
 

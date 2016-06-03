@@ -24,8 +24,12 @@ namespace Xamarin.Android.Build.Utilities
 			string monoAndroidPath = Environment.GetEnvironmentVariable ("MONO_ANDROID_PATH");
 			if (!string.IsNullOrEmpty (monoAndroidPath)) {
 				string libMandroid = Path.Combine (monoAndroidPath, "lib", "mandroid");
-				if (Directory.Exists (libMandroid) && ValidateRuntime (libMandroid))
-					return libMandroid;
+				if (Directory.Exists (libMandroid)) {
+					if (ValidateRuntime (libMandroid))
+						return libMandroid;
+					AndroidLogger.LogInfo (null, "MONO_ANDROID_PATH points to {0}, but it is invalid.", monoAndroidPath);
+				} else
+					AndroidLogger.LogInfo (null, "MONO_ANDROID_PATH points to {0}, but it does not exist.", monoAndroidPath);
 			}
 
 			// check also in the users folder
@@ -38,7 +42,7 @@ namespace Xamarin.Android.Build.Utilities
 		protected override bool ValidateBin (string binPath)
 		{
 			return !string.IsNullOrWhiteSpace (binPath) &&
-				File.Exists (Path.Combine (binPath, "generator"));
+				File.Exists (Path.Combine (binPath, GeneratorScript));
 		}
 
 		protected override string FindFramework (string runtimePath)
@@ -64,8 +68,7 @@ namespace Xamarin.Android.Build.Utilities
 		protected override string FindBin (string runtimePath)
 		{
 			string binPath = Path.GetFullPath (Path.Combine (runtimePath, "..", "..", "bin"));
-			Console.WriteLine (binPath);
-			if (File.Exists (Path.Combine (binPath, "generator")))
+			if (File.Exists (Path.Combine (binPath, GeneratorScript)))
 				return binPath;
 			return null;
 		}
