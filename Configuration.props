@@ -8,8 +8,8 @@
     <HostOS Condition=" '$(HostOS)' == '' And '$(OS)' == 'Windows_NT' ">Windows</HostOS>
     <HostOS Condition=" '$(HostOS)' == '' And '$(OS)' == 'Unix' And Exists ('/Applications') ">Darwin</HostOS>
     <HostOS Condition=" '$(HostOS)' == '' And '$(OS)' == 'Unix' ">Linux</HostOS>
-    <HostCc Condition=" '$(HostCc)' == '' ">clang</HostCc>
-    <HostCxx Condition=" '$(HostCxx)' == '' ">clang++</HostCxx>
+    <HostCc Condition=" '$(HostCc)' == '' ">cc</HostCc>
+    <HostCxx Condition=" '$(HostCxx)' == '' ">c++</HostCxx>
     <ManagedRuntime Condition=" '$(ManagedRuntime)' == '' And '$(OS)' != 'Windows_NT' ">mono</ManagedRuntime>
     <HOME Condition=" '$(HOME)' == '' ">$(HOMEDRIVE)$(HOMEPATH)</HOME>
     <AndroidApiLevel Condition=" '$(AndroidApiLevel)' == '' ">23</AndroidApiLevel>
