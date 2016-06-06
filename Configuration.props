@@ -19,7 +19,7 @@
     <AndroidMxeInstallPrefix Condition=" '$(AndroidMxeInstallPrefix)' == '' ">$(AndroidToolchainDirectory)\mxe</AndroidMxeInstallPrefix>
     <AndroidSdkDirectory>$(AndroidToolchainDirectory)\sdk</AndroidSdkDirectory>
     <AndroidNdkDirectory>$(AndroidToolchainDirectory)\ndk</AndroidNdkDirectory>
-    <AndroidSupportedAbis Condition=" '$(AndroidSupportedAbis)' == '' ">host-$(HostOS),armeabi-v7a</AndroidSupportedAbis>
+    <AndroidSupportedAbis Condition=" '$(AndroidSupportedAbis)' == '' ">host-$(HostOS):armeabi-v7a</AndroidSupportedAbis>
     <MonoSourceDirectory>$(MSBuildThisFileDirectory)external\mono</MonoSourceDirectory>
     <XamarinAndroidSourcePath>$(MSBuildThisFileDirectory)</XamarinAndroidSourcePath>
   </PropertyGroup>
@@ -28,11 +28,11 @@
   </PropertyGroup>
   <!--
     "Fixup" $(AndroidSupportedAbis) so that Condition attributes elsewhere
-    can use `,ABI-NAME,`, to avoid substring mismatches.
+    can use `:ABI-NAME:`, to avoid substring mismatches.
     -->
   <PropertyGroup>
     <AndroidSupportedAbisForConditionalChecks>$(AndroidSupportedAbis)</AndroidSupportedAbisForConditionalChecks>
-    <AndroidSupportedAbisForConditionalChecks Condition=" !$(AndroidSupportedAbisForConditionalChecks.EndsWith (',')) "   >$(AndroidSupportedAbisForConditionalChecks),</AndroidSupportedAbisForConditionalChecks>
-    <AndroidSupportedAbisForConditionalChecks Condition=" !$(AndroidSupportedAbisForConditionalChecks.StartsWith (',')) " >,$(AndroidSupportedAbisForConditionalChecks)</AndroidSupportedAbisForConditionalChecks>
+    <AndroidSupportedAbisForConditionalChecks Condition=" !$(AndroidSupportedAbisForConditionalChecks.EndsWith (':')) "   >$(AndroidSupportedAbisForConditionalChecks):</AndroidSupportedAbisForConditionalChecks>
+    <AndroidSupportedAbisForConditionalChecks Condition=" !$(AndroidSupportedAbisForConditionalChecks.StartsWith (':')) " >:$(AndroidSupportedAbisForConditionalChecks)</AndroidSupportedAbisForConditionalChecks>
   </PropertyGroup>
 </Project>
