@@ -33,7 +33,7 @@ Overridable MSBuild properties include:
     version which corresponds to `$(AndroidApiLevel)`. This is *usually* the
     Android version number with a leading `v`, e.g. `v4.0.3` for API-15.
 * `$(AndroidSupportedAbis)`: The Android ABIs to build for inclusion within
-    apps. This is a `,`-separated list of ABIs to build. Supported values are:
+    apps. This is a `:`-separated list of ABIs to build. Supported values are:
 
     * `armeabi`
     * `armeabi-v7a`
@@ -52,9 +52,9 @@ Overridable MSBuild properties include:
     * `host-Linux`
     * `host-win64`: Cross-compile Windows 64-bit binaries from Unix.
 
-    The default value is `host-$(HostOS),armeabi-v7a`, where `$(HostOS)`
+    The default value is `host-$(HostOS):armeabi-v7a`, where `$(HostOS)`
     is based on probing various environment variables and filesystem locations.
-    On OS X, the default would be `host-Darwin,armeabi-v7a`.
+    On OS X, the default would be `host-Darwin:armeabi-v7a`.
 
 * `$(AndroidToolchainCacheDirectory)`: The directory to cache the downloaded
     Android NDK and SDK files. This value defaults to

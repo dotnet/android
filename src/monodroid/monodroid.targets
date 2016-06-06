@@ -13,7 +13,7 @@
       Outputs="@(_MonoRuntime->'$(OutputPath)\%(Identity)\libmono-android.$(_Conf).so')">
     <Which Program="%(_RequiredProgram.Identity)" Required="True" />
     <PropertyGroup>
-      <_AppAbi>$(AndroidSupportedAbis.Replace(',', ' ')</_AppAbi>
+      <_AppAbi>$(AndroidSupportedAbis.Replace(':', ' '))</_AppAbi>
     </PropertyGroup>
     <WriteLinesToFile
         File="jni\Application.mk"
