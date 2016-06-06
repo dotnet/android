@@ -26,6 +26,11 @@
   <PropertyGroup>
     <AndroidMxeFullPath>$([System.IO.Path]::GetFullPath ('$(AndroidMxeInstallPrefix)'))</AndroidMxeFullPath>
   </PropertyGroup>
+  <ItemGroup>
+    <HostOSName Include="host-Darwin" />
+    <HostOSName Include="host-Linux" />
+    <HostOSName Include="host-win64" />
+  </ItemGroup>
   <!--
     "Fixup" $(AndroidSupportedAbis) so that Condition attributes elsewhere
     can use `:ABI-NAME:`, to avoid substring mismatches.
