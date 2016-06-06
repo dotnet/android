@@ -6,3 +6,7 @@
 	path = external/mono
 	url = https://github.com/mono/mono.git
 	branch = mono-4.5.0-branch
+[submodule "external/mxe"]
+	path = external/mxe
+	url = https://github.com/xamarin/mxe.git
+	branch = xamarin

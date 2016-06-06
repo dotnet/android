@@ -18,9 +18,11 @@
     <BuildDependsOn>
 			ResolveReferences;
       _CopyBootstrapTasksAssembly;
+      _CheckForRequiredPrograms;
       _DownloadItems;
 			_UnzipFiles;
 			_CreateNdkToolchains;
+      _CreateMxeToolchains;
     </BuildDependsOn>
   </PropertyGroup>
   <ItemGroup>

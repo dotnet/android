@@ -38,6 +38,7 @@
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\UnzipDirectoryChildren.cs" />
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\GenerateProfile.cs" />
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\GetNugetPackageBasePath.cs" />
+    <Compile Include="Xamarin.Android.Tools.BootstrapTasks\Which.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Xamarin.Android.Tools.BootstrapTasks.targets">

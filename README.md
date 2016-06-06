@@ -41,7 +41,20 @@ Overridable MSBuild properties include:
     * `x86`
     * `x86_64`
 
-    The default value is `armeabi-v7a`.
+    Addtionally there are a set of "host" values. The "host ABI" is used
+    to build mono for the *currently executing operating system*, in
+    particular to build the base class libraries such as `mscorlib.dll`.
+    There can also be support for cross-compiling mono for a different
+    host, e.g. to build Windows `libmonosgen-2.0.dll` from OS X.
+    Supported host values include:
+
+    * `host-Darwin`
+    * `host-Linux`
+    * `host-win64`: Cross-compile Windows 64-bit binaries from Unix.
+
+    The default value is `host-$(HostOS),armeabi-v7a`, where `$(HostOS)`
+    is based on probing various environment variables and filesystem locations.
+    On OS X, the default would be `host-Darwin,armeabi-v7a`.
 
 * `$(AndroidToolchainCacheDirectory)`: The directory to cache the downloaded
     Android NDK and SDK files. This value defaults to

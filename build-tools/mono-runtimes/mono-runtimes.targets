@@ -78,7 +78,7 @@
       Outputs="@(_MonoRuntime->'$(IntermediateOutputPath)\%(Identity)\Makefile')">
     <MakeDir Directories="@(_MonoRuntime->'$(IntermediateOutputPath)\%(Identity)')" />
     <Exec
-        Command="..\..\..\$(_MonoPath)\configure LDFLAGS=&quot;%(_MonoRuntime.LdFlags)&quot; CFLAGS=&quot;%(_MonoRuntime.CFlags)&quot; CXXFLAGS=&quot;%(_MonoRuntime.CxxFlags)&quot; CC=&quot;%(_MonoRuntime.Cc)&quot; CXX=&quot;%(_MonoRuntime.Cxx)&quot; CPP=&quot;%(_MonoRuntime.Cpp)&quot; CXXCPP=&quot;%(_MonoRuntime.CxxCpp)&quot; LD=&quot;%(_MonoRuntime.Ld)&quot; AR=&quot;%(_MonoRuntime.Ar)&quot; AS=&quot;%(_MonoRuntime.As)&quot; RANLIB=&quot;%(_MonoRuntime.RanLib)&quot; STRIP=&quot;%(_MonoRuntime.Strip)&quot; --cache-file=..\%(_MonoRuntime.Identity).config.cache %(_MonoRuntime.ConfigureFlags)"
+        Command="..\..\..\$(_MonoPath)\configure LDFLAGS=&quot;%(_MonoRuntime.LdFlags)&quot; CFLAGS=&quot;%(_MonoRuntime.CFlags)&quot; CXXFLAGS=&quot;%(_MonoRuntime.CxxFlags)&quot; CC=&quot;%(_MonoRuntime.Cc)&quot; CXX=&quot;%(_MonoRuntime.Cxx)&quot; CPP=&quot;%(_MonoRuntime.Cpp)&quot; CXXCPP=&quot;%(_MonoRuntime.CxxCpp)&quot; LD=&quot;%(_MonoRuntime.Ld)&quot; AR=&quot;%(_MonoRuntime.Ar)&quot; AS=&quot;%(_MonoRuntime.As)&quot; RANLIB=&quot;%(_MonoRuntime.RanLib)&quot; STRIP=&quot;%(_MonoRuntime.Strip)&quot; DLLTOOL=&quot;%(_MonoRuntime.DllTool)&quot; OBJDUMP=&quot;%(_MonoRuntime.Objdump)&quot; --cache-file=..\%(_MonoRuntime.Identity).config.cache %(_MonoRuntime.ConfigureFlags)"
         WorkingDirectory="@(_MonoRuntime->'$(IntermediateOutputPath)\%(Identity)')"
     />
     <Touch
@@ -86,34 +86,37 @@
         AlwaysCreate="True"
     />
   </Target>
-  <ItemGroup>
-    <_RuntimeLibraries Include="@(_MonoRuntime->'$(IntermediateOutputPath)%(Identity)\mono\mini\.libs\%(OutputRuntimeFilename).%(NativeLibraryExtension)')" />
-    <_RuntimeLibraries Include="@(_MonoRuntime->'$(IntermediateOutputPath)%(Identity)\mono\profiler\.libs\%(OutputProfilerFilename).%(NativeLibraryExtension)')" />
-    <_RuntimeLibraries Include="@(_MonoRuntime->'$(IntermediateOutputPath)%(Identity)\support\.libs\%(OutputMonoPosixHelperFilename).%(NativeLibraryExtension)')" />
-  </ItemGroup>
+  <Target Name="_GetRuntimesOutputItems">
+    <ItemGroup>
+      <_RuntimeLibraries                Include="@(_MonoRuntime->'$(IntermediateOutputPath)%(Identity)\mono\mini\.libs\%(OutputRuntimeFilename).%(NativeLibraryExtension)')" />
+      <_InstallRuntimesOutputs          Include="@(_MonoRuntime->'$(OutputPath)\lib\xbuild\Xamarin\Android\lib\%(Identity)\%(OutputRuntimeFilename).%(NativeLibraryExtension)')" />
+      <_InstallUnstrippedRuntimeOutputs Include="@(_MonoRuntime->'$(OutputPath)\lib\xbuild\Xamarin\Android\lib\%(Identity)\%(OutputRuntimeFilename).d.%(NativeLibraryExtension)')" />
+      <_RuntimeLibraries
+          Condition=" '%(_MonoRuntime.OutputProfilerFilename)' != '' "
+          Include="@(_MonoRuntime->'$(IntermediateOutputPath)%(Identity)\mono\profiler\.libs\%(OutputProfilerFilename).%(NativeLibraryExtension)')"
+      />
+      <_InstallRuntimesOutputs
+          Condition=" '%(_MonoRuntime.OutputProfilerFilename)' != '' "
+          Include="@(_MonoRuntime->'$(OutputPath)\lib\xbuild\Xamarin\Android\lib\%(Identity)\%(OutputProfilerFilename).%(NativeLibraryExtension)')"
+      />
+      <_RuntimeLibraries        Include="@(_MonoRuntime->'$(IntermediateOutputPath)%(Identity)\support\.libs\%(OutputMonoPosixHelperFilename).%(NativeLibraryExtension)')" />
+      <_InstallRuntimesOutputs  Include="@(_MonoRuntime->'$(OutputPath)\lib\xbuild\Xamarin\Android\lib\%(Identity)\%(OutputMonoPosixHelperFilename).%(NativeLibraryExtension)')" />
+    </ItemGroup>
+  </Target>
   <Target Name="_BuildRuntimes"
+      DependsOnTargets="_GetRuntimesOutputItems"
       Inputs="@(_MonoRuntime->'$(IntermediateOutputPath)%(Identity)\.stamp')"
-      Outputs="@(_RuntimeLibraries);@(_BclProfileItems">
+      Outputs="@(_RuntimeLibraries);@(_BclProfileItems)">
     <Exec
         Command="make $(MAKEFLAGS) # %(_MonoRuntime.Identity)"
         WorkingDirectory="@(_MonoRuntime->'$(IntermediateOutputPath)\%(Identity)')"
     />
-    <ItemGroup>
-      <_MonoLibraries Include="@(_MonoRuntime->'$(IntermediateOutputPath)\%(Identity)\mono\mini\.libs\%(OutputRuntimeFilename).%(NativeLibraryExtension)')" />
-      <_MonoLibraries Include="@(_MonoRuntime->'$(IntermediateOutputPath)%(Identity)\mono\profiler\.libs\%(OutputProfilerFilename).%(NativeLibraryExtension)')" />
-      <_MonoLibraries Include="@(_MonoRuntime->'$(IntermediateOutputPath)%(Identity)\support\.libs\%(OutputMonoPosixHelperFilename).%(NativeLibraryExtension)')" />
-    </ItemGroup>
     <Touch
-        Files="@(_MonoLibraries)"
+        Files="@(_RuntimeLibraries);@(_BclProfileItems)"
     />
   </Target>
-  <ItemGroup>
-    <_InstallRuntimesOutputs Include="@(_MonoRuntime->'$(OutputPath)\lib\xbuild\Xamarin\Android\lib\%(Identity)\%(OutputRuntimeFilename).%(NativeLibraryExtension)')" />
-    <_InstallRuntimesOutputs Include="@(_MonoRuntime->'$(OutputPath)\lib\xbuild\Xamarin\Android\lib\%(Identity)\%(OutputProfilerFilename).%(NativeLibraryExtension)')" />
-    <_InstallRuntimesOutputs Include="@(_MonoRuntime->'$(OutputPath)\lib\xbuild\Xamarin\Android\lib\%(Identity)\%(OutputMonoPosixHelperFilename).%(NativeLibraryExtension)')" />
-    <_InstallUnstrippedRuntimeOutputs Include="@(_MonoRuntime->'$(OutputPath)\lib\xbuild\Xamarin\Android\lib\%(Identity)\%(OutputRuntimeFilename).d.%(NativeLibraryExtension)')" />
-  </ItemGroup>
   <Target Name="_InstallRuntimes"
+      DependsOnTargets="_GetRuntimesOutputItems"
       Inputs="@(_RuntimeLibraries)"
       Outputs="@(_InstallRuntimesOutputs);@(_InstallUnstrippedRuntimeOutputs)">
     <MakeDir Directories="@(_MonoRuntime->'$(OutputPath)\lib\xbuild\Xamarin\Android\lib\%(Identity)')" />

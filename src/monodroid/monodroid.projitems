@@ -6,4 +6,7 @@
   <ItemGroup>
     <_MonoRuntime Include="$(_SupportedAbis)" />
   </ItemGroup>
+  <ItemGroup>
+    <_RequiredProgram Include="xxd" />
+  </ItemGroup>
 </Project>

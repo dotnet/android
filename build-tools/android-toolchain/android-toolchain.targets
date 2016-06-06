@@ -12,6 +12,22 @@
   <UsingTask AssemblyFile="$(OutputPath)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.CreateTemporaryDirectory" />
   <UsingTask AssemblyFile="$(OutputPath)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.DownloadUri" />
   <UsingTask AssemblyFile="$(OutputPath)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.UnzipDirectoryChildren" />
+  <UsingTask AssemblyFile="$(OutputPath)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.Which" />
+  <Target Name="_CheckForRequiredPrograms">
+    <Which Program="%(_RequiredProgram.Identity)" Required="True" />
+    <OnError ExecuteTargets="_PrintRequiredPrograms" />
+  </Target>
+  <Target Name="_PrintRequiredPrograms">
+    <Error
+        ContinueOnError="True"
+        Text="The following programs are required: @(_RequiredProgram->'%(Identity)', ' ')"
+    />
+    <Error
+        Condition=" '$(HostOS)' == 'Darwin' "
+        ContinueOnError="True"
+        Text="Please try running: brew install @(_RequiredProgram->'%(Homebrew)', ' ')`"
+    />
+  </Target>
   <Target Name="_DetermineItems">
     <CreateItem
         Include="@(AndroidSdkItem)"
@@ -94,5 +110,35 @@
         Text="$(AndroidToolchainDirectory)\ndk"
         Importance="High"
     />
+  </Target>
+  <Target Name="_SetMxeToolchainMakefileTimeToLastCommitTimestamp"
+      Condition="$(AndroidSupportedAbisForConditionalChecks.Contains (',host-win64,')) Or $(AndroidSupportedAbisForConditionalChecks.Contains (',host-win32,'))">
+    <Exec
+        Command="touch -m -t `git log -1 --format=%25cd --date=format-local:%25Y%25m%25d%25H%25M.%25S` Makefile"
+        WorkingDirectory="..\..\external\mxe"
+    />
+  </Target>
+  <Target Name="_CreateMxeW32Toolchain"
+      DependsOnTargets="_SetMxeToolchainMakefileTimeToLastCommitTimestamp"
+      Condition="$(AndroidSupportedAbisForConditionalChecks.Contains (',host-win64,'))"
+      Inputs="..\..\external\mxe\Makefile"
+      Outputs="$(AndroidMxeFullPath)\bin\i686-w64-mingw32.static-gcc">
+    <Exec
+        Command="make $(MAKEFLAGS) MXE_TARGETS=&quot;i686-w64-mingw32.static&quot; gcc PREFIX=&quot;$(AndroidMxeFullPath)&quot;"
+        WorkingDirectory="..\..\external\mxe"
+    />
+  </Target>
+  <Target Name="_CreateMxeW64Toolchain"
+      DependsOnTargets="_SetMxeToolchainMakefileTimeToLastCommitTimestamp"
+      Condition="$(AndroidSupportedAbisForConditionalChecks.Contains (',host-win64,'))"
+      Inputs="..\..\external\mxe\Makefile"
+      Outputs="$(AndroidMxeFullPath)\bin\x86_64-w64-mingw32.static-gcc">
+    <Exec
+        Command="make $(MAKEFLAGS) MXE_TARGETS=&quot;x86_64-w64-mingw32.static&quot; gcc PREFIX=&quot;$(AndroidMxeFullPath)&quot;"
+        WorkingDirectory="..\..\external\mxe"
+    />
+  </Target>
+  <Target Name="_CreateMxeToolchains"
+      DependsOnTargets="_CreateMxeW32Toolchain;_CreateMxeW64Toolchain">
   </Target>
 </Project>
