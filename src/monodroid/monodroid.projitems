@@ -4,7 +4,7 @@
     <_SupportedAbis>$(AndroidSupportedAbis.Replace(':', ';'))</_SupportedAbis>
   </PropertyGroup>
   <ItemGroup>
-    <_MonoRuntime Include="$(_SupportedAbis)" />
+    <_MonoRuntime Include="$(_SupportedAbis)" Exclude="@(HostOSName)" />
   </ItemGroup>
   <ItemGroup>
     <_RequiredProgram Include="xxd" />
