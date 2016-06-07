@@ -34,7 +34,11 @@ namespace Xamarin.Android.Build.Utilities
 
 			// check also in the users folder
 			var personal = Environment.GetFolderPath (Environment.SpecialFolder.Personal);
-			var additionalSearchPaths = new [] { Path.Combine (personal, @".xamarin.android/lib/mandroid") };
+			var additionalSearchPaths = new [] {
+				// for Mono.Posix and Mono.Data.Sqlite builds in xamarin-android.
+				monoAndroidPath = Path.GetFullPath (Path.Combine (new Uri (GetType ().Assembly.CodeBase).LocalPath, "..", "..", "..", "..", "..", "lib", "mandroid")),
+				Path.Combine (personal, @".xamarin.android/lib/mandroid")
+			};
 
 			return additionalSearchPaths.Concat (SearchPaths).FirstOrDefault (ValidateRuntime);
 		}

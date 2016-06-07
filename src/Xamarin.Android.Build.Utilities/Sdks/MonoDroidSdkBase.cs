@@ -9,7 +9,7 @@ namespace Xamarin.Android.Build.Utilities
 	abstract class MonoDroidSdkBase
 	{
 		protected readonly static string DebugRuntime = "Mono.Android.DebugRuntime-debug.apk";
-		protected readonly static string GeneratorExe = "generator.exe";
+		protected readonly static string ClassParseExe = "class-parse.exe";
 		protected readonly static string GeneratorScript = "generator";
 
 		// I can never remember the difference between SdkPath and anything else...
@@ -107,7 +107,7 @@ namespace Xamarin.Android.Build.Utilities
 		{
 			return !string.IsNullOrWhiteSpace (loc) &&
 				(File.Exists (Path.Combine (loc, DebugRuntime)) ||    // Normal/expected
-				 File.Exists (Path.Combine (loc, GeneratorExe)) ||    // Normal/expected
+				 File.Exists (Path.Combine (loc, ClassParseExe)) ||    // Normal/expected
 					File.Exists (Path.Combine (loc, "Ionic.Zip.dll")));  // Wrench builds
 		}
 

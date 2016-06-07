@@ -58,7 +58,7 @@ namespace Xamarin.Android.Tasks
 		public static void RefreshMonoDroidSdk (string toolsPath, string binPath, string[] referenceAssemblyPaths)
 		{
 			MonoDroidSdk.Refresh (toolsPath, binPath,
-					(from   refPath in referenceAssemblyPaths
+					(from   refPath in referenceAssemblyPaths ?? new string [0]
 					 where  !string.IsNullOrEmpty (refPath)
 					 let    path = refPath.TrimEnd (Path.DirectorySeparatorChar)
 					 where  File.Exists (Path.Combine (path, "mscorlib.dll"))
