@@ -961,6 +961,7 @@ because xbuild doesn't support framework reference assemblies.
 	<_PropertyCacheItems Include="AndroidManagedSymbols=$(AndroidManagedSymbols)" />
 	<_PropertyCacheItems Include="AndroidUseLatestPlatformSdk=$(AndroidUseLatestPlatformSdk)" />
 	<_PropertyCacheItems Include="TargetFrameworkVersion=$(TargetFrameworkVersion)" />
+	<_PropertyCacheItems Include="AndroidCreatePackagePerAbi=$(AndroidCreatePackagePerAbi)" />
 </ItemGroup>
 
 <Target Name="_ReadPropertiesCache">
