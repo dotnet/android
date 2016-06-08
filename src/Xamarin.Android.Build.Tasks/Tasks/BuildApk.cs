@@ -193,6 +193,7 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ("  EmbedAssemblies: {0}", EmbedAssemblies);
 			Log.LogDebugMessage ("  AndroidAotMode: {0}", AndroidAotMode);
 			Log.LogDebugMessage ("  AndroidSequencePointsMode: {0}", AndroidSequencePointsMode);
+			Log.LogDebugMessage ("  CreatePackagePerAbi: {0}", CreatePackagePerAbi);
 			Log.LogDebugTaskItems ("  Environments:", Environments);
 			Log.LogDebugTaskItems ("  ResolvedUserAssemblies:", ResolvedUserAssemblies);
 			Log.LogDebugTaskItems ("  ResolvedFrameworkAssemblies:", ResolvedFrameworkAssemblies);
