@@ -1,6 +1,6 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 	<PropertyGroup>
 		<XamarinAndroidVersion>Unknown</XamarinAndroidVersion>
-		<_JavaInteropReferences>Java.interop;System.Runtime</_JavaInteropReferences>
+		<_JavaInteropReferences>Java.Interop;System.Runtime</_JavaInteropReferences>
 	</PropertyGroup>
 </Project>
