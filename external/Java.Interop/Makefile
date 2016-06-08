@@ -83,17 +83,17 @@ bin/Test$(CONFIGURATION)/$(NATIVE_TIMING_LIB): tests/NativeTiming/timing.c $(wil
 	mkdir -p `dirname "$@"`
 	gcc -g -shared -o $@ $< -m32 $(JI_JDK_INCLUDE_PATHS:%=-I%)
 
-bin/Test$(CONFIGURATION)/Java.Interop-Tests.dll: $(wildcard src/Java.Interop/*/*.cs src/Java.Interop/Tests/*/*.cs)
-	$(XBUILD)
-	touch $@
+# Usage: $(call TestAssemblyTemplate,assembly-basename)
+define TestAssemblyTemplate
+bin/Test$$(CONFIGURATION)/$(1)-Tests.dll: $(wildcard src/$(1)/*/*.cs src/$(1)/Test*/*/*.cs)
+	$$(XBUILD)
+	touch $$@
+endef # TestAssemblyTemplate
 
-bin/Test$(CONFIGURATION)/Java.Interop.Dynamic-Tests.dll: $(wildcard src/Java.Interop.Dynamic/*/*.cs src/Java.Interop.Dynamic/Tests/*/*.cs)
-	$(XBUILD)
-	touch $@
-
-bin/Test$(CONFIGURATION)/Java.Interop.Export-Tests.dll: $(wildcard src/Java.Interop.Export/*/*.cs src/Java.Interop.Export/Tests/*/*.cs)
-	$(XBUILD)
-	touch $@
+$(eval $(call TestAssemblyTemplate,Java.Interop))
+$(eval $(call TestAssemblyTemplate,Java.Interop.Dynamic))
+$(eval $(call TestAssemblyTemplate,Java.Interop.Export))
+$(eval $(call TestAssemblyTemplate,Java.Interop.Tools.JavaCallableWrappers))
 
 bin/Test$(CONFIGURATION)/Java.Interop-PerformanceTests.dll: $(wildcard tests/Java.Interop-PerformanceTests/*.cs) bin/Test$(CONFIGURATION)/$(NATIVE_TIMING_LIB)
 	$(XBUILD)
