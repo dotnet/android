@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <JdkJvmPath>/Library/Java/JavaVirtualMachines/jdk1.8.0_77.jdk/Contents/Home/jre/lib/server/libjvm.dylib</JdkJvmPath>
+    <MonoFrameworkPath>/Library/Frameworks/Mono.framework/Libraries/libmonosgen-2.0.1.dylib</MonoFrameworkPath>
+    <UtilityOutputFullPath>$(MSBuildThisFileDirectory)bin\$(Configuration)\</UtilityOutputFullPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- JDK C `include` directories -->
+    <JdkIncludePath Include="/Library/Java/JavaVirtualMachines/jdk1.8.0_77.jdk/Contents/Home/include" />
+    <JdkIncludePath Include="/Library/Java/JavaVirtualMachines/jdk1.8.0_77.jdk/Contents/Home/include/darwin" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Mono C `include` directories -->
+    <MonoIncludePath Include="/Library/Frameworks/Mono.framework/Headers/mono-2.0" />
+  </ItemGroup>
+</Project>

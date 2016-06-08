@@ -2,10 +2,13 @@
 
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/xamarin/xamarin-android?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-**Java.Interop** is a brain-delusional [Second System Syndrome][sss] rebuild
- of the monodroid/Xamarin.Android core, intended to fix some of the shortcomings
-  and design mistakes I've made over the years.
+**Java.Interop** is a binding of the [Java Native Interface][jni] for use from
+managed languages such as C#, and an associated set of code generators to
+allow Java code to invoke managed code. It is *also* a brain-delusional
+[Second System Syndrome][sss] rebuild of the monodroid/Xamarin.Android core,
+intended to fix some of the shortcomings and design mistakes I've made over the years.
 
+[jni]: http://docs.oracle.com/javase/8/docs/technotes/guides/jni/spec/jniTOC.html
 [sss]: http://en.wikipedia.org/wiki/Second-system_effect
 
 In particular, it attempts to fix the following issues: 
@@ -27,7 +30,7 @@ which returns a global reference while most other methods return a local ref.
 
 The `JNIEnv` API is also huge, unwieldy, and terrible.
 
-## Requirements
+## Build Requirements
 
 The current Oracle JDK7 installer only provides 64-bit binaries, while
 Mono for OS X is currently a 32-bit binary. These don't work together. :-(
@@ -61,6 +64,52 @@ copy the contained `JavaDeveloper.pkg` file into this directory,
 then run the `osx-setup` target:
 
     $ make osx-setup JDK=JavaDeveloper.pkg
+
+
+## Build Configuration
+
+The Java.Interop build can be configured by overriding **make**(1) variables
+on the command line or by specifying MSBuild properties to control behavior.
+
+### **make**(1) variables
+
+The following **make**(1) variables may be specified:
+
+* `$(CONFIGURATION)`: The product configuration to build, and corresponds
+    to the `$(Configuration)` MSBuild property when running `$(XBUILD)`.
+    Valid values are `Debug` and `Release`. Default value is `Debug`.
+* `$(RUNTIME)`: The managed runtime to use to execute utilities, tests.
+    Default value is `mono64` if present in `$PATH`, otherwise `mono`.
+* `$(TESTS)`: Which unit tests to execute. Useful in conjunction with the
+    `make run-tests` target:
+
+        make run-tests TESTS=bin/Debug/Java.Interop.Dynamic-Tests.dll
+
+* `$(V)`: If set to a non-empty string, adds `/v:diag` to `$(XBUILD)`
+    invocations.
+* `$(XBUILD)`: The MSBuild build tool to execute for builds.
+    Default value is `xbuild`.
+
+
+### MSBuild Properties
+
+MSbuild properties may be placed into the file `Configuration.Override.props`,
+which can be copied from
+[`Configuration.Override.props.in`](Configuration.Override.props.in).
+The `Configuration.Override.props` file is `<Import/>`ed by
+[`Configuration.props`](Configuration.props); there is no need to `<Import/>`
+it within other project files.
+
+Overridable MSBuild properties include:
+
+* `$(JdkJvmPath)`: Full path name to the JVM native library to link
+    [`java-interop`](src/java-interop) against. By default this is
+    probed for from numerious locations within
+    [`build-tools/scripts/jdk.mk`](build-tools/scripts/jdk.mk).
+* `$(UtilityOutputFullPath)`: Directory to place various utilities such as
+    [`class-parse`](tools/class-parse), [`generator`](tools/generator),
+    and [`logcat-parse`](tools/logcat-parse). This value should be a full path.
+    By default this is `$(MSBuildThisFileDirectory)bin/$(Configuration)`.
 
 
 ## Type Safety

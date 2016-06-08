@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!-- Note: MUST be imported *after* $(Configuration) is set! -->
+  <Import
+      Project="$(MSBuildThisFileDirectory)Configuration.Override.props"
+      Condition="Exists('$(MSBuildThisFileDirectory)Configuration.Override.props')"
+  />
+  <Import
+      Project="$(MSBuildThisFileDirectory)bin\Build$(Configuration)\JdkInfo.props"
+      Condition="Exists('$(MSBuildThisFileDirectory)bin\Build$(Configuration)\JdkInfo.props')"
+  />
+  <Import
+      Project="$(MSBuildThisFileDirectory)bin\Build$(Configuration)\MonoInfo.props"
+      Condition="Exists('$(MSBuildThisFileDirectory)bin\Build$(Configuration)\MonoInfo.props')"
+  />
+  <PropertyGroup>
+    <UtilityOutputFullPath  Condition=" '$(UtilityOutputFullPath)' == '' ">$(MSBuildThisFileDirectory)bin\$(Configuration)\</UtilityOutputFullPath>
+  </PropertyGroup>
+</Project>

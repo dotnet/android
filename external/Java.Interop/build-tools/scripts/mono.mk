@@ -21,12 +21,12 @@ bin/Build$(CONFIGURATION)/MonoInfo.props: $(JI_MONO_INCLUDE_PATHS) $(JI_MONO_FRA
 	-rm "$@"
 	echo '<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">' > "$@"
 	echo '  <PropertyGroup>' >> "$@"
-	echo "    <MonoFrameworkPath>$(JI_MONO_FRAMEWORK_PATH)</MonoFrameworkPath>" >> "$@"
-	echo '    <MonoLibs>$(JI_MONO_LIBS)</MonoLibs>'
+	echo "    <MonoFrameworkPath  Condition=\" '\$$(MonoFrameworkPath)' == '' \">$(JI_MONO_FRAMEWORK_PATH)</MonoFrameworkPath>" >> "$@"
+	echo "    <MonoLibs           Condition=\" '\$$(MonoLibs)' == ''          \">$(JI_MONO_LIBS)</MonoLibs>" >> "$@"
 	echo '  </PropertyGroup>' >> "$@"
 	echo '  <ItemGroup>' >> "$@"
 	for p in $(JI_MONO_INCLUDE_PATHS); do \
-		echo "    <MonoIncludePath Include=\"$$p\" />" >> "$@"; \
+		echo "    <MonoIncludePath    Condition=\" '\$$(MonoFrameworkPath)' == '' \" Include=\"$$p\" />" >> "$@"; \
 	done
 	echo '  </ItemGroup>' >> "$@"
 	echo '</Project>' >> "$@"
