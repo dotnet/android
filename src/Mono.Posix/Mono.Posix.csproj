@@ -238,6 +238,14 @@
       <Name>Mono.Android</Name>
       <Private>False</Private>
     </ProjectReference>
+    <Reference Include="Java.Interop">
+      <HintPath>$(OutputPath)..\v1.0\Java.Interop.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Runtime">
+      <HintPath>$(OutputPath)..\v1.0\Facades\System.Runtime.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
   </ItemGroup>
   <PropertyGroup>
     <XANativeLibsDir>$(OutputPath)\..\..\..\xbuild\Xamarin\Android\lib</XANativeLibsDir>
