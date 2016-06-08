@@ -99,8 +99,8 @@ namespace Xamarin.Android.Tasks
 				archive.AddFile (fileName, root);
 			}
 			foreach (var dir in Directory.GetDirectories (folder)) {
-				var internalDir = Path.Combine (folderInArchive, dir.Replace ("./", string.Empty));
-				archive.AddDirectory (dir, internalDir);
+				var internalDir = dir.Replace ("./", string.Empty).Replace (folder, string.Empty);
+				archive.AddDirectory (dir, folderInArchive + internalDir);
 			}
 		}
 

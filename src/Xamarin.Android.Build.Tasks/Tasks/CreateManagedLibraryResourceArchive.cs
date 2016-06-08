@@ -105,10 +105,11 @@ namespace Xamarin.Android.Tasks
 			}
 
 			// Archive them in a zip.
-			using (var stream = new MemoryStream ())
-			using (var zip = new ZipArchive (stream, ZipArchiveMode.Create, true, new System.Text.UTF8Encoding (false))) {
-				zip.AddDirectory (OutputDirectory, outDirInfo.Name);
-
+			using (var stream = new MemoryStream ()) {
+				using (var zip = new ZipArchive (stream, ZipArchiveMode.Create, true, new System.Text.UTF8Encoding (false))) {
+					zip.AddDirectory (OutputDirectory, outDirInfo.Name);
+				}
+				stream.Position = 0;
 				string outpath = Path.Combine (outDirInfo.Parent.FullName, "__AndroidLibraryProjects__.zip");
 				if (Files.ArchiveZip (outpath, f => {
 					using (var fs = new FileStream (f, FileMode.CreateNew)) {
