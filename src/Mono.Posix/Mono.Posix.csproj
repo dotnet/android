@@ -12,7 +12,12 @@
     <AndroidResgenClass>Resource</AndroidResgenClass>
     <AndroidResgenFile>Resources\Resource.designer.cs</AndroidResgenFile>
     <AssemblyName>Mono.Posix</AssemblyName>
-    <TargetFrameworkVersion>v6.0</TargetFrameworkVersion>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+  <Import Project="..\..\Configuration.props" />
+  <PropertyGroup>
+    <TargetFrameworkVersion>$(AndroidFrameworkVersion)</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -53,8 +58,11 @@
       <HintPath>$(OutputPath)..\v1.0\System.Xml.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="Java.Interop">
+      <HintPath>$(OutputPath)..\v1.0\Java.Interop.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
   </ItemGroup>
-  <Import Project="..\..\Configuration.props" />
   <ItemGroup>
     <Compile Include="$(XamarinAndroidSourcePath)\src\Mono.Posix\Mono.Unix.Native\NativeConvert.Android.cs" />
     <Compile Include="$(XamarinAndroidSourcePath)\src\Mono.Posix\Mono.Unix.Android\AndroidUtils.cs" />
@@ -237,14 +245,6 @@
       <Name>Mono.Android</Name>
       <Private>False</Private>
     </ProjectReference>
-    <Reference Include="Java.Interop">
-      <HintPath>$(OutputPath)..\v1.0\Java.Interop.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="System.Runtime">
-      <HintPath>$(OutputPath)..\v1.0\Facades\System.Runtime.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
   </ItemGroup>
   <PropertyGroup>
     <XANativeLibsDir>$(OutputPath)\..\..\..\xbuild\Xamarin\Android\lib</XANativeLibsDir>
@@ -259,7 +259,7 @@
     <EmbeddedNativeLibrary Include="$(XANativeLibsDir)\armeabi-v7a\libMonoPosixHelper.so" Condition="$(AndroidSupportedAbisForConditionalChecks.Contains (':armeabi-v7a:'))">
       <Link>MonoPosixHelper\armeabi-v7a\libMonoPosixHelper.so</Link>
     </EmbeddedNativeLibrary>
-    <EmbeddedNativeLibrary Include="$(XANativeLibsDir)\x86\libMonoPosixHelper.so" Condition="$(AndroidSupportedAbisForConditionalChecks.Contains (:x86:'))">
+    <EmbeddedNativeLibrary Include="$(XANativeLibsDir)\x86\libMonoPosixHelper.so" Condition="$(AndroidSupportedAbisForConditionalChecks.Contains (':x86:'))">
       <Link>MonoPosixHelper\x86\libMonoPosixHelper.so</Link>
     </EmbeddedNativeLibrary>
     <EmbeddedNativeLibrary Include="$(XANativeLibsDir)\x86_64\libMonoPosixHelper.so" Condition="$(AndroidSupportedAbisForConditionalChecks.Contains (':x86_64:'))">
