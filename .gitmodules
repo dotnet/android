@@ -10,3 +10,6 @@
 	path = external/mxe
 	url = https://github.com/xamarin/mxe.git
 	branch = xamarin
+[submodule "external/sqlite"]
+	path = external/sqlite
+	url = https://github.com/xamarin/sqlite.git
