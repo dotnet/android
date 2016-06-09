@@ -1,0 +1,60 @@
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <PropertyGroup>
+    <Configuration Condition="'$(Configuration)' == ''">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ItemType>GenericProject</ItemType>
+    <ProjectGuid>{B8F799C5-D7CE-4E09-9CE6-BAA4173E7EC8}</ProjectGuid>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'">
+    <OutputPath>..\..\bin\Debug\</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
+    <OutputPath>..\..\bin\Release\</OutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <BuildDependsOn>
+        _CreateProject;
+        _NdkBuild;
+    </BuildDependsOn>
+  </PropertyGroup>
+
+  <Import Project="..\..\Configuration.props" />
+
+  <!-- Build target and co. -->
+
+  <Target Name="Build" DependsOnTargets="$(BuildDependsOn)" />
+
+  <Target Name="_CreateProject">
+    <Exec Condition="!Exists('src')"
+        Command="$(AndroidSdkDirectory)\tools\android create project -g -n sqlitesample -p . -a MainActivity -t android-10 --package com.xamarin.sqlitesample -v 1.0.0" />
+    <Copy Condition="!Exists('src\stamp')"
+        SourceFiles="src-jni\Application.mk;src-jni\Android.mk"
+        DestinationFiles="src\main\jni\Application.mk;src\main\jni\Android.mk" />
+    <Touch Files="src\stamp" AlwaysCreate="true" />
+  </Target>
+
+  <Target Name="_NdkBuild">
+    <Exec Command="$(AndroidNdkDirectory)\ndk-build"
+        WorkingDirectory="src\main\jni" />
+
+    <!-- build outputs are:
+	src/main/libs/x86/libsqlite3_xamarin.so
+	src/main/libs/armeabi-v7a/libsqlite3_xamarin.so
+	src/main/libs/armeabi/libsqlite3_xamarin.so
+	src/main/libs/arm64-v8a/libsqlite3_xamarin.so
+	src/main/libs/x86_64/libsqlite3_xamarin.so
+    -->
+  </Target>
+
+  <!-- Clean target -->
+
+  <Target Name="Clean">
+    <Delete
+	Files="build.gradle;gradlew;gradlew.bat;local.properties" />
+    <RemoveDir Directories="gradle;src" />
+  </Target>
+</Project>
+
+
