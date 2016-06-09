@@ -175,9 +175,7 @@ namespace Xamarin.Android.Tasks
 					AddZipEntry (apk, StubApplicationDataFile, string.Empty);
 			}
 			MonoAndroidHelper.CopyIfZipChanged (apkOutputPath + "new", apkOutputPath);
-			//File.Delete (apkOutputPath + "new");
-			File.Move (apkOutputPath + "new", apkOutputPath + DateTime.Now.ToShortTimeString ());
-
+			File.Delete (apkOutputPath + "new");
 		}
 
 		public override bool Execute ()
