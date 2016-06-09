@@ -635,6 +635,11 @@
       <Name>Xamarin.Android.Tools.BootstrapTasks</Name>
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
     </ProjectReference>
+    <ProjectReference Include="..\..\external\Java.Interop\tools\class-parse\class-parse.csproj">
+      <Project>{38C762AB-8FD1-44DE-9855-26AAE7129DC3}</Project>
+      <Name>class-parse</Name>
+      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="pdb2mdb\" />

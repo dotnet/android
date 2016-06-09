@@ -24,6 +24,7 @@ prepare:
 	git submodule update --init --recursive
 	nuget restore
 	(cd external/Java.Interop && nuget restore)
+	cp Configuration.Java.Interop.Override.props external/Java.Interop/Configuration.Override.props
 
 
 run-all-tests: run-nunit-tests run-apk-tests
