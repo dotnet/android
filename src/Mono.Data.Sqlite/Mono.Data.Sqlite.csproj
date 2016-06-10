@@ -48,7 +48,13 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Data" />
     <Reference Include="System.Transactions" />
-    <Reference Include="Mono.Android" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Mono.Android\Mono.Android.csproj">
+      <Project>{66CF299A-CE95-4131-BCD8-DB66E30C4BF7}</Project>
+      <Name>Mono.Android</Name>
+      <Private>False</Private>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="Mono.Data.Sqlite.dll.config">
