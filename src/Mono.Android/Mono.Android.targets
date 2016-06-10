@@ -49,7 +49,7 @@
       Outputs="$(IntermediateOutputPath)android-$(AndroidApiLevel)\Mono.Android.projitems">
     <MakeDir Directories="$(IntermediateOutputPath)android-$(AndroidApiLevel)" />
     <PropertyGroup>
-      <Generator>..\..\external\Java.Interop\bin\$(Configuration)\generator.exe</Generator>
+      <Generator>$(OutputPath)..\..\..\mandroid\generator.exe</Generator>
       <_ApiLevel>--api-level=$(AndroidApiLevel)</_ApiLevel>
       <_Out>-o "$(IntermediateOutputPath)android-$(AndroidApiLevel)"</_Out>
       <_Codegen>--codegen-target=XAJavaInterop1</_Codegen>
