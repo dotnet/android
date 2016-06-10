@@ -2,5 +2,6 @@
 	<PropertyGroup>
 		<XamarinAndroidVersion>Unknown</XamarinAndroidVersion>
 		<_JavaInteropReferences>Java.Interop;System.Runtime</_JavaInteropReferences>
+		<DependsOnSystemRuntime Condition=" '$(DependsOnSystemRuntime)' == '' ">true</DependsOnSystemRuntime>
 	</PropertyGroup>
 </Project>
