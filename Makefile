@@ -32,6 +32,12 @@ run-all-tests: run-nunit-tests run-apk-tests
 clean:
 	$(MSBUILD) /t:Clean
 
+distclean:
+	# It may fail if we're cleaning a half-built tree, no harm done if we ignore it
+	-$(MAKE) clean
+	git clean -xdff
+	git submodule foreach git clean -xdff
+
 # $(call RUN_NUNIT_TEST,filename,log-lref?)
 define RUN_NUNIT_TEST
 	MONO_TRACE_LISTENER=Console.Out \
