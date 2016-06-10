@@ -74,7 +74,7 @@ namespace Xamarin.Android.Tasks
 
 		public static bool ContainsEntry (this ZipArchive archive, string entryName)
 		{
-			return archive.Entries.Any (x => string.Compare (x.Name, entryName, StringComparison.OrdinalIgnoreCase) == 0);
+			return archive.Entries.Any (x => string.Compare (x.FullName, entryName, StringComparison.OrdinalIgnoreCase) == 0);
 		}
 
 		public static bool IsDirectory (this ZipArchiveEntry entry)

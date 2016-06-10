@@ -232,7 +232,8 @@ namespace Xamarin.Android.Tasks
 
 							// temporarily extracted directory will look like:
 							//    __library_projects__/[dllname]/[library_project_imports | jlibs]/bin
-							ZipFile.ExtractToDirectory (finfo.FullName, outDirForDll);
+							using (var zip = MonoAndroidHelper.ReadZipFile (finfo.FullName))
+								Files.ExtractAll (zip, outDirForDll);
 
 							// We used to *copy* the resources to overwrite other resources,
 							// which resulted in missing resource issue.
