@@ -36,15 +36,15 @@
       <HintPath>$(OutputPath)..\v1.0\mscorlib.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="System.dll">
+    <Reference Include="System">
       <HintPath>$(OutputPath)..\v1.0\System.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="System.Core.dll">
+    <Reference Include="System.Core">
       <HintPath>$(OutputPath)..\v1.0\System.Core.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="System.Xml.dll">
+    <Reference Include="System.Xml">
       <HintPath>$(OutputPath)..\v1.0\System.Xml.dll</HintPath>
       <Private>False</Private>
     </Reference>
