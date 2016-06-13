@@ -42,6 +42,7 @@
     can use `:ABI-NAME:`, to avoid substring mismatches.
     -->
   <PropertyGroup>
+    <AndroidSupportedDeviceAbis>$([System.String]::Copy('$(AndroidSupportedAbis)').Replace (':', ';').Replace ('host-$(HostOS)', '').Replace (';;', ';')</AndroidSupportedDeviceAbis>
     <AndroidSupportedAbisForConditionalChecks>$(AndroidSupportedAbis)</AndroidSupportedAbisForConditionalChecks>
     <AndroidSupportedAbisForConditionalChecks Condition=" !$(AndroidSupportedAbisForConditionalChecks.EndsWith (':')) "   >$(AndroidSupportedAbisForConditionalChecks):</AndroidSupportedAbisForConditionalChecks>
     <AndroidSupportedAbisForConditionalChecks Condition=" !$(AndroidSupportedAbisForConditionalChecks.StartsWith (':')) " >:$(AndroidSupportedAbisForConditionalChecks)</AndroidSupportedAbisForConditionalChecks>
