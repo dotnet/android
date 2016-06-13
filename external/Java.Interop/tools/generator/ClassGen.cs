@@ -625,8 +625,6 @@ namespace MonoDroid.Generation {
 			sw.WriteLine ("}");
 			sw.Close ();
 			gen_info.Writer = null;
-
-			GenerateAnnotationAttribute (opt, gen_info);
 		}
 
 		public static void GenerateTypeRegistrations (CodeGenerationOptions opt, GenerationInfo gen_info)
