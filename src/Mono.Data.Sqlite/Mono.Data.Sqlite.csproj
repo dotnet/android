@@ -165,9 +165,14 @@
     <EmbeddedNativeLibrary Include="@(_SupportedAbi-&gt;'..\sqlite-xamarin\src\main\libs\%(Identity)\libsqlite3_xamarin.so')" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\sqlite-xamarin/sqlite-xamarin.mdproj">
+    <ProjectReference Include="..\sqlite-xamarin\sqlite-xamarin.mdproj">
       <Project>{B8F799C5-D7CE-4E09-9CE6-BAA4173E7EC8}</Project>
       <Name>sqlite-xamarin</Name>
+      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\Xamarin.Android.Build.Tasks\Xamarin.Android.Build.Tasks.csproj">
+      <Project>{3F1F2F50-AF1A-4A5A-BEDB-193372F068D7}</Project>
+      <Name>Xamarin.Android.Build.Tasks</Name>
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
     </ProjectReference>
   </ItemGroup>
