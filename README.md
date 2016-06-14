@@ -64,6 +64,9 @@ Overridable MSBuild properties include:
     `$(HOME)\android-toolchain`.
 * `$(HostCc)`, `$(HostCxx)`: The C and C++ compilers to use to generate
     host-native binaries.
+* `$(JavaInteropSourceDirectory)`: The Java.Interop source directory to
+    build and reference projects from. By default, this is
+    `external/Java.Interop` directory, maintained by `git submodule update`.
 
 # Build Requirements
 

@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="..\..\external\Java.Interop\src\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems" Label="Shared" Condition="Exists('..\..\external\Java.Interop\src\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems')" />
-  <Import Project="..\..\external\Java.Interop\src\Java.Interop.Tools.TypeNameMappings\Java.Interop.Tools.TypeNameMappings.projitems" Label="Shared" Condition="Exists('..\..\external\Java.Interop\src\Java.Interop.Tools.TypeNameMappings\Java.Interop.Tools.TypeNameMappings.projitems')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -14,6 +12,8 @@
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
+  <Import Project="$(JavaInteropFullPath)\src\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems" Label="Shared" Condition="Exists('$(JavaInteropFullPath)\src\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems')" />
+  <Import Project="$(JavaInteropFullPath)\src\Java.Interop.Tools.TypeNameMappings\Java.Interop.Tools.TypeNameMappings.projitems" Label="Shared" Condition="Exists('$(JavaInteropFullPath)\src\Java.Interop.Tools.TypeNameMappings\Java.Interop.Tools.TypeNameMappings.projitems')" />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>True</DebugSymbols>
     <DebugType>full</DebugType>
@@ -478,7 +478,7 @@
     <Compile Include="..\Mono.Android\Android.Runtime\IntDefinitionAttribute.cs">
       <Link>Mono.Android\IntDefinitionAttribute.cs</Link>
     </Compile>
-    <Compile Include="..\..\external\Java.Interop\src\utils\StringRocks.cs">
+    <Compile Include="$(JavaInteropFullPath)\src\utils\StringRocks.cs">
       <Link>Utilities\StringRocks.cs</Link>
     </Compile>
     <Compile Include="..\..\external\mono\mcs\tools\tuner\Mono.Tuner\FilterAttributes.cs">
@@ -605,15 +605,15 @@
       <Project>{D27AD8F7-7710-40BE-B03B-55EFBEC13C44}</Project>
       <Name>Xamarin.Android.Tools.Aidl</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop.Tools.Diagnostics\Java.Interop.Tools.Diagnostics.csproj">
+    <ProjectReference Include="$(JavaInteropFullPath)\src\Java.Interop.Tools.Diagnostics\Java.Interop.Tools.Diagnostics.csproj">
       <Project>{64CC4E44-CE3A-4319-BF3F-6CF8BD513870}</Project>
       <Name>Java.Interop.Tools.Diagnostics</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop.Tools.Cecil\Java.Interop.Tools.Cecil.csproj">
+    <ProjectReference Include="$(JavaInteropFullPath)\src\Java.Interop.Tools.Cecil\Java.Interop.Tools.Cecil.csproj">
       <Project>{D48EE8D0-0A0A-4493-AEF5-DAF5F8CF86AD}</Project>
       <Name>Java.Interop.Tools.Cecil</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers.csproj">
+    <ProjectReference Include="$(JavaInteropFullPath)\src\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers.csproj">
       <Project>{D18FCF91-8876-48A0-A693-2DC1E7D3D80A}</Project>
       <Name>Java.Interop.Tools.JavaCallableWrappers</Name>
     </ProjectReference>
@@ -621,7 +621,7 @@
       <Project>{91713046-C358-4647-B162-ED4E1442F3D8}</Project>
       <Name>Xamarin.Android.Build.Utilities</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\external\Java.Interop\src\Xamarin.Android.Tools.Bytecode\Xamarin.Android.Tools.Bytecode.csproj">
+    <ProjectReference Include="$(JavaInteropFullPath)\src\Xamarin.Android.Tools.Bytecode\Xamarin.Android.Tools.Bytecode.csproj">
       <Project>{B17475BC-45A2-47A3-B8FC-62F3A0959EE0}</Project>
       <Name>Xamarin.Android.Tools.Bytecode</Name>
     </ProjectReference>
@@ -635,7 +635,7 @@
       <Name>Xamarin.Android.Tools.BootstrapTasks</Name>
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
     </ProjectReference>
-    <ProjectReference Include="..\..\external\Java.Interop\tools\class-parse\class-parse.csproj">
+    <ProjectReference Include="$(JavaInteropFullPath)\tools\class-parse\class-parse.csproj">
       <Project>{38C762AB-8FD1-44DE-9855-26AAE7129DC3}</Project>
       <Name>class-parse</Name>
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>

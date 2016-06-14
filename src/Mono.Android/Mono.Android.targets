@@ -2,14 +2,14 @@
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Target Name="_BuildJavaInterop"
       BeforeTargets="BeforeResolveReferences"
-      Inputs="..\..\external\Java.Interop\src\Java.Interop\Java.Interop.csproj"
+      Inputs="$(JavaInteropFullPath)\src\Java.Interop\Java.Interop.csproj"
       Outputs="$(OutputPath)\..\v1.0\Java.Interop.dll">
     <MSBuild
-        Projects="..\..\external\Java.Interop\src\Java.Interop\Java.Interop.csproj"
+        Projects="$(JavaInteropFullPath)\src\Java.Interop\Java.Interop.csproj"
         Properties="Configuration=XAIntegration$(Configuration)"
     />
     <ItemGroup>
-      <Assembly Include="..\..\external\Java.Interop\bin\XAIntegration$(Configuration)\*.dll*" />
+      <Assembly Include="$(JavaInteropFullPath)\bin\XAIntegration$(Configuration)\*.dll*" />
     </ItemGroup>
     <Copy
         SourceFiles="@(Assembly)"
@@ -89,7 +89,7 @@
     <MakeDir Directories="$(IntermediateOutputPath)android-$(AndroidApiLevel).jcw\bin" />
     <PropertyGroup>
       <OutputPathAbs>$(MSBuildProjectDirectory)\$(OutputPath)</OutputPathAbs>
-      <JcwGen>..\..\external\Java.Interop\bin\$(Configuration)\jcw-gen.exe</JcwGen>
+      <JcwGen>$(JavaInteropFullPath)\bin\$(Configuration)\jcw-gen.exe</JcwGen>
       <_LibDirs>-L "$(OutputPathAbs)" -L "$(OutputPathAbs)..\v1.0\" -L "$(OutputPathAbs)..\v1.0\Facades"</_LibDirs>
       <_Assembly>"$(OutputPathAbs)$(AssemblyName).dll"</_Assembly>
       <_Out>-o "$(MSBuildProjectDirectory)\$(IntermediateOutputPath)android-$(AndroidApiLevel).jcw\src"</_Out>
