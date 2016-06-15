@@ -2,15 +2,12 @@
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.Which" />
   <Import Project="monodroid.projitems" />
-  <PropertyGroup>
-    <_Conf>$(Configuration.ToLowerInvariant())</_Conf>
-  </PropertyGroup>
   <ItemGroup>
     <CFiles Include="jni\**\*.c" />
   </ItemGroup>
   <Target Name="_BuildRuntimes"
       Inputs="@(CFiles);jni\Android.mk"
-      Outputs="@(_MonoRuntime->'$(OutputPath)\%(Identity)\libmono-android.$(_Conf).so')">
+      Outputs="@(_MonoRuntime->'$(OutputPath)\%(Identity)\libmono-android.debug.so');@(_MonoRuntime->'$(OutputPath)\%(Identity)\libmono-android.release.so')">
     <Which Program="%(_RequiredProgram.Identity)" Required="True" />
     <PropertyGroup>
       <_AppAbi>@(_MonoRuntime->'%(Identity)', ' ')</_AppAbi>
@@ -21,22 +18,33 @@
         Overwrite="True"
     />
     <Exec
-        Command="$(AndroidToolchainDirectory)\ndk\ndk-build CONFIGURATION=$(Configuration) V=1"
+        Command="$(AndroidToolchainDirectory)\ndk\ndk-build CONFIGURATION=Debug V=1"
     />
     <Copy
         SourceFiles="@(_MonoRuntime->'obj\local\%(Identity)\libmonodroid.so')"
-        DestinationFiles="@(_MonoRuntime->'$(OutputPath)\%(Identity)\libmono-android.$(_Conf).d.so')"
+        DestinationFiles="@(_MonoRuntime->'$(OutputPath)\%(Identity)\libmono-android.debug.d.so')"
     />
     <Copy
         SourceFiles="@(_MonoRuntime->'libs\%(Identity)\libmonodroid.so')"
-        DestinationFiles="@(_MonoRuntime->'$(OutputPath)\%(Identity)\libmono-android.$(_Conf).so')"
+        DestinationFiles="@(_MonoRuntime->'$(OutputPath)\%(Identity)\libmono-android.debug.so')"
+    />
+    <Exec
+        Command="$(AndroidToolchainDirectory)\ndk\ndk-build CONFIGURATION=Release V=1"
+    />
+    <Copy
+        SourceFiles="@(_MonoRuntime->'obj\local\%(Identity)\libmonodroid.so')"
+        DestinationFiles="@(_MonoRuntime->'$(OutputPath)\%(Identity)\libmono-android.release.d.so')"
+    />
+    <Copy
+        SourceFiles="@(_MonoRuntime->'libs\%(Identity)\libmonodroid.so')"
+        DestinationFiles="@(_MonoRuntime->'$(OutputPath)\%(Identity)\libmono-android.release.so')"
     />
   </Target>
   <Target Name="_CleanRuntimes"
       AfterTargets="Clean">
     <RemoveDir Directories="obj\local;libs" />
     <Delete Files="jni\config.include;jni\machine.config.include;jni\Application.mk" />
-    <Delete Files="@(_MonoRuntime->'$(OutputPath)\%(Identity)\libmono-android.$(_Conf).so')" />
-    <Delete Files="@(_MonoRuntime->'$(OutputPath)\%(Identity)\libmono-android.$(_Conf).d.so')" />
+    <Delete Files="@(_MonoRuntime->'$(OutputPath)\%(Identity)\libmono-android.debug.so');@(_MonoRuntime->'$(OutputPath)\%(Identity)\libmono-android.release.so')" />
+    <Delete Files="@(_MonoRuntime->'$(OutputPath)\%(Identity)\libmono-android.debug.d.so');@(_MonoRuntime->'$(OutputPath)\%(Identity)\libmono-android.release.d.so')" />
   </Target>
 </Project>
