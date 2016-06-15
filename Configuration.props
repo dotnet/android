@@ -24,6 +24,7 @@
     <AndroidSdkDirectory>$(AndroidToolchainDirectory)\sdk</AndroidSdkDirectory>
     <AndroidNdkDirectory>$(AndroidToolchainDirectory)\ndk</AndroidNdkDirectory>
     <AndroidSupportedAbis Condition=" '$(AndroidSupportedAbis)' == '' ">host-$(HostOS):armeabi-v7a</AndroidSupportedAbis>
+    <JavaInteropSourceDirectory Condition=" '$(JavaInteropSourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\Java.Interop</JavaInteropSourceDirectory>
     <MonoSourceDirectory>$(MSBuildThisFileDirectory)external\mono</MonoSourceDirectory>
     <SqliteSourceDirectory Condition=" '$(SqliteSourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\sqlite</SqliteSourceDirectory>
     <XamarinAndroidSourcePath>$(MSBuildThisFileDirectory)</XamarinAndroidSourcePath>
@@ -33,6 +34,7 @@
   </PropertyGroup>
   <PropertyGroup>
     <AndroidMxeFullPath>$([System.IO.Path]::GetFullPath ('$(AndroidMxeInstallPrefix)'))</AndroidMxeFullPath>
+    <JavaInteropFullPath>$([System.IO.Path]::GetFullPath ('$(JavaInteropSourceDirectory)'))</JavaInteropFullPath>
     <MonoSourceFullPath>$([System.IO.Path]::GetFullPath ('$(MonoSourceDirectory)'))</MonoSourceFullPath>
     <SqliteSourceFullPath>$([System.IO.Path]::GetFullPath ('$(SqliteSourceDirectory)'))</SqliteSourceFullPath>
   </PropertyGroup>
