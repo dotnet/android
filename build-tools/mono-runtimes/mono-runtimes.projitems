@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <_MonoRuntime Include="armeabi" Condition="$(AndroidSupportedTargetJitAbis.Contains (':armeabi:'))">
+    <_MonoRuntime Include="armeabi" Condition="$(AndroidSupportedTargetJitAbisForConditionalChecks.Contains (':armeabi:'))">
       <Ar>$(_ArmAr)</Ar>
       <As>$(_ArmAs)</As>
       <Cc>$(_ArmCc)</Cc>
@@ -21,7 +21,7 @@
       <OutputProfilerFilename>libmono-profiler-log</OutputProfilerFilename>
       <OutputMonoPosixHelperFilename>libMonoPosixHelper</OutputMonoPosixHelperFilename>
     </_MonoRuntime>
-    <_MonoRuntime Include="armeabi-v7a" Condition="$(AndroidSupportedTargetJitAbis.Contains (':armeabi-v7a:'))">
+    <_MonoRuntime Include="armeabi-v7a" Condition="$(AndroidSupportedTargetJitAbisForConditionalChecks.Contains (':armeabi-v7a:'))">
       <Ar>$(_ArmAr)</Ar>
       <As>$(_ArmAs)</As>
       <Cc>$(_ArmCc)</Cc>
@@ -41,7 +41,7 @@
       <OutputProfilerFilename>libmono-profiler-log</OutputProfilerFilename>
       <OutputMonoPosixHelperFilename>libMonoPosixHelper</OutputMonoPosixHelperFilename>
     </_MonoRuntime>
-    <_MonoRuntime Include="arm64-v8a" Condition="$(AndroidSupportedTargetJitAbis.Contains (':arm64-v8a:'))">
+    <_MonoRuntime Include="arm64-v8a" Condition="$(AndroidSupportedTargetJitAbisForConditionalChecks.Contains (':arm64-v8a:'))">
       <Ar>$(_Arm64Ar)</Ar>
       <As>$(_Arm64As)</As>
       <Cc>$(_Arm64Cc)</Cc>
@@ -61,7 +61,7 @@
       <OutputProfilerFilename>libmono-profiler-log</OutputProfilerFilename>
       <OutputMonoPosixHelperFilename>libMonoPosixHelper</OutputMonoPosixHelperFilename>
     </_MonoRuntime>
-    <_MonoRuntime Include="x86" Condition="$(AndroidSupportedTargetJitAbis.Contains (':x86:'))">
+    <_MonoRuntime Include="x86" Condition="$(AndroidSupportedTargetJitAbisForConditionalChecks.Contains (':x86:'))">
       <Ar>$(_X86Ar)</Ar>
       <As>$(_X86As)</As>
       <Cc>$(_X86Cc)</Cc>
@@ -81,7 +81,7 @@
       <OutputProfilerFilename>libmono-profiler-log</OutputProfilerFilename>
       <OutputMonoPosixHelperFilename>libMonoPosixHelper</OutputMonoPosixHelperFilename>
     </_MonoRuntime>
-    <_MonoRuntime Include="x86_64" Condition="$(AndroidSupportedTargetJitAbis.Contains (':x86_64:'))">
+    <_MonoRuntime Include="x86_64" Condition="$(AndroidSupportedTargetJitAbisForConditionalChecks.Contains (':x86_64:'))">
       <Ar>$(_X86_64Ar)</Ar>
       <As>$(_X86_64As)</As>
       <Cc>$(_X86_64Cc)</Cc>
