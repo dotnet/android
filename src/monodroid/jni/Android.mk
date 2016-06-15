@@ -3,12 +3,12 @@ LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 
 ifeq ($(CONFIGURATION),Debug)
-COMMON_CFLAGS ?= -ggdb3 -O0 -fno-omit-frame-pointer
+COMMON_CFLAGS ?= -ggdb3 -O0 -fno-omit-frame-pointer -DRELEASE=1
 else
 COMMON_CFLAGS ?= -g -O2 -DRELEASE=1
 endif
 
-LOCAL_CFLAGS =	$(COMMON_FLAGS) \
+LOCAL_CFLAGS =	$(COMMON_CFLAGS) \
 	-std=c99 \
 	-DHAVE_LINUX_NETLINK_H=1 -DHAVE_LINUX_RTNETLINK_H=1 \
 	-D_REENTRANT -DPLATFORM_ANDROID -DANDROID -DLINUX -Dlinux -D__linux_ \
