@@ -81,8 +81,6 @@ Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|AnyCPU = Debug|AnyCPU
 		Release|AnyCPU = Release|AnyCPU
-		XAIntegrationDebug|Any CPU = XAIntegrationDebug|Any CPU
-		XAIntegrationRelease|Any CPU = XAIntegrationRelease|Any CPU
 		XAIntegrationDebug|AnyCPU = XAIntegrationDebug|AnyCPU
 		XAIntegrationRelease|AnyCPU = XAIntegrationRelease|AnyCPU
 	EndGlobalSection

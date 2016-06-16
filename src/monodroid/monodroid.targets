@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.ValueToItems" />
   <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.Which" />
   <Import Project="monodroid.projitems" />
   <ItemGroup>
@@ -7,10 +8,10 @@
   </ItemGroup>
   <Target Name="_BuildRuntimes"
       Inputs="@(CFiles);jni\Android.mk"
-      Outputs="@(_MonoRuntime->'$(OutputPath)\%(Identity)\libmono-android.debug.so');@(_MonoRuntime->'$(OutputPath)\%(Identity)\libmono-android.release.so')">
+      Outputs="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android.debug.so');@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android.release.so')">
     <Which Program="%(_RequiredProgram.Identity)" Required="True" />
     <PropertyGroup>
-      <_AppAbi>@(_MonoRuntime->'%(Identity)', ' ')</_AppAbi>
+      <_AppAbi>@(AndroidSupportedTargetJitAbi->'%(Identity)', ' ')</_AppAbi>
     </PropertyGroup>
     <WriteLinesToFile
         File="jni\Application.mk"
@@ -21,30 +22,30 @@
         Command="$(AndroidToolchainDirectory)\ndk\ndk-build CONFIGURATION=Debug V=1"
     />
     <Copy
-        SourceFiles="@(_MonoRuntime->'obj\local\%(Identity)\libmonodroid.so')"
-        DestinationFiles="@(_MonoRuntime->'$(OutputPath)\%(Identity)\libmono-android.debug.d.so')"
+        SourceFiles="@(AndroidSupportedTargetJitAbi->'obj\local\%(Identity)\libmonodroid.so')"
+        DestinationFiles="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android.debug.d.so')"
     />
     <Copy
-        SourceFiles="@(_MonoRuntime->'libs\%(Identity)\libmonodroid.so')"
-        DestinationFiles="@(_MonoRuntime->'$(OutputPath)\%(Identity)\libmono-android.debug.so')"
+        SourceFiles="@(AndroidSupportedTargetJitAbi->'libs\%(Identity)\libmonodroid.so')"
+        DestinationFiles="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android.debug.so')"
     />
     <Exec
         Command="$(AndroidToolchainDirectory)\ndk\ndk-build CONFIGURATION=Release V=1"
     />
     <Copy
-        SourceFiles="@(_MonoRuntime->'obj\local\%(Identity)\libmonodroid.so')"
-        DestinationFiles="@(_MonoRuntime->'$(OutputPath)\%(Identity)\libmono-android.release.d.so')"
+        SourceFiles="@(AndroidSupportedTargetJitAbi->'obj\local\%(Identity)\libmonodroid.so')"
+        DestinationFiles="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android.release.d.so')"
     />
     <Copy
-        SourceFiles="@(_MonoRuntime->'libs\%(Identity)\libmonodroid.so')"
-        DestinationFiles="@(_MonoRuntime->'$(OutputPath)\%(Identity)\libmono-android.release.so')"
+        SourceFiles="@(AndroidSupportedTargetJitAbi->'libs\%(Identity)\libmonodroid.so')"
+        DestinationFiles="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android.release.so')"
     />
   </Target>
   <Target Name="_CleanRuntimes"
       AfterTargets="Clean">
     <RemoveDir Directories="obj\local;libs" />
     <Delete Files="jni\config.include;jni\machine.config.include;jni\Application.mk" />
-    <Delete Files="@(_MonoRuntime->'$(OutputPath)\%(Identity)\libmono-android.debug.so');@(_MonoRuntime->'$(OutputPath)\%(Identity)\libmono-android.release.so')" />
-    <Delete Files="@(_MonoRuntime->'$(OutputPath)\%(Identity)\libmono-android.debug.d.so');@(_MonoRuntime->'$(OutputPath)\%(Identity)\libmono-android.release.d.so')" />
+    <Delete Files="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android.debug.so');@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android.release.so')" />
+    <Delete Files="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android.debug.d.so');@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android.release.d.so')" />
   </Target>
 </Project>

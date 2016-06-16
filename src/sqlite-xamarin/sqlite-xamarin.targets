@@ -16,7 +16,6 @@
     <Touch Files="src\stamp" AlwaysCreate="true" />
   </Target>
   <ItemGroup>
-    <_SupportedAbi Include="$(AndroidSupportedDeviceAbis)" />
     <!-- build outputs include (if enabled):
       src/main/libs/x86/libsqlite3_xamarin.so
       src/main/libs/armeabi-v7a/libsqlite3_xamarin.so
@@ -24,10 +23,10 @@
       src/main/libs/arm64-v8a/libsqlite3_xamarin.so
       src/main/libs/x86_64/libsqlite3_xamarin.so
       -->
-    <_LibSqliteXamarin Include="@(_SupportedAbi->'src\main\libs\%(Identity)\libsqlite3_xamarin.so')" />
+    <_LibSqliteXamarin Include="@(AndroidSupportedTargetJitAbi->'src\main\libs\%(Identity)\libsqlite3_xamarin.so')" />
   </ItemGroup>
   <PropertyGroup>
-	<_AppAbi>$([System.String]::Copy('$(AndroidSupportedDeviceAbis)').Replace (';', ' '))</_AppAbi>
+    <_AppAbi>$(AndroidSupportedTargetJitAbis.Replace (':', ' '))</_AppAbi>
   </PropertyGroup>
   <Target Name="_NdkBuild"
       Inputs="src\stamp"
