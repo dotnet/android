@@ -13,3 +13,7 @@
 [submodule "external/sqlite"]
 	path = external/sqlite
 	url = https://github.com/xamarin/sqlite.git
+[submodule "external/opentk"]
+	path = external/opentk
+	url = https://github.com/mono/opentk.git
+	branch = master
