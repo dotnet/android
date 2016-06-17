@@ -221,10 +221,10 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<AndroidGdbDebugServer Condition="'$(AndroidGdbDebugServer)' == ''">Gdb</AndroidGdbDebugServer>
 
     <!--
-    <_LibraryProjectImportsDirectoryName Condition="$(UseShortFileNames)">jlibs</_LibraryProjectImportsDirectoryName>
-    <_LibraryProjectImportsDirectoryName Condition="!$(UseShortFileNames)">library_project_imports</_LibraryProjectImportsDirectoryName>
-	<_NativeLibraryImportsDirectoryName Condition="$(UseShortFileNames)">libs</_NativeLibraryImportsDirectoryName>
-	<_NativeLibraryImportsDirectoryName Condition="!$(UseShortFileNames)">native_library_imports</_NativeLibraryImportsDirectoryName>
+    <_LibraryProjectImportsDirectoryName Condition="'$(UseShortFileNames)' == 'true'">jlibs</_LibraryProjectImportsDirectoryName>
+    <_LibraryProjectImportsDirectoryName Condition="'$(UseShortFileNames)' != 'true'">library_project_imports</_LibraryProjectImportsDirectoryName>
+	<_NativeLibraryImportsDirectoryName Condition="'$(UseShortFileNames)' == 'true'">libs</_NativeLibraryImportsDirectoryName>
+	<_NativeLibraryImportsDirectoryName Condition="'$(UseShortFileNames)' != 'true'">native_library_imports</_NativeLibraryImportsDirectoryName>
     -->
     <_LibraryProjectImportsDirectoryName>library_project_imports</_LibraryProjectImportsDirectoryName>
 	<_NativeLibraryImportsDirectoryName>native_library_imports</_NativeLibraryImportsDirectoryName>
@@ -1414,12 +1414,12 @@ because xbuild doesn't support framework reference assemblies.
   <CopyResource
     ResourceName="NotifyTimeZoneChanges.java"
     OutputPath="$(MonoAndroidIntermediate)android\src\mono\android\app\NotifyTimeZoneChanges.java"
-    Condition="$(AndroidIncludeDebugSymbols)" />
+    Condition="'$(AndroidIncludeDebugSymbols)' == 'True'" />
 
   <CopyResource
     ResourceName="Seppuku.java"
     OutputPath="$(MonoAndroidIntermediate)android\src\mono\android\Seppuku.java"
-    Condition="$(AndroidIncludeDebugSymbols)" />
+    Condition="'$(AndroidIncludeDebugSymbols)' == 'True'" />
   
   <Copy
     SourceFiles="$(MonoPlatformJarPath)"
@@ -1852,7 +1852,7 @@ because xbuild doesn't support framework reference assemblies.
   Outputs="$(IntermediateOutputPath)_dex_stamp">
   <Error
     Text="'UseJackAndJill' option is not supported when 'AndroidFastDeploymentType' contains 'Dexes'. Please disable either of those."
-    Condition="'$(UseJackAndJill)' == 'True' and $(_InstantRunEnabled)" />
+    Condition="'$(UseJackAndJill)' == 'True' and '$(_InstantRunEnabled)' == 'True'" />
   <Jack
     TargetFrameworkDirectory="$(TargetFrameworkDirectory)"
     StubSourceDirectory="$(IntermediateOutputPath)android\src"
@@ -1912,7 +1912,7 @@ because xbuild doesn't support framework reference assemblies.
     <Output TaskParameter="ReferenceJavaLibraries" ItemName="_ReferenceJavaLibs" />
   </DetermineJavaLibrariesToCompile>
   
-  <CreateItem Include="@(_JavaLibrariesToCompile)" Condition="!($(_InstantRunEnabled))">
+  <CreateItem Include="@(_JavaLibrariesToCompile)" Condition="'$(_InstantRunEnabled)' != 'True'">
     <Output TaskParameter="Include" ItemName="_JavaLibrariesToCompileForAppDx" />
   </CreateItem>
 </Target>
@@ -2150,10 +2150,10 @@ because xbuild doesn't support framework reference assemblies.
   DependsOnTargets="_PrepareBuildApk"
   Inputs="$(_BuildApkEmbedInputs)"
   Outputs="$(ApkFileIntermediate)"
-  Condition="$(EmbedAssembliesIntoApk)">
+  Condition="'$(EmbedAssembliesIntoApk)' == 'True'">
 
   <Aot
-	Condition="$(AotAssemblies)"
+	Condition="'$(AotAssemblies)' == 'True'"
 	AndroidAotMode="$(AndroidAotMode)"
 	AndroidNdkDirectory="$(_AndroidNdkDirectory)"
 	AndroidApiLevel="$(_AndroidApiLevel)"
@@ -2179,7 +2179,7 @@ because xbuild doesn't support framework reference assemblies.
 
   <!-- Bundle the assemblies into native libraries in the apk -->
   <MakeBundleNativeCodeExternal
-		Condition="$(BundleAssemblies)"
+		Condition="'$(BundleAssemblies)' == 'True'"
 		AndroidNdkDirectory="$(_AndroidNdkDirectory)"
 		Assemblies="@(_ResolvedUserAssemblies);@(_AndroidResolvedSatellitePaths);@(_ShrunkFrameworkAssemblies)"
 		IncludePath="$(MonoAndroidIncludeDirectory)"
@@ -2349,7 +2349,7 @@ because xbuild doesn't support framework reference assemblies.
 	DependsOnTargets="Build;_ResolveAndroidSigningKey">
 	<ItemGroup>
 		<ApkAbiFilesIntermediate Include="$(ApkFileIntermediate)" />
-		<ApkAbiFilesIntermediate Condition="$(AndroidCreatePackagePerAbi) == true" Include="$(MonoAndroidIntermediate)android\bin\$(_AndroidPackage)*.apk" />
+		<ApkAbiFilesIntermediate Condition="'$(AndroidCreatePackagePerAbi)' == 'true'" Include="$(MonoAndroidIntermediate)android\bin\$(_AndroidPackage)*.apk" />
 	</ItemGroup>
 	<KeyTool
 		KeyStore="$(_ApkKeyStore)"
@@ -2375,12 +2375,12 @@ because xbuild doesn't support framework reference assemblies.
 	<Message Text="Signed android package '$(ApkFileSigned)'" />
 	<ItemGroup>
 		<ApkAbiFilesSigned Include="$(ApkFileSigned)" />
-		<ApkAbiFilesSigned Condition="$(AndroidCreatePackagePerAbi) == true" Include="$(OutDir)$(_AndroidPackage)*-Signed.apk" />
+		<ApkAbiFilesSigned Condition="'$(AndroidCreatePackagePerAbi)' == 'true'" Include="$(OutDir)$(_AndroidPackage)*-Signed.apk" />
 	</ItemGroup>
 	<Delete Files="%(ApkAbiFilesSigned.FullPath)" />
 	<ItemGroup>
 		<ApkAbiFilesUnaligned Include="$(OutDir)$(_AndroidPackage)-Signed-Unaligned.apk" />
-		<ApkAbiFilesUnaligned Condition="$(AndroidCreatePackagePerAbi) == true" Include="$(OutDir)$(_AndroidPackage)*-Signed-Unaligned.apk" />
+		<ApkAbiFilesUnaligned Condition="'$(AndroidCreatePackagePerAbi)' == 'true'" Include="$(OutDir)$(_AndroidPackage)*-Signed-Unaligned.apk" />
 	</ItemGroup>
 	<Message Text="Unaligned android package '%(ApkAbiFilesUnaligned.FullPath)'" />
 	<AndroidZipAlign
@@ -2400,7 +2400,7 @@ because xbuild doesn't support framework reference assemblies.
 </PropertyGroup>
 
 <Target Name="ConvertDebuggingFiles"
-	Condition=" $(AndroidIncludeDebugSymbols) And Exists ('$(_IntermediatePdbFile)') And '$(OS)' == 'Windows_NT'"
+	Condition=" '$(AndroidIncludeDebugSymbols)' == 'true' And Exists ('$(_IntermediatePdbFile)') And '$(OS)' == 'Windows_NT'"
 	DependsOnTargets="_ConvertDebuggingFiles">
 	<CreateItem Include="$(OutDir)$(TargetFileName).mdb" Condition="Exists('$(OutDir)$(TargetFileName).mdb')">
 		<Output TaskParameter="Include" ItemName="FileWrites" />
