@@ -409,8 +409,6 @@ namespace Xamarin.Android.Tasks
 		public static string GetPlatformApiLevelName (string platformApiLevel)
 		{
 			switch (platformApiLevel.Trim ()) {
-			case "24":
-				return "N";
 			default:
 				return platformApiLevel;
 			}
@@ -421,8 +419,6 @@ namespace Xamarin.Android.Tasks
 		public static string GetPlatformApiLevel (string platformApiLevelName)
 		{
 			switch (platformApiLevelName.Trim ()) {
-			case "N":
-				return "24";
 			default:
 				return platformApiLevelName;
 			}
