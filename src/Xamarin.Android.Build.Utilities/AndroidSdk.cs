@@ -80,11 +80,10 @@ namespace Xamarin.Android.Build.Utilities
 			return null;
 		}
 
+		// it was useful when android-21 was android-L, or android-23 was android-MNC.
+		// We will use this when similar preview release is out.
 		static string ToApiName (int apiLevel)
 		{
-			// Support for N Preview
-			if (apiLevel == 24)
-				return "N";
 			return apiLevel.ToString ();
 		}
 
