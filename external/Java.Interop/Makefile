@@ -9,7 +9,7 @@ ifeq ($(OS),Linux)
 NATIVE_EXT = .so
 endif
 
-RUNTIME       := $(shell if [ -f `which mono64` ] ; then echo mono64 ; else echo mono; fi) --debug=casts
+RUNTIME       := $(shell if [ -f "`which mono64`" ] ; then echo mono64 ; else echo mono; fi) --debug=casts
 
 XA_CONFIGURATION  = XAIntegrationDebug
 
