@@ -17,7 +17,8 @@ namespace generatortests
 		private static string supportFilePath = typeof(Compiler).Assembly.Location;
 
 		public static Assembly Compile (Xamarin.Android.Binder.CodeGeneratorOptions options,
-			string assemblyFileName, IEnumerable<string> AdditionalSourceDirectories, out string[] errors)
+			string assemblyFileName, IEnumerable<string> AdditionalSourceDirectories,
+			out bool hasErrors, out string output)
 		{
 			var generatedCodePath = options.ManagedCallableWrapperSourceOutputDirectory;
 			var sourceFiles = Directory.EnumerateFiles (generatedCodePath, "*.cs",
@@ -53,14 +54,12 @@ namespace generatortests
 			CSharpCodeProvider codeProvider = new CSharpCodeProvider ();
 			CompilerResults results = codeProvider.CompileAssemblyFromFile (parameters,sourceFiles.ToArray ());
 
-			List<string> errs = new List<string> ();
-			foreach (CompilerError message in results.Errors) {
-				if (message.IsWarning)
-					continue;
-				errs.Add (message.ToString ());
-			}
+			hasErrors   = false;
 
-			errors = errs.ToArray ();
+			foreach (CompilerError message in results.Errors) {
+				hasErrors   = hasErrors || (!message.IsWarning);
+			}
+			output  = string.Join (Environment.NewLine, results.Output.Cast<string> ());
 
 			return results.CompiledAssembly;
 		}

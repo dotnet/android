@@ -38,10 +38,11 @@ namespace generatortests
 			if (output.Contains ("error")) {
 				Assert.Fail (output);
 			}
-			string[] errors;
-			BuiltAssembly = Compiler.Compile (Options, "Mono.Andoroid",
-				AdditionalSourceDirectories, out errors);
-			Assert.AreEqual (0, errors.Length, string.Join (Environment.NewLine, errors));
+			bool    hasErrors;
+			string  compilerOutput;
+			BuiltAssembly = Compiler.Compile (Options, "Mono.Andoroid", AdditionalSourceDirectories,
+				out hasErrors, out compilerOutput);
+			Assert.AreEqual (false, hasErrors, compilerOutput);
 			Assert.IsNotNull (BuiltAssembly);
 		}
 
