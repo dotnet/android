@@ -115,12 +115,16 @@ bin/Build$(CONFIGURATION)/JdkInfo.props: $(JI_JDK_INCLUDE_PATHS) $(JI_JVM_PATH)
 	-mkdir -p `dirname "$@"`
 	-rm "$@"
 	echo '<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">' > "$@"
-	echo '  <PropertyGroup>' >> "$@"
-	echo "    <JdkJvmPath     Condition=\" '\$$(JdkJvmPath)' == '' \">$(JI_JVM_PATH)</JdkJvmPath>" >> "$@"
-	echo '  </PropertyGroup>' >> "$@"
-	echo '  <ItemGroup>' >> "$@"
+	echo '  <Choose>' >> "$@"
+	echo "    <When Condition=\" '\$$(JdkJvmPath)' == '' \">" >> "$@"
+	echo '      <PropertyGroup>' >> "$@"
+	echo "        <JdkJvmPath>$(JI_JVM_PATH)</JdkJvmPath>" >> "$@"
+	echo '      </PropertyGroup>' >> "$@"
+	echo '      <ItemGroup>' >> "$@"
 	for p in $(JI_JDK_INCLUDE_PATHS); do \
-		echo "    <JdkIncludePath Condition=\" '\$$(JdkJvmPath)' == '' \" Include=\"$$p\" />" >> "$@"; \
+		echo "        <JdkIncludePath Include=\"$$p\" />" >> "$@"; \
 	done
-	echo '  </ItemGroup>' >> "$@"
+	echo '      </ItemGroup>' >> "$@"
+	echo '    </When>' >> "$@"
+	echo '  </Choose>' >> "$@"
 	echo '</Project>' >> "$@"

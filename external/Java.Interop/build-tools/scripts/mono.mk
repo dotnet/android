@@ -20,13 +20,17 @@ bin/Build$(CONFIGURATION)/MonoInfo.props: $(JI_MONO_INCLUDE_PATHS) $(JI_MONO_FRA
 	-mkdir -p `dirname "$@"`
 	-rm "$@"
 	echo '<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">' > "$@"
-	echo '  <PropertyGroup>' >> "$@"
-	echo "    <MonoFrameworkPath  Condition=\" '\$$(MonoFrameworkPath)' == '' \">$(JI_MONO_FRAMEWORK_PATH)</MonoFrameworkPath>" >> "$@"
-	echo "    <MonoLibs           Condition=\" '\$$(MonoLibs)' == ''          \">$(JI_MONO_LIBS)</MonoLibs>" >> "$@"
-	echo '  </PropertyGroup>' >> "$@"
-	echo '  <ItemGroup>' >> "$@"
+	echo '  <Choose>' >> "$@"
+	echo "    <When Condition=\" '\$$(MonoFrameworkPath)' == '' \">" >> "$@"
+	echo '      <PropertyGroup>' >> "$@"
+	echo "        <MonoFrameworkPath>$(JI_MONO_FRAMEWORK_PATH)</MonoFrameworkPath>" >> "$@"
+	echo "        <MonoLibs         >$(JI_MONO_LIBS)</MonoLibs>" >> "$@"
+	echo '      </PropertyGroup>' >> "$@"
+	echo '      <ItemGroup>' >> "$@"
 	for p in $(JI_MONO_INCLUDE_PATHS); do \
-		echo "    <MonoIncludePath    Condition=\" '\$$(MonoFrameworkPath)' == '' \" Include=\"$$p\" />" >> "$@"; \
+		echo "        <MonoIncludePath Include=\"$$p\" />" >> "$@"; \
 	done
-	echo '  </ItemGroup>' >> "$@"
+	echo '      </ItemGroup>' >> "$@"
+	echo '    </When>' >> "$@"
+	echo '  </Choose>' >> "$@"
 	echo '</Project>' >> "$@"
