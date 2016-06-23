@@ -178,10 +178,28 @@ namespace MonoDroid.Generation {
 		public string GetObjectHandleProperty (string variable)
 		{
 			var handleType  = "Java.Lang.Object";
-			if (FullName == "Java.Lang.Throwable" || Ancestors ().Any (a => a.FullName == "Java.Lang.Throwable"))
+			if (IsThrowable ())
 				handleType  = "Java.Lang.Throwable";
 
 			return $"((global::{handleType}) {variable}).Handle";
+		}
+
+		bool IsThrowable ()
+		{
+			if (FullName == "Java.Lang.Throwable" || Ancestors ().Any (a => a.FullName == "Java.Lang.Throwable"))
+				return true;
+			return false;
+		}
+
+		public bool RequiresNew (string memberName)
+		{
+			if (Array.BinarySearch (ObjectRequiresNew, memberName, StringComparer.OrdinalIgnoreCase) >= 0) {
+				return true;
+			}
+			if (IsThrowable () && Array.BinarySearch (ThrowableRequiresNew, memberName, StringComparer.OrdinalIgnoreCase) >= 0) {
+				return true;
+			}
+			return false;
 		}
 
 		protected IEnumerable<InterfaceGen> GetAllImplementedInterfaces ()
@@ -508,15 +526,19 @@ namespace MonoDroid.Generation {
 		}
 
 		// Keep sorted alphabetically
-		static readonly string[] blacklist = new string[]{
+		static readonly string[]    ObjectRequiresNew       = new string[]{
 			"Handle",
+		};
+
+		static readonly string[]    ThrowableRequiresNew    = new string []{
+			"Message",
 		};
 
 		bool IsInfrastructural (string name)
 		{
 			// some names are reserved for use by us, e.g. we don't want another
 			// Handle property, as that conflicts with Java.Lang.Object.Handle.
-			return Array.BinarySearch (blacklist, name) >= 0;
+			return Array.BinarySearch (ObjectRequiresNew, name) >= 0;
 		}
 
 		protected void GenCharSequenceEnumerator (StreamWriter sw, string indent, CodeGenerationOptions opt)

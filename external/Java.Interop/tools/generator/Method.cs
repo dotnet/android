@@ -799,6 +799,9 @@ namespace MonoDroid.Generation {
 
 			string static_arg = IsStatic ? " static" : String.Empty;
 			string virt_ov = IsOverride ? " override" : IsVirtual ? " virtual" : String.Empty;
+			if ((string.IsNullOrEmpty (virt_ov) || virt_ov == " virtual") && type.RequiresNew (AdjustedName)) {
+				virt_ov = " new" + virt_ov;
+			}
 			string seal = IsOverride && IsFinal ? " sealed" : null;
 			string ret = opt.GetOutputName (RetVal.FullName);
 			GenerateIdField (sw, indent, opt);

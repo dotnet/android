@@ -77,7 +77,7 @@ namespace Xamarin.Test {
 		static IntPtr id_handle_Ljava_lang_Object_Ljava_lang_Throwable_;
 		// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/method[@name='handle' and count(parameter)=2 and parameter[1][@type='java.lang.Object'] and parameter[2][@type='java.lang.Throwable']]"
 		[Register ("handle", "(Ljava/lang/Object;Ljava/lang/Throwable;)I", "GetHandle_Ljava_lang_Object_Ljava_lang_Throwable_Handler")]
-		public virtual unsafe int Handle (global::Java.Lang.Object o, global::Java.Lang.Throwable t)
+		public new virtual unsafe int Handle (global::Java.Lang.Object o, global::Java.Lang.Throwable t)
 		{
 			if (id_handle_Ljava_lang_Object_Ljava_lang_Throwable_ == IntPtr.Zero)
 				id_handle_Ljava_lang_Object_Ljava_lang_Throwable_ = JNIEnv.GetMethodID (class_ref, "handle", "(Ljava/lang/Object;Ljava/lang/Throwable;)I");

@@ -32,7 +32,7 @@ namespace Java.Lang {
 #pragma warning restore 0169
 
 		static IntPtr id_getMessage;
-		public virtual unsafe string Message {
+		public new virtual unsafe string Message {
 			// Metadata.xml XPath method reference: path="/api/package[@name='java.lang']/class[@name='Throwable']/method[@name='getMessage' and count(parameter)=0]"
 			[Register ("getMessage", "()Ljava/lang/String;", "GetGetMessageHandler")]
 			get {

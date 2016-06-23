@@ -57,7 +57,10 @@ namespace generatortests
 				if (!File.Exists (dest)) {
 					Assert.Fail (string.Format ("Expected {0} but it was not generated.", dest));
 				} else if (!FileCompare (file, dest)) {
-					Assert.Fail (string.Format ("The Files {0} and {1} do not match", file, dest));
+					var fullSource  = Path.GetFullPath (file);
+					var fullDest    = Path.GetFullPath (dest);
+					string message  = $"File contents differ; run: diff -u {fullSource} \\{Environment.NewLine}\t{fullDest}";
+					Assert.Fail (message);
 				}
 			}
 		}

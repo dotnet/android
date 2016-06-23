@@ -65,13 +65,17 @@ namespace MonoDroid.Generation {
 				overrides = true;
 			}
 
+			bool requiresNew     = false;
 			string abstract_name = AdjustedName;
 			string visibility = Getter.RetVal.IsGeneric ? "protected" : Getter.Visibility;
-			if (!overrides)
+			if (!overrides) {
+				requiresNew      = gen.RequiresNew (abstract_name);
 				GenerateCallbacks (sw, indent, opt, gen, abstract_name);
-			sw.WriteLine ("{0}{1} abstract{2} {3} {4} {{",
+			}
+			sw.WriteLine ("{0}{1}{2} abstract{3} {4} {5} {{",
 					indent,
 					visibility,
+					requiresNew ? " new" : "",
 					overrides ? " override" : "",
 					opt.GetOutputName (Getter.ReturnType),
 					abstract_name);
@@ -199,14 +203,15 @@ namespace MonoDroid.Generation {
 				force_override = true;
 		
 			string decl_name = AdjustedName;
+			string needNew          = gen.RequiresNew (decl_name) ? " new" : "";
 			string virtual_override = String.Empty;
 			bool is_virtual = Getter.IsVirtual && (Setter == null || Setter.IsVirtual);
 			if (with_callbacks && is_virtual) {
-				virtual_override = " virtual";
+				virtual_override = needNew + " virtual";
 				Getter.GenerateCallback (sw, indent, opt, gen, AdjustedName);
 			}
 			if (with_callbacks && is_virtual && Setter != null) {
-				virtual_override = " virtual";
+				virtual_override = needNew + " virtual";
 				Setter.GenerateCallback (sw, indent, opt, gen, AdjustedName);
 			}
 			virtual_override = force_override ? " override" : virtual_override;
@@ -214,7 +219,7 @@ namespace MonoDroid.Generation {
 				virtual_override = " static";
 			// It should be using AdjustedName instead of Name, but ICharSequence ("Formatted") properties are not caught by this...
 			else if (gen.BaseSymbol != null && gen.BaseSymbol.GetPropertyByName (Name, true) != null)
-				virtual_override = " override";
+				virtual_override = needNew + " override";
 			
 			Getter.GenerateIdField (sw, indent, opt);
 			if (Setter != null)
