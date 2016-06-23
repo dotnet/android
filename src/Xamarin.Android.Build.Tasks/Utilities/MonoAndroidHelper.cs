@@ -7,8 +7,7 @@ using System.IO;
 using System.Security.Cryptography;
 using Mono.Security.Cryptography;
 using Xamarin.Android.Build.Utilities;
-using System.IO.Compression;
-
+using Xamarin.Tools.Zip;
 
 #if MSBUILD
 using Microsoft.Build.Framework;

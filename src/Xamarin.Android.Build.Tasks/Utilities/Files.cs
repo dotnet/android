@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using System.Security.Cryptography;
 
-using System.IO.Compression;
+using Xamarin.Tools.Zip;
 #if MSBUILD
 using Microsoft.Build.Utilities;
 using Xamarin.Android.Tasks;
@@ -157,9 +157,9 @@ namespace Xamarin.Android.Tools {
 			string hashes = String.Empty;
 
 			try {
-				using (var zip = new ZipArchive (stream, ZipArchiveMode.Read)) {
-					foreach (var item in zip.Entries) {
-						hashes += String.Format ("{0}{1}", item.FullName, item.Hash());
+				using (var zip = ZipArchive.Open (stream)) {
+					foreach (var item in zip) {
+						hashes += String.Format ("{0}{1}", item.FullName, item.CRC);
 					}
 				}
 			} catch {
@@ -178,8 +178,8 @@ namespace Xamarin.Android.Tools {
 					return File.ReadAllText (filename + ".hash");
 
 				using (var zip = ReadZipFile (filename)) {
-					foreach (var item in zip.Entries) {
-						hashes += String.Format ("{0}{1}", item.FullName, item.Hash());
+					foreach (var item in zip) {
+						hashes += String.Format ("{0}{1}", item.FullName, item.CRC);
 					}
 				}
 			} catch {
@@ -190,26 +190,26 @@ namespace Xamarin.Android.Tools {
 
 		public static ZipArchive ReadZipFile (string filename)
 		{
-			return ZipFile.Open (filename, ZipArchiveMode.Read, new System.Text.UTF8Encoding (false));
+			return ZipArchive.Open (filename, FileMode.Open);
 		}
 
 		public static void ExtractAll(ZipArchive zip, string destination, Action<int, int> progressCallback = null)
 		{
 			int i = 0;
-			int total = zip.Entries.Count;
-			foreach (var entry in zip.Entries) {
+			int total = (int)zip.EntryCount;
+			foreach (var entry in zip) {
 				if (entry.FullName.Contains ("/__MACOSX/") ||
 						entry.FullName.EndsWith ("/__MACOSX", StringComparison.OrdinalIgnoreCase) ||
 						entry.FullName.EndsWith ("/.DS_Store", StringComparison.OrdinalIgnoreCase))
 					continue;
-				if (entry.IsDirectory ()) {
+				if (entry.IsDirectory) {
 					Directory.CreateDirectory (Path.Combine (destination, entry.FullName));
 					continue;
 				}
 				if (progressCallback != null)
 					progressCallback (i++, total);
 				Directory.CreateDirectory (Path.Combine (destination, Path.GetDirectoryName (entry.FullName)));
-				entry.ExtractToFile (Path.Combine (destination, entry.FullName), overwrite: true);
+				entry.Extract (destination, entry.FullName);
 			}
 		}
 

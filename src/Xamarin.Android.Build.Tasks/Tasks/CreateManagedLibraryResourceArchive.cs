@@ -8,7 +8,7 @@ using System.Xml.Linq;
 using Microsoft.Build.Utilities;
 using Microsoft.Build.Framework;
 using System.Text.RegularExpressions;
-using System.IO.Compression;
+using Xamarin.Tools.Zip;
 
 using Xamarin.Android.Tools;
 
@@ -106,7 +106,8 @@ namespace Xamarin.Android.Tasks
 
 			// Archive them in a zip.
 			using (var stream = new MemoryStream ()) {
-				using (var zip = new ZipArchive (stream, ZipArchiveMode.Create, true, new System.Text.UTF8Encoding (false))) {
+				using (var zip = ZipArchive.Create (stream)) {
+					Log.LogDebugMessage ($" {OutputDirectory} {outDirInfo.Name} ");
 					zip.AddDirectory (OutputDirectory, outDirInfo.Name);
 				}
 				stream.Position = 0;

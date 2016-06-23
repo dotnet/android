@@ -122,9 +122,9 @@
       DependsOnTargets="_SetMxeToolchainMakefileTimeToLastCommitTimestamp"
       Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))"
       Inputs="..\..\external\mxe\Makefile"
-      Outputs="$(AndroidMxeFullPath)\bin\i686-w64-mingw32.static-gcc">
+      Outputs="$(AndroidMxeFullPath)\bin\i686-w64-mingw32.static-gcc;$(AndroidMxeFullPath)\bin\i686-w64-mingw32.static-cmake">
     <Exec
-        Command="make $(MAKEFLAGS) MXE_TARGETS=&quot;i686-w64-mingw32.static&quot; gcc PREFIX=&quot;$(AndroidMxeFullPath)&quot;"
+        Command="make $(MAKEFLAGS) MXE_TARGETS=&quot;i686-w64-mingw32.static&quot; gcc cmake zlib PREFIX=&quot;$(AndroidMxeFullPath)&quot;"
         WorkingDirectory="..\..\external\mxe"
     />
   </Target>
@@ -132,9 +132,9 @@
       DependsOnTargets="_SetMxeToolchainMakefileTimeToLastCommitTimestamp"
       Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))"
       Inputs="..\..\external\mxe\Makefile"
-      Outputs="$(AndroidMxeFullPath)\bin\x86_64-w64-mingw32.static-gcc">
+      Outputs="$(AndroidMxeFullPath)\bin\x86_64-w64-mingw32.static-gcc;$(AndroidMxeFullPath)\bin\x86_64-w64-mingw32.static-cmake">
     <Exec
-        Command="make $(MAKEFLAGS) MXE_TARGETS=&quot;x86_64-w64-mingw32.static&quot; gcc PREFIX=&quot;$(AndroidMxeFullPath)&quot;"
+        Command="make $(MAKEFLAGS) MXE_TARGETS=&quot;x86_64-w64-mingw32.static&quot; gcc cmake zlib PREFIX=&quot;$(AndroidMxeFullPath)&quot;"
         WorkingDirectory="..\..\external\mxe"
     />
   </Target>
