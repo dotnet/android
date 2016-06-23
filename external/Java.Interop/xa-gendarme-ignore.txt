@@ -120,12 +120,12 @@ T: Java.Interop.JniObjectReferenceOptions
 
 R: Gendarme.Rules.Design.MarkAssemblyWithCLSCompliantRule
 # CLSCompliantAttribute isn't in the PCL profile we're targeting, so we can't apply it.
-A: Java.Interop, Version=0.1.0.0, Culture=neutral, PublicKeyToken=null
+A: Java.Interop, Version=0.1.0.0, Culture=neutral, PublicKeyToken=84e04ff9cfb79065
 
 
 R: Gendarme.Rules.Design.MarkAssemblyWithComVisibleRule
 # Ditto; ComVisibleAttribute isn't in our PCL profile.
-A: Java.Interop, Version=0.1.0.0, Culture=neutral, PublicKeyToken=null
+A: Java.Interop, Version=0.1.0.0, Culture=neutral, PublicKeyToken=84e04ff9cfb79065
 
 
 R: Gendarme.Rules.Design.PreferEventsOverMethodsRule
