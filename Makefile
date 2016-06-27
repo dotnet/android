@@ -28,7 +28,7 @@ prepare::
 	cp Configuration.Java.Interop.Override.props external/Java.Interop/Configuration.Override.props
 
 ifeq ($(OS),Linux)
-UBUNTU_DEPS          = libzip4
+UBUNTU_DEPS          = libzip4 curl
 LINUX_DISTRO         = $(shell lsb_release -i -s || true)
 LINUX_DISTRO_RELEASE = $(shell lsb_release -r -s || true)
 
