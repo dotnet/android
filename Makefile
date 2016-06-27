@@ -1,4 +1,4 @@
-OS            = $(shell uname)
+OS            := $(shell uname)
 V             ?= 0
 CONFIGURATION = Debug
 MSBUILD       = xbuild /p:Configuration=$(CONFIGURATION) $(MSBUILD_ARGS)
@@ -29,8 +29,8 @@ prepare::
 
 ifeq ($(OS),Linux)
 UBUNTU_DEPS          = libzip4 curl
-LINUX_DISTRO         = $(shell lsb_release -i -s || true)
-LINUX_DISTRO_RELEASE = $(shell lsb_release -r -s || true)
+LINUX_DISTRO         := $(shell lsb_release -i -s || true)
+LINUX_DISTRO_RELEASE := $(shell lsb_release -r -s || true)
 
 prepare:: linux-prepare-$(LINUX_DISTRO) linux-prepare-$(LINUX_DISTRO)-$(LINUX_DISTRO_RELEASE)
 
