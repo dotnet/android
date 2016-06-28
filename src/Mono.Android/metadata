@@ -1253,4 +1253,5 @@
   --> 
   <attr path="/api/package[@name='java.util']/class[starts-with (@name, 'Spliterators.Abstract')]/method[@name='trySplit']" name="managedReturn">Java.Util.ISpliterator</attr>
 
+  <attr path="/api/package[@name='android.service.quicksettings']" name="managedName">Android.Service.QuickSettings</attr>
 </metadata>
