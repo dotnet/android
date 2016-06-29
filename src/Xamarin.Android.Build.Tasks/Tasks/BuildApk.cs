@@ -127,7 +127,7 @@ namespace Xamarin.Android.Tasks
 				AddNativeLibrariesFromAssemblies (apk, supportedAbis);
 
 				foreach (ITaskItem typemap in TypeMappings) {
-					apk.AddFile (typemap.ItemSpec, compressionMethod: CompressionMethod.Store);
+					apk.AddFile (typemap.ItemSpec, Path.GetFileName(typemap.ItemSpec), compressionMethod: CompressionMethod.Store);
 				}
 
 				foreach (var file in files) {
@@ -249,7 +249,7 @@ namespace Xamarin.Android.Tasks
 
 			foreach (ITaskItem assembly in ResolvedUserAssemblies) {
 				// Add assembly
-				apk.AddFile (assembly.ItemSpec, GetTargetDirectory (assembly.ItemSpec), compressionMethod: CompressionMethod.Store);
+				apk.AddFile (assembly.ItemSpec, GetTargetDirectory (assembly.ItemSpec) + "/"  + Path.GetFileName (assembly.ItemSpec), compressionMethod: CompressionMethod.Store);
 
 				// Try to add config if exists
 				var config = Path.ChangeExtension (assembly.ItemSpec, "dll.config");
@@ -260,7 +260,7 @@ namespace Xamarin.Android.Tasks
 					var symbols = Path.ChangeExtension (assembly.ItemSpec, "dll.mdb");
 
 					if (File.Exists (symbols))
-						apk.AddFile (symbols, "assemblies", compressionMethod: CompressionMethod.Store);
+						apk.AddFile (symbols, "assemblies/" + Path.GetFileName (symbols), compressionMethod: CompressionMethod.Store);
 				}
 			}
 
@@ -269,7 +269,7 @@ namespace Xamarin.Android.Tasks
 
 			// Add framework assemblies
 			foreach (ITaskItem assembly in ResolvedFrameworkAssemblies) {
-				apk.AddFile (assembly.ItemSpec, "assemblies", compressionMethod: CompressionMethod.Store);
+				apk.AddFile (assembly.ItemSpec, "assemblies/" + Path.GetFileName (assembly.ItemSpec), compressionMethod: CompressionMethod.Store);
 				var config = Path.ChangeExtension (assembly.ItemSpec, "dll.config");
 				AddAssemblyConfigEntry (apk, config);
 				// Try to add symbols if Debug
@@ -277,7 +277,7 @@ namespace Xamarin.Android.Tasks
 					var symbols = Path.ChangeExtension (assembly.ItemSpec, "dll.mdb");
 
 					if (File.Exists (symbols))
-						apk.AddFile (symbols, "assemblies", compressionMethod: CompressionMethod.Store);
+						apk.AddFile (symbols, "assemblies/" + Path.GetFileName (symbols), compressionMethod: CompressionMethod.Store);
 				}
 			}
 		}
