@@ -8,7 +8,7 @@ using System.Xml.Linq;
 using Microsoft.Build.Utilities;
 using Microsoft.Build.Framework;
 using System.Text.RegularExpressions;
-using System.IO.Compression;
+using Xamarin.Tools.Zip;
 
 using Xamarin.Android.Tools;
 
@@ -79,7 +79,8 @@ namespace Xamarin.Android.Tasks
 					string tmpname = Path.Combine (Path.GetTempPath (), "monodroid_import_" + Guid.NewGuid ().ToString ());
 					try {
 						Directory.CreateDirectory (tmpname);
-						ZipFile.ExtractToDirectory (p, tmpname, new System.Text.UTF8Encoding (false));
+						var archive = ZipArchive.Open (p, FileMode.Open);
+						archive.ExtractAll (tmpname);
 
 						if (!CopyLibraryContent (tmpname, p.EndsWith (".aar", StringComparison.OrdinalIgnoreCase)))
 							return false;
@@ -91,7 +92,7 @@ namespace Xamarin.Android.Tasks
 
 			// Archive them in a zip.
 			using (var stream = new MemoryStream ()) {
-				using (var zip = new ZipArchive (stream, ZipArchiveMode.Create, true, new System.Text.UTF8Encoding (false))) {
+				using (var zip = ZipArchive.Create (stream)) {
 					zip.AddDirectory (OutputDirectory, outDirInfo.Name);
 				}
 				stream.Position = 0;
