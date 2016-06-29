@@ -29,7 +29,14 @@ namespace MonoDroid.Generation {
 
 		public List<GenBase> Parse (string filename, IEnumerable<string> fixups, string apiLevel, int productVersion)
 		{
-			return Parse (Load (filename), fixups, apiLevel, productVersion);
+			var doc = Load (filename);
+			try {
+				return Parse (doc, fixups, apiLevel, productVersion);
+			} finally {
+				try {
+					doc.Save (filename + ".fixed");
+				} catch { } // skip any error here.
+			}
 		}
 
 		public List<GenBase> Parse (XmlDocument doc, IEnumerable<string> fixups, string apiLevel, int productVersion)
