@@ -13,9 +13,8 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <OutputPath>..\..\bin\$(Configuration)</OutputPath>
   </PropertyGroup>
-  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <BuildDependsOn>
+    <BuildDependsOn Condition="'$(HostOS)' == 'Windows' OR '$(HostOS)' == 'Darwin'">
       ResolveReferences;
       _Configure;
       _Make
@@ -29,4 +28,5 @@
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
     </ProjectReference>
   </ItemGroup>
+  <Target Name="Build" DependsOnTargets="$(BuildDependsOn)" />
 </Project>
