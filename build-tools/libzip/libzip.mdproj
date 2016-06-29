@@ -13,6 +13,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <OutputPath>..\..\bin\$(Configuration)</OutputPath>
   </PropertyGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.Common.targets" />
   <PropertyGroup>
     <BuildDependsOn Condition="'$(HostOS)' == 'Windows' OR '$(HostOS)' == 'Darwin'">
       ResolveReferences;
