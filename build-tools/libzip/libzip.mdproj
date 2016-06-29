@@ -15,11 +15,11 @@
   </PropertyGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.Common.targets" />
   <PropertyGroup>
-    <BuildDependsOn Condition="'$(HostOS)' == 'Windows' OR '$(HostOS)' == 'Darwin'">
+    <BuildDependsOnLocal Condition="'$(HostOS)' == 'Windows' OR '$(HostOS)' == 'Darwin'">
       ResolveReferences;
       _Configure;
       _Make
-    </BuildDependsOn>
+    </BuildDependsOnLocal>
   </PropertyGroup>
   <Import Project="libzip.targets" />
   <ItemGroup>
@@ -29,5 +29,6 @@
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
     </ProjectReference>
   </ItemGroup>
-  <Target Name="Build" DependsOnTargets="$(BuildDependsOn)" />
+  <Target Name="Build" DependsOnTargets="$(BuildDependsOnLocal)" />
+  <Target Name="Clean" />
 </Project>
