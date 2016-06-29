@@ -155,7 +155,7 @@ namespace Xamarin.Android.Tasks
 				jarFilePaths = MonoAndroidHelper.DistinctFilesByContent (jarFilePaths);
 
 				foreach (var jarFile in jarFilePaths) {
-					using (var jar = ZipArchive.Open (File.Open (jarFile, FileMode.Open))) {
+					using (var jar = ZipArchive.Open (File.OpenRead (jarFile))) {
 						foreach (var jarItem in jar.Where (ze => !ze.IsDirectory && !ze.FullName.StartsWith ("META-INF") && !ze.FullName.EndsWith (".class") && !ze.FullName.EndsWith (".java") && !ze.FullName.EndsWith ("MANIFEST.MF"))) {
 							byte [] data;
 							using (var d = new System.IO.MemoryStream ()) {
