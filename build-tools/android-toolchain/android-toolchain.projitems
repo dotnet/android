@@ -34,9 +34,9 @@
       <HostOS>Darwin</HostOS>
       <DestDir>tools</DestDir>
     </AndroidSdkItem>
-    <AndroidSdkItem Include="platform-N_r01.zip">
+    <AndroidSdkItem Include="platform-24_r01.zip">
       <HostOS></HostOS>
-      <DestDir>platforms\android-N</DestDir>
+      <DestDir>platforms\android-24</DestDir>
     </AndroidSdkItem>
     <AndroidSdkItem Include="android-23_r01.zip">
       <HostOS></HostOS>
