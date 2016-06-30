@@ -3,6 +3,7 @@
   <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.ValueToItems" />
   <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.Which" />
   <Import Project="monodroid.projitems" />
+  <Import Project="..\..\build-tools\scripts\RequiredPrograms.targets" />
   <PropertyGroup>
     <_Conf>$(Configuration.ToLowerInvariant())</_Conf>
   </PropertyGroup>
@@ -12,7 +13,6 @@
   <Target Name="_BuildRuntimes"
       Inputs="@(CFiles);jni\Android.mk"
       Outputs="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android.$(_Conf).so')">
-    <Which Program="%(_RequiredProgram.Identity)" Required="True" />
     <PropertyGroup>
       <_AppAbi>@(AndroidSupportedTargetJitAbi->'%(Identity)', ' ')</_AppAbi>
     </PropertyGroup>

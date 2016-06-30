@@ -2,6 +2,7 @@
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="..\..\Configuration.props" />
   <Import Project="android-toolchain.projitems" />
+  <Import Project="..\scripts\RequiredPrograms.targets" />
   <Target Name="_CopyBootstrapTasksAssembly"
       Outputs="$(OutputPath)\Xamarin.Android.Tools.BootstrapTasks.dll">
     <MSBuild
@@ -13,21 +14,6 @@
   <UsingTask AssemblyFile="$(OutputPath)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.DownloadUri" />
   <UsingTask AssemblyFile="$(OutputPath)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.UnzipDirectoryChildren" />
   <UsingTask AssemblyFile="$(OutputPath)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.Which" />
-  <Target Name="_CheckForRequiredPrograms">
-    <Which Program="%(_RequiredProgram.Identity)" Required="True" />
-    <OnError ExecuteTargets="_PrintRequiredPrograms" />
-  </Target>
-  <Target Name="_PrintRequiredPrograms">
-    <Error
-        ContinueOnError="True"
-        Text="The following programs are required: @(_RequiredProgram->'%(Identity)', ' ')"
-    />
-    <Error
-        Condition=" '$(HostOS)' == 'Darwin' "
-        ContinueOnError="True"
-        Text="Please try running: brew install @(_RequiredProgram->'%(Homebrew)', ' ')`"
-    />
-  </Target>
   <Target Name="_DetermineItems">
     <CreateItem
         Include="@(AndroidSdkItem)"

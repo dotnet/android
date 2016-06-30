@@ -17,6 +17,7 @@
   <PropertyGroup>
     <BuildDependsOn>
       ResolveReferences;
+      CheckForRequiredPrograms;
       _BuildRuntimes;
     </BuildDependsOn>
   </PropertyGroup>
