@@ -9,11 +9,19 @@ namespace Xamarin.Android.Net
 	/// </summary>
 	public class AndroidHttpResponseMessage : HttpResponseMessage
 	{
+		URL javaUrl;
+		HttpURLConnection httpConnection;
+
 		/// <summary>
 		/// Set to the same value as <see cref="AndroidClientHandler.RequestedAuthentication"/>.
 		/// </summary>
 		/// <value>The requested authentication.</value>
 		public IList <AuthenticationData> RequestedAuthentication { get; internal set; }
+
+		public AndroidHttpResponseMessage (URL javaUrl, HttpURLConnection httpConnection) {
+			javaUrl = javaUrl;
+			httpConnection = httpConnection;
+		}
 
 		/// <summary>
 		/// Set to the same value as <see cref="AndroidClientHandler.RequestNeedsAuthorization"/>
@@ -21,6 +29,18 @@ namespace Xamarin.Android.Net
 		/// <value>The request needs authorization.</value>
 		public bool RequestNeedsAuthorization {
 			get { return RequestedAuthentication?.Count > 0; }
+		}
+
+		protected override void Dispose(bool disposing) {
+			base.Dispose(disposing);
+
+			if (javaUrl != null) {
+				javaUrl.Dispose ();
+			}
+
+			if (httpConnection != null) {
+				httpConnection.Dispose ();
+			}
 		}
 	}
 }

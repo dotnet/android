@@ -90,9 +90,6 @@ namespace Xamarin.Android.Net
 		// uncompress it any longer, doh. And they don't support 'deflate' so we need to handle it ourselves.
 		bool decompress_here;
 
-		URL java_url;
-		HttpURLConnection java_connection;
-
 		/// <summary>
 		/// <para>
 		/// Gets or sets the pre authentication data for the request. This property must be set by the application
@@ -154,15 +151,6 @@ namespace Xamarin.Android.Net
 		protected override void Dispose (bool disposing)
 		{
 			disposed  = true;
-			if (java_connection != null) {
-				java_connection.Dispose ();
-				java_connection = null;
-			}
-
-			if (java_url != null) {
-				java_url.Dispose ();
-				java_url = null;
-			}
 
 			base.Dispose (disposing);
 		}
@@ -180,7 +168,7 @@ namespace Xamarin.Android.Net
 		/// <returns>Task in which the request is executed</returns>
 		/// <param name="request">Request provided by <see cref="System.Net.Http.HttpClient"/></param>
 		/// <param name="cancellationToken">Cancellation token.</param>
-		protected override async Task <HttpResponseMessage> SendAsync (HttpRequestMessage request, CancellationToken cancellationToken)
+		protected override Task <HttpResponseMessage> SendAsync (HttpRequestMessage request, CancellationToken cancellationToken)
 		{
 			AssertSelf ();
 			if (request == null)
@@ -189,23 +177,23 @@ namespace Xamarin.Android.Net
 			if (!request.RequestUri.IsAbsoluteUri)
 				throw new ArgumentException ("Must represent an absolute URI", "request");
 
-			java_url = new URL (request.RequestUri.ToString ());
-			java_connection = java_url.OpenConnection () as HttpURLConnection;
-			HttpURLConnection httpConnection = await SetupRequestInternal (request, java_connection).ConfigureAwait (false);
-					return await ProcessRequest (request, httpConnection, cancellationToken);
+			URL java_url = new URL (request.RequestUri.ToString ());
+			URLConnection java_connection = java_url.OpenConnection ();
+			HttpURLConnection httpConnection = SetupRequestInternal (request, java_connection);
+			return ProcessRequest (request, java_url, httpConnection, cancellationToken);
 		}
 		
-		Task <HttpResponseMessage> ProcessRequest (HttpRequestMessage request, HttpURLConnection httpConnection, CancellationToken cancellationToken)
+		Task <HttpResponseMessage> ProcessRequest (HttpRequestMessage request, URL javaUrl, HttpURLConnection httpConnection, CancellationToken cancellationToken)
 		{
 			cancellationToken.ThrowIfCancellationRequested ();
 			httpConnection.InstanceFollowRedirects = AllowAutoRedirect;
 			RequestedAuthentication = null;
 			ProxyAuthenticationRequested = false;
-			
-			return DoProcessRequest (request, httpConnection, cancellationToken);
+
+			return DoProcessRequest (request, javaUrl, httpConnection, cancellationToken);
 		}
 		
-		async Task <HttpResponseMessage> DoProcessRequest (HttpRequestMessage request, HttpURLConnection httpConnection, CancellationToken cancellationToken)
+		async Task <HttpResponseMessage> DoProcessRequest (HttpRequestMessage request, URL javaUrl, HttpURLConnection httpConnection, CancellationToken cancellationToken)
 		{
 			if (Logger.LogNet)
 				Logger.Log (LogLevel.Info, LOG_APP, $"{this}.DoProcessRequest ()");
@@ -222,12 +210,16 @@ namespace Xamarin.Android.Net
 				throw new WebException (ex.Message, ex, WebExceptionStatus.ConnectFailure, null);
 			}
 
+			if (httpConnection.DoOutput) {
+				await request.Content.CopyToAsync (httpConnection.OutputStream).ConfigureAwait (false);
+			}
+
 			var statusCode = (HttpStatusCode)httpConnection.ResponseCode;
 			var connectionUri = new Uri (httpConnection.URL.ToString ());
 
 			// If the request was redirected we need to put the new URL in the request
 			request.RequestUri = connectionUri;
-			var ret = new AndroidHttpResponseMessage {
+			var ret = new AndroidHttpResponseMessage (javaUrl, httpConnection) {
 				RequestMessage = request,
 				ReasonPhrase = httpConnection.ResponseMessage,
 				StatusCode = statusCode,
@@ -369,9 +361,9 @@ namespace Xamarin.Android.Net
 		/// </summary>
 		/// <param name="request">Request data</param>
 		/// <param name="conn">Pre-configured connection instance</param>
-		protected virtual Task SetupRequest (HttpRequestMessage request, HttpURLConnection conn)
+		protected virtual void SetupRequest (HttpRequestMessage request, HttpURLConnection conn)
 		{
-			return Task.Factory.StartNew (AssertSelf);
+			AssertSelf ();
 		}
 
 		/// <summary>
@@ -430,20 +422,22 @@ namespace Xamarin.Android.Net
 			list.Add (encoding);
 		}
 		
-		async Task <HttpURLConnection> SetupRequestInternal (HttpRequestMessage request, HttpURLConnection conn)
+		HttpURLConnection SetupRequestInternal (HttpRequestMessage request, URLConnection conn)
 		{
 			if (conn == null)
 				throw new ArgumentNullException (nameof (conn));
-			var httpConnection = conn;
+			var httpConnection = conn.JavaCast <HttpURLConnection> ();
 			if (httpConnection == null)
 				throw new InvalidOperationException ($"Unsupported URL scheme {conn.URL.Protocol}");
+
 			httpConnection.RequestMethod = request.Method.ToString ();
+
 			// SSL context must be set up as soon as possible, before adding any content or
 			// headers. Otherwise Java won't use the socket factory
-			await SetupSSL (httpConnection as HttpsURLConnection);
+			SetupSSL (httpConnection as HttpsURLConnection);
 			if (request.Content != null)
-				await AddHeaders (httpConnection, request.Content.Headers);
-			await AddHeaders (httpConnection, request.Headers);
+				AddHeaders (httpConnection, request.Content.Headers);
+			AddHeaders (httpConnection, request.Headers);
 			
 			List <string> accept_encoding = null;
 
@@ -472,16 +466,15 @@ namespace Xamarin.Android.Net
 					httpConnection.SetRequestProperty ("Cookie", cookieHeaderValue);
 			}
 			
-			await HandlePreAuthentication (httpConnection);
-			await SetupRequest (request, httpConnection);
-			await SetupRequestBody (httpConnection, request);
+			HandlePreAuthentication (httpConnection);
+			SetupRequest (request, httpConnection);
+			SetupRequestBody (httpConnection, request);
 			
 			return httpConnection;
 		}
 
-		Task SetupSSL (HttpsURLConnection httpsConnection)
+		void SetupSSL (HttpsURLConnection httpsConnection)
 		{
-			return Task.Factory.StartNew (() => {
 			if (httpsConnection == null)
 				return;
 
@@ -514,12 +507,10 @@ namespace Xamarin.Android.Net
 			SSLContext context = SSLContext.GetInstance ("TLS");
 			context.Init (kmf?.GetKeyManagers (), tmf.GetTrustManagers (), null);
 			httpsConnection.SSLSocketFactory = context.SocketFactory;
-			});
 		}
 		
-		Task HandlePreAuthentication (HttpURLConnection httpConnection)
+		void HandlePreAuthentication (HttpURLConnection httpConnection)
 		{
-			return Task.Factory.StartNew (() => {
 			AuthenticationData data = PreAuthenticationData;
 			if (!PreAuthenticate || data == null)
 				return;
@@ -548,25 +539,21 @@ namespace Xamarin.Android.Net
 			if (Logger.LogNet)
 				Logger.Log (LogLevel.Info, LOG_APP, $"Authentication header '{data.UseProxyAuthentication ? "Proxy-Authorization" : "Authorization"}' will be set to '{authorization.Message}'");
 			httpConnection.SetRequestProperty (data.UseProxyAuthentication ? "Proxy-Authorization" : "Authorization", authorization.Message);
-			});
 		}
 
-		Task AddHeaders (HttpURLConnection conn, HttpHeaders headers)
+		void AddHeaders (HttpURLConnection conn, HttpHeaders headers)
 		{
-			return Task.Factory.StartNew (() => {
 			if (headers == null)
 				return;
 
 			foreach (KeyValuePair<string, IEnumerable<string>> header in headers) {
 				conn.SetRequestProperty (header.Key, header.Value != null ? String.Join (",", header.Value) : String.Empty);
 			}
-			});
 		}
 		
-		async Task SetupRequestBody (HttpURLConnection httpConnection, HttpRequestMessage request)
+		void SetupRequestBody (HttpURLConnection httpConnection, HttpRequestMessage request)
 		{
 			if (request.Content == null) {
-				httpConnection.SetChunkedStreamingMode (0);
 				// Pilfered from System.Net.Http.HttpClientHandler:SendAync
 				if (HttpMethod.Post.Equals (request.Method) || HttpMethod.Put.Equals (request.Method) || HttpMethod.Delete.Equals (request.Method)) {
 					// Explicitly set this to make sure we're sending a "Content-Length: 0" header.
@@ -576,27 +563,13 @@ namespace Xamarin.Android.Net
 				}
 				return;
 			}
-			
+
 			httpConnection.DoOutput = true;
-
-			var bytes = await request.Content.ReadAsByteArrayAsync ().ConfigureAwait (false);
-
-			int contentLength = bytes.Length;
-			httpConnection.SetRequestProperty ("Content-Length", contentLength.ToString());
-			httpConnection.SetFixedLengthStreamingMode (contentLength);
-
-			string contentType;
-			if (request.Content.Headers.ContentType != null)
-				contentType = String.Join (" ", request.Content.Headers.GetValues ("Content-Type"));
+			long? contentLength = request.Content.Headers.ContentLength;
+			if (contentLength != null)
+				httpConnection.SetFixedLengthStreamingMode ((int)contentLength);
 			else
-				contentType = "text/plain";
-			httpConnection.SetRequestProperty ("Content-Type", contentType);
-
-			await Task.Factory.StartNew (() => {
-				httpConnection.OutputStream.Write (bytes, 0, contentLength);
-				httpConnection.OutputStream.Flush ();
-				httpConnection.OutputStream.Close ();
-			});
+				httpConnection.SetChunkedStreamingMode (0);
 		}
 	}
 }
