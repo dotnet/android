@@ -17,6 +17,7 @@
   <PropertyGroup>
     <BuildDependsOnLocal Condition="'$(HostOS)' == 'Windows' OR '$(HostOS)' == 'Darwin'">
       ResolveReferences;
+      CheckForRequiredPrograms;
       _Configure;
       _Make
     </BuildDependsOnLocal>
