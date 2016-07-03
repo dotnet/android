@@ -121,7 +121,7 @@ install it; it may be part of the [**vim-common** package][sid-vim-common].
 To simplify building Xamarin.Android, important pieces of the Android SDK
 and Android NDK will be automatically downloaded and installed from
 Google's website. Downloaded files are cached locally, by default into
-`$(AndroidToolchainDirectory)`. The Android NDK and SDK will be installed by
+`$(AndroidToolchainCacheDirectory)`. The Android NDK and SDK will be installed by
 default into `$(AndroidToolchainDirectory)`.
 
 The files that will be downloaded and installed are controlled by
