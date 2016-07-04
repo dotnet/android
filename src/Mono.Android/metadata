@@ -1254,4 +1254,45 @@
   <attr path="/api/package[@name='java.util']/class[starts-with (@name, 'Spliterators.Abstract')]/method[@name='trySplit']" name="managedReturn">Java.Util.ISpliterator</attr>
 
   <attr path="/api/package[@name='android.service.quicksettings']" name="managedName">Android.Service.QuickSettings</attr>
+
+  <!-- android.media.AudioRouting.OnRoutingChangedListener is a new
+  interface that is added to AudioRecord and AudioTrack *as a base
+  interface*. It is a breaking change if it were in C#, but surprisingly
+  not in Java because the method is *implemented* in thosee derived
+  interfaces as a default method(!)
+
+  Problems are:
+
+  (1) the method in the new base interface simply breaks source code
+  compatibility for those derived interfaces, so the base method has to
+  be removed.
+
+  (2) The method is somehow causing name conflict for event listeners,
+  RoutingChangedEventArgs and RoutingChanged event.
+
+  (3) Even if we remove the new listener type, AudioRouting interface
+  still brings more complicated issue i.e. duplicate
+  RoutingChangedEventHandler and RoutingChanged events which are due
+  to overloads of the audio router and its deried classes (deprecated).
+
+  There is no other solution but removing IAudioRouting and all relevant
+  types and methods so far. Offering awkward API that forces manual
+  fixup to rename every descendants is no-go.
+ 
+  -->
+
+  <remove-node path="/api/package[@name='android.media']/interface[@name='AudioRouting']" />
+  <remove-node path="/api/package[@name='android.media']/class[@name='AudioRecord']/implements[@name='android.media.AudioRouting']" />
+  <remove-node path="/api/package[@name='android.media']/class[@name='AudioTrack']/implements[@name='android.media.AudioRouting']" />
+
+  <remove-node path="/api/package[@name='android.media']/interface[@name='AudioRouting.OnRoutingChangedListener']" />
+
+  <remove-node path="/api/package[@name='android.media']/interface[@name='AudioRecord.OnRoutingChangedListener']/implements[@name='android.media.AudioRouting.OnRoutingChangedListener']" />
+  <remove-node path="/api/package[@name='android.media']/interface[@name='AudioRecord.OnRoutingChangedListener']/method[@name='onRoutingChanged' and parameter[1]/@type='android.media.AudioRouting']" />
+  <remove-node path="/api/package[@name='android.media']/interface[@name='AudioTrack.OnRoutingChangedListener']/implements[@name='android.media.AudioRouting.OnRoutingChangedListener']" />
+  <remove-node path="/api/package[@name='android.media']/interface[@name='AudioTrack.OnRoutingChangedListener']/method[@name='onRoutingChanged' and parameter[1]/@type='android.media.AudioRouting']" />
+
+  <remove-node path="/api/package[@name='android.media']/class[@name='AudioRecord']/method[@name='addOnRoutingChangedListener' and parameter[1]/@type='android.media.AudioRouting.OnRoutingChangedListener']" />
+  <remove-node path="/api/package[@name='android.media']/class[@name='AudioTrack']/method[@name='addOnRoutingChangedListener' and parameter[1]/@type='android.media.AudioRouting.OnRoutingChangedListener']" />
+
 </metadata>
