@@ -1297,4 +1297,12 @@
   <remove-node path="/api/package[@name='android.media']/class[@name='AudioRecord']/method[@name='addOnRoutingChangedListener' and parameter[1]/@type='android.media.AudioRouting.OnRoutingChangedListener']" />
   <remove-node path="/api/package[@name='android.media']/class[@name='AudioTrack']/method[@name='addOnRoutingChangedListener' and parameter[1]/@type='android.media.AudioRouting.OnRoutingChangedListener']" />
 
+  <!-- FIXME: this should be fixed rather in api-merge
+  
+  These methods are "default" in API Level 24, but they weren't before.
+  Default methods are not bound like non-default ones, so they are removed
+  in the latest API if we change them to non-default. -->
+  <attr path="/api/package[@name='java.lang.reflect']/interface[@name='AnnotatedElement']/method[@name='isAnnotationPresent']" name="abstract">true</attr>
+  <attr path="/api/package[@name='java.util']/interface[@name='Iterator&lt;E&gt;' or @name='Iterator']/method[@name='remove']" name="abstract">true</attr>
+
 </metadata>
