@@ -1195,7 +1195,9 @@
   -->
   
   <remove-node path="/api/package[@name='java.nio.channels']/interface[@name='NetworkChannel']" /> 
-  <remove-node path="/api/package[@name='java.nio.channels']/class[implements/@name='java.nio.channels.NetworkChannel']" /> 
+  <remove-node path="/api/package[@name='java.nio.channels']/class[@name='DatagramChannel']/implements[@name='java.nio.channels.NetworkChannel']" /> 
+  <remove-node path="/api/package[@name='java.nio.channels']/class[@name='SocketChannel']/implements[@name='java.nio.channels.NetworkChannel']" /> 
+  <remove-node path="/api/package[@name='java.nio.channels']/class[@name='ServerSocketChannel']/implements[@name='java.nio.channels.NetworkChannel']" /> 
 
   <attr path="/api/package[@name='java.util.concurrent.atomic']/class[@name='Striped64']" name="visibility">public</attr>
 
