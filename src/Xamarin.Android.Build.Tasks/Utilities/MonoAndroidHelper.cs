@@ -7,8 +7,7 @@ using System.IO;
 using System.Security.Cryptography;
 using Mono.Security.Cryptography;
 using Xamarin.Android.Build.Utilities;
-using System.IO.Compression;
-
+using Xamarin.Tools.Zip;
 
 #if MSBUILD
 using Microsoft.Build.Framework;
@@ -409,8 +408,6 @@ namespace Xamarin.Android.Tasks
 		public static string GetPlatformApiLevelName (string platformApiLevel)
 		{
 			switch (platformApiLevel.Trim ()) {
-			case "24":
-				return "N";
 			default:
 				return platformApiLevel;
 			}
@@ -421,8 +418,6 @@ namespace Xamarin.Android.Tasks
 		public static string GetPlatformApiLevel (string platformApiLevelName)
 		{
 			switch (platformApiLevelName.Trim ()) {
-			case "N":
-				return "24";
 			default:
 				return platformApiLevelName;
 			}

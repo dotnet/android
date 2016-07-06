@@ -34,15 +34,13 @@
   </PropertyGroup>
   <PropertyGroup>
     <DefineConstants Condition="'$(__XA_NO_PREVIEW_L_SUPPORT__)' != ''">$(DefineConstants);XA_NO_PREVIEW_L_SUPPORT</DefineConstants>
-    <AndroidGeneratedClassDirectory Condition=" '$(AndroidGeneratedClassDirectory)' == '' "  >..\..\src\Mono.Android\obj\$(Configuration)\android-$(AndroidApiLevel)</AndroidGeneratedClassDirectory>
+    <AndroidGeneratedClassDirectory Condition=" '$(AndroidGeneratedClassDirectory)' == '' ">..\..\src\Mono.Android\obj\$(Configuration)\android-$(AndroidApiLevel)</AndroidGeneratedClassDirectory>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.Build.Framework" />
     <Reference Include="Microsoft.Build.Utilities.v4.0" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.IO.Compression" />
-    <Reference Include="System.IO.Compression.FileSystem" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Xml" />
     <Reference Include="Mono.Cecil">
@@ -63,8 +61,6 @@
     <Reference Include="FSharp.Compiler.CodeDom">
       <HintPath>..\..\packages\FSharp.Compiler.CodeDom.1.0.0.1\lib\net40\FSharp.Compiler.CodeDom.dll</HintPath>
     </Reference>
-    <Reference Include="System.IO.Compression.FileSystem" />
-    <Reference Include="System.IO.Compression" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="$(IntermediateOutputPath)Profile.g.cs" />
@@ -117,7 +113,6 @@
     <Compile Include="Utilities\JavaResourceParser.cs" />
     <Compile Include="Utilities\ManifestDocumentElement.cs" />
     <Compile Include="Utilities\ManifestDocument.cs" />
-    <Compile Include="Utilities\ZipArchiveExtensions.cs" />    
     <Compile Include="Mono.Android\MetaDataAttribute.Partial.cs" />
     <Compile Include="Utilities\MonoAndroidHelper.cs" />
     <None Include="Linker\MonoDroid.Tuner\PreserveCode.cs" />
@@ -639,6 +634,10 @@
       <Project>{38C762AB-8FD1-44DE-9855-26AAE7129DC3}</Project>
       <Name>class-parse</Name>
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="$(LibZipSharpSourceFullPath)\libZipSharp.csproj">
+      <Project>{E248B2CA-303B-4645-ADDC-9D4459D550FD}</Project>
+      <Name>libZipSharp</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

@@ -162,7 +162,7 @@ namespace Xamarin.Android.Tasks {
 					LogMessage ("Extracting {0} to {1}", file, contentDir);
 					using (var zip = MonoAndroidHelper.ReadZipFile (file)) {
 						int extracted = 0;
-						var o = Math.Max(1, (zip.Entries.Count / 10));
+						var o = Math.Max(1, (zip.EntryCount / 10));
 						Files.ExtractAll (zip, contentDir, (progress, total) => {
 							if ((progress % o) != 0 || extracted == progress || progress == 0)
 								return;

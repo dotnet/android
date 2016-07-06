@@ -1,3 +1,4 @@
+OS            := $(shell uname)
 V             ?= 0
 CONFIGURATION = Debug
 MSBUILD       = xbuild /p:Configuration=$(CONFIGURATION) $(MSBUILD_ARGS)
@@ -20,12 +21,28 @@ endif
 all:
 	$(MSBUILD)
 
-prepare:
+prepare::
 	git submodule update --init --recursive
 	nuget restore
 	(cd external/Java.Interop && nuget restore)
 	cp Configuration.Java.Interop.Override.props external/Java.Interop/Configuration.Override.props
 
+ifeq ($(OS),Linux)
+UBUNTU_DEPS          = libzip4 curl openjdk-8-jdk git make automake autoconf libtool unzip vim-common clang lib32stdc++6 lib32z1
+LINUX_DISTRO         := $(shell lsb_release -i -s || true)
+LINUX_DISTRO_RELEASE := $(shell lsb_release -r -s || true)
+
+prepare:: linux-prepare-$(LINUX_DISTRO) linux-prepare-$(LINUX_DISTRO)-$(LINUX_DISTRO_RELEASE)
+
+linux-prepare-Ubuntu::
+	@echo Installing build depedencies for $(LINUX_DISTRO)
+	@echo Will use sudo, please provide your password as needed
+	sudo apt-get -f -u install $(UBUNTU_DEPS)
+
+linux-prepare-$(LINUX_DISTRO)::
+
+linux-prepare-$(LINUX_DISTRO)-$(LINUX_DISTRO_RELEASE)::
+endif
 
 run-all-tests: run-nunit-tests run-apk-tests
 

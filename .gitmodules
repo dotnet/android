@@ -13,3 +13,15 @@
 [submodule "external/sqlite"]
 	path = external/sqlite
 	url = https://github.com/xamarin/sqlite.git
+[submodule "external/opentk"]
+	path = external/opentk
+	url = https://github.com/mono/opentk.git
+	branch = master
+[submodule "external/libzip"]
+	path = external/libzip
+	url = https://github.com/nih-at/libzip.git
+	branch = master
+[submodule "external/LibZipSharp"]
+	path = external/LibZipSharp
+	url = https://github.com/grendello/LibZipSharp.git
+	branch = master

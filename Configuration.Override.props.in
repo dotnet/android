@@ -7,7 +7,7 @@
     <AndroidFrameworkVersion>v6.0</AndroidFrameworkVersion>
 
     <!--
-      Colon-separated list of ABIs to build mono for.
+      Colon-separated list of ABIs to build the mono JIT for.
       Supported ABIs include:
       - armeabi
       - armeabi-v7a
@@ -16,7 +16,18 @@
       - x86_64
       Note: Why colon? Because comma `,` and semicolon `;` can't be specified on the command-line.
       -->
-    <AndroidSupportedAbis>armeabi:armeabi-v7a:arm64-v8a:x86:x86_64</AndroidSupportedAbis>
+    <AndroidSupportedTargetJitAbis>armeabi:armeabi-v7a:arm64-v8a:x86:x86_64</AndroidSupportedTargetJitAbis>
+
+    <!--
+      Colon-separated list of ABIs to build a "host" mono JIT for.
+      The host JIT is used for the Xamarin Studio Designer, among other things.
+      Supported ABIs include:
+      - Darwin
+      - Linux
+      - mxe-Win64
+      Note: Why colon? Because comma `,` and semicolon `;` can't be specified on the command-line.
+      -->
+    <AndroidSupportedHostJitAbis>Darwin:mxe-Win64</AndroidSupportedHostJitAbis>
 
     <!-- C and C++ compilers to emit host-native binaries -->
     <HostCc>clang</HostCc>

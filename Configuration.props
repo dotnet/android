@@ -23,9 +23,13 @@
     <AndroidMxeInstallPrefix Condition=" '$(AndroidMxeInstallPrefix)' == '' ">$(AndroidToolchainDirectory)\mxe</AndroidMxeInstallPrefix>
     <AndroidSdkDirectory>$(AndroidToolchainDirectory)\sdk</AndroidSdkDirectory>
     <AndroidNdkDirectory>$(AndroidToolchainDirectory)\ndk</AndroidNdkDirectory>
-    <AndroidSupportedAbis Condition=" '$(AndroidSupportedAbis)' == '' ">host-$(HostOS):armeabi-v7a</AndroidSupportedAbis>
+    <AndroidSupportedHostJitAbis Condition=" '$(AndroidSupportedHostJitAbis)' == '' ">$(HostOS)</AndroidSupportedHostJitAbis>
+    <AndroidSupportedTargetJitAbis Condition=" '$(AndroidSupportedTargetJitAbis)' == '' ">armeabi-v7a</AndroidSupportedTargetJitAbis>
     <JavaInteropSourceDirectory Condition=" '$(JavaInteropSourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\Java.Interop</JavaInteropSourceDirectory>
     <MonoSourceDirectory>$(MSBuildThisFileDirectory)external\mono</MonoSourceDirectory>
+    <OpenTKSourceDirectory>$(MSBuildThisFileDirectory)external\opentk</OpenTKSourceDirectory>
+    <LibZipSourceDirectory Condition=" '$(LibZipSourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\libzip</LibZipSourceDirectory>
+    <LibZipSharpSourceDirectory Condition=" '$(LibZipSharpSourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\LibZipSharp</LibZipSharpSourceDirectory>
     <SqliteSourceDirectory Condition=" '$(SqliteSourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\sqlite</SqliteSourceDirectory>
     <XamarinAndroidSourcePath>$(MSBuildThisFileDirectory)</XamarinAndroidSourcePath>
     <AllSupported32BitTargetAndroidAbis>armeabi;armeabi-v7a;x86</AllSupported32BitTargetAndroidAbis>
@@ -37,20 +41,34 @@
     <JavaInteropFullPath>$([System.IO.Path]::GetFullPath ('$(JavaInteropSourceDirectory)'))</JavaInteropFullPath>
     <MonoSourceFullPath>$([System.IO.Path]::GetFullPath ('$(MonoSourceDirectory)'))</MonoSourceFullPath>
     <SqliteSourceFullPath>$([System.IO.Path]::GetFullPath ('$(SqliteSourceDirectory)'))</SqliteSourceFullPath>
+    <OpenTKSourceFullPath>$([System.IO.Path]::GetFullPath ('$(OpenTKSourceDirectory)'))</OpenTKSourceFullPath>
+    <LibZipSourceFullPath>$([System.IO.Path]::GetFullPath ('$(LibZipSourceDirectory)'))</LibZipSourceFullPath>
+    <LibZipSharpSourceFullPath>$([System.IO.Path]::GetFullPath ('$(LibZipSharpSourceDirectory)'))</LibZipSharpSourceFullPath>
   </PropertyGroup>
-  <ItemGroup>
-    <HostOSName Include="host-Darwin" />
-    <HostOSName Include="host-Linux" />
-    <HostOSName Include="host-win64" />
-  </ItemGroup>
   <!--
-    "Fixup" $(AndroidSupportedAbis) so that Condition attributes elsewhere
+    "Fixup" $(AndroidSupportedHostJitAbis) so that Condition attributes elsewhere
     can use `:ABI-NAME:`, to avoid substring mismatches.
     -->
   <PropertyGroup>
-    <AndroidSupportedDeviceAbis>$([System.String]::Copy('$(AndroidSupportedAbis)').Replace (':', ';').Replace ('host-$(HostOS)', '').Replace (';;', ';')</AndroidSupportedDeviceAbis>
-    <AndroidSupportedAbisForConditionalChecks>$(AndroidSupportedAbis)</AndroidSupportedAbisForConditionalChecks>
-    <AndroidSupportedAbisForConditionalChecks Condition=" !$(AndroidSupportedAbisForConditionalChecks.EndsWith (':')) "   >$(AndroidSupportedAbisForConditionalChecks):</AndroidSupportedAbisForConditionalChecks>
-    <AndroidSupportedAbisForConditionalChecks Condition=" !$(AndroidSupportedAbisForConditionalChecks.StartsWith (':')) " >:$(AndroidSupportedAbisForConditionalChecks)</AndroidSupportedAbisForConditionalChecks>
+    <AndroidSupportedHostJitAbisForConditionalChecks>$(AndroidSupportedHostJitAbis)</AndroidSupportedHostJitAbisForConditionalChecks>
+    <AndroidSupportedHostJitAbisForConditionalChecks Condition=" !$(AndroidSupportedHostJitAbisForConditionalChecks.EndsWith (':')) "   >$(AndroidSupportedHostJitAbisForConditionalChecks):</AndroidSupportedHostJitAbisForConditionalChecks>
+    <AndroidSupportedHostJitAbisForConditionalChecks Condition=" !$(AndroidSupportedHostJitAbisForConditionalChecks.StartsWith (':')) " >:$(AndroidSupportedHostJitAbisForConditionalChecks)</AndroidSupportedHostJitAbisForConditionalChecks>
+    <AndroidSupportedHostJitAbisSplit>$(AndroidSupportedHostJitAbis.Split(':'))</AndroidSupportedHostJitAbisSplit>
   </PropertyGroup>
+  <ItemGroup>
+    <AndroidSupportedHostJitAbi Include="$(AndroidSupportedHostJitAbisSplit)" />
+  </ItemGroup>
+  <!--
+    "Fixup" $(AndroidSupportedTargetJitAbis) so that Condition attributes elsewhere
+    can use `:ABI-NAME:`, to avoid substring mismatches.
+    -->
+  <PropertyGroup>
+    <AndroidSupportedTargetJitAbisForConditionalChecks>$(AndroidSupportedTargetJitAbis)</AndroidSupportedTargetJitAbisForConditionalChecks>
+    <AndroidSupportedTargetJitAbisForConditionalChecks Condition=" !$(AndroidSupportedTargetJitAbisForConditionalChecks.EndsWith (':')) "   >$(AndroidSupportedTargetJitAbisForConditionalChecks):</AndroidSupportedTargetJitAbisForConditionalChecks>
+    <AndroidSupportedTargetJitAbisForConditionalChecks Condition=" !$(AndroidSupportedTargetJitAbisForConditionalChecks.StartsWith (':')) " >:$(AndroidSupportedTargetJitAbisForConditionalChecks)</AndroidSupportedTargetJitAbisForConditionalChecks>
+    <AndroidSupportedTargetJitAbisSplit>$(AndroidSupportedTargetJitAbis.Split(':'))</AndroidSupportedTargetJitAbisSplit>
+  </PropertyGroup>
+  <ItemGroup>
+    <AndroidSupportedTargetJitAbi Include="$(AndroidSupportedTargetJitAbisSplit)" />
+  </ItemGroup>
 </Project>

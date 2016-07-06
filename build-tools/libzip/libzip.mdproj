@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ItemType>GenericProject</ItemType>
+    <ProjectGuid>{900A0F71-BAAD-417A-8D1A-8D330297CDD0}</ProjectGuid>
+  </PropertyGroup>
+  <Import Project="..\..\Configuration.props" />
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <OutputPath>..\..\bin\$(Configuration)</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <OutputPath>..\..\bin\$(Configuration)</OutputPath>
+  </PropertyGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.Common.targets" />
+  <PropertyGroup>
+    <BuildDependsOnLocal Condition="'$(HostOS)' == 'Windows' OR '$(HostOS)' == 'Darwin'">
+      ResolveReferences;
+      CheckForRequiredPrograms;
+      _Configure;
+      _Make
+    </BuildDependsOnLocal>
+  </PropertyGroup>
+  <Import Project="libzip.targets" />
+  <ItemGroup>
+    <ProjectReference Include="..\android-toolchain\android-toolchain.mdproj">
+      <Project>{8FF78EB6-6FC8-46A7-8A15-EBBA9045C5FA}</Project>
+      <Name>android-toolchain</Name>
+      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
+    </ProjectReference>
+  </ItemGroup>
+  <Target Name="Build" DependsOnTargets="$(BuildDependsOnLocal)" />
+  <Target Name="Clean" />
+</Project>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.Which" />
+  <Target Name="CheckForRequiredPrograms">
+    <Which Program="%(RequiredProgram.Identity)" Required="True" />
+    <OnError ExecuteTargets="_PrintRequiredPrograms" />
+  </Target>
+  <Target Name="_PrintRequiredPrograms">
+    <Error
+        ContinueOnError="True"
+        Text="The following programs are required: @(RequiredProgram->'%(Identity)', ' ')"
+    />
+    <Error
+        Condition=" '$(HostOS)' == 'Darwin' "
+        ContinueOnError="True"
+        Text="Please try running: brew install @(RequiredProgram->'%(Homebrew)', ' ')`"
+    />
+  </Target>
+</Project>

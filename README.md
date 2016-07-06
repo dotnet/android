@@ -32,30 +32,30 @@ Overridable MSBuild properties include:
 * `$(AndroidFrameworkVersion)`: The Xamarin.Android `$(TargetFrameworkVersion)`
     version which corresponds to `$(AndroidApiLevel)`. This is *usually* the
     Android version number with a leading `v`, e.g. `v4.0.3` for API-15.
-* `$(AndroidSupportedAbis)`: The Android ABIs to build for inclusion within
-    apps. This is a `:`-separated list of ABIs to build. Supported values are:
+* `$(AndroidSupportedHostJitAbis)`: The Android ABIs for which to build a
+    host JIT *and* Xamarin.Android base class libraries (`mscorlib.dll`/etc.).
+    The "host JIT" is used e.g. with the Xamarin Studio Designer, to render
+    Xamarin.Android apps on the developer's machine.
+    There can also be support for cross-compiling mono for a different
+    host, e.g. to build Windows `libmonosgen-2.0.dll` from OS X.
+    Supported host values include:
+
+    * `Darwin`
+    * `Linux`
+    * `mxe-Win64`: Cross-compile Windows 64-bit binaries from Unix.
+
+    The default value is `$(HostOS)`, where `$(HostOS)` is based on probing
+    various environment variables and filesystem locations.
+    On OS X, the default would be `Darwin`.
+* `$(AndroidSupportedTargetJitAbis)`: The Android ABIs for which to build the
+    the Mono JIT for inclusion within apps. This is a `:`-separated list of
+    ABIs to build. Supported values are:
 
     * `armeabi`
     * `armeabi-v7a`
     * `arm64-v8a`
     * `x86`
     * `x86_64`
-
-    Addtionally there are a set of "host" values. The "host ABI" is used
-    to build mono for the *currently executing operating system*, in
-    particular to build the base class libraries such as `mscorlib.dll`.
-    There can also be support for cross-compiling mono for a different
-    host, e.g. to build Windows `libmonosgen-2.0.dll` from OS X.
-    Supported host values include:
-
-    * `host-Darwin`
-    * `host-Linux`
-    * `host-win64`: Cross-compile Windows 64-bit binaries from Unix.
-
-    The default value is `host-$(HostOS):armeabi-v7a`, where `$(HostOS)`
-    is based on probing various environment variables and filesystem locations.
-    On OS X, the default would be `host-Darwin:armeabi-v7a`.
-
 * `$(AndroidToolchainCacheDirectory)`: The directory to cache the downloaded
     Android NDK and SDK files. This value defaults to
     `$(HOME)\android-archives`.
@@ -121,7 +121,7 @@ install it; it may be part of the [**vim-common** package][sid-vim-common].
 To simplify building Xamarin.Android, important pieces of the Android SDK
 and Android NDK will be automatically downloaded and installed from
 Google's website. Downloaded files are cached locally, by default into
-`$(AndroidToolchainDirectory)`. The Android NDK and SDK will be installed by
+`$(AndroidToolchainCacheDirectory)`. The Android NDK and SDK will be installed by
 default into `$(AndroidToolchainDirectory)`.
 
 The files that will be downloaded and installed are controlled by

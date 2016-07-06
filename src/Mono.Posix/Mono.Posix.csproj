@@ -255,19 +255,19 @@
     <XANativeLibsDir>$(OutputPath)\..\..\..\xbuild\Xamarin\Android\lib</XANativeLibsDir>
   </PropertyGroup>
   <ItemGroup>
-    <EmbeddedNativeLibrary Include="$(XANativeLibsDir)\arm64-v8a\libMonoPosixHelper.so" Condition="$(AndroidSupportedAbisForConditionalChecks.Contains (':arm64-v8a:'))">
+    <EmbeddedNativeLibrary Include="$(XANativeLibsDir)\arm64-v8a\libMonoPosixHelper.so" Condition="$(AndroidSupportedTargetJitAbis.Contains (':arm64-v8a:'))">
       <Link>MonoPosixHelper\arm64-v8a\libMonoPosixHelper.so</Link>
     </EmbeddedNativeLibrary>
-    <EmbeddedNativeLibrary Include="$(XANativeLibsDir)\armeabi\libMonoPosixHelper.so" Condition="$(AndroidSupportedAbisForConditionalChecks.Contains (':armeabi:'))">
+    <EmbeddedNativeLibrary Include="$(XANativeLibsDir)\armeabi\libMonoPosixHelper.so" Condition="$(AndroidSupportedTargetJitAbis.Contains (':armeabi:'))">
       <Link>MonoPosixHelper\armeabi\libMonoPosixHelper.so</Link>
     </EmbeddedNativeLibrary>
-    <EmbeddedNativeLibrary Include="$(XANativeLibsDir)\armeabi-v7a\libMonoPosixHelper.so" Condition="$(AndroidSupportedAbisForConditionalChecks.Contains (':armeabi-v7a:'))">
+    <EmbeddedNativeLibrary Include="$(XANativeLibsDir)\armeabi-v7a\libMonoPosixHelper.so" Condition="$(AndroidSupportedTargetJitAbis.Contains (':armeabi-v7a:'))">
       <Link>MonoPosixHelper\armeabi-v7a\libMonoPosixHelper.so</Link>
     </EmbeddedNativeLibrary>
-    <EmbeddedNativeLibrary Include="$(XANativeLibsDir)\x86\libMonoPosixHelper.so" Condition="$(AndroidSupportedAbisForConditionalChecks.Contains (':x86:'))">
+    <EmbeddedNativeLibrary Include="$(XANativeLibsDir)\x86\libMonoPosixHelper.so" Condition="$(AndroidSupportedTargetJitAbis.Contains (':x86:'))">
       <Link>MonoPosixHelper\x86\libMonoPosixHelper.so</Link>
     </EmbeddedNativeLibrary>
-    <EmbeddedNativeLibrary Include="$(XANativeLibsDir)\x86_64\libMonoPosixHelper.so" Condition="$(AndroidSupportedAbisForConditionalChecks.Contains (':x86_64:'))">
+    <EmbeddedNativeLibrary Include="$(XANativeLibsDir)\x86_64\libMonoPosixHelper.so" Condition="$(AndroidSupportedTargetJitAbis.Contains (':x86_64:'))">
       <Link>MonoPosixHelper\x86_64\libMonoPosixHelper.so</Link>
     </EmbeddedNativeLibrary>
   </ItemGroup>
