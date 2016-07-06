@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using System.Net.Http;
 
+using Java.Net;
+
 namespace Xamarin.Android.Net
 {
 	/// <summary>
