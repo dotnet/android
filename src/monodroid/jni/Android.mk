@@ -3,7 +3,7 @@ LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 
 ifeq ($(CONFIGURATION),Debug)
-COMMON_CFLAGS ?= -ggdb3 -O0 -fno-omit-frame-pointer -DRELEASE=1
+COMMON_CFLAGS ?= -ggdb3 -O0 -fno-omit-frame-pointer
 else
 COMMON_CFLAGS ?= -g -O2 -DRELEASE=1
 endif
