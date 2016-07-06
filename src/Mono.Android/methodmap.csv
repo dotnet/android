@@ -2074,8 +2074,8 @@
 24, android.media, AudioRecord, getTimestamp, timebase, Android.Media.AudioTimebase
 24, android.media, AudioRecordingConfiguration, getClientAudioSource, return, Android.Media.AudioSource
 24, android.media, MediaRouter.RouteInfo, getDeviceType, return, Android.Media.MediaRouterDeviceType
-24, android.media.tv, TvInputService.RecordingSession, notifyError, error, Android.Media.RecordingError
-24, android.media.tv, TvRecordingClient.RecordingCallback, onError, error, Android.Media.RecordingError
+24, android.media.tv, TvInputService.RecordingSession, notifyError, error, Android.Media.TV.RecordingError
+24, android.media.tv, TvRecordingClient.RecordingCallback, onError, error, Android.Media.TV.RecordingError
 24, android.mtp, MtpDeviceInfo, getEventsSupported, return, Android.Mtp.EventCode[]
 24, android.mtp, MtpDeviceInfo, getOperationsSupported, return, Android.Mtp.OperationCode[]
 24, android.mtp, MtpDeviceInfo, isEventSupported, code, Android.Mtp.EventCode
