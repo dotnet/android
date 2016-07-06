@@ -13,7 +13,6 @@ namespace Java.Lang {
 #endif  // JAVA_INTEROP
 	{
 
-		static IntPtr java_lang_Object_toString;
 		protected bool is_generated;
 		IntPtr handle;
 
@@ -130,18 +129,43 @@ namespace Java.Lang {
 
 		public override string StackTrace {
 			get {
-				if (string.IsNullOrEmpty (nativeStack) && handle != IntPtr.Zero) {
-					using (var nativeStackWriter = new Java.IO.StringWriter ())
-					using (var nativeStackPw = new Java.IO.PrintWriter (nativeStackWriter)) {
-						PrintStackTrace (nativeStackPw);
-						nativeStack = nativeStackWriter.ToString ();
-					}
-					nativeStack = base.StackTrace + Environment.NewLine +
-						"  --- End of managed exception stack trace ---" + Environment.NewLine +
-						nativeStack;
+				return base.StackTrace + ManagedStackTraceAddendum;
+			}
+		}
+
+		string ManagedStackTraceAddendum {
+			get {
+				var javaStack = JavaStackTrace;
+				if (string.IsNullOrEmpty (javaStack))
+					return "";
+				return Environment.NewLine +
+					"  --- End of managed " +
+					GetType ().FullName +
+					" stack trace ---" + Environment.NewLine +
+					javaStack;
+			}
+		}
+
+		string JavaStackTrace {
+			get {
+				if (!string.IsNullOrEmpty (nativeStack))
+					return nativeStack;
+
+				if (handle == IntPtr.Zero)
+					return null;
+
+				using (var nativeStackWriter = new Java.IO.StringWriter ())
+				using (var nativeStackPw = new Java.IO.PrintWriter (nativeStackWriter)) {
+					PrintStackTrace (nativeStackPw);
+					nativeStack = nativeStackWriter.ToString ();
 				}
 				return nativeStack;
 			}
+		}
+
+		public override string ToString ()
+		{
+			return base.ToString () + ManagedStackTraceAddendum;
 		}
 
 #if JAVA_INTEROP
