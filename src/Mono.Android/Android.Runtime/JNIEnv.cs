@@ -297,7 +297,14 @@ namespace Android.Runtime {
 				Java.Lang.Thread.DefaultUncaughtExceptionHandler = uncaughtExceptionHandler.DefaultHandler;
 
 #if JAVA_INTEROP
-			// Close of the current JniEnvironment to avoid ObjectDisposedException after shutdown
+			/* Manually dispose surfaced objects and close the current JniEnvironment to
+			 * avoid ObjectDisposedException thrown on finalizer threads after shutdown
+			 */
+			foreach (var surfacedObject in Java.Interop.Runtime.GetSurfacedObjects ()) {
+				var obj = surfacedObject.Target as IDisposable;
+				if (obj != null)
+					obj.Dispose ();
+			}
 			JniEnvironment.Runtime.Dispose ();
 #endif // JAVA_INTEROP
 		}
