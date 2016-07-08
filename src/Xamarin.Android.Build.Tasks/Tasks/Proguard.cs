@@ -126,7 +126,7 @@ namespace Xamarin.Android.Tasks
 				File.Delete (ProguardJarInput);
 			using (var zip = ZipArchive.Open (ProguardJarInput, FileMode.Create)) {
 				foreach (var file in Directory.GetFiles (classesFullPath, "*", SearchOption.AllDirectories))
-					zip.AddFile (file, Path.GetDirectoryName (file.Substring (classesFullPath.Length)));
+					zip.AddFile (file, Path.Combine (Path.GetDirectoryName (file.Substring (classesFullPath.Length)), Path.GetFileName (file)));
 			}
 
 			var acwLines = File.ReadAllLines (AcwMapFile);
