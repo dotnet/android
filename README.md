@@ -155,6 +155,23 @@ Then, you may do one of the following:
     because it generates sources, and those sources won't exist on the
     initial project load. Rebuild the project should this happen.
 
+## Linux build notes
+
+If you have the `binfmt_misc` module enabled with any of Mono or Wine installed and
+you plan to cross-build the Windows compilers and tools (by enabling the `mxe-Win32`
+or `mxe-Win64` host targets) as well as LLVM+AOT targets, you will need to disable 
+`binfmt_misc` for the duration of the build or the Mono/LLVM configure scripts will
+fail to detect they are cross-compiling and they will produce Windows PE executables
+for tools required by the build.
+
+To disable `binfmt_misc` you need to issue the following command as root:
+
+        echo 0 > /proc/sys/fs/binfmt_misc/status
+
+and to enable it again, issue the following command:
+
+        echo 1 > /proc/sys/fs/binfmt_misc/status
+
 # Build Output Directory Structure
 
 There are two configurations, `Debug` and `Release`, controlled by the

@@ -86,15 +86,15 @@
     />
   </Target>
   <Target Name="_SetMxeToolchainMakefileTimeToLastCommitTimestamp"
-      Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:')) Or $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win32:'))">
+      Condition=" '$(NeedMxe)' == 'true' And ($(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:')) Or $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win32:')))">
     <Exec
         Command="touch -m -t `git log -1 --format=%25cd --date=format-local:%25Y%25m%25d%25H%25M.%25S` Makefile"
         WorkingDirectory="..\..\external\mxe"
     />
   </Target>
   <ItemGroup>
-    <_AndroidMxeToolchain Include="i686-w64-mingw32.static"   Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win32:'))" />
-    <_AndroidMxeToolchain Include="x86_64-w64-mingw32.static" Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))" />
+    <_AndroidMxeToolchain Include="$(MingwCommandPrefix32)" Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win32:'))" />
+    <_AndroidMxeToolchain Include="$(MingwCommandPrefix64)" Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))" />
   </ItemGroup>
   <ItemGroup>
     <_AndroidMxeOutput Include="@(_AndroidMxeToolchain->'$(AndroidMxeFullPath)\bin\%(Identity)-gcc')" />
@@ -104,17 +104,17 @@
   </ItemGroup>
   <Target Name="_CreateMxeToolchains"
       DependsOnTargets="_SetMxeToolchainMakefileTimeToLastCommitTimestamp"
-      Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win32:')) Or $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))"
+      Condition=" '$(NeedMxe)' == 'true' And ($(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win32:')) Or $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:')))"
       Inputs="..\..\external\mxe\Makefile"
       Outputs="@(_AndroidMxeOutput)">
     <Exec
         Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win32:'))"
-        Command="make $(MAKEFLAGS) MXE_TARGETS=&quot;i686-w64-mingw32.static&quot; gcc cmake zlib PREFIX=&quot;$(AndroidMxeFullPath)&quot;"
+        Command="make $(MAKEFLAGS) MXE_TARGETS=&quot;$(MingwCommandPrefix32)&quot; gcc cmake zlib PREFIX=&quot;$(AndroidMxeFullPath)&quot;"
         WorkingDirectory="..\..\external\mxe"
     />
     <Exec
         Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))"
-        Command="make $(MAKEFLAGS) MXE_TARGETS=&quot;x86_64-w64-mingw32.static&quot; gcc cmake zlib PREFIX=&quot;$(AndroidMxeFullPath)&quot;"
+        Command="make $(MAKEFLAGS) MXE_TARGETS=&quot;$(MingwCommandPrefix64)&quot; gcc cmake zlib PREFIX=&quot;$(AndroidMxeFullPath)&quot;"
         WorkingDirectory="..\..\external\mxe"
     />
   </Target>

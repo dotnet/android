@@ -72,6 +72,71 @@
         WorkingDirectory="$(MonoSourceFullPath)"
     />
   </Target>
+
+  <Target Name="_PrepareLlvmItems">
+    <ItemGroup>
+      <_LlvmSourceFile Include="$(LlvmSourceFullPath)\lib\**\*.cpp" />
+      <_LlvmHeaderFile Include="$(LlvmSourceFullPath)\lib\**\*.h" />
+      <_LlvmMakefileConfig Include="@(_LlvmRuntime->'$(_LlvmOutputDirTop)\%(BuildDir)\Makefile.config')" />
+      <_LlvmConfigureStamp Include="@(_LlvmRuntime->'$(_LlvmOutputDirTop)\%(BuildDir)\.stamp-configure')" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <_LlvmArchive Include="$(_LlvmOutputDirTop)\%(_LlvmRuntime.BuildDir)\Release\lib\*.a" />
+
+      <_LlvmSourceBinary Include="@(_LlvmRuntime->'$(_LlvmOutputDirTop)\%(BuildDir)\Release\bin\opt%(ExeSuffix)')" Condition=" '%(_LlvmRuntime.InstallBinaries)' == 'true' " />
+      <_LlvmTargetBinary Include="@(_LlvmRuntime->'$(OutputPath)\bin\opt%(ExeSuffix)')" Condition=" '%(_LlvmRuntime.InstallBinaries)' == 'true' "/>
+
+      <_LlvmSourceBinary Include="@(_LlvmRuntime->'$(_LlvmOutputDirTop)\%(BuildDir)\Release\bin\llc%(ExeSuffix)')" Condition=" '%(_LlvmRuntime.InstallBinaries)' == 'true' " />
+      <_LlvmTargetBinary Include="@(_LlvmRuntime->'$(OutputPath)\bin\llc%(ExeSuffix)')" Condition=" '%(_LlvmRuntime.InstallBinaries)' == 'true' " />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_ConfigureLlvm"
+          DependsOnTargets="_PrepareLlvmItems"
+          Inputs="$(LlvmSourceFullPath)\Makefile.config.in;$(LlvmSourceFullPath)\configure;@(_LlvmSourceFile);@(_LlvmHeaderFile)"
+          Outputs="@(_LlvmMakefileConfig);@(_LlvmConfigureStamp)"
+          Condition=" $(_LlvmNeeded) != '' ">
+    <MakeDir Directories="$(_LlvmOutputDirTop)\%(_LlvmRuntime.BuildDir)" />
+    <Exec
+        Command="%(_LlvmRuntime.ConfigureEnvironment) $(LlvmSourceFullPath)\configure %(_LlvmRuntime.ConfigureFlags)"
+        WorkingDirectory="$(_LlvmOutputDirTop)\%(_LlvmRuntime.BuildDir)"
+    />
+    <Touch
+        Files="$(_LlvmOutputDirTop)\%(_LlvmRuntime.BuildDir)\Makefile.config"
+    />
+    <Touch
+        Files="$(_LlvmOutputDirTop)\%(_LlvmRuntime.BuildDir)\.stamp-configure"
+        AlwaysCreate="true"
+    />
+  </Target>
+  
+  <Target Name="_BuildLlvm"
+          DependsOnTargets="_ConfigureLlvm"
+          Inputs="@(_LlvmConfigureStamp);@(_LlvmSourceFile);@(_LlvmHeaderFile)"
+          Outputs="@(_LlvmArchive);@(_LlvmSourceBinary)"
+          Condition=" '$(_LlvmNeeded)' != '' ">
+    <Exec
+        Command="%(_LlvmRuntime.BuildEnvironment) make $(MakeConcurrency) all install"
+        WorkingDirectory="$(_LlvmOutputDirTop)\%(_LlvmRuntime.BuildDir)"
+        />
+    <Touch
+        Files="@(_LlvmArchive);@(_LlvmTargetBinary)"
+        />
+  </Target>
+
+  <Target Name="_InstallLlvm"
+          DependsOnTargets="_BuildLlvm"
+          Inputs="@(_LlvmSourceBinary)"
+          Outputs="@(_LlvmTargetBinary)"
+          Condition=" '$(_LlvmNeeded)' != '' ">
+    <Copy
+        SourceFiles="@(_LlvmSourceBinary)"
+        DestinationFolder="$(OutputPath)\bin" />
+    <Touch
+        Files="@(_LlvmTargetBinary)" />
+  </Target>
+
   <Target Name="_Autogen"
       DependsOnTargets="_SetAutogenShTimeToLastCommitTimestamp"
       Inputs="$(MonoSourceFullPath)\autogen.sh"
@@ -82,63 +147,71 @@
     />
   </Target>
   <Target Name="_ConfigureRuntimes"
+      DependsOnTargets="_BuildLlvm"
       Inputs="$(MonoSourceFullPath)\configure"
-      Outputs="@(_MonoRuntime->'$(IntermediateOutputPath)\%(Identity)\Makefile')">
-    <MakeDir Directories="@(_MonoRuntime->'$(IntermediateOutputPath)\%(Identity)')" />
+      Outputs="$(IntermediateOutputPath)\%(_MonoRuntime.Identity)\Makefile">
+    <MakeDir Directories="$(IntermediateOutputPath)\%(_MonoRuntime.Identity)" />
     <Exec
         Command="$(MonoSourceFullPath)\configure LDFLAGS=&quot;%(_MonoRuntime.LdFlags)&quot; CFLAGS=&quot;%(_MonoRuntime.CFlags)&quot; CXXFLAGS=&quot;%(_MonoRuntime.CxxFlags)&quot; CC=&quot;%(_MonoRuntime.Cc)&quot; CXX=&quot;%(_MonoRuntime.Cxx)&quot; CPP=&quot;%(_MonoRuntime.Cpp)&quot; CXXCPP=&quot;%(_MonoRuntime.CxxCpp)&quot; LD=&quot;%(_MonoRuntime.Ld)&quot; AR=&quot;%(_MonoRuntime.Ar)&quot; AS=&quot;%(_MonoRuntime.As)&quot; RANLIB=&quot;%(_MonoRuntime.RanLib)&quot; STRIP=&quot;%(_MonoRuntime.Strip)&quot; DLLTOOL=&quot;%(_MonoRuntime.DllTool)&quot; OBJDUMP=&quot;%(_MonoRuntime.Objdump)&quot; --cache-file=..\%(_MonoRuntime.Identity).config.cache %(_MonoRuntime.ConfigureFlags)"
-        WorkingDirectory="@(_MonoRuntime->'$(IntermediateOutputPath)\%(Identity)')"
+        WorkingDirectory="$(IntermediateOutputPath)\%(_MonoRuntime.Identity)"
     />
     <Touch
-        Files="@(_MonoRuntime->'$(IntermediateOutputPath)\%(Identity)\.stamp')"
+        Files="$(IntermediateOutputPath)\%(_MonoRuntime.Identity)\.stamp"
         AlwaysCreate="True"
     />
   </Target>
   <Target Name="_GetRuntimesOutputItems">
     <ItemGroup>
-      <_RuntimeLibraries                Include="@(_MonoRuntime->'$(IntermediateOutputPath)%(Identity)\mono\mini\.libs\%(OutputRuntimeFilename).%(NativeLibraryExtension)')" />
-      <_InstallRuntimesOutputs          Include="@(_MonoRuntime->'$(OutputPath)\lib\xbuild\Xamarin\Android\lib\%(Identity)\%(OutputRuntimeFilename).%(NativeLibraryExtension)')" />
-      <_InstallUnstrippedRuntimeOutputs Include="@(_MonoRuntime->'$(OutputPath)\lib\xbuild\Xamarin\Android\lib\%(Identity)\%(OutputRuntimeFilename).d.%(NativeLibraryExtension)')" />
+      <_RuntimeLibraries                Condition=" '%(_MonoRuntime.DoBuild)' == 'true' " Include="@(_MonoRuntime->'$(IntermediateOutputPath)%(Identity)\mono\mini\.libs\%(OutputRuntimeFilename).%(NativeLibraryExtension)')" />
+      <_InstallRuntimesOutputs          Condition=" '%(_MonoRuntime.DoBuild)' == 'true' " Include="@(_MonoRuntime->'$(OutputPath)\lib\xbuild\Xamarin\Android\lib\%(Identity)\%(OutputRuntimeFilename).%(NativeLibraryExtension)')" />
+      <_InstallUnstrippedRuntimeOutputs Condition=" '%(_MonoRuntime.DoBuild)' == 'true' " Include="@(_MonoRuntime->'$(OutputPath)\lib\xbuild\Xamarin\Android\lib\%(Identity)\%(OutputRuntimeFilename).d.%(NativeLibraryExtension)')" />
       <_RuntimeLibraries
-          Condition=" '%(_MonoRuntime.OutputProfilerFilename)' != '' "
+          Condition=" '%(_MonoRuntime.DoBuild)' == 'true' And '%(_MonoRuntime.OutputProfilerFilename)' != '' "
           Include="@(_MonoRuntime->'$(IntermediateOutputPath)%(Identity)\mono\profiler\.libs\%(OutputProfilerFilename).%(NativeLibraryExtension)')"
       />
       <_InstallRuntimesOutputs
-          Condition=" '%(_MonoRuntime.OutputProfilerFilename)' != '' "
+          Condition=" '%(_MonoRuntime.DoBuild)' == 'true' And '%(_MonoRuntime.OutputProfilerFilename)' != '' "
           Include="@(_MonoRuntime->'$(OutputPath)\lib\xbuild\Xamarin\Android\lib\%(Identity)\%(OutputProfilerFilename).%(NativeLibraryExtension)')"
       />
-      <_RuntimeLibraries        Include="@(_MonoRuntime->'$(IntermediateOutputPath)%(Identity)\support\.libs\%(OutputMonoPosixHelperFilename).%(NativeLibraryExtension)')" />
-      <_InstallRuntimesOutputs  Include="@(_MonoRuntime->'$(OutputPath)\lib\xbuild\Xamarin\Android\lib\%(Identity)\%(OutputMonoPosixHelperFilename).%(NativeLibraryExtension)')" />
+      <_RuntimeLibraries        Condition=" '%(_MonoRuntime.DoBuild)' == 'true' " Include="@(_MonoRuntime->'$(IntermediateOutputPath)%(Identity)\support\.libs\%(OutputMonoPosixHelperFilename).%(NativeLibraryExtension)')" />
+      <_InstallRuntimesOutputs  Condition=" '%(_MonoRuntime.DoBuild)' == 'true' " Include="@(_MonoRuntime->'$(OutputPath)\lib\xbuild\Xamarin\Android\lib\%(Identity)\%(OutputMonoPosixHelperFilename).%(NativeLibraryExtension)')" />
+      <_RuntimeBuildStamp       Condition=" '%(_MonoRuntime.DoBuild)' == 'true' " Include="@(_MonoRuntime->'$(IntermediateOutputPath)%(Identity)\.stamp')" />
     </ItemGroup>
   </Target>
   <Target Name="_BuildRuntimes"
       DependsOnTargets="_GetRuntimesOutputItems"
-      Inputs="@(_MonoRuntime->'$(IntermediateOutputPath)%(Identity)\.stamp')"
-      Outputs="@(_RuntimeLibraries);@(_BclProfileItems)">
+      Inputs="%(_RuntimeBuildStamp.Identity)"
+      Outputs="%(_RuntimeLibraries.Identity);@(_BclProfileItems)">
     <Exec
-        Command="make $(MAKEFLAGS) # %(_MonoRuntime.Identity)"
-        WorkingDirectory="@(_MonoRuntime->'$(IntermediateOutputPath)\%(Identity)')"
+        Condition=" '%(_MonoRuntime.DoBuild)' == 'true' "
+        Command="make $(MakeConcurrency) # %(_MonoRuntime.Identity)"
+        WorkingDirectory="$(IntermediateOutputPath)\%(_MonoRuntime.Identity)"
     />
     <Touch
-        Files="@(_RuntimeLibraries);@(_BclProfileItems)"
+        Files="%(_RuntimeLibraries.Identity);@(_BclProfileItems)"
     />
   </Target>
   <Target Name="_InstallRuntimes"
       DependsOnTargets="_GetRuntimesOutputItems"
-      Inputs="@(_RuntimeLibraries)"
-      Outputs="@(_InstallRuntimesOutputs);@(_InstallUnstrippedRuntimeOutputs)">
-    <MakeDir Directories="@(_MonoRuntime->'$(OutputPath)\lib\xbuild\Xamarin\Android\lib\%(Identity)')" />
+      Inputs="%(_RuntimeLibraries.Identity)"
+      Outputs="%(_InstallRuntimesOutputs.Identity);%(_InstallUnstrippedRuntimeOutputs.Identity)">
+    <MakeDir
+        Condition=" '%(_MonoRuntime.DoBuild)' == 'true' "
+        Directories="$(OutputPath)\lib\xbuild\Xamarin\Android\lib\%(_MonoRuntime.Identity)"
+        />
     <Copy
+        Condition=" '%(_MonoRuntime.DoBuild)' == 'true' "
         SourceFiles="@(_RuntimeLibraries)"
         DestinationFiles="@(_InstallRuntimesOutputs)"
     />
     <Copy
-        SourceFiles="@(_MonoRuntime->'$(IntermediateOutputPath)\%(Identity)\mono\mini\.libs\%(OutputRuntimeFilename).%(NativeLibraryExtension)')"
-        DestinationFiles="@(_InstallUnstrippedRuntimeOutputs)"
+        Condition=" '%(_MonoRuntime.DoBuild)' == 'true' "
+        SourceFiles="$(IntermediateOutputPath)\%(_MonoRuntime.Identity)\mono\mini\.libs\%(_MonoRuntime.OutputRuntimeFilename).%(_MonoRuntime.NativeLibraryExtension)"
+        DestinationFiles="%(_InstallUnstrippedRuntimeOutputs.Identity)"
     />
     <Exec
-        Condition=" '$(Configuration)' != 'Debug' "
-        Command="&quot;%(_MonoRuntime.Strip)&quot; %(_MonoRuntime.StripFlags) &quot;$(OutputPath)\lib\xbuild\Xamarin\Android\lib\%(Identity)\%(OutputRuntimeFilename).%(NativeLibraryExtension)&quot;"
+        Condition=" '$(Configuration)' != 'Debug' And '%(_MonoRuntime.DoBuild)' == 'true' "
+        Command="&quot;%(_MonoRuntime.Strip)&quot; %(_MonoRuntime.StripFlags) &quot;$(OutputPath)\lib\xbuild\Xamarin\Android\lib\%(_MonoRuntime.Identity)\%(_MonoRuntime.OutputRuntimeFilename).%(_MonoRuntime.NativeLibraryExtension)&quot;"
     />
     <Touch
         Files="@(_InstallRuntimesOutputs);@(_InstallUnstrippedRuntimeOutputs)"
@@ -186,9 +259,81 @@
         Overwrite="True"
     />
   </Target>
+
+  <!-- The condition below is to work around a bug in xbuild which attempts to batch
+       even if there are no _MonoCrossRuntime items and the Copy task fails
+  -->
+  <Target Name="_ConfigureCrossRuntimes"
+          DependsOnTargets="_BuildLlvm"
+          Inputs="$(MonoSourceFullPath)\configure"
+          Outputs="$(IntermediateOutputPath)%(_MonoCrossRuntime.Identity)\Makefile;$(IntermediateOutputPath)%(_MonoCrossRuntime.Identity)\.stamp"
+          Condition=" '@(_MonoCrossRuntime)' != '' ">
+    <MakeDir Directories="$(IntermediateOutputPath)\%(_MonoCrossRuntime.Identity)" />
+    <Exec
+        Command="%(_MonoCrossRuntime.ConfigureEnvironment) $(MonoSourceFullPath)\configure LDFLAGS=&quot;%(_MonoCrossRuntime.LdFlags)&quot; CFLAGS=&quot;%(_MonoCrossRuntime.CFlags)&quot; CXXFLAGS=&quot;%(_MonoCrossRuntime.CxxFlags)&quot; CC=&quot;%(_MonoCrossRuntime.Cc)&quot; CXX=&quot;%(_MonoCrossRuntime.Cxx)&quot; CPP=&quot;%(_MonoCrossRuntime.Cpp)&quot; CXXCPP=&quot;%(_MonoCrossRuntime.CxxCpp)&quot; LD=&quot;%(_MonoCrossRuntime.Ld)&quot; AR=&quot;%(_MonoCrossRuntime.Ar)&quot; AS=&quot;%(_MonoCrossRuntime.As)&quot; RANLIB=&quot;%(_MonoCrossRuntime.RanLib)&quot; STRIP=&quot;%(_MonoCrossRuntime.Strip)&quot; DLLTOOL=&quot;%(_MonoCrossRuntime.DllTool)&quot; OBJDUMP=&quot;%(_MonoCrossRuntime.Objdump)&quot; --cache-file=..\%(_MonoCrossRuntime.Identity).config.cache %(_MonoCrossRuntime.ConfigureFlags)"
+        WorkingDirectory="$(IntermediateOutputPath)%(_MonoCrossRuntime.Identity)"
+    />
+    <Touch
+        Files="$(IntermediateOutputPath)%(_MonoCrossRuntime.Identity)\.stamp"
+        AlwaysCreate="True"
+    />
+  </Target>
+  
+  <Target Name="_GenerateCrossOffsetHeaderFiles"
+      Inputs="$(MonoSourceFullPath)\configure"
+      Outputs="%(_MonoCrossRuntime.OffsetsHeader)"
+      Condition=" '$(HostOS)' != 'Linux' And '@(_MonoCrossRuntime)' != '' ">
+    <Exec
+        Command="make $(_AotOffsetsDumperName)"
+        WorkingDirectory="$(_AotOffsetsDumperSourceDir)" 
+    />
+    <Exec
+        Command="MONO_PATH=$(_AotOffsetsDumperSourceDir)\CppSharp $(ManagedRuntime) $(_AotOffsetsDumperSourceDir)\$(_AotOffsetsDumperName) --xamarin-android --android-ndk=&quot;$(AndroidNdkFullPath)&quot; --mono=&quot;$(MonoSourceFullPath)&quot; --monodroid=&quot;$(XamarinAndroidSourcePath)&quot; --abi=&quot;%(_MonoCrossRuntime.TargetAbi)&quot; --out=&quot;$(MSBuildThisFileDirectory)$(IntermediateOutputPath)%(_MonoCrossRuntime.Identity)&quot;"
+        WorkingDirectory="$(IntermediateOutputPath)%(_MonoCrossRuntime.Identity)" 
+    />
+    <Touch
+        Files="$(IntermediateOutputPath)%(_MonoCrossRuntime.Identity)\%(_MonoCrossRuntime.OffsetsHeaderFile)" 
+    />
+  </Target>
+
+
+  <!-- The condition below is to work around a bug in xbuild which attempts to batch
+       even if there are no _MonoCrossRuntime items and the Copy task fails
+  -->
+  <Target Name="_BuildCrossRuntimes"
+      DependsOnTargets="_GenerateCrossOffsetHeaderFiles"
+      Inputs="$(IntermediateOutputPath)%(_MonoCrossRuntime.Identity)\.stamp"
+      Outputs="$(IntermediateOutputPath)%(_MonoCrossRuntime.Identity)\mono\mini\mono-sgen%(_MonoCrossRuntime.ExeSuffix)"
+      Condition=" '@(_MonoCrossRuntime)' != '' ">
+    <Message Text="Building %(_MonoCrossRuntime.Identity) in $(IntermediateOutputPath)%(_MonoCrossRuntime.Identity)"/>
+    <Exec
+        Command="%(_MonoCrossRuntime.BuildEnvironment) make $(MakeConcurrency)"
+        WorkingDirectory="$(IntermediateOutputPath)%(_MonoCrossRuntime.Identity)"
+    />
+    <Touch
+        Files="$(IntermediateOutputPath)%(_MonoCrossRuntime.Identity)\mono\mini\mono-sgen%(_MonoCrossRuntime.ExeSuffix)"
+    />
+  </Target>
+
+  <!-- The condition below is to work around a bug in xbuild which attempts to batch
+       even if there are no _MonoCrossRuntime items and the Copy task fails
+  -->
+  <Target Name="_InstallCrossRuntimes"
+      Inputs="$(IntermediateOutputPath)%(_MonoCrossRuntime.Identity)\mono\mini\mono-sgen%(_MonoCrossRuntime.ExeSuffix)"
+      Outputs="$(OutputPath)bin\%(_MonoCrossRuntime.CrossMonoName)"
+      Condition=" '@(_MonoCrossRuntime)' != '' ">
+    <MakeDir Directories="$(OutputPath)bin\" />
+    <Copy
+        SourceFiles="$(IntermediateOutputPath)%(_MonoCrossRuntime.Identity)\mono\mini\mono-sgen%(_MonoCrossRuntime.ExeSuffix)"
+        DestinationFiles="$(OutputPath)bin\%(_MonoCrossRuntime.CrossMonoName)%(_MonoCrossRuntime.ExeSuffix)" 
+    />
+    <Touch
+        Files="$(OutputPath)bin\%(_MonoCrossRuntime.CrossMonoName)%(_MonoCrossRuntime.ExeSuffix)" 
+    />
+  </Target>
   <Target Name="_CleanRuntimes"
       AfterTargets="Clean">
-    <RemoveDir Directories="@(_MonoRuntime->'$(IntermediateOutputPath)\%(Identity)')" />
-    <Delete Files="@(_MonoRuntime->'$(IntermediateOutputPath)\%(Identity).config.cache')" />
+    <RemoveDir Directories="@(_MonoRuntime->'$(IntermediateOutputPath)\%(Identity)');@(_MonoCrossRuntime->'$(IntermediateOutputPath)\%(Identity)');$(_LlvmBuildDir32);$(_LlvmBuildDir64);$(_LlvmBuildDirWin32);$(_LlvmBuildDirWin64)" />
+    <Delete Files="@(_MonoRuntime->'$(IntermediateOutputPath)\%(Identity).config.cache');$(_CrossOutputPrefix)*.config.cache;$(_CrossOutputDirTop)\llvm*.config.cache" />
   </Target>
 </Project>

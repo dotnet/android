@@ -16,11 +16,16 @@
   <PropertyGroup>
     <BuildDependsOn>
       ResolveReferences;
+      _BuildLlvm;
+      _InstallLlvm;
       _Autogen;
       _ConfigureRuntimes;
       _BuildRuntimes;
       _InstallRuntimes;
       _InstallBcl;
+      _ConfigureCrossRuntimes;
+      _BuildCrossRuntimes;
+      _InstallCrossRuntimes;
     </BuildDependsOn>
   </PropertyGroup>
   <Import Project="mono-runtimes.targets" />

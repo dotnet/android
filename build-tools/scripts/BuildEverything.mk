@@ -22,6 +22,15 @@ ALL_HOST_ABIS = \
 	$(shell uname) \
 	mxe-Win64
 
+ALL_AOT_ABIS = \
+	armeabi \
+	win-armeabi \
+	arm64 \
+	win-arm64 \
+	x86 \
+	win-x86 \
+	x86_64 \
+	win-x86_64
 
 _space :=
 _space +=
@@ -33,7 +42,8 @@ join-with = $(subst $(_space),$(1),$(strip $(2)))
 
 _MSBUILD_ARGS	= \
 	/p:AndroidSupportedTargetJitAbis=$(call join-with,:,$(ALL_JIT_ABIS)) \
-	/p:AndroidSupportedHostJitAbis=$(call join-with,:,$(ALL_HOST_ABIS))
+	/p:AndroidSupportedHostJitAbis=$(call join-with,:,$(ALL_HOST_ABIS)) \
+	/p:AndroidSupportedTargetAotAbis=$(call join-with,:,$(ALL_AOT_ABIS))
 
 TASK_ASSEMBLIES = \
 	bin/Debug/lib/xbuild/Xamarin/Android/Xamarin.Android.Build.Tasks.dll    \
