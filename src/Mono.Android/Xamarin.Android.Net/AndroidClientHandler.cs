@@ -168,7 +168,7 @@ namespace Xamarin.Android.Net
 		/// <returns>Task in which the request is executed</returns>
 		/// <param name="request">Request provided by <see cref="System.Net.Http.HttpClient"/></param>
 		/// <param name="cancellationToken">Cancellation token.</param>
-		protected override Task <HttpResponseMessage> SendAsync (HttpRequestMessage request, CancellationToken cancellationToken)
+		protected override async Task <HttpResponseMessage> SendAsync (HttpRequestMessage request, CancellationToken cancellationToken)
 		{
 			AssertSelf ();
 			if (request == null)
@@ -179,8 +179,8 @@ namespace Xamarin.Android.Net
 
 			URL java_url = new URL (request.RequestUri.ToString ());
 			URLConnection java_connection = java_url.OpenConnection ();
-			HttpURLConnection httpConnection = SetupRequestInternal (request, java_connection);
-			return ProcessRequest (request, java_url, httpConnection, cancellationToken);
+			HttpURLConnection httpConnection = await SetupRequestInternal (request, java_connection);
+			return await ProcessRequest (request, java_url, httpConnection, cancellationToken);
 		}
 		
 		Task <HttpResponseMessage> ProcessRequest (HttpRequestMessage request, URL javaUrl, HttpURLConnection httpConnection, CancellationToken cancellationToken)
@@ -361,9 +361,9 @@ namespace Xamarin.Android.Net
 		/// </summary>
 		/// <param name="request">Request data</param>
 		/// <param name="conn">Pre-configured connection instance</param>
-		protected virtual void SetupRequest (HttpRequestMessage request, HttpURLConnection conn)
+		protected virtual Task SetupRequest (HttpRequestMessage request, HttpURLConnection conn)
 		{
-			AssertSelf ();
+			return Task.Factory.StartNew (AssertSelf);
 		}
 
 		/// <summary>
@@ -422,7 +422,7 @@ namespace Xamarin.Android.Net
 			list.Add (encoding);
 		}
 		
-		HttpURLConnection SetupRequestInternal (HttpRequestMessage request, URLConnection conn)
+		async Task <HttpURLConnection> SetupRequestInternal (HttpRequestMessage request, URLConnection conn)
 		{
 			if (conn == null)
 				throw new ArgumentNullException (nameof (conn));
@@ -467,7 +467,7 @@ namespace Xamarin.Android.Net
 			}
 			
 			HandlePreAuthentication (httpConnection);
-			SetupRequest (request, httpConnection);
+			await SetupRequest (request, httpConnection);
 			SetupRequestBody (httpConnection, request);
 			
 			return httpConnection;

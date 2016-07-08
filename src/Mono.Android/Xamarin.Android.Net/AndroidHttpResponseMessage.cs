@@ -20,6 +20,9 @@ namespace Xamarin.Android.Net
 		/// <value>The requested authentication.</value>
 		public IList <AuthenticationData> RequestedAuthentication { get; internal set; }
 
+		public AndroidHttpResponseMessage ()
+		{}
+
 		public AndroidHttpResponseMessage (URL javaUrl, HttpURLConnection httpConnection) {
 			javaUrl = javaUrl;
 			httpConnection = httpConnection;
