@@ -19,7 +19,6 @@
     <DebugType>full</DebugType>
     <Optimize>False</Optimize>
     <OutputPath>..\..\bin\$(Configuration)\lib\xbuild\Xamarin\Android</OutputPath>
-    <DefineConstants Condition="'$(MonoDroidTiming)' == ''">TRACE;DEBUG;HAVE_CECIL;MSBUILD;JCW_ONLY_TYPE_NAMES</DefineConstants>
     <DefineConstants Condition="'$(MonoDroidTiming)' == ''">TRACE;DEBUG;HAVE_CECIL;MSBUILD</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -28,13 +27,13 @@
     <DebugType></DebugType>
     <Optimize>True</Optimize>
     <OutputPath>..\..\bin\$(Configuration)\lib\xbuild\Xamarin\Android</OutputPath>
-    <DefineConstants>TRACE;HAVE_CECIL;MSBUILD;JCW_ONLY_TYPE_NAMES</DefineConstants>
+    <DefineConstants>TRACE;HAVE_CECIL;MSBUILD</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup>
     <DefineConstants Condition="'$(__XA_NO_PREVIEW_L_SUPPORT__)' != ''">$(DefineConstants);XA_NO_PREVIEW_L_SUPPORT</DefineConstants>
-    <AndroidGeneratedClassDirectory Condition=" '$(AndroidGeneratedClassDirectory)' == '' ">..\..\src\Mono.Android\obj\$(Configuration)\android-$(AndroidApiLevel)</AndroidGeneratedClassDirectory>
+    <AndroidGeneratedClassDirectory Condition=" '$(AndroidGeneratedClassDirectory)' == '' ">..\..\src\Mono.Android\obj\$(Configuration)\android-$(AndroidApiLevel)\mcw</AndroidGeneratedClassDirectory>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.Build.Framework" />

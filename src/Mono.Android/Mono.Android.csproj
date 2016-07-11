@@ -296,8 +296,11 @@
   <Import Project="$(JavaInteropFullPath)\src\Java.Interop.Tools.TypeNameMappings\Java.Interop.Tools.TypeNameMappings.projitems" Label="Shared" Condition="Exists('$(JavaInteropFullPath)\src\Java.Interop.Tools.TypeNameMappings\Java.Interop.Tools.TypeNameMappings.projitems')" />
   <Import Project="$(JavaInteropFullPath)\src\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems" Label="Shared" Condition="Exists('$(JavaInteropFullPath)\src\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems')" />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <IntermediateOutputPath>$(IntermediateOutputPath)android-$(AndroidApiLevel)\</IntermediateOutputPath>
+  </PropertyGroup>
   <Import Project="Mono.Android.targets" />
-  <Import Project="$(IntermediateOutputPath)android-$(AndroidApiLevel)\Mono.Android.projitems" Condition="Exists('$(IntermediateOutputPath)android-$(AndroidApiLevel)\Mono.Android.projitems')" />
+  <Import Project="$(IntermediateOutputPath)mcw\Mono.Android.projitems" Condition="Exists('$(IntermediateOutputPath)mcw\Mono.Android.projitems')" />
   <ItemGroup>
     <ProjectReference Include="..\..\build-tools\api-merge\api-merge.csproj">
       <Project>{3FC3E78B-F7D4-42EA-BBE8-4535DF42BFF8}</Project>

@@ -116,7 +116,7 @@
       <Objdump>$(AndroidMxeFullPath)\bin\x86_64-w64-mingw32.static-objdump</Objdump>
       <RanLib>$(AndroidMxeFullPath)\bin\x86_64-w64-mingw32.static-ranlib</RanLib>
       <Strip>$(AndroidMxeFullPath)\bin\x86_64-w64-mingw32.static-strip</Strip>
-      <ConfigureFlags>PATH="$PATH:$(AndroidMxeFullPath)\bin" --host=x86_64-w64-mingw32.static --target=x86_64-w64-mingw32.static --disable-boehm --enable-mcs-build=no --enable-nls=no --enable-maintainer-mode --with-monodroid --disable-llvm</ConfigureFlags>
+      <ConfigureFlags>PATH="$PATH:$(AndroidMxeFullPath)\bin" --host=x86_64-w64-mingw32.static --target=x86_64-w64-mingw32.static --disable-boehm --enable-mcs-build=no --enable-nls=no --enable-maintainer-mode --with-monodroid --disable-llvm ac_cv_header_zlib_h=no</ConfigureFlags>
       <NativeLibraryExtension>dll</NativeLibraryExtension>
       <OutputRuntimeFilename>libmonosgen-2.0</OutputRuntimeFilename>
       <OutputProfilerFilename></OutputProfilerFilename>
@@ -133,7 +133,8 @@
       <Ld>ld</Ld>
       <LdFlags></LdFlags>
       <RanLib>ranlib</RanLib>
-      <Strip>strip -S</Strip>
+      <Strip>strip</Strip>
+      <StripFlags>-S</StripFlags>
       <ConfigureFlags>--enable-maintainer-mode --without-ikvm-native --with-monodroid --with-mcs-docs=no --disable-mono-debugger --with-profile2=no --with-profile4=no --with-profile4_5=yes --disable-boehm --enable-nls=no --disable-iconv</ConfigureFlags>
       <OutputRuntimeFilename>libmonosgen-2.0</OutputRuntimeFilename>
       <NativeLibraryExtension>dylib</NativeLibraryExtension>
