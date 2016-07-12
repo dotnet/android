@@ -168,6 +168,9 @@ namespace Java.Interop {
 			[Conditional ("DEBUG")]
 			static void AssertReferenceType (ref JniObjectReference reference, JniObjectReferenceType type)
 			{
+				if (reference.Type == type)
+					return;
+
 				Debug.Assert (reference.Type == type,
 						string.Format ("Object reference {0} should be of type {1}, is instead {2}!",
 							reference.ToString (), type, reference.Type));
@@ -176,6 +179,9 @@ namespace Java.Interop {
 			[Conditional ("DEBUG")]
 			void AssertCount (int count, string type, string value)
 			{
+				if (count >= 0)
+					return;
+
 				Debug.Assert (count >= 0,
 						string.Format ("{0} count is {1}, expected to be >= 0 when dealing with handle {2} on thread '{3}'({4}).",
 							type, count, value, Runtime.GetCurrentManagedThreadName (), Environment.CurrentManagedThreadId));
