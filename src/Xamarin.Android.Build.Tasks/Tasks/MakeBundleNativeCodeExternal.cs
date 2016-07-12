@@ -98,7 +98,7 @@ namespace Xamarin.Android.Tasks
 					break;
 				}
 
-				if (!NdkUtil.ValidateNdkPlatform (Log, AndroidNdkDirectory, arch, requireLibm:true)) {
+				if (!NdkUtil.ValidateNdkPlatform (Log, AndroidNdkDirectory, arch, enableLLVM: false)) {
 					return false;
 				}
 

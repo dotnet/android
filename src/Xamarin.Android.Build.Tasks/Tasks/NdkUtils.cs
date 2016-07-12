@@ -16,7 +16,7 @@ namespace Xamarin.Android.Tasks
 {
 	public static class NdkUtil {
 
-		public static bool ValidateNdkPlatform (TaskLoggingHelper log, string ndkPath, AndroidTargetArch arch, bool requireLibm)
+		public static bool ValidateNdkPlatform (TaskLoggingHelper log, string ndkPath, AndroidTargetArch arch, bool enableLLVM)
 		{
 			// Check that we have a compatible NDK version for the targeted ABIs.
 			NdkUtil.NdkVersion ndkVersion;
@@ -30,10 +30,16 @@ namespace Xamarin.Android.Tasks
 
 			// NDK r10d is buggy and cannot link x86_64 ABI shared libraries because they are 32-bits.
 			// See https://code.google.com/p/android/issues/detail?id=161421
-			if (requireLibm && ndkVersion.Version == 10 && ndkVersion.Revision == "d" && arch == AndroidTargetArch.X86_64) {
+			if (enableLLVM && ndkVersion.Version == 10 && ndkVersion.Revision == "d" && arch == AndroidTargetArch.X86_64) {
 				log.LogCodedError ("XA3004", "Android NDK r10d is buggy and provides an incompatible x86_64 libm.so. " +
 						"See https://code.google.com/p/android/issues/detail?id=161422.");
 				return false;
+			}
+
+			if (enableLLVM && (ndkVersion.Version < 10 || (ndkVersion.Version == 10 && ndkVersion.Revision[0] < 'd'))) {
+				log.LogMessage (MessageImportance.High,
+						"The detected Android NDK version is incompatible with the targeted LLVM configuration, " +
+						"please upgrade to NDK r10d or newer.");
 			}
 
 			return true;

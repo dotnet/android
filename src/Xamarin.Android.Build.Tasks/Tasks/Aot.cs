@@ -277,7 +277,7 @@ namespace Xamarin.Android.Tasks
 					throw new Exception ("Unsupported Android target architecture ABI: " + abi);
 				}
 
-				if (!NdkUtil.ValidateNdkPlatform (Log, AndroidNdkDirectory, arch, requireLibm:EnableLLVM)) {
+				if (!NdkUtil.ValidateNdkPlatform (Log, AndroidNdkDirectory, arch, enableLLVM:EnableLLVM)) {
 					return false;
 				}
 
