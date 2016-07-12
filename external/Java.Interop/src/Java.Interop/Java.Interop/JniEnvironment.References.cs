@@ -5,8 +5,23 @@ namespace Java.Interop
 {
 	partial class JniEnvironment {
 
+		/// <include file="../Documentation/Java.Interop/JniEnvironment.References.xml" path="/docs/member[@name='T:JniEnvironment.References']/*" />
 		static partial class References
 		{
+			/// <include file="../Documentation/Java.Interop/JniEnvironment.References.xml" path="/docs/member[@name='M:CreatedReference']/*" />
+			public static void CreatedReference (JniObjectReference value)
+			{
+				if (!value.IsValid)
+					return;
+				switch (value.Type) {
+				case JniObjectReferenceType.Local:
+					Runtime.ObjectReferenceManager.CreatedLocalReference (CurrentInfo, value);
+					break;
+				default:
+					throw new ArgumentException ("Only JNI Local References are currently supported.", nameof (value));
+				}
+			}
+
 			public static void GetJavaVM (out IntPtr invocationPointer)
 			{
 				int r   = _GetJavaVM (out invocationPointer);

@@ -179,6 +179,13 @@ namespace Java.Interop {
 				Debug.Assert (count >= 0,
 						string.Format ("{0} count is {1}, expected to be >= 0 when dealing with handle {2} on thread '{3}'({4}).",
 							type, count, value, Runtime.GetCurrentManagedThreadName (), Environment.CurrentManagedThreadId));
+				if (count < 0) {
+					Debug.WriteLine ("Perhaps `Java.Interop.JniEnvironment.References.{0}()` should be used to note the creation of handle {1} on thread '{2}'({3})?",
+							nameof (JniEnvironment.References.CreatedReference),
+							value,
+							Runtime.GetCurrentManagedThreadName (),
+							Environment.CurrentManagedThreadId);
+				}
 			}
 		}
 	}

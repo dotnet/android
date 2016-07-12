@@ -174,5 +174,6 @@
     </None>
     <None Include="Documentation\Java.Interop\IJavaPeerable.xml" />
     <None Include="Documentation\Java.Interop\JniManagedPeerStates.xml" />
+    <None Include="Documentation\Java.Interop\JniEnvironment.References.xml" />
   </ItemGroup>
 </Project>
