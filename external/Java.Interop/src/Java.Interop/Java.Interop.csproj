@@ -34,7 +34,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <ConsolePause>false</ConsolePause>
-    <DefineConstants>INTEROP;FEATURE_JNIENVIRONMENT_SAFEHANDLES;FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES</DefineConstants>
+    <DefineConstants>INTEROP;FEATURE_JNIENVIRONMENT_JI_PINVOKES;FEATURE_JNIOBJECTREFERENCE_INTPTRS</DefineConstants>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DocumentationFile>..\..\bin\Release\Java.Interop.xml</DocumentationFile>
   </PropertyGroup>

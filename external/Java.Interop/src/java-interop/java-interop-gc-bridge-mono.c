@@ -861,9 +861,7 @@ get_add_reference_method (JavaInteropGCBridge *bridge, JNIEnv *env, jobject obj,
 static mono_bool
 add_reference (JavaInteropGCBridge *bridge, JNIEnv *env, MonoObject *obj, MonoJavaGCBridgeInfo *bridge_info, MonoObject *reffed_obj)
 {
-#if DEBUG
 	MonoClass *klass    = mono_object_get_class (obj);
-#endif
 
 	void *handle;
 	mono_field_get_value (obj, bridge_info->handle, &handle);
