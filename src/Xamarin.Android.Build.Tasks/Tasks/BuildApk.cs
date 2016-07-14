@@ -115,7 +115,7 @@ namespace Xamarin.Android.Tasks
 						Assembly.GetExecutingAssembly ().GetManifestResourceStream ("NOTICE.txt"));
 
 				// Add classes.dx
-				apk.AddFiles (DalvikClasses);
+				apk.AddFiles (DalvikClasses, useFileDirectories: false);
 
 				if (EmbedAssemblies && !BundleAssemblies)
 					AddAssemblies (apk);
