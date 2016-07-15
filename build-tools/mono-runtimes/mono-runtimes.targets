@@ -40,8 +40,14 @@
       <_BclAssembly Include="System.Net.dll"/>
       <_BclAssembly Include="System.Net.Http.dll"/>
       <_BclAssembly Include="System.Net.Http.WebRequest.dll"/>
+      <_BclAssembly Include="System.Net.Http.WinHttpHandler.dll"/>
       <_BclAssembly Include="System.Numerics.dll"/>
+      <_BclAssembly Include="System.Numerics.Vectors.dll"/>
+      <_BclAssembly Include="System.Reflection.Context.dll"/>
+      <_BclAssembly Include="System.Reflection.DispatchProxy.dll"/>
+      <_BclAssembly Include="System.Runtime.InteropServices.RuntimeInformation.dll"/>
       <_BclAssembly Include="System.Runtime.Serialization.dll"/>
+      <_BclAssembly Include="System.Security.dll"/>
       <_BclAssembly Include="System.ServiceModel.dll"/>
       <_BclAssembly Include="System.ServiceModel.Internals.dll"/>
       <_BclAssembly Include="System.ServiceModel.Web.dll"/>
@@ -51,6 +57,7 @@
       <_BclAssembly Include="System.Xml.dll"/>
       <_BclAssembly Include="System.Xml.Linq.dll"/>
       <_BclAssembly Include="System.Xml.Serialization.dll"/>
+      <_BclAssembly Include="System.Xml.XPath.XmlDocument.dll"/>
   </ItemGroup>
   <ItemGroup>
     <_BclProfileItems Include="@(_BclAssembly->'$(_MonoProfileDir)\%(Identity)')" />
