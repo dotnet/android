@@ -92,27 +92,30 @@
         WorkingDirectory="..\..\external\mxe"
     />
   </Target>
-  <Target Name="_CreateMxeW32Toolchain"
+  <ItemGroup>
+    <_AndroidMxeToolchain Include="i686-w64-mingw32.static"   Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win32:'))" />
+    <_AndroidMxeToolchain Include="x86_64-w64-mingw32.static" Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))" />
+  </ItemGroup>
+  <ItemGroup>
+    <_AndroidMxeOutput Include="@(_AndroidMxeToolchain->'$(AndroidMxeFullPath)\bin\%(Identity)-gcc')" />
+    <_AndroidMxeOutput Include="@(_AndroidMxeToolchain->'$(AndroidMxeFullPath)\bin\%(Identity)-cmake')" />
+    <_AndroidMxeOutput Include="@(_AndroidMxeToolchain->'$(AndroidMxeFullPath)\%(Identity)\lib\libz.a')" />
+    <_AndroidMxeOutput Include="@(_AndroidMxeToolchain->'$(AndroidMxeFullPath)\%(Identity)\include\zlib.h')" />
+  </ItemGroup>
+  <Target Name="_CreateMxeToolchains"
       DependsOnTargets="_SetMxeToolchainMakefileTimeToLastCommitTimestamp"
-      Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))"
+      Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win32:')) Or $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))"
       Inputs="..\..\external\mxe\Makefile"
-      Outputs="$(AndroidMxeFullPath)\bin\i686-w64-mingw32.static-gcc;$(AndroidMxeFullPath)\bin\i686-w64-mingw32.static-cmake">
+      Outputs="@(_AndroidMxeOutput)">
     <Exec
+        Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win32:'))"
         Command="make $(MAKEFLAGS) MXE_TARGETS=&quot;i686-w64-mingw32.static&quot; gcc cmake zlib PREFIX=&quot;$(AndroidMxeFullPath)&quot;"
         WorkingDirectory="..\..\external\mxe"
     />
-  </Target>
-  <Target Name="_CreateMxeW64Toolchain"
-      DependsOnTargets="_SetMxeToolchainMakefileTimeToLastCommitTimestamp"
-      Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))"
-      Inputs="..\..\external\mxe\Makefile"
-      Outputs="$(AndroidMxeFullPath)\bin\x86_64-w64-mingw32.static-gcc;$(AndroidMxeFullPath)\bin\x86_64-w64-mingw32.static-cmake">
     <Exec
+        Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))"
         Command="make $(MAKEFLAGS) MXE_TARGETS=&quot;x86_64-w64-mingw32.static&quot; gcc cmake zlib PREFIX=&quot;$(AndroidMxeFullPath)&quot;"
         WorkingDirectory="..\..\external\mxe"
     />
-  </Target>
-  <Target Name="_CreateMxeToolchains"
-      DependsOnTargets="_CreateMxeW32Toolchain;_CreateMxeW64Toolchain">
   </Target>
 </Project>
