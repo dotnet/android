@@ -1,6 +1,7 @@
 *.userprefs
 bin
 Configuration.Override.props
+msfinal.pub
 obj
 packages
 .DS_Store

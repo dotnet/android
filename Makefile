@@ -26,6 +26,7 @@ prepare::
 	nuget restore
 	(cd external/Java.Interop && nuget restore)
 	cp Configuration.Java.Interop.Override.props external/Java.Interop/Configuration.Override.props
+	cp `$(MSBUILD) /nologo /v:minimal /t:GetMonoSourceFullPath build-tools/scripts/Paths.targets`/mcs/class/msfinal.pub .
 
 ifeq ($(OS),Linux)
 UBUNTU_DEPS          = libzip4 curl openjdk-8-jdk git make automake autoconf libtool unzip vim-common clang lib32stdc++6 lib32z1
