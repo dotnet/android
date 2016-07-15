@@ -85,18 +85,6 @@
         AlwaysCreate="False"
     />
   </Target>
-  <Target Name="_GetAndroidSdkDirectory">
-    <Message
-        Text="$(AndroidToolchainDirectory)\sdk"
-        Importance="High"
-    />
-  </Target>
-  <Target Name="_GetAndroidNdkDirectory">
-    <Message
-        Text="$(AndroidToolchainDirectory)\ndk"
-        Importance="High"
-    />
-  </Target>
   <Target Name="_SetMxeToolchainMakefileTimeToLastCommitTimestamp"
       Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:')) Or $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win32:'))">
     <Exec

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\..\Configuration.props" />
+  <Target Name="GetAndroidNdkFullPath">
+    <Message
+        Text="$(AndroidNdkFullPath)"
+        Importance="High"
+    />
+  </Target>
+  <Target Name="GetAndroidSdkFullPath">
+    <Message
+        Text="$(AndroidSdkFullPath)"
+        Importance="High"
+    />
+  </Target>
+  <Target Name="GetMonoSourceFullPath">
+    <Message
+        Text="$(MonoSourceFullPath)"
+        Importance="High"
+    />
+  </Target>
+</Project>
