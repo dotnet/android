@@ -138,7 +138,7 @@ namespace Xamarin.Android.Tasks
 			return filePaths.Distinct (MonoAndroidHelper.SizeAndContentFileComparer.DefaultComparer);
 		}
 
-		internal static void InitializeAndroidLogger (TaskLoggingHelper log)
+		public static void InitializeAndroidLogger (TaskLoggingHelper log)
 		{
 			AndroidLogger.Error += (task, message) => log.LogError (task + " " + message);
 			AndroidLogger.Warning += (task, message) => log.LogWarning (task + " " + message);
