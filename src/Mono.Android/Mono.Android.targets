@@ -30,14 +30,14 @@
   <Target Name="_GenerateApiDescription"
       BeforeTargets="_GenerateBinding"
       Inputs="Profiles\api-$(AndroidApiLevel).xml.in"
-      Outputs="$(IntermediateOutputPath)android-$(AndroidApiLevel)\api.xml">
-    <MakeDir Directories="$(IntermediateOutputPath)android-$(AndroidApiLevel)" />
+      Outputs="$(IntermediateOutputPath)mcw\api.xml">
+    <MakeDir Directories="$(IntermediateOutputPath)mcw" />
     <PropertyGroup>
       <ApiMerge>..\..\bin\Build$(Configuration)\api-merge.exe</ApiMerge>
       <_Profiles>@(_AndroidProfile->'%(Identity)', ' ')</_Profiles>
       <_Glob>-s 'Profiles\api-*.xml.in'</_Glob>
       <_LastProfile>--last-description=Profiles\api-$(AndroidApiLevel).xml.in</_LastProfile>
-      <_Out>-o "$(IntermediateOutputPath)android-$(AndroidApiLevel)\api.xml"</_Out>
+      <_Out>-o "$(IntermediateOutputPath)mcw\api.xml"</_Out>
     </PropertyGroup>
     <Exec
         Command="$(ManagedRuntime) $(ApiMerge) $(_Out) $(_Glob) $(_Profiles) $(_LastProfile)"
@@ -45,33 +45,34 @@
   </Target>
   <Target Name="_GenerateBinding"
       BeforeTargets="CoreCompile"
-      Inputs="$(IntermediateOutputPath)android-$(AndroidApiLevel)\api.xml"
-      Outputs="$(IntermediateOutputPath)android-$(AndroidApiLevel)\Mono.Android.projitems">
-    <MakeDir Directories="$(IntermediateOutputPath)android-$(AndroidApiLevel)" />
+      Inputs="$(IntermediateOutputPath)mcw\api.xml"
+      Outputs="$(IntermediateOutputPath)mcw\Mono.Android.projitems">
+    <MakeDir Directories="$(IntermediateOutputPath)mcw" />
     <PropertyGroup>
-      <Generator>$(OutputPath)..\..\..\mandroid\generator.exe</Generator>
+      <Generator>"$(OutputPath)..\..\..\mandroid\generator.exe"</Generator>
+      <_GenFlags>--public --product-version=7</_GenFlags>
       <_ApiLevel>--api-level=$(AndroidApiLevel)</_ApiLevel>
-      <_Out>-o "$(IntermediateOutputPath)android-$(AndroidApiLevel)"</_Out>
+      <_Out>-o "$(IntermediateOutputPath)mcw"</_Out>
       <_Codegen>--codegen-target=XAJavaInterop1</_Codegen>
       <_Fixup>--fixup=metadata</_Fixup>
       <_Enums1>--preserve-enums --enumflags=enumflags --enumfields=map.csv --enummethods=methodmap.csv</_Enums1>
-      <_Enums2>--enummetadata=$(IntermediateOutputPath)android-$(AndroidApiLevel)\enummetadata</_Enums2>
-      <_Versions>--apiversions=$(AndroidToolchainDirectory)\sdk\platform-tools\api\api-versions.xml</_Versions>
-      <_Annotations>--annotations=$(AndroidToolchainDirectory)\sdk\platform-tools\api\annotations.zip</_Annotations>
+      <_Enums2>--enummetadata=$(IntermediateOutputPath)mcw\enummetadata</_Enums2>
+      <_Versions>--apiversions="$(AndroidSdkDirectory)\platform-tools\api\api-versions.xml"</_Versions>
+      <_Annotations>--annotations="$(AndroidSdkDirectory)\platform-tools\api\annotations.zip"</_Annotations>
       <_Assembly>--assembly="Mono.Android, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null"</_Assembly>
-      <_TypeMap>--type-map-report=$(IntermediateOutputPath)android-$(AndroidApiLevel)\type-mapping.txt</_TypeMap>
-      <_Api>$(IntermediateOutputPath)android-$(AndroidApiLevel)\api.xml</_Api>
-      <_Dirs>--enumdir=$(IntermediateOutputPath)android-$(AndroidApiLevel)</_Dirs>
+      <_TypeMap>--type-map-report=$(IntermediateOutputPath)mcw\type-mapping.txt</_TypeMap>
+      <_Api>$(IntermediateOutputPath)mcw\api.xml</_Api>
+      <_Dirs>--enumdir=$(IntermediateOutputPath)mcw</_Dirs>
     </PropertyGroup>
     <Exec
-        Command="$(ManagedRuntime) $(Generator) $(_ApiLevel) $(_Out) $(_Codegen) $(_Fixup) $(_Enums1) $(_Enums2) $(_Versions) $(_Annotations) $(_Assembly) $(_TypeMap) $(_Dirs) $(_Api)"
+        Command="$(ManagedRuntime) $(Generator) $(_GenFlags) $(_ApiLevel) $(_Out) $(_Codegen) $(_Fixup) $(_Enums1) $(_Enums2) $(_Versions) $(_Annotations) $(_Assembly) $(_TypeMap) $(_Dirs) $(_Api)"
     />
     <ItemGroup>
-      <Compile Include="$(IntermediateOutputPath)android-$(AndroidApiLevel)\**\*.cs" />
+      <Compile Include="$(IntermediateOutputPath)mcw\**\*.cs" />
     </ItemGroup>
     <XmlPeek
         Namespaces="&lt;Namespace Prefix='msbuild' Uri='http://schemas.microsoft.com/developer/msbuild/2003' /&gt;"
-        XmlInputPath="$(IntermediateOutputPath)android-$(AndroidApiLevel)\Mono.Android.projitems" 
+        XmlInputPath="$(IntermediateOutputPath)mcw\Mono.Android.projitems"
         Query="/msbuild:Project/msbuild:PropertyGroup/msbuild:DefineConstants/text()" >
       <Output TaskParameter="Result" PropertyName="_GeneratedDefineConstants" />
     </XmlPeek>
@@ -79,6 +80,10 @@
       <DefineConstants>$(DefineConstants);$([System.String]::Copy('$(_GeneratedDefineConstants)').Replace ('%24(DefineConstants);', ''))</DefineConstants>
     </PropertyGroup>
   </Target>
+  <PropertyGroup>
+    <JavacSourceVersion Condition=" '$(JavacSourceVersion)' == '' And '$(AndroidApiLevel)' != '' And $(AndroidApiLevel) &gt; 23 ">1.8</JavacSourceVersion>
+    <JavacSourceVersion Condition=" '$(JavacSourceVersion)' == '' ">1.6</JavacSourceVersion>
+  </PropertyGroup>
   <ItemGroup>
     <_CommonJavaSources Include="java\**\*.java" />
   </ItemGroup>
@@ -86,35 +91,35 @@
       AfterTargets="CoreBuild"
       Inputs="$(OutputPath)$(AssemblyName).dll"
       Outputs="$(OutputPath)mono.android.jar">
-    <MakeDir Directories="$(IntermediateOutputPath)android-$(AndroidApiLevel).jcw\bin" />
+    <MakeDir Directories="$(IntermediateOutputPath)jcw;$(IntermediateOutputPath)jcw\bin" />
     <PropertyGroup>
       <OutputPathAbs>$(MSBuildProjectDirectory)\$(OutputPath)</OutputPathAbs>
       <JcwGen>$(JavaInteropFullPath)\bin\$(Configuration)\jcw-gen.exe</JcwGen>
       <_LibDirs>-L "$(OutputPathAbs)" -L "$(OutputPathAbs)..\v1.0\" -L "$(OutputPathAbs)..\v1.0\Facades"</_LibDirs>
       <_Assembly>"$(OutputPathAbs)$(AssemblyName).dll"</_Assembly>
-      <_Out>-o "$(MSBuildProjectDirectory)\$(IntermediateOutputPath)android-$(AndroidApiLevel).jcw\src"</_Out>
+      <_Out>-o "$(MSBuildProjectDirectory)\$(IntermediateOutputPath)jcw\src"</_Out>
     </PropertyGroup>
     <Exec
         Command="$(ManagedRuntime) $(JcwGen) $(_Out) $(_LibDirs) $(_Assembly)"
     />
     <ItemGroup>
-      <_JavaSources Include="$(IntermediateOutputPath)android-$(AndroidApiLevel).jcw\src\**\*.java" />
+      <_JavaSources Include="$(IntermediateOutputPath)jcw\src\**\*.java" />
     </ItemGroup>
     <WriteLinesToFile
-        File="$(IntermediateOutputPath)android-$(AndroidApiLevel).jcw\classes.txt"
+        File="$(IntermediateOutputPath)jcw\classes.txt"
         Lines="@(_CommonJavaSources);@(_JavaSources)"
         Overwrite="True"
     />
     <PropertyGroup>
-      <_Target>-source 1.6 -target 1.6</_Target>
-      <_D>-d "$(IntermediateOutputPath)android-$(AndroidApiLevel).jcw\bin"</_D>
+      <_Target>-source $(JavacSourceVersion) -target $(JavacSourceVersion)</_Target>
+      <_D>-d "$(IntermediateOutputPath)jcw\bin"</_D>
       <_AndroidJar>"$(AndroidToolchainDirectory)\sdk\platforms\android-$(AndroidApiLevel)\android.jar"</_AndroidJar>
     </PropertyGroup>
     <Exec
-        Command="javac $(_Target) $(_D) -bootclasspath $(_AndroidJar) @$(IntermediateOutputPath)android-$(AndroidApiLevel).jcw\classes.txt"
+        Command="javac $(_Target) $(_D) -bootclasspath $(_AndroidJar) @$(IntermediateOutputPath)jcw\classes.txt"
     />
     <Exec
-        Command="jar cf &quot;$(OutputPath)mono.android.jar&quot; -C &quot;$(IntermediateOutputPath)android-$(AndroidApiLevel).jcw\bin&quot; ."
+        Command="jar cf &quot;$(OutputPath)mono.android.jar&quot; -C &quot;$(IntermediateOutputPath)jcw\bin&quot; ."
     />
   </Target>
   <Target Name="_GenerateFrameworkList"
@@ -134,6 +139,6 @@
   </Target>
   <Target Name="_CleanBinding"
       AfterTargets="Clean">
-    <RemoveDir Directories="$(IntermediateOutputPath)android-$(AndroidApiLevel);$(IntermediateOutputPath)android-$(AndroidApiLevel).jcw" />
+    <RemoveDir Directories="$(IntermediateOutputPath)" />
   </Target>
 </Project>

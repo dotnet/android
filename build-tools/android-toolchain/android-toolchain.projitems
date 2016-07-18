@@ -34,13 +34,49 @@
       <HostOS>Darwin</HostOS>
       <DestDir>tools</DestDir>
     </AndroidSdkItem>
-    <AndroidSdkItem Include="platform-24_r01.zip">
+    <AndroidSdkItem Include="android-2.3.3_r02-linux.zip">
       <HostOS></HostOS>
-      <DestDir>platforms\android-24</DestDir>
+      <DestDir>platforms\android-10</DestDir>
+    </AndroidSdkItem>
+    <AndroidSdkItem Include="android-15_r03.zip">
+      <HostOS></HostOS>
+      <DestDir>platforms\android-15</DestDir>
+    </AndroidSdkItem>
+    <AndroidSdkItem Include="android-16_r04.zip">
+      <HostOS></HostOS>
+      <DestDir>platforms\android-16</DestDir>
+    </AndroidSdkItem>
+    <AndroidSdkItem Include="android-17_r02.zip">
+      <HostOS></HostOS>
+      <DestDir>platforms\android-17</DestDir>
+    </AndroidSdkItem>
+    <AndroidSdkItem Include="android-18_r02.zip">
+      <HostOS></HostOS>
+      <DestDir>platforms\android-18</DestDir>
+    </AndroidSdkItem>
+    <AndroidSdkItem Include="android-19_r03.zip">
+      <HostOS></HostOS>
+      <DestDir>platforms\android-19</DestDir>
+    </AndroidSdkItem>
+    <AndroidSdkItem Include="android-20_r02.zip">
+      <HostOS></HostOS>
+      <DestDir>platforms\android-20</DestDir>
+    </AndroidSdkItem>
+    <AndroidSdkItem Include="android-21_r02.zip">
+      <HostOS></HostOS>
+      <DestDir>platforms\android-21</DestDir>
+    </AndroidSdkItem>
+    <AndroidSdkItem Include="android-22_r02.zip">
+      <HostOS></HostOS>
+      <DestDir>platforms\android-22</DestDir>
     </AndroidSdkItem>
     <AndroidSdkItem Include="android-23_r01.zip">
       <HostOS></HostOS>
       <DestDir>platforms\android-23</DestDir>
+    </AndroidSdkItem>
+    <AndroidSdkItem Include="platform-24_r01.zip">
+      <HostOS></HostOS>
+      <DestDir>platforms\android-24</DestDir>
     </AndroidSdkItem>
   </ItemGroup>
   <ItemGroup>
