@@ -1,9 +1,17 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <UsingTask TaskName="Xamarin.Android.Tools.BootstrapTasks.GenerateProfile" AssemblyFile="..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" />
+  <UsingTask TaskName="Xamarin.Android.Tools.BootstrapTasks.UnzipDirectoryChildren" AssemblyFile="..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" />
   <PropertyGroup>
     <_SharedRuntimeBuildPath Condition=" '$(_SharedRuntimeBuildPath)' == '' ">..\..\bin\$(Configuration)\lib\xbuild-frameworks\MonoAndroid\</_SharedRuntimeBuildPath>
     <_GeneratedProfileClass>$(IntermediateOutputPath)Profile.g.cs</_GeneratedProfileClass>
+    <BuildDependsOn>
+		$(BuildDependsOn);
+		_CopyExtractedMultiDexJar;
+    </BuildDependsOn>
+    <_AndroidSdkLocation>$(ANDROID_SDK_PATH)</_AndroidSdkLocation>
+    <_AndroidSdkLocation Condition="'$(_AndroidSdkLocation)'==''">$(AndroidToolchainDirectory)\sdk</_AndroidSdkLocation>
+    <_MultiDexAarInAndroidSdk>extras\android\m2repository\com\android\support\multidex\1.0.1\multidex-1.0.1.aar</_MultiDexAarInAndroidSdk>
   </PropertyGroup>
   <ItemGroup>
     <_SharedRuntimeAssemblies Include="$(_SharedRuntimeBuildPath)v1.0\*.dll;$(_SharedRuntimeBuildPath)$(AndroidFrameworkVersion)\*.dll"/>
@@ -18,5 +26,17 @@
         File="$(IntermediateOutputPath)$(CleanFile)"
         Lines="$(_GeneratedProfileClass)"
         Overwrite="false"/>
+  </Target>
+  
+  <Target Name="_CopyExtractedMultiDexJar"
+    Inputs="$(_AndroidSdkLocation)\$(_MultiDexAarInAndroidSdk)"
+    Outputs="$(OutputPath)..\..\..\mandroid\android-support-multidex.jar">
+    <UnzipDirectoryChildren
+      NoSubdirectory="true"
+      SourceFiles="$(_AndroidSdkLocation)\$(_MultiDexAarInAndroidSdk)"
+      DestinationFolder="$(IntermediateOutputPath)multidex-aar" />
+    <Copy
+      SourceFiles="$(IntermediateOutputPath)multidex-aar\classes.jar"
+      DestinationFiles="$(OutputPath)..\..\..\mandroid\android-support-multidex.jar" />
   </Target>
 </Project>

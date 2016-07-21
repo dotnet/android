@@ -78,6 +78,10 @@
       <HostOS></HostOS>
       <DestDir>platforms\android-24</DestDir>
     </AndroidSdkItem>
+    <AndroidSdkItem Include="android_m2repository_r16.zip">
+      <HostOS></HostOS>
+      <DestDir>extras\android\m2repository</DestDir>
+    </AndroidSdkItem>
   </ItemGroup>
   <ItemGroup>
     <_NdkToolchain Include="arm-linux-androideabi-clang" Condition="$(AndroidSupportedTargetJitAbisForConditionalChecks.Contains(':armeabi:')) Or $(AndroidSupportedTargetJitAbisForConditionalChecks.Contains(':armeabi-v7a:'))">

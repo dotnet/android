@@ -29,6 +29,8 @@ namespace Xamarin.Android.Tools.BootstrapTasks {
 		[Required]
 		public  ITaskItem       DestinationFolder   { get; set; }
 
+		public bool NoSubdirectory { get; set; }
+
 		public override bool Execute ()
 		{
 			Log.LogMessage (MessageImportance.Low, "Unzip:");
@@ -101,7 +103,9 @@ namespace Xamarin.Android.Tools.BootstrapTasks {
 				p.WaitForExit ();
 			}
 
-			foreach (var dir in Directory.EnumerateDirectories (nestedTemp, "*")) {
+			var dirs = NoSubdirectory ? new string [] { nestedTemp } : Directory.EnumerateDirectories (nestedTemp, "*");
+
+			foreach (var dir in dirs) {
 				foreach (var fse in Directory.EnumerateFileSystemEntries (dir)) {
 					var name    = Path.GetFileName (fse);
 					var destDir = string.IsNullOrEmpty (relativeDestDir)
