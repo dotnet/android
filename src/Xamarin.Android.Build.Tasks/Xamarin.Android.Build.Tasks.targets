@@ -12,6 +12,7 @@
     <_AndroidSdkLocation>$(ANDROID_SDK_PATH)</_AndroidSdkLocation>
     <_AndroidSdkLocation Condition="'$(_AndroidSdkLocation)'==''">$(AndroidToolchainDirectory)\sdk</_AndroidSdkLocation>
     <_MultiDexAarInAndroidSdk>extras\android\m2repository\com\android\support\multidex\1.0.1\multidex-1.0.1.aar</_MultiDexAarInAndroidSdk>
+    <_SupportLicenseInAndroidSdk>extras\android\m2repository\NOTICE.txt</_SupportLicenseInAndroidSdk>
   </PropertyGroup>
   <ItemGroup>
     <_SharedRuntimeAssemblies Include="$(_SharedRuntimeBuildPath)v1.0\*.dll;$(_SharedRuntimeBuildPath)$(AndroidFrameworkVersion)\*.dll"/>
@@ -29,8 +30,8 @@
   </Target>
   
   <Target Name="_CopyExtractedMultiDexJar"
-    Inputs="$(_AndroidSdkLocation)\$(_MultiDexAarInAndroidSdk)"
-    Outputs="$(OutputPath)..\..\..\mandroid\android-support-multidex.jar">
+    Inputs="$(_AndroidSdkLocation)\$(_MultiDexAarInAndroidSdk);$(_AndroidSdkLocation)\$(_SupportLicenseInAndroidSdk)"
+    Outputs="$(OutputPath)..\..\..\mandroid\android-support-multidex.jar;$(OutputPath)..\..\..\mandroid\MULTIDEX_JAR_LICENSE">
     <UnzipDirectoryChildren
       NoSubdirectory="true"
       SourceFiles="$(_AndroidSdkLocation)\$(_MultiDexAarInAndroidSdk)"
@@ -38,5 +39,8 @@
     <Copy
       SourceFiles="$(IntermediateOutputPath)multidex-aar\classes.jar"
       DestinationFiles="$(OutputPath)..\..\..\mandroid\android-support-multidex.jar" />
+    <Copy
+      SourceFiles="$(_AndroidSdkLocation)\$(_SupportLicenseInAndroidSdk)"
+      DestinationFiles="$(OutputPath)..\..\..\mandroid\MULTIDEX_JAR_LICENSE" />
   </Target>
 </Project>
