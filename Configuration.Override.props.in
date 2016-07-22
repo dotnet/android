@@ -2,9 +2,9 @@
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <!-- The default Android API level to bind in src/Mono.Android -->
-    <AndroidApiLevel>23</AndroidApiLevel>
+    <AndroidApiLevel>24</AndroidApiLevel>
     <!-- The Xamarin.Android $(TargetFrameworkVersion) value that corresponds to $(AndroidApiLevel) -->
-    <AndroidFrameworkVersion>v6.0</AndroidFrameworkVersion>
+    <AndroidFrameworkVersion>v7.0</AndroidFrameworkVersion>
 
     <!--
       Colon-separated list of ABIs to build the mono JIT for.

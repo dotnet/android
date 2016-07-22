@@ -197,7 +197,7 @@ To control which API level is bound, set the `$(AndroidApiLevel)` and
 Android API level, *usually* a number, while `$(AndroidFrameworkVersion)`
 is the Xamarin.Android `$(TargetFrameworkVersion)`.
 
-The default values will target Android API-23, Android 6.0.
+The default values will target Android API-24, Android 7.0.
 
 For example, to generate `Mono.Android.dll` for API-19 (Android 4.4):
 
