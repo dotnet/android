@@ -101,7 +101,7 @@ namespace Xamarin.Android.Build.Utilities
 			new AndroidVersion (21, "5.0",   "Lollipop",                new Version (5, 0)),
 			new AndroidVersion (22, "5.1",   "Lollipop",                new Version (5, 1)),
 			new AndroidVersion (23, "6.0",   "Marshmallow",             new Version (6, 0)),
-			new AndroidVersion (24, "6.0.99",   "N Preview",             new Version (6, 0, 99)),
+			new AndroidVersion (24, "7.0",   "Nougat",                  new Version (7, 0)),
 		};
 	}
 }
