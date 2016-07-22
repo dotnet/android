@@ -539,7 +539,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 </Target>
 
 <Target Name="_BuildSdkCache"
-	Inputs="$(MSBuildProjectFullPath);$(_AndroidBuildPropertiesCache)"
+	Inputs="$(MSBuildProjectFullPath);$(_AndroidBuildPropertiesCache);$(MSBuildThisFileFullPath)"
 	Outputs="$(_AndroidSdksCache)"
 	DependsOnTargets="_GetReferenceAssemblyPaths">
 	<ResolveSdks
