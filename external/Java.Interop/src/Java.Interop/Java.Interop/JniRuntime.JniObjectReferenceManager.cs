@@ -53,7 +53,8 @@ namespace Java.Interop {
 			{
 				if (!reference.IsValid)
 					return reference;
-				AssertCount (localReferenceCount, "LREF", reference.ToString ());
+				if (localReferenceCount < 0)
+					AssertCount(localReferenceCount, "LREF", reference.ToString());
 				localReferenceCount++;
 				return JniEnvironment.References.NewLocalRef (reference);
 			}
@@ -71,7 +72,8 @@ namespace Java.Interop {
 					return;
 				AssertReferenceType (ref reference, JniObjectReferenceType.Local);
 				localReferenceCount--;
-				AssertCount (localReferenceCount, "LREF", reference.ToString ());
+				if (localReferenceCount < 0)
+					AssertCount(localReferenceCount, "LREF", reference.ToString());
 				JniEnvironment.References.DeleteLocalRef (reference.Handle);
 				reference.Invalidate ();
 			}
@@ -87,7 +89,8 @@ namespace Java.Interop {
 			{
 				if (!reference.IsValid)
 					return;
-				AssertCount (localReferenceCount, "LREF", reference.ToString ());
+				if (localReferenceCount < 0)
+					AssertCount(localReferenceCount, "LREF", reference.ToString());
 				localReferenceCount++ ;
 			}
 
@@ -104,7 +107,8 @@ namespace Java.Interop {
 				if (!reference.IsValid)
 					return IntPtr.Zero;
 				localReferenceCount--;
-				AssertCount (localReferenceCount, "LREF", reference.ToString ());
+				if (localReferenceCount < 0)
+					AssertCount (localReferenceCount, "LREF", reference.ToString ());
 				var h           = reference.Handle;
 				reference.Invalidate ();
 				return h;
@@ -123,7 +127,8 @@ namespace Java.Interop {
 				if (!reference.IsValid)
 					return reference;
 				var n   = JniEnvironment.References.NewGlobalRef (reference);
-				AssertCount (GlobalReferenceCount, "GREF", reference.ToString ());
+				if (GlobalReferenceCount < 0)
+					AssertCount (GlobalReferenceCount, "GREF", reference.ToString ());
 				return n;
 			}
 
@@ -132,7 +137,8 @@ namespace Java.Interop {
 				if (!reference.IsValid)
 					return;
 				AssertReferenceType (ref reference, JniObjectReferenceType.Global);
-				AssertCount (GlobalReferenceCount, "GREF", reference.ToString ());
+				if (GlobalReferenceCount < 0)
+					AssertCount(GlobalReferenceCount, "GREF", reference.ToString());
 				JniEnvironment.References.DeleteGlobalRef (reference.Handle);
 				reference.Invalidate ();
 			}
@@ -142,7 +148,8 @@ namespace Java.Interop {
 				if (!reference.IsValid)
 					return reference;
 				var n   = JniEnvironment.References.NewWeakGlobalRef (reference);
-				AssertCount (WeakGlobalReferenceCount, "WGREF", reference.ToString ());
+				if (WeakGlobalReferenceCount < 0)
+					AssertCount(WeakGlobalReferenceCount, "WGREF", reference.ToString());
 				return n;
 			}
 
@@ -151,7 +158,8 @@ namespace Java.Interop {
 				if (!reference.IsValid)
 					return;
 				AssertReferenceType (ref reference, JniObjectReferenceType.WeakGlobal);
-				AssertCount (WeakGlobalReferenceCount, "WGREF", reference.ToString ());
+				if (WeakGlobalReferenceCount < 0)
+					AssertCount(WeakGlobalReferenceCount, "WGREF", reference.ToString());
 				JniEnvironment.References.DeleteWeakGlobalRef (reference.Handle);
 				reference.Invalidate ();
 			}
@@ -179,9 +187,6 @@ namespace Java.Interop {
 			[Conditional ("DEBUG")]
 			void AssertCount (int count, string type, string value)
 			{
-				if (count >= 0)
-					return;
-
 				Debug.Assert (count >= 0,
 						string.Format ("{0} count is {1}, expected to be >= 0 when dealing with handle {2} on thread '{3}'({4}).",
 							type, count, value, Runtime.GetCurrentManagedThreadName (), Environment.CurrentManagedThreadId));
