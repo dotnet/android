@@ -74,6 +74,9 @@ namespace Android.App {
 #if ANDROID_10
 		public bool                   VMSafeMode              {get; set;}
 #endif
+#if ANDROID_24
+		public bool                   ResizeableActivity      {get; set;}
+#endif
 #endif  // JCW_ONLY_TYPE_NAMES
 	}
 }

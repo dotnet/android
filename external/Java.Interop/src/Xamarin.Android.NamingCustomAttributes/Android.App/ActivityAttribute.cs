@@ -54,6 +54,10 @@ namespace Android.App
 #endif
 		public string                 Permission              {get; set;}
 		public string                 Process                 {get; set;}
+#if ANDROID_24
+		public bool                   ResizeableActivity      {get;set;}
+		public bool                   SupportsPictureInPicture {get;set;}
+#endif
 		public ScreenOrientation      ScreenOrientation       {get; set;}
 		public bool                   StateNotNeeded          {get; set;}
 		public string                 TaskAffinity            {get; set;}
