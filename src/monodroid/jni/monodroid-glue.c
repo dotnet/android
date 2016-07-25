@@ -708,6 +708,14 @@ static const MonoJavaGCBridgeType mono_java_gc_bridge_types[] = {
 
 #define NUM_GC_BRIDGE_TYPES (sizeof (mono_java_gc_bridge_types)/sizeof (mono_java_gc_bridge_types [0]))
 
+/* `mono_java_gc_bridge_info` stores shared global data about the last Monodroid assembly loaded.
+ * Specifically it stores data about the `mono_java_gc_bridge_types` types.
+ * In order for this to work, two rules must be followed.
+ *   1. Only one Monodroid appdomain can be loaded at a time.
+ *   2. Since the Monodroid appdomain unload clears `mono_java_gc_bridge_info`, anything which
+ *      could run at the same time as the domain unload (like gc_bridge_class_kind) must tolerate
+ *      the structure fields being set to zero during run
+ */
 typedef struct MonoJavaGCBridgeInfo {
 	MonoClass       *klass;
 	MonoClassField  *handle;
@@ -735,6 +743,18 @@ static int gc_gref_count;
 static int gc_weak_gref_count;
 
 static int is_running_on_desktop = 0;
+
+// Do this instead of using memset so that individual pointers are set atomically
+static void clear_mono_java_gc_bridge_info() {
+	for (int c = 0; c < NUM_GC_BRIDGE_TYPES; c++) {
+		MonoJavaGCBridgeInfo *info = &mono_java_gc_bridge_info [c];
+		info->klass = NULL;
+		info->handle = NULL;
+		info->handle_type = NULL;
+		info->refs_added = NULL;
+		info->weak_handle = NULL;
+	}
+}
 
 static int
 get_gc_bridge_index (MonoClass *klass)
@@ -3858,10 +3878,31 @@ JNICALL Java_mono_android_Runtime_destroyContexts (JNIEnv *env, jclass klass, ji
 
 		if (domain == NULL)
 			continue;
-		log_info (LOG_DEFAULT, "Unloading domain `%d'", contextIDs[i]);
+		log_info (LOG_DEFAULT, "Shutting down domain `%d'", contextIDs[i]);
 		shutdown_android_runtime (domain);
-		mono.mono_domain_unload (domain);
 		remove_monodroid_domain (domain);
+	}
+
+	/* If domains_list is now empty, we are about to unload Monodroid.dll.
+	 * Clear the global bridge info structure since it's pointing into soon-invalid memory.
+	 * FIXME: It is possible for a thread to get into `gc_bridge_class_kind` after this clear
+	 *        occurs, but before the stop-the-world during mono_domain_unload. If this happens,
+	 *        it can falsely mark a class as transparent. This is considered acceptable because
+	 *        this case is *very* rare and the worst case scenario is a resource leak.
+	 *        The real solution would be to add a new callback, called while the world is stopped
+	 *        during `mono_gc_clear_domain`, and clear the bridge info during that.
+	 */
+	if (!domains_list)
+		clear_mono_java_gc_bridge_info ();
+
+	for (i = 0; i < count; i++) {
+		int domain_id = contextIDs[i];
+		MonoDomain *domain = mono.mono_domain_get_by_id (domain_id);
+
+		if (domain == NULL)
+			continue;
+		log_info (LOG_DEFAULT, "Unloading domain `%d'", contextIDs[i]);
+		mono.mono_domain_unload (domain);
 	}
 
 	(*env)->ReleaseIntArrayElements (env, array, contextIDs, JNI_ABORT);
