@@ -27,7 +27,7 @@ prepare:: prepare-external prepare-props
 prepare-external:
 	git submodule update --init --recursive
 	nuget restore
-	(cd `$(MSBUILD) /nologo /v:minimal /t:GetJavaInteropFullPath build-tools/scripts/Paths.targets` && nuget restore)
+	(cd `$(MSBUILD) /p:DoNotLoadOSProperties=True /nologo /v:minimal /t:GetJavaInteropFullPath build-tools/scripts/Paths.targets` && nuget restore)
 
 prepare-props:
 	cp Configuration.Java.Interop.Override.props external/Java.Interop/Configuration.Override.props
