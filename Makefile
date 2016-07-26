@@ -22,10 +22,12 @@ endif
 all:
 	$(MSBUILD)
 
-prepare:: prepare-props
+prepare:: prepare-external prepare-props
+
+prepare-external:
 	git submodule update --init --recursive
 	nuget restore
-	(cd external/Java.Interop && nuget restore)
+	(cd `$(MSBUILD) /nologo /v:minimal /t:GetJavaInteropFullPath build-tools/scripts/Paths.targets` && nuget restore)
 
 prepare-props:
 	cp Configuration.Java.Interop.Override.props external/Java.Interop/Configuration.Override.props
