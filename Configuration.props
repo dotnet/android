@@ -7,12 +7,23 @@
       Project="$(MSBuildThisFileDirectory)Configuration.Override.props"
       Condition="Exists('$(MSBuildThisFileDirectory)Configuration.Override.props')"
   />
+
+  <!--
+      Note: this file *must* be imported *after* Configuration.Override.props
+  -->
+  <Import Project="$(MSBuildThisFileDirectory)Configuration.OperatingSystem.props" />
   <PropertyGroup>
     <HostOS Condition=" '$(HostOS)' == '' And '$(OS)' == 'Windows_NT' ">Windows</HostOS>
-    <HostOS Condition=" '$(HostOS)' == '' And '$(OS)' == 'Unix' And Exists ('/Applications') ">Darwin</HostOS>
-    <HostOS Condition=" '$(HostOS)' == '' And '$(OS)' == 'Unix' ">Linux</HostOS>
+    <HostCc Condition=" '$(HostCc)' == '' ">$(HostCc64)</HostCc>
+    <HostCxx Condition=" '$(HostCxx)' == '' ">$(HostCxx64)</HostCxx>
+    <HostCc Condition=" '$(HostCc)' == '' ">$(HostCc32)</HostCc>
+    <HostCxx Condition=" '$(HostCxx)' == '' ">$(HostCxx32)</HostCxx>
     <HostCc Condition=" '$(HostCc)' == '' ">cc</HostCc>
     <HostCxx Condition=" '$(HostCxx)' == '' ">c++</HostCxx>
+    <HostCcName Condition=" '$(HostCcName)' == '' ">cc</HostCcName>
+    <HostCxxName Condition=" '$(HostCxxName)' == '' ">c++</HostCxxName>
+    <NeedMxe Condition=" '$(HostOS)' == 'Darwin' ">true</NeedMxe>
+    <MakeConcurrency Condition=" '$(MakeConcurrency)' == '' And '$(HostCpuCount)' != '' ">-j$(HostCpuCount)</MakeConcurrency>
     <ManagedRuntime Condition=" '$(ManagedRuntime)' == '' And '$(OS)' != 'Windows_NT' ">mono</ManagedRuntime>
     <TargetFrameworkRootPath>$(MSBuildThisFileDirectory)bin\$(Configuration)\lib\xbuild-frameworks</TargetFrameworkRootPath>
     <HOME Condition=" '$(HOME)' == '' ">$(HOMEDRIVE)$(HOMEPATH)</HOME>
@@ -20,12 +31,14 @@
     <AndroidFrameworkVersion Condition=" '$(AndroidFrameworkVersion)' == '' ">v6.0</AndroidFrameworkVersion>
     <AndroidToolchainCacheDirectory Condition=" '$(AndroidToolchainCacheDirectory)' == '' ">$(HOME)\android-archives</AndroidToolchainCacheDirectory>
     <AndroidToolchainDirectory Condition=" '$(AndroidToolchainDirectory)' == '' ">$(HOME)\android-toolchain</AndroidToolchainDirectory>
-    <AndroidMxeInstallPrefix Condition=" '$(AndroidMxeInstallPrefix)' == '' ">$(AndroidToolchainDirectory)\mxe</AndroidMxeInstallPrefix>
+    <AndroidMxeInstallPrefix Condition=" '$(AndroidMxeInstallPrefix)' == '' And '$(NeedMxe)' == 'true' ">$(AndroidToolchainDirectory)\mxe</AndroidMxeInstallPrefix>
+    <AndroidMxeInstallPrefix Condition=" '$(HostOS)' == 'Linux' ">\usr</AndroidMxeInstallPrefix>
     <AndroidSdkDirectory>$(AndroidToolchainDirectory)\sdk</AndroidSdkDirectory>
     <AndroidNdkDirectory>$(AndroidToolchainDirectory)\ndk</AndroidNdkDirectory>
     <AndroidSupportedHostJitAbis Condition=" '$(AndroidSupportedHostJitAbis)' == '' ">$(HostOS)</AndroidSupportedHostJitAbis>
     <AndroidSupportedTargetJitAbis Condition=" '$(AndroidSupportedTargetJitAbis)' == '' ">armeabi-v7a</AndroidSupportedTargetJitAbis>
     <JavaInteropSourceDirectory Condition=" '$(JavaInteropSourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\Java.Interop</JavaInteropSourceDirectory>
+    <LlvmSourceDirectory Condition=" '$(LlvmSourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\llvm</LlvmSourceDirectory>
     <MonoSourceDirectory>$(MSBuildThisFileDirectory)external\mono</MonoSourceDirectory>
     <OpenTKSourceDirectory>$(MSBuildThisFileDirectory)external\opentk</OpenTKSourceDirectory>
     <LibZipSourceDirectory Condition=" '$(LibZipSourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\libzip</LibZipSourceDirectory>
@@ -37,10 +50,16 @@
     <AllSupportedTargetAndroidAbis>$(AllSupported32BitTargetAndroidAbis);$(AllSupported64BitTargetAndroidAbis)</AllSupportedTargetAndroidAbis>
   </PropertyGroup>
   <PropertyGroup>
+    <_MingwPrefixTail Condition=" '$(HostOS)' == 'Darwin' ">.static</_MingwPrefixTail>
+    <MingwCommandPrefix32>i686-w64-mingw32$(_MingwPrefixTail)</MingwCommandPrefix32>
+    <MingwCommandPrefix64>x86_64-w64-mingw32$(_MingwPrefixTail)</MingwCommandPrefix64>
+  </PropertyGroup>
+  <PropertyGroup>
     <AndroidMxeFullPath>$([System.IO.Path]::GetFullPath ('$(AndroidMxeInstallPrefix)'))</AndroidMxeFullPath>
     <AndroidNdkFullPath>$([System.IO.Path]::GetFullPath ('$(AndroidNdkDirectory)'))</AndroidNdkFullPath>
     <AndroidSdkFullPath>$([System.IO.Path]::GetFullPath ('$(AndroidSdkDirectory)'))</AndroidSdkFullPath>
     <JavaInteropFullPath>$([System.IO.Path]::GetFullPath ('$(JavaInteropSourceDirectory)'))</JavaInteropFullPath>
+    <LlvmSourceFullPath>$([System.IO.Path]::GetFullPath ('$(LlvmSourceDirectory)'))</LlvmSourceFullPath>
     <MonoSourceFullPath>$([System.IO.Path]::GetFullPath ('$(MonoSourceDirectory)'))</MonoSourceFullPath>
     <SqliteSourceFullPath>$([System.IO.Path]::GetFullPath ('$(SqliteSourceDirectory)'))</SqliteSourceFullPath>
     <OpenTKSourceFullPath>$([System.IO.Path]::GetFullPath ('$(OpenTKSourceDirectory)'))</OpenTKSourceFullPath>
@@ -73,4 +92,11 @@
   <ItemGroup>
     <AndroidSupportedTargetJitAbi Include="$(AndroidSupportedTargetJitAbisSplit)" />
   </ItemGroup>
+
+  <PropertyGroup>
+    <AndroidSupportedTargetAotAbisForConditionalChecks>$(AndroidSupportedTargetAotAbis)</AndroidSupportedTargetAotAbisForConditionalChecks>
+    <AndroidSupportedTargetAotAbisForConditionalChecks Condition=" !$(AndroidSupportedTargetAotAbisForConditionalChecks.EndsWith (':')) "   >$(AndroidSupportedTargetAotAbisForConditionalChecks):</AndroidSupportedTargetAotAbisForConditionalChecks>
+    <AndroidSupportedTargetAotAbisForConditionalChecks Condition=" !$(AndroidSupportedTargetAotAbisForConditionalChecks.StartsWith (':')) " >:$(AndroidSupportedTargetAotAbisForConditionalChecks)</AndroidSupportedTargetAotAbisForConditionalChecks>
+    <AndroidSupportedTargetAotAbisSplit>$(AndroidSupportedTargetAotAbis.Split(':'))</AndroidSupportedTargetAotAbisSplit>
+  </PropertyGroup>
 </Project>

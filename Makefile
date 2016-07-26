@@ -1,4 +1,5 @@
 OS            := $(shell uname)
+OS_ARCH       := $(shell uname -m)
 V             ?= 0
 CONFIGURATION = Debug
 MSBUILD       = xbuild /p:Configuration=$(CONFIGURATION) $(MSBUILD_ARGS)
@@ -21,21 +22,59 @@ endif
 all:
 	$(MSBUILD)
 
-prepare::
+prepare:: prepare-props
 	git submodule update --init --recursive
 	nuget restore
 	(cd external/Java.Interop && nuget restore)
+
+prepare-props:
 	cp Configuration.Java.Interop.Override.props external/Java.Interop/Configuration.Override.props
+	./build-tools/scripts/generate-os-info Configuration.OperatingSystem.props
 	cp `$(MSBUILD) /nologo /v:minimal /t:GetMonoSourceFullPath build-tools/scripts/Paths.targets`/mcs/class/msfinal.pub .
 
 include build-tools/scripts/BuildEverything.mk
 
+# Please keep the package names sorted
 ifeq ($(OS),Linux)
-UBUNTU_DEPS          = libzip4 curl openjdk-8-jdk git make automake autoconf libtool unzip vim-common clang lib32stdc++6 lib32z1
+UBUNTU_DEPS          = \
+	autoconf \
+	autotools-dev \
+	automake \
+	clang \
+	curl \
+	g++-mingw-w64 \
+	gcc-mingw-w64 \
+	git \
+	libtool \
+	libzip4 \
+	linux-libc-dev \
+	make \
+	openjdk-8-jdk \
+	unzip \
+	vim-common
+
+ifeq ($(OS_ARCH),x86_64)
+UBUNTU_DEPS          += \
+	lib32stdc++6 \
+	lib32z1 \
+	libx32tinfo-dev \
+	linux-libc-dev:i386 \
+	zlib1g-dev:i386
+endif
 LINUX_DISTRO         := $(shell lsb_release -i -s || true)
 LINUX_DISTRO_RELEASE := $(shell lsb_release -r -s || true)
+BINFMT_MISC_TROUBLE  := cli win
 
 prepare:: linux-prepare-$(LINUX_DISTRO) linux-prepare-$(LINUX_DISTRO)-$(LINUX_DISTRO_RELEASE)
+	@BINFMT_WARN=no ; \
+	for m in $(BINFMT_MISC_TROUBLE); do \
+		if [ -f /proc/sys/fs/binfmt_misc/$$m ]; then \
+			BINFMT_WARN=yes ; \
+		fi ; \
+	done ; \
+	if [ "x$$BINFMT_WARN" = "xyes" ]; then \
+		cat Documentation/binfmt_misc-warning-Linux.txt ; \
+	fi
 
 linux-prepare-Ubuntu::
 	@echo Installing build depedencies for $(LINUX_DISTRO)

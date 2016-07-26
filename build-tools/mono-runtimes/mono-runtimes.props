@@ -12,6 +12,120 @@
     <_TargetCxxFlags>$(_SecurityCFlags) -DMONODROID=1</_TargetCxxFlags>
     <_TargetLdFlags>-ldl -lm -llog -lc -lgcc</_TargetLdFlags>
   </PropertyGroup>
+
+  <!-- LLVM+cross common -->
+  <PropertyGroup>
+    <_CrossOutputDirTop>$([System.IO.Path]::GetFullPath ('$(IntermediateOutputPath)')</_CrossOutputDirTop>
+    <_MingwCc32>$(MingwCommandPrefix32)-gcc</_MingwCc32>
+    <_MingwCxx32>$(MingwCommandPrefix32)-g++</_MingwCxx32>
+    <_MingwCc64>$(MingwCommandPrefix64)-gcc</_MingwCc64>
+    <_MingwCxx64>$(MingwCommandPrefix64)-g++</_MingwCxx64>
+    <_MingwTriplet32>i686-w64-mingw32$(_MingwPrefixTail)</_MingwTriplet32>
+    <_MingwTriplet64>x86_64-w64-mingw32$(_MingwPrefixTail)</_MingwTriplet64>
+
+    <!-- LLVM -->
+    <_LlvmNeeded Condition=" '$(AndroidSupportedTargetAotAbis)' != '' ">yes</_LlvmNeeded>
+    <_LlvmCanBuild64 Condition=" '$(HostBits)' == '64' ">yes</_LlvmCanBuild64>
+    <_LlvmOutputDirTop>$(_CrossOutputDirTop)\llvm</_LlvmOutputDirTop>
+
+    <_LlvmBuildDir32>$(_LlvmOutputDirTop)\build-32</_LlvmBuildDir32>
+    <_LlvmBuildDir64>$(_LlvmOutputDirTop)\build-64</_LlvmBuildDir64>
+    <_LlvmPrefix32>$(_LlvmOutputDirTop)\installed-32\usr</_LlvmPrefix32>
+    <_LlvmPrefix64>$(_LlvmOutputDirTop)\installed-64\usr</_LlvmPrefix64>
+
+    <_LlvmBuildDirWin32>$(_LlvmOutputDirTop)\build-win32</_LlvmBuildDirWin32>
+    <_LlvmBuildDirWin64>$(_LlvmOutputDirTop)\build-win64</_LlvmBuildDirWin64>
+    <_LlvmPrefixWin32>$(_LlvmOutputDirTop)\installed-win32\usr</_LlvmPrefixWin32>
+    <_LlvmPrefixWin64>$(_LlvmOutputDirTop)\installed-win64\usr</_LlvmPrefixWin64>
+
+    <_LlvmCommonConfigureFlags>--enable-optimized --enable-assertions=no --enable-targets="arm,aarch64,x86"</_LlvmCommonConfigureFlags>
+    <_LlvmCommonConfigureFlags32>$(_LlvmCommonConfigureFlags) --prefix=$(_LlvmPrefix32) --cache-file=$(_CrossOutputDirTop)\llvm32.config.cache CC="$(HostCc32)" CXX="$(HostCxx32)"</_LlvmCommonConfigureFlags32>
+    <_LlvmCommonConfigureFlags64>$(_LlvmCommonConfigureFlags) --prefix=$(_LlvmPrefix64) --cache-file=$(_CrossOutputDirTop)\llvm64.config.cache CC="$(HostCc64)" CXX="$(HostCxx64)"</_LlvmCommonConfigureFlags64>
+
+    <_LlvmCommonConfigureFlagsWin>$(_LlvmCommonConfigureFlags) --disable-pthreads --disable-zlib</_LlvmCommonConfigureFlagsWin>
+    <_LlvmCommonConfigureFlagsWin32>$(_LlvmCommonConfigureFlagsWin) --prefix=$(_LlvmPrefixWin32) --with-llvm=$(_LlvmPrefix32) --cache-file=$(_CrossOutputDirTop)\llvm-win32.config.cache CC="$(_MingwCc32)" CXX="$(_MingwCxx32)"</_LlvmCommonConfigureFlagsWin32>
+    <_LlvmCommonConfigureFlagsWin64>$(_LlvmCommonConfigureFlagsWin) --prefix=$(_LlvmPrefixWin64) --with-llvm=$(_LlvmPrefix64) --cache-file=$(_CrossOutputDirTop)\llvm-win64.config.cache CC="$(_MingwCc64)" CXX="$(_MingwCxx64)"</_LlvmCommonConfigureFlagsWin64>
+
+    <!-- Cross compilers -->
+    <_AotOffsetsDumperName>MonoAotOffsetsDumper.exe</_AotOffsetsDumperName>
+    <_AotOffsetsDumperSourceDir>$(MonoSourceFullPath)\tools\offsets-tool</_AotOffsetsDumperSourceDir>
+    <_CrossDefaultLlvmPrefix Condition=" '$(_LlvmCanBuild64)' == 'yes' ">$(_LlvmPrefix64)</_CrossDefaultLlvmPrefix>
+    <_CrossDefaultLlvmPrefix Condition=" '$(_LlvmCanBuild64)' != 'yes' ">$(_LlvmPrefix32)</_CrossDefaultLlvmPrefix>
+    <_CrossOutputPrefix>$(_CrossOutputDirTop)\cross-</_CrossOutputPrefix>
+    <_CrossConfigureCachePrefix>$(_CrossOutputDirTop)cross-</_CrossConfigureCachePrefix>
+    <_CrossDebugCFlags Condition=" '$(Configuration)' == 'Debug'">-DDEBUG_CROSS</_CrossDebugCFlags>
+    <_CrossCommonCFlags>$(_CrossDebugCFlags) -DXAMARIN_PRODUCT_VERSION=0</_CrossCommonCFlags>
+    <_CrossCommonCXXFlags>$(_CrossCommonCFlags)</_CrossCommonCXXFlags>
+    <_CrossCommonConfigureFlags>--disable-boehm --enable-mcs-build=no --enable-nls=no --enable-maintainer-mode --enable-extension-module --with-tls=pthread</_CrossCommonConfigureFlags>
+  </PropertyGroup>
+
+  <!-- LLVM+cross OSX -->
+  <PropertyGroup Condition=" '$(HostOS)' == 'Darwin' ">
+    <_OSXMinVersion>-mmacosx-version-min=10.9</_OSXMinVersion>
+    <_CrossConfigureBuildHost32>$(HostTriplet32)</_CrossConfigureBuildHost32>
+    <_CrossConfigureBuildHost64>$(HostTriplet64)</_CrossConfigureBuildHost64>
+    <_CrossConfigureBuildHostWin32>$(_MingwTriplet32)</_CrossConfigureBuildHostWin32>
+    <_CrossConfigureBuildHostWin64>$(_MingwTriplet64)</_CrossConfigureBuildHostWin64>
+    <_CrossOSXCommonCompilerFlags>$(_OSXMinVersion)</_CrossOSXCommonCompilerFlags>
+    <_CrossCFlags>$(_CrossCommonCFlags) $(_CrossOSXCommonCompilerFlags)</_CrossCFlags>
+    <_CrossCFlagsWin>$(_CrossCommonCFlags)</_CrossCFlagsWin>
+    <_CrossCXXFlags>$(_CrossCommonCXXFlags) $(_CrossOSXCommonCompilerFlags) -stdlib=libc++</_CrossCXXFlags>
+    <_CrossCXXFlagsWin>$(_CrossCommonCXXFlags)</_CrossCXXFlagsWin>
+    <_CrossConfigureFlags32>--build=$(_CrossConfigureBuildHost32) $(_CrossCommonConfigureFlags)</_CrossConfigureFlags32>
+    <_CrossConfigureFlags64>--build=$(_CrossConfigureBuildHost64) $(_CrossCommonConfigureFlags)</_CrossConfigureFlags64>
+    <_CrossConfigureFlags>$(_CrossConfigureFlags64)</_CrossConfigureFlags>
+
+    <_LlvmStdlib>-stdlib=libc++</_LlvmStdlib>
+    <_LlvmExtraConfigureFlags>--enable-libcpp</_LlvmExtraConfigureFlags>
+    <_LlvmOsxCommonConfigureFlags>$(_LlvmExtraConfigureFlags) CXXFLAGS="$(_LlvmStdlib) $(_OSXMinVersion)" LDFLAGS="$(_OSXMinVersion)"</_LlvmOsxCommonConfigureFlags>
+    <_LlvmConfigureFlags32>--build="$(_CrossConfigureBuildHost32)" $(_LlvmOsxCommonConfigureFlags) $(_LlvmCommonConfigureFlags32)</_LlvmConfigureFlags32>
+    <_LlvmConfigureFlags64>--build="$(_CrossConfigureBuildHost64)" $(_LlvmOsxCommonConfigureFlags) $(_LlvmCommonConfigureFlags64)</_LlvmConfigureFlags64>
+    <_LlvmConfigureEnvironmentWin32>PATH="$(AndroidMxeFullPath)\bin:$(PATH)"</_LlvmConfigureEnvironmentWin32>
+    <_LlvmConfigureEnvironmentWin64>PATH="$(AndroidMxeFullPath)\bin:$(PATH)"</_LlvmConfigureEnvironmentWin64>
+    <_LlvmConfigureFlagsWin32>--host="$(_CrossConfigureBuildHostWin32)" $(_LlvmCommonConfigureFlagsWin32)</_LlvmConfigureFlagsWin32>
+    <_LlvmConfigureFlagsWin64>--host="$(_CrossConfigureBuildHostWin64)" $(_LlvmCommonConfigureFlagsWin64)</_LlvmConfigureFlagsWin64>
+  </PropertyGroup>
+
+  <!-- LLVM+cross Linux -->
+  <PropertyGroup Condition=" '$(HostOS)' == 'Linux' ">
+    <_CrossConfigureBuildHost>$(HostTriplet)</_CrossConfigureBuildHost>
+    <_CrossConfigureBuildHostWin32>$(_MingwTriplet32)</_CrossConfigureBuildHostWin32>
+    <_CrossConfigureBuildHostWin64>$(_MingwTriplet64)</_CrossConfigureBuildHostWin64>
+
+    <_CrossCFlags>$(_CrossCommonCFlags)</_CrossCFlags>
+    <_CrossCFlagsWin>$(_CrossCFlags)</_CrossCFlagsWin>
+    <_CrossCXXFlags>$(_CrossCommonCXXFlags)</_CrossCXXFlags>
+    <_CrossCXXFlagsWin>$(_CrossCXXFlags)</_CrossCXXFlagsWin>
+    <_CrossConfigureFlags>--build=$(_CrossConfigureBuildHost) $(_CrossCommonConfigureFlags)</_CrossConfigureFlags>
+
+    <_LlvmConfigureFlags32>--build="$(_CrossConfigureBuildHost)" $(_LlvmCommonConfigureFlags32)</_LlvmConfigureFlags32>
+    <_LlvmConfigureFlags64>--build="$(_CrossConfigureBuildHost)" $(_LlvmCommonConfigureFlags64)</_LlvmConfigureFlags64>
+    <_LlvmConfigureFlagsWin32>--host="$(_CrossConfigureBuildHostWin32)" $(_LlvmCommonConfigureFlagsWin32)</_LlvmConfigureFlagsWin32>
+    <_LlvmConfigureFlagsWin64>--host="$(_CrossConfigureBuildHostWin64)" $(_LlvmCommonConfigureFlagsWin64)</_LlvmConfigureFlagsWin64>
+  </PropertyGroup>
+
+  <!-- Cross-compilers settings -->
+  <PropertyGroup>
+      <_CrossArmTargetAbi>armv5-none-linux-androideabi</_CrossArmTargetAbi>
+      <_CrossArmOffsetsHeaderFile>armv5-none-linux-androideabi.h</_CrossArmOffsetsHeaderFile>
+  </PropertyGroup>
+
+  <PropertyGroup>
+      <_CrossArm64TargetAbi>aarch64-v8a-linux-android</_CrossArm64TargetAbi>
+      <_CrossArm64OffsetsHeaderFile>aarch64-v8a-linux-android.h</_CrossArm64OffsetsHeaderFile>
+  </PropertyGroup>
+
+  <PropertyGroup>
+      <_CrossX86TargetAbi>i686-none-linux-android</_CrossX86TargetAbi>
+      <_CrossX86OffsetsHeaderFile>i686-none-linux-android.h</_CrossX86OffsetsHeaderFile>
+  </PropertyGroup>
+
+  <PropertyGroup>
+      <_CrossX8664TargetAbi>x86_64-none-linux-android</_CrossX8664TargetAbi>
+      <_CrossX8664OffsetsHeaderFile>x86_64-none-linux-android.h</_CrossX8664OffsetsHeaderFile>
+  </PropertyGroup>
+
+  <!-- Mono runtimes settings -->
   <PropertyGroup>
     <_ArmNdkPlatformPath>$(AndroidToolchainDirectory)\ndk\platforms\android-4</_ArmNdkPlatformPath>
     <_ArmAr>$(AndroidToolchainDirectory)\toolchains\arm-linux-androideabi-clang\bin\arm-linux-androideabi-ar</_ArmAr>
