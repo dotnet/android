@@ -13,6 +13,12 @@
         Importance="High"
     />
   </Target>
+  <Target Name="GetJavaInteropFullPath">
+    <Message
+        Text="$(JavaInteropFullPath)"
+        Importance="High"
+    />
+  </Target>
   <Target Name="GetMonoSourceFullPath">
     <Message
         Text="$(MonoSourceFullPath)"
