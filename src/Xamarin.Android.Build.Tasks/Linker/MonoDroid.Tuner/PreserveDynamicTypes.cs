@@ -19,6 +19,14 @@ namespace Mono.Tuner {
 		bool preserve_dynamic;
 		List<AssemblyDefinition> saved = new List<AssemblyDefinition> ();
 
+		void PreserveLibrary (AssemblyDefinition assembly)
+		{
+			var action = Annotations.GetAction (assembly);
+			ResolveFromAssemblyStep.ProcessLibrary (context, assembly);
+			if (action == AssemblyAction.Link)
+				Annotations.SetAction (assembly, action);
+		}
+
 		public override void ProcessAssembly (AssemblyDefinition assembly)
 		{
 			// Preserve dynamic dependencies only when Microsoft.CSharp is referenced.
@@ -26,13 +34,13 @@ namespace Mono.Tuner {
 			case "Microsoft.CSharp":
 				preserve_dynamic = true;
 				foreach (var savedAssembly in saved)
-					ResolveFromAssemblyStep.ProcessLibrary (context, savedAssembly);
-				ResolveFromAssemblyStep.ProcessLibrary (context, assembly);
+					PreserveLibrary (savedAssembly);
+				PreserveLibrary (assembly);
 				break;
 			case "Mono.CSharp":
 			case "System.Core":
 				if (preserve_dynamic)
-					ResolveFromAssemblyStep.ProcessLibrary (context, assembly);
+					PreserveLibrary (assembly);
 				else
 					saved.Add (assembly);
 				break;
