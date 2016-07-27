@@ -104,27 +104,6 @@
     <_LlvmConfigureFlagsWin64>--host="$(_CrossConfigureBuildHostWin64)" $(_LlvmCommonConfigureFlagsWin64)</_LlvmConfigureFlagsWin64>
   </PropertyGroup>
 
-  <!-- Cross-compilers settings -->
-  <PropertyGroup>
-      <_CrossArmTargetAbi>armv5-none-linux-androideabi</_CrossArmTargetAbi>
-      <_CrossArmOffsetsHeaderFile>armv5-none-linux-androideabi.h</_CrossArmOffsetsHeaderFile>
-  </PropertyGroup>
-
-  <PropertyGroup>
-      <_CrossArm64TargetAbi>aarch64-v8a-linux-android</_CrossArm64TargetAbi>
-      <_CrossArm64OffsetsHeaderFile>aarch64-v8a-linux-android.h</_CrossArm64OffsetsHeaderFile>
-  </PropertyGroup>
-
-  <PropertyGroup>
-      <_CrossX86TargetAbi>i686-none-linux-android</_CrossX86TargetAbi>
-      <_CrossX86OffsetsHeaderFile>i686-none-linux-android.h</_CrossX86OffsetsHeaderFile>
-  </PropertyGroup>
-
-  <PropertyGroup>
-      <_CrossX8664TargetAbi>x86_64-none-linux-android</_CrossX8664TargetAbi>
-      <_CrossX8664OffsetsHeaderFile>x86_64-none-linux-android.h</_CrossX8664OffsetsHeaderFile>
-  </PropertyGroup>
-
   <!-- Mono runtimes settings -->
   <PropertyGroup>
     <_ArmNdkPlatformPath>$(AndroidToolchainDirectory)\ndk\platforms\android-4</_ArmNdkPlatformPath>
