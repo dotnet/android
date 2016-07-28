@@ -80,13 +80,13 @@ namespace Xamarin.Android.Tasks
 				
 				//compute the target path
 				string rel;
-				var logicalName = item.GetMetadata ("LogicalName");
+				var logicalName = item.GetMetadata ("LogicalName").Replace ('\\', Path.DirectorySeparatorChar);
 				if (item.GetMetadata ("IsWearApplicationResource") == "True") {
 					rel = item.ItemSpec.Substring (IntermediateDir.Length);
 				} else if (!string.IsNullOrEmpty (logicalName)) {
 					rel = logicalName;
 				} else {
-					rel = item.GetMetadata ("Link");
+					rel = item.GetMetadata ("Link").Replace ('\\', Path.DirectorySeparatorChar);
 					if (string.IsNullOrEmpty (rel)) {
 						rel = item.GetMetadata ("Identity");
 						if (!string.IsNullOrEmpty (ProjectDir)) {

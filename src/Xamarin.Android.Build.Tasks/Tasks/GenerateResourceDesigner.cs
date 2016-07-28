@@ -72,7 +72,7 @@ namespace Xamarin.Android.Tasks
 					continue;
 
 				var name = item.ItemSpec.Substring (ResourceDirectory.Length);
-				var logical_name = item.GetMetadata ("LogicalName");
+				var logical_name = item.GetMetadata ("LogicalName").Replace ('\\', '/');
 
 				AddRename (name.Replace ('/', Path.DirectorySeparatorChar), logical_name.Replace ('/', Path.DirectorySeparatorChar));
 			}
