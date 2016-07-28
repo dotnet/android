@@ -20,6 +20,7 @@ ALL_JIT_ABIS  = \
 
 ALL_HOST_ABIS = \
 	$(shell uname) \
+	mxe-Win32 \
 	mxe-Win64
 
 ALL_AOT_ABIS = \

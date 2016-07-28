@@ -40,7 +40,6 @@
       <_BclAssembly Include="System.Json.dll"/>
       <_BclAssembly Include="System.Net.dll"/>
       <_BclAssembly Include="System.Net.Http.dll"/>
-      <_BclAssembly Include="System.Net.Http.WebRequest.dll"/>
       <_BclAssembly Include="System.Net.Http.WinHttpHandler.dll"/>
       <_BclAssembly Include="System.Numerics.dll"/>
       <_BclAssembly Include="System.Numerics.Vectors.dll"/>
@@ -162,59 +161,106 @@
   </Target>
   <Target Name="_GetRuntimesOutputItems">
     <ItemGroup>
-      <_RuntimeLibraries                Condition=" '%(_MonoRuntime.DoBuild)' == 'true' " Include="@(_MonoRuntime->'$(IntermediateOutputPath)%(Identity)\mono\mini\.libs\%(OutputRuntimeFilename).%(NativeLibraryExtension)')" />
-      <_InstallRuntimesOutputs          Condition=" '%(_MonoRuntime.DoBuild)' == 'true' " Include="@(_MonoRuntime->'$(OutputPath)\lib\xbuild\Xamarin\Android\lib\%(Identity)\%(OutputRuntimeFilename).%(NativeLibraryExtension)')" />
-      <_InstallUnstrippedRuntimeOutputs Condition=" '%(_MonoRuntime.DoBuild)' == 'true' " Include="@(_MonoRuntime->'$(OutputPath)\lib\xbuild\Xamarin\Android\lib\%(Identity)\%(OutputRuntimeFilename).d.%(NativeLibraryExtension)')" />
-      <_RuntimeLibraries
-          Condition=" '%(_MonoRuntime.DoBuild)' == 'true' And '%(_MonoRuntime.OutputProfilerFilename)' != '' "
+      <_RuntimeSource
+          Condition=" '%(_MonoRuntime.DoBuild)' == 'True' "
+          Include="@(_MonoRuntime->'$(IntermediateOutputPath)%(Identity)\mono\mini\.libs\%(OutputRuntimeFilename).%(NativeLibraryExtension)')"
+      />
+      <_InstallRuntimeOutput
+          Condition=" '%(_MonoRuntime.DoBuild)' == 'True' "
+          Include="@(_MonoRuntime->'$(OutputPath)\lib\xbuild\Xamarin\Android\lib\%(Identity)\%(OutputRuntimeFilename).%(NativeLibraryExtension)')"
+      />
+      <_InstallUnstrippedRuntimeOutput
+          Condition=" '%(_MonoRuntime.DoBuild)' == 'True' "
+          Include="@(_MonoRuntime->'$(OutputPath)\lib\xbuild\Xamarin\Android\lib\%(Identity)\%(OutputRuntimeFilename).d.%(NativeLibraryExtension)')"
+      />
+      <_ProfilerSource
+          Condition=" '%(_MonoRuntime.DoBuild)' == 'True' And '%(_MonoRuntime.OutputProfilerFilename)' != '' "
           Include="@(_MonoRuntime->'$(IntermediateOutputPath)%(Identity)\mono\profiler\.libs\%(OutputProfilerFilename).%(NativeLibraryExtension)')"
       />
-      <_InstallRuntimesOutputs
-          Condition=" '%(_MonoRuntime.DoBuild)' == 'true' And '%(_MonoRuntime.OutputProfilerFilename)' != '' "
+      <_InstallProfilerOutput
+          Condition=" '%(_MonoRuntime.DoBuild)' == 'True' And '%(_MonoRuntime.OutputProfilerFilename)' != '' "
           Include="@(_MonoRuntime->'$(OutputPath)\lib\xbuild\Xamarin\Android\lib\%(Identity)\%(OutputProfilerFilename).%(NativeLibraryExtension)')"
       />
-      <_RuntimeLibraries        Condition=" '%(_MonoRuntime.DoBuild)' == 'true' " Include="@(_MonoRuntime->'$(IntermediateOutputPath)%(Identity)\support\.libs\%(OutputMonoPosixHelperFilename).%(NativeLibraryExtension)')" />
-      <_InstallRuntimesOutputs  Condition=" '%(_MonoRuntime.DoBuild)' == 'true' " Include="@(_MonoRuntime->'$(OutputPath)\lib\xbuild\Xamarin\Android\lib\%(Identity)\%(OutputMonoPosixHelperFilename).%(NativeLibraryExtension)')" />
+      <_InstallUnstrippedProfilerOutput
+          Condition=" '%(_MonoRuntime.DoBuild)' == 'True' And '%(_MonoRuntime.OutputProfilerFilename)' != '' "
+          Include="@(_MonoRuntime->'$(OutputPath)\lib\xbuild\Xamarin\Android\lib\%(Identity)\%(OutputProfilerFilename).d.%(NativeLibraryExtension)')"
+      />
+      <_MonoPosixHelperSource
+          Condition=" '%(_MonoRuntime.DoBuild)' == 'True' And '%(_MonoRuntime.OutputMonoPosixHelperFilename)' != '' "
+          Include="@(_MonoRuntime->'$(IntermediateOutputPath)%(Identity)\support\.libs\%(OutputMonoPosixHelperFilename).%(NativeLibraryExtension)')"
+      />
+      <_InstallMonoPosixHelperOutput
+          Condition=" '%(_MonoRuntime.DoBuild)' == 'True' And '%(_MonoRuntime.OutputMonoPosixHelperFilename)' != '' "
+          Include="@(_MonoRuntime->'$(OutputPath)\lib\xbuild\Xamarin\Android\lib\%(Identity)\%(OutputMonoPosixHelperFilename).%(NativeLibraryExtension)')"
+      />
+      <_InstallUnstrippedMonoPosixHelperOutput
+          Condition=" '%(_MonoRuntime.DoBuild)' == 'True' And '%(_MonoRuntime.OutputMonoPosixHelperFilename)' != '' "
+          Include="@(_MonoRuntime->'$(OutputPath)\lib\xbuild\Xamarin\Android\lib\%(Identity)\%(OutputMonoPosixHelperFilename).d.%(NativeLibraryExtension)')"
+      />
       <_RuntimeBuildStamp       Condition=" '%(_MonoRuntime.DoBuild)' == 'true' " Include="@(_MonoRuntime->'$(IntermediateOutputPath)%(Identity)\.stamp')" />
     </ItemGroup>
   </Target>
   <Target Name="_BuildRuntimes"
       DependsOnTargets="_GetRuntimesOutputItems"
-      Inputs="%(_RuntimeBuildStamp.Identity)"
-      Outputs="%(_RuntimeLibraries.Identity);@(_BclProfileItems)">
+      Inputs="@(_RuntimeBuildStamp)"
+      Outputs="@(_RuntimeSource);@(_ProfilerSource);@(_MonoPosixHelperSource);@(_BclProfileItems)">
     <Exec
         Condition=" '%(_MonoRuntime.DoBuild)' == 'true' "
         Command="make $(MakeConcurrency) # %(_MonoRuntime.Identity)"
         WorkingDirectory="$(IntermediateOutputPath)\%(_MonoRuntime.Identity)"
     />
     <Touch
-        Files="%(_RuntimeLibraries.Identity);@(_BclProfileItems)"
+        Files="@(_RuntimeSource);@(_ProfilerSource);@(_MonoPosixHelperSource);@(_BclProfileItems)"
     />
   </Target>
   <Target Name="_InstallRuntimes"
       DependsOnTargets="_GetRuntimesOutputItems"
-      Inputs="%(_RuntimeLibraries.Identity)"
-      Outputs="%(_InstallRuntimesOutputs.Identity);%(_InstallUnstrippedRuntimeOutputs.Identity)">
+      Inputs="@(_RuntimeSource);@(_ProfilerSource);@(_MonoPosixHelperSource)"
+      Outputs="@(_InstallRuntimesOutput);@(_InstallProfilerOutput);@(_InstallMonoPosixHelperOutput)">
     <MakeDir
         Condition=" '%(_MonoRuntime.DoBuild)' == 'true' "
         Directories="$(OutputPath)\lib\xbuild\Xamarin\Android\lib\%(_MonoRuntime.Identity)"
-        />
-    <Copy
-        Condition=" '%(_MonoRuntime.DoBuild)' == 'true' "
-        SourceFiles="@(_RuntimeLibraries)"
-        DestinationFiles="@(_InstallRuntimesOutputs)"
     />
     <Copy
-        Condition=" '%(_MonoRuntime.DoBuild)' == 'true' "
-        SourceFiles="$(IntermediateOutputPath)\%(_MonoRuntime.Identity)\mono\mini\.libs\%(_MonoRuntime.OutputRuntimeFilename).%(_MonoRuntime.NativeLibraryExtension)"
-        DestinationFiles="%(_InstallUnstrippedRuntimeOutputs.Identity)"
+        SourceFiles="@(_RuntimeSource)"
+        DestinationFiles="@(_InstallRuntimeOutput)"
+    />
+    <Copy
+        SourceFiles="@(_RuntimeSource)"
+        DestinationFiles="@(_InstallUnstrippedRuntimeOutput)"
     />
     <Exec
         Condition=" '$(Configuration)' != 'Debug' And '%(_MonoRuntime.DoBuild)' == 'true' "
         Command="&quot;%(_MonoRuntime.Strip)&quot; %(_MonoRuntime.StripFlags) &quot;$(OutputPath)\lib\xbuild\Xamarin\Android\lib\%(_MonoRuntime.Identity)\%(_MonoRuntime.OutputRuntimeFilename).%(_MonoRuntime.NativeLibraryExtension)&quot;"
     />
+
+    <Copy
+        SourceFiles="@(_ProfilerSource)"
+        DestinationFiles="@(_InstallProfilerOutput)"
+    />
+    <Copy
+        SourceFiles="@(_ProfilerSource)"
+        DestinationFiles="@(_InstallUnstrippedProfilerOutput)"
+    />
+    <Exec
+        Condition=" '$(Configuration)' != 'Debug' And '%(_MonoRuntime.DoBuild)' == 'true' And '%(_MonoRuntime.OutputProfilerFilename)' != '' "
+        Command="&quot;%(_MonoRuntime.Strip)&quot; %(_MonoRuntime.StripFlags) &quot;$(OutputPath)\lib\xbuild\Xamarin\Android\lib\%(_MonoRuntime.Identity)\%(_MonoRuntime.OutputProfilerFilename).%(_MonoRuntime.NativeLibraryExtension)&quot;"
+    />
+
+    <Copy
+        SourceFiles="@(_MonoPosixHelperSource)"
+        DestinationFiles="@(_InstallMonoPosixHelperOutput)"
+    />
+    <Copy
+        SourceFiles="@(_MonoPosixHelperSource)"
+        DestinationFiles="@(_InstallUnstrippedMonoPosixHelperOutput)"
+    />
+    <Exec
+        Condition=" '$(Configuration)' != 'Debug' And '%(_MonoRuntime.DoBuild)' == 'true' And '%(_MonoRuntime.OutputMonoPosixHelperFilename)' != '' "
+        Command="&quot;%(_MonoRuntime.Strip)&quot; %(_MonoRuntime.StripFlags) &quot;$(OutputPath)\lib\xbuild\Xamarin\Android\lib\%(_MonoRuntime.Identity)\%(_MonoRuntime.OutputMonoPosixHelperFilename).%(_MonoRuntime.NativeLibraryExtension)&quot;"
+    />
     <Touch
-        Files="@(_InstallRuntimesOutputs);@(_InstallUnstrippedRuntimeOutputs)"
+        Files="@(_InstallRuntimesOutput);@(_InstallProfilerOutput);@(_InstallMonoPosixHelperOutput)"
     />
   </Target>
   <Target Name="_InstallBcl"
@@ -281,7 +327,7 @@
   
   <Target Name="_GenerateCrossOffsetHeaderFiles"
       Inputs="$(MonoSourceFullPath)\configure"
-      Outputs="%(_MonoCrossRuntime.OffsetsHeader)"
+      Outputs="$(IntermediateOutputPath)%(_MonoCrossRuntime.Identity)\%(_MonoCrossRuntime.TargetAbi).h"
       Condition=" '$(HostOS)' != 'Linux' And '@(_MonoCrossRuntime)' != '' ">
     <Exec
         Command="make $(_AotOffsetsDumperName)"
