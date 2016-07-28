@@ -126,10 +126,18 @@ namespace Xamarin.Android.Build.Utilities
 		{
 			var path = Environment.GetEnvironmentVariable ("PATH");
 			var pathDirs = path.Split (new char[] { Path.PathSeparator }, StringSplitOptions.RemoveEmptyEntries);
+			var pathExt = Environment.GetEnvironmentVariable ("PATHEXT");
+			var pathExts = pathExt?.Split (new char [] { Path.PathSeparator }, StringSplitOptions.RemoveEmptyEntries);
 
-			foreach (var dir in pathDirs)
+			foreach (var dir in pathDirs) {
 				if (File.Exists (Path.Combine (dir, (executable))))
 					yield return dir;
+				if (pathExts == null)
+					continue;
+				foreach (var ext in pathExts)
+					if (File.Exists (Path.Combine (dir, Path.ChangeExtension (executable, ext))))
+						yield return dir;
+			}
 		}
 
 		protected string NullIfEmpty (string s)
