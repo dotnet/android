@@ -85,6 +85,7 @@ namespace Xamarin.Android.Tasks
 		public string AndroidGdbDebugServer { get; set; }
 		public string AndroidEmbedProfilers { get; set; }
 		public string HttpClientHandlerType { get; set; }
+		public string TlsProvider { get; set; }
 
 		[Output]
 		public ITaskItem[] OutputFiles { get; set; }
@@ -201,6 +202,7 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugTaskItems ("  LibraryProjectJars:", LibraryProjectJars);
 			Log.LogDebugTaskItems ("  AdditionalNativeLibraryReferences:", AdditionalNativeLibraryReferences);
 			Log.LogDebugTaskItems ("  HttpClientHandlerType:", HttpClientHandlerType);
+			Log.LogDebugTaskItems ("  TlsProvider:", TlsProvider);
 
 			Aot.TryGetSequencePointsMode (AndroidSequencePointsMode, out sequencePointsMode);
 
@@ -323,6 +325,7 @@ namespace Xamarin.Android.Tasks
 			const string defaultLogLevel = "MONO_LOG_LEVEL=info";
 			const string defaultMonoDebug = "MONO_DEBUG=gen-compact-seq-points";
 			const string defaultHttpMessageHandler = "XA_HTTP_CLIENT_HANDLER_TYPE=Xamarin.Android.Net.AndroidClientHandler";
+			const string defaultTlsProvider = "XA_TLS_PROVIDER=default";
 			string xamarinBuildId = string.Format ("XAMARIN_BUILD_ID={0}", buildId);
 
 			if (Environments == null) {
@@ -340,6 +343,7 @@ namespace Xamarin.Android.Tasks
 			bool haveMonoDebug = false;
 			bool havebuildId = false;
 			bool haveHttpMessageHandler = false;
+			bool haveTlsProvider = false;
 
 			foreach (ITaskItem env in Environments) {
 				environment.WriteLine ("## Source File: {0}", env.ItemSpec);
@@ -356,6 +360,8 @@ namespace Xamarin.Android.Tasks
 					}
 					if (lineToWrite.StartsWith ("XA_HTTP_CLIENT_HANDLER_TYPE=", StringComparison.Ordinal))
 						haveHttpMessageHandler = true;
+					if (lineToWrite.StartsWith ("XA_TLS_PROVIDER=", StringComparison.Ordinal))
+						haveTlsProvider = true;
 					environment.WriteLine (lineToWrite);
 				}
 			}
@@ -373,6 +379,8 @@ namespace Xamarin.Android.Tasks
 
 			if (!haveHttpMessageHandler)
 				environment.WriteLine (HttpClientHandlerType == null ? defaultHttpMessageHandler : $"XA_HTTP_CLIENT_HANDLER_TYPE={HttpClientHandlerType.Trim ()}");
+			if (!haveTlsProvider)
+				environment.WriteLine (TlsProvider == null ? defaultTlsProvider : $"XA_TLS_PROVIDER={TlsProvider.Trim ()}");
 			
 			apk.AddEntry ("environment", environment.ToString (),
 					new UTF8Encoding (encoderShouldEmitUTF8Identifier:false));

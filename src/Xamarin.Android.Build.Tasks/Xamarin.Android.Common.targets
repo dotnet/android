@@ -2243,7 +2243,8 @@ because xbuild doesn't support framework reference assemblies.
     LibraryProjectJars="@(ExtractedJarImports)"
     AndroidEmbedProfilers="$(AndroidEmbedProfilers)"
     AndroidGdbDebugServer="$(AndroidGdbDebugServer)"
-    HttpClientHandlerType="$(AndroidHttpClientHandlerType)">
+    HttpClientHandlerType="$(AndroidHttpClientHandlerType)"
+    TlsProvider="$(AndroidTlsProvider)">
     <Output TaskParameter="BuildId" PropertyName="_XamarinBuildId" />
     <Output TaskParameter="OutputFiles" ItemName="ApkFiles" />
   </BuildApk>
