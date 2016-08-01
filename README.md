@@ -6,6 +6,10 @@ Xamarin.Android provides open-source bindings of the Android SDK for use with
 
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/xamarin/xamarin-android?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
+### Continuous Builds ###
+
+You can download the continuous builds of this repository are [available](https://jenkins.mono-project.com/view/Xamarin.Android/job/xamarin-android-builds/)
+
 # Configuration.Overrides.props
 
 The Xamarin.Android build is heavily dependent on MSBuild, with the *intention*
