@@ -31,6 +31,7 @@ namespace Android.App {
 		UiOptions _UiOptions;
 		bool _SupportsRtl;
 		bool _VMSafeMode;
+		bool _ResizeableActivity;
 		ICustomAttributeProvider provider;
 
 		static ManifestDocumentElement<ApplicationAttribute> mapping = new ManifestDocumentElement<ApplicationAttribute> ("application") {
@@ -154,6 +155,11 @@ namespace Android.App {
 			  "process",
 			  self          => self.Process,
 			  (self, value) => self.Process = (string) value
+			}, {
+			  "ResizeableActivity",
+			  "resizeableActivity",
+			  self          => self._ResizeableActivity,
+			  (self, value) => self._ResizeableActivity = (bool) value
 			}, {
 			  "RequiredAccountType",
 			  "requiredAccountType",

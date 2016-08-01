@@ -26,8 +26,8 @@
     <ManagedRuntime Condition=" '$(ManagedRuntime)' == '' And '$(OS)' != 'Windows_NT' ">mono</ManagedRuntime>
     <TargetFrameworkRootPath>$(MSBuildThisFileDirectory)bin\$(Configuration)\lib\xbuild-frameworks</TargetFrameworkRootPath>
     <HOME Condition=" '$(HOME)' == '' ">$(HOMEDRIVE)$(HOMEPATH)</HOME>
-    <AndroidApiLevel Condition=" '$(AndroidApiLevel)' == '' ">23</AndroidApiLevel>
-    <AndroidFrameworkVersion Condition=" '$(AndroidFrameworkVersion)' == '' ">v6.0</AndroidFrameworkVersion>
+    <AndroidApiLevel Condition=" '$(AndroidApiLevel)' == '' ">24</AndroidApiLevel>
+    <AndroidFrameworkVersion Condition=" '$(AndroidFrameworkVersion)' == '' ">v7.0</AndroidFrameworkVersion>
     <AndroidToolchainCacheDirectory Condition=" '$(AndroidToolchainCacheDirectory)' == '' ">$(HOME)\android-archives</AndroidToolchainCacheDirectory>
     <AndroidToolchainDirectory Condition=" '$(AndroidToolchainDirectory)' == '' ">$(HOME)\android-toolchain</AndroidToolchainDirectory>
     <AndroidMxeInstallPrefix Condition=" '$(AndroidMxeInstallPrefix)' == '' And '$(NeedMxe)' == 'true' ">$(AndroidToolchainDirectory)\mxe</AndroidMxeInstallPrefix>

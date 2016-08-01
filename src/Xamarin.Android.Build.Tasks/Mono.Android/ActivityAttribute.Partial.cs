@@ -22,6 +22,8 @@ namespace Android.App {
 		LayoutDirection _LayoutDirection;
 		UiOptions _UiOptions;
 		bool _Immersive;
+		bool _ResizeableActivity;
+		bool _SupportsPictureInPicture;
 
 		static ManifestDocumentElement<ActivityAttribute> mapping = new ManifestDocumentElement<ActivityAttribute> ("activity") {
 			{
@@ -135,6 +137,16 @@ namespace Android.App {
 			  "process",
 			  self          => self.Process,
 			  (self, value) => self.Process = (string) value
+			}, {
+			  "ResizeableActivity",
+			  "resizeableActivity",
+			  self          => self._ResizeableActivity,
+			  (self, value) => self._ResizeableActivity = (bool) value
+			}, {
+			  "SupportsPictureInPicture",
+			  "supportsPictureInPicture",
+			  self          => self._SupportsPictureInPicture,
+			  (self, value) => self._SupportsPictureInPicture = (bool) value
 			}, {
 			  "ScreenOrientation",
 			  "screenOrientation",
