@@ -50,7 +50,8 @@ namespace generatortests
 		{
 			var files = Directory.GetFiles (sourceDir);
 			foreach (var file in files) {
-				if (Path.GetExtension (file) == ".xml")
+				var extension   = Path.GetExtension (file);
+				if (extension == ".xml" || extension == ".fixed")
 					continue;
 				var filename = Path.GetFileName (file);
 				var dest = Path.Combine (destinationDir, filename);
