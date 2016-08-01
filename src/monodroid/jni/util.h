@@ -15,9 +15,20 @@
 #define MONODROID_PATH_SEPARATOR "/"
 #endif
 
+#if WINDOWS
+typedef struct _stat monodroid_stat_t;
+#define monodroid_dir_t _WDIR
+typedef struct _wdirent monodroid_dirent_t;
+#else
+typedef struct stat monodroid_stat_t;
+#define monodroid_dir_t DIR
+typedef struct dirent monodroid_dirent_t;
+#endif
+
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <dirent.h>
 
 #include "dylib-mono.h"
 #include "monodroid.h"
@@ -37,6 +48,10 @@ MONO_API  int     recv_uninterrupted (int fd, void *buf, int len);
 int ends_with (const char *str, const char *end);
 char* path_combine(const char *path1, const char *path2);
 FILE *monodroid_fopen (const char* filename, const char* mode);
+int monodroid_stat (const char *path, monodroid_stat_t *s);
+monodroid_dir_t* monodroid_opendir (const char *filename);
+int monodroid_closedir (monodroid_dir_t *dirp);
+int monodroid_dirent_hasextension (monodroid_dirent_t *e, const char *extension);
 
 static inline void*
 _assert_valid_pointer (void *p, size_t size)
