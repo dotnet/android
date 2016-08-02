@@ -175,6 +175,23 @@ namespace Xamarin.Android.Tasks
 			return true;
 		}
 
+		static bool GetNdkToolchainSourceProperties (string androidNdkPath, out NdkVersion version)
+		{
+			version = new NdkVersion ();
+			var sourcePropertiesPath = Path.Combine (androidNdkPath, "source.properties");
+			if (!File.Exists (sourcePropertiesPath)) {
+				return false;
+			}
+			var match = Regex.Match (File.ReadAllText (sourcePropertiesPath).Trim (), "^Pkg.Revision\\s*=\\s*([.0-9]+)$", RegexOptions.Multiline);
+			if (!match.Success) {
+				return false;
+			}
+			var numbers = match.Groups[1].Value.Trim().Split ('.');
+			version.Version = int.Parse (numbers [0]);
+			version.Revision = Convert.ToChar (int.Parse (numbers [1]) + (int)'a').ToString ();
+			return true;
+		}
+
 		public struct NdkVersion
 		{
 			public int Version;
@@ -186,8 +203,11 @@ namespace Xamarin.Android.Tasks
 			ndkVersion = new NdkVersion ();
 
 			string version;
-			if (!GetNdkToolchainRelease(androidNdkPath, out version))
+			if (!GetNdkToolchainRelease (androidNdkPath, out version)) {
+				if (GetNdkToolchainSourceProperties (androidNdkPath, out ndkVersion))
+					return true;
 				return false;
+			}
 
 			var match = Regex.Match(version, @"r(\d+)\s*(.*)\s+.*");
 			if( !match.Success)
