@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>{74598F5C-B8CC-4CE6-8EE2-AB9CA1400076}</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>Xamarin.Android.NamingCustomAttributes</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Android.Content\BroadcastReceiverAttribute.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Android.Content\ContentProviderAttribute.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Android.Runtime\RegisterAttribute.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\ExportAttribute.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\ExportFieldAttribute.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\ExportParameterAttribute.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\ExportParameterKind.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Android.App\ActivityAttribute.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Android.App\ApplicationAttribute.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Android.App\ServiceAttribute.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Android.App\InstrumentationAttribute.cs" />
+  </ItemGroup>
+</Project>

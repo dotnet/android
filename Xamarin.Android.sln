@@ -21,7 +21,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Java.Interop", "external\Ja
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "generator", "external\Java.Interop\tools\generator\generator.csproj", "{D14A1B5C-2060-4930-92BE-F7190256C735}"
 EndProject
-Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Xamarin.Android.NamingCustomAttributes", "external\Java.Interop\src\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.shproj", "{74598F5C-B8CC-4CE6-8EE2-AB9CA1400076}"
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Java.Interop.NamingCustomAttributes", "external\Java.Interop\src\Java.Interop.NamingCustomAttributes\Java.Interop.NamingCustomAttributes.shproj", "{FE789F04-5E95-42C5-AEF1-E33F8DF06B3F}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Xamarin.Android.NamingCustomAttributes", "src\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.shproj", "{74598F5C-B8CC-4CE6-8EE2-AB9CA1400076}"
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Java.Interop.Tools.TypeNameMappings", "external\Java.Interop\src\Java.Interop.Tools.TypeNameMappings\Java.Interop.Tools.TypeNameMappings.shproj", "{E706B6F2-5562-4765-8F07-8CF84A797B30}"
 EndProject
@@ -410,6 +412,7 @@ Global
 		{3FC3E78B-F7D4-42EA-BBE8-4535DF42BFF8} = {E351F97D-EA4F-4E7F-AAA0-8EBB1F2A4A62}
 		{94BD81F7-B06F-4295-9636-F8A3B6BDC762} = {04E3E11E-B47D-4599-8AFC-50515A95E715}
 		{D14A1B5C-2060-4930-92BE-F7190256C735} = {04E3E11E-B47D-4599-8AFC-50515A95E715}
+		{FE789F04-5E95-42C5-AEF1-E33F8DF06B3F} = {04E3E11E-B47D-4599-8AFC-50515A95E715}
 		{74598F5C-B8CC-4CE6-8EE2-AB9CA1400076} = {04E3E11E-B47D-4599-8AFC-50515A95E715}
 		{E706B6F2-5562-4765-8F07-8CF84A797B30} = {04E3E11E-B47D-4599-8AFC-50515A95E715}
 		{66CF299A-CE95-4131-BCD8-DB66E30C4BF7} = {04E3E11E-B47D-4599-8AFC-50515A95E715}
