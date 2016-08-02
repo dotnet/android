@@ -404,8 +404,8 @@ create_update_dir (char *override_dir)
 static int
 file_exists (const char *file)
 {
-	struct stat s;
-	if (stat (file, &s) == 0 && (s.st_mode & S_IFMT) == S_IFREG)
+	monodroid_stat_t s;
+	if (monodroid_stat (file, &s) == 0 && (s.st_mode & S_IFMT) == S_IFREG)
 		return 1;
 	return 0;
 }
@@ -419,8 +419,8 @@ file_executable (const char *file)
 	const int s_ixugo = S_IXUSR;
 #endif
 
-	struct stat s;
-	if (stat (file, &s) == 0 && (s.st_mode & S_IFMT) == S_IFREG && (s.st_mode & s_ixugo) != 0)
+	monodroid_stat_t s;
+	if (monodroid_stat (file, &s) == 0 && (s.st_mode & S_IFMT) == S_IFREG && (s.st_mode & s_ixugo) != 0)
 		return 1;
 	return 0;
 }
@@ -428,8 +428,8 @@ file_executable (const char *file)
 static int
 directory_exists (const char *directory)
 {
-	struct stat s;
-	if (stat (directory, &s) == 0 && (s.st_mode & S_IFMT) == S_IFDIR)
+	monodroid_stat_t s;
+	if (monodroid_stat (directory, &s) == 0 && (s.st_mode & S_IFMT) == S_IFDIR)
 		return 1;
 	return 0;
 }
@@ -521,13 +521,13 @@ setenv(const char *name, const char *value, int overwrite)
 static pthread_mutex_t readdir_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static int
-readdir_r (DIR *dirp, struct dirent *entry, struct dirent **result)
+readdir_r (_WDIR *dirp, struct _wdirent *entry, struct _wdirent **result)
 {
 	int error_code = 0;
 
 	pthread_mutex_lock (&readdir_mutex);
 	errno = 0;
-	entry = readdir (dirp);
+	entry = _wreaddir (dirp);
 	*result = entry;
 
 	if (entry == NULL && errno != 0)
@@ -1743,21 +1743,22 @@ count_override_assemblies (void)
 	int i;
 
 	for (i = 0; i < MAX_OVERRIDES; ++i) {
-		DIR *dir;
-		struct dirent b, *e;
+		monodroid_dir_t *dir;
+		monodroid_dirent_t b, *e;
 
 		const char *dir_path = override_dirs [i];
+
 		if (dir_path == NULL || !directory_exists (dir_path))
 			continue;
 
-		if ((dir = opendir (dir_path)) == NULL)
+		if ((dir = monodroid_opendir (dir_path)) == NULL)
 			continue;
 
 		while (readdir_r (dir, &b, &e) == 0 && e) {
-			if (ends_with (e->d_name, ".dll"))
+			if (monodroid_dirent_hasextension (e, ".dll"))
 				++c;
 		}
-		closedir (dir);
+		monodroid_closedir (dir);
 	}
 
 	return c;

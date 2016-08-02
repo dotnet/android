@@ -392,6 +392,59 @@ monodroid_fopen (const char *filename, const char *mode)
 #endif // ndef WINDOWS
 }
 
+int
+monodroid_stat (const char *path, monodroid_stat_t *s)
+{
+	int result;
+
+#ifndef WINDOWS
+	result = stat (path, s);
+#else
+	wchar_t *wpath = utf8_to_utf16 (path);
+	result = _wstat (wpath, s);
+	free (wpath);
+#endif
+
+	return result;
+}
+
+monodroid_dir_t*
+monodroid_opendir (const char *filename)
+{
+#ifndef WINDOWS
+	return opendir (filename);
+#else
+	wchar_t *wfilename = utf8_to_utf16 (filename);
+	monodroid_dir_t *result = _wopendir (wfilename);
+	free (wfilename);
+	return result;
+#endif
+}
+
+int
+monodroid_closedir (monodroid_dir_t *dirp)
+{
+#ifndef WINDOWS
+	return closedir (dirp);
+#else
+	return _wclosedir (dirp);
+#endif
+
+}
+
+int
+monodroid_dirent_hasextension (monodroid_dirent_t *e, const char *extension)
+{
+#ifndef WINDOWS
+	return ends_with (e->d_name, extension);
+#else
+	char *mb_dname = utf16_to_utf8 (e->d_name);
+	int result = ends_with (mb_dname, extension);
+	free (mb_dname);
+	return result;
+#endif
+}
+
 #ifdef WINDOWS
 char*
 utf16_to_utf8 (const wchar_t *widestr)
