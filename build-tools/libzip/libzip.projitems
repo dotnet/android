@@ -1,12 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <_LibZipTarget Include="host-mxe-Win64" Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))">
-      <CMake>$(AndroidMxeFullPath)\bin\x86_64-w64-mingw32.static-cmake</CMake>
-      <CMakeFlags></CMakeFlags>
-      <OutputLibrary>libzip.dll</OutputLibrary>
-      <OutputLibraryPath>lib/libzip.dll</OutputLibraryPath>
-    </_LibZipTarget>
     <_LibZipTarget Include="host-Darwin" Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Darwin:'))">
       <CMake>cmake</CMake>
       <CMakeFlags>-DCMAKE_OSX_ARCHITECTURES=&quot;i386;x86_64&quot;</CMakeFlags>
@@ -19,8 +13,5 @@
       <OutputLibrary>libzip.so</OutputLibrary>
       <OutputLibraryPath>libzip.so</OutputLibraryPath>
     </_LibZipTarget>
-  </ItemGroup>
-  <ItemGroup>
-    <RequiredProgram Include="cmake" />
   </ItemGroup>
 </Project>

@@ -1,12 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <PropertyGroup>
-    <_SourceTopDir>..\..</_SourceTopDir>
-  </PropertyGroup>
-  <UsingTask AssemblyFile="$(_SourceTopDir)\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.GetNugetPackageBasePath" />
-  <Import Project="libzip.props" />
-  <Import Project="libzip.projitems" />
-  <Import Project="..\scripts\RequiredPrograms.targets" />
+  <Target Name="_CheckForMake">
+    <Exec Command="make --help" />
+    <OnError ExecuteTargets="_PrintRequiredMake" />
+  </Target>
+  <Target Name="_PrintRequiredMake">
+    <Error Text="The `make` program is required, and could not be found in `$PATH`." />
+  </Target>
+  <Target Name="_CheckForCmake">
+    <Exec Command="cmake --help" />
+    <OnError ExecuteTargets="_PrintRequiredCmake" />
+  </Target>
+  <Target Name="_PrintRequiredCmake">
+    <Error Text="The `cmake` program is required, and could not be found in `$PATH`." />
+  </Target>
   <Target Name="_SetCMakeListsTxtTimeToLastCommitTimestamp">
     <Exec
         Command="touch -m -t `git log -1 --format=%25cd --date=format-local:%25Y%25m%25d%25H%25M.%25S` CMakeLists.txt"
@@ -14,23 +21,38 @@
     />
   </Target>
   <Target Name="_Configure"
-        DependsOnTargets="_SetCMakeListsTxtTimeToLastCommitTimestamp"
-        Inputs="$(LibZipSourceFullPath\CMakeLists.txt"
-        Outputs="$(IntermediateOutputPath)\%(_LibZipTarget.Identity)\Makefile">
+      Condition=" '@(_LibZipTarget)' != '' "
+      DependsOnTargets="_SetCMakeListsTxtTimeToLastCommitTimestamp"
+      Inputs="$(LibZipSourceFullPath)\CMakeLists.txt"
+      Outputs="$(IntermediateOutputPath)\%(_LibZipTarget.Identity)\Makefile">
+    <CallTarget Targets="_CheckForCmake" />
     <MakeDir Directories="@(_LibZipTarget->'$(IntermediateOutputPath)\%(Identity)')" /> 
     <Exec
         Command="%(_LibZipTarget.CMake) %(_LibZipTarget.CMakeFlags) $(LibZipSourceFullPath)"
         WorkingDirectory="@(_LibZipTarget->'$(IntermediateOutputPath)\%(Identity)')"
     />
   </Target>
+  <ItemGroup>
+    <Content Include="@(_LibZipTarget->'$(OutputPath)\lib\xbuild\Xamarin\Android\%(_LibZipTarget.OutputLibrary)')">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
   <Target Name="_Make"
-        Inputs="$(IntermediateOutputPath)\%(_LibZipTarget.Identity)\Makefile"
-        Outputs="$(IntermediateOutputPath)\%(_LibZipTarget.Identity)\%(_LibZipTarget.OutputLibraryPath)">
+      Condition=" '@(_LibZipTarget)' != '' "
+      Inputs="$(IntermediateOutputPath)\%(_LibZipTarget.Identity)\Makefile"
+      Outputs="@(Content)">
+    <CallTarget Targets="_CheckForMake" />
     <Exec
         Command="make"
         WorkingDirectory="$(IntermediateOutputPath)\%(_LibZipTarget.Identity)"
      /> 
     <Copy SourceFiles="@(_LibZipTarget->'$(IntermediateOutputPath)\%(Identity)\%(_LibZipTarget.OutputLibraryPath)')"
         DestinationFiles="@(_LibZipTarget->'$(OutputPath)\lib\xbuild\Xamarin\Android\%(_LibZipTarget.OutputLibrary)')"/>
+    <Touch Files="@(Content)" />
+  </Target>
+  <Target Name="_CleanBinaries"
+      AfterTargets="Clean">
+    <RemoveDir Directories="$(IntermediateOutputPath)\%(_LibZipTarget.Identity" />
+    <Delete Files="@(_LibZipTarget->'$(OutputPath)\lib\xbuild\Xamarin\Android\%(_LibZipTarget.OutputLibrary)')" />
   </Target>
 </Project>
