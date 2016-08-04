@@ -597,7 +597,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	</CreateItem>
 </Target>
 
-<Target Name="_SetupApplicationJavaClass" AfterTargets="_SetLatestTargetFrameworkVersion">
+<Target Name="_SetupApplicationJavaClass" AfterTargets="_ResolveMonoAndroidSdks">
 	<PropertyGroup>
 		<AndroidApplicationJavaClass Condition="'$(AndroidApplicationJavaClass)' == '' And $(AndroidEnableMultiDex)">android.support.multidex.MultiDexApplication</AndroidApplicationJavaClass>
 		<AndroidApplicationJavaClass Condition="'$(AndroidApplicationJavaClass)' == ''">android.app.Application</AndroidApplicationJavaClass>
