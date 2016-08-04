@@ -516,6 +516,7 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
     <Delete Files="$(ApiOutputFile)" />
     <Delete Files="$(ApiOutputFile).adjusted" />
     <Delete Files="$(ApiOutputFile).fixed" />
+    <Delete Files="$(ApiOutputFile).adjusted.fixed" />
     <Delete Files="$(_GeneratorStampFile)" />
 
     <RemoveDirFixed Directories="$(GeneratedOutputPath)" Condition="Exists ('$(GeneratedOutputPath)')" />
