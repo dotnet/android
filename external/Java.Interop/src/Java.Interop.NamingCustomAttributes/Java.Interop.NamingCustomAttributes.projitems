@@ -3,10 +3,10 @@
   <PropertyGroup>
     <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
     <HasSharedItems>true</HasSharedItems>
-    <SharedGUID>{74598F5C-B8CC-4CE6-8EE2-AB9CA1400076}</SharedGUID>
+    <SharedGUID>{FE789F04-5E95-42C5-AEF1-E33F8DF06B3F}</SharedGUID>
   </PropertyGroup>
   <PropertyGroup Label="Configuration">
-    <Import_RootNamespace>Xamarin.Android.NamingCustomAttributes</Import_RootNamespace>
+    <Import_RootNamespace>Java.Interop.NamingCustomAttributes</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Android.Content\BroadcastReceiverAttribute.cs" />
