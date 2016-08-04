@@ -5,6 +5,10 @@ if [ -z "$CONFIGURATION" ] ; then
 	CONFIGURATION=Debug
 fi
 
+if [ -z "$MSBUILD" ] ; then
+	MSBUILD=xbuild
+fi
+
 export TARGETS_DIR="$topdir/bin/$CONFIGURATION/lib/xbuild"
 export MSBuildExtensionsPath="$TARGETS_DIR" 
 export MONO_ANDROID_PATH="$topdir/bin/$CONFIGURATION"
@@ -18,7 +22,7 @@ ANDROID_SDK_PATH=$(echo $ANDROID_SDK_PATH | sed 's/^\w*//g')
 export ANDROID_NDK_PATH
 export ANDROID_SDK_PATH
 
-exec xbuild /p:Configuration=Release $MSBUILD_OPTIONS \
+exec $MSBUILD /p:Configuration=$CONFIGURATION $MSBUILD_OPTIONS \
 	/p:AndroidNdkDirectory="$ANDROID_NDK_PATH" \
 	/p:AndroidSdkDirectory="$ANDROID_SDK_PATH" \
 	/p:MonoDroidInstallDirectory="$MONO_ANDROID_PATH" \

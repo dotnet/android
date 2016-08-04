@@ -61,13 +61,13 @@ FRAMEWORK_ASSEMBLIES = \
 leeroy jenkins: prepare $(RUNTIME_LIBRARIES) $(TASK_ASSEMBLIES) $(FRAMEWORK_ASSEMBLIES)
 
 $(TASK_ASSEMBLIES): bin/%/lib/xbuild/Xamarin/Android/Xamarin.Android.Build.Tasks.dll:
-	$(MSBUILD) /p:Configuration=$* $(_MSBUILD_ARGS)
+	$(MSBUILD) $(MSBUILD_FLAGS) /p:Configuration=$* $(_MSBUILD_ARGS) $(SOLUTION)
 
 $(FRAMEWORK_ASSEMBLIES):
 	$(foreach a, $(API_LEVELS), \
-		$(MSBUILD) src/Mono.Android/Mono.Android.csproj /p:Configuration=Debug   $(_MSBUILD_ARGS) /p:AndroidApiLevel=$(a) /p:AndroidFrameworkVersion=$(word $(a), $(ALL_FRAMEWORKS));  \
-		$(MSBUILD) src/Mono.Android/Mono.Android.csproj /p:Configuration=Release $(_MSBUILD_ARGS) /p:AndroidApiLevel=$(a) /p:AndroidFrameworkVersion=$(word $(a), $(ALL_FRAMEWORKS)); )
+		$(MSBUILD) $(MSBUILD_FLAGS) src/Mono.Android/Mono.Android.csproj /p:Configuration=Debug   $(_MSBUILD_ARGS) /p:AndroidApiLevel=$(a) /p:AndroidFrameworkVersion=$(word $(a), $(ALL_FRAMEWORKS));  \
+		$(MSBUILD) $(MSBUILD_FLAGS) src/Mono.Android/Mono.Android.csproj /p:Configuration=Release $(_MSBUILD_ARGS) /p:AndroidApiLevel=$(a) /p:AndroidFrameworkVersion=$(word $(a), $(ALL_FRAMEWORKS)); )
 
 $(RUNTIME_LIBRARIES):
-	$(MSBUILD) /p:Configuration=Debug $(_MSBUILD_ARGS)
-	$(MSBUILD) /p:Configuration=Release $(_MSBUILD_ARGS)
+	$(MSBUILD) $(MSBUILD_FLAGS) /p:Configuration=Debug   $(_MSBUILD_ARGS) $(SOLUTION)
+	$(MSBUILD) $(MSBUILD_FLAGS) /p:Configuration=Release $(_MSBUILD_ARGS) $(SOLUTION)
