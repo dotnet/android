@@ -13,9 +13,9 @@ namespace Android.Runtime {
 			return Java.Interop.TypeManager.LookupTypeMapping (mappings, javaType);
 		}
 
-		public static void RegisterType (string java_class, Type t)
+		public static void RegisterType (string java_class, Type t, bool ignoreExistingRegistration = false)
 		{
-			Java.Interop.TypeManager.RegisterType (java_class, t);
+			Java.Interop.TypeManager.RegisterType (java_class, t, ignoreExistingRegistration);
 		}
 
 		public static void RegisterPackage (string package, Converter<string, Type> lookup)

@@ -60,6 +60,8 @@ namespace Android.Runtime {
 		internal  static  bool  PropagateExceptions;
 		static UncaughtExceptionHandler defaultUncaughtExceptionHandler;
 
+		static bool IsRunningOnDesktop;
+
 #if !JAVA_INTEROP
 		static JNIInvokeInterface invoke_iface;
 
@@ -155,7 +157,7 @@ namespace Android.Runtime {
 				return;
 			}
 
-			TypeManager.RegisterType (Java.Interop.TypeManager.GetClassName (jniClass), type);
+			TypeManager.RegisterType (Java.Interop.TypeManager.GetClassName (jniClass), type, ignoreExistingRegistration: IsRunningOnDesktop);
 
 			string[] methods = new string ((char*) methods_ptr, 0, methods_len).Split ('\n');
 			if (methods.Length == 0)
@@ -257,6 +259,7 @@ namespace Android.Runtime {
 			}
 
 			AllocObjectSupported = androidSdkVersion > 10;
+			IsRunningOnDesktop = Convert.ToBoolean (args->isRunningOnDesktop);
 
 			Java.Interop.Runtime.grefIGCUserPeer_class = args->grefIGCUserPeer;
 
@@ -282,7 +285,7 @@ namespace Android.Runtime {
 #endif
 			if (PropagateExceptions) {
 				defaultUncaughtExceptionHandler = new UncaughtExceptionHandler (Java.Lang.Thread.DefaultUncaughtExceptionHandler);
-				if (!Convert.ToBoolean (args->isRunningOnDesktop))
+				if (!IsRunningOnDesktop)
 					Java.Lang.Thread.DefaultUncaughtExceptionHandler = defaultUncaughtExceptionHandler;
 			}
 		}
