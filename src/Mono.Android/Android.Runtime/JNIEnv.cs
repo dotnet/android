@@ -60,7 +60,7 @@ namespace Android.Runtime {
 		internal  static  bool  PropagateExceptions;
 		static UncaughtExceptionHandler defaultUncaughtExceptionHandler;
 
-		static bool IsRunningOnDesktop;
+		internal static bool IsRunningOnDesktop;
 
 #if !JAVA_INTEROP
 		static JNIInvokeInterface invoke_iface;
@@ -157,7 +157,7 @@ namespace Android.Runtime {
 				return;
 			}
 
-			TypeManager.RegisterType (Java.Interop.TypeManager.GetClassName (jniClass), type, ignoreExistingRegistration: IsRunningOnDesktop);
+			TypeManager.RegisterType (Java.Interop.TypeManager.GetClassName (jniClass), type);
 
 			string[] methods = new string ((char*) methods_ptr, 0, methods_len).Split ('\n');
 			if (methods.Length == 0)

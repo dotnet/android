@@ -308,7 +308,7 @@ namespace Java.Interop {
 			return c.Invoke (new object[]{handle, transfer});
 		}
 
-		public static void RegisterType (string java_class, Type t, bool ignoreExistingRegistration = false)
+		public static void RegisterType (string java_class, Type t)
 		{
 			string jniFromType = JniTypeMapping.ToJniName (t);
 			lock (jniToManaged) {
@@ -318,7 +318,7 @@ namespace Java.Interop {
 					if (jniFromType != java_class) {
 						managedToJni.Add (t, java_class);
 					}
-				} else if (!ignoreExistingRegistration) {
+				} else if (!JNIEnv.IsRunningOnDesktop || t != typeof (Java.Interop.TypeManager)) {
 					// skip the registration and output a warning
 					Logger.Log (LogLevel.Warn, "monodroid", string.Format ("Type Registration Skipped for {0} to {1} ", java_class, t.ToString()));
 				}
