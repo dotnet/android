@@ -1437,6 +1437,13 @@ java_gc (JNIEnv *env)
 	(*env)->CallVoidMethod (env, Runtime_instance, Runtime_gc);
 }
 
+/* The context (mapping to a Mono AppDomain) that is currently selected as the
+ * active context from the point of view of Java. We cannot rely on the value
+ * of `mono_domain_get` for this as it's stored per-thread and we want to be
+ * able to switch our different contexts from different threads.
+ */
+static int current_context_id = -1;
+
 struct MonodroidBridgeProcessingInfo {
 	MonoDomain *domain;
 	MonoClassField *bridge_processing_field;
@@ -3844,6 +3851,7 @@ JNICALL Java_mono_android_Runtime_createNewContext (JNIEnv *env, jclass klass, j
 	MonoDomain *domain = create_and_initialize_domain (env, runtimeApks, assemblies, loader, /*is_root_domain:*/ 0);
 	mono.mono_domain_set (domain, FALSE);
 	int domain_id = mono.mono_domain_get_id (domain);
+	current_context_id = domain_id;
 	log_info (LOG_DEFAULT, "Created new context with id %d\n", domain_id);
 	return domain_id;
 }
@@ -3853,12 +3861,12 @@ JNICALL Java_mono_android_Runtime_switchToContext (JNIEnv *env, jclass klass, ji
 {
 	log_info (LOG_DEFAULT, "SWITCHING CONTEXT");
 	MonoDomain *domain = mono.mono_domain_get_by_id ((int)contextID);
-	MonoDomain *curr_domain = mono.mono_domain_get ();
-	if (domain != NULL && domain != curr_domain) {
-		mono.mono_domain_set (domain, FALSE);
+	if (current_context_id != (int)contextID) {
+		mono.mono_domain_set (domain, TRUE);
 		// Reinitialize TypeManager so that its JNI handle goes into the right domain
 		reinitialize_android_runtime_type_manager (env);
 	}
+	current_context_id = (int)contextID;
 }
 
 JNIEXPORT void
@@ -3866,6 +3874,7 @@ JNICALL Java_mono_android_Runtime_destroyContexts (JNIEnv *env, jclass klass, ji
 {
 	MonoDomain *root_domain = mono.mono_get_root_domain ();
 	mono.mono_jit_thread_attach (root_domain);
+	current_context_id = -1;
 
 	jint *contextIDs = (*env)->GetIntArrayElements (env, array, NULL);
 	jsize count = (*env)->GetArrayLength (env, array);

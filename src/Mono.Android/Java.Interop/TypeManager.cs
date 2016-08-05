@@ -318,7 +318,7 @@ namespace Java.Interop {
 					if (jniFromType != java_class) {
 						managedToJni.Add (t, java_class);
 					}
-				} else {
+				} else if (!JNIEnv.IsRunningOnDesktop || t != typeof (Java.Interop.TypeManager)) {
 					// skip the registration and output a warning
 					Logger.Log (LogLevel.Warn, "monodroid", string.Format ("Type Registration Skipped for {0} to {1} ", java_class, t.ToString()));
 				}
