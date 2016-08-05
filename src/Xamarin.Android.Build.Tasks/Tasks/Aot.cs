@@ -326,7 +326,7 @@ namespace Xamarin.Android.Tasks
 						ldFlags,
 						QuoteFileName (SdkBinDirectory),
 						QuoteFileName (outdir),
-						sequencePointsMode == SequencePointsMode.Offline ? string.Format("gen-seq-points-file={0},", seqpointsFile) : string.Empty
+						sequencePointsMode == SequencePointsMode.Offline ? string.Format("msym-dir={0},", QuoteFileName(outdir)) : string.Empty
 					);
 
 					// Due to a Monodroid MSBuild bug we can end up with paths to assemblies that are not in the intermediate
@@ -382,8 +382,6 @@ namespace Xamarin.Android.Tasks
 			// the C code cannot parse all the license details, including the activation code that tell us which license level is allowed
 			// so we provide this out-of-band to the cross-compilers - this can be extended to communicate a few others bits as well
 			psi.EnvironmentVariables ["MONO_PATH"] = assembliesPath;
-			if (sequencePointsMode != SequencePointsMode.None)
-				psi.EnvironmentVariables ["MONO_DEBUG"] = "gen-compact-seq-points";
 
 			var proc = new Process ();
 			proc.OutputDataReceived += OnAotOutputData;
