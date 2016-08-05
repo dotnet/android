@@ -35,6 +35,7 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
   <UsingTask TaskName="Xamarin.Android.Tasks.CreateNativeLibraryArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.ImportJavaDoc" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.MDoc" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.SetMSBuildExtensionsPath" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 
   <!--
   *******************************************
@@ -142,6 +143,7 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
   </PropertyGroup>
   
 <Target Name="_GetReferenceAssemblyPaths">
+	<SetMSBuildExtensionsPath />
 	<GetReferenceAssemblyPaths
 			TargetFrameworkMoniker="$(TargetFrameworkIdentifier),Version=v1.0"
 			RootPath="$(TargetFrameworkRootPath)">

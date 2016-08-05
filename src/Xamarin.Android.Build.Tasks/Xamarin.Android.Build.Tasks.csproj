@@ -391,6 +391,7 @@
     <Compile Include="Tasks\CheckTargetFrameworks.cs" />
     <Compile Include="Tasks\Dx.cs" />
     <Compile Include="Tasks\CreateMsymManifest.cs" />
+    <Compile Include="Tasks\SetMSBuildExtensionsPath.cs" />
     <Compile Include="Utilities\AndroidResource.cs">
       <Link>Utilities\AndroidResource.cs</Link>
     </Compile>
