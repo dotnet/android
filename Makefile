@@ -2,8 +2,10 @@ OS            := $(shell uname)
 OS_ARCH       := $(shell uname -m)
 V             ?= 0
 CONFIGURATION = Debug
-MSBUILD       = xbuild /p:Configuration=$(CONFIGURATION) $(MSBUILD_ARGS)
+MSBUILD       = xbuild
+MSBUILD_FLAGS = /p:Configuration=$(CONFIGURATION) $(MSBUILD_ARGS)
 RUNTIME       := $(shell if [ -f `which mono64` ] ; then echo mono64 ; else echo mono; fi) --debug=casts
+SOLUTION      = Xamarin.Android.sln
 
 NUNIT_TESTS = \
 	bin/Test$(CONFIGURATION)/Xamarin.Android.Build.Tests.dll
@@ -12,27 +14,31 @@ NUNIT_CONSOLE = packages/NUnit.ConsoleRunner.3.2.1/tools/nunit3-console.exe
 
 ifneq ($(V),0)
 MONO_OPTIONS += --debug
-MSBUILD      += /v:d
+MSBUILD_FLAGS += /v:d
 endif
 
 ifneq ($(MONO_OPTIONS),)
 export MONO_OPTIONS
 endif
 
-all:
-	$(MSBUILD)
+all::
+	$(MSBUILD) $(MSBUILD_FLAGS) $(SOLUTION)
+
+all-tests::
+	tools/scripts/xabuild $(MSBUILD_FLAGS) Xamarin.Android-Tests.sln
 
 prepare:: prepare-external prepare-props
 
 prepare-external:
 	git submodule update --init --recursive
-	nuget restore
-	(cd `$(MSBUILD) /p:DoNotLoadOSProperties=True /nologo /v:minimal /t:GetJavaInteropFullPath build-tools/scripts/Paths.targets` && nuget restore)
+	nuget restore $(SOLUTION)
+	nuget restore Xamarin.Android-Tests.sln
+	(cd `$(MSBUILD) $(MSBUILD_FLAGS) /p:DoNotLoadOSProperties=True /nologo /v:minimal /t:GetJavaInteropFullPath build-tools/scripts/Paths.targets` && nuget restore)
 
 prepare-props:
 	cp Configuration.Java.Interop.Override.props external/Java.Interop/Configuration.Override.props
 	./build-tools/scripts/generate-os-info Configuration.OperatingSystem.props
-	cp `$(MSBUILD) /nologo /v:minimal /t:GetMonoSourceFullPath build-tools/scripts/Paths.targets`/mcs/class/msfinal.pub .
+	cp `$(MSBUILD) $(MSBUILD_FLAGS) /nologo /v:minimal /t:GetMonoSourceFullPath build-tools/scripts/Paths.targets`/mcs/class/msfinal.pub .
 
 include build-tools/scripts/BuildEverything.mk
 
@@ -91,7 +97,8 @@ endif
 run-all-tests: run-nunit-tests run-apk-tests
 
 clean:
-	$(MSBUILD) /t:Clean
+	$(MSBUILD) $(MSBUILD_FLAGS) /t:Clean Xamarin.Android.sln
+	tools/scripts/xabuild $(MSBUILD_FLAGS) /t:Clean Xamarin.Android-Tests.sln
 
 distclean:
 	# It may fail if we're cleaning a half-built tree, no harm done if we ignore it
@@ -122,9 +129,9 @@ TEST_APK_PROJECTS = \
 define RUN_TEST_APK
 	# Must use xabuild to ensure correct assemblies are resolved
 	tools/scripts/xabuild /t:SignAndroidPackage $(1) && \
-	$(MSBUILD) /t:UnDeploy $(1) && \
-	$(MSBUILD) /t:Deploy $(1) && \
-	$(MSBUILD) /t:RunTests $(1) $(if $(ADB_TARGET),"/p:AdbTarget=$(ADB_TARGET)",)
+	$(MSBUILD) $(MSBUILD_FLAGS) /t:UnDeploy $(1) && \
+	$(MSBUILD) $(MSBUILD_FLAGS) /t:Deploy $(1) && \
+	$(MSBUILD) $(MSBUILD_FLAGS) /t:RunTests $(1) $(if $(ADB_TARGET),"/p:AdbTarget=$(ADB_TARGET)",)
 endef
 
 run-apk-tests:
