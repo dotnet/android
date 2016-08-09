@@ -405,36 +405,36 @@ namespace Xamarin.Android.Tools.Aidl
 			case "String":
 				return String.Format ("{0} = {1}.ReadString ();", arg, parcel);
 			case "String []":
-				return String.Format ("{0} = {1}.CreateStringArray (); {1}.ReadStringArray ({0});", arg, parcel);
+				return String.Format ("{0} = {1}.CreateStringArray ();", arg, parcel);
 			case "bool":
 				return String.Format ("{0} = {1}.ReadInt () != 0;", arg, parcel);
 			case "bool []":
-				return String.Format ("{0} = {1}.CreateBooleanArray (); {1}.ReadBooleanArray ({0});", arg, parcel);
+				return String.Format ("{0} = {1}.CreateBooleanArray ();", arg, parcel);
 			// FIXME: I'm not sure if aidl should support byte...
 			case "sbyte":
 				return String.Format ("{0} = {1}.ReadByte ();", arg, parcel);
 			case "byte []":
-				return String.Format ("{0} = {1}.CreateByteArray (); {1}.ReadByteArray ({0});", arg, parcel);
+				return String.Format ("{0} = {1}.CreateByteArray ();", arg, parcel);
 			case "char":
 				return String.Format ("{0} = (char) {1}.ReadInt ();", arg, parcel);
 			case "char []":
-				return String.Format ("{0} = {1}.CreateCharArray (); {1}.ReadCharArray ({0});", arg, parcel);
+				return String.Format ("{0} = {1}.CreateCharArray ();", arg, parcel);
 			case "int":
 				return String.Format ("{0} = {1}.ReadInt ();", arg, parcel);
 			case "int []":
-				return String.Format ("{0} = {1}.CreateIntArray (); {1}.ReadIntArray ({0});", arg, parcel);
+				return String.Format ("{0} = {1}.CreateIntArray ();", arg, parcel);
 			case "long":
 				return String.Format ("{0} = {1}.ReadLong ();", arg, parcel);
 			case "long []":
-				return String.Format ("{0} = {1}.CreateLongArray (); {1}.ReadLongArray ({0});", arg, parcel);
+				return String.Format ("{0} = {1}.CreateLongArray ();", arg, parcel);
 			case "float":
 				return String.Format ("{0} = {1}.ReadFloat ();", arg, parcel);
 			case "float []":
-				return String.Format ("{0} = {1}.CreateFloatArray (); {1}.ReadFloatArray ({0});", arg, parcel);
+				return String.Format ("{0} = {1}.CreateFloatArray ();", arg, parcel);
 			case "double":
 				return String.Format ("{0} = {1}.ReadDouble ();", arg, parcel);
 			case "double []":
-				return String.Format ("{0} = {1}.CreateDoubleArray (); {1}.ReadDoubleArray ({0});", arg, parcel);
+				return String.Format ("{0} = {1}.CreateDoubleArray ();", arg, parcel);
 			// FIXME: are JavaList for List and JavaDictionary for Map always appropriate?
 			case "List":
 			case "Android.Runtime.JavaList":
