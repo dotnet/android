@@ -6,11 +6,31 @@ Xamarin.Android provides open-source bindings of the Android SDK for use with
 
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/xamarin/xamarin-android?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-### Continuous Builds ###
+# Build Status
 
-You can download the continuous builds of this repository are [available](https://jenkins.mono-project.com/view/Xamarin.Android/job/xamarin-android-builds/)
+| Platform              | Status |
+|-----------------------|--------|
+| **OSS macOS**         | [![OSS macOS x86_64][oss-macOS-x86_64-icon]][oss-macOS-x86_64-status] |
+| **OSS Ubuntu**        | [![OSS Linux/Ubuntu x86_64][oss-ubuntu-x86_64-icon]][oss-ubuntu-x86_64-status] |
 
-# Configuration.Overrides.props
+[oss-macOS-x86_64-icon]: https://jenkins.mono-project.com/view/Xamarin.Android/job/xamarin-android/badge/icon
+[oss-macOS-x86_64-status]: https://jenkins.mono-project.com/view/Xamarin.Android/job/xamarin-android/
+[oss-ubuntu-x86_64-icon]: https://jenkins.mono-project.com/view/Xamarin.Android/job/xamarin-android-linux/badge/icon
+[oss-ubuntu-x86_64-status]: https://jenkins.mono-project.com/view/Xamarin.Android/job/xamarin-android-linux/
+
+# Downloads
+
+| Platform        | Status |
+|-----------------|--------|
+| **Commercial Xamarin.Android 6.2 (Cycle 8)** for macOS       | [![Commercial Xamarin.Android 6.2, macOS][commercial-c8-macOS-x86_64-icon]][commercial-c8-macOS-x86_64-status] |
+| **Commercial Xamarin.Android 7.0.99 (master)** for macOS     | [![Commercial Xamarin.Android 7.1, macOS][commercial-master-macOS-x86_64-icon]][commercial-master-macOS-x86_64-status] |
+
+[commercial-c8-macOS-x86_64-icon]: https://jenkins.mono-project.com/view/Xamarin.Android/job/xamarin-android-builds-cycle8/badge/icon
+[commercial-c8-macOS-x86_64-status]: https://jenkins.mono-project.com/view/Xamarin.Android/job/xamarin-android-builds-cycle8/
+[commercial-master-macOS-x86_64-icon]: https://jenkins.mono-project.com/view/Xamarin.Android/job/xamarin-android-builds-master/badge/icon
+[commercial-master-macOS-x86_64-status]: https://jenkins.mono-project.com/view/Xamarin.Android/job/xamarin-android-builds-master/
+
+# Configuration.Override.props
 
 The Xamarin.Android build is heavily dependent on MSBuild, with the *intention*
 that it should (eventually?) be possible to build the project simply by
