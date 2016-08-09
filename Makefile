@@ -44,6 +44,8 @@ include build-tools/scripts/BuildEverything.mk
 
 # Please keep the package names sorted
 ifeq ($(OS),Linux)
+NO_SUDO ?= false
+
 UBUNTU_DEPS          = \
 	autoconf \
 	autotools-dev \
@@ -84,10 +86,34 @@ prepare:: linux-prepare-$(LINUX_DISTRO) linux-prepare-$(LINUX_DISTRO)-$(LINUX_DI
 		cat Documentation/binfmt_misc-warning-Linux.txt ; \
 	fi
 
+ifeq ($(NO_SUDO),false)
 linux-prepare-Ubuntu::
+	@echo
 	@echo Installing build depedencies for $(LINUX_DISTRO)
 	@echo Will use sudo, please provide your password as needed
+	@echo
 	sudo apt-get -f -u install $(UBUNTU_DEPS)
+else
+linux-prepare-Ubuntu::
+	@echo
+	@echo sudo is disabled, cannot install dependencies
+	@echo Listing status of all the dependencies
+	@PACKAGES_MISSING=no ; \
+	for p in $(UBUNTU_DEPS); do \
+		if dpkg -l $$p > /dev/null 2>&1 ; then \
+			echo "[INSTALLED] $$p" ; \
+		else \
+			echo "[ MISSING ] $$p" ; \
+			PACKAGES_MISSING=yes ; \
+		fi ; \
+	done ; \
+	echo ; \
+	if [ "x$$PACKAGES_MISSING" = "xyes" ]; then \
+		echo Some packages are missing, cannot continue ; \
+		echo ; \
+		false ; \
+	fi
+endif
 
 linux-prepare-$(LINUX_DISTRO)::
 
