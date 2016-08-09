@@ -13,6 +13,7 @@ using System.Security.Cryptography;
 using System.Net;
 using System.ComponentModel;
 using Xamarin.Android.Tools;
+using Xamarin.Tools.Zip;
 
 using Java.Interop.Tools.Cecil;
 
@@ -193,6 +194,66 @@ namespace Xamarin.Android.Tasks {
 			return string.Compare (hash, sha1, StringComparison.InvariantCultureIgnoreCase) == 0;
 		}
 
+		void DoDownload (long totalBytes, long offset, Stream responseStream, Stream outputStream, Action<long, long, int> progressCallback = null)
+		{
+			long readSoFar = offset;
+			byte [] buffer = new byte [8192];
+			int bufferSize = buffer.Length;
+			int nread = 0;
+			float percent, tb = (float)totalBytes, lastPercent = 0;
+			outputStream.Seek (offset, SeekOrigin.Begin);
+
+			while ((nread = responseStream.Read (buffer, 0, buffer.Length)) > 0) {
+				readSoFar += nread;
+				outputStream.Write (buffer, 0, nread);
+				percent = (float)readSoFar / tb * 100;
+				if (percent - lastPercent > 1) {
+					progressCallback?.Invoke (readSoFar, totalBytes, (int)percent);
+					lastPercent = percent;
+				}
+				outputStream.Flush ();
+			}
+		}
+
+		void Download (string file, Uri uri, Action<long, long, int> progressCallback = null)
+		{
+			var request = WebRequest.CreateHttp (uri);
+			int offset = 0;
+			if (File.Exists (file) && !MonoAndroidHelper.IsValidZip (file)) {
+				var fi = new FileInfo (file);
+				request.AddRange (fi.Length);
+				offset = (int)fi.Length;
+				LogMessage ("Partial download detected. Resuming from previous download progress.");
+			}
+			if (!File.Exists (file) || offset > 0) {
+				HttpWebResponse response = null;
+				try {
+					response = (HttpWebResponse)request.GetResponse ();
+				}
+				catch (WebException ex) {
+					var exceptionResponse = ex.Response as HttpWebResponse;
+					if (exceptionResponse?.StatusCode != HttpStatusCode.RequestedRangeNotSatisfiable)
+						throw;
+					// Download the entire file again.
+					request.Abort ();
+					request = WebRequest.CreateHttp (uri);
+					File.Delete (file);
+					offset = 0;
+					request.AddRange (0);
+					response = (HttpWebResponse)request.GetResponse ();
+					LogMessage ("Could not resume previous download. Starting again.");
+				}
+				if (response != null) {
+					long totalBytes = response.ContentLength + offset;
+					using (var responseStream = response.GetResponseStream ()) {
+						using (var outputStream = new FileStream (file, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None)) {
+							DoDownload (totalBytes, offset, responseStream, outputStream, progressCallback);
+						}
+					}
+				}
+			}
+		}
+
 		string MakeSureLibraryIsInPlace (string destinationBase, string url, string version, string embeddedArchive, string sha1)
 		{
 			if (string.IsNullOrEmpty (url))
@@ -214,29 +275,26 @@ namespace Xamarin.Android.Tasks {
 				Directory.CreateDirectory (zipDir);
 
 			string file = Path.Combine (zipDir, !uri.IsFile ? hash + ".zip" : Path.GetFileName (uri.AbsolutePath));
-			if (!File.Exists (file) || !IsValidDownload (file, sha1)) {
+			if (!File.Exists (file) || !IsValidDownload (file, sha1) || !MonoAndroidHelper.IsValidZip (file)) {
 				int progress = -1;
-				DownloadProgressChangedEventHandler downloadHandler = (o, e) => {
-					if (e.ProgressPercentage % 10 != 0 || progress == e.ProgressPercentage)
+				var downloadHandler = new Action<long, long, int>((r,t,p) => {
+					if (p % 10 != 0 || progress == p)
 						return;
-					progress = e.ProgressPercentage;
-					LogMessage ("\t({0}/{1}b), total {2:F1}%", e.BytesReceived,
-						e.TotalBytesToReceive, e.ProgressPercentage);
-				};
-				using (var client = new System.Net.WebClient ()) {
-					client.DownloadProgressChanged += downloadHandler;
-					LogMessage ("  Downloading {0} into {1}", url, zipDir);
-					try {
-						client.DownloadFileTaskAsync (url, file).Wait (Token);
+					progress = p;
+					LogMessage ("\t({0}/{1}b), total {2:F1}%", r,
+						t, p);
+				});
+				LogMessage ("  Downloading {0} into {1}", url, zipDir);
+				try {
+					Download (file, uri, downloadHandler);
+					if (MonoAndroidHelper.IsValidZip (file))
 						LogMessage ("  Downloading Complete");
-					} catch (Exception e) {
-						LogCodedError ("XA5208", "Download failed. Please download {0} and put it to the {1} directory.", url, destinationDir);
-						LogCodedError ("XA5208", "Reason: {0}", e.GetBaseException ().Message);
-						Log.LogMessage (MessageImportance.Low, e.ToString ());
-						if (File.Exists (file))
-							File.Delete (file);
-					}
-					client.DownloadProgressChanged -= downloadHandler;
+					else 
+						LogCodedError ("XA5208", "Download succeeded but the zip file was not valid. Please do a clean build and try again.");
+				} catch (Exception e) {
+					LogCodedError ("XA5208", "Download failed. Please build again.");
+					LogCodedError ("XA5208", "Reason: {0}", e.GetBaseException ().Message);
+					Log.LogMessage (MessageImportance.Low, e.ToString ());
 				}
 			}
 			else
@@ -337,6 +395,12 @@ namespace Xamarin.Android.Tasks {
 			});
 
 			var result = base.Execute ();
+
+			if (!result || Log.HasLoggedErrors) {
+				if (File.Exists (CacheFile))
+					File.Delete (CacheFile);
+				return false;
+			}
 
 			var AdditionalAndroidResourcePaths = androidResources.ToArray ();
 			var AdditionalJavaLibraryReferences = javaLibraries.ToArray ();
