@@ -195,7 +195,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<DeployExternal Condition="'$(DeployExternal)' == ''">False</DeployExternal>
 	<UseShortFileNames Condition="'$(UseShortFileNames)' != 'True'">False</UseShortFileNames>
 
-	<AndroidMultiDexSupportJar>extras\android\support\multidex\library\libs\android-support-multidex.jar</AndroidMultiDexSupportJar>
+	<!-- Obsolete build property: should be removed in the future releases -->
+	<AndroidMultiDexSupportJar></AndroidMultiDexSupportJar>
 		
 	<AndroidSupportedAbis Condition=" '$(AndroidSupportedAbis)' == '' ">armeabi-v7a</AndroidSupportedAbis>
 
@@ -1072,7 +1073,11 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_AddMultiDexDependencyJars">
 	<CreateItem Include="$(AndroidSdkDirectory)\$(AndroidMultiDexSupportJar)"
-		Condition="'$(AndroidEnableMultiDex)' == 'True'">
+		Condition="'$(AndroidEnableMultiDex)' == 'True' AND '$(AndroidMultiDexSupportJar)' != ''">
+      <Output TaskParameter="Include" ItemName="AndroidJavaLibrary" />
+	</CreateItem>
+	<CreateItem Include="$(MonoAndroidToolsDirectory)\android-support-multidex.jar"
+		Condition="'$(AndroidEnableMultiDex)' == 'True' AND '$(AndroidMultiDexSupportJar)' == ''">
       <Output TaskParameter="Include" ItemName="AndroidJavaLibrary" />
 	</CreateItem>
 </Target>
