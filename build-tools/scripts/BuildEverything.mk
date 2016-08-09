@@ -1,3 +1,18 @@
+PRODUCT_VERSION   = $(shell $(MSBUILD) $(MSBUILD_FLAGS) /p:DoNotLoadOSProperties=True /nologo /v:minimal /t:GetProductVersion build-tools/scripts/Info.targets | tr -d '[[:space:]]')
+
+GIT_BRANCH        = $(shell LANG=C git rev-parse --abbrev-ref HEAD | tr -d '[[:space:]]' | tr -C a-zA-Z0-9- _)
+GIT_COMMIT        = $(shell LANG=C git log --no-color --first-parent -n1 --pretty=format:%h)
+
+# In which commit did $(PRODUCT_VERSION) change? 00000000 if uncommitted
+-commit-of-last-version-change    = $(shell LANG=C git blame Configuration.props | grep '<ProductVersion>' | grep -v grep | sed 's/ .*//')
+
+# How many commits have passed since $(-commit-of-last-version-change)?
+# "0" when commit hash is invalid (e.g. 00000000)
+-num-commits-since-version-change = $(shell LANG=C git log $(-commit-of-last-version-change)..HEAD --oneline 2>/dev/null | wc -l | sed 's/ //g')
+
+ZIP_OUTPUT        = oss-xamarin.android_v$(PRODUCT_VERSION).$(-num-commits-since-version-change)_$(OS)-$(OS_ARCH)_$(GIT_BRANCH)_$(GIT_COMMIT).zip
+
+
 # $(ALL_API_LEVELS) and $(ALL_FRAMEWORKS) must be kept in sync w/ each other
 ALL_API_LEVELS    = 1 2 3 4 5 6 7 8 9 10    11  12  13  14  15      16    17    18    19    20        21    22    23    24
 # this was different when API Level 21 was "L". Same could happen in the future.
@@ -58,7 +73,7 @@ FRAMEWORK_ASSEMBLIES = \
 	$(FRAMEWORKS:%=bin/Debug/lib/xbuild-frameworks/MonoAndroid/%/Mono.Android.dll)    \
 	$(FRAMEWORKS:%=bin/Release/lib/xbuild-frameworks/MonoAndroid/%/Mono.Android.dll)
 
-leeroy jenkins: prepare $(RUNTIME_LIBRARIES) $(TASK_ASSEMBLIES) $(FRAMEWORK_ASSEMBLIES)
+leeroy jenkins: prepare $(RUNTIME_LIBRARIES) $(TASK_ASSEMBLIES) $(FRAMEWORK_ASSEMBLIES) $(ZIP_OUTPUT)
 
 $(TASK_ASSEMBLIES): bin/%/lib/xbuild/Xamarin/Android/Xamarin.Android.Build.Tasks.dll:
 	$(MSBUILD) $(MSBUILD_FLAGS) /p:Configuration=$* $(_MSBUILD_ARGS) $(SOLUTION)
@@ -71,3 +86,13 @@ $(FRAMEWORK_ASSEMBLIES):
 $(RUNTIME_LIBRARIES):
 	$(MSBUILD) $(MSBUILD_FLAGS) /p:Configuration=Debug   $(_MSBUILD_ARGS) $(SOLUTION)
 	$(MSBUILD) $(MSBUILD_FLAGS) /p:Configuration=Release $(_MSBUILD_ARGS) $(SOLUTION)
+
+_BUNDLE_ZIPS  = $(wildcard bin/*/bundle-*.zip)
+
+package-oss-name:
+	@echo ZIP_OUTPUT=$(ZIP_OUTPUT)
+
+package-oss $(ZIP_OUTPUT):
+	if [ -d bin/Debug/bin ]   ; then cp tools/scripts/xabuild bin/Debug/bin   ; fi
+	if [ -d bin/Release/bin ] ; then cp tools/scripts/xabuild bin/Release/bin ; fi
+	zip -r "$(ZIP_OUTPUT)" bin $(_BUNDLE_ZIPS:%=--exclude %)
