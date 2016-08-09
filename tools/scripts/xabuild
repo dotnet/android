@@ -1,26 +1,53 @@
 #!/bin/bash -e
-topdir="$(cd `dirname "$0"`/../.. && pwd)"
+
+name=$(basename "$0")
 
 if [ -z "$CONFIGURATION" ] ; then
 	CONFIGURATION=Debug
+fi
+
+xabuilddir="$(cd `dirname "$0"` && pwd)"
+
+if [[ "$xabuilddir" == */tools/scripts ]] ; then
+	topdir="$xabuilddir/../../bin/$CONFIGURATION"
+	Paths_targets="$xabuilddir/../../build-tools/scripts/Paths.targets"
+elif [[ "$xabuilddir" == */bin ]] ; then
+	topdir="$xabuilddir/.."
+else
+	(>&2 echo "$name: Could not determine location to Xamarin.Android locations.")
+	exit 1
 fi
 
 if [ -z "$MSBUILD" ] ; then
 	MSBUILD=xbuild
 fi
 
-export TARGETS_DIR="$topdir/bin/$CONFIGURATION/lib/xbuild"
-export MSBuildExtensionsPath="$TARGETS_DIR" 
-export MONO_ANDROID_PATH="$topdir/bin/$CONFIGURATION"
-export XBUILD_FRAMEWORK_FOLDERS_PATH="$topdir/bin/$CONFIGURATION/lib/xbuild-frameworks"
-ANDROID_NDK_PATH=$(xbuild /nologo /v:minimal /t:GetAndroidNdkFullPath $topdir/build-tools/scripts/Paths.targets)
-ANDROID_SDK_PATH=$(xbuild /nologo /v:minimal /t:GetAndroidSdkFullPath $topdir/build-tools/scripts/Paths.targets)
+if [ -z "$ANDROID_NDK_PATH" -a -f "$Paths_targets" ] ; then
+	ANDROID_NDK_PATH=$($MSBUILD /nologo /v:minimal /t:GetAndroidNdkFullPath "$Paths_targets")
+	ANDROID_NDK_PATH=$(echo $ANDROID_NDK_PATH | sed 's/^\w*//g')
+	export ANDROID_NDK_PATH
+fi
 
-ANDROID_NDK_PATH=$(echo $ANDROID_NDK_PATH | sed 's/^\w*//g')
-ANDROID_SDK_PATH=$(echo $ANDROID_SDK_PATH | sed 's/^\w*//g')
+if [ -z "$ANDROID_SDK_PATH" -a -f "$Paths_targets" ] ; then
+	ANDROID_SDK_PATH=$($MSBUILD /nologo /v:minimal /t:GetAndroidSdkFullPath "$Paths_targets")
+	ANDROID_SDK_PATH=$(echo $ANDROID_SDK_PATH | sed 's/^\w*//g')
+	export ANDROID_SDK_PATH
+fi
 
-export ANDROID_NDK_PATH
-export ANDROID_SDK_PATH
+if [ -z "$ANDROID_NDK_PATH" ] ; then
+	>&2 echo "$name: Could not determine Android NDK path. Please export the \$ANDROID_NDK_PATH environment variable."
+	exit 1
+fi
+
+if [ -z "$ANDROID_SDK_PATH" ] ; then
+	>&2 echo "$name: Could not determine Android SDK path. Please export the \$ANDROID_SDK_PATH environment variable."
+	exit 1
+fi
+
+export TARGETS_DIR="$topdir/lib/xbuild"
+export MSBuildExtensionsPath="$TARGETS_DIR"
+export MONO_ANDROID_PATH="$topdir"
+export XBUILD_FRAMEWORK_FOLDERS_PATH="$topdir/lib/xbuild-frameworks"
 
 exec $MSBUILD /p:Configuration=$CONFIGURATION $MSBUILD_OPTIONS \
 	/p:AndroidNdkDirectory="$ANDROID_NDK_PATH" \
