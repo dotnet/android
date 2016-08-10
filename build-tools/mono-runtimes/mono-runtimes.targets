@@ -366,15 +366,15 @@
   -->
   <Target Name="_InstallCrossRuntimes"
       Inputs="$(IntermediateOutputPath)%(_MonoCrossRuntime.Identity)\mono\mini\mono-sgen%(_MonoCrossRuntime.ExeSuffix)"
-      Outputs="$(OutputPath)bin\%(_MonoCrossRuntime.CrossMonoName)"
+      Outputs="$(OutputPath)%(_MonoCrossRuntime.InstallPath)%(_MonoCrossRuntime.CrossMonoName)%(_MonoCrossRuntime.ExeSuffix)"
       Condition=" '@(_MonoCrossRuntime)' != '' ">
     <MakeDir Directories="$(OutputPath)bin\" />
     <Copy
         SourceFiles="$(IntermediateOutputPath)%(_MonoCrossRuntime.Identity)\mono\mini\mono-sgen%(_MonoCrossRuntime.ExeSuffix)"
-        DestinationFiles="$(OutputPath)bin\%(_MonoCrossRuntime.CrossMonoName)%(_MonoCrossRuntime.ExeSuffix)" 
+        DestinationFiles="$(OutputPath)%(_MonoCrossRuntime.InstallPath)%(_MonoCrossRuntime.CrossMonoName)%(_MonoCrossRuntime.ExeSuffix)"
     />
     <Touch
-        Files="$(OutputPath)bin\%(_MonoCrossRuntime.CrossMonoName)%(_MonoCrossRuntime.ExeSuffix)" 
+        Files="$(OutputPath)%(_MonoCrossRuntime.InstallPath)%(_MonoCrossRuntime.CrossMonoName)%(_MonoCrossRuntime.ExeSuffix)"
     />
   </Target>
   <Target Name="_CleanRuntimes"

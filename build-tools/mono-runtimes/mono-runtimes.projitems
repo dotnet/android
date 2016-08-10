@@ -280,6 +280,7 @@
       <ExeSuffix></ExeSuffix>
       <BuildEnvironment></BuildEnvironment>
       <ConfigureEnvironment></ConfigureEnvironment>
+      <InstallPath>bin/</InstallPath>
       <CrossMonoName>cross-arm</CrossMonoName>
     </_MonoCrossRuntime>
 
@@ -300,6 +301,7 @@
       <ExeSuffix></ExeSuffix>
       <BuildEnvironment></BuildEnvironment>
       <ConfigureEnvironment></ConfigureEnvironment>
+      <InstallPath>bin/</InstallPath>
       <CrossMonoName>cross-arm64</CrossMonoName>
     </_MonoCrossRuntime>
 
@@ -320,6 +322,7 @@
       <ExeSuffix></ExeSuffix>
       <BuildEnvironment></BuildEnvironment>
       <ConfigureEnvironment></ConfigureEnvironment>
+      <InstallPath>bin/</InstallPath>
       <CrossMonoName>cross-x86</CrossMonoName>
     </_MonoCrossRuntime>
 
@@ -340,6 +343,7 @@
       <ExeSuffix></ExeSuffix>
       <BuildEnvironment></BuildEnvironment>
       <ConfigureEnvironment></ConfigureEnvironment>
+      <InstallPath>bin/</InstallPath>
       <CrossMonoName>cross-x86_64</CrossMonoName>
     </_MonoCrossRuntime>
 
@@ -360,6 +364,7 @@
       <ExeSuffix>.exe</ExeSuffix>
       <BuildEnvironment>PATH="$(AndroidMxeFullPath)\bin:$(PATH)"</BuildEnvironment>
       <ConfigureEnvironment>$(_LlvmConfigureEnvironmentWin32)</ConfigureEnvironment>
+      <InstallPath>lib/mandroid/</InstallPath>
       <CrossMonoName>cross-arm</CrossMonoName>
     </_MonoCrossRuntime>
 
@@ -380,6 +385,7 @@
       <ExeSuffix>.exe</ExeSuffix>
       <BuildEnvironment>PATH="$(AndroidMxeFullPath)\bin:$(PATH)"</BuildEnvironment>
       <ConfigureEnvironment>$(_LlvmConfigureEnvironmentWin32)</ConfigureEnvironment>
+      <InstallPath>lib/mandroid/</InstallPath>
       <CrossMonoName>cross-arm64</CrossMonoName>
     </_MonoCrossRuntime>
 
@@ -400,6 +406,7 @@
       <ExeSuffix>.exe</ExeSuffix>
       <BuildEnvironment>PATH="$(AndroidMxeFullPath)\bin:$(PATH)"</BuildEnvironment>
       <ConfigureEnvironment>$(_LlvmConfigureEnvironmentWin32)</ConfigureEnvironment>
+      <InstallPath>lib/mandroid/</InstallPath>
       <CrossMonoName>cross-x86</CrossMonoName>
     </_MonoCrossRuntime>
 
@@ -420,6 +427,7 @@
       <ExeSuffix>.exe</ExeSuffix>
       <BuildEnvironment>PATH="$(AndroidMxeFullPath)\bin:$(PATH)"</BuildEnvironment>
       <ConfigureEnvironment>$(_LlvmConfigureEnvironmentWin32)</ConfigureEnvironment>
+      <InstallPath>lib/mandroid/</InstallPath>
       <CrossMonoName>cross-x86_64</CrossMonoName>
     </_MonoCrossRuntime>
   </ItemGroup>

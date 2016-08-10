@@ -85,14 +85,16 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "libZipSharp", "external\Lib
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "System.Drawing.Primitives", "src\System.Drawing.Primitives\System.Drawing.Primitives.csproj", "{C9FF2E4D-D927-479E-838B-647C16763F64}"
 EndProject
+Project("{9344BDBB-3E7F-41FC-A0DD-8665D75EE146}") = "libzip-windows", "build-tools\libzip-windows\libzip-windows.mdproj", "{0DE278D6-000F-4001-BB98-187C0AF58A61}"
+EndProject
+Project("{9344BDBB-3E7F-41FC-A0DD-8665D75EE146}") = "bundle", "build-tools\bundle\bundle.mdproj", "{1640725C-4DB8-4D8D-BC96-74E688A06EEF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|AnyCPU = Debug|AnyCPU
 		Release|AnyCPU = Release|AnyCPU
 		XAIntegrationDebug|AnyCPU = XAIntegrationDebug|AnyCPU
 		XAIntegrationRelease|AnyCPU = XAIntegrationRelease|AnyCPU
-		XAIntegrationDebug|Any CPU = XAIntegrationDebug|Any CPU
-		XAIntegrationRelease|Any CPU = XAIntegrationRelease|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{3F1F2F50-AF1A-4A5A-BEDB-193372F068D7}.Debug|AnyCPU.ActiveCfg = Debug|Any CPU
@@ -389,6 +391,22 @@ Global
 		{C9FF2E4D-D927-479E-838B-647C16763F64}.XAIntegrationDebug|AnyCPU.Build.0 = Debug|Any CPU
 		{C9FF2E4D-D927-479E-838B-647C16763F64}.XAIntegrationRelease|AnyCPU.ActiveCfg = Debug|Any CPU
 		{C9FF2E4D-D927-479E-838B-647C16763F64}.XAIntegrationRelease|AnyCPU.Build.0 = Debug|Any CPU
+		{0DE278D6-000F-4001-BB98-187C0AF58A61}.Debug|AnyCPU.ActiveCfg = Debug|Any CPU
+		{0DE278D6-000F-4001-BB98-187C0AF58A61}.Debug|AnyCPU.Build.0 = Debug|Any CPU
+		{0DE278D6-000F-4001-BB98-187C0AF58A61}.Release|AnyCPU.ActiveCfg = Release|Any CPU
+		{0DE278D6-000F-4001-BB98-187C0AF58A61}.Release|AnyCPU.Build.0 = Release|Any CPU
+		{0DE278D6-000F-4001-BB98-187C0AF58A61}.XAIntegrationDebug|AnyCPU.ActiveCfg = Debug|Any CPU
+		{0DE278D6-000F-4001-BB98-187C0AF58A61}.XAIntegrationDebug|AnyCPU.Build.0 = Debug|Any CPU
+		{0DE278D6-000F-4001-BB98-187C0AF58A61}.XAIntegrationRelease|AnyCPU.ActiveCfg = Release|Any CPU
+		{0DE278D6-000F-4001-BB98-187C0AF58A61}.XAIntegrationRelease|AnyCPU.Build.0 = Release|Any CPU
+		{1640725C-4DB8-4D8D-BC96-74E688A06EEF}.Debug|AnyCPU.ActiveCfg = Debug|Any CPU
+		{1640725C-4DB8-4D8D-BC96-74E688A06EEF}.Debug|AnyCPU.Build.0 = Debug|Any CPU
+		{1640725C-4DB8-4D8D-BC96-74E688A06EEF}.Release|AnyCPU.ActiveCfg = Release|Any CPU
+		{1640725C-4DB8-4D8D-BC96-74E688A06EEF}.Release|AnyCPU.Build.0 = Release|Any CPU
+		{1640725C-4DB8-4D8D-BC96-74E688A06EEF}.XAIntegrationDebug|AnyCPU.ActiveCfg = Debug|Any CPU
+		{1640725C-4DB8-4D8D-BC96-74E688A06EEF}.XAIntegrationDebug|AnyCPU.Build.0 = Debug|Any CPU
+		{1640725C-4DB8-4D8D-BC96-74E688A06EEF}.XAIntegrationRelease|AnyCPU.ActiveCfg = Release|Any CPU
+		{1640725C-4DB8-4D8D-BC96-74E688A06EEF}.XAIntegrationRelease|AnyCPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{8FF78EB6-6FC8-46A7-8A15-EBBA9045C5FA} = {E351F97D-EA4F-4E7F-AAA0-8EBB1F2A4A62}
@@ -429,6 +447,8 @@ Global
 		{900A0F71-BAAD-417A-8D1A-8D330297CDD0} = {E351F97D-EA4F-4E7F-AAA0-8EBB1F2A4A62}
 		{E248B2CA-303B-4645-ADDC-9D4459D550FD} = {04E3E11E-B47D-4599-8AFC-50515A95E715}
 		{C9FF2E4D-D927-479E-838B-647C16763F64} = {04E3E11E-B47D-4599-8AFC-50515A95E715}
+		{0DE278D6-000F-4001-BB98-187C0AF58A61} = {E351F97D-EA4F-4E7F-AAA0-8EBB1F2A4A62}
+		{1640725C-4DB8-4D8D-BC96-74E688A06EEF} = {E351F97D-EA4F-4E7F-AAA0-8EBB1F2A4A62}
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
 		Policies = $0

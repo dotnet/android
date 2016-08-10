@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -7,10 +7,13 @@
     <OutputType>Library</OutputType>
     <RootNamespace>Xamarin.Android.Tools.BootstrapTasks</RootNamespace>
     <AssemblyName>Xamarin.Android.Tools.BootstrapTasks</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <Optimize>true</Optimize>
+    <DebugSymbols>True</DebugSymbols>
+    <DebugType>Full</DebugType>
+    <Optimize>False</Optimize>
     <OutputPath>..\..\bin\BuildDebug</OutputPath>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -24,6 +27,7 @@
     <ConsolePause>false</ConsolePause>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="mscorlib" />
     <Reference Include="System" />
     <Reference Include="Microsoft.Build.Framework" />
     <Reference Include="Microsoft.Build.Utilities.v4.0" />
@@ -38,12 +42,26 @@
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\UnzipDirectoryChildren.cs" />
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\GenerateProfile.cs" />
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\GetNugetPackageBasePath.cs" />
+    <Compile Include="Xamarin.Android.Tools.BootstrapTasks\Git.cs" />
+    <Compile Include="Xamarin.Android.Tools.BootstrapTasks\GitBranch.cs" />
+    <Compile Include="Xamarin.Android.Tools.BootstrapTasks\GitCommitHash.cs" />
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\Which.cs" />
+    <Compile Include="Xamarin.Android.Tools.BootstrapTasks\Zip.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Xamarin.Android.Tools.BootstrapTasks.targets">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\external\LibZipSharp\libZipSharp.csproj">
+      <Project>{E248B2CA-303B-4645-ADDC-9D4459D550FD}</Project>
+      <Name>libZipSharp</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\build-tools\libzip\libzip.mdproj">
+      <Project>{900A0F71-BAAD-417A-8D1A-8D330297CDD0}</Project>
+      <Name>libzip</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>
