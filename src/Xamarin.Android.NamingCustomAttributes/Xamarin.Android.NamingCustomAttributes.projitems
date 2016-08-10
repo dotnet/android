@@ -20,5 +20,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Android.App\ApplicationAttribute.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Android.App\ServiceAttribute.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Android.App\InstrumentationAttribute.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Android.App\LayoutAttribute.cs" />
   </ItemGroup>
 </Project>

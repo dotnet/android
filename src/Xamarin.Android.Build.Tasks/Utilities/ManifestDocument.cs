@@ -510,7 +510,13 @@ namespace Xamarin.Android.Tasks {
 			return ToElement (type, name, 
 					ActivityAttribute.FromTypeDefinition, 
 					aa => aa.ToElement (Resolver, PackageName, targetSdkVersion), 
-					(aa, element) => {if (aa.MainLauncher) AddLauncherIntentElements (element);});
+					(aa, element) => {
+						if (aa.MainLauncher)
+							AddLauncherIntentElements (element);
+						var la = LayoutAttribute.FromTypeDefinition (type);
+						if (la != null)
+							element.Add (la.ToElement (Resolver, PackageName));
+					});
 		}
 
 		XElement InstrumentationFromTypeDefinition (TypeDefinition type, string name, int targetSdkVersion)
