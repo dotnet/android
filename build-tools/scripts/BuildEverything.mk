@@ -10,7 +10,8 @@ GIT_COMMIT        = $(shell LANG=C git log --no-color --first-parent -n1 --prett
 # "0" when commit hash is invalid (e.g. 00000000)
 -num-commits-since-version-change = $(shell LANG=C git log $(-commit-of-last-version-change)..HEAD --oneline 2>/dev/null | wc -l | sed 's/ //g')
 
-ZIP_OUTPUT        = oss-xamarin.android_v$(PRODUCT_VERSION).$(-num-commits-since-version-change)_$(OS)-$(OS_ARCH)_$(GIT_BRANCH)_$(GIT_COMMIT).zip
+ZIP_OUTPUT_BASENAME   = oss-xamarin.android_v$(PRODUCT_VERSION).$(-num-commits-since-version-change)_$(OS)-$(OS_ARCH)_$(GIT_BRANCH)_$(GIT_COMMIT)
+ZIP_OUTPUT            = $(ZIP_OUTPUT_BASENAME).zip
 
 
 # $(ALL_API_LEVELS) and $(ALL_FRAMEWORKS) must be kept in sync w/ each other
@@ -95,4 +96,6 @@ package-oss-name:
 package-oss $(ZIP_OUTPUT):
 	if [ -d bin/Debug/bin ]   ; then cp tools/scripts/xabuild bin/Debug/bin   ; fi
 	if [ -d bin/Release/bin ] ; then cp tools/scripts/xabuild bin/Release/bin ; fi
-	zip -r "$(ZIP_OUTPUT)" bin $(_BUNDLE_ZIPS:%=--exclude %)
+	if [ ! -d $(ZIP_OUTPUT_BASENAME) ] ; then mkdir $(ZIP_OUTPUT_BASENAME) ; fi
+	if [ ! -L $(ZIP_OUTPUT_BASENAME)/bin ] ; then ln -s ../bin $(ZIP_OUTPUT_BASENAME) ; fi
+	zip -r "$(ZIP_OUTPUT)" $(ZIP_OUTPUT_BASENAME) $(_BUNDLE_ZIPS:%=--exclude %)
