@@ -29,11 +29,14 @@ all-tests::
 
 prepare:: prepare-external prepare-props
 
+# $(call GetPath,path)
+GetPath   = $(shell $(MSBUILD) $(MSBUILD_FLAGS) /p:DoNotLoadOSProperties=True /nologo /v:minimal /t:Get$(1)FullPath build-tools/scripts/Paths.targets | tr -d '[[:space:]]' )
+
 prepare-external:
 	git submodule update --init --recursive
 	nuget restore $(SOLUTION)
 	nuget restore Xamarin.Android-Tests.sln
-	(cd `$(MSBUILD) $(MSBUILD_FLAGS) /p:DoNotLoadOSProperties=True /nologo /v:minimal /t:GetJavaInteropFullPath build-tools/scripts/Paths.targets` && nuget restore)
+	(cd $(call GetPath,JavaInterop) && nuget restore)
 
 prepare-props:
 	cp Configuration.Java.Interop.Override.props external/Java.Interop/Configuration.Override.props

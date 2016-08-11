@@ -8,11 +8,9 @@ using System.Text;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
-using Xamarin.Tools.Zip;
-
 using IOFile = System.IO.File;
 
-namespace Xamarin.Android.Tools.BootstrapTasks
+namespace Xamarin.Android.BuildTools.PrepTasks
 {
 	public class Git : ToolTask
 	{

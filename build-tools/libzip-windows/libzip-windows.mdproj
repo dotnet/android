@@ -17,8 +17,7 @@
   <PropertyGroup>
     <BuildDependsOnLocal Condition="'$(HostOS)' == 'Windows' OR '$(HostOS)' == 'Darwin'">
       ResolveReferences;
-      _Configure;
-      _Make
+      _BuildUnlessCached
     </BuildDependsOnLocal>
   </PropertyGroup>
   <Import Project="libzip-windows.props" />

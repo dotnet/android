@@ -5,7 +5,7 @@ using System.Text;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
-namespace Xamarin.Android.Tools.BootstrapTasks
+namespace Xamarin.Android.BuildTools.PrepTasks
 {
 	public class Which : Task
 	{
@@ -19,13 +19,18 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 		[Output]
 		public  ITaskItem           Location            { get; set; }
 
-		static  readonly    string[]    FileExtensions = new []{
-			null,
-			".bat",
-			".cmd",
-			".com",
-			".exe",
-		};
+		static  readonly    string[]    FileExtensions;
+
+		static Which ()
+		{
+			var pathExt     = Environment.GetEnvironmentVariable ("PATHEXT");
+			var pathExts    = pathExt?.Split (new char [] { Path.PathSeparator }, StringSplitOptions.RemoveEmptyEntries);
+			FileExtensions  = new string [(pathExts?.Length ?? 0) + 1];
+			FileExtensions [0] = null;
+			if (pathExts != null) {
+				Array.Copy (pathExts, 0, FileExtensions, 1, pathExt.Length);
+			}
+		}
 
 		public override bool Execute ()
 		{

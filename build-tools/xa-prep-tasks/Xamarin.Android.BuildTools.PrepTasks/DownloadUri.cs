@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -9,7 +9,7 @@ using Microsoft.Build.Utilities;
 using TTask = System.Threading.Tasks.Task;
 using MTask = Microsoft.Build.Utilities.Task;
 
-namespace Xamarin.Android.Tools.BootstrapTasks {
+namespace Xamarin.Android.BuildTools.PrepTasks {
 
 	public class DownloadUri : MTask
 	{
@@ -58,12 +58,17 @@ namespace Xamarin.Android.Tools.BootstrapTasks {
 				Log.LogMessage (MessageImportance.Normal, $"Skipping uri '{uri}' as destination file already exists '{destinationFile}'.");
 				return;
 			}
-			Log.LogMessage (MessageImportance.Low, $"Downloading '{uri}'.");
+			var dp  = Path.GetDirectoryName (destinationFile);
+			var dn  = Path.GetFileName (destinationFile);
+			var tempPath    = Path.Combine (dp, "." + dn + ".download");
+
+			Log.LogMessage (MessageImportance.Low, $"Downloading `{uri}` to `{tempPath}`.");
 			using (var r = await client.GetAsync (uri))
-			using (var o = File.OpenWrite (destinationFile)) {
+			using (var o = File.OpenWrite (tempPath)) {
 				await r.Content.CopyToAsync (o);
 			}
+			Log.LogMessage (MessageImportance.Low, $"mv '{tempPath}' '{destinationFile}'.");
+			File.Move (tempPath, destinationFile);
 		}
 	}
 }
-

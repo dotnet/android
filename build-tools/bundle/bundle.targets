@@ -1,78 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <UsingTask AssemblyFile="$(_SourceTopDir)\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.GetNugetPackageBasePath" />
-  <UsingTask AssemblyFile="$(_SourceTopDir)\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.GitCommitHash" />
   <UsingTask AssemblyFile="$(_SourceTopDir)\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.Zip" />
   <Import Project="..\mono-runtimes\mono-runtimes.props" />
   <Import Project="..\mono-runtimes\mono-runtimes.projitems" />
   <Import Project="..\mono-runtimes\mono-runtimes.targets" />
   <Import Project="..\libzip\libzip.props" />
   <Import Project="..\libzip\libzip.projitems" />
+  <Import Project="..\libzip\libzip.targets" />
   <Import Project="..\libzip-windows\libzip-windows.props" />
   <Import Project="..\libzip-windows\libzip-windows.projitems" />
-  <Target Name="_GetHashes">
-    <GitCommitHash
-        WorkingDirectory="$(LibZipSourceFullPath)"
-        ToolPath="$(GitToolPath)"
-        ToolExe="$(GitToolExe)">
-      <Output TaskParameter="AbbreviatedCommitHash"   PropertyName="_LibZipHash" />
-    </GitCommitHash>
-    <GitCommitHash
-        WorkingDirectory="$(LlvmSourceFullPath)"
-        ToolPath="$(GitToolPath)"
-        ToolExe="$(GitToolExe)">
-      <Output TaskParameter="AbbreviatedCommitHash"   PropertyName="_LlvmHash" />
-    </GitCommitHash>
-    <GitCommitHash
-        WorkingDirectory="$(MonoSourceFullPath)"
-        ToolPath="$(GitToolPath)"
-        ToolExe="$(GitToolExe)">
-      <Output TaskParameter="AbbreviatedCommitHash"   PropertyName="_MonoHash" />
-    </GitCommitHash>
-  </Target>
-  <Target Name="GetBundlePath"
-      DependsOnTargets="_GetHashes">
-    <PropertyGroup>
-      <_BundlePath>$(OutputPath)bundle-v2-$(Configuration)-$(HostOS)-libzip=$(_LibZipHash),llvm=$(_LlvmHash),mono=$(_MonoHash).zip</_BundlePath>
-    </PropertyGroup>
-  </Target>
+  <Import Project="..\libzip-windows\libzip-windows.targets" />
+  <Import Project="bundle-path.targets" />
   <Target Name="Clean"
-      DependsOnTargets="_GetHashes">
-    <Delete Files="$(_BundlePath)" />
+      DependsOnTargets="GetBundleFileName">
+    <Delete Files="$(OutputPath)$(XABundleFileName)" />
   </Target>
   <Target Name="_GetArchiveItems"
-      DependsOnTargets="_GetRuntimesOutputItems">
-    <ItemGroup>
-      <_Archive Include="@(_BclInstalledItem)" />
-      <_Archive Include="$(OutputPath)lib\xbuild-frameworks\MonoAndroid\v1.0\Facades\*.dll*" />
-      <_Archive Include="$(OutputPath)lib\xbuild-frameworks\MonoAndroid\v1.0\RedistList\FrameworkList.xml" />
-      <_Archive Include="@(_InstallRuntimeOutput)" />
-      <_Archive Include="@(_InstallUnstrippedRuntimeOutput)" />
-      <_Archive Include="@(_InstallProfilerOutput)" />
-      <_Archive Include="@(_InstallUnstrippedProfilerOutput)" />
-      <_Archive Include="@(_InstallMonoPosixHelperOutput)" />
-      <_Archive Include="@(_InstallUnstrippedMonoPosixHelperOutput)" />
-      <_Archive Include="@(_RuntimeEglibHeaderOutput)" />
-      <_Archive Include="@(_LibZipTarget->'$(OutputPath)lib\xbuild\Xamarin\Android\%(OutputLibrary)')" />
-      <_Archive Include="@(_MonoConstsOutput)" />
-      <_Archive Include="$(OutputPath)%(_MonoCrossRuntime.InstallPath)%(_MonoCrossRuntime.CrossMonoName)%(_MonoCrossRuntime.ExeSuffix)"
-          Condition=" '@(_MonoCrossRuntime)' != '' "
-      />
-      <_Archive Include="@(_LlvmRuntime->'$(OutputPath)bin\llc%(ExeSuffix)')"
-          Condition=" '%(_LlvmRuntime.InstallBinaries)' == 'true' "
-      />
-      <_Archive Include="@(_LlvmRuntime->'$(OutputPath)bin\opt%(ExeSuffix)')"
-          Condition=" '%(_LlvmRuntime.InstallBinaries)' == 'true' "
-      />
-    </ItemGroup>
+      DependsOnTargets="GetMonoBundleItems;GetLibZipBundleItems">
   </Target>
   <Target Name="CreateBundle"
-      DependsOnTargets="GetBundlePath;_GetArchiveItems"
-      Inputs="@(_Archive)"
-      Outputs="$(_BundlePath)">
+      DependsOnTargets="GetBundleFileName;_GetArchiveItems"
+      Inputs="@(BundleItem)"
+      Outputs="$(OutputPath)$(XABundleFileName)">
     <Zip
-        File="$(_BundlePath)"
-        Entries="@(_Archive)"
+        Entries="@(BundleItem)"
+        File="$(OutputPath)$(XABundleFileName)"
         Prefix="$(OutputPath)"
     />
   </Target>

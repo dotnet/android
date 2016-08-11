@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"  TaskName="Xamarin.Android.BuildTools.PrepTasks.GitCommitHash" />
+  <Target Name="_GetHashes">
+    <GitCommitHash
+        WorkingDirectory="$(LibZipSourceFullPath)"
+        ToolPath="$(GitToolPath)"
+        ToolExe="$(GitToolExe)">
+      <Output TaskParameter="AbbreviatedCommitHash"   PropertyName="_LibZipHash" />
+    </GitCommitHash>
+    <GitCommitHash
+        WorkingDirectory="$(LlvmSourceFullPath)"
+        ToolPath="$(GitToolPath)"
+        ToolExe="$(GitToolExe)">
+      <Output TaskParameter="AbbreviatedCommitHash"   PropertyName="_LlvmHash" />
+    </GitCommitHash>
+    <GitCommitHash
+        WorkingDirectory="$(MonoSourceFullPath)"
+        ToolPath="$(GitToolPath)"
+        ToolExe="$(GitToolExe)">
+      <Output TaskParameter="AbbreviatedCommitHash"   PropertyName="_MonoHash" />
+    </GitCommitHash>
+  </Target>
+  <Target Name="GetBundleFileName"
+      DependsOnTargets="_GetHashes">
+    <PropertyGroup>
+      <XABundleFileName>bundle-v2-$(Configuration)-$(HostOS)-libzip=$(_LibZipHash),llvm=$(_LlvmHash),mono=$(_MonoHash).zip</XABundleFileName>
+    </PropertyGroup>
+  </Target>
+</Project>

@@ -14,4 +14,8 @@
       <OutputLibraryPath>libzip.so</OutputLibraryPath>
     </_LibZipTarget>
   </ItemGroup>
+  <ItemGroup>
+    <RequiredProgram Include="cmake" />
+    <RequiredProgram Include="make" />
+  </ItemGroup>
 </Project>
