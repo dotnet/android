@@ -74,7 +74,7 @@ namespace Xamarin.Android.Tasks
 							TypeAttributes  = TypeAttributes.Public,
 						};
 						t.Members.Add (new CodeConstructor () {
-								Attributes  = MemberAttributes.Private,
+								Attributes  = MemberAttributes.Family,
 						});
 						g.Members.Add (t);
 						return g;
