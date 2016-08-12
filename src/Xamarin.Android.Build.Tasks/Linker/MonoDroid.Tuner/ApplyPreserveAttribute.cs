@@ -1,6 +1,7 @@
 // Copyright 2011, 2015 Xamarin Inc. All rights reserved.
 
 using System;
+using System.Collections.Generic;
 
 using Mono.Linker;
 using Mono.Tuner;
@@ -11,16 +12,33 @@ namespace MonoDroid.Tuner {
 
 	public class ApplyPreserveAttribute : ApplyPreserveAttributeBase {
 		
+		bool is_sdk;
+
 		// System.ServiceModeldll is an SDK assembly but it does contain types with [DataMember] attributes
 		public override bool IsActiveFor (AssemblyDefinition assembly)
 		{
-			if (Profile.IsSdkAssembly (assembly)) {
-				if (assembly.Name.Name != "System.ServiceModel")
-					return false;
-			}
+			is_sdk = Profile.IsSdkAssembly (assembly);
+			if (is_sdk && assembly.Name.Name != "System.ServiceModel")
+				return false;
 			return Annotations.GetAction (assembly) == AssemblyAction.Link;
 		}
 		
+		// SDK candidates - they will be preserved only if the application (not the SDK) uses it
+		static List<ICustomAttributeProvider> srs_data_contract = new List<ICustomAttributeProvider> ();
+		static List<ICustomAttributeProvider> xml_serialization = new List<ICustomAttributeProvider> ();
+
+		public static IList<ICustomAttributeProvider> DataContract {
+			get {
+				return srs_data_contract;
+			}
+		}
+
+		public static IList<ICustomAttributeProvider> XmlSerialization {
+			get {
+				return xml_serialization;
+			}
+		}
+
 		protected override bool IsPreservedAttribute (ICustomAttributeProvider provider, CustomAttribute attribute, out bool removeAttribute)
 		{
 			removeAttribute = false;
@@ -44,8 +62,8 @@ namespace MonoDroid.Tuner {
 					srs = (type.Name == "DataContractAttribute");
 				
 				if (srs) {
-					MarkDefautConstructor (provider);
-					return true;
+					MarkDefautConstructor (provider, is_sdk ? srs_data_contract : null);
+					return !is_sdk;
 				}
 				break;
 			case "System.Xml.Serialization":
@@ -55,8 +73,8 @@ namespace MonoDroid.Tuner {
 					// but we do not have to keep things that XML serialization will ignore anyway!
 					if (name != "XmlIgnoreAttribute") {
 						// the default constructor of the type *being used* is needed
-						MarkDefautConstructor (provider);
-						return true;
+						MarkDefautConstructor (provider, is_sdk ? xml_serialization : null);
+						return !is_sdk;
 					}
 				}
 				break;
@@ -73,8 +91,13 @@ namespace MonoDroid.Tuner {
 		}
 		
 		// xml serialization requires the default .ctor to be present
-		void MarkDefautConstructor (ICustomAttributeProvider provider)
+		void MarkDefautConstructor (ICustomAttributeProvider provider, IList<ICustomAttributeProvider> list)
 		{
+			if (list != null) {
+				list.Add (provider);
+				return;
+			}
+
 			TypeDefinition td = (provider as TypeDefinition);
 			if (td == null) {
 				PropertyDefinition pd = (provider as PropertyDefinition);
