@@ -12,10 +12,13 @@ namespace MonoDroid.Tuner
 
 		public override bool IsActiveFor (Mono.Cecil.AssemblyDefinition assembly)
 		{
-			return assembly.Name.Name == "System.Runtime.Serialization";
+			return assembly.Name.Name == "System.Runtime.Serialization" || assembly.Name.Name == "System.Xml";
 		}
 
-		public override void ProcessType (Mono.Cecil.TypeDefinition type)
+		bool system_runtime_serialization = false;
+		bool system_xml_serialization = false;
+
+		public override void ProcessType (TypeDefinition type)
 		{
 			switch (type.Namespace) {
 			case "System.Runtime.Serialization.Json":
@@ -46,8 +49,68 @@ namespace MonoDroid.Tuner
 						PreserveConstructors (nt);
 					break;
 				}
+
+				if (system_runtime_serialization)
+					break;
+				system_runtime_serialization = true;
+				// if we're keeping this assembly and use the Serialization namespace inside user code then we
+				// must bring the all the members decorated with [Data[Contract|Member]] attributes from the SDK
+				var members = ApplyPreserveAttribute.DataContract;
+				foreach (var member in members)
+					MarkMetadata (member);
+				members.Clear ();
+				break;
+			case "System.Xml.Serialization":
+				if (system_xml_serialization)
+					break;
+				switch (type.Name) {
+				case "XmlIgnoreAttribute":
+					break;
+				default:
+					// if we're keeping this assembly and use the Serialization namespace inside user code
+					// then we must bring the all the members decorated with [Xml*] attributes from the SDK
+					system_xml_serialization = true;
+					members = ApplyPreserveAttribute.XmlSerialization;
+					foreach (var member in members)
+						MarkMetadata (member);
+					members.Clear ();
+					break;
+				}
 				break;
 			}
+		}
+
+		protected virtual IMetadataTokenProvider FilterExtraSerializationMembers (IMetadataTokenProvider provider)
+		{
+			return provider;
+		}
+
+		void MarkMetadata (IMetadataTokenProvider tp)
+		{
+			var provider = FilterExtraSerializationMembers (tp);
+			if (provider == null)
+				return;
+
+			TypeReference tr = (provider as TypeReference);
+			if (tr != null) {
+				PreserveType (tr.Resolve ());
+				return;
+			}
+			MethodReference mr = (provider as MethodReference);
+			if (mr != null) {
+				PreserveMethod (mr.Resolve ());
+				return;
+			}
+			PropertyDefinition pd = (provider as PropertyDefinition);
+			if (pd != null) {
+				if (pd.GetMethod != null)
+					PreserveMethod (pd.GetMethod);
+				if (pd.SetMethod != null)
+					PreserveMethod (pd.SetMethod);
+				return;
+			}
+			// TODO: we should unify this code with xamarin-macios MobileMarkStep
+			// once we move this code to mark step, we should mark events, fields and properties
 		}
 
 		protected void PreserveConstructors (TypeDefinition type)
@@ -93,6 +156,22 @@ namespace MonoDroid.Tuner
 		void PreserveMethod (TypeDefinition type, MethodDefinition method)
 		{
 			Annotations.AddPreservedMethod (type, method);
+		}
+
+		void PreserveMethod (MethodDefinition md)
+		{
+			if (md == null)
+				return;
+			if (md.DeclaringType == null)
+				return;
+
+			PreserveMethod (md.DeclaringType, md);
+		}
+
+		void PreserveType (TypeDefinition type)
+		{
+			if (type != null)
+				Annotations.SetPreserve (type, Mono.Linker.TypePreserve.All);
 		}
 	}
 }
