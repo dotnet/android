@@ -91,6 +91,9 @@ Overridable MSBuild properties include:
 * `$(JavaInteropSourceDirectory)`: The Java.Interop source directory to
     build and reference projects from. By default, this is
     `external/Java.Interop` directory, maintained by `git submodule update`.
+* `$(MakeConcurrency)`: **make**(1) parameters to use intended to influence
+    the number of CPU cores used when **make**(1) executes. By default this uses
+		`-jCOUNT`, where `COUNT` is obtained from `sysctl hw.ncpu`.
 
 # Build Requirements
 
@@ -280,3 +283,40 @@ We use [Mono's Coding Guidelines](http://www.mono-project.com/community/contribu
 
 We use [Bugzilla](https://bugzilla.xamarin.com/enter_bug.cgi?product=Android) to track issues.
 
+# Maintainer FAQ
+
+## How do I rebuild the Mono Runtime and Native Binaries?
+
+The various Mono runtimes -- over *20* of them (!) -- all store object code
+within `build-tools/mono-runtimes/obj/$(Configuration)/TARGET`.
+
+If you change sources within `external/mono`, a top-level `make`/`xbuild`
+invocation may not rebuild those mono native binaries. To explicitly rebuild
+Mono for a given target, run `make` from the relevant directory.
+For example, to rebuild Mono for armeabi-v7a:
+
+	$ cd build-tools/mono-runtimes
+	$ make -C obj/Debug/armeabi-v7a
+	
+	# This updates bin/$(Configuration)/lib/xbuild/Xamarin/Android/lib/armeabi-v7a/libmonosgen-2.0.so
+	$ xbuild /t:_InstallRuntimes
+
+## How do I rebuild BCL assemblies?
+
+The Xamarin.Android Base Class Library assemblies, such as `mscorlib.dll`,
+are built within `external/mono`, using Mono's normal build system:
+
+	# This updates external/mono/mcs/class/lib/monodroid/ASSEMBLY.dll
+	$ make -C external/mono/mcs/class/ASSEMBLY PROFILE=monodroid
+
+Alternatively, if you want to rebuild *all* the assemblies, the "host"
+Mono needs to be rebuilt. Note that the name of the "host" directory
+varies based on the operating system you're building from:
+
+	$ make -C build-tools/mono-runtimes/obj/Debug/host-Darwin
+
+Once the assemblies have been rebuilt, they can be copied into the appropriate
+Xamarin.Android SDK directory by using the `_InstallBcl` target:
+
+	# This updates bin/$(Configuration)/lib/xbuild-frameworks/MonoAndroid/v1.0/ASSEMBLY.dll
+	$ xbuild build-tools/mono-runtimes/mono-runtimes.mdproj /t:_InstallBcl
