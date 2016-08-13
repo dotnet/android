@@ -35,6 +35,7 @@
       <_BclAssembly Include="System.Data.dll"/>
       <_BclAssembly Include="System.Data.Services.Client.dll"/>
       <_BclAssembly Include="System.dll"/>
+      <_BclAssembly Include="System.IdentityModel.dll"/>
       <_BclAssembly Include="System.IO.Compression.dll"/>
       <_BclAssembly Include="System.IO.Compression.FileSystem.dll"/>
       <_BclAssembly Include="System.Json.dll"/>
