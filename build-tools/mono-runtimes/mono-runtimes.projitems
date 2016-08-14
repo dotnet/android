@@ -228,6 +228,7 @@
       <BuildEnvironment></BuildEnvironment>
       <ExeSuffix></ExeSuffix>
       <InstallBinaries>true</InstallBinaries>
+      <InstallPath>bin/</InstallPath>
     </_LlvmRuntime>
 
     <_LlvmRuntime Include="llvm64" Condition=" '$(_LlvmNeeded)' != '' And '$(_LlvmCanBuild64)' == 'yes' ">
@@ -238,6 +239,7 @@
       <BuildEnvironment></BuildEnvironment>
       <ExeSuffix></ExeSuffix>
       <InstallBinaries>true</InstallBinaries>
+      <InstallPath>bin/</InstallPath>
     </_LlvmRuntime>
 
     <_LlvmRuntime Include="llvmwin32" Condition=" '$(_LlvmNeeded)' != '' And $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win32:')) ">
@@ -248,6 +250,7 @@
       <BuildEnvironment>PATH="$(AndroidMxeFullPath)\bin:$(PATH)"</BuildEnvironment>
       <ExeSuffix>.exe</ExeSuffix>
       <InstallBinaries>true</InstallBinaries>
+      <InstallPath>lib/mandroid/</InstallPath>
     </_LlvmRuntime>
 
     <_LlvmRuntime Include="llvmwin64" Condition=" '$(_LlvmNeeded)' != '' And $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:')) ">
@@ -258,6 +261,7 @@
       <BuildEnvironment>PATH="$(AndroidMxeFullPath)\bin:$(PATH)"</BuildEnvironment>
       <ExeSuffix>.exe</ExeSuffix>
       <InstallBinaries>false</InstallBinaries>
+      <InstallPath>lib/mandroid/</InstallPath>
     </_LlvmRuntime>
   </ItemGroup>
 
