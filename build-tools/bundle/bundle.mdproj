@@ -7,7 +7,7 @@
     <ProjectGuid>{1640725C-4DB8-4D8D-BC96-74E688A06EEF}</ProjectGuid>
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">1
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <OutputPath>..\..\bin\Debug</OutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
