@@ -36,9 +36,7 @@ LOCAL_LDFLAGS   += \
 	-Wl,--no-undefined \
 
 LOCAL_C_INCLUDES	:= \
-	$(LOCAL_PATH)/../../../build-tools/mono-runtimes/obj/$(CONFIGURATION)/$(TARGET_ARCH_ABI) \
-	$(LOCAL_PATH)/../../../build-tools/mono-runtimes/obj/$(CONFIGURATION)/$(TARGET_ARCH_ABI)/eglib \
-	$(LOCAL_PATH)/../../../build-tools/mono-runtimes/obj/$(CONFIGURATION)/$(TARGET_ARCH_ABI)/eglib/src \
+	$(LOCAL_PATH)/../../../bin/$(CONFIGURATION)/include/$(TARGET_ARCH_ABI)/eglib \
 	$(LOCAL_PATH)/../../../external/mono/eglib/src \
 	$(LOCAL_PATH)/zip
 
