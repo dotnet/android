@@ -173,7 +173,7 @@
     <Compile Include="$(MonoSourceDirectory)\mcs\build\common\Locale.cs">
       <Link>Locale.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceDirectory)\mcs\build\common\Consts.cs">
+    <Compile Include="$(OutputPath)..\..\..\..\include\Consts.cs">
       <Link>Consts.cs</Link>
     </Compile>
   </ItemGroup>

@@ -33,7 +33,7 @@
   <Target Name="GetBundlePath"
       DependsOnTargets="_GetHashes">
     <PropertyGroup>
-      <_BundlePath>$(OutputPath)bundle-v1-$(Configuration)-$(HostOS)-libzip=$(_LibZipHash),llvm=$(_LlvmHash),mono=$(_MonoHash).zip</_BundlePath>
+      <_BundlePath>$(OutputPath)bundle-v2-$(Configuration)-$(HostOS)-libzip=$(_LibZipHash),llvm=$(_LlvmHash),mono=$(_MonoHash).zip</_BundlePath>
     </PropertyGroup>
   </Target>
   <Target Name="Clean"
@@ -54,6 +54,7 @@
       <_Archive Include="@(_InstallUnstrippedMonoPosixHelperOutput)" />
       <_Archive Include="@(_RuntimeEglibHeaderOutput)" />
       <_Archive Include="@(_LibZipTarget->'$(OutputPath)lib\xbuild\Xamarin\Android\%(OutputLibrary)')" />
+      <_Archive Include="@(_MonoConstsOutput)" />
       <_Archive Include="$(OutputPath)%(_MonoCrossRuntime.InstallPath)%(_MonoCrossRuntime.CrossMonoName)%(_MonoCrossRuntime.ExeSuffix)"
           Condition=" '@(_MonoCrossRuntime)' != '' "
       />

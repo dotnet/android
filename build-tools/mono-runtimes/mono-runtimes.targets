@@ -85,10 +85,10 @@
       <_LlvmArchive Include="$(_LlvmOutputDirTop)\%(_LlvmRuntime.BuildDir)\Release\lib\*.a" />
 
       <_LlvmSourceBinary Include="@(_LlvmRuntime->'$(_LlvmOutputDirTop)\%(BuildDir)\Release\bin\opt%(ExeSuffix)')" Condition=" '%(_LlvmRuntime.InstallBinaries)' == 'true' " />
-      <_LlvmTargetBinary Include="@(_LlvmRuntime->'$(OutputPath)\bin\opt%(ExeSuffix)')" Condition=" '%(_LlvmRuntime.InstallBinaries)' == 'true' "/>
+      <_LlvmTargetBinary Include="@(_LlvmRuntime->'$(OutputPath)\%(InstallPath)opt%(ExeSuffix)')" Condition=" '%(_LlvmRuntime.InstallBinaries)' == 'true' "/>
 
       <_LlvmSourceBinary Include="@(_LlvmRuntime->'$(_LlvmOutputDirTop)\%(BuildDir)\Release\bin\llc%(ExeSuffix)')" Condition=" '%(_LlvmRuntime.InstallBinaries)' == 'true' " />
-      <_LlvmTargetBinary Include="@(_LlvmRuntime->'$(OutputPath)\bin\llc%(ExeSuffix)')" Condition=" '%(_LlvmRuntime.InstallBinaries)' == 'true' " />
+      <_LlvmTargetBinary Include="@(_LlvmRuntime->'$(OutputPath)\%(InstallPath)llc%(ExeSuffix)')" Condition=" '%(_LlvmRuntime.InstallBinaries)' == 'true' " />
     </ItemGroup>
   </Target>
 
@@ -206,6 +206,14 @@
           Condition=" '%(_MonoRuntime.DoBuild)' == 'True' "
           Include="@(_MonoRuntime->'$(OutputPath)include\%(Identity)\eglib\config.h');@(_MonoRuntime->'$(OutputPath)include\%(Identity)\eglib\eglib-config.h')"
       />
+      <_MonoConstsSource
+          Condition=" '%(_MonoRuntime.DoBuild)' == 'True' "
+          Include="$(MonoSourceFullPath)\mcs\build\common\Consts.cs"
+      />
+      <_MonoConstsOutput
+          Condition=" '%(_MonoRuntime.DoBuild)' == 'True' "
+          Include="$(OutputPath)include\Consts.cs"
+      />
       <_RuntimeBuildStamp       Condition=" '%(_MonoRuntime.DoBuild)' == 'true' " Include="@(_MonoRuntime->'$(IntermediateOutputPath)%(Identity)\.stamp')" />
     </ItemGroup>
   </Target>
@@ -237,6 +245,10 @@
     <Copy
         SourceFiles="@(_RuntimeEglibHeaderSource)"
         DestinationFiles="@(_RuntimeEglibHeaderOutput)"
+    />
+    <Copy
+        SourceFiles="@(_MonoConstsSource)"
+        DestinationFiles="@(_MonoConstsOutput)"
     />
     <Copy
         SourceFiles="@(_RuntimeSource)"
