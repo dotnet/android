@@ -19,7 +19,7 @@
     <DebugType>full</DebugType>
     <Optimize>False</Optimize>
     <OutputPath>..\..\bin\$(Configuration)\lib\xbuild\Xamarin\Android</OutputPath>
-    <DefineConstants Condition="'$(MonoDroidTiming)' == ''">TRACE;DEBUG;HAVE_CECIL;MSBUILD</DefineConstants>
+    <DefineConstants Condition="'$(MonoDroidTiming)' == ''">TRACE;DEBUG;HAVE_CECIL;MSBUILD;ANDROID_24</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -105,6 +105,7 @@
     <Compile Include="Mono.Android\BroadcastReceiverAttribute.Partial.cs" />
     <Compile Include="Mono.Android\ActivityAttribute.Partial.cs" />
     <Compile Include="Mono.Android\ContentProviderAttribute.Partial.cs" />
+    <Compile Include="Mono.Android\LayoutAttribute.Partial.cs" />
     <Compile Include="Utilities\AndroidAddOnManifest.cs" />
     <Compile Include="Mono.Android\IntentFilterAttribute.Partial.cs" />
     <Compile Include="Mono.Android\GrantUriPermissionAttribute.Partial.cs" />
