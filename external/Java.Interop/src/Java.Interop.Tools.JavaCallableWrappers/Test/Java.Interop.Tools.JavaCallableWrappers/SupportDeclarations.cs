@@ -143,7 +143,7 @@ namespace Xamarin.Android.ToolsTests {
 	{
 	}
 
-	[ContentProvider (new [] { "ignore.authority" }, Name = "provider.Name")]
+	[ContentProvider (Name = "provider.Name")]
 	class ProviderName : Java.Lang.Object
 	{
 	}
