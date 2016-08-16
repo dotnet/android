@@ -7,7 +7,7 @@
       <OutputLibrary>libzip.3.0.dylib</OutputLibrary>
       <OutputLibraryPath>lib/libzip.3.0.dylib</OutputLibraryPath>
     </_LibZipTarget>
-    <_LibZipTarget Include="host-Linux" Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Linux:'))">
+    <_LibZipTarget Include="host-Linux" Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Linux:')) AND '$(_LinuxBuildLibZip)' == 'true' ">
       <CMake>cmake</CMake>
       <CMakeFlags></CMakeFlags>
       <OutputLibrary>libzip.so</OutputLibrary>
