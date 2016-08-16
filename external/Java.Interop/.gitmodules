@@ -1,3 +1,4 @@
 [submodule "lib/mono.linq.expressions"]
 	path = lib/mono.linq.expressions
-	url = ../../jonpryor/mono.linq.expressions.git
+	url = https://github.com/jonpryor/mono.linq.expressions.git
+	branch = master
