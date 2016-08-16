@@ -125,6 +125,7 @@ define RUN_TEST
 	$(RUNTIME) $$MONO_OPTIONS --runtime=v4.0.0 \
 		$(NUNIT_CONSOLE) $(NUNIT_EXTRA) $(1) \
 		$(if $(RUN),-run:$(RUN)) \
+		-xml=TestResult-$(basename $(notdir $(1))).xml \
 		-output=bin/Test$(CONFIGURATION)/TestOutput-$(basename $(notdir $(1))).txt ;
 endef
 
