@@ -22,6 +22,11 @@
   </PropertyGroup>
   <Import Project="bundle.targets" />
   <ItemGroup>
+    <ProjectReference Include="..\xa-prep-tasks\xa-prep-tasks.csproj">
+      <Project>{7CE69551-BD73-4726-ACAA-AAF89C84BAF8}</Project>
+      <Name>xa-prep-tasks</Name>
+      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
+    </ProjectReference>
     <ProjectReference Include="..\android-toolchain\android-toolchain.mdproj">
       <Project>{8FF78EB6-6FC8-46A7-8A15-EBBA9045C5FA}</Project>
       <Name>android-toolchain</Name>

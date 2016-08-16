@@ -292,8 +292,14 @@ within `build-tools/mono-runtimes/obj/$(Configuration)/TARGET`.
 
 If you change sources within `external/mono`, a top-level `make`/`xbuild`
 invocation may not rebuild those mono native binaries. To explicitly rebuild
-Mono for a given target, run `make` from the relevant directory.
-For example, to rebuild Mono for armeabi-v7a:
+*all* Mono runtimes, use the `ForceBuild` target:
+
+	# Build and install all runtimes
+	$ xbuild /t:ForceBuild build-tools/mono-runtimes/mono-runtimes.mdproj
+
+To build Mono for a specific target, run `make` from the relevant directory
+and invoke the `_InstallRuntimes` target. For example, to rebuild
+Mono for armeabi-v7a:
 
 	$ cd build-tools/mono-runtimes
 	$ make -C obj/Debug/armeabi-v7a

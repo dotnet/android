@@ -10,10 +10,8 @@
         Properties="OutputPath=$(AndroidToolchainDirectory)"
     />
   </Target>
-  <UsingTask AssemblyFile="$(OutputPath)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.CreateTemporaryDirectory" />
-  <UsingTask AssemblyFile="$(OutputPath)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.DownloadUri" />
-  <UsingTask AssemblyFile="$(OutputPath)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.UnzipDirectoryChildren" />
-  <UsingTask AssemblyFile="$(OutputPath)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.Which" />
+  <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"   TaskName="Xamarin.Android.BuildTools.PrepTasks.DownloadUri" />
+  <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.UnzipDirectoryChildren" />
   <Target Name="_DetermineItems">
     <CreateItem
         Include="@(AndroidSdkItem)"

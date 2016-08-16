@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <UsingTask AssemblyFile="$(OutputPath)xa-prep-tasks.dll"   TaskName="Xamarin.Android.BuildTools.PrepTasks.DownloadUri" />
+  <UsingTask AssemblyFile="$(OutputPath)xa-prep-tasks.dll"   TaskName="Xamarin.Android.BuildTools.PrepTasks.SystemUnzip" />
+  <Import Project="..\bundle\bundle-path.targets" />
+  <PropertyGroup>
+    <_AzureBaseUri>https://xamjenkinsartifact.blob.core.windows.net/xamarin-android/xamarin-android/bin/</_AzureBaseUri>
+  </PropertyGroup>
+  <Target Name="_GetBundleOutputPath"
+      DependsOnTargets="GetBundleFileName">
+    <PropertyGroup>
+      <_BundlePath>$(OutputPath)$(XABundleFileName)</_BundlePath>
+    </PropertyGroup>
+  </Target>
+  <Target Name="_DownloadBundle"
+      DependsOnTargets="_GetBundleOutputPath"
+      Inputs=""
+      Outputs="$(_BundlePath)">
+    <DownloadUri
+        SourceUris="$(_AzureBaseUri)$(Configuration)/$(XABundleFileName)"
+        DestinationFiles="$(_BundlePath)"
+    />
+  </Target>
+  <Target Name="_ExtractBundle"
+      DependsOnTargets="_DownloadBundle"
+      Inputs="$(_BundlePath)"
+      Outputs="$(OutputPath).extracted-$(XABundleFileName)">
+    <SystemUnzip
+        SourceFiles="$(_BundlePath)"
+        HostOS="$(HostOS)"
+        DestinationFolder="..\..\bin\$(Configuration)"
+    />
+    <WriteLinesToFile
+        File="$(OutputPath).extracted-$(XABundleFileName)"
+        Lines="$(XABundleFileName)"
+        Overwrite="True"
+    />
+  </Target>
+  <Target Name="_DownloadAndExtractBundle"
+      AfterTargets="Build"
+      DependsOnTargets="_ExtractBundle">
+  </Target>
+</Project>
