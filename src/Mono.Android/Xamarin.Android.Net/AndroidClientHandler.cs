@@ -57,6 +57,13 @@ namespace Xamarin.Android.Net
 	/// </remarks>
 	public class AndroidClientHandler : HttpClientHandler
 	{
+		sealed class RequestRedirectionState
+		{
+			public Uri NewUrl;
+			public int RedirectCounter;
+			public HttpMethod Method;
+		}
+
 		internal const string LOG_APP = "monodroid-net";
 
 		const string GZIP_ENCODING = "gzip";
@@ -177,23 +184,36 @@ namespace Xamarin.Android.Net
 			if (!request.RequestUri.IsAbsoluteUri)
 				throw new ArgumentException ("Must represent an absolute URI", "request");
 
-			URL java_url = new URL (request.RequestUri.ToString ());
-			URLConnection java_connection = java_url.OpenConnection ();
-			HttpURLConnection httpConnection = await SetupRequestInternal (request, java_connection);
-			return await ProcessRequest (request, java_url, httpConnection, cancellationToken);
+			var redirectState = new RequestRedirectionState {
+				NewUrl = request.RequestUri,
+				RedirectCounter = 0,
+				Method = request.Method
+			};
+			while (true) {
+				URL java_url = new URL (redirectState.NewUrl.ToString ());
+				URLConnection java_connection = java_url.OpenConnection ();
+				HttpURLConnection httpConnection = await SetupRequestInternal (request, java_connection);
+				HttpResponseMessage response = await ProcessRequest (request, java_url, httpConnection, cancellationToken, redirectState);
+				if (response != null)
+					return response;
+
+				if (redirectState.NewUrl == null)
+					throw new InvalidOperationException ("Request redirected but no new URI specified");
+				request.Method = redirectState.Method;
+			}
 		}
 		
-		Task <HttpResponseMessage> ProcessRequest (HttpRequestMessage request, URL javaUrl, HttpURLConnection httpConnection, CancellationToken cancellationToken)
+		Task <HttpResponseMessage> ProcessRequest (HttpRequestMessage request, URL javaUrl, HttpURLConnection httpConnection, CancellationToken cancellationToken, RequestRedirectionState redirectState)
 		{
 			cancellationToken.ThrowIfCancellationRequested ();
-			httpConnection.InstanceFollowRedirects = AllowAutoRedirect;
+			httpConnection.InstanceFollowRedirects = false; // We handle it ourselves
 			RequestedAuthentication = null;
 			ProxyAuthenticationRequested = false;
 
-			return DoProcessRequest (request, javaUrl, httpConnection, cancellationToken);
+			return DoProcessRequest (request, javaUrl, httpConnection, cancellationToken, redirectState);
 		}
 		
-		async Task <HttpResponseMessage> DoProcessRequest (HttpRequestMessage request, URL javaUrl, HttpURLConnection httpConnection, CancellationToken cancellationToken)
+		async Task <HttpResponseMessage> DoProcessRequest (HttpRequestMessage request, URL javaUrl, HttpURLConnection httpConnection, CancellationToken cancellationToken, RequestRedirectionState redirectState)
 		{
 			if (Logger.LogNet)
 				Logger.Log (LogLevel.Info, LOG_APP, $"{this}.DoProcessRequest ()");
@@ -227,31 +247,43 @@ namespace Xamarin.Android.Net
 
 			if (Logger.LogNet)
 				Logger.Log (LogLevel.Info, LOG_APP, $"Status code: {statusCode}");
-			if (statusCode == HttpStatusCode.Unauthorized || statusCode == HttpStatusCode.ProxyAuthenticationRequired) {
-				// We don't resend the request since that would require new set of credentials if the
-				// ones provided in Credentials are invalid (or null) and that, in turn, may require asking the
-				// user which is not something that should be taken care of by us and in this
-				// context. The application should be responsible for this.
-				// HttpClientHandler throws an exception in this instance, but I think it's not a good
-				// idea. We'll return the response message with all the information required by the
-				// application to fill in the blanks and provide the requested credentials instead.
-				//
-				// We should return the body of the response too but, alas, the Java client will throw
-				// a, wait for it, FileNotFound exception if we attempt to access the input stream. So
-				// no body, just a dummy. Java FTW!
-				ret.Content = new StringContent ("Unauthorized", Encoding.ASCII);
-				CopyHeaders (httpConnection, ret);
 
-				if (ret.Headers.WwwAuthenticate != null) {
-					ProxyAuthenticationRequested = false;
-					CollectAuthInfo (ret.Headers.WwwAuthenticate);
-				} else if (ret.Headers.ProxyAuthenticate != null) {
-					ProxyAuthenticationRequested = true;
-					CollectAuthInfo (ret.Headers.ProxyAuthenticate);
+			bool disposeRet;
+			if (HandleRedirect (statusCode, httpConnection, redirectState, out disposeRet)) {
+				if (disposeRet) {
+					ret.Dispose ();
+					ret = null;
 				}
-
-				ret.RequestedAuthentication = RequestedAuthentication;
 				return ret;
+			}
+
+			switch (statusCode) {
+				case HttpStatusCode.Unauthorized:
+				case HttpStatusCode.ProxyAuthenticationRequired:
+					// We don't resend the request since that would require new set of credentials if the
+					// ones provided in Credentials are invalid (or null) and that, in turn, may require asking the
+					// user which is not something that should be taken care of by us and in this
+					// context. The application should be responsible for this.
+					// HttpClientHandler throws an exception in this instance, but I think it's not a good
+					// idea. We'll return the response message with all the information required by the
+					// application to fill in the blanks and provide the requested credentials instead.
+					//
+					// We should return the body of the response too but, alas, the Java client will throw
+					// a, wait for it, FileNotFound exception if we attempt to access the input stream. So
+					// no body, just a dummy. Java FTW!
+					ret.Content = new StringContent ("Unauthorized", Encoding.ASCII);
+					CopyHeaders (httpConnection, ret);
+
+					if (ret.Headers.WwwAuthenticate != null) {
+						ProxyAuthenticationRequested = false;
+						CollectAuthInfo (ret.Headers.WwwAuthenticate);
+					} else if (ret.Headers.ProxyAuthenticate != null) {
+						ProxyAuthenticationRequested = true;
+						CollectAuthInfo (ret.Headers.ProxyAuthenticate);
+					}
+
+					ret.RequestedAuthentication = RequestedAuthentication;
+					return ret;
 			}
 
 			if (!IsErrorStatusCode (statusCode)) {
@@ -300,6 +332,54 @@ namespace Xamarin.Android.Net
 			if (Logger.LogNet)
 				Logger.Log (LogLevel.Info, LOG_APP, $"Returning");
 			return ret;
+		}
+
+		bool HandleRedirect (HttpStatusCode redirectCode, HttpURLConnection httpConnection, RequestRedirectionState redirectState, out bool disposeRet)
+		{
+			if (!AllowAutoRedirect) {
+				disposeRet = false;
+				return true; // We shouldn't follow and there's no data to fetch, just return
+			}
+			disposeRet = true;
+
+			redirectState.NewUrl = null;
+			switch (redirectCode) {
+				case HttpStatusCode.MultipleChoices:   // 300
+					break;
+
+				case HttpStatusCode.Moved:             // 301
+				case HttpStatusCode.Redirect:          // 302
+				case HttpStatusCode.SeeOther:          // 303
+					redirectState.Method = HttpMethod.Get;
+					break;
+
+				case HttpStatusCode.TemporaryRedirect: // 307
+					break;
+
+				default:
+					if ((int)redirectCode >= 300 && (int)redirectCode < 400)
+						throw new InvalidOperationException ($"HTTP Redirection status code {redirectCode} ({(int)redirectCode}) not supported");
+					return false;
+			}
+
+			IDictionary <string, IList <string>> headers = httpConnection.HeaderFields;
+			IList <string> locationHeader;
+			if (!headers.TryGetValue ("Location", out locationHeader) || locationHeader == null || locationHeader.Count == 0)
+				throw new InvalidOperationException ($"HTTP connection redirected with code {redirectCode} ({(int)redirectCode}) but no Location header found in response");
+
+			if (locationHeader.Count > 1 && Logger.LogNet)
+				Logger.Log (LogLevel.Info, LOG_APP, $"More than one location header for HTTP {redirectCode} redirect. Will use the first one.");
+
+			redirectState.RedirectCounter++;
+			if (redirectState.RedirectCounter >= MaxAutomaticRedirections)
+				throw new WebException ($"Maximum automatic redirections exceeded (allowed {MaxAutomaticRedirections}, redirected {redirectState.RedirectCounter} times)");
+
+			Uri location = new Uri (locationHeader [0], UriKind.Absolute);
+			redirectState.NewUrl = location;
+			if (Logger.LogNet)
+				Logger.Log (LogLevel.Debug, LOG_APP, $"Request redirected to {location}");
+
+			return true;
 		}
 
 		bool IsErrorStatusCode (HttpStatusCode statusCode)
