@@ -620,19 +620,13 @@
       <Project>{B17475BC-45A2-47A3-B8FC-62F3A0959EE0}</Project>
       <Name>Xamarin.Android.Tools.Bytecode</Name>
     </ProjectReference>
+    <!--
+      Mono.Android.csproj needs to be built first because this project
+      references files *generated* and contained within the Mono.Android project.
+      -->
     <ProjectReference Include="..\..\src\Mono.Android\Mono.Android.csproj">
       <Project>{66CF299A-CE95-4131-BCD8-DB66E30C4BF7}</Project>
       <Name>Mono.Android</Name>
-      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
-    </ProjectReference>
-    <ProjectReference Include="..\Xamarin.Android.Tools.BootstrapTasks\Xamarin.Android.Tools.BootstrapTasks.csproj">
-      <Project>{E8492EFB-D14A-4F32-AA28-88848322ECEA}</Project>
-      <Name>Xamarin.Android.Tools.BootstrapTasks</Name>
-      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
-    </ProjectReference>
-    <ProjectReference Include="$(JavaInteropFullPath)\tools\class-parse\class-parse.csproj">
-      <Project>{38C762AB-8FD1-44DE-9855-26AAE7129DC3}</Project>
-      <Name>class-parse</Name>
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
     </ProjectReference>
     <ProjectReference Include="$(LibZipSharpSourceFullPath)\libZipSharp.csproj">
