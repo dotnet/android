@@ -112,7 +112,6 @@ namespace Java.Interop {
 					}
 					builder.InvocationPointer            = javavm;
 					builder.EnvironmentPointer   = jnienv;
-					builder.DestroyRuntimeOnDispose  = true;
 					return builder;
 				}
 			} finally {
