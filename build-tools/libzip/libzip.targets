@@ -79,7 +79,7 @@
   </Target>
   <Target Name="_CleanBinaries"
       AfterTargets="Clean">
-    <RemoveDir Directories="$(IntermediateOutputPath)\%(_LibZipTarget.Identity" />
+    <RemoveDir Directories="$(IntermediateOutputPath)\%(_LibZipTarget.Identity)" />
     <Delete Files="@(_LibZipTarget->'$(OutputPath)\lib\xbuild\Xamarin\Android\%(_LibZipTarget.OutputLibrary)')" />
   </Target>
 </Project>
