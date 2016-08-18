@@ -629,6 +629,16 @@
       <Name>Mono.Android</Name>
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
     </ProjectReference>
+    <!--
+      Xamarin.Android.Tools.BootstrapTasks needs to be built first because
+      Xamarin.Android.Build.Tasks.targets uses several tasks located in
+      Xamarin.Android.Tools.BootstrapTasks, such as <GenerateProfile/>
+      -->
+    <ProjectReference Include="..\Xamarin.Android.Tools.BootstrapTasks\Xamarin.Android.Tools.BootstrapTasks.csproj">
+      <Project>{E8492EFB-D14A-4F32-AA28-88848322ECEA}</Project>
+      <Name>Xamarin.Android.Tools.BootstrapTasks</Name>
+      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
+    </ProjectReference>
     <ProjectReference Include="$(LibZipSharpSourceFullPath)\libZipSharp.csproj">
       <Project>{E248B2CA-303B-4645-ADDC-9D4459D550FD}</Project>
       <Name>libZipSharp</Name>
