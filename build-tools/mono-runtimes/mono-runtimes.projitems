@@ -200,7 +200,8 @@
       <Ld>ld</Ld>
       <LdFlags></LdFlags>
       <RanLib>ranlib</RanLib>
-      <Strip>strip -S</Strip>
+      <Strip>strip</Strip>
+      <StripFlags>-S</StripFlags>
       <ConfigureFlags>--enable-maintainer-mode --without-ikvm-native --with-monodroid --with-mcs-docs=no --disable-mono-debugger --with-profile2=no --with-profile4=no --with-profile4_5=yes --disable-boehm --enable-nls=no --disable-iconv</ConfigureFlags>
       <OutputRuntimeFilename>libmonosgen-2.0</OutputRuntimeFilename>
       <NativeLibraryExtension>so</NativeLibraryExtension>
@@ -278,7 +279,8 @@
       <Ld>ld</Ld>
       <LdFlags></LdFlags>
       <RanLib>ranlib</RanLib>
-      <Strip>strip -S</Strip>
+      <Strip>strip</Strip>
+      <StripFlags>-S</StripFlags>
       <TargetAbi>armv5-none-linux-androideabi</TargetAbi>
       <ConfigureFlags>--target=armv5-linux-androideabi --cache-file=$(_CrossConfigureCachePrefix)arm.config.cache --with-cross-offsets=armv5-none-linux-androideabi.h $(_CrossConfigureFlags) --with-llvm=$(_CrossDefaultLlvmPrefix)</ConfigureFlags>
       <ExeSuffix></ExeSuffix>
@@ -299,7 +301,8 @@
       <Ld>ld</Ld>
       <LdFlags></LdFlags>
       <RanLib>ranlib</RanLib>
-      <Strip>strip -S</Strip>
+      <Strip>strip</Strip>
+      <StripFlags>-S</StripFlags>
       <TargetAbi>aarch64-v8a-linux-android</TargetAbi>
       <ConfigureFlags>--target=aarch64-v8a-linux-android --cache-file=$(_CrossConfigureCachePrefix)arm64.config.cache --with-cross-offsets=aarch64-v8a-linux-android.h $(_CrossConfigureFlags) --with-llvm=$(_CrossDefaultLlvmPrefix)</ConfigureFlags>
       <ExeSuffix></ExeSuffix>
@@ -320,7 +323,8 @@
       <Ld>ld</Ld>
       <LdFlags></LdFlags>
       <RanLib>ranlib</RanLib>
-      <Strip>strip -S</Strip>
+      <Strip>strip</Strip>
+      <StripFlags>-S</StripFlags>
       <TargetAbi>i686-none-linux-android</TargetAbi>
       <ConfigureFlags>--target=i686-linux-android --cache-file=$(_CrossConfigureCachePrefix)x86.config.cache --with-cross-offsets=i686-none-linux-android.h $(_CrossConfigureFlags)  --with-llvm=$(_LlvmPrefix32)</ConfigureFlags>
       <ExeSuffix></ExeSuffix>
@@ -341,7 +345,8 @@
       <Ld>ld</Ld>
       <LdFlags></LdFlags>
       <RanLib>ranlib</RanLib>
-      <Strip>strip -S</Strip>
+      <Strip>strip</Strip>
+      <StripFlags>-S</StripFlags>
       <TargetAbi>x86_64-none-linux-android</TargetAbi>
       <ConfigureFlags>--target=x86_64-linux-android --cache-file=$(_CrossConfigureCachePrefix)x86_64.config.cache --with-cross-offsets=x86_64-none-linux-android.h $(_CrossConfigureFlags)  --with-llvm=$(_CrossDefaultLlvmPrefix)</ConfigureFlags>
       <ExeSuffix></ExeSuffix>
@@ -362,7 +367,8 @@
       <Ld>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-ld</Ld>
       <LdFlags>-static -static-libgcc</LdFlags>
       <RanLib>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-ranlib</RanLib>
-      <Strip>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-strip -S</Strip>
+      <Strip>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-strip</Strip>
+      <StripFlags>-S</StripFlags>
       <TargetAbi>armv5-none-linux-androideabi</TargetAbi>
       <ConfigureFlags>--target=armv5-linux-androideabi --host="$(_CrossConfigureBuildHostWin32)" --cache-file=$(_CrossConfigureCachePrefix)arm-win.config.cache --with-cross-offsets=armv5-none-linux-androideabi.h $(_CrossConfigureFlags) --with-llvm=$(_LlvmPrefixWin32)</ConfigureFlags>
       <ExeSuffix>.exe</ExeSuffix>
@@ -383,7 +389,8 @@
       <Ld>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-ld</Ld>
       <LdFlags>-static -static-libgcc -static-libstdc++</LdFlags>
       <RanLib>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-ranlib</RanLib>
-      <Strip>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-strip -S</Strip>
+      <Strip>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-strip</Strip>
+      <StripFlags>-S</StripFlags>
       <TargetAbi>aarch64-v8a-linux-android</TargetAbi>
       <ConfigureFlags>--target=aarch64-v8a-linux-android --host="$(_CrossConfigureBuildHostWin32)" --cache-file=$(_CrossConfigureCachePrefix)arm64-win.config.cache --with-cross-offsets=aarch64-v8a-linux-android.h $(_CrossConfigureFlags) --with-llvm=$(_LlvmPrefixWin32)</ConfigureFlags>
       <ExeSuffix>.exe</ExeSuffix>
@@ -404,7 +411,8 @@
       <Ld>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-ld</Ld>
       <LdFlags>-static -static-libgcc -static-libstdc++</LdFlags>
       <RanLib>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-ranlib</RanLib>
-      <Strip>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-strip -S</Strip>
+      <Strip>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-strip</Strip>
+      <StripFlags>-S</StripFlags>
       <TargetAbi>i686-none-linux-android</TargetAbi>
       <ConfigureFlags>--target=i686-linux-android --host="$(_CrossConfigureBuildHostWin32)" --cache-file=$(_CrossConfigureCachePrefix)x86-win.config.cache --with-cross-offsets=i686-none-linux-android.h $(_CrossConfigureFlags) --with-llvm=$(_LlvmPrefixWin32)</ConfigureFlags>
       <ExeSuffix>.exe</ExeSuffix>
@@ -425,7 +433,8 @@
       <Ld>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-ld</Ld>
       <LdFlags>-static -static-libgcc -static-libstdc++</LdFlags>
       <RanLib>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-ranlib</RanLib>
-      <Strip>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-strip -S</Strip>
+      <Strip>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-strip</Strip>
+      <StripFlags>-S</StripFlags>
       <TargetAbi>x86_64-none-linux-android</TargetAbi>
       <ConfigureFlags>--target=x86_64-linux-android --host="$(_CrossConfigureBuildHostWin64)" --cache-file=$(_CrossConfigureCachePrefix)x86_64-win.config.cache --with-cross-offsets=x86_64-none-linux-android.h $(_CrossConfigureFlags) --with-llvm=$(_LlvmPrefixWin64)</ConfigureFlags>
       <ExeSuffix>.exe</ExeSuffix>
