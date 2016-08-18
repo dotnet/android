@@ -1404,16 +1404,29 @@ target_from_jobject (jobject jobj)
 	return result;
 }
 
+// See note in gc_prepare_for_java_collection
+static int
+scc_get_stashed_index (MonoGCBridgeSCC *scc)
+{
+	assert (scc->num_objs < 0);
+	return -scc->num_objs - 1;
+}
+
+static void
+scc_set_stashed_index (MonoGCBridgeSCC *scc, int index)
+{
+	scc->num_objs = -index - 1;
+}
+
 // Extract the root target for an SCC. If the SCC has bridged objects, this is the first object. If not, it's stored in temporary_peers.
-// Must pass in the JNI information necessary to interact with temporary_peers.
 static AddReferenceTarget
-target_from_scc (MonoGCBridgeSCC **sccs, int idx, JNIEnv *env, jobject temporary_peers, int *temporary_peer_indices)
+target_from_scc (MonoGCBridgeSCC **sccs, int idx, JNIEnv *env, jobject temporary_peers)
 {
 	MonoGCBridgeSCC *scc = sccs [idx];
 	if (scc->num_objs > 0)
 		return target_from_mono_object (scc->objs [0]);
 
-	jobject jobj = (*env)->CallObjectMethod (env, temporary_peers, jni_arraylist_get, temporary_peer_indices [idx]);
+	jobject jobj = (*env)->CallObjectMethod (env, temporary_peers, jni_arraylist_get, scc_get_stashed_index (scc));
 	return target_from_jobject (jobj);
 }
 
@@ -1438,7 +1451,6 @@ gc_prepare_for_java_collection (JNIEnv *env, int num_sccs, MonoGCBridgeSCC **scc
 	/* Some SCCs might have no IGCUserPeers associated with them, so we must create one */
 	jobject temporary_peers = NULL;     // This is an ArrayList
 	int temporary_peer_count = 0;       // Number of items in temporary_peers
-	int *temporary_peer_indices = NULL; // Map sccs array index -> temporary_peers index
 
 	/* Basic setup before looking at xrefs */
 	for (int i = 0; i < num_sccs; i++) {
@@ -1461,7 +1473,7 @@ gc_prepare_for_java_collection (JNIEnv *env, int num_sccs, MonoGCBridgeSCC **scc
 			add_reference_mono_object (env, prev, first);
 
 		/* Some SCCs have no IGCUserPeers associated with them, so we must create a temporary one */
-		} else if (scc->num_objs == 0) {
+		} else if (scc->num_objs <= 0) {
 			/* Look up JNI metadata we'll need and create a temporary_peers ArrayList, which
 			 * will protect the temporary objects from collection while we're building the graph.
 			 */
@@ -1478,24 +1490,24 @@ gc_prepare_for_java_collection (JNIEnv *env, int num_sccs, MonoGCBridgeSCC **scc
 			}
 			if (!temporary_peers) {
 				temporary_peers = (*env)->NewObject (env, jni_arraylist, jni_arraylist_constructor);
-
-				temporary_peer_indices = xmalloc (num_sccs * sizeof (*temporary_peer_indices));
 			}
 
 			jobject peer = (*env)->NewObject (env, jni_gcuserpeer, jni_gcuserpeer_constructor);
 			(*env)->CallBooleanMethod (env, temporary_peers, jni_arraylist_add, peer);
 			(*env)->DeleteLocalRef (env, peer);
 
-			// FIXME: This could be stored in scc as a negative index.
-			temporary_peer_indices[i] = temporary_peer_count;
+			// During the xref phase, we need to be able to map bridgeless SCCs to their position
+			// in temporary_peers. Because for all bridgeless SCCs the num_objs field is known 0,
+			// we can temporarily stash this index as a negative value in the SCC.
+			scc_set_stashed_index (scc, temporary_peer_count);
 			temporary_peer_count++;
 		}
 	}
 
 	/* add the cross scc refs */
 	for (int i = 0; i < num_xrefs; i++) {
-		AddReferenceTarget src_target = target_from_scc (sccs, xrefs [i].src_scc_index, env, temporary_peers, temporary_peer_indices);
-		AddReferenceTarget dst_target = target_from_scc (sccs, xrefs [i].dst_scc_index, env, temporary_peers, temporary_peer_indices);
+		AddReferenceTarget src_target = target_from_scc (sccs, xrefs [i].src_scc_index, env, temporary_peers);
+		AddReferenceTarget dst_target = target_from_scc (sccs, xrefs [i].dst_scc_index, env, temporary_peers);
 
 		add_reference (env, src_target, dst_target);
 
@@ -1505,7 +1517,6 @@ gc_prepare_for_java_collection (JNIEnv *env, int num_sccs, MonoGCBridgeSCC **scc
 
 	/* With xrefs processed, the temporary peer list can be released */
 	(*env)->DeleteLocalRef (env, temporary_peers);
-	free (temporary_peer_indices);
 
 	// switch to weak refs
 	for (int i = 0; i < num_sccs; i++)
@@ -1535,6 +1546,11 @@ gc_cleanup_after_java_collection (JNIEnv *env, int num_sccs, MonoGCBridgeSCC **s
 	/* clear the cross references on any remaining items */
 	for (i = 0; i < num_sccs; i++) {
 		sccs [i]->is_alive = 0;
+
+		/* Clear out "stashed" values from gc_prepare_for_java_collection */
+		if (sccs [i]->num_objs < 0)
+			sccs [i]->num_objs = 0;
+
 		for (j = 0; j < sccs [i]->num_objs; j++) {
 			MonoJavaGCBridgeInfo    *bridge_info;
 
