@@ -1325,7 +1325,9 @@ load_reference_target (AddReferenceTarget target, MonoJavaGCBridgeInfo** bridge_
 
 #if DEBUG
 // Allocate and return a string describing a target
-static char *describe_target (AddReferenceTarget target) {
+static char *
+describe_target (AddReferenceTarget target)
+{
 	if (target.is_mono_object) {
 		MonoClass *klass = mono.mono_object_get_class (target.obj);
 		return monodroid_strdup_printf ("object of class %s.%s",
@@ -1378,7 +1380,9 @@ add_reference (JNIEnv *env, AddReferenceTarget target, AddReferenceTarget reffed
 }
 
 // Create a target
-AddReferenceTarget mono_object_target (MonoObject *obj) {
+static AddReferenceTarget
+target_from_mono_object (MonoObject *obj)
+{
 	AddReferenceTarget result;
 	result.is_mono_object = TRUE;
 	result.obj = obj;
@@ -1386,7 +1390,9 @@ AddReferenceTarget mono_object_target (MonoObject *obj) {
 }
 
 // Create a target
-AddReferenceTarget jobject_target (jobject jobj) {
+static AddReferenceTarget
+target_from_jobject (jobject jobj)
+{
 	AddReferenceTarget result;
 	result.is_mono_object = FALSE;
 	result.jobj = jobj;
@@ -1395,18 +1401,21 @@ AddReferenceTarget jobject_target (jobject jobj) {
 
 // Extract the root target for an SCC. If the SCC has bridged objects, this is the first object. If not, it's stored in temporary_peers.
 // Must pass in the JNI information necessary to interact with temporary_peers.
-static AddReferenceTarget scc_target (MonoGCBridgeSCC **sccs, int idx, JNIEnv *env, jobject temporary_peers, jmethodID arraylist_get, int *temporary_peer_indices)
+static AddReferenceTarget
+target_from_scc (MonoGCBridgeSCC **sccs, int idx, JNIEnv *env, jobject temporary_peers, jmethodID arraylist_get, int *temporary_peer_indices)
 {
 	MonoGCBridgeSCC *scc = sccs [idx];
 	if (scc->num_objs > 0)
-		return mono_object_target (scc->objs [0]);
+		return target_from_mono_object (scc->objs [0]);
 
 	jobject jobj = (*env)->CallObjectMethod (env, temporary_peers, arraylist_get, temporary_peer_indices [idx]);
-	return jobject_target (jobj);
+	return target_from_jobject (jobj);
 }
 
-// Must call this on any AddReferenceTarget returned by scc_target once done with it
-static void release_scc_target (JNIEnv *env, AddReferenceTarget target) {
+// Must call this on any AddReferenceTarget returned by target_from_scc once done with it
+static void
+target_release (JNIEnv *env, AddReferenceTarget target)
+{
 	if (!target.is_mono_object)
 		(*env)->DeleteLocalRef (env, target.jobj);
 }
@@ -1415,15 +1424,7 @@ static void release_scc_target (JNIEnv *env, AddReferenceTarget target) {
 static mono_bool
 add_reference_mono_object (JNIEnv *env, MonoObject *obj, MonoObject *reffed_obj)
 {
-	return add_reference (env, mono_object_target (obj), mono_object_target (reffed_obj));
-}
-
-// Clear a local reference which might be NULL // FIXME: Is it safe to just call DeleteLocalRef with NULL?
-static void
-delete_java_lref (JNIEnv *env, jobject jobj)
-{
-	if (jobj)
-		(*env)->DeleteLocalRef (env, jobj);
+	return add_reference (env, target_from_mono_object (obj), target_from_mono_object (reffed_obj));
 }
 
 static void
@@ -1479,7 +1480,7 @@ gc_prepare_for_java_collection (JNIEnv *env, int num_sccs, MonoGCBridgeSCC **scc
 
 			jobject peer = (*env)->NewObject (env, gcuserpeer, gcuserpeer_constructor);
 			(*env)->CallBooleanMethod (env, temporary_peers, arraylist_add, peer);
-			delete_java_lref (env, peer);
+			(*env)->DeleteLocalRef (env, peer);
 
 			// FIXME: This could be stored in scc as a negative index.
 			temporary_peer_indices[i] = temporary_peer_count;
@@ -1488,22 +1489,22 @@ gc_prepare_for_java_collection (JNIEnv *env, int num_sccs, MonoGCBridgeSCC **scc
 	}
 
 	/* We are done adding to the temporary peer list */
-	delete_java_lref (env, gcuserpeer);
+	(*env)->DeleteLocalRef (env, gcuserpeer);
 
 	/* add the cross scc refs */
 	for (int i = 0; i < num_xrefs; i++) {
-		AddReferenceTarget src_target = scc_target (sccs, xrefs [i].src_scc_index, env, temporary_peers, arraylist_get, temporary_peer_indices);
-		AddReferenceTarget dst_target = scc_target (sccs, xrefs [i].dst_scc_index, env, temporary_peers, arraylist_get, temporary_peer_indices);
+		AddReferenceTarget src_target = target_from_scc (sccs, xrefs [i].src_scc_index, env, temporary_peers, arraylist_get, temporary_peer_indices);
+		AddReferenceTarget dst_target = target_from_scc (sccs, xrefs [i].dst_scc_index, env, temporary_peers, arraylist_get, temporary_peer_indices);
 
 		add_reference (env, src_target, dst_target);
 
-		release_scc_target (env, src_target);
-		release_scc_target (env, dst_target);
+		target_release (env, src_target);
+		target_release (env, dst_target);
 	}
 
 	/* With xrefs processed, the temporary peer list can be released */
-	delete_java_lref (env, arraylist);
-	delete_java_lref (env, temporary_peers);
+	(*env)->DeleteLocalRef (env, arraylist);
+	(*env)->DeleteLocalRef (env, temporary_peers);
 	free (temporary_peer_indices);
 
 	// switch to weak refs
