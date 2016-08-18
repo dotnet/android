@@ -425,6 +425,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 
 <PropertyGroup Condition="'$(AndroidApplication)' != '' And $(AndroidApplication)">
   <BuildDependsOn>
+    _ValidateLinkMode;
     _SetupDesignTimeBuildForBuild;
     _CreatePropertiesCache;
     _CheckProjectItems;
@@ -438,6 +439,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 
 <PropertyGroup Condition="'$(AndroidApplication)' == '' Or !($(AndroidApplication))">
   <BuildDependsOn>
+    _ValidateLinkMode;
      _SetupDesignTimeBuildForBuild;
      _CreatePropertiesCache;
     _AddAndroidDefines;
@@ -485,6 +487,12 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 		_CleanMonoAndroidIntermediateDir;
 	</CleanDependsOn>
 </PropertyGroup>
+
+<Target Name="_ValidateLinkMode">
+	<CreateProperty Value="None" Condition="'$(AndroidLinkMode)' == 'SdkOnly' And '$(AndroidUseSharedRuntime)' == 'true'">
+		<Output TaskParameter="Value" PropertyName="AndroidLinkMode" />
+	</CreateProperty>
+</Target>
 
 <Target Name="_RemoveLegacyDesigner" Condition="'$(AndroidUseIntermediateDesignerFile)' == 'True'">
 	<ItemGroup>
