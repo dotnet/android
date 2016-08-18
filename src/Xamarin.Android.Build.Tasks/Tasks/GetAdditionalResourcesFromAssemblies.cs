@@ -80,17 +80,17 @@ namespace Xamarin.Android.Tasks {
 		{
 			if (!attr.HasProperties)
 				return "";
-			CustomAttributeNamedArgument arg = attr.Properties.FirstOrDefault (p => p.Name == "PackageName");
-			if (arg.Name != null) {
-				string packageName = arg.Argument.Value as string;
-				if (packageName != null)
-					return string.Format ("Please install package: '{0}' available in SDK installer", packageName);
-			}
-			arg = attr.Properties.FirstOrDefault (p => p.Name == "InstallInstructions");
+			CustomAttributeNamedArgument arg = attr.Properties.FirstOrDefault (p => p.Name == "InstallInstructions");
 			if (arg.Name != null) {
 				string instInstructs = arg.Argument.Value as string;
 				if (instInstructs != null)
 					return "Installation instructions: " + instInstructs;
+			}
+			arg = attr.Properties.FirstOrDefault (p => p.Name == "PackageName");
+			if (arg.Name != null) {
+				string packageName = arg.Argument.Value as string;
+				if (packageName != null)
+					return string.Format ("Unable to restore Java resources for package '{0}'. The authors of the package should set the SourceUrl property or InstallInstructions property on the {1}", packageName, attr.AttributeType);
 			}
 			return null;
 		}
@@ -147,7 +147,8 @@ namespace Xamarin.Android.Tasks {
 				items.Add (Path.GetFullPath (path).TrimEnd (Path.DirectorySeparatorChar));
 				return;
 			}
-			LogCodedError (errorCode, errorFmt, ErrorMessage (attr), path);
+			if (sourceUrl.Name == null)
+				LogCodedError (errorCode, errorFmt, ErrorMessage (attr), path);
 		}
 
 		bool ExtractArchive (string url, string file, string contentDir)
@@ -172,7 +173,7 @@ namespace Xamarin.Android.Tasks {
 					}
 				}
 				catch (Exception e) {
-					LogCodedError ("XA5209", "Unzipping failed. Please download {0} and extract it to the {1} directory.", url, contentDir);
+					LogCodedError ("XA5209", "Unzipping failed while attempting to extract {0} into {1}{2}", file, contentDir, Path.DirectorySeparatorChar);
 					LogCodedError ("XA5209", "Reason: {0}", e.Message);
 					Log.LogMessage (MessageImportance.Low, e.ToString ());
 					Directory.Delete (contentDir, true);
@@ -230,7 +231,7 @@ namespace Xamarin.Android.Tasks {
 						client.DownloadFileTaskAsync (url, file).Wait (Token);
 						LogMessage ("  Downloading Complete");
 					} catch (Exception e) {
-						LogCodedError ("XA5208", "Download failed. Please download {0} and put it to the {1} directory.", url, destinationDir);
+						LogCodedError ("XA5208", "Download failed. Please download {0} and copy it to {1}", url, file);
 						LogCodedError ("XA5208", "Reason: {0}", e.GetBaseException ().Message);
 						Log.LogMessage (MessageImportance.Low, e.ToString ());
 						if (File.Exists (file))
@@ -260,7 +261,10 @@ namespace Xamarin.Android.Tasks {
 					if (Log.HasLoggedErrors)
 						break;
 					if (!success) {
-						Log.LogWarning ("Expected File {0} does not exist. Trying to extract again.", Path.Combine (contentDir, embeddedArchive));
+						if (attempt < 2)
+							Log.LogWarning ("Expected file {0} does not exist. Trying to extract again.", Path.Combine (contentDir, embeddedArchive));
+						else
+							LogCodedError ("XA5217", "Expected file {0} does not exist after extracting {1}", Path.Combine (contentDir, embeddedArchive), file);
 						if (Directory.Exists (contentDir))
 							Directory.Delete (contentDir, recursive: true);
 					}
@@ -319,13 +323,13 @@ namespace Xamarin.Android.Tasks {
 					foreach (var ca in resolver.GetAssembly (assemblyItem.ItemSpec).CustomAttributes) {
 						switch (ca.AttributeType.FullName) {
 						case "Android.IncludeAndroidResourcesFromAttribute":
-							AddAttributeValue (androidResources, ca, "XA5206", "{0}. Android resource directory {1} doesn't exist.", true, fullPath);
+							AddAttributeValue (androidResources, ca, "XA5206", "{0}. (Details: Android resource directory {1} doesn't exist.)", true, fullPath);
 							break;
 						case "Java.Interop.JavaLibraryReferenceAttribute":
-							AddAttributeValue (javaLibraries, ca, "XA5207", "{0}. Java library file {1} doesn't exist.", false, fullPath);
+							AddAttributeValue (javaLibraries, ca, "XA5207", "{0}. (Details: Java library file {1} doesn't exist.)", false, fullPath);
 							break;
 						case "Android.NativeLibraryReferenceAttribute":
-							AddAttributeValue (nativeLibraries, ca, "XA5210", "{0}. Native library file {1} doesn't exist.", false, fullPath);
+							AddAttributeValue (nativeLibraries, ca, "XA5210", "{0}. (Details: Native library file {1} doesn't exist.)", false, fullPath);
 							break;
 						}
 					}
