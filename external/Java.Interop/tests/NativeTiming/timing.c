@@ -229,8 +229,10 @@ foo_get_native_jni_timings (JNIEnv *env, int count, jclass klass, jobject self, 
 		obj3 = (*env)->NewObject(env, Object_class, Object_init);
 
 	start = current_time_millis ();
-	for (i = 0; i < count; i++)
+	for (i = 0; i < count; i++) {
 		(*env)->CallStaticVoidMethod (env, klass, Timing_StaticVoidMethod);
+		(*env)->ExceptionClear (env);
+	}
 	end = current_time_millis ();
 
 	jniTimes [0] = end - start;
@@ -238,8 +240,10 @@ foo_get_native_jni_timings (JNIEnv *env, int count, jclass klass, jobject self, 
 			jniTimes [0], jniTimes [0] / (double) count);
 
 	start = current_time_millis ();
-	for (i = 0; i < count; i++)
+	for (i = 0; i < count; i++) {
 		(*env)->CallStaticIntMethod (env, klass, Timing_StaticIntMethod);
+		(*env)->ExceptionClear (env);
+	}
 	end = current_time_millis ();
 
 	jniTimes [1] = end - start;
@@ -247,8 +251,10 @@ foo_get_native_jni_timings (JNIEnv *env, int count, jclass klass, jobject self, 
 			jniTimes [1], jniTimes [1] / (double) count);
 
 	start = current_time_millis ();
-	for (i = 0; i < count; i++)
+	for (i = 0; i < count; i++) {
 		(*env)->CallStaticObjectMethod (env, klass, Timing_StaticObjectMethod);
+		(*env)->ExceptionClear (env);
+	}
 	end = current_time_millis ();
 
 	jniTimes [2] = end - start;
@@ -256,8 +262,10 @@ foo_get_native_jni_timings (JNIEnv *env, int count, jclass klass, jobject self, 
 			jniTimes [2], jniTimes [2] / (double) count);
 
 	start = current_time_millis ();
-	for (i = 0; i < count; i++)
+	for (i = 0; i < count; i++) {
 		(*env)->CallVoidMethod (env, self, Timing_VirtualVoidMethod);
+		(*env)->ExceptionClear (env);
+	}
 	end = current_time_millis ();
 
 	jniTimes [3] = end - start;
@@ -265,8 +273,10 @@ foo_get_native_jni_timings (JNIEnv *env, int count, jclass klass, jobject self, 
 			jniTimes [3], jniTimes [3] / (double) count);
 
 	start = current_time_millis ();
-	for (i = 0; i < count; i++)
+	for (i = 0; i < count; i++) {
 		(*env)->CallIntMethod (env, self, Timing_VirtualIntMethod);
+		(*env)->ExceptionClear (env);
+	}
 	end = current_time_millis ();
 
 	jniTimes [4] = end - start;
@@ -274,8 +284,10 @@ foo_get_native_jni_timings (JNIEnv *env, int count, jclass klass, jobject self, 
 			jniTimes [4], jniTimes [4] / (double) count);
 
 	start = current_time_millis ();
-	for (i = 0; i < count; i++)
+	for (i = 0; i < count; i++) {
 		(*env)->CallObjectMethod (env, self, Timing_VirtualObjectMethod);
+		(*env)->ExceptionClear (env);
+	}
 	end = current_time_millis ();
 
 	jniTimes [5] = end - start;
@@ -283,8 +295,10 @@ foo_get_native_jni_timings (JNIEnv *env, int count, jclass klass, jobject self, 
 			jniTimes [5], jniTimes [5] / (double) count);
 
 	start = current_time_millis ();
-	for (i = 0; i < count; i++)
+	for (i = 0; i < count; i++) {
 		(*env)->CallNonvirtualVoidMethod (env, self, klass, Timing_FinalVoidMethod);
+		(*env)->ExceptionClear (env);
+	}
 	end = current_time_millis ();
 
 	jniTimes [6] = end - start;
@@ -292,8 +306,10 @@ foo_get_native_jni_timings (JNIEnv *env, int count, jclass klass, jobject self, 
 			jniTimes [6], jniTimes [6] / (double) count);
 
 	start = current_time_millis ();
-	for (i = 0; i < count; i++)
+	for (i = 0; i < count; i++) {
 		(*env)->CallNonvirtualIntMethod (env, self, klass, Timing_FinalIntMethod);
+		(*env)->ExceptionClear (env);
+	}
 	end = current_time_millis ();
 
 	jniTimes [7] = end - start;
@@ -301,8 +317,10 @@ foo_get_native_jni_timings (JNIEnv *env, int count, jclass klass, jobject self, 
 			jniTimes [7], jniTimes [7] / (double) count);
 
 	start = current_time_millis ();
-	for (i = 0; i < count; i++)
+	for (i = 0; i < count; i++) {
 		(*env)->CallNonvirtualObjectMethod (env, self, klass, Timing_FinalObjectMethod);
+		(*env)->ExceptionClear (env);
+	}
 	end = current_time_millis ();
 
 	jniTimes [8] = end - start;
@@ -312,8 +330,10 @@ foo_get_native_jni_timings (JNIEnv *env, int count, jclass klass, jobject self, 
 
 
 	start = current_time_millis ();
-	for (i = 0; i < count; i++)
+	for (i = 0; i < count; i++) {
 		(*env)->CallStaticVoidMethod (env, klass, Timing_StaticVoidMethod1Args, obj1);
+		(*env)->ExceptionClear (env);
+	}
 	end = current_time_millis ();
 
 	jniTimes [9] = end - start;
@@ -321,8 +341,10 @@ foo_get_native_jni_timings (JNIEnv *env, int count, jclass klass, jobject self, 
 			jniTimes [9], jniTimes [9] / (double) count);
 
 	start = current_time_millis ();
-	for (i = 0; i < count; i++)
+	for (i = 0; i < count; i++) {
 		(*env)->CallStaticVoidMethod (env, klass, Timing_StaticVoidMethod2Args, obj1, obj2);
+		(*env)->ExceptionClear (env);
+	}
 	end = current_time_millis ();
 
 	jniTimes [10] = end - start;
@@ -330,8 +352,10 @@ foo_get_native_jni_timings (JNIEnv *env, int count, jclass klass, jobject self, 
 			jniTimes [10], jniTimes [10] / (double) count);
 
 	start = current_time_millis ();
-	for (i = 0; i < count; i++)
+	for (i = 0; i < count; i++) {
 		(*env)->CallStaticVoidMethod (env, klass, Timing_StaticVoidMethod3Args, obj1, obj2, obj3);
+		(*env)->ExceptionClear (env);
+	}
 	end = current_time_millis ();
 
 	jniTimes [11] = end - start;
@@ -341,8 +365,10 @@ foo_get_native_jni_timings (JNIEnv *env, int count, jclass klass, jobject self, 
 
 
 	start = current_time_millis ();
-	for (i = 0; i < count; i++)
+	for (i = 0; i < count; i++) {
 		(*env)->CallStaticVoidMethod (env, klass, Timing_StaticVoidMethod1IArgs, 42);
+		(*env)->ExceptionClear (env);
+	}
 	end = current_time_millis ();
 
 	jniTimes [12] = end - start;
@@ -350,8 +376,10 @@ foo_get_native_jni_timings (JNIEnv *env, int count, jclass klass, jobject self, 
 			jniTimes [12], jniTimes [12] / (double) count);
 
 	start = current_time_millis ();
-	for (i = 0; i < count; i++)
+	for (i = 0; i < count; i++) {
 		(*env)->CallStaticVoidMethod (env, klass, Timing_StaticVoidMethod2IArgs, 42, 42);
+		(*env)->ExceptionClear (env);
+	}
 	end = current_time_millis ();
 
 	jniTimes [13] = end - start;
@@ -359,8 +387,10 @@ foo_get_native_jni_timings (JNIEnv *env, int count, jclass klass, jobject self, 
 			jniTimes [13], jniTimes [13] / (double) count);
 
 	start = current_time_millis ();
-	for (i = 0; i < count; i++)
+	for (i = 0; i < count; i++) {
 		(*env)->CallStaticVoidMethod (env, klass, Timing_StaticVoidMethod3IArgs, 42, 42, 42);
+		(*env)->ExceptionClear (env);
+	}
 	end = current_time_millis ();
 
 	jniTimes [14] = end - start;
