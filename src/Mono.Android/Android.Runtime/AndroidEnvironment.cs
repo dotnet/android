@@ -22,6 +22,7 @@ namespace Android.Runtime {
 		public const string AndroidLogAppName = "Mono.Android";
 
 		static IX509TrustManager sslTrustManager;
+		static KeyStore certStore;
 		static object lock_ = new object ();
 
 		static IntPtr java_lang_Object_toString;
@@ -43,6 +44,22 @@ namespace Android.Runtime {
 					}
 					if (sslTrustManager != null)
 						break;
+				}
+			}
+		}
+
+		static void SetupCertStore ()
+		{
+			if (certStore != null)
+				return;
+
+			lock (lock_) {
+				try {
+					certStore = KeyStore.GetInstance ("AndroidCAStore");
+					certStore.Load (null);
+				} catch {
+					// ignore
+					certStore = null;
 				}
 			}
 		}
@@ -150,6 +167,24 @@ namespace Android.Runtime {
 			catch (Exception e) {
 				return false;
 			}
+		}
+
+		// This is invoked by
+		// System.dll!!System.AndroidPlatform.CertStoreLookup()
+		// DO NOT REMOVE
+		static byte[] CertStoreLookup (long hash, bool userStore)
+		{
+			SetupCertStore ();
+
+			if (certStore == null)
+				return null;
+
+			var alias = string.Format ("{0}:{1:x8}.0", userStore ? "user" : "system", hash);
+			var certificate = certStore.GetCertificate (alias);
+			if (certificate == null)
+				return null;
+
+			return certificate.GetEncoded ();
 		}
 
 		static Java.Security.Cert.CertificateFactory GetX509CertificateFactory ()
