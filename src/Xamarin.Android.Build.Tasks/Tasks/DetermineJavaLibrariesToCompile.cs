@@ -65,7 +65,8 @@ namespace Xamarin.Android.Tasks
 			jars          = jars.Where (j => distinct.Contains (j)).ToList ();
 
 			JavaLibrariesToCompile = jars.Where (j => !IsExcluded (j.ItemSpec)).ToArray ();
-			ReferenceJavaLibraries = jars.Except (JavaLibrariesToCompile).ToArray ();
+			ReferenceJavaLibraries = (ExternalJavaLibraries ?? Enumerable.Empty<ITaskItem> ())
+				.Concat (jars.Except (JavaLibrariesToCompile)).ToArray ();
 
 			Log.LogDebugTaskItems ("  JavaLibrariesToCompile:", JavaLibrariesToCompile);
 			Log.LogDebugTaskItems ("  ReferenceJavaLibraries:", ReferenceJavaLibraries);
