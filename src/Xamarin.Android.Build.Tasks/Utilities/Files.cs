@@ -188,9 +188,9 @@ namespace Xamarin.Android.Tools {
 			return hashes;
 		}
 
-		public static ZipArchive ReadZipFile (string filename)
+		public static ZipArchive ReadZipFile (string filename, bool strictConsistencyChecks = false)
 		{
-			return ZipArchive.Open (filename, FileMode.Open);
+			return ZipArchive.Open (filename, FileMode.Open, strictConsistencyChecks: strictConsistencyChecks);
 		}
 
 		public static void ExtractAll(ZipArchive zip, string destination, Action<int, int> progressCallback = null)

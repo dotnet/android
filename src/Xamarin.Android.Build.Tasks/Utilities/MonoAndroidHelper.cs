@@ -324,6 +324,17 @@ namespace Xamarin.Android.Tasks
 			return Files.ReadZipFile (filename);
 		}
 
+		public static bool IsValidZip (string filename)
+		{
+			try {
+				using (var zip = Files.ReadZipFile (filename, strictConsistencyChecks: true)) {
+				}
+			} catch (ZipIOException) {
+				return false;
+			}
+			return true;
+		}
+
 		public static string HashFile (string filename)
 		{
 			return Files.HashFile (filename);
