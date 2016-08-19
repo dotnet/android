@@ -190,7 +190,7 @@ namespace Xamarin.Android.Net
 				Method = request.Method
 			};
 			while (true) {
-				URL java_url = new URL (redirectState.NewUrl.ToString ());
+				URL java_url = new URL (Uri.EscapeUriString (redirectState.NewUrl.ToString ()));
 				URLConnection java_connection = java_url.OpenConnection ();
 				HttpURLConnection httpConnection = await SetupRequestInternal (request, java_connection);
 				HttpResponseMessage response = await ProcessRequest (request, java_url, httpConnection, cancellationToken, redirectState);
