@@ -267,11 +267,8 @@ namespace Xamarin.Android.Net
 					// HttpClientHandler throws an exception in this instance, but I think it's not a good
 					// idea. We'll return the response message with all the information required by the
 					// application to fill in the blanks and provide the requested credentials instead.
-					//
-					// We should return the body of the response too but, alas, the Java client will throw
-					// a, wait for it, FileNotFound exception if we attempt to access the input stream. So
-					// no body, just a dummy. Java FTW!
-					ret.Content = new StringContent ("Unauthorized", Encoding.ASCII);
+
+					ret.Content = GetErrorContent(httpConnection,  new StringContent ("Unauthorized", Encoding.ASCII));
 					CopyHeaders (httpConnection, ret);
 
 					if (ret.Headers.WwwAuthenticate != null) {
@@ -285,28 +282,18 @@ namespace Xamarin.Android.Net
 					ret.RequestedAuthentication = RequestedAuthentication;
 					return ret;
 			}
-
+			
 			if (!IsErrorStatusCode (statusCode)) {
 				if (Logger.LogNet)
 					Logger.Log (LogLevel.Info, LOG_APP, $"Reading...");
-				Stream inputStream = new BufferedStream (httpConnection.InputStream);
-				if (decompress_here) {
-					string[] encodings = httpConnection.ContentEncoding?.Split (',');
-					if (encodings != null) {
-						if (encodings.Contains (GZIP_ENCODING, StringComparer.OrdinalIgnoreCase))
-							inputStream = new GZipStream (inputStream, CompressionMode.Decompress);
-						else if (encodings.Contains (DEFLATE_ENCODING, StringComparer.OrdinalIgnoreCase))
-							inputStream = new DeflateStream (inputStream, CompressionMode.Decompress);
-					}
-				}
-				ret.Content = new StreamContent (inputStream);
-			} else {
-				if (Logger.LogNet)
-					Logger.Log (LogLevel.Info, LOG_APP, $"Status code is {statusCode}, returning empty content");
-				// For 400 >= response code <= 599 the Java client throws the FileNotFound exeption when attempting to read from the connection
-				// Client tests require we return no content here
-				ret.Content = new StringContent (String.Empty, Encoding.ASCII);
+				ret.Content = GetContent(httpConnection, httpConnection.InputStream);
 			}
+			else {
+				if (Logger.LogNet)
+					Logger.Log (LogLevel.Info, LOG_APP, $"Status code is {statusCode}, reading...");
+				ret.Content = GetErrorContent(httpConnection, new StringContent (String.Empty, Encoding.ASCII));
+			}
+			
 			CopyHeaders (httpConnection, ret);
 
 			IEnumerable <string> cookieHeaderValue;
@@ -333,6 +320,32 @@ namespace Xamarin.Android.Net
 				Logger.Log (LogLevel.Info, LOG_APP, $"Returning");
 			return ret;
 		}
+		
+		private HttpContent GetErrorContent (HttpURLConnection httpConnection, HttpContent fallbackContent) 
+		{
+			var contentStream = httpConnection.ErrorStream;
+
+			if (contentStream != null) {
+				return GetContent(httpConnection, contentStream);
+			}
+
+			return fallbackContent;
+		}
+
+	    private HttpContent GetContent (URLConnection httpConnection, Stream contentStream)
+	    {
+            Stream inputStream = new BufferedStream(contentStream);
+            if (decompress_here) {
+                string[] encodings = httpConnection.ContentEncoding?.Split(',');
+                if (encodings != null) {
+                    if (encodings.Contains(GZIP_ENCODING, StringComparer.OrdinalIgnoreCase))
+                        inputStream = new GZipStream(inputStream, CompressionMode.Decompress);
+                    else if (encodings.Contains(DEFLATE_ENCODING, StringComparer.OrdinalIgnoreCase))
+                        inputStream = new DeflateStream(inputStream, CompressionMode.Decompress);
+                }
+            }
+            return new StreamContent(inputStream);
+        }
 
 		bool HandleRedirect (HttpStatusCode redirectCode, HttpURLConnection httpConnection, RequestRedirectionState redirectState, out bool disposeRet)
 		{
