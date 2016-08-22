@@ -402,6 +402,11 @@
 		-->
 		<type fullname="Mono.Runtime" />
 
+		<!-- marshal.c (mono_marshal_get_native_wrapper) -->
+		<type fullname="Mono.RuntimeStructs/HandleStackMark" />
+		<!-- marshal.c (mono_marshal_get_native_wrapper) -->
+		<type fullname="Mono.RuntimeStructs/MonoError" />
+
 		<type fullname="Mono.Interop.ComInteropProxy" feature="com" />
 		<type fullname="Mono.Interop.IDispatch" feature="com" />
 		<type fullname="Mono.Interop.IUnknown" feature="com" />
