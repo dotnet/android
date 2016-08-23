@@ -60,6 +60,8 @@ namespace Xamarin.Android.Tasks
 
 		public string AndroidSequencePointsMode { get; set; }
 
+		public string AotAdditionalArguments { get; set; }
+
 		public ITaskItem[] AdditionalNativeLibraryReferences { get; set; }
 
 		[Output]
@@ -317,7 +319,7 @@ namespace Xamarin.Android.Tasks
 						Path.GetFileName (assembly.ItemSpec)));
 
 					string aotOptions = string.Format (
-						"{0}--aot={8}{1}outfile={2},asmwriter,mtriple={3},tool-prefix={4},ld-flags={5},llvm-path={6},temp-path={7}",
+						"{0}--aot={9}{8}{1}outfile={2},asmwriter,mtriple={3},tool-prefix={4},ld-flags={5},llvm-path={6},temp-path={7}",
 						EnableLLVM ? "--llvm " : string.Empty,
 						AotMode != AotMode.Normal ? string.Format("{0},", AotMode.ToString().ToLowerInvariant()) : string.Empty,
 						QuoteFileName (outputFile),
@@ -326,7 +328,8 @@ namespace Xamarin.Android.Tasks
 						ldFlags,
 						QuoteFileName (SdkBinDirectory),
 						QuoteFileName (outdir),
-						sequencePointsMode == SequencePointsMode.Offline ? string.Format("msym-dir={0},", QuoteFileName(outdir)) : string.Empty
+						sequencePointsMode == SequencePointsMode.Offline ? string.Format("msym-dir={0},", QuoteFileName(outdir)) : string.Empty,
+						AotAdditionalArguments != string.Empty ? string.Format ("{0},", AotAdditionalArguments) : string.Empty
 					);
 
 					// Due to a Monodroid MSBuild bug we can end up with paths to assemblies that are not in the intermediate
