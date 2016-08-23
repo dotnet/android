@@ -2283,7 +2283,7 @@ because xbuild doesn't support framework reference assemblies.
 
   <Copy Condition=" '$(AndroidManagedSymbols)' == 'True' And Exists('%(_SymbolicateArchiveAssemblies.Identity)') "
     SourceFiles="@(_SymbolicateArchiveAssemblies)"
-    DestinationFolder="$(OutDir)$(_AndroidPackage).msym"
+    DestinationFolder="$(OutDir)$(_AndroidPackage).apk.msym"
     SkipUnchangedFiles="true"
   />
 
@@ -2293,7 +2293,7 @@ because xbuild doesn't support framework reference assemblies.
 
   <Copy Condition=" '$(AndroidManagedSymbols)' == 'True' And '%(_SymbolicateFiles.Filename)' != '' "
     SourceFiles="$(_AndroidAotBinDirectory)\%(_SymbolicateFiles.RecursiveDir)%(_SymbolicateFiles.Filename)%(_SymbolicateFiles.Extension)"
-    DestinationFolder="$(OutDir)$(_AndroidPackage).msym\%(_SymbolicateFiles.RecursiveDir)"
+    DestinationFolder="$(OutDir)$(_AndroidPackage).apk.msym\%(_SymbolicateFiles.RecursiveDir)"
     SkipUnchangedFiles="true"
   />
 
@@ -2301,19 +2301,19 @@ because xbuild doesn't support framework reference assemblies.
      Condition=" '$(_XamarinBuildId)' != '' And '$(AndroidManagedSymbols)' == 'True' "
      BuildId="$(_XamarinBuildId)"
      PackageName="$(_AndroidPackage)"
-     OutputDirectory="$(OutDir)$(_AndroidPackage).msym"
+     OutputDirectory="$(OutDir)$(_AndroidPackage).apk.msym"
    />
 
   <WriteLinesToFile
     Condition=" '$(AndroidManagedSymbols)' == 'True' "
     File="$(IntermediateOutputPath)$(CleanFile)"
-    Lines="@(_SymbolicateFiles->'$(OutDir)$(_AndroidPackage).msym\%(Filename)%(Extension)')"
+    Lines="@(_SymbolicateFiles->'$(OutDir)$(_AndroidPackage).apk.msym\%(Filename)%(Extension)')"
     Overwrite="false"/>
 
   <WriteLinesToFile
     Condition=" '$(AndroidManagedSymbols)' == 'True' And '%(_SymbolicateFiles.Filename)' != '' "
     File="$(IntermediateOutputPath)$(CleanFile)"
-    Lines="$(OutDir)$(_AndroidPackage).msym\%(_SymbolicateFiles.RecursiveDir)%(_SymbolicateFiles.Filename)%(_SymbolicateFiles.Extension)"
+    Lines="$(OutDir)$(_AndroidPackage).apk.msym\%(_SymbolicateFiles.RecursiveDir)%(_SymbolicateFiles.Filename)%(_SymbolicateFiles.Extension)"
     Overwrite="false"/>
 
   <Delete Files="$(_UploadFlagFile)" Condition="Exists ('$(_UploadFlagFile)')" />
@@ -2462,7 +2462,7 @@ because xbuild doesn't support framework reference assemblies.
 	<GetAndroidPackageName ManifestFile="$(ProjectDir)$(AndroidManifest)" AssemblyName="$(AssemblyName)">
 		<Output TaskParameter="PackageName" PropertyName="_AndroidPackage" />
 	</GetAndroidPackageName>
-	<RemoveDirFixed Directories="$(OutDir)$(_AndroidPackage).msym" Condition=" '$(_AndroidPackage)' != '' And Exists ('$(OutDir)$(_AndroidPackage).msym')" />
+	<RemoveDirFixed Directories="$(OutDir)$(_AndroidPackage).apk.msym" Condition=" '$(_AndroidPackage)' != '' And Exists ('$(OutDir)$(_AndroidPackage).apk.msym')" />
 </Target>
 
 <Target Name="_CleanGeneratedDeploymentFiles">
