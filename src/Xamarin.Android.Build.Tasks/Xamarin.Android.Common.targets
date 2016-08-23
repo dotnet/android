@@ -2173,6 +2173,7 @@ because xbuild doesn't support framework reference assemblies.
 	SdkBinDirectory="$(MonoAndroidBinDirectory)"
 	SupportedAbis="$(_BuildTargetAbis)"
 	AndroidSequencePointsMode="$(_SequencePointsMode)"
+	AotAdditionalArguments="$(AndroidAotAdditionalArguments)"
 	ResolvedAssemblies="@(_ResolvedAssemblies)"
 	AotOutputDirectory="$(_AndroidAotBinDirectory)"
 	IntermediateAssemblyDir="$(MonoAndroidIntermediateAssemblyDir)"
