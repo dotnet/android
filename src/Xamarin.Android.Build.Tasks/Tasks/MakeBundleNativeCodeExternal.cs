@@ -111,7 +111,6 @@ namespace Xamarin.Android.Tasks
 				var clb = new CommandLineBuilder ();
 				clb.AppendSwitch ("--dos2unix=false");
 				clb.AppendSwitch ("--nomain");
-				clb.AppendSwitch ("--i18n none");
 				clb.AppendSwitch ("--style");
 				clb.AppendSwitch ("linux");
 				clb.AppendSwitch ("-c");
