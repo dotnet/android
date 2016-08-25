@@ -12,11 +12,14 @@ namespace MonoDroid.Generation {
 		ISymbol sym;
 		string java_type;
 		string managed_type;
+		string raw_type;
+		bool is_enumified;
 
-		public ReturnValue (Method owner, string java_type, string managed_type)
+		public ReturnValue (Method owner, string java_type, string managed_type, bool isEnumified)
 		{
-			this.java_type = java_type;
+			this.raw_type = this.java_type = java_type;
 			this.managed_type = managed_type;
+			this.is_enumified = isEnumified;
 		}
 
 		public string CallMethodPrefix {
@@ -44,6 +47,7 @@ namespace MonoDroid.Generation {
 		public void SetGeneratedEnumType (string enumType)
 		{
 			sym = new GeneratedEnumSymbol (enumType);
+			is_enumified = true;
 			managed_type = null;
 			java_type = sym.JavaName;
 		}
@@ -59,6 +63,10 @@ namespace MonoDroid.Generation {
 
 		public bool IsArray {
 			get { return sym.IsArray; }
+		}
+
+		public bool IsEnumified {
+			get { return is_enumified; }
 		}
 
 		public bool IsGeneric {
@@ -78,7 +86,7 @@ namespace MonoDroid.Generation {
 		}
 
 		public string RawJavaType {
-			get { return java_type; }
+			get { return raw_type; }
 		}
 
 		public string FromNative (CodeGenerationOptions opt, string var_name, bool owned)

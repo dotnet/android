@@ -37,7 +37,7 @@ namespace MonoDroid.Generation {
 			foreach (var p in support.GetParameters (regatt))
 				Parameters.Add (p);
 			
-			if (regatt != null && !IsReturnEnumified) {
+			if (regatt != null) {
 				var rt = support.GetJniReturnType (regatt);
 				if (rt != null)
 					java_return = rt.Type;
@@ -271,7 +271,7 @@ namespace MonoDroid.Generation {
 		
 		internal void FillReturnType ()
 		{
-			retval = new ReturnValue (this, Return, ManagedReturn);
+			retval = new ReturnValue (this, Return, ManagedReturn, IsReturnEnumified);
 		}
 
 		public bool GenerateDispatchingSetter { get; protected set; }
