@@ -2283,11 +2283,12 @@ because xbuild doesn't support framework reference assemblies.
   />
 
   <ItemGroup>
-    <_SymbolicateFiles Include="$(_AndroidAotBinDirectory)\**\*.msym" />
+    <_BuiltAbis Include="$(_BuildTargetAbis)" />
+    <_SymbolicateFiles Include="$(_AndroidAotBinDirectory)\%(_BuiltAbis.Identity)\**\*.msym" />
   </ItemGroup>
 
   <Copy Condition=" '$(AndroidManagedSymbols)' == 'True' And '%(_SymbolicateFiles.Filename)' != '' "
-    SourceFiles="$(_AndroidAotBinDirectory)\%(_SymbolicateFiles.RecursiveDir)%(_SymbolicateFiles.Filename)%(_SymbolicateFiles.Extension)"
+    SourceFiles="%(_SymbolicateFiles.Identity)"
     DestinationFolder="$(OutDir)$(_AndroidPackage).apk.msym\%(_SymbolicateFiles.RecursiveDir)"
     SkipUnchangedFiles="true"
   />
