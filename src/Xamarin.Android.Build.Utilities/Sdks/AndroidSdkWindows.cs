@@ -15,17 +15,13 @@ namespace Xamarin.Android.Build.Utilities
 		const string XAMARIN_ANDROID_INSTALLER_PATH = @"SOFTWARE\Xamarin\MonoAndroid";
 		const string XAMARIN_ANDROID_INSTALLER_KEY = "PrivateAndroidSdkPath";
 
-		public override string Adb { get { return "adb.exe"; } }
-		public override string Android { get { return "android.bat"; } }
-		public override string Emulator { get { return "emulator.exe"; } }
-		public override string Monitor { get { return "monitor.bat"; } }
-		public override string ZipAlign { get { return "zipalign.exe"; } }
-		public override string JarSigner { get { return "jarsigner.exe"; } }
-		public override string KeyTool { get { return "keytool.exe"; } }
-		public override string NdkStack { get { return "ndk-stack.exe"; } }
+		public override string ZipAlign { get; protected set; } = "zipalign.exe";
+		public override string JarSigner { get; protected set; } = "jarsigner.exe";
+		public override string KeyTool { get; protected set; } = "keytool.exe";
+
 		public override string NdkHostPlatform32Bit { get { return "windows"; } }
 		public override string NdkHostPlatform64Bit { get { return "windows-x86_64"; } }
-		public override string Javac { get { return "javac.exe"; } }
+		public override string Javac { get; protected set; } = "javac.exe";
 
 		public override string PreferedAndroidSdkPath {
 			get {
