@@ -1310,8 +1310,8 @@ typedef struct {
 
 // These will be loaded as needed and persist between GCs
 // FIXME: This code assumes it is totally safe to hold onto these GREFs forever. Can mono.android.jar ever be unloaded?
-static jobject   jni_arraylist, jni_gcuserpeer;
-static jmethodID jni_arraylist_constructor, jni_arraylist_get, jni_arraylist_add, jni_gcuserpeer_constructor;
+static jobject   ArrayList_class, GCUserPeer_class;
+static jmethodID ArrayList_ctor, ArrayList_get, ArrayList_add, GCUserPeer_ctor;
 
 // Given a target, extract the bridge_info (if a mono object) and handle. Return success.
 static mono_bool
@@ -1404,11 +1404,15 @@ target_from_jobject (jobject jobj)
 	return result;
 }
 
-// See note in gc_prepare_for_java_collection
+/* During the xref phase of gc_prepare_for_java_collection, we need to be able to map bridgeless
+ * SCCs to their index in temporary_peers. Because for all bridgeless SCCs the num_objs field of
+ * MonoGCBridgeSCC is known 0, we can temporarily stash this index as a negative value in the SCC
+ * object. This does mean we have to erase our vandalism at the end of the function.
+ */
 static int
 scc_get_stashed_index (MonoGCBridgeSCC *scc)
 {
-	assert (scc->num_objs < 0);
+	assert ( (scc->num_objs < 0) || !"Attempted to load stashed index from an object which does not contain one." );
 	return -scc->num_objs - 1;
 }
 
@@ -1426,7 +1430,7 @@ target_from_scc (MonoGCBridgeSCC **sccs, int idx, JNIEnv *env, jobject temporary
 	if (scc->num_objs > 0)
 		return target_from_mono_object (scc->objs [0]);
 
-	jobject jobj = (*env)->CallObjectMethod (env, temporary_peers, jni_arraylist_get, scc_get_stashed_index (scc));
+	jobject jobj = (*env)->CallObjectMethod (env, temporary_peers, ArrayList_get, scc_get_stashed_index (scc));
 	return target_from_jobject (jobj);
 }
 
@@ -1452,11 +1456,19 @@ gc_prepare_for_java_collection (JNIEnv *env, int num_sccs, MonoGCBridgeSCC **scc
 	jobject temporary_peers = NULL;     // This is an ArrayList
 	int temporary_peer_count = 0;       // Number of items in temporary_peers
 
-	/* Basic setup before looking at xrefs */
+	/* Before looking at xrefs, scan the SCCs. During collection, an SCC has to behave like a
+	 * single object. If the number of objects in the SCC is anything other than 1, the SCC
+	 * must be doctored to mimic that one-object nature.
+	 */
 	for (int i = 0; i < num_sccs; i++) {
 		MonoGCBridgeSCC *scc = sccs [i];
 
-		/* Make sure all objects within a single SCC directly or indirectly reference each other */
+		/* num_objs < 0 case: This is a violation of the bridge API invariants. */
+		assert ( (scc->num_objs >= 0) || !"Bridge processor submitted an SCC with a negative number of objects." );
+
+		/* num_objs > 1 case: The SCC contains many objects which must be collected as one.
+		 * Solution: Make all objects within the SCC directly or indirectly reference each other
+		 */
 		if (scc->num_objs > 1) {
 			MonoGCBridgeSCC *first = scc->objs [0];
 			MonoGCBridgeSCC *prev = first;
@@ -1472,33 +1484,36 @@ gc_prepare_for_java_collection (JNIEnv *env, int num_sccs, MonoGCBridgeSCC **scc
 			/* ref the first from the final */
 			add_reference_mono_object (env, prev, first);
 
-		/* Some SCCs have no IGCUserPeers associated with them, so we must create a temporary one */
-		} else if (scc->num_objs <= 0) {
-			/* Look up JNI metadata we'll need and create a temporary_peers ArrayList, which
-			 * will protect the temporary objects from collection while we're building the graph.
+		/* num_objs == 0 case: The SCC contains *no* objects (or rather contains only C# objects).
+		 * Solution: Create a temporary Java object to stand in for the SCC.
+		 */
+		} else if (scc->num_objs == 0) {
+			/* Once per process boot, look up JNI metadata we need to make temporary objects */
+			if (!ArrayList_class) {
+				ArrayList_class = lref_to_gref (env, (*env)->FindClass (env, "java/util/ArrayList"));
+				ArrayList_ctor = (*env)->GetMethodID (env, ArrayList_class, "<init>", "()V");
+				ArrayList_add = (*env)->GetMethodID (env, ArrayList_class, "add", "(Ljava/lang/Object;)Z");
+				ArrayList_get = (*env)->GetMethodID (env, ArrayList_class, "get", "(I)Ljava/lang/Object;");
+
+				GCUserPeer_class = lref_to_gref (env, (*env)->FindClass (env, "mono/android/GCUserPeer"));
+				GCUserPeer_ctor = (*env)->GetMethodID (env, GCUserPeer_class, "<init>", "()V");
+
+				assert ( (ArrayList_class && ArrayList_ctor && ArrayList_get && GCUserPeer_class && GCUserPeer_ctor) || !"Failed to load classes required for JNI" );
+			}
+
+			/* Once per gc_prepare_for_java_collection call, create a list to hold the temporary
+			 * objects we create. This will protect them from collection while we build the list.
 			 */
-			if (!jni_arraylist) {
-				jni_arraylist = lref_to_gref (env, (*env)->FindClass (env, "java/util/ArrayList"));
-				jni_arraylist_constructor = (*env)->GetMethodID (env, jni_arraylist, "<init>", "()V");
-				jni_arraylist_add = (*env)->GetMethodID (env, jni_arraylist, "add", "(Ljava/lang/Object;)Z");
-				jni_arraylist_get = (*env)->GetMethodID (env, jni_arraylist, "get", "(I)Ljava/lang/Object;");
-
-				jni_gcuserpeer = lref_to_gref (env, (*env)->FindClass (env, "mono/android/GCUserPeer"));
-				jni_gcuserpeer_constructor = (*env)->GetMethodID (env, jni_gcuserpeer, "<init>", "()V");
-
-				assert (jni_arraylist && jni_arraylist_constructor && jni_arraylist_get && jni_gcuserpeer && jni_gcuserpeer_constructor);
-			}
 			if (!temporary_peers) {
-				temporary_peers = (*env)->NewObject (env, jni_arraylist, jni_arraylist_constructor);
+				temporary_peers = (*env)->NewObject (env, ArrayList_class, ArrayList_ctor);
 			}
 
-			jobject peer = (*env)->NewObject (env, jni_gcuserpeer, jni_gcuserpeer_constructor);
-			(*env)->CallBooleanMethod (env, temporary_peers, jni_arraylist_add, peer);
+			/* Create this SCC's temporary object */
+			jobject peer = (*env)->NewObject (env, GCUserPeer_class, GCUserPeer_ctor);
+			(*env)->CallBooleanMethod (env, temporary_peers, ArrayList_add, peer);
 			(*env)->DeleteLocalRef (env, peer);
 
-			// During the xref phase, we need to be able to map bridgeless SCCs to their position
-			// in temporary_peers. Because for all bridgeless SCCs the num_objs field is known 0,
-			// we can temporarily stash this index as a negative value in the SCC.
+			/* See note on scc_get_stashed_index */
 			scc_set_stashed_index (scc, temporary_peer_count);
 			temporary_peer_count++;
 		}
@@ -1518,10 +1533,16 @@ gc_prepare_for_java_collection (JNIEnv *env, int num_sccs, MonoGCBridgeSCC **scc
 	/* With xrefs processed, the temporary peer list can be released */
 	(*env)->DeleteLocalRef (env, temporary_peers);
 
-	// switch to weak refs
-	for (int i = 0; i < num_sccs; i++)
-		for (int j = 0; j < sccs [i]->num_objs; j++)
+	/* Post-xref cleanup on SCCs: Undo memoization, switch to weak refs */
+	for (int i = 0; i < num_sccs; i++) {
+		/* See note on scc_get_stashed_index */
+		if (sccs [i]->num_objs < 0)
+			sccs [i]->num_objs = 0;
+
+		for (int j = 0; j < sccs [i]->num_objs; j++) {
 			take_weak_global_ref (env, sccs [i]->objs [j]);
+		}
+	}
 }
 
 static void
@@ -1546,10 +1567,6 @@ gc_cleanup_after_java_collection (JNIEnv *env, int num_sccs, MonoGCBridgeSCC **s
 	/* clear the cross references on any remaining items */
 	for (i = 0; i < num_sccs; i++) {
 		sccs [i]->is_alive = 0;
-
-		/* Clear out "stashed" values from gc_prepare_for_java_collection */
-		if (sccs [i]->num_objs < 0)
-			sccs [i]->num_objs = 0;
 
 		for (j = 0; j < sccs [i]->num_objs; j++) {
 			MonoJavaGCBridgeInfo    *bridge_info;
