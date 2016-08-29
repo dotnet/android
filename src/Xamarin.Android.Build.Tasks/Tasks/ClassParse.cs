@@ -40,11 +40,11 @@ namespace Xamarin.Android.Tasks
 		{
 			Log.LogDebugMessage ("ClassParse Task");
 			Log.LogDebugMessage ("  OutputFile: {0}", OutputFile);
-			Log.LogDebugMessage ("  SourceJars: {0}", SourceJars);
-			Log.LogDebugMessage ("  JavaDocsPaths: {0}", JavaDocPaths);
-			Log.LogDebugMessage ("  Java7DocsPaths: {0}", Java7DocPaths);
-			Log.LogDebugMessage ("  Java8DocsPaths: {0}", Java8DocPaths);
-			Log.LogDebugMessage ("  DroidDocsPaths: {0}", DroidDocPaths);
+			Log.LogTaskItems ("  SourceJars: ", SourceJars);
+			Log.LogTaskItems ("  JavaDocsPaths: ", JavaDocPaths);
+			Log.LogTaskItems ("  Java7DocsPaths: ", Java7DocPaths);
+			Log.LogTaskItems ("  Java8DocsPaths: ", Java8DocPaths);
+			Log.LogTaskItems ("  DroidDocsPaths: ", DroidDocPaths);
 
 			using (var output = new StreamWriter (OutputFile, append: false, 
 						encoding: new UTF8Encoding (encoderShouldEmitUTF8Identifier: false))) {
