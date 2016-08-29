@@ -1278,92 +1278,271 @@ gc_is_bridge_object (MonoObject *object)
 	return 1;
 }
 
+// Add a reference from an IGCUserPeer jobject to another jobject
 static mono_bool
-add_reference (JNIEnv *env, MonoObject *obj, MonoJavaGCBridgeInfo *bridge_info, MonoObject *reffed_obj)
+add_reference_jobject (JNIEnv *env, jobject handle, jobject reffed_handle)
 {
 	jclass java_class;
 	jmethodID add_method_id;
-	void *handle, *reffed_handle;
-#if DEBUG
-	MonoClass *klass;
-	klass = mono.mono_object_get_class (obj);
-#endif
 
-	mono.mono_field_get_value (obj, bridge_info->handle, &handle);
 	java_class = (*env)->GetObjectClass (env, handle);
 	add_method_id = (*env)->GetMethodID (env, java_class, "monodroidAddReference", "(Ljava/lang/Object;)V");
 	if (add_method_id) {
-		mono.mono_field_get_value (reffed_obj, bridge_info->handle, &reffed_handle);
 		(*env)->CallVoidMethod (env, handle, add_method_id, reffed_handle);
 		(*env)->DeleteLocalRef (env, java_class);
-#if DEBUG
-		if (gc_spew_enabled)
-			log_warn (LOG_GC, "added reference for object of class %s.%s to object of class %s.%s",
-					mono.mono_class_get_namespace (klass),
-					mono.mono_class_get_name (klass),
-					mono.mono_class_get_namespace (mono.mono_object_get_class (reffed_obj)),
-					mono.mono_class_get_name (mono.mono_object_get_class (reffed_obj)));
-#endif
+
 		return 1;
 	}
 
 	(*env)->ExceptionClear (env);
-#if DEBUG
-	if (gc_spew_enabled)
-		log_error (LOG_GC, "Missing monodroidAddReference method for object of class %s.%s",
-				mono.mono_class_get_namespace (klass),
-				mono.mono_class_get_name (klass));
-#endif
 	(*env)->DeleteLocalRef (env, java_class);
 	return 0;
+}
+
+// add_reference can work with objects which are either MonoObjects with java peers, or raw jobjects
+typedef struct {
+	mono_bool is_mono_object;
+	union {
+		MonoObject *obj;
+		jobject jobj;
+	};
+} AddReferenceTarget;
+
+// These will be loaded as needed and persist between GCs
+// FIXME: This code assumes it is totally safe to hold onto these GREFs forever. Can mono.android.jar ever be unloaded?
+static jobject   ArrayList_class, GCUserPeer_class;
+static jmethodID ArrayList_ctor, ArrayList_get, ArrayList_add, GCUserPeer_ctor;
+
+// Given a target, extract the bridge_info (if a mono object) and handle. Return success.
+static mono_bool
+load_reference_target (AddReferenceTarget target, MonoJavaGCBridgeInfo** bridge_info, jobject *handle)
+{
+	if (target.is_mono_object) {
+		*bridge_info = get_gc_bridge_info_for_object (target.obj);
+		if (!*bridge_info)
+			return FALSE;
+		mono.mono_field_get_value (target.obj, (*bridge_info)->handle, handle);
+	} else {
+		*handle = target.jobj;
+	}
+	return TRUE;
+}
+
+#if DEBUG
+// Allocate and return a string describing a target
+static char *
+describe_target (AddReferenceTarget target)
+{
+	if (target.is_mono_object) {
+		MonoClass *klass = mono.mono_object_get_class (target.obj);
+		return monodroid_strdup_printf ("object of class %s.%s",
+			mono.mono_class_get_namespace (klass),
+			mono.mono_class_get_name (klass));
+	}
+	else
+		return monodroid_strdup_printf ("<temporary object %p>", target.jobj);
+}
+#endif
+
+// Add a reference from one target to another. If the "from" target is a mono_object, it must be a user peer
+static mono_bool
+add_reference (JNIEnv *env, AddReferenceTarget target, AddReferenceTarget reffed_target)
+{
+	MonoJavaGCBridgeInfo *bridge_info = NULL, *reffed_bridge_info = NULL;
+	jobject handle, reffed_handle;
+
+	if (!load_reference_target (target, &bridge_info, &handle))
+		return FALSE;
+
+	if (!load_reference_target (reffed_target, &reffed_bridge_info, &reffed_handle))
+		return FALSE;
+
+	mono_bool success = add_reference_jobject (env, handle, reffed_handle);
+
+	// Flag MonoObjects so they can be cleared in gc_cleanup_after_java_collection.
+	// Java temporaries do not need this because the entire GCUserPeer is discarded.
+	if (success && target.is_mono_object) {
+		int ref_val = 1;
+		mono.mono_field_set_value (target.obj, bridge_info->refs_added, &ref_val);
+	}
+
+#if DEBUG
+	if (gc_spew_enabled) {
+		char *description = describe_target (target),
+			 *reffed_description = describe_target (reffed_target);
+
+		if (success)
+			log_warn (LOG_GC, "Added reference for %s to %s", description, reffed_description);
+		else
+			log_error (LOG_GC, "Missing monodroidAddReference method for %s", description);
+
+		free (description);
+		free (reffed_description);
+	}
+#endif
+
+	return success;
+}
+
+// Create a target
+static AddReferenceTarget
+target_from_mono_object (MonoObject *obj)
+{
+	AddReferenceTarget result;
+	result.is_mono_object = TRUE;
+	result.obj = obj;
+	return result;
+}
+
+// Create a target
+static AddReferenceTarget
+target_from_jobject (jobject jobj)
+{
+	AddReferenceTarget result;
+	result.is_mono_object = FALSE;
+	result.jobj = jobj;
+	return result;
+}
+
+/* During the xref phase of gc_prepare_for_java_collection, we need to be able to map bridgeless
+ * SCCs to their index in temporary_peers. Because for all bridgeless SCCs the num_objs field of
+ * MonoGCBridgeSCC is known 0, we can temporarily stash this index as a negative value in the SCC
+ * object. This does mean we have to erase our vandalism at the end of the function.
+ */
+static int
+scc_get_stashed_index (MonoGCBridgeSCC *scc)
+{
+	assert ( (scc->num_objs < 0) || !"Attempted to load stashed index from an object which does not contain one." );
+	return -scc->num_objs - 1;
+}
+
+static void
+scc_set_stashed_index (MonoGCBridgeSCC *scc, int index)
+{
+	scc->num_objs = -index - 1;
+}
+
+// Extract the root target for an SCC. If the SCC has bridged objects, this is the first object. If not, it's stored in temporary_peers.
+static AddReferenceTarget
+target_from_scc (MonoGCBridgeSCC **sccs, int idx, JNIEnv *env, jobject temporary_peers)
+{
+	MonoGCBridgeSCC *scc = sccs [idx];
+	if (scc->num_objs > 0)
+		return target_from_mono_object (scc->objs [0]);
+
+	jobject jobj = (*env)->CallObjectMethod (env, temporary_peers, ArrayList_get, scc_get_stashed_index (scc));
+	return target_from_jobject (jobj);
+}
+
+// Must call this on any AddReferenceTarget returned by target_from_scc once done with it
+static void
+target_release (JNIEnv *env, AddReferenceTarget target)
+{
+	if (!target.is_mono_object)
+		(*env)->DeleteLocalRef (env, target.jobj);
+}
+
+// Add a reference between objects if both are already known to be MonoObjects which are user peers
+static mono_bool
+add_reference_mono_object (JNIEnv *env, MonoObject *obj, MonoObject *reffed_obj)
+{
+	return add_reference (env, target_from_mono_object (obj), target_from_mono_object (reffed_obj));
 }
 
 static void
 gc_prepare_for_java_collection (JNIEnv *env, int num_sccs, MonoGCBridgeSCC **sccs, int num_xrefs, MonoGCBridgeXRef *xrefs)
 {
-	MonoGCBridgeSCC *scc;
-	int i, j, ref_val;
+	/* Some SCCs might have no IGCUserPeers associated with them, so we must create one */
+	jobject temporary_peers = NULL;     // This is an ArrayList
+	int temporary_peer_count = 0;       // Number of items in temporary_peers
 
-	ref_val = 1;
-	/* add java refs for items on the list which reference each other */
-	for (i = 0; i < num_sccs; i++) {
-		scc = sccs [i];
+	/* Before looking at xrefs, scan the SCCs. During collection, an SCC has to behave like a
+	 * single object. If the number of objects in the SCC is anything other than 1, the SCC
+	 * must be doctored to mimic that one-object nature.
+	 */
+	for (int i = 0; i < num_sccs; i++) {
+		MonoGCBridgeSCC *scc = sccs [i];
 
-		MonoJavaGCBridgeInfo    *bridge_info = NULL;
-		/* start at the second item, ref j from j-1 */
-		for (j = 1; j < scc->num_objs; j++) {
-			bridge_info = get_gc_bridge_info_for_object (scc->objs [j-1]);
-			if (bridge_info != NULL && add_reference (env, scc->objs [j-1], bridge_info, scc->objs [j])) {
-				mono.mono_field_set_value (scc->objs [j-1], bridge_info->refs_added, &ref_val);
-			}
-		}
-		/* ref the first from the last */
+		/* num_objs < 0 case: This is a violation of the bridge API invariants. */
+		assert ( (scc->num_objs >= 0) || !"Bridge processor submitted an SCC with a negative number of objects." );
+
+		/* num_objs > 1 case: The SCC contains many objects which must be collected as one.
+		 * Solution: Make all objects within the SCC directly or indirectly reference each other
+		 */
 		if (scc->num_objs > 1) {
-			bridge_info = get_gc_bridge_info_for_object (scc->objs [scc->num_objs-1]);
-			if (bridge_info != NULL && add_reference (env, scc->objs [scc->num_objs-1], bridge_info, scc->objs [0])) {
-				mono.mono_field_set_value (scc->objs [scc->num_objs-1], bridge_info->refs_added, &ref_val);
+			MonoGCBridgeSCC *first = scc->objs [0];
+			MonoGCBridgeSCC *prev = first;
+
+			/* start at the second item, ref j from j-1 */
+			for (int j = 1; j < scc->num_objs; j++) {
+				MonoGCBridgeSCC *current = scc->objs [j];
+
+				add_reference_mono_object (env, prev, current);
+				prev = current;
 			}
+
+			/* ref the first from the final */
+			add_reference_mono_object (env, prev, first);
+
+		/* num_objs == 0 case: The SCC contains *no* objects (or rather contains only C# objects).
+		 * Solution: Create a temporary Java object to stand in for the SCC.
+		 */
+		} else if (scc->num_objs == 0) {
+			/* Once per process boot, look up JNI metadata we need to make temporary objects */
+			if (!ArrayList_class) {
+				ArrayList_class = lref_to_gref (env, (*env)->FindClass (env, "java/util/ArrayList"));
+				ArrayList_ctor = (*env)->GetMethodID (env, ArrayList_class, "<init>", "()V");
+				ArrayList_add = (*env)->GetMethodID (env, ArrayList_class, "add", "(Ljava/lang/Object;)Z");
+				ArrayList_get = (*env)->GetMethodID (env, ArrayList_class, "get", "(I)Ljava/lang/Object;");
+
+				GCUserPeer_class = lref_to_gref (env, (*env)->FindClass (env, "mono/android/GCUserPeer"));
+				GCUserPeer_ctor = (*env)->GetMethodID (env, GCUserPeer_class, "<init>", "()V");
+
+				assert ( (ArrayList_class && ArrayList_ctor && ArrayList_get && GCUserPeer_class && GCUserPeer_ctor) || !"Failed to load classes required for JNI" );
+			}
+
+			/* Once per gc_prepare_for_java_collection call, create a list to hold the temporary
+			 * objects we create. This will protect them from collection while we build the list.
+			 */
+			if (!temporary_peers) {
+				temporary_peers = (*env)->NewObject (env, ArrayList_class, ArrayList_ctor);
+			}
+
+			/* Create this SCC's temporary object */
+			jobject peer = (*env)->NewObject (env, GCUserPeer_class, GCUserPeer_ctor);
+			(*env)->CallBooleanMethod (env, temporary_peers, ArrayList_add, peer);
+			(*env)->DeleteLocalRef (env, peer);
+
+			/* See note on scc_get_stashed_index */
+			scc_set_stashed_index (scc, temporary_peer_count);
+			temporary_peer_count++;
 		}
 	}
 
 	/* add the cross scc refs */
-	for (i = 0; i < num_xrefs; i++) {
-		MonoObject *src_obj = sccs [xrefs [i].src_scc_index]->objs [0];
-		MonoObject *dst_obj = sccs [xrefs [i].dst_scc_index]->objs [0];
-		MonoJavaGCBridgeInfo *bridge_info = get_gc_bridge_info_for_object (src_obj);
+	for (int i = 0; i < num_xrefs; i++) {
+		AddReferenceTarget src_target = target_from_scc (sccs, xrefs [i].src_scc_index, env, temporary_peers);
+		AddReferenceTarget dst_target = target_from_scc (sccs, xrefs [i].dst_scc_index, env, temporary_peers);
 
-		if (bridge_info == NULL)
-			continue;
+		add_reference (env, src_target, dst_target);
 
-		if (add_reference (env, src_obj, bridge_info, dst_obj)) {
-			mono.mono_field_set_value (src_obj, bridge_info->refs_added, &ref_val);
-		}
+		target_release (env, src_target);
+		target_release (env, dst_target);
 	}
 
-	// switch to weak refs
-	for (i = 0; i < num_sccs; i++)
-		for (j = 0; j < sccs [i]->num_objs; j++)
+	/* With xrefs processed, the temporary peer list can be released */
+	(*env)->DeleteLocalRef (env, temporary_peers);
+
+	/* Post-xref cleanup on SCCs: Undo memoization, switch to weak refs */
+	for (int i = 0; i < num_sccs; i++) {
+		/* See note on scc_get_stashed_index */
+		if (sccs [i]->num_objs < 0)
+			sccs [i]->num_objs = 0;
+
+		for (int j = 0; j < sccs [i]->num_objs; j++) {
 			take_weak_global_ref (env, sccs [i]->objs [j]);
+		}
+	}
 }
 
 static void
@@ -1388,6 +1567,7 @@ gc_cleanup_after_java_collection (JNIEnv *env, int num_sccs, MonoGCBridgeSCC **s
 	/* clear the cross references on any remaining items */
 	for (i = 0; i < num_sccs; i++) {
 		sccs [i]->is_alive = 0;
+
 		for (j = 0; j < sccs [i]->num_objs; j++) {
 			MonoJavaGCBridgeInfo    *bridge_info;
 
