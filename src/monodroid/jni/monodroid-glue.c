@@ -2123,6 +2123,16 @@ load_assembly (MonoDomain *domain, JNIEnv *env, jstring assembly)
 	mono.mono_assembly_name_free (aname);
 }
 
+static void
+set_debug_options (void)
+{
+	if (monodroid_get_namespaced_system_property (DEBUG_MONO_DEBUG_PROPERTY, NULL) == 0)
+		return;
+
+	register_debug_symbols = 1;
+	mono.mono_debug_init (MONO_DEBUG_FORMAT_MONO);
+}
+
 #ifdef ANDROID
 static const char *soft_breakpoint_kernel_list[] = {
 	"2.6.32.21-g1e30168", NULL
@@ -2160,16 +2170,6 @@ enable_soft_breakpoints (void)
 	
 	log_info (LOG_DEBUGGER, "soft breakpoints enabled (%s property set to %s)", DEBUG_MONO_SOFT_BREAKPOINTS, value);
 	return 1;
-}
-
-static void
-set_debug_options (void)
-{
-	if (monodroid_get_namespaced_system_property (DEBUG_MONO_DEBUG_PROPERTY, NULL) == 0)
-		return;
-
-	register_debug_symbols = 1;
-	mono.mono_debug_init (MONO_DEBUG_FORMAT_MONO);
 }
 
 void
@@ -2395,11 +2395,6 @@ static int
 enable_soft_breakpoints (void)
 {
 	return 0;
-}
-
-static void
-set_debug_options (void)
-{
 }
 
 void
