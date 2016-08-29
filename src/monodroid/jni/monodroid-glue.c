@@ -2931,7 +2931,7 @@ register_packages (MonoDomain *domain, JNIEnv *env, jobjectArray assemblies)
 		a = mono.mono_domain_assembly_open (domain, basename);
 		if (a == NULL) {
 			log_fatal (LOG_ASSEMBLY, "Could not load assembly '%s' during startup registration.", basename);
-			log_fatal (LOG_ASSEMBLY, "This might be due to an invalid debug instalation.");
+			log_fatal (LOG_ASSEMBLY, "This might be due to an invalid debug installation.");
 			log_fatal (LOG_ASSEMBLY, "A common cause is to 'adb install' the app directly instead of doing from the IDE.");
 			exit (FATAL_EXIT_MISSING_ASSEMBLY);
 		}
