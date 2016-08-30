@@ -8,23 +8,12 @@ namespace Xamarin.Android.Build.Utilities
 {
 	class AndroidSdkUnix : AndroidSdkBase
 	{
-		public override string Adb { get { return "adb"; } }
-		public override string Android { get { return "android"; } }
-		public override string Emulator { get { return "emulator"; } }
-		public override string Monitor { get { return "monitor"; } }
-		public override string ZipAlign { get { return "zipalign"; } }
-		public override string JarSigner { get { return "jarsigner"; } }
-		public override string KeyTool { get { return "keytool"; } }
-		public override string NdkStack { get { return "ndk-stack"; } }
-
 		public override string NdkHostPlatform32Bit {
 			get { return OS.IsMac ? "darwin-x86" : "linux-x86"; }
 		}
 		public override string NdkHostPlatform64Bit {
 			get { return OS.IsMac ? "darwin-x86_64" : "linux-x86_64"; }
 		}
-
-		public override string Javac { get { return "javac"; } }
 
 		public override string PreferedAndroidSdkPath { 
 			get {
