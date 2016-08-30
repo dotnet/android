@@ -80,6 +80,15 @@ namespace Xamarin.Android.Tasks
 					toolPaths = new List<string>();
 				toolPaths.Add (path);
 			}
+			{
+				string path = Path.Combine (androidNdkPath, "prebuilt", AndroidSdk.AndroidNdkHostPlatform, "bin", tool);
+				if (File.Exists (path))
+					return path;
+				if (toolPaths == null)
+					toolPaths = new List<string>();
+				toolPaths.Add (path);
+                       }
+
 			Diagnostic.Error (5101,
 					"C compiler for target {0} was not found. Tried paths: \"{1}\"",
 					arch, string.Join ("; ", toolPaths));
