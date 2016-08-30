@@ -80,6 +80,11 @@ namespace Android.App {
 			  self          => self.Description,
 			  (self, value) => self.Description = (string) value
 			}, {
+			  "DirectBootAware",
+			  "directBootAware",
+			  self          => self.DirectBootAware,
+			  (self, value) => self.DirectBootAware = (bool) value
+			}, {
 			  "Enabled",
 			  "enabled",
 			  self          => self.Enabled,

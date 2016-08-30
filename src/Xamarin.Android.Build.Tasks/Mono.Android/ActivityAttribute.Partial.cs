@@ -52,6 +52,11 @@ namespace Android.App {
 			  self          => self.ConfigurationChanges,
 			  (self, value) => self.ConfigurationChanges  = (ConfigChanges) value
 			}, {
+			  "DirectBootAware",
+			  "directBootAware",
+			  self          => self.DirectBootAware,
+			  (self, value) => self.DirectBootAware = (bool) value
+			}, {
 			  "Enabled",
 			  "enabled",
 			  self          => self.Enabled,

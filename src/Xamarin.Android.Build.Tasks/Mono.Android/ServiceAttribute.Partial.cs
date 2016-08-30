@@ -16,6 +16,11 @@ namespace Android.App {
 
 		static ManifestDocumentElement<ServiceAttribute> mapping = new ManifestDocumentElement<ServiceAttribute> ("service") {
 			{
+			  "DirectBootAware",
+			  "directBootAware",
+			  self          => self.DirectBootAware,
+			  (self, value) => self.DirectBootAware = (bool) value
+			}, {
 			  "Enabled",
 			  "enabled",
 			  self          => self.Enabled,
