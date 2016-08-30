@@ -34,18 +34,18 @@ namespace Xamarin.Android.Build.Utilities
 		public string AndroidToolsPathShort { get; private set; }
 		public string AndroidPlatformToolsPathShort { get; private set; }
 
-		public abstract string Adb { get; }
-		public abstract string Android { get; }
-		public abstract string Emulator { get; }
-		public abstract string Monitor { get; }
-		public abstract string ZipAlign { get; }
-		public abstract string JarSigner { get; }
-		public abstract string KeyTool { get; }
+		public virtual string Adb { get; protected set; } = "adb";
+		public virtual string Android { get; protected set; } = "android";
+		public virtual string Emulator { get; protected set; } = "emulator";
+		public virtual string Monitor { get; protected set; } = "monitor";
+		public virtual string ZipAlign { get; protected set; } = "zipalign";
+		public virtual string JarSigner { get; protected set; } = "jarsigner";
+		public virtual string KeyTool { get; protected set; } = "keytool";
 
-		public abstract string NdkStack { get; }
+		public virtual string NdkStack { get; protected set; } = "ndk-stack";
 		public abstract string NdkHostPlatform32Bit { get; }
 		public abstract string NdkHostPlatform64Bit { get; }
-		public abstract string Javac { get; }
+		public virtual string Javac { get; protected set; } = "javac";
 
 		public abstract string PreferedAndroidSdkPath { get; }
 		public abstract string PreferedAndroidNdkPath { get; }
@@ -81,6 +81,13 @@ namespace Xamarin.Android.Build.Utilities
 				IsNdk64Bit = Directory.EnumerateDirectories (toolchainsDir, "arm-linux-androideabi-*")
 					.Any (dir => Directory.Exists (Path.Combine (dir, "prebuilt", NdkHostPlatform64Bit)));
 			}
+			// we need to look for extensions other than the default .exe|.bat
+			// google have a habbit of changing them.
+			Adb = GetExecutablePath (AndroidPlatformToolsPath, Adb);
+			Android = GetExecutablePath (AndroidToolsPath, Android);
+			Emulator = GetExecutablePath (AndroidToolsPath, Emulator);
+			Monitor = GetExecutablePath (AndroidToolsPath, Monitor);
+			NdkStack = GetExecutablePath (AndroidNdkPath, NdkStack);
 		}
 
 		protected abstract IEnumerable<string> GetAllAvailableAndroidSdks ();
@@ -119,25 +126,39 @@ namespace Xamarin.Android.Build.Utilities
 		/// </summary>
 		public bool ValidateAndroidNdkLocation (string loc)
 		{
-			return !string.IsNullOrEmpty (loc) && File.Exists (Path.Combine (loc, NdkStack));
+			return !string.IsNullOrEmpty (loc) && FindExecutableInDirectory(NdkStack, loc).Any();
 		}
 
 		protected IEnumerable<string> FindExecutableInPath (string executable)
 		{
 			var path = Environment.GetEnvironmentVariable ("PATH");
 			var pathDirs = path.Split (new char[] { Path.PathSeparator }, StringSplitOptions.RemoveEmptyEntries);
+
+			foreach (var dir in pathDirs) {
+				foreach (var directory in FindExecutableInDirectory(executable, dir)) {
+					yield return directory;
+				}
+			}
+		}
+		
+		protected IEnumerable<string> FindExecutableInDirectory(string executable, string dir)
+		{			
+			foreach (var exe in Executables (executable))
+				if (File.Exists (Path.Combine (dir, exe)))
+					yield return dir;
+		}
+
+		IEnumerable<string> Executables (string executable)
+		{
+			yield return executable;
 			var pathExt = Environment.GetEnvironmentVariable ("PATHEXT");
 			var pathExts = pathExt?.Split (new char [] { Path.PathSeparator }, StringSplitOptions.RemoveEmptyEntries);
 
-			foreach (var dir in pathDirs) {
-				if (File.Exists (Path.Combine (dir, (executable))))
-					yield return dir;
-				if (pathExts == null)
-					continue;
-				foreach (var ext in pathExts)
-					if (File.Exists (Path.Combine (dir, Path.ChangeExtension (executable, ext))))
-						yield return dir;
-			}
+			if (pathExts == null)
+				yield break;
+
+			foreach (var ext in pathExts)
+				yield return Path.ChangeExtension (executable, ext);
 		}
 
 		protected string NullIfEmpty (string s)
@@ -146,6 +167,14 @@ namespace Xamarin.Android.Build.Utilities
 				return s;
 
 			return null;
+		}
+
+		string GetExecutablePath (string dir, string exe)
+		{
+			foreach (var e in Executables (exe))
+				if (File.Exists (Path.Combine (dir, e)))
+					return e;
+			return exe;
 		}
 	}
 }
