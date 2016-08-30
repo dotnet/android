@@ -25,6 +25,9 @@ namespace Android.App
 		public bool                   AlwaysRetainTaskState   {get; set;}
 		public bool                   ClearTaskOnLaunch       {get; set;}
 		public ConfigChanges          ConfigurationChanges    {get; set;}
+#if ANDROID_24
+		public bool                   DirectBootAware         {get; set;}
+#endif
 		public bool                   Enabled                 {get; set;}
 		public bool                   ExcludeFromRecents      {get; set;}
 		public bool                   Exported                {get; set;}

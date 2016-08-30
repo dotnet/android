@@ -19,6 +19,11 @@ namespace Android.Content {
 			  (self, value) => self.Authorities = ToStringArray (value),
 			  self          => string.Join (";", self.Authorities)
 			}, {
+			  "DirectBootAware",
+			  "directBootAware",
+			  self          => self.DirectBootAware,
+			  (self, value) => self.DirectBootAware = (bool) value
+			}, {
 			  "Enabled",
 			  "enabled",
 			  self          => self.Enabled,

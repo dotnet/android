@@ -28,6 +28,9 @@ namespace Android.App {
 #endif
 		public bool                   Debuggable              {get; set;}
 		public string                 Description             {get; set;}
+#if ANDROID_24
+		public bool                   DirectBootAware         {get; set;}
+#endif
 		public bool                   Enabled                 {get; set;}
 #if ANDROID_23
 		public bool                   ExtractNativeLibs       {get; set;}
