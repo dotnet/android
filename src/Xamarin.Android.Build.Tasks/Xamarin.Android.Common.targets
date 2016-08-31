@@ -2270,16 +2270,9 @@ because xbuild doesn't support framework reference assemblies.
 
   <Copy SourceFiles="%(ApkFiles.FullPath)" DestinationFolder="$(OutDir)" />
 
-  <GetFilesThatExist
-      Condition="'$(AndroidManagedSymbols)' == 'True' "
-      Files="@(_ResolvedAssemblies->'%(Identity)');@(_ResolvedAssemblies->'%(Identity).mdb');@(_ResolvedAssemblies->'%(Identity).msym')">
-    <Output TaskParameter="FilesThatExist" ItemName="_SymbolicateArchiveAssemblies" />
-  </GetFilesThatExist>
-
-  <Copy Condition=" '$(AndroidManagedSymbols)' == 'True' And Exists('%(_SymbolicateArchiveAssemblies.Identity)') "
-    SourceFiles="@(_SymbolicateArchiveAssemblies)"
-    DestinationFolder="$(OutDir)$(_AndroidPackage).apk.msym"
-    SkipUnchangedFiles="true"
+  <Exec
+    Command="&quot;$(_MonoAndroidBinDirectory)mono-symbolicate&quot; store-symbols &quot;$(OutDir)$(_AndroidPackage).apk.msym&quot; &quot;$(MonoAndroidIntermediate)android/assets&quot;"
+    Condition=" '$(AndroidManagedSymbols)' == 'True' "
   />
 
   <ItemGroup>
