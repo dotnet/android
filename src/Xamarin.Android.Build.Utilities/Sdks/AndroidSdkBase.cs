@@ -110,7 +110,7 @@ namespace Xamarin.Android.Build.Utilities
 		/// </summary>
 		public bool ValidateAndroidSdkLocation (string loc)
 		{
-			return !string.IsNullOrEmpty (loc) && File.Exists (Path.Combine (Path.Combine (loc, "platform-tools"), Adb));
+			return !string.IsNullOrEmpty (loc) && FindExecutableInDirectory (Adb, Path.Combine (loc, "platform-tools")).Any ();
 		}
 
 		/// <summary>
@@ -118,7 +118,7 @@ namespace Xamarin.Android.Build.Utilities
 		/// </summary>
 		public virtual bool ValidateJavaSdkLocation (string loc)
 		{
-			return !string.IsNullOrEmpty (loc) && File.Exists (Path.Combine (Path.Combine (loc, "bin"), JarSigner));
+			return !string.IsNullOrEmpty (loc) && FindExecutableInDirectory (JarSigner, Path.Combine (loc, "bin")).Any ();
 		}
 
 		/// <summary>
@@ -171,6 +171,8 @@ namespace Xamarin.Android.Build.Utilities
 
 		string GetExecutablePath (string dir, string exe)
 		{
+			if (string.IsNullOrEmpty (dir))
+				return exe;
 			foreach (var e in Executables (exe))
 				if (File.Exists (Path.Combine (dir, e)))
 					return e;
