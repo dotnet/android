@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace Xamarin.Android.Build.Utilities
 {
@@ -186,7 +187,7 @@ namespace Xamarin.Android.Build.Utilities
 				return false;
 			}
 
-			if (!File.Exists (Path.Combine (path, subdir, exe))) {
+			if (!FindExecutableInDirectory (exe, Path.Combine (path, subdir)).Any ()) {
 				AndroidLogger.LogInfo ("sdk", "  Key {0} found:\n    Path does not contain {1} in \\{2} ({3}).", key_name, exe, subdir, path);
 				return false;
 			}
