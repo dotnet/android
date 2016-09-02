@@ -362,12 +362,24 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
     <!-- Extract the API from the .jar file and store as .xml, using either class-parse or jar2xml -->
 	
     <ClassParse Condition="'$(AndroidClassParser)' == 'class-parse'"
-      OutputFile="$(ApiOutputFile)"
+      OutputFile="$(ApiOutputFile).class-parse"
       SourceJars="@(EmbeddedJar);@(InputJar)"
       JavaDocPaths="$(JavaDocPaths)"
       Java7DocPaths="$(Java7DocPaths)"
       Java8DocPaths="$(Java8DocPaths)"
       DroidDocPaths="$(DroidDocPaths)"
+    />
+
+    <BindingsGenerator Condition="'$(AndroidClassParser)' == 'class-parse'"
+      OnlyRunXmlAdjuster="true"
+      XmlAdjusterOutput="$(ApiOutputFile)"
+      OutputDirectory="$(GeneratedOutputPath)src"
+      AndroidApiLevel="$(_AndroidApiLevel)"
+      ApiXmlInput="$(ApiOutputFile).class-parse"
+      ReferencedManagedLibraries="@(ReferencePath);@(ReferenceDependencyPaths)"
+      MonoAndroidFrameworkDirectories="$(_TargetFrameworkDirectories)"
+      ToolPath="$(_MonoAndroidBinDirectory)"
+      ToolExe="$(BindingsGeneratorToolExe)"
     />
 
     <JarToXml Condition="'$(AndroidClassParser)' == 'jar2xml'"
@@ -515,6 +527,7 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
 
     <Delete Files="$(ApiOutputFile)" />
     <Delete Files="$(ApiOutputFile).adjusted" />
+    <Delete Files="$(ApiOutputFile).class-parse" />
     <Delete Files="$(ApiOutputFile).fixed" />
     <Delete Files="$(ApiOutputFile).adjusted.fixed" />
     <Delete Files="$(_GeneratorStampFile)" />

@@ -14,13 +14,15 @@ namespace Xamarin.Android.Tasks
 {
 	public class BindingsGenerator : AndroidToolTask
 	{
+		public bool OnlyRunXmlAdjuster { get; set; }
+
+		public string XmlAdjusterOutput { get; set; }
+
 		[Required]
 		public string OutputDirectory { get; set; }
 
-		[Required]
 		public string EnumDirectory { get; set; }
 
-		[Required]
 		public string EnumMetadataDirectory { get; set; }
 
 		[Required]
@@ -29,7 +31,6 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string ApiXmlInput { get; set; }
 
-		[Required]
 		public string AssemblyName { get; set; }
 		
 		public string CodegenTarget { get; set; }
@@ -53,6 +54,7 @@ namespace Xamarin.Android.Tasks
 		public override bool Execute ()
 		{
 			Log.LogDebugMessage ("BindingsGenerator Task");
+			Log.LogDebugMessage ("  OnlyRunXmlAdjuster: {0}", OnlyRunXmlAdjuster);
 			Log.LogDebugMessage ("  OutputDirectory: {0}", OutputDirectory);
 			Log.LogDebugMessage ("  EnumDirectory: {0}", EnumDirectory);
 			Log.LogDebugMessage ("  EnumMetadataDirectory: {0}", EnumMetadataDirectory);
@@ -105,6 +107,10 @@ namespace Xamarin.Android.Tasks
 			var cmd = new CommandLineBuilder ();
 
 			cmd.AppendFileNameIfNotNull (ApiXmlInput);
+
+			if (OnlyRunXmlAdjuster)
+				cmd.AppendSwitch ("--only-xml-adjuster");
+			cmd.AppendSwitchIfNotNull ("--xml-adjuster-output=", XmlAdjusterOutput);
 
 			cmd.AppendSwitchIfNotNull ("--codegen-target=", CodegenTarget);
 			cmd.AppendSwitchIfNotNull ("--csdir=", OutputDirectory);
