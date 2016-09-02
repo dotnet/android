@@ -2277,7 +2277,7 @@ because xbuild doesn't support framework reference assemblies.
 
   <ItemGroup>
     <_BuiltAbis Include="$(_BuildTargetAbis)" />
-    <_SymbolicateFiles Include="$(_AndroidAotBinDirectory)\%(_BuiltAbis.Identity)\**\*.mSYM" />
+    <_SymbolicateFiles Include="$(_AndroidAotBinDirectory)\%(_BuiltAbis.Identity)\**\*.msym" />
   </ItemGroup>
 
   <Copy Condition=" '$(AndroidManagedSymbols)' == 'True' And '%(_SymbolicateFiles.Filename)' != '' "
