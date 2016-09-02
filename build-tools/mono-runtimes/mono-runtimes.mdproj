@@ -6,6 +6,19 @@
     <ItemType>GenericProject</ItemType>
     <ProjectGuid>{C03E6CF1-7460-4CDC-A4AB-292BBC0F61F2}</ProjectGuid>
   </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <OutputPath>..\..\bin\Debug</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <OutputPath>..\..\bin\Release</OutputPath>
+  </PropertyGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.Common.targets" />
+  <PropertyGroup>
+    <BuildDependsOn>
+      ResolveReferences;
+      _BuildUnlessCached
+    </BuildDependsOn>
+  </PropertyGroup>
   <Import Project="mono-runtimes.targets" />
   <ItemGroup>
     <ProjectReference Include="..\xa-prep-tasks\xa-prep-tasks.csproj">

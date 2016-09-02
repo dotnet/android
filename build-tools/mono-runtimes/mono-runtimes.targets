@@ -1,19 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <OutputPath>..\..\bin\Debug</OutputPath>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <OutputPath>..\..\bin\Release</OutputPath>
-  </PropertyGroup>
-  <Import Project="$(MSBuildBinPath)\Microsoft.Common.targets" />
-  <PropertyGroup>
-    <BuildDepends>
-      ResolveReferences;
-      _BuildUnlessCached
-    </BuildDepends>
-  </PropertyGroup>
-  <Target Name="Build" DependsOnTargets="$(BuildDepends)" />
+  <Target Name="Build" DependsOnTargets="$(BuildDependsOn)" />
   <PropertyGroup>
     <_SourceTopDir>..\..</_SourceTopDir>
     <_BclFrameworkDir>$(OutputPath)\lib\xbuild-frameworks\MonoAndroid\v1.0</_BclFrameworkDir>
@@ -465,7 +452,14 @@
       DependsOnTargets="_SetAutogenShTimeToLastCommitTimestamp;GetMonoBundleItems"
       Inputs="$(MonoSourceFullPath)\autogen.sh;$(LlvmSourceFullPath)\Makefile.config.in"
       Outputs="@(BundleItem)">
-    <CallTarget Targets="ForceBuild" />
+    <PropertyGroup>
+      <_Now>$([System.DateTime]::Now.Ticks)</_Now>
+    </PropertyGroup>
+    <MSBuild
+        Projects="$(MSBuildThisFileDirectory)\mono-runtimes.mdproj"
+        Properties="_ForceXbuildToNotCacheTargets=$(_Now)"
+        Targets="ForceBuild"
+    />
   </Target>
   <Target Name="_CleanRuntimes"
       AfterTargets="Clean">

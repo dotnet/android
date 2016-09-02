@@ -7,7 +7,7 @@
       Outputs="$(OutputPath)\Xamarin.Android.Tools.BootstrapTasks.dll">
     <MSBuild
         Projects="..\..\src\Xamarin.Android.Tools.BootstrapTasks\Xamarin.Android.Tools.BootstrapTasks.csproj"
-        Properties="OutputPath=$(AndroidToolchainDirectory)"
+        Properties="OutputPath=$(AndroidToolchainDirectory)\"
     />
   </Target>
   <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"   TaskName="Xamarin.Android.BuildTools.PrepTasks.DownloadUri" />
