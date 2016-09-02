@@ -35,7 +35,17 @@ ALL_JIT_ABIS  = \
 	x86_64
 
 ALL_HOST_ABIS = \
-	$(shell uname) \
+	$(shell uname)
+
+#
+# On Linux we no disable building of all the cross-compiler/AOT environments.
+# This is because CppSharp as used in Mono to generate C headers with
+# runtime struct offsets doesn't work on Linux in the version used by Mono
+#
+# When/if CppSharp is fixed to work on Linux we can re-enable the code below
+#
+ifneq ($(OS),Linux)
+ALL_HOST_ABIS += \
 	mxe-Win32 \
 	mxe-Win64
 
@@ -48,6 +58,7 @@ ALL_AOT_ABIS = \
 	win-x86 \
 	x86_64 \
 	win-x86_64
+endif
 
 _space :=
 _space +=
