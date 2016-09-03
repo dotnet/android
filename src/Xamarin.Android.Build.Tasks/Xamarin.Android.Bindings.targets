@@ -61,7 +61,7 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
     <MonoAndroidVersion>v5.0</MonoAndroidVersion>
     <TargetFrameworkVersion Condition="'$(TargetFrameworkVersion)' == '' And '$(AndroidUseLatestPlatformSdk)' == 'False'">v2.3</TargetFrameworkVersion>
 	<UseShortFileNames Condition="'$(UseShortFileNames)' != 'True'">False</UseShortFileNames>
-	<AndroidClassParser Condition="'$(AndroidClassParser)' == ''">jar2xml</AndroidClassParser>
+	<AndroidClassParser Condition="'$(AndroidClassParser)' == ''">class-parse</AndroidClassParser>
   </PropertyGroup>
   
   <!-- Get our Build Actions to show up in VS -->
