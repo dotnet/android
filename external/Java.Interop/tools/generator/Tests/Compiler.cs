@@ -40,6 +40,7 @@ namespace generatortests
 			parameters.CompilerOptions = "/unsafe";
 			parameters.OutputAssembly = assemblyFileName;
 			parameters.ReferencedAssemblies.Add (unitTestFrameworkAssemblyPath);
+			parameters.ReferencedAssemblies.Add (typeof (Enumerable).Assembly.Location);
 
 			var binDir  = Path.GetDirectoryName (typeof (BaseGeneratorTest).Assembly.Location);
 			var facDir  = GetFacadesPath ();
