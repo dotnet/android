@@ -437,6 +437,7 @@
       <BundleItem Include="@(_InstallMonoPosixHelperOutput)" />
       <BundleItem Include="@(_InstallUnstrippedMonoPosixHelperOutput)" />
       <BundleItem Include="@(_RuntimeEglibHeaderOutput)" />
+      <BundleItem Include="@(_MonoConstsOutput)" />
       <BundleItem Include="@(_LlvmTargetBinary)" />
       <BundleItem Include="$(OutputPath)\%(_MonoCrossRuntime.InstallPath)%(_MonoCrossRuntime.CrossMonoName)%(_MonoCrossRuntime.ExeSuffix)"
           Condition=" '@(_MonoCrossRuntime)' != '' "
