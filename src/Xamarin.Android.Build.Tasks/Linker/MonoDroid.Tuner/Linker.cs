@@ -78,6 +78,8 @@ namespace MonoDroid.Tuner
 			// monodroid tuner steps
 			pipeline.AppendStep (new SubStepDispatcher {
 				new ApplyPreserveAttribute (),
+			});
+			pipeline.AppendStep (new SubStepDispatcher {
 				new PreserveExportedTypes (),
 				new RemoveSecurity (),
 				new MarkJavaObjects (),

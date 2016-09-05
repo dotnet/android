@@ -18,8 +18,6 @@ namespace MonoDroid.Tuner {
 		public override bool IsActiveFor (AssemblyDefinition assembly)
 		{
 			is_sdk = Profile.IsSdkAssembly (assembly);
-			if (is_sdk && assembly.Name.Name != "System.ServiceModel")
-				return false;
 			return Annotations.GetAction (assembly) == AssemblyAction.Link;
 		}
 		
