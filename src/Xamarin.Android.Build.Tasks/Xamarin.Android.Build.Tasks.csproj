@@ -60,6 +60,9 @@
     <Reference Include="FSharp.Compiler.CodeDom">
       <HintPath>..\..\packages\FSharp.Compiler.CodeDom.1.0.0.1\lib\net40\FSharp.Compiler.CodeDom.dll</HintPath>
     </Reference>
+    <Reference Include="FSharp.Core">
+      <HintPath>..\..\packages\FSharp.Core.4.0.1.5\lib\net40\FSharp.Core.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="$(IntermediateOutputPath)Profile.g.cs" />
