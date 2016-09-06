@@ -186,6 +186,9 @@ namespace Xamarin.Android.Tasks
 				cmd.AppendSwitchIfNotNull ("-printusage ", PrintUsageOutput);
 				cmd.AppendSwitchIfNotNull ("-printmapping ", PrintMappingOutput);
 			}
+
+			// http://stackoverflow.com/questions/5701126/compile-with-proguard-gives-exception-local-variable-type-mismatch#7587680
+			cmd.AppendSwitch ("-optimizations !code/allocation/variable");
 			
 			return cmd.ToString ();
 		}
