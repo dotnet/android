@@ -2270,6 +2270,7 @@ because xbuild doesn't support framework reference assemblies.
 
   <Copy SourceFiles="%(ApkFiles.FullPath)" DestinationFolder="$(OutDir)" />
 
+  <MakeDir Directories="&quot;$(OutDir)$(_AndroidPackage).apk.mSYM&quot;" Condition=" '$(AndroidManagedSymbols)' == 'True' " />
   <Exec
     Command="&quot;$(_MonoAndroidBinDirectory)mono-symbolicate&quot; store-symbols &quot;$(OutDir)$(_AndroidPackage).apk.mSYM&quot; &quot;$(MonoAndroidIntermediate)android/assets&quot;"
     Condition=" '$(AndroidManagedSymbols)' == 'True' "
