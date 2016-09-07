@@ -26,6 +26,9 @@
       BeforeTargets="CoreCompile"
       Inputs="@(_SharedRuntimeAssemblies)"
       Outputs="$(_GeneratedProfileClass)">
+    <ItemGroup>
+      <_SharedRuntimeAssemblies Remove="$(_SharedRuntimeBuildPath)v1.0\FSharp.Core.dll" />
+    </ItemGroup>
     <GenerateProfile Files="@(_SharedRuntimeAssemblies)" OutputFile="$(_GeneratedProfileClass)" />
     <WriteLinesToFile
         File="$(IntermediateOutputPath)$(CleanFile)"
