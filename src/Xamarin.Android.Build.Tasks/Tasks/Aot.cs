@@ -378,6 +378,8 @@ namespace Xamarin.Android.Tasks
 				UseShellExecute = false,
 				RedirectStandardOutput = true,
 				RedirectStandardError = true,
+				CreateNoWindow=true,
+				WindowStyle=ProcessWindowStyle.Hidden,
 			};
 			
 			// we do not want options to be provided out of band to the cross compilers
