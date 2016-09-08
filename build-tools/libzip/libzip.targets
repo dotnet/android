@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="libzip.props" />
-  <Import Project="libzip.projitems" />
   <Import Project="..\scripts\RequiredPrograms.targets" />
   <PropertyGroup>
     <ForceBuildDependsOn>
@@ -67,7 +65,7 @@
       <_Now>$([System.DateTime]::Now.Ticks)</_Now>
     </PropertyGroup>
     <MSBuild
-        Projects="$(MSBuildThisFileDirectory)\libzip.mdproj"
+        Projects="$(ForceBuildProjectFilePath)"
         Properties="_ForceXbuildToNotCacheTargets=$(_Now)"
         Targets="ForceBuild"
     />

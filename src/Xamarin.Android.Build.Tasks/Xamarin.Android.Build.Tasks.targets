@@ -2,6 +2,7 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <UsingTask TaskName="Xamarin.Android.Tools.BootstrapTasks.GenerateProfile" AssemblyFile="..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tools.BootstrapTasks.UnzipDirectoryChildren" AssemblyFile="..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" />
+  <Import Project="..\..\build-tools\mono-runtimes\ProfileAssemblies.projitems" />
   <PropertyGroup>
     <_SharedRuntimeBuildPath Condition=" '$(_SharedRuntimeBuildPath)' == '' ">..\..\bin\$(Configuration)\lib\xbuild-frameworks\MonoAndroid\</_SharedRuntimeBuildPath>
     <_GeneratedProfileClass>$(IntermediateOutputPath)Profile.g.cs</_GeneratedProfileClass>
@@ -15,7 +16,11 @@
     <_SupportLicenseInAndroidSdk>extras\android\m2repository\NOTICE.txt</_SupportLicenseInAndroidSdk>
   </PropertyGroup>
   <ItemGroup>
-    <_SharedRuntimeAssemblies Include="$(_SharedRuntimeBuildPath)v1.0\*.dll;$(_SharedRuntimeBuildPath)$(AndroidFrameworkVersion)\*.dll"/>
+    <_SharedRuntimeAssemblies Include="@(MonoProfileAssembly->'$(_SharedRuntimeBuildPath)v1.0\%(Identity)')" />
+    <_SharedRuntimeAssemblies Include="$(_SharedRuntimeBuildPath)v1.0\Mono.Data.Sqlite.dll" />
+    <_SharedRuntimeAssemblies Include="$(_SharedRuntimeBuildPath)v1.0\Mono.Posix.dll" />
+    <_SharedRuntimeAssemblies Include="$(_SharedRuntimeBuildPath)v1.0\System.EnterpriseServices.dll" />
+    <_SharedRuntimeAssemblies Include="$(_SharedRuntimeBuildPath)$(AndroidFrameworkVersion)\Mono.Android.Export.dll" />
     <!-- These files are build after Xamarin.Android.Build.Tasks but MUST be included in Profile.g.cs -->
     <_SharedRuntimeAssemblies Include="$(_SharedRuntimeBuildPath)$(AndroidFrameworkVersion)\Mono.Android.dll" />
     <_SharedRuntimeAssemblies Include="$(_SharedRuntimeBuildPath)$(AndroidFrameworkVersion)\OpenTK.dll" />

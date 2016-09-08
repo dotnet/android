@@ -26,54 +26,9 @@
   </PropertyGroup>
   <Import Project="mono-runtimes.props" />
   <Import Project="mono-runtimes.projitems" />
+  <Import Project="ProfileAssemblies.projitems" />
   <ItemGroup>
-      <_BclAssembly Include="I18N.CJK.dll"/>
-      <_BclAssembly Include="I18N.dll"/>
-      <_BclAssembly Include="I18N.MidEast.dll"/>
-      <_BclAssembly Include="I18N.Other.dll"/>
-      <_BclAssembly Include="I18N.Rare.dll"/>
-      <_BclAssembly Include="I18N.West.dll"/>
-      <_BclAssembly Include="Microsoft.CSharp.dll"/>
-      <_BclAssembly Include="Mono.Cairo.dll"/>
-      <_BclAssembly Include="Mono.CompilerServices.SymbolWriter.dll"/>
-      <_BclAssembly Include="Mono.CSharp.dll"/>
-      <_BclAssembly Include="Mono.Data.Tds.dll"/>
-      <_BclAssembly Include="Mono.Security.dll"/>
-      <_BclAssembly Include="Mono.Security.Providers.DotNet.dll"/>
-      <_BclAssembly Include="Mono.Security.Providers.NewSystemSource.dll"/>
-      <_BclAssembly Include="Mono.Security.Providers.NewTls.dll"/>
-      <_BclAssembly Include="mscorlib.dll"/>
-      <_BclAssembly Include="SMDiagnostics.dll"/>
-      <_BclAssembly Include="System.ComponentModel.Composition.dll"/>
-      <_BclAssembly Include="System.ComponentModel.DataAnnotations.dll"/>
-      <_BclAssembly Include="System.Core.dll"/>
-      <_BclAssembly Include="System.Data.dll"/>
-      <_BclAssembly Include="System.Data.Services.Client.dll"/>
-      <_BclAssembly Include="System.dll"/>
-      <_BclAssembly Include="System.IdentityModel.dll"/>
-      <_BclAssembly Include="System.IO.Compression.dll"/>
-      <_BclAssembly Include="System.IO.Compression.FileSystem.dll"/>
-      <_BclAssembly Include="System.Json.dll"/>
-      <_BclAssembly Include="System.Net.dll"/>
-      <_BclAssembly Include="System.Net.Http.dll"/>
-      <_BclAssembly Include="System.Net.Http.WinHttpHandler.dll"/>
-      <_BclAssembly Include="System.Numerics.dll"/>
-      <_BclAssembly Include="System.Numerics.Vectors.dll"/>
-      <_BclAssembly Include="System.Reflection.Context.dll"/>
-      <_BclAssembly Include="System.Reflection.DispatchProxy.dll"/>
-      <_BclAssembly Include="System.Runtime.InteropServices.RuntimeInformation.dll"/>
-      <_BclAssembly Include="System.Runtime.Serialization.dll"/>
-      <_BclAssembly Include="System.Security.dll"/>
-      <_BclAssembly Include="System.ServiceModel.dll"/>
-      <_BclAssembly Include="System.ServiceModel.Internals.dll"/>
-      <_BclAssembly Include="System.ServiceModel.Web.dll"/>
-      <_BclAssembly Include="System.Transactions.dll"/>
-      <_BclAssembly Include="System.Web.Services.dll"/>
-      <_BclAssembly Include="System.Windows.dll"/>
-      <_BclAssembly Include="System.Xml.dll"/>
-      <_BclAssembly Include="System.Xml.Linq.dll"/>
-      <_BclAssembly Include="System.Xml.Serialization.dll"/>
-      <_BclAssembly Include="System.Xml.XPath.XmlDocument.dll"/>
+    <_BclAssembly Include="@(MonoProfileAssembly)" />
   </ItemGroup>
   <ItemGroup>
     <_BclProfileItems Include="@(_BclAssembly->'$(_MonoProfileDir)\%(Identity)')" />
@@ -428,7 +383,7 @@
       DependsOnTargets="_GetRuntimesOutputItems;_PrepareLlvmItems">
     <ItemGroup>
       <BundleItem Include="@(_BclInstalledItem)" />
-      <BundleItem Include="$(OutputPath)\lib\xbuild-frameworks\MonoAndroid\v1.0\Facades\*.dll*" />
+      <BundleItem Include="@(MonoFacadeAssembly->'$(OutputPath)\lib\xbuild-frameworks\MonoAndroid\v1.0\Facades\%(Identity)')" />
       <BundleItem Include="$(OutputPath)\lib\xbuild-frameworks\MonoAndroid\v1.0\RedistList\FrameworkList.xml" />
       <BundleItem Include="@(_InstallRuntimeOutput)" />
       <BundleItem Include="@(_InstallUnstrippedRuntimeOutput)" />

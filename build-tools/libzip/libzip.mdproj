@@ -5,6 +5,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ItemType>GenericProject</ItemType>
     <ProjectGuid>{900A0F71-BAAD-417A-8D1A-8D330297CDD0}</ProjectGuid>
+    <ForceBuildProjectFilePath>$(MSBuildThisFileFullPath)</ForceBuildProjectFilePath>
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
   <PropertyGroup>
@@ -17,6 +18,8 @@
       _BuildUnlessCached
     </BuildDependsOn>
   </PropertyGroup>
+  <Import Project="libzip.props" />
+  <Import Project="libzip.projitems" />
   <Import Project="libzip.targets" />
   <ItemGroup>
     <ProjectReference Include="..\xa-prep-tasks\xa-prep-tasks.csproj">

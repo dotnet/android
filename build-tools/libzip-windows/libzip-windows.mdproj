@@ -5,6 +5,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ItemType>GenericProject</ItemType>
     <ProjectGuid>{0DE278D6-000F-4001-BB98-187C0AF58A61}</ProjectGuid>
+    <ForceBuildProjectFilePath>$(MSBuildThisFileFullPath)</ForceBuildProjectFilePath>
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
