@@ -27,7 +27,6 @@
     <MonoFacadeAssembly Include="System.Diagnostics.TraceEvent.dll" />
     <MonoFacadeAssembly Include="System.Diagnostics.TraceSource.dll" />
     <MonoFacadeAssembly Include="System.Diagnostics.Tracing.dll" />
-    <MonoFacadeAssembly Include="System.Drawing.Primitives.dll" />
     <MonoFacadeAssembly Include="System.Dynamic.Runtime.dll" />
     <MonoFacadeAssembly Include="System.Globalization.Calendars.dll" />
     <MonoFacadeAssembly Include="System.Globalization.Extensions.dll" />
