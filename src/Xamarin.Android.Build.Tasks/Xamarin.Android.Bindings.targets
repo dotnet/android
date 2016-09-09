@@ -267,12 +267,6 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
       <Output TaskParameter="Value" PropertyName="_AndroidPlatformToolsDirectory"/>
     </CreateProperty>
 
-    <CreateProperty Value="smcs" Condition="'$(OS)' == 'Unix'">
-      <Output TaskParameter="Value" PropertyName="CscToolExe"/>
-    </CreateProperty>
-    <CreateProperty Value="$(_MonoAndroidBinDirectory)" Condition="'$(OS)' == 'Unix'">
-      <Output TaskParameter="Value" PropertyName="CscToolPath"/>
-    </CreateProperty>
   </Target>
 
   <Target Name="_SetupDesignTimeBuildForBuild">
