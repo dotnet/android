@@ -333,7 +333,7 @@ namespace MonoDroid.Generation {
 			var overridens = defaultMethods.Where (m => overrides.Where (_ => _.Name == m.Name && _.JniSignature == m.JniSignature)
 				.Any (mm => mm.DeclaringType.GetAllDerivedInterfaces ().Contains (m.DeclaringType)));
 
-			foreach (Method m in Methods.Concat (defaultMethods.Except (overridens))) {
+			foreach (Method m in Methods.Concat (defaultMethods.Except (overridens)).Where (m => m.DeclaringType.IsGeneratable)) {
 				bool virt = m.IsVirtual;
 				m.IsVirtual = !IsFinal && virt;
 				if (m.IsAbstract && !m.IsInterfaceDefaultMethodOverride && !m.IsInterfaceDefaultMethod)
