@@ -468,6 +468,10 @@ namespace MonoDroid.Generation {
 					Report.Warning (0, Report.WarningInterfaceGen + 1, "empty event name in {0}.{1}.", FullName, method.Name);
 					continue;
 				}
+				if (opt.GetSafeIdentifier (name) != name) {
+					Report.Warning (0, Report.WarningInterfaceGen + 4, "event name for {0}.{1} is invalid. `eventName' or `argsType` can be used to assign a valid member name.", FullName, method.Name);
+					continue;
+				}
 				var prop = target.Properties.FirstOrDefault (p => p.Setter == method);
 				if (prop != null) {
 					string setter = "__Set" + prop.Name;
@@ -523,6 +527,8 @@ namespace MonoDroid.Generation {
 		
 		void GenerateEventOrProperty (Method m, StreamWriter sw, string indent, ClassGen target, CodeGenerationOptions opt, string name, string connector_fmt, string add, string remove)
 		{
+			if (m.EventName == string.Empty)
+				return;
 			string nameSpec = Methods.Count > 1 ? m.AdjustedName : String.Empty;
 			int idx = FullName.LastIndexOf (".");
 			int start = Name.StartsWith ("IOn") ? 3 : 1;
@@ -534,9 +540,16 @@ namespace MonoDroid.Generation {
 			else
 				full_delegate_name += "Handler";
 			if (m.RetVal.IsVoid || m.IsEventHandlerWithHandledProperty) {
-				if (m.EventName != string.Empty)
+				if (opt.GetSafeIdentifier (name) != name) {
+					Report.Warning (0, Report.WarningInterfaceGen + 5, "event name for {0}.{1} is invalid. `eventName' or `argsType` can be used to assign a valid member name.", FullName, name);
+					return;
+				} else
 					GenerateEvent (sw, indent, opt, name, nameSpec, m.AdjustedName, full_delegate_name, !m.Parameters.HasSender, connector_fmt, add, remove);
 			} else {
+				if (opt.GetSafeIdentifier (name) != name) {
+					Report.Warning (0, Report.WarningInterfaceGen + 6, "event property name for {0}.{1} is invalid. `eventName' or `argsType` can be used to assign a valid member name.", FullName, name);
+					return;
+				}
 				sw.WriteLine ("{0}WeakReference weak_implementor_{1};", indent, name);
 				sw.WriteLine ("{0}{1}Implementor Impl{2} {{", indent, opt.GetOutputName (FullName), name);
 				sw.WriteLine ("{0}\tget {{", indent);
