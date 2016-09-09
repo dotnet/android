@@ -54,6 +54,8 @@ namespace Xamarin.Android.Binder {
 		public bool                 UseShortFileNames {get; set;}
 		public int                  ProductVersion { get; set; }
 		public string               MappingReportFile { get; set; }
+		public bool                 OnlyRunApiXmlAdjuster { get; set; }
+		public string               ApiXmlAdjusterOutput { get; set; }
 
 		public static CodeGeneratorOptions Parse (string[] args)
 		{
@@ -115,6 +117,12 @@ namespace Xamarin.Android.Binder {
 				{ "type-map-report=",
 					"Java-Managed Mapping report file.",
 					v => opts.MappingReportFile = v },
+				{ "only-xml-adjuster",
+					"Run only API XML adjuster for class-parse input.",
+					v => opts.OnlyRunApiXmlAdjuster = v != null },
+				{ "xml-adjuster-output=",
+					"specify API XML adjuster output XML for class-parse input.",
+					v => opts.ApiXmlAdjusterOutput = v },
 				{ "h|?|help",
 					"Show this message and exit.",
 					v => show_help = v != null },
@@ -218,6 +226,8 @@ namespace Xamarin.Android.Binder {
 			var annotations_zips    = options.AnnotationsZipFiles;
 			string filename         = options.ApiDescriptionFile;
 			string mapping_file     = options.MappingReportFile;
+			bool only_xml_adjuster  = options.OnlyRunApiXmlAdjuster;
+			string api_xml_adjuster_output = options.ApiXmlAdjusterOutput;
 			var apiSource           = "";
 			var opt                 = new CodeGenerationOptions () {
 				CodeGenerationTarget  = options.CodeGenerationTarget,
@@ -265,9 +275,11 @@ namespace Xamarin.Android.Binder {
 				apiSourceAttr = xr.GetAttribute ("api-source");
 			}
 			if (apiSourceAttr == "class-parse") {
-				apiXmlFile = Path.Combine (Path.GetDirectoryName (filename), Path.GetFileName (filename) + ".adjusted");
+				apiXmlFile = api_xml_adjuster_output ?? Path.Combine (Path.GetDirectoryName (filename), Path.GetFileName (filename) + ".adjusted");
 				new Adjuster ().Process (filename, SymbolTable.AllRegisteredSymbols ().OfType<GenBase> ().ToArray (), apiXmlFile);
 			}
+			if (only_xml_adjuster)
+				return;
 
 			// load XML API definition with fixups.
 
