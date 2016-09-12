@@ -13,6 +13,7 @@
       Outputs="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android.debug.so');@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android.release.so')">
     <PropertyGroup>
       <_AppAbi>@(AndroidSupportedTargetJitAbi->'%(Identity)', ' ')</_AppAbi>
+      <_NdkBuildArgs>CONFIGURATION=$(Configuration) SGEN_BRIDGE_VERSION=$(MonoSgenBridgeVersion)</_NdkBuildArgs>
     </PropertyGroup>
     <WriteLinesToFile
         File="jni\Application.mk"
@@ -20,7 +21,7 @@
         Overwrite="True"
     />
     <Exec
-        Command="$(AndroidToolchainDirectory)\ndk\ndk-build CONFIGURATION=$(Configuration) NDK_LIBS_OUT=./libs/Debug NDK_OUT=./obj/Debug V=1"
+        Command="$(AndroidToolchainDirectory)\ndk\ndk-build $(_NdkBuildArgs) NDK_LIBS_OUT=./libs/Debug NDK_OUT=./obj/Debug V=1"
     />
     <Copy
         SourceFiles="@(AndroidSupportedTargetJitAbi->'obj\Debug\local\%(Identity)\libmonodroid.so')"
@@ -31,7 +32,7 @@
         DestinationFiles="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android.debug.so')"
     />
     <Exec
-        Command="$(AndroidToolchainDirectory)\ndk\ndk-build CONFIGURATION=$(Configuration) NDK_LIBS_OUT=./libs/Release NDK_OUT=./obj/Release  V=1"
+        Command="$(AndroidToolchainDirectory)\ndk\ndk-build $(_NdkBuildArgs) NDK_LIBS_OUT=./libs/Release NDK_OUT=./obj/Release  V=1"
     />
     <Copy
         SourceFiles="@(AndroidSupportedTargetJitAbi->'obj\Release\local\%(Identity)\libmonodroid.so')"
@@ -45,10 +46,10 @@
   <Target Name="_CleanRuntimes"
       AfterTargets="Clean">
     <Exec
-        Command="$(AndroidToolchainDirectory)\ndk\ndk-build CONFIGURATION=$(Configuration) NDK_LIBS_OUT=./libs/Debug NDK_OUT=./obj/Debug  V=1 clean"
+        Command="$(AndroidToolchainDirectory)\ndk\ndk-build $(_NdkBuildArgs) NDK_LIBS_OUT=./libs/Debug NDK_OUT=./obj/Debug  V=1 clean"
     />
     <Exec
-        Command="$(AndroidToolchainDirectory)\ndk\ndk-build CONFIGURATION=$(Configuration) NDK_LIBS_OUT=./libs/Release NDK_OUT=./obj/Release  V=1 clean"
+        Command="$(AndroidToolchainDirectory)\ndk\ndk-build $(_NdkBuildArgs) NDK_LIBS_OUT=./libs/Release NDK_OUT=./obj/Release  V=1 clean"
     />
     <RemoveDir Directories="obj\local;libs" />
     <Delete Files="jni\config.include;jni\machine.config.include;jni\Application.mk" />

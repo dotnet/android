@@ -93,7 +93,12 @@ Overridable MSBuild properties include:
     `external/Java.Interop` directory, maintained by `git submodule update`.
 * `$(MakeConcurrency)`: **make**(1) parameters to use intended to influence
     the number of CPU cores used when **make**(1) executes. By default this uses
-		`-jCOUNT`, where `COUNT` is obtained from `sysctl hw.ncpu`.
+    `-jCOUNT`, where `COUNT` is obtained from `sysctl hw.ncpu`.
+* `$(MonoSgenBridgeVersion)`: The Mono SGEN Bridge version to support.
+    Valid values include:
+
+    * `4`: Mono 4.6 support. This is the default.
+    * `5`: Mono 4.8 support.
 
 # Build Requirements
 

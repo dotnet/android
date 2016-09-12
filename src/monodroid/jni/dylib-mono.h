@@ -120,9 +120,13 @@ typedef uint8_t  mono_byte;
 #endif
 #endif
 
-enum {
-	SGEN_BRIDGE_VERSION = 4
-};
+#ifndef SGEN_BRIDGE_VERSION
+#error  SGEN_BRIDGE_VERSION must be defined! (Use the `$(MonoSgenBridgeVersion)` MSBuild property)
+#endif  /* ndef SGEN_BRIDGE_VERSION */
+
+#if (SGEN_BRIDGE_VERSION < 4) || (SGEN_BRIDGE_VERSION >= 6)
+#error  Only SGEN_BRIDGE_VERSION/$(MonoSgenBridgeVersion) values of 4 or 5 are supported.
+#endif  /* SGEN_BRIDGE_VERSION check */
 
 typedef enum {
 	/* Instances of this class should be scanned when computing the transitive dependency among bridges. E.g. List<object>*/
