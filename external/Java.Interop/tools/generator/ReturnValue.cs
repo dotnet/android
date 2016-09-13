@@ -118,7 +118,7 @@ namespace MonoDroid.Generation {
 
 		public bool Validate (CodeGenerationOptions opt, GenericParameterDefinitionList type_params)
 		{
-			sym = SymbolTable.Lookup (java_type, type_params);
+			sym = (IsEnumified ? SymbolTable.Lookup (managed_type, type_params) : null) ?? SymbolTable.Lookup (java_type, type_params);
 			if (sym == null) {
 				Report.Warning (0, Report.WarningReturnValue + 0, "Unknown return type {0} {1}.", java_type, opt.ContextString);
 				return false;
