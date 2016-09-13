@@ -79,13 +79,15 @@ namespace MonoDroid.Generation {
 					overrides ? " override" : "",
 					opt.GetOutputName (Getter.ReturnType),
 					abstract_name);
-			sw.WriteLine ("{0}\t// Metadata.xml XPath method reference: path=\"{1}/method[@name='{2}'{3}]\"", indent, gen.MetadataXPathReference, Getter.JavaName, Getter.Parameters.GetMethodXPathPredicate ());
+			if (gen.IsGeneratable)
+				sw.WriteLine ("{0}\t// Metadata.xml XPath method reference: path=\"{1}/method[@name='{2}'{3}]\"", indent, gen.MetadataXPathReference, Getter.JavaName, Getter.Parameters.GetMethodXPathPredicate ());
 			if (Getter.IsReturnEnumified)
 				sw.WriteLine ("{0}[return:global::Android.Runtime.GeneratedEnum]", indent);
 			Getter.GenerateCustomAttributes (sw, indent);
 			sw.WriteLine ("{0}\t[Register (\"{1}\", \"{2}\", \"{3}\"{4})] get;", indent, Getter.JavaName, Getter.JniSignature, Getter.ConnectorName, Getter.AdditionalAttributeString ());
 			if (Setter != null) {
-				sw.WriteLine ("{0}\t// Metadata.xml XPath method reference: path=\"{1}/method[@name='{2}'{3}]\"", indent, gen.MetadataXPathReference, Setter.JavaName, Setter.Parameters.GetMethodXPathPredicate ());
+				if (gen.IsGeneratable)
+					sw.WriteLine ("{0}\t// Metadata.xml XPath method reference: path=\"{1}/method[@name='{2}'{3}]\"", indent, gen.MetadataXPathReference, Setter.JavaName, Setter.Parameters.GetMethodXPathPredicate ());
 				Setter.GenerateCustomAttributes (sw, indent);
 				sw.WriteLine ("{0}\t[Register (\"{1}\", \"{2}\", \"{3}\"{4})] set;", indent, Setter.JavaName, Setter.JniSignature, Setter.ConnectorName, Setter.AdditionalAttributeString ());
 			}
@@ -99,13 +101,15 @@ namespace MonoDroid.Generation {
 		{
 			sw.WriteLine ("{0}{1} {2} {{", indent, opt.GetOutputName (Type), AdjustedName);
 			if (Getter != null) {
-				sw.WriteLine ("{0}\t// Metadata.xml XPath method reference: path=\"{1}/method[@name='{2}'{3}]\"", indent, gen.MetadataXPathReference, Getter.JavaName, Getter.Parameters.GetMethodXPathPredicate ());
+				if (gen.IsGeneratable)
+					sw.WriteLine ("{0}\t// Metadata.xml XPath method reference: path=\"{1}/method[@name='{2}'{3}]\"", indent, gen.MetadataXPathReference, Getter.JavaName, Getter.Parameters.GetMethodXPathPredicate ());
 				if (Getter.GenericArguments != null && Getter.GenericArguments.Any ())
 					sw.WriteLine ("{0}{1}", indent, Getter.GenericArguments.ToGeneratedAttributeString ());
 				sw.WriteLine ("{0}\t[Register (\"{1}\", \"{2}\", \"{3}:{4}\"{5})] get;", indent, Getter.JavaName, Getter.JniSignature, Getter.ConnectorName, Getter.GetAdapterName (opt, adapter), Getter.AdditionalAttributeString ());
 			}
 			if (Setter != null) {
-				sw.WriteLine ("{0}\t// Metadata.xml XPath method reference: path=\"{1}/method[@name='{2}'{3}]\"", indent, gen.MetadataXPathReference, Setter.JavaName, Setter.Parameters.GetMethodXPathPredicate ());
+				if (gen.IsGeneratable)
+					sw.WriteLine ("{0}\t// Metadata.xml XPath method reference: path=\"{1}/method[@name='{2}'{3}]\"", indent, gen.MetadataXPathReference, Setter.JavaName, Setter.Parameters.GetMethodXPathPredicate ());
 				if (Setter.GenericArguments != null && Setter.GenericArguments.Any ())
 					sw.WriteLine ("{0}{1}", indent, Setter.GenericArguments.ToGeneratedAttributeString ());
 				sw.WriteLine ("{0}\t[Register (\"{1}\", \"{2}\", \"{3}:{4}\"{5})] set;", indent, Setter.JavaName, Setter.JniSignature, Setter.ConnectorName, Setter.GetAdapterName (opt, adapter), Setter.AdditionalAttributeString ());
@@ -230,13 +234,15 @@ namespace MonoDroid.Generation {
 				sw.WriteLine ("{0}[Obsolete (@\"{1}\")]", indent, Getter.Deprecated.Replace ("\"", "\"\"").Trim () + (Setter != null && Setter.Deprecated != Getter.Deprecated ? " " + Setter.Deprecated.Replace ("\"", "\"\"").Trim () : null));
 			Getter.GenerateCustomAttributes (sw, indent);
 			sw.WriteLine ("{0}{1}{2} unsafe {3} {4} {{", indent, visibility, virtual_override, opt.GetOutputName (Getter.ReturnType), decl_name);
-			sw.WriteLine ("{0}\t// Metadata.xml XPath method reference: path=\"{1}/method[@name='{2}'{3}]\"", indent, gen.MetadataXPathReference, Getter.JavaName, Getter.Parameters.GetMethodXPathPredicate ());
+			if (gen.IsGeneratable)
+				sw.WriteLine ("{0}\t// Metadata.xml XPath method reference: path=\"{1}/method[@name='{2}'{3}]\"", indent, gen.MetadataXPathReference, Getter.JavaName, Getter.Parameters.GetMethodXPathPredicate ());
 			sw.WriteLine ("{0}\t[Register (\"{1}\", \"{2}\", \"{3}\"{4})]", indent, Getter.JavaName, Getter.JniSignature, Getter.ConnectorName, Getter.AdditionalAttributeString ());
 			sw.WriteLine ("{0}\tget {{", indent);
 			Getter.GenerateBody (sw, indent + "\t\t", opt);
 			sw.WriteLine ("{0}\t}}", indent);
 			if (Setter != null) {
-				sw.WriteLine ("{0}\t// Metadata.xml XPath method reference: path=\"{1}/method[@name='{2}'{3}]\"", indent, gen.MetadataXPathReference, Setter.JavaName, Setter.Parameters.GetMethodXPathPredicate ());
+				if (gen.IsGeneratable)
+					sw.WriteLine ("{0}\t// Metadata.xml XPath method reference: path=\"{1}/method[@name='{2}'{3}]\"", indent, gen.MetadataXPathReference, Setter.JavaName, Setter.Parameters.GetMethodXPathPredicate ());
 				Setter.GenerateCustomAttributes (sw, indent);
 				sw.WriteLine ("{0}\t[Register (\"{1}\", \"{2}\", \"{3}\"{4})]", indent, Setter.JavaName, Setter.JniSignature, Setter.ConnectorName, Setter.AdditionalAttributeString ());
 				sw.WriteLine ("{0}\tset {{", indent);

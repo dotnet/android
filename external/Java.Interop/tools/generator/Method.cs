@@ -566,7 +566,8 @@ namespace MonoDroid.Generation {
 				bool gen_as_formatted = IsReturnCharSequence;
 				string name = AdjustedName;
 				GenerateCallback (sw, indent, opt, impl, null, gen_as_formatted);
-				sw.WriteLine ("{0}// Metadata.xml XPath method reference: path=\"{1}\"", indent, GetMetadataXPathReference (this.DeclaringType));
+				if (DeclaringType.IsGeneratable)
+					sw.WriteLine ("{0}// Metadata.xml XPath method reference: path=\"{1}\"", indent, GetMetadataXPathReference (this.DeclaringType));
 				sw.WriteLine ("{0}[Register (\"{1}\", \"{2}\", \"{3}\"{4})]", indent, JavaName, JniSignature, ConnectorName, this.AdditionalAttributeString ());
 				GenerateCustomAttributes (sw, indent);
 				sw.WriteLine ("{0}{1} abstract {2} {3} ({4});", indent, Visibility, opt.GetOutputName (RetVal.FullName), name, GenBase.GetSignature (this, opt));
@@ -581,7 +582,8 @@ namespace MonoDroid.Generation {
 
 		public void GenerateDeclaration (StreamWriter sw, string indent, CodeGenerationOptions opt, GenBase type, string adapter)
 		{
-			sw.WriteLine ("{0}// Metadata.xml XPath method reference: path=\"{1}\"", indent, GetMetadataXPathReference (this.DeclaringType));
+			if (DeclaringType.IsGeneratable)
+				sw.WriteLine ("{0}// Metadata.xml XPath method reference: path=\"{1}\"", indent, GetMetadataXPathReference (this.DeclaringType));
 			if (Deprecated != null)
 				sw.WriteLine ("[Obsolete (@\"{0}\")]", Deprecated.Replace ("\"", "\"\""));
 			if (IsReturnEnumified)
@@ -805,7 +807,8 @@ namespace MonoDroid.Generation {
 			string seal = IsOverride && IsFinal ? " sealed" : null;
 			string ret = opt.GetOutputName (RetVal.FullName);
 			GenerateIdField (sw, indent, opt);
-			sw.WriteLine ("{0}// Metadata.xml XPath method reference: path=\"{1}\"", indent, GetMetadataXPathReference (this.DeclaringType));
+			if (DeclaringType.IsGeneratable)
+				sw.WriteLine ("{0}// Metadata.xml XPath method reference: path=\"{1}\"", indent, GetMetadataXPathReference (this.DeclaringType));
 			if (Deprecated != null)
 				sw.WriteLine ("{0}[Obsolete (@\"{1}\")]", indent, Deprecated.Replace ("\"", "\"\""));
 			if (IsReturnEnumified)
