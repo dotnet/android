@@ -121,7 +121,7 @@ typedef uint8_t  mono_byte;
 #endif
 
 enum {
-	SGEN_BRIDGE_VERSION = 4
+	SGEN_BRIDGE_VERSION = 5
 };
 
 typedef enum {
