@@ -6,6 +6,7 @@
     <ItemType>GenericProject</ItemType>
     <ProjectGuid>{2CF172E5-BDAE-4ABA-8BC8-08040ED3E77A}</ProjectGuid>
   </PropertyGroup>
+  <Import Project="..\..\Configuration.props" />
   <PropertyGroup Condition="'$(Configuration)'=='Debug'">
     <OutputPath>..\..\bin\Debug\</OutputPath>
   </PropertyGroup>
@@ -13,17 +14,6 @@
     <OutputPath>..\..\bin\Release\</OutputPath>
   </PropertyGroup>
 
-  <Import Project="..\..\Configuration.props" />
-
-  <Target Name="Build">
-    <Copy SourceFiles="..\..\tools\scripts\generator" DestinationFiles="$(OutputPath)bin\generator" />
-    <Exec
-	Condition=" '$(HostOS)' != 'Windows' "
-	Command="chmod +x $(OutputPath)bin\generator" />
-  </Target>
-
-  <Target Name="Clean">
-    <Delete Files="$(OutputPath)bin\generator" />
-  </Target>
+  <Import Project="unix-distribution-setup.targets" />
 </Project>
 

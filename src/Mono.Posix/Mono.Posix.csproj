@@ -13,6 +13,8 @@
     <AndroidResgenFile>Resources\Resource.designer.cs</AndroidResgenFile>
     <AssemblyName>Mono.Posix</AssemblyName>
     <SignAssembly>true</SignAssembly>
+    <AndroidApplication>false</AndroidApplication>
+    <AndroidUseLatestPlatformSdk>false</AndroidUseLatestPlatformSdk>
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
   <PropertyGroup>
@@ -26,6 +28,7 @@
     <OutputPath>..\..\bin\$(Configuration)\lib\xbuild-frameworks\MonoAndroid\v1.0</OutputPath>
     <DefineConstants>DEBUG;TRACE;NET_4_0;NET_4_5;MONO;DISABLE_CAS_USE;MONODROID</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
+    <AndroidUseSharedRuntime>True</AndroidUseSharedRuntime>
     <WarningLevel>4</WarningLevel>
     <AndroidLinkMode>None</AndroidLinkMode>
     <ConsolePause>false</ConsolePause>

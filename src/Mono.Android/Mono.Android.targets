@@ -94,13 +94,13 @@
     <MakeDir Directories="$(IntermediateOutputPath)jcw;$(IntermediateOutputPath)jcw\bin" />
     <PropertyGroup>
       <OutputPathAbs>$(MSBuildProjectDirectory)\$(OutputPath)</OutputPathAbs>
-      <JcwGen>$(JavaInteropFullPath)\bin\$(Configuration)\jcw-gen.exe</JcwGen>
+      <JcwGen>"$(JavaInteropFullPath)\bin\$(Configuration)\jcw-gen.exe" -v10</JcwGen>
       <_LibDirs>-L "$(OutputPathAbs)" -L "$(OutputPathAbs)..\v1.0\" -L "$(OutputPathAbs)..\v1.0\Facades"</_LibDirs>
       <_Assembly>"$(OutputPathAbs)$(AssemblyName).dll"</_Assembly>
       <_Out>-o "$(MSBuildProjectDirectory)\$(IntermediateOutputPath)jcw\src"</_Out>
     </PropertyGroup>
     <Exec
-        Command="$(ManagedRuntime) $(JcwGen) $(_Out) $(_LibDirs) $(_Assembly)"
+        Command="$(ManagedRuntime) $(ManagedRuntimeArgs) $(JcwGen) $(_Out) $(_LibDirs) $(_Assembly)"
     />
     <ItemGroup>
       <_JavaSources Include="$(IntermediateOutputPath)jcw\src\**\*.java" />
