@@ -4,7 +4,7 @@ V             ?= 0
 CONFIGURATION = Debug
 MSBUILD       = xbuild
 MSBUILD_FLAGS = /p:Configuration=$(CONFIGURATION) $(MSBUILD_ARGS)
-RUNTIME       := $(shell if [ -f `which mono64` ] ; then echo mono64 ; else echo mono; fi) --debug=casts
+RUNTIME       := $(shell if [ -f "`which mono64`" ] ; then echo mono64 ; else echo mono; fi) --debug=casts
 SOLUTION      = Xamarin.Android.sln
 
 NUNIT_TESTS = \
