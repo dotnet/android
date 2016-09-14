@@ -169,6 +169,23 @@ namespace Xamarin.Android.Net
 			throw new ObjectDisposedException (nameof (AndroidClientHandler));
 		}
 
+		string EncodeUrl (Uri url)
+		{
+			if (url == null)
+				return String.Empty;
+
+			if (String.IsNullOrEmpty (url.Query))
+				return Uri.EscapeUriString (url.ToString ());
+
+			// UriBuilder takes care of encoding everything properly
+			var bldr = new UriBuilder (url);
+			if (url.IsDefaultPort)
+				bldr.Port = -1; // Avoids adding :80 or :443 to the host name in the result
+
+			// bldr.Uri.ToString () would ruin the good job UriBuilder did
+			return bldr.ToString ();
+		}
+
 		/// <summary>
 		/// Creates, configures and processes an asynchronous request to the indicated resource.
 		/// </summary>
@@ -190,7 +207,7 @@ namespace Xamarin.Android.Net
 				Method = request.Method
 			};
 			while (true) {
-				URL java_url = new URL (Uri.EscapeUriString (redirectState.NewUrl.ToString ()));
+				URL java_url = new URL (EncodeUrl (redirectState.NewUrl));
 				URLConnection java_connection = java_url.OpenConnection ();
 				HttpURLConnection httpConnection = await SetupRequestInternal (request, java_connection);
 				HttpResponseMessage response = await ProcessRequest (request, java_url, httpConnection, cancellationToken, redirectState);
