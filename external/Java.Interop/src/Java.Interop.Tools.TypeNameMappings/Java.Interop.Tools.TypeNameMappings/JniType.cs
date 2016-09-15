@@ -612,14 +612,14 @@ namespace Java.Interop.Tools.TypeNameMappings {
 				return false;
 
 			return GetBaseConstructors (type)
-				.Any (ctor => ctor.Parameters.Cast<ParameterDefinition> ().Any (p => p.Name == "__self"));
+				.Any (ctor => ctor.Parameters.Any (p => p.Name == "__self"));
 		}
 
 		static IEnumerable<MethodDefinition> GetBaseConstructors (TypeDefinition type)
 		{
 			var baseType = type.GetBaseTypes ().FirstOrDefault (t => t.GetCustomAttributes (typeof (RegisterAttribute)).Any ());
 			if (baseType != null)
-				return baseType.Methods.Where (m => m.IsConstructor && !m.IsStatic).Cast<MethodDefinition> ();
+				return baseType.Methods.Where (m => m.IsConstructor && !m.IsStatic);
 			return Enumerable.Empty<MethodDefinition> ();
 		}
 #endif  // HAVE_CECIL

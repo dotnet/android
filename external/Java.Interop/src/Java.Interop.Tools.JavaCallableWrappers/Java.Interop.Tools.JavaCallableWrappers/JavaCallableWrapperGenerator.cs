@@ -130,7 +130,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 				}
 			}
 
-			foreach (MethodDefinition imethod in type.Interfaces.Cast<TypeReference> ()
+			foreach (MethodDefinition imethod in type.Interfaces.Select (ifaceInfo => ifaceInfo.InterfaceType)
 					.Select (r => {
 						var d = r.Resolve ();
 						if (d == null)
@@ -141,7 +141,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 						return d;
 					})
 					.Where (d => GetRegisterAttributes (d).Any ())
-					.SelectMany (d => d.Methods.Cast<MethodDefinition>())) {
+					.SelectMany (d => d.Methods)) {
 				AddMethod (imethod, imethod);
 			}
 
@@ -538,7 +538,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 			sw.WriteLine ("\textends " + extendsType);
 			sw.WriteLine ("\timplements");
 			sw.Write ("\t\tmono.android.IGCUserPeer");
-			IEnumerable<TypeDefinition> ifaces = type.Interfaces.Cast<TypeReference>()
+			IEnumerable<TypeDefinition> ifaces = type.Interfaces.Select (ifaceInfo => ifaceInfo.InterfaceType)
 				.Select (r => r.Resolve ())
 				.Where (d => GetRegisterAttributes (d).Any ());
 			if (ifaces.Any ()) {
