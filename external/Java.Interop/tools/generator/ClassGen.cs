@@ -31,13 +31,14 @@ namespace MonoDroid.Generation {
 			: base (new ManagedGenBaseSupport (t))
 		{
 			this.t = t;
-			foreach (var itd in t.Interfaces) {
-				var def = itd.Resolve ();
+			foreach (var ifaceImpl in t.Interfaces) {
+				var iface   = ifaceImpl.InterfaceType;
+				var def     = ifaceImpl.InterfaceType.Resolve ();
 				if (def != null && def.IsNotPublic)
 					continue;
-				AddInterface (itd.FullNameCorrected ());
+				AddInterface (iface.FullNameCorrected ());
 			}
-			bool implements_charsequence = t.Interfaces.Any (it => it.FullName == "Java.Lang.CharSequence");
+			bool implements_charsequence = t.Interfaces.Any (it => it.InterfaceType.FullName == "Java.Lang.CharSequence");
 			foreach (var m in t.Methods) {
 				if (m.IsPrivate || m.IsAssembly || !m.CustomAttributes.Any (ca => ca.AttributeType.FullNameCorrected () == "Android.Runtime.RegisterAttribute"))
 					continue;

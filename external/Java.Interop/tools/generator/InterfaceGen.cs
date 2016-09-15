@@ -15,8 +15,9 @@ namespace MonoDroid.Generation {
 		public ManagedInterfaceGen (TypeDefinition t)
 			: base (new ManagedGenBaseSupport (t))
 		{
-			foreach (var itd in t.Interfaces)
-				AddInterface (itd.FullNameCorrected ());
+			foreach (var ifaceImpl in t.Interfaces) {
+				AddInterface (ifaceImpl.InterfaceType.FullNameCorrected ());
+			}
 			foreach (var m in t.Methods) {
 				if (m.IsPrivate || m.IsAssembly || !m.CustomAttributes.Any (ca => ca.AttributeType.FullNameCorrected () == "Android.Runtime.RegisterAttribute"))
 					continue;

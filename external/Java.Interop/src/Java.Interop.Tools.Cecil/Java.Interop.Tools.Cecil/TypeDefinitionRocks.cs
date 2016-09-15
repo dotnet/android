@@ -41,9 +41,11 @@ namespace Java.Interop.Tools.Cecil {
 					return true;
 				if (!t.HasInterfaces)
 					continue;
-				foreach (var i in t.Interfaces)
+				foreach (var ifaceImpl in t.Interfaces) {
+					var i   = ifaceImpl.InterfaceType;
 					if (IsAssignableFrom (type, i))
 						return true;
+				}
 			}
 			return false;
 		}
@@ -56,7 +58,7 @@ namespace Java.Interop.Tools.Cecil {
 		public static bool ImplementsInterface (this TypeDefinition type, string interfaceName)
 		{
 			return type.GetTypeAndBaseTypes ().Any (t => t.HasInterfaces &&
-					t.Interfaces.Any (i => i.FullName == interfaceName));
+					t.Interfaces.Any (i => i.InterfaceType.FullName == interfaceName));
 		}
 
 		public static string GetPartialAssemblyQualifiedName (this TypeReference type)

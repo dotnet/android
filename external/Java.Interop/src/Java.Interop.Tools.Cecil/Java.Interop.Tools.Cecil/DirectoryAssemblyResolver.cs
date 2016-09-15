@@ -74,6 +74,16 @@ namespace Java.Interop.Tools.Cecil {
 			SearchDirectories = new List<string> ();
 		}
 
+		public void Dispose ()
+		{
+			Dispose (disposing: false);
+			GC.SuppressFinalize (this);
+		}
+
+		protected virtual void Dispose (bool disposing)
+		{
+		}
+
 		public IDictionary ToResolverCache ()
 		{
 			var resolver_cache = new Hashtable ();

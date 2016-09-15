@@ -198,8 +198,9 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 				return null;
 
 			foreach (var ins in method.Body.Instructions) {
-				if (ins.SequencePoint != null)
-					return ins.SequencePoint;
+				var seqPoint = method.DebugInformation.GetSequencePoint (ins);
+				if (seqPoint != null)
+					return seqPoint;
 			}
 
 			return null;
@@ -213,7 +214,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 					continue;
 
 				foreach (var ins in method.Body.Instructions) {
-					var seq = ins.SequencePoint;
+					var seq = method.DebugInformation.GetSequencePoint (ins);
 					if (seq == null)
 						continue;
 
