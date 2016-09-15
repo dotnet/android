@@ -13,7 +13,7 @@
   </PropertyGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.Common.targets" />
   <PropertyGroup>
-    <BuildDependsOn/>
+    <BuildDependsOn />
     <BuildDependsOn Condition="'$(HostOS)' == 'Windows' OR '$(HostOS)' == 'Darwin'">
       ResolveReferences;
       _BuildUnlessCached

@@ -60,7 +60,8 @@ namespace MonoDroid.Tuner {
 			while (type != null) {
 				// does the type implements it itself
 				if (type.HasInterfaces) {
-					foreach (TypeReference iface in type.Interfaces) {
+					foreach (var ifaceInfo in type.Interfaces) {
+						var iface       = ifaceInfo.InterfaceType;
 						string fullname = (generic) ? iface.GetElementType ().FullName : iface.FullName;
 						if (fullname == interfaceName)
 							return true;

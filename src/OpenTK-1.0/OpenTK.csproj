@@ -19,6 +19,8 @@
     <NoWarn>3001,3002,3003,3005,3006,3021,3014,0618,1591,0414,0169,0419,1635</NoWarn>
     <NoStdLib>true</NoStdLib>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AndroidApplication>false</AndroidApplication>
+    <AndroidUseLatestPlatformSdk>false</AndroidUseLatestPlatformSdk>
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
   <PropertyGroup>
@@ -67,7 +69,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-        <Compile Include="GlobalAssemblyInfo.cs"/>
+        <Compile Include="GlobalAssemblyInfo.cs" />
         <Compile Include="$(OpenTKSourceDirectory)\Source\OpenTK\Audio\AudioCapture.cs">
             <Link>Audio\AudioCapture.cs</Link>
         </Compile>

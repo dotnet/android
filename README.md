@@ -97,8 +97,8 @@ Overridable MSBuild properties include:
 * `$(MonoSgenBridgeVersion)`: The Mono SGEN Bridge version to support.
     Valid values include:
 
-    * `4`: Mono 4.6 support. This is the default.
-    * `5`: Mono 4.8 support.
+    * `4`: Mono 4.6 support.
+    * `5`: Mono 4.8 support. This is the default.
 
 # Build Requirements
 

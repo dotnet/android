@@ -137,7 +137,8 @@ namespace MonoDroid.Tuner
 			foreach (var baseType in type.GetBaseTypes ())
 				typeMethods.AddRange (baseType.Methods);
 
-			foreach (var iface in type.Interfaces) {
+			foreach (var ifaceInfo in type.Interfaces) {
+				var iface    = ifaceInfo.InterfaceType;
 				var ifaceDef = iface.Resolve ();
 				if (ifaceDef == null) {
 					if (Context.LogInternalExceptions)

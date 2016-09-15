@@ -45,8 +45,8 @@ namespace Mono.Tuner {
 				return false; // we are not looking for default system types.
 			if (!type.HasInterfaces)
 				return false;
-			return type.Interfaces.Any (i => i.FullName == "System.Linq.IQueryProvider")
-					|| type.Interfaces.Select (t => t.Resolve ()).Any (t => t != null && IsLinqProvider (t));
+			return type.Interfaces.Any (i => i.InterfaceType.FullName == "System.Linq.IQueryProvider")
+					|| type.Interfaces.Select (t => t.InterfaceType.Resolve ()).Any (t => t != null && IsLinqProvider (t));
 		}
 	}
 }
