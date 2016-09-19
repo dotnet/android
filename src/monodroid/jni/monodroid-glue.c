@@ -3989,6 +3989,8 @@ JNICALL Java_mono_android_Runtime_register (JNIEnv *env, jclass klass, jstring m
 	args [4] = &methods_len;
 
 	mono.mono_jit_thread_attach (domain);
+	// Refresh current domain as it might have been modified by the above call
+	domain = mono.mono_domain_get ();
 	monodroid_runtime_invoke (&mono, domain, registerType, NULL, args, NULL);
 
 	(*env)->ReleaseStringChars (env, managedType, managedType_ptr);
