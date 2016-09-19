@@ -189,7 +189,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<AndroidUseDebugRuntime Condition="'$(AndroidUseDebugRuntime)' == '' And '$(AndroidUseSharedRuntime)' == 'False' And '$(EmbedAssembliesIntoApk)' == 'True' And ('$(DebugSymbols)' != 'True' Or '$(DebugType)' != 'Full')" >False</AndroidUseDebugRuntime>
 	<AndroidUseDebugRuntime Condition="'$(AndroidUseDebugRuntime)' == ''" >True</AndroidUseDebugRuntime>
 
-	<AndroidManagedSymbols Condition=" '$(AndroidManagedSymbols)' == '' ">False</AndroidManagedSymbols>
+	<MonoSymbolArchive Condition=" '$(MonoSymbolArchive)' == '' And '$(AndroidUseSharedRuntime)' == 'False' And '$(EmbedAssembliesIntoApk)' == 'True' And '$(DebugSymbols)' == 'True' And '$(DebugType)' == 'PdbOnly'" >True</MonoSymbolArchive>  
+	<MonoSymbolArchive Condition=" '$(MonoSymbolArchive)' == '' ">False</MonoSymbolArchive>
 
 	<BundleAssemblies Condition="'$(BundleAssemblies)' == ''">False</BundleAssemblies>
 	<DeployExternal Condition="'$(DeployExternal)' == ''">False</DeployExternal>
@@ -253,8 +254,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<_Android32bitArchitectures>armeabi-v7a;armeabi;x86;mips</_Android32bitArchitectures>
 	<_Android64bitArchitectures>arm64-v8a;x86_64;mips64</_Android64bitArchitectures>
 
-	<_AndroidSequencePointsMode Condition=" '$(AndroidManagedSymbols)' == 'True' And '$(AndroidUseDebugRuntime)' == 'False' And '$(AotAssemblies)' == 'True' And '$(DebugSymbols)' == 'True' And '$(DebugType)' == 'PdbOnly'">Offline</_AndroidSequencePointsMode>
-	<_AndroidSequencePointsMode Condition=" '$(AndroidManagedSymbols)' == 'True' And '$(AndroidUseDebugRuntime)' == 'False' And '$(_AndroidSequencePointsMode)' == ''">Normal</_AndroidSequencePointsMode>
+	<_AndroidSequencePointsMode Condition=" '$(MonoSymbolArchive)' == 'True' And '$(AndroidUseDebugRuntime)' == 'False' And '$(AotAssemblies)' == 'True' And '$(DebugSymbols)' == 'True' And '$(DebugType)' == 'PdbOnly'">Offline</_AndroidSequencePointsMode>
+	<_AndroidSequencePointsMode Condition=" '$(MonoSymbolArchive)' == 'True' And '$(AndroidUseDebugRuntime)' == 'False' And '$(_AndroidSequencePointsMode)' == ''">Normal</_AndroidSequencePointsMode>
 	<_AndroidSequencePointsMode Condition=" '$(_AndroidSequencePointsMode)' == ''">None</_AndroidSequencePointsMode>
 	<_InstantRunEnabled Condition=" '$(_InstantRunEnabled)' == '' ">False</_InstantRunEnabled>
 
@@ -967,7 +968,7 @@ because xbuild doesn't support framework reference assemblies.
 	<_PropertyCacheItems Include="JavaSdkPath=$(JavaSdkDirectory)" />
 	<_PropertyCacheItems Include="AndroidSequencePointsMode=$(_AndroidSequencePointsMode)" />
 	<_PropertyCacheItems Include="XamarinAndroidVersion=$(XamarinAndroidVersion)" />
-	<_PropertyCacheItems Include="AndroidManagedSymbols=$(AndroidManagedSymbols)" />
+	<_PropertyCacheItems Include="MonoSymbolArchive=$(MonoSymbolArchive)" />
 	<_PropertyCacheItems Include="AndroidUseLatestPlatformSdk=$(AndroidUseLatestPlatformSdk)" />
 	<_PropertyCacheItems Include="TargetFrameworkVersion=$(TargetFrameworkVersion)" />
 	<_PropertyCacheItems Include="AndroidCreatePackagePerAbi=$(AndroidCreatePackagePerAbi)" />
@@ -2270,10 +2271,10 @@ because xbuild doesn't support framework reference assemblies.
 
   <Copy SourceFiles="%(ApkFiles.FullPath)" DestinationFolder="$(OutDir)" />
 
-  <MakeDir Directories="$(OutDir)$(_AndroidPackage).apk.mSYM" Condition=" '$(AndroidManagedSymbols)' == 'True' " />
+  <MakeDir Directories="$(OutDir)$(_AndroidPackage).apk.mSYM" Condition=" '$(MonoSymbolArchive)' == 'True' " />
   <Exec
     Command="&quot;$(_MonoAndroidBinDirectory)mono-symbolicate&quot; store-symbols &quot;$(OutDir)$(_AndroidPackage).apk.mSYM&quot; &quot;$(MonoAndroidIntermediate)android/assets&quot;"
-    Condition=" '$(AndroidManagedSymbols)' == 'True' "
+    Condition=" '$(MonoSymbolArchive)' == 'True' "
   />
 
   <ItemGroup>
@@ -2281,27 +2282,27 @@ because xbuild doesn't support framework reference assemblies.
     <_SymbolicateFiles Include="$(_AndroidAotBinDirectory)\%(_BuiltAbis.Identity)\**\*.msym" />
   </ItemGroup>
 
-  <Copy Condition=" '$(AndroidManagedSymbols)' == 'True' And '%(_SymbolicateFiles.Filename)' != '' "
+  <Copy Condition=" '$(MonoSymbolArchive)' == 'True' And '%(_SymbolicateFiles.Filename)' != '' "
     SourceFiles="%(_SymbolicateFiles.Identity)"
     DestinationFolder="$(OutDir)$(_AndroidPackage).apk.mSYM\%(_SymbolicateFiles.RecursiveDir)"
     SkipUnchangedFiles="true"
   />
 
   <CreateMsymManifest
-     Condition=" '$(_XamarinBuildId)' != '' And '$(AndroidManagedSymbols)' == 'True' "
+     Condition=" '$(_XamarinBuildId)' != '' And '$(MonoSymbolArchive)' == 'True' "
      BuildId="$(_XamarinBuildId)"
      PackageName="$(_AndroidPackage)"
      OutputDirectory="$(OutDir)$(_AndroidPackage).apk.mSYM"
    />
 
   <WriteLinesToFile
-    Condition=" '$(AndroidManagedSymbols)' == 'True' "
+    Condition=" '$(MonoSymbolArchive)' == 'True' "
     File="$(IntermediateOutputPath)$(CleanFile)"
     Lines="@(_SymbolicateFiles->'$(OutDir)$(_AndroidPackage).apk.mSYM\%(Filename)%(Extension)')"
     Overwrite="false"/>
 
   <WriteLinesToFile
-    Condition=" '$(AndroidManagedSymbols)' == 'True' And '%(_SymbolicateFiles.Filename)' != '' "
+    Condition=" '$(MonoSymbolArchive)' == 'True' And '%(_SymbolicateFiles.Filename)' != '' "
     File="$(IntermediateOutputPath)$(CleanFile)"
     Lines="$(OutDir)$(_AndroidPackage).apk.mSYM\%(_SymbolicateFiles.RecursiveDir)%(_SymbolicateFiles.Filename)%(_SymbolicateFiles.Extension)"
     Overwrite="false"/>
