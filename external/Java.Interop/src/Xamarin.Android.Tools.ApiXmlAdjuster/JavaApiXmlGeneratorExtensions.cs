@@ -10,12 +10,12 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 	{
 		public static void Save (this JavaApi api, string xmlfile)
 		{
-			using (var reader = XmlWriter.Create (xmlfile, new XmlWriterSettings () {
+			using (var writer = XmlWriter.Create (xmlfile, new XmlWriterSettings () {
 				Encoding = new UTF8Encoding (false, true),
 				Indent = true,
 				OmitXmlDeclaration = true,
 				}))
-				api.Save (reader);
+				api.Save (writer);
 		}
 		
 		public static void Save (this JavaApi api, XmlWriter writer)

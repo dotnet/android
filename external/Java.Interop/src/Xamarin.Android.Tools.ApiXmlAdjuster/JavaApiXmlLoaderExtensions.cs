@@ -31,9 +31,12 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 						break; // </api>
 					if (reader.NodeType != XmlNodeType.Element || reader.LocalName != "package")
 						throw XmlUtil.UnexpectedElementOrContent ("api", reader, "package");
-					var pkg = api.Packages.FirstOrDefault (p => p.Name == reader.GetAttribute ("name")) ?? new JavaPackage (api);
+					var pkg = api.Packages.FirstOrDefault (p => p.Name == reader.GetAttribute ("name"));
+					if (pkg == null) {
+						pkg = new JavaPackage (api);
+						api.Packages.Add (pkg);
+					}
 					pkg.Load (reader, isReferenceOnly);
-					api.Packages.Add (pkg);
 				} while (true);
 	
 				XmlUtil.VerifyEndElement (reader, "api");
