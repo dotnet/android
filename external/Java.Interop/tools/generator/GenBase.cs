@@ -813,11 +813,12 @@ namespace MonoDroid.Generation {
 
 		public virtual void UpdateEnums (CodeGenerationOptions opt)
 		{
-			if (enum_updated)
+			if (enum_updated || !IsGeneratable)
 				return;
 			enum_updated = true;
-			for (var b = GetBaseGen (); b != null; b = b.GetBaseGen ())
-				b.UpdateEnums (opt);
+			var baseGen = GetBaseGen ();
+			if (baseGen != null)
+				baseGen.UpdateEnums (opt);
 
 			foreach (Method m in methods) {
 				AutoDetectEnumifiedOverrideParameters (m, opt);
