@@ -6,36 +6,30 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 {
 	public static class JavaApiOverrideMarkerExtensions
 	{
-		
+
 		public static void MarkOverrides (this JavaApi api)
 		{
+			api.MarkOverrides (new HashSet<JavaClass> ());
+		}
+
+		public static void MarkOverrides (this JavaApi api, HashSet<JavaClass> doneList)
+		{
 			foreach (var kls in api.Packages.SelectMany (p => p.Types).OfType<JavaClass> ())
-				kls.MarkOverrides ();
+				kls.MarkOverrides (doneList);
 		}
 		
-		static void MarkOverrides (this JavaClass cls)
+		static void MarkOverrides (this JavaClass cls, HashSet<JavaClass> doneList)
 		{
+			if (doneList.Contains (cls))
+				return;
+			doneList.Add (cls);
+
 			var baseClass = cls.ResolvedExtends == null ? null :cls.ResolvedExtends.ReferencedType as JavaClass;
 			if (baseClass != null)
-				baseClass.MarkOverrides ();
+				baseClass.MarkOverrides (doneList);
 			
 			foreach (var method in cls.Members.OfType<JavaMethod> ())
 				cls.MarkBaseMethod (method);
-/*
-foreach (var m in cls.Members.OfType<JavaMethod> ().Where (_ => _.BaseMethod != null)) {
-	var b = m.BaseMethod.Method;
-	if (m.ExtendedJniSignature != b.ExtendedJniSignature)
-		Console.WriteLine ("Method      {0}.{1}#{2}({3}) | {8}\n  overrides {4}.{5}#{6}({7}) | {9}",
-			m.Parent.Parent.Name, m.Parent.Name, m.Name, string.Join (", ", m.Parameters.Select (p => p.Type)),
-			b.Parent.Parent.Name, b.Parent.Name, b.Name, string.Join (", ", b.Parameters.Select (p => p.Type)),
-			m.ExtendedJniSignature, b.ExtendedJniSignature);
-}
-foreach (var m in cls.Members.OfType<JavaMethod> ())
-	foreach (var para in m.Parameters.Where (p => p.InstantiatedGenericArgumentName != null))
-		Console.WriteLine ("Method {0}.{1}#{2}({3}) has generics-instantiated parameter {4} ({5} -> {6})",
-			m.Parent.Parent.Name, m.Parent.Name, m.Name, string.Join (", ", m.Parameters.Select (p => p.Type)),
-			para.Name, para.InstantiatedGenericArgumentName, para.Type);
-*/			
 		}
 		
 		static void MarkBaseMethod (this JavaClass cls, JavaMethod method)
