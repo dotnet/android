@@ -91,19 +91,21 @@ endif   # Darwin
 ifeq ($(OS),Linux)
 
 # This is for Ubuntu and derivatives (possibly Debian too)
-_LINUX_JAVA_INCLUDE_DIRS          = /usr/lib/jvm/default-java/include/
+_DEFAULT_LINUX_JAVA_INCLUDE_DIRS  = /usr/lib/jvm/default-java/include/
 _LINUX_JAVA_FALLBACK_DIRS         = /usr/lib/jvm/java*
 _LINUX_JAVA_JNI_INCLUDE_DIR       = include
-_LINUX_JAVA_JNI_OS_INCLUDE_DIR    = $(DESKTOP_JAVA_JNI_INCLUDE_DIR)/linux
 
+_DESKTOP_JAVA_INCLUDE_DIRS = $(_DEFAULT_LINUX_JAVA_INCLUDE_DIRS)
 
-ifeq ($(wildcard $(DESKTOP_JAVA_INCLUDE_DIRS)),)
-JI_JDK_INCLUDE_PATHS  = $(wildcard $(JAVA_HOME)/include) $(wildcard $(JAVA_HOME)/include/linux)
+ifeq ($(wildcard $(_DESKTOP_JAVA_INCLUDE_DIRS)),)
+_DESKTOP_JAVA_INCLUDE_DIRS  = $(wildcard $(JAVA_HOME)/include)
 endif
-ifeq ($(wildcard $(JI_JDK_INCLUDE_PATHS)),)
+ifeq ($(wildcard $(_DESKTOP_JAVA_INCLUDE_DIRS)),)
 LATEST_JDK            := $(shell ls -dtr $(_LINUX_JAVA_FALLBACK_DIRS) | sort | tail -1)
-JI_JDK_INCLUDE_PATHS  = $(LATEST_JDK)/$(_LINUX_JAVA_JNI_INCLUDE_DIR) $(LATEST_JDK)/$(_LINUX_JAVA_JNI_OS_INCLUDE_DIR)
+_DESKTOP_JAVA_INCLUDE_DIRS  = $(LATEST_JDK)/$(_LINUX_JAVA_JNI_INCLUDE_DIR)
 endif
+
+JI_JDK_INCLUDE_PATHS = $(_DESKTOP_JAVA_INCLUDE_DIRS) $(_DESKTOP_JAVA_INCLUDE_DIRS)/linux
 
 endif   # Linux
 
