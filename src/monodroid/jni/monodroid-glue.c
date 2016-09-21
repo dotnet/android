@@ -81,6 +81,14 @@ static struct timespec wait_ts;
 static char *runtime_libdir;
 static int register_debug_symbols;
 static MonoMethod* registerType;
+/* If set, monodroid will start a gdbserver process and attaches it to itself */
+static int attach_gdb;
+/*
+ * If set, monodroid will spin in a loop until the debugger breaks the wait by
+ * clearing monodroid_gdb_wait.
+ */
+static int wait_for_gdb;
+static int monodroid_gdb_wait = TRUE;
 
 #ifdef ANDROID64
 #define SYSTEM_LIB_PATH "/system/lib64"
@@ -2182,6 +2190,41 @@ JNI_OnLoad (JavaVM *vm, void *reserved)
 	return JNI_VERSION_1_6;
 }
 
+static void
+parse_gdb_options (void)
+{
+	char *val;
+
+	if (!(monodroid_get_namespaced_system_property (DEBUG_MONO_GDB_PROPERTY, &val) > 0))
+		return;
+
+	if (strstr (val, "wait:") == val) {
+		/*
+		 * The form of the property should be: 'wait:<timestamp>', where <timestamp> should be
+		 * the output of date +%s in the android shell.
+		 * If this property is set, wait for a native debugger to attach by spinning in a loop.
+		 * The debugger can break the wait by setting 'monodroid_gdb_wait' to 0.
+		 * If the current time is later than <timestamp> + 10s, the property is ignored.
+		 */
+		long long v;
+		int do_wait = TRUE;
+
+		v = atoll (val + strlen ("wait:"));
+		if (v > 100000) {
+			time_t secs = time (NULL);
+
+			if (v + 10 < secs) {
+				log_warn (LOG_DEFAULT, "Found stale %s property with value '%s', not waiting.", DEBUG_MONO_GDB_PROPERTY, val);
+				do_wait = FALSE;
+			}
+		}
+
+		wait_for_gdb = do_wait;
+	} else {
+		attach_gdb = TRUE;
+	}
+}
+
 #if DEBUG
 typedef struct {
 	int debug;
@@ -2555,8 +2598,8 @@ static int
 should_attach_gdb (void)
 {
 	int i;
-	if (monodroid_get_namespaced_system_property (DEBUG_MONO_GDB_PROPERTY, NULL) > 0)
-		return 1;
+	if (!attach_gdb)
+		return 0;
 	for (i = 0; i < MAX_OVERRIDES; ++i) {
 		char *p = path_combine (override_dirs [i], "gdb");
 		int  e  = p != NULL && file_exists (p);
@@ -2706,11 +2749,20 @@ mono_runtime_init (char *runtime_args)
 	if ((log_categories & LOG_TIMING) != 0)
 		mono.mono_profiler_install_jit_end (jit_end);
 
+	parse_gdb_options ();
+
 	if (!should_attach_gdb ()) {
 		log_debug (LOG_DEBUGGER, "not attaching the debug server.\n");
 	} else {
 		if (!start_ds2_server ())
 			start_gdbserver ();
+	}
+
+	if (wait_for_gdb) {
+		log_warn (LOG_DEFAULT, "Waiting for gdb to attach...");
+		while (monodroid_gdb_wait) {
+			sleep (1);
+		}
 	}
 
 	/* Additional runtime arguments passed to mono_jit_parse_options () */
