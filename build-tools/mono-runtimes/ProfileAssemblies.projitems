@@ -145,9 +145,6 @@
     <MonoProfileAssembly Include="Mono.CSharp.dll" />
     <MonoProfileAssembly Include="Mono.Data.Tds.dll" />
     <MonoProfileAssembly Include="Mono.Security.dll" />
-    <MonoProfileAssembly Include="Mono.Security.Providers.DotNet.dll" />
-    <MonoProfileAssembly Include="Mono.Security.Providers.NewSystemSource.dll" />
-    <MonoProfileAssembly Include="Mono.Security.Providers.NewTls.dll" />
     <MonoProfileAssembly Include="mscorlib.dll" />
     <MonoProfileAssembly Include="SMDiagnostics.dll" />
     <MonoProfileAssembly Include="System.ComponentModel.Composition.dll" />
