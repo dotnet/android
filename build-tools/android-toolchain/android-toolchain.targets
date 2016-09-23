@@ -32,7 +32,7 @@
       Outputs="@(_PlatformAndroidSdkItem->'$(AndroidToolchainCacheDirectory)\%(Identity)');@(_PlatformAndroidNdkItem->'$(AndroidToolchainCacheDirectory)\%(Identity)')">
     <MakeDir Directories="$(AndroidToolchainCacheDirectory)" />
     <DownloadUri
-        SourceUris="@(_PlatformAndroidSdkItem->'$(AndroidUri)/%(Identity)');@(_PlatformAndroidNdkItem->'$(AndroidUri)/%(Identity)')"
+        SourceUris="@(_PlatformAndroidSdkItem->'$(AndroidUri)/%(RelUrl)%(Identity)');@(_PlatformAndroidNdkItem->'$(AndroidUri)/%(RelUrl)%(Identity)')"
         DestinationFiles="@(_PlatformAndroidSdkItem->'$(AndroidToolchainCacheDirectory)\%(Identity)');@(_PlatformAndroidNdkItem->'$(AndroidToolchainCacheDirectory)\%(Identity)')"
     />
   </Target>

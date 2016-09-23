@@ -25,7 +25,7 @@ all::
 	$(MSBUILD) $(MSBUILD_FLAGS) $(SOLUTION)
 
 all-tests::
-	tools/scripts/xabuild $(MSBUILD_FLAGS) Xamarin.Android-Tests.sln
+	MSBUILD="$(MSBUILD)" tools/scripts/xabuild $(MSBUILD_FLAGS) Xamarin.Android-Tests.sln
 
 prepare:: prepare-external prepare-props
 
@@ -142,27 +142,25 @@ define RUN_NUNIT_TEST
 	$(RUNTIME) --runtime=v4.0.0 \
 		$(NUNIT_CONSOLE) $(NUNIT_EXTRA) $(1) \
 		$(if $(RUN),-run:$(RUN)) \
+		--result=TestResult-$(basename $(notdir $(1))).xml \
 		-output=bin/Test$(CONFIGURATION)/TestOutput-$(basename $(notdir $(1))).txt ;
 endef
 
 run-nunit-tests: $(NUNIT_TESTS)
 	$(foreach t,$(NUNIT_TESTS), $(call RUN_NUNIT_TEST,$(t),1))
 
-# Test .apk projects must satisfy the following requirements:
-# 1. They must have a UnDeploy target
-# 2. They must have a Deploy target
-# 3. They must have a RunTests target
+# .apk files to test on-device need to:
+# (1) Have their .csproj files listed here
+# (2) Add a `@(UnitTestApk)` entry to `tests/RunApkTests.targets`
 TEST_APK_PROJECTS = \
 	src/Mono.Android/Test/Mono.Android-Tests.csproj
 
-# Syntax: $(call RUN_TEST_APK,path/to/project.csproj)
-define RUN_TEST_APK
+# Syntax: $(call BUILD_TEST_APK,path/to/project.csproj)
+define BUILD_TEST_APK
 	# Must use xabuild to ensure correct assemblies are resolved
-	tools/scripts/xabuild /t:SignAndroidPackage $(1) && \
-	$(MSBUILD) $(MSBUILD_FLAGS) /t:UnDeploy $(1) && \
-	$(MSBUILD) $(MSBUILD_FLAGS) /t:Deploy $(1) && \
-	$(MSBUILD) $(MSBUILD_FLAGS) /t:RunTests $(1) $(if $(ADB_TARGET),"/p:AdbTarget=$(ADB_TARGET)",)
-endef
+	MSBUILD="$(MSBUILD)" tools/scripts/xabuild /t:SignAndroidPackage $(1)
+endef	# BUILD_TEST_APK
 
 run-apk-tests:
-	$(foreach p, $(TEST_APK_PROJECTS), $(call RUN_TEST_APK, $(p)))
+	$(foreach p, $(TEST_APK_PROJECTS), $(call BUILD_TEST_APK, $(p)))
+	$(MSBUILD) $(MSBUILD_FLAGS) tests/RunApkTests.targets

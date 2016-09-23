@@ -417,6 +417,7 @@ create_update_dir (char *override_dir)
 
 	override_dirs [0] = override_dir;
 	create_public_directory (override_dir);
+	log_warn (LOG_DEFAULT, "Creating public update directory: `%s`", override_dir);
 }
 
 static int

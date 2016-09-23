@@ -8,15 +8,12 @@ using System.Text;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
-using IOFile = System.IO.File;
+using Xamarin.Android.BuildTools.PrepTasks;
 
-namespace Xamarin.Android.BuildTools.PrepTasks
+namespace Xamarin.Android.Tools.BootstrapTasks
 {
-	public class Git : PathToolTask
+	public class Emulator : PathToolTask
 	{
-		[Required]
-		public                  ITaskItem       WorkingDirectory            { get; set; }
-
 		public                  string          Arguments                   { get; set; }
 
 		[Output]
@@ -27,7 +24,7 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 		}
 
 		protected   override    string          ToolBaseName {
-			get { return "git"; }
+			get { return "emulator"; }
 		}
 
 		List<string> lines;
@@ -38,13 +35,13 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 		public override bool Execute ()
 		{
 			if (LogTaskMessages) {
-				Log.LogMessage (MessageImportance.Low, $"Task {nameof (Git)}");
-				Log.LogMessage (MessageImportance.Low, $"  {nameof (WorkingDirectory)}: {WorkingDirectory.ItemSpec}");
+				Log.LogMessage (MessageImportance.Low, $"Task {nameof (Emulator)}");
+				Log.LogMessage (MessageImportance.Low, $"  {nameof (Arguments)}: {Arguments}");
 			}
 
 			base.Execute ();
 
-			Output  = Lines?.ToArray ();
+			Output  = lines?.ToArray ();
 
 			if (LogTaskMessages) {
 				Log.LogMessage (MessageImportance.Low, $"  [Output] {nameof (Output)}:");
@@ -58,11 +55,6 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 		protected override string GenerateCommandLineCommands ()
 		{
 			return Arguments;
-		}
-
-		protected override string GetWorkingDirectory ()
-		{
-			return WorkingDirectory.ItemSpec;
 		}
 
 		protected override void LogEventsFromTextOutput (string singleLine, MessageImportance messageImportance)

@@ -86,6 +86,11 @@
       <HostOS></HostOS>
       <DestDir>extras\android\m2repository</DestDir>
     </AndroidSdkItem>
+    <AndroidSdkItem Include="sysimg_x86-21_r03.zip">
+      <HostOS></HostOS>
+      <RelUrl>sys-img/android/</RelUrl>
+      <DestDir>system-images\android-21\x86</DestDir>
+    </AndroidSdkItem>
   </ItemGroup>
   <ItemGroup>
     <_NdkToolchain Include="arm-linux-androideabi-clang" Condition="$(AndroidSupportedTargetJitAbisForConditionalChecks.Contains(':armeabi:')) Or $(AndroidSupportedTargetJitAbisForConditionalChecks.Contains(':armeabi-v7a:')) Or $(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':win-armeabi:'))">

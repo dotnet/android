@@ -32,11 +32,42 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 			}
 		}
 
+		public static string GetProgramLocation (string programBasename, out string filename, string[] directories = null)
+		{
+			directories = directories ?? GetPathDirectories ();
+			foreach (var d in directories) {
+				var p   = GetProgramLocation (programBasename, d, out filename);
+				if (p != null)
+					return p;
+			}
+			filename    = programBasename;
+			return null;
+		}
+
+		static string GetProgramLocation (string programBasename, string directory, out string filename)
+		{
+			foreach (var ext in FileExtensions) {
+				filename    = Path.ChangeExtension (programBasename, ext);
+				var p       = Path.Combine (directory, filename);
+				if (File.Exists (p)) {
+					return p;
+				}
+			}
+			filename    = programBasename;
+			return null;
+		}
+
+		static string[] GetPathDirectories ()
+		{
+			return Environment.GetEnvironmentVariable ("PATH")
+				.Split (Path.PathSeparator);
+		}
+
 		public override bool Execute ()
 		{
 			string[]    paths   = Directories?.Select (d => d.ItemSpec).ToArray ();
 			if (paths == null || paths.Length == 0) {
-				paths    = Environment.GetEnvironmentVariable ("PATH").Split (Path.PathSeparator);
+				paths   = GetPathDirectories ();
 			}
 
 			Log.LogMessage (MessageImportance.Low, $"Task {nameof (Which)}");
@@ -47,17 +78,10 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 			}
 			Log.LogMessage (MessageImportance.Low, $"  {nameof (Required)}: {Required}");
 
-			foreach (var path in paths) {
-				var p   = Path.Combine (path, Program.ItemSpec);
-				foreach (var ext in FileExtensions) {
-					var e   = Path.ChangeExtension (p, ext);
-					if (File.Exists (e)) {
-						Location = new TaskItem (e);
-						break;
-					}
-				}
-				if (Location != null)
-					break;
+			string _;
+			var e = GetProgramLocation (Program.ItemSpec, out _, paths);
+			if (e != null) {
+				Location = new TaskItem (e);
 			}
 
 			if (Location == null && Required) {

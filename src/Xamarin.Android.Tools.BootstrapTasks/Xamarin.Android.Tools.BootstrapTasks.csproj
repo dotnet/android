@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -8,7 +8,6 @@
     <RootNamespace>Xamarin.Android.Tools.BootstrapTasks</RootNamespace>
     <AssemblyName>Xamarin.Android.Tools.BootstrapTasks</AssemblyName>
     <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
-    <TargetFrameworkProfile />
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -39,9 +38,16 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Xamarin.Android.Tools.BootstrapTasks\UnzipDirectoryChildren.cs" />
+    <Compile Include="Xamarin.Android.Tools.BootstrapTasks\Adb.cs" />
+    <Compile Include="Xamarin.Android.Tools.BootstrapTasks\Android.cs" />
+    <Compile Include="Xamarin.Android.Tools.BootstrapTasks\CheckAdbTarget.cs" />
+    <Compile Include="Xamarin.Android.Tools.BootstrapTasks\CreateAndroidEmulator.cs" />
+    <Compile Include="Xamarin.Android.Tools.BootstrapTasks\Emulator.cs" />
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\GenerateProfile.cs" />
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\GetNugetPackageBasePath.cs" />
+    <Compile Include="Xamarin.Android.Tools.BootstrapTasks\RunInstrumentationTests.cs" />
+    <Compile Include="Xamarin.Android.Tools.BootstrapTasks\StartAndroidEmulator.cs" />
+    <Compile Include="Xamarin.Android.Tools.BootstrapTasks\UnzipDirectoryChildren.cs" />
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\Zip.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -57,6 +63,10 @@
     <ProjectReference Include="..\..\build-tools\libzip\libzip.mdproj">
       <Project>{900A0F71-BAAD-417A-8D1A-8D330297CDD0}</Project>
       <Name>libzip</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\build-tools\xa-prep-tasks\xa-prep-tasks.csproj">
+      <Project>{7CE69551-BD73-4726-ACAA-AAF89C84BAF8}</Project>
+      <Name>xa-prep-tasks</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />

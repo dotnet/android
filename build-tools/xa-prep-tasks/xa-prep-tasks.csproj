@@ -7,7 +7,7 @@
     <OutputType>Library</OutputType>
     <RootNamespace>Xamarin.Android.BuildTools.PrepTasks</RootNamespace>
     <AssemblyName>xa-prep-tasks</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -41,6 +41,7 @@
     <Compile Include="Xamarin.Android.BuildTools.PrepTasks\Git.cs" />
     <Compile Include="Xamarin.Android.BuildTools.PrepTasks\GitBranch.cs" />
     <Compile Include="Xamarin.Android.BuildTools.PrepTasks\GitCommitHash.cs" />
+    <Compile Include="Xamarin.Android.BuildTools.PrepTasks\PathToolTask.cs" />
     <Compile Include="Xamarin.Android.BuildTools.PrepTasks\SystemUnzip.cs" />
     <Compile Include="Xamarin.Android.BuildTools.PrepTasks\Which.cs" />
     <Compile Include="Xamarin.Android.BuildTools.PrepTasks\GitBlame.cs" />

@@ -93,10 +93,11 @@ namespace Xamarin.Android.NUnitLite {
 
 		string GetResultsPath ()
 		{
-			var docsDir = Context.GetExternalFilesDir (global::Android.OS.Environment.DirectoryDocuments);
-			if (docsDir == null)
-				return null;
-			return Path.Combine (docsDir.AbsolutePath, "TestResults.xml");
+			var resultsPathFile = Context.GetExternalFilesDir (global::Android.OS.Environment.DirectoryDocuments);
+			var resultsPath = resultsPathFile != null && resultsPathFile.Exists ()
+				? resultsPathFile.AbsolutePath
+				: Path.Combine (Context.FilesDir.AbsolutePath, ".__override__");
+			return Path.Combine (resultsPath, "TestResults.xml");
 		}
 
 		// On some Android targets, the external storage directory is "emulated",
