@@ -444,30 +444,31 @@ namespace Xamarin.Android.Tasks
 		void AddNativeLibrariesFromAssemblies (ZipArchive apk, string supportedAbis)
 		{
 			var abis = supportedAbis.Split (new char[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
-			var res = new DirectoryAssemblyResolver (Console.WriteLine, loadDebugSymbols: false);
+			using (var res = new DirectoryAssemblyResolver (Console.WriteLine, loadDebugSymbols: false)) {
 			foreach (var assembly in EmbeddedNativeLibraryAssemblies)
 				res.Load (assembly.ItemSpec);
-			foreach (var assemblyPath in EmbeddedNativeLibraryAssemblies) {
-				var assembly = res.GetAssembly (assemblyPath.ItemSpec);
-				foreach (var mod in assembly.Modules) {
-					var ressozip = mod.Resources.FirstOrDefault (r => r.Name == "__AndroidNativeLibraries__.zip") as EmbeddedResource;
-					if (ressozip == null)
-						continue;
-					var data = ressozip.GetResourceData ();
-					using (var ms = new MemoryStream (data)) {
-						using (var zip = ZipArchive.Open (ms)) {
-							foreach (var e in zip.Where (x => abis.Any (a => x.FullName.Contains (a)))) {
-								if (e.IsDirectory)
-									continue;
-								var key = e.FullName.Replace ("native_library_imports", "lib");
-								if (apk.Any(k => k.FullName  == key)) {
-									Log.LogCodedWarning ("4301", "Apk already contains the item {0}; ignoring.", key);
-									continue;
-								}
-								using (var s = new MemoryStream ()) {
-									e.Extract (s);
-									s.Position = 0;
-									apk.AddEntry (s.ToArray (),key);
+				foreach (var assemblyPath in EmbeddedNativeLibraryAssemblies) {
+					var assembly = res.GetAssembly (assemblyPath.ItemSpec);
+					foreach (var mod in assembly.Modules) {
+						var ressozip = mod.Resources.FirstOrDefault (r => r.Name == "__AndroidNativeLibraries__.zip") as EmbeddedResource;
+						if (ressozip == null)
+							continue;
+						var data = ressozip.GetResourceData ();
+						using (var ms = new MemoryStream (data)) {
+							using (var zip = ZipArchive.Open (ms)) {
+								foreach (var e in zip.Where (x => abis.Any (a => x.FullName.Contains (a)))) {
+									if (e.IsDirectory)
+										continue;
+									var key = e.FullName.Replace ("native_library_imports", "lib");
+									if (apk.Any (k => k.FullName == key)) {
+										Log.LogCodedWarning ("4301", "Apk already contains the item {0}; ignoring.", key);
+										continue;
+									}
+									using (var s = new MemoryStream ()) {
+										e.Extract (s);
+										s.Position = 0;
+										apk.AddEntry (s.ToArray (), key);
+									}
 								}
 							}
 						}

@@ -75,8 +75,16 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ("  DumpDependencies: {0}", DumpDependencies);
 			Log.LogDebugMessage ("  LinkOnlyNewerThan: {0}", LinkOnlyNewerThan);
 
-			var res = new DirectoryAssemblyResolver (Log.LogWarning, loadDebugSymbols: false);
-			
+			var rp = new ReaderParameters {
+				InMemory    = true,
+			};
+			using (var res = new DirectoryAssemblyResolver (Log.LogWarning, loadDebugSymbols: false, loadReaderParameters: rp)) {
+				return Execute (res);
+			}
+		}
+
+		bool Execute (DirectoryAssemblyResolver res)
+		{
 			// Put every assembly we'll need in the resolver
 			foreach (var assembly in ResolvedAssemblies) {
 				res.Load (Path.GetFullPath (assembly.ItemSpec));

@@ -363,28 +363,29 @@ namespace Xamarin.Android.Tasks {
 				? CachePath
 				: Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.LocalApplicationData), CacheBaseDir);
 
-				var resolver = new DirectoryAssemblyResolver (Log.LogWarning, loadDebugSymbols: false);
-				foreach (var assemblyItem in Assemblies) {
-					string fullPath = Path.GetFullPath (assemblyItem.ItemSpec);
-					if (assemblies.Contains (fullPath)) {
-						LogDebugMessage ("  Skip assembly: {0}, it was already processed", fullPath);
-						continue;
-					}
-					assemblies.Add (fullPath);
-					resolver.Load (fullPath);
-					// Append source file name (without the Xamarin. prefix or extension) to the base folder
-					// This would help avoid potential collisions.
-					foreach (var ca in resolver.GetAssembly (assemblyItem.ItemSpec).CustomAttributes) {
-						switch (ca.AttributeType.FullName) {
-						case "Android.IncludeAndroidResourcesFromAttribute":
-							AddAttributeValue (androidResources, ca, "XA5206", "{0}. Android resource directory {1} doesn't exist.", true, fullPath);
-							break;
-						case "Java.Interop.JavaLibraryReferenceAttribute":
-							AddAttributeValue (javaLibraries, ca, "XA5207", "{0}. Java library file {1} doesn't exist.", false, fullPath);
-							break;
-						case "Android.NativeLibraryReferenceAttribute":
-							AddAttributeValue (nativeLibraries, ca, "XA5210", "{0}. Native library file {1} doesn't exist.", false, fullPath);
-							break;
+				using (var resolver = new DirectoryAssemblyResolver (Log.LogWarning, loadDebugSymbols: false)) {
+					foreach (var assemblyItem in Assemblies) {
+						string fullPath = Path.GetFullPath (assemblyItem.ItemSpec);
+						if (assemblies.Contains (fullPath)) {
+							LogDebugMessage ("  Skip assembly: {0}, it was already processed", fullPath);
+							continue;
+						}
+						assemblies.Add (fullPath);
+						resolver.Load (fullPath);
+						// Append source file name (without the Xamarin. prefix or extension) to the base folder
+						// This would help avoid potential collisions.
+						foreach (var ca in resolver.GetAssembly (assemblyItem.ItemSpec).CustomAttributes) {
+							switch (ca.AttributeType.FullName) {
+							case "Android.IncludeAndroidResourcesFromAttribute":
+								AddAttributeValue (androidResources, ca, "XA5206", "{0}. Android resource directory {1} doesn't exist.", true, fullPath);
+								break;
+							case "Java.Interop.JavaLibraryReferenceAttribute":
+								AddAttributeValue (javaLibraries, ca, "XA5207", "{0}. Java library file {1} doesn't exist.", false, fullPath);
+								break;
+							case "Android.NativeLibraryReferenceAttribute":
+								AddAttributeValue (nativeLibraries, ca, "XA5210", "{0}. Native library file {1} doesn't exist.", false, fullPath);
+								break;
+							}
 						}
 					}
 				}

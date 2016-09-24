@@ -42,9 +42,14 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public string[] ResolvedDoNotPackageAttributes { get; set; }
 
-		DirectoryAssemblyResolver     resolver;
-
 		public override bool Execute ()
+		{
+			using (var resolver = new DirectoryAssemblyResolver (Log.LogWarning, loadDebugSymbols: false)) {
+				return Execute (resolver);
+			}
+		}
+
+		bool Execute (DirectoryAssemblyResolver resolver)
 		{
 			Log.LogDebugMessage ("ResolveAssemblies Task");
 			Log.LogDebugMessage ("  ReferenceAssembliesDirectory: {0}", ReferenceAssembliesDirectory);
@@ -52,7 +57,6 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ("  LinkMode: {0}", LinkMode);
 			Log.LogDebugTaskItems ("  Assemblies:", Assemblies);
 
-			resolver  = new DirectoryAssemblyResolver (Log.LogWarning, loadDebugSymbols: false);
 			foreach (var dir in ReferenceAssembliesDirectory.Split (new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries))
 				resolver.SearchDirectories.Add (dir);
 
@@ -80,14 +84,14 @@ namespace Xamarin.Android.Tasks
 			}
 			try {
 				foreach (var assembly in topAssemblyReferences)
-					AddAssemblyReferences (assemblies, assembly, true);
+					AddAssemblyReferences (resolver, assemblies, assembly, true);
 			} catch (Exception ex) {
 				Log.LogError ("Exception while loading assemblies: {0}", ex);
 				return false;
 			}
 
 			// Add I18N assemblies if needed
-			AddI18nAssemblies (assemblies);
+			AddI18nAssemblies (resolver, assemblies);
 
 			ResolvedAssemblies = assemblies.Select (a => new TaskItem (a)).ToArray ();
 			ResolvedSymbols = assemblies.Select (a => a + ".mdb").Where (a => File.Exists (a)).Select (a => new TaskItem (a)).ToArray ();
@@ -100,13 +104,13 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugTaskItems ("  [Output] ResolvedFrameworkAssemblies:", ResolvedFrameworkAssemblies);
 			Log.LogDebugTaskItems ("  [Output] ResolvedDoNotPackageAttributes:", ResolvedDoNotPackageAttributes);
 			
-			return true;
+			return !Log.HasLoggedErrors;
 		}
 
 		readonly List<string> do_not_package_atts = new List<string> ();
 		int indent = 2;
 
-		private void AddAssemblyReferences (ICollection<string> assemblies, AssemblyDefinition assembly, bool topLevel)
+		void AddAssemblyReferences (DirectoryAssemblyResolver resolver, ICollection<string> assemblies, AssemblyDefinition assembly, bool topLevel)
 		{
 			var fqname = assembly.MainModule.FullyQualifiedName;
 
@@ -130,7 +134,7 @@ namespace Xamarin.Android.Tasks
 			// Recurse into each referenced assembly
 			foreach (AssemblyNameReference reference in assembly.MainModule.AssemblyReferences) {
 				var reference_assembly = resolver.Resolve (reference);
-				AddAssemblyReferences (assemblies, reference_assembly, false);
+				AddAssemblyReferences (resolver, assemblies, reference_assembly, false);
 			}
 			indent -= 2;
 		}
@@ -147,7 +151,7 @@ namespace Xamarin.Android.Tasks
 			return mode;
 		}
 
-		private void AddI18nAssemblies (ICollection<string> assemblies)
+		void AddI18nAssemblies (DirectoryAssemblyResolver resolver, ICollection<string> assemblies)
 		{
 			var i18n = Linker.ParseI18nAssemblies (I18nAssemblies);
 			var link = ParseLinkMode (LinkMode);
@@ -156,25 +160,25 @@ namespace Xamarin.Android.Tasks
 			if (i18n == Mono.Linker.I18nAssemblies.None)
 				return;
 
-			assemblies.Add (ResolveI18nAssembly ("I18N"));
+			assemblies.Add (ResolveI18nAssembly (resolver, "I18N"));
 	
 			if (i18n.HasFlag (Mono.Linker.I18nAssemblies.CJK))
-				assemblies.Add (ResolveI18nAssembly ("I18N.CJK"));
+				assemblies.Add (ResolveI18nAssembly (resolver, "I18N.CJK"));
 	
 			if (i18n.HasFlag (Mono.Linker.I18nAssemblies.MidEast))
-				assemblies.Add (ResolveI18nAssembly ("I18N.MidEast"));
+				assemblies.Add (ResolveI18nAssembly (resolver, "I18N.MidEast"));
 	
 			if (i18n.HasFlag (Mono.Linker.I18nAssemblies.Other))
-				assemblies.Add (ResolveI18nAssembly ("I18N.Other"));
+				assemblies.Add (ResolveI18nAssembly (resolver, "I18N.Other"));
 	
 			if (i18n.HasFlag (Mono.Linker.I18nAssemblies.Rare))
-				assemblies.Add (ResolveI18nAssembly ("I18N.Rare"));
+				assemblies.Add (ResolveI18nAssembly (resolver, "I18N.Rare"));
 	
 			if (i18n.HasFlag (Mono.Linker.I18nAssemblies.West))
-				assemblies.Add (ResolveI18nAssembly ("I18N.West"));
+				assemblies.Add (ResolveI18nAssembly (resolver, "I18N.West"));
 		}
 
-		private string ResolveI18nAssembly (string name)
+		string ResolveI18nAssembly (DirectoryAssemblyResolver resolver, string name)
 		{
 			var assembly = resolver.Resolve (AssemblyNameReference.Parse (name));
 			return assembly.MainModule.FullyQualifiedName;
