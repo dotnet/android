@@ -20,5 +20,6 @@ namespace MonoDroid.Tuner
 		public I18nAssemblies I18nAssemblies { get; set; }
 		public string ProguardConfiguration { get; set; }
 		public bool DumpDependencies { get; set; }
+		public string HttpClientHandlerType { get; set; }
 	}
 }
