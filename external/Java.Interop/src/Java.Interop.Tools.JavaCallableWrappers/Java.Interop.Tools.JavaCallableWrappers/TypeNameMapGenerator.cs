@@ -68,13 +68,15 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 
 			Log             = logMessage;
 			var Assemblies  = assemblies.ToList ();
-			var resolver    = new DirectoryAssemblyResolver (Log, loadDebugSymbols: true);
+			var rp          = new ReaderParameters (ReadingMode.Immediate);
 
-			foreach (var assembly in Assemblies) {
-				resolver.Load (Path.GetFullPath (assembly));
+			using (var resolver = new DirectoryAssemblyResolver (Log, loadDebugSymbols: true, loadReaderParameters: rp)) {
+				foreach (var assembly in Assemblies) {
+					resolver.Load (Path.GetFullPath (assembly));
+				}
+
+				Types       = JavaTypeScanner.GetJavaTypes (Assemblies, resolver, logMessage);
 			}
-
-			Types       = JavaTypeScanner.GetJavaTypes (Assemblies, resolver, logMessage);
 		}
 
 		public TypeNameMapGenerator (IEnumerable<TypeDefinition> types, Action<string, object[]> logMessage)

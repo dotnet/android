@@ -71,6 +71,9 @@ namespace Java.Interop.Tools
 				Console.Error.Write ("jcw-gen: {0}", verbosity > 0 ? e.ToString () : e.Message);
 				return 1;
 			}
+			finally {
+				resolver.Dispose ();
+			}
 		}
 
 		static void GenerateJavaCallableWrapper (TypeDefinition type, string outputPath)

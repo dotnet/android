@@ -64,7 +64,12 @@ namespace Java.Interop.Tools.Cecil {
 		bool loadDebugSymbols;
 		Action<string, object[]> logWarnings;
 
-		public DirectoryAssemblyResolver (Action<string, object[]> logWarnings, bool loadDebugSymbols)
+		ReaderParameters                        loadReaderParameters;
+
+		static  readonly    ReaderParameters    DefaultLoadReaderParameters = new ReaderParameters {
+		};
+
+		public DirectoryAssemblyResolver (Action<string, object[]> logWarnings, bool loadDebugSymbols, ReaderParameters loadReaderParameters = null)
 		{
 			if (logWarnings == null)
 				throw new ArgumentNullException (nameof (logWarnings));
@@ -72,6 +77,7 @@ namespace Java.Interop.Tools.Cecil {
 			this.loadDebugSymbols = loadDebugSymbols;
 			this.logWarnings = logWarnings;
 			SearchDirectories = new List<string> ();
+			this.loadReaderParameters = loadReaderParameters ?? DefaultLoadReaderParameters;
 		}
 
 		public void Dispose ()
@@ -82,8 +88,15 @@ namespace Java.Interop.Tools.Cecil {
 
 		protected virtual void Dispose (bool disposing)
 		{
+			if (!disposing || cache == null)
+				return;
+			foreach (var e in cache) {
+				e.Value.Dispose ();
+			}
+			cache = null;
 		}
 
+		[Obsolete ("Should not be used; was required with previous Cecil versions.")]
 		public IDictionary ToResolverCache ()
 		{
 			var resolver_cache = new Hashtable ();
@@ -114,9 +127,21 @@ namespace Java.Interop.Tools.Cecil {
 
 		protected virtual AssemblyDefinition ReadAssembly (string file)
 		{
+			bool haveDebugSymbols = loadDebugSymbols &&
+				(File.Exists (file + ".mdb") ||
+				 File.Exists (Path.ChangeExtension (file, ".pdb")));
 			var reader_parameters = new ReaderParameters () {
-				AssemblyResolver  = this,
-				ReadSymbols       = loadDebugSymbols && (File.Exists(file + ".mdb") || File.Exists(Path.ChangeExtension(file, ".pdb"))),
+				ApplyWindowsRuntimeProjections  = loadReaderParameters.ApplyWindowsRuntimeProjections,
+				AssemblyResolver                = this,
+				MetadataImporterProvider        = loadReaderParameters.MetadataImporterProvider,
+				InMemory                        = loadReaderParameters.InMemory,
+				MetadataResolver                = loadReaderParameters.MetadataResolver,
+				ReadingMode                     = loadReaderParameters.ReadingMode,
+				ReadSymbols                     = haveDebugSymbols,
+				ReadWrite                       = loadReaderParameters.ReadWrite,
+				ReflectionImporterProvider      = loadReaderParameters.ReflectionImporterProvider,
+				SymbolReaderProvider            = loadReaderParameters.SymbolReaderProvider,
+				SymbolStream                    = loadReaderParameters.SymbolStream,
 			};
 			try {
 				return AssemblyDefinition.ReadAssembly (file, reader_parameters);

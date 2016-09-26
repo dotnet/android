@@ -209,6 +209,13 @@ namespace Xamarin.Android.Binder {
 			if (options == null)
 				throw new ArgumentNullException ("options");
 
+			using (var resolver = new DirectoryAssemblyResolver (Console.WriteLine, loadDebugSymbols: false)) {
+				Run (options, resolver);
+			}
+		}
+
+		static void Run (CodeGeneratorOptions options, DirectoryAssemblyResolver resolver)
+		{
 			string assemblyQN       = options.AssemblyQualifiedName;
 			string api_level        = options.ApiLevel;
 			int product_version     = options.ProductVersion;
@@ -239,7 +246,6 @@ namespace Xamarin.Android.Binder {
 
 			// Load reference libraries
 
-			var resolver = new DirectoryAssemblyResolver (Console.WriteLine, loadDebugSymbols: false);
 			foreach (var lib in options.LibraryPaths) {
 				resolver.SearchDirectories.Add (lib);
 			}
