@@ -361,6 +361,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <Target Name="_BuildAdditionalResourcesCache"
 	Inputs="@(ReferencePath);@(ReferenceDependencyPaths)"
 	Outputs="$(_AndroidResourcePathsCache)"
+	DependsOnTargets="$(_BeforeBuildAdditionalResourcesCache)"
 	>
  <GetAdditionalResourcesFromAssemblies
    AndroidSdkDirectory="$(_AndroidSdkDirectory)"
@@ -503,7 +504,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	</ItemGroup>
 </Target>
 
-<Target Name="_ValidateAndroidPackageProperties" DependsOnTargets="_ResolveMonoAndroidSdks">
+<Target Name="_ValidateAndroidPackageProperties" DependsOnTargets="$(_OnResolveMonoAndroidSdks)">
 	<CreateProperty Value="$(ProjectDir)$(AndroidManifest)" Condition="'$(AndroidManifest)' != ''">
 		<Output TaskParameter="Value" PropertyName="_AndroidManifestAbs"/>
 	</CreateProperty>
@@ -537,7 +538,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 </Target>
 
 <Target Name="_AddAndroidDefines"
-		DependsOnTargets="_ResolveMonoAndroidSdks">
+		DependsOnTargets="$(_OnResolveMonoAndroidSdks)">
 </Target>
 
 <Target Name="_GetReferenceAssemblyPaths">
@@ -607,13 +608,21 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	</CreateItem>
 </Target>
 
-<Target Name="_SetupApplicationJavaClass" AfterTargets="_ResolveMonoAndroidSdks">
+<Target Name="_SetupApplicationJavaClass" AfterTargets="_ResolveMonoAndroidSdks" DependsOnTargets="$(_BeforeSetupApplicationJavaClass)">
 	<PropertyGroup>
 		<AndroidApplicationJavaClass Condition="'$(AndroidApplicationJavaClass)' == '' And $(AndroidEnableMultiDex)">android.support.multidex.MultiDexApplication</AndroidApplicationJavaClass>
 		<AndroidApplicationJavaClass Condition="'$(AndroidApplicationJavaClass)' == ''">android.app.Application</AndroidApplicationJavaClass>
 	</PropertyGroup>
 	<Message Text="Application Java class: $(AndroidApplicationJavaClass)" />
 </Target>
+
+
+<PropertyGroup>
+	<_OnResolveMonoAndroidSdks>
+		_ResolveMonoAndroidSdks
+		;$(_AfterResolveMonoAndroidSdks)
+	</_OnResolveMonoAndroidSdks>
+</PropertyGroup>
 
 <!--
 Resolves tools paths and SDK paths, and verifies everything is installed.
@@ -1013,7 +1022,7 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="_GenerateAndroidResourceDir"
 	Inputs="$(MSBuildAllProjects);@(AndroidResource);$(_AndroidBuildPropertiesCache)"
 	Outputs="@(_AndroidResourceDest)"
-	DependsOnTargets="_ResolveMonoAndroidSdks">
+	DependsOnTargets="$(_OnResolveMonoAndroidSdks)">
 	<CopyAndConvertResources SourceFiles="@(AndroidResource)"
 			DestinationFiles="@(_AndroidResourceDest)"
 			AcwMapFile="$(_AcwMapFile)"
@@ -1212,7 +1221,7 @@ because xbuild doesn't support framework reference assemblies.
 	<_UpdateAndroidResgenDependsOnTargets>
 		_CheckForDeletedResourceFile;
 		_ValidateAndroidPackageProperties;
-		_ResolveMonoAndroidSdks;
+		$(_OnResolveMonoAndroidSdks);
 		_GetLibraryImports;
 		_CheckDuplicateJavaLibraries;
 		_GetAdditionalResourcesFromAssemblies;
@@ -1418,7 +1427,7 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="_AddStaticResources"
 		Inputs="$(MonoPlatformJarPath);$(_AndroidBuildPropertiesCache)"
 		Outputs="$(_AndroidStaticResourcesFlag)"
-		DependsOnTargets="_GetMonoPlatformJarPath">
+		DependsOnTargets="$(_BeforeAddStaticResources);_GetMonoPlatformJarPath">
 	<CopyResource ResourceName="machine.config" OutputPath="$(MonoAndroidIntermediateAssetsDir)machine.config" />
   <CopyResource
     ResourceName="MonoRuntimeProvider.Bundled.java"
@@ -1656,7 +1665,7 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_GenerateJavaStubs"
-  DependsOnTargets="_SetLatestTargetFrameworkVersion;_PrepareAssemblies"
+  DependsOnTargets="_SetLatestTargetFrameworkVersion;_PrepareAssemblies;$(_AfterPrepareAssemblies)"
   Inputs="$(MSBuildAllProjects);@(_ResolvedAssemblies);$(_AndroidManifestAbs);$(_AndroidBuildPropertiesCache)"
   Outputs="$(IntermediateOutputPath)android\AndroidManifest.xml;$(_AcwMapFile);$(_AndroidTypeMappingJavaToManaged);$(_AndroidTypeMappingManagedToJava)">
   <GenerateJavaStubs
@@ -1827,7 +1836,7 @@ because xbuild doesn't support framework reference assemblies.
 		_FindJavaStubFiles;
 		_AddStaticResources;
 		_GetMonoPlatformJarPath;
-		_ResolveMonoAndroidSdks;
+		$(_OnResolveMonoAndroidSdks);
 		_GetLibraryImports;
 		_CheckDuplicateJavaLibraries;
 		_CreateBaseApk;
@@ -1835,6 +1844,7 @@ because xbuild doesn't support framework reference assemblies.
 		_CreateAdditionalResourceCache;
 		_DetermineJavaLibrariesToCompile;
 		$(_CompileJavaDependsOnTargetsForJack);
+		$(_CompileJavaDependsOnTargets)
 	</_CompileJavaDependsOnTargets>
 </PropertyGroup>
 
@@ -2134,6 +2144,7 @@ because xbuild doesn't support framework reference assemblies.
 		_LinkAssemblies;
 		_GetAddOnPlatformLibraries;
 		_CompileDex;
+		$(_AfterCompileDex);
 		_CompileJava;
 		_CreateBaseApk;
 		_PrepareAssemblies;
@@ -2248,7 +2259,7 @@ because xbuild doesn't support framework reference assemblies.
 	</_CopyPackageInputs>
 </PropertyGroup>
 
-<Target Name="_DefineBuildTargetAbis">
+<Target Name="_DefineBuildTargetAbis" DependsOnTargets="$(_BeforeDefineBuildTargetAbis)">
 	<CreateProperty Value="$(AndroidSupportedAbis)" Condition="'$(_BuildTargetAbis)' == ''">
 		<Output TaskParameter="Value" PropertyName="_BuildTargetAbis"/>
 	</CreateProperty>
@@ -2311,7 +2322,7 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
   
 
-<Target Name="_ResolveAndroidSigningKey" DependsOnTargets="_ResolveMonoAndroidSdks">
+<Target Name="_ResolveAndroidSigningKey" DependsOnTargets="$(_OnResolveMonoAndroidSdks)">
 	<!-- would use a PropertyGroup here but xbuild doesn't support it -->
 	<CreateProperty Value="$(_ApkDebugKeyStore)" Condition="'$(AndroidKeyStore)'!='True'">
 		<Output TaskParameter="Value" PropertyName="_ApkKeyStore"/>
@@ -2430,7 +2441,7 @@ because xbuild doesn't support framework reference assemblies.
 <PropertyGroup>
 	<_BuildApkDependsOnTargets>
 		Build
-		;_ResolveMonoAndroidSdks
+		;$(_OnResolveMonoAndroidSdks)
 		;_ValidateAndroidPackageProperties
 		;_BuildApkEmbed
 	</_BuildApkDependsOnTargets>
