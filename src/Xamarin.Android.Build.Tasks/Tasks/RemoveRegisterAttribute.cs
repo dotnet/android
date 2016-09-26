@@ -24,13 +24,13 @@ namespace Xamarin.Android.Tasks
 
 			// Find Mono.Android.dll
 			var mono_android = ShrunkFrameworkAssemblies.First (f => Path.GetFileNameWithoutExtension (f.ItemSpec) == "Mono.Android").ItemSpec;
-			var assembly = AssemblyDefinition.ReadAssembly (mono_android);
+			using (var assembly = AssemblyDefinition.ReadAssembly (mono_android, new ReaderParameters { ReadWrite = true })) {
+				// Strip out [Register] attributes
+				foreach (TypeDefinition type in assembly.MainModule.Types)
+					ProcessType (type);
 
-			// Strip out [Register] attributes
-			foreach (TypeDefinition type in assembly.MainModule.Types)
-				ProcessType (type);
-
-			assembly.Write (mono_android);
+				assembly.Write ();
+			}
 			
 			return true;
 		}
