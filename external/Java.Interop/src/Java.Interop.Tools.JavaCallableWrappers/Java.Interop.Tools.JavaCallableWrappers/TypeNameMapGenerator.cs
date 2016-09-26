@@ -72,6 +72,13 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 
 			using (var resolver = new DirectoryAssemblyResolver (Log, loadDebugSymbols: true, loadReaderParameters: rp)) {
 				foreach (var assembly in Assemblies) {
+					var directory   = Path.GetDirectoryName (assembly);
+					if (string.IsNullOrEmpty (directory))
+						continue;
+					if (!resolver.SearchDirectories.Contains (directory))
+						resolver.SearchDirectories.Add (directory);
+				}
+				foreach (var assembly in Assemblies) {
 					resolver.Load (Path.GetFullPath (assembly));
 				}
 
