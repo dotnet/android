@@ -23,9 +23,8 @@ namespace Xamarin.Android.Tasks
 		public string ProjectFile { get; set; } 
 
 		Dictionary<ITaskItem, int> apiLevels = new Dictionary<ITaskItem, int> ();
-		DirectoryAssemblyResolver res;
 
-		int ExtractApiLevel(ITaskItem ass)
+		int ExtractApiLevel(DirectoryAssemblyResolver res, ITaskItem ass)
 		{
 			Log.LogDebugMessage (ass.ItemSpec);
 			foreach (var ca in res.GetAssembly (ass.ItemSpec).CustomAttributes) {
@@ -51,13 +50,14 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ("  ProjectFile: {0}", ProjectFile);
 			Log.LogDebugTaskItems ("  ResolvedUserAssemblies: {0}", ResolvedAssemblies);
 
-			res = new DirectoryAssemblyResolver (Log.LogWarning, loadDebugSymbols: false);
-			foreach (var assembly in ResolvedAssemblies) {
-				res.Load (Path.GetFullPath (assembly.ItemSpec));
-				var apiLevel = ExtractApiLevel (assembly);
-				if (apiLevel > 0) {
-					Log.LogDebugMessage ("{0}={1}", Path.GetFileNameWithoutExtension (assembly.ItemSpec), apiLevel);
-					apiLevels.Add (assembly, apiLevel);
+			using (var res = new DirectoryAssemblyResolver (Log.LogWarning, loadDebugSymbols: false)) {
+				foreach (var assembly in ResolvedAssemblies) {
+					res.Load (Path.GetFullPath (assembly.ItemSpec));
+					var apiLevel = ExtractApiLevel (res, assembly);
+					if (apiLevel > 0) {
+						Log.LogDebugMessage ("{0}={1}", Path.GetFileNameWithoutExtension (assembly.ItemSpec), apiLevel);
+						apiLevels.Add (assembly, apiLevel);
+					}
 				}
 			}
 

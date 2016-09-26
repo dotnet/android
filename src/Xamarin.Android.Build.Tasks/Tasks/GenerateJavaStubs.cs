@@ -79,7 +79,11 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ("  ApplicationJavaClass: {0}", ApplicationJavaClass);
 
 			try {
-				Run ();
+				// We're going to do 3 steps here instead of separate tasks so
+				// we can share the list of JLO TypeDefinitions between them
+				using (var res = new DirectoryAssemblyResolver (Log.LogWarning, loadDebugSymbols: true)) {
+					Run (res);
+				}
 			}
 			catch (XamarinAndroidException e) {
 				Log.LogCodedError (string.Format ("XA{0:0000}", e.Code), e.MessageWithoutCode);
@@ -90,17 +94,13 @@ namespace Xamarin.Android.Tasks
 			return !Log.HasLoggedErrors;
 		}
 
-		void Run ()
+		void Run (DirectoryAssemblyResolver res)
 		{
 			PackageNamingPolicy pnp;
 			JniType.PackageNamingPolicy = Enum.TryParse (PackageNamingPolicy, out pnp) ? pnp : PackageNamingPolicyEnum.LowercaseHash;
 			var temp = Path.Combine (Path.GetTempPath (), Path.GetRandomFileName ());
 			Directory.CreateDirectory (temp);
 
-			// We're going to do 3 steps here instead of separate tasks so
-			// we can share the list of JLO TypeDefinitions between them
-			var res = new DirectoryAssemblyResolver (Log.LogWarning, loadDebugSymbols:true);
-			
 			var selectedWhitelistAssemblies = new List<string> ();
 			
 			// Put every assembly we'll need in the resolver

@@ -28,7 +28,13 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ("StripEmbeddedLibraries Task");
 			Log.LogDebugTaskItems ("  Assemblies: ", Assemblies);
 
-			var res = new DirectoryAssemblyResolver (Log.LogWarning, true);
+			using (var res = new DirectoryAssemblyResolver (Log.LogWarning, true)) {
+				return Execute (res);
+			}
+		}
+
+		bool Execute (DirectoryAssemblyResolver res)
+		{
 			foreach (var assembly in Assemblies)
 				res.Load (Path.GetFullPath (assembly.ItemSpec));
 

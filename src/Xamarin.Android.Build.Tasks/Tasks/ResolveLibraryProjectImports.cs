@@ -71,7 +71,10 @@ namespace Xamarin.Android.Tasks
 			var resolvedResourceDirectories   = new List<string> ();
 			var resolvedAssetDirectories      = new List<string> ();
 			var resolvedEnvironmentFiles      = new List<string> ();
-			Extract (jars, resolvedResourceDirectories, resolvedAssetDirectories, resolvedEnvironmentFiles);
+
+			using (var resolver = new DirectoryAssemblyResolver (Log.LogWarning, loadDebugSymbols: false)) {
+				Extract (resolver, jars, resolvedResourceDirectories, resolvedAssetDirectories, resolvedEnvironmentFiles);
+			}
 
 			Jars                        = jars.ToArray ();
 			ResolvedResourceDirectories = resolvedResourceDirectories
@@ -133,6 +136,7 @@ namespace Xamarin.Android.Tasks
 
 		// Extracts library project contents under e.g. obj/Debug/[__library_projects__/*.jar | res/*/*]
 		void Extract (
+				DirectoryAssemblyResolver res,
 				ICollection<string> jars,
 				ICollection<string> resolvedResourceDirectories,
 				ICollection<string> resolvedAssetDirectories,
@@ -142,7 +146,6 @@ namespace Xamarin.Android.Tasks
 			if (!outdir.Exists)
 				outdir.Create ();
 
-			var res = new DirectoryAssemblyResolver (Log.LogWarning, loadDebugSymbols: false);
 			foreach (var assembly in Assemblies)
 				res.Load (assembly.ItemSpec);
 
