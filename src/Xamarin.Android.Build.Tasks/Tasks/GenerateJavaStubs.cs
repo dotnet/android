@@ -266,11 +266,12 @@ namespace Xamarin.Android.Tasks
 
 		void WriteTypeMappings (List<TypeDefinition> types)
 		{
-			var gen = UseSharedRuntime
+			using (var gen = UseSharedRuntime
 				? new TypeNameMapGenerator (types, Log.LogDebugMessage)
-				: new TypeNameMapGenerator (ResolvedAssemblies.Select (p => p.ItemSpec), Log.LogDebugMessage);
-			UpdateWhenChanged (Path.Combine (OutputDirectory, "typemap.jm"), gen.WriteJavaToManaged);
-			UpdateWhenChanged (Path.Combine (OutputDirectory, "typemap.mj"), gen.WriteManagedToJava);
+			        : new TypeNameMapGenerator (ResolvedAssemblies.Select (p => p.ItemSpec), Log.LogDebugMessage)) {
+				UpdateWhenChanged (Path.Combine (OutputDirectory, "typemap.jm"), gen.WriteJavaToManaged);
+				UpdateWhenChanged (Path.Combine (OutputDirectory, "typemap.mj"), gen.WriteManagedToJava);
+			}
 		}
 
 		void UpdateWhenChanged (string path, Action<Stream> generator)
