@@ -106,6 +106,14 @@ namespace Xamarin.Android.Tasks
 			bool isFSharp = string.Equals (language, "F#", StringComparison.OrdinalIgnoreCase);
 			bool isCSharp = string.Equals (language, "C#", StringComparison.OrdinalIgnoreCase);
 
+
+			if (isFSharp)
+			{
+				language = "C#";
+				isCSharp = true;
+				NetResgenOutputFile = Path.ChangeExtension (NetResgenOutputFile, ".cs");
+			}
+
 			// Let VB put this in the default namespace
 			if (isVB)
 				Namespace = string.Empty;
@@ -138,31 +146,22 @@ namespace Xamarin.Android.Tasks
 					.CreateImportMethods (assemblies);
 			}
 
-			AdjustConstructor (isFSharp, resources);
+			AdjustConstructor (resources);
 			foreach (var member in resources.Members)
 				if (member is CodeTypeDeclaration)
-					AdjustConstructor (isFSharp, (CodeTypeDeclaration) member);
+					AdjustConstructor ((CodeTypeDeclaration) member);
 
 			// Write out our Resources.Designer.cs file
 
-			WriteFile (NetResgenOutputFile, resources, language, isFSharp, isCSharp, aliases);
+			WriteFile (NetResgenOutputFile, resources, language, isCSharp, aliases);
 
 			return !Log.HasLoggedErrors;
 		}
 
 		// Remove private constructor in F#.
 		// Add static constructor. (but ignored in F#)
-		void AdjustConstructor (bool isFSharp, CodeTypeDeclaration type)
+		void AdjustConstructor (CodeTypeDeclaration type)
 		{			
-			if (isFSharp) {
-				foreach (CodeTypeMember tm in type.Members) {
-					if (tm is CodeConstructor) {
-						type.Members.Remove (tm);
-						break;
-					}
-				}
-			}
-
 			var staticCtor = new CodeTypeConstructor () { Attributes = MemberAttributes.Static };
 			staticCtor.Statements.Add (
 				new CodeExpressionStatement (
@@ -175,11 +174,9 @@ namespace Xamarin.Android.Tasks
 			type.Members.Add (staticCtor);
 		}
 
-		private void WriteFile (string file, CodeTypeDeclaration resources, string language, bool isFSharp, bool isCSharp, IEnumerable<string> aliases)
+		private void WriteFile (string file, CodeTypeDeclaration resources, string language, bool isCSharp, IEnumerable<string> aliases)
 		{
-			CodeDomProvider provider = 
-				isFSharp ? new FSharp.Compiler.CodeDom.FSharpCodeProvider () :
-				CodeDomProvider.CreateProvider (language);
+			CodeDomProvider provider = CodeDomProvider.CreateProvider (language);
 
 			string code = null;
 			using (var o = new StringWriter ()) {
@@ -217,23 +214,6 @@ namespace Xamarin.Android.Tasks
 					provider.GenerateCodeFromCompileUnit(new CodeSnippetCompileUnit("#pragma warning restore 1591"), o, options);
 
 				code = o.ToString ();
-
-				// post-processing for F#
-				if (isFSharp) {
-					code = code.Replace ("\r\n", "\n");
-					while (true) {
-						int skipLen = " = class".Length;
-						int idx = code.IndexOf (" = class");
-						if (idx < 0)
-							break;
-						int end = code.IndexOf ("        end");
-						string head = code.Substring (0, idx);
-						string mid = end < 0 ? code.Substring (idx) : code.Substring (idx + skipLen, end - idx - skipLen);
-						string last = end < 0 ? null : code.Substring (end + "        end".Length);
-						code = head + @" () =
-            static do Android.Runtime.ResourceIdManager.UpdateIdValues()" + mid + "\n" + last;
-					}
-				}
 			}
 
 			if (MonoAndroidHelper.CopyIfStringChanged (code, file)) {
