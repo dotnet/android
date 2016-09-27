@@ -28,6 +28,9 @@ namespace Xamarin.Android.Tasks
 		public string JavaPlatformJarPath { get; set; }
 
 		[Required]
+		public string AndroidSdkDirectory { get; set; }
+
+		[Required]
 		public string ClassesOutputDirectory { get; set; }
 
 		[Required]
@@ -79,6 +82,7 @@ namespace Xamarin.Android.Tasks
 		public override bool Execute ()
 		{
 			Log.LogDebugMessage ("Proguard");
+			Log.LogDebugMessage ("  AndroidSdkDirectory: {0}", AndroidSdkDirectory);
 			Log.LogDebugMessage ("  JavaPlatformJarPath: {0}", JavaPlatformJarPath);
 			Log.LogDebugMessage ("  ClassesOutputDirectory: {0}", ClassesOutputDirectory);
 			Log.LogDebugMessage ("  AcwMapFile: {0}", AcwMapFile);
@@ -150,7 +154,7 @@ namespace Xamarin.Android.Tasks
 				GetType ().Assembly.GetManifestResourceStream ("proguard_xamarin.cfg").CopyTo (xamcfg);
 			
 			var configs = ProguardConfigurationFiles
-				.Replace ("{sdk.dir}", Path.GetDirectoryName (Path.GetDirectoryName (ProguardHome)) + Path.DirectorySeparatorChar)
+				.Replace ("{sdk.dir}", AndroidSdkDirectory + Path.DirectorySeparatorChar)
 				.Replace ("{intermediate.common.xamarin}", ProguardCommonXamarinConfiguration)
 				.Replace ("{intermediate.references}", ProguardGeneratedReferenceConfiguration)
 				.Replace ("{intermediate.application}", ProguardGeneratedApplicationConfiguration)

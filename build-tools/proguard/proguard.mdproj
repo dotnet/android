@@ -7,6 +7,10 @@
     <ProjectGuid>{4B9D96BB-95AB-44E8-9F87-13B12C8BCED1}</ProjectGuid>
     <OutputPath>..\..\bin\$(Configuration)</OutputPath>
   </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+  </PropertyGroup>
 
   <Import Project="proguard.targets" />
 </Project>
