@@ -38,6 +38,7 @@ namespace Xamarin.Android.Tasks
 			foreach (var assembly in Assemblies)
 				res.Load (Path.GetFullPath (assembly.ItemSpec));
 
+			var strippedAssemblies = new Dictionary<string, string> ();
 			foreach (var assemblyName in Assemblies) {
 				var suffix = assemblyName.ItemSpec.EndsWith (".dll") ? String.Empty : ".dll";
 				string hintPath = assemblyName.GetMetadata ("HintPath").Replace (Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
@@ -74,7 +75,8 @@ namespace Xamarin.Android.Tasks
 					}
 				}
 				if (assembly_modified) {
-					Log.LogDebugMessage ("    The stripped library is saved as {0}", assemblyPath);
+					var strippedPath = assemblyPath + ".stripped";
+					Log.LogDebugMessage ("    The stripped library is saved as {0}", strippedPath);
 
 					// Output assembly needs to regenerate symbol file even if no IL/metadata was touched
 					// because Cecil still rewrites all assembly types in Cecil order (type A, nested types of A, type B, etc)
@@ -83,9 +85,19 @@ namespace Xamarin.Android.Tasks
 						WriteSymbols = assembly.MainModule.HasSymbols
 					};
 
-					assembly.Write (assemblyPath, wp);
+					assembly.Write (strippedPath, wp);
+					strippedAssemblies [assemblyPath] = strippedPath;
 				}
 			}
+
+			res.Dispose ();
+
+			foreach (var pair in strippedAssemblies) {
+				File.Delete (pair.Key);
+				File.Move (pair.Value, pair.Key);
+				Log.LogDebugMessage ("    The stripped library {0} is moved back to {1}", pair.Value, pair.Key);
+			}
+
 			return true;
 		}
 	}
