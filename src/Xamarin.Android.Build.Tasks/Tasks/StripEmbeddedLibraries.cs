@@ -28,7 +28,7 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ("StripEmbeddedLibraries Task");
 			Log.LogDebugTaskItems ("  Assemblies: ", Assemblies);
 
-			using (var res = new DirectoryAssemblyResolver (Log.LogWarning, true)) {
+			using (var res = new DirectoryAssemblyResolver (Log.LogWarning, true, new ReaderParameters { ReadWrite = true } )) {
 				return Execute (res);
 			}
 		}
@@ -83,7 +83,7 @@ namespace Xamarin.Android.Tasks
 						WriteSymbols = assembly.MainModule.HasSymbols
 					};
 
-					assembly.Write (assemblyPath, wp);
+					assembly.Write (wp);
 				}
 			}
 			return true;
