@@ -82,7 +82,7 @@ namespace Java.Interop.Tools.Cecil {
 
 		public void Dispose ()
 		{
-			Dispose (disposing: false);
+			Dispose (disposing: true);
 			GC.SuppressFinalize (this);
 		}
 
