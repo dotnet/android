@@ -263,6 +263,8 @@
     <Compile Include="Java.Nio\CharBuffer.cs" />
     <Compile Include="Java.Security\IdentityScope.cs" />
     <Compile Include="Java.Util\Spliterators.cs" />
+    <Compile Include="Java.Util.Concurrent.Atomic\AtomicInteger.cs" />
+    <Compile Include="Java.Util.Concurrent.Atomic\AtomicLong.cs" />
     <Compile Include="Javax.Microedition.Khronos.Egl\EGLContext.cs" />
     <Compile Include="Org.Apache.Http.Impl.Conn\DefaultClientConnection.cs" />
     <Compile Include="Org.Apache.Http.Impl.Cookie\BasicClientCookie.cs" />
