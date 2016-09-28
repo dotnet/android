@@ -1,0 +1,12 @@
+~
+*#
+*.pdb
+*.mdb
+src/*.dll
+*.pidb
+*.suo
+*.userprefs
+*/.DS_Store
+.DS_Store
+bin
+**/obj
