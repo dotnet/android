@@ -2223,6 +2223,8 @@ parse_gdb_options (void)
 	} else {
 		attach_gdb = TRUE;
 	}
+
+	free (val);
 }
 
 #if DEBUG
