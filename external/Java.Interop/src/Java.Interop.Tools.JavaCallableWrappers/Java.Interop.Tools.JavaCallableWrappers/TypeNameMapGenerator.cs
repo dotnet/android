@@ -54,10 +54,11 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 	 * The rows MUST be sorted so that strcmp(3) can be used to compare keys
 	 * values between rows
 	 */
-	public class TypeNameMapGenerator {
+	public class TypeNameMapGenerator : IDisposable {
 
 		Action<string, object[]>        Log;
 		List<TypeDefinition>            Types;
+		DirectoryAssemblyResolver       Resolver;
 
 		public TypeNameMapGenerator (IEnumerable<string> assemblies, Action<string, object []> logMessage)
 		{
@@ -70,20 +71,19 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 			var Assemblies  = assemblies.ToList ();
 			var rp          = new ReaderParameters (ReadingMode.Immediate);
 
-			using (var resolver = new DirectoryAssemblyResolver (Log, loadDebugSymbols: true, loadReaderParameters: rp)) {
-				foreach (var assembly in Assemblies) {
-					var directory   = Path.GetDirectoryName (assembly);
-					if (string.IsNullOrEmpty (directory))
-						continue;
-					if (!resolver.SearchDirectories.Contains (directory))
-						resolver.SearchDirectories.Add (directory);
-				}
-				foreach (var assembly in Assemblies) {
-					resolver.Load (Path.GetFullPath (assembly));
-				}
-
-				Types       = JavaTypeScanner.GetJavaTypes (Assemblies, resolver, logMessage);
+			Resolver = new DirectoryAssemblyResolver (Log, loadDebugSymbols: true, loadReaderParameters: rp);
+			foreach (var assembly in Assemblies) {
+				var directory   = Path.GetDirectoryName (assembly);
+				if (string.IsNullOrEmpty (directory))
+					continue;
+				if (!Resolver.SearchDirectories.Contains (directory))
+					Resolver.SearchDirectories.Add (directory);
 			}
+			foreach (var assembly in Assemblies) {
+				Resolver.Load (Path.GetFullPath (assembly));
+			}
+
+			Types       = JavaTypeScanner.GetJavaTypes (Assemblies, Resolver, logMessage);
 		}
 
 		public TypeNameMapGenerator (IEnumerable<TypeDefinition> types, Action<string, object[]> logMessage)
@@ -95,6 +95,21 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 
 			Log         = logMessage;
 			Types       = types.ToList ();
+		}
+
+		public void Dispose ()
+		{
+			Dispose (true);
+			GC.SuppressFinalize (this);
+		}
+
+		protected virtual void Dispose (bool disposing)
+		{
+			if (!disposing || Resolver == null)
+				return;
+
+			Resolver.Dispose ();
+			Resolver = null;
 		}
 
 		void LogWarning (string format, params object[] args)
