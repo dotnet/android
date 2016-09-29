@@ -29,3 +29,6 @@
 	path = external/llvm
 	url = https://github.com/mono/llvm.git
 	branch = master
+[submodule "external/xamarin-android-tools"]
+	path = external/xamarin-android-tools
+	url = git@github.com:xamarin/xamarin-android-tools.git
