@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{91713046-C358-4647-B162-ED4E1442F3D8}</ProjectGuid>
+    <ProjectGuid>{e34bcfa0-caa4-412c-aa1c-75db8d67d157}</ProjectGuid>
     <OutputType>Library</OutputType>
     <RootNamespace>Xamarin.Android.Tools</RootNamespace>
     <AssemblyName>Xamarin.Android.Tools</AssemblyName>
