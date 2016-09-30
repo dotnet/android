@@ -16,6 +16,7 @@ namespace Xamarin.Android.Build.Utilities
 		readonly static string[] SearchPaths = {
 			"/Library/Frameworks/Xamarin.Android.framework/Versions/Current/lib/mandroid",
 			"/Developer/MonoAndroid/usr/lib/mandroid",
+			"/app/lib/mandroid",
 			"/opt/mono-android/lib/mandroid"
 		};
 
