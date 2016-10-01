@@ -88,6 +88,7 @@ namespace MonoDroid.Tuner
 				new PreserveApplications (),
 				new RemoveAttributes (),
 				new PreserveDynamicTypes (),
+				new PreserveHttpAndroidClientHandler { HttpClientHandlerType = options.HttpClientHandlerType },
 				new PreserveSoapHttpClients (),
 				new PreserveTypeConverters (),
 				new PreserveLinqExpressions (),

@@ -44,6 +44,8 @@ namespace Xamarin.Android.Tasks
 		public string OptionalDestinationDirectory { get; set; }
 		public string LinkOnlyNewerThan { get; set; }
 
+		public string HttpClientHandlerType { get; set; }
+
 		IEnumerable<AssemblyDefinition> GetRetainAssemblies (DirectoryAssemblyResolver res)
 		{
 			List<AssemblyDefinition> retainList = null;
@@ -74,6 +76,7 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ("  ProguardConfiguration: {0}", ProguardConfiguration);
 			Log.LogDebugMessage ("  DumpDependencies: {0}", DumpDependencies);
 			Log.LogDebugMessage ("  LinkOnlyNewerThan: {0}", LinkOnlyNewerThan);
+			Log.LogDebugMessage ("  HttpClientHandlerType: {0}", HttpClientHandlerType);
 
 			var rp = new ReaderParameters {
 				InMemory    = true,
@@ -104,6 +107,7 @@ namespace Xamarin.Android.Tasks
 			if (!options.LinkSdkOnly)
 				options.RetainAssemblies = GetRetainAssemblies (res);
 			options.DumpDependencies = DumpDependencies;
+			options.HttpClientHandlerType = HttpClientHandlerType;
 			
 			var skiplist = new List<string> ();
 
