@@ -251,7 +251,7 @@ namespace Xamarin.Android.Net
 				await request.Content.CopyToAsync (httpConnection.OutputStream).ConfigureAwait (false);
 			}
 
-			var statusCode = (HttpStatusCode)httpConnection.ResponseCode;
+			var statusCode = await Task.Run (() => (HttpStatusCode)httpConnection.ResponseCode).ConfigureAwait (false);
 			var connectionUri = new Uri (httpConnection.URL.ToString ());
 
 			// If the request was redirected we need to put the new URL in the request
