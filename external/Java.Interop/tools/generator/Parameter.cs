@@ -291,9 +291,9 @@ namespace MonoDroid.Generation {
 			return new Parameter (SymbolTable.MangleName (p.Name), jnitype ?? p.ParameterType.FullNameCorrected (), null, isEnumType, rawtype);
 		}
 		
-		public static Parameter FromManagedType (TypeDefinition t)
+		public static Parameter FromManagedType (TypeDefinition t, string javaType)
 		{
-			return new Parameter ("__self", t.FullName, null, false);
+			return new Parameter ("__self", javaType ?? t.FullName, t.FullName, false);
 		}
 #endif
 	}

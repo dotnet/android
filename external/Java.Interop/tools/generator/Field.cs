@@ -76,7 +76,7 @@ namespace MonoDroid.Generation {
 
 		protected override Parameter SetterParameter {
 			get {
-				var p = Parameter.FromManagedType (f.FieldType.Resolve ());
+				var p = Parameter.FromManagedType (f.FieldType.Resolve (), null);
 				p.Name = "value";
 				return p;
 			}

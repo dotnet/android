@@ -39,8 +39,11 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 				.SelectMany (p => p.Types)
 				.FirstOrDefault (t => name.StartsWith (t.Parent.Name, StringComparison.Ordinal) && name == t.Parent.Name + '.' + t.Name);
 			if (ret == null)
+				ret = ManagedType.DummyManagedPackages
+				                 .SelectMany (p => p.Types)
+				                 .FirstOrDefault (t => t.FullName == name);
+			if (ret == null)
 				throw new JavaTypeResolutionException (string.Format ("Type '{0}' was not found.", name));
-			
 			return ret;
 		}
 		

@@ -36,7 +36,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 		{
 			JavaClass k = cls;
 			while (true) {
-				k = k.ResolvedExtends != null ? (JavaClass) k.ResolvedExtends.ReferencedType : null;
+				k = k.ResolvedExtends != null ? k.ResolvedExtends.ReferencedType as JavaClass : null;
 				if (k == null)
 					break;
 				

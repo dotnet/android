@@ -108,6 +108,37 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 		}
 	}
 
+
+	class ManagedType : JavaType
+	{
+		static JavaPackage dummy_system_package, dummy_system_io_package;
+		static JavaType system_object, system_exception, system_io_stream;
+
+		static ManagedType ()
+		{
+			dummy_system_package = new JavaPackage (null) { Name = "System" };
+			system_object = new ManagedType (dummy_system_package) { Name = "Object" };
+			system_exception = new ManagedType (dummy_system_package) { Name = "Exception" };
+			dummy_system_package.Types.Add (system_object);
+			dummy_system_package.Types.Add (system_exception);
+			dummy_system_io_package = new JavaPackage (null) { Name = "System.IO" };
+			system_io_stream = new ManagedType (dummy_system_package) { Name = "Stream" };
+			dummy_system_io_package.Types.Add (system_io_stream);
+		}
+
+		public static IEnumerable<JavaPackage> DummyManagedPackages {
+			get {
+				yield return dummy_system_package; 
+				yield return dummy_system_io_package;
+			}
+		}
+
+		public ManagedType (JavaPackage package) : base (package) 
+		{
+		}
+	}
+
+
 	public partial class JavaImplements
 	{
 		public string Name { get; set; }

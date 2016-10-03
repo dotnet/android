@@ -19,11 +19,11 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 				if (gen is InterfaceGen) {
 					var iface = new JavaInterface (pkg);
 					pkg.Types.Add (iface);
-					iface.Load (gen);
+					iface.Load ((InterfaceGen) gen);
 				} else if (gen is ClassGen) {
 					var kls = new JavaClass (pkg);
 					pkg.Types.Add (kls);
-					kls.Load (gen);
+					kls.Load ((ClassGen) gen);
 				}
 				else
 					throw new InvalidOperationException ();
@@ -75,11 +75,11 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 			((JavaType) iface).Load (gen);
 		}
 
-		static string ExpandTypeParameters (GenericParameterDefinitionList tps)
+		static string ExpandTypeParameters (ISymbol [] tps)
 		{
 			if (tps == null)
 				return null;
-			return '<' + string.Join (", ", tps.Select (_ => _.Name)) + '>';
+			return '<' + string.Join (", ", tps.Select (_ => _.JavaName)) + '>';
 		}
 
 		static void Load (this JavaClass kls, ClassGen gen)
@@ -88,10 +88,13 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 
 			kls.Abstract = gen.IsAbstract;
 			kls.Final = gen.IsFinal;
-			if (gen.BaseGen != null) {
-				kls.Extends = gen.BaseGen.JavaSimpleName;
-				kls.ExtendsGeneric = gen.BaseGen.JavaSimpleName + ExpandTypeParameters (gen.BaseGen.TypeParameters);
-				kls.ExtendedJniExtends = gen.BaseGen.JniName;
+			var baseGen = gen.BaseType != null ? SymbolTable.Lookup (gen.BaseType) : null;
+
+			if (baseGen != null) {
+				kls.Extends = baseGen.JavaName;
+				var gs = baseGen as GenericSymbol;
+				kls.ExtendsGeneric = gs != null ? gs.JavaName + ExpandTypeParameters (gs.TypeParams) : baseGen.JavaName;
+				kls.ExtendedJniExtends = baseGen.JniName;
 			}
 			foreach (var c in gen.Ctors) {
 				var ctor = new JavaConstructor (kls);
