@@ -145,6 +145,15 @@ namespace Xamarin.Android.Tasks
 			AndroidLogger.Info += (task, message) => log.LogMessage (task + " " + message);
 			AndroidLogger.Debug += (task, message) => log.LogDebugMessage (task + " " + message);
 		}
+
+		public static void InitializeAndroidLogger (MessageHandler error, MessageHandler warning,
+			MessageHandler info, MessageHandler debug)
+		{
+			AndroidLogger.Error += error;
+			AndroidLogger.Warning += warning;
+			AndroidLogger.Info += info;
+			AndroidLogger.Debug += debug;
+		}
 #endif
 
 		public static IEnumerable<string> DistinctFilesByContent (IEnumerable<string> filePaths)
