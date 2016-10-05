@@ -644,6 +644,10 @@
       <Project>{E248B2CA-303B-4645-ADDC-9D4459D550FD}</Project>
       <Name>libZipSharp</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\external\xamarin-android-tools\src\Xamarin.Android.Tools\Xamarin.Android.Tools.csproj">
+      <Project>{E34BCFA0-CAA4-412C-AA1C-75DB8D67D157}</Project>
+      <Name>Xamarin.Android.Tools</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="pdb2mdb\" />

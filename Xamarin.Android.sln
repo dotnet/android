@@ -91,12 +91,16 @@ Project("{9344BDBB-3E7F-41FC-A0DD-8665D75EE146}") = "bundle", "build-tools\bundl
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "xa-prep-tasks", "build-tools\xa-prep-tasks\xa-prep-tasks.csproj", "{7CE69551-BD73-4726-ACAA-AAF89C84BAF8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.Tools", "external\xamarin-android-tools\src\Xamarin.Android.Tools\Xamarin.Android.Tools.csproj", "{E34BCFA0-CAA4-412C-AA1C-75DB8D67D157}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|AnyCPU = Debug|AnyCPU
 		Release|AnyCPU = Release|AnyCPU
 		XAIntegrationDebug|AnyCPU = XAIntegrationDebug|AnyCPU
 		XAIntegrationRelease|AnyCPU = XAIntegrationRelease|AnyCPU
+		XAIntegrationDebug|Any CPU = XAIntegrationDebug|Any CPU
+		XAIntegrationRelease|Any CPU = XAIntegrationRelease|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{3F1F2F50-AF1A-4A5A-BEDB-193372F068D7}.Debug|AnyCPU.ActiveCfg = Debug|Any CPU
@@ -417,6 +421,18 @@ Global
 		{7CE69551-BD73-4726-ACAA-AAF89C84BAF8}.XAIntegrationDebug|AnyCPU.Build.0 = Debug|Any CPU
 		{7CE69551-BD73-4726-ACAA-AAF89C84BAF8}.XAIntegrationRelease|AnyCPU.ActiveCfg = Debug|Any CPU
 		{7CE69551-BD73-4726-ACAA-AAF89C84BAF8}.XAIntegrationRelease|AnyCPU.Build.0 = Debug|Any CPU
+		{E34BCFA0-CAA4-412C-AA1C-75DB8D67D157}.Debug|AnyCPU.ActiveCfg = Debug|Any CPU
+		{E34BCFA0-CAA4-412C-AA1C-75DB8D67D157}.Debug|AnyCPU.Build.0 = Debug|Any CPU
+		{E34BCFA0-CAA4-412C-AA1C-75DB8D67D157}.Release|AnyCPU.ActiveCfg = Release|Any CPU
+		{E34BCFA0-CAA4-412C-AA1C-75DB8D67D157}.Release|AnyCPU.Build.0 = Release|Any CPU
+		{E34BCFA0-CAA4-412C-AA1C-75DB8D67D157}.XAIntegrationDebug|AnyCPU.ActiveCfg = Debug|Any CPU
+		{E34BCFA0-CAA4-412C-AA1C-75DB8D67D157}.XAIntegrationDebug|AnyCPU.Build.0 = Debug|Any CPU
+		{E34BCFA0-CAA4-412C-AA1C-75DB8D67D157}.XAIntegrationRelease|AnyCPU.ActiveCfg = Debug|Any CPU
+		{E34BCFA0-CAA4-412C-AA1C-75DB8D67D157}.XAIntegrationRelease|AnyCPU.Build.0 = Debug|Any CPU
+		{E34BCFA0-CAA4-412C-AA1C-75DB8D67D157}.XAIntegrationDebug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E34BCFA0-CAA4-412C-AA1C-75DB8D67D157}.XAIntegrationDebug|Any CPU.Build.0 = Debug|Any CPU
+		{E34BCFA0-CAA4-412C-AA1C-75DB8D67D157}.XAIntegrationRelease|Any CPU.ActiveCfg = Debug|Any CPU
+		{E34BCFA0-CAA4-412C-AA1C-75DB8D67D157}.XAIntegrationRelease|Any CPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{8FF78EB6-6FC8-46A7-8A15-EBBA9045C5FA} = {E351F97D-EA4F-4E7F-AAA0-8EBB1F2A4A62}
@@ -460,6 +476,7 @@ Global
 		{0DE278D6-000F-4001-BB98-187C0AF58A61} = {E351F97D-EA4F-4E7F-AAA0-8EBB1F2A4A62}
 		{1640725C-4DB8-4D8D-BC96-74E688A06EEF} = {E351F97D-EA4F-4E7F-AAA0-8EBB1F2A4A62}
 		{7CE69551-BD73-4726-ACAA-AAF89C84BAF8} = {E351F97D-EA4F-4E7F-AAA0-8EBB1F2A4A62}
+		{E34BCFA0-CAA4-412C-AA1C-75DB8D67D157} = {04E3E11E-B47D-4599-8AFC-50515A95E715}
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
 		Policies = $0
