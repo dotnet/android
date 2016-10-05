@@ -138,12 +138,22 @@ namespace Xamarin.Android.Tasks
 			return filePaths.Distinct (MonoAndroidHelper.SizeAndContentFileComparer.DefaultComparer);
 		}
 
-		public static void InitializeAndroidLogger (TaskLoggingHelper log)
+		public static void InitializeAndroidLogger (MessageHandler error, MessageHandler warning,
+			MessageHandler info, MessageHandler debug)
 		{
-			AndroidLogger.Error += (task, message) => log.LogError (task + " " + message);
-			AndroidLogger.Warning += (task, message) => log.LogWarning (task + " " + message);
-			AndroidLogger.Info += (task, message) => log.LogMessage (task + " " + message);
-			AndroidLogger.Debug += (task, message) => log.LogDebugMessage (task + " " + message);
+			AndroidLogger.Error += error;
+			AndroidLogger.Warning += warning;
+			AndroidLogger.Info += info;
+			AndroidLogger.Debug += debug;
+		}
+
+		public static void ClearAndroidLogger (MessageHandler error, MessageHandler warning,
+			MessageHandler info, MessageHandler debug)
+		{
+			AndroidLogger.Error -= error;
+			AndroidLogger.Warning -= warning;
+			AndroidLogger.Info -= info;
+			AndroidLogger.Debug -= debug;
 		}
 #endif
 
