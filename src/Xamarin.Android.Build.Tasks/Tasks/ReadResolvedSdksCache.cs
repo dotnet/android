@@ -84,9 +84,18 @@ namespace Xamarin.Android.Tasks
 
 		public override bool Execute ()
 		{
+			MonoAndroidHelper.InitializeAndroidLogger (ErrorHandler, WarningHandler, InfoHandler, DebugHandler);
+			try {
+				return RunTask ();
+			} finally {
+				MonoAndroidHelper.ClearAndroidLogger (ErrorHandler, WarningHandler, InfoHandler, DebugHandler);
+			}
+		}
+
+		public bool RunTask ()
+		{
 			Log.LogDebugMessage ("Task ReadResolvedSdksCache");
 			Log.LogDebugMessage ("  CacheFile: {0}", CacheFile);
-			MonoAndroidHelper.InitializeAndroidLogger (Log);
 			if (!File.Exists (CacheFile)) {
 				Log.LogWarning ("{0} does not exist. No Resolved Sdks found", CacheFile);
 				return !Log.HasLoggedErrors;
@@ -135,6 +144,26 @@ namespace Xamarin.Android.Tasks
 			MonoAndroidHelper.RefreshMonoDroidSdk (MonoAndroidToolsPath, MonoAndroidBinPath, ReferenceAssemblyPaths);
 
 			return !Log.HasLoggedErrors;
+		}
+
+		void ErrorHandler (string task, string message)
+		{
+			Log.LogError ($"{task} {message}");
+		}
+
+		void WarningHandler (string task, string message)
+		{
+			Log.LogWarning ($"{task} {message}");
+		}
+
+		void DebugHandler (string task, string message)
+		{
+			Log.LogDebugMessage ($"DEBUG {task} {message}");
+		}
+
+		void InfoHandler (string task, string message)
+		{
+			Log.LogMessage ($"{task} {message}");
 		}
 	}
 }

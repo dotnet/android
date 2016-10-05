@@ -106,6 +106,17 @@ namespace Xamarin.Android.Tasks
 
 		public override bool Execute ()
 		{
+			MonoAndroidHelper.InitializeAndroidLogger (ErrorHandler, WarningHandler, InfoHandler, DebugHandler);
+			try {
+				return RunTask();
+			}
+			finally {
+				MonoAndroidHelper.ClearAndroidLogger (ErrorHandler, WarningHandler, InfoHandler, DebugHandler);
+			}
+		}
+
+		public bool RunTask ()
+		{
 			Log.LogDebugMessage ("ResolveSdksTask:");
 			Log.LogDebugMessage ("  AndroidApiLevel: {0}", AndroidApiLevel);
 			Log.LogDebugMessage ("  AndroidSdkBuildToolsVersion: {0}", AndroidSdkBuildToolsVersion);
@@ -115,8 +126,6 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ("  SequencePointsMode: {0}", SequencePointsMode);
 			Log.LogDebugMessage ("  MonoAndroidToolsPath: {0}", MonoAndroidToolsPath);
 			Log.LogDebugMessage ("  MonoAndroidBinPath: {0}", MonoAndroidBinPath);
-
-			MonoAndroidHelper.InitializeAndroidLogger (Log);
 
 			MonoAndroidHelper.RefreshAndroidSdk (AndroidSdkPath, AndroidNdkPath, JavaSdkPath);
 			MonoAndroidHelper.RefreshMonoDroidSdk (MonoAndroidToolsPath, MonoAndroidBinPath, ReferenceAssemblyPaths);
@@ -385,6 +394,26 @@ namespace Xamarin.Android.Tasks
 					"Could not determine $(TargetFrameworkVersion) for API level '{0}.'",
 					AndroidApiLevel);
 			return null;
+		}
+
+		void ErrorHandler (string task, string message)
+		{
+			Log.LogError ($"{task} {message}");
+		}
+
+		void WarningHandler (string task, string message)
+		{
+			Log.LogWarning ($"{task} {message}");
+		}
+
+		void DebugHandler (string task, string message)
+		{
+			Log.LogDebugMessage ($"DEBUG {task} {message}");
+		}
+
+		void InfoHandler (string task, string message)
+		{
+			Log.LogMessage ($"{task} {message}");
 		}
 	}
 }
