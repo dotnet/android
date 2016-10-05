@@ -18,6 +18,7 @@ namespace MonoDroid.Generation
 		public abstract string DeprecatedComment { get; }
 		public abstract bool IsGeneratable { get; }
 		public abstract bool IsGeneric { get; }
+		public abstract bool IsObfuscated { get; }
 		public abstract string FullName { get; set; }
 		public abstract string Name { get; set; }
 		public abstract string Namespace { get; }
@@ -91,6 +92,10 @@ namespace MonoDroid.Generation
 		
 		public override bool IsDeprecated {
 			get { return deprecated; }
+		}
+
+		public override bool IsObfuscated {
+			get { return false; } // obfuscated types have no chance to be already bound in managed types.
 		}
 		
 		public override string DeprecatedComment {
@@ -198,8 +203,8 @@ namespace MonoDroid.Generation
 				name = TypeNamePrefix + raw_name;
 				full_name = String.Format ("{0}.{1}{2}", ns, idx > 0 ? StringRocks.TypeToPascalCase (java_name.Substring (0, idx + 1)) : String.Empty, name);
 			}
-			//marshaler = elem.XGetAttribute ("marshaler");
-			//if (!string.IsNullOrEmpty (marshaler)) throw new Exception ();
+
+			obfuscated = IsObfuscatedName (java_name) && elem.XGetAttribute ("obfuscated") != "false";
 		}
 
 		public override bool IsAcw {
@@ -218,6 +223,11 @@ namespace MonoDroid.Generation
 
 		public override bool IsGeneratable {
 			get { return true; }
+		}
+
+		bool obfuscated;
+		public override bool IsObfuscated {
+			get { return obfuscated; }
 		}
 		
 		string java_name;
@@ -289,6 +299,17 @@ namespace MonoDroid.Generation
 				Report.Warning (0, Report.WarningGenBaseSupport + 0, "Type {0}.{1}: FxDG naming violation: Type name '{1}' matches namespace part '{2}'.", pkg_name, java_name, topmost);
 				// return false;
 			}
+			return true;
+		}
+
+		bool IsObfuscatedName (String name)
+		{
+			if (name.StartsWith ("R.", StringComparison.Ordinal))
+				return false;
+			int idx = name.LastIndexOf ('.');
+			string last = idx < 0 ? name : name.Substring (idx + 1);
+			if (last.Any (c => (c < 'a' || 'z' < c) && (c < '0' || '9' < c)))
+					return false;
 			return true;
 		}
 	}

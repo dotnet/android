@@ -53,6 +53,10 @@ namespace MonoDroid.Generation {
 			get { return support.IsDeprecated; }
 		}
 		
+		public bool IsObfuscated {
+			get { return support.IsObfuscated; }
+		}
+
 		public string DeprecatedComment {
 			get { return support.DeprecatedComment; }
 		}
@@ -718,6 +722,9 @@ namespace MonoDroid.Generation {
 			// have to "implement" those methods because they are declared and you have to implement
 			// any declared methods in C#. That is going to be problematic a lot.
 			methods = methods.Where (m => !m.IsInterfaceDefaultMethod).ToList ();
+			nested_types = nested_types.Where (n => !n.IsObfuscated && n.Visibility != "private").ToList ();
+			foreach (var n in nested_types)
+				n.StripNonBindables ();
 		}
 
 		public void FillProperties ()

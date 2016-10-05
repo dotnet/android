@@ -129,7 +129,6 @@ namespace MonoDroid.Generation {
 					nested [name] = gen;
 				else
 					result.Add (gen);
-				SymbolTable.AddType (gen);
 			}
 
 			foreach (string name in nested.Keys) {

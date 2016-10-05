@@ -308,8 +308,12 @@ namespace Xamarin.Android.Binder {
 			opt.Gens = gens;
 
 			// disable interface default methods here, especially before validation.
-			foreach (var gen in gens)
+			gens = gens.Where (g => !g.IsObfuscated && g.Visibility != "private").ToList ();
+			foreach (var gen in gens) {
 				gen.StripNonBindables ();
+				if (gen.IsGeneratable)
+					AddTypeToTable (gen);
+			}
 
 			Validate (gens, opt);
 
@@ -353,6 +357,13 @@ namespace Xamarin.Android.Binder {
 				: enummap.WriteEnumerations (enumdir, enums, FlattenNestedTypes (gens).ToArray (), opt.UseShortFileNames);
 
 			gen_info.GenerateLibraryProjectFile (options, enumFiles);
+		}
+
+		static void AddTypeToTable (GenBase gb)
+		{
+			SymbolTable.AddType (gb);
+			foreach (var nt in gb.NestedTypes)
+				AddTypeToTable (nt);
 		}
 
 		static IEnumerable<GenBase> FlattenNestedTypes (IEnumerable<GenBase> gens)
