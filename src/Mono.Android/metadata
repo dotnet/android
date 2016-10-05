@@ -1,4 +1,8 @@
 <metadata>
+  <!-- Manifest.permission has its last name part all in lowercase and
+       regarded as obfuscated, so avoid that by explicitly marking not. -->
+  <attr path="/api/package[@name='android']/class[@name='Manifest.permission']" name="obfuscated">false</attr>
+
   <!-- FIXME: hack to workaround api-merge bug that brings two identical methods (it doesn't care generic type params) -->
   <remove-node path="/api/package[@name='android.animation']/interface[@name='TypeEvaluator']/method[@name='evaluate' and @merge.SourceFile]" />
 
