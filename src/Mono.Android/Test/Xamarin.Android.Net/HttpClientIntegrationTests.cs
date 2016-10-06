@@ -598,6 +598,36 @@ namespace Xamarin.Android.NetTests {
 				}
 			}
 		}
+
+		[Test]
+		void UrlEscaping_Bug43411 ()
+		{
+			UrlEscaping_TestUrl ($"http://{TestHost}/?example=value%20_value", "#1");
+			UrlEscaping_TestUrl ($"http://{TestHost}/?query=anna%20%26%20lotte&param2=true", "#2");
+		}
+
+		void UrlEscaping_TestUrl (string url, string messagePrefix)
+		{
+			bool? failed = null;
+
+			var listener = CreateListener (l => {
+				failed = true;
+			});
+
+			using (listener) {
+				try {
+					var client = new HttpClient ();
+					var request = new HttpRequestMessage (HttpMethod.Get, url);
+
+					client.SendAsync (request, HttpCompletionOption.ResponseHeadersRead).Wait ();
+					Assert.AreEqual (url, request.RequestUri.ToString (), $"{messagePrefix}-1");
+					Assert.IsNull (failed, $"{messagePrefix}-2");
+				} finally {
+					listener.Abort ();
+					listener.Close ();
+				}
+			}
+		}
 #if TODO
 		[Test]
 		public void Send_Complete_Content ()
