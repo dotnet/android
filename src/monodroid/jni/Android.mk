@@ -59,7 +59,8 @@ LOCAL_SRC_FILES := \
 	zip/ioapi.c \
 	zip/unzip.c \
 	xamarin_getifaddrs.c \
-	cpu-arch-detect.c
+	cpu-arch-detect.c \
+	monodroid-networkinfo.c
 
 jni/monodroid-glue.c: jni/config.include jni/machine.config.include
 

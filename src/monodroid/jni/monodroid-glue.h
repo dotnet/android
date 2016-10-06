@@ -2,9 +2,11 @@
 #define __MONODROID_GLUE_H
 
 #include <stdio.h>
+#include <jni.h>
 
 MONO_API  int monodroid_get_system_property (const char *name, char **value);
 int monodroid_get_system_property_from_overrides (const char *name, char ** value);
+JNIEnv* get_jnienv (void);
 
 struct DylibMono;
 
