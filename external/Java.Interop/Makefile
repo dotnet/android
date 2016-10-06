@@ -9,8 +9,6 @@ ifeq ($(OS),Linux)
 NATIVE_EXT = .so
 endif
 
-RUNTIME       := $(shell if [ -f "`which mono64`" ] ; then echo mono64 ; else echo mono; fi) --debug=casts
-
 XA_CONFIGURATION  = XAIntegrationDebug
 
 GENDARME_URL = https://cloud.github.com/downloads/spouliot/gendarme/gendarme-2.10-bin.zip
@@ -58,8 +56,8 @@ clean:
 	-rm -Rf bin/$(CONFIGURATION) bin/Build$(CONFIGURATION) bin/Test$(CONFIGURATION) bin/XAIntegration$(CONFIGURATION)
 	-rm src/Java.Runtime.Environment/Java.Runtime.Environment.dll.config
 
-include build-tools/scripts/jdk.mk
 include build-tools/scripts/mono.mk
+include build-tools/scripts/jdk.mk
 
 $(PACKAGES) $(NUNIT_CONSOLE):
 	nuget restore

@@ -3,8 +3,9 @@
 #
 # Inputs:
 #
-#   $(OS): `uname` value of the host operating system
+#   $(OS): Optional; **uname**(1) value of the host operating system
 #   $(CONFIGURATION): Build configuration name, e.g. Debug or Release
+#   $(RUNTIME): `mono` executable for the host operating system
 #
 # Outputs:
 #
@@ -19,7 +20,7 @@
 #   $(JI_JVM_PATH):
 #       Location of the Java native library that contains e.g. JNI_CreateJavaVM().
 
-
+OS           ?= $(shell uname)
 
 ifeq ($(OS),Darwin)
 
