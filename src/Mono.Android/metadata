@@ -1159,11 +1159,8 @@
    
    Another mess: we should be able to use 'api-since' here, but that information is provided by platform-tools/api/annotations.zip which is NOT part of N preview 1. So we use api-merge info instead...
   -->
-  <remove-node path="/api/package[@name='java.awt.font']/class[@name='NumericShaper']/method[@name='getContextualShaper' and @merge.SourceFile = 'Profiles/api-24.xml.in']" />
-  <remove-node path="/api/package[@name='java.awt.font']/class[@name='NumericShaper']/method[@name='getShaper' and @merge.SourceFile = 'Profiles/api-24.xml.in']" />
-  <!-- FIXME: our product had inconsistent metadata fixup duplicates, but the xamarin-android migration from monodroid caused extraneous directory structural changes which broke build to fix this issue. To workaround the problem, these two extraneous metadata fixup lines are added. They should be removed in the future. -->
-  <remove-node path="/api/package[@name='java.awt.font']/class[@name='NumericShaper']/method[@name='getContextualShaper' and @merge.SourceFile = 'api-24.xml.in']" />
-  <remove-node path="/api/package[@name='java.awt.font']/class[@name='NumericShaper']/method[@name='getShaper' and @merge.SourceFile = 'api-24.xml.in']" />
+  <remove-node path="/api/package[@name='java.awt.font']/class[@name='NumericShaper']/method[@name='getContextualShaper' and contains(@merge.SourceFile, 'api-24.xml.in')]" />
+  <remove-node path="/api/package[@name='java.awt.font']/class[@name='NumericShaper']/method[@name='getShaper' and contains(@merge.SourceFile, 'api-24.xml.in')]" />
 
   <!-- StringBuffer.Append(bool) is newly added, and it causes override
     resolution conflict with base AbstractStringBuilder. However, that "forcibly exposed internal-only" class returned AbstractStringBuilder itself, which doesn't match the expected return type. For this case, we need to modify the internal type.
