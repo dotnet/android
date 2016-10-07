@@ -234,6 +234,15 @@ namespace Xamarin.Android.Net
 		{
 			if (Logger.LogNet)
 				Logger.Log (LogLevel.Info, LOG_APP, $"{this}.DoProcessRequest ()");
+
+			if(cancellationToken.IsCancellationRequested)
+			{
+				if(Logger.LogNet)
+					Logger.Log(LogLevel.Info, LOG_APP, " cancelled");
+
+				cancellationToken.ThrowIfCancellationRequested();
+			}
+
 			try {
 				if (Logger.LogNet)
 					Logger.Log (LogLevel.Info, LOG_APP, $"  connecting");
@@ -246,6 +255,16 @@ namespace Xamarin.Android.Net
 				// Wrap it nicely in a "standard" exception so that it's compatible with HttpClientHandler
 				throw new WebException (ex.Message, ex, WebExceptionStatus.ConnectFailure, null);
 			}
+
+			if(cancellationToken.IsCancellationRequested)
+			{
+				if(Logger.LogNet)
+					Logger.Log(LogLevel.Info, LOG_APP, " cancelled");
+
+				httpConnection.Disconnect();
+				cancellationToken.ThrowIfCancellationRequested();
+			}
+			cancellationToken.Register(httpConnection.Disconnect);
 
 			if (httpConnection.DoOutput) {
 				await request.Content.CopyToAsync (httpConnection.OutputStream).ConfigureAwait (false);
