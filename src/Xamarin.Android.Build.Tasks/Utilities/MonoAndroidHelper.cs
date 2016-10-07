@@ -31,6 +31,8 @@ namespace Xamarin.Android.Tasks
 				UseShellExecute = false,
 				RedirectStandardOutput = true,
 				RedirectStandardError = true,
+				CreateNoWindow = true,
+				WindowStyle = ProcessWindowStyle.Hidden,
 			};
 			Process p = new Process ();
 			p.StartInfo = psi;

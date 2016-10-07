@@ -41,6 +41,8 @@ namespace Xamarin.Android.Tasks
 				RedirectStandardOutput = true,
 				RedirectStandardError = true,
 				UseShellExecute = false,
+				CreateNoWindow = true,
+				WindowStyle = ProcessWindowStyle.Hidden,
 				};
 			var proc = Process.Start (psi);
 			proc.WaitForExit ();

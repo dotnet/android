@@ -78,6 +78,8 @@ namespace Xamarin.Android.Tasks
 				UseShellExecute = false,
 				RedirectStandardOutput = true,
 				RedirectStandardError = true,
+				CreateNoWindow = true,
+				WindowStyle = ProcessWindowStyle.Hidden,
 			};
 
 			var proc = new Process ();

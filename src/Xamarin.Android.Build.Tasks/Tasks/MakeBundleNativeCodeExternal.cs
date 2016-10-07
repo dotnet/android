@@ -131,6 +131,8 @@ namespace Xamarin.Android.Tasks
 					UseShellExecute = false,
 					RedirectStandardOutput = true,
 					RedirectStandardError = true,
+					CreateNoWindow = true,
+					WindowStyle = ProcessWindowStyle.Hidden,
 				};
 				var gccNoQuotes = NdkUtil.GetNdkTool (AndroidNdkDirectory, arch, "gcc");
 				var gcc = '"' + gccNoQuotes + '"';
