@@ -43,6 +43,9 @@
     <Compile Include="Xamarin.Android.BuildTools.PrepTasks\GitCommitHash.cs" />
     <Compile Include="Xamarin.Android.BuildTools.PrepTasks\SystemUnzip.cs" />
     <Compile Include="Xamarin.Android.BuildTools.PrepTasks\Which.cs" />
+    <Compile Include="Xamarin.Android.BuildTools.PrepTasks\GitBlame.cs" />
+    <Compile Include="Xamarin.Android.BuildTools.PrepTasks\GitCommitsInRange.cs" />
+    <Compile Include="Xamarin.Android.BuildTools.PrepTasks\ReplaceFileContents.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <Import Project="xa-prep-tasks.targets" />

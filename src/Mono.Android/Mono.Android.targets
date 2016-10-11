@@ -1,5 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"   TaskName="Xamarin.Android.BuildTools.PrepTasks.GitBlame" />
+  <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"   TaskName="Xamarin.Android.BuildTools.PrepTasks.GitBranch" />
+  <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"   TaskName="Xamarin.Android.BuildTools.PrepTasks.GitCommitHash" />
+  <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"   TaskName="Xamarin.Android.BuildTools.PrepTasks.GitCommitsInRange" />
+  <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"   TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" />
+  <ItemGroup>
+    <Compile Include="$(IntermediateOutputPath)AssemblyInfo.cs" />
+  </ItemGroup>
   <Target Name="_BuildJavaInterop"
       BeforeTargets="BeforeResolveReferences"
       Inputs="$(JavaInteropFullPath)\src\Java.Interop\Java.Interop.csproj"
@@ -15,6 +23,44 @@
         SourceFiles="@(Assembly)"
         DestinationFolder="$(OutputPath)\..\v1.0"
     />
+  </Target>
+  <Target Name="_BuildAssemblyInfo_cs"
+      BeforeTargets="CoreCompile"
+      Condition="!Exists ('$(IntermediateOutputPath)AssemblyInfo.cs')"
+      Inputs="Properties\AssemblyInfo.cs.in"
+      Outputs="$(IntermediateOutputPath)AssemblyInfo.cs">
+    <GitBlame
+        FileName="$(XamarinAndroidSourcePath)\Configuration.props"
+        LineFilter="&lt;ProductVersion&gt;"
+        WorkingDirectory="$(XamarinAndroidSourcePath)"
+        ToolPath="$(GitToolPath)"
+        ToolExe="$(GitToolExe)">
+      <Output TaskParameter="Commits"                 ItemName="_XAVersionCommit" />
+    </GitBlame>
+    <GitCommitsInRange
+        StartCommit="%(_XAVersionCommit.CommitHash)"
+        WorkingDirectory="$(XamarinAndroidSourcePath)"
+        ToolPath="$(GitToolPath)"
+        ToolExe="$(GitToolExe)">
+      <Output TaskParameter="CommitCount"             PropertyName="_XACommitCount" />
+    </GitCommitsInRange>
+    <GitCommitHash
+        WorkingDirectory="$(XamarinAndroidSourcePath)"
+        ToolPath="$(GitToolPath)"
+        ToolExe="$(GitToolExe)">
+      <Output TaskParameter="AbbreviatedCommitHash"   PropertyName="_XAHash" />
+    </GitCommitHash>
+    <GitBranch
+        WorkingDirectory="$(XamarinAndroidSourcePath)"
+        ToolPath="$(GitToolPath)"
+        ToolExe="$(GitToolExe)">
+      <Output TaskParameter="Branch"                  PropertyName="_XABranch" />
+    </GitBranch>
+    <ReplaceFileContents
+        SourceFile="Properties\AssemblyInfo.cs.in"
+        DestinationFile="$(IntermediateOutputPath)AssemblyInfo.cs"
+        Replacements="@PACKAGE_VERSION@=$(ProductVersion);@PACKAGE_VERSION_BUILD@=$(_XACommitCount);@PACKAGE_HEAD_REV@=$(_XAHash);@PACKAGE_HEAD_BRANCH@=$(_XABranch)">
+    </ReplaceFileContents>
   </Target>
   <Target Name="_BuildJNIEnv"
       BeforeTargets="CoreCompile"
