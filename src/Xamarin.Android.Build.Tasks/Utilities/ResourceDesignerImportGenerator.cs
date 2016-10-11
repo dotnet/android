@@ -3,6 +3,7 @@ using System.CodeDom;
 using System.Collections.Generic;
 using System.Linq;
 using Mono.Cecil;
+using Microsoft.Build.Utilities;
 
 namespace Xamarin.Android.Tasks
 {
@@ -10,11 +11,27 @@ namespace Xamarin.Android.Tasks
 	{
 		CodeTypeDeclaration primary;
 		string primary_name;
+		HashSet<string> resourceFields = new HashSet<string> ();
+		TaskLoggingHelper Log;
 
-		public ResourceDesignerImportGenerator (string ns, CodeTypeDeclaration applicationResourceDesigner)
+		string CreateIdentifier (string type, string field)
+		{
+			return $"{primary_name}.{type}.{field}";
+		}
+
+		public ResourceDesignerImportGenerator (string ns, CodeTypeDeclaration applicationResourceDesigner, TaskLoggingHelper log)
 		{
 			this.primary = applicationResourceDesigner;
 			primary_name = ns + (ns.Length > 0 ? "." : "") + primary.Name;
+			Log = log;
+
+			foreach (CodeTypeMember type in primary.Members) {
+				var decl = type as CodeTypeDeclaration;
+				if (decl == null)
+					continue;
+				foreach (CodeTypeMember field in decl.Members) 
+					resourceFields.Add (CreateIdentifier (type.Name, field.Name));
+			}
 		}
 
 		public void CreateImportMethods (IEnumerable<AssemblyDefinition> libraries)
@@ -54,6 +71,20 @@ namespace Xamarin.Android.Tasks
 				foreach (var field in type.Fields) {
 					var dstField = new CodeFieldReferenceExpression (dstClassRef, field.Name);
 					var srcField = new CodeFieldReferenceExpression (srcClassRef, field.Name);
+					var fieldName = CreateIdentifier (type.Name, field.Name);
+					if (!resourceFields.Contains (fieldName)) {
+						Log.LogWarning (subcategory: null,
+							warningCode: "XA0106",
+							helpKeyword: null,
+							file: null,
+							lineNumber: 0,
+							columnNumber: 0,
+							endLineNumber: 0,
+							endColumnNumber: 0,
+							message: $"Skipping {fieldName}. Please check that your Nuget Package versions are compatible."
+						);
+						continue;
+					}
 					// This simply assigns field regardless of whether it is int or int[].
 					method.Statements.Add (new CodeAssignStatement (dstField, srcField));
 				}

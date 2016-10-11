@@ -121,7 +121,7 @@ namespace Xamarin.Android.Tasks
 						assemblyNames.Add (assemblyPath);
 					}
 					var assemblies = assemblyNames.Select (assembly => resolver.GetAssembly (assembly));
-					new ResourceDesignerImportGenerator (Namespace, resources)
+					new ResourceDesignerImportGenerator (Namespace, resources, Log)
 						.CreateImportMethods (assemblies);
 				}
 			}
