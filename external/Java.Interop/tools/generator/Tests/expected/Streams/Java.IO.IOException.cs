@@ -50,7 +50,7 @@ namespace Java.IO {
 				id_printStackTrace = JNIEnv.GetMethodID (class_ref, "printStackTrace", "()V");
 			try {
 
-				if (GetType () == ThresholdType)
+				if (((object) this).GetType () == ThresholdType)
 					JNIEnv.CallVoidMethod (((global::Java.Lang.Throwable) this).Handle, id_printStackTrace);
 				else
 					JNIEnv.CallNonvirtualVoidMethod (((global::Java.Lang.Throwable) this).Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "printStackTrace", "()V"));

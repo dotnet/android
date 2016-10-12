@@ -6,6 +6,9 @@
     <Content Include='expected.ji\Adapters\Java.Lang.Object.cs'>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include='expected.ji\Adapters\Mono.Android.projitems'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include='expected.ji\Adapters\Xamarin.Test.AbsSpinner.cs'>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -33,6 +36,9 @@
     <Content Include='expected.ji\Android.Graphics.Color\Java.Lang.Object.cs'>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include='expected.ji\Android.Graphics.Color\Mono.Android.projitems'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include='expected.ji\Android.Graphics.Color\Xamarin.Test.SomeObject.cs'>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -46,6 +52,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include='expected.ji\Arrays\Java.Lang.Object.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\Arrays\Mono.Android.projitems'>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include='expected.ji\Arrays\Xamarin.Test.SomeObject.cs'>
@@ -63,6 +72,9 @@
     <Content Include='expected.ji\Constructors\Java.Lang.Object.cs'>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include='expected.ji\Constructors\Mono.Android.projitems'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include='expected.ji\Constructors\Xamarin.Test.SomeObject.cs'>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -76,6 +88,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include='expected.ji\NestedTypes\Java.Lang.Object.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\NestedTypes\Mono.Android.projitems'>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include='expected.ji\NestedTypes\Xamarin.Test.NotificationCompatBase.cs'>
@@ -93,6 +108,9 @@
     <Content Include='expected.ji\NonStaticFields\Java.Lang.Object.cs'>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include='expected.ji\NonStaticFields\Mono.Android.projitems'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include='expected.ji\NonStaticFields\Xamarin.Test.SomeObject.cs'>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -105,10 +123,19 @@
     <Content Include='expected.ji\NormalMethods\Java.Interop.__TypeRegistrations.cs'>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include='expected.ji\NormalMethods\Java.Lang.Class.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include='expected.ji\NormalMethods\Java.Lang.Integer.cs'>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include='expected.ji\NormalMethods\Java.Lang.Object.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\NormalMethods\Java.Lang.Throwable.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\NormalMethods\Mono.Android.projitems'>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include='expected.ji\NormalMethods\Xamarin.Test.A.cs'>
@@ -132,6 +159,9 @@
     <Content Include='expected.ji\NormalProperties\Java.Lang.Object.cs'>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include='expected.ji\NormalProperties\Mono.Android.projitems'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include='expected.ji\NormalProperties\Xamarin.Test.SomeObject.cs'>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -150,6 +180,9 @@
     <Content Include='expected.ji\ParameterXPath\Java.Lang.Object.cs'>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include='expected.ji\ParameterXPath\Mono.Android.projitems'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include='expected.ji\ParameterXPath\Xamarin.Test.A.cs'>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -163,6 +196,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include='expected.ji\StaticFields\Java.Lang.Object.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\StaticFields\Mono.Android.projitems'>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include='expected.ji\StaticFields\Xamarin.Test.SomeObject.cs'>
@@ -180,6 +216,9 @@
     <Content Include='expected.ji\StaticMethods\Java.Lang.Object.cs'>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include='expected.ji\StaticMethods\Mono.Android.projitems'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include='expected.ji\StaticMethods\Xamarin.Test.SomeObject.cs'>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -195,6 +234,9 @@
     <Content Include='expected.ji\StaticProperties\Java.Lang.Object.cs'>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include='expected.ji\StaticProperties\Mono.Android.projitems'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include='expected.ji\StaticProperties\Xamarin.Test.SomeObject.cs'>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -207,6 +249,9 @@
     <Content Include='expected.ji\Streams\Java.IO.FilterOutputStream.cs'>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include='expected.ji\Streams\Java.IO.IOException.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include='expected.ji\Streams\Java.IO.InputStream.cs'>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -217,6 +262,12 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include='expected.ji\Streams\Java.Lang.Object.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\Streams\Java.Lang.Throwable.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\Streams\Mono.Android.projitems'>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include='expected.ji\Streams\__NamespaceMapping__.cs'>
@@ -232,6 +283,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include='expected.ji\TestInterface\Java.Lang.String.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\TestInterface\Mono.Android.projitems'>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include='expected.ji\TestInterface\Test.ME.GenericImplementation.cs'>
@@ -270,6 +324,9 @@
     <Content Include='expected.ji\java.lang.Enum\Java.Lang.State.cs'>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include='expected.ji\java.lang.Enum\Mono.Android.projitems'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include='expected.ji\java.lang.Enum\__NamespaceMapping__.cs'>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -282,6 +339,9 @@
     <Content Include='expected.ji\java.lang.Object\Java.Lang.Object.cs'>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include='expected.ji\java.lang.Object\Mono.Android.projitems'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include='expected.ji\java.lang.Object\__NamespaceMapping__.cs'>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -292,6 +352,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include='expected.ji\java.util.List\Java.Lang.Object.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\java.util.List\Mono.Android.projitems'>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include='expected.ji\java.util.List\Xamarin.Test.SomeObject.cs'>
@@ -384,6 +447,9 @@
     <Content Include='expected\NonStaticFields\Xamarin.Test.SomeObject.cs'>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include='expected\NormalMethods\Java.Lang.Throwable.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include='expected\NormalMethods\NormalMethods.xml'>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -429,10 +495,16 @@
     <Content Include='expected\Streams\Java.IO.FilterOutputStream.cs'>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include='expected\Streams\Java.IO.IOException.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include='expected\Streams\Java.IO.InputStream.cs'>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include='expected\Streams\Java.IO.OutputStream.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected\Streams\Java.Lang.Throwable.cs'>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include='expected\Streams\Streams.xml'>

@@ -58,9 +58,9 @@ namespace Test.ME {
 				return;
 
 			try {
-				if (GetType () != typeof (TestInterfaceImplementation)) {
+				if (((object) this).GetType () != typeof (TestInterfaceImplementation)) {
 					SetHandle (
-							global::Android.Runtime.JNIEnv.StartCreateInstance (GetType (), "()V"),
+							global::Android.Runtime.JNIEnv.StartCreateInstance (((object) this).GetType (), "()V"),
 							JniHandleOwnership.TransferLocalRef);
 					global::Android.Runtime.JNIEnv.FinishCreateInstance (((global::Java.Lang.Object) this).Handle, "()V");
 					return;

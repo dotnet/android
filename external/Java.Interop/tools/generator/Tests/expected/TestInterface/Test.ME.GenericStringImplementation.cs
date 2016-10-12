@@ -35,9 +35,9 @@ namespace Test.ME {
 				return;
 
 			try {
-				if (GetType () != typeof (GenericStringImplementation)) {
+				if (((object) this).GetType () != typeof (GenericStringImplementation)) {
 					SetHandle (
-							global::Android.Runtime.JNIEnv.StartCreateInstance (GetType (), "()V"),
+							global::Android.Runtime.JNIEnv.StartCreateInstance (((object) this).GetType (), "()V"),
 							JniHandleOwnership.TransferLocalRef);
 					global::Android.Runtime.JNIEnv.FinishCreateInstance (((global::Java.Lang.Object) this).Handle, "()V");
 					return;
@@ -84,7 +84,7 @@ namespace Test.ME {
 				JValue* __args = stackalloc JValue [1];
 				__args [0] = new JValue (native_value);
 
-				if (GetType () == ThresholdType)
+				if (((object) this).GetType () == ThresholdType)
 					JNIEnv.CallVoidMethod (((global::Java.Lang.Object) this).Handle, id_SetObject_arrayLjava_lang_String_, __args);
 				else
 					JNIEnv.CallNonvirtualVoidMethod (((global::Java.Lang.Object) this).Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "SetObject", "([Ljava/lang/String;)V"), __args);

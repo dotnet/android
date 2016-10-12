@@ -68,7 +68,7 @@ namespace Xamarin.Test {
 					id_getAdapter = JNIEnv.GetMethodID (class_ref, "getAdapter", "()Lxamarin/test/SpinnerAdapter;");
 				try {
 
-					if (GetType () == ThresholdType)
+					if (((object) this).GetType () == ThresholdType)
 						return global::Java.Lang.Object.GetObject<global::Xamarin.Test.ISpinnerAdapter> (JNIEnv.CallObjectMethod (((global::Java.Lang.Object) this).Handle, id_getAdapter), JniHandleOwnership.TransferLocalRef);
 					else
 						return global::Java.Lang.Object.GetObject<global::Xamarin.Test.ISpinnerAdapter> (JNIEnv.CallNonvirtualObjectMethod (((global::Java.Lang.Object) this).Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "getAdapter", "()Lxamarin/test/SpinnerAdapter;")), JniHandleOwnership.TransferLocalRef);
@@ -84,7 +84,7 @@ namespace Xamarin.Test {
 					JValue* __args = stackalloc JValue [1];
 					__args [0] = new JValue (value);
 
-					if (GetType () == ThresholdType)
+					if (((object) this).GetType () == ThresholdType)
 						JNIEnv.CallVoidMethod (((global::Java.Lang.Object) this).Handle, id_setAdapter_Lxamarin_test_SpinnerAdapter_, __args);
 					else
 						JNIEnv.CallNonvirtualVoidMethod (((global::Java.Lang.Object) this).Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "setAdapter", "(Lxamarin/test/SpinnerAdapter;)V"), __args);

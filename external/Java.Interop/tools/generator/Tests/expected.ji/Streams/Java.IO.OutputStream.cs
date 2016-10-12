@@ -41,7 +41,7 @@ namespace Java.IO {
 				return;
 
 			try {
-				var __r = _members.InstanceMethods.StartCreateInstance (__id, GetType (), null);
+				var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);
 				SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
 				_members.InstanceMethods.FinishCreateInstance (__id, this, null);
 			} finally {

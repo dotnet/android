@@ -163,7 +163,7 @@ namespace Xamarin.Test {
 				try {
 					JniArgumentValue* __args = stackalloc JniArgumentValue [1];
 					__args [0] = new JniArgumentValue ((__self == null) ? IntPtr.Zero : ((global::Java.Lang.Object) __self).Handle);
-					var __r = _members.InstanceMethods.StartCreateInstance (__id, GetType (), __args);
+					var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), __args);
 					SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
 					_members.InstanceMethods.FinishCreateInstance (__id, this, __args);
 				} finally {

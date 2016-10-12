@@ -43,9 +43,37 @@ namespace Xamarin.Test {
 			try {
 				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
 				__args [0] = new JniArgumentValue ((c == null) ? IntPtr.Zero : ((global::Java.Lang.Object) c).Handle);
-				var __r = _members.InstanceMethods.StartCreateInstance (__id, GetType (), __args);
+				var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), __args);
 				SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
 				_members.InstanceMethods.FinishCreateInstance (__id, this, __args);
+			} finally {
+			}
+		}
+
+		static Delegate cb_getType;
+#pragma warning disable 0169
+		static Delegate GetGetTypeHandler ()
+		{
+			if (cb_getType == null)
+				cb_getType = JNINativeWrapper.CreateDelegate ((Func<IntPtr, IntPtr, IntPtr>) n_GetType);
+			return cb_getType;
+		}
+
+		static IntPtr n_GetType (IntPtr jnienv, IntPtr native__this)
+		{
+			global::Xamarin.Test.SomeObject __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			return JNIEnv.NewArray (__this.GetType ());
+		}
+#pragma warning restore 0169
+
+		// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/method[@name='getType' and count(parameter)=0]"
+		[Register ("getType", "()[I", "GetGetTypeHandler")]
+		public virtual unsafe int[] GetType ()
+		{
+			const string __id = "getType.()[I";
+			try {
+				var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
+				return (int[]) JNIEnv.GetArray (__rm.Handle, JniHandleOwnership.TransferLocalRef, typeof (int));
 			} finally {
 			}
 		}

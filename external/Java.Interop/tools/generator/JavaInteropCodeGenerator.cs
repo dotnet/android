@@ -124,7 +124,7 @@ namespace MonoDroid.Generation {
 			var oldindent = indent;
 			indent += "\t";
 			ctor.Parameters.WriteCallArgs (sw, indent, opt, invoker:false);
-			sw.WriteLine ("{0}var __r = _members.InstanceMethods.StartCreateInstance (__id, GetType (){1});", indent, ctor.Parameters.GetCallArgs (opt, invoker:false));
+			sw.WriteLine ("{0}var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (){1});", indent, ctor.Parameters.GetCallArgs (opt, invoker:false));
 			sw.WriteLine ("{0}SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);", indent);
 			sw.WriteLine ("{0}_members.InstanceMethods.FinishCreateInstance (__id, this{1});", indent, ctor.Parameters.GetCallArgs (opt, invoker:false));
 			indent = oldindent;

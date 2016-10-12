@@ -56,7 +56,7 @@ namespace Android.Text {
 				__args [0] = new JValue (p0);
 
 				Android.Text.SpanTypes __ret;
-				if (GetType () == ThresholdType)
+				if (((object) this).GetType () == ThresholdType)
 					__ret = (Android.Text.SpanTypes) JNIEnv.CallIntMethod (((global::Java.Lang.Object) this).Handle, id_getSpanFlags_Ljava_lang_Object_, __args);
 				else
 					__ret = (Android.Text.SpanTypes) JNIEnv.CallNonvirtualIntMethod (((global::Java.Lang.Object) this).Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "getSpanFlags", "(Ljava/lang/Object;)I"), __args);

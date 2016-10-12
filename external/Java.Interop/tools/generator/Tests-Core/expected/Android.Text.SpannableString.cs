@@ -38,9 +38,9 @@ namespace Android.Text {
 			try {
 				JValue* __args = stackalloc JValue [1];
 				__args [0] = new JValue (native_source);
-				if (GetType () != typeof (SpannableString)) {
+				if (((object) this).GetType () != typeof (SpannableString)) {
 					SetHandle (
-							global::Android.Runtime.JNIEnv.StartCreateInstance (GetType (), "(Ljava/lang/CharSequence;)V", __args),
+							global::Android.Runtime.JNIEnv.StartCreateInstance (((object) this).GetType (), "(Ljava/lang/CharSequence;)V", __args),
 							JniHandleOwnership.TransferLocalRef);
 					global::Android.Runtime.JNIEnv.FinishCreateInstance (((global::Java.Lang.Object) this).Handle, "(Ljava/lang/CharSequence;)V", __args);
 					return;
@@ -68,9 +68,9 @@ namespace Android.Text {
 			try {
 				JValue* __args = stackalloc JValue [1];
 				__args [0] = new JValue (native_source);
-				if (GetType () != typeof (SpannableString)) {
+				if (((object) this).GetType () != typeof (SpannableString)) {
 					SetHandle (
-							global::Android.Runtime.JNIEnv.StartCreateInstance (GetType (), "(Ljava/lang/CharSequence;)V", __args),
+							global::Android.Runtime.JNIEnv.StartCreateInstance (((object) this).GetType (), "(Ljava/lang/CharSequence;)V", __args),
 							JniHandleOwnership.TransferLocalRef);
 					global::Android.Runtime.JNIEnv.FinishCreateInstance (((global::Java.Lang.Object) this).Handle, "(Ljava/lang/CharSequence;)V", __args);
 					return;
@@ -117,7 +117,7 @@ namespace Android.Text {
 				__args [0] = new JValue (what);
 
 				Android.Text.SpanTypes __ret;
-				if (GetType () == ThresholdType)
+				if (((object) this).GetType () == ThresholdType)
 					__ret = (Android.Text.SpanTypes) JNIEnv.CallIntMethod (((global::Java.Lang.Object) this).Handle, id_getSpanFlags_Ljava_lang_Object_, __args);
 				else
 					__ret = (Android.Text.SpanTypes) JNIEnv.CallNonvirtualIntMethod (((global::Java.Lang.Object) this).Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "getSpanFlags", "(Ljava/lang/Object;)I"), __args);

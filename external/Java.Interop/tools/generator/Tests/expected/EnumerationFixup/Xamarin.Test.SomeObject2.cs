@@ -68,7 +68,7 @@ namespace Xamarin.Test {
 					id_getSomeObjectProperty = JNIEnv.GetMethodID (class_ref, "getSomeObjectProperty", "()I");
 				try {
 
-					if (GetType () == ThresholdType)
+					if (((object) this).GetType () == ThresholdType)
 						return (global::Xamarin.Test.SomeValues) JNIEnv.CallIntMethod (((global::Java.Lang.Object) this).Handle, id_getSomeObjectProperty);
 					else
 						return (global::Xamarin.Test.SomeValues) JNIEnv.CallNonvirtualIntMethod (((global::Java.Lang.Object) this).Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "getSomeObjectProperty", "()I"));
@@ -84,7 +84,7 @@ namespace Xamarin.Test {
 					JValue* __args = stackalloc JValue [1];
 					__args [0] = new JValue ((int) value);
 
-					if (GetType () == ThresholdType)
+					if (((object) this).GetType () == ThresholdType)
 						JNIEnv.CallVoidMethod (((global::Java.Lang.Object) this).Handle, id_setSomeObjectProperty_I, __args);
 					else
 						JNIEnv.CallNonvirtualVoidMethod (((global::Java.Lang.Object) this).Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "setSomeObjectProperty", "(I)V"), __args);
@@ -119,7 +119,7 @@ namespace Xamarin.Test {
 				id_getSomeObjectPropertyArray = JNIEnv.GetMethodID (class_ref, "getSomeObjectPropertyArray", "()[I");
 			try {
 
-				if (GetType () == ThresholdType)
+				if (((object) this).GetType () == ThresholdType)
 					return (global::Xamarin.Test.SomeValues[]) JNIEnv.GetArray (JNIEnv.CallObjectMethod (((global::Java.Lang.Object) this).Handle, id_getSomeObjectPropertyArray), JniHandleOwnership.TransferLocalRef, typeof (global::Xamarin.Test.SomeValues));
 				else
 					return (global::Xamarin.Test.SomeValues[]) JNIEnv.GetArray (JNIEnv.CallNonvirtualObjectMethod (((global::Java.Lang.Object) this).Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "getSomeObjectPropertyArray", "()[I")), JniHandleOwnership.TransferLocalRef, typeof (global::Xamarin.Test.SomeValues));
@@ -158,7 +158,7 @@ namespace Xamarin.Test {
 				JValue* __args = stackalloc JValue [1];
 				__args [0] = new JValue (native_newvalue);
 
-				if (GetType () == ThresholdType)
+				if (((object) this).GetType () == ThresholdType)
 					JNIEnv.CallVoidMethod (((global::Java.Lang.Object) this).Handle, id_setSomeObjectPropertyArray_arrayI, __args);
 				else
 					JNIEnv.CallNonvirtualVoidMethod (((global::Java.Lang.Object) this).Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "setSomeObjectPropertyArray", "([I)V"), __args);

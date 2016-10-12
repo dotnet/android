@@ -164,7 +164,7 @@ namespace Android.Views {
 				JValue* __args = stackalloc JValue [1];
 				__args [0] = new JValue (l);
 
-				if (GetType () == ThresholdType)
+				if (((object) this).GetType () == ThresholdType)
 					JNIEnv.CallVoidMethod (((global::Java.Lang.Object) this).Handle, id_setOnClickListener_Landroid_view_View_OnClickListener_, __args);
 				else
 					JNIEnv.CallNonvirtualVoidMethod (((global::Java.Lang.Object) this).Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "setOnClickListener", "(Landroid/view/View$OnClickListener;)V"), __args);
@@ -201,7 +201,7 @@ namespace Android.Views {
 				JValue* __args = stackalloc JValue [1];
 				__args [0] = new JValue (native_views);
 
-				if (GetType () == ThresholdType)
+				if (((object) this).GetType () == ThresholdType)
 					JNIEnv.CallVoidMethod (((global::Java.Lang.Object) this).Handle, id_addTouchables_Ljava_util_ArrayList_, __args);
 				else
 					JNIEnv.CallNonvirtualVoidMethod (((global::Java.Lang.Object) this).Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "addTouchables", "(Ljava/util/ArrayList;)V"), __args);

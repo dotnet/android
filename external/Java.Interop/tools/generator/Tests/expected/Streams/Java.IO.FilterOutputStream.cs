@@ -38,9 +38,9 @@ namespace Java.IO {
 			try {
 				JValue* __args = stackalloc JValue [1];
 				__args [0] = new JValue (native__out);
-				if (GetType () != typeof (FilterOutputStream)) {
+				if (((object) this).GetType () != typeof (FilterOutputStream)) {
 					SetHandle (
-							global::Android.Runtime.JNIEnv.StartCreateInstance (GetType (), "(Ljava/io/OutputStream;)V", __args),
+							global::Android.Runtime.JNIEnv.StartCreateInstance (((object) this).GetType (), "(Ljava/io/OutputStream;)V", __args),
 							JniHandleOwnership.TransferLocalRef);
 					global::Android.Runtime.JNIEnv.FinishCreateInstance (((global::Java.Lang.Object) this).Handle, "(Ljava/io/OutputStream;)V", __args);
 					return;
@@ -84,7 +84,7 @@ namespace Java.IO {
 				JValue* __args = stackalloc JValue [1];
 				__args [0] = new JValue (oneByte);
 
-				if (GetType () == ThresholdType)
+				if (((object) this).GetType () == ThresholdType)
 					JNIEnv.CallVoidMethod (((global::Java.Lang.Object) this).Handle, id_write_I, __args);
 				else
 					JNIEnv.CallNonvirtualVoidMethod (((global::Java.Lang.Object) this).Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "write", "(I)V"), __args);

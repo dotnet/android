@@ -70,9 +70,9 @@ namespace MonoDroid.Generation {
 			var oldindent = indent;
 			indent += "\t";
 			ctor.Parameters.WriteCallArgs (sw, indent, opt, invoker:false);
-			sw.WriteLine ("{0}if (GetType () != typeof ({1})) {{", indent, ctor.Name);
+			sw.WriteLine ("{0}if (((object) this).GetType () != typeof ({1})) {{", indent, ctor.Name);
 			sw.WriteLine ("{0}\tSetHandle (", indent);
-			sw.WriteLine ("{0}\t\t\tglobal::Android.Runtime.JNIEnv.StartCreateInstance (GetType (), \"{1}\"{2}),",
+			sw.WriteLine ("{0}\t\t\tglobal::Android.Runtime.JNIEnv.StartCreateInstance (((object) this).GetType (), \"{1}\"{2}),",
 					indent,
 					ctor.IsNonStaticNestedType ? "(" + ctor.Parameters.JniNestedDerivedSignature + ")V" : ctor.JniSignature,
 					ctor.Parameters.GetCallArgs (opt, invoker:false));
@@ -135,7 +135,7 @@ namespace MonoDroid.Generation {
 				sw.WriteLine ();
 				if (!method.IsVoid && method.Parameters.HasCleanup)
 					sw.WriteLine ("{0}{1} __ret;", indent, opt.GetOutputName (method.RetVal.FullName));
-				sw.WriteLine ("{0}if (GetType () == ThresholdType)", indent);
+				sw.WriteLine ("{0}if (((object) this).GetType () == ThresholdType)", indent);
 				GenerateJNICall (method, sw, indent + "\t", opt,
 						"JNIEnv.Call" + method.RetVal.CallMethodPrefix + "Method (" +
 						opt.ContextType.GetObjectHandleProperty ("this") +

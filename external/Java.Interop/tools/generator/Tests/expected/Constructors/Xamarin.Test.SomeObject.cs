@@ -35,9 +35,9 @@ namespace Xamarin.Test {
 				return;
 
 			try {
-				if (GetType () != typeof (SomeObject)) {
+				if (((object) this).GetType () != typeof (SomeObject)) {
 					SetHandle (
-							global::Android.Runtime.JNIEnv.StartCreateInstance (GetType (), "()V"),
+							global::Android.Runtime.JNIEnv.StartCreateInstance (((object) this).GetType (), "()V"),
 							JniHandleOwnership.TransferLocalRef);
 					global::Android.Runtime.JNIEnv.FinishCreateInstance (((global::Java.Lang.Object) this).Handle, "()V");
 					return;
@@ -65,9 +65,9 @@ namespace Xamarin.Test {
 			try {
 				JValue* __args = stackalloc JValue [1];
 				__args [0] = new JValue (aint);
-				if (GetType () != typeof (SomeObject)) {
+				if (((object) this).GetType () != typeof (SomeObject)) {
 					SetHandle (
-							global::Android.Runtime.JNIEnv.StartCreateInstance (GetType (), "(I)V", __args),
+							global::Android.Runtime.JNIEnv.StartCreateInstance (((object) this).GetType (), "(I)V", __args),
 							JniHandleOwnership.TransferLocalRef);
 					global::Android.Runtime.JNIEnv.FinishCreateInstance (((global::Java.Lang.Object) this).Handle, "(I)V", __args);
 					return;

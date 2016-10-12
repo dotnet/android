@@ -143,9 +143,9 @@ namespace Xamarin.Test {
 				try {
 					JValue* __args = stackalloc JValue [1];
 					__args [0] = new JValue (__self);
-					if (GetType () != typeof (InstanceInner)) {
+					if (((object) this).GetType () != typeof (InstanceInner)) {
 						SetHandle (
-								global::Android.Runtime.JNIEnv.StartCreateInstance (GetType (), "(L" + global::Android.Runtime.JNIEnv.GetJniName (GetType ().DeclaringType) + ";)V", __args),
+								global::Android.Runtime.JNIEnv.StartCreateInstance (((object) this).GetType (), "(L" + global::Android.Runtime.JNIEnv.GetJniName (GetType ().DeclaringType) + ";)V", __args),
 								JniHandleOwnership.TransferLocalRef);
 						global::Android.Runtime.JNIEnv.FinishCreateInstance (((global::Java.Lang.Object) this).Handle, "(L" + global::Android.Runtime.JNIEnv.GetJniName (GetType ().DeclaringType) + ";)V", __args);
 						return;

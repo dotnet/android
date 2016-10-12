@@ -41,7 +41,7 @@ namespace Xamarin.Test {
 				return;
 
 			try {
-				var __r = _members.InstanceMethods.StartCreateInstance (__id, GetType (), null);
+				var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);
 				SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
 				_members.InstanceMethods.FinishCreateInstance (__id, this, null);
 			} finally {
@@ -61,7 +61,7 @@ namespace Xamarin.Test {
 			try {
 				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
 				__args [0] = new JniArgumentValue (aint);
-				var __r = _members.InstanceMethods.StartCreateInstance (__id, GetType (), __args);
+				var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), __args);
 				SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
 				_members.InstanceMethods.FinishCreateInstance (__id, this, __args);
 			} finally {
