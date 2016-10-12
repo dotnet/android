@@ -5111,9 +5111,9 @@
 24,Android.Service.Notification.ConditionState,Unknown,android/service/notification/Condition.STATE_UNKNOWN,2
 24,Android.Service.Notification.SuppressEffect,ScreenOff,android/service/notification/NotificationListenerService.SUPPRESSED_EFFECT_SCREEN_OFF,1
 24,Android.Service.Notification.SuppressEffect,ScreenOn,android/service/notification/NotificationListenerService.SUPPRESSED_EFFECT_SCREEN_ON,2
-24,Android.Service.Quicksettings.TileState,Active,android/service/quicksettings/Tile.STATE_ACTIVE,2
-24,Android.Service.Quicksettings.TileState,Inactive,android/service/quicksettings/Tile.STATE_INACTIVE,1
-24,Android.Service.Quicksettings.TileState,Unavailable,android/service/quicksettings/Tile.STATE_UNAVAILABLE,0
+24,Android.Service.QuickSettings.TileState,Active,android/service/quicksettings/Tile.STATE_ACTIVE,2
+24,Android.Service.QuickSettings.TileState,Inactive,android/service/quicksettings/Tile.STATE_INACTIVE,1
+24,Android.Service.QuickSettings.TileState,Unavailable,android/service/quicksettings/Tile.STATE_UNAVAILABLE,0
 24,Android.Telephony.UiccApplicationType,Csim,android/telephony/TelephonyManager.APPTYPE_CSIM,4
 24,Android.Telephony.UiccApplicationType,Isim,android/telephony/TelephonyManager.APPTYPE_ISIM,5
 24,Android.Telephony.UiccApplicationType,Ruim,android/telephony/TelephonyManager.APPTYPE_RUIM,3
