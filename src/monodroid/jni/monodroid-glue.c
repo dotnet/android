@@ -1503,10 +1503,7 @@ gc_prepare_for_java_collection (JNIEnv *env, int num_sccs, MonoGCBridgeSCC **scc
 				ArrayList_add = (*env)->GetMethodID (env, ArrayList_class, "add", "(Ljava/lang/Object;)Z");
 				ArrayList_get = (*env)->GetMethodID (env, ArrayList_class, "get", "(I)Ljava/lang/Object;");
 
-				GCUserPeer_class = lref_to_gref (env, (*env)->FindClass (env, "mono/android/GCUserPeer"));
-				GCUserPeer_ctor = (*env)->GetMethodID (env, GCUserPeer_class, "<init>", "()V");
-
-				assert ( (ArrayList_class && ArrayList_ctor && ArrayList_get && GCUserPeer_class && GCUserPeer_ctor) || !"Failed to load classes required for JNI" );
+				assert ( (ArrayList_class && ArrayList_ctor && ArrayList_get) || !"Failed to load classes required for JNI" );
 			}
 
 			/* Once per gc_prepare_for_java_collection call, create a list to hold the temporary
@@ -3093,6 +3090,10 @@ init_android_runtime (MonoDomain *domain, JNIEnv *env, jobject loader)
 	(*env)->DeleteLocalRef (env, lrefLoaderClass);
 
 	init.grefLoader = (*env)->NewGlobalRef (env, loader);
+
+	GCUserPeer_class = lref_to_gref (env, (*env)->FindClass (env, "mono/android/GCUserPeer"));
+	GCUserPeer_ctor = (*env)->GetMethodID (env, GCUserPeer_class, "<init>", "()V");
+	assert ( (GCUserPeer_class && GCUserPeer_ctor) || !"Failed to load classes required for JNI" );
 
 	lrefIGCUserPeer       = (*env)->FindClass (env, "mono/android/IGCUserPeer");
 	init.grefIGCUserPeer  = (*env)->NewGlobalRef (env, lrefIGCUserPeer);
