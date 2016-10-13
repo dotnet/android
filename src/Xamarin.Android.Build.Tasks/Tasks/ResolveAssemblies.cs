@@ -76,7 +76,7 @@ namespace Xamarin.Android.Tasks
 					if (assemblyDef == null)
 						throw new InvalidOperationException ("Failed to load assembly " + assembly.ItemSpec);
 					topAssemblyReferences.Add (assemblyDef);
-					assemblies.Add (assemblyDef.MainModule.FullyQualifiedName);
+					assemblies.Add (Path.GetFullPath (assemblyDef.MainModule.FullyQualifiedName));
 				}
 			} catch (Exception ex) {
 				Log.LogError ("Exception while loading assemblies: {0}", ex);
