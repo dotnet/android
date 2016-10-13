@@ -1,0 +1,33 @@
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <Import Project="..\..\Configuration.props" />
+  <Import Project="$(MSBuildBinPath)\Microsoft.Common.targets" />
+
+  <Target Name="Build">
+    <Exec Command="ant -f ..\..\external\proguard\buildscripts\build.xml proguard" />
+    <Copy
+	SourceFiles="..\..\external\proguard\lib\proguard.jar"
+	DestinationFiles="$(OutputPath)\lib\mandroid\proguard\lib\proguard.jar"
+	 />
+    <Copy
+	SourceFiles="..\..\external\proguard\bin\proguard.bat"
+	DestinationFiles="$(OutputPath)\lib\mandroid\proguard\bin\proguard.bat"
+	 />
+    <Copy
+	SourceFiles="..\..\external\proguard\bin\proguard.sh"
+	DestinationFiles="$(OutputPath)\lib\mandroid\proguard\bin\proguard.sh"
+	 />
+    <Copy
+	SourceFiles="..\..\external\proguard\LICENSE"
+	DestinationFiles="$(OutputPath)\lib\mandroid\proguard\PROGUARD_LICENSE.txt"
+	 />
+  </Target>
+  <Target Name="Clean">
+    <Delete Files="$(OutputPath)\lib\mandroid\proguard\PROGUARD_LICENSE.txt" />
+    <Delete Files="$(OutputPath)\lib\mandroid\proguard\lib\proguard.jar" />
+    <Delete Files="$(OutputPath)\lib\mandroid\proguard\bin\proguard.sh" />
+    <Delete Files="$(OutputPath)\lib\mandroid\proguard\bin\proguard.bat" />
+    <Exec Command="ant -f ..\..\external\proguard\buildscripts\build.xml clean" />
+  </Target>
+</Project>
+

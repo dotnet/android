@@ -29,3 +29,6 @@
 	path = external/llvm
 	url = https://github.com/mono/llvm.git
 	branch = master
+[submodule "external/proguard"]
+	path = external/proguard
+	url = https://github.com/facebook/proguard.git

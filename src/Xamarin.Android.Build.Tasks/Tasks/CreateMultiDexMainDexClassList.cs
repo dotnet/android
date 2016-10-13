@@ -18,6 +18,9 @@ namespace Xamarin.Android.Tasks
 		public string ClassesOutputDirectory { get; set; }
 
 		[Required]
+		public string ProguardHome { get; set; }
+
+		[Required]
 		public ITaskItem[] JavaLibraries { get; set; }
 		
 		public string MultiDexMainDexListFile { get; set; }
@@ -32,6 +35,7 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugTaskItems ("  CustomMainDexListFiles:", CustomMainDexListFiles);
 			Log.LogDebugMessage ("  ToolExe: {0}", ToolExe);
 			Log.LogDebugMessage ("  ToolPath: {0}", ToolPath);
+			Log.LogDebugMessage ("  ProguardHome: {0}", ProguardHome);
 			
 			if (CustomMainDexListFiles != null && CustomMainDexListFiles.Any ()) {
 				var content = string.Concat (CustomMainDexListFiles.Select (i => File.ReadAllText (i.ItemSpec)));
@@ -70,13 +74,15 @@ namespace Xamarin.Android.Tasks
 			return Path.Combine (ToolPath, ToolExe);
 		}
 
-		// Windows seems to need special care.
 		protected override StringDictionary EnvironmentOverride {
 			get {
 				var sd = base.EnvironmentOverride ?? new StringDictionary ();
+				// Windows seems to need special care.
 				var opts = sd.ContainsKey ("JAVA_TOOL_OPTIONS") ? sd ["JAVA_TOOL_OPTIONS"] : null;
 				opts += " -Dfile.encoding=UTF8";
 				sd ["JAVA_TOOL_OPTIONS"] = opts;
+
+				sd ["PROGUARD_HOME"] = ProguardHome;
 				return sd;
 			}
 		}
