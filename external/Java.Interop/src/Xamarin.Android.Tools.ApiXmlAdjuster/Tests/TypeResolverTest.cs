@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using NUnit.Framework;
 
 namespace Xamarin.Android.Tools.ApiXmlAdjuster.Tests
@@ -18,19 +19,14 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster.Tests
 		[Test]
 		public void TypeReferenceEquals ()
 		{
-			var intRef = new JavaTypeReference ("int");
-			Assert.AreEqual (intRef, new JavaTypeReference ("int"), "primitive types");
+			var intRef = JavaTypeReference.Int;
 			Assert.AreEqual (JavaTypeReference.Int, intRef, "primitive types 2");
-			Assert.AreNotEqual (new JavaTypeReference ("void"), intRef, "primitive types 3");
-			Assert.AreNotEqual (intRef, new JavaTypeReference (intRef, "[]"), "primitive types: array vs. non-array");
-			Assert.AreEqual (new JavaTypeReference (intRef, "[]"), new JavaTypeReference (intRef, "[]"), "primitive types: array vs. array");
 
 			var dummyType = new JavaClass (new JavaPackage (api) { Name = string.Empty }) { Name = "Dummy" };
 			var tps = new JavaTypeParameters (dummyType);
 			var gt = new JavaTypeParameter (tps) { Name = "T" };
 			Assert.AreEqual (new JavaTypeReference (gt, null), new JavaTypeReference (new JavaTypeParameter (tps) { Name = "T"}, null), "type parameters");
 			Assert.AreNotEqual (new JavaTypeReference (gt, null), new JavaTypeReference (new JavaTypeParameter (tps) { Name = "U"}, null), "type parameters 2");
-			Assert.AreNotEqual (new JavaTypeReference (gt, null), new JavaTypeReference ("T"), "primitive vs. type parameters");
 			Assert.AreNotEqual (new JavaTypeReference (gt, null), new JavaTypeReference (gt, "[]"), "type parameters: array vs. non-array");
 			Assert.AreEqual (new JavaTypeReference (gt, "[]"), new JavaTypeReference (gt, "[]"), "type parameters: array vs. array");
 			
@@ -53,6 +49,21 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster.Tests
 			Assert.IsNotNull (kls, "type was not class");
 			Assert.IsNotNull (kls.ResolvedExtends, "extends not resolved.");
 			Assert.IsNotNull (kls.ResolvedExtends.ReferencedType, "referenced type is not correctly resolved");
+		}
+
+		[Test]
+		public void ResolveGenericArguments ()
+		{
+			var type = api.FindNonGenericType ("java.util.concurrent.ConcurrentHashMap");
+			Assert.IsNotNull (type, "type not found");
+			var kls = type as JavaClass;
+			Assert.IsNotNull (kls, "type was not class");
+			var method = kls.Members.OfType<JavaMethod> ().First (m => m.Name == "searchEntries");
+			Assert.IsNotNull (method, "method not found.");
+			var para = method.Parameters [1];
+			Assert.AreEqual ("java.util.function.Function<java.util.Map.Entry<K, V>, ? extends U>",
+			                 para.ResolvedType.ToString (),
+			                 "referenced type is not correctly resolved");
 		}
 	}
 }

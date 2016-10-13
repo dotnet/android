@@ -48,17 +48,28 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 			GenericWildcard = new JavaTypeReference ("?");
 		}
 		
-		public JavaTypeReference (string specialName)
+		JavaTypeReference (string specialName)
 		{
 			SpecialName = specialName;
 		}
 		
-		public JavaTypeReference (JavaTypeReference referencedType, string arrayPart)
+		public JavaTypeReference (string constraintLabel, IEnumerable<JavaTypeReference> wildcardConstraints, string arrayPart)
+		{
+			SpecialName = GenericWildcard.SpecialName;
+			ArrayPart = arrayPart;
+			WildcardBoundsType = constraintLabel;
+			WildcardConstraints = wildcardConstraints != null && wildcardConstraints.Any () ? wildcardConstraints.ToList () : null;
+		}
+
+		public JavaTypeReference (JavaTypeReference referencedType, string arrayPart, string wildcardBoundsType, IEnumerable<JavaTypeReference> wildcardConstraints)
 		{
 			if (referencedType == null)
 				throw new ArgumentNullException ("referencedType");
 			SpecialName = referencedType.SpecialName;
+			WildcardBoundsType = wildcardBoundsType;
+			WildcardConstraints = wildcardConstraints?.ToList ();
 			ReferencedType = referencedType.ReferencedType;
+			ReferencedTypeParameter = referencedType.ReferencedTypeParameter;
 			TypeParameters = referencedType.TypeParameters;
 			ArrayPart = arrayPart;
 		}
@@ -81,6 +92,10 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 		}
 		
 		public string SpecialName { get; private set; }
+
+		public string WildcardBoundsType { get; private set; }
+		public IList<JavaTypeReference> WildcardConstraints { get; private set; }
+
 		public JavaType ReferencedType { get; private set; }
 		public JavaTypeParameter ReferencedTypeParameter { get; private set; }
 		public IList<JavaTypeReference> TypeParameters { get; private set; }
@@ -88,10 +103,12 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 		
 		public override string ToString ()
 		{
-			if (SpecialName != null)
-				return SpecialName;
+			if (SpecialName == GenericWildcard.SpecialName && WildcardConstraints != null)
+				return SpecialName + WildcardBoundsType + string.Join (" & ", WildcardConstraints);
+			else if (SpecialName != null)
+				return SpecialName + ArrayPart;
 			else if (ReferencedTypeParameter != null)
-				return ReferencedTypeParameter.Name;
+				return ReferencedTypeParameter.ToString () + ArrayPart;
 			else
 				return string.Format ("{0}{1}{2}{3}{4}",
 					ReferencedType.Parent.Name,

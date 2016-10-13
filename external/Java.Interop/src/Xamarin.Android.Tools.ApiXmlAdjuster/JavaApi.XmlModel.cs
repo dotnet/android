@@ -253,6 +253,12 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 
 	public partial class JavaParameter
 	{
+		public JavaParameter (JavaMethodBase parent)
+		{
+			Parent = parent;
+		}
+
+		public JavaMethodBase Parent { get; private set; }
 		public string Name { get; set; }
 		public string Type { get; set; }
 		
@@ -309,7 +315,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 		
 		public override string ToString ()
 		{
-			return Name + (GenericConstraints == null ? null : GenericConstraints.ToString ());
+			return Name;
 		}
 	}
 
@@ -326,7 +332,10 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 		
 		public override string ToString ()
 		{
-			return " " + (BoundsType ?? "extends") + " " + string.Join (" & ", GenericConstraints);
+			string csts = string.Join (" & ", GenericConstraints);
+			if (csts == "java.lang.Object")
+				return string.Empty;
+			return " " + (BoundsType ?? "extends") + " " + csts;
 		}
 	}
 	

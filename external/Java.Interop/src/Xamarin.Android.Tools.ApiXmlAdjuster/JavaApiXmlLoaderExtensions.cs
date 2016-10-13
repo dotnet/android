@@ -242,7 +242,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 						tp.Load (reader);
 						method.TypeParameters = tp;
 					} else if (reader.LocalName == "parameter") {
-						var p = new JavaParameter ();
+						var p = new JavaParameter (methodBase);
 						p.Load (reader);
 						methodBase.Parameters.Add (p);
 					} else if (reader.LocalName == "exception") {

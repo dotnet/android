@@ -119,7 +119,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 		{
 			method.Deprecated = gm.Deprecated;
 			method.Visibility = gm.Visibility;
-			method.Parameters = gm.Parameters.Select (_ => new JavaParameter () {
+			method.Parameters = gm.Parameters.Select (_ => new JavaParameter (method) {
 				Name = _.JavaName,
 				Type = _.RawNativeType,
 				}).ToArray ();

@@ -176,7 +176,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 			SaveCommon (method, writer, "method",
 				XmlConvert.ToString (method.Abstract),
 				XmlConvert.ToString (method.Native),
-				method.Return,
+				method.GetVisibleReturnTypeName (),
 				XmlConvert.ToString (method.Synchronized),
 				null,
 				null,
@@ -232,8 +232,8 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 				foreach (var p in parameters) {
 					writer.WriteStartElement ("parameter");
 					writer.WriteAttributeString ("name", p.Name);
-					writer.WriteAttributeString ("type", p.Type);
-					writer.WriteString ("\n        ");			
+					writer.WriteAttributeString ("type", p.GetVisibleTypeName ());
+					writer.WriteString ("\n        ");
 					writer.WriteFullEndElement ();
 				}
 			}

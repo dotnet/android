@@ -19,14 +19,14 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 	//
 	// A generic type parameter, or a primitive type, is also represented by this too.
 	//
-	internal class JavaTypeName
+	public class JavaTypeName
 	{
 		const string extendsLabel = " extends ";
 		const string superLabel = " super ";
 
 		static readonly string [] genericConstraintsLabels = { extendsLabel, superLabel };
 
-		private JavaTypeName ()
+		JavaTypeName ()
 		{
 		}
 
@@ -40,6 +40,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 				int gccidx = gcidx < 0 ? -1 : dottedFullName.IndexOf (',', 0, gcidx);
 				if (gcidx > 0 && gcgidx < 0 && gccidx < 0) {
 					string args = dottedFullName.Substring (gcidx + label.Length).Trim ();
+					ret.BoundsType = label;
 					ret.GenericConstraints = ParseCommaSeparatedTypeNames (args).Select (s => Parse (s)).ToArray ();
 					dottedFullName = dottedFullName.Substring (0, gcidx).Trim ();
 				}
@@ -69,7 +70,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 			
 			return ret;
 		}
-		
+
 		static IEnumerable<string> ParseCommaSeparatedTypeNames (string args)
 		{
 			int comma = args.IndexOf (',');
@@ -79,7 +80,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 				int open = args.IndexOf ('<', 0, comma);
 				if (open > 0) {
 					int openCount = 1;
-					int i = open;
+					int i = open + 1;
 					while (i < args.Length) {
 						if (args [i] == '<')
 							openCount++;
@@ -90,10 +91,11 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 							break;
 					}
 					yield return args.Substring (0, i);
-					if (i > args.Length) {
+					if (i < args.Length) {
 						comma = args.IndexOf (',', i);
-						foreach (var s in ParseCommaSeparatedTypeNames (args.Substring (comma + 1)))
-							yield return s;
+						if (comma > 0)
+							foreach (var s in ParseCommaSeparatedTypeNames (args.Substring (comma + 1)))
+								yield return s;
 					}
 				} else {
 					yield return args.Substring (0, comma);
@@ -104,6 +106,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 		}
 		
 		public string FullNameNonGeneric { get; set; }
+		public string BoundsType { get; set; } // " extends " / " super "
 		public IList<JavaTypeName> GenericConstraints { get; private set; }
 		public IList<JavaTypeName> GenericArguments { get; private set; }
 		public string ArrayPart { get; set; }

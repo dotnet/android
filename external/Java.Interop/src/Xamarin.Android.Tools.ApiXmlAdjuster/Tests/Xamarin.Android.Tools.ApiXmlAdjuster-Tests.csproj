@@ -32,6 +32,7 @@
     <Reference Include="System" />
     <Reference Include="nunit.framework">
       <HintPath>..\packages\NUnit.2.6.3\lib\nunit.framework.dll</HintPath>
+      <Package>nunit</Package>
     </Reference>
     <Reference Include="System.Xml" />
   </ItemGroup>
@@ -44,7 +45,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-    <None Include="api-10.xml.in" />
+    <None Include="api-24.xml.in" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Xamarin.Android.Tools.ApiXmlAdjuster.csproj">

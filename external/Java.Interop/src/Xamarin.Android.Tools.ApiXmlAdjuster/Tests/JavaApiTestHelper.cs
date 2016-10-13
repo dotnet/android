@@ -16,7 +16,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster.Tests
 				"src",
 				"Xamarin.Android.Tools.ApiXmlAdjuster",
 				"Tests",
-				"api-10.xml.in");
+				"api-24.xml.in");
 
 		public static JavaApi GetLoadedApi ()
 		{

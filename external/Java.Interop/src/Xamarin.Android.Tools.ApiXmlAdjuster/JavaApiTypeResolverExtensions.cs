@@ -24,9 +24,11 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 			var tp = contextTypeParameters.Where (tps => tps != null).SelectMany (tps => tps.TypeParameters).FirstOrDefault (_ => _.Name == tn.FullNameNonGeneric);
 			if (tp != null)
 				return new JavaTypeReference (tp, tn.ArrayPart);
+			if (tn.FullNameNonGeneric == JavaTypeReference.GenericWildcard.SpecialName)
+				return new JavaTypeReference (tn.BoundsType, tn.GenericConstraints?.Select (gc => JavaTypeNameToReference (api, gc, contextTypeParameters)), tn.ArrayPart);
 			var primitive = JavaTypeReference.GetSpecialType (tn.FullNameNonGeneric);
 			if (primitive != null)
-				return tn.ArrayPart == null ? primitive : new JavaTypeReference (primitive, tn.ArrayPart);
+				return tn.ArrayPart == null && tn.GenericConstraints == null ? primitive : new JavaTypeReference (primitive, tn.ArrayPart, tn.BoundsType, tn.GenericConstraints?.Select (gc => JavaTypeNameToReference (api, gc, contextTypeParameters)));
 			var type = api.FindNonGenericType (tn.FullNameNonGeneric);
 			return new JavaTypeReference (type,
 				tn.GenericArguments != null ? tn.GenericArguments.Select (_ => api.JavaTypeNameToReference (_, contextTypeParameters)).ToArray () : null,
@@ -111,7 +113,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 		public static void Resolve (this JavaMethod m)
 		{
 			if (m.TypeParameters != null)
-				m.TypeParameters.Resolve (m.GetApi (), m.Parent.TypeParameters);
+				m.TypeParameters.Resolve (m.GetApi (), m.TypeParameters);
 			m.ResolveMethodBase (m.TypeParameters);
 			m.ResolvedReturnType = m.GetApi ().Parse (m.Return, m.Parent.TypeParameters, m.TypeParameters);
 		}
