@@ -22,10 +22,17 @@ namespace Xamarin.Android.Tasks
 	{
 		public string ProguardJarPath { get; set; }
 
+		public string ProguardToolPath { get; set; }
+
 		public string JavaToolPath { get; set; }
+
+		public string MSBuildRuntimeType { get; set; }
 
 		[Required]
 		public string JavaPlatformJarPath { get; set; }
+
+		[Required]
+		public string AndroidSdkDirectory { get; set; }
 
 		[Required]
 		public string ClassesOutputDirectory { get; set; }
@@ -79,6 +86,8 @@ namespace Xamarin.Android.Tasks
 		public override bool Execute ()
 		{
 			Log.LogDebugMessage ("Proguard");
+			Log.LogDebugMessage ("  AndroidSdkDirectory: {0}", AndroidSdkDirectory);
+			Log.LogDebugMessage ("  MSBuildRuntimeType: {0}", MSBuildRuntimeType);
 			Log.LogDebugMessage ("  JavaPlatformJarPath: {0}", JavaPlatformJarPath);
 			Log.LogDebugMessage ("  ClassesOutputDirectory: {0}", ClassesOutputDirectory);
 			Log.LogDebugMessage ("  AcwMapFile: {0}", AcwMapFile);
@@ -96,6 +105,13 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ("  DumpOutput: {0}", DumpOutput);
 			Log.LogDebugMessage ("  PrintSeedsOutput: {0}", PrintSeedsOutput);
 			Log.LogDebugMessage ("  PrintMappingOutput: {0}", PrintMappingOutput);
+
+			// Windows seems to need special care, needs JAVA_TOOL_OPTIONS.
+			// On the other hand, xbuild has a bug and fails to parse '=' in the value, so we skip JAVA_TOOL_OPTIONS on Mono runtime.
+			EnvironmentVariables =
+				string.IsNullOrEmpty (MSBuildRuntimeType) || MSBuildRuntimeType == "Mono" ?
+				new string [] { "PROGUARD_HOME=" + ProguardHome } :
+				new string [] { "JAVA_TOOL_OPTIONS=-Dfile.encoding=UTF8", "PROGUARD_HOME=" + ProguardHome };
 
 			return base.Execute ();
 		}
@@ -150,7 +166,7 @@ namespace Xamarin.Android.Tasks
 				GetType ().Assembly.GetManifestResourceStream ("proguard_xamarin.cfg").CopyTo (xamcfg);
 			
 			var configs = ProguardConfigurationFiles
-				.Replace ("{sdk.dir}", Path.GetDirectoryName (Path.GetDirectoryName (ProguardHome)) + Path.DirectorySeparatorChar)
+				.Replace ("{sdk.dir}", AndroidSdkDirectory + Path.DirectorySeparatorChar)
 				.Replace ("{intermediate.common.xamarin}", ProguardCommonXamarinConfiguration)
 				.Replace ("{intermediate.references}", ProguardGeneratedReferenceConfiguration)
 				.Replace ("{intermediate.application}", ProguardGeneratedApplicationConfiguration)
@@ -186,36 +202,22 @@ namespace Xamarin.Android.Tasks
 				cmd.AppendSwitchIfNotNull ("-printusage ", PrintUsageOutput);
 				cmd.AppendSwitchIfNotNull ("-printmapping ", PrintMappingOutput);
 			}
-			
+
+			// http://stackoverflow.com/questions/5701126/compile-with-proguard-gives-exception-local-variable-type-mismatch#7587680
+			cmd.AppendSwitch ("-optimizations !code/allocation/variable");
+
 			return cmd.ToString ();
 		}
 
 		protected override string GenerateFullPathToTool ()
 		{
 			if (UseProguard)
-				return Path.Combine (ToolPath, ToolExe);
+				return Path.Combine (ProguardToolPath, "bin", ToolExe);
 			return Path.Combine (JavaToolPath, ToolName);
 		}
 
-		// Windows seems to need special care.
-		protected override StringDictionary EnvironmentOverride {
-			get {
-				var sd = base.EnvironmentOverride ?? new StringDictionary ();
-				if (OS.IsWindows) {
-					if (!sd.ContainsKey ("PROGUARD_HOME"))
-						sd.Add ("PROGUARD_HOME", ProguardHome);
-				}
-				var opts = sd.ContainsKey ("JAVA_TOOL_OPTIONS") ? sd ["JAVA_TOOL_OPTIONS"] : null;
-				opts += " -Dfile.encoding=UTF8";
-				sd ["JAVA_TOOL_OPTIONS"] = opts;
-				return sd;
-			}
-		}
-
 		string ProguardHome {
-			get {
-				return Path.GetDirectoryName (Path.GetDirectoryName (UseProguard ? ToolPath : ProguardJarPath));
-			}
+			get { return UseProguard ? ProguardToolPath : Path.GetDirectoryName (Path.GetDirectoryName (ProguardJarPath)); }
 		}
 	}
 }
