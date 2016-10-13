@@ -31,9 +31,10 @@ namespace Xamarin.Android.Net
 		public AndroidHttpResponseMessage ()
 		{}
 
-		public AndroidHttpResponseMessage (URL javaUrl, HttpURLConnection httpConnection) {
-			javaUrl = javaUrl;
-			httpConnection = httpConnection;
+		public AndroidHttpResponseMessage (URL javaUrl, HttpURLConnection httpConnection) 
+		{
+			this.javaUrl = javaUrl;
+			this.httpConnection = httpConnection;
 		}
 
 		protected override void Dispose (bool disposing)
