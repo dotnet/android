@@ -89,6 +89,7 @@ static int attach_gdb;
  */
 static int wait_for_gdb;
 static int monodroid_gdb_wait = TRUE;
+static int android_api_level = 0;
 
 #ifdef ANDROID64
 #define SYSTEM_LIB_PATH "/system/lib64"
@@ -106,6 +107,13 @@ static int monodroid_gdb_wait = TRUE;
 
 FILE  *gref_log;
 FILE  *lref_log;
+
+/* !DO NOT REMOVE! Used by Mono BCL */
+MONO_API int
+_monodroid_get_android_api_level (void)
+{
+	return android_api_level;
+}
 
 /* Invoked by System.Core.dll!System.IO.MemoryMappedFiles.MemoryMapImpl.getpagesize */
 MONO_API int
@@ -1239,6 +1247,12 @@ ensure_jnienv (void)
 		(*jvm)->GetEnv (jvm, (void**)&env, JNI_VERSION_1_6);
 	}
 	return env;
+}
+
+JNIEnv*
+get_jnienv (void)
+{
+	return ensure_jnienv ();
 }
 
 static MonoGCBridgeObjectKind
@@ -2845,7 +2859,7 @@ create_domain (JNIEnv *env, jobjectArray runtimeApks, jstring assembly, jobject 
 	if (is_root_domain)
 		domain = mono.mono_jit_init_version ("RootDomain", "mobile");
 	else {
-		char *domain_name = monodroid_strdup_printf ("MonoAndroidDomain%d", GetAndroidSdkVersion (env, loader));
+		char *domain_name = monodroid_strdup_printf ("MonoAndroidDomain%d", _monodroid_get_android_api_level ());
 		domain = mono.mono_domain_create_appdomain (domain_name, NULL);
 		free (domain_name);
 	}
@@ -3033,11 +3047,12 @@ init_android_runtime (MonoDomain *domain, JNIEnv *env, jobject loader)
 	void *args [1];
 	args [0] = &init;
 
+	android_api_level = GetAndroidSdkVersion (env, loader);
 	init.javaVm                 = jvm;
 	init.env                    = env;
 	init.logCategories          = log_categories;
 	init.version                = (*env)->GetVersion (env);
-	init.androidSdkVersion      = GetAndroidSdkVersion (env, loader);
+	init.androidSdkVersion      = android_api_level;
 	init.localRefsAreIndirect   = LocalRefsAreIndirect (env, init.androidSdkVersion);
 	init.isRunningOnDesktop     = is_running_on_desktop;
 
