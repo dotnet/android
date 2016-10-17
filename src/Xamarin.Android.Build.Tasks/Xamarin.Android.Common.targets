@@ -742,14 +742,15 @@ because xbuild doesn't support framework reference assemblies.
 		/>
 	</CreateProperty>
 
-	<CreateProperty Value="$(AndroidSdkDirectory)\tools\proguard\lib\proguard.jar">
-		<Output TaskParameter="Value" PropertyName="ProguardJarPath"
-				Condition="'$(ProguardJarPath)' == ''"
-		/>
-	</CreateProperty>
 	<CreateProperty Value="$(AndroidSdkDirectory)\tools\proguard\">
 		<Output TaskParameter="Value" PropertyName="ProguardToolPath"
-				Condition="'$(UseProguard)' == 'True' And '$(ProguardToolPath)' == ''"
+				Condition="'$(ProguardToolPath)' == ''"
+		/>
+	</CreateProperty>
+
+	<CreateProperty Value="$(ProguardToolPath)lib\proguard.jar">
+		<Output TaskParameter="Value" PropertyName="ProguardJarPath"
+				Condition="'$(ProguardJarPath)' == ''"
 		/>
 	</CreateProperty>
 
@@ -1883,6 +1884,7 @@ because xbuild doesn't support framework reference assemblies.
     StubSourceDirectory="$(IntermediateOutputPath)android\src"
     JavaSourceFiles="@(AndroidJavaSource)"
     JavaPlatformJackPath="$(_JavaPlatformJackPath)"
+    AndroidSdkDirectory="$(_AndroidSdkDirectory)"
     InputJackFiles="@(_PreprocessedJavaLibrary)"
     OutputDexDirectory="$(IntermediateOutputPath)android\bin"
     ToolPath="$(JavaToolPath)"
@@ -2021,8 +2023,10 @@ because xbuild doesn't support framework reference assemblies.
   <Proguard
     Condition="'$(AndroidEnableProguard)' == 'True' and '$(_ProguardProjectConfiguration)' != ''"
     ProguardJarPath="$(ProguardJarPath)"
+    AndroidSdkDirectory="$(_AndroidSdkDirectory)"
     JavaToolPath="$(JavaToolPath)"
-    ToolPath="$(ProguardToolPath)"
+    MSBuildRuntimeType="$(MSBuildRuntimeType)"
+    ProguardToolPath="$(ProguardToolPath)"
     ToolExe="$(ProguardToolExe)"
     UseProguard="$(UseProguard)"
     JavaPlatformJarPath="$(JavaPlatformJarPath)"
@@ -2048,6 +2052,8 @@ because xbuild doesn't support framework reference assemblies.
     Condition="'$(AndroidEnableMultiDex)' == 'True' And '$(AndroidCustomMainDexListFile)' == ''"
     ToolPath="$(MainDexClassesToolPath)"
     ToolExe="$(MainDexClassesToolExe)"
+    MSBuildRuntimeType="$(MSBuildRuntimeType)"
+    ProguardHome="$(ProguardToolPath)"
     ClassesOutputDirectory="$(IntermediateOutputPath)android\bin\classes"
     JavaLibraries="@(_JavaLibrariesToCompile)"
     MultiDexMainDexListFile="$(_AndroidMainDexListFile)"

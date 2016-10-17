@@ -21,6 +21,9 @@ namespace Xamarin.Android.Tasks
 		public string JavaPlatformJackPath { get; set; }
 
 		[Required]
+		public string AndroidSdkDirectory { get; set; }
+
+		[Required]
 		public string [] InputJackFiles { get; set; }
 
 		[Required]
@@ -112,7 +115,7 @@ namespace Xamarin.Android.Tasks
 					// skip invalid lines
 				}
 				var configs = ProguardConfigurationFiles
-					.Replace ("{sdk.dir}", Path.GetDirectoryName (Path.GetDirectoryName (ProguardJarPath)) + Path.DirectorySeparatorChar)
+					.Replace ("{sdk.dir}", AndroidSdkDirectory + Path.DirectorySeparatorChar)
 					.Replace ("{intermediate.common.xamarin}", ProguardCommonXamarinConfiguration)
 					.Replace ("{intermediate.references}", ProguardGeneratedReferenceConfiguration)
 					.Replace ("{intermediate.application}", ProguardGeneratedApplicationConfiguration)
