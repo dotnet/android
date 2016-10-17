@@ -25,17 +25,23 @@ function getMingwSearchDir_Linux()
 
 function getInfo_Linux()
 {
-    local CONFIG_GUESS=/usr/share/misc/config.guess
     local uses_clang=no
     local compiler_version="`cc --version | tr -d '\n'`"
 
-    lsb_release > /dev/null 2>&1 || die "Your Linux does not have a working 'lsb_release' command"
-
-    if [ ! -x $CONFIG_GUESS ]; then
-        die "Your Linux does not have the '$CONFIG_GUESS' script. Missing the autotools-dev package?"
+    if [ -d /app ]; then
+      OS_NAME="Flatpak"
+      OS_RELEASE=`grep ^flatpak-version /.flatpak-info | cut -f2 -d'='`
+      local CONFIG_GUESS=/usr/share/libtool/build-aux/config.guess
+    else
+      lsb_release > /dev/null 2>&1 || die "Your Linux does not have a working 'lsb_release' command"
+      OS_NAME="`lsb_release -is`"
+      OS_RELEASE="`lsb_release -rs`"
+      local CONFIG_GUESS=/usr/share/misc/config.guess
+      if [ ! -x $CONFIG_GUESS ]; then
+          die "Your Linux does not have the '$CONFIG_GUESS' script. Missing the autotools-dev package?"
+      fi
     fi
-    OS_NAME="`lsb_release -is`"
-    OS_RELEASE="`lsb_release -rs`"
+
     HOST_CPUS="`nproc`"
 
     if echo $compiler_version | grep -i "Free Software Foundation" > /dev/null 2>&1; then
