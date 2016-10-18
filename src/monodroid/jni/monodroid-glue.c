@@ -96,7 +96,11 @@ static int android_api_level = 0;
 #elif ANDROID
 #define SYSTEM_LIB_PATH "/system/lib"
 #elif LINUX
+#ifdef LINUX_FLATPAK
+#define SYSTEM_LIB_PATH "/app/lib/mono"
+#else
 #define SYSTEM_LIB_PATH "/usr/lib"
+#endif
 #elif APPLE_OS_X
 #define SYSTEM_LIB_PATH "/Library/Frameworks/Xamarin.Android.framework/Libraries/"
 #elif WINDOWS

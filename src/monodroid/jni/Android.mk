@@ -28,6 +28,10 @@ LOCAL_CFLAGS =	$(COMMON_CFLAGS) \
 	$(if $(TIMING),-DMONODROID_TIMING=1,) \
 	$(if $(NODEBUG),,-DDEBUG=1)
 
+ifneq ($(wildcard /app/.),)
+LOCAL_CFLAGS = $(LOCAL_CFLAGS) -DLINUX_FLATPAK
+endif
+
 LOCAL_LDFLAGS   += \
 	-Wall \
 	-Wl,--export-dynamic \
