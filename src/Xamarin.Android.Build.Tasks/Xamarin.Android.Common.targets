@@ -1585,7 +1585,8 @@ because xbuild doesn't support framework reference assemblies.
       EnableProguard="$(AndroidEnableProguard)"
       DumpDependencies="$(LinkerDumpDependencies)"
       ResolvedAssemblies="@(ResolvedAssemblies->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)')"
-      HttpClientHandlerType="$(AndroidHttpClientHandlerType)" />
+      HttpClientHandlerType="$(AndroidHttpClientHandlerType)"
+      TlsProviderType="$(AndroidTlsProviderType)" />
 
     <!-- We have to use a flag instead of normal outputs because linking can delete unused assemblies -->
     <Touch Files="$(_AndroidLinkFlag)" AlwaysCreate="true" />

@@ -530,6 +530,7 @@
     </Compile>
     <Compile Include="Utilities\Profile.cs" />
     <None Include="Xamarin.Android.Build.Tasks.targets" />
+    <Compile Include="Linker\MonoDroid.Tuner\PreserveTlsProvider.cs" />
   </ItemGroup>
   <!-- MD doesn't handle MSBuildToolsPath yet
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
