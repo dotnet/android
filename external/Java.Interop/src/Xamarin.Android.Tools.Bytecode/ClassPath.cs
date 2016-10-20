@@ -13,6 +13,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 
 	public enum JavaDocletType {
 		DroidDoc,
+		DroidDoc2,
 		Java6,
 		Java7,
 		Java8,
@@ -225,7 +226,8 @@ namespace Xamarin.Android.Tools.Bytecode {
 		AndroidDocScraper CreateDocScraper (string dir)
 		{
 			switch (DocletType) {
-			default: return new DroidDocScraper (dir);
+			default: return new DroidDoc2Scraper (dir);
+			case JavaDocletType.DroidDoc: return new DroidDocScraper (dir);
 			case JavaDocletType.Java6: return new JavaDocScraper (dir);
 			case JavaDocletType.Java7: return new Java7DocScraper (dir);
 			case JavaDocletType.Java8: return new Java8DocScraper (dir);

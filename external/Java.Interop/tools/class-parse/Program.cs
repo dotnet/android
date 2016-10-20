@@ -90,6 +90,7 @@ namespace Xamarin.Android.Tools {
 
 		static  Dictionary<string, JavaDocletType>  JavaDocletTypeMapping   = new Dictionary<string, JavaDocletType> {
 			{ "droiddoc",   JavaDocletType.DroidDoc },
+			{ "droiddoc2",   JavaDocletType.DroidDoc2 },
 			{ "java6",      JavaDocletType.Java6 },
 			{ "java7",      JavaDocletType.Java7 },
 			{ "java8",      JavaDocletType.Java8 },

@@ -35,20 +35,60 @@ namespace Xamarin.Android.Tools.Bytecode
 {
 	enum JavaDocKind {
 		DroidDoc,
+		DroidDoc2,
 		Java6,
-		Java7
+		Java7,
+		Java8
 	}
 	
 	class DroidDocScraper : AndroidDocScraper
 	{
 		const String pattern_head_droiddoc = "<span class=\"sympad\"><a href=\".*";
-	
+
 		public DroidDocScraper (string dir)
 			: base (dir, pattern_head_droiddoc, null, " ", false)
 		{
 		}
 	}
 	
+	class DroidDoc2Scraper : AndroidDocScraper
+	{
+		const String pattern_head_droiddoc = "<tr class=\"api .+\".*>.*<code>.*<a href=\".*";
+		const String reset_pattern_head = "<p>";
+
+		public DroidDoc2Scraper (string dir)
+			: base (dir, pattern_head_droiddoc, reset_pattern_head, " ", true, "\\(", ", ", "\\)", "\\s*</code>")
+		{
+		}
+
+		string prev_path;
+		string [] prev_contents;
+
+		protected override IEnumerable<string> GetContentLines (string path)
+		{
+			if (prev_path == path)
+				return prev_contents;
+			else {
+				prev_path = path;
+				string all = File.ReadAllText (path).Replace ('\r', ' ').Replace ('\n', ' ');
+				int start = all.IndexOf ("<!-- ======== START OF CLASS DATA ======== -->", StringComparison.Ordinal);
+				all = start < 0 ? all : all.Substring (start);
+				int end = all.IndexOf ("<!-- ========= END OF CLASS DATA ========= -->", StringComparison.Ordinal);
+				all = end < 0 ? all : all.Substring (0, end);
+				// <tr>...</tr> is the basic structure so </tr> is used as the end of member, but we also use <p> here.
+				// Sometimes another </code> can appear after "</code>" (for the end of context member) and that messes regex match.
+				// So, with any <p>, we interrupt consecutive matches.
+				prev_contents = all.Split (new string [] { "<p>", "</tr>" }, StringSplitOptions.RemoveEmptyEntries);
+				return prev_contents;
+			}
+		}
+
+		protected override bool ShouldResetMatchBuffer (string text)
+		{
+			return true;
+		}
+	}
+
 	class JavaDocScraper : AndroidDocScraper
 	{
 		const String pattern_head_javadoc = "<TD><CODE><B><A HREF=\"[./]*"; // I'm not sure how path could be specified... (./ , ../ , or even /)
@@ -80,7 +120,7 @@ namespace Xamarin.Android.Tools.Bytecode
 		const String parameter_pair_splitter_javadoc = "&nbsp;";
 
 		public Java8DocScraper (string dir)
-			: base (dir, pattern_head_javadoc, reset_pattern_head_javadoc, parameter_pair_splitter_javadoc, true, "-", "-", "-")
+			: base (dir, pattern_head_javadoc, reset_pattern_head_javadoc, parameter_pair_splitter_javadoc, true, "-", "-", "-", null)
 		{
 		}
 	}
@@ -94,14 +134,15 @@ namespace Xamarin.Android.Tools.Bytecode
 		readonly String open_method;
 		readonly String param_sep;
 		readonly String close_method;	
+		readonly String post_close_method_parens;
 		string root;
-	
+
 		protected AndroidDocScraper (string dir, String patternHead, String resetPatternHead, String parameterPairSplitter, bool continuousParamLines)
-			: this (dir, patternHead, resetPatternHead, parameterPairSplitter, continuousParamLines, "\\(", ", ", "\\)")
+			: this (dir, patternHead, resetPatternHead, parameterPairSplitter, continuousParamLines, "\\(", ", ", "\\)", null)
 		{
 		}
 
-		protected AndroidDocScraper (string dir, String patternHead, String resetPatternHead, String parameterPairSplitter, bool continuousParamLines, string openMethod, string paramSep, string closeMethod)
+		protected AndroidDocScraper (string dir, String patternHead, String resetPatternHead, String parameterPairSplitter, bool continuousParamLines, string openMethod, string paramSep, string closeMethod, string postCloseMethodParens)
 		{
 			if (dir == null)
 				throw new ArgumentNullException ("dir");
@@ -112,7 +153,8 @@ namespace Xamarin.Android.Tools.Bytecode
 			continuous_param_lines = continuousParamLines;
 			open_method = openMethod;
 			param_sep = paramSep;
-			close_method = closeMethod;	
+			close_method = closeMethod;
+			post_close_method_parens = postCloseMethodParens ?? string.Empty;
 			if (!Directory.Exists (dir))
 				throw new Exception ("Directory '" + dir + "' does not exist");
 	
@@ -124,18 +166,22 @@ namespace Xamarin.Android.Tools.Bytecode
 			//foreach (var f in Directory.GetFiles (dir, "*.html", SearchOption.AllDirectories))
 			//	LoadDocument (f.Substring (dir.Length + 1), f);
 		}
-		
-		void LoadDocument (string packageDir, string file)
+
+		protected virtual IEnumerable<string> GetContentLines (string path)
 		{
-			string pkgName = packageDir.Replace ('/', '.');
-			string className = Path.GetFileNameWithoutExtension (file).Replace ('$', '.');
-			
-			string html = File.ReadAllText (file);
+			return File.ReadAllText (path).Split ('\n');
+		}
+
+		protected virtual bool ShouldResetMatchBuffer (string text)
+		{
+			// sometimes we get incomplete tag, so cache it until it gets complete or matched.
+			// I *know* this is a hack.
+			return reset_pattern_head == null || text.EndsWith (">", StringComparison.Ordinal) || !continuous_param_lines && !text.StartsWith (reset_pattern_head, StringComparison.Ordinal);
 		}
 	
-		public String[] GetParameterNames (string package, string type, string method, string[] ptypes, bool isVarArgs)
+		public virtual String[] GetParameterNames (string package, string type, string method, string[] ptypes, bool isVarArgs)
 		{
-			String path = package.Replace ('.', '/') + '/' + type.Replace ('$', '.') + ".html";
+			string path = package.Replace ('.', '/') + '/' + type.Replace ('$', '.') + ".html";
 			string file = Path.Combine (root, path);
 			if (!File.Exists (file)) {
 				Log.Warning (1,"Warning: no document found : " + file);
@@ -153,44 +199,39 @@ namespace Xamarin.Android.Tools.Bytecode
 					buffer.Append (param_sep);
 				buffer.Append (ptypes [i].Replace ('$', '.'));
 			}
+			buffer.Replace ("[", "\\[").Replace ("]", "\\]");
 			buffer.Append (close_method);
-			buffer.Append ("\".*\\((.*)\\)");
-			buffer.Replace ("[", "\\[").Replace ("]", "\\]").Replace ("?", "\\?");
+			buffer.Append ("\".*\\(([^(]*)\\)");
+			buffer.Append (post_close_method_parens);
+			buffer.Replace ("?", "\\?");
 			Regex pattern = new Regex (buffer.ToString (), RegexOptions.Multiline);
 	
 			try {
-				var reader = File.OpenText (file);
-				try {
-					String text = "";
-					String prev = null;
-					while ((text = reader.ReadLine ()) != null) {
-						if (prev != null)
-							prev = text = prev + text;
-						var matcher = pattern.Match (text);
-						if (matcher.Success) {
-							var plist = matcher.Groups [1];
-							String[] parms = plist.Value.Split (new string [] {", "}, StringSplitOptions.RemoveEmptyEntries);
-							if (parms.Length != ptypes.Length) {
-								Log.Warning (1, "failed matching {0} (expected {1} params, got {2} params)", buffer, ptypes.Length, parms.Length);
-								return null;
-							}
-							String[] result = new String [ptypes.Length];
-							for (int i = 0; i < ptypes.Length; i++) {
-								String[] toks = parms [i].Split (parameter_pair_splitter);
-								result [i] = toks [toks.Length - 1];
-							}
-							reader.Close ();
-							return result;
+				String text = "";
+				String prev = null;
+				foreach (var _text in GetContentLines (file)) {
+					text = _text.TrimEnd ('\r');
+					if (prev != null)
+						prev = text = prev + text;
+					var matcher = pattern.Match (text);
+					if (matcher.Success) {
+						var plist = matcher.Groups [1];
+						String[] parms = plist.Value.Split (new string [] {", "}, StringSplitOptions.RemoveEmptyEntries);
+						if (parms.Length != ptypes.Length) {
+							Log.Warning (1, "failed matching {0} (expected {1} params, got {2} params)", buffer, ptypes.Length, parms.Length);
+							return null;
 						}
-						// sometimes we get incomplete tag, so cache it until it gets complete or matched.
-						// I *know* this is a hack.
-						if (reset_pattern_head == null || text.EndsWith (">", StringComparison.Ordinal) || !continuous_param_lines && !text.StartsWith (reset_pattern_head, StringComparison.Ordinal))
-							prev = null;
-						else
-							prev = text;
+						String[] result = new String [ptypes.Length];
+						for (int i = 0; i < ptypes.Length; i++) {
+							String[] toks = parms [i].Split (parameter_pair_splitter);
+							result [i] = toks [toks.Length - 1];
+						}
+						return result;
 					}
-				} finally {
-					reader.Close ();
+					if (ShouldResetMatchBuffer (text))
+						prev = null;
+					else
+						prev = text;
 				}
 			} catch (Exception e) {
 				Log.Error ("ERROR in {0}.{1}: {2}", type, method, e);
