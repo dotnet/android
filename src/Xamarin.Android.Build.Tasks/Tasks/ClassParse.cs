@@ -29,10 +29,12 @@ namespace Xamarin.Android.Tasks
 
 		public ITaskItem[] DroidDocPaths { get; set; }
 
+		public ITaskItem [] DroidDoc2Paths { get; set; }
+
 		public IEnumerable<ITaskItem> DocsPaths {
 			get {
 				Func<ITaskItem[],IEnumerable<ITaskItem>> f = l => l ?? Enumerable.Empty<ITaskItem> ();
-				return f (JavaDocPaths).Concat (f (Java7DocPaths)).Concat (f (Java8DocPaths)).Concat (f (DroidDocPaths));
+				return f (JavaDocPaths).Concat (f (Java7DocPaths)).Concat (f (Java8DocPaths)).Concat (f (DroidDocPaths)).Concat (f (DroidDoc2Paths));
 			}
 		}
 
@@ -41,10 +43,11 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ("ClassParse Task");
 			Log.LogDebugMessage ("  OutputFile: {0}", OutputFile);
 			Log.LogTaskItems ("  SourceJars: ", SourceJars);
-			Log.LogTaskItems ("  JavaDocsPaths: ", JavaDocPaths);
-			Log.LogTaskItems ("  Java7DocsPaths: ", Java7DocPaths);
-			Log.LogTaskItems ("  Java8DocsPaths: ", Java8DocPaths);
-			Log.LogTaskItems ("  DroidDocsPaths: ", DroidDocPaths);
+			Log.LogTaskItems ("  JavaDocPaths: ", JavaDocPaths);
+			Log.LogTaskItems ("  Java7DocPaths: ", Java7DocPaths);
+			Log.LogTaskItems ("  Java8DocPaths: ", Java8DocPaths);
+			Log.LogTaskItems ("  DroidDocPaths: ", DroidDocPaths);
+			Log.LogTaskItems ("  DroidDoc2Paths: ", DroidDoc2Paths);
 
 			using (var output = new StreamWriter (OutputFile, append: false, 
 						encoding: new UTF8Encoding (encoderShouldEmitUTF8Identifier: false))) {
