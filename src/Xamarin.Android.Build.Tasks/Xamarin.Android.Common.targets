@@ -368,7 +368,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
    AndroidNdkDirectory="$(_AndroidNdkDirectory)"
    Assemblies="@(ReferencePath);@(ReferenceDependencyPaths)"
    CacheFile="$(_AndroidResourcePathsCache)"
-   Condition=" '$(DesignTimeBuild)' != 'true' "
+   Condition=" '$(DesignTimeBuild)' == 'false' Or '$(DesignTimeBuild)' == '' "
   />
 </Target>
 
