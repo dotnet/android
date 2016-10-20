@@ -3,4 +3,36 @@
   <ItemGroup>
     <RequiredProgram Include="xxd" />
   </ItemGroup>
+  <ItemGroup>
+    <_HostRuntime Include="host-Darwin" Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Darwin:'))">
+      <Cc>$(HostCc)</Cc>
+      <CFlags>$(_HostUnixCFlags) $(_HostDarwinCFlags) -DAPPLE_OS_X</CFlags>
+      <LdFlags>$(_HostUnixLdFlags)</LdFlags>
+      <ExtraSource>$(_UnixAdditionalSourceFiles)</ExtraSource>
+      <NativeLibraryExtension>dylib</NativeLibraryExtension>
+      <OutputDirectory>host-Darwin</OutputDirectory>
+      <Strip>strip</Strip>
+      <StripFlags>-S</StripFlags>
+    </_HostRuntime>
+    <_HostRuntime Include="host-Linux" Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Linux:'))">
+      <Cc>$(HostCc)</Cc>
+      <CFlags>$(_HostUnixCFlags) $(_HostLinuxCFlags) -D_GNU_SOURCE</CFlags>
+      <LdFlags>$(_HostUnixLdFlags)</LdFlags>
+      <ExtraSource>$(_UnixAdditionalSourceFiles)</ExtraSource>
+      <NativeLibraryExtension>so</NativeLibraryExtension>
+      <OutputDirectory>host-Linux</OutputDirectory>
+      <Strip>strip</Strip>
+      <StripFlags>-S</StripFlags>
+    </_HostRuntime>
+    <_HostRuntime Include="host-win" Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))">
+      <Cc>"$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-gcc"</Cc>
+      <CFlags>$(_HostCommonWinCFlags) $(_HostWin64CFlags)</CFlags>
+      <LdFlags>$(_HostCommonWinLdFlags)</LdFlags>
+      <ExtraSource></ExtraSource>
+      <NativeLibraryExtension>dll</NativeLibraryExtension>
+      <OutputDirectory>host-win</OutputDirectory>
+      <Strip>"$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-strip"</Strip>
+      <StripFlags>-S</StripFlags>
+    </_HostRuntime>
+  </ItemGroup>
 </Project>

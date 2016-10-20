@@ -62,19 +62,6 @@ LOCAL_SRC_FILES := \
 	cpu-arch-detect.c \
 	monodroid-networkinfo.c
 
-jni/monodroid-glue.c: jni/config.include jni/machine.config.include
-
-$(LOCAL_PATH)/machine.config.include: $(LOCAL_PATH)/../machine.config.xml
-	(cat $< ; dd if=/dev/zero bs=1 count=1 2>/dev/null) > monodroid.machine.config
-	xxd -i monodroid.machine.config | sed 's/^unsigned /static const unsigned /g' > jni/machine.config.include
-	rm monodroid.machine.config
-
-$(LOCAL_PATH)/config.include: $(LOCAL_PATH)/../config.xml
-	(cat $< ; dd if=/dev/zero bs=1 count=1 2>/dev/null) > monodroid.config
-	xxd -i monodroid.config | sed 's/^unsigned /static const unsigned /g' > jni/config.include
-	rm monodroid.config
-
-
 include $(BUILD_SHARED_LIBRARY)
 
 
