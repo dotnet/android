@@ -9,9 +9,9 @@ namespace MonoDroid.Tuner
 	{
 		public string TlsProviderType { get; set; }
 
-		public override bool IsActiveFor (Mono.Cecil.AssemblyDefinition assembly)
+		public override bool IsActiveFor (AssemblyDefinition assembly)
 		{
-			return TlsProviderType != null && (assembly.Name.Name == "System" || assembly.Name.Name == "Mono.Android");
+			return TlsProviderType != null && assembly.Name.Name == "System";
 		}
 
 		public override SubStepTargets Targets {
@@ -22,50 +22,6 @@ namespace MonoDroid.Tuner
 		{
 			if (method.Name == "CreateDefaultProviderImpl" && method.DeclaringType.FullName == "Mono.Net.Security.MonoTlsProviderFactory")
 				ProcessCreateProviderImpl (method);
-		}
-
-		protected AssemblyDefinition GetAssembly (string assemblyName)
-		{
-			AssemblyDefinition ad;
-			context.TryGetLinkedAssembly (assemblyName, out ad);
-			return ad;
-		}
-
-		protected TypeDefinition GetType (AssemblyDefinition assembly, string typeName)
-		{
-			return assembly.MainModule.GetType (typeName);
-		}
-
-		protected TypeDefinition GetType (string assemblyName, string typeName)
-		{
-			AssemblyDefinition ad = GetAssembly (assemblyName);
-			return ad == null ? null : GetType (ad, typeName);
-		}
-
-		bool MarkType (string assemblyName, string typeName)
-		{
-			var type = GetType (assemblyName, typeName);
-			if (type != null) {
-				context.Annotations.Mark (type);
-				context.Annotations.SetPreserve (type, Mono.Linker.TypePreserve.All);
-				return true;
-			}
-			return false;
-		}
-
-		string GetAssemblyNameFromTypeName (string typeName, out string simpleTypeName)
-		{
-			simpleTypeName = null;
-			var parts = typeName.Split (new char [] { ',' }, 2);
-			if (parts.Length != 2)
-				return null;
-
-			var anr = AssemblyNameReference.Parse (parts [1].Trim ());
-			if (anr == null)
-				return null;
-
-			simpleTypeName = parts [0].Trim ();
-			return anr.Name;
 		}
 
 		TypeDefinition GetTlsProvider (ModuleDefinition module)
