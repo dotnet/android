@@ -95,6 +95,8 @@ static int android_api_level = 0;
 #define SYSTEM_LIB_PATH "/system/lib64"
 #elif ANDROID
 #define SYSTEM_LIB_PATH "/system/lib"
+#elif LINUX_FLATPAK
+#define SYSTEM_LIB_PATH "/app/lib/mono"
 #elif LINUX
 #define SYSTEM_LIB_PATH "/usr/lib"
 #elif APPLE_OS_X
