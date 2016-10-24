@@ -26,7 +26,7 @@
     </_HostRuntime>
     <_HostRuntime Include="host-win" Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))">
       <Cc>"$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-gcc"</Cc>
-      <CFlags>$(_HostCommonWinCFlags) $(_HostWin64CFlags)</CFlags>
+      <CFlags>$(_HostCommonWinCFlags) $(_HostWin64CFlags) $(_LinuxFlatPakBuild)</CFlags>
       <LdFlags>$(_HostCommonWinLdFlags)</LdFlags>
       <ExtraSource></ExtraSource>
       <NativeLibraryExtension>dll</NativeLibraryExtension>
