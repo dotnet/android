@@ -97,8 +97,11 @@
   <ItemGroup>
     <_AndroidMxeOutput Include="@(_AndroidMxeToolchain->'$(AndroidMxeFullPath)\bin\%(Identity)-gcc')" />
     <_AndroidMxeOutput Include="@(_AndroidMxeToolchain->'$(AndroidMxeFullPath)\bin\%(Identity)-cmake')" />
-    <_AndroidMxeOutput Include="@(_AndroidMxeToolchain->'$(AndroidMxeFullPath)\%(Identity)\lib\libz.a')" />
+    <_AndroidMxeOutput Include="@(_AndroidMxeToolchain->'$(AndroidMxeFullPath)\%(Identity)\include\dlfcn.h')" />
+    <_AndroidMxeOutput Include="@(_AndroidMxeToolchain->'$(AndroidMxeFullPath)\%(Identity)\include\pthread.h')" />
+    <_AndroidMxeOutput Include="@(_AndroidMxeToolchain->'$(AndroidMxeFullPath)\%(Identity)\include\sys\mman.h')" />
     <_AndroidMxeOutput Include="@(_AndroidMxeToolchain->'$(AndroidMxeFullPath)\%(Identity)\include\zlib.h')" />
+    <_AndroidMxeOutput Include="@(_AndroidMxeToolchain->'$(AndroidMxeFullPath)\%(Identity)\lib\libz.a')" />
   </ItemGroup>
   <Target Name="_CreateMxeToolchains"
       DependsOnTargets="_SetMxeToolchainMakefileTimeToLastCommitTimestamp"
@@ -107,13 +110,14 @@
       Outputs="@(_AndroidMxeOutput)">
     <Exec
         Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win32:'))"
-        Command="make $(MAKEFLAGS) MXE_TARGETS=&quot;$(MingwCommandPrefix32)&quot; gcc cmake zlib PREFIX=&quot;$(AndroidMxeFullPath)&quot;"
+        Command="make $(MAKEFLAGS) MXE_TARGETS=&quot;$(MingwCommandPrefix32)&quot; gcc cmake zlib pthreads dlfcn-win32 mman-win32 PREFIX=&quot;$(AndroidMxeFullPath)&quot;"
         WorkingDirectory="..\..\external\mxe"
     />
     <Exec
         Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))"
-        Command="make $(MAKEFLAGS) MXE_TARGETS=&quot;$(MingwCommandPrefix64)&quot; gcc cmake zlib PREFIX=&quot;$(AndroidMxeFullPath)&quot;"
+        Command="make $(MAKEFLAGS) MXE_TARGETS=&quot;$(MingwCommandPrefix64)&quot; gcc cmake zlib pthreads dlfcn-win32 mman-win32 PREFIX=&quot;$(AndroidMxeFullPath)&quot;"
         WorkingDirectory="..\..\external\mxe"
     />
+    <Touch Files="@(_AndroidMxeOutput)" />
   </Target>
 </Project>
