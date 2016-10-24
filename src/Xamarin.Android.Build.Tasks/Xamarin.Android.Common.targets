@@ -279,6 +279,12 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	</Otherwise>
 </Choose>
 
+<!-- Do not resolve from the GAC under any circumstances in Mobile -->
+<PropertyGroup>
+	<AssemblySearchPaths>$([System.String]::Copy('$(AssemblySearchPaths)').Replace('{GAC}',''))</AssemblySearchPaths>
+	<AssemblySearchPaths Condition="'$(MSBuildRuntimeVersion)' != ''">$(AssemblySearchPaths.Split(';'))</AssemblySearchPaths>
+</PropertyGroup>
+
 <Target Name="_SeparateAppExtensionReferences">
 	<CreateItem Include="@(ProjectReference)" PreserveExistingMetadata="true" Condition="'%(Identity)' != '' AND '%(ProjectReference.IsAppExtension)' == 'true'">
 		<Output ItemName="_AppExtensionReference" TaskParameter="Include" />
@@ -2126,6 +2132,7 @@ because xbuild doesn't support framework reference assemblies.
   <ResolveAssemblyReference
       AllowedAssemblyExtensions="$(AllowedReferenceAssemblyFileExtensions)"
       AssemblyFiles="@(ResolvedUserAssemblies)"
+      AutoUnify="True"
       FindDependencies="True"
       FindRelatedFiles="False"
       FindSatellites="True"
