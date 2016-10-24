@@ -79,6 +79,12 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
 
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.Targets" />
 
+  <!-- Do not resolve from the GAC under any circumstances in Mobile -->
+  <PropertyGroup>
+    <AssemblySearchPaths>$([System.String]::Copy('$(AssemblySearchPaths)').Replace('{GAC}',''))</AssemblySearchPaths>
+    <AssemblySearchPaths Condition="'$(MSBuildRuntimeVersion)' != ''">$(AssemblySearchPaths.Split(';'))</AssemblySearchPaths>
+  </PropertyGroup>
+	
   <PropertyGroup>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <GetReferenceAssemblyPathsDependsOn>_SetLatestTargetFrameworkVersion</GetReferenceAssemblyPathsDependsOn>
