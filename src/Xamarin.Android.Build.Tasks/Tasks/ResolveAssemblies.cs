@@ -129,7 +129,7 @@ namespace Xamarin.Android.Tasks
 			indent += 2;
 			// Add this assembly
 			if (!topLevel && assemblies.All (a => new AssemblyNameDefinition (a, null).Name != assembly.Name.Name))
-				assemblies.Add (fqname);
+				assemblies.Add (Path.GetFullPath (fqname));
 
 			// Recurse into each referenced assembly
 			foreach (AssemblyNameReference reference in assembly.MainModule.AssemblyReferences) {
@@ -181,7 +181,7 @@ namespace Xamarin.Android.Tasks
 		string ResolveI18nAssembly (DirectoryAssemblyResolver resolver, string name)
 		{
 			var assembly = resolver.Resolve (AssemblyNameReference.Parse (name));
-			return assembly.MainModule.FullyQualifiedName;
+			return Path.GetFullPath (assembly.MainModule.FullyQualifiedName);
 		}
 	}
 }
