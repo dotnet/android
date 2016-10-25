@@ -5,7 +5,7 @@
     <_CommonCFlags Condition=" '$(Configuration)' == 'Release' ">-g -O2</_CommonCFlags>
     <_HostWinCFlags Condition=" '$(Configuration)' == 'Debug' ">-ggdb3 -O0 -DXAMARIN_PRODUCT_VERSION=0</_HostWinCFlags>
     <_HostWinCFlags Condition=" '$(Configuration)' == 'Release' ">-g -O2 -DXAMARIN_PRODUCT_VERSION=0</_HostWinCFlags>
-    <_BtlsConfigureFlags>--with-btls-android-ndk=$(AndroidToolchainDirectory)\ndk</_BtlsConfigureFlags>
+    <_BtlsConfigureFlags>--enable-dynamic-btls --with-btls-android-ndk=$(AndroidToolchainDirectory)\ndk</_BtlsConfigureFlags>
     <_CommonConfigureFlags>--without-ikvm-native --enable-maintainer-mode --with-profile2=no --with-profile4=no --with-profile4_5=no --with-monodroid --enable-nls=no --with-sigaltstack=yes --with-tls=pthread mono_cv_uscore=yes</_CommonConfigureFlags>
     <_TargetConfigureFlags>$(_CommonConfigureFlags) --enable-minimal=ssa,portability,attach,verifier,full_messages,sgen_remset,sgen_marksweep_par,sgen_marksweep_fixed,sgen_marksweep_fixed_par,sgen_copying,logging,security,shared_handles --disable-mcs-build --disable-executables --disable-iconv $(_BtlsConfigureFlags)</_TargetConfigureFlags>
     <_SecurityCFlags>-Wl,-z,now -Wl,-z,relro -Wl,-z,noexecstack -fstack-protector</_SecurityCFlags>

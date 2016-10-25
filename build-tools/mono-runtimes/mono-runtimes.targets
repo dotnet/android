@@ -159,6 +159,18 @@
           Condition=" '%(_MonoRuntime.DoBuild)' == 'True' And '%(_MonoRuntime.OutputProfilerFilename)' != '' "
           Include="@(_MonoRuntime->'$(OutputPath)\lib\xbuild\Xamarin\Android\lib\%(Identity)\%(OutputProfilerFilename).d.%(NativeLibraryExtension)')"
       />
+      <_MonoBtlsSource
+          Condition=" '%(_MonoRuntime.DoBuild)' == 'True' And '%(_MonoRuntime.OutputMonoBtlsFilename)' != '' "
+          Include="@(_MonoRuntime->'$(IntermediateOutputPath)\%(Identity)\mono\btls\build-shared\%(OutputMonoBtlsFilename).%(NativeLibraryExtension)')"
+      />
+      <_InstallMonoBtlsOutput
+          Condition=" '%(_MonoRuntime.DoBuild)' == 'True' And '%(_MonoRuntime.OutputMonoBtlsFilename)' != '' "
+          Include="@(_MonoRuntime->'$(OutputPath)\lib\xbuild\Xamarin\Android\lib\%(Identity)\%(OutputMonoBtlsFilename).%(NativeLibraryExtension)')"
+      />
+      <_InstallUnstrippedMonoBtlsOutput
+          Condition=" '%(_MonoRuntime.DoBuild)' == 'True' And '%(_MonoRuntime.OutputMonoBtlsFilename)' != '' "
+          Include="@(_MonoRuntime->'$(OutputPath)\lib\xbuild\Xamarin\Android\lib\%(Identity)\%(OutputMonoBtlsFilename).d.%(NativeLibraryExtension)')"
+      />
       <_MonoPosixHelperSource
           Condition=" '%(_MonoRuntime.DoBuild)' == 'True' And '%(_MonoRuntime.OutputMonoPosixHelperFilename)' != '' "
           Include="@(_MonoRuntime->'$(IntermediateOutputPath)\%(Identity)\support\.libs\%(OutputMonoPosixHelperFilename).%(NativeLibraryExtension)')"
@@ -193,7 +205,7 @@
   <Target Name="_BuildRuntimes"
       DependsOnTargets="_GetRuntimesOutputItems"
       Inputs="@(_RuntimeBuildStamp)"
-      Outputs="@(_RuntimeSource);@(_ProfilerSource);@(_MonoPosixHelperSource);@(_BclProfileItems)">
+      Outputs="@(_RuntimeSource);@(_ProfilerSource);@(_MonoPosixHelperSource);@(_BclProfileItems);@(_MonoBtlsSource)">
     <Exec
         Condition=" '%(_MonoRuntime.DoBuild)' == 'true' "
         Command="make $(MakeConcurrency) # %(_MonoRuntime.Identity)"
@@ -250,6 +262,19 @@
     />
 
     <Copy
+        SourceFiles="@(_MonoBtlsSource)"
+        DestinationFiles="@(_InstallMonoBtlsOutput)"
+    />
+    <Copy
+        SourceFiles="@(_MonoBtlsSource)"
+        DestinationFiles="@(_InstallUnstrippedMonoBtlsOutput)"
+    />
+    <Exec
+        Condition=" '$(Configuration)' != 'Debug' And '%(_MonoRuntime.DoBuild)' == 'true' And '%(_MonoRuntime.OutputMonoPosixHelperFilename)' != '' "
+        Command="&quot;%(_MonoRuntime.Strip)&quot; %(_MonoRuntime.StripFlags) &quot;$(OutputPath)\lib\xbuild\Xamarin\Android\lib\%(_MonoRuntime.Identity)\%(_MonoRuntime.OutputMonoBtlsFilename).%(_MonoRuntime.NativeLibraryExtension)&quot;"
+    />
+
+    <Copy
         SourceFiles="@(_MonoPosixHelperSource)"
         DestinationFiles="@(_InstallMonoPosixHelperOutput)"
     />
@@ -262,7 +287,7 @@
         Command="&quot;%(_MonoRuntime.Strip)&quot; %(_MonoRuntime.StripFlags) &quot;$(OutputPath)\lib\xbuild\Xamarin\Android\lib\%(_MonoRuntime.Identity)\%(_MonoRuntime.OutputMonoPosixHelperFilename).%(_MonoRuntime.NativeLibraryExtension)&quot;"
     />
     <Touch
-        Files="@(_InstallRuntimesOutput);@(_InstallProfilerOutput);@(_InstallMonoPosixHelperOutput)"
+        Files="@(_InstallRuntimesOutput);@(_InstallProfilerOutput);@(_InstallMonoPosixHelperOutput);@(_InstallMonoBtlsOutput)"
     />
   </Target>
   <Target Name="_InstallBcl"

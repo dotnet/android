@@ -87,6 +87,9 @@ namespace Xamarin.Android.Tasks
 		public string HttpClientHandlerType { get; set; }
 		public string TlsProvider { get; set; }
 
+
+		static  readonly    string          MSBuildXamarinAndroidDirectory      = Path.GetDirectoryName (typeof (BuildApk).Assembly.Location);
+
 		[Output]
 		public ITaskItem[] OutputFiles { get; set; }
 
@@ -202,7 +205,7 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugTaskItems ("  LibraryProjectJars:", LibraryProjectJars);
 			Log.LogDebugTaskItems ("  AdditionalNativeLibraryReferences:", AdditionalNativeLibraryReferences);
 			Log.LogDebugTaskItems ("  HttpClientHandlerType:", HttpClientHandlerType);
-			Log.LogDebugTaskItems ("  TlsProvider:", TlsProvider);
+			Log.LogDebugMessage ("  TlsProvider: {0}", TlsProvider);
 
 			Aot.TryGetSequencePointsMode (AndroidSequencePointsMode, out sequencePointsMode);
 
@@ -418,33 +421,45 @@ namespace Xamarin.Android.Tasks
 			return results;
 		}
 
+		void AddNativeLibrary (ZipArchive apk, string abi, string filename)
+		{
+			var path    = Path.Combine (MSBuildXamarinAndroidDirectory, "lib", abi, filename);
+			apk.AddEntry (string.Format ("lib/{0}/{1}", abi, filename), File.OpenRead (path));
+		}
+
 		void AddProfilers (ZipArchive apk, string abi)
 		{
-			var root = Path.GetDirectoryName (typeof(BuildApk).Assembly.Location);
 			if (!string.IsNullOrEmpty (AndroidEmbedProfilers)) {
 				foreach (var profiler in ParseProfilers (AndroidEmbedProfilers)) {
 					var library = string.Format ("libmono-profiler-{0}.so", profiler);
-					var path = Path.Combine (root, "lib", abi, library);
-					apk.AddEntry (string.Format ("lib/{0}/libmono-profiler-{1}.so", abi, profiler), File.OpenRead (path));
+					AddNativeLibrary (apk, abi, library);
 				}
 			}
 		}
 
+		void AddBtlsLibs (ZipArchive apk, string abi)
+		{
+			if (string.Compare ("btls", TlsProvider, StringComparison.OrdinalIgnoreCase) == 0) {
+				AddNativeLibrary (apk, abi, "libmono-btls-shared.so");
+			}
+			// These are the other supported values
+			//  * "default":
+			//  * "legacy":
+		}
+
 		void AddRuntimeLibraries (ZipArchive apk, string supportedAbis)
 		{
-			var root = Path.GetDirectoryName (typeof(BuildApk).Assembly.Location);
 			bool use_shared_runtime = String.Equals (UseSharedRuntime, "true", StringComparison.OrdinalIgnoreCase);
 			var abis = supportedAbis.Split (new char[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
 			foreach (var abi in abis) {
 				string library = string.Format ("libmono-android.{0}.so", _Debug ? "debug" : "release");
-				var path = Path.Combine (root, "lib", abi, library);
+				var path = Path.Combine (MSBuildXamarinAndroidDirectory, "lib", abi, library);
 				apk.AddEntry (string.Format ("lib/{0}/libmonodroid.so", abi), File.OpenRead (path));
 				if (!use_shared_runtime) {
 					// include the sgen
-					library = "libmonosgen-2.0.so";
-					path = Path.Combine (root, "lib", abi, library);
-					apk.AddEntry (string.Format ("lib/{0}/libmonosgen-2.0.so", abi), File.OpenRead (path));
+					AddNativeLibrary (apk, abi, "libmonosgen-2.0.so");
 				}
+				AddBtlsLibs (apk, abi);
 				AddProfilers (apk, abi);
 			}
 		}
