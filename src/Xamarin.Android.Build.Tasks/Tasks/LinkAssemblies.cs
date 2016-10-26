@@ -46,7 +46,7 @@ namespace Xamarin.Android.Tasks
 
 		public string HttpClientHandlerType { get; set; }
 
-		public string TlsProviderType { get; set; }
+		public string TlsProvider { get; set; }
 
 		IEnumerable<AssemblyDefinition> GetRetainAssemblies (DirectoryAssemblyResolver res)
 		{
@@ -79,7 +79,7 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ("  DumpDependencies: {0}", DumpDependencies);
 			Log.LogDebugMessage ("  LinkOnlyNewerThan: {0}", LinkOnlyNewerThan);
 			Log.LogDebugMessage ("  HttpClientHandlerType: {0}", HttpClientHandlerType);
-			Log.LogDebugMessage ("  TlsProviderType: {0}", TlsProviderType);
+			Log.LogDebugMessage ("  TlsProvider: {0}", TlsProvider);
 
 			var rp = new ReaderParameters {
 				InMemory    = true,
@@ -111,7 +111,7 @@ namespace Xamarin.Android.Tasks
 				options.RetainAssemblies = GetRetainAssemblies (res);
 			options.DumpDependencies = DumpDependencies;
 			options.HttpClientHandlerType = HttpClientHandlerType;
-			options.TlsProviderType = TlsProviderType;
+			options.TlsProvider = TlsProvider;
 			
 			var skiplist = new List<string> ();
 

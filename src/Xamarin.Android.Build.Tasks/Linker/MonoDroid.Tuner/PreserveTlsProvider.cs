@@ -7,11 +7,11 @@ namespace MonoDroid.Tuner
 {
 	public class PreserveTlsProvider : BaseSubStep
 	{
-		public string TlsProviderType { get; set; }
+		public string TlsProvider { get; set; }
 
 		public override bool IsActiveFor (AssemblyDefinition assembly)
 		{
-			return TlsProviderType != null && assembly.Name.Name == "System";
+			return TlsProvider != null && assembly.Name.Name == "System";
 		}
 
 		public override SubStepTargets Targets {
@@ -27,10 +27,10 @@ namespace MonoDroid.Tuner
 		TypeDefinition GetTlsProvider (ModuleDefinition module)
 		{
 			string provider;
-			if (string.IsNullOrEmpty (TlsProviderType))
+			if (string.IsNullOrEmpty (TlsProvider))
 				provider = "default";
 			else
-				provider = TlsProviderType;
+				provider = TlsProvider;
 
 			TypeDefinition type;
 			switch (provider) {
