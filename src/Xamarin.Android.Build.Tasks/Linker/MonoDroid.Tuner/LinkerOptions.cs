@@ -21,6 +21,6 @@ namespace MonoDroid.Tuner
 		public string ProguardConfiguration { get; set; }
 		public bool DumpDependencies { get; set; }
 		public string HttpClientHandlerType { get; set; }
-		public string TlsProviderType { get; set; }
+		public string TlsProvider { get; set; }
 	}
 }
