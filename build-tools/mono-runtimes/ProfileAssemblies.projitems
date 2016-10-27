@@ -140,11 +140,11 @@
     <MonoProfileAssembly Include="I18N.Rare.dll" />
     <MonoProfileAssembly Include="I18N.West.dll" />
     <MonoProfileAssembly Include="Microsoft.CSharp.dll" />
+    <MonoProfileAssembly Include="Mono.Btls.Interface.dll" />
     <MonoProfileAssembly Include="Mono.CompilerServices.SymbolWriter.dll" />
     <MonoProfileAssembly Include="Mono.CSharp.dll" />
     <MonoProfileAssembly Include="Mono.Data.Tds.dll" />
     <MonoProfileAssembly Include="Mono.Security.dll" />
-    <MonoProfileAssembly Include="Mono.Btls.Interface.dll" />
     <MonoProfileAssembly Include="mscorlib.dll" />
     <MonoProfileAssembly Include="System.ComponentModel.Composition.dll" />
     <MonoProfileAssembly Include="System.ComponentModel.DataAnnotations.dll" />
