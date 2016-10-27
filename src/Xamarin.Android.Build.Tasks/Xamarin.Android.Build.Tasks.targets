@@ -19,6 +19,7 @@
     <_SharedRuntimeAssemblies Include="@(MonoProfileAssembly->'$(_SharedRuntimeBuildPath)v1.0\%(Identity)')" />
     <_SharedRuntimeAssemblies Include="$(_SharedRuntimeBuildPath)v1.0\Mono.Data.Sqlite.dll" />
     <_SharedRuntimeAssemblies Include="$(_SharedRuntimeBuildPath)v1.0\Mono.Posix.dll" />
+    <_SharedRuntimeAssemblies Include="$(_SharedRuntimeBuildPath)v1.0\Java.Interop.dll" />
     <_SharedRuntimeAssemblies Include="$(_SharedRuntimeBuildPath)v1.0\System.EnterpriseServices.dll" />
     <_SharedRuntimeAssemblies Include="$(_SharedRuntimeBuildPath)$(AndroidFrameworkVersion)\Mono.Android.Export.dll" />
     <!-- These files are build after Xamarin.Android.Build.Tasks but MUST be included in Profile.g.cs -->

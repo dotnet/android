@@ -252,18 +252,22 @@ namespace Xamarin.Android.Tasks
 				// Framework assemblies don't come from outside the SDK Path;
 				// user assemblies do
 				if (checkSdkPath && treatAsUser && TargetFrameworkDirectories != null) {
-					return TargetFrameworkDirectories
-						// TargetFrameworkDirectories will contain a "versioned" directory,
-						// e.g. $prefix/lib/xbuild-frameworks/MonoAndroid/v1.0.
-						// Trim off the version.
-						.Select (p => Path.GetDirectoryName (p.TrimEnd (Path.DirectorySeparatorChar)))
-						.Any (p => assembly.StartsWith (p));
+					return ExistsInFrameworkPath (assembly);
 				}
 #endif
 				return true;
 			}
+			return TargetFrameworkDirectories == null || !checkSdkPath ? false : ExistsInFrameworkPath (assembly);
+		}
 
-			return false;
+		public static bool ExistsInFrameworkPath (string assembly)
+		{
+			return TargetFrameworkDirectories
+					// TargetFrameworkDirectories will contain a "versioned" directory,
+					// e.g. $prefix/lib/xbuild-frameworks/MonoAndroid/v1.0.
+					// Trim off the version.
+					.Select (p => Path.GetDirectoryName (p.TrimEnd (Path.DirectorySeparatorChar)))
+					.Any (p => assembly.StartsWith (p));
 		}
 
 		public static bool IsForceRetainedAssembly (string assembly)
