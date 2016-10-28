@@ -151,6 +151,9 @@
     <EmbeddedResource Include="$(IntermediateOutputPath)classes\java\util\Collection.class">
       <LogicalName>Collection.class</LogicalName>
     </EmbeddedResource>
+    <EmbeddedResource Include="ParameterFixupApiXmlDocs.xml">
+      <LogicalName>ParameterFixupApiXmlDocs.xml</LogicalName>
+    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

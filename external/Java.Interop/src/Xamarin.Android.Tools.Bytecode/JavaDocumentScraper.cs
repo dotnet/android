@@ -125,7 +125,7 @@ namespace Xamarin.Android.Tools.Bytecode
 		}
 	}
 
-	public abstract class AndroidDocScraper
+	public abstract class AndroidDocScraper : IAndroidDocScraper
 	{
 		readonly String pattern_head;
 		readonly String reset_pattern_head;
@@ -269,6 +269,54 @@ namespace Xamarin.Android.Tools.Bytecode
 			} catch (Exception ex) {
 				Log.Error ("Annotations parser error: " + ex);
 			}
-		}		
+		}
+	}
+
+	public interface IAndroidDocScraper
+	{
+		String[] GetParameterNames (string package, string type, string method, string[] ptypes, bool isVarArgs);
+	}
+
+	public class ApiXmlDocScraper : IAndroidDocScraper
+	{
+		public ApiXmlDocScraper (string apiXmlFile)
+		{
+			xdoc = XDocument.Load (apiXmlFile);
+		}
+
+		XDocument xdoc;
+
+		public string[] GetParameterNames (string package, string type, string method, string[] ptypes, bool isVarArgs)
+		{
+			var methodOrCtor = method == "constructor" ?
+				"constructor[" : $"method[@name='{method}'";
+
+			var pcount = ptypes.Length;
+
+			var xpath = new StringBuilder ();
+
+			xpath.Append ($"/api/package[@name='{package}']/*[self::class or self::interface]/");
+
+			if (method == "constructor")
+				xpath.Append ("constructor[");
+			else
+				xpath.Append ($"method[@name='{method}'");
+
+			xpath.Append ($" and count(parameter)={pcount}");
+
+			if (pcount > 0) {
+				xpath.Append (" and ");
+				xpath.Append (string.Join (" and ", ptypes.Select ((pt, pindex) => $"parameter[{pindex + 1}][@type='{pt}']")));
+			}
+
+			xpath.Append ("]");
+
+			var methodElem = xdoc.XPathSelectElement (xpath.ToString ());
+
+			if (methodElem != null)
+				return methodElem.Elements ("parameter").Select (pe => pe.Attribute ("name")?.Value).ToArray ();
+
+			return new string[0];
+		}
 	}
 }

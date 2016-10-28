@@ -94,6 +94,7 @@ namespace Xamarin.Android.Tools {
 			{ "java6",      JavaDocletType.Java6 },
 			{ "java7",      JavaDocletType.Java7 },
 			{ "java8",      JavaDocletType.Java8 },
+			{ "apixml",     JavaDocletType.ApiXml },
 		};
 
 		static JavaDocletType GetJavaDocletType (string value)

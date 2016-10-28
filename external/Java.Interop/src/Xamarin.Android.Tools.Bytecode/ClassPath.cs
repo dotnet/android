@@ -17,6 +17,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 		Java6,
 		Java7,
 		Java8,
+		_ApiXml
 	}
 
 	public class ClassPath {
@@ -217,20 +218,21 @@ namespace Xamarin.Android.Tools.Bytecode {
 			if (DocumentationPaths == null)
 				return;
 			foreach (var path in DocumentationPaths) {
-				if (!Directory.Exists (path))
+				if (!Directory.Exists (path) && !File.Exists (path))
 					continue;
 				FixupParametersFromDocs (api, path);
 			}
 		}
 
-		AndroidDocScraper CreateDocScraper (string dir)
+		IAndroidDocScraper CreateDocScraper (string src)
 		{
 			switch (DocletType) {
-			default: return new DroidDoc2Scraper (dir);
-			case JavaDocletType.DroidDoc: return new DroidDocScraper (dir);
-			case JavaDocletType.Java6: return new JavaDocScraper (dir);
-			case JavaDocletType.Java7: return new Java7DocScraper (dir);
-			case JavaDocletType.Java8: return new Java8DocScraper (dir);
+			default: return new DroidDoc2Scraper (src);
+			case JavaDocletType.DroidDoc: return new DroidDocScraper (src);
+			case JavaDocletType.Java6: return new JavaDocScraper (src);
+			case JavaDocletType.Java7: return new Java7DocScraper (src);
+			case JavaDocletType.Java8: return new Java8DocScraper (src);
+			case JavaDocletType._ApiXml: return new ApiXmlDocScraper (src);
 			}
 		}
 

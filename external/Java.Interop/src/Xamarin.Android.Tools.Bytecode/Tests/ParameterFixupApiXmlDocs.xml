@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<api>
+	<package name="java.util">
+		<class name="Collection">
+			<method name="add">
+				<parameter name="object" type="E" />
+			</method>
+		</class>
+	</package>
+</api>
