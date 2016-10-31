@@ -113,9 +113,10 @@ namespace Xamarin.Android.Tasks
 		void AddAssemblyReferences (DirectoryAssemblyResolver resolver, ICollection<string> assemblies, AssemblyDefinition assembly, bool topLevel)
 		{
 			var fqname = assembly.MainModule.FullyQualifiedName;
+			var fullPath = Path.GetFullPath (fqname);
 
 			// Don't repeat assemblies we've already done
-			if (!topLevel && assemblies.Contains (fqname))
+			if (!topLevel && assemblies.Contains (fullPath))
 				return;
 			
 			foreach (var att in assembly.CustomAttributes.Where (a => a.AttributeType.FullName == "Java.Interop.DoNotPackageAttribute")) {
@@ -129,7 +130,7 @@ namespace Xamarin.Android.Tasks
 			indent += 2;
 			// Add this assembly
 			if (!topLevel && assemblies.All (a => new AssemblyNameDefinition (a, null).Name != assembly.Name.Name))
-				assemblies.Add (Path.GetFullPath (fqname));
+				assemblies.Add (fullPath);
 
 			// Recurse into each referenced assembly
 			foreach (AssemblyNameReference reference in assembly.MainModule.AssemblyReferences) {
