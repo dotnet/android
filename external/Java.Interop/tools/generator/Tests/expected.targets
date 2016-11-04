@@ -1,374 +1,5 @@
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Content Include='expected.ji\Adapters\Java.Interop.__TypeRegistrations.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\Adapters\Java.Lang.Object.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\Adapters\Mono.Android.projitems'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\Adapters\Xamarin.Test.AbsSpinner.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\Adapters\Xamarin.Test.AdapterView.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\Adapters\Xamarin.Test.GenericReturnObject.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\Adapters\Xamarin.Test.IAdapter.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\Adapters\Xamarin.Test.ISpinnerAdapter.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\Adapters\__NamespaceMapping__.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\Adapters\enumlist'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\Android.Graphics.Color\Java.Interop.__TypeRegistrations.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\Android.Graphics.Color\Java.Lang.Object.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\Android.Graphics.Color\Mono.Android.projitems'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\Android.Graphics.Color\Xamarin.Test.SomeObject.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\Android.Graphics.Color\__NamespaceMapping__.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\Android.Graphics.Color\enumlist'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\Arrays\Java.Interop.__TypeRegistrations.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\Arrays\Java.Lang.Object.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\Arrays\Mono.Android.projitems'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\Arrays\Xamarin.Test.SomeObject.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\Arrays\__NamespaceMapping__.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\Arrays\enumlist'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\Constructors\Java.Interop.__TypeRegistrations.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\Constructors\Java.Lang.Object.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\Constructors\Mono.Android.projitems'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\Constructors\Xamarin.Test.SomeObject.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\Constructors\__NamespaceMapping__.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\Constructors\enumlist'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\NestedTypes\Java.Interop.__TypeRegistrations.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\NestedTypes\Java.Lang.Object.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\NestedTypes\Mono.Android.projitems'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\NestedTypes\Xamarin.Test.NotificationCompatBase.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\NestedTypes\__NamespaceMapping__.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\NestedTypes\enumlist'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\NonStaticFields\Java.Interop.__TypeRegistrations.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\NonStaticFields\Java.Lang.Object.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\NonStaticFields\Mono.Android.projitems'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\NonStaticFields\Xamarin.Test.SomeObject.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\NonStaticFields\__NamespaceMapping__.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\NonStaticFields\enumlist'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\NormalMethods\Java.Interop.__TypeRegistrations.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\NormalMethods\Java.Lang.Class.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\NormalMethods\Java.Lang.Integer.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\NormalMethods\Java.Lang.Object.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\NormalMethods\Java.Lang.Throwable.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\NormalMethods\Mono.Android.projitems'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\NormalMethods\Xamarin.Test.A.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\NormalMethods\Xamarin.Test.C.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\NormalMethods\Xamarin.Test.SomeObject.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\NormalMethods\__NamespaceMapping__.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\NormalMethods\enumlist'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\NormalProperties\Java.Interop.__TypeRegistrations.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\NormalProperties\Java.Lang.Object.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\NormalProperties\Mono.Android.projitems'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\NormalProperties\Xamarin.Test.SomeObject.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\NormalProperties\__NamespaceMapping__.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\NormalProperties\enumlist'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\ParameterXPath\Java.Interop.__TypeRegistrations.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\ParameterXPath\Java.Lang.Integer.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\ParameterXPath\Java.Lang.Object.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\ParameterXPath\Mono.Android.projitems'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\ParameterXPath\Xamarin.Test.A.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\ParameterXPath\__NamespaceMapping__.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\ParameterXPath\enumlist'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\StaticFields\Java.Interop.__TypeRegistrations.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\StaticFields\Java.Lang.Object.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\StaticFields\Mono.Android.projitems'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\StaticFields\Xamarin.Test.SomeObject.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\StaticFields\__NamespaceMapping__.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\StaticFields\enumlist'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\StaticMethods\Java.Interop.__TypeRegistrations.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\StaticMethods\Java.Lang.Object.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\StaticMethods\Mono.Android.projitems'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\StaticMethods\Xamarin.Test.SomeObject.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\StaticMethods\__NamespaceMapping__.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\StaticMethods\enumlist'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\StaticProperties\Java.Interop.__TypeRegistrations.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\StaticProperties\Java.Lang.Object.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\StaticProperties\Mono.Android.projitems'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\StaticProperties\Xamarin.Test.SomeObject.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\StaticProperties\__NamespaceMapping__.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\StaticProperties\enumlist'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\Streams\Java.IO.FilterOutputStream.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\Streams\Java.IO.IOException.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\Streams\Java.IO.InputStream.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\Streams\Java.IO.OutputStream.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\Streams\Java.Interop.__TypeRegistrations.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\Streams\Java.Lang.Object.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\Streams\Java.Lang.Throwable.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\Streams\Mono.Android.projitems'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\Streams\__NamespaceMapping__.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\Streams\enumlist'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\TestInterface\Java.Interop.__TypeRegistrations.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\TestInterface\Java.Lang.Object.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\TestInterface\Java.Lang.String.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\TestInterface\Mono.Android.projitems'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\TestInterface\Test.ME.GenericImplementation.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\TestInterface\Test.ME.GenericStringImplementation.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\TestInterface\Test.ME.IGenericInterface.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\TestInterface\Test.ME.ITestInterface.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\TestInterface\Test.ME.TestInterfaceImplementation.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\TestInterface\__NamespaceMapping__.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\TestInterface\enumlist'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\java.lang.Enum\Java.Interop.__TypeRegistrations.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\java.lang.Enum\Java.Lang.Enum.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\java.lang.Enum\Java.Lang.IComparable.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\java.lang.Enum\Java.Lang.Object.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\java.lang.Enum\Java.Lang.State.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\java.lang.Enum\Mono.Android.projitems'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\java.lang.Enum\__NamespaceMapping__.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\java.lang.Enum\enumlist'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\java.lang.Object\Java.Interop.__TypeRegistrations.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\java.lang.Object\Java.Lang.Object.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\java.lang.Object\Mono.Android.projitems'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\java.lang.Object\__NamespaceMapping__.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\java.lang.Object\enumlist'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\java.util.List\Java.Interop.__TypeRegistrations.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\java.util.List\Java.Lang.Object.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\java.util.List\Mono.Android.projitems'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\java.util.List\Xamarin.Test.SomeObject.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\java.util.List\__NamespaceMapping__.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.ji\java.util.List\enumlist'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected.targets'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include='expected\Adapters\Adapters.xml'>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -408,10 +39,19 @@
     <Content Include='expected\Constructors\Xamarin.Test.SomeObject.cs'>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include='expected\EnumerationFixup\EnumerationFixup.xml'>
+    <Content Include='expected\CSharpKeywords\CSharpKeywords.xml'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected\CSharpKeywords\Xamarin.Test.CSharpKeywords.cs'>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include='expected\EnumerationFixup\EnumerationFixupMap.xml'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected\EnumerationFixup\EnumerationFixup.xml'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected\EnumerationFixup\enumlist'>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include='expected\EnumerationFixup\Java.Interop.__TypeRegistrations.cs'>
@@ -420,19 +60,427 @@
     <Content Include='expected\EnumerationFixup\Java.Lang.Object.cs'>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include='expected\EnumerationFixup\Xamarin.Test.SomeObject.cs'>
+    <Content Include='expected\EnumerationFixup\__NamespaceMapping__.cs'>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include='expected\EnumerationFixup\Xamarin.Test.SomeObject2.cs'>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include='expected\EnumerationFixup\Xamarin.Test.SomeObject.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include='expected\EnumerationFixup\Xamarin.Test.SomeValues.cs'>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include='expected\EnumerationFixup\__NamespaceMapping__.cs'>
+    <Content Include='expected\java.lang.Enum\Java.Lang.Enum.cs'>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include='expected\EnumerationFixup\enumlist'>
+    <Content Include='expected\java.lang.Enum\Java.Lang.Enum.xml'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected\java.lang.Enum\Java.Lang.IComparable.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected\java.lang.Enum\Java.Lang.Object.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected\java.lang.Enum\Java.Lang.State.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected\java.lang.Object\enumlist'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected\java.lang.Object\Java.Interop.__TypeRegistrations.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected\java.lang.Object\Java.Lang.Object.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected\java.lang.Object\java.lang.Object.xml'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected\java.lang.Object\__NamespaceMapping__.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected\java.util.List\java.util.List.xml'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected\java.util.List\Xamarin.Test.SomeObject.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\Adapters\enumlist'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\Adapters\Java.Interop.__TypeRegistrations.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\Adapters\Java.Lang.Object.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\Adapters\Mono.Android.projitems'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\Adapters\__NamespaceMapping__.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\Adapters\Xamarin.Test.AbsSpinner.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\Adapters\Xamarin.Test.AdapterView.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\Adapters\Xamarin.Test.GenericReturnObject.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\Adapters\Xamarin.Test.IAdapter.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\Adapters\Xamarin.Test.ISpinnerAdapter.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\Android.Graphics.Color\enumlist'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\Android.Graphics.Color\Java.Interop.__TypeRegistrations.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\Android.Graphics.Color\Java.Lang.Object.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\Android.Graphics.Color\Mono.Android.projitems'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\Android.Graphics.Color\__NamespaceMapping__.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\Android.Graphics.Color\Xamarin.Test.SomeObject.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\Arrays\enumlist'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\Arrays\Java.Interop.__TypeRegistrations.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\Arrays\Java.Lang.Object.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\Arrays\Mono.Android.projitems'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\Arrays\__NamespaceMapping__.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\Arrays\Xamarin.Test.SomeObject.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\Constructors\enumlist'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\Constructors\Java.Interop.__TypeRegistrations.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\Constructors\Java.Lang.Object.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\Constructors\Mono.Android.projitems'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\Constructors\__NamespaceMapping__.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\Constructors\Xamarin.Test.SomeObject.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\CSharpKeywords\CSharpKeywords.xml'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\CSharpKeywords\Mono.Android.projitems'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\CSharpKeywords\Xamarin.Test.CSharpKeywords.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\java.lang.Enum\enumlist'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\java.lang.Enum\Java.Interop.__TypeRegistrations.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\java.lang.Enum\Java.Lang.Enum.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\java.lang.Enum\Java.Lang.IComparable.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\java.lang.Enum\Java.Lang.Object.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\java.lang.Enum\Java.Lang.State.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\java.lang.Enum\Mono.Android.projitems'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\java.lang.Enum\__NamespaceMapping__.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\java.lang.Object\enumlist'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\java.lang.Object\Java.Interop.__TypeRegistrations.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\java.lang.Object\Java.Lang.Object.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\java.lang.Object\Mono.Android.projitems'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\java.lang.Object\__NamespaceMapping__.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\java.util.List\enumlist'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\java.util.List\Java.Interop.__TypeRegistrations.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\java.util.List\Java.Lang.Object.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\java.util.List\Mono.Android.projitems'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\java.util.List\__NamespaceMapping__.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\java.util.List\Xamarin.Test.SomeObject.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\NestedTypes\enumlist'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\NestedTypes\Java.Interop.__TypeRegistrations.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\NestedTypes\Java.Lang.Object.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\NestedTypes\Mono.Android.projitems'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\NestedTypes\__NamespaceMapping__.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\NestedTypes\Xamarin.Test.NotificationCompatBase.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\NonStaticFields\enumlist'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\NonStaticFields\Java.Interop.__TypeRegistrations.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\NonStaticFields\Java.Lang.Object.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\NonStaticFields\Mono.Android.projitems'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\NonStaticFields\__NamespaceMapping__.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\NonStaticFields\Xamarin.Test.SomeObject.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\NormalMethods\enumlist'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\NormalMethods\Java.Interop.__TypeRegistrations.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\NormalMethods\Java.Lang.Class.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\NormalMethods\Java.Lang.Integer.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\NormalMethods\Java.Lang.Object.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\NormalMethods\Java.Lang.Throwable.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\NormalMethods\Mono.Android.projitems'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\NormalMethods\__NamespaceMapping__.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\NormalMethods\Xamarin.Test.A.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\NormalMethods\Xamarin.Test.C.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\NormalMethods\Xamarin.Test.SomeObject.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\NormalProperties\enumlist'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\NormalProperties\Java.Interop.__TypeRegistrations.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\NormalProperties\Java.Lang.Object.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\NormalProperties\Mono.Android.projitems'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\NormalProperties\__NamespaceMapping__.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\NormalProperties\Xamarin.Test.SomeObject.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\ParameterXPath\enumlist'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\ParameterXPath\Java.Interop.__TypeRegistrations.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\ParameterXPath\Java.Lang.Integer.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\ParameterXPath\Java.Lang.Object.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\ParameterXPath\Mono.Android.projitems'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\ParameterXPath\__NamespaceMapping__.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\ParameterXPath\Xamarin.Test.A.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\StaticFields\enumlist'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\StaticFields\Java.Interop.__TypeRegistrations.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\StaticFields\Java.Lang.Object.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\StaticFields\Mono.Android.projitems'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\StaticFields\__NamespaceMapping__.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\StaticFields\Xamarin.Test.SomeObject.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\StaticMethods\enumlist'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\StaticMethods\Java.Interop.__TypeRegistrations.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\StaticMethods\Java.Lang.Object.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\StaticMethods\Mono.Android.projitems'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\StaticMethods\__NamespaceMapping__.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\StaticMethods\Xamarin.Test.SomeObject.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\StaticProperties\enumlist'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\StaticProperties\Java.Interop.__TypeRegistrations.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\StaticProperties\Java.Lang.Object.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\StaticProperties\Mono.Android.projitems'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\StaticProperties\__NamespaceMapping__.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\StaticProperties\Xamarin.Test.SomeObject.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\Streams\enumlist'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\Streams\Java.Interop.__TypeRegistrations.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\Streams\Java.IO.FilterOutputStream.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\Streams\Java.IO.InputStream.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\Streams\Java.IO.IOException.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\Streams\Java.IO.OutputStream.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\Streams\Java.Lang.Object.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\Streams\Java.Lang.Throwable.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\Streams\Mono.Android.projitems'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\Streams\__NamespaceMapping__.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\TestInterface\enumlist'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\TestInterface\Java.Interop.__TypeRegistrations.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\TestInterface\Java.Lang.Object.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\TestInterface\Java.Lang.String.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\TestInterface\Mono.Android.projitems'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\TestInterface\__NamespaceMapping__.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\TestInterface\Test.ME.GenericImplementation.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\TestInterface\Test.ME.GenericStringImplementation.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\TestInterface\Test.ME.IGenericInterface.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\TestInterface\Test.ME.ITestInterface.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\TestInterface\Test.ME.TestInterfaceImplementation.cs'>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include='expected\NestedTypes\NestedTypes.xml'>
@@ -495,10 +543,10 @@
     <Content Include='expected\Streams\Java.IO.FilterOutputStream.cs'>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include='expected\Streams\Java.IO.IOException.cs'>
+    <Content Include='expected\Streams\Java.IO.InputStream.cs'>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include='expected\Streams\Java.IO.InputStream.cs'>
+    <Content Include='expected\Streams\Java.IO.IOException.cs'>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include='expected\Streams\Java.IO.OutputStream.cs'>
@@ -522,6 +570,12 @@
     <Content Include='expected\Streams\SupportFiles\OutputStreamInvoker.cs'>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include='expected.targets'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected\TestInterface\TestInterface.xml'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include='expected\TestInterface\Test.ME.GenericImplementation.cs'>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -535,45 +589,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include='expected\TestInterface\Test.ME.TestInterfaceImplementation.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected\TestInterface\TestInterface.xml'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected\java.lang.Enum\Java.Lang.Enum.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected\java.lang.Enum\Java.Lang.Enum.xml'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected\java.lang.Enum\Java.Lang.IComparable.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected\java.lang.Enum\Java.Lang.Object.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected\java.lang.Enum\Java.Lang.State.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected\java.lang.Object\Java.Interop.__TypeRegistrations.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected\java.lang.Object\Java.Lang.Object.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected\java.lang.Object\__NamespaceMapping__.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected\java.lang.Object\enumlist'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected\java.lang.Object\java.lang.Object.xml'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected\java.util.List\Xamarin.Test.SomeObject.cs'>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include='expected\java.util.List\java.util.List.xml'>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
