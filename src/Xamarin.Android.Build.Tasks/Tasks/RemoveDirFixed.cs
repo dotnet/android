@@ -54,9 +54,17 @@ namespace Xamarin.Android.Tasks {
 			
 			foreach (ITaskItem directory in directories) {
 				try {
-					MonoAndroidHelper.SetDirectoryWriteable (directory.GetMetadata ("FullPath"));
-					Directory.Delete (directory.GetMetadata ("FullPath"), true);
-					temporaryRemovedDirectories.Add (directory);
+					try {
+						// try to do a normal "fast" delete of the directory.
+						Directory.Delete (directory.GetMetadata ("FullPath"), true);
+						temporaryRemovedDirectories.Add (directory);
+					} catch {
+						// if that fails we probably have readonly files (or locked files)
+						// so try to make them writable and try again.
+						MonoAndroidHelper.SetDirectoryWriteable (directory.GetMetadata ("FullPath"));
+						Directory.Delete (directory.GetMetadata ("FullPath"), true);
+						temporaryRemovedDirectories.Add (directory);
+					}
 				}
 				catch (DirectoryNotFoundException ex) {
 					Log.LogErrorFromException (ex);
