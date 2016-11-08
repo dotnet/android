@@ -331,24 +331,13 @@ namespace Xamarin.Android.Tasks
 			const string defaultTlsProvider = "XA_TLS_PROVIDER=default";
 			string xamarinBuildId = string.Format ("XAMARIN_BUILD_ID={0}", buildId);
 
-			if (Environments == null) {
-				if (_Debug)
-					environment.WriteLine (defaultLogLevel);
-				if (sequencePointsMode != SequencePointsMode.None)
-					environment.WriteLine (defaultMonoDebug);
-				environment.WriteLine (xamarinBuildId);
-				apk.AddEntry ("environment", environment.ToString(),
-						new UTF8Encoding (encoderShouldEmitUTF8Identifier:false));
-				return;
-			}
-
 			bool haveLogLevel = false;
 			bool haveMonoDebug = false;
 			bool havebuildId = false;
 			bool haveHttpMessageHandler = false;
 			bool haveTlsProvider = false;
 
-			foreach (ITaskItem env in Environments) {
+			foreach (ITaskItem env in Environments ?? new TaskItem[0]) {
 				environment.WriteLine ("## Source File: {0}", env.ItemSpec);
 				foreach (string line in File.ReadLines (env.ItemSpec)) {
 					var lineToWrite = line;
