@@ -24,8 +24,13 @@ namespace MonoDroid.Generation {
 				AddMethod (new ManagedMethod (this, m));
 			}
 		}
+
 		public override string ArgsType {
 			get { throw new NotImplementedException (); }
+		}
+
+		public override bool MayHaveManagedGenericArguments {
+			get { return !this.IsAcw; }
 		}
 	}
 #endif
@@ -107,6 +112,10 @@ namespace MonoDroid.Generation {
 		public bool IsListener {
 			// If there is a property it cannot generate valid implementor, so reject this at least so far.
 			get { return Name.EndsWith ("Listener") && Properties.Count == 0 && Interfaces.Count == 0; }
+		}
+
+		public virtual bool MayHaveManagedGenericArguments {
+			get { return false; }
 		}
 
 		public override string NativeType {

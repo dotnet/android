@@ -61,6 +61,7 @@
     <Compile Include="Adapters.cs" />
     <Compile Include="PamareterXPath.cs" />
     <Compile Include="CSharpKeywords.cs" />
+    <Compile Include="GenericArguments.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

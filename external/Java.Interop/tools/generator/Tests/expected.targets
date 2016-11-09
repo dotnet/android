@@ -84,7 +84,19 @@
     <Content Include='expected\java.lang.Enum\Java.Lang.Object.cs'>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include='expected\java.lang.Enum\Java.Lang.State.cs'>
+    <Content Include='expected.ji\GenericArguments\GenericArguments.xml'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\GenericArguments\Java.Lang.Object.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\GenericArguments\Com.Google.Android.Exoplayer.Drm.FrameworkMediaDrm.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\GenericArguments\Com.Google.Android.Exoplayer.Drm.IExoMediaDrm.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\NestedTypes\Java.Interop.__TypeRegistrations.cs'>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include='expected\java.lang.Object\enumlist'>
@@ -481,6 +493,18 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include='expected.ji\TestInterface\Test.ME.TestInterfaceImplementation.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected\GenericArguments\GenericArguments.xml'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected\GenericArguments\Java.Lang.Object.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected\GenericArguments\Com.Google.Android.Exoplayer.Drm.FrameworkMediaDrm.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected\GenericArguments\Com.Google.Android.Exoplayer.Drm.IExoMediaDrm.cs'>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include='expected\NestedTypes\NestedTypes.xml'>

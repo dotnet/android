@@ -52,6 +52,10 @@ namespace MonoDroid.Generation {
 			get { return null; }
 		}
 
+		public bool MayHaveManagedGenericArguments {
+			get { return true; }
+		}
+
 		public string GetObjectHandleProperty (string variable)
 		{
 			return $"((global::Java.Lang.Object) {variable}).Handle";

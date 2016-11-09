@@ -91,7 +91,8 @@ namespace MonoDroid.Generation {
 
 		public string GetGenericType (Dictionary<string, string> mappings)
 		{
-			return gen.FullName + (mappings == null ? tps : MapTypeParams (mappings));
+			var rgm = gen as IRequireGenericMarshal;
+			return gen.FullName + (rgm != null && !rgm.MayHaveManagedGenericArguments ? null : mappings == null ? tps : MapTypeParams (mappings));
 		}
 
 		public string ToNative (CodeGenerationOptions opt, string varname)
