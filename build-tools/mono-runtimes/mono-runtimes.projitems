@@ -167,7 +167,7 @@
       <Objdump>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-objdump</Objdump>
       <RanLib>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-ranlib</RanLib>
       <Strip>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-strip</Strip>
-      <ConfigureFlags>PATH="$PATH:$(AndroidMxeFullPath)\bin" --host=$(MingwCommandPrefix64) --target=$(MingwCommandPrefix64) --disable-boehm --enable-mcs-build=no --enable-nls=no --enable-maintainer-mode --with-monodroid --disable-llvm ac_cv_header_zlib_h=no</ConfigureFlags>
+      <ConfigureFlags>PATH="$PATH:$(AndroidMxeFullPath)\bin" --host=$(MingwCommandPrefix64) --target=$(MingwCommandPrefix64) --disable-boehm --enable-mcs-build=no --enable-nls=no --enable-maintainer-mode --with-monodroid --disable-llvm ac_cv_header_zlib_h=no ac_cv_search_dlopen=no</ConfigureFlags>
       <NativeLibraryExtension>dll</NativeLibraryExtension>
       <OutputRuntimeFilename>libmonosgen-2.0</OutputRuntimeFilename>
       <OutputProfilerFilename></OutputProfilerFilename>
