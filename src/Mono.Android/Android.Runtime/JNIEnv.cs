@@ -304,12 +304,41 @@ namespace Android.Runtime {
 			 * avoid ObjectDisposedException thrown on finalizer threads after shutdown
 			 */
 			foreach (var surfacedObject in Java.Interop.Runtime.GetSurfacedObjects ()) {
-				var obj = surfacedObject.Target as IDisposable;
-				if (obj != null)
-					obj.Dispose ();
+				try {
+					var obj = surfacedObject.Target as IDisposable;
+					if (obj != null)
+						obj.Dispose ();
+					continue;
+				} catch (Exception e) {
+					Logger.Log (LogLevel.Warn,
+								"monodroid",
+								string.Format ("Couldn't dispose object: {0}", e));
+				}
+				/* If calling Dispose failed, the assumption is that user-code in
+				 * the Dispose(bool) overload is to blame for it. In that case we
+				 * fallback to manual deletion of the surfaced object.
+				 */
+				var jobj = surfacedObject.Target as Java.Lang.Object;
+				if (jobj != null)
+					ManualJavaObjectDispose (jobj);
 			}
 			JniEnvironment.Runtime.Dispose ();
 #endif // JAVA_INTEROP
+		}
+
+		/* FIXME: This reproduces the minimal steps in Java.Lang.Object.Dispose
+		 * that needs to be executed so that we don't leak any GREF and prevent
+		 * code execution into an appdomain that we are disposing via a finalizer.
+		 * Ideally it should be done via another more generic mechanism, likely
+		 * from the Java.Interop.Runtime API.
+		 */
+		static void ManualJavaObjectDispose (Java.Lang.Object obj)
+		{
+			var peer = obj.PeerReference;
+			var handle = peer.Handle;
+			var keyHandle = ((IJavaObjectEx)obj).KeyHandle;
+			Java.Lang.Object.Dispose (obj, ref handle, keyHandle, (JObjectRefType)peer.Type);
+			GC.SuppressFinalize (obj);
 		}
 
 		internal static void PropagateUncaughtException (IntPtr env, IntPtr javaThreadPtr, IntPtr javaExceptionPtr)
