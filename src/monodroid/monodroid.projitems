@@ -24,7 +24,7 @@
       <Strip>strip</Strip>
       <StripFlags>-S</StripFlags>
     </_HostRuntime>
-    <_HostRuntime Include="host-win" Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))">
+    <_HostRuntime Include="host-mxe-Win64" Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))">
       <Cc>"$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-gcc"</Cc>
       <CFlags>$(_HostCommonWinCFlags) $(_HostWin64CFlags) $(_LinuxFlatPakBuild)</CFlags>
       <LdFlags>$(_HostCommonWinLdFlags)</LdFlags>
