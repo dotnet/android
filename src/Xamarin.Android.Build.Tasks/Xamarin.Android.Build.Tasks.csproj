@@ -129,13 +129,13 @@
     <Compile Include="Linker\MonoDroid.Tuner\RemoveAttributes.cs" />
     <Compile Include="Utilities\MSBuildExtensions.cs" />
     <Compile Include="Mono.Android\ServiceAttribute.Partial.cs" />
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\tuner\Mono.Tuner\AdjustVisibility.cs">
+    <Compile Include="$(LinkerSourceFullPath)\tuner\Mono.Tuner\AdjustVisibility.cs">
       <Link>Linker\Mono.Tuner\AdjustVisibility.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\tuner\Mono.Tuner\CecilRocks.cs">
+    <Compile Include="$(LinkerSourceFullPath)\tuner\Mono.Tuner\CecilRocks.cs">
       <Link>Linker\Mono.Tuner\CecilRocks.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\tuner\Mono.Tuner\CheckVisibility.cs">
+    <Compile Include="$(LinkerSourceFullPath)\tuner\Mono.Tuner\CheckVisibility.cs">
       <Link>Linker\Mono.Tuner\CheckVisibility.cs</Link>
     </Compile>
     <Compile Include="Mono.Android\UsesLibraryAttribute.Partial.cs" />
@@ -308,79 +308,79 @@
     <None Include="Xamarin.Android.Analysis.targets">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\linker\Mono.Linker\Annotations.cs">
+    <Compile Include="$(LinkerSourceFullPath)\linker\Mono.Linker\Annotations.cs">
       <Link>Linker\Mono.Linker\Annotations.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\linker\Mono.Linker\AssemblyAction.cs">
+    <Compile Include="$(LinkerSourceFullPath)\linker\Mono.Linker\AssemblyAction.cs">
       <Link>Linker\Mono.Linker\AssemblyAction.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\linker\Mono.Linker\AssemblyResolver.cs">
+    <Compile Include="$(LinkerSourceFullPath)\linker\Mono.Linker\AssemblyResolver.cs">
       <Link>Linker\Mono.Linker\AssemblyResolver.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\linker\Mono.Linker\I18nAssemblies.cs">
+    <Compile Include="$(LinkerSourceFullPath)\linker\Mono.Linker\I18nAssemblies.cs">
       <Link>Linker\Mono.Linker\I18nAssemblies.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\linker\Mono.Linker\IXApiVisitor.cs">
+    <Compile Include="$(LinkerSourceFullPath)\linker\Mono.Linker\IXApiVisitor.cs">
       <Link>Linker\Mono.Linker\IXApiVisitor.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\linker\Mono.Linker\LinkContext.cs">
+    <Compile Include="$(LinkerSourceFullPath)\linker\Mono.Linker\LinkContext.cs">
       <Link>Linker\Mono.Linker\LinkContext.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\linker\Mono.Linker\MethodAction.cs">
+    <Compile Include="$(LinkerSourceFullPath)\linker\Mono.Linker\MethodAction.cs">
       <Link>Linker\Mono.Linker\MethodAction.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\linker\Mono.Linker\Pipeline.cs">
+    <Compile Include="$(LinkerSourceFullPath)\linker\Mono.Linker\Pipeline.cs">
       <Link>Linker\Mono.Linker\Pipeline.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\linker\Mono.Linker\TypePreserve.cs">
+    <Compile Include="$(LinkerSourceFullPath)\linker\Mono.Linker\TypePreserve.cs">
       <Link>Linker\Mono.Linker\TypePreserve.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\linker\Mono.Linker\XApiReader.cs">
+    <Compile Include="$(LinkerSourceFullPath)\linker\Mono.Linker\XApiReader.cs">
       <Link>Linker\Mono.Linker\XApiReader.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\linker\Mono.Linker.Steps\BlacklistStep.cs">
+    <Compile Include="$(LinkerSourceFullPath)\linker\Mono.Linker.Steps\BlacklistStep.cs">
       <Link>Linker\Mono.Linker.Steps\BlacklistStep.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\linker\Mono.Linker.Steps\BaseStep.cs">
+    <Compile Include="$(LinkerSourceFullPath)\linker\Mono.Linker.Steps\BaseStep.cs">
       <Link>Linker\Mono.Linker.Steps\BaseStep.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\linker\Mono.Linker.Steps\CleanStep.cs">
+    <Compile Include="$(LinkerSourceFullPath)\linker\Mono.Linker.Steps\CleanStep.cs">
       <Link>Linker\Mono.Linker.Steps\CleanStep.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\linker\Mono.Linker.Steps\IStep.cs">
+    <Compile Include="$(LinkerSourceFullPath)\linker\Mono.Linker.Steps\IStep.cs">
       <Link>Linker\Mono.Linker.Steps\IStep.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\linker\Mono.Linker.Steps\LoadI18nAssemblies.cs">
+    <Compile Include="$(LinkerSourceFullPath)\linker\Mono.Linker.Steps\LoadI18nAssemblies.cs">
       <Link>Linker\Mono.Linker.Steps\LoadI18nAssemblies.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\linker\Mono.Linker.Steps\LoadReferencesStep.cs">
+    <Compile Include="$(LinkerSourceFullPath)\linker\Mono.Linker.Steps\LoadReferencesStep.cs">
       <Link>Linker\Mono.Linker.Steps\LoadReferencesStep.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\linker\Mono.Linker.Steps\OutputStep.cs">
+    <Compile Include="$(LinkerSourceFullPath)\linker\Mono.Linker.Steps\OutputStep.cs">
       <Link>Linker\Mono.Linker.Steps\OutputStep.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\linker\Mono.Linker.Steps\RegenerateGuidStep.cs">
+    <Compile Include="$(LinkerSourceFullPath)\linker\Mono.Linker.Steps\RegenerateGuidStep.cs">
       <Link>Linker\Mono.Linker.Steps\RegenerateGuidStep.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\linker\Mono.Linker.Steps\ResolveFromAssemblyStep.cs">
+    <Compile Include="$(LinkerSourceFullPath)\linker\Mono.Linker.Steps\ResolveFromAssemblyStep.cs">
       <Link>Linker\Mono.Linker.Steps\ResolveFromAssemblyStep.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\linker\Mono.Linker.Steps\ResolveFromXApiStep.cs">
+    <Compile Include="$(LinkerSourceFullPath)\linker\Mono.Linker.Steps\ResolveFromXApiStep.cs">
       <Link>Linker\Mono.Linker.Steps\ResolveFromXApiStep.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\linker\Mono.Linker.Steps\ResolveFromXmlStep.cs">
+    <Compile Include="$(LinkerSourceFullPath)\linker\Mono.Linker.Steps\ResolveFromXmlStep.cs">
       <Link>Linker\Mono.Linker.Steps\ResolveFromXmlStep.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\linker\Mono.Linker.Steps\ResolveStep.cs">
+    <Compile Include="$(LinkerSourceFullPath)\linker\Mono.Linker.Steps\ResolveStep.cs">
       <Link>Linker\Mono.Linker.Steps\ResolveStep.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\linker\Mono.Linker.Steps\TypeMapStep.cs">
+    <Compile Include="$(LinkerSourceFullPath)\linker\Mono.Linker.Steps\TypeMapStep.cs">
       <Link>Linker\Mono.Linker.Steps\TypeMapStep.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\linker\Mono.Linker.Steps\SweepStep.cs">
+    <Compile Include="$(LinkerSourceFullPath)\linker\Mono.Linker.Steps\SweepStep.cs">
       <Link>Linker\Mono.Linker.Steps\SweepStep.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\linker\Mono.Linker.Steps\MarkStep.cs">
+    <Compile Include="$(LinkerSourceFullPath)\linker\Mono.Linker.Steps\MarkStep.cs">
       <Link>Linker\Mono.Linker.Steps\MarkStep.cs</Link>
     </Compile>
     <Compile Include="Tasks\MergeResources.cs" />
@@ -405,40 +405,40 @@
     <Compile Include="Utilities\Files.cs">
       <Link>Utilities\Files.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\tuner\Mono.Tuner\ApplyPreserveAttributeBase.cs">
+    <Compile Include="$(LinkerSourceFullPath)\tuner\Mono.Tuner\ApplyPreserveAttributeBase.cs">
       <Link>Linker\Mono.Tuner\ApplyPreserveAttributeBase.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\tuner\Mono.Tuner\Dispatcher.cs">
+    <Compile Include="$(LinkerSourceFullPath)\tuner\Mono.Tuner\Dispatcher.cs">
       <Link>Linker\Mono.Tuner\Dispatcher.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\tuner\Mono.Tuner\CustomizeActions.cs">
+    <Compile Include="$(LinkerSourceFullPath)\tuner\Mono.Tuner\CustomizeActions.cs">
       <Link>Linker\Mono.Tuner\CustomizeActions.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\tuner\Mono.Tuner\Extensions.cs">
+    <Compile Include="$(LinkerSourceFullPath)\tuner\Mono.Tuner\Extensions.cs">
       <Link>Linker\Mono.Tuner\Extensions.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\tuner\Mono.Tuner\FixModuleFlags.cs">
+    <Compile Include="$(LinkerSourceFullPath)\tuner\Mono.Tuner\FixModuleFlags.cs">
       <Link>Linker\Mono.Tuner\FixModuleFlags.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\tuner\Mono.Tuner\PrintTypeMap.cs">
+    <Compile Include="$(LinkerSourceFullPath)\tuner\Mono.Tuner\PrintTypeMap.cs">
       <Link>Linker\Mono.Tuner\PrintTypeMap.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\tuner\Mono.Tuner\PreserveCrypto.cs">
+    <Compile Include="$(LinkerSourceFullPath)\tuner\Mono.Tuner\PreserveCrypto.cs">
       <Link>Linker\Mono.Tuner\PreserveCrypto.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\tuner\Mono.Tuner\PreserveSoapHttpClients.cs">
+    <Compile Include="$(LinkerSourceFullPath)\tuner\Mono.Tuner\PreserveSoapHttpClients.cs">
       <Link>Linker\Mono.Tuner\PreserveSoapHttpClients.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\tuner\Mono.Tuner\Profile.cs">
+    <Compile Include="$(LinkerSourceFullPath)\tuner\Mono.Tuner\Profile.cs">
       <Link>Linker\Mono.Tuner\Profile.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\tuner\Mono.Tuner\RemoveAttributesBase.cs">
+    <Compile Include="$(LinkerSourceFullPath)\tuner\Mono.Tuner\RemoveAttributesBase.cs">
       <Link>Linker\Mono.Tuner\RemoveAttributesBase.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\tuner\Mono.Tuner\RemoveResources.cs">
+    <Compile Include="$(LinkerSourceFullPath)\tuner\Mono.Tuner\RemoveResources.cs">
       <Link>Linker\Mono.Tuner\RemoveResources.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\tuner\Mono.Tuner\RemoveSecurity.cs">
+    <Compile Include="$(LinkerSourceFullPath)\tuner\Mono.Tuner\RemoveSecurity.cs">
       <Link>Linker\Mono.Tuner\RemoveSecurity.cs</Link>
     </Compile>
     <Compile Include="..\Mono.Android\\Android.App\IntentFilterAttribute.cs">
@@ -477,19 +477,19 @@
     <Compile Include="$(JavaInteropFullPath)\src\utils\StringRocks.cs">
       <Link>Utilities\StringRocks.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\tuner\Mono.Tuner\FilterAttributes.cs">
+    <Compile Include="$(LinkerSourceFullPath)\tuner\Mono.Tuner\FilterAttributes.cs">
       <Link>Linker\Mono.Tuner\FilterAttributes.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\tuner\Mono.Tuner\InjectSecurityAttributes.cs">
+    <Compile Include="$(LinkerSourceFullPath)\tuner\Mono.Tuner\InjectSecurityAttributes.cs">
       <Link>Linker\Mono.Tuner\InjectSecurityAttributes.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\tuner\Mono.Tuner\PrintStatus.cs">
+    <Compile Include="$(LinkerSourceFullPath)\tuner\Mono.Tuner\PrintStatus.cs">
       <Link>Linker\Mono.Tuner\PrintStatus.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\tuner\Mono.Tuner\RemoveSerialization.cs">
+    <Compile Include="$(LinkerSourceFullPath)\tuner\Mono.Tuner\RemoveSerialization.cs">
       <Link>Linker\Mono.Tuner\RemoveSerialization.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\tuner\Mono.Tuner\TunerAnnotations.cs">
+    <Compile Include="$(LinkerSourceFullPath)\tuner\Mono.Tuner\TunerAnnotations.cs">
       <Link>Linker\Mono.Tuner\TunerAnnotations.cs</Link>
     </Compile>
     <Compile Include="..\Mono.Android\\Android.App\UsesLibraryAttribute.cs">
