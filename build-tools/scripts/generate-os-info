@@ -31,15 +31,10 @@ function getInfo_Linux()
     if [ -d /app ]; then
       OS_NAME="Flatpak"
       OS_RELEASE=`grep ^flatpak-version /.flatpak-info | cut -f2 -d'='`
-      local CONFIG_GUESS=/usr/share/libtool/build-aux/config.guess
     else
       lsb_release > /dev/null 2>&1 || die "Your Linux does not have a working 'lsb_release' command"
       OS_NAME="`lsb_release -is`"
       OS_RELEASE="`lsb_release -rs`"
-      local CONFIG_GUESS=/usr/share/misc/config.guess
-      if [ ! -x $CONFIG_GUESS ]; then
-          die "Your Linux does not have the '$CONFIG_GUESS' script. Missing the autotools-dev package?"
-      fi
     fi
 
     HOST_CPUS="`nproc`"
@@ -56,20 +51,21 @@ function getInfo_Linux()
         HOST_CXX=c++
     fi
 
+    HOST_TRIPLET="$HOST_CC -dumpmachine"
+
     if [ "x$ARCHITECTURE_BITS" = "x64" ]; then
         HOST_CC64="$HOST_CC"
         HOST_CXX64="$HOST_CXX"
         HOST_CC32="$HOST_CC -m32"
         HOST_CXX32="$HOST_CXX -m32"
-        HOST_TRIPLET32="`i386 $CONFIG_GUESS`"
-        HOST_TRIPLET64="`$CONFIG_GUESS`"
-        HOST_TRIPLET="$HOST_TRIPLET64"
+        HOST_TRIPLET32=`sed s/[^-]*-/i686-/ <<< "$HOST_TRIPLET"`
+        HOST_TRIPLET64="$HOST_TRIPLET"
     else
         HOST_CC32="$HOST_CC"
         HOST_CXX32="$HOST_CXX"
         HOST_CC64=false
         HOST_CXX64=false
-        HOST_TRIPLET32="`$CONFIG_GUESS`"
+        HOST_TRIPLET32="$HOST_TRIPLET"
         HOST_TRIPLET64="false"
         HOST_TRIPLET="$HOST_TRIPLET32"
     fi
