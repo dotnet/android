@@ -187,11 +187,21 @@ namespace Xamarin.Android.Tasks {
 		{
 			if (string.IsNullOrEmpty (sha1))
 				return true;
+
+			var hashFile = file + ".sha1";
+			if (File.Exists (hashFile) && string.Compare (File.ReadAllText (hashFile), sha1, StringComparison.InvariantCultureIgnoreCase) == 0)
+				return true;
+			
 			var hash = Xamarin.Android.Tools.Files.HashFile (file).Replace ("-", String.Empty);
 			Log.LogDebugMessage ("File :{0}", file);
 			Log.LogDebugMessage ("SHA1 : {0}", hash);
 			Log.LogDebugMessage ("Expected SHA1 : {0}", sha1);
-			return string.Compare (hash, sha1, StringComparison.InvariantCultureIgnoreCase) == 0;
+
+			var isValid = string.Compare (hash, sha1, StringComparison.InvariantCultureIgnoreCase) == 0;
+			if (isValid)
+				File.WriteAllText (hashFile, hash);
+
+			return isValid;
 		}
 
 		void DoDownload (long totalBytes, long offset, Stream responseStream, Stream outputStream, Action<long, long, int> progressCallback = null)
