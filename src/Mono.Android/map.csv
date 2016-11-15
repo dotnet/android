@@ -214,6 +214,7 @@
 21,Android.App.Usage.UsageEventType,MoveToBackground,android/app/usage/UsageEvents.Event.MOVE_TO_BACKGROUND,2
 21,Android.App.Usage.UsageEventType,MoveToForeground,android/app/usage/UsageEvents.Event.MOVE_TO_FOREGROUND,1
 21,Android.App.Usage.UsageEventType,None,android/app/usage/UsageEvents.Event.NONE,0
+25,Android.App.Usage.UsageEventType,ShortcutInvocation,android/app/usage/UsageEvents.Event.SHORTCUT_INVOCATION,8
 23,Android.App.Usage.UsageEventType,UserInteraction,android/app/usage/UsageEvents.Event.USER_INTERACTION,7
 21,Android.App.Usage.UsageStatsInterval,Best,android/app/usage/UsageStatsManager.INTERVAL_BEST,4
 21,Android.App.Usage.UsageStatsInterval,Daily,android/app/usage/UsageStatsManager.INTERVAL_DAILY,0
@@ -941,6 +942,7 @@
 5,Android.Media.ChannelOut,Surround,android/media/AudioFormat.CHANNEL_OUT_SURROUND,1052
 21,Android.Media.Encoding,Ac3,android/media/AudioFormat.ENCODING_AC3,5
 3,Android.Media.Encoding,Default,android/media/AudioFormat.ENCODING_DEFAULT,1
+25,Android.Media.Encoding,DolbyTruehd,android/media/AudioFormat.ENCODING_DOLBY_TRUEHD,14
 23,Android.Media.Encoding,Dts,android/media/AudioFormat.ENCODING_DTS,7
 23,Android.Media.Encoding,DtsHd,android/media/AudioFormat.ENCODING_DTS_HD,8
 21,Android.Media.Encoding,EAc3,android/media/AudioFormat.ENCODING_E_AC3,6
@@ -1569,12 +1571,15 @@
 4,Android.Telephony.NetworkType,EvdoA,android/telephony/TelephonyManager.NETWORK_TYPE_EVDO_A,6
 9,Android.Telephony.NetworkType,EvdoB,android/telephony/TelephonyManager.NETWORK_TYPE_EVDO_B,12
 1,Android.Telephony.NetworkType,Gprs,android/telephony/TelephonyManager.NETWORK_TYPE_GPRS,1
+25,Android.Telephony.NetworkType,Gsm,android/telephony/TelephonyManager.NETWORK_TYPE_GSM,16
 5,Android.Telephony.NetworkType,Hsdpa,android/telephony/TelephonyManager.NETWORK_TYPE_HSDPA,8
 5,Android.Telephony.NetworkType,Hspa,android/telephony/TelephonyManager.NETWORK_TYPE_HSPA,10
 13,Android.Telephony.NetworkType,Hspap,android/telephony/TelephonyManager.NETWORK_TYPE_HSPAP,15
 5,Android.Telephony.NetworkType,Hsupa,android/telephony/TelephonyManager.NETWORK_TYPE_HSUPA,9
 8,Android.Telephony.NetworkType,Iden,android/telephony/TelephonyManager.NETWORK_TYPE_IDEN,11
+25,Android.Telephony.NetworkType,Iwlan,android/telephony/TelephonyManager.NETWORK_TYPE_IWLAN,18
 11,Android.Telephony.NetworkType,Lte,android/telephony/TelephonyManager.NETWORK_TYPE_LTE,13
+25,Android.Telephony.NetworkType,TdScdma,android/telephony/TelephonyManager.NETWORK_TYPE_TD_SCDMA,17
 1,Android.Telephony.NetworkType,Umts,android/telephony/TelephonyManager.NETWORK_TYPE_UMTS,3
 1,Android.Telephony.NetworkType,Unknown,android/telephony/TelephonyManager.NETWORK_TYPE_UNKNOWN,0
 3,Android.Text.InputTypes,ClassDatetime,I:android/text/InputType.TYPE_CLASS_DATETIME,4
@@ -1950,6 +1955,10 @@
 9,Android.Views.Keycode,SwitchCharset,android/view/KeyEvent.KEYCODE_SWITCH_CHARSET,95
 1,Android.Views.Keycode,Sym,android/view/KeyEvent.KEYCODE_SYM,63
 11,Android.Views.Keycode,Sysrq,android/view/KeyEvent.KEYCODE_SYSRQ,120
+25,Android.Views.Keycode,SystemNavigationDown,android/view/KeyEvent.KEYCODE_SYSTEM_NAVIGATION_DOWN,281
+25,Android.Views.Keycode,SystemNavigationLeft,android/view/KeyEvent.KEYCODE_SYSTEM_NAVIGATION_LEFT,282
+25,Android.Views.Keycode,SystemNavigationRight,android/view/KeyEvent.KEYCODE_SYSTEM_NAVIGATION_RIGHT,283
+25,Android.Views.Keycode,SystemNavigationUp,android/view/KeyEvent.KEYCODE_SYSTEM_NAVIGATION_UP,280
 1,Android.Views.Keycode,T,android/view/KeyEvent.KEYCODE_T,48
 1,Android.Views.Keycode,Tab,android/view/KeyEvent.KEYCODE_TAB,61
 11,Android.Views.Keycode,Tv,android/view/KeyEvent.KEYCODE_TV,170
@@ -2175,6 +2184,7 @@
 1,Android.Views.WindowManagerTypes,ApplicationStarting,android/view/WindowManager$LayoutParams.TYPE_APPLICATION_STARTING,3
 1,Android.Views.WindowManagerTypes,ApplicationSubPanel,android/view/WindowManager$LayoutParams.TYPE_APPLICATION_SUB_PANEL,1002
 1,Android.Views.WindowManagerTypes,BaseApplication,android/view/WindowManager$LayoutParams.TYPE_BASE_APPLICATION,1
+25,Android.Views.WindowManagerTypes,DrawnApplication,android/view/WindowManager$LayoutParams.TYPE_DRAWN_APPLICATION,4
 3,Android.Views.WindowManagerTypes,InputMethod,android/view/WindowManager$LayoutParams.TYPE_INPUT_METHOD,2011
 3,Android.Views.WindowManagerTypes,InputMethodDialog,android/view/WindowManager$LayoutParams.TYPE_INPUT_METHOD_DIALOG,2012
 1,Android.Views.WindowManagerTypes,KeyguardDialog,android/view/WindowManager$LayoutParams.TYPE_KEYGUARD_DIALOG,2009
@@ -2381,6 +2391,7 @@
 1,Android.Net.WifiState,Enabled,android/net/wifi/WifiManager.WIFI_STATE_ENABLED,3
 1,Android.Net.WifiState,Enabling,android/net/wifi/WifiManager.WIFI_STATE_ENABLING,2
 1,Android.Net.WifiState,Unknown,android/net/wifi/WifiManager.WIFI_STATE_UNKNOWN,4
+25,Android.Provider.CallType,AnsweredExternally,android/provider/CallLog$Calls.ANSWERED_EXTERNALLY_TYPE,7
 24,Android.Provider.CallType,Blocked,android/provider/CallLog$Calls.BLOCKED_TYPE,6
 1,Android.Provider.CallType,Incoming,android/provider/CallLog$Calls.INCOMING_TYPE,1
 1,Android.Provider.CallType,Missed,android/provider/CallLog$Calls.MISSED_TYPE,3
@@ -2942,10 +2953,12 @@
 23,Android.Telecom.CallState,Disconnecting,android/telecom/Call.STATE_DISCONNECTING,10
 23,Android.Telecom.CallState,Holding,android/telecom/Call.STATE_HOLDING,3
 23,Android.Telecom.CallState,New,android/telecom/Call.STATE_NEW,0
+25,Android.Telecom.CallState,PullingCall,android/telecom/Call.STATE_PULLING_CALL,11
 23,Android.Telecom.CallState,Ringing,android/telecom/Call.STATE_RINGING,2
 23,Android.Telecom.CallState,SelectPhoneAccount,android/telecom/Call.STATE_SELECT_PHONE_ACCOUNT,8
 24,Android.Telecom.CallCapability,CannotDowngradeVideoToAudio,android/telecom/Call.Details.CAPABILITY_CANNOT_DOWNGRADE_VIDEO_TO_AUDIO,4194304
 23,Android.Telecom.CallCapability,CanPauseVideo,android/telecom/Call.Details.CAPABILITY_CAN_PAUSE_VIDEO,1048576
+25,Android.Telecom.CallCapability,CanPullCall,android/telecom/Call.Details.CAPABILITY_CAN_PULL_CALL,8388608
 23,Android.Telecom.CallCapability,DisconnectFromConference,android/telecom/Call.Details.CAPABILITY_DISCONNECT_FROM_CONFERENCE,8192
 23,Android.Telecom.CallCapability,Hold,android/telecom/Call.Details.CAPABILITY_HOLD,1
 23,Android.Telecom.CallCapability,ManageConference,android/telecom/Call.Details.CAPABILITY_MANAGE_CONFERENCE,128
@@ -2965,7 +2978,9 @@
 23,Android.Telecom.CallProperty,EmergencyCallbackMode,android/telecom/Call.Details.PROPERTY_EMERGENCY_CALLBACK_MODE,4
 24,Android.Telecom.CallProperty,EnterpriseCall,android/telecom/Call.Details.PROPERTY_ENTERPRISE_CALL,32
 23,Android.Telecom.CallProperty,GenericConference,android/telecom/Call.Details.PROPERTY_GENERIC_CONFERENCE,2
+25,Android.Telecom.CallProperty,HasCdmaVoicePrivacy,android/telecom/Call.Details.PROPERTY_HAS_CDMA_VOICE_PRIVACY,128
 23,Android.Telecom.CallProperty,HighDefAudio,android/telecom/Call.Details.PROPERTY_HIGH_DEF_AUDIO,16
+25,Android.Telecom.CallProperty,IsExternalCall,android/telecom/Call.Details.PROPERTY_IS_EXTERNAL_CALL,64
 23,Android.Telecom.CallProperty,Wifi,android/telecom/Call.Details.PROPERTY_WIFI,8
 23,Android.Telecom.CallAudioRoute,Bluetooth,android/telecom/CallAudioState.ROUTE_BLUETOOTH,2
 23,Android.Telecom.CallAudioRoute,Earpiece,android/telecom/CallAudioState.ROUTE_EARPIECE,1
@@ -2974,6 +2989,7 @@
 23,Android.Telecom.CallAudioRoute,WiredOrEarpiece,android/telecom/CallAudioState.ROUTE_WIRED_OR_EARPIECE,5
 24,Android.Telecom.ConnectionCapability,CannotDowngradeVideoToAudio,android/telecom/Connection.CAPABILITY_CANNOT_DOWNGRADE_VIDEO_TO_AUDIO,8388608
 23,Android.Telecom.ConnectionCapability,CanPauseVideo,android/telecom/Connection.CAPABILITY_CAN_PAUSE_VIDEO,1048576
+25,Android.Telecom.ConnectionCapability,CanPullCall,android/telecom/Connection.CAPABILITY_CAN_PULL_CALL,16777216
 24,Android.Telecom.ConnectionCapability,CanSendResponseViaConnection,android/telecom/Connection.CAPABILITY_CAN_SEND_RESPONSE_VIA_CONNECTION,4194304
 23,Android.Telecom.ConnectionCapability,CanUpgradeToVideo,android/telecom/Connection.CAPABILITY_CAN_UPGRADE_TO_VIDEO,524288
 23,Android.Telecom.ConnectionCapability,DisconnectFromConference,android/telecom/Connection.CAPABILITY_DISCONNECT_FROM_CONFERENCE,8192
@@ -2997,6 +3013,7 @@
 23,Android.Telecom.ConnectionState,Holding,android/telecom/Connection.STATE_HOLDING,5
 23,Android.Telecom.ConnectionState,Initializing,android/telecom/Connection.STATE_INITIALIZING,0
 23,Android.Telecom.ConnectionState,New,android/telecom/Connection.STATE_NEW,1
+25,Android.Telecom.ConnectionState,PullingCall,android/telecom/Connection.STATE_PULLING_CALL,7
 23,Android.Telecom.ConnectionState,Ringing,android/telecom/Connection.STATE_RINGING,2
 23,Android.Telecom.VideoSessionEvent,CameraFailure,android/telecom/Connection.VideoProvider.SESSION_EVENT_CAMERA_FAILURE,5
 23,Android.Telecom.VideoSessionEvent,CameraReady,android/telecom/Connection.VideoProvider.SESSION_EVENT_CAMERA_READY,6
@@ -3009,7 +3026,9 @@
 23,Android.Telecom.ModifyRequestResult,RejectedByRemote,android/telecom/Connection.VideoProvider.SESSION_MODIFY_REQUEST_REJECTED_BY_REMOTE,5
 23,Android.Telecom.ModifyRequestResult,Success,android/telecom/Connection.VideoProvider.SESSION_MODIFY_REQUEST_SUCCESS,1
 23,Android.Telecom.ModifyRequestResult,TimedOut,android/telecom/Connection.VideoProvider.SESSION_MODIFY_REQUEST_TIMED_OUT,4
+25,Android.Telecom.Causes,AnsweredElsewhere,android/telecom/DisconnectCause.ANSWERED_ELSEWHERE,11
 23,Android.Telecom.Causes,Busy,android/telecom/DisconnectCause.BUSY,7
+25,Android.Telecom.Causes,CallPulled,android/telecom/DisconnectCause.CALL_PULLED,12
 23,Android.Telecom.Causes,Canceled,android/telecom/DisconnectCause.CANCELED,4
 23,Android.Telecom.Causes,ConnectionManagerNotSupported,android/telecom/DisconnectCause.CONNECTION_MANAGER_NOT_SUPPORTED,10
 23,Android.Telecom.Causes,Error,android/telecom/DisconnectCause.ERROR,1
@@ -3918,6 +3937,7 @@
 22,Android.OS.BuildVersionCodes,LollipopMr1,android/os/Build$VERSION_CODES.LOLLIPOP_MR1,22
 23,Android.OS.BuildVersionCodes,M,android/os/Build$VERSION_CODES.M,23
 24,Android.OS.BuildVersionCodes,N,android/os/Build$VERSION_CODES.N,24
+25,Android.OS.BuildVersionCodes,NMr1,android/os/Build$VERSION_CODES.N_MR1,25
 0,Android.OS.DebugShow,Default,,0
 1,Android.OS.DebugShow,Classloader,android/os/Debug.SHOW_CLASSLOADER,2
 1,Android.OS.DebugShow,FullDetail,android/os/Debug.SHOW_FULL_DETAIL,1
@@ -4115,6 +4135,9 @@
 19,Android.Provider.ThreadType,BroadcastThread,android/provider/Telephony.Threads.BROADCAST_THREAD,1
 19,Android.Provider.ThreadType,CommonThread,android/provider/Telephony.Threads.COMMON_THREAD,0
 14,Android.Provider.VoicemailConfigurationState,CanBeConfigured,android/provider/VoicemailContract$Status.CONFIGURATION_STATE_CAN_BE_CONFIGURED,2
+25,Android.Provider.VoicemailConfigurationState,Configuring,android/provider/VoicemailContract$Status.CONFIGURATION_STATE_CONFIGURING,3
+25,Android.Provider.VoicemailConfigurationState,Disabled,android/provider/VoicemailContract$Status.CONFIGURATION_STATE_DISABLED,5
+25,Android.Provider.VoicemailConfigurationState,Failed,android/provider/VoicemailContract$Status.CONFIGURATION_STATE_FAILED,4
 14,Android.Provider.VoicemailConfigurationState,NotConfigured,android/provider/VoicemailContract$Status.CONFIGURATION_STATE_NOT_CONFIGURED,1
 14,Android.Provider.VoicemailConfigurationState,Ok,android/provider/VoicemailContract$Status.CONFIGURATION_STATE_OK,0
 24,Android.Provider.VoicemailDataChannelState,BadConfiguration,android/provider/VoicemailContract$Status.DATA_CHANNEL_STATE_BAD_CONFIGURATION,3
@@ -4177,7 +4200,10 @@
 8,Android.Util.Base64Flags,NoPadding,android/util/Base64.NO_PADDING,1
 8,Android.Util.Base64Flags,NoWrap,android/util/Base64.NO_WRAP,2
 8,Android.Util.Base64Flags,UrlSafe,android/util/Base64.URL_SAFE,8
+25,Android.Util.DisplayMetricsDensity,D260,android/util/DisplayMetrics.DENSITY_260,260
 22,Android.Util.DisplayMetricsDensity,D280,android/util/DisplayMetrics.DENSITY_280,280
+25,Android.Util.DisplayMetricsDensity,D300,android/util/DisplayMetrics.DENSITY_300,300
+25,Android.Util.DisplayMetricsDensity,D340,android/util/DisplayMetrics.DENSITY_340,340
 23,Android.Util.DisplayMetricsDensity,D360,android/util/DisplayMetrics.DENSITY_360,360
 19,Android.Util.DisplayMetricsDensity,D400,android/util/DisplayMetrics.DENSITY_400,400
 23,Android.Util.DisplayMetricsDensity,D420,android/util/DisplayMetrics.DENSITY_420,420
@@ -5195,3 +5221,19 @@
 24,Java.Util.SpliteratorCharacteristics,Sized,I:java/util/Spliterator.SIZED,64
 24,Java.Util.SpliteratorCharacteristics,Sorted,I:java/util/Spliterator.SORTED,4
 24,Java.Util.SpliteratorCharacteristics,Subsized,I:java/util/Spliterator.SUBSIZED,16384
+0,Android.Content.PM.LauncherAppsShortcutQueryFlags,None,,0
+25,Android.Content.PM.LauncherAppsShortcutQueryFlags,GetKeyFieldsOnly,android/content/pm/LauncherApps.ShortcutQuery.FLAG_GET_KEY_FIELDS_ONLY,4
+25,Android.Content.PM.LauncherAppsShortcutQueryFlags,MatchDynamic,android/content/pm/LauncherApps.ShortcutQuery.FLAG_MATCH_DYNAMIC,1
+25,Android.Content.PM.LauncherAppsShortcutQueryFlags,MatchManifest,android/content/pm/LauncherApps.ShortcutQuery.FLAG_MATCH_MANIFEST,8
+25,Android.Content.PM.LauncherAppsShortcutQueryFlags,MatchPinned,android/content/pm/LauncherApps.ShortcutQuery.FLAG_MATCH_PINNED,2
+14,Android.Provider.VoicemailContractConfigurationState,CanBeConfigured,android/provider/VoicemailContract.Status.CONFIGURATION_STATE_CAN_BE_CONFIGURED,2
+25,Android.Provider.VoicemailContractConfigurationState,Configuring,android/provider/VoicemailContract.Status.CONFIGURATION_STATE_CONFIGURING,3
+25,Android.Provider.VoicemailContractConfigurationState,Disabled,android/provider/VoicemailContract.Status.CONFIGURATION_STATE_DISABLED,5
+25,Android.Provider.VoicemailContractConfigurationState,Failed,android/provider/VoicemailContract.Status.CONFIGURATION_STATE_FAILED,4
+14,Android.Provider.VoicemailContractConfigurationState,NotConfigured,android/provider/VoicemailContract.Status.CONFIGURATION_STATE_NOT_CONFIGURED,1
+14,Android.Provider.VoicemailContractConfigurationState,Ok,android/provider/VoicemailContract.Status.CONFIGURATION_STATE_OK,0
+0,Android.Telecom.ConnectionProperties,None,,0
+25,Android.Telecom.ConnectionProperties,HasCdmaVoicePrivacy,android/telecom/Connection.PROPERTY_HAS_CDMA_VOICE_PRIVACY,32
+25,Android.Telecom.ConnectionProperties,IsExternalCall,android/telecom/Connection.PROPERTY_IS_EXTERNAL_CALL,16
+0,Android.Views.InputMethods.InputContentFlags,None,,0
+25,Android.Views.InputMethods.InputContentFlags,GrantReadUriPermission,I:android/view/inputmethod/InputConnection.INPUT_CONTENT_GRANT_READ_URI_PERMISSION,1

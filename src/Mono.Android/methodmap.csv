@@ -2133,3 +2133,17 @@
 24, java.util, Spliterators.AbstractIntSpliterator, characteristics, return, Java.Util.SpliteratorCharacteristics
 24, java.util, Spliterators.AbstractLongSpliterator, characteristics, return, Java.Util.SpliteratorCharacteristics
 24, java.util, Spliterators.AbstractSpliterator, characteristics, return, Java.Util.SpliteratorCharacteristics
+
+// API Level 25
+
+25, android.content.pm, LauncherApps.ShortcutQuery, setQueryFlags, queryFlags, Android.Content.PM.LauncherAppsShortcutQueryFlags
+25, android.telecom, Connection, getConnectionProperties, return, Android.Telecom.ConnectionProperties
+25, android.telecom, Connection, setConnectionProperties, connectionProperties, Android.Telecom.ConnectionProperties
+25, android.telecom, Connection, setConnectionProperties, connectionProperties, Android.Telecom.ConnectionProperties
+25, android.telecom, Conference, getConnectionProperties, return, Android.Telecom.ConnectionProperties
+25, android.telecom, Conference, setConnectionProperties, connectionProperties, Android.Telecom.ConnectionProperties
+25, android.telecom, RemoteConnection, getConnectionProperties, return, Android.Telecom.ConnectionProperties
+25, android.telecom, RemoteConnection.Callback, onConnectionPropertiesChanged, connectionProperties, Android.Telecom.ConnectionProperties
+25, android.telecom, RemoteConference, getConnectionProperties, return, Android.Telecom.ConnectionProperties
+25, android.telecom, RemoteConference.Callback, onConnectionPropertiesChanged, connectionProperties, Android.Telecom.ConnectionProperties
+25, android.view.inputmethod, [Interface]InputConnection, commitContent, flags, Android.Views.InputMethods.InputContentFlags
