@@ -279,13 +279,16 @@ namespace Xamarin.Android.Tasks {
 			var hash = string.Concat (md5.ComputeHash (Encoding.UTF8.GetBytes (url)).Select (b => b.ToString ("X02")));
 			var uri = new Uri (url);
 
+			var extras = Path.Combine (AndroidSdkDirectory, "extras", "android");
+			var existsInSdk = string.IsNullOrEmpty (embeddedArchive) ? false : File.Exists (Path.Combine (extras, embeddedArchive));
+
 			string zipDir =  !uri.IsFile ? Path.Combine (CachePath, "zips") : destinationDir;
 			bool createZipDirectory = !Directory.Exists (zipDir);
 			if (createZipDirectory)
 				Directory.CreateDirectory (zipDir);
 
 			string file = Path.Combine (zipDir, !uri.IsFile ? hash + ".zip" : Path.GetFileName (uri.AbsolutePath));
-			if (!File.Exists (file) || !IsValidDownload (file, sha1) || !MonoAndroidHelper.IsValidZip (file)) {
+			if (!existsInSdk && (!File.Exists (file) || !IsValidDownload (file, sha1) || !MonoAndroidHelper.IsValidZip (file))) {
 				int progress = -1;
 				var downloadHandler = new Action<long, long, int>((r,t,p) => {
 					if (p % 10 != 0 || progress == p)
@@ -309,7 +312,7 @@ namespace Xamarin.Android.Tasks {
 			}
 			else
 				LogDebugMessage ("    reusing existing archive: {0}", file);
-			string contentDir = Path.Combine (destinationDir, "content");
+			string contentDir = !existsInSdk ? Path.Combine (destinationDir, "content") : extras;
 
 			int attempt = 0;
 			while (attempt < 3 && !Log.HasLoggedErrors) {
