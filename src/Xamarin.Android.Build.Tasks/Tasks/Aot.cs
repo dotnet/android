@@ -64,6 +64,8 @@ namespace Xamarin.Android.Tasks
 
 		public ITaskItem[] AdditionalNativeLibraryReferences { get; set; }
 
+		public string ExtraAotOptions { get; set; }
+
 		[Output]
 		public string[] NativeLibrariesReferences { get; set; }
 
@@ -318,19 +320,28 @@ namespace Xamarin.Android.Tasks
 					string seqpointsFile = Path.Combine(outdir, string.Format ("{0}.msym",
 						Path.GetFileName (assembly.ItemSpec)));
 
-					string aotOptions = string.Format (
-						"{0}--aot={9}{8}{1}outfile={2},asmwriter,mtriple={3},tool-prefix={4},ld-flags={5},llvm-path={6},temp-path={7}",
-						EnableLLVM ? "--llvm " : string.Empty,
-						AotMode != AotMode.Normal ? string.Format("{0},", AotMode.ToString().ToLowerInvariant()) : string.Empty,
-						QuoteFileName (outputFile),
-						mtriple,
-						QuoteFileName (toolPrefix),
-						ldFlags,
-						QuoteFileName (SdkBinDirectory),
-						QuoteFileName (outdir),
-						sequencePointsMode == SequencePointsMode.Offline ? string.Format("msym-dir={0},", QuoteFileName(outdir)) : string.Empty,
-						AotAdditionalArguments != string.Empty ? string.Format ("{0},", AotAdditionalArguments) : string.Empty
-					);
+					List<string> aotOptions = new List<string> ();
+
+					if (!string.IsNullOrEmpty (AotAdditionalArguments))
+						aotOptions.Add (AotAdditionalArguments);
+					if (sequencePointsMode == SequencePointsMode.Offline)
+						aotOptions.Add ("msym-dir=" + QuoteFileName (outdir));
+					if (AotMode != AotMode.Normal)
+						aotOptions.Add (AotMode.ToString ().ToLowerInvariant ());
+
+					aotOptions.Add ("outfile="     + QuoteFileName (outputFile));
+					aotOptions.Add ("asmwriter");
+					aotOptions.Add ("mtriple="     + mtriple);
+					aotOptions.Add ("tool-prefix=" + QuoteFileName (toolPrefix));
+					aotOptions.Add ("ld-flags="    + ldFlags);
+					aotOptions.Add ("llvm-path="   + QuoteFileName (SdkBinDirectory));
+					aotOptions.Add ("temp-path="   + QuoteFileName (outdir));
+
+					string aotOptionsStr = (EnableLLVM ? "--llvm " : "") + "--aot=" + string.Join (",", aotOptions);
+
+					if (!string.IsNullOrEmpty (ExtraAotOptions)) {
+						aotOptionsStr += (aotOptions.Count > 0 ? "," : "") + ExtraAotOptions;
+					}
 
 					// Due to a Monodroid MSBuild bug we can end up with paths to assemblies that are not in the intermediate
 					// assembly directory (typically obj/assemblies). This can lead to problems with the Mono loader not being
@@ -348,7 +359,7 @@ namespace Xamarin.Android.Tasks
 					var assembliesPath = Path.GetFullPath (Path.GetDirectoryName (resolvedPath));
 					var assemblyPath = QuoteFileName (Path.GetFullPath (resolvedPath));
 					
-					if (!RunAotCompiler (assembliesPath, aotCompiler, aotOptions, assemblyPath)) {
+					if (!RunAotCompiler (assembliesPath, aotCompiler, aotOptionsStr, assemblyPath)) {
 						Log.LogCodedError ("XA3001", "Could not AOT the assembly: {0}", assembly.ItemSpec);
 						return false;
 					}
@@ -366,15 +377,9 @@ namespace Xamarin.Android.Tasks
 			
 		bool RunAotCompiler (string assembliesPath, string aotCompiler, string aotOptions, string assembly)
 		{
-			var arguments = aotOptions + " " + assembly;
-
-			Log.LogMessage (MessageImportance.High, "[AOT] " + assembly);
-			Log.LogMessage (MessageImportance.Low, "Mono arguments: " + arguments);
-			Log.LogMessage (MessageImportance.Low, "MONO_PATH=" + assembliesPath);
-
 			var psi = new ProcessStartInfo () {
 				FileName = aotCompiler,
-				Arguments = arguments,
+				Arguments = aotOptions + " \"" + assembly + "\"",
 				UseShellExecute = false,
 				RedirectStandardOutput = true,
 				RedirectStandardError = true,
@@ -387,6 +392,9 @@ namespace Xamarin.Android.Tasks
 			// the C code cannot parse all the license details, including the activation code that tell us which license level is allowed
 			// so we provide this out-of-band to the cross-compilers - this can be extended to communicate a few others bits as well
 			psi.EnvironmentVariables ["MONO_PATH"] = assembliesPath;
+
+			Log.LogDebugMessage ("[AOT] MONO_PATH=\"{0}\" MONO_ENV_OPTIONS=\"{1}\" {2} {3}",
+				psi.EnvironmentVariables ["MONO_PATH"], psi.EnvironmentVariables ["MONO_ENV_OPTIONS"], psi.FileName, psi.Arguments);
 
 			var proc = new Process ();
 			proc.OutputDataReceived += OnAotOutputData;
