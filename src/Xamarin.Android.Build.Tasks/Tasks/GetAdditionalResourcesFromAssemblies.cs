@@ -48,7 +48,7 @@ namespace Xamarin.Android.Tasks {
 		public ITaskItem[] Assemblies { get; set; }
 
 		[Required]
-		public string CacheFile { get; set;} 
+		public string CacheFile { get; set;}
 
 		string CachePath;
 		MD5 md5 = MD5.Create ();
@@ -318,7 +318,7 @@ namespace Xamarin.Android.Tasks {
 				if (string.IsNullOrEmpty (extraPath))
 					LogDebugMessage ("    reusing existing archive: {0}", file);
 				else
-					LogDebugMessage ("    found {0} in {1}", embeddedArchive, Path.Combine (AndroidSdkDirectory, extraPath));
+					LogDebugMessage ("    found `{0}` in `{1}`", embeddedArchive, Path.Combine (AndroidSdkDirectory, extraPath));
 			}
 
 			string contentDir = string.IsNullOrEmpty (extraPath) ? Path.Combine (destinationDir, "content") : Path.Combine (AndroidSdkDirectory, extraPath);
