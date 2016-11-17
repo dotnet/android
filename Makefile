@@ -36,7 +36,7 @@ prepare-external:
 	git submodule update --init --recursive
 	nuget restore $(SOLUTION)
 	nuget restore Xamarin.Android-Tests.sln
-	(cd $(call GetPath,JavaInterop) && nuget restore)
+	(cd $(call GetPath,JavaInterop) && make prepare)
 	(cd $(call GetPath,JavaInterop) && make bin/BuildDebug/JdkInfo.props)
 
 prepare-props:
