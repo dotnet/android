@@ -148,7 +148,7 @@ namespace MonoDroid.Generation
 		}
 
 		public override string Visibility {
-			get { return t.IsPublic ? "public" : "protected internal"; }
+			get { return t.IsPublic || t.IsNestedPublic ? "public" : "protected internal"; }
 		}
 	}
 #endif

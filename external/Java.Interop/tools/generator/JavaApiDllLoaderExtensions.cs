@@ -1,5 +1,6 @@
 #if GENERATOR
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using MonoDroid.Generation;
 
@@ -7,7 +8,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 {
 	public static class JavaApiDllLoaderExtensions
 	{
-		public static void LoadReferences (this JavaApi api, GenBase [] gens)
+		public static void LoadReferences (this JavaApi api, IEnumerable<GenBase> gens)
 		{
 			JavaPackage pkg = null;
 			foreach (var gen in gens.Where (_ => _.IsAcw)) {
@@ -27,6 +28,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 				}
 				else
 					throw new InvalidOperationException ();
+				api.LoadReferences (gen.NestedTypes);
 			}
 		}
 
