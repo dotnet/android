@@ -21,6 +21,8 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string OutputDexDirectory { get; set; }
 
+		public string OutputFileName { get; set; }
+
 		public string [] Jars { get; set; }
 
 		[Output]
@@ -48,13 +50,13 @@ namespace Xamarin.Android.Tasks
 			var md5 = System.Security.Cryptography.MD5.Create ();
 			foreach (var jar in Jars) {
 				context_jar = jar;
-				context_dex = Path.Combine (OutputDexDirectory, BitConverter.ToString (md5.ComputeHash (Encoding.UTF8.GetBytes (jar))) + Path.GetFileNameWithoutExtension (context_jar) + ".dex");
+				context_dex = Path.Combine (OutputDexDirectory, OutputFileName ?? BitConverter.ToString (md5.ComputeHash (Encoding.UTF8.GetBytes (jar))) + Path.GetFileNameWithoutExtension (context_jar) + ".dex");
 				retval &= base.Execute ();
 				outputJackFiles.Add (context_dex);
 			}
 			OutputDexFiles = outputJackFiles.ToArray ();
 
-			Log.LogDebugTaskItems ("  OutputJackFiles: ", OutputDexFiles);
+			Log.LogDebugTaskItems ("  OutputDexFiles: ", OutputDexFiles);
 			return retval;
 		}
 

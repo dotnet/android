@@ -2019,6 +2019,35 @@ because xbuild doesn't support framework reference assemblies.
   Condition="'$(UseJackAndJill)' == 'True'"
   DependsOnTargets="_CompileJavaWithJack" />
 
+<Target Name="_CreateAdditionalJavaLibraryJackCache"
+    Condition="'$(UseJackAndJill)' == 'True'"
+    Inputs="@(_AdditionalJavaLibraryReferences)"
+    Outputs="@(_AdditionalJavaLibraryReferences->'%(RootDir)%(Directory)xamarin_cache.jack')">
+  <Jill
+    Condition="'$(UseJackAndJill)' == 'True'"
+    OutputJackDirectory="%(RootDir)%(Directory)"
+    OutputFileName="xamarin_cache.jack"
+    Jars="%(_AdditionalJavaLibraryReferences.Identity)"
+    ToolPath="$(JavaToolPath)"
+    ToolExe="$(JavaToolExe)"
+    JillJarPath="$(JillJarPath)" />
+</Target>
+
+<Target Name="_CreateAdditionalJavaLibraryDxCache"
+    Condition="'$(UseJackAndJill)'!='True'"
+    Inputs="@(_AdditionalJavaLibraryReferences)"
+    Outputs="@(_AdditionalJavaLibraryReferences->'%(RootDir)%(Directory)xamarin_cache.jar')"
+>
+  <Dx
+    OutputDexDirectory="%(RootDir)%(Directory)"
+    OutputFileName="xamarin_cache.jar"
+    Jars="%(_AdditionalJavaLibraryReferences.Identity)"
+    ToolPath="$(JavaToolPath)"
+    ToolExe="$(JavaToolExe)"
+    DxJarPath="$(DxJarPath)"
+  />
+</Target>
+
 <Target Name="_CompileToDalvikWithDx"
   Condition="'$(UseJackAndJill)' != 'True'"
   DependsOnTargets="$(_CompileToDalvikDependsOnTargets)"
@@ -2092,7 +2121,7 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_CompileDex"
-		DependsOnTargets="_CompileToDalvikWithDx;_CompileToDalvikWithJack">
+		DependsOnTargets="_CreateAdditionalJavaLibraryDxCache;_CreateAdditionalJavaLibraryJackCache;_CompileToDalvikWithDx;_CompileToDalvikWithJack">
 
 	<ItemGroup>
 		<_DexFile Include="$(IntermediateOutputPath)android\bin\dex\*.dex" />

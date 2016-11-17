@@ -18,6 +18,8 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string ClassesOutputDirectory { get; set; }
 
+		public string ClassesOutputFile { get; set; }
+
 		public string DxJarPath { get; set; }
 
 		public string JavaToolPath { get; set; }
@@ -106,16 +108,24 @@ namespace Xamarin.Android.Tasks
 				cmd.AppendSwitch ("--multi-dex");
 				cmd.AppendSwitchIfNotNull ("--main-dex-list=", MultiDexMainDexListFile);
 			}
-			cmd.AppendSwitchIfNotNull ("--output=", Path.GetDirectoryName (ClassesOutputDirectory));
+			cmd.AppendSwitchIfNotNull ("--output=", Path.Combine (Path.GetDirectoryName (ClassesOutputDirectory), ClassesOutputFile ?? String.Empty));
 
 
 			// .jar files
 			if (File.Exists (OptionalObfuscatedJarFile))
 				cmd.AppendFileNameIfNotNull (OptionalObfuscatedJarFile);
 			else {
-				cmd.AppendFileNameIfNotNull (ClassesOutputDirectory);
-				foreach (var jar in JavaLibrariesToCompile)
-					cmd.AppendFileNameIfNotNull (jar.ItemSpec);
+				if (string.IsNullOrEmpty (ClassesOutputFile))
+					cmd.AppendFileNameIfNotNull (ClassesOutputDirectory);
+				foreach (var jar in JavaLibrariesToCompile) {
+					var cacheJar = Path.Combine (Path.GetDirectoryName (jar.ItemSpec), "xamarin_cache.jar");
+					if (File.Exists (cacheJar)) {
+						cmd.AppendFileNameIfNotNull (cacheJar);
+						Log.LogDebugMessage ("  using: {0}", cacheJar);
+					}
+					else
+						cmd.AppendFileNameIfNotNull (jar.ItemSpec);
+				}
 			}
 
 			return cmd.ToString ();
