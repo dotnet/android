@@ -48,7 +48,7 @@ namespace Xamarin.Android.Tasks {
 		public ITaskItem[] Assemblies { get; set; }
 
 		[Required]
-		public string CacheFile { get; set;} 
+		public string CacheFile { get; set; }
 
 		string CachePath;
 		MD5 md5 = MD5.Create ();
@@ -58,6 +58,11 @@ namespace Xamarin.Android.Tasks {
 		}
 
 		readonly Regex regex = new Regex(@"(\$(\w+))\b");
+
+		readonly string[] extraPaths = new string[] {
+			Path.Combine ("extras", "android"),
+			Path.Combine ("extras", "google"),
+		};
 
 		string SubstituteEnvVariables (string path)
 		{
@@ -279,13 +284,15 @@ namespace Xamarin.Android.Tasks {
 			var hash = string.Concat (md5.ComputeHash (Encoding.UTF8.GetBytes (url)).Select (b => b.ToString ("X02")));
 			var uri = new Uri (url);
 
+			var extraPath = extraPaths.FirstOrDefault (x => File.Exists (Path.Combine (AndroidSdkDirectory, x, embeddedArchive ?? String.Empty)));
+
 			string zipDir =  !uri.IsFile ? Path.Combine (CachePath, "zips") : destinationDir;
 			bool createZipDirectory = !Directory.Exists (zipDir);
 			if (createZipDirectory)
 				Directory.CreateDirectory (zipDir);
 
 			string file = Path.Combine (zipDir, !uri.IsFile ? hash + ".zip" : Path.GetFileName (uri.AbsolutePath));
-			if (!File.Exists (file) || !IsValidDownload (file, sha1) || !MonoAndroidHelper.IsValidZip (file)) {
+			if (string.IsNullOrEmpty (extraPath) && (!File.Exists (file) || !IsValidDownload (file, sha1) || !MonoAndroidHelper.IsValidZip (file))) {
 				int progress = -1;
 				var downloadHandler = new Action<long, long, int>((r,t,p) => {
 					if (p % 10 != 0 || progress == p)
@@ -307,9 +314,14 @@ namespace Xamarin.Android.Tasks {
 					Log.LogMessage (MessageImportance.Low, e.ToString ());
 				}
 			}
-			else
-				LogDebugMessage ("    reusing existing archive: {0}", file);
-			string contentDir = Path.Combine (destinationDir, "content");
+			else {
+				if (string.IsNullOrEmpty (extraPath))
+					LogDebugMessage ("    reusing existing archive: {0}", file);
+				else
+					LogDebugMessage ("    found `{0}` in `{1}`", embeddedArchive, Path.Combine (AndroidSdkDirectory, extraPath));
+			}
+
+			string contentDir = string.IsNullOrEmpty (extraPath) ? Path.Combine (destinationDir, "content") : Path.Combine (AndroidSdkDirectory, extraPath);
 
 			int attempt = 0;
 			while (attempt < 3 && !Log.HasLoggedErrors) {
