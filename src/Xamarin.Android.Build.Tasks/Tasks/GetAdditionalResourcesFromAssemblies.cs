@@ -48,7 +48,7 @@ namespace Xamarin.Android.Tasks {
 		public ITaskItem[] Assemblies { get; set; }
 
 		[Required]
-		public string CacheFile { get; set;}
+		public string CacheFile { get; set; }
 
 		string CachePath;
 		MD5 md5 = MD5.Create ();
