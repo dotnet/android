@@ -111,8 +111,8 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 
 	class ManagedType : JavaType
 	{
-		static JavaPackage dummy_system_package, dummy_system_io_package;
-		static JavaType system_object, system_exception, system_io_stream;
+		static JavaPackage dummy_system_package, dummy_system_io_package, dummy_system_xml_package;
+		static JavaType system_object, system_exception, system_io_stream, system_xml_xmlreader;
 
 		static ManagedType ()
 		{
@@ -122,14 +122,18 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 			dummy_system_package.Types.Add (system_object);
 			dummy_system_package.Types.Add (system_exception);
 			dummy_system_io_package = new JavaPackage (null) { Name = "System.IO" };
-			system_io_stream = new ManagedType (dummy_system_package) { Name = "Stream" };
+			system_io_stream = new ManagedType (dummy_system_io_package) { Name = "Stream" };
 			dummy_system_io_package.Types.Add (system_io_stream);
+			dummy_system_xml_package = new JavaPackage (null) { Name = "System.Xml" };
+			system_xml_xmlreader = new ManagedType (dummy_system_xml_package) { Name = "XmlReader" };
+			dummy_system_io_package.Types.Add (system_xml_xmlreader);
 		}
 
 		public static IEnumerable<JavaPackage> DummyManagedPackages {
 			get {
 				yield return dummy_system_package; 
 				yield return dummy_system_io_package;
+				yield return dummy_system_xml_package;
 			}
 		}
 
