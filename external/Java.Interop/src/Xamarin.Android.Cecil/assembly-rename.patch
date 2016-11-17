@@ -1,0 +1,39 @@
+diff --git a/Mono.Cecil.Cil/Symbols.cs b/Mono.Cecil.Cil/Symbols.cs
+index 426c4a7..1bc138d 100644
+--- a/Mono.Cecil.Cil/Symbols.cs
++++ b/Mono.Cecil.Cil/Symbols.cs
+@@ -186,7 +186,7 @@ namespace Mono.Cecil.Cil {
+ 			var cecil_name = typeof (SymbolProvider).Assembly.GetName ();
+ 
+ 			var name = new SR.AssemblyName {
+-				Name = "Mono.Cecil." + symbol_kind,
++				Name = "Xamarin.Android.Cecil." + symbol_kind,
+ 				Version = cecil_name.Version,
+ 			};
+ 
+diff --git a/ProjectInfo.cs b/ProjectInfo.cs
+index 8d427a7..59bc253 100644
+--- a/ProjectInfo.cs
++++ b/ProjectInfo.cs
+@@ -10,7 +10,7 @@
+ using System.Reflection;
+ using System.Runtime.InteropServices;
+ 
+-[assembly: AssemblyProduct ("Mono.Cecil")]
++[assembly: AssemblyProduct ("Xamarin.Android.Cecil")]
+ [assembly: AssemblyCopyright ("Copyright © 2008 - 2015 Jb Evain")]
+ 
+ [assembly: ComVisible (false)]
+diff --git a/Mono.Cecil/AssemblyInfo.cs b/Mono.Cecil/AssemblyInfo.cs
+index 40cc0d4..41e159f 100644
+--- a/Mono.Cecil/AssemblyInfo.cs
++++ b/Mono.Cecil/AssemblyInfo.cs
+@@ -10,7 +10,7 @@ using System.Reflection;
+ using System.Runtime.CompilerServices;
+ using System.Runtime.InteropServices;
+ 
+-[assembly: AssemblyTitle ("Mono.Cecil")]
++[assembly: AssemblyTitle ("Xamarin.Android.Cecil")]
+ 
+ [assembly: Guid ("fd225bb4-fa53-44b2-a6db-85f5e48dcb54")]
+ 

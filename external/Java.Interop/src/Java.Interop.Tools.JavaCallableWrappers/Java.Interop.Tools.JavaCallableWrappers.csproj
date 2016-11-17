@@ -31,18 +31,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
-    <Reference Include="Mono.Cecil">
-      <HintPath>..\..\packages\Mono.Cecil.0.10.0-beta1-v2\lib\net40\Mono.Cecil.dll</HintPath>
-    </Reference>
-    <Reference Include="Mono.Cecil.Mdb">
-      <HintPath>..\..\packages\Mono.Cecil.0.10.0-beta1-v2\lib\net40\Mono.Cecil.Mdb.dll</HintPath>
-    </Reference>
-    <Reference Include="Mono.Cecil.Pdb">
-      <HintPath>..\..\packages\Mono.Cecil.0.10.0-beta1-v2\lib\net40\Mono.Cecil.Pdb.dll</HintPath>
-    </Reference>
-    <Reference Include="Mono.Cecil.Rocks">
-      <HintPath>..\..\packages\Mono.Cecil.0.10.0-beta1-v2\lib\net40\Mono.Cecil.Rocks.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -61,6 +49,10 @@
       <Project>{D48EE8D0-0A0A-4493-AEF5-DAF5F8CF86AD}</Project>
       <Name>Java.Interop.Tools.Cecil</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Xamarin.Android.Cecil\Xamarin.Android.Cecil.csproj">
+      <Project>{15945D4B-FF56-4BCC-B598-2718D199DD08}</Project>
+      <Name>Xamarin.Android.Cecil</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\MonoRuntimeProvider.Bundled.java">
@@ -69,9 +61,6 @@
     <EmbeddedResource Include="Resources\MonoRuntimeProvider.Shared.java">
       <LogicalName>MonoRuntimeProvider.Shared.java</LogicalName>
     </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

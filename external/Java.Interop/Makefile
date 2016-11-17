@@ -51,6 +51,11 @@ xa-all: $(PACKAGES) $(XA_INTEGRATION_OUTPUTS)
 
 run-all-tests: run-tests run-test-jnimarshal run-test-generator-core run-ptests
 
+prepare:: prepare-external
+
+prepare-external: $(PACKAGES) $(NUNIT_CONSOLE)
+	git submodule update --init --recursive
+
 clean:
 	-$(XBUILD) /t:Clean
 	-rm -Rf bin/$(CONFIGURATION) bin/Build$(CONFIGURATION) bin/Test$(CONFIGURATION) bin/XAIntegration$(CONFIGURATION)

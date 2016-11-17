@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <CecilDirectory>$(MSBuildThisFileDirectory)\..\..\external\cecil</CecilDirectory>
+    <CecilPreparedFlag>prepared.flag</CecilPreparedFlag>
+    <OutputPath Condition="'$(OutputPath)' == ''">bin\$(Configuration)</OutputPath>
+    <CecilOutputPath>$([System.IO.Path]::GetFullPath ('$(OutputPath)'))</CecilOutputPath>
+    <CecilAssemblies>$(OutputPath)\Xamarin.Android.Cecil.dll;$(OutputPath)\Xamarin.Android.Cecil.Mdb.dll</CecilAssemblies>
+  </PropertyGroup>
+  <Target Name="PrepareCecil"
+      Inputs="$(CecilDirectory)\Mono.Cecil.sln;AssemblyInfo.cs;Mono.Cecil.overrides;Xamarin.Android.Cecil.targets"
+      Outputs="$(CecilPreparedFlag)">
+    <Copy SourceFiles="AssemblyInfo.cs" DestinationFiles="$(CecilDirectory)\Mono.Cecil.AssemblyInfo.cs" />
+    <Copy SourceFiles="Mono.Cecil.overrides" DestinationFolder="$(CecilDirectory)" />
+    <Touch Files="$(CecilPreparedFlag)" AlwaysCreate="True" />
+  </Target>
+  <Target Name="BuildCecil"
+      Inputs="$(CecilPreparedFlag)"
+      Outputs="$(CecilAssemblies)" DependsOnTargets="PrepareCecil">
+    <Exec Command="cd $(CecilDirectory); patch -Ep1 &lt; $(MSBuildThisFileDirectory)\assembly-rename.patch" />
+    <MSBuild
+	Projects="$(CecilDirectory)\Mono.Cecil.csproj;$(CecilDirectory)\symbols\mdb\Mono.Cecil.Mdb.csproj"
+	Targets="Clean;Build"
+	StopOnFirstFailure="true"
+	Properties="Configuration=net_4_0_Debug;OutputPath=$(CecilOutputPath);BuildingSolutionFile=false" />
+    <Exec Command="cd $(CecilDirectory); patch -REp1 &lt; $(MSBuildThisFileDirectory)\assembly-rename.patch" />
+    <Touch Files="$(CecilAssemblies)" />
+  </Target>
+  <Target Name="Build" DependsOnTargets="BuildCecil" Returns="$(CecilOutputPath)\$(AssemblyName).dll">
+    <MakeDir Directories="obj\$(Configuration)" />
+  </Target>
+  <Target Name="AfterClean">
+    <Delete Files="$(CecilPreparedFlag)" />
+    <RemoveDir Directories="bin" />
+  </Target>
+</Project>

@@ -42,18 +42,6 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
-    <Reference Include="Mono.Cecil">
-      <HintPath>..\..\packages\Mono.Cecil.0.10.0-beta1-v2\lib\net40\Mono.Cecil.dll</HintPath>
-    </Reference>
-    <Reference Include="Mono.Cecil.Mdb">
-      <HintPath>..\..\packages\Mono.Cecil.0.10.0-beta1-v2\lib\net40\Mono.Cecil.Mdb.dll</HintPath>
-    </Reference>
-    <Reference Include="Mono.Cecil.Pdb">
-      <HintPath>..\..\packages\Mono.Cecil.0.10.0-beta1-v2\lib\net40\Mono.Cecil.Pdb.dll</HintPath>
-    </Reference>
-    <Reference Include="Mono.Cecil.Rocks">
-      <HintPath>..\..\packages\Mono.Cecil.0.10.0-beta1-v2\lib\net40\Mono.Cecil.Rocks.dll</HintPath>
-    </Reference>
     <Reference Include="Mono.Options">
       <HintPath>..\..\packages\Mono.Options.4.4.0.0\lib\net4-client\Mono.Options.dll</HintPath>
     </Reference>
@@ -142,6 +130,10 @@
     <ProjectReference Include="..\..\src\Java.Interop.Tools.Cecil\Java.Interop.Tools.Cecil.csproj">
       <Project>{D48EE8D0-0A0A-4493-AEF5-DAF5F8CF86AD}</Project>
       <Name>Java.Interop.Tools.Cecil</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\src\Xamarin.Android.Cecil\Xamarin.Android.Cecil.csproj">
+      <Project>{15945D4B-FF56-4BCC-B598-2718D199DD08}</Project>
+      <Name>Xamarin.Android.Cecil</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

@@ -47,7 +47,7 @@ namespace Xamarin.AndroidTools.AnnotationSupport
 					yield return m;
 			if (t.IsInterface)
 				foreach (var it in t.Interfaces)
-					foreach (var m in it.Resolve ().GetMethods ())
+					foreach (var m in it.InterfaceType.Resolve ().GetMethods ())
 						yield return m;
 		}
 

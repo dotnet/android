@@ -31,9 +31,6 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="Mono.Cecil">
-      <HintPath>..\packages\Mono.Cecil.0.10.0-beta1-v2\lib\net40\Mono.Cecil.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ManagedTypeFinderCecil.cs" />
@@ -41,9 +38,10 @@
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
+    <ProjectReference Include="..\Xamarin.Android.Cecil\Xamarin.Android.Cecil.csproj">
+      <Project>{15945D4B-FF56-4BCC-B598-2718D199DD08}</Project>
+      <Name>Xamarin.Android.Cecil</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Xamarin.Android.Tools.ApiXmlAdjuster\Xamarin.Android.Tools.ApiXmlAdjuster.csproj">
       <Project>{1268EADF-8344-431C-81F6-FCB7CBC99F49}</Project>
       <Name>Xamarin.Android.Tools.ApiXmlAdjuster</Name>
