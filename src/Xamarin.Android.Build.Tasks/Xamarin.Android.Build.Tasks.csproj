@@ -42,18 +42,6 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Xml" />
-    <Reference Include="Mono.Cecil">
-      <HintPath>..\..\packages\Mono.Cecil.0.10.0-beta1-v2\lib\net40\Mono.Cecil.dll</HintPath>
-    </Reference>
-    <Reference Include="Mono.Cecil.Mdb">
-      <HintPath>..\..\packages\Mono.Cecil.0.10.0-beta1-v2\lib\net40\Mono.Cecil.Mdb.dll</HintPath>
-    </Reference>
-    <Reference Include="Mono.Cecil.Pdb">
-      <HintPath>..\..\packages\Mono.Cecil.0.10.0-beta1-v2\lib\net40\Mono.Cecil.Pdb.dll</HintPath>
-    </Reference>
-    <Reference Include="Mono.Cecil.Rocks">
-      <HintPath>..\..\packages\Mono.Cecil.0.10.0-beta1-v2\lib\net40\Mono.Cecil.Rocks.dll</HintPath>
-    </Reference>
     <Reference Include="Irony">
       <HintPath>..\..\packages\Irony.0.9.1\lib\net40\Irony.dll</HintPath>
     </Reference>
@@ -644,6 +632,14 @@
     <ProjectReference Include="$(LibZipSharpSourceFullPath)\libZipSharp.csproj">
       <Project>{E248B2CA-303B-4645-ADDC-9D4459D550FD}</Project>
       <Name>libZipSharp</Name>
+    </ProjectReference>
+    <ProjectReference Include="$(JavaInteropFullPath)\src\Xamarin.Android.Cecil\Xamarin.Android.Cecil.csproj">
+      <Project>{15945D4B-FF56-4BCC-B598-2718D199DD08}</Project>
+      <Name>Xamarin.Android.Cecil</Name>
+    </ProjectReference>
+    <ProjectReference Include="$(JavaInteropFullPath)\src\Xamarin.Android.Cecil\Xamarin.Android.Cecil.Mdb.csproj">
+      <Project>{C0487169-8F81-497F-919E-EB42B1D0243F}</Project>
+      <Name>Xamarin.Android.Cecil.Mdb</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

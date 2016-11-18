@@ -91,6 +91,10 @@ Project("{9344BDBB-3E7F-41FC-A0DD-8665D75EE146}") = "bundle", "build-tools\bundl
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "xa-prep-tasks", "build-tools\xa-prep-tasks\xa-prep-tasks.csproj", "{7CE69551-BD73-4726-ACAA-AAF89C84BAF8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.Cecil", "external\Java.Interop\src\Xamarin.Android.Cecil\Xamarin.Android.Cecil.csproj", "{15945D4B-FF56-4BCC-B598-2718D199DD08}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.Cecil.Mdb", "external\Java.Interop\src\Xamarin.Android.Cecil\Xamarin.Android.Cecil.Mdb.csproj", "{C0487169-8F81-497F-919E-EB42B1D0243F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|AnyCPU = Debug|AnyCPU
@@ -417,6 +421,22 @@ Global
 		{7CE69551-BD73-4726-ACAA-AAF89C84BAF8}.XAIntegrationDebug|AnyCPU.Build.0 = Debug|Any CPU
 		{7CE69551-BD73-4726-ACAA-AAF89C84BAF8}.XAIntegrationRelease|AnyCPU.ActiveCfg = Debug|Any CPU
 		{7CE69551-BD73-4726-ACAA-AAF89C84BAF8}.XAIntegrationRelease|AnyCPU.Build.0 = Debug|Any CPU
+		{15945D4B-FF56-4BCC-B598-2718D199DD08}.Debug|AnyCPU.ActiveCfg = Debug|Any CPU
+		{15945D4B-FF56-4BCC-B598-2718D199DD08}.Debug|AnyCPU.Build.0 = Debug|Any CPU
+		{15945D4B-FF56-4BCC-B598-2718D199DD08}.Release|AnyCPU.ActiveCfg = Release|Any CPU
+		{15945D4B-FF56-4BCC-B598-2718D199DD08}.Release|AnyCPU.Build.0 = Release|Any CPU
+		{15945D4B-FF56-4BCC-B598-2718D199DD08}.XAIntegrationDebug|AnyCPU.ActiveCfg = Debug|Any CPU
+		{15945D4B-FF56-4BCC-B598-2718D199DD08}.XAIntegrationDebug|AnyCPU.Build.0 = Debug|Any CPU
+		{15945D4B-FF56-4BCC-B598-2718D199DD08}.XAIntegrationRelease|AnyCPU.ActiveCfg = Debug|Any CPU
+		{15945D4B-FF56-4BCC-B598-2718D199DD08}.XAIntegrationRelease|AnyCPU.Build.0 = Debug|Any CPU
+		{C0487169-8F81-497F-919E-EB42B1D0243F}.Debug|AnyCPU.ActiveCfg = Debug|Any CPU
+		{C0487169-8F81-497F-919E-EB42B1D0243F}.Debug|AnyCPU.Build.0 = Debug|Any CPU
+		{C0487169-8F81-497F-919E-EB42B1D0243F}.Release|AnyCPU.ActiveCfg = Release|Any CPU
+		{C0487169-8F81-497F-919E-EB42B1D0243F}.Release|AnyCPU.Build.0 = Release|Any CPU
+		{C0487169-8F81-497F-919E-EB42B1D0243F}.XAIntegrationDebug|AnyCPU.ActiveCfg = Debug|Any CPU
+		{C0487169-8F81-497F-919E-EB42B1D0243F}.XAIntegrationDebug|AnyCPU.Build.0 = Debug|Any CPU
+		{C0487169-8F81-497F-919E-EB42B1D0243F}.XAIntegrationRelease|AnyCPU.ActiveCfg = Debug|Any CPU
+		{C0487169-8F81-497F-919E-EB42B1D0243F}.XAIntegrationRelease|AnyCPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{8FF78EB6-6FC8-46A7-8A15-EBBA9045C5FA} = {E351F97D-EA4F-4E7F-AAA0-8EBB1F2A4A62}
@@ -460,6 +480,8 @@ Global
 		{0DE278D6-000F-4001-BB98-187C0AF58A61} = {E351F97D-EA4F-4E7F-AAA0-8EBB1F2A4A62}
 		{1640725C-4DB8-4D8D-BC96-74E688A06EEF} = {E351F97D-EA4F-4E7F-AAA0-8EBB1F2A4A62}
 		{7CE69551-BD73-4726-ACAA-AAF89C84BAF8} = {E351F97D-EA4F-4E7F-AAA0-8EBB1F2A4A62}
+		{15945D4B-FF56-4BCC-B598-2718D199DD08} = {864062D3-A415-4A6F-9324-5820237BA058}
+		{C0487169-8F81-497F-919E-EB42B1D0243F} = {864062D3-A415-4A6F-9324-5820237BA058}
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
 		Policies = $0
