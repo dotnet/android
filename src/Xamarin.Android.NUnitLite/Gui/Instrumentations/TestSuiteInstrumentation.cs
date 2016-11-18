@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.IO;
 using System.Reflection;
 
 using Android.App;
@@ -7,6 +9,7 @@ using Android.OS;
 using Android.Runtime;
 using Android.Util;
 
+using NUnitLite.Runner;
 using NUnit.Framework.Internal;
 
 namespace Xamarin.Android.NUnitLite {
@@ -47,7 +50,14 @@ namespace Xamarin.Android.NUnitLite {
 			int failed = 0;
 			try {
 				Log.Info (TAG, "NUnit automated tests started");
-				AndroidRunner.Runner.Run (AndroidRunner.GetSetupTestTarget (arguments), TargetContext);
+				var testResult  = AndroidRunner.Runner.Run (AndroidRunner.GetSetupTestTarget (arguments), TargetContext);
+				var resultsFile = GetResultsPath ();
+				if (resultsFile != null) {
+					var startTime   = DateTime.Now;
+					var resultsXml  = new NUnit2XmlOutputWriter (startTime);
+					resultsXml.WriteResultFile (testResult, resultsFile);
+					results.PutString ("nunit2-results-path", ToAdbPath (resultsFile));
+				}
 				Log.Info (TAG, "NUnit automated tests completed");
 				int passed = 0, skipped = 0, inconclusive = 0;
 				foreach (TestResult result in AndroidRunner.Results.Values) {
@@ -79,6 +89,34 @@ namespace Xamarin.Android.NUnitLite {
 				results.PutString ("error", e.ToString ());
 			}
 			Finish (failed == 0 ? Result.Ok : Result.Canceled, results);
+		}
+
+		string GetResultsPath ()
+		{
+			var docsDir = Context.GetExternalFilesDir (global::Android.OS.Environment.DirectoryDocuments);
+			if (docsDir == null)
+				return null;
+			return Path.Combine (docsDir.AbsolutePath, "TestResults.xml");
+		}
+
+		// On some Android targets, the external storage directory is "emulated",
+		// in which case the paths used on-device by the application are *not*
+		// paths that can be used off-device with `adb pull`.
+		// For example, `Contxt.GetExternalFilesDir()` may return `/storage/emulated/foo`,
+		// but `adb pull /storage/emulated/foo` will *fail*; instead, we may need
+		// `adb pull /mnt/shell/emulated/foo`.
+		// The `$EMULATED_STORAGE_SOURCE` and `$EMULATED_STORAGE_TARGET` environment
+		// variables control the "on-device" (`$EMULATED_STORAGE_TARGET`) and
+		// "off-device" (`$EMULATED_STORAGE_SOURCE`) directory prefixes
+		string ToAdbPath (string path)
+		{
+			var source  = System.Environment.GetEnvironmentVariable ("EMULATED_STORAGE_SOURCE");
+			var target  = System.Environment.GetEnvironmentVariable ("EMULATED_STORAGE_TARGET");
+
+			if (!string.IsNullOrEmpty (source) && !string.IsNullOrEmpty (target) && path.StartsWith (target, StringComparison.Ordinal)) {
+				return path.Replace (target, source);
+			}
+			return path;
 		}
 
 		protected abstract void AddTests ();

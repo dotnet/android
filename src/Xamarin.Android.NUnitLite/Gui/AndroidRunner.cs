@@ -316,13 +316,13 @@ namespace Xamarin.Android.NUnitLite
 			}
 		}
 
-		internal void Run (NUnitTest test, Context context)
+		internal TestResult Run (NUnitTest test, Context context)
 		{
 			if (!OpenWriter ("Run Everything", context))
-				return;
+				return null;
 
 			try {
-				Run (test);
+				return Run (test);
 			} finally {
 				int testCount = passed + failed + skipped + inconclusive;
 				Runner.Writer.WriteLine ("Tests run: {0}, Passed: {1}, Failed: {2}, Skipped: {3}, Inconclusive: {4}",
