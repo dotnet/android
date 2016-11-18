@@ -17,12 +17,13 @@
       Inputs=""
       Outputs="$(_BundlePath)">
     <DownloadUri
+        ContinueOnError="True"
         SourceUris="$(_AzureBaseUri)$(Configuration)/$(XABundleFileName)"
         DestinationFiles="$(_BundlePath)"
     />
   </Target>
   <Target Name="_ExtractBundle"
-      DependsOnTargets="_DownloadBundle"
+      Condition=" Exists('$(_BundlePath)') "
       Inputs="$(_BundlePath)"
       Outputs="$(OutputPath).extracted-$(XABundleFileName)">
     <SystemUnzip
@@ -38,6 +39,6 @@
   </Target>
   <Target Name="_DownloadAndExtractBundle"
       AfterTargets="Build"
-      DependsOnTargets="_ExtractBundle">
+      DependsOnTargets="_GetBundleOutputPath;_DownloadBundle;_ExtractBundle">
   </Target>
 </Project>

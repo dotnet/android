@@ -62,13 +62,18 @@ namespace Xamarin.Android.BuildTools.PrepTasks {
 			var dn  = Path.GetFileName (destinationFile);
 			var tempPath    = Path.Combine (dp, "." + dn + ".download");
 
-			Log.LogMessage (MessageImportance.Low, $"Downloading `{uri}` to `{tempPath}`.");
-			using (var r = await client.GetAsync (uri))
-			using (var o = File.OpenWrite (tempPath)) {
-				await r.Content.CopyToAsync (o);
+			Log.LogMessage (MessageImportance.Normal, $"Downloading `{uri}` to `{tempPath}`.");
+			try {
+				using (var s = await client.GetStreamAsync (uri))
+				using (var o = File.OpenWrite (tempPath)) {
+					await s.CopyToAsync (o);
+				}
+				Log.LogMessage (MessageImportance.Low, $"mv '{tempPath}' '{destinationFile}'.");
+				File.Move (tempPath, destinationFile);
 			}
-			Log.LogMessage (MessageImportance.Low, $"mv '{tempPath}' '{destinationFile}'.");
-			File.Move (tempPath, destinationFile);
+			catch (Exception e) {
+				Log.LogErrorFromException (e);
+			}
 		}
 	}
 }
