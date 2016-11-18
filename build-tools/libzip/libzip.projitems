@@ -11,7 +11,7 @@
       <CMake>cmake</CMake>
       <CMakeFlags></CMakeFlags>
       <OutputLibrary>libzip.so</OutputLibrary>
-      <OutputLibraryPath>libzip.so</OutputLibraryPath>
+      <OutputLibraryPath>lib/libzip.so</OutputLibraryPath>
     </_LibZipTarget>
   </ItemGroup>
   <ItemGroup>
