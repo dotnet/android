@@ -8,3 +8,4 @@ packages
 .DS_Store
 .nuget
 TestResult.xml
+TestResult-*.xml

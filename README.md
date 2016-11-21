@@ -290,44 +290,4 @@ We use [Bugzilla](https://bugzilla.xamarin.com/enter_bug.cgi?product=Android) to
 
 # Maintainer FAQ
 
-## How do I rebuild the Mono Runtime and Native Binaries?
-
-The various Mono runtimes -- over *20* of them (!) -- all store object code
-within `build-tools/mono-runtimes/obj/$(Configuration)/TARGET`.
-
-If you change sources within `external/mono`, a top-level `make`/`xbuild`
-invocation may not rebuild those mono native binaries. To explicitly rebuild
-*all* Mono runtimes, use the `ForceBuild` target:
-
-	# Build and install all runtimes
-	$ xbuild /t:ForceBuild build-tools/mono-runtimes/mono-runtimes.mdproj
-
-To build Mono for a specific target, run `make` from the relevant directory
-and invoke the `_InstallRuntimes` target. For example, to rebuild
-Mono for armeabi-v7a:
-
-	$ cd build-tools/mono-runtimes
-	$ make -C obj/Debug/armeabi-v7a
-	
-	# This updates bin/$(Configuration)/lib/xbuild/Xamarin/Android/lib/armeabi-v7a/libmonosgen-2.0.so
-	$ xbuild /t:_InstallRuntimes
-
-## How do I rebuild BCL assemblies?
-
-The Xamarin.Android Base Class Library assemblies, such as `mscorlib.dll`,
-are built within `external/mono`, using Mono's normal build system:
-
-	# This updates external/mono/mcs/class/lib/monodroid/ASSEMBLY.dll
-	$ make -C external/mono/mcs/class/ASSEMBLY PROFILE=monodroid
-
-Alternatively, if you want to rebuild *all* the assemblies, the "host"
-Mono needs to be rebuilt. Note that the name of the "host" directory
-varies based on the operating system you're building from:
-
-	$ make -C build-tools/mono-runtimes/obj/Debug/host-Darwin
-
-Once the assemblies have been rebuilt, they can be copied into the appropriate
-Xamarin.Android SDK directory by using the `_InstallBcl` target:
-
-	# This updates bin/$(Configuration)/lib/xbuild-frameworks/MonoAndroid/v1.0/ASSEMBLY.dll
-	$ xbuild build-tools/mono-runtimes/mono-runtimes.mdproj /t:_InstallBcl
+See [DevelopmentTips.md](Documentation/DevelopmentTips.md).

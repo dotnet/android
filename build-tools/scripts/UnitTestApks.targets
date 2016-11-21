@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.Adb" />
+  <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.CheckAdbTarget" />
+  <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.CreateAndroidEmulator" />
+  <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.RunInstrumentationTests" />
+  <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.StartAndroidEmulator" />
+
+  <PropertyGroup>
+    <_TestImageName>XamarinAndroidUnitTestRunner</_TestImageName>
+    <_AdbEmulatorPort>5600</_AdbEmulatorPort>
+  </PropertyGroup>
+
+  <Target Name="AcquireAndroidTarget">
+    <CheckAdbTarget
+        Condition=" '$(RequireNewEmulator)' != 'True' "
+        AdbTarget="$(AdbTarget)"
+        ToolPath="$(AdbToolPath)">
+      <Output TaskParameter="AdbTarget"     PropertyName="_AdbTarget" />
+      <Output TaskParameter="IsValidTarget" PropertyName="_ValidAdbTarget"  />
+    </CheckAdbTarget>
+    <CreateAndroidEmulator
+        Condition=" '$(_ValidAdbTarget)' != 'True' "
+        AndroidAbi="x86"
+        AndroidSdkHome="$(AndroidSdkDirectory)"
+        SdkVersion="21"
+        ImageName="$(_TestImageName)"
+        ToolExe="$(AndroidToolExe)"
+        ToolPath="$(AndroidToolPath)"
+    />
+    <StartAndroidEmulator
+        Condition=" '$(_ValidAdbTarget)' != 'True' "
+        AndroidSdkHome="$(AndroidSdkDirectory)"
+        ImageName="$(_TestImageName)"
+        Port="$(_AdbEmulatorPort)"
+        ToolExe="$(EmulatorToolExe)"
+        ToolPath="$(EmulatorToolPath)">
+      <Output TaskParameter="AdbTarget" PropertyName="_AdbTarget" />
+      <Output TaskParameter="AdbTarget" PropertyName="_EmuTarget" />
+      <Output TaskParameter="AdbProcess" PropertyName="_EmuProcess" />
+    </StartAndroidEmulator>
+    <Adb
+        Condition=" '$(_ValidAdbTarget)' != 'True' "
+        Arguments="$(_AdbTarget) wait-for-device"
+    />
+    <Message
+        Condition=" '$(_EmuTarget)' != '' "
+        Text="Launched Android emulator; `adb` target: '$(_AdbTarget)'"
+    />
+  </Target>
+
+  <Target Name="ReleaseAndroidTarget">
+    <Adb
+        Condition=" '$(_EmuTarget)' != '' "
+        Arguments="$(_EmuTarget) emu kill"
+    />
+  </Target>
+
+  <!--
+    <ItemGroup>
+      <UnitTestApk Include="ApkFile">
+        <Package></Package>
+        <InstrumentationType></InstrumentationType>
+        <ResultsPath></ResultsPath>
+      </UnitTestApk>
+    </ItemGroup>
+    -->
+
+  <Target Name="DeployUnitTestApks"
+      Condition=" '@(UnitTestApk)' != '' ">
+    <Adb
+        Arguments="$(_AdbTarget) $(AdbOptions) install -r &quot;%(UnitTestApk.Identity)&quot;"
+        ToolExe="$(AdbToolExe)"
+        ToolPath="$(AdbToolPath)"
+    />
+  </Target>
+
+  <Target Name="UndeployUnitTestApks"
+      Condition=" '@(UnitTestApk)' != '' ">
+    <Adb
+        Arguments="$(_AdbTarget) $(AdbOptions) uninstall &quot;%(UnitTestApk.Package)&quot;"
+        ToolExe="$(AdbToolExe)"
+        ToolPath="$(AdbToolPath)"
+    />
+  </Target>
+
+  <Target Name="RunUnitTestApks"
+      Condition=" '@(UnitTestApk)' != '' ">
+    <RunInstrumentationTests
+        AdbTarget="$(_AdbTarget)"
+        AdbOptions="$(AdbOptions)"
+        Component="%(UnitTestApk.Package)/%(UnitTestApk.InstrumentationType)"
+        NUnit2TestResultsFile="%(UnitTestApk.ResultsPath)"
+        ToolExe="$(AdbToolExe)"
+        ToolPath="$(AdbToolPath)">
+      <Output TaskParameter="NUnit2TestResultsFile" PropertyName="_ResultsFile "/>
+    </RunInstrumentationTests>
+  </Target>
+</Project>
