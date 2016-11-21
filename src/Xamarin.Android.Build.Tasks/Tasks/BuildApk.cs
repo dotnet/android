@@ -327,7 +327,7 @@ namespace Xamarin.Android.Tasks
 
 			const string defaultLogLevel = "MONO_LOG_LEVEL=info";
 			const string defaultMonoDebug = "MONO_DEBUG=gen-compact-seq-points";
-			const string defaultHttpMessageHandler = "XA_HTTP_CLIENT_HANDLER_TYPE=Xamarin.Android.Net.AndroidClientHandler";
+			const string defaultHttpMessageHandler = "XA_HTTP_CLIENT_HANDLER_TYPE=System.Net.Http.HttpClientHandler, System.Net.Http";
 			const string defaultTlsProvider = "XA_TLS_PROVIDER=default";
 			string xamarinBuildId = string.Format ("XAMARIN_BUILD_ID={0}", buildId);
 
