@@ -87,6 +87,7 @@
   <Target Name="RunUnitTestApks"
       Condition=" '@(UnitTestApk)' != '' ">
     <RunInstrumentationTests
+        ContinueOnError="True"
         AdbTarget="$(_AdbTarget)"
         AdbOptions="$(AdbOptions)"
         Component="%(UnitTestApk.Package)/%(UnitTestApk.InstrumentationType)"
