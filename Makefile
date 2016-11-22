@@ -142,8 +142,9 @@ define RUN_NUNIT_TEST
 	$(RUNTIME) --runtime=v4.0.0 \
 		$(NUNIT_CONSOLE) $(NUNIT_EXTRA) $(1) \
 		$(if $(RUN),-run:$(RUN)) \
-		--result=TestResult-$(basename $(notdir $(1))).xml \
-		-output=bin/Test$(CONFIGURATION)/TestOutput-$(basename $(notdir $(1))).txt ;
+		--result="TestResult-$(basename $(notdir $(1))).xml;format=nunit2" \
+		-output=bin/Test$(CONFIGURATION)/TestOutput-$(basename $(notdir $(1))).txt \
+	|| true ;
 endef
 
 run-nunit-tests: $(NUNIT_TESTS)

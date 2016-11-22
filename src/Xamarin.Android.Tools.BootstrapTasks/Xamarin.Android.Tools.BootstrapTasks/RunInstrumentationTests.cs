@@ -101,7 +101,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			if (!singleLine.Contains (TestResultsPathResult))
 				return;
 			var i = singleLine.IndexOf (TestResultsPathResult);
-			targetTestResultsPath   = singleLine.Substring (i + TestResultsPathResult.Length);
+			targetTestResultsPath   = singleLine.Substring (i + TestResultsPathResult.Length).Trim ();
 		}
 	}
 }
