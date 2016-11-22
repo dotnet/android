@@ -55,12 +55,20 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 		protected override void LogEventsFromTextOutput (string singleLine, MessageImportance messageImportance)
 		{
 			base.LogEventsFromTextOutput (singleLine, messageImportance);
-			// Log.LogMessage ($"# jonp: messageImportance={messageImportance};  line='{singleLine}'");
 			if (string.IsNullOrEmpty (singleLine))
 				return;
 			if (singleLine.Equals ("List of devices attached", StringComparison.OrdinalIgnoreCase))
 				return;
+			// Ignore stderr
 			if (messageImportance == MessageImportance.High)
+				return;
+			// Informational messages, e.g.
+			//  * daemon not running. starting it now on port 5037 *
+			//  * daemon started successfully *
+			if (singleLine.StartsWith ("* ", StringComparison.Ordinal))
+				return;
+			// Error messages, e.g.: error: device '(null)' not found
+			if (singleLine.StartsWith ("error: ", StringComparison.OrdinalIgnoreCase))
 				return;
 
 			if (string.IsNullOrEmpty (SdkVersion)) {
