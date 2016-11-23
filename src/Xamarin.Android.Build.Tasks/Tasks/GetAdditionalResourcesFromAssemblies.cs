@@ -123,6 +123,7 @@ namespace Xamarin.Android.Tasks {
 			CustomAttributeNamedArgument sha1sum = attr.Properties.FirstOrDefault (p => p.Name == "Sha1sum");
 			var isXamarinAssembly = Path.GetFileName (fullPath).StartsWith (AssemblyNamePrefix, StringComparison.OrdinalIgnoreCase);
 			var assemblyDir = Path.Combine (CachePath, Path.GetFileNameWithoutExtension (fullPath));
+			var cacheDir = Path.Combine (CachePath, isXamarinAssembly ? "extras" : Path.GetFileNameWithoutExtension (fullPath));
 			// upgrade the paths to not strip off the Xamarin. prefix as it might cause assembly 
 			// collisions now that we cache everything here.
 			var oldAssemblyDir = Path.Combine (CachePath, Path.GetFileNameWithoutExtension (fullPath).Substring (isXamarinAssembly ? AssemblyNamePrefix.Length : 0));
@@ -143,7 +144,7 @@ namespace Xamarin.Android.Tasks {
 			if (sourceUrl.Name != null) {
 				if (new Uri (sourceUrl.Argument.Value as string).IsFile)
 					assemblyDir = Path.GetDirectoryName (fullPath);
-				baseDir = MakeSureLibraryIsInPlace (assemblyDir, sourceUrl.Argument.Value as string,
+				baseDir = MakeSureLibraryIsInPlace (assemblyDir, cacheDir, sourceUrl.Argument.Value as string,
 					version.Argument.Value as string, embeddedArchive.Argument.Value as string, sha1sum.Argument.Value as string);
 			}
 			if (!string.IsNullOrEmpty (baseDir) && !Path.IsPathRooted (path))
@@ -269,7 +270,7 @@ namespace Xamarin.Android.Tasks {
 			}
 		}
 
-		string MakeSureLibraryIsInPlace (string destinationBase, string url, string version, string embeddedArchive, string sha1)
+		string MakeSureLibraryIsInPlace (string destinationBase, string cacheBase, string url, string version, string embeddedArchive, string sha1)
 		{
 			if (string.IsNullOrEmpty (url))
 				return null;
@@ -321,7 +322,16 @@ namespace Xamarin.Android.Tasks {
 					LogDebugMessage ("    found `{0}` in `{1}`", embeddedArchive, Path.Combine (AndroidSdkDirectory, extraPath));
 			}
 
-			string contentDir = string.IsNullOrEmpty (extraPath) ? Path.Combine (destinationDir, "content") : Path.Combine (AndroidSdkDirectory, extraPath);
+			string oldcontentDir = Path.Combine (destinationDir, "content");
+			if (Directory.Exists (oldcontentDir)) {
+				try {
+					Directory.Delete (oldcontentDir, recursive: true);
+				}
+				catch (Exception e) {
+					LogMessage ($"Failed to remove old content Directory {oldcontentDir}. {e}");
+				}
+			}
+			string contentDir = string.IsNullOrEmpty (extraPath) ? Path.Combine (cacheBase, version ?? String.Empty) : Path.Combine (AndroidSdkDirectory, extraPath);
 
 			int attempt = 0;
 			while (attempt < 3 && !Log.HasLoggedErrors) {
