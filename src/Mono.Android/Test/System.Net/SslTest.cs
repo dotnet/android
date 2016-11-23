@@ -27,7 +27,7 @@ namespace System.NetTests {
 			Exception  exception  = null;
 
 			var thread = new Thread (() => {
-				string url = "https://pipeline.internalx.com/";
+				string url = "https://tlstest-1.xamdev.com/";
 
 				var downloadTask = new WebClient ().DownloadDataTaskAsync (url);
 				var completeTask = downloadTask.ContinueWith (t => {

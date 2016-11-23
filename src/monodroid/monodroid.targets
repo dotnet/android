@@ -41,8 +41,9 @@
       DependsOnTargets="_GenerateIncludeFiles;_BuildAndroidRuntimes;_BuildHostRuntimes">
   </Target>
   <Target Name="_GenerateIncludeFiles"
-      Inputs="@(_EmbeddedBlob)"
-      Outputs="@(_EmbeddedBlob->'jni\%(Include)')">
+      Inputs="@(_EmbeddedBlob);jni/config.h"
+      Outputs="@(_EmbeddedBlob->'jni\%(Include)');$(OutputPath)\..\..\..\..\..\include\config.h">
+    <Copy SourceFiles="jni/config.h" DestinationFiles="$(OutputPath)\..\..\..\..\..\include\config.h" />
     <Exec Command="(cat &quot;@(_EmbeddedBlob)&quot; ; dd if=/dev/zero bs=1 count=1 2>/dev/null) > %(_EmbeddedBlob.Config)" />
     <Exec Command="xxd -i %(_EmbeddedBlob.Config) | sed 's/^unsigned /static const unsigned /g' > jni/%(_EmbeddedBlob.Include)" />
     <Exec Command="rm %(_EmbeddedBlob.Config)" />
@@ -52,7 +53,7 @@
       Outputs="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android.debug.so');@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android.release.so')">
     <PropertyGroup>
       <_AppAbi>@(AndroidSupportedTargetJitAbi->'%(Identity)', ' ')</_AppAbi>
-      <_NdkBuildArgs>CONFIGURATION=$(Configuration) SGEN_BRIDGE_VERSION=$(MonoSgenBridgeVersion)</_NdkBuildArgs>
+      <_NdkBuildArgs>CONFIGURATION=$(Configuration) SGEN_BRIDGE_VERSION=$(MonoSgenBridgeVersion) MONO_PATH="$(MonoSourceFullPath)"</_NdkBuildArgs>
     </PropertyGroup>
     <WriteLinesToFile
         File="jni\Application.mk"
