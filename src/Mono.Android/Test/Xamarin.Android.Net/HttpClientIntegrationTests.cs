@@ -202,6 +202,7 @@ namespace Xamarin.Android.NetTests {
 				}
 			}
 		}
+
 #if TODO
 		[Test]
 		public void Send_Complete_Default ()
@@ -792,7 +793,7 @@ namespace Xamarin.Android.NetTests {
 				}
 			}
 		}
-#endif
+
 		[Test]
 		public void Send_Content_Get ()
 		{
@@ -893,6 +894,7 @@ namespace Xamarin.Android.NetTests {
 				}
 			}
 		}
+#endif  // TODO
 
 		[Test]
 		public void Send_Invalid ()

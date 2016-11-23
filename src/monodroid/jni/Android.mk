@@ -37,17 +37,22 @@ LOCAL_LDFLAGS   += \
 	-Wl,--no-undefined \
 
 LOCAL_C_INCLUDES	:= \
+	$(LOCAL_PATH)/../../../bin/$(CONFIGURATION)/include \
 	$(LOCAL_PATH)/../../../bin/$(CONFIGURATION)/include/$(TARGET_ARCH_ABI)/eglib \
-	$(LOCAL_PATH)/../../../external/mono/eglib/src \
+	"$(MONO_PATH)/eglib/src" \
 	$(LOCAL_PATH)/zip
 
 LOCAL_LDLIBS    := -llog -lz -lstdc++
 
 LOCAL_MODULE    := monodroid
 
+# Note: `$(MONO_PATH)` *cannot* contain spaces, because we can't quote it.
+# Should we try to, `ndk-build` ignores the file with the warning:
+#   Android NDK: ".../mono/support/nl.c" ".../mono/support/zlib-helper.c"
+#   Android NDK: WARNING: Unsupported source file extensions in jni/Android.mk for module monodroid
 LOCAL_SRC_FILES := \
-	../../../external/mono/support/nl.c \
-	../../../external/mono/support/zlib-helper.c \
+	$(MONO_PATH)/support/nl.c \
+	$(MONO_PATH)/support/zlib-helper.c \
 	dylib-mono.c \
 	embedded-assemblies.c \
 	jni.c \

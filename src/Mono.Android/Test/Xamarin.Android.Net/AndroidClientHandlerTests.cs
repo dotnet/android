@@ -164,15 +164,24 @@ namespace Xamarin.Android.NetTests {
     [Test]
     public void Sanity_Tls_1_2_Url_WithMonoClientHandlerFails ()
     {
+      var tlsProvider   = global::System.Environment.GetEnvironmentVariable ("XA_TLS_PROVIDER");
+      var supportTls1_2 = tlsProvider.Equals ("btls", StringComparison.OrdinalIgnoreCase);
       using (var c = new HttpClient (new HttpClientHandler ())) {
         try {
           var tr = c.GetAsync (Tls_1_2_Url);
           tr.Wait ();
           tr.Result.EnsureSuccessStatusCode ();
-          Assert.Fail ("SHOULD NOT BE REACHED: Mono's HttpClientHandler doesn't support TLS 1.2.");
+          if (!supportTls1_2) {
+            Assert.Fail ("SHOULD NOT BE REACHED: Mono's HttpClientHandler doesn't support TLS 1.2.");
+          }
         }
         catch (AggregateException e) {
-          Assert.IsTrue (e.InnerExceptions.Any (ie => ie is WebException));
+          if (supportTls1_2) {
+            Assert.Fail ("SHOULD NOT BE REACHED: BTLS is present, TLS 1.2 should work.");
+          }
+          if (!supportTls1_2) {
+            Assert.IsTrue (e.InnerExceptions.Any (ie => ie is WebException));
+          }
         }
       }
     }
