@@ -116,10 +116,10 @@ namespace Xamarin.ProjectTools
 			if (RunXBuild) {
 				var outdir = Environment.GetEnvironmentVariable ("XA_BUILD_OUTPUT_PATH");
 				if (String.IsNullOrEmpty (outdir))
-					outdir = Path.GetFullPath (Path.Combine ("..", "..", "..", "bin", "Debug"));
+					outdir = Path.GetFullPath (Path.Combine (Root, "..", "..", "bin", "Debug"));
 
 				if (!Directory.Exists (Path.Combine (outdir, "lib", "xbuild")))
-					outdir = Path.GetFullPath (Path.Combine ("..", "..", "..", "bin", "Release"));
+					outdir = Path.GetFullPath (Path.Combine (Root, "..", "..", "bin", "Release"));
 
 				var targetsdir = Path.Combine (outdir, "lib", "xbuild");
 				args.AppendFormat (" {0} ", logger);

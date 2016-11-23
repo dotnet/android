@@ -7,7 +7,7 @@
     <OutputType>Library</OutputType>
     <RootNamespace>Xamarin.Android.Build.Tests</RootNamespace>
     <AssemblyName>Xamarin.Android.Build.Tests</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
   </PropertyGroup>
   <Import Project="..\..\..\..\Configuration.props" />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -37,10 +37,6 @@
     <Reference Include="nunit.framework">
       <HintPath>..\..\..\..\packages\NUnit.3.2.1\lib\net45\nunit.framework.dll</HintPath>
     </Reference>
-    <Reference Include="Ionic.Zip">
-      <HintPath>..\..\..\..\packages\Unofficial.Ionic.Zip.1.9.1.8\lib\Ionic.Zip.dll</HintPath>
-      <Private>False</Private>
-    </Reference>    
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Utilities\BaseTest.cs" />
@@ -52,6 +48,10 @@
     <ProjectReference Include="..\Xamarin.ProjectTools\Xamarin.ProjectTools.csproj">
       <Project>{2DD1EE75-6D8D-4653-A800-0A24367F7F38}</Project>
       <Name>Xamarin.ProjectTools</Name>
+    </ProjectReference>
+    <ProjectReference Include="$(LibZipSharpSourceFullPath)\libZipSharp.csproj">
+      <Project>{E248B2CA-303B-4645-ADDC-9D4459D550FD}</Project>
+      <Name>libZipSharp</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

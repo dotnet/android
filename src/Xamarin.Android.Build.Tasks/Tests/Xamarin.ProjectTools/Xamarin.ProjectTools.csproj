@@ -7,7 +7,7 @@
     <OutputType>Library</OutputType>
     <RootNamespace>Xamarin.ProjectTools</RootNamespace>
     <AssemblyName>Xamarin.ProjectTools</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
   </PropertyGroup>
   <Import Project="..\..\..\..\Configuration.props" />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -35,10 +35,6 @@
     <Reference Include="Microsoft.Build" />
     <Reference Condition=" '$(OS)' != 'Unix' " Include="Microsoft.Build.Engine" />
     <Reference Include="System.Drawing" />
-    <Reference Include="Ionic.Zip">
-      <HintPath>..\..\..\..\packages\Unofficial.Ionic.Zip.1.9.1.8\lib\Ionic.Zip.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="Microsoft.Web.XmlTransform">
       <HintPath>..\..\..\..\packages\Microsoft.Web.Xdt.2.1.1\lib\net40\Microsoft.Web.XmlTransform.dll</HintPath>
     </Reference>
@@ -109,7 +105,15 @@
     <EmbeddedResource Include="Resources\Base\test.keystore" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Ionic.Zip.xml" />
     <None Include="packages.config" />
+    <Content Include="..\..\..\..\bin\$(Configuration)\lib\xbuild\Xamarin\Android\libzip.3.0.dylib">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="$(LibZipSharpSourceFullPath)\libZipSharp.csproj">
+      <Project>{E248B2CA-303B-4645-ADDC-9D4459D550FD}</Project>
+      <Name>libZipSharp</Name>
+    </ProjectReference>
   </ItemGroup>
 </Project>
