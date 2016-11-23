@@ -5,6 +5,16 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mono.Android-Tests", "src\M
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HelloWorld", "samples\HelloWorld\HelloWorld.csproj", "{2305B00D-DE81-4744-B0DA-357835CAFE5A}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Samples", "Samples", "{43A4FB09-279A-4138-8027-EC1E1CED2E8A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Core", "Core", "{EFBC4DC0-DBFF-4DAA-B0B8-6D0CB02A25F5}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Locales", "Locales", "{D6BFEDF6-2F48-44B2-9553-F2F6F92531BD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LibraryResources", "tests\locales\LibraryResources\LibraryResources.csproj", "{05768F39-7BAF-43E6-971E-712F5771E88E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.Locale-Tests", "tests\locales\Xamarin.Android.Locale-Tests\Xamarin.Android.Locale-Tests.csproj", "{9D5C83B5-70D5-4CC2-9DB7-78B23DC8F255}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -19,5 +29,19 @@ Global
 		{2305B00D-DE81-4744-B0DA-357835CAFE5A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2305B00D-DE81-4744-B0DA-357835CAFE5A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2305B00D-DE81-4744-B0DA-357835CAFE5A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{05768F39-7BAF-43E6-971E-712F5771E88E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{05768F39-7BAF-43E6-971E-712F5771E88E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{05768F39-7BAF-43E6-971E-712F5771E88E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{05768F39-7BAF-43E6-971E-712F5771E88E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9D5C83B5-70D5-4CC2-9DB7-78B23DC8F255}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9D5C83B5-70D5-4CC2-9DB7-78B23DC8F255}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9D5C83B5-70D5-4CC2-9DB7-78B23DC8F255}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9D5C83B5-70D5-4CC2-9DB7-78B23DC8F255}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{2305B00D-DE81-4744-B0DA-357835CAFE5A} = {43A4FB09-279A-4138-8027-EC1E1CED2E8A}
+		{40EAD437-216B-4DF4-8258-3F47E1672C3A} = {EFBC4DC0-DBFF-4DAA-B0B8-6D0CB02A25F5}
+		{05768F39-7BAF-43E6-971E-712F5771E88E} = {D6BFEDF6-2F48-44B2-9553-F2F6F92531BD}
+		{9D5C83B5-70D5-4CC2-9DB7-78B23DC8F255} = {D6BFEDF6-2F48-44B2-9553-F2F6F92531BD}
 	EndGlobalSection
 EndGlobal

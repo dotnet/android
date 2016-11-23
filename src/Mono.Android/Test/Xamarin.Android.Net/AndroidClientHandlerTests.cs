@@ -180,7 +180,7 @@ namespace Xamarin.Android.NetTests {
             Assert.Fail ("SHOULD NOT BE REACHED: BTLS is present, TLS 1.2 should work.");
           }
           if (!supportTls1_2) {
-            Assert.IsTrue (e.InnerExceptions.Any (ie => ie is WebException));
+            Assert.IsTrue (e.InnerExceptions.Any (ie => ie is WebException), e.ToString ());
           }
         }
       }

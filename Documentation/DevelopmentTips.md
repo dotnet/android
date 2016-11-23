@@ -44,6 +44,80 @@ Xamarin.Android SDK directory by using the `_InstallBcl` target:
 	# This updates bin/$(Configuration)/lib/xbuild-frameworks/MonoAndroid/v1.0/ASSEMBLY.dll
 	$ xbuild build-tools/mono-runtimes/mono-runtimes.mdproj /t:_InstallBcl
 
+# Unit Tests
+
+The `xamarin-android` repo contains several unit tests:
+
+* NUnit-based unit tests, for stand-alone assemblies and utilities.
+
+* `.apk`-based unit tests, which are NUnitLite-based tests that need to
+    execute on an Android device.
+
+All unit tests can be executed via the `make run-all-tests` target:
+
+	$ make run-all-tests
+
+All NUnit-based tests can be executed via the `make run-nunit-tests` target:
+
+	$ make run-nunit-tests
+
+All `.apk`-based unit tests can be executed via the `make run-apk-tests` target:
+
+	$ make run-apk-tests
+
+
+## Running Individual NUnit Tests
+
+Individual NUnit-based tests can be executed by overriding the `$(NUNIT_TESTS)`
+make variable:
+
+	$ make run-nunit-tests NUNIT_TESTS=bin/TestDebug/Xamarin.Android.Build.Tests.dll
+
+## Running Individual `.apk` Projects
+
+See also the [`tests/RunApkTests.targets`](tests/RunApkTests.targets) and
+[`build-tools/scripts/UnitTestApks.targets`](build-tools/scripts/UnitTestApks.targets)
+files.
+
+All `.apk`-based unit test projects provide the following targets:
+
+* `DeployUnitTestApks`: Installs the associated `.apk` to an Android device.
+* `UndeployUnitTestApks`: Uninstalls the associated `.apk` from an Android device.
+* `RunUnitTestApks`: Executes the unit tests contained within a `.apk`.
+    Must be executed *after* the `DeployUnitTestApks` target.
+
+To run an individual `.apk`-based test project, a package must be built, using the
+`SignAndroidPackage` target, installed, and executed.
+
+For example:
+
+	$ tools/scripts/xabuild /t:SignAndroidPackage tests/locales/Xamarin.Android.Locale-Tests/Xamarin.Android.Locale-Tests.csproj
+	$ tools/scripts/xabuild /t:DeployUnitTestApks tests/locales/Xamarin.Android.Locale-Tests/Xamarin.Android.Locale-Tests.csproj
+	$ tools/scripts/xabuild /t:RunUnitTestApks    tests/locales/Xamarin.Android.Locale-Tests/Xamarin.Android.Locale-Tests.csproj
+
+### Running A Single Test Fixture
+
+`.apk`-based unit tests will look for a `suite` bundle key to determine which
+test fixture to execute. If no such value is provided, then all tests are
+executed.
+
+The value of the `suite` bundle key may be the full class name of a class
+with the `[TestFixture]` custom attribute.
+
+When the `RunUnitTestApks` target runs, an `adb shell am instrument` command
+is printed:
+
+	Tool .../adb execution started with arguments:   shell am instrument  -w "Xamarin.Android.Locale_Tests/xamarin.android.localetests.TestInstrumentation"
+
+Turn that into a correctly formatted shell command:
+
+	$ .../adb shell am instrument  -w "Xamarin.Android.Locale_Tests/xamarin.android.localetests.TestInstrumentation"
+
+Then insert `-e suite FIXTURE_TYPE` arguments before the `-w`:
+
+	$ .../adb shell am instrument -e suite Xamarin.Android.LocaleTests.SatelliteAssemblyTests \
+		-w "Xamarin.Android.Locale_Tests/xamarin.android.localetests.TestInstrumentation"
+
 # Testing Updated Assemblies
 
 The `xamarin-android` repo does not support [fast deployment][fastdep],

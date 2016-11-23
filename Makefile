@@ -154,7 +154,8 @@ run-nunit-tests: $(NUNIT_TESTS)
 # (1) Have their .csproj files listed here
 # (2) Add a `@(UnitTestApk)` entry to `tests/RunApkTests.targets`
 TEST_APK_PROJECTS = \
-	src/Mono.Android/Test/Mono.Android-Tests.csproj
+	src/Mono.Android/Test/Mono.Android-Tests.csproj \
+	tests/locales/Xamarin.Android.Locale-Tests/Xamarin.Android.Locale-Tests.csproj
 
 # Syntax: $(call BUILD_TEST_APK,path/to/project.csproj)
 define BUILD_TEST_APK
