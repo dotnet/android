@@ -3,7 +3,7 @@
 	<uses-sdk android:minSdkVersion="10" />
 	<application android:label="Xamarin.Android.RuntimeTests" android:name="android.apptests.App">
 		<activity
-				android:name="xamarin.android.runtimetests.RenamedActivity"
+				android:name="android.apptests.RenamedActivity"
 				android:configChanges="keyboardHidden"
 		/>
 	</application>
