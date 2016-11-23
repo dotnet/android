@@ -15,6 +15,7 @@
     <CheckAdbTarget
         Condition=" '$(RequireNewEmulator)' != 'True' "
         AdbTarget="$(AdbTarget)"
+        ToolExe="$(AdbToolExe)"
         ToolPath="$(AdbToolPath)">
       <Output TaskParameter="AdbTarget"     PropertyName="_AdbTarget" />
       <Output TaskParameter="IsValidTarget" PropertyName="_ValidAdbTarget"  />
@@ -39,9 +40,15 @@
       <Output TaskParameter="AdbTarget" PropertyName="_EmuTarget" />
       <Output TaskParameter="AdbProcess" PropertyName="_EmuProcess" />
     </StartAndroidEmulator>
+    <Exec
+        Condition=" '$(_ValidAdbTarget)' != 'True' "
+        Command="sleep 10"
+    />
     <Adb
         Condition=" '$(_ValidAdbTarget)' != 'True' "
         Arguments="$(_AdbTarget) wait-for-device"
+        ToolExe="$(AdbToolExe)"
+        ToolPath="$(AdbToolPath)"
     />
     <Message
         Condition=" '$(_EmuTarget)' != '' "
@@ -53,6 +60,8 @@
     <Adb
         Condition=" '$(_EmuTarget)' != '' "
         Arguments="$(_EmuTarget) emu kill"
+        ToolExe="$(AdbToolExe)"
+        ToolPath="$(AdbToolPath)"
     />
   </Target>
 
