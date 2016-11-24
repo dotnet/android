@@ -972,9 +972,9 @@ namespace Xamarin.Android.NetTests {
 
 					try {
 						client.GetStringAsync (LocalServer).Wait (WaitTimeout);
-						Assert.Fail ("#1");
+						Assert.Fail ("#1: HttpRequestException wasn't thrown.");
 					} catch (AggregateException e) {
-						Assert.IsTrue (e.InnerException is HttpRequestException, "#2");
+						Assert.IsTrue (e.InnerException is HttpRequestException, "#2: " + e.ToString ());
 					}
 				} finally {
 					listener.Abort ();

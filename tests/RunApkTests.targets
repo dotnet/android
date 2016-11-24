@@ -9,13 +9,8 @@
     Note that the `.csproj` for each `@(UnitTestApk)` entry *must* be added to
     `$(TEST_APK_PROJECTS)` in the toplevel Makefile so that the `.apk` is built.
     -->
-  <ItemGroup>
-    <UnitTestApk Include="$(OutputPath)Mono.Android_Tests-Signed.apk">
-      <Package>Mono.Android_Tests</Package>
-      <InstrumentationType>xamarin.android.runtimetests.TestInstrumentation</InstrumentationType>
-      <ResultsPath>..\TestResult-Mono.Android_Tests.xml</ResultsPath>
-    </UnitTestApk>
-  </ItemGroup>
+  <Import Project="..\src\Mono.Android\Test\Mono.Android-Tests.projitems" />
+  <Import Project="..\tests\locales\Xamarin.Android.Locale-Tests\Xamarin.Android.Locale-Tests.projitems" />
   <Import Project="..\build-tools\scripts\UnitTestApks.targets" />
   <PropertyGroup>
     <RunApkTestsDependsOn>

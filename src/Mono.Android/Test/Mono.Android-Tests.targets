@@ -7,13 +7,7 @@
     <AndroidNativeLibrary Include="libs\x86\libreuse-threads.so" />
     <AndroidNativeLibrary Include="libs\x86_64\libreuse-threads.so" />
   </ItemGroup>
-  <ItemGroup>
-    <UnitTestApk Include="$(OutputPath)Mono.Android_Tests-Signed.apk">
-      <Package>Mono.Android_Tests</Package>
-      <InstrumentationType>xamarin.android.runtimetests.TestInstrumentation</InstrumentationType>
-      <ResultsPath>..\..\..\TestResult-Mono.Android_Tests.xml</ResultsPath>
-    </UnitTestApk>
-  </ItemGroup>
+  <Import Project="Mono.Android-Tests.projitems" />
   <Import Project="..\..\..\build-tools\scripts\UnitTestApks.targets" />
   <Target Name="BuildNativeLibs"
       BeforeTargets="Build"

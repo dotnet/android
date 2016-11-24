@@ -1,0 +1,4 @@
+# Force runtime to use fr-FR locale instead of default locale.
+LANG=fr-FR
+__XA_USE_JAVA_DEFAULT_TIMEZONE_ID__=true
+
