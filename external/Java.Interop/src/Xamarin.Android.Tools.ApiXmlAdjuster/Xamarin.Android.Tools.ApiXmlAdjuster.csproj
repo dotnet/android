@@ -49,6 +49,7 @@
     <Compile Include="JavaApiDefectFinderExtensions.cs" />
     <Compile Include="JavaTypeResolutionUtil.cs" />
     <Compile Include="JavaApiFixVisibilityExtensions.cs" />
+    <Compile Include="Log.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

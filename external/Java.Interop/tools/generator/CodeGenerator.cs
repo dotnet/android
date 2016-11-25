@@ -282,7 +282,7 @@ namespace Xamarin.Android.Binder {
 			}
 			if (apiSourceAttr == "class-parse") {
 				apiXmlFile = api_xml_adjuster_output ?? Path.Combine (Path.GetDirectoryName (filename), Path.GetFileName (filename) + ".adjusted");
-				new Adjuster ().Process (filename, SymbolTable.AllRegisteredSymbols ().OfType<GenBase> ().ToArray (), apiXmlFile);
+				new Adjuster ().Process (filename, SymbolTable.AllRegisteredSymbols ().OfType<GenBase> ().ToArray (), apiXmlFile, Report.Verbosity ?? 0);
 			}
 			if (only_xml_adjuster)
 				return;

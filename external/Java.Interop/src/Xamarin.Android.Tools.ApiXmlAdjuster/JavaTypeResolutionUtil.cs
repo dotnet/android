@@ -85,8 +85,8 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 			if (typeParameter.GenericConstraints == null)
 				return true;
 			// FIXME: implement correct generic constraint conformance check.
-			Console.Error.WriteLine ("WARNING: generic constraint conformance check is not implemented, so the type might be actually compatible. Type parameter: {0}{1}, examined type: {2}",
-				typeParameter.Name, typeParameter.Parent.ParentMethod?.Name ?? typeParameter.Parent.ParentType?.Name, examinedType.ToString ());
+			Log.LogDebug ("NOTICE: generic constraint conformance check is not implemented, so the type might be actually compatible. Type parameter: {0}{1}, examined type: {2}",
+			                               typeParameter.Name, typeParameter.Parent.ParentMethod?.Name ?? typeParameter.Parent.ParentType?.Name, examinedType);
 			return false;
 		}
 	}
