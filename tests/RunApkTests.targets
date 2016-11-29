@@ -10,6 +10,7 @@
     `$(TEST_APK_PROJECTS)` in the toplevel Makefile so that the `.apk` is built.
     -->
   <Import Project="..\src\Mono.Android\Test\Mono.Android-Tests.projitems" />
+  <Import Project="..\tests\CodeGen-Binding\Xamarin.Android.JcwGen-Tests\Xamarin.Android.JcwGen-Tests.projitems" />
   <Import Project="..\tests\locales\Xamarin.Android.Locale-Tests\Xamarin.Android.Locale-Tests.projitems" />
   <Import Project="..\build-tools\scripts\UnitTestApks.targets" />
   <PropertyGroup>

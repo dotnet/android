@@ -15,6 +15,36 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LibraryResources", "tests\l
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.Locale-Tests", "tests\locales\Xamarin.Android.Locale-Tests\Xamarin.Android.Locale-Tests.csproj", "{9D5C83B5-70D5-4CC2-9DB7-78B23DC8F255}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "CodeGen-Binding", "CodeGen-Binding", "{2EFFECF5-1CCA-4005-AE62-1D6F01C88DF4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.McwGen-Tests", "tests\CodeGen-Binding\Xamarin.Android.McwGen-Tests\Xamarin.Android.McwGen-Tests.csproj", "{EF798EB3-D639-4E09-9DB0-233E67F727B0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.LibraryProjectZip-LibBinding", "tests\CodeGen-Binding\Xamarin.Android.LibraryProjectZip-LibBinding\Xamarin.Android.LibraryProjectZip-LibBinding.csproj", "{9553ED9D-92EA-411B-ADFF-21C5608CCD16}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.FixJavaAbstractMethod-APIv1Binding", "tests\CodeGen-Binding\Xamarin.Android.FixJavaAbstractMethod-APIv1Binding\Xamarin.Android.FixJavaAbstractMethod-APIv1Binding.csproj", "{91105023-9421-4E56-A87B-64BC62525D55}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.FixJavaAbstractMethod-APIv2Binding", "tests\CodeGen-Binding\Xamarin.Android.FixJavaAbstractMethod-APIv2Binding\Xamarin.Android.FixJavaAbstractMethod-APIv2Binding.csproj", "{7B9D9F32-973F-49CF-A8F8-05BDFC75556C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.FixJavaAbstractMethod-Library", "tests\CodeGen-Binding\Xamarin.Android.FixJavaAbstractMethod-Library\Xamarin.Android.FixJavaAbstractMethod-Library.csproj", "{B7476528-C166-40BF-931F-EAEB02247879}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.JcwGen-Tests", "tests\CodeGen-Binding\Xamarin.Android.JcwGen-Tests\Xamarin.Android.JcwGen-Tests.csproj", "{9479B71F-19FE-48F9-AB3F-AE764D76038A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "CodeGen-MkBundle", "CodeGen-MkBundle", "{93CBCEB8-8B64-420C-950C-BCE9CC8C6032}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.MakeBundle-Tests", "tests\CodeGen-MkBundle\Xamarin.Android.MakeBundle-Tests\Xamarin.Android.MakeBundle-Tests.csproj", "{A0B2692E-9FBE-4157-9526-7145F07F2C5A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ResolveImports", "ResolveImports", "{E49089E4-4CE0-475E-BE9C-0AB4E4D56EE9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.BindingResolveImportLib1", "tests\ResolveImports\Xamarin.Android.BindingResolveImportLib1\Xamarin.Android.BindingResolveImportLib1.csproj", "{2A0519DF-0DDA-45F7-AC3C-E2992748D364}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.BindingResolveImportLib2", "tests\ResolveImports\Xamarin.Android.BindingResolveImportLib2\Xamarin.Android.BindingResolveImportLib2.csproj", "{DD4E2A49-730C-41FD-B6D4-AFB73F94271F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.BindingResolveImportLib3", "tests\ResolveImports\Xamarin.Android.BindingResolveImportLib3\Xamarin.Android.BindingResolveImportLib3.csproj", "{9802CB35-0BC0-4EE1-9A81-BB40BD97945A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.BindingResolveImportLib4", "tests\ResolveImports\Xamarin.Android.BindingResolveImportLib4\Xamarin.Android.BindingResolveImportLib4.csproj", "{5BDCEF07-E3D7-4E73-B025-6E43A5A7D7F1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.BindingResolveImports-Tests", "tests\ResolveImports\Xamarin.Android.BindingResolveImports-Tests\Xamarin.Android.BindingResolveImports-Tests.csproj", "{B297008B-C313-455E-B230-E119589D2D79}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -37,11 +67,71 @@ Global
 		{9D5C83B5-70D5-4CC2-9DB7-78B23DC8F255}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9D5C83B5-70D5-4CC2-9DB7-78B23DC8F255}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9D5C83B5-70D5-4CC2-9DB7-78B23DC8F255}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EF798EB3-D639-4E09-9DB0-233E67F727B0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EF798EB3-D639-4E09-9DB0-233E67F727B0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EF798EB3-D639-4E09-9DB0-233E67F727B0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EF798EB3-D639-4E09-9DB0-233E67F727B0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9553ED9D-92EA-411B-ADFF-21C5608CCD16}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9553ED9D-92EA-411B-ADFF-21C5608CCD16}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9553ED9D-92EA-411B-ADFF-21C5608CCD16}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9553ED9D-92EA-411B-ADFF-21C5608CCD16}.Release|Any CPU.Build.0 = Release|Any CPU
+		{91105023-9421-4E56-A87B-64BC62525D55}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{91105023-9421-4E56-A87B-64BC62525D55}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{91105023-9421-4E56-A87B-64BC62525D55}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{91105023-9421-4E56-A87B-64BC62525D55}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7B9D9F32-973F-49CF-A8F8-05BDFC75556C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7B9D9F32-973F-49CF-A8F8-05BDFC75556C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7B9D9F32-973F-49CF-A8F8-05BDFC75556C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7B9D9F32-973F-49CF-A8F8-05BDFC75556C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B7476528-C166-40BF-931F-EAEB02247879}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B7476528-C166-40BF-931F-EAEB02247879}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B7476528-C166-40BF-931F-EAEB02247879}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B7476528-C166-40BF-931F-EAEB02247879}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9479B71F-19FE-48F9-AB3F-AE764D76038A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9479B71F-19FE-48F9-AB3F-AE764D76038A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9479B71F-19FE-48F9-AB3F-AE764D76038A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9479B71F-19FE-48F9-AB3F-AE764D76038A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A0B2692E-9FBE-4157-9526-7145F07F2C5A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A0B2692E-9FBE-4157-9526-7145F07F2C5A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A0B2692E-9FBE-4157-9526-7145F07F2C5A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A0B2692E-9FBE-4157-9526-7145F07F2C5A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2A0519DF-0DDA-45F7-AC3C-E2992748D364}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2A0519DF-0DDA-45F7-AC3C-E2992748D364}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2A0519DF-0DDA-45F7-AC3C-E2992748D364}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2A0519DF-0DDA-45F7-AC3C-E2992748D364}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DD4E2A49-730C-41FD-B6D4-AFB73F94271F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DD4E2A49-730C-41FD-B6D4-AFB73F94271F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DD4E2A49-730C-41FD-B6D4-AFB73F94271F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DD4E2A49-730C-41FD-B6D4-AFB73F94271F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9802CB35-0BC0-4EE1-9A81-BB40BD97945A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9802CB35-0BC0-4EE1-9A81-BB40BD97945A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9802CB35-0BC0-4EE1-9A81-BB40BD97945A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9802CB35-0BC0-4EE1-9A81-BB40BD97945A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5BDCEF07-E3D7-4E73-B025-6E43A5A7D7F1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5BDCEF07-E3D7-4E73-B025-6E43A5A7D7F1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5BDCEF07-E3D7-4E73-B025-6E43A5A7D7F1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5BDCEF07-E3D7-4E73-B025-6E43A5A7D7F1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B297008B-C313-455E-B230-E119589D2D79}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B297008B-C313-455E-B230-E119589D2D79}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B297008B-C313-455E-B230-E119589D2D79}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B297008B-C313-455E-B230-E119589D2D79}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{2305B00D-DE81-4744-B0DA-357835CAFE5A} = {43A4FB09-279A-4138-8027-EC1E1CED2E8A}
 		{40EAD437-216B-4DF4-8258-3F47E1672C3A} = {EFBC4DC0-DBFF-4DAA-B0B8-6D0CB02A25F5}
 		{05768F39-7BAF-43E6-971E-712F5771E88E} = {D6BFEDF6-2F48-44B2-9553-F2F6F92531BD}
 		{9D5C83B5-70D5-4CC2-9DB7-78B23DC8F255} = {D6BFEDF6-2F48-44B2-9553-F2F6F92531BD}
+		{EF798EB3-D639-4E09-9DB0-233E67F727B0} = {2EFFECF5-1CCA-4005-AE62-1D6F01C88DF4}
+		{9553ED9D-92EA-411B-ADFF-21C5608CCD16} = {2EFFECF5-1CCA-4005-AE62-1D6F01C88DF4}
+		{91105023-9421-4E56-A87B-64BC62525D55} = {2EFFECF5-1CCA-4005-AE62-1D6F01C88DF4}
+		{7B9D9F32-973F-49CF-A8F8-05BDFC75556C} = {2EFFECF5-1CCA-4005-AE62-1D6F01C88DF4}
+		{B7476528-C166-40BF-931F-EAEB02247879} = {2EFFECF5-1CCA-4005-AE62-1D6F01C88DF4}
+		{9479B71F-19FE-48F9-AB3F-AE764D76038A} = {2EFFECF5-1CCA-4005-AE62-1D6F01C88DF4}
+		{A0B2692E-9FBE-4157-9526-7145F07F2C5A} = {93CBCEB8-8B64-420C-950C-BCE9CC8C6032}
+		{2A0519DF-0DDA-45F7-AC3C-E2992748D364} = {E49089E4-4CE0-475E-BE9C-0AB4E4D56EE9}
+		{DD4E2A49-730C-41FD-B6D4-AFB73F94271F} = {E49089E4-4CE0-475E-BE9C-0AB4E4D56EE9}
+		{9802CB35-0BC0-4EE1-9A81-BB40BD97945A} = {E49089E4-4CE0-475E-BE9C-0AB4E4D56EE9}
+		{5BDCEF07-E3D7-4E73-B025-6E43A5A7D7F1} = {E49089E4-4CE0-475E-BE9C-0AB4E4D56EE9}
+		{B297008B-C313-455E-B230-E119589D2D79} = {E49089E4-4CE0-475E-BE9C-0AB4E4D56EE9}
 	EndGlobalSection
 EndGlobal

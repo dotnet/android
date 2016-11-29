@@ -26,6 +26,7 @@ namespace Xamarin.Android.LocaleTests
 		
 		public static void UpdateIdValues()
 		{
+			global::LibraryResources.Resource.String.library_name = global::Xamarin.Android.LocaleTests.Resource.String.library_name;
 			global::Xamarin.Android.NUnitLite.Resource.Id.OptionHostName = global::Xamarin.Android.LocaleTests.Resource.Id.OptionHostName;
 			global::Xamarin.Android.NUnitLite.Resource.Id.OptionPort = global::Xamarin.Android.LocaleTests.Resource.Id.OptionPort;
 			global::Xamarin.Android.NUnitLite.Resource.Id.OptionRemoteServer = global::Xamarin.Android.LocaleTests.Resource.Id.OptionRemoteServer;
@@ -48,7 +49,6 @@ namespace Xamarin.Android.LocaleTests
 			global::Xamarin.Android.NUnitLite.Resource.Layout.results = global::Xamarin.Android.LocaleTests.Resource.Layout.results;
 			global::Xamarin.Android.NUnitLite.Resource.Layout.test_result = global::Xamarin.Android.LocaleTests.Resource.Layout.test_result;
 			global::Xamarin.Android.NUnitLite.Resource.Layout.test_suite = global::Xamarin.Android.LocaleTests.Resource.Layout.test_suite;
-			global::LibraryResources.Resource.String.library_name = global::Xamarin.Android.LocaleTests.Resource.String.library_name;
 		}
 		
 		public partial class Attribute

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Target Name="BuildJars"
+      DependsOnTargets="_ResolveMonoAndroidSdks"
+      Inputs="@(InputJarSource)"
+      Outputs="@(InputJar)">
+    <MakeDir Directories="Jars\classes" />
+    <Exec Command="&quot;$(JavaSdkDirectory)\bin\javac&quot; -source 1.5 -target 1.6 -d &quot;Jars\classes&quot; @(InputJarSource -&gt; '%(Identity)', ' ')" />
+    <Exec Command="&quot;$(JavaSdkDirectory)\bin\jar&quot; cf &quot;@(InputJar)&quot; -C &quot;Jars\classes&quot; ." />
+  </Target>
+  <Target Name="CleanLocal">
+    <RemoveDir Directories="bin;obj;Jars\classes;@(InputJar)"/>
+  </Target>
+</Project>

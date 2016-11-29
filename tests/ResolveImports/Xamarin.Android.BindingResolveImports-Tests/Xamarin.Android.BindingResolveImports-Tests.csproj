@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectTypeGuids>{EFBA0AD7-5A72-4C68-AF49-83D382785DCF};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <ProjectGuid>{B297008B-C313-455E-B230-E119589D2D79}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AssemblyName>Xamarin.Android.BindingResolveImports-Tests</AssemblyName>
+    <AndroidApplication>True</AndroidApplication>
+    <RootNamespace>Xamarin.Android.BindingResolveImportsTests</RootNamespace>
+    <AndroidResgenFile>Resources\Resource.designer.cs</AndroidResgenFile>
+    <AndroidResgenClass>Resource</AndroidResgenClass>
+    <MonoAndroidResourcePrefix>Resources</MonoAndroidResourcePrefix>
+    <MonoAndroidAssetsPrefix>Assets</MonoAndroidAssetsPrefix>
+    <AndroidUseLatestPlatformSdk>False</AndroidUseLatestPlatformSdk>
+    <AndroidManifest>Properties\AndroidManifest.xml</AndroidManifest>
+    <UseShortFileNames>True</UseShortFileNames>
+    <AndroidSupportedAbis>armeabi-v7a;x86</AndroidSupportedAbis>
+  </PropertyGroup>
+  <Import Project="..\..\..\Configuration.props" />
+  <PropertyGroup>
+    <TargetFrameworkVersion>$(AndroidFrameworkVersion)</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug</OutputPath>
+    <DefineConstants>DEBUG;</DefineConstants>
+    <WarningLevel>4</WarningLevel>
+    <AndroidLinkMode>None</AndroidLinkMode>
+    <ConsolePause>false</ConsolePause>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>full</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release</OutputPath>
+    <WarningLevel>4</WarningLevel>
+    <AndroidUseSharedRuntime>false</AndroidUseSharedRuntime>
+    <ConsolePause>false</ConsolePause>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="Assets\AboutAssets.txt" />
+    <None Include="Resources\AboutResources.txt" />
+    <None Include="Properties\AndroidManifest.xml" />
+  </ItemGroup>
+  <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
+  <ItemGroup>
+    <Compile Include="MainActivity.cs" />
+    <Compile Include="Resources\Resource.designer.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Core" />
+    <Reference Include="Mono.Android" />
+  </ItemGroup>
+  <ItemGroup>
+    <AndroidResource Include="Resources\layout\Main.axml" />
+    <AndroidResource Include="Resources\values\Strings.xml" />
+    <AndroidResource Include="Resources\drawable\Icon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Xamarin.Android.BindingResolveImportLib1\Xamarin.Android.BindingResolveImportLib1.csproj">
+      <Project>{2A0519DF-0DDA-45F7-AC3C-E2992748D364}</Project>
+      <Name>Xamarin.Android.BindingResolveImportLib1</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Xamarin.Android.BindingResolveImportLib2\Xamarin.Android.BindingResolveImportLib2.csproj">
+      <Project>{DD4E2A49-730C-41FD-B6D4-AFB73F94271F}</Project>
+      <Name>Xamarin.Android.BindingResolveImportLib2</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Xamarin.Android.BindingResolveImportLib3\Xamarin.Android.BindingResolveImportLib3.csproj">
+      <Project>{9802CB35-0BC0-4EE1-9A81-BB40BD97945A}</Project>
+      <Name>Xamarin.Android.BindingResolveImportLib3</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Xamarin.Android.BindingResolveImportLib4\Xamarin.Android.BindingResolveImportLib4.csproj">
+      <Project>{5BDCEF07-E3D7-4E73-B025-6E43A5A7D7F1}</Project>
+      <Name>Xamarin.Android.BindingResolveImportLib4</Name>
+    </ProjectReference>
+  </ItemGroup>
+</Project>
