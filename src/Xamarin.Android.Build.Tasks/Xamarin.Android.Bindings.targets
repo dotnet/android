@@ -16,6 +16,7 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <UsingTask TaskName="Xamarin.Android.Tasks.ApiXmlAnalyzer" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.BindingsGenerator" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.ExportApiMergedXml" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.GetApiLevelFromFramework" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.GetImportedLibraries" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.JarToXml" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -350,7 +351,38 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
 	</ExportJarToXmlDependsOnTargets>
 </PropertyGroup>
 
-  <Target Name="ExportJarToXml"
+  <Target Name="ExportJarToXml" DependsOnTargets="ExportJarToXml_ClassParse;ExportJarToXml_Jar2Xml;ExportJarToXml_ApiMerge" />
+
+  <Target Name="ExportJarToXml_ApiMerge"
+          Condition="'$(AndroidClassParser)' == 'api-merge'"
+          DependsOnTargets="$(ExportJarToXmlDependsOnTargets)"
+          Inputs="@(EmbeddedJar);@(EmbeddedReferenceJar);@(InputJar);@(ReferenceJar);$(MSBuildAllProjects);@(_AdditionalJavaLibraryReferences)"
+          Outputs="$(ApiOutputFile)">
+
+    <ExportApiMergedXml
+      ApiVersioningDescriptors="@(AndroidApiVersioningDescription)"
+      AndroidSdkDirectory="$(_AndroidSdkDirectory)"
+      MonoAndroidToolsDirectory="$(MonoAndroidToolsDirectory)"
+      JavaSdkDirectory="$(_JavaSdkDirectory)"
+      AndroidApiLevel="$(_AndroidApiLevel)"
+      OutputFile="$(ApiOutputFile)"
+      OutputDirectory="$(IntermediateOutputPath)api-merge"
+      ReferencedManagedLibraries="@(ReferencePath);@(ReferenceDependencyPaths)"
+      SourceJars="@(EmbeddedJar);@(InputJar)"
+      ReferenceJars="@(EmbeddedReferenceJar);@(ReferenceJar);@(_AdditionalJavaLibraryReferences)"
+      DroidDocPaths="$(DroidDocPaths)"
+      JavaDocPaths="$(JavaDocPaths)"
+      Java7DocPaths="$(Java7DocPaths)"
+      Java8DocPaths="$(Java8DocPaths)"
+      JavaDocs="@(JavaDocIndex)"
+      LibraryProjectJars="$(IntermediateOutputPath)__library_projects__\*.jar"
+      ToolPath="$(_MonoAndroidBinDirectory)"
+      ToolExe="$(BindingApiMergeToolExe)"
+    />
+  </Target>
+	
+  <Target Name="ExportJarToXml_ClassParse"
+          Condition="'$(AndroidClassParser)' == 'class-parse'"
           DependsOnTargets="$(ExportJarToXmlDependsOnTargets)"
           Inputs="@(EmbeddedJar);@(EmbeddedReferenceJar);@(InputJar);@(ReferenceJar);$(MSBuildAllProjects);@(_AdditionalJavaLibraryReferences)"
           Outputs="$(ApiOutputFile)">
@@ -361,7 +393,7 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
 
     <!-- Extract the API from the .jar file and store as .xml, using either class-parse or jar2xml -->
 	
-    <ClassParse Condition="'$(AndroidClassParser)' == 'class-parse'"
+    <ClassParse
       OutputFile="$(ApiOutputFile).class-parse"
       SourceJars="@(EmbeddedJar);@(InputJar)"
       JavaDocPaths="$(JavaDocPaths)"
@@ -370,7 +402,7 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
       DroidDocPaths="$(DroidDocPaths)"
     />
 
-    <BindingsGenerator Condition="'$(AndroidClassParser)' == 'class-parse'"
+    <BindingsGenerator
       OnlyRunXmlAdjuster="true"
       XmlAdjusterOutput="$(ApiOutputFile)"
       OutputDirectory="$(GeneratedOutputPath)src"
@@ -381,8 +413,15 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
       ToolPath="$(_MonoAndroidBinDirectory)"
       ToolExe="$(BindingsGeneratorToolExe)"
     />
+  </Target>
 
-    <JarToXml Condition="'$(AndroidClassParser)' == 'jar2xml'"
+  <Target Name="ExportJarToXml_Jar2Xml"
+          Condition="'$(AndroidClassParser)' == 'jar2xml'"
+          DependsOnTargets="$(ExportJarToXmlDependsOnTargets)"
+          Inputs="@(EmbeddedJar);@(EmbeddedReferenceJar);@(InputJar);@(ReferenceJar);$(MSBuildAllProjects);@(_AdditionalJavaLibraryReferences)"
+          Outputs="$(ApiOutputFile)">
+
+    <JarToXml
       JavaMaximumHeapSize="$(JavaMaximumHeapSize)"
       JavaOptions="$(JavaOptions)"
       AndroidSdkDirectory="$(_AndroidSdkDirectory)"
