@@ -245,7 +245,7 @@ namespace Xamarin.Android.Net
 			try {
 				if (Logger.LogNet)
 					Logger.Log (LogLevel.Info, LOG_APP, $"  connecting");
-				await httpConnection.ConnectAsync ().ConfigureAwait (false);
+				await Task.WhenAny(httpConnection.ConnectAsync(),Task.Run(()=> { cancellationToken.WaitHandle.WaitOne(); })).ConfigureAwait(false);
 				if (Logger.LogNet)
 					Logger.Log (LogLevel.Info, LOG_APP, $"  connected");
 			} catch (Java.Net.ConnectException ex) {
@@ -265,7 +265,13 @@ namespace Xamarin.Android.Net
 			cancellationToken.Register (httpConnection.Disconnect);
 
 			if (httpConnection.DoOutput) {
-				await request.Content.CopyToAsync (httpConnection.OutputStream).ConfigureAwait (false);
+				await Task.WhenAny(request.Content.CopyToAsync (httpConnection.OutputStream),Task.Run(() => { cancellationToken.WaitHandle.WaitOne(); })).ConfigureAwait (false);
+			}
+
+			if (cancellationToken.IsCancellationRequested)
+			{
+					httpConnection.Disconnect();
+					cancellationToken.ThrowIfCancellationRequested();
 			}
 
 			var statusCode = await Task.Run (() => (HttpStatusCode)httpConnection.ResponseCode).ConfigureAwait (false);
