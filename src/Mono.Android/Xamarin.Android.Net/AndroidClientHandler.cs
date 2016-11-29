@@ -265,7 +265,10 @@ namespace Xamarin.Android.Net
 			cancellationToken.Register (httpConnection.Disconnect);
 
 			if (httpConnection.DoOutput) {
-				await Task.WhenAny(request.Content.CopyToAsync (httpConnection.OutputStream),Task.Run(() => { cancellationToken.WaitHandle.WaitOne(); })).ConfigureAwait (false);
+				using (var stream = await request.Content.ReadAsStreamAsync())
+				{
+					await stream.CopyToAsync(httpConnection.OutputStream, 4096, cancellationToken).ConfigureAwait(false);
+				}
 			}
 
 			if (cancellationToken.IsCancellationRequested)
