@@ -5,6 +5,9 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
+// using System.Threading.Tasks conflicts with Microsoft.Build.Utilities because of the Task type
+using ThreadingTasks = System.Threading.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
@@ -224,6 +227,57 @@ namespace Xamarin.Android.Tasks
 
 			var nativeLibs = new List<string> ();
 
+			if (!RunParallelAotCompiler (nativeLibs))
+				return false;
+
+			NativeLibrariesReferences = nativeLibs.ToArray ();
+
+			Log.LogDebugTaskItems ("Aot Outputs:");
+			Log.LogDebugTaskItems ("  NativeLibrariesReferences: ", NativeLibrariesReferences);
+
+			return true;
+		}
+
+		bool RunParallelAotCompiler (List<string> nativeLibs)
+		{
+			CancellationTokenSource cts = null;
+
+			try {
+				cts = new CancellationTokenSource ();
+
+				ThreadingTasks.ParallelOptions options = new ThreadingTasks.ParallelOptions {
+					CancellationToken = cts.Token,
+				};
+
+				ThreadingTasks.Parallel.ForEach (GetAotConfigs (), options,
+					config => {
+						if (!config.Valid) {
+							cts.Cancel ();
+							return;
+						}
+
+						if (!RunAotCompiler (config.AssembliesPath, config.AotCompiler, config.AotOptions, config.AssemblyPath, cts.Token)) {
+							Log.LogCodedError ("XA3001", "Could not AOT the assembly: {0}", Path.GetFileName (config.AssemblyPath));
+							cts.Cancel ();
+							return;
+						}
+
+						lock (nativeLibs)
+							nativeLibs.Add (config.OutputFile);
+					}
+				);
+			} catch (OperationCanceledException) {
+				return false;
+			} finally {
+				if (cts != null)
+					cts.Dispose ();
+			}
+
+			return true;
+		}
+
+		IEnumerable<Config> GetAotConfigs ()
+		{
 			if (!Directory.Exists (AotOutputDirectory))
 				Directory.CreateDirectory (AotOutputDirectory);
 
@@ -282,11 +336,13 @@ namespace Xamarin.Android.Tasks
 				}
 
 				if (!NdkUtil.ValidateNdkPlatform (Log, AndroidNdkDirectory, arch, enableLLVM:EnableLLVM)) {
-					return false;
+					yield return Config.Invalid;
+					yield break;
 				}
 
 				if (!ValidateAotConfiguration(Log, arch, EnableLLVM)) {
-					return false;
+					yield return Config.Invalid;
+					yield break;
 				}
 
 				outdir = Path.GetFullPath (outdir);
@@ -320,6 +376,10 @@ namespace Xamarin.Android.Tasks
 					string seqpointsFile = Path.Combine(outdir, string.Format ("{0}.msym",
 						Path.GetFileName (assembly.ItemSpec)));
 
+					string tempDir = Path.Combine (outdir, Path.GetFileName (assembly.ItemSpec));
+					if (!Directory.Exists (tempDir))
+						Directory.CreateDirectory (tempDir);
+
 					List<string> aotOptions = new List<string> ();
 
 					if (!string.IsNullOrEmpty (AotAdditionalArguments))
@@ -335,7 +395,7 @@ namespace Xamarin.Android.Tasks
 					aotOptions.Add ("tool-prefix=" + QuoteFileName (toolPrefix));
 					aotOptions.Add ("ld-flags="    + ldFlags);
 					aotOptions.Add ("llvm-path="   + QuoteFileName (SdkBinDirectory));
-					aotOptions.Add ("temp-path="   + QuoteFileName (outdir));
+					aotOptions.Add ("temp-path="   + QuoteFileName (tempDir));
 
 					string aotOptionsStr = (EnableLLVM ? "--llvm " : "") + "--aot=" + string.Join (",", aotOptions);
 
@@ -358,24 +418,13 @@ namespace Xamarin.Android.Tasks
 
 					var assembliesPath = Path.GetFullPath (Path.GetDirectoryName (resolvedPath));
 					var assemblyPath = QuoteFileName (Path.GetFullPath (resolvedPath));
-					
-					if (!RunAotCompiler (assembliesPath, aotCompiler, aotOptionsStr, assemblyPath)) {
-						Log.LogCodedError ("XA3001", "Could not AOT the assembly: {0}", assembly.ItemSpec);
-						return false;
-					}
-					nativeLibs.Add (outputFile);
+
+					yield return new Config (assembliesPath, aotCompiler, aotOptionsStr, assemblyPath, outputFile);
 				}
 			}
-
-			NativeLibrariesReferences = nativeLibs.ToArray ();
-
-			Log.LogDebugTaskItems ("Aot Outputs:");
-			Log.LogDebugTaskItems ("  NativeLibrariesReferences: ", NativeLibrariesReferences);
-
-			return true;
 		}
 			
-		bool RunAotCompiler (string assembliesPath, string aotCompiler, string aotOptions, string assembly)
+		bool RunAotCompiler (string assembliesPath, string aotCompiler, string aotOptions, string assembly, CancellationToken token)
 		{
 			var psi = new ProcessStartInfo () {
 				FileName = aotCompiler,
@@ -403,6 +452,7 @@ namespace Xamarin.Android.Tasks
 			proc.Start ();
 			proc.BeginOutputReadLine ();
 			proc.BeginErrorReadLine ();
+			token.Register (() => { try { proc.Kill (); } catch (Exception) {} });
 			proc.WaitForExit ();
 			return proc.ExitCode == 0;
 		}
@@ -419,5 +469,28 @@ namespace Xamarin.Android.Tasks
 				Log.LogMessage ("[aot-compiler stderr] {0}", e.Data);
 		}
 
+		struct Config {
+			public string AssembliesPath { get; }
+			public string AotCompiler { get; }
+			public string AotOptions { get; }
+			public string AssemblyPath { get; }
+			public string OutputFile { get; }
+
+			public bool Valid { get; private set; }
+
+			public Config (string assembliesPath, string aotCompiler, string aotOptions, string assemblyPath, string outputFile)
+			{
+				AssembliesPath = assembliesPath;
+				AotCompiler = aotCompiler;
+				AotOptions = aotOptions;
+				AssemblyPath = assemblyPath;
+				OutputFile = outputFile;
+				Valid = true;
+			}
+
+			public static Config Invalid {
+				get { return new Config { Valid = false }; }
+			}
+		}
 	}
 }
