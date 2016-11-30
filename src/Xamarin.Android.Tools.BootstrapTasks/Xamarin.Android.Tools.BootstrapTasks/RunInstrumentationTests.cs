@@ -14,6 +14,8 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 		public                  string              AdbTarget                   { get; set; }
 		public                  string              AdbOptions                  { get; set; }
 
+		public                  string              TestFixture                 { get; set; }
+
 		[Required]
 		public                  string              Component                   { get; set; }
 
@@ -55,6 +57,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 				Log.LogMessage (MessageImportance.Low, $"    {a}:");
 			}
 			Log.LogMessage (MessageImportance.Low, $"  {nameof (NUnit2TestResultsFile)}: {NUnit2TestResultsFile}");
+			Log.LogMessage (MessageImportance.Low, $"  {nameof (TestFixture)}: {TestFixture}");
 
 			executionState  = ExecuteState.RunInstrumentation;
 			base.Execute ();
@@ -82,6 +85,9 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 					args.Append (" -e \"").Append (kvp [0]).Append ("\" \"");
 					args.Append (kvp.Length > 1 ? kvp [1] : "");
 					args.Append ("\"");
+				}
+				if (!string.IsNullOrWhiteSpace (TestFixture)) {
+					args.Append (" -e suite \"").Append (TestFixture).Append ("\"");
 				}
 				return $"{AdbTarget} {AdbOptions} shell am instrument {args.ToString ()} -w \"{Component}\"";
 			case ExecuteState.PullFiles:

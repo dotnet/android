@@ -97,26 +97,38 @@ For example:
 
 ### Running A Single Test Fixture
 
-`.apk`-based unit tests will look for a `suite` bundle key to determine which
-test fixture to execute. If no such value is provided, then all tests are
-executed.
+A single NUnit *Test Fixture* -- a class with the `[TestFixture]`
+custom attribute -- may be executed instead of executing *all* test fixtures.
 
-The value of the `suite` bundle key may be the full class name of a class
-with the `[TestFixture]` custom attribute.
+The `RunUnitTestApks` target accepts a `TestFixture` MSBuild property
+to specify the test fixture class to execute:
 
-When the `RunUnitTestApks` target runs, an `adb shell am instrument` command
-is printed:
+	$ tools/scripts/xabuild /t:RunUnitTestApks \
+	    /p:TestFixture=Xamarin.Android.LocaleTests.SatelliteAssemblyTests \
+	    tests/locales/Xamarin.Android.Locale-Tests/Xamarin.Android.Locale-Tests.csproj
 
-	Tool .../adb execution started with arguments:   shell am instrument  -w "Xamarin.Android.Locale_Tests/xamarin.android.localetests.TestInstrumentation"
+If using `Xamarin.Android.NUnitLite` for projects outside the `xamarin-android`
+repository, such as NUnit tests for a custom app, the `RunUnitTestApks` target
+will not exist. In such scenarios, the [`adb shell am`][adb-shell-am]
+`instrument` command can be used instead. It follows the format:
 
-Turn that into a correctly formatted shell command:
+[adb-shell-am]: https://developer.android.com/studio/command-line/adb.html#am
 
-	$ .../adb shell am instrument  -w "Xamarin.Android.Locale_Tests/xamarin.android.localetests.TestInstrumentation"
+	$ adb shell am instrument -e suite FIXTURE -w PACKAGE/INSTRUMENTATION
 
-Then insert `-e suite FIXTURE_TYPE` arguments before the `-w`:
+Where:
 
-	$ .../adb shell am instrument -e suite Xamarin.Android.LocaleTests.SatelliteAssemblyTests \
+* `FIXTURE` is the full *managed* class name of the NUnit test fixture to
+    execute.
+* `PACKAGE` is the Android package name containing the NUnit tests
+* `INSTRUMENTATION` is the *Java callable wrapper* class name to execute,
+    located within the Android package `PACKAGE`.
+
+For example:
+
+	$ adb shell am instrument -e suite Xamarin.Android.LocaleTests.SatelliteAssemblyTests \
 		-w "Xamarin.Android.Locale_Tests/xamarin.android.localetests.TestInstrumentation"
+
 
 # Testing Updated Assemblies
 

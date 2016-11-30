@@ -101,6 +101,7 @@
         AdbOptions="$(AdbOptions)"
         Component="%(UnitTestApk.Package)/%(UnitTestApk.InstrumentationType)"
         NUnit2TestResultsFile="%(UnitTestApk.ResultsPath)"
+        TestFixture="$(TestFixture)"
         ToolExe="$(AdbToolExe)"
         ToolPath="$(AdbToolPath)">
       <Output TaskParameter="NUnit2TestResultsFile" PropertyName="_ResultsFile "/>
