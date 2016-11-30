@@ -12,7 +12,7 @@
       Condition=" '$(DoNotLoadOSProperties)' != 'True' "
   />
   <PropertyGroup>
-    <ProductVersion>7.0.99</ProductVersion>
+    <ProductVersion>7.1.99</ProductVersion>
     <HostOS Condition=" '$(HostOS)' == '' And '$(OS)' == 'Windows_NT' ">Windows</HostOS>
     <HostCc Condition=" '$(HostCc)' == '' ">$(HostCc64)</HostCc>
     <HostCxx Condition=" '$(HostCxx)' == '' ">$(HostCxx64)</HostCxx>
