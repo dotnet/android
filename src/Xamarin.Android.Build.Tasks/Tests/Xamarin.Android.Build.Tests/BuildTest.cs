@@ -55,7 +55,7 @@ namespace Xamarin.Android.Build.Tests
 			using (var b = CreateApkBuilder (Path.Combine ("temp", $"BuildWithTlsProvider_{androidTlsProvider}_{isRelease}_{expected}"))) {
 				proj.SetProperty ("AndroidTlsProvider", androidTlsProvider);
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				var apk = Path.Combine(b.ProjectDirectory,
+				var apk = Path.Combine(Root, b.ProjectDirectory,
 					proj.IntermediateOutputPath,"android", "bin", "UnnamedProject.UnnamedProject.apk");
 				using (var zipFile = ZipHelper.OpenZip (apk)) {
 					if (expected) {

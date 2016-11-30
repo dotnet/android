@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using Ionic.Zip;
+using Xamarin.Tools.Zip;
 
 namespace Xamarin.ProjectTools
 {
@@ -86,9 +86,9 @@ namespace Xamarin.ProjectTools
 	
 	public class OutputApk : IDisposable
 	{
-		ZipFile apk;
+		ZipArchive apk;
 		
-		internal OutputApk (ZipFile apk)
+		internal OutputApk (ZipArchive apk)
 		{
 			this.apk = apk;
 		}
@@ -100,27 +100,31 @@ namespace Xamarin.ProjectTools
 		
 		ZipEntry GetEntry (string file)
 		{
-			return apk.Entries.First (e => e.FileName == file);
+			return apk.First (e => e.FullName == file);
 		}
 		
 		public bool Exists (string file)
 		{
-			return apk.Entries.Any (e => e.FileName == file);
+			return apk.Any (e => e.FullName == file);
 		}
 		
 		public string GetText (string file)
 		{
-			using (var sr = new StreamReader (GetEntry (file).OpenReader ()))
-				return sr.ReadToEnd ();
+			using (var ms = new MemoryStream ()) {
+				GetEntry (file).Extract (ms);
+				ms.Position = 0;
+				using (var sr = new StreamReader (ms))
+					return sr.ReadToEnd ();
+			}
 		}
 		
 		public byte [] GetRaw (string file)
 		{
 			var e = GetEntry (file);
-			byte [] ret = new byte [e.UncompressedSize];
-			using (var r = e.OpenReader ())
-				r.Read (ret, 0, ret.Length);
-			return ret;
+			using (var ms = new MemoryStream ()) {
+				e.Extract (ms);
+				return ms.ToArray ();
+			}
 		}
 	}
 }
