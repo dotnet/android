@@ -75,8 +75,8 @@ make variable:
 
 ## Running Individual `.apk` Projects
 
-See also the [`tests/RunApkTests.targets`](tests/RunApkTests.targets) and
-[`build-tools/scripts/UnitTestApks.targets`](build-tools/scripts/UnitTestApks.targets)
+See also the [`tests/RunApkTests.targets`](../tests/RunApkTests.targets) and
+[`build-tools/scripts/UnitTestApks.targets`](../build-tools/scripts/UnitTestApks.targets)
 files.
 
 All `.apk`-based unit test projects provide the following targets:
@@ -136,7 +136,7 @@ The `xamarin-android` repo does not support [fast deployment][fastdep],
 which means that, *normally*, if you wanted to e.g. test a fix within
 `Mono.Android.dll` you would need to:
 
-[fastdev]: https://developer.xamarin.com/guides/android/under_the_hood/build_process/#Fast_Deployment
+[fastdep]: https://developer.xamarin.com/guides/android/under_the_hood/build_process/#Fast_Deployment
 
 1. Build `src/Mono.Android/Mono.Android.csproj`
 2. Rebuild your test project, e.g.
