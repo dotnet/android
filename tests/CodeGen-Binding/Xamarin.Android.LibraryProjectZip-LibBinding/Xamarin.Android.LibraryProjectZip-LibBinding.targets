@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Target Name="BuildNativeLibs"
+      DependsOnTargets="_ResolveMonoAndroidSdks"
+      Inputs="jni\simple-lib.c;jni\Android.mk"
+      Outputs="@(AndroidNativeLibrary);$(OutputPath)\native-lib-1\NativeLib.zip">
+    <Error
+        Condition="!Exists ('$(AndroidNdkDirectory)\ndk-build')"
+        Text="Could not locate Android NDK."
+    />
+    <Exec Command="&quot;$(AndroidNdkDirectory)\ndk-build&quot;" />
+    <MakeDir Directories="$(OutputPath)\native-lib-1" />
+    <Exec
+        Command="zip -r ../$(OutputPath)/native-lib-1/NativeLib.zip arm64-v8a armeabi armeabi-v7a x86 x86_64"
+        WorkingDirectory="libs"
+    />
+  </Target>
+  <Target Name="BuildNativeLibs2"
+      DependsOnTargets="_ResolveMonoAndroidSdks"
+      Inputs="simple2\jni\simple2-lib.c;simple2\jni\Android.mk"
+      Outputs="@(AndroidNativeLibrary);$(OutputPath)\native-lib-2\NativeLib2.zip">
+    <Error
+        Condition="!Exists ('$(AndroidNdkDirectory)\ndk-build')"
+        Text="Could not locate Android NDK."
+    />
+    <Exec
+        Command="&quot;$(AndroidNdkDirectory)\ndk-build&quot;"
+        WorkingDirectory="simple2"
+    />
+    <MakeDir Directories="$(OutputPath)\native-lib-2" />
+    <MakeDir Directories="$(OutputPath)\native-lib-2\aar-test" />
+    <Exec
+        Command="zip -r ../../$(OutputPath)/native-lib-2/aar-test/EmbeddedNativeLib.zip arm64-v8a armeabi armeabi-v7a x86 x86_64"
+        WorkingDirectory="simple2/libs"
+    />
+    <Exec
+        Command="zip -r NativeLib2.zip aar-test"
+        WorkingDirectory="$(OutputPath)\native-lib-2"
+    />
+  </Target>
+  <Target Name="BuildJavaLibs"
+      DependsOnTargets="_ResolveMonoAndroidSdks"
+      Inputs="java\JavaLib\project.properties"
+      Outputs="$(OutputPath)JavaLib.zip">
+    <Exec
+        Command="&quot;$(AndroidSdkDirectory)\tools\android&quot; update project -p ."
+        WorkingDirectory="java\JavaLib"
+    />
+    <Exec
+        Command="ant debug"
+        WorkingDirectory="java\JavaLib"
+    />
+    <MakeDir Directories="$(OutputPath)" />
+    <Exec
+        Command="zip -r ../../$(OutputPath)JavaLib.zip bin res AndroidManifest.xml"
+        WorkingDirectory="java\JavaLib"
+    />
+  </Target>
+  <Target Name="CleanLocal">
+    <RemoveDir Directories="java\JavaLib\bin;java\JavaLib\gen;bin;obj;libs;simple2\libs" />
+    <Delete Files="java\JavaLib\build.xml" />
+  </Target>
+</Project>

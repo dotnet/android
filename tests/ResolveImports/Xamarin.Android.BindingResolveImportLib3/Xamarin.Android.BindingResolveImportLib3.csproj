@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectTypeGuids>{10368E6C-D01B-4462-8E8B-01FC667A7035};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <ProjectGuid>{9802CB35-0BC0-4EE1-9A81-BB40BD97945A}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>Xamarin.Android.BindingResolveImportLib3</RootNamespace>
+    <MonoAndroidResourcePrefix>Resources</MonoAndroidResourcePrefix>
+    <MonoAndroidAssetsPrefix>Assets</MonoAndroidAssetsPrefix>
+    <AndroidUseLatestPlatformSdk>False</AndroidUseLatestPlatformSdk>
+    <AssemblyName>Xamarin.Android.BindingResolveImportLib3</AssemblyName>
+    <AndroidManifest>Properties\AndroidManifest.xml</AndroidManifest>
+    <AndroidApplication>True</AndroidApplication>
+    <UseShortFileNames>True</UseShortFileNames>
+  </PropertyGroup>
+  <Import Project="..\..\..\Configuration.props" />
+  <PropertyGroup>
+    <TargetFrameworkVersion>$(AndroidFrameworkVersion)</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug</OutputPath>
+    <DefineConstants>DEBUG;</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AndroidLinkMode>None</AndroidLinkMode>
+    <ConsolePause>false</ConsolePause>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>full</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AndroidUseSharedRuntime>false</AndroidUseSharedRuntime>
+    <ConsolePause>false</ConsolePause>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Core" />
+    <Reference Include="Mono.Android" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Additions\AboutAdditions.txt" />
+    <None Include="Jars\AboutJars.txt" />
+    <None Include="Jars\com\xamarin\android\test\binding\resolveimport\Lib3.java">
+      <Link>Jars\com\xamarin\android\test\binding\resolveimport\Lib3.java</Link>
+    </None>
+    <None Include="Properties\AndroidManifest.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <TransformFile Include="Transforms\EnumFields.xml" />
+    <TransformFile Include="Transforms\EnumMethods.xml" />
+    <TransformFile Include="Transforms\Metadata.xml" />
+  </ItemGroup>
+  <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.Bindings.targets" />
+  <ItemGroup>
+    <LibraryProjectZip Include="Jars\zipped\lib3.zip" />
+  </ItemGroup>
+  <PropertyGroup>
+    <BuildDependsOn>
+      BuildJar;
+      $(BuildDependsOn)
+    </BuildDependsOn>
+    <CleanDependsOn>
+      CleanJar;
+      $(CleanDependsOn)
+    </CleanDependsOn>
+  </PropertyGroup>
+  <Target Name="BuildJar" Inputs="Jars/com/xamarin/android/test/binding/resolveimport/Lib3.java" Outputs="Jars/lib3.zip">
+    <Exec Command="javac -source 1.5 -target 1.6 -d Jars -sourcepath Jars Jars/com/xamarin/android/test/binding/resolveimport/Lib3.java" />
+    <Exec WorkingDirectory="Jars" Command="zip -r lib3.jar com" />
+    <MakeDir Directories="Jars/zipped;Jars/zipped/bin" />
+    <Copy SourceFiles="Jars/lib3.jar;Properties/AndroidManifest.xml" DestinationFiles="Jars/zipped/bin/lib3.jar;Jars/zipped/bin/AndroidManifest.xml" />
+    <Exec WorkingDirectory="Jars/zipped" Command="zip -r lib3.zip bin" />
+    <Copy SourceFiles="Jars/zipped/lib3.zip" DestinationFiles="Jars/lib3.zip" />
+  </Target>
+  <Target Name="CleanJar">
+    <RemoveDir Directories="Jars/bin;Jars/zipped" />
+    <Delete Files="Jars/lib3.zip;Jars/zipped/lib3.zip;Jars/lib3.jar;Jars/com/xamarin/android/test/binding/resolveimport/Lib3.class" />
+  </Target>
+  <ItemGroup>
+    <Folder Include="Jars\com\" />
+  </ItemGroup>
+</Project>
