@@ -440,6 +440,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
     _CheckForContent;
     _CheckTargetFramework;
     _RemoveLegacyDesigner;
+    _ValidateAndroidPackageProperties;
     $(BuildDependsOn);
     _CompileDex;
   </BuildDependsOn>
@@ -456,6 +457,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
     _CheckForContent;
     _CheckTargetFramework;
     _RemoveLegacyDesigner;
+    _ValidateAndroidPackageProperties;
     $(BuildDependsOn);
   </BuildDependsOn>
 </PropertyGroup>
@@ -510,7 +512,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	</ItemGroup>
 </Target>
 
-<Target Name="_ValidateAndroidPackageProperties" DependsOnTargets="$(_OnResolveMonoAndroidSdks)">
+<Target Name="_ValidateAndroidPackageProperties">
 	<CreateProperty Value="$(ProjectDir)$(AndroidManifest)" Condition="'$(AndroidManifest)' != ''">
 		<Output TaskParameter="Value" PropertyName="_AndroidManifestAbs"/>
 	</CreateProperty>
@@ -1171,8 +1173,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <PropertyGroup>
 	<_GenerateJavaDesignerForComponentDependsOnTargets>
-		_ValidateAndroidPackageProperties
-		;_GetAdditionalResourcesFromAssemblies
+		_GetAdditionalResourcesFromAssemblies
 		;_CreateAdditionalResourceCache
 		;_CollectAdditionalResourceFiles
 	</_GenerateJavaDesignerForComponentDependsOnTargets>
@@ -1227,7 +1228,6 @@ because xbuild doesn't support framework reference assemblies.
 <PropertyGroup>
 	<_UpdateAndroidResgenDependsOnTargets>
 		_CheckForDeletedResourceFile;
-		_ValidateAndroidPackageProperties;
 		$(_OnResolveMonoAndroidSdks);
 		_GetLibraryImports;
 		_CheckDuplicateJavaLibraries;
@@ -1395,7 +1395,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <!-- Package Build -->
 <Target Name="PackageForAndroid"
-	DependsOnTargets="SetWearAppTargetToPackageForAndroid;Build;_ValidateAndroidPackageProperties;_CopyPackage" />
+	DependsOnTargets="SetWearAppTargetToPackageForAndroid;Build;_CopyPackage" />
 	
 <Target Name="_ResolveAssemblies">
 	<!--- Remove the ImplicitlyExpandDesignTimeFacades assemblies. We have already build the app there are not required for packaging  -->
@@ -1729,7 +1729,6 @@ because xbuild doesn't support framework reference assemblies.
 <PropertyGroup>
 	<_CreateBaseApkDependsOnTargets>
 		_GetAddOnPlatformLibraries;
-		_ValidateAndroidPackageProperties;
 		_GetLibraryImports;
 		_CheckDuplicateJavaLibraries;
 		_GetAdditionalResourcesFromAssemblies;
@@ -2458,13 +2457,12 @@ because xbuild doesn't support framework reference assemblies.
 	<_BuildApkDependsOnTargets>
 		Build
 		;$(_OnResolveMonoAndroidSdks)
-		;_ValidateAndroidPackageProperties
 		;_BuildApkEmbed
 	</_BuildApkDependsOnTargets>
 </PropertyGroup>
 
 <Target Name="BuildApk"	DependsOnTargets="$(_BuildApkDependsOnTargets)" />
-<Target Name="Package"	DependsOnTargets="Build;_ValidateAndroidPackageProperties;_CopyPackage" />
+<Target Name="Package"	DependsOnTargets="Build;_CopyPackage" />
 <Target Name="Sign" 	DependsOnTargets="Build;_ResolveAndroidSigningKey;_Sign" />
 
 <!-- Cleaning -->
