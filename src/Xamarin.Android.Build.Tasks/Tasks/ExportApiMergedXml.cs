@@ -59,11 +59,12 @@ namespace Xamarin.Android.Tasks
 			return base.Execute ();
 #else
 			// class-parse
-			bool hasConflicts = SourceJars.Select (s => Path.GetFileName (s.ItemSpec)).Distinct ().Count () != SourceJars.Length;
+			var orderedJars = GetOrderedSourceJars ().ToArray ();
+			bool hasConflicts = GetOrderedSourceJars ().Select (s => Path.GetFileName (s.ItemSpec)).Distinct ().Count () != orderedJars.Length;
 			var classParseXmls = new List<string> ();
 			var apiAdjustedXmls = new List<string> ();
 
-			foreach (var jarItem in SourceJars) {
+			foreach (var jarItem in orderedJars) {
 				var jar = jarItem.ItemSpec;
 				var classPath = new Tools.Bytecode.ClassPath () {
 					ApiSource = "class-parse",
@@ -78,37 +79,59 @@ namespace Xamarin.Android.Tasks
 			}
 
 			// api-xml-adjuster
-			foreach (var xml in classParseXmls) {
-				var outfile = Path.ChangeExtension (xml, ".xml");
+			foreach (var xmlInput in classParseXmls) {
+				var outfile = Path.ChangeExtension (xmlInput, ".xml");
 				apiAdjustedXmls.Add (outfile);
 
 				var aargs = new List<string> ();
-				aargs.Add (xml);
+				aargs.Add (xmlInput);
 				aargs.Add ("--assembly=dummy");
 				aargs.Add ("--only-xml-adjuster");
 				aargs.Add ("--xml-adjuster-output=" + outfile);
 				aargs.Add ("--api-level=" + AndroidApiLevel);
 				foreach (var dll in ReferencedManagedLibraries)
 					aargs.Add ("--ref=" + dll.ItemSpec);
-				foreach (var docs in JavaDocs)
-					aargs.Add ("--docs=" + docs.ItemSpec);
 
-				Log.LogDebugMessage ("Running {0} {1}", GeneratorToolExe, string.Join (" ", apiAdjustedXmls));
-				var aproc = Process.Start (GeneratorToolExe, string.Join (" ", aargs));
+				Log.LogDebugMessage ("Running {0} {1}", GetGeneratorToolFullPath (), string.Join (" ", aargs));
+				var apsi = new ProcessStartInfo (GetGeneratorToolFullPath (), string.Join (" ", aargs)) {
+					/*UseShellExecute = false,
+					RedirectStandardOutput = true,
+					RedirectStandardError = true*/
+				};
+				var aproc = Process.Start (apsi);
 				aproc.WaitForExit ();
 				if (aproc.ExitCode != 0)
 					return false;
 			}
 
 			// api-merge
-			Log.LogDebugMessage ("Running {0} {1}", ApiMergeToolExe, string.Join (" ", apiAdjustedXmls));
 			var margs = new List<string> ();
 			margs.Add ("-o:" + OutputFile);
 			margs.AddRange (apiAdjustedXmls);
-			var mproc = Process.Start (ApiMergeToolExe, string.Join (" ", margs));
+			Log.LogDebugMessage ("Running {0} {1}", GetApiMergeToolFullPath (), string.Join (" ", margs));
+			var mpsi = new ProcessStartInfo (GetApiMergeToolFullPath (), string.Join (" ", margs)) {
+				UseShellExecute = false,
+				RedirectStandardOutput = true,
+				RedirectStandardError = true
+			};
+			var mproc = Process.Start (mpsi);
 			mproc.WaitForExit ();
 			return mproc.ExitCode == 0;
 #endif
+		}
+
+		IEnumerable<ITaskItem> GetOrderedSourceJars ()
+		{
+			Func<string, string, string> filterEmpty = (s, fallback) => string.IsNullOrWhiteSpace (s) ? fallback : s;
+			var dic = SourceJars.ToDictionary (s => filterEmpty (s.GetMetadata ("OriginalProjectPath"), s.ItemSpec));
+			var artifactPaths = dic.Keys.Select (p => Path.GetDirectoryName (Path.GetDirectoryName (p))).Distinct ();
+			if (artifactPaths.Count () != 1) {
+				Log.LogWarning ("Input source jar files are not in the expected directory layout. The Source Jar/Aar files should be '{{groupId}}\\{{artifactId}}\\{{version}}\\{{library.aar}}' and should share the same {{artifactId}} directory, like an artifact in 'm2repository'.");
+				return SourceJars;
+			} else {
+				var artifactPath = artifactPaths.First ();
+				return dic.OrderBy (p => p.Key.Substring (artifactPath.Length), StringComparer.OrdinalIgnoreCase).Select (p => p.Value);
+			}
 		}
 
 		string GetGeneratorToolFullPath ()
@@ -141,7 +164,7 @@ namespace Xamarin.Android.Tasks
 
 			cmd.AppendSwitchIfNotNull ("--api-level=", AndroidApiLevel);
 
-			foreach (var jar in SourceJars)
+			foreach (var jar in GetOrderedSourceJars ())
 				cmd.AppendSwitchIfNotNull ("--jar=", Path.GetFullPath (jar.ItemSpec));
 
 			var libraryProjectJars = MonoAndroidHelper.ExpandFiles (LibraryProjectJars);
