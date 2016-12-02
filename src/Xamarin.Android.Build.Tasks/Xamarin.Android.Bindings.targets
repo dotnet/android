@@ -370,14 +370,12 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
       ReferencedManagedLibraries="@(ReferencePath);@(ReferenceDependencyPaths)"
       SourceJars="@(EmbeddedJar);@(InputJar)"
       ReferenceJars="@(EmbeddedReferenceJar);@(ReferenceJar);@(_AdditionalJavaLibraryReferences)"
-      DroidDocPaths="$(DroidDocPaths)"
-      JavaDocPaths="$(JavaDocPaths)"
-      Java7DocPaths="$(Java7DocPaths)"
-      Java8DocPaths="$(Java8DocPaths)"
-      JavaDocs="@(JavaDocIndex)"
+      JavaDocs="@(JavaDocIndex);$(DroidDocPaths);$(JavaDocPaths);$(Java7DocPaths);$(Java8DocPaths)"
       LibraryProjectJars="$(IntermediateOutputPath)__library_projects__\*.jar"
-      ToolPath="$(_MonoAndroidBinDirectory)"
-      ToolExe="$(BindingApiMergeToolExe)"
+      GeneratorToolPath="$(_MonoAndroidBinDirectory)"
+      GeneratorToolExe="$(BindingsGeneratorToolExe)"
+      ApiMergeToolPath="$(_MonoAndroidBinDirectory)"
+      ApiMergeToolExe="$(ApiMergeToolExe)"
     />
   </Target>
 	

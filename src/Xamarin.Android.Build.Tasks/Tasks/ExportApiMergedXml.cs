@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Xamarin.Android.Build.Utilities;
@@ -15,6 +18,14 @@ namespace Xamarin.Android.Tasks
 		public string MonoAndroidToolsDirectory { get; set; }
 		[Required]
 		public string JavaSdkDirectory { get; set; }
+
+		[Required]
+		public string GeneratorToolPath { get; set; }
+		[Required]
+		public string ApiMergeToolPath { get; set; }
+		public string GeneratorToolExe { get; set; }
+		public string ApiMergeToolExe { get; set; }
+
 		[Required]
 		public string AndroidApiLevel { get; set; }
 		[Required]
@@ -23,10 +34,6 @@ namespace Xamarin.Android.Tasks
 		public string OutputDirectory { get; set; }
 		public ITaskItem [] SourceJars { get; set; }
 		public ITaskItem [] ReferenceJars { get; set; }
-		public string DroidDocPaths { get; set; }
-		public string JavaDocPaths { get; set; }
-		public string Java7DocPaths { get; set; }
-		public string Java8DocPaths { get; set; }
 		public ITaskItem [] JavaDocs { get; set; }
 		public ITaskItem [] LibraryProjectJars { get; set; }
 		public ITaskItem [] ReferencedManagedLibraries { get; set; }
@@ -40,10 +47,6 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ("  MonoAndroidToolsDirectory: {0}", MonoAndroidToolsDirectory);
 			Log.LogDebugMessage ("  JavaSdkDirectory: {0}", JavaSdkDirectory);
 			Log.LogDebugMessage ("  OutputFile: {0}", OutputFile);
-			Log.LogDebugMessage ("  DroidDocPaths: {0}", DroidDocPaths);
-			Log.LogDebugMessage ("  JavaDocPaths: {0}", JavaDocPaths);
-			Log.LogDebugMessage ("  Java7DocPaths: {0}", Java7DocPaths);
-			Log.LogDebugMessage ("  Java8DocPaths: {0}", Java8DocPaths);
 			Log.LogDebugTaskItems ("  JavaDocs: {0}", JavaDocs);
 			Log.LogDebugTaskItems ("  LibraryProjectJars:", LibraryProjectJars);
 			Log.LogDebugTaskItems ("  SourceJars:", SourceJars);
@@ -52,7 +55,78 @@ namespace Xamarin.Android.Tasks
 
 			Directory.CreateDirectory (OutputDirectory);
 
+#if STANDALONE_TOOLCHAIN
 			return base.Execute ();
+#else
+			// class-parse
+			bool hasConflicts = SourceJars.Select (s => Path.GetFileName (s.ItemSpec)).Distinct ().Count () != SourceJars.Length;
+			var classParseXmls = new List<string> ();
+			var apiAdjustedXmls = new List<string> ();
+
+			foreach (var jarItem in SourceJars) {
+				var jar = jarItem.ItemSpec;
+				var classPath = new Tools.Bytecode.ClassPath () {
+					ApiSource = "class-parse",
+					DocumentationPaths = JavaDocs.Select (s => s.ItemSpec)
+				};
+				if (Tools.Bytecode.ClassPath.IsJarFile (jar))
+					classPath.Load (jar);
+				var outname = hasConflicts ? Path.GetFileName (jar) : Path.GetFileName (Path.GetDirectoryName (jar)) + '_' + Path.GetFileName (jar);
+				var outfile = Path.Combine (OutputDirectory, Path.ChangeExtension (outname, ".class-parse"));
+				classParseXmls.Add (outfile);
+				classPath.SaveXmlDescription (outfile);
+			}
+
+			// api-xml-adjuster
+			foreach (var xml in classParseXmls) {
+				var outfile = Path.ChangeExtension (xml, ".xml");
+				apiAdjustedXmls.Add (outfile);
+
+				var aargs = new List<string> ();
+				aargs.Add (xml);
+				aargs.Add ("--assembly=dummy");
+				aargs.Add ("--only-xml-adjuster");
+				aargs.Add ("--xml-adjuster-output=" + outfile);
+				aargs.Add ("--api-level=" + AndroidApiLevel);
+				foreach (var dll in ReferencedManagedLibraries)
+					aargs.Add ("--ref=" + dll.ItemSpec);
+				foreach (var docs in JavaDocs)
+					aargs.Add ("--docs=" + docs.ItemSpec);
+
+				Log.LogDebugMessage ("Running {0} {1}", GeneratorToolExe, string.Join (" ", apiAdjustedXmls));
+				var aproc = Process.Start (GeneratorToolExe, string.Join (" ", aargs));
+				aproc.WaitForExit ();
+				if (aproc.ExitCode != 0)
+					return false;
+			}
+
+			// api-merge
+			Log.LogDebugMessage ("Running {0} {1}", ApiMergeToolExe, string.Join (" ", apiAdjustedXmls));
+			var margs = new List<string> ();
+			margs.Add ("-o:" + OutputFile);
+			margs.AddRange (apiAdjustedXmls);
+			var mproc = Process.Start (ApiMergeToolExe, string.Join (" ", margs));
+			mproc.WaitForExit ();
+			return mproc.ExitCode == 0;
+#endif
+		}
+
+		string GetGeneratorToolFullPath ()
+		{
+			return GeneratorToolExe ?? Path.Combine (GeneratorToolPath, GeneratorToolName);
+		}
+
+		string GetApiMergeToolFullPath ()
+		{
+			return ApiMergeToolExe ?? Path.Combine (ApiMergeToolPath, ApiMergeToolName);
+		}
+
+		public string GeneratorToolName {
+			get { return OS.IsWindows ? "generator.exe" : "generator"; }
+		}
+
+		public string ApiMergeToolName {
+			get { return OS.IsWindows ? "api-merge.exe" : "api-merge"; }
 		}
 
 		protected override string GenerateCommandLineCommands ()
@@ -88,22 +162,6 @@ namespace Xamarin.Android.Tasks
 			if (ReferenceJars != null)
 				foreach (var jar in ReferenceJars)
 					cmd.AppendSwitchIfNotNull ("--ref=", Path.GetFullPath (jar.ItemSpec));
-
-			if (DroidDocPaths != null)
-				foreach (var path in DroidDocPaths.Split (';'))
-					cmd.AppendSwitchIfNotNull ("--docs=", Path.GetFullPath (path));
-
-			if (JavaDocPaths != null)
-				foreach (var path in JavaDocPaths.Split (';'))
-					cmd.AppendSwitchIfNotNull ("--docs=", Path.GetFullPath (path));
-
-			if (Java7DocPaths != null)
-				foreach (var path in Java7DocPaths.Split (';'))
-					cmd.AppendSwitchIfNotNull ("--docs=", Path.GetFullPath (path));
-
-			if (Java8DocPaths != null)
-				foreach (var path in Java8DocPaths.Split (';'))
-					cmd.AppendSwitchIfNotNull ("--docs=", Path.GetFullPath (path));
 
 			if (JavaDocs != null) {
 				foreach (var doc in JavaDocs)
