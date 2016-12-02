@@ -2,6 +2,7 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <AndroidUri Condition=" '$(AndroidUri)' == '' ">https://dl-ssl.google.com/android/repository</AndroidUri>
+    <AntUri Condition=" '$(AntUri)' == '' ">http://mirrors.ibiblio.org/apache/ant/binaries</AntUri>
   </PropertyGroup>
   <ItemGroup>
     <AndroidNdkItem Include="android-ndk-r11c-linux-x86_64.zip">
@@ -109,6 +110,11 @@
       <Platform>android-21</Platform>
       <Arch>x86_64</Arch>
     </_NdkToolchain>
+  </ItemGroup>
+  <ItemGroup>
+    <AntItem Include="apache-ant-1.9.7-bin.zip">
+      <HostOS></HostOS>
+    </AntItem>
   </ItemGroup>
   <ItemGroup>
     <RequiredProgram Include="$(ManagedRuntime)"    Condition=" '$(ManagedRuntime)' != '' " />
