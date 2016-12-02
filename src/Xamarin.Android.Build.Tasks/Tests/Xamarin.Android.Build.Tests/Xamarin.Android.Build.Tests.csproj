@@ -42,6 +42,7 @@
     <Compile Include="Utilities\BaseTest.cs" />
     <Compile Include="Utilities\BuildHelper.cs" />
     <Compile Include="BuildTest.cs" />
+    <Compile Include="PackagingTest.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
