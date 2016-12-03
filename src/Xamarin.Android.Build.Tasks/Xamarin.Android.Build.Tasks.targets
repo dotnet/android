@@ -76,6 +76,8 @@
         DisabledWarnings="1699"
         References="$(OutputPath)..\..\..\..\lib\mandroid\Xamarin.Android.Cecil.dll"
         OutputAssembly="$(OutputPath)..\..\..\..\lib\mandroid\mono-symbolicate.exe"
+        ToolExe="$(CscToolExe)"
+        ToolPath="$(CscToolPath)"
     />
     <Copy
         SourceFiles="..\..\tools\scripts\mono-symbolicate"

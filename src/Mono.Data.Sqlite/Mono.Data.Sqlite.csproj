@@ -13,6 +13,7 @@
     <AndroidResgenFile>Resources\Resource.designer.cs</AndroidResgenFile>
     <AssemblyName>Mono.Data.Sqlite</AssemblyName>
     <SignAssembly>true</SignAssembly>
+    <NoStdLib>True</NoStdLib>
     <AndroidApplication>false</AndroidApplication>
     <AndroidUseLatestPlatformSdk>false</AndroidUseLatestPlatformSdk>
   </PropertyGroup>

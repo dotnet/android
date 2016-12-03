@@ -92,9 +92,8 @@
     <PropertyGroup>
       <_Script>$(AndroidToolchainDirectory)\ndk\build\tools\make-standalone-toolchain.sh</_Script>
       <_Install>@(_NdkToolchain->'$(AndroidToolchainDirectory)\toolchains\%(Identity)')</_Install>
-      <_Toolchain>@(_NdkToolchain->'%(Identity)')</_Toolchain>
     </PropertyGroup>
-    <Exec Command="bash &quot;$(_Script)&quot; --platform=%(_NdkToolchain.Platform) &quot;--install-dir=$(_Install)&quot; --arch=%(_NdkToolchain.Arch) --toolchain=$(_Toolchain)" />
+    <Exec Command="bash &quot;$(_Script)&quot; --platform=%(_NdkToolchain.Platform) &quot;--install-dir=$(_Install)&quot; --arch=%(_NdkToolchain.Arch) --toolchain=%(_NdkToolchain.Identity)" />
     <Touch
         Files="@(_NdkToolchain->'$(AndroidToolchainDirectory)\toolchains\%(Identity)\AndroidVersion.txt')"
         AlwaysCreate="False"

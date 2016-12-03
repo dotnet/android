@@ -2,8 +2,6 @@ OS            := $(shell uname)
 OS_ARCH       := $(shell uname -m)
 V             ?= 0
 CONFIGURATION = Debug
-MSBUILD       = xbuild
-MSBUILD_FLAGS = /p:Configuration=$(CONFIGURATION) $(MSBUILD_ARGS)
 RUNTIME       := $(shell if [ -f "`which mono64`" ] ; then echo mono64 ; else echo mono; fi) --debug=casts
 SOLUTION      = Xamarin.Android.sln
 
@@ -14,12 +12,13 @@ NUNIT_CONSOLE = packages/NUnit.ConsoleRunner.3.2.1/tools/nunit3-console.exe
 
 ifneq ($(V),0)
 MONO_OPTIONS += --debug
-MSBUILD_FLAGS += /v:d
 endif
 
 ifneq ($(MONO_OPTIONS),)
 export MONO_OPTIONS
 endif
+
+include build-tools/scripts/msbuild.mk
 
 all::
 	$(MSBUILD) $(MSBUILD_FLAGS) $(SOLUTION)
@@ -27,10 +26,13 @@ all::
 all-tests::
 	MSBUILD="$(MSBUILD)" tools/scripts/xabuild $(MSBUILD_FLAGS) Xamarin.Android-Tests.sln
 
-prepare:: prepare-external prepare-props
+prepare:: prepare-external prepare-props prepare-msbuild
 
 # $(call GetPath,path)
 GetPath   = $(shell $(MSBUILD) $(MSBUILD_FLAGS) /p:DoNotLoadOSProperties=True /nologo /v:minimal /t:Get$(1)FullPath build-tools/scripts/Paths.targets | tr -d '[[:space:]]' )
+
+MSBUILD_PREPARE_PROJS = \
+	src/Xamarin.Android.Build.Tasks/Xamarin.Android.Build.Tasks.csproj
 
 prepare-external:
 	git submodule update --init --recursive
@@ -43,6 +45,13 @@ prepare-props:
 	cp Configuration.Java.Interop.Override.props external/Java.Interop/Configuration.Override.props
 	./build-tools/scripts/generate-os-info Configuration.OperatingSystem.props
 	cp `$(MSBUILD) $(MSBUILD_FLAGS) /nologo /v:minimal /t:GetMonoSourceFullPath build-tools/scripts/Paths.targets`/mcs/class/msfinal.pub .
+
+prepare-msbuild:
+ifeq ($(MSBUILD),msbuild)
+	for proj in $(MSBUILD_PREPARE_PROJS); do \
+		$(MSBUILD) $(MSBUILD_FLAGS) "$$proj"; \
+	done
+endif	# msbuild
 
 include build-tools/scripts/BuildEverything.mk
 
