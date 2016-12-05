@@ -47,7 +47,7 @@
         WorkingDirectory="java\JavaLib"
     />
     <Exec
-        Command="ant debug"
+        Command="$(AntDirectory)\bin\ant debug"
         WorkingDirectory="java\JavaLib"
     />
     <MakeDir Directories="$(OutputPath)" />

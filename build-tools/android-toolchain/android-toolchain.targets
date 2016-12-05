@@ -23,8 +23,16 @@
         Condition=" '%(HostOS)' == '$(HostOS)' Or '%(HostOS)' == '' ">
 			<Output TaskParameter="Include" ItemName="_PlatformAndroidNdkItem"/>
     </CreateItem>
+    <CreateItem
+        Include="@(AntItem)"
+        Condition=" '%(HostOS)' == '$(HostOS)' Or '%(HostOS)' == '' ">
+      <Output TaskParameter="Include" ItemName="_PlatformAntItem"/>
+    </CreateItem>
     <ItemGroup>
         <_SdkStampFiles Include="@(_PlatformAndroidSdkItem->'$(AndroidToolchainDirectory)\sdk\.stamp-%(Identity)')" />
+    </ItemGroup>
+    <ItemGroup>
+      <_SdkStampFiles Include="@(_PlatformAntItem->'$(AntDirectory)\.stamp-%(Identity)')" />
     </ItemGroup>
   </Target>
   <Target Name="_DownloadItems"
@@ -35,10 +43,14 @@
         SourceUris="@(_PlatformAndroidSdkItem->'$(AndroidUri)/%(RelUrl)%(Identity)');@(_PlatformAndroidNdkItem->'$(AndroidUri)/%(RelUrl)%(Identity)')"
         DestinationFiles="@(_PlatformAndroidSdkItem->'$(AndroidToolchainCacheDirectory)\%(Identity)');@(_PlatformAndroidNdkItem->'$(AndroidToolchainCacheDirectory)\%(Identity)')"
     />
+    <DownloadUri
+        SourceUris="@(_PlatformAntItem->'$(AntUri)/%(RelUrl)%(Identity)')"
+        DestinationFiles="@(_PlatformAntItem->'$(AndroidToolchainCacheDirectory)\%(Identity)')"
+    />
   </Target>
   <Target Name="_UnzipFiles"
       DependsOnTargets="_DetermineItems"
-      Inputs="@(_PlatformAndroidSdkItem->'$(AndroidToolchainCacheDirectory)\%(Identity)')"
+      Inputs="@(_PlatformAndroidSdkItem->'$(AndroidToolchainCacheDirectory)\%(Identity)');@(_PlatformAntItem->'$(AndroidToolchainCacheDirectory)\%(Identity)')"
       Outputs="@(_SdkStampFiles);$(AndroidToolchainDirectory)\ndk\.stamp-ndk">
     <CreateItem
         Include="@(_PlatformAndroidSdkItem->'$(AndroidToolchainCacheDirectory)\%(_PlatformAndroidSdkItem.Identity)">
@@ -50,8 +62,8 @@
       <Output TaskParameter="Include" ItemName="_AndroidNdkItems"/>
     </CreateItem>
 
-    <RemoveDir Directories="$(AndroidToolchainDirectory)\sdk;$(AndroidToolchainDirectory)\ndk" />
-    <MakeDir Directories="$(AndroidToolchainDirectory)\sdk;$(AndroidToolchainDirectory)\ndk" />
+    <RemoveDir Directories="$(AndroidSdkDirectory);$(AndroidNdkDirectory);$(AntDirectory)" />
+    <MakeDir Directories="$(AndroidSdkDirectory);$(AndroidNdkDirectory);$(AntDirectory)" />
 
     <UnzipDirectoryChildren
         HostOS="$(HostOS)"
@@ -62,6 +74,11 @@
         HostOS="$(HostOS)"
         SourceFiles="@(AndroidNdkItem->'$(AndroidToolchainCacheDirectory)\%(Identity)')"
         DestinationFolder="$(AndroidToolchainDirectory)\ndk"
+    />
+    <UnzipDirectoryChildren
+        HostOS="$(HostOS)"
+        SourceFiles="@(_PlatformAntItem->'$(AndroidToolchainCacheDirectory)\%(Identity)')"
+        DestinationFolder="$(AntDirectory)"
     />
     <Touch
         Files="@(_SdkStampFiles);$(AndroidToolchainDirectory)\ndk\.stamp-ndk"
