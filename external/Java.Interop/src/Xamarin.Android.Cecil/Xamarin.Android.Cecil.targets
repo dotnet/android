@@ -3,7 +3,7 @@
   <PropertyGroup>
     <CecilDirectory>$(MSBuildThisFileDirectory)\..\..\external\cecil</CecilDirectory>
     <CecilPreparedFlag>prepared.flag</CecilPreparedFlag>
-    <OutputPath Condition="'$(OutputPath)' == ''">bin\$(Configuration)</OutputPath>
+    <OutputPath Condition=" '$(OutputPath)' == '' ">..\..\bin\$(Configuration)</OutputPath>
     <CecilOutputPath>$([System.IO.Path]::GetFullPath ('$(OutputPath)'))</CecilOutputPath>
     <CecilAssemblies>$(OutputPath)\Xamarin.Android.Cecil.dll;$(OutputPath)\Xamarin.Android.Cecil.Mdb.dll</CecilAssemblies>
   </PropertyGroup>
@@ -17,13 +17,19 @@
   <Target Name="BuildCecil"
       Inputs="$(CecilPreparedFlag)"
       Outputs="$(CecilAssemblies)" DependsOnTargets="PrepareCecil">
-    <Exec Command="cd $(CecilDirectory); patch -Ep1 &lt; $(MSBuildThisFileDirectory)\assembly-rename.patch" />
+    <Exec
+        Command="patch -Ep1 &lt; &quot;$(MSBuildThisFileDirectory)\assembly-rename.patch&quot;"
+        WorkingDirectory="$(CecilDirectory)"
+    />
     <MSBuild
-	Projects="$(CecilDirectory)\Mono.Cecil.csproj;$(CecilDirectory)\symbols\mdb\Mono.Cecil.Mdb.csproj"
-	Targets="Clean;Build"
-	StopOnFirstFailure="true"
-	Properties="Configuration=net_4_0_Debug;OutputPath=$(CecilOutputPath);BuildingSolutionFile=false" />
-    <Exec Command="cd $(CecilDirectory); patch -REp1 &lt; $(MSBuildThisFileDirectory)\assembly-rename.patch" />
+        Projects="$(CecilDirectory)\Mono.Cecil.csproj;$(CecilDirectory)\symbols\mdb\Mono.Cecil.Mdb.csproj"
+        Targets="Clean;Build"
+        StopOnFirstFailure="True"
+        Properties="Configuration=net_4_0_Debug;OutputPath=$(CecilOutputPath);BuildingSolutionFile=false" />
+    <Exec
+        Command="patch -REp1 &lt; &quot;$(MSBuildThisFileDirectory)\assembly-rename.patch&quot;"
+        WorkingDirectory="$(CecilDirectory)"
+    />
     <Touch Files="$(CecilAssemblies)" />
   </Target>
   <Target Name="Build" DependsOnTargets="BuildCecil" Returns="$(CecilOutputPath)\$(AssemblyName).dll">
@@ -31,6 +37,5 @@
   </Target>
   <Target Name="AfterClean">
     <Delete Files="$(CecilPreparedFlag)" />
-    <RemoveDir Directories="bin" />
   </Target>
 </Project>
