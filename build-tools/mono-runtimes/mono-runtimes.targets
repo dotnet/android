@@ -365,8 +365,12 @@
         Command="make $(_AotOffsetsDumperName)"
         WorkingDirectory="$(_AotOffsetsDumperSourceDir)" 
     />
+    <PropertyGroup>
+      <_CppAbiDir Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Darwin:'))">osx_32</_CppAbiDir>
+      <_CppAbiDir Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Linux:'))">linux_64</_CppAbiDir>
+    </PropertyGroup>
     <Exec
-        Command="MONO_PATH=$(_AotOffsetsDumperSourceDir)\CppSharp $(ManagedRuntime) $(_AotOffsetsDumperSourceDir)\$(_AotOffsetsDumperName) --xamarin-android --android-ndk=&quot;$(AndroidNdkFullPath)&quot; --mono=&quot;$(MonoSourceFullPath)&quot; --monodroid=&quot;$(XamarinAndroidSourcePath)&quot; --abi=&quot;%(_MonoCrossRuntime.TargetAbi)&quot; --out=&quot;$(MSBuildThisFileDirectory)$(IntermediateOutputPath)\%(_MonoCrossRuntime.Identity)&quot;"
+        Command="MONO_PATH=$(_AotOffsetsDumperSourceDir)\CppSharp\$(_CppAbiDir) $(ManagedRuntime) $(_AotOffsetsDumperSourceDir)\$(_AotOffsetsDumperName) --xamarin-android --android-ndk=&quot;$(AndroidNdkFullPath)&quot; --mono=&quot;$(MonoSourceFullPath)&quot; --monodroid=&quot;$(XamarinAndroidSourcePath)&quot; --abi=&quot;%(_MonoCrossRuntime.TargetAbi)&quot; --out=&quot;$(MSBuildThisFileDirectory)$(IntermediateOutputPath)\%(_MonoCrossRuntime.Identity)&quot;"
         WorkingDirectory="$(IntermediateOutputPath)\%(_MonoCrossRuntime.Identity)"
     />
     <Touch
