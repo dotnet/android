@@ -170,7 +170,7 @@ URL to download files from is controlled by the `$(AndroidUri)` property.
 [android-toolchain.projitems]: build-tools/android-toolchain/android-toolchain.projitems
 
 <a name="brew" />
-## Brew Programs
+## Brew Programs (If you are missing one or many programs on OSX)
 
 `brew install cmake`
 
