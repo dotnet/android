@@ -106,8 +106,15 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-    <Content Include="..\..\..\..\bin\$(Configuration)\lib\xbuild\Xamarin\Android\libzip.3.0.dylib">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <Content
+        Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Darwin:'))"
+        Include="..\..\..\..\bin\$(Configuration)\lib\xbuild\Xamarin\Android\libzip.3.0.dylib">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content
+        Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Linux:')) And '$(_LinuxBuildLibZip)' == 'True' "
+        Include="..\..\..\..\bin\$(Configuration)\lib\xbuild\Xamarin\Android\libzip.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
   <ItemGroup>
