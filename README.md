@@ -109,8 +109,7 @@ Building Xamarin.Android requires:
 * [Autotools (`autoconf`, `automake`, etc.)](#autotools)
 * [`xxd`](#xxd)
 * [The Android SDK and NDK](#ndk)
-* [`cmake`](#cmake)
-* [`libtool`](#libtool)
+* [`brew programs`](#brew)
 
 
 <a name="mono-sdk" />
@@ -170,19 +169,32 @@ URL to download files from is controlled by the `$(AndroidUri)` property.
 
 [android-toolchain.projitems]: build-tools/android-toolchain/android-toolchain.projitems
 
-<a name="cmake" />
-## cmake
-
-You might run into an issue with `cmake` not being available on your machine. Use `brew` to install `cmake`:
+<a name="brew" />
+## Brew Programs
 
 `brew install cmake`
 
-<a name="libtool" />
-## libtool
-
-You might run into an issue with `libtool` not being available on your machine. Use `brew` to install `libtool`:
-
 `brew install libtool`
+
+`brew install p7zip`
+
+`brew install gdk-pixbuf`
+
+`brew install gettext`
+
+`brew install coreutils findutils gnu-tar gnu-sed gawk gnutls gnu-indent gnu-getopt`
+
+`brew install intltool`
+
+`brew install scons`
+
+`brew install wget`
+
+`brew install xz`
+
+If any program is not found, try to ensure it's linked via:
+
+`brew link <package name>`
 
 # Build
 
