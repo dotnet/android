@@ -109,6 +109,9 @@ Building Xamarin.Android requires:
 * [Autotools (`autoconf`, `automake`, etc.)](#autotools)
 * [`xxd`](#xxd)
 * [The Android SDK and NDK](#ndk)
+* [`cmake`](#cmake)
+* [`libtool`](#libtool)
+
 
 <a name="mono-sdk" />
 ## Mono MDK
@@ -137,6 +140,10 @@ the Mono runtimes.
 
 On OS X, autotools are distributed with [Mono.framework][osx-mono].
 
+If you run into issues regarding `autoconf` or `automake` try to install it with `brew` via:
+
+`brew install automake`
+
 <a name="xxd" />
 ## `xxd`
 
@@ -163,6 +170,20 @@ URL to download files from is controlled by the `$(AndroidUri)` property.
 
 [android-toolchain.projitems]: build-tools/android-toolchain/android-toolchain.projitems
 
+<a name="cmake" />
+## cmake
+
+You might run into an issue with `cmake` not being available on your machine. Use `brew` to install `cmake`:
+
+`brew install cmake`
+
+<a name="libtool" />
+## libtool
+
+You might run into an issue with `libtool` not being available on your machine. Use `brew` to install `libtool`:
+
+`brew install libtool`
+
 # Build
 
 At this point in time, building Xamarin.Android is only supported on OS X.
@@ -173,7 +194,9 @@ To build Xamarin.Android, first prepare the project:
     make prepare
 
 This will perform `git submodule update`, and any other pre-build tasks
-that need to be performed.
+that need to be performed. After this process is completed, ensure there is no existing git changes in the `external` folder.
+
+On the main repo, you can use `git status` to ensure a clean slate.
 
 Then, you may do one of the following:
 
