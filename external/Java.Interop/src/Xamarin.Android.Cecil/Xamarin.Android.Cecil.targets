@@ -3,7 +3,7 @@
   <PropertyGroup>
     <CecilDirectory>$(MSBuildThisFileDirectory)\..\..\external\cecil</CecilDirectory>
     <CecilPreparedFlag>prepared.flag</CecilPreparedFlag>
-    <OutputPath Condition=" '$(OutputPath)' == '' ">..\..\bin\$(Configuration)</OutputPath>
+    <OutputPath Condition=" '$(OutputPath)' == '' ">$(MSBuildThisFileDirectory)\..\..\bin\$(Configuration)</OutputPath>
     <CecilOutputPath>$([System.IO.Path]::GetFullPath ('$(OutputPath)'))</CecilOutputPath>
     <CecilAssemblies>$(OutputPath)\Xamarin.Android.Cecil.dll;$(OutputPath)\Xamarin.Android.Cecil.Mdb.dll</CecilAssemblies>
   </PropertyGroup>
