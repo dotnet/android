@@ -137,6 +137,10 @@ the Mono runtimes.
 
 On OS X, autotools are distributed with [Mono.framework][osx-mono].
 
+If you run into issues regarding `autoconf` or `automake` try to install it with `brew` via:
+
+    brew install automake
+
 <a name="xxd" />
 ## `xxd`
 
@@ -173,7 +177,10 @@ To build Xamarin.Android, first prepare the project:
     make prepare
 
 This will perform `git submodule update`, and any other pre-build tasks
-that need to be performed.
+that need to be performed. After this process is completed, ensure there
+is no existing git changes in the `external` folder.
+
+On the main repo, you can use `git status` to ensure a clean slate.
 
 Then, you may do one of the following:
 
@@ -203,6 +210,42 @@ To disable `binfmt_misc` you need to issue the following command as root:
 and to enable it again, issue the following command:
 
         echo 1 > /proc/sys/fs/binfmt_misc/status
+
+## macOS Build Notes
+
+The [`android-toolchain.projitems`](build-tools/android-toolchain/android-toolchain.projitems),
+[`libzip.projitems`](build-tools/libzip/libzip.projitems), and
+[`monodroid.projitems`](src/monodroid/monodroid.projitems) project files, among
+others, use the `@(RequiredProgram)` build action to check for the existence
+of a program within `$PATH` during the build. If a required program doesn't
+exist, then the build will fail and a suggested `brew install` command line
+will be provided to install the missing commands.
+
+### Brew Programs
+
+Suggested `brew install` commands:
+
+    brew install cmake
+    brew install libtool
+    brew install p7zip
+    brew install gdk-pixbuf
+    brew install gettext
+    brew install coreutils
+    brew install findutils
+    brew install gnu-tar
+    brew install gnu-sed
+    brew install gawk
+    brew install gnutls
+    brew install gnu-indent
+    brew install gnu-getopt
+    brew install intltool
+    brew install scons
+    brew install wget
+    brew install xz
+
+If any program is still not found, try to ensure it's linked via:
+
+    brew link <package name>
 
 # Build Output Directory Structure
 
