@@ -137,6 +137,10 @@ the Mono runtimes.
 
 On OS X, autotools are distributed with [Mono.framework][osx-mono].
 
+If you run into issues regarding `autoconf` or `automake` try to install it with `brew` via:
+
+`brew install automake`
+
 <a name="xxd" />
 ## `xxd`
 
@@ -173,7 +177,10 @@ To build Xamarin.Android, first prepare the project:
     make prepare
 
 This will perform `git submodule update`, and any other pre-build tasks
-that need to be performed.
+that need to be performed. After this process is completed, ensure there 
+is no existing git changes in the `external` folder.
+
+On the main repo, you can use `git status` to ensure a clean slate.
 
 Then, you may do one of the following:
 
@@ -203,6 +210,35 @@ To disable `binfmt_misc` you need to issue the following command as root:
 and to enable it again, issue the following command:
 
         echo 1 > /proc/sys/fs/binfmt_misc/status
+        
+## Build Troubleshooting (OSX)
+
+If various programs are missing during the `build-tools/scripts/RequiredPrograms.targets`
+step, please follow this list of `brew` programs to install:
+ 
+### Brew Programs
+```
+brew install cmake
+brew install libtool
+brew install p7zip
+brew install gdk-pixbuf
+brew install gettext
+brew install coreutils
+brew install findutils
+brew install gnu-tar
+brew install gnu-sed
+brew install gawk
+brew install gnutls
+brew install gnu-indent
+brew install gnu-getopt
+brew install intltool
+brew install scons
+brew install wget
+brew install xz
+```
+If any program is still not found, try to ensure it's linked via:
+
+`brew link <package name>`
 
 # Build Output Directory Structure
 
