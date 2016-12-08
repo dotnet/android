@@ -109,8 +109,6 @@ Building Xamarin.Android requires:
 * [Autotools (`autoconf`, `automake`, etc.)](#autotools)
 * [`xxd`](#xxd)
 * [The Android SDK and NDK](#ndk)
-* [`brew programs`](#brew)
-
 
 <a name="mono-sdk" />
 ## Mono MDK
@@ -169,33 +167,6 @@ URL to download files from is controlled by the `$(AndroidUri)` property.
 
 [android-toolchain.projitems]: build-tools/android-toolchain/android-toolchain.projitems
 
-<a name="brew" />
-## Brew Programs (If you are missing one or many programs on OSX)
-
-`brew install cmake`
-
-`brew install libtool`
-
-`brew install p7zip`
-
-`brew install gdk-pixbuf`
-
-`brew install gettext`
-
-`brew install coreutils findutils gnu-tar gnu-sed gawk gnutls gnu-indent gnu-getopt`
-
-`brew install intltool`
-
-`brew install scons`
-
-`brew install wget`
-
-`brew install xz`
-
-If any program is not found, try to ensure it's linked via:
-
-`brew link <package name>`
-
 # Build
 
 At this point in time, building Xamarin.Android is only supported on OS X.
@@ -206,7 +177,8 @@ To build Xamarin.Android, first prepare the project:
     make prepare
 
 This will perform `git submodule update`, and any other pre-build tasks
-that need to be performed. After this process is completed, ensure there is no existing git changes in the `external` folder.
+that need to be performed. After this process is completed, ensure there 
+is no existing git changes in the `external` folder.
 
 On the main repo, you can use `git status` to ensure a clean slate.
 
@@ -238,6 +210,35 @@ To disable `binfmt_misc` you need to issue the following command as root:
 and to enable it again, issue the following command:
 
         echo 1 > /proc/sys/fs/binfmt_misc/status
+        
+## Build Troubleshooting (OSX)
+
+If various programs are missing during the `build-tools/scripts/RequiredPrograms.targets`
+step, please follow this list of `brew` programs to install:
+ 
+### Brew Programs
+```
+brew install cmake
+brew install libtool
+brew install p7zip
+brew install gdk-pixbuf
+brew install gettext
+brew install coreutils
+brew install findutils
+brew install gnu-tar
+brew install gnu-sed
+brew install gawk
+brew install gnutls
+brew install gnu-indent
+brew install gnu-getopt
+brew install intltool
+brew install scons
+brew install wget
+brew install xz
+```
+If any program is still not found, try to ensure it's linked via:
+
+`brew link <package name>`
 
 # Build Output Directory Structure
 
