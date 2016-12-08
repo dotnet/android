@@ -30,7 +30,7 @@ namespace Xamarin.Android.Tasks
 	}
 
 	// can't be a single ToolTask, because it has to run mkbundle many times for each arch.
-	public class Aot : Task
+	public class Aot : AsyncTask
 	{
 		[Required]
 		public string AndroidAotMode { get; set; }
@@ -203,23 +203,23 @@ namespace Xamarin.Android.Tasks
 		}
 
 		bool DoExecute () {
-			Log.LogDebugMessage ("Aot:", AndroidAotMode);
-			Log.LogDebugMessage ("  AndroidApiLevel: {0}", AndroidApiLevel);
-			Log.LogDebugMessage ("  AndroidAotMode: {0}", AndroidAotMode);
-			Log.LogDebugMessage ("  AndroidSequencePointsMode: {0}", AndroidSequencePointsMode);
-			Log.LogDebugMessage ("  AndroidNdkDirectory: {0}", AndroidNdkDirectory);
-			Log.LogDebugMessage ("  AotOutputDirectory: {0}", AotOutputDirectory);
-			Log.LogDebugMessage ("  EnableLLVM: {0}", EnableLLVM);
-			Log.LogDebugMessage ("  IntermediateAssemblyDir: {0}", IntermediateAssemblyDir);
-			Log.LogDebugMessage ("  LinkMode: {0}", LinkMode);
-			Log.LogDebugMessage ("  SdkBinDirectory: {0}", SdkBinDirectory);
-			Log.LogDebugMessage ("  SupportedAbis: {0}", SupportedAbis);
-			Log.LogDebugTaskItems ("  ResolvedAssemblies:", ResolvedAssemblies);
-			Log.LogDebugTaskItems ("  AdditionalNativeLibraryReferences:", AdditionalNativeLibraryReferences);
+			LogDebugMessage ("Aot:", AndroidAotMode);
+			LogDebugMessage ("  AndroidApiLevel: {0}", AndroidApiLevel);
+			LogDebugMessage ("  AndroidAotMode: {0}", AndroidAotMode);
+			LogDebugMessage ("  AndroidSequencePointsMode: {0}", AndroidSequencePointsMode);
+			LogDebugMessage ("  AndroidNdkDirectory: {0}", AndroidNdkDirectory);
+			LogDebugMessage ("  AotOutputDirectory: {0}", AotOutputDirectory);
+			LogDebugMessage ("  EnableLLVM: {0}", EnableLLVM);
+			LogDebugMessage ("  IntermediateAssemblyDir: {0}", IntermediateAssemblyDir);
+			LogDebugMessage ("  LinkMode: {0}", LinkMode);
+			LogDebugMessage ("  SdkBinDirectory: {0}", SdkBinDirectory);
+			LogDebugMessage ("  SupportedAbis: {0}", SupportedAbis);
+			LogDebugTaskItems ("  ResolvedAssemblies:", ResolvedAssemblies);
+			LogDebugTaskItems ("  AdditionalNativeLibraryReferences:", AdditionalNativeLibraryReferences);
 
 			bool hasValidAotMode = GetAndroidAotMode (AndroidAotMode, out AotMode);
 			if (!hasValidAotMode) {
-				Log.LogCodedError ("XA3001", "Invalid AOT mode: {0}", AndroidAotMode);
+				LogCodedError ("XA3001", "Invalid AOT mode: {0}", AndroidAotMode);
 				return false;
 			}
 
@@ -227,15 +227,25 @@ namespace Xamarin.Android.Tasks
 
 			var nativeLibs = new List<string> ();
 
-			if (!RunParallelAotCompiler (nativeLibs))
+			var task = ThreadingTasks.Task.Run ( () => {
+				return RunParallelAotCompiler (nativeLibs);
+			});
+
+			task.ContinueWith ( (t) => {
+				Complete ();
+			});
+
+			base.Execute ();
+
+			if (!task.Result)
 				return false;
 
 			NativeLibrariesReferences = nativeLibs.ToArray ();
 
-			Log.LogDebugTaskItems ("Aot Outputs:");
-			Log.LogDebugTaskItems ("  NativeLibrariesReferences: ", NativeLibrariesReferences);
+			LogDebugTaskItems ("Aot Outputs:");
+			LogDebugTaskItems ("  NativeLibrariesReferences: ", NativeLibrariesReferences);
 
-			return true;
+			return !Log.HasLoggedErrors;
 		}
 
 		bool RunParallelAotCompiler (List<string> nativeLibs)
@@ -257,7 +267,7 @@ namespace Xamarin.Android.Tasks
 						}
 
 						if (!RunAotCompiler (config.AssembliesPath, config.AotCompiler, config.AotOptions, config.AssemblyPath, cts.Token)) {
-							Log.LogCodedError ("XA3001", "Could not AOT the assembly: {0}", Path.GetFileName (config.AssemblyPath));
+							LogCodedError ("XA3001", "Could not AOT the assembly: {0}", Path.GetFileName (config.AssemblyPath));
 							cts.Cancel ();
 							return;
 						}
@@ -442,7 +452,7 @@ namespace Xamarin.Android.Tasks
 			// so we provide this out-of-band to the cross-compilers - this can be extended to communicate a few others bits as well
 			psi.EnvironmentVariables ["MONO_PATH"] = assembliesPath;
 
-			Log.LogDebugMessage ("[AOT] MONO_PATH=\"{0}\" MONO_ENV_OPTIONS=\"{1}\" {2} {3}",
+			LogDebugMessage ("[AOT] MONO_PATH=\"{0}\" MONO_ENV_OPTIONS=\"{1}\" {2} {3}",
 				psi.EnvironmentVariables ["MONO_PATH"], psi.EnvironmentVariables ["MONO_ENV_OPTIONS"], psi.FileName, psi.Arguments);
 
 			var proc = new Process ();
@@ -460,13 +470,13 @@ namespace Xamarin.Android.Tasks
 		void OnAotOutputData (object sender, DataReceivedEventArgs e)
 		{
 			if (e.Data != null)
-				Log.LogMessage ("[aot-compiler stdout] {0}", e.Data);
+				LogMessage ("[aot-compiler stdout] {0}", e.Data);
 		}
 
 		void OnAotErrorData (object sender, DataReceivedEventArgs e)
 		{
 			if (e.Data != null)
-				Log.LogMessage ("[aot-compiler stderr] {0}", e.Data);
+				LogMessage ("[aot-compiler stderr] {0}", e.Data);
 		}
 
 		struct Config {
