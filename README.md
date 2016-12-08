@@ -22,11 +22,14 @@ Xamarin.Android provides open-source bindings of the Android SDK for use with
 
 | Platform        | Status |
 |-----------------|--------|
-| **Commercial Xamarin.Android 6.2 (Cycle 8)** for macOS       | [![Commercial Xamarin.Android 6.2, macOS][commercial-c8-macOS-x86_64-icon]][commercial-c8-macOS-x86_64-status] |
-| **Commercial Xamarin.Android 7.0.99 (master)** for macOS     | [![Commercial Xamarin.Android 7.1, macOS][commercial-master-macOS-x86_64-icon]][commercial-master-macOS-x86_64-status] |
+| **Commercial Xamarin.Android 7.0 (Cycle 8)** for macOS       | [![Commercial Xamarin.Android 7.0, macOS][commercial-c8-macOS-x86_64-icon]][commercial-c8-macOS-x86_64-status] |
+| **Commercial Xamarin.Android 7.1 (Cycle 9)** for macOS       | [![Commercial Xamarin.Android 7.1, macOS][commercial-c9-macOS-x86_64-icon]][commercial-c9-macOS-x86_64-status] |
+| **Commercial Xamarin.Android 7.1.99 (master)** for macOS     | [![Commercial Xamarin.Android 7.1.99, macOS][commercial-master-macOS-x86_64-icon]][commercial-master-macOS-x86_64-status] |
 
 [commercial-c8-macOS-x86_64-icon]: https://jenkins.mono-project.com/view/Xamarin.Android/job/xamarin-android-builds-cycle8/badge/icon
 [commercial-c8-macOS-x86_64-status]: https://jenkins.mono-project.com/view/Xamarin.Android/job/xamarin-android-builds-cycle8/
+[commercial-c9-macOS-x86_64-icon]: https://jenkins.mono-project.com/view/Xamarin.Android/job/xamarin-android-builds-cycle9/badge/icon
+[commercial-c9-macOS-x86_64-status]: https://jenkins.mono-project.com/view/Xamarin.Android/job/xamarin-android-builds-cycle9/
 [commercial-master-macOS-x86_64-icon]: https://jenkins.mono-project.com/view/Xamarin.Android/job/xamarin-android-builds-master/badge/icon
 [commercial-master-macOS-x86_64-status]: https://jenkins.mono-project.com/view/Xamarin.Android/job/xamarin-android-builds-master/
 
