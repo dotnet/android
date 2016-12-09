@@ -139,7 +139,7 @@ namespace Xamarin.Android.Tools {
 				output.WriteLine ("\t{0}: {1}", i, c.ConstantPool [i]);
 			}
 			output.WriteLine ("ThisClass: {0}", c.ThisClass.Name);
-			output.WriteLine ("SuperClass: {0}", c.SuperClass.Name);
+			output.WriteLine ("SuperClass: {0}", c.SuperClass?.Name);
 			output.WriteLine ("AccessFlags: {0}", c.AccessFlags);
 			output.WriteLine ("Attributes Count: {0}", c.Attributes.Count);
 			for (int i = 0; i < c.Attributes.Count; ++i) {
