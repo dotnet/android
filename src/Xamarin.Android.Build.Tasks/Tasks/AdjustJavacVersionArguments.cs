@@ -16,6 +16,8 @@ namespace Xamarin.Android.Tasks
 
 		public bool EnableMultiDex { get; set; }
 
+		public bool SkipJavacVersionCheck { get; set; }
+
 		[Output]
 		public string TargetVersion { get; set; }
 
@@ -32,6 +34,10 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ("ToolExe: {0}", ToolExe);
 			Log.LogDebugMessage ("EnableProguard: {0}", EnableProguard);
 			Log.LogDebugMessage ("EnableMultiDex: {0}", EnableMultiDex);
+			Log.LogDebugMessage ("SkipJavacVersionCheck: {0}", SkipJavacVersionCheck);
+
+			if (SkipJavacVersionCheck)
+				return true;
 
 			// so far only proguard matters.
 			if (!EnableProguard && !EnableMultiDex)
