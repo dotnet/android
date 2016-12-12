@@ -8,9 +8,12 @@
     <AndroidNdkItem Include="android-ndk-r11c-linux-x86_64.zip">
       <HostOS>Linux</HostOS>
     </AndroidNdkItem>
-    <AndroidSdkItem Include="build-tools_r23-linux.zip">
+    <!--
+      $(XABuildToolsVersion) is defined in Configuration.props
+      -->
+    <AndroidSdkItem Include="build-tools_r$(XABuildToolsVersion)-linux.zip">
       <HostOS>Linux</HostOS>
-      <DestDir>build-tools\23.0.0</DestDir>
+      <DestDir>build-tools\$(XABuildToolsVersion)</DestDir>
     </AndroidSdkItem>
     <AndroidSdkItem Include="platform-tools_r23-linux.zip">
       <HostOS>Linux</HostOS>
@@ -23,9 +26,9 @@
     <AndroidNdkItem Include="android-ndk-r11c-darwin-x86_64.zip">
       <HostOS>Darwin</HostOS>
     </AndroidNdkItem>
-    <AndroidSdkItem Include="build-tools_r23-macosx.zip">
+    <AndroidSdkItem Include="build-tools_r$(XABuildToolsVersion)-macosx.zip">
       <HostOS>Darwin</HostOS>
-      <DestDir>build-tools\23.0.0</DestDir>
+      <DestDir>build-tools\$(XABuildToolsVersion)</DestDir>
     </AndroidSdkItem>
     <AndroidSdkItem Include="platform-tools_r23-macosx.zip">
       <HostOS>Darwin</HostOS>

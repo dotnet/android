@@ -52,6 +52,7 @@
     <AllSupported32BitTargetAndroidAbis>armeabi;armeabi-v7a;x86</AllSupported32BitTargetAndroidAbis>
     <AllSupported64BitTargetAndroidAbis>arm64-v8a;x86_64</AllSupported64BitTargetAndroidAbis>
     <AllSupportedTargetAndroidAbis>$(AllSupported32BitTargetAndroidAbis);$(AllSupported64BitTargetAndroidAbis)</AllSupportedTargetAndroidAbis>
+    <XABuildToolsVersion>25.0.1</XABuildToolsVersion>
   </PropertyGroup>
   <PropertyGroup>
     <_MingwPrefixTail Condition=" '$(HostOS)' == 'Darwin' ">.static</_MingwPrefixTail>

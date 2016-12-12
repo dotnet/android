@@ -168,6 +168,34 @@
         Command="jar cf &quot;$(OutputPath)mono.android.jar&quot; -C &quot;$(IntermediateOutputPath)jcw\bin&quot; ."
     />
   </Target>
+  <Target Name="_GenerateMonoAndroidDex16"
+      AfterTargets="_GenerateJavaCallableWrappers"
+      Condition="'$(JavacSourceVersion)' == '1.6'"
+      Inputs="$(OutputPath)mono.android.jar"
+      Outputs="$(OutputPath)mono.android.dex">
+    <Exec
+        Command="&quot;$(AndroidSdkDirectory)&quot;\build-tools\$(XABuildToolsVersion)\dx --dex --output=&quot;$(OutputPath)mono.android.dex&quot; &quot;$(OutputPath)mono.android.jar&quot;"
+    />
+  </Target>
+  <Target Name="_GenerateMonoAndroidDex18"
+      AfterTargets="_GenerateJavaCallableWrappers"
+      Condition="'$(JavacSourceVersion)' == '1.8'"
+      Inputs="$(OutputPath)mono.android.jar"
+      Outputs="$(OutputPath)mono.android.dex">
+    <MakeDir
+        Directories="$(IntermediateOutputPath)__dex"
+    />
+    <Exec
+        Command="java -jar &quot;$(AndroidSdkDirectory)&quot;\build-tools\$(XABuildToolsVersion)\jack.jar --output-dex=&quot;$(IntermediateOutputPath)__dex&quot; -cp &quot;$(AndroidToolchainDirectory)\sdk\platforms\android-$(AndroidApiLevel)\android.jar&quot; @&quot;$(IntermediateOutputPath)jcw\classes.txt&quot;"
+    />
+    <Copy
+        SourceFiles="$(IntermediateOutputPath)__dex\classes.dex"
+        DestinationFiles="$(OutputPath)mono.android.dex"
+    />
+    <RemoveDir
+        Directories="$(IntermediateOutputPath)__dex"
+    />
+  </Target>
   <Target Name="_GenerateFrameworkList"
       AfterTargets="CoreBuild"
       Inputs="$(OutputPath)$(AssemblyName).dll"
