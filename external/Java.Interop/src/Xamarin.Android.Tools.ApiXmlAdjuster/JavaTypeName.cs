@@ -55,10 +55,25 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 				ret.ArrayPart += dottedFullName.Substring (aidx);
 				dottedFullName = dottedFullName.Substring (0, aidx);
 			}
-			
+
+			Func<string, int, int> getMatchingGenericCloser = (str, start) => {
+				int count = 0;
+				for (int i = start; i < str.Length; i++) {
+					switch (str [i]) {
+					case '<':
+						count++;
+						break;
+					case '>':
+						if (count-- == 0)
+							return i;
+						break;
+					}
+				}
+				return -1;
+			};
 			int idx = dottedFullName.IndexOf ('<');
 			if (idx > 0) {
-				int last = dottedFullName.LastIndexOf ('>');
+				int last = getMatchingGenericCloser (dottedFullName, idx + 1);
 				ret.GenericArguments = ParseCommaSeparatedTypeNames (dottedFullName.Substring (idx + 1, last - idx - 1))
 					.Select (s => JavaTypeName.Parse (s.Trim ()))
 					.ToArray ();
