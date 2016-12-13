@@ -2271,6 +2271,7 @@ because xbuild doesn't support framework reference assemblies.
 		;@(ReferenceDependencyPaths)
 		;$(ApkFileIntermediate)
 		;$(_AndroidBuildPropertiesCache)
+		;@(ApkFiles)
 	</_CopyPackageInputs>
 </PropertyGroup>
 
