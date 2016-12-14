@@ -9,6 +9,7 @@
     <BuildDependsOn>
 		$(BuildDependsOn);
 		_CopyExtractedMultiDexJar;
+		_BuildMonoSymbolicate;
     </BuildDependsOn>
     <_AndroidSdkLocation>$(ANDROID_SDK_PATH)</_AndroidSdkLocation>
     <_AndroidSdkLocation Condition="'$(_AndroidSdkLocation)'==''">$(AndroidToolchainDirectory)\sdk</_AndroidSdkLocation>
@@ -55,5 +56,20 @@
     <Copy
       SourceFiles="$(_AndroidSdkLocation)\$(_SupportLicenseInAndroidSdk)"
       DestinationFiles="$(OutputPath)..\..\..\mandroid\MULTIDEX_JAR_LICENSE" />
+  </Target>
+
+  <Target Name="_BuildMonoSymbolicate">
+    <MSBuild
+        Projects="..\..\external\mono\mcs\tools\mono-symbolicate\monosymbolicate.csproj"
+        Properties="OutputPath=..\..\..\..\..\bin\$(Configuration)\lib\mandroid\;Configuration=$(Configuration);AssemblyName=mono-symbolicate"
+    />
+    <Copy
+        SourceFiles="..\..\tools\scripts\mono-symbolicate"
+        DestinationFiles="$(OutputPath)..\..\..\..\bin\mono-symbolicate"
+    />
+    <Copy
+        SourceFiles="..\..\tools\scripts\mono-symbolicate.cmd"
+        DestinationFiles="$(OutputPath)..\..\..\..\bin\mono-symbolicate.cmd"
+    />
   </Target>
 </Project>
