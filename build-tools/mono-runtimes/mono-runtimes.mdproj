@@ -31,5 +31,10 @@
       <Name>android-toolchain</Name>
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
     </ProjectReference>
+    <ProjectReference Include="..\remap-assembly-ref\remap-assembly-ref.csproj">
+      <Project>{C876DA71-8573-4CEF-9149-716D72455ED4}</Project>
+      <Name>remap-assembly-ref</Name>
+      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
+    </ProjectReference>
   </ItemGroup>
 </Project>
