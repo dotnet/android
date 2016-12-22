@@ -242,12 +242,15 @@ namespace Xamarin.Android.Net
 				cancellationToken.ThrowIfCancellationRequested ();
 			}
 
+			CancellationTokenSource waitHandleSource = new CancellationTokenSource();
 			try {
 				if (Logger.LogNet)
 					Logger.Log (LogLevel.Info, LOG_APP, $"  connecting");
+
+				CancellationToken linkedToken = CancellationTokenSource.CreateLinkedTokenSource(waitHandleSource.Token, cancellationToken).Token;
 				await Task.WhenAny (
 						httpConnection.ConnectAsync (),
-						Task.Run (()=> { cancellationToken.WaitHandle.WaitOne(); }))
+						Task.Run (()=> { linkedToken.WaitHandle.WaitOne(); }))
 					.ConfigureAwait(false);
 				if (Logger.LogNet)
 					Logger.Log (LogLevel.Info, LOG_APP, $"  connected");
@@ -256,6 +259,9 @@ namespace Xamarin.Android.Net
 					Logger.Log (LogLevel.Info, LOG_APP, $"Connection exception {ex}");
 				// Wrap it nicely in a "standard" exception so that it's compatible with HttpClientHandler
 				throw new WebException (ex.Message, ex, WebExceptionStatus.ConnectFailure, null);
+			} finally{
+				//If not already cancelled, cancel the WaitOne through the waitHandleSource to prevent an orphaned thread
+				waitHandleSource.Cancel();
 			}
 
 			if (cancellationToken.IsCancellationRequested) {
