@@ -439,9 +439,10 @@ namespace Xamarin.Android.Net
 
 			string redirectUrl = locationHeader[0];
 			string protocol = httpConnection.URL?.Protocol;
-			if (redirectUrl.StartsWith("//") && protocol != null && protocol.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+			if (redirectUrl.StartsWith("//", StringComparison.OrdinalIgnoreCase))
 			{
 				// When redirecting to an URL without protocol, we use the protocol of previous request
+				// See https://tools.ietf.org/html/rfc3986#section-5 (example in section 5.4)
 				redirectUrl = protocol + ":" + redirectUrl;
 			}
 			
