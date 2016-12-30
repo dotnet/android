@@ -185,5 +185,58 @@ namespace Xamarin.Android.NetTests {
         }
       }
     }
+
+    [Test]
+    public void Cancel_Client_Works()
+    {
+      var cts = new CancellationTokenSource ();
+      cts.Cancel (); //Cancel immediately
+      using (var c = new HttpClient (CreateHandler())) {
+        var tr = c.GetAsync ("http://10.255.255.1", cts.Token);
+        try {
+          tr.Wait();
+          Assert.Fail ("SHOULD NOT HAPPEN: Request is expected to cancel");
+        }
+        catch (AggregateException ex) {
+          Assert.IsTrue (ex.InnerExceptions.Any (ie => ie is System.OperationCanceledException), "Request did not throw cancellation exception");
+          Assert.IsTrue (cts.IsCancellationRequested, "The request was canceled before cancellation was requested");
+        }
+      }
+    }
+
+    [Test]
+    public void Token_Timeout_Works()
+    {
+      var cts = new CancellationTokenSource (2000); //Cancel after 2000ms through token
+      using (var c = new HttpClient (CreateHandler())){
+        var tr = c.GetAsync ("http://10.255.255.1", cts.Token);
+        try {
+          tr.Wait ();
+          Assert.Fail ("SHOULD NOT HAPPEN: Request is expected to cancel");
+        }
+        catch (AggregateException ex) {
+          Assert.IsTrue (ex.InnerExceptions.Any(ie => ie is System.OperationCanceledException), "Request did not throw cancellation exception");
+          Assert.IsTrue (cts.IsCancellationRequested, "The request was canceled before cancellation was requested");
+        }
+      }
+    }
+
+    [Test]
+    public void Property_Timeout_Works()
+    {
+      using (var c = new HttpClient (CreateHandler ()))
+      {
+        c.Timeout = TimeSpan.FromMilliseconds (2000); //Cancel after 2000ms through Timeout property
+        var tr = c.GetAsync ("http://10.255.255.1");
+        try {
+          tr.Wait ();
+          Assert.Fail ("SHOULD NOT HAPPEN: Request is expected to cancel");
+        }
+        catch (AggregateException ex)
+        {
+          Assert.IsTrue (ex.InnerExceptions.Any (ie => ie is System.OperationCanceledException), "Request did not throw cancellation exception");
+        }
+      }
+    }
   }
 }

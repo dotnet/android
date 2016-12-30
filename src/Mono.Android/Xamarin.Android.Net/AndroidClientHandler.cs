@@ -250,7 +250,11 @@ namespace Xamarin.Android.Net
 				CancellationToken linkedToken = CancellationTokenSource.CreateLinkedTokenSource(waitHandleSource.Token, cancellationToken).Token;
 				await Task.WhenAny (
 						httpConnection.ConnectAsync (),
-						Task.Run (()=> { linkedToken.WaitHandle.WaitOne(); }))
+						Task.Run (()=> { 
+							linkedToken.WaitHandle.WaitOne();
+							if (Logger.LogNet)
+								Logger.Log(LogLevel.Info, LOG_APP, $"Wait handle task finished");
+						}))
 					.ConfigureAwait(false);
 				if (Logger.LogNet)
 					Logger.Log (LogLevel.Info, LOG_APP, $"  connected");
