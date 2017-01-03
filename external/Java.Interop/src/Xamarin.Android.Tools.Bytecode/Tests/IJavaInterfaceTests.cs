@@ -18,7 +18,7 @@ namespace Xamarin.Android.Tools.BytecodeTests {
 			new ExpectedTypeDeclaration {
 				MajorVersion        = 0x32,
 				MinorVersion        = 0,
-				ConstantPoolCount   = 21,
+				ConstantPoolCount   = 23,
 				AccessFlags         = ClassAccessFlags.Interface | ClassAccessFlags.Abstract,
 				FullName            = "com/xamarin/IJavaInterface",
 				Superclass          = new TypeInfo ("java/lang/Object", "Ljava/lang/Object;"),
@@ -61,7 +61,7 @@ namespace Xamarin.Android.Tools.BytecodeTests {
 						ReturnDescriptor        = "Ljava/lang/Object;",
 						ReturnGenericDescriptor = "TTReturn;",
 						Parameters = {
-							new ParameterInfo ("p0",    "Ljava/lang/CharSequence;", "TTString;"),
+							new ParameterInfo ("value",     "Ljava/lang/CharSequence;", "TTString;"),
 						},
 					},
 				}

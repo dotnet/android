@@ -68,7 +68,7 @@
         synthetic="false"
         jni-signature="(Ljava/lang/Object;)Ljava/lang/Object;">
         <parameter
-          name="p0"
+          name="value"
           type="E2"
           jni-type="TE2;" />
       </method>

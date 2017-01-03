@@ -132,6 +132,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 					parameters [i].Type.TypeSignature  = sig.Parameters [i];
 				}
 			}
+			UpdateParametersFromMethodParametersAttribute (parameters);
 			return parameters;
 		}
 
@@ -204,6 +205,33 @@ namespace Xamarin.Android.Tools.Bytecode {
 				? new MethodTypeSignature (signature.Signature)
 				: null;
 		}
+
+		void UpdateParametersFromMethodParametersAttribute (ParameterInfo[] parameters)
+		{
+			var methodParams = (MethodParametersAttribute) Attributes.SingleOrDefault (a => a.Name == AttributeInfo.MethodParameters);
+			if (methodParams == null)
+				return;
+
+			const MethodParameterAccessFlags OuterThis =
+				MethodParameterAccessFlags.Mandated | MethodParameterAccessFlags.Final;
+			var pinfo = methodParams.ParameterInfo;
+			int startIndex = 0;
+			while (startIndex < pinfo.Count &&
+				   (pinfo [startIndex].AccessFlags & OuterThis) == OuterThis) {
+				startIndex++;
+			}
+			Debug.Assert (
+					parameters.Length == pinfo.Count - startIndex,
+					$"Unexpected number of method parameters; expected {parameters.Length}, got {pinfo.Count - startIndex}");
+			for (int i = 0; i < parameters.Length; ++i) {
+				var p = pinfo [i + startIndex];
+
+				parameters [i].AccessFlags = p.AccessFlags;
+				if (p != null) {
+					parameters [i].Name = p.Name;
+				}
+			}
+		}
 	}
 
 	public sealed class TypeInfo : IEquatable<TypeInfo> {
@@ -259,6 +287,8 @@ namespace Xamarin.Android.Tools.Bytecode {
 		public  int         Position;
 		public  TypeInfo    Type    = new TypeInfo ();
 
+		public  MethodParameterAccessFlags      AccessFlags;
+
 		public ParameterInfo (string name = null, string binaryName = null, string typeSignature = null, int position = 0)
 		{
 			Name                = name;
@@ -294,7 +324,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 
 		public override string ToString ()
 		{
-			return string.Format ("ParameterInfo(Name={0}, Position={1}, Type={2}", Name, Position, Type);
+			return $"ParameterInfo(Name={Name}, Position={Position}, Type={Type}, AccessFlags={AccessFlags})";
 		}
 	}
 
@@ -312,5 +342,13 @@ namespace Xamarin.Android.Tools.Bytecode {
 		Abstract        = 0x0400,
 		Strict          = 0x0800,
 		Synthetic       = 0x1000,
+	}
+
+	[Flags]
+	public enum MethodParameterAccessFlags {
+		None,
+		Final           = 0x0010,
+		Synthetic       = 0x1000,
+		Mandated        = 0x8000,
 	}
 }

@@ -42,6 +42,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 		public  const   string  Exceptions              = "Exceptions";
 		public  const   string  InnerClasses            = "InnerClasses";
 		public  const   string  LocalVariableTable      = "LocalVariableTable";
+		public  const   string  MethodParameters        = "MethodParameters";
 		public  const   string  Signature               = "Signature";
 		public  const   string  StackMapTable           = "StackMapTable";
 
@@ -71,6 +72,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 			{ typeof (ExceptionsAttribute),             Exceptions },
 			{ typeof (InnerClassesAttribute),           InnerClasses },
 			{ typeof (LocalVariableTableAttribute),     LocalVariableTable },
+			{ typeof (MethodParametersAttribute),       MethodParameters },
 			{ typeof (SignatureAttribute),              Signature },
 			{ typeof (StackMapTableAttribute),          StackMapTable },
 		};
@@ -101,6 +103,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 			case Exceptions:            return new ExceptionsAttribute (constantPool, nameIndex, stream);
 			case InnerClasses:          return new InnerClassesAttribute (constantPool, nameIndex, stream);
 			case LocalVariableTable:    return new LocalVariableTableAttribute (constantPool, nameIndex, stream);
+			case MethodParameters:      return new MethodParametersAttribute (constantPool, nameIndex, stream);
 			case Signature:             return new SignatureAttribute (constantPool, nameIndex, stream);
 			case StackMapTable:         return new StackMapTableAttribute (constantPool, nameIndex, stream);
 			default:                    return new UnknownAttribute (constantPool, nameIndex, stream);
@@ -386,6 +389,74 @@ namespace Xamarin.Android.Tools.Bytecode {
 		public override string ToString ()
 		{
 			return string.Format ("LocalVariableTableEntry(Name='{0}', Descriptor='{1}')", Name, Descriptor);
+		}
+	}
+
+	public sealed class MethodParameterInfo {
+
+		internal    ushort                          nameIndex;
+		public      MethodParameterAccessFlags      AccessFlags;
+
+		public      ConstantPool                    ConstantPool {get; private set;}
+
+		public MethodParameterInfo (ConstantPool constantPool)
+		{
+			ConstantPool    = constantPool;
+		}
+
+		public string Name {
+			get {
+				if (nameIndex == 0)
+					return null;
+				return ((ConstantPoolUtf8Item) ConstantPool [nameIndex]).Value;
+			}
+		}
+
+		public override string ToString ()
+		{
+			return string.Format ("MethodParameterInfo(Name='{0}', AccessFlags={1})", Name, AccessFlags);
+		}
+	}
+
+	// https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.7.24
+	public sealed class MethodParametersAttribute : AttributeInfo {
+
+		List<MethodParameterInfo>   parameters;
+
+		public  IList<MethodParameterInfo>  ParameterInfo {
+			get {return parameters;}
+		}
+
+		public MethodParametersAttribute (ConstantPool constantPool, ushort nameIndex, Stream stream)
+			: base (constantPool, nameIndex, stream)
+		{
+			var length  = stream.ReadNetworkUInt32 ();
+			var count   = stream.ReadNetworkByte ();
+			Debug.Assert (
+					length == (checked ((count * 4) + 1)),
+					$"Unexpected `MethodParameters` length; expected {(count*4)+1}, got {length}!");
+			parameters  = new List<MethodParameterInfo> (count);
+			for (int i = 0; i < count; ++i) {
+				var pNameIndex  = stream.ReadNetworkUInt16 ();
+				var accessFlags = stream.ReadNetworkUInt16 ();
+				var p           = new MethodParameterInfo (constantPool) {
+					nameIndex   = pNameIndex,
+					AccessFlags = (MethodParameterAccessFlags) accessFlags,
+				};
+				parameters.Add (p);
+			}
+		}
+
+		public override string ToString ()
+		{
+			if (parameters.Count == 0)
+				return "MethodParametersAttribute()";
+			var sb = new StringBuilder ("MethodParametersAttribute(");
+			sb.Append (parameters [0]);
+			for (int i = 1; i < parameters.Count; ++i)
+				sb.Append (", ").Append (parameters [i]);
+			sb.Append (")");
+			return sb.ToString ();
 		}
 	}
 

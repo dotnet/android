@@ -22,7 +22,7 @@ namespace Xamarin.Android.Tools.BytecodeTests {
 			new ExpectedTypeDeclaration {
 				MajorVersion        = 0x32,
 				MinorVersion        = 0,
-				ConstantPoolCount   = 50,
+				ConstantPoolCount   = 53,
 				AccessFlags         = ClassAccessFlags.Final | ClassAccessFlags.Super | ClassAccessFlags.Enum,
 				FullName            = "com/xamarin/JavaEnum",
 				Superclass          = new TypeInfo ("java/lang/Enum",   "Ljava/lang/Enum<Lcom/xamarin/JavaEnum;>;"),
@@ -62,8 +62,8 @@ namespace Xamarin.Android.Tools.BytecodeTests {
 						AccessFlags             = MethodAccessFlags.Private,
 						ReturnDescriptor        = "V",
 						Parameters = {
-							new ParameterInfo ("p0", "Ljava/lang/String;",  "Ljava/lang/String;"),
-							new ParameterInfo ("p1", "I",                   "I"),
+							new ParameterInfo ("$enum$name",    "Ljava/lang/String;",  "Ljava/lang/String;"),
+							new ParameterInfo ("$enum$ordinal", "I",                   "I"),
 						},
 					},
 					new ExpectedMethodDeclaration {

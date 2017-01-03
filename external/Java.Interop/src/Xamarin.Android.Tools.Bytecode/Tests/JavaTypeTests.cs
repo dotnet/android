@@ -20,7 +20,7 @@ namespace Xamarin.Android.Tools.BytecodeTests {
 			new ExpectedTypeDeclaration {
 				MajorVersion        = 0x32,
 				MinorVersion        = 0,
-				ConstantPoolCount   = 183,
+				ConstantPoolCount   = 184,
 				AccessFlags         = ClassAccessFlags.Public | ClassAccessFlags.Super,
 				FullName            = "com/xamarin/JavaType",
 				Superclass          = new TypeInfo ("java/lang/Object", "Ljava/lang/Object;"),
@@ -132,7 +132,7 @@ namespace Xamarin.Android.Tools.BytecodeTests {
 						Name                = "STATIC_FINAL_STRING",
 						Descriptor          = "Ljava/lang/String;",
 						AccessFlags         = FieldAccessFlags.Public | FieldAccessFlags.Static | FieldAccessFlags.Final,
-						ConstantValue       = "String(stringIndex=175 Utf8=\"Hello, \\\"embedded\0Nulls\" and \ud83d\udca9!\")",
+						ConstantValue       = "String(stringIndex=176 Utf8=\"Hello, \\\"embedded\0Nulls\" and \ud83d\udca9!\")",
 					},
 					new ExpectedFieldDeclaration {
 						Name                = "STATIC_FINAL_BOOL_FALSE",
@@ -309,7 +309,7 @@ namespace Xamarin.Android.Tools.BytecodeTests {
 						AccessFlags             = MethodAccessFlags.Public | MethodAccessFlags.Bridge | MethodAccessFlags.Synthetic,
 						ReturnDescriptor        = "I",
 						Parameters = {
-							new ParameterInfo ("p0", "Ljava/lang/Object;", "Ljava/lang/Object;"),
+							new ParameterInfo ("value", "Ljava/lang/Object;", "Ljava/lang/Object;"),
 						},
 					},
 					new ExpectedMethodDeclaration {
@@ -317,7 +317,7 @@ namespace Xamarin.Android.Tools.BytecodeTests {
 						AccessFlags             = MethodAccessFlags.Public | MethodAccessFlags.Bridge | MethodAccessFlags.Synthetic,
 						ReturnDescriptor        = "Ljava/lang/Object;",
 						Parameters = {
-							new ParameterInfo ("p0", "Ljava/lang/CharSequence;",    "Ljava/lang/CharSequence;"),
+							new ParameterInfo ("value", "Ljava/lang/CharSequence;", "Ljava/lang/CharSequence;"),
 						},
 					},
 					new ExpectedMethodDeclaration {
