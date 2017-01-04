@@ -20,5 +20,8 @@ namespace Android.Content {
 		public string                 Name                    {get; set;}
 		public string                 Permission              {get; set;}
 		public string                 Process                 {get; set;}
+#if ANDROID_25
+		public string                 RoundIcon               {get; set;}
+#endif
 	}
 }

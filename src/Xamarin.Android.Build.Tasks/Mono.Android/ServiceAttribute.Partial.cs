@@ -13,6 +13,7 @@ namespace Android.App {
 	partial class ServiceAttribute {
 
 		bool  _IsolatedProcess;
+		string _RoundIcon;
 
 		static ManifestDocumentElement<ServiceAttribute> mapping = new ManifestDocumentElement<ServiceAttribute> ("service") {
 			{
@@ -60,7 +61,12 @@ namespace Android.App {
 			  "process",
 			  self          => self.Process,
 			  (self, value) => self.Process = (string) value
-			},
+			}, {
+			  "RoundIcon",
+			  "roundIcon",
+			  self          => self._RoundIcon,
+			  (self, value) => self._RoundIcon  = (string) value
+			}, 
 		};
 
 		ICollection<string> specified;

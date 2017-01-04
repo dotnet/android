@@ -32,6 +32,9 @@ namespace Android.Content {
 		public string                 Permission              {get; set;}
 		public string                 Process                 {get; set;}
 		public string                 ReadPermission          {get; set;}
+#if ANDROID_25
+		public string                 RoundIcon               {get; set;}
+#endif
 		public bool                   Syncable                {get; set;}
 		public string                 WritePermission         {get; set;}
 	}

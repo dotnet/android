@@ -17,6 +17,8 @@ namespace Android.App {
 
 	partial class PermissionAttribute {
 
+		string _RoundIcon;
+		
 		static ManifestDocumentElement<PermissionAttribute> mapping = new ManifestDocumentElement<PermissionAttribute> ("permission") {
 			{
 				"Description",
@@ -48,7 +50,12 @@ namespace Android.App {
 				"protectionLevel",
 				self          => self.ProtectionLevel,
 				(self, value) => self.ProtectionLevel  = (Protection) value
-			},
+			}, {
+			  "RoundIcon",
+			  "roundIcon",
+			  self          => self._RoundIcon,
+			  (self, value) => self._RoundIcon  = (string) value
+			}, 
 		};
 
 		ICollection<string> specified;

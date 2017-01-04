@@ -53,6 +53,11 @@ namespace Android.App
 		public string                 Process                 {get; set;}
 #if ANDROID_24
 		public bool                   ResizeableActivity      {get;set;}
+#endif
+#if ANDROID_25
+		public string                 RoundIcon               {get;set;}
+#endif
+#if ANDROID_24
 		public bool                   SupportsPictureInPicture {get;set;}
 #endif
 		public ScreenOrientation      ScreenOrientation       {get; set;}

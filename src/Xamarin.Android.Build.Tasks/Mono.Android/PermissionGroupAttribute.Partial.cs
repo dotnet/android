@@ -16,6 +16,8 @@ using Android.Content.PM;
 namespace Android.App {
 
 	partial class PermissionGroupAttribute {
+		
+		string _RoundIcon;
 
 		static ManifestDocumentElement<PermissionGroupAttribute> mapping = new ManifestDocumentElement<PermissionGroupAttribute> ("permission") {
 			{
@@ -38,7 +40,12 @@ namespace Android.App {
 				"name",
 				self          => self.Name,
 				(self, value) => self.Name  = (string) value
-			},
+			}, {
+			  "RoundIcon",
+			  "roundIcon",
+			  self          => self._RoundIcon,
+			  (self, value) => self._RoundIcon  = (string) value
+			}, 
 		};
 
 		ICollection<string> specified;
