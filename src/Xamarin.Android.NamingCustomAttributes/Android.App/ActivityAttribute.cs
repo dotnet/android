@@ -55,7 +55,7 @@ namespace Android.App
 		public bool                   ResizeableActivity      {get;set;}
 #endif
 #if ANDROID_25
-		public string                 RoundIcon               {get;set;}
+		public string                 RoundIcon               {get; set;}
 #endif
 #if ANDROID_24
 		public bool                   SupportsPictureInPicture {get;set;}

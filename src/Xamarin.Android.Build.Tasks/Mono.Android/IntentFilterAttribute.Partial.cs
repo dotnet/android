@@ -13,6 +13,7 @@ namespace Android.App {
 
 	partial class IntentFilterAttribute {
 		bool _AutoVerify;
+		string _RoundIcon;
 
 		static readonly Dictionary<string, string> attributeMappings = new Dictionary<string, string> () {
 			{ "Icon",             "icon" },
@@ -48,6 +49,7 @@ namespace Android.App {
 			{ "DataPorts",        (self, value) => self.DataPorts       = ToStringArray (value) },
 			{ "DataSchemes",      (self, value) => self.DataSchemes     = ToStringArray (value) },
 			{ "AutoVerify",       (self, value) => self._AutoVerify     = (bool) value },
+			{ "RoundIcon",        (self, value) => self._RoundIcon      = (string) value },
 		};
 
 		static string[] ToStringArray (object value)

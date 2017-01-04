@@ -11,6 +11,8 @@ using Xamarin.Android.Manifest;
 namespace Android.Content {
 
 	partial class ContentProviderAttribute {
+		
+		string _RoundIcon;
 
 		static ManifestDocumentElement<ContentProviderAttribute> mapping = new ManifestDocumentElement<ContentProviderAttribute> ("provider") {
 			{
@@ -78,6 +80,11 @@ namespace Android.Content {
 			  "readPermission",
 			  self          => self.ReadPermission,
 			  (self, value) => self.ReadPermission  = (string) value
+			}, {
+			  "RoundIcon",
+			  "roundIcon",
+			  self          => self._RoundIcon,
+			  (self, value) => self._RoundIcon  = (string) value
 			}, {
 			  "Syncable",
 			  "syncable",

@@ -11,6 +11,8 @@ using Xamarin.Android.Manifest;
 namespace Android.Content {
 
 	partial class BroadcastReceiverAttribute {
+		
+		string _RoundIcon;
 
 		static ManifestDocumentElement<BroadcastReceiverAttribute> mapping = new ManifestDocumentElement<BroadcastReceiverAttribute> ("receiver") {
 			{
@@ -53,6 +55,11 @@ namespace Android.Content {
 			  "process",
 			  self          => self.Process,
 			  (self, value) => self.Process = (string) value
+			}, {
+			  "RoundIcon",
+			  "roundIcon",
+			  self          => self._RoundIcon,
+			  (self, value) => self._RoundIcon  = (string) value
 			},
 		};
 
