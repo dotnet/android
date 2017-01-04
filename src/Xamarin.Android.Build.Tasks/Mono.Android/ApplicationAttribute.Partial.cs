@@ -33,6 +33,7 @@ namespace Android.App {
 		bool _VMSafeMode;
 		bool _ResizeableActivity;
 		ICustomAttributeProvider provider;
+		string _RoundIcon;
 
 		static ManifestDocumentElement<ApplicationAttribute> mapping = new ManifestDocumentElement<ApplicationAttribute> ("application") {
 			{
@@ -180,6 +181,11 @@ namespace Android.App {
 			  "restrictedAccountType",
 			  self          => self._RestrictedAccountType,
 			  (self, value) => self._RestrictedAccountType  = (string) value
+			}, {
+			  "RoundIcon",
+			  "roundIcon",
+			  self          => self._RoundIcon,
+			  (self, value) => self._RoundIcon  = (string) value
 			}, {
 			  "SupportsRtl",
 			  "supportsRtl",

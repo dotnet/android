@@ -11,6 +11,8 @@ using Xamarin.Android.Manifest;
 namespace Android.App {
 
 	partial class InstrumentationAttribute {
+		
+		string _RoundIcon;
 
 		static ManifestDocumentElement<InstrumentationAttribute> mapping = new ManifestDocumentElement<InstrumentationAttribute> ("instrumentation") {
 			{
@@ -38,6 +40,11 @@ namespace Android.App {
 			  "name",
 			  self          => self.Name,
 			  (self, value) => self.Name  = (string) value
+			}, {
+			  "RoundIcon",
+			  "roundIcon",
+			  self          => self._RoundIcon,
+			  (self, value) => self._RoundIcon  = (string) value
 			}, {
 			  "TargetPackage",
 			  "targetPackage",
