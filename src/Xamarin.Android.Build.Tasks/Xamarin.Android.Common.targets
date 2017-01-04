@@ -91,6 +91,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.Proguard" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.DetermineJavaLibrariesToCompile" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CreateMultiDexMainDexClassList" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.SetMSBuildExtensionsPath" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 
 <!--
 *******************************************
@@ -550,6 +551,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 </Target>
 
 <Target Name="_GetReferenceAssemblyPaths">
+	<SetMSBuildExtensionsPath />
 	<GetReferenceAssemblyPaths
 			TargetFrameworkMoniker="$(TargetFrameworkIdentifier),Version=v1.0"
 			RootPath="$(TargetFrameworkRootPath)">
