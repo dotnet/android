@@ -24,6 +24,7 @@ namespace Android.App {
 		bool _Immersive;
 		bool _ResizeableActivity;
 		bool _SupportsPictureInPicture;
+		string _RoundIcon;
 
 		static ManifestDocumentElement<ActivityAttribute> mapping = new ManifestDocumentElement<ActivityAttribute> ("activity") {
 			{
@@ -147,6 +148,11 @@ namespace Android.App {
 			  "resizeableActivity",
 			  self          => self._ResizeableActivity,
 			  (self, value) => self._ResizeableActivity = (bool) value
+			}, {
+			  "RoundIcon",
+			  "roundIcon",
+			  self          => self._RoundIcon,
+			  (self, value) => self._RoundIcon  = (string) value
 			}, {
 			  "SupportsPictureInPicture",
 			  "supportsPictureInPicture",

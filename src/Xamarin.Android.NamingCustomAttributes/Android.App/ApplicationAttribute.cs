@@ -60,6 +60,9 @@ namespace Android.App {
 #if ANDROID_18
 		public string                 RestrictedAccountType   {get; set;}
 #endif
+#if ANDROID_25
+		public string                 RoundIcon               {get; set;}
+#endif
 #if ANDROID_17
 		public bool                   SupportsRtl             {get; set;}
 #endif

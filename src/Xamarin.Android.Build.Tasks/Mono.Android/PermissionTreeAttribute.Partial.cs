@@ -16,6 +16,8 @@ using Android.Content.PM;
 namespace Android.App {
 
 	partial class PermissionTreeAttribute {
+		
+		string _RoundIcon;
 
 		static ManifestDocumentElement<PermissionTreeAttribute> mapping = new ManifestDocumentElement<PermissionTreeAttribute> ("permission") {
 			{
@@ -33,6 +35,11 @@ namespace Android.App {
 				"name",
 				self          => self.Name,
 				(self, value) => self.Name  = (string) value
+			}, {
+			  "RoundIcon",
+			  "roundIcon",
+			  self          => self._RoundIcon,
+			  (self, value) => self._RoundIcon  = (string) value
 			},
 		};
 
