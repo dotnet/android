@@ -40,5 +40,8 @@ namespace Android.App {
 		// This does not exist on https://developer.android.com/guide/topics/manifest/intent-filter-element.html but on http://developer.android.com/intl/ja/training/app-links/index.html ! (bug #35595)
 		public bool       AutoVerify      {get; set;}
 #endif
+#if ANDROID_25
+		public string     RoundIcon       {get; set;}
+#endif
 	}
 }

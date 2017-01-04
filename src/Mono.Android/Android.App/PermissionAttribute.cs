@@ -21,6 +21,9 @@ namespace Android.App {
 		public string                 Name                    {get; set;}
 		public string                 PermissionGroup         {get; set;}
 		public Protection             ProtectionLevel         {get; set;}
+#if ANDROID_25
+		public string                 RoundIcon               {get; set;}
+#endif
 	}
 }
 

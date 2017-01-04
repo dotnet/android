@@ -13,6 +13,7 @@ namespace Android.App {
 
 	partial class IntentFilterAttribute {
 		bool _AutoVerify;
+		string _RoundIcon;
 
 		static readonly Dictionary<string, string> attributeMappings = new Dictionary<string, string> () {
 			{ "Icon",             "icon" },
