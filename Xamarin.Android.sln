@@ -15,6 +15,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "jnienv-gen", "build-tools\j
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "api-merge", "build-tools\api-merge\api-merge.csproj", "{3FC3E78B-F7D4-42EA-BBE8-4535DF42BFF8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "remap-assembly-ref", "build-tools\remap-assembly-ref\remap-assembly-ref.csproj", "{C876DA71-8573-4CEF-9149-716D72455ED4}"
+EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Core", "Core", "{04E3E11E-B47D-4599-8AFC-50515A95E715}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Java.Interop", "external\Java.Interop\src\Java.Interop\Java.Interop.csproj", "{94BD81F7-B06F-4295-9636-F8A3B6BDC762}"
