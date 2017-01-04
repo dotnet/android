@@ -58,10 +58,24 @@
       DestinationFiles="$(OutputPath)..\..\..\mandroid\MULTIDEX_JAR_LICENSE" />
   </Target>
 
-  <Target Name="_BuildMonoSymbolicate">
-    <MSBuild
-        Projects="..\..\external\mono\mcs\tools\mono-symbolicate\monosymbolicate.csproj"
-        Properties="OutputPath=..\..\..\..\..\bin\$(Configuration)\lib\mandroid\;Configuration=$(Configuration);AssemblyName=mono-symbolicate"
+  <Target Name="_BuildMonoSymbolicate"
+      Inputs="$(MonoSourceFullPath)\mcs\tools\mono-symbolicate\mono-symbolicate.exe.sources"
+      Outputs="$(OutputPath)..\..\..\..\lib\mandroid\mono-symbolicate.exe"
+      >
+    <ReadLinesFromFile  
+            File="$(MonoSourceFullPath)\mcs\tools\mono-symbolicate\mono-symbolicate.exe.sources" >  
+        <Output  
+            TaskParameter="Lines"  
+            ItemName="SourceFiles"
+        />  
+    </ReadLinesFromFile>
+    <Csc
+        Sources="@(SourceFiles->'$(MonoSourceFullPath)\mcs\tools\mono-symbolicate\%(Identity)')"
+        DefineConstants="NET_4_0;NET_4_5;NET_4_6;MONO"
+        CodePage="65001"
+        DisabledWarnings="1699"
+        References="$(OutputPath)..\..\..\..\lib\mandroid\Xamarin.Android.Cecil.dll"
+        OutputAssembly="$(OutputPath)..\..\..\..\lib\mandroid\mono-symbolicate.exe"
     />
     <Copy
         SourceFiles="..\..\tools\scripts\mono-symbolicate"
