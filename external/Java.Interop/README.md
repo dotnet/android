@@ -76,7 +76,7 @@ on the command line or by specifying MSBuild properties to control behavior.
 The following **make**(1) variables may be specified:
 
 * `$(CONFIGURATION)`: The product configuration to build, and corresponds
-    to the `$(Configuration)` MSBuild property when running `$(XBUILD)`.
+    to the `$(Configuration)` MSBuild property when running `$(MSBUILD)`.
     Valid values are `Debug` and `Release`. Default value is `Debug`.
 * `$(RUNTIME)`: The managed runtime to use to execute utilities, tests.
     Default value is `mono64` if present in `$PATH`, otherwise `mono`.
@@ -85,9 +85,9 @@ The following **make**(1) variables may be specified:
 
         make run-tests TESTS=bin/Debug/Java.Interop.Dynamic-Tests.dll
 
-* `$(V)`: If set to a non-empty string, adds `/v:diag` to `$(XBUILD)`
+* `$(V)`: If set to a non-empty string, adds `/v:diag` to `$(MSBUILD_FLAGS)`
     invocations.
-* `$(XBUILD)`: The MSBuild build tool to execute for builds.
+* `$(MSBUILD)`: The MSBuild build tool to execute for builds.
     Default value is `xbuild`.
 
 

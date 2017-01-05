@@ -1,5 +1,6 @@
 OS           ?= $(shell uname)
 
+V             ?= 0
 CONFIGURATION = Debug
 
 ifeq ($(OS),Darwin)
@@ -39,7 +40,6 @@ PTESTS = \
 ATESTS = \
 	bin/Test$(CONFIGURATION)/Android.Interop-Tests.dll
 
-XBUILD = xbuild $(if $(V),/v:diag,)
 NUNIT_CONSOLE = packages/NUnit.Runners.2.6.3/tools/nunit-console.exe
 
 BUILD_PROPS = bin/Build$(CONFIGURATION)/JdkInfo.props bin/Build$(CONFIGURATION)/MonoInfo.props
@@ -57,12 +57,13 @@ prepare-external: $(PACKAGES) $(NUNIT_CONSOLE)
 	git submodule update --init --recursive
 
 clean:
-	-$(XBUILD) /t:Clean
+	-$(MSBUILD) $(MSBUILD_FLAGS) /t:Clean
 	-rm -Rf bin/$(CONFIGURATION) bin/Build$(CONFIGURATION) bin/Test$(CONFIGURATION) bin/XAIntegration$(CONFIGURATION)
 	-rm src/Java.Runtime.Environment/Java.Runtime.Environment.dll.config
 
 include build-tools/scripts/mono.mk
 include build-tools/scripts/jdk.mk
+include build-tools/scripts/msbuild.mk
 
 $(PACKAGES) $(NUNIT_CONSOLE):
 	nuget restore
@@ -97,7 +98,7 @@ endif
 # Usage: $(call TestAssemblyTemplate,assembly-basename)
 define TestAssemblyTemplate
 bin/Test$$(CONFIGURATION)/$(1)-Tests.dll: $(wildcard src/$(1)/*/*.cs src/$(1)/Test*/*/*.cs)
-	$$(XBUILD)
+	$$(MSBUILD) $$(MSBUILD_FLAGS)
 	touch $$@
 endef # TestAssemblyTemplate
 
@@ -107,15 +108,15 @@ $(eval $(call TestAssemblyTemplate,Java.Interop.Export))
 $(eval $(call TestAssemblyTemplate,Java.Interop.Tools.JavaCallableWrappers))
 
 bin/Test$(CONFIGURATION)/Java.Interop-PerformanceTests.dll: $(wildcard tests/Java.Interop-PerformanceTests/*.cs) bin/Test$(CONFIGURATION)/$(NATIVE_TIMING_LIB)
-	$(XBUILD)
+	$(MSBUILD) $(MSBUILD_FLAGS)
 	touch $@
 
 bin/Test$(CONFIGURATION)/Android.Interop-Tests.dll: $(wildcard src/Android.Interop/*/*.cs src/Android.Interop/Tests/*/*.cs)
-	$(XBUILD)
+	$(MSBUILD) $(MSBUILD_FLAGS)
 	touch $@
 
 bin/$(XA_CONFIGURATION)/Java.Interop.dll: $(wildcard src/Java.Interop/*/*.cs) src/Java.Interop/Java.Interop.csproj
-	$(XBUILD) /p:Configuration=$(XA_CONFIGURATION) $(if $(SNK),"/p:AssemblyOriginatorKeyFile=$(SNK)",)
+	$(MSBUILD) $(if $(V),/v:diag,) /p:Configuration=$(XA_CONFIGURATION) $(if $(SNK),"/p:AssemblyOriginatorKeyFile=$(SNK)",)
 
 CSHARP_REFS = \
 	bin/$(CONFIGURATION)/Java.Interop.dll               \
@@ -150,7 +151,7 @@ bin/Test$(CONFIGURATION)/$(JAVA_INTEROP_LIB): bin/$(CONFIGURATION)/$(JAVA_INTERO
 	cp $< $@
 
 run-android: $(ATESTS)
-	(cd src/Android.Interop/Tests; $(XBUILD) '/t:Install;RunTests' $(if $(FIXTURE),/p:TestFixture=$(FIXTURE)))
+	(cd src/Android.Interop/Tests; $(MSBUILD) $(MSBUILD_FLAGS) '/t:Install;RunTests' $(if $(FIXTURE),/p:TestFixture=$(FIXTURE)))
 
 run-test-jnimarshal: bin/Test$(CONFIGURATION)/Java.Interop.Export-Tests.dll bin/Test$(CONFIGURATION)/$(JAVA_INTEROP_LIB)
 	MONO_TRACE_LISTENER=Console.Out \

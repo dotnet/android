@@ -81,7 +81,7 @@
       Inputs="@(Compile)"
       Outputs="@(MacLibLipo)">
     <PropertyGroup>
-      <_FixedDefines>$(DefineSymbols.Replace(' ', ';'))</_FixedDefines>
+      <_FixedDefines>$(DefineSymbols.Split(' '))</_FixedDefines>
     </PropertyGroup>
     <ItemGroup>
       <_Defines Include="$(_FixedDefines)" />

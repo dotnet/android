@@ -9,9 +9,10 @@ clean:
 
 include ../../build-tools/scripts/mono.mk
 include ../../build-tools/scripts/jdk.mk
+include ../../build-tools/scripts/msbuild.mk
 
 $(JNIENV_GEN):
-	(cd ../../build-tools/jnienv-gen ; xbuild /p:Configuration=$(CONFIGURATION))
+	(cd ../../build-tools/jnienv-gen ; $(MSBUILD) $(MSBUILD_FLAGS) )
 
 HANDLE_FEATURES = \
 	-d:FEATURE_JNIENVIRONMENT_JI_INTPTRS \
