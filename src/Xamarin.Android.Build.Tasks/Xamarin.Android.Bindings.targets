@@ -93,6 +93,8 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
   <Target Name="_ResolveMonoAndroidFramework" DependsOnTargets="GetReferenceAssemblyPaths" >
   </Target>
 
+  <Target Name="AndroidPrepareForBuild" DependsOnTargets="_ResolveMonoAndroidFramework" />
+
   <PropertyGroup>
     <GeneratedOutputPath Condition="'$(GeneratedOutputPath)' == ''">$(IntermediateOutputPath)generated\</GeneratedOutputPath>
     <ApiOutputFile Condition="'$(ApiOutputFile)' == ''">$(IntermediateOutputPath)api.xml</ApiOutputFile>

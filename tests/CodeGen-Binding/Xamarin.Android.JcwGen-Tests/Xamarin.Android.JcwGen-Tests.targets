@@ -3,17 +3,17 @@
   <Import Project="Xamarin.Android.JcwGen-Tests.projitems" />
   <Import Project="..\..\..\build-tools\scripts\UnitTestApks.targets" />
   <Target Name="BuildNativeLibs"
-      DependsOnTargets="_ResolveMonoAndroidSdks"
+      DependsOnTargets="AndroidPrepareForBuild"
       Inputs="jni\Android.mk;jni\timing.c"
       Outputs="@(AndroidNativeLibrary)">
     <Error
-        Condition="!Exists ('$(_AndroidNdkDirectory)\ndk-build')"
+        Condition="!Exists ('$(AndroidNdkDirectory)\ndk-build')"
         Text="Could not locate Android NDK."
     />
-    <Exec Command="&quot;$(_AndroidNdkDirectory)\ndk-build&quot;" />
+    <Exec Command="&quot;$(AndroidNdkDirectory)\ndk-build&quot;" />
   </Target>
   <Target Name="RunTests"
-      DependsOnTargets="_ValidateAndroidPackageProperties">
+      DependsOnTargets="AndroidPrepareForBuild">
     <Exec Command="&quot;$(_AndroidPlatformToolsDirectory)adb&quot; $(AdbTarget) $(AdbOptions) shell am instrument -w $(_AndroidPackage)/xamarin.android.jcwgentests.TestInstrumentation" />
   </Target>
   <Target Name="CleanLocal">
