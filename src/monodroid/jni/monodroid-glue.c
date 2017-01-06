@@ -88,8 +88,15 @@ static int attach_gdb;
  * clearing monodroid_gdb_wait.
  */
 static int wait_for_gdb;
-static int monodroid_gdb_wait = TRUE;
+static volatile int monodroid_gdb_wait = TRUE;
 static int android_api_level = 0;
+
+/* Can be called by a native debugger to break the wait on startup */
+MONO_API void
+monodroid_clear_gdb_wait (void)
+{
+	monodroid_gdb_wait = FALSE;
+}
 
 #ifdef ANDROID64
 #define SYSTEM_LIB_PATH "/system/lib64"
