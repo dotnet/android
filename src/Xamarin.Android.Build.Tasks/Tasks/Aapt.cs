@@ -11,10 +11,11 @@ using Microsoft.Build.Framework;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using Xamarin.Android.Build.Utilities;
+using ThreadingTasks = System.Threading.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
-	public class Aapt : ToolTask
+	public class Aapt : AsyncTask
 	{
 		private const string error_regex_string = @"(?<file>.*)\s*:\s*(?<line>\d*)\s*:\s*error:\s*(?<error>.+)";
 		private Regex error_regex = new Regex (error_regex_string, RegexOptions.Compiled);
@@ -28,7 +29,7 @@ namespace Xamarin.Android.Tasks
 		public string AssetDirectory { get; set; }
 
 		[Required]
-		public string ManifestFile { get; set; }
+		public ITaskItem[] ManifestFiles { get; set; }
 
 		[Required]
 		public string ResourceDirectory { get; set; }
@@ -55,7 +56,11 @@ namespace Xamarin.Android.Tasks
 
 		public string ExtraArgs { get; set; }
 
-		protected override string ToolName { get { return OS.IsWindows ? "aapt.exe" : "aapt"; } }
+		protected string ToolName { get { return OS.IsWindows ? "aapt.exe" : "aapt"; } }
+
+		public string ToolPath { get; set; }
+
+		public string ToolExe { get; set; }
 
 		public string ApiLevel { get; set; }
 
@@ -73,7 +78,6 @@ namespace Xamarin.Android.Tasks
 
 		public bool ExplicitCrunch { get; set; }
 
-		string currentAbi;
 		string currentResourceOutputFile;
 		Dictionary<string,string> resource_name_case_map = new Dictionary<string,string> ();
 
@@ -84,10 +88,43 @@ namespace Xamarin.Android.Tasks
 				File.GetLastWriteTime (AndroidComponentResgenFlagFile) > File.GetLastWriteTime (manifestFile);
 		}
 
-		bool ExecuteForAbi (string abi)
+		bool RunAapt (string commandLine)
 		{
-			currentAbi = abi;
-			var ret = base.Execute ();
+			var psi = new ProcessStartInfo () {
+				FileName = GenerateFullPathToTool (),
+				Arguments = commandLine,
+				UseShellExecute = false,
+				RedirectStandardOutput = true,
+				RedirectStandardError = true,
+				CreateNoWindow = true,
+				WindowStyle = ProcessWindowStyle.Hidden,
+			};
+
+			var proc = new Process ();
+			proc.OutputDataReceived += (sender, e) => {
+				LogEventsFromTextOutput (e.Data, MessageImportance.Normal);
+			};
+			proc.ErrorDataReceived += (sender, e) => {
+				LogEventsFromTextOutput (e.Data, MessageImportance.Normal);
+			};
+			proc.StartInfo = psi;
+			proc.Start ();
+			proc.BeginOutputReadLine ();
+			proc.BeginErrorReadLine ();
+			Token.Register (() => {
+				try {
+					proc.Kill ();
+				} catch (Exception) {
+				}
+			});
+			LogDebugMessage ("Executing {0}", commandLine);
+			proc.WaitForExit ();
+			return proc.ExitCode == 0;
+		}
+
+		bool ExecuteForAbi (string cmd)
+		{
+			var ret = RunAapt (cmd);
 			if (ret && !string.IsNullOrEmpty (currentResourceOutputFile)) {
 				var tmpfile = currentResourceOutputFile + ".bk";
 				MonoAndroidHelper.CopyIfZipChanged (tmpfile, currentResourceOutputFile);
@@ -96,11 +133,39 @@ namespace Xamarin.Android.Tasks
 			return ret;
 		}
 
+		int DoExecute (ITaskItem manifestFile, ThreadingTasks.ParallelLoopState state, int loop)
+		{
+			if (!File.Exists (manifestFile.ItemSpec)) {
+				LogDebugMessage ("{0} does not exists. Skipping", manifestFile.ItemSpec);
+				return 0;
+			}
+
+			bool upToDate = ManifestIsUpToDate (manifestFile.ItemSpec);
+
+			if (AdditionalAndroidResourcePaths != null)
+				foreach (var dir in AdditionalAndroidResourcePaths)
+					if (!string.IsNullOrEmpty (dir.ItemSpec))
+						upToDate = upToDate && ManifestIsUpToDate (string.Format ("{0}{1}{2}{3}{4}", dir, Path.DirectorySeparatorChar, "manifest", Path.DirectorySeparatorChar, "AndroidManifest.xml"));
+
+			if (upToDate) {
+				LogMessage ("  Additional Android Resources manifsets files are unchanged. Skipping.");
+				return 0;
+			}
+
+			var defaultAbi = new string [] { null };
+			var abis = SupportedAbis?.Split (new char [] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
+			foreach (var abi in (CreatePackagePerAbi && abis?.Length > 1) ? defaultAbi.Concat (abis) : defaultAbi) {
+				ExecuteForAbi (GenerateCommandLineCommands (manifestFile.ItemSpec, abi));
+			}
+
+			return 0;
+		}
+
 		public override bool Execute ()
 		{
 			Log.LogDebugMessage ("Aapt Task");
 			Log.LogDebugMessage ("  AssetDirectory: {0}", AssetDirectory);
-			Log.LogDebugMessage ("  ManifestFile: {0}", ManifestFile);
+			Log.LogDebugTaskItems ("  ManifestFiles: ", ManifestFiles);
 			Log.LogDebugMessage ("  ResourceDirectory: {0}", ResourceDirectory);
 			Log.LogDebugMessage ("  JavaDesignerOutputDirectory: {0}", JavaDesignerOutputDirectory);
 			Log.LogDebugMessage ("  PackageName: {0}", PackageName);
@@ -115,34 +180,18 @@ namespace Xamarin.Android.Tasks
 			if (CreatePackagePerAbi)
 				Log.LogDebugMessage ("  SupportedAbis: {0}", SupportedAbis);
 
-			bool upToDate = ManifestIsUpToDate (ManifestFile);
-
 			if (ResourceNameCaseMap != null)
 				foreach (var arr in ResourceNameCaseMap.Split (';').Select (l => l.Split ('|')).Where (a => a.Length == 2))
 					resource_name_case_map [arr [1]] = arr [0]; // lowercase -> original
 
-			if (AdditionalAndroidResourcePaths != null)
-				foreach (var dir in AdditionalAndroidResourcePaths)
-					if (!string.IsNullOrEmpty (dir.ItemSpec))
-						upToDate = upToDate && ManifestIsUpToDate (string.Format ("{0}{1}{2}", dir, Path.DirectorySeparatorChar, "manifest", Path.DirectorySeparatorChar, "AndroidManifest.xml"));
+			ThreadingTasks.Parallel.ForEach (ManifestFiles, () => 0, DoExecute, (obj) => { Complete (); });
 
-			if (upToDate) {
-				Log.LogMessage (MessageImportance.Normal, "  Additional Android Resources manifsets files are unchanged. Skipping.");
-				return true;
-			}
+			base.Execute ();
 
-			ExecuteForAbi (null);
-
-			if (CreatePackagePerAbi) {
-				var abis = SupportedAbis.Split (new char[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
-				if (abis.Length > 1)
-					foreach (var abi in abis)
-						ExecuteForAbi (abi);
-			}
 			return !Log.HasLoggedErrors;
 		}
 
-		protected override string GenerateCommandLineCommands ()
+		protected string GenerateCommandLineCommands (string ManifestFile, string currentAbi)
 		{
 			// For creating Resource.Designer.cs:
 			//   Running command: C:\Program Files (x86)\Android\android-sdk-windows\platform-tools\aapt
@@ -260,17 +309,19 @@ namespace Xamarin.Android.Tasks
 				return s;
 		}
 
-		protected override string GenerateFullPathToTool ()
+		protected string GenerateFullPathToTool ()
 		{
-			return Path.Combine (ToolPath, ToolExe);
+			return Path.Combine (ToolPath, string.IsNullOrEmpty (ToolExe) ? ToolName : ToolExe);
 		}
 
-		protected override void LogEventsFromTextOutput (string singleLine, MessageImportance messageImportance)
+		protected void LogEventsFromTextOutput (string singleLine, MessageImportance messageImportance)
 		{
 			// Aapt errors looks like this:
 			//   C:\Users\Jonathan\Documents\Visual Studio 2010\Projects\AndroidMSBuildTest\AndroidMSBuildTest\obj\Debug\res\layout\main.axml:7: error: No resource identifier found for attribute 'id2' in package 'android' (TaskId:22)
 			// Look for them and convert them to MSBuild compatible errors.
-			
+			if (string.IsNullOrEmpty (singleLine)) 
+				return;
+
 			var match = error_regex.Match (singleLine);
 
 			if (match.Success) {
@@ -296,11 +347,11 @@ namespace Xamarin.Android.Tasks
 
 			// Handle additional error that doesn't match the regex
 			if (singleLine.Trim ().StartsWith ("invalid resource directory name:")) {
-				Log.LogError ("", "", "", ToolName, -1, -1, -1, -1, "Invalid resource directory name: \"{0}\".", singleLine.Substring (singleLine.LastIndexOfAny (new char[] { '\\', '/' }) + 1));
+				LogError ("", "", "", ToolName, -1, -1, -1, -1, "Invalid resource directory name: \"{0}\".", singleLine.Substring (singleLine.LastIndexOfAny (new char[] { '\\', '/' }) + 1));
 				messageImportance = MessageImportance.High;
 			}
 
-			base.LogEventsFromTextOutput (singleLine, messageImportance);
+			LogMessage (singleLine, messageImportance);
 		}
 	}
 }
