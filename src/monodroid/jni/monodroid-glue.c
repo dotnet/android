@@ -66,6 +66,8 @@
 #include "xamarin_getifaddrs.h"
 #endif
 
+#define MONO_API_EXPORT __attribute__ ((visibility ("default")))
+
 static pthread_mutex_t process_cmd_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t process_cmd_cond = PTHREAD_COND_INITIALIZER;
 static int debugging_configured;
@@ -88,8 +90,15 @@ static int attach_gdb;
  * clearing monodroid_gdb_wait.
  */
 static int wait_for_gdb;
-static int monodroid_gdb_wait = TRUE;
+static volatile int monodroid_gdb_wait = TRUE;
 static int android_api_level = 0;
+
+/* Can be called by a native debugger to break the wait on startup */
+MONO_API_EXPORT void
+monodroid_clear_gdb_wait (void)
+{
+	monodroid_gdb_wait = FALSE;
+}
 
 #ifdef ANDROID64
 #define SYSTEM_LIB_PATH "/system/lib64"
