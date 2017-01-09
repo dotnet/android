@@ -12,6 +12,7 @@
     <AndroidUseLatestPlatformSdk>False</AndroidUseLatestPlatformSdk>
     <AssemblyName>Xamarin.Android.BindingResolveImportLib2</AssemblyName>
     <UseShortFileNames>True</UseShortFileNames>
+    <AndroidClassParser>class-parse</AndroidClassParser>
   </PropertyGroup>
   <Import Project="..\..\..\Configuration.props" />
   <PropertyGroup>
