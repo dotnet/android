@@ -74,7 +74,7 @@
         DefineConstants="NET_4_0;NET_4_5;NET_4_6;MONO"
         CodePage="65001"
         DisabledWarnings="1699"
-        References="$(OutputPath)..\..\..\..\lib\mandroid\Xamarin.Android.Cecil.dll"
+        References="$(OutputPath)..\..\..\..\lib\xbuild\Xamarin\Android\Xamarin.Android.Cecil.dll"
         OutputAssembly="$(OutputPath)..\..\..\..\lib\mandroid\mono-symbolicate.exe"
     />
     <Copy
