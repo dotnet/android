@@ -4,12 +4,26 @@
   <PropertyGroup>
     <_SourceTopDir>..\..</_SourceTopDir>
     <_BclFrameworkDir>$(OutputPath)\lib\xbuild-frameworks\MonoAndroid\v1.0</_BclFrameworkDir>
+    <_MandroidDir>$(OutputPath)\lib\mandroid</_MandroidDir>
   </PropertyGroup>
+  <ItemGroup>
+    <MonoDocCopyItem Include="monodoc.dll" />
+    <MonoDocCopyItem Include="monodoc.dll.mdb" />
+    <MonoDocCopyItem Include="monodoc.dll.config" />
+  </ItemGroup>
   <UsingTask AssemblyFile="$(_SourceTopDir)\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.GetNugetPackageBasePath" />
   <Import Project="$(_SourceTopDir)\Configuration.props" />
   <PropertyGroup>
     <_MonoProfileDir>$(MonoSourceFullPath)\mcs\class\lib\monodroid</_MonoProfileDir>
+    <_MonoOutputDir>$(MonoSourceFullPath)\mcs\class\lib\net_4_x</_MonoOutputDir>
   </PropertyGroup>
+  <ItemGroup>
+    <_MonoDocCopyItems Include="@(MonoDocCopyItem->'$(_MonoOutputDir)\%(Identity)')" />
+  </ItemGroup>
+  <ItemGroup>
+    <_MonoDocInstalledItems Include="@(MonoDocCopyItem->'$(_MandroidDir)\%(Identity)')" />
+    <_MonoDocInstalledItems Include="$(_MandroidDir)\mdoc.exe" />
+  </ItemGroup>
   <PropertyGroup>
     <ForceBuildDependsOn>
       _BuildLlvm;
@@ -19,6 +33,7 @@
       _BuildRuntimes;
       _InstallRuntimes;
       _InstallBcl;
+      _InstallMonoDoc;
       _ConfigureCrossRuntimes;
       _BuildCrossRuntimes;
       _InstallCrossRuntimes;
@@ -295,6 +310,18 @@
     />
     <Touch Files="@(_InstallMonoPosixHelperOutput);@(_InstallUnstrippedMonoPosixHelperOutput)" />
   </Target>
+  <Target Name="_InstallMonoDoc"
+      Inputs="@(_MonoDocCopyItems);$(_MonoOutputDir)\mdoc.exe"
+      Outputs="@(_MonoDocInstalledItems)">
+    <MakeDir Directories="$(_MandroidDir)" />
+    <Copy
+      SourceFiles="@(_MonoDocCopyItems)"
+      DestinationFolder="$(_MandroidDir)"
+    />
+    <Exec
+      Command="$(RemapAssemblyRefTool) &quot;$(_MonoOutputDir)\mdoc.exe&quot; &quot;$(_MandroidDir)\mdoc.exe&quot; Mono.Cecil &quot;$(_MandroidDir)\Xamarin.Android.Cecil.dll&quot;"
+    />
+  </Target>
   <Target Name="_InstallBcl"
       Inputs="@(_BclProfileItems)"
       Outputs="@(_BclInstalledItem);$(OutputPath)\lib\xbuild-frameworks\MonoAndroid\v1.0\RedistList\FrameworkList.xml">
@@ -417,6 +444,7 @@
       DependsOnTargets="_GetRuntimesOutputItems;_PrepareLlvmItems">
     <ItemGroup>
       <BundleItem Include="@(_BclInstalledItem)" />
+      <BundleItem Include="@(_MonoDocInstalledItems)" />
       <BundleItem Include="@(MonoFacadeAssembly->'$(OutputPath)\lib\xbuild-frameworks\MonoAndroid\v1.0\Facades\%(Identity)')" />
       <BundleItem Include="$(OutputPath)\lib\xbuild-frameworks\MonoAndroid\v1.0\RedistList\FrameworkList.xml" />
       <BundleItem Include="@(_InstallRuntimeOutput)" />
