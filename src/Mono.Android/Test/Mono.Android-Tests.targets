@@ -11,7 +11,7 @@
   <Import Project="..\..\..\build-tools\scripts\UnitTestApks.targets" />
   <Target Name="BuildNativeLibs"
       BeforeTargets="Build"
-      DependsOnTargets="_ResolveMonoAndroidSdks"
+      DependsOnTargets="AndroidPrepareForBuild"
       Inputs="jni\reuse-threads.c;jni\Android.mk"
       Outputs="@(AndroidNativeLibrary)">
     <Error Text="Could not locate Android NDK." Condition="!Exists ('$(AndroidNdkDirectory)\ndk-build')" />

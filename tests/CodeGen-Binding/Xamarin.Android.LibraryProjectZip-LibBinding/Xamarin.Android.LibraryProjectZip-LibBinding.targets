@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Target Name="BuildNativeLibs"
-      DependsOnTargets="_ResolveMonoAndroidSdks"
+      DependsOnTargets="AndroidPrepareForBuild"
       Inputs="jni\simple-lib.c;jni\Android.mk"
       Outputs="@(AndroidNativeLibrary);$(OutputPath)\native-lib-1\NativeLib.zip">
     <Error
@@ -16,7 +16,7 @@
     />
   </Target>
   <Target Name="BuildNativeLibs2"
-      DependsOnTargets="_ResolveMonoAndroidSdks"
+      DependsOnTargets="AndroidPrepareForBuild"
       Inputs="simple2\jni\simple2-lib.c;simple2\jni\Android.mk"
       Outputs="@(AndroidNativeLibrary);$(OutputPath)\native-lib-2\NativeLib2.zip">
     <Error
@@ -39,7 +39,7 @@
     />
   </Target>
   <Target Name="BuildJavaLibs"
-      DependsOnTargets="_ResolveMonoAndroidSdks"
+      DependsOnTargets="AndroidPrepareForBuild"
       Inputs="java\JavaLib\project.properties"
       Outputs="$(OutputPath)JavaLib.zip">
     <Exec

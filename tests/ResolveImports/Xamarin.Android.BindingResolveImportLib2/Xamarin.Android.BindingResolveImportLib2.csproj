@@ -83,9 +83,9 @@
     <RemoveDir Directories="Jars/bin" />
     <Delete Files="Jars/lib2.jar;Jars/com/xamarin/android/test/binding/resolveimport/Lib2.class" />
   </Target>
-  <Target Name="BuildNativeLibs" DependsOnTargets="_ResolveMonoAndroidSdks" Inputs="jni\timing.c;jni\Android.mk" Outputs="@(EmbeddedNativeLibrary)">
-    <Error Text="Could not locate Android NDK." Condition="!Exists ('$(_AndroidNdkDirectory)\ndk-build')" />
-    <Exec Command="&quot;$(_AndroidNdkDirectory)\ndk-build&quot;" />
+  <Target Name="BuildNativeLibs" DependsOnTargets="AndroidPrepareForBuild" Inputs="jni\timing.c;jni\Android.mk" Outputs="@(EmbeddedNativeLibrary)">
+    <Error Text="Could not locate Android NDK." Condition="!Exists ('$(AndroidNdkDirectory)\ndk-build')" />
+    <Exec Command="&quot;$(AndroidNdkDirectory)\ndk-build&quot;" />
   </Target>
   <Target Name="CleanNativeLibs">
     <RemoveDir Directories="obj\local;libs" />
