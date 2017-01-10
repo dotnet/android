@@ -101,11 +101,11 @@ void create_public_directory (const char *dir);
 int create_directory (const char *pathname, int mode);
 void set_world_accessable (const char *path);
 
-typedef void  MonoAssembly;
 struct        DylibMono;
 
 MonoAssembly    *monodroid_load_assembly (struct DylibMono *mono, MonoDomain *domain, const char *basename);
 void            *monodroid_runtime_invoke (struct DylibMono *mono, MonoDomain *domain, MonoMethod *method, void *obj, void **params, MonoObject **exc);
 MonoClass       *monodroid_get_class_from_name (struct DylibMono *mono, MonoDomain *domain, const char* assembly, const char *namespace, const char *type);
+MonoDomain      *monodroid_create_appdomain (struct DylibMono *mono, MonoDomain *parent_domain, const char *friendly_name, int shadow_copy);
 
 #endif /* __MONODROID_UTIL_H__ */

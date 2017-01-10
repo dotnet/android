@@ -1502,19 +1502,19 @@ gc_prepare_for_java_collection (JNIEnv *env, int num_sccs, MonoGCBridgeSCC **scc
 		 * Solution: Make all objects within the SCC directly or indirectly reference each other
 		 */
 		if (scc->num_objs > 1) {
-			MonoGCBridgeSCC *first = scc->objs [0];
+			MonoGCBridgeSCC *first = (MonoGCBridgeSCC*)scc->objs [0];
 			MonoGCBridgeSCC *prev = first;
 
 			/* start at the second item, ref j from j-1 */
 			for (int j = 1; j < scc->num_objs; j++) {
-				MonoGCBridgeSCC *current = scc->objs [j];
+				MonoGCBridgeSCC *current = (MonoGCBridgeSCC*)scc->objs [j];
 
-				add_reference_mono_object (env, prev, current);
+				add_reference_mono_object (env, (MonoObject*)prev, (MonoObject*)current);
 				prev = current;
 			}
 
 			/* ref the first from the final */
-			add_reference_mono_object (env, prev, first);
+			add_reference_mono_object (env, (MonoObject*)prev, (MonoObject*)first);
 
 		/* num_objs == 0 case: The SCC contains *no* objects (or rather contains only C# objects).
 		 * Solution: Create a temporary Java object to stand in for the SCC.
@@ -2869,8 +2869,9 @@ create_domain (JNIEnv *env, jobjectArray runtimeApks, jstring assembly, jobject 
 	if (is_root_domain)
 		domain = mono.mono_jit_init_version ("RootDomain", "mobile");
 	else {
+		MonoDomain* root_domain = mono.mono_get_root_domain ();
 		char *domain_name = monodroid_strdup_printf ("MonoAndroidDomain%d", GetAndroidSdkVersion (env, loader));
-		domain = mono.mono_domain_create_appdomain (domain_name, NULL);
+		domain = monodroid_create_appdomain (&mono, root_domain, domain_name, /*shadow_copy:*/ 1);
 		free (domain_name);
 	}
 

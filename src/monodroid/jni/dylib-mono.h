@@ -56,8 +56,8 @@ typedef void MonoException;
 typedef void MonoImage;
 typedef void MonoJitInfo;
 typedef void MonoMethod;
-typedef void MonoObject;
 typedef void MonoProfiler;
+typedef void MonoString;
 typedef void MonoType;
 typedef void (*MonoDomainFunc) (MonoDomain *domain, void* user_data);
 
@@ -108,6 +108,36 @@ typedef struct {
 	const unsigned char *data;
 	const unsigned int size;
 } MonoBundledAssembly;
+
+// Keep this in sync with MonoObject in object.h
+typedef struct {
+	// MonoObject 2 pointers
+	void *_pad_mono_object[2];
+} MonoObject;
+
+// Keep this in sync with MonoAppDomainSetup in domains-internal.h
+typedef struct {
+	MonoObject object;
+	// MonoAppDomainSetup unused entries
+	void *_pad_mono_appdomainsetup[9];
+
+	MonoString *shadow_copy_files;
+} MonoAppDomainSetup;
+
+// Keep this in sync with MonoRealProxy in object-internals.h
+typedef struct {
+	MonoObject object;
+	// MonoRealProxy ununused entries
+	void *_pad_mono_realproxy[3];
+
+	int32_t target_domain_id;
+} MonoRealProxy;
+
+// Keep this in sync with MonoTransparentProxy in object-internals.h
+typedef struct {
+	MonoObject pad_mono_object;
+	MonoRealProxy *rp;
+} MonoTransparentProxy;
 
 typedef uint32_t mono_bool;
 typedef uint8_t  mono_byte;
@@ -227,6 +257,7 @@ typedef MonoDomain*     (*monodroid_mono_jit_thread_attach) (MonoDomain *domain)
 typedef void            (*monodroid_mono_jit_set_aot_mode) (MonoAotMode mode);
 typedef char*           (*monodroid_mono_method_full_name_fptr) (MonoMethod *method, mono_bool signature);
 typedef MonoClass*      (*monodroid_mono_object_get_class_fptr) (MonoObject *obj);
+typedef MonoObject*     (*monodroid_mono_object_new_fptr) (MonoDomain *domain, MonoClass *klass);
 typedef void*           (*monodroid_mono_object_unbox_fptr) (MonoObject *obj);
 typedef void            (*monodroid_mono_profiler_install_fptr) (void *profiler, void *callback);
 typedef void            (*monodroid_mono_profiler_install_jit_end_fptr) (MonoProfileJitResult end);
@@ -240,6 +271,7 @@ typedef void*           (*monodroid_mono_runtime_invoke_fptr) (MonoMethod *metho
 typedef void            (*monodroid_mono_set_defaults_fptr)(int arg0, int arg1);
 typedef void            (*monodroid_mono_set_crash_chaining_fptr)(mono_bool chain_crashes);
 typedef void            (*monodroid_mono_set_signal_chaining_fptr)(mono_bool chain_signals);
+typedef MonoString*     (*monodroid_mono_string_new_fptr)(MonoDomain *domain, const char *text);
 typedef void*           (*monodroid_mono_thread_attach_fptr) (MonoDomain *domain);
 typedef void            (*monodroid_mono_thread_create_fptr) (MonoDomain *domain, void* func, void* arg);
 typedef void            (*monodroid_mono_gc_disable_fptr) (void);
@@ -325,6 +357,9 @@ struct DylibMono {
 	monodroid_mono_config_for_assembly_fptr                 mono_config_for_assembly;
 
 	monodroid_mono_assembly_loaded_fptr                     mono_assembly_loaded;
+
+	monodroid_mono_object_new_fptr                          mono_object_new;
+	monodroid_mono_string_new_fptr                          mono_string_new;
 };
 
 MONO_API  struct  DylibMono*  monodroid_dylib_mono_new (const char *libmono_path);
