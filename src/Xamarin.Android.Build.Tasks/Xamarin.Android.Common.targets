@@ -1187,35 +1187,19 @@ because xbuild doesn't support framework reference assemblies.
   Outputs="$(_AndroidComponentResgenFlagFile)"
   DependsOnTargets="$(_GenerateJavaDesignerForComponentDependsOnTargets)">
 
-<!--
-  This copy is required because the Aapt statement below will be Batched.
-  Aapt will be called for each Path in _AdditonalAndroidResourceCachePaths
-  this is beause of the ManifestFile and Contition properties being set to 
-
-  "%(_AdditonalAndroidResourceCachePaths.Identity)\AndroidManifest.xml"
-
-  the use of .Identify will cause the batch. However we do need ALL of the 
-  resource cache paths to be passed in to correctly resolve resources. If
-  we don't do this only the current "batched" path will be included. 
--->
- <ItemGroup>
-  <_AdditionalAndroidResourceCachePathsCopy Include="@(_AdditonalAndroidResourceCachePaths)"/>
- </ItemGroup>
-
  <!-- Run aapt to generate R.java for additional Android resources-->
  <Aapt
-   Condition="Exists('%(_AdditonalAndroidResourceCachePaths.Identity)\AndroidManifest.xml')"
    ImportsDirectory="$(_LibraryProjectImportsDirectoryName)"
    OutputImportDirectory="$(IntermediateOutputPath)__library_projects__\"
    UseShortFileNames="$(UseShortFileNames)"
-   ManifestFile="%(_AdditonalAndroidResourceCachePaths.Identity)\AndroidManifest.xml"
+   ManifestFiles="@(_AdditonalAndroidResourceCachePaths->'%(Identity)\AndroidManifest.xml')"
    ApplicationName="$(_AndroidPackage)"
    JavaPlatformJarPath="$(JavaPlatformJarPath)"
    NonConstantId="true"
    JavaDesignerOutputDirectory="$(IntermediateOutputPath)android\src"
    ResourceDirectory="$(MonoAndroidResDirIntermediate)"
    AdditionalResourceDirectories="@(LibraryResourceDirectories)"
-   AdditionalAndroidResourcePaths="@(_AdditionalAndroidResourceCachePathsCopy)"
+   AdditionalAndroidResourcePaths="@(_AdditonalAndroidResourceCachePaths)"
    AndroidComponentResgenFlagFile="$(_AndroidComponentResgenFlagFile)"
    ToolPath="$(AaptToolPath)"
    ToolExe="$(AaptToolExe)"
@@ -1274,7 +1258,7 @@ because xbuild doesn't support framework reference assemblies.
 		OutputImportDirectory="$(IntermediateOutputPath)__library_projects__\"
 		UseShortFileNames="$(UseShortFileNames)"
 		JavaPlatformJarPath="$(JavaPlatformJarPath)"
-		ManifestFile="$(ResgenTemporaryDirectory)\AndroidManifest.xml"
+		ManifestFiles="$(ResgenTemporaryDirectory)\AndroidManifest.xml"
 		PackageName="$(_AndroidPackage)"
 		ApplicationName="$(_AndroidPackage)"
 		ResourceDirectory="$(MonoAndroidResDirIntermediate)"
@@ -1787,7 +1771,7 @@ because xbuild doesn't support framework reference assemblies.
 	OutputImportDirectory="$(IntermediateOutputPath)__library_projects__\"
 	UseShortFileNames="$(UseShortFileNames)"
     JavaPlatformJarPath="$(JavaPlatformJarPath)"
-    ManifestFile="$(IntermediateOutputPath)android\AndroidManifest.xml"
+    ManifestFiles="$(IntermediateOutputPath)android\AndroidManifest.xml"
     ResourceDirectory="$(MonoAndroidResDirIntermediate)"
     JavaDesignerOutputDirectory="$(AaptTemporaryDirectory)"
     ResourceOutputFile="$(_PackagedResources)"
