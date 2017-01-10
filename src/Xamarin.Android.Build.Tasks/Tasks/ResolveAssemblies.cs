@@ -23,8 +23,6 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string ReferenceAssembliesDirectory { get; set; }
 
-		public ITaskItem[] DesignTimeFacadeDirectories { get; set; }
-
 		public string I18nAssemblies { get; set; }
 		public string LinkMode { get; set; }
 
@@ -58,12 +56,11 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ("  I18nAssemblies: {0}", I18nAssemblies);
 			Log.LogDebugMessage ("  LinkMode: {0}", LinkMode);
 			Log.LogDebugTaskItems ("  Assemblies:", Assemblies);
-			Log.LogDebugTaskItems ("  DesignTimeFacadeDirectories:", DesignTimeFacadeDirectories);
 
 			foreach (var dir in ReferenceAssembliesDirectory.Split (new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries))
 				resolver.SearchDirectories.Add (dir);
 
-			var assemblies = new HashSet<ITaskItem> (new ITaskItemEqualityComparer ());
+			var assemblies = new HashSet<string> ();
 
 			var topAssemblyReferences = new List<AssemblyDefinition> ();
 
@@ -79,7 +76,7 @@ namespace Xamarin.Android.Tasks
 					if (assemblyDef == null)
 						throw new InvalidOperationException ("Failed to load assembly " + assembly.ItemSpec);
 					topAssemblyReferences.Add (assemblyDef);
-					assemblies.Add (new TaskItem (Path.GetFullPath (assemblyDef.MainModule.FullyQualifiedName)));
+					assemblies.Add (Path.GetFullPath (assemblyDef.MainModule.FullyQualifiedName));
 				}
 			} catch (Exception ex) {
 				Log.LogError ("Exception while loading assemblies: {0}", ex);
@@ -96,8 +93,8 @@ namespace Xamarin.Android.Tasks
 			// Add I18N assemblies if needed
 			AddI18nAssemblies (resolver, assemblies);
 
-			ResolvedAssemblies = assemblies.ToArray ();
-			ResolvedSymbols = assemblies.Select (a => new TaskItem (a + ".mdb")).Where (a => File.Exists (a.ItemSpec)).ToArray ();
+			ResolvedAssemblies = assemblies.Select (a => new TaskItem (a)).ToArray ();
+			ResolvedSymbols = assemblies.Select (a => a + ".mdb").Where (a => File.Exists (a)).Select (a => new TaskItem (a)).ToArray ();
 			ResolvedFrameworkAssemblies = ResolvedAssemblies.Where (p => MonoAndroidHelper.IsFrameworkAssembly (p.ItemSpec, true)).ToArray ();
 			ResolvedUserAssemblies = ResolvedAssemblies.Where (p => !MonoAndroidHelper.IsFrameworkAssembly (p.ItemSpec, true)).ToArray ();
 			ResolvedDoNotPackageAttributes = do_not_package_atts.ToArray ();
@@ -113,14 +110,13 @@ namespace Xamarin.Android.Tasks
 		readonly List<string> do_not_package_atts = new List<string> ();
 		int indent = 2;
 
-		void AddAssemblyReferences (DirectoryAssemblyResolver resolver, ICollection<ITaskItem> assemblies, AssemblyDefinition assembly, bool topLevel)
+		void AddAssemblyReferences (DirectoryAssemblyResolver resolver, ICollection<string> assemblies, AssemblyDefinition assembly, bool topLevel)
 		{
 			var fqname = assembly.MainModule.FullyQualifiedName;
 			var fullPath = Path.GetFullPath (fqname);
-			var item = new TaskItem (fullPath);
 
 			// Don't repeat assemblies we've already done
-			if (!topLevel && assemblies.Contains (item))
+			if (!topLevel && assemblies.Contains (fullPath))
 				return;
 			
 			foreach (var att in assembly.CustomAttributes.Where (a => a.AttributeType.FullName == "Java.Interop.DoNotPackageAttribute")) {
@@ -133,11 +129,8 @@ namespace Xamarin.Android.Tasks
 			Log.LogMessage (MessageImportance.Low, "{0}Adding assembly reference for {1}, recursively...", new string (' ', indent), assembly.Name);
 			indent += 2;
 			// Add this assembly
-			if (!topLevel && assemblies.All (a => new AssemblyNameDefinition (a.ItemSpec, null).Name != assembly.Name.Name)) {
-				var path = Path.GetDirectoryName (fullPath);
-				item.SetMetadata ("ResolvedFrom", DesignTimeFacadeDirectories.Any (x =>  Path.GetDirectoryName (x.ItemSpec).StartsWith (Path.GetDirectoryName (path))) ? "ImplicitlyExpandDesignTimeFacades" : "");
-				assemblies.Add (item);
-			}
+			if (!topLevel && assemblies.All (a => new AssemblyNameDefinition (a, null).Name != assembly.Name.Name))
+				assemblies.Add (fullPath);
 
 			// Recurse into each referenced assembly
 			foreach (AssemblyNameReference reference in assembly.MainModule.AssemblyReferences) {
@@ -159,7 +152,7 @@ namespace Xamarin.Android.Tasks
 			return mode;
 		}
 
-		void AddI18nAssemblies (DirectoryAssemblyResolver resolver, ICollection<ITaskItem> assemblies)
+		void AddI18nAssemblies (DirectoryAssemblyResolver resolver, ICollection<string> assemblies)
 		{
 			var i18n = Linker.ParseI18nAssemblies (I18nAssemblies);
 			var link = ParseLinkMode (LinkMode);
@@ -186,10 +179,10 @@ namespace Xamarin.Android.Tasks
 				assemblies.Add (ResolveI18nAssembly (resolver, "I18N.West"));
 		}
 
-		ITaskItem ResolveI18nAssembly (DirectoryAssemblyResolver resolver, string name)
+		string ResolveI18nAssembly (DirectoryAssemblyResolver resolver, string name)
 		{
 			var assembly = resolver.Resolve (AssemblyNameReference.Parse (name));
-			return new TaskItem (Path.GetFullPath (assembly.MainModule.FullyQualifiedName));
+			return Path.GetFullPath (assembly.MainModule.FullyQualifiedName);
 		}
 	}
 }

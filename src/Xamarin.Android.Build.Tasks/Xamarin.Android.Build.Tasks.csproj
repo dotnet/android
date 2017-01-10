@@ -393,9 +393,6 @@
     <Compile Include="Utilities\Files.cs">
       <Link>Utilities\Files.cs</Link>
     </Compile>
-    <Compile Include="Utilities\ITaskItemEqualityComparer.cs">
-      <Link>Utilities\ITaskItemEqualityComparer.cs</Link>
-    </Compile>
     <Compile Include="$(LinkerSourceFullPath)\tuner\Mono.Tuner\ApplyPreserveAttributeBase.cs">
       <Link>Linker\Mono.Tuner\ApplyPreserveAttributeBase.cs</Link>
     </Compile>
