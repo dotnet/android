@@ -121,3 +121,45 @@ _monodroid_get_network_interface_supports_multicast (const char *ifname, mono_bo
 {
 	return _monodroid_get_network_interface_state (ifname, NULL, supports_multicast);
 }
+
+/* !DO NOT REMOVE! Used by Mono BCL (System.Net.NetworkInformation.UnixIPInterfaceProperties) */
+MONO_API int
+_monodroid_get_dns_servers (void **dns_servers_array)
+{
+	*dns_servers_array = NULL;
+	if (!dns_servers_array) {
+		log_warn (LOG_NET, "Unable to get DNS servers, no location to store data in");
+		return -1;
+	}
+
+	size_t  len;
+	char   *dns;
+	char   *dns_servers [8];
+	int     count = 0;
+	char    prop_name[] = "net.dnsX";
+	for (int i = 0; i < 8; i++) {
+		prop_name [7] = (char)(i + 0x31);
+		len = monodroid_get_system_property (prop_name, &dns);
+		if (len <= 0) {
+			dns_servers [i] = NULL;
+			continue;
+		}
+		dns_servers [i] = strndup (dns, len);
+		count++;
+	}
+
+	if (count <= 0)
+		return 0;
+
+	char **ret = (char**)malloc (sizeof (char*) * count);
+	char **p = ret;
+	for (int i = 0; i < 8; i++) {
+		if (!dns_servers [i])
+			continue;
+		*p++ = dns_servers [i];
+	}
+
+	*dns_servers_array = (void*)ret;
+	return count;
+}
+
