@@ -318,7 +318,7 @@ namespace Xamarin.Android.Binder {
 			Validate (gens, opt);
 
 			if (api_versions_xml != null)
-				ApiVersionsSupport.AssignApiLevels (gens, api_versions_xml, api_level);
+				ApiVersionsSupport.AssignApiLevels (gens, api_versions_xml);
 
 			foreach (GenBase gen in gens)
 				gen.FillProperties ();

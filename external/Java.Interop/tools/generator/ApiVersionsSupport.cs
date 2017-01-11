@@ -20,16 +20,25 @@ namespace MonoDroid.Generation
 			int ApiAvailableSince { get; set; }
 		}
 
-		public static void AssignApiLevels (IList<GenBase> gens, string apiVersionsXml, string currentApiLevelString)
+		static IEnumerable<GenBase> FlattenGens (IEnumerable<GenBase> gens)
 		{
-			int dummy;
-			int currentApiLevel = int.TryParse (currentApiLevelString, out dummy) ? dummy : int.MaxValue;
+			foreach (var g in gens) {
+				yield return g;
+				foreach (var nt in FlattenGens (g.NestedTypes))
+					yield return nt;
+			}
+		}
 
+		public static void AssignApiLevels (IList<GenBase> gens, string apiVersionsXml)
+		{
+			var flattenGens = FlattenGens (gens);
 			var versions = new ApiVersionsProvider ();
 			versions.Parse (apiVersionsXml);
 			foreach (var type in versions.Versions.Values) {
-				var matchedGens = gens.Where (g => g.JavaName == type.Name);
+				var matchedGens = flattenGens.Where (g => g.JavaName == type.Name);
 				if (!matchedGens.Any ())
+					// There are known missing types, and it's going to be too noisy to report missing ones here.
+					// That task should be done elsewhere.
 					continue;
 				foreach (var gen in matchedGens)
 					gen.ApiAvailableSince = type.Since;
@@ -38,9 +47,6 @@ namespace MonoDroid.Generation
 					// it might be moved to the corresponding class. 
 					if (genf != null)
 						genf.ApiAvailableSince = field.Since > 0 ? field.Since : type.Since;
-					// commenting out this, because there are too many enum-mapped fields (removed).
-					//else
-					//	Console.Error.WriteLine ("!!!!! In type {0}, field {1} not found.", type.Name, field.Name);
 				}
 				Func<Method,ApiVersionsProvider.Definition,bool> methodMatch =
 					(m, method) => m.JavaName == method.MethodName && m.JniSignature == method.Name.Substring (method.MethodName.Length);
@@ -52,9 +58,6 @@ namespace MonoDroid.Generation
 						matchedGens.SelectMany (g => GetAllMethods (g)).FirstOrDefault (m => methodMatch (m, method));
 					if (genm != null)
 						genm.ApiAvailableSince = method.Since > 0 ? method.Since : type.Since;
-					// there are several "missing" stuff from android.test packages (unbound yet).
-					else if (!type.Name.StartsWith ("android.test") && method.Since <= currentApiLevel)
-						Report.Warning (0, Report.WarningAnnotationsProvider, " api-versions.xml mensions type {0}, methodbase {1}, but not found.", type.Name, method.Name);
 				}
 			}
 		}
