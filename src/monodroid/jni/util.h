@@ -107,5 +107,6 @@ struct        DylibMono;
 MonoAssembly    *monodroid_load_assembly (struct DylibMono *mono, MonoDomain *domain, const char *basename);
 void            *monodroid_runtime_invoke (struct DylibMono *mono, MonoDomain *domain, MonoMethod *method, void *obj, void **params, MonoObject **exc);
 MonoClass       *monodroid_get_class_from_name (struct DylibMono *mono, MonoDomain *domain, const char* assembly, const char *namespace, const char *type);
+MonoClass       *monodroid_get_class_from_image (struct DylibMono *mono, MonoDomain *domain, MonoImage* image, const char *namespace, const char *type);
 
 #endif /* __MONODROID_UTIL_H__ */
