@@ -3023,13 +3023,13 @@ _monodroid_get_display_dpi (float *x_dpi, float *y_dpi)
 }
 
 static void
-lookup_bridge_info (MonoImage *image, const MonoJavaGCBridgeType *type, MonoJavaGCBridgeInfo *info)
+lookup_bridge_info (MonoDomain *domain, MonoImage *image, const MonoJavaGCBridgeType *type, MonoJavaGCBridgeInfo *info)
 {
-	info->klass             = mono.mono_class_from_name (image, type->namespace,    type->typename);
-	info->handle            = mono.mono_class_get_field_from_name (info->klass,     "handle");
-	info->handle_type       = mono.mono_class_get_field_from_name (info->klass,     "handle_type");
-	info->refs_added        = mono.mono_class_get_field_from_name (info->klass,     "refs_added");
-	info->weak_handle       = mono.mono_class_get_field_from_name (info->klass,     "weak_handle");
+	info->klass             = monodroid_get_class_from_image (&mono, domain, image, type->namespace, type->typename);
+	info->handle            = mono.mono_class_get_field_from_name (info->klass, "handle");
+	info->handle_type       = mono.mono_class_get_field_from_name (info->klass, "handle_type");
+	info->refs_added        = mono.mono_class_get_field_from_name (info->klass, "refs_added");
+	info->weak_handle       = mono.mono_class_get_field_from_name (info->klass, "weak_handle");
 }
 
 static void
@@ -3073,12 +3073,12 @@ init_android_runtime (MonoDomain *domain, JNIEnv *env, jobject loader)
 	image = mono.mono_assembly_get_image  (assm);
 
 	for (i = 0; i < NUM_GC_BRIDGE_TYPES; ++i) {
-		lookup_bridge_info (image, &mono_java_gc_bridge_types [i], &mono_java_gc_bridge_info [i]);
+		lookup_bridge_info (domain, image, &mono_java_gc_bridge_types [i], &mono_java_gc_bridge_info [i]);
 	}
 
-	runtime                             = mono.mono_class_from_name (image, "Android.Runtime", "JNIEnv");
+	runtime                             = monodroid_get_class_from_image (&mono, domain, image, "Android.Runtime", "JNIEnv");
 	method                              = mono.mono_class_get_method_from_name (runtime, "Initialize", 1);
-	environment                         = mono.mono_class_from_name (image, "Android.Runtime", "AndroidEnvironment");
+	environment                         = monodroid_get_class_from_image (&mono, domain, image, "Android.Runtime", "AndroidEnvironment");
 
 	if (method == 0) {
 		log_fatal (LOG_DEFAULT, "INTERNAL ERROR: Unable to find Android.Runtime.JNIEnv.Initialize!");
@@ -3131,7 +3131,7 @@ get_android_runtime_class (MonoDomain *domain)
 {
 	MonoAssembly *assm = monodroid_load_assembly (&mono, domain, "Mono.Android");
 	MonoImage *image   = mono.mono_assembly_get_image (assm);
-	MonoClass *runtime = mono.mono_class_from_name (image, "Android.Runtime", "JNIEnv");
+	MonoClass *runtime = monodroid_get_class_from_image (&mono, domain, image, "Android.Runtime", "JNIEnv");
 
 	return runtime;
 }
@@ -3189,7 +3189,7 @@ register_packages (MonoDomain *domain, JNIEnv *env, jobjectArray assemblies)
 
 		image = mono.mono_assembly_get_image (a);
 
-		c = mono.mono_class_from_name (image, "Java.Interop", "__TypeRegistrations");
+		c = monodroid_get_class_from_image (&mono, domain, image, "Java.Interop", "__TypeRegistrations");
 		if (c == NULL)
 			continue;
 		m = mono.mono_class_get_method_from_name (c, "RegisterPackages", 0);
