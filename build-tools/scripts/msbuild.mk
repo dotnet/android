@@ -27,7 +27,3 @@ MSBUILD_FLAGS = /p:Configuration=$(CONFIGURATION) $(MSBUILD_ARGS)
 ifneq ($(V),0)
 MSBUILD_FLAGS += /v:diag
 endif   # $(V) != 0
-
-ifeq ($(MSBUILD),xbuild)
-MSBUILD_FLAGS += /p:_XABuildingWithXBuild=True
-endif	# msbuild

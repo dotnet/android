@@ -96,6 +96,7 @@
     <MakeDir Directories="$(_LlvmOutputDirTop)\%(_LlvmRuntime.BuildDir)" />
     <Exec
         Command="%(_LlvmRuntime.ConfigureEnvironment) $(LlvmSourceFullPath)\configure %(_LlvmRuntime.ConfigureFlags)"
+        IgnoreStandardErrorWarningFormat="True"
         WorkingDirectory="$(_LlvmOutputDirTop)\%(_LlvmRuntime.BuildDir)"
     />
     <Touch
@@ -114,6 +115,7 @@
           Condition=" '$(_LlvmNeeded)' != '' ">
     <Exec
         Command="%(_LlvmRuntime.BuildEnvironment) make $(MakeConcurrency) all install"
+        IgnoreStandardErrorWarningFormat="True"
         WorkingDirectory="$(_LlvmOutputDirTop)\%(_LlvmRuntime.BuildDir)"
         />
     <Touch
@@ -149,6 +151,7 @@
     <MakeDir Directories="$(IntermediateOutputPath)\%(_MonoRuntime.Identity)" />
     <Exec
         Command="$(MonoSourceFullPath)\configure LDFLAGS=&quot;%(_MonoRuntime.LdFlags)&quot; CFLAGS=&quot;%(_MonoRuntime.CFlags)&quot; CXXFLAGS=&quot;%(_MonoRuntime.CxxFlags)&quot; CC=&quot;%(_MonoRuntime.Cc)&quot; CXX=&quot;%(_MonoRuntime.Cxx)&quot; CPP=&quot;%(_MonoRuntime.Cpp)&quot; CXXCPP=&quot;%(_MonoRuntime.CxxCpp)&quot; LD=&quot;%(_MonoRuntime.Ld)&quot; AR=&quot;%(_MonoRuntime.Ar)&quot; AS=&quot;%(_MonoRuntime.As)&quot; RANLIB=&quot;%(_MonoRuntime.RanLib)&quot; STRIP=&quot;%(_MonoRuntime.Strip)&quot; DLLTOOL=&quot;%(_MonoRuntime.DllTool)&quot; OBJDUMP=&quot;%(_MonoRuntime.Objdump)&quot; --cache-file=..\%(_MonoRuntime.Identity).config.cache %(_MonoRuntime.ConfigureFlags)"
+        IgnoreStandardErrorWarningFormat="True"
         WorkingDirectory="$(IntermediateOutputPath)\%(_MonoRuntime.Identity)"
     />
     <Touch
@@ -232,6 +235,7 @@
     <Exec
         Condition=" '%(_MonoRuntime.DoBuild)' == 'true' "
         Command="make $(MakeConcurrency) # %(_MonoRuntime.Identity)"
+        IgnoreStandardErrorWarningFormat="True"
         WorkingDirectory="$(IntermediateOutputPath)\%(_MonoRuntime.Identity)"
     />
     <Touch
@@ -384,6 +388,7 @@
     <MakeDir Directories="$(IntermediateOutputPath)\%(_MonoCrossRuntime.Identity)" />
     <Exec
         Command="%(_MonoCrossRuntime.ConfigureEnvironment) $(MonoSourceFullPath)\configure LDFLAGS=&quot;%(_MonoCrossRuntime.LdFlags)&quot; CFLAGS=&quot;%(_MonoCrossRuntime.CFlags)&quot; CXXFLAGS=&quot;%(_MonoCrossRuntime.CxxFlags)&quot; CC=&quot;%(_MonoCrossRuntime.Cc)&quot; CXX=&quot;%(_MonoCrossRuntime.Cxx)&quot; CPP=&quot;%(_MonoCrossRuntime.Cpp)&quot; CXXCPP=&quot;%(_MonoCrossRuntime.CxxCpp)&quot; LD=&quot;%(_MonoCrossRuntime.Ld)&quot; AR=&quot;%(_MonoCrossRuntime.Ar)&quot; AS=&quot;%(_MonoCrossRuntime.As)&quot; RANLIB=&quot;%(_MonoCrossRuntime.RanLib)&quot; STRIP=&quot;%(_MonoCrossRuntime.Strip)&quot; DLLTOOL=&quot;%(_MonoCrossRuntime.DllTool)&quot; OBJDUMP=&quot;%(_MonoCrossRuntime.Objdump)&quot; --cache-file=..\%(_MonoCrossRuntime.Identity).config.cache %(_MonoCrossRuntime.ConfigureFlags)"
+        IgnoreStandardErrorWarningFormat="True"
         WorkingDirectory="$(IntermediateOutputPath)\%(_MonoCrossRuntime.Identity)"
     />
     <Touch
@@ -425,6 +430,7 @@
     <Message Text="Building %(_MonoCrossRuntime.Identity) in $(IntermediateOutputPath)\%(_MonoCrossRuntime.Identity)"/>
     <Exec
         Command="%(_MonoCrossRuntime.BuildEnvironment) make $(MakeConcurrency)"
+        IgnoreStandardErrorWarningFormat="True"
         WorkingDirectory="$(IntermediateOutputPath)\%(_MonoCrossRuntime.Identity)"
     />
     <Touch

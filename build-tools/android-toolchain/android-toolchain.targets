@@ -67,12 +67,12 @@
 
     <UnzipDirectoryChildren
         HostOS="$(HostOS)"
-        SourceFiles="@(AndroidSdkItem->'$(AndroidToolchainCacheDirectory)\%(Identity)')"
+        SourceFiles="@(_PlatformAndroidSdkItem->'$(AndroidToolchainCacheDirectory)\%(Identity)')"
         DestinationFolder="$(AndroidToolchainDirectory)\sdk"
     />
     <UnzipDirectoryChildren
         HostOS="$(HostOS)"
-        SourceFiles="@(AndroidNdkItem->'$(AndroidToolchainCacheDirectory)\%(Identity)')"
+        SourceFiles="@(_PlatformAndroidNdkItem->'$(AndroidToolchainCacheDirectory)\%(Identity)')"
         DestinationFolder="$(AndroidToolchainDirectory)\ndk"
     />
     <UnzipDirectoryChildren
