@@ -130,7 +130,11 @@ monodroid_getpagesize (void)
 #endif
 }
 
-/* Invoked by System.Core.dll!System.TimeZoneInfo.Android.GetDefaultTimeZoneName */
+/* Invoked by:
+    - System.Core.dll!System.TimeZoneInfo.Android.GetDefaultTimeZoneName
+    - Mono.Android.dll!Android.Runtime.AndroidEnvironment.GetDefaultTimeZone
+*/
+
 MONO_API void
 monodroid_free (void *ptr)
 {
