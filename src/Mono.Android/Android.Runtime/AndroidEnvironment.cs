@@ -248,7 +248,7 @@ namespace Android.Runtime {
 		[DllImport ("__Internal")]
 		static extern IntPtr _monodroid_timezone_get_default_id ();
 
-		[DllImport ("c")]
+		[DllImport ("libc")]
 		static extern void free (IntPtr p);
 
 		// This is invoked by
