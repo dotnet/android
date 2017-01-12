@@ -1220,6 +1220,7 @@ because xbuild doesn't support framework reference assemblies.
 		_GetAdditionalResourcesFromAssemblies;
 		_CreateAdditionalResourceCache;
 		_GenerateAndroidResourceDir;
+		_DefineBuildTargetAbis;
 	</_UpdateAndroidResgenDependsOnTargets>
 </PropertyGroup>
 
@@ -1274,6 +1275,7 @@ because xbuild doesn't support framework reference assemblies.
 		AndroidUseLatestPlatformSdk="$(AndroidUseLatestPlatformSdk)"
 		ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
 		ExplicitCrunch="$(AndroidExplicitCrunch)"
+		SupportedAbis="$(_BuildTargetAbis)"
 	/>
 	
 	<CopyGeneratedJavaResourceClasses

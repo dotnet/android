@@ -78,7 +78,6 @@ namespace Xamarin.Android.Tasks
 
 		public bool ExplicitCrunch { get; set; }
 
-		string currentResourceOutputFile;
 		Dictionary<string,string> resource_name_case_map = new Dictionary<string,string> ();
 
 		bool ManifestIsUpToDate (string manifestFile)
@@ -122,7 +121,7 @@ namespace Xamarin.Android.Tasks
 			return proc.ExitCode == 0;
 		}
 
-		bool ExecuteForAbi (string cmd)
+		bool ExecuteForAbi (string cmd, string currentResourceOutputFile)
 		{
 			var ret = RunAapt (cmd);
 			if (ret && !string.IsNullOrEmpty (currentResourceOutputFile)) {
@@ -155,7 +154,8 @@ namespace Xamarin.Android.Tasks
 			var defaultAbi = new string [] { null };
 			var abis = SupportedAbis?.Split (new char [] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
 			foreach (var abi in (CreatePackagePerAbi && abis?.Length > 1) ? defaultAbi.Concat (abis) : defaultAbi) {
-				ExecuteForAbi (GenerateCommandLineCommands (manifestFile.ItemSpec, abi));
+				var currentResourceOutputFile = abi != null ? string.Format ("{0}-{1}", ResourceOutputFile, abi) : ResourceOutputFile;
+				ExecuteForAbi (GenerateCommandLineCommands (manifestFile.ItemSpec, abi, currentResourceOutputFile), currentResourceOutputFile);
 			}
 
 			return 0;
@@ -191,7 +191,7 @@ namespace Xamarin.Android.Tasks
 			return !Log.HasLoggedErrors;
 		}
 
-		protected string GenerateCommandLineCommands (string ManifestFile, string currentAbi)
+		protected string GenerateCommandLineCommands (string ManifestFile, string currentAbi, string currentResourceOutputFile)
 		{
 			// For creating Resource.Designer.cs:
 			//   Running command: C:\Program Files (x86)\Android\android-sdk-windows\platform-tools\aapt
@@ -235,7 +235,6 @@ namespace Xamarin.Android.Tasks
 				manifest.SetAbi (currentAbi);
 			manifest.ApplicationName = ApplicationName;
 			manifest.Save (manifestFile);
-			currentResourceOutputFile = currentAbi != null ? string.Format ("{0}-{1}", ResourceOutputFile, currentAbi) : ResourceOutputFile;
 
 			cmd.AppendSwitchIfNotNull ("-M ", manifestFile);
 			Directory.CreateDirectory (JavaDesignerOutputDirectory);

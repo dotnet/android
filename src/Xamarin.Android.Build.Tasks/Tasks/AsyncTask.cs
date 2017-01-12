@@ -90,10 +90,12 @@ namespace Xamarin.Android.Tasks
 
 		protected void LogMessage (string message, MessageImportance importance = MessageImportance.Normal)
 		{
-			if (UIThreadId == Thread.CurrentThread.ManagedThreadId)
+			if (UIThreadId == Thread.CurrentThread.ManagedThreadId) {
 				#pragma warning disable 618
 				Log.LogMessage (importance, message);
+				return;
 				#pragma warning restore 618
+			}
 
 			lock (logMessageQueue.SyncRoot) {
 				logMessageQueue.Enqueue (new BuildMessageEventArgs (
@@ -121,7 +123,7 @@ namespace Xamarin.Android.Tasks
 
 		protected void LogError (string code, string message)
 		{
-			if (UIThreadId == Thread.CurrentThread.ManagedThreadId)
+			if (UIThreadId == Thread.CurrentThread.ManagedThreadId) {
 				#pragma warning disable 618
 				Log.LogError (
 					subcategory: null,
@@ -134,7 +136,9 @@ namespace Xamarin.Android.Tasks
 					endColumnNumber: 0,
 					message: message
 				);
-			#pragma warning restore 618
+				return;
+				#pragma warning restore 618
+			}
 
 			lock (errorMessageQueue.SyncRoot) {
 				errorMessageQueue.Enqueue (new BuildErrorEventArgs (
@@ -163,10 +167,12 @@ namespace Xamarin.Android.Tasks
 
 		protected void LogWarning (string message)
 		{
-			if (UIThreadId == Thread.CurrentThread.ManagedThreadId)
+			if (UIThreadId == Thread.CurrentThread.ManagedThreadId) {
 				#pragma warning disable 618
 				Log.LogWarning (message);
+				return;
 				#pragma warning restore 618
+			}
 			
 			lock (warningMessageQueue.SyncRoot) {
 				warningMessageQueue.Enqueue (new BuildWarningEventArgs (

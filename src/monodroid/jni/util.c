@@ -383,6 +383,23 @@ monodroid_get_class_from_name (struct DylibMono *mono, MonoDomain *domain, const
 	return result;
 }
 
+MonoClass*
+monodroid_get_class_from_image (struct DylibMono *mono, MonoDomain *domain, MonoImage *image, const char *namespace, const char *type)
+{
+	MonoClass *result = NULL;
+	MonoDomain *current = mono->mono_domain_get ();
+
+	if (domain != current)
+		mono->mono_domain_set (domain, FALSE);
+
+	result = mono->mono_class_from_name (image, namespace, type);
+
+	if (domain != current)
+		mono->mono_domain_set (current, FALSE);
+
+	return result;
+}
+
 void create_public_directory (const char *dir)
 {
 #ifndef WINDOWS

@@ -11,6 +11,14 @@
     <MonoDocCopyItem Include="monodoc.dll.mdb" />
     <MonoDocCopyItem Include="monodoc.dll.config" />
   </ItemGroup>
+  <ItemGroup>
+    <FSharpItem Include="FSharp.Core.dll" />
+    <FSharpItem Include="FSharp.Core.optdata" />
+    <FSharpItem Include="FSharp.Core.sigdata" />
+  </ItemGroup>
+  <ItemGroup>
+    <_FSharpInstalledItems Include="@(FSharpItem->'$(OutputPath)\lib\xbuild-frameworks\MonoAndroid\v1.0\%(Identity)')" />
+  </ItemGroup>
   <UsingTask AssemblyFile="$(_SourceTopDir)\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.GetNugetPackageBasePath" />
   <Import Project="$(_SourceTopDir)\Configuration.props" />
   <PropertyGroup>
@@ -445,6 +453,7 @@
     <ItemGroup>
       <BundleItem Include="@(_BclInstalledItem)" />
       <BundleItem Include="@(_MonoDocInstalledItems)" />
+      <BundleItem Include="@(_FSharpInstalledItems)" />
       <BundleItem Include="@(MonoFacadeAssembly->'$(OutputPath)\lib\xbuild-frameworks\MonoAndroid\v1.0\Facades\%(Identity)')" />
       <BundleItem Include="$(OutputPath)\lib\xbuild-frameworks\MonoAndroid\v1.0\RedistList\FrameworkList.xml" />
       <BundleItem Include="@(_InstallRuntimeOutput)" />
