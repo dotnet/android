@@ -33,7 +33,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 		public static JavaTypeName Parse (string dottedFullName)
 		{
 			var ret = new JavaTypeName ();
-			
+
 			foreach (var label in genericConstraintsLabels) {
 				int gcidx = dottedFullName.IndexOf (label, StringComparison.Ordinal);
 				int gcgidx = gcidx < 0 ? -1 : dottedFullName.IndexOf ('<', 0, gcidx);
@@ -45,7 +45,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 					dottedFullName = dottedFullName.Substring (0, gcidx).Trim ();
 				}
 			}
-			
+
 			if (dottedFullName.EndsWith ("...", StringComparison.Ordinal)) {
 				ret.ArrayPart = "...";
 				dottedFullName = dottedFullName.Substring (0, dottedFullName.Length - 3);
@@ -56,34 +56,45 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 				dottedFullName = dottedFullName.Substring (0, aidx);
 			}
 
-			Func<string, int, int> getMatchingGenericCloser = (str, start) => {
-				int count = 0;
-				for (int i = start; i < str.Length; i++) {
-					switch (str [i]) {
-					case '<':
-						count++;
-						break;
-					case '>':
-						if (count-- == 0)
-							return i;
-						break;
-					}
-				}
-				return -1;
-			};
 			int idx = dottedFullName.IndexOf ('<');
+			int nextIndex = dottedFullName.Length;
 			if (idx > 0) {
-				int last = getMatchingGenericCloser (dottedFullName, idx + 1);
+				int last = GetMatchingGenericCloser (dottedFullName, idx + 1);
 				ret.GenericArguments = ParseCommaSeparatedTypeNames (dottedFullName.Substring (idx + 1, last - idx - 1))
 					.Select (s => JavaTypeName.Parse (s.Trim ()))
 					.ToArray ();
-				dottedFullName = dottedFullName.Substring (0, idx);
+				nextIndex = last + 1;
 			}
-			
 			// at this state, there is no way to distinguish package name from this name specification.
-			ret.FullNameNonGeneric = dottedFullName;
-			
+			ret.DottedName = idx < 0 ? dottedFullName : dottedFullName.Substring (0, idx);
+
+			if (nextIndex < dottedFullName.Length) {
+				if (dottedFullName [nextIndex] != '.')
+					throw new ArgumentException (nameof (dottedFullName));
+				// the generic parent is parsed, but the rest is still there.
+				var parent = ret;
+				ret = Parse (dottedFullName.Substring (nextIndex + 1));
+				ret.GenericParent = parent;
+			}
+
 			return ret;
+		}
+
+		static int GetMatchingGenericCloser (string str, int start)
+		{
+			int count = 0;
+			for (int i = start; i < str.Length; i++) {
+				switch (str [i]) {
+				case '<':
+					count++;
+					break;
+				case '>':
+					if (count-- == 0)
+						return i;
+					break;
+				}
+			}
+			return -1;
 		}
 
 		static IEnumerable<string> ParseCommaSeparatedTypeNames (string args)
@@ -119,11 +130,22 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 				}
 			}
 		}
-		
-		public string FullNameNonGeneric { get; set; }
+
+		public JavaTypeName GenericParent { get; set; }
+		public string DottedName { get; set; }
 		public string BoundsType { get; set; } // " extends " / " super "
 		public IList<JavaTypeName> GenericConstraints { get; private set; }
 		public IList<JavaTypeName> GenericArguments { get; private set; }
 		public string ArrayPart { get; set; }
+
+		public string FullNameNonGeneric {
+			get {
+				if (GenericParent != null)
+					return GenericParent.FullNameNonGeneric + "." + DottedName;
+				else
+					return DottedName;
+			}
+		}
+
 	}
 }

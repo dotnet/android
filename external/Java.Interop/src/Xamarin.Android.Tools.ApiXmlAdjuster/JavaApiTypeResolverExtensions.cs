@@ -18,15 +18,15 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 			var tn = JavaTypeName.Parse (name);
 			return JavaTypeNameToReference (api, tn, contextTypeParameters);
 		}
-		
+
 		static JavaTypeReference JavaTypeNameToReference (this JavaApi api, JavaTypeName tn, params JavaTypeParameters [] contextTypeParameters)
 		{
-			var tp = contextTypeParameters.Where (tps => tps != null).SelectMany (tps => tps.TypeParameters).FirstOrDefault (_ => _.Name == tn.FullNameNonGeneric);
+			var tp = contextTypeParameters.Where (tps => tps != null).SelectMany (tps => tps.TypeParameters).FirstOrDefault (_ => _.Name == tn.DottedName);
 			if (tp != null)
 				return new JavaTypeReference (tp, tn.ArrayPart);
-			if (tn.FullNameNonGeneric == JavaTypeReference.GenericWildcard.SpecialName)
+			if (tn.DottedName == JavaTypeReference.GenericWildcard.SpecialName)
 				return new JavaTypeReference (tn.BoundsType, tn.GenericConstraints?.Select (gc => JavaTypeNameToReference (api, gc, contextTypeParameters)), tn.ArrayPart);
-			var primitive = JavaTypeReference.GetSpecialType (tn.FullNameNonGeneric);
+			var primitive = JavaTypeReference.GetSpecialType (tn.DottedName);
 			if (primitive != null)
 				return tn.ArrayPart == null && tn.GenericConstraints == null ? primitive : new JavaTypeReference (primitive, tn.ArrayPart, tn.BoundsType, tn.GenericConstraints?.Select (gc => JavaTypeNameToReference (api, gc, contextTypeParameters)));
 			var type = api.FindNonGenericType (tn.FullNameNonGeneric);
