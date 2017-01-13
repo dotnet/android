@@ -163,6 +163,19 @@ namespace Xamarin.Android.NetTests {
       }
     }
 
+    static IEnumerable<Exception> Exceptions (Exception e)
+    {
+        yield return e;
+        for (var i = e.InnerException; i != null; i = i.InnerException) {
+            yield return i;
+        }
+    }
+
+    static bool IsSecureChannelFailure (Exception e)
+    {
+        return Exceptions (e).Any (v => (v as WebException)?.Status == WebExceptionStatus.SecureChannelFailure);
+    }
+
     [Test]
     public void Sanity_Tls_1_2_Url_WithMonoClientHandlerFails ()
     {
@@ -182,7 +195,9 @@ namespace Xamarin.Android.NetTests {
             Assert.Fail ("SHOULD NOT BE REACHED: BTLS is present, TLS 1.2 should work.");
           }
           if (!supportTls1_2) {
-            Assert.IsTrue (e.InnerExceptions.Any (ie => ie is WebException), e.ToString ());
+            Assert.IsTrue (IsSecureChannelFailure (e),
+                "Nested exception and/or corresponding status code did not match expected results for TLS 1.2 incompatibility {0}",
+                 e);
           }
         }
       }
