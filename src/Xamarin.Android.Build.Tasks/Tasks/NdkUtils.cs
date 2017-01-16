@@ -105,7 +105,8 @@ namespace Xamarin.Android.Tasks
 
 		public static string GetNdkPlatformLibPath (string androidNdkPath, AndroidTargetArch arch, int level)
 		{
-			string path = Path.Combine (androidNdkPath, "platforms", "android-" + level, "arch-" + GetPlatformArch (arch), "usr", "lib");
+			string lib = arch == AndroidTargetArch.X86_64 ? "lib64" : "lib";
+			string path = Path.Combine (androidNdkPath, "platforms", "android-" + level, "arch-" + GetPlatformArch (arch), "usr", lib);
 			if (!Directory.Exists (path))
 				throw new InvalidOperationException (String.Format ("Platform library directory for target {0} and API Level {1} was not found. Expected path is \"{2}\"", arch, level, path));
 			return path;

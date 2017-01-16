@@ -157,11 +157,6 @@ namespace Xamarin.Android.Tasks
 
 		static bool ValidateAotConfiguration (TaskLoggingHelper log, AndroidTargetArch arch, bool enableLLVM)
 		{
-			if (arch == AndroidTargetArch.X86_64) {
-				log.LogCodedError ("XA3004", "x86_64 architecture is not currently supported on AOT mode.");
-				return false;
-			}			
-
 			return true;
 		}
 
