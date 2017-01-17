@@ -2873,8 +2873,9 @@ create_domain (JNIEnv *env, jobjectArray runtimeApks, jstring assembly, jobject 
 	if (is_root_domain)
 		domain = mono.mono_jit_init_version ("RootDomain", "mobile");
 	else {
+		MonoDomain* root_domain = mono.mono_get_root_domain ();
 		char *domain_name = monodroid_strdup_printf ("MonoAndroidDomain%d", GetAndroidSdkVersion (env, loader));
-		domain = mono.mono_domain_create_appdomain (domain_name, NULL);
+		domain = monodroid_create_appdomain (&mono, root_domain, domain_name, /*shadow_copy:*/ 1);
 		free (domain_name);
 	}
 

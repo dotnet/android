@@ -287,6 +287,41 @@ monodroid_runtime_invoke (struct DylibMono *mono, MonoDomain *domain, MonoMethod
 	}
 }
 
+static void
+monodroid_property_set (struct DylibMono *mono, MonoDomain *domain, MonoProperty *property, void *obj, void **params, MonoObject **exc)
+{
+	MonoDomain *current = mono->mono_domain_get ();
+	if (domain != current) {
+		mono->mono_domain_set (domain, FALSE);
+		mono->mono_property_set_value (property, obj, params, exc);
+		mono->mono_domain_set (current, FALSE);
+	} else {
+		mono->mono_property_set_value (property, obj, params, exc);
+	}
+}
+
+MonoDomain*
+monodroid_create_appdomain (struct DylibMono *mono, MonoDomain *parent_domain, const char *friendly_name, int shadow_copy)
+{
+	MonoClass *appdomain_setup_klass = monodroid_get_class_from_name (mono, parent_domain, "mscorlib", "System", "AppDomainSetup");
+	MonoClass *appdomain_klass = monodroid_get_class_from_name (mono, parent_domain, "mscorlib", "System", "AppDomain");
+	MonoMethod *create_domain = mono->mono_class_get_method_from_name (appdomain_klass, "CreateDomain", 3);
+	MonoProperty *shadow_copy_prop = mono->mono_class_get_property_from_name (appdomain_setup_klass, "ShadowCopyFiles");
+
+	MonoObject *setup = mono->mono_object_new (parent_domain, appdomain_setup_klass);
+	MonoString *mono_friendly_name = mono->mono_string_new (parent_domain, friendly_name);
+	MonoString *mono_shadow_copy = mono->mono_string_new (parent_domain, shadow_copy ? "true" : "false");
+
+	monodroid_property_set (mono, parent_domain, shadow_copy_prop, setup, &mono_shadow_copy, NULL);
+
+	void *args[3] = { mono_friendly_name, NULL, setup };
+	MonoObject *appdomain = monodroid_runtime_invoke (mono, parent_domain, create_domain, NULL, args, NULL);
+	if (appdomain == NULL)
+		return NULL;
+
+	return mono->mono_domain_from_appdomain (appdomain);
+}
+
 static int
 make_directory (const char *path, int mode)
 {
