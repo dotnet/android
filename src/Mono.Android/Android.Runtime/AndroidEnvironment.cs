@@ -241,15 +241,15 @@ namespace Android.Runtime {
 			try {
 				return Marshal.PtrToStringAnsi (id);
 			} finally {
-				free (id);
+				monodroid_free (id);
 			}
 		}
 
 		[DllImport ("__Internal")]
 		static extern IntPtr _monodroid_timezone_get_default_id ();
 
-		[DllImport ("c")]
-		static extern void free (IntPtr p);
+		[DllImport ("__Internal")]
+		static extern void monodroid_free (IntPtr ptr);
 
 		// This is invoked by
 		// mscorlib.dll!System.AndroidPlatform.GetDefaultSyncContext()
