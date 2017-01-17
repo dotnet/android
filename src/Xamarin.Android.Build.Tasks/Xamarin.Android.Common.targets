@@ -628,6 +628,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <PropertyGroup>
 	<_OnResolveMonoAndroidSdks>
 		_ResolveMonoAndroidSdks
+		;_ValidateAndroidPackageProperties
 		;$(_AfterResolveMonoAndroidSdks)
 	</_OnResolveMonoAndroidSdks>
 </PropertyGroup>
