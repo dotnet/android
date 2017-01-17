@@ -1509,12 +1509,12 @@ gc_prepare_for_java_collection (JNIEnv *env, int num_sccs, MonoGCBridgeSCC **scc
 			for (int j = 1; j < scc->num_objs; j++) {
 				MonoGCBridgeSCC *current = (MonoGCBridgeSCC*)scc->objs [j];
 
-				add_reference_mono_object (env, (MonoObject*)prev, (MonoObject*)current);
+				add_reference_mono_object (env, prev, current);
 				prev = current;
 			}
 
 			/* ref the first from the final */
-			add_reference_mono_object (env, (MonoObject*)prev, (MonoObject*)first);
+			add_reference_mono_object (env, prev, first);
 
 		/* num_objs == 0 case: The SCC contains *no* objects (or rather contains only C# objects).
 		 * Solution: Create a temporary Java object to stand in for the SCC.

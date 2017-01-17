@@ -56,7 +56,9 @@ typedef void MonoException;
 typedef void MonoImage;
 typedef void MonoJitInfo;
 typedef void MonoMethod;
+typedef void MonoObject;
 typedef void MonoProfiler;
+typedef void MonoProperty;
 typedef void MonoString;
 typedef void MonoType;
 typedef void (*MonoDomainFunc) (MonoDomain *domain, void* user_data);
@@ -108,36 +110,6 @@ typedef struct {
 	const unsigned char *data;
 	const unsigned int size;
 } MonoBundledAssembly;
-
-// Keep this in sync with MonoObject in object.h
-typedef struct {
-	// MonoObject 2 pointers
-	void *_pad_mono_object[2];
-} MonoObject;
-
-// Keep this in sync with MonoAppDomainSetup in domains-internal.h
-typedef struct {
-	MonoObject object;
-	// MonoAppDomainSetup unused entries
-	void *_pad_mono_appdomainsetup[9];
-
-	MonoString *shadow_copy_files;
-} MonoAppDomainSetup;
-
-// Keep this in sync with MonoRealProxy in object-internals.h
-typedef struct {
-	MonoObject object;
-	// MonoRealProxy ununused entries
-	void *_pad_mono_realproxy[3];
-
-	int32_t target_domain_id;
-} MonoRealProxy;
-
-// Keep this in sync with MonoTransparentProxy in object-internals.h
-typedef struct {
-	MonoObject pad_mono_object;
-	MonoRealProxy *rp;
-} MonoTransparentProxy;
 
 typedef uint32_t mono_bool;
 typedef uint8_t  mono_byte;
@@ -226,6 +198,7 @@ typedef mono_bool       (*monodroid_mono_class_is_subclass_of_fptr) (MonoClass *
 typedef void*           (*monodroid_mono_class_get_field_from_name_fptr) (MonoClass *arg0, char *arg1);
 typedef MonoClassField* (*monodroid_mono_class_get_fields_fptr) (MonoClass *arg0, void **arg1);
 typedef void*           (*monodroid_mono_class_get_method_from_name_fptr) (MonoClass *arg0, char *arg1, int arg2);
+typedef MonoProperty*   (*monodroid_mono_class_get_property_from_name_fptr) (MonoClass *klass, const char *name);
 typedef MonoVTable*     (*monodroid_mono_class_vtable_fptr) (MonoDomain *domain, MonoClass *class);
 typedef void            (*monodroid_mono_config_for_assembly_fptr) (MonoImage *assembly);
 typedef void            (*monodroid_mono_counters_dump_fptr) (int section_mask, FILE* outfile);
@@ -236,6 +209,7 @@ typedef void*           (*monodroid_mono_dl_fallback_register_fptr) (MonoDlFallb
 typedef void*           (*monodroid_mono_domain_assembly_open_fptr) (MonoDomain *arg0, const char *arg1);
 typedef MonoDomain*     (*monodroid_mono_domain_create_appdomain_fptr) (char *friendly_name, char *config_file);
 typedef void            (*monodroid_mono_domain_foreach_fptr) (MonoDomainFunc func, void *user_data);
+typedef MonoDomain*     (*monodroid_mono_domain_from_appdomain_fptr) (MonoObject *appdomain);
 typedef MonoDomain*     (*monodroid_mono_domain_get_fptr) ();
 typedef MonoDomain*     (*monodroid_mono_domain_get_by_id_fptr) (int ID);
 typedef int             (*monodroid_mono_domain_get_id_fptr) (MonoDomain *domain);
@@ -263,6 +237,7 @@ typedef void            (*monodroid_mono_profiler_install_fptr) (void *profiler,
 typedef void            (*monodroid_mono_profiler_install_jit_end_fptr) (MonoProfileJitResult end);
 typedef void            (*monodroid_mono_profiler_install_thread_fptr) (void *start_ftn, void *end_ftn);
 typedef void            (*monodroid_mono_profiler_set_events_fptr) (MonoProfileFlags events);
+typedef void            (*monodroid_mono_property_set_value_fptr) (MonoProperty *prop, void *obj, void **params, MonoObject **exc);
 typedef void            (*monodroid_mono_register_bundled_assemblies_fptr) (const MonoBundledAssembly **assemblies);
 typedef void            (*monodroid_mono_register_config_for_assembly_fptr) (const char* assembly_name, const char* config_xml);
 typedef void            (*monodroid_mono_register_symfile_for_assembly_fptr) (const char* assembly_name, const mono_byte *raw_contents, int size);
@@ -360,6 +335,10 @@ struct DylibMono {
 
 	monodroid_mono_object_new_fptr                          mono_object_new;
 	monodroid_mono_string_new_fptr                          mono_string_new;
+
+	monodroid_mono_property_set_value_fptr                  mono_property_set_value;
+	monodroid_mono_class_get_property_from_name_fptr        mono_class_get_property_from_name;
+	monodroid_mono_domain_from_appdomain_fptr               mono_domain_from_appdomain;
 };
 
 MONO_API  struct  DylibMono*  monodroid_dylib_mono_new (const char *libmono_path);
