@@ -1506,12 +1506,12 @@ gc_prepare_for_java_collection (JNIEnv *env, int num_sccs, MonoGCBridgeSCC **scc
 		 * Solution: Make all objects within the SCC directly or indirectly reference each other
 		 */
 		if (scc->num_objs > 1) {
-			MonoGCBridgeSCC *first = (MonoGCBridgeSCC*)scc->objs [0];
+			MonoGCBridgeSCC *first = scc->objs [0];
 			MonoGCBridgeSCC *prev = first;
 
 			/* start at the second item, ref j from j-1 */
 			for (int j = 1; j < scc->num_objs; j++) {
-				MonoGCBridgeSCC *current = (MonoGCBridgeSCC*)scc->objs [j];
+				MonoGCBridgeSCC *current = scc->objs [j];
 
 				add_reference_mono_object (env, prev, current);
 				prev = current;
