@@ -37,7 +37,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			if (enableLLVM && (ndkVersion.Version < 10 || (ndkVersion.Version == 10 && ndkVersion.Revision[0] < 'd'))) {
-				log.LogMessage (MessageImportance.High,
+				log.LogCodedError ("XA3005",
 						"The detected Android NDK version is incompatible with the targeted LLVM configuration, " +
 						"please upgrade to NDK r10d or newer.");
 			}
