@@ -57,6 +57,7 @@
     <Compile Include="Linker\MonoDroid.Tuner\Linker.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\LinkerOptions.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\MonoDroidMarkStep.cs" />
+    <Compile Include="Linker\MonoDroid.Tuner\MonoDroidSweepStep.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\PreserveHttpAndroidClientHandler.cs" />
     <Compile Include="Tasks\Aapt.cs" />
     <Compile Include="Tasks\AndroidZipAlign.cs" />

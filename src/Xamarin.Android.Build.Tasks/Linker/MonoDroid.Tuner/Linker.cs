@@ -105,7 +105,7 @@ namespace MonoDroid.Tuner
 
 			pipeline.AppendStep (new FixAbstractMethodsStep ());
 			pipeline.AppendStep (new MonoDroidMarkStep ());
-			pipeline.AppendStep (new SweepStep ());
+			pipeline.AppendStep (new MonoDroidSweepStep ());
 			pipeline.AppendStep (new CleanStep ());
 			// monodroid tuner steps
 			if (!string.IsNullOrWhiteSpace (options.ProguardConfiguration))
