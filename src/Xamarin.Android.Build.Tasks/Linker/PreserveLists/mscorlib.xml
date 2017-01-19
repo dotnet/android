@@ -11,9 +11,12 @@
 			<method name="DoUnhandledException" />
 			<method name="InternalSetContext" />
 			<method name="GetMarshalledDomainObjRef" />
+			<method name="CreateDomain" />
 		</type>
 
-		<type fullname="System.AppDomainSetup" preserve="fields" />
+		<type fullname="System.AppDomainSetup" preserve="fields">
+			<method name="set_ShadowCopyFiles" />
+		</type>
 		<type fullname="System.AppDomainUnloadedException" />
 		<type fullname="System.ApplicationException" />
 		<type fullname="System.ArgIterator" />
