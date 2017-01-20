@@ -51,7 +51,8 @@ namespace Xamarin.Android.Tasks
 			EnvironmentVariables =
 				string.IsNullOrEmpty (MSBuildRuntimeType) || MSBuildRuntimeType == "Mono" ?
 				new string [] { "PROGUARD_HOME=" + ProguardHome } :
-				new string [] { "JAVA_TOOL_OPTIONS=-Dfile.encoding=UTF8", "PROGUARD_HOME=" + ProguardHome };
+				//TODO ReAdd the PROGUARD_HOME env variable once we are shipping our own proguard
+				new string [] { "JAVA_TOOL_OPTIONS=-Dfile.encoding=UTF8" };
 
 			return base.Execute ();
 		}
