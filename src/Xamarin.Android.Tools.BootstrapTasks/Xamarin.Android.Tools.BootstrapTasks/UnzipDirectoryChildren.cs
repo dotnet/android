@@ -33,7 +33,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks {
 
 		public override bool Execute ()
 		{
-			Log.LogMessage (MessageImportance.Low, "Unzip:");
+			Log.LogMessage (MessageImportance.Low, $"{nameof (UnzipDirectoryChildren)}:");
 			Log.LogMessage (MessageImportance.Low, "  DestinationFolder: {0}", DestinationFolder.ItemSpec);
 			Log.LogMessage (MessageImportance.Low, "  EntryNameEncoding: {0}", EntryNameEncoding);
 			Log.LogMessage (MessageImportance.Low, "  SourceFiles:");
