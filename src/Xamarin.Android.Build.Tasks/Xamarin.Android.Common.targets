@@ -1145,6 +1145,7 @@ because xbuild doesn't support framework reference assemblies.
   
 <Target Name="_CreateNativeLibraryArchive"
         Condition="@(EmbeddedNativeLibrary) != ''" 
+        DependsOnTargets="ResolveReferences"
         Inputs="@(EmbeddedNativeLibrary)"
         Outputs="$(IntermediateOutputPath)__AndroidNativeLibraries__.zip">
     <CreateNativeLibraryArchive
