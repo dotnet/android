@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!-- Note: ..\..\Configuration.props *must* be included FIRST -->
+  <PropertyGroup>
+    <TargetFrameworkVersion>$(AndroidFrameworkVersion)</TargetFrameworkVersion>
+    <TargetFrameworkRootPath>$(MSBuildThisFileDirectory)..\..\bin\$(Configuration)\lib\xbuild-frameworks</TargetFrameworkRootPath>
+    <FrameworkPathOverride
+        Condition=" '$(FrameworkPathOverride)' == '' And '$(_XAFixMSBuildFrameworkPathOverride)' == 'True' "
+    >$(TargetFrameworkRootPath)\MonoAndroid\v1.0</FrameworkPathOverride>
+  </PropertyGroup>
+</Project>

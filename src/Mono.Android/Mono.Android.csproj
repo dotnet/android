@@ -7,11 +7,15 @@
     <OutputType>Library</OutputType>
     <RootNamespace>Android</RootNamespace>
     <AssemblyName>Mono.Android</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
+  <PropertyGroup>
+    <TargetFrameworkIdentifier>MonoAndroid</TargetFrameworkIdentifier>
+    <TargetFrameworkVersion>$(AndroidFrameworkVersion)</TargetFrameworkVersion>
+    <TargetFrameworkRootPath>..\..\bin\$(Configuration)\lib\xbuild-frameworks</TargetFrameworkRootPath>
+  </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
@@ -63,6 +67,10 @@
     </Reference>
     <Reference Include="Java.Interop">
       <HintPath>$(OutputPath)..\v1.0\Java.Interop.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Runtime">
+      <HintPath>$(OutputPath)..\v1.0\Facades\System.Runtime.dll</HintPath>
       <Private>False</Private>
     </Reference>
   </ItemGroup>
@@ -302,6 +310,7 @@
   <Import Project="..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems" Label="Shared" Condition="Exists('..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems')" />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
+    <ImplicitlyExpandDesignTimeFacades>False</ImplicitlyExpandDesignTimeFacades>
     <IntermediateOutputPath>$(IntermediateOutputPath)android-$(AndroidApiLevel)\</IntermediateOutputPath>
   </PropertyGroup>
   <Import Project="Mono.Android.targets" />
