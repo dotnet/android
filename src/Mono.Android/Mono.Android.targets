@@ -197,7 +197,7 @@
     />
   </Target>
   <Target Name="_GenerateFrameworkList"
-      AfterTargets="CoreBuild"
+      BeforeTargets="ResolveReferences"
       Inputs="$(OutputPath)$(AssemblyName).dll"
       Outputs="$(OutputPath)RedistList\FrameworkList.xml">
    <MakeDir Directories="$(OutputPath)RedistList" />

@@ -26,6 +26,7 @@
   <PropertyGroup>
     <TargetFrameworkVersion>$(AndroidFrameworkVersion)</TargetFrameworkVersion>
     <AssemblyOriginatorKeyFile>$(MonoSourceFullPath)\mcs\class\mono.pub</AssemblyOriginatorKeyFile>
+    <TargetFrameworkRootPath>..\..\bin\$(Configuration)\lib\xbuild-frameworks</TargetFrameworkRootPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
