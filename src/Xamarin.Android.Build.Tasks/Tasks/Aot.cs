@@ -148,6 +148,14 @@ namespace Xamarin.Android.Tasks
 			return libPath;
 		}
 
+		static string GetShortPath (string path)
+		{
+			if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+				return QuoteFileName (path);
+			var shortPath = KernelEx.GetShortPathName (Path.GetDirectoryName (path));
+			return Path.Combine (shortPath, Path.GetFileName (path));
+		}
+
 		static string QuoteFileName(string fileName)
 		{
 			var builder = new CommandLineBuilder();
@@ -362,9 +370,9 @@ namespace Xamarin.Android.Tasks
 						Diagnostic.Error (5101, ex.Message);
 					}
 					var libs = new List<string>() {
-						QuoteFileName (Path.Combine(GetNdkToolchainLibraryDir(toolchainPath), "libgcc.a")),
-						QuoteFileName (Path.Combine(androidLibPath, "libc.so")),
-						QuoteFileName (Path.Combine(androidLibPath, "libm.so"))
+						GetShortPath (Path.Combine(GetNdkToolchainLibraryDir(toolchainPath), "libgcc.a")),
+						GetShortPath (Path.Combine(androidLibPath, "libc.so")),
+						GetShortPath (Path.Combine(androidLibPath, "libm.so"))
 					};
 					ldFlags = string.Join(";", libs);
 				}
@@ -385,17 +393,17 @@ namespace Xamarin.Android.Tasks
 					if (!string.IsNullOrEmpty (AotAdditionalArguments))
 						aotOptions.Add (AotAdditionalArguments);
 					if (sequencePointsMode == SequencePointsMode.Offline)
-						aotOptions.Add ("msym-dir=" + QuoteFileName (outdir));
+						aotOptions.Add ("msym-dir=" + GetShortPath (outdir));
 					if (AotMode != AotMode.Normal)
 						aotOptions.Add (AotMode.ToString ().ToLowerInvariant ());
 
-					aotOptions.Add ("outfile="     + QuoteFileName (outputFile));
+					aotOptions.Add ("outfile="     + GetShortPath (outputFile));
 					aotOptions.Add ("asmwriter");
 					aotOptions.Add ("mtriple="     + mtriple);
-					aotOptions.Add ("tool-prefix=" + QuoteFileName (toolPrefix));
+					aotOptions.Add ("tool-prefix=" + GetShortPath (toolPrefix));
 					aotOptions.Add ("ld-flags="    + ldFlags);
-					aotOptions.Add ("llvm-path="   + QuoteFileName (SdkBinDirectory));
-					aotOptions.Add ("temp-path="   + QuoteFileName (tempDir));
+					aotOptions.Add ("llvm-path="   + GetShortPath (SdkBinDirectory));
+					aotOptions.Add ("temp-path="   + GetShortPath (tempDir));
 
 					string aotOptionsStr = (EnableLLVM ? "--llvm " : "") + "--aot=" + string.Join (",", aotOptions);
 
@@ -419,7 +427,7 @@ namespace Xamarin.Android.Tasks
 					var assembliesPath = Path.GetFullPath (Path.GetDirectoryName (resolvedPath));
 					var assemblyPath = QuoteFileName (Path.GetFullPath (resolvedPath));
 
-					yield return new Config (assembliesPath, aotCompiler, aotOptionsStr, assemblyPath, outputFile);
+					yield return new Config (assembliesPath, QuoteFileName (aotCompiler), aotOptionsStr, assemblyPath, outputFile);
 				}
 			}
 		}
