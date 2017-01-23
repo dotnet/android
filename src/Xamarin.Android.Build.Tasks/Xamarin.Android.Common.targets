@@ -831,7 +831,7 @@ because xbuild doesn't support framework reference assemblies.
 	</CreateProperty>
 </Target>
 
-<Target Name="AndroidPrepareForBuild" DependsOnTargets="_ResolveMonoAndroidFramework" />
+<Target Name="AndroidPrepareForBuild" DependsOnTargets="_ResolveMonoAndroidSdks" />
 
 <!-- uploadflags.txt
 	- This file says which devices this package has been deployed to.
