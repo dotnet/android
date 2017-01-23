@@ -166,5 +166,33 @@ namespace MonoDroid.Tuner
 				break;
 			}
 		}
+
+		public override void Process (Mono.Linker.LinkContext context)
+		{
+			base.Process (context);
+
+			// deal with [TypeForwardedTo] pseudo-attributes
+			foreach (AssemblyDefinition assembly in _context.GetAssemblies ()) {
+				if (!assembly.MainModule.HasExportedTypes)
+					continue;
+
+				foreach (var exported in assembly.MainModule.ExportedTypes) {
+					bool isForwarder = exported.IsForwarder;
+					var declaringType = exported.DeclaringType;
+					while (!isForwarder && (declaringType != null)) {
+						isForwarder = declaringType.IsForwarder;
+						declaringType = declaringType.DeclaringType;
+					}
+
+					if (!isForwarder)
+						continue;
+					var type = exported.Resolve ();
+					if (!Annotations.IsMarked (type))
+						continue;
+					Annotations.Mark (exported);
+					Annotations.Mark (assembly.MainModule);
+				}
+			}
+		}
 	}
 }
