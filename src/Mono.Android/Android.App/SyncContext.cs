@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 
 using Android.OS;
+using Android.Runtime;
 
 namespace Android.App {
 
@@ -12,9 +13,25 @@ namespace Android.App {
 			return new SyncContext ();
 		}
 
+		static bool EnsureLooper (Looper looper, SendOrPostCallback d)
+		{
+			if (looper == null) {
+				var message = $"No Android message loop is available. Skipping invocation of `{d.Method.DeclaringType.FullName}.{d.Method.Name}`!";
+				if (JNIEnv.IsRunningOnDesktop)
+					message += " Using `await` when running on the Android Designer is not currently supported. Please use the `View.IsInEditMode` property.";
+				Logger.Log (LogLevel.Error, "monodroid-synccontext", message);
+				return false;
+			}
+
+			return true;
+		}
+
 		public override void Post (SendOrPostCallback d, object state)
 		{
-			using (Handler h = new Handler(Application.Context.MainLooper)) {
+			var looper = Application.Context?.MainLooper;
+			if (!EnsureLooper (looper, d))
+				return;
+			using (var h = new Handler (looper)) {
 				h.Post (() => d (state));
 			}
 		}
@@ -22,12 +39,14 @@ namespace Android.App {
 		public override void Send (SendOrPostCallback d, object state)
 		{
 			var looper = Looper.MainLooper;
+			if (!EnsureLooper (looper, d))
+				return;
 			if (Looper.MyLooper() == looper) {
 				d (state);
 				return;
 			}
 			var m = new ManualResetEvent (false);
-			using (Handler h = new Handler (looper)) {
+			using (var h = new Handler (looper)) {
 				h.Post (() => {
 					d (state);
 					m.Set ();
