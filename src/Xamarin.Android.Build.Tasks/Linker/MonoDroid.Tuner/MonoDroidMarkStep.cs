@@ -11,6 +11,7 @@ namespace MonoDroid.Tuner
 	class MonoDroidMarkStep : MarkStep
 	{
 		const string RegisterAttribute = "Android.Runtime.RegisterAttribute";
+		const string ICustomMarshalerName = "System.Runtime.InteropServices.ICustomMarshaler";
 
 		// If this is one of our infrastructure methods that has [Register], like:
 		// [Register ("hasWindowFocus", "()Z", "GetHasWindowFocusHandler")],
@@ -141,6 +142,15 @@ namespace MonoDroid.Tuner
 
 			if (type.Module.Assembly.Name.Name == "System.Core")
 				ProcessSystemCore (type);
+
+			if (type.HasMethods && type.HasInterfaces && type.Implements (ICustomMarshalerName)) {
+				foreach (MethodDefinition method in type.Methods) {
+					if (method.Name == "GetInstance" && method.IsStatic && method.HasParameters && method.Parameters.Count == 1 && method.ReturnType.FullName == ICustomMarshalerName && method.Parameters.First ().ParameterType.FullName == "System.String") {
+						MarkMethod (method);
+						break;
+					}
+				}
+			}
 
 			return type;
 		}
