@@ -256,8 +256,6 @@ namespace Android.Runtime {
 		// DO NOT REMOVE
 		static SynchronizationContext GetDefaultSyncContext ()
 		{
-			if (JNIEnv.IsRunningOnDesktop && !string.IsNullOrEmpty (Environment.GetEnvironmentVariable ("__XA_DISABLE_SYNC_CONTEXT__")))
-				return null;
 			var looper = Android.OS.Looper.MainLooper;
 			if (Android.OS.Looper.MyLooper() == looper)
 				return Android.App.Application.SynchronizationContext;
