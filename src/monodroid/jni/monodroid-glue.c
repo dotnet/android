@@ -2875,7 +2875,7 @@ create_domain (JNIEnv *env, jobjectArray runtimeApks, jstring assembly, jobject 
 	else {
 		MonoDomain* root_domain = mono.mono_get_root_domain ();
 		char *domain_name = monodroid_strdup_printf ("MonoAndroidDomain%d", GetAndroidSdkVersion (env, loader));
-		domain = monodroid_create_appdomain (&mono, root_domain, domain_name, /*shadow_copy:*/ 1);
+		domain = monodroid_create_appdomain (&mono, root_domain, domain_name, /*shadow_copy:*/ 0);
 		free (domain_name);
 	}
 
