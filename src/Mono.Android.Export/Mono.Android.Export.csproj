@@ -7,16 +7,11 @@
     <OutputType>Library</OutputType>
     <RootNamespace>Mono.Android.Export</RootNamespace>
     <AssemblyName>Mono.Android.Export</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
-  <PropertyGroup>
-    <ImplicitlyExpandDesignTimeFacades>True</ImplicitlyExpandDesignTimeFacades>
-    <TargetFrameworkIdentifier>MonoAndroid</TargetFrameworkIdentifier>
-    <TargetFrameworkVersion>$(AndroidFrameworkVersion)</TargetFrameworkVersion>
-    <TargetFrameworkRootPath>..\..\bin\$(Configuration)\lib\xbuild-frameworks</TargetFrameworkRootPath>
-  </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
