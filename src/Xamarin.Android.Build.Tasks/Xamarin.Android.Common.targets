@@ -365,7 +365,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 </Target>
 
 <Target Name="_BuildAdditionalResourcesCache"
-	Inputs="@(ReferencePath);@(ReferenceDependencyPaths)"
+	Inputs="@(ReferencePath);@(ReferenceDependencyPaths);$(MSBuildProjectFullPath)"
 	Outputs="$(_AndroidResourcePathsCache)"
 	DependsOnTargets="$(_BeforeBuildAdditionalResourcesCache)"
 	>
