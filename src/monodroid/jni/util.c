@@ -303,8 +303,8 @@ monodroid_property_set (struct DylibMono *mono, MonoDomain *domain, MonoProperty
 MonoDomain*
 monodroid_create_appdomain (struct DylibMono *mono, MonoDomain *parent_domain, const char *friendly_name, int shadow_copy)
 {
-	MonoClass *appdomain_setup_klass = monodroid_get_class_from_name (mono, parent_domain, "mscorlib", "System", "AppDomainSetup");
-	MonoClass *appdomain_klass = monodroid_get_class_from_name (mono, parent_domain, "mscorlib", "System", "AppDomain");
+	MonoClass *appdomain_setup_klass = monodroid_get_class_from_name (mono, parent_domain, "mscorlib", "System", "AppDomainSetup", NULL);
+	MonoClass *appdomain_klass = monodroid_get_class_from_name (mono, parent_domain, "mscorlib", "System", "AppDomain", NULL);
 	MonoMethod *create_domain = mono->mono_class_get_method_from_name (appdomain_klass, "CreateDomain", 3);
 	MonoProperty *shadow_copy_prop = mono->mono_class_get_property_from_name (appdomain_setup_klass, "ShadowCopyFiles");
 
@@ -368,7 +368,7 @@ create_directory (const char *pathname, int mode)
 }
 
 MonoClass*
-monodroid_get_class_from_name (struct DylibMono *mono, MonoDomain *domain, const char* assembly, const char *namespace, const char *type)
+monodroid_get_class_from_name (struct DylibMono *mono, MonoDomain *domain, const char* assembly, const char *namespace, const char *type, MonoImage **result_image)
 {
 	MonoAssembly *assm = NULL;
 	MonoImage *image = NULL;
@@ -383,6 +383,8 @@ monodroid_get_class_from_name (struct DylibMono *mono, MonoDomain *domain, const
 	if (assm != NULL) {
 		image = mono->mono_assembly_get_image (assm);
 		result = mono->mono_class_from_name (image, namespace, type);
+		if (result_image != NULL)
+			*result_image = image;
 	}
 
 	if (domain != current)

@@ -756,6 +756,18 @@ typedef struct MonoJavaGCBridgeInfo {
 
 static MonoJavaGCBridgeInfo mono_java_gc_bridge_info [NUM_GC_BRIDGE_TYPES];
 
+struct MonodroidBridgeProcessingInfo {
+	MonoDomain *domain;
+	MonoClassField *bridge_processing_field;
+	MonoVTable *jnienv_vtable;
+	MonoJavaGCBridgeInfo gc_bridge_info[NUM_GC_BRIDGE_TYPES];
+
+	struct MonodroidBridgeProcessingInfo* next;
+};
+
+typedef struct MonodroidBridgeProcessingInfo MonodroidBridgeProcessingInfo;
+MonodroidBridgeProcessingInfo *domains_list;
+
 static jclass weakrefClass;
 static jmethodID weakrefCtor;
 static jmethodID weakrefGet;
@@ -774,26 +786,34 @@ static int gc_weak_gref_count;
 
 static int is_running_on_desktop = 0;
 
-// Do this instead of using memset so that individual pointers are set atomically
-static void clear_mono_java_gc_bridge_info() {
-	for (int c = 0; c < NUM_GC_BRIDGE_TYPES; c++) {
-		MonoJavaGCBridgeInfo *info = &mono_java_gc_bridge_info [c];
-		info->klass = NULL;
-		info->handle = NULL;
-		info->handle_type = NULL;
-		info->refs_added = NULL;
-		info->weak_handle = NULL;
+static MonoJavaGCBridgeInfo*
+get_gc_bridge_info_for_domain (MonoDomain *domain)
+{
+	MonodroidBridgeProcessingInfo* list = domains_list;
+	for ( ; list != NULL; list = list->next) {
+		if (domain == list->domain)
+			return list->gc_bridge_info;
 	}
+	return NULL;
 }
 
 static int
-get_gc_bridge_index (MonoClass *klass)
+get_gc_bridge_index (MonoClass *klass, MonoJavaGCBridgeInfo** info)
 {
 	int i;
 	int f = 0;
+	MonoJavaGCBridgeInfo *gc_bridge_info = mono_java_gc_bridge_info;
+	if (is_running_on_desktop) {
+		MonoDomain *domain = mono.mono_domain_get ();
+		gc_bridge_info = get_gc_bridge_info_for_domain (domain);
+		if (gc_bridge_info == NULL)
+			return -1;
+	}
+	if (info != NULL)
+		*info = gc_bridge_info;
 
 	for (i = 0; i < NUM_GC_BRIDGE_TYPES; ++i) {
-		MonoClass *k = mono_java_gc_bridge_info [i].klass;
+		MonoClass *k = gc_bridge_info [i].klass;
 		if (k == NULL) {
 			f++;
 			continue;
@@ -815,10 +835,11 @@ get_gc_bridge_info_for_class (MonoClass *klass)
 	if (klass == NULL)
 		return NULL;
 
-	i   = get_gc_bridge_index (klass);
+	MonoJavaGCBridgeInfo* gc_bridge_info;
+	i   = get_gc_bridge_index (klass, &gc_bridge_info);
 	if (i < 0)
 		return NULL;
-	return &mono_java_gc_bridge_info [i];
+	return &gc_bridge_info [i];
 }
 
 static MonoJavaGCBridgeInfo *
@@ -1276,7 +1297,7 @@ gc_bridge_class_kind (MonoClass *class)
 	if (gc_disabled)
 		return GC_BRIDGE_TRANSPARENT_CLASS;
 
-	i = get_gc_bridge_index (class);
+	i = get_gc_bridge_index (class, NULL);
 	if (i == -NUM_GC_BRIDGE_TYPES) {
 		log_info (LOG_GC, "asked if a class %s.%s is a bridge before we inited java.lang.Object", 
 			mono.mono_class_get_namespace (class),
@@ -1650,23 +1671,22 @@ java_gc (JNIEnv *env)
 	(*env)->CallVoidMethod (env, Runtime_instance, Runtime_gc);
 }
 
+static void
+lookup_bridge_info (MonoDomain *domain, MonoImage *image, const MonoJavaGCBridgeType *type, MonoJavaGCBridgeInfo *info)
+{
+	info->klass             = monodroid_get_class_from_image (&mono, domain, image, type->namespace, type->typename);
+	info->handle            = mono.mono_class_get_field_from_name (info->klass, "handle");
+	info->handle_type       = mono.mono_class_get_field_from_name (info->klass, "handle_type");
+	info->refs_added        = mono.mono_class_get_field_from_name (info->klass, "refs_added");
+	info->weak_handle       = mono.mono_class_get_field_from_name (info->klass, "weak_handle");
+}
+
 /* The context (mapping to a Mono AppDomain) that is currently selected as the
  * active context from the point of view of Java. We cannot rely on the value
  * of `mono_domain_get` for this as it's stored per-thread and we want to be
  * able to switch our different contexts from different threads.
  */
 static int current_context_id = -1;
-
-struct MonodroidBridgeProcessingInfo {
-	MonoDomain *domain;
-	MonoClassField *bridge_processing_field;
-	MonoVTable *jnienv_vtable;
-
-	struct MonodroidBridgeProcessingInfo* next;
-};
-
-typedef struct MonodroidBridgeProcessingInfo MonodroidBridgeProcessingInfo;
-MonodroidBridgeProcessingInfo *domains_list;
 
 static void
 add_monodroid_domain (MonoDomain *domain)
@@ -1677,11 +1697,14 @@ add_monodroid_domain (MonoDomain *domain)
 	 * use GC API to allocate memory and thus can't be called from within the GC callback as it causes a deadlock
 	 * (the routine allocating the memory waits for the GC round to complete first)
 	 */
-	MonoClass *jnienv = monodroid_get_class_from_name (&mono, domain, "Mono.Android", "Android.Runtime", "JNIEnv");;
+	MonoImage *image = NULL;
+	MonoClass *jnienv = monodroid_get_class_from_name (&mono, domain, "Mono.Android", "Android.Runtime", "JNIEnv", &image);
 	node->domain = domain;
 	node->bridge_processing_field = mono.mono_class_get_field_from_name (jnienv, "BridgeProcessing");
 	node->jnienv_vtable = mono.mono_class_vtable (domain, jnienv);
 	node->next = domains_list;
+	for (int i = 0; i < NUM_GC_BRIDGE_TYPES; ++i)
+		lookup_bridge_info (domain, image, &mono_java_gc_bridge_types [i], &node->gc_bridge_info [i]);
 
 	domains_list = node;
 }
@@ -3036,16 +3059,6 @@ _monodroid_get_display_dpi (float *x_dpi, float *y_dpi)
 }
 
 static void
-lookup_bridge_info (MonoDomain *domain, MonoImage *image, const MonoJavaGCBridgeType *type, MonoJavaGCBridgeInfo *info)
-{
-	info->klass             = monodroid_get_class_from_image (&mono, domain, image, type->namespace, type->typename);
-	info->handle            = mono.mono_class_get_field_from_name (info->klass, "handle");
-	info->handle_type       = mono.mono_class_get_field_from_name (info->klass, "handle_type");
-	info->refs_added        = mono.mono_class_get_field_from_name (info->klass, "refs_added");
-	info->weak_handle       = mono.mono_class_get_field_from_name (info->klass, "weak_handle");
-}
-
-static void
 init_android_runtime (MonoDomain *domain, JNIEnv *env, jobject loader)
 {
 	MonoAssembly *assm;
@@ -3085,8 +3098,10 @@ init_android_runtime (MonoDomain *domain, JNIEnv *env, jobject loader)
 	assm  = monodroid_load_assembly (&mono, domain, "Mono.Android");
 	image = mono.mono_assembly_get_image  (assm);
 
-	for (i = 0; i < NUM_GC_BRIDGE_TYPES; ++i) {
-		lookup_bridge_info (domain, image, &mono_java_gc_bridge_types [i], &mono_java_gc_bridge_info [i]);
+	if (!is_running_on_desktop) {
+		for (i = 0; i < NUM_GC_BRIDGE_TYPES; ++i) {
+			lookup_bridge_info (domain, image, &mono_java_gc_bridge_types [i], &mono_java_gc_bridge_info [i]);
+		}
 	}
 
 	runtime                             = monodroid_get_class_from_image (&mono, domain, image, "Android.Runtime", "JNIEnv");
@@ -4154,18 +4169,6 @@ JNICALL Java_mono_android_Runtime_destroyContexts (JNIEnv *env, jclass klass, ji
 		shutdown_android_runtime (domain);
 		remove_monodroid_domain (domain);
 	}
-
-	/* If domains_list is now empty, we are about to unload Monodroid.dll.
-	 * Clear the global bridge info structure since it's pointing into soon-invalid memory.
-	 * FIXME: It is possible for a thread to get into `gc_bridge_class_kind` after this clear
-	 *        occurs, but before the stop-the-world during mono_domain_unload. If this happens,
-	 *        it can falsely mark a class as transparent. This is considered acceptable because
-	 *        this case is *very* rare and the worst case scenario is a resource leak.
-	 *        The real solution would be to add a new callback, called while the world is stopped
-	 *        during `mono_gc_clear_domain`, and clear the bridge info during that.
-	 */
-	if (!domains_list)
-		clear_mono_java_gc_bridge_info ();
 
 	for (i = 0; i < count; i++) {
 		int domain_id = contextIDs[i];
