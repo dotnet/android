@@ -81,6 +81,8 @@ namespace Xamarin.Android.Tasks
 
 		public bool EnableLLVM { get; set; }
 
+		public bool EnableSGenConcurrent { get; set; }
+
 		public string StubApplicationDataFile { get; set; }
 		public string AndroidGdbDebugServer { get; set; }
 		public string AndroidEmbedProfilers { get; set; }
@@ -336,6 +338,7 @@ namespace Xamarin.Android.Tasks
 			bool havebuildId = false;
 			bool haveHttpMessageHandler = false;
 			bool haveTlsProvider = false;
+			bool haveMonoGCParams = false;
 
 			foreach (ITaskItem env in Environments ?? new TaskItem[0]) {
 				environment.WriteLine ("## Source File: {0}", env.ItemSpec);
@@ -343,6 +346,8 @@ namespace Xamarin.Android.Tasks
 					var lineToWrite = line;
 					if (lineToWrite.StartsWith ("MONO_LOG_LEVEL=", StringComparison.Ordinal))
 						haveLogLevel = true;
+					if (lineToWrite.StartsWith ("MONO_GC_PARAMS=", StringComparison.Ordinal))
+						haveMonoGCParams = true;
 					if (lineToWrite.StartsWith ("XAMARIN_BUILD_ID=", StringComparison.Ordinal))
 						havebuildId = true;
 					if (lineToWrite.StartsWith ("MONO_DEBUG=", StringComparison.Ordinal)) {
@@ -373,7 +378,13 @@ namespace Xamarin.Android.Tasks
 				environment.WriteLine (HttpClientHandlerType == null ? defaultHttpMessageHandler : $"XA_HTTP_CLIENT_HANDLER_TYPE={HttpClientHandlerType.Trim ()}");
 			if (!haveTlsProvider)
 				environment.WriteLine (TlsProvider == null ? defaultTlsProvider : $"XA_TLS_PROVIDER={TlsProvider.Trim ()}");
-			
+			if (!haveMonoGCParams) {
+				if (EnableSGenConcurrent)
+					environment.WriteLine ("MONO_GC_PARAMS=major=marksweep-conc");
+				else
+					environment.WriteLine ("MONO_GC_PARAMS=major=marksweep");
+			}
+
 			apk.AddEntry ("environment", environment.ToString (),
 					new UTF8Encoding (encoderShouldEmitUTF8Identifier:false));
 		}
