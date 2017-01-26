@@ -104,20 +104,14 @@ namespace Xamarin.Android.Tasks
 				File.WriteAllText (Path.Combine (OutputDirectory, "__res_name_case_map.txt"), nameCaseMap.ToString ());
 			}
 
-			// Archive them in a zip.
-			using (var stream = new MemoryStream ()) {
-				using (var zip = ZipArchive.Create (stream)) {
-					Log.LogDebugMessage ($" {OutputDirectory} {outDirInfo.Name} ");
+			var outpath = Path.Combine (outDirInfo.Parent.FullName, "__AndroidLibraryProjects__.zip");
+
+			if (Files.ArchiveZip (outpath, f => {
+				using (var zip = new ZipArchiveEx (f)) {
 					zip.AddDirectory (OutputDirectory, outDirInfo.Name);
 				}
-				stream.Position = 0;
-				string outpath = Path.Combine (outDirInfo.Parent.FullName, "__AndroidLibraryProjects__.zip");
-				if (Files.ArchiveZip (outpath, f => {
-					using (var fs = new FileStream (f, FileMode.CreateNew)) {
-						stream.CopyTo (fs);
-					}
-				}))
-					Log.LogDebugMessage ("Saving contents to " + outpath);
+			})) {
+				Log.LogDebugMessage ("Saving contents to " + outpath);
 			}
 
 			return true;
