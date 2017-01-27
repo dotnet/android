@@ -305,24 +305,37 @@ public class StubApplication extends Application {
       mGetInstance.setAccessible(true);
       Object resourcesManager = mGetInstance.invoke(null);
 
-      Field mAssets = Resources.class.getDeclaredField("mAssets");
-      mAssets.setAccessible(true);
-
+      Field mAssets = null;
+      try {
+        // Android N and later has mResourcesImpl/*of ResourcesImpl*/.mAssets instead.
+        Class<?> resImplClass = Class.forName("android.content.res.ResourcesImpl");
+        mAssets = resImplClass.getDeclaredField("mAssets");
+      } catch (NoSuchFieldException ex) {
+        try {
+          mAssets = Resources.class.getDeclaredField("mAssets");
+          mAssets.setAccessible(true);
+        } catch (NoSuchFieldException ex2) {
+          Log.w("StubApplication", "Failed to replace AssetManager. Assets will fail to load; " + ex.getMessage() + " / " + ex2.getMessage());
+        }
+      }
       // Iterate over all known Resources objects
-      Field fMActiveResources = clazz.getDeclaredField("mActiveResources");
-      fMActiveResources.setAccessible(true);
-      @SuppressWarnings("unchecked")
-      Map<?, WeakReference<Resources>> arrayMap =
-          (Map<?, WeakReference<Resources>>) fMActiveResources.get(resourcesManager);
-      for (WeakReference<Resources> wr : arrayMap.values()) {
-        Resources resources = wr.get();
-        // Set the AssetManager of the Resources instance to our brand new one
-        mAssets.set(resources, newAssetManager);
-        resources.updateConfiguration(resources.getConfiguration(), resources.getDisplayMetrics());
+      try {
+        Field fMActiveResources = clazz.getDeclaredField("mActiveResources");
+        fMActiveResources.setAccessible(true);
+        @SuppressWarnings("unchecked")
+        Map<?, WeakReference<Resources>> arrayMap =
+            (Map<?, WeakReference<Resources>>) fMActiveResources.get(resourcesManager);
+        for (WeakReference<Resources> wr : arrayMap.values()) {
+          Resources resources = wr.get();
+          // Set the AssetManager of the Resources instance to our brand new one
+          if (mAssets != null)
+            mAssets.set(resources, newAssetManager);
+          resources.updateConfiguration(resources.getConfiguration(), resources.getDisplayMetrics());
+        }
+      } catch (NoSuchFieldException ex) {
+         Log.w("StubApplication", "Failed to replace ResourceManager. Some resources may fail to load; " + ex.getMessage());
       }
     } catch (IllegalAccessException e) {
-      throw new IllegalStateException(e);
-    } catch (NoSuchFieldException e) {
       throw new IllegalStateException(e);
     } catch (NoSuchMethodException e) {
       throw new IllegalStateException(e);
