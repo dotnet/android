@@ -177,7 +177,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<MonoAndroidVersion>v$(_XAMajorVersionNumber).0</MonoAndroidVersion>
 	<AndroidUpdateResourceReferences Condition="'$(AndroidUpdateResourceReferences)' == ''">True</AndroidUpdateResourceReferences>
 	<EmbedAssembliesIntoApk Condition="'$(EmbedAssembliesIntoApk)' == ''">True</EmbedAssembliesIntoApk>
-
+	<AndroidSkipJavacVersionCheck Condition="'$(AndroidSkipJavacVersionCheck)' == ''">False</AndroidSkipJavacVersionCheck>
 
 	<!-- Ahead-of-time compilation properties -->
 	<AndroidAotMode Condition=" '$(AndroidAotMode)' == '' And '$(AotAssemblies)' == 'True' ">Normal</AndroidAotMode>
@@ -1815,6 +1815,7 @@ because xbuild doesn't support framework reference assemblies.
 		Condition="'$(JavacTargetVersion)'=='' or '$(JavacSourceVersion)' == ''"
 		ToolPath="$(JavacToolPath)"
 	    ToolExe="$(JavacToolExe)"
+	    SkipJavacVersionCheck="$(AndroidSkipJavacVersionCheck)"
 	    EnableProguard="$(AndroidEnableProguard)"
 	    EnableMultiDex="$(AndroidEnableMultiDex)">
 	    <Output TaskParameter="TargetVersion" PropertyName="JavacTargetVersion" />
