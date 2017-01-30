@@ -161,3 +161,9 @@ into the update directory:
 	adb push bin/Debug/lib/xbuild-frameworks/MonoAndroid/v7.1/Mono.Android.dll /data/data/Mono.Android_Tests/files/.__override__
 
 When the process restarts the new assembly will be used.
+
+# Debugging using lldb
+
+Download a precompiled lldb binary from
+`https://github.com/mono/lldb-binaries/releases`, and follow the instructions
+in README.md.

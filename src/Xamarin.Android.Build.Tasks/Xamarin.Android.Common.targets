@@ -2546,6 +2546,12 @@ because xbuild doesn't support framework reference assemblies.
  	</CreateItem>
 </Target>
 
+<Target Name="_lldb"
+                DependsOnTargets="AndroidPrepareForBuild">
+  <WriteLinesToFile File="$(_LldbConfigFile)" Lines="PKG=$(_AndroidPackage)" Overwrite="true"/>
+  <WriteLinesToFile File="$(_LldbConfigFile)" Lines="MANIFEST=$(IntermediateOutputPath)android\AndroidManifest.xml"/>
+</Target>
+
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Common.Debugging.targets"
         Condition="Exists('$(MSBuildThisFileDirectory)Xamarin.Android.Common.Debugging.targets')"/>
 
