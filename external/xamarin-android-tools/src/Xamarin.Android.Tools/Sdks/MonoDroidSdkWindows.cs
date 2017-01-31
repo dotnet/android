@@ -14,6 +14,8 @@ namespace Xamarin.Android.Tools
 				string libMandroid = Path.Combine (monoAndroidPath, "lib", "mandroid");
 				if (Directory.Exists (libMandroid) && ValidateRuntime (libMandroid))
 					return libMandroid;
+				if (Directory.Exists (monoAndroidPath) && ValidateRuntime (monoAndroidPath))
+					return monoAndroidPath;
 			}
 			string xamarinSdk = Path.Combine (OS.ProgramFilesX86, "MSBuild", "Xamarin", "Android");
 			return Directory.Exists (xamarinSdk)
