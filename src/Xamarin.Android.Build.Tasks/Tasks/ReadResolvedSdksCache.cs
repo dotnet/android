@@ -140,9 +140,9 @@ namespace Xamarin.Android.Tasks
 
 			MonoAndroidHelper.TargetFrameworkDirectories	= ReferenceAssemblyPaths;
 
-			MonoAndroidHelper.RefreshAndroidSdk (AndroidSdkPath, AndroidNdkPath, JavaSdkPath);
 			MonoAndroidHelper.RefreshMonoDroidSdk (MonoAndroidToolsPath, MonoAndroidBinPath, ReferenceAssemblyPaths);
-
+			MonoAndroidHelper.RefreshAndroidSdk (AndroidSdkPath, AndroidNdkPath, JavaSdkPath);
+			
 			return !Log.HasLoggedErrors;
 		}
 
