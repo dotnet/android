@@ -127,9 +127,9 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ("  MonoAndroidToolsPath: {0}", MonoAndroidToolsPath);
 			Log.LogDebugMessage ("  MonoAndroidBinPath: {0}", MonoAndroidBinPath);
 
-			MonoAndroidHelper.RefreshAndroidSdk (AndroidSdkPath, AndroidNdkPath, JavaSdkPath);
 			MonoAndroidHelper.RefreshMonoDroidSdk (MonoAndroidToolsPath, MonoAndroidBinPath, ReferenceAssemblyPaths);
-
+			MonoAndroidHelper.RefreshAndroidSdk (AndroidSdkPath, AndroidNdkPath, JavaSdkPath);
+			
 			// OS X:    $prefix/lib/mandroid
 			// Windows: %ProgramFiles(x86)%\MSBuild\Xamarin\Android
 			this.MonoAndroidToolsPath = MonoDroidSdk.RuntimePath;
