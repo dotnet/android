@@ -71,6 +71,11 @@
         SourceFiles="@(AndroidSupportedTargetJitAbi->'libs\Debug\%(Identity)\libmonodroid.so')"
         DestinationFiles="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android.debug.so')"
     />
+    <WriteLinesToFile
+        File="jni\Application.mk"
+        Lines="APP_ABI := $(_AppAbi); APP_CFLAGS+=-DRELEASE=1"
+        Overwrite="True"
+    />
     <Exec
         Command="$(AndroidToolchainDirectory)\ndk\ndk-build $(_NdkBuildArgs) NDK_LIBS_OUT=./libs/Release NDK_OUT=./obj/Release  V=1"
     />
