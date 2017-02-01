@@ -209,8 +209,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<AndroidUseIntermediateDesignerFile Condition=" '$(AndroidUseIntermediateDesignerFile)' == '' ">False</AndroidUseIntermediateDesignerFile>
 
 	<!-- Prevent warnings about assembly version conflicts -->
-	<AutoUnifyAssemblyReferences>True</AutoUnifyAssemblyReferences>
-	<AutoGenerateBindingRedirects>False</AutoGenerateBindingRedirects>
+	<AutoUnifyAssemblyReferences Condition="'$(AutoUnifyAssemblyReferences)' == ''">True</AutoUnifyAssemblyReferences>
+	<AutoGenerateBindingRedirects Condition="'$(AutoGenerateBindingRedirects)' == ''">False</AutoGenerateBindingRedirects>
 
 	<!-- The .NET SGEN tool cannot process Xamarin.Android assemblies because
 	     our mscorlib.dll isn't properly signed, as far as its concerned.
@@ -2122,7 +2122,7 @@ because xbuild doesn't support framework reference assemblies.
   <ResolveAssemblyReference
       AllowedAssemblyExtensions="$(AllowedReferenceAssemblyFileExtensions)"
       AssemblyFiles="@(ResolvedUserAssemblies)"
-      AutoUnify="True"
+      AutoUnify="$(AutoUnifyAssemblyReferences)"
       FindDependencies="True"
       FindRelatedFiles="False"
       FindSatellites="True"
