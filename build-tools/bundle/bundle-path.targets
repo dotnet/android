@@ -24,7 +24,7 @@
   <Target Name="GetBundleFileName"
       DependsOnTargets="_GetHashes">
     <PropertyGroup>
-      <XABundleFileName>bundle-v7-$(Configuration)-$(HostOS)-libzip=$(_LibZipHash),llvm=$(_LlvmHash),mono=$(_MonoHash).zip</XABundleFileName>
+      <XABundleFileName>bundle-v8-$(Configuration)-$(HostOS)-libzip=$(_LibZipHash),llvm=$(_LlvmHash),mono=$(_MonoHash).zip</XABundleFileName>
     </PropertyGroup>
   </Target>
 </Project>
