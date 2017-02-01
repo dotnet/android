@@ -178,6 +178,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<AndroidUpdateResourceReferences Condition="'$(AndroidUpdateResourceReferences)' == ''">True</AndroidUpdateResourceReferences>
 	<EmbedAssembliesIntoApk Condition="'$(EmbedAssembliesIntoApk)' == ''">True</EmbedAssembliesIntoApk>
 	<AndroidSkipJavacVersionCheck Condition="'$(AndroidSkipJavacVersionCheck)' == ''">False</AndroidSkipJavacVersionCheck>
+	<AndroidBuildApplicationPackage Condition=" '$(AndroidBuildApplicationPackage)' == ''">False</AndroidBuildApplicationPackage>
 
 	<!-- Ahead-of-time compilation properties -->
 	<AndroidAotMode Condition=" '$(AndroidAotMode)' == '' And '$(AotAssemblies)' == 'True' ">Normal</AndroidAotMode>
@@ -431,6 +432,13 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 *******************************************
 -->
 
+<PropertyGroup Condition="'$(AndroidBuildApplicationPackage)' == 'True' And '$(AndroidApplication)' != '' And $(AndroidApplication)">
+  <_PostBuildTargets>
+    _CopyPackage;
+    _Sign
+  </_PostBuildTargets>
+</PropertyGroup>
+
 <PropertyGroup Condition="'$(AndroidApplication)' != '' And $(AndroidApplication)">
   <BuildDependsOn>
     _ValidateLinkMode;
@@ -443,6 +451,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
     _ValidateAndroidPackageProperties;
     $(BuildDependsOn);
     _CompileDex;
+    $(_PostBuildTargets)
   </BuildDependsOn>
 </PropertyGroup>
 
@@ -2375,7 +2384,7 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="_Sign"
 	Inputs="$(MSBuildAllProjects);$(ApkFileIntermediate);$(_AndroidBuildPropertiesCache)"
 	Outputs="$(ApkFileSigned)"
-	DependsOnTargets="Build;_ResolveAndroidSigningKey">
+	DependsOnTargets="_ResolveAndroidSigningKey">
 	<ItemGroup>
 		<ApkAbiFilesIntermediate Include="$(ApkFileIntermediate)" />
 		<ApkAbiFilesIntermediate Condition="'$(AndroidCreatePackagePerAbi)' == 'true'" Include="$(MonoAndroidIntermediate)android\bin\$(_AndroidPackage)*.apk" />
