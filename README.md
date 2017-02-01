@@ -322,6 +322,10 @@ or via `adb shell am`:
 
 # Contributing
 
+This project has adopted the code of conduct defined by the Contributor Covenant
+to clarify expected behavior in our community. For more information, see the
+[.NET Foundation Code of Conduct](http://www.dotnetfoundation.org/code-of-conduct).
+
 ## Mailing Lists
 
 To discuss this project, and participate in the design, we use the [android-devel@lists.xamarin.com](http://lists.xamarin.com/mailman/listinfo/android-devel) mailing list.   
