@@ -290,7 +290,7 @@
       <Strip>strip</Strip>
       <StripFlags>-S</StripFlags>
       <TargetAbi>armv5-none-linux-androideabi</TargetAbi>
-      <ConfigureFlags>--target=armv5-linux-androideabi --cache-file=$(_CrossConfigureCachePrefix)arm.config.cache --with-cross-offsets=armv5-none-linux-androideabi.h $(_CrossConfigureFlags) --with-llvm=$(_CrossDefaultLlvmPrefix)</ConfigureFlags>
+      <ConfigureFlags>--target=armv5-linux-androideabi --cache-file=$(_CrossConfigureCachePrefix)arm.config.cache --with-cross-offsets=armv5-none-linux-androideabi.h $(_CrossConfigureFlags32) --with-llvm=$(_LlvmPrefix32)</ConfigureFlags>
       <ExeSuffix></ExeSuffix>
       <BuildEnvironment></BuildEnvironment>
       <ConfigureEnvironment></ConfigureEnvironment>
@@ -334,7 +334,7 @@
       <Strip>strip</Strip>
       <StripFlags>-S</StripFlags>
       <TargetAbi>i686-none-linux-android</TargetAbi>
-      <ConfigureFlags>--target=i686-linux-android --cache-file=$(_CrossConfigureCachePrefix)x86.config.cache --with-cross-offsets=i686-none-linux-android.h $(_CrossConfigureFlags)  --with-llvm=$(_LlvmPrefix32)</ConfigureFlags>
+      <ConfigureFlags>--target=i686-linux-android --cache-file=$(_CrossConfigureCachePrefix)x86.config.cache --with-cross-offsets=i686-none-linux-android.h $(_CrossConfigureFlags32)  --with-llvm=$(_LlvmPrefix32)</ConfigureFlags>
       <ExeSuffix></ExeSuffix>
       <BuildEnvironment></BuildEnvironment>
       <ConfigureEnvironment></ConfigureEnvironment>
@@ -378,7 +378,7 @@
       <Strip>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-strip</Strip>
       <StripFlags>-S</StripFlags>
       <TargetAbi>armv5-none-linux-androideabi</TargetAbi>
-      <ConfigureFlags>--target=armv5-linux-androideabi --host="$(_CrossConfigureBuildHostWin32)" --cache-file=$(_CrossConfigureCachePrefix)arm-win.config.cache --with-cross-offsets=armv5-none-linux-androideabi.h $(_CrossConfigureFlags) --with-llvm=$(_LlvmPrefixWin32)</ConfigureFlags>
+      <ConfigureFlags>--target=armv5-linux-androideabi --host="$(_CrossConfigureBuildHostWin32)" --cache-file=$(_CrossConfigureCachePrefix)arm-win.config.cache --with-cross-offsets=armv5-none-linux-androideabi.h $(_CrossConfigureFlags32) --with-llvm=$(_LlvmPrefixWin32)</ConfigureFlags>
       <ExeSuffix>.exe</ExeSuffix>
       <BuildEnvironment>PATH="$(AndroidMxeFullPath)\bin:$(PATH)"</BuildEnvironment>
       <ConfigureEnvironment>$(_LlvmConfigureEnvironmentWin32)</ConfigureEnvironment>
@@ -422,7 +422,7 @@
       <Strip>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-strip</Strip>
       <StripFlags>-S</StripFlags>
       <TargetAbi>i686-none-linux-android</TargetAbi>
-      <ConfigureFlags>--target=i686-linux-android --host="$(_CrossConfigureBuildHostWin32)" --cache-file=$(_CrossConfigureCachePrefix)x86-win.config.cache --with-cross-offsets=i686-none-linux-android.h $(_CrossConfigureFlags) --with-llvm=$(_LlvmPrefixWin32)</ConfigureFlags>
+      <ConfigureFlags>--target=i686-linux-android --host="$(_CrossConfigureBuildHostWin32)" --cache-file=$(_CrossConfigureCachePrefix)x86-win.config.cache --with-cross-offsets=i686-none-linux-android.h $(_CrossConfigureFlags32) --with-llvm=$(_LlvmPrefixWin32)</ConfigureFlags>
       <ExeSuffix>.exe</ExeSuffix>
       <BuildEnvironment>PATH="$(AndroidMxeFullPath)\bin:$(PATH)"</BuildEnvironment>
       <ConfigureEnvironment>$(_LlvmConfigureEnvironmentWin32)</ConfigureEnvironment>
