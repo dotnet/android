@@ -301,7 +301,14 @@ open_netlink_session (netlink_session *session)
 
 	/* Fill out addresses */
 	session->us.nl_family = AF_NETLINK;
-	session->us.nl_pid = getpid ();
+
+	/* We have previously used `getpid()` here but it turns out that WebView/Chromium does the same
+	   and there can only be one session with the same PID. Setting it to 0 will cause the kernel to
+	   assign some PID that's unique and valid instead.
+
+	   See: https://bugzilla.xamarin.com/show_bug.cgi?id=41860
+	*/
+	session->us.nl_pid = 0;
 	session->us.nl_groups = 0;
 
 	session->them.nl_family = AF_NETLINK;
