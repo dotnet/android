@@ -17,7 +17,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>..\..\bin\Debug\lib\xbuild-frameworks\MonoAndroid\$(AndroidFrameworkVersion)</OutputPath>
-    <DefineConstants>DEBUG;JAVA_INTEROP</DefineConstants>
+    <DefineConstants>DEBUG;JAVA_INTEROP;NET_2_0</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <ConsolePause>false</ConsolePause>
@@ -29,7 +29,7 @@
     <DebugType>full</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>..\..\bin\Release\lib\xbuild-frameworks\MonoAndroid\$(AndroidFrameworkVersion)</OutputPath>
-    <DefineConstants>JAVA_INTEROP</DefineConstants>
+    <DefineConstants>JAVA_INTEROP;NET_2_0</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <ConsolePause>false</ConsolePause>
