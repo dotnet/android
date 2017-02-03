@@ -42,6 +42,7 @@
     <Compile Include="JavaApiTypeResolverExtensions.cs" />
     <Compile Include="JavaApiOverrideMarkerExtensions.cs" />
     <Compile Include="JavaApiGeneralExtensions.cs" />
+    <Compile Include="JavaApiNonBindableStripper.cs" />
     <Compile Include="JavaApi.RelationAnalysisModel.cs" />
     <Compile Include="JavaTypeReference.cs" />
     <Compile Include="JavaApiGenericInheritanceMapperExtensions.cs" />

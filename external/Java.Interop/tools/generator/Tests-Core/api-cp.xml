@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<api api-source="class-parse">
+  <package name="java.lang">
+    <class abstract="false" deprecated="not deprecated" final="false" name="Object" static="false" visibility="public">
+    </class>
+  </package>
+  <package name="xamarin.test.invalidnames">
+    <class abstract="false" deprecated="not deprecated" extends="java.lang.Object" extends-generic-aware="java.lang.Object" final="false" name="InvalidNameMembers" static="false" visibility="public">
+      <field deprecated="not deprecated" final="true" name="INVALID_$CONSTANT" static="true" transient="false" type="int" type-generic-aware="int" value="1" visibility="public" volatile="false">
+      </field>
+      <field deprecated="not deprecated" final="true" name="INVALID_$FIELD" static="false" transient="false" type="int" type-generic-aware="int" visibility="public" volatile="false">
+      </field>
+      <method abstract="false" deprecated="not deprecated" final="false" name="invalid$name" native="false" return="int" static="false" synchronized="false" visibility="public">
+      </method>
+    </class>
+  </package>
+</api>
+

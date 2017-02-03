@@ -161,21 +161,23 @@ run-test-jnimarshal: bin/Test$(CONFIGURATION)/Java.Interop.Export-Tests.dll bin/
 
 GENERATOR_EXPECTED_TARGETS  = tools/generator/Tests/expected.targets
 
-# $(call GEN_CORE_OUTPUT, outdir)
+# $(call GEN_CORE_OUTPUT, outdir, suffix, extra)
 define GEN_CORE_OUTPUT
 	-$(RM) -Rf $(1)
 	mkdir -p $(1)
-	$(RUNTIME) bin/Test$(CONFIGURATION)/generator.exe -o $(1) $(2) --api-level=20 tools/generator/Tests-Core/api.xml \
-		--enummethods=tools/generator/Tests-Core/methods.xml \
-		--enumfields=tools/generator/Tests-Core/fields.xml \
+	$(RUNTIME) bin/Test$(CONFIGURATION)/generator.exe -o $(1) $(3) --api-level=20 tools/generator/Tests-Core/api$(2).xml \
+		--enummethods=tools/generator/Tests-Core/methods$(2).xml \
+		--enumfields=tools/generator/Tests-Core/fields$(2).xml \
 		--enumdir=$(1)
 endef
 
 run-test-generator-core: bin/Test$(CONFIGURATION)/generator.exe
 	$(call GEN_CORE_OUTPUT,bin/Test$(CONFIGURATION)/generator-core)
 	diff -rup tools/generator/Tests-Core/expected bin/Test$(CONFIGURATION)/generator-core
-	$(call GEN_CORE_OUTPUT,bin/Test$(CONFIGURATION)/generator-core,--codegen-target=JavaInterop1)
+	$(call GEN_CORE_OUTPUT,bin/Test$(CONFIGURATION)/generator-core,,--codegen-target=JavaInterop1)
 	diff -rup tools/generator/Tests-Core/expected.ji bin/Test$(CONFIGURATION)/generator-core
+	$(call GEN_CORE_OUTPUT,bin/Test$(CONFIGURATION)/generator-core,-cp)
+	diff -rup tools/generator/Tests-Core/expected.cp bin/Test$(CONFIGURATION)/generator-core
 
 bin/Test$(CONFIGURATION)/generator.exe: bin/$(CONFIGURATION)/generator.exe
 	cp $<* `dirname "$@"`

@@ -23,6 +23,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 			var api = new JavaApi ();
 			api.LoadReferences (gens);
 			api.Load (inputXmlFile);
+			api.StripNonBindables ();
 			api.Resolve ();
 			api.CreateGenericInheritanceMapping ();
 			api.MarkOverrides ();
