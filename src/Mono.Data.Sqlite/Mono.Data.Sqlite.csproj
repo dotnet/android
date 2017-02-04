@@ -90,9 +90,6 @@
     <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Data.Sqlite\Assembly\AssemblyInfo.cs">
       <Link>Assembly\AssemblyInfo.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Data.Sqlite\Mono.Data.Sqlite_2.0\MonoPInvokeCallbackAttribute.cs">
-      <Link>Mono.Data.Sqlite_2.0\MonoPInvokeCallbackAttribute.cs</Link>
-    </Compile>
     <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Data.Sqlite\Mono.Data.Sqlite_2.0\SQLite3.cs">
       <Link>Mono.Data.Sqlite_2.0\SQLite3.cs</Link>
     </Compile>
