@@ -250,6 +250,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	
 	<_AndroidMainDexListFile>$(IntermediateOutputPath)multidex.keep</_AndroidMainDexListFile>
 	
+	<AndroidManifestPlaceholders Condition="'$(AndroidManifestPlaceholders)' == ''"></AndroidManifestPlaceholders>
+		
 	<_PackagedResources>$(IntermediateOutputPath)android\bin\packaged_resources</_PackagedResources>
 
 	<_Android32bitArchitectures>armeabi-v7a;armeabi;x86;mips</_Android32bitArchitectures>
@@ -1686,6 +1688,7 @@ because xbuild doesn't support framework reference assemblies.
 	AndroidSdkPlatform="$(_AndroidApiLevel)"
 	AndroidSdkDir="$(_AndroidSdkDirectory)"
 	PackageName="$(_AndroidPackage)"
+	ManifestPlaceholders="$(AndroidManifestPlaceholders)"
 	OutputDirectory="$(IntermediateOutputPath)android"
 	MergedAndroidManifestOutput="$(IntermediateOutputPath)android\AndroidManifest.xml"
     UseSharedRuntime="$(AndroidUseSharedRuntime)"

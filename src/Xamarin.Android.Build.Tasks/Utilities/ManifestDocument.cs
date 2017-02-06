@@ -47,6 +47,7 @@ namespace Xamarin.Android.Tasks {
 		public string PackageName { get; set; }
 		public List<string> Addons { get; private set; }
 		public string ApplicationName { get; set; }
+		public string [] Placeholders { get; set; }
 		public List<string> Assemblies { get; set; }
 		public DirectoryAssemblyResolver Resolver { get; set; }
 		public string SdkDir { get; set; }
@@ -780,7 +781,7 @@ namespace Xamarin.Android.Tasks {
 			using (var file = new StreamWriter (filename, false, new UTF8Encoding (false)))
 				Save (file);
 		}
-		
+
 		public void Save (System.IO.TextWriter stream)
 		{
 			var ms = new MemoryStream ();
@@ -790,6 +791,13 @@ namespace Xamarin.Android.Tasks {
 			var s = new StreamReader (ms).ReadToEnd ();
 			if (ApplicationName != null)
 				s = s.Replace ("${applicationId}", ApplicationName);
+			if (Placeholders != null)
+				foreach (var entry in Placeholders.Select (e => e.Split (new char [] {'='}, 2, StringSplitOptions.None))) {
+					if (entry.Length == 2)
+						s = s.Replace ("${" + entry [0] + "}", entry [1]);
+					else
+						log.LogWarning ("Invalid application placeholders (AndroidApplicationPlaceholders) value. Use 'key1=value1;key2=value2, ...' format. The specified value was: " + Placeholders);
+				}
 			stream.Write (s);
 		}
 

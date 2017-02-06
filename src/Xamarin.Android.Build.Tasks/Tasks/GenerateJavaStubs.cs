@@ -38,6 +38,7 @@ namespace Xamarin.Android.Tasks
 		public bool Debug { get; set; }
 		public string ApplicationName { get; set; }
 		public string PackageName { get; set; }
+		public string [] ManifestPlaceholders { get; set; }
 
 		public string AndroidSdkDir { get; set; }
 
@@ -77,6 +78,7 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugTaskItems ("  MergedManifestDocuments:", MergedManifestDocuments);
 			Log.LogDebugMessage ("  PackageNamingPolicy: {0}", PackageNamingPolicy);
 			Log.LogDebugMessage ("  ApplicationJavaClass: {0}", ApplicationJavaClass);
+			Log.LogDebugTaskItems ("  ManifestPlaceholders: ", ManifestPlaceholders);
 
 			try {
 				// We're going to do 3 steps here instead of separate tasks so
@@ -199,6 +201,7 @@ namespace Xamarin.Android.Tasks
 
 			manifest.PackageName = PackageName;
 			manifest.ApplicationName = ApplicationName ?? PackageName;
+			manifest.Placeholders = ManifestPlaceholders;
 			manifest.Assemblies.AddRange (assemblies);
 			manifest.Resolver = res;
 			manifest.SdkDir = AndroidSdkDir;
