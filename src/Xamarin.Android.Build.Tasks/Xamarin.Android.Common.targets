@@ -1732,6 +1732,7 @@ because xbuild doesn't support framework reference assemblies.
 		_CheckDuplicateJavaLibraries;
 		_GetAdditionalResourcesFromAssemblies;
 		_CreateAdditionalResourceCache;
+		$(_AfterCreateBaseApkDependsOnTargets);
 	</_CreateBaseApkDependsOnTargets>
 	<_CreateBaseApkInputs>
 		$(MSBuildAllProjects)
