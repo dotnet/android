@@ -467,5 +467,15 @@ namespace Xamarin.Android.Tasks
 			}
 			return acw_map;
 		}
+
+		public static string [] GetProguardEnvironmentVaribles (string proguardHome)
+		{
+			return Environment.OSVersion.Platform == PlatformID.Unix ?
+				new string [] { "PROGUARD_HOME=" + proguardHome } :
+				//TODO ReAdd the PROGUARD_HOME env variable once we are shipping our own proguard
+				// Windows seems to need special care, needs JAVA_TOOL_OPTIONS.
+				// On the other hand, xbuild has a bug and fails to parse '=' in the value, so we skip JAVA_TOOL_OPTIONS on Mono runtime.
+				new string [] { "JAVA_TOOL_OPTIONS=-Dfile.encoding=UTF8" };
+		}
 	}
 }

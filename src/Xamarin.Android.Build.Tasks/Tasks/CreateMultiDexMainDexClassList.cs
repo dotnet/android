@@ -20,8 +20,6 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string ProguardHome { get; set; }
 
-		public string MSBuildRuntimeType { get; set; }
-
 		[Required]
 		public ITaskItem[] JavaLibraries { get; set; }
 		
@@ -37,7 +35,6 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugTaskItems ("  CustomMainDexListFiles:", CustomMainDexListFiles);
 			Log.LogDebugMessage ("  ToolExe: {0}", ToolExe);
 			Log.LogDebugMessage ("  ToolPath: {0}", ToolPath);
-			Log.LogDebugMessage ("  MSBuildRuntimeType: {0}", MSBuildRuntimeType);
 			Log.LogDebugMessage ("  ProguardHome: {0}", ProguardHome);
 
 			if (CustomMainDexListFiles != null && CustomMainDexListFiles.Any ()) {
@@ -46,13 +43,7 @@ namespace Xamarin.Android.Tasks
 				return true;
 			}
 
-			// Windows seems to need special care, needs JAVA_TOOL_OPTIONS.
-			// On the other hand, xbuild has a bug and fails to parse '=' in the value, so we skip JAVA_TOOL_OPTIONS on Mono runtime.
-			EnvironmentVariables =
-				string.IsNullOrEmpty (MSBuildRuntimeType) || MSBuildRuntimeType == "Mono" ?
-				new string [] { "PROGUARD_HOME=" + ProguardHome } :
-				//TODO ReAdd the PROGUARD_HOME env variable once we are shipping our own proguard
-				new string [] { "JAVA_TOOL_OPTIONS=-Dfile.encoding=UTF8" };
+			EnvironmentVariables = MonoAndroidHelper.GetProguardEnvironmentVaribles (ProguardHome);
 
 			return base.Execute ();
 		}
