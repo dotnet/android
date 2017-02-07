@@ -42,6 +42,7 @@
       _InstallRuntimes;
       _InstallBcl;
       _InstallMonoDoc;
+      _InstallMonoSymbolicate;
       _ConfigureCrossRuntimes;
       _BuildCrossRuntimes;
       _InstallCrossRuntimes;
@@ -334,6 +335,24 @@
         Command="$(RemapAssemblyRefTool) &quot;$(_MonoOutputDir)\mdoc.exe&quot; &quot;$(_MandroidDir)\mdoc.exe&quot; Mono.Cecil &quot;$(_MandroidDir)\Xamarin.Android.Cecil.dll&quot;"
     />
   </Target>
+  <Target Name="_InstallMonoSymbolicate"
+      Inputs="$(_MonoOutputDir)\mono-symbolicate.exe"
+      Outputs="$(_MandroidDir)\mono-symbolicate.exe">
+    <MakeDir Directories="$(_MandroidDir)" />
+    <Copy
+        Condition=" Exists('$(_MonoOutputDir)\mono-symbolicate.exe.mdb') "
+        SourceFiles="$(_MonoOutputDir)\mono-symbolicate.exe.mdb"
+        DestinationFolder="$(_MandroidDir)"
+    />
+    <Copy
+        Condition=" Exists('$(_MonoOutputDir)\mono-symbolicate.pdb') "
+        SourceFiles="$(_MonoOutputDir)\mono-symbolicate.pdb"
+        DestinationFolder="$(_MandroidDir)"
+    />
+    <Exec
+        Command="$(RemapAssemblyRefTool) &quot;$(_MonoOutputDir)\mono-symbolicate.exe&quot; &quot;$(_MandroidDir)\mono-symbolicate.exe&quot; Mono.Cecil &quot;$(_MandroidDir)\Xamarin.Android.Cecil.dll&quot;"
+    />
+  </Target>
   <Target Name="_InstallBcl"
       Inputs="@(_BclProfileItems)"
       Outputs="@(_BclInstalledItem);$(OutputPath)\lib\xbuild-frameworks\MonoAndroid\v1.0\RedistList\FrameworkList.xml">
@@ -459,6 +478,9 @@
     <ItemGroup>
       <BundleItem Include="@(_BclInstalledItem)" />
       <BundleItem Include="@(_MonoDocInstalledItems)" />
+      <BundleItem Include="$(_MandroidDir)\mono-symbolicate.exe" />
+      <BundleItem Include="$(_MandroidDir)\mono-symbolicate.exe.mdb"  Condition=" Exists ('$(_MandroidDir)\mono-symbolicate.exe.mdb') " />
+      <BundleItem Include="$(_MandroidDir)\mono-symbolicate.pdb"      Condition=" Exists ('$(_MandroidDir)\mono-symbolicate.pdb') " />
       <BundleItem Include="@(_FSharpInstalledItems)" />
       <BundleItem Include="@(MonoFacadeAssembly->'$(OutputPath)\lib\xbuild-frameworks\MonoAndroid\v1.0\Facades\%(Identity)')" />
       <BundleItem Include="$(OutputPath)\lib\xbuild-frameworks\MonoAndroid\v1.0\RedistList\FrameworkList.xml" />
