@@ -63,26 +63,6 @@
       Inputs="$(MonoSourceFullPath)\mcs\tools\mono-symbolicate\mono-symbolicate.exe.sources"
       Outputs="$(OutputPath)..\..\..\..\lib\mandroid\mono-symbolicate.exe"
       >
-    <ReadLinesFromFile  
-            File="$(MonoSourceFullPath)\mcs\tools\mono-symbolicate\mono-symbolicate.exe.sources" >  
-        <Output  
-            TaskParameter="Lines"  
-            ItemName="SourceFiles"
-        />  
-    </ReadLinesFromFile>
-    <ItemGroup>
-        <FilteredSourceFiles Include="@(SourceFiles)" Condition=" '%(SourceFiles.Identity)' != '' " />
-    </ItemGroup>
-    <Csc
-        Sources="@(FilteredSourceFiles->'$(MonoSourceFullPath)\mcs\tools\mono-symbolicate\%(Identity)')"
-        DefineConstants="NET_4_0;NET_4_5;NET_4_6;MONO"
-        CodePage="65001"
-        DisabledWarnings="1699"
-        References="$(OutputPath)..\..\..\..\lib\xbuild\Xamarin\Android\Xamarin.Android.Cecil.dll"
-        OutputAssembly="$(OutputPath)..\..\..\..\lib\mandroid\mono-symbolicate.exe"
-        ToolExe="$(CscToolExe)"
-        ToolPath="$(CscToolPath)"
-    />
     <Copy
         SourceFiles="..\..\tools\scripts\mono-symbolicate"
         DestinationFiles="$(OutputPath)..\..\..\..\bin\mono-symbolicate"
