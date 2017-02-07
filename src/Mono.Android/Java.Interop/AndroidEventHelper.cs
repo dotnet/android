@@ -10,7 +10,7 @@ namespace Java.Interop {
 				Func<TImplementor> creator,
 				Action<TInterface> setListener,
 				Action<TImplementor> add)
-			where TImplementor : TInterface, Java.Lang.Object
+			where TImplementor : Java.Lang.Object, TInterface
 		{
 			TImplementor impl = null;
 			if (implementor == null || (impl = (TImplementor) implementor.Target) == null) {
@@ -26,7 +26,7 @@ namespace Java.Interop {
 				Func<TImplementor, bool> empty,
 				Action<TInterface> setListener,
 				Action<TImplementor> remove)
-			where TImplementor : TInterface, Java.Lang.Object
+			where TImplementor : Java.Lang.Object, TInterface
 		{
 			TImplementor impl = null;
 			if (implementor == null || (impl = (TImplementor) implementor.Target) == null)
