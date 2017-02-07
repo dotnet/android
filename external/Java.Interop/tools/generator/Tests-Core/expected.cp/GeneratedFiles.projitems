@@ -7,6 +7,8 @@
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)\Java.Interop.__TypeRegistrations.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)\Java.Lang.Object.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)\Java.Lang.String.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)\Xamarin.Test.Invalidnames.In.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)\Xamarin.Test.Invalidnames.InvalidNameMembers.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)\__NamespaceMapping__.cs" />
   </ItemGroup>

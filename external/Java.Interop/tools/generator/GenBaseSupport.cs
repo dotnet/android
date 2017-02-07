@@ -204,7 +204,7 @@ namespace MonoDroid.Generation
 				full_name = String.Format ("{0}.{1}{2}", ns, idx > 0 ? StringRocks.TypeToPascalCase (java_name.Substring (0, idx + 1)) : String.Empty, name);
 			}
 
-			obfuscated = IsObfuscatedName (java_name) && elem.XGetAttribute ("obfuscated") != "false";
+			obfuscated = IsObfuscatedName (pkg.ChildNodes.Count, java_name) && elem.XGetAttribute ("obfuscated") != "false";
 		}
 
 		public override bool IsAcw {
@@ -302,12 +302,21 @@ namespace MonoDroid.Generation
 			return true;
 		}
 
-		bool IsObfuscatedName (String name)
+		bool IsObfuscatedName (int threshold, string name)
 		{
 			if (name.StartsWith ("R.", StringComparison.Ordinal))
 				return false;
 			int idx = name.LastIndexOf ('.');
 			string last = idx < 0 ? name : name.Substring (idx + 1);
+			// probably new proguard within Gradle tasks, used in recent GooglePlayServices in 2016 or later.
+			if (last.StartsWith ("zz", StringComparison.Ordinal))
+				return true;
+			// do not expect any name with more than 3 letters is an 'obfuscated' one.
+			if (last.Length > 3)
+				return false;
+			// Only short ones ('a', 'b', 'c' ... 'aa', 'ab', ... 'zzz') are the targets.
+			if (!(last.Length == 3 && threshold > 26*26 || last.Length == 2 && threshold > 26 || last.Length == 1))
+				return false;
 			if (last.Any (c => (c < 'a' || 'z' < c) && (c < '0' || '9' < c)))
 					return false;
 			return true;

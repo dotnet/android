@@ -3,6 +3,8 @@
   <package name="java.lang">
     <class abstract="false" deprecated="not deprecated" final="false" name="Object" static="false" visibility="public">
     </class>
+    <class abstract="false" deprecated="not deprecated" extends="java.lang.Object" extends-generic-aware="java.lang.Object" final="false" name="String" static="false" visibility="public">
+    </class>
   </package>
   <package name="xamarin.test.invalidnames">
     <class abstract="false" deprecated="not deprecated" extends="java.lang.Object" extends-generic-aware="java.lang.Object" final="false" name="InvalidNameMembers" static="false" visibility="public">
@@ -12,6 +14,12 @@
       </field>
       <method abstract="false" deprecated="not deprecated" final="false" name="invalid$name" native="false" return="int" static="false" synchronized="false" visibility="public">
       </method>
+    </class>
+    <class abstract="false" deprecated="not deprecated" extends="java.lang.Object" extends-generic-aware="java.lang.Object" final="false" name="a" static="false" visibility="public">
+    </class>
+    <class abstract="false" deprecated="not deprecated" extends="java.lang.Object" extends-generic-aware="java.lang.Object" final="false" name="in" static="false" visibility="public">
+    </class>
+    <class abstract="false" deprecated="not deprecated" extends="java.lang.Object" extends-generic-aware="java.lang.Object" final="false" name="zzTop" static="false" visibility="public">
     </class>
   </package>
 </api>
