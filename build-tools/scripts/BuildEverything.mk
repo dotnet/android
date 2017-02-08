@@ -99,7 +99,12 @@ $(RUNTIME_LIBRARIES):
 	$(MSBUILD) $(MSBUILD_FLAGS) /p:Configuration=Debug   $(_MSBUILD_ARGS) $(SOLUTION)
 	$(MSBUILD) $(MSBUILD_FLAGS) /p:Configuration=Release $(_MSBUILD_ARGS) $(SOLUTION)
 
-_BUNDLE_ZIPS  = $(wildcard bin/*/bundle-*.zip)
+_BUNDLE_ZIPS_INCLUDE  = \
+	$(ZIP_OUTPUT_BASENAME)/bin/Debug \
+	$(ZIP_OUTPUT_BASENAME)/bin/Release
+
+_BUNDLE_ZIPS_EXCLUDE  = \
+	$(ZIP_OUTPUT_BASENAME)/bin/*/bundle-*.zip
 
 package-oss-name:
 	@echo ZIP_OUTPUT=$(ZIP_OUTPUT)
@@ -109,4 +114,6 @@ package-oss $(ZIP_OUTPUT):
 	if [ -d bin/Release/bin ] ; then cp tools/scripts/xabuild bin/Release/bin ; fi
 	if [ ! -d $(ZIP_OUTPUT_BASENAME) ] ; then mkdir $(ZIP_OUTPUT_BASENAME) ; fi
 	if [ ! -L $(ZIP_OUTPUT_BASENAME)/bin ] ; then ln -s ../bin $(ZIP_OUTPUT_BASENAME) ; fi
-	zip -r "$(ZIP_OUTPUT)" $(ZIP_OUTPUT_BASENAME) $(_BUNDLE_ZIPS:%=--exclude %)
+	zip -r "$(ZIP_OUTPUT)" \
+		$(wildcard $(_BUNDLE_ZIPS_INCLUDE)) \
+		$(patsubst %, --exclude %, $(wildcard $(_BUNDLE_ZIPS_EXCLUDE)))
