@@ -35,6 +35,7 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
   <UsingTask TaskName="Xamarin.Android.Tasks.CreateNativeLibraryArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.ImportJavaDoc" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.MDoc" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.Unzip" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 
   <!--
   *******************************************
@@ -75,6 +76,7 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
     <AvailableItemName Include="LibraryProjectProperties" />
     <AvailableItemName Include="LibraryProjectZip" />
     <AvailableItemName Include="JavaDocIndex" />
+    <AvailableItemName Include="JavaDocJar" />
   </ItemGroup>
 
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.Targets" />
@@ -349,8 +351,23 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
 		;_GetAdditionalResourcesFromAssemblies
 		;_ExtractLibraryProjectImports
 		;_GetLibraryImports
+		;_ExtractJavaDocJars
 	</ExportJarToXmlDependsOnTargets>
 </PropertyGroup>
+
+  <Target Name="_ExtractJavaDocJars"
+		Inputs="@(JavaDocJar)"
+		Outputs="@(JavaDocJar->'$(IntermediateOutputPath)javadocs\%(FileName).stamp')">
+		
+    <Unzip Sources="@(JavaDocJar)" DestinationDirectories="@(JavaDocJar->'$(IntermediateOutputPath)javadocs\%(FileName)')" />
+		
+    <Touch Files="@(JavaDocJar->'$(IntermediateOutputPath)javadocs\%(FileName).stamp')" />
+		
+    <CreateItem Include="@(JavaDocJar->'$(IntermediateOutputPath)javadocs\%(FileName)\index.html')">
+      <Output TaskParameter="Include" ItemName="JavaDocIndex" />
+    </CreateItem>
+		
+  </Target>
 
   <Target Name="ExportJarToXml"
           DependsOnTargets="$(ExportJarToXmlDependsOnTargets)"
@@ -540,6 +557,7 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
     <Delete Files="@(IntermediateAssembly->'$(IntermediateOutputPath)%(filename).xml')" />
     <RemoveDirFixed Directories="$(IntermediateOutputPath)docs" Condition="Exists ('$(IntermediateOutputPath)docs')" />
 
+    <RemoveDirFixed Directories="$(IntermediateOutputPath)javadocs" Condition="Exists ('$(IntermediateOutputPath)javadocs')" />
   </Target>
   
   <Target Name="CleanLibraryProjectIntermediaries">

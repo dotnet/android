@@ -10,6 +10,7 @@
     <AssemblyName>Xamarin.Android.Build.Tasks</AssemblyName>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <SchemaVersion>2.0</SchemaVersion>
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
   <Import Project="..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems" Label="Shared" Condition="Exists('..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems')" />
@@ -520,6 +521,7 @@
     <Compile Include="Utilities\Profile.cs" />
     <None Include="Xamarin.Android.Build.Tasks.targets" />
     <Compile Include="Linker\MonoDroid.Tuner\PreserveTlsProvider.cs" />
+    <Compile Include="Tasks\Unzip.cs" />
   </ItemGroup>
   <!-- MD doesn't handle MSBuildToolsPath yet
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
