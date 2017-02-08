@@ -9,7 +9,7 @@
     <BuildDependsOn>
 		$(BuildDependsOn);
 		_CopyExtractedMultiDexJar;
-		_BuildMonoSymbolicate;
+		_BuildMonoSymbolicateScripts;
     </BuildDependsOn>
     <_AndroidSdkLocation>$(ANDROID_SDK_PATH)</_AndroidSdkLocation>
     <_AndroidSdkLocation Condition="'$(_AndroidSdkLocation)'==''">$(AndroidToolchainDirectory)\sdk</_AndroidSdkLocation>
@@ -59,17 +59,18 @@
       DestinationFiles="$(OutputPath)..\..\..\mandroid\MULTIDEX_JAR_LICENSE" />
   </Target>
 
-  <Target Name="_BuildMonoSymbolicate"
-      Inputs="$(MonoSourceFullPath)\mcs\tools\mono-symbolicate\mono-symbolicate.exe.sources"
-      Outputs="$(OutputPath)..\..\..\..\lib\mandroid\mono-symbolicate.exe"
-      >
+  <ItemGroup>
+    <_MonoSymbolicateScript             Include="mono-symbolicate;mono-symbolicate.cmd" />
+    <_MonoSymbolicateScriptSource       Include="@(_MonoSymbolicateScript->'..\..\tools\scripts\%(Identity)')" />
+    <_MonoSymbolicateScriptDestination  Include="@(_MonoSymbolicateScript->'$(OutputPath)..\..\..\..\bin\%(Identity)')" />
+  </ItemGroup>
+
+  <Target Name="_BuildMonoSymbolicateScripts"
+      Inputs="@(_MonoSymbolicateScriptSource)"
+      Outputs="@(_MonoSymbolicateScriptDestination)">
     <Copy
-        SourceFiles="..\..\tools\scripts\mono-symbolicate"
-        DestinationFiles="$(OutputPath)..\..\..\..\bin\mono-symbolicate"
-    />
-    <Copy
-        SourceFiles="..\..\tools\scripts\mono-symbolicate.cmd"
-        DestinationFiles="$(OutputPath)..\..\..\..\bin\mono-symbolicate.cmd"
+        SourceFiles="@(_MonoSymbolicateScriptSource)"
+        DestinationFiles="@(_MonoSymbolicateScriptDestination)"
     />
   </Target>
 </Project>
