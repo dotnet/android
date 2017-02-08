@@ -115,7 +115,7 @@
     </_NdkToolchain>
   </ItemGroup>
   <ItemGroup>
-    <AntItem Include="apache-ant-1.9.8-bin.zip">
+    <AntItem Include="apache-ant-1.9.9-bin.zip">
       <HostOS></HostOS>
     </AntItem>
   </ItemGroup>
