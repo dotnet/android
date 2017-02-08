@@ -115,5 +115,5 @@ package-oss $(ZIP_OUTPUT):
 	if [ ! -d $(ZIP_OUTPUT_BASENAME) ] ; then mkdir $(ZIP_OUTPUT_BASENAME) ; fi
 	if [ ! -L $(ZIP_OUTPUT_BASENAME)/bin ] ; then ln -s ../bin $(ZIP_OUTPUT_BASENAME) ; fi
 	zip -r "$(ZIP_OUTPUT)" \
-		$(wildcard $(_BUNDLE_ZIPS_INCLUDE)) \
-		$(patsubst %, --exclude %, $(wildcard $(_BUNDLE_ZIPS_EXCLUDE)))
+		`ls -1d $(_BUNDLE_ZIPS_INCLUDE) 2>/dev/null` \
+		--exclude `ls -1d $(_BUNDLE_ZIPS_EXCLUDE) 2>/dev/null`
