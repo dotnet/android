@@ -41,12 +41,19 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 
 		protected override string GenerateCommandLineCommands ()
 		{
-			return "rev-parse --abbrev-ref HEAD";
+			return "branch --contains HEAD";
 		}
 
 		protected override void LogEventsFromTextOutput (string singleLine, MessageImportance messageImportance)
 		{
+			if (singleLine?.Length > 0 && singleLine [0] == '*')
+				singleLine = singleLine.Substring (1);
+			singleLine  = singleLine?.Trim ();
 			if (string.IsNullOrEmpty (singleLine))
+				return;
+			if (singleLine.StartsWith ("(") && singleLine.Contains ("detached at") && singleLine.EndsWith (")"))
+				return;
+			if (Branch != null)
 				return;
 			Branch  = singleLine;
 		}
