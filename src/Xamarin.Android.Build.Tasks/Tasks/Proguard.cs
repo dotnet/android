@@ -26,8 +26,6 @@ namespace Xamarin.Android.Tasks
 
 		public string JavaToolPath { get; set; }
 
-		public string MSBuildRuntimeType { get; set; }
-
 		[Required]
 		public string JavaPlatformJarPath { get; set; }
 
@@ -87,7 +85,6 @@ namespace Xamarin.Android.Tasks
 		{
 			Log.LogDebugMessage ("Proguard");
 			Log.LogDebugMessage ("  AndroidSdkDirectory: {0}", AndroidSdkDirectory);
-			Log.LogDebugMessage ("  MSBuildRuntimeType: {0}", MSBuildRuntimeType);
 			Log.LogDebugMessage ("  JavaPlatformJarPath: {0}", JavaPlatformJarPath);
 			Log.LogDebugMessage ("  ClassesOutputDirectory: {0}", ClassesOutputDirectory);
 			Log.LogDebugMessage ("  AcwMapFile: {0}", AcwMapFile);
@@ -106,12 +103,7 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ("  PrintSeedsOutput: {0}", PrintSeedsOutput);
 			Log.LogDebugMessage ("  PrintMappingOutput: {0}", PrintMappingOutput);
 
-			// Windows seems to need special care, needs JAVA_TOOL_OPTIONS.
-			// On the other hand, xbuild has a bug and fails to parse '=' in the value, so we skip JAVA_TOOL_OPTIONS on Mono runtime.
-			EnvironmentVariables =
-				string.IsNullOrEmpty (MSBuildRuntimeType) || MSBuildRuntimeType == "Mono" ?
-				new string [] { "PROGUARD_HOME=" + ProguardHome } :
-				new string [] { "JAVA_TOOL_OPTIONS=-Dfile.encoding=UTF8", "PROGUARD_HOME=" + ProguardHome };
+			EnvironmentVariables = MonoAndroidHelper.GetProguardEnvironmentVaribles (ProguardHome);
 
 			return base.Execute ();
 		}
