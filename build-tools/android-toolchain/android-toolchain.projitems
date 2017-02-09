@@ -2,7 +2,7 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <AndroidUri Condition=" '$(AndroidUri)' == '' ">https://dl-ssl.google.com/android/repository</AndroidUri>
-    <AntUri Condition=" '$(AntUri)' == '' ">http://mirrors.ibiblio.org/apache/ant/binaries</AntUri>
+    <AntUri Condition=" '$(AntUri)' == '' ">http://archive.apache.org/dist/ant/binaries</AntUri>
   </PropertyGroup>
   <ItemGroup>
     <AndroidNdkItem Include="android-ndk-r11c-linux-x86_64.zip">
