@@ -1,3 +1,4 @@
+<img src="banner.png" alt="Xamarin.Android banner" height="145" >
 Xamarin.Android
 ===============
 
