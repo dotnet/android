@@ -12,15 +12,10 @@ namespace Xamarin.Android.Build.Tests
 		static BaseTest ()
 		{
 			try {
-				string ext = Environment.OSVersion.Platform != PlatformID.Unix ? ".exe" : "";
-				string adb = Path.Combine (Environment.GetEnvironmentVariable ("ANDROID_SDK_PATH"), "platform-tools", "adb" + ext);
-				var proc = System.Diagnostics.Process.Start (new System.Diagnostics.ProcessStartInfo (adb, "devices") { RedirectStandardOutput = true, UseShellExecute = false });
-				proc.WaitForExit ();
-				var output = proc.StandardOutput.ReadToEnd ().Trim ();
-				// We wouldn't like to unexpectedly deploy to connected devices while running tests, so filter by target name for now...
-				HasDevices = output.Split ('\n').Where (s => s.Contains ("emulator-")).Count () > 0;
-			}
-			catch (Exception ex) {
+				var adbTarget = Environment.GetEnvironmentVariable ("ADB_TARGET");
+				HasDevices = string.Compare (RunAdbCommand ($"{adbTarget} shell getprop ro.build.version.sdk"),
+						"error: no devices/emulators found" , StringComparison.InvariantCultureIgnoreCase) != 0;
+			} catch (Exception ex) {
 				Console.Error.WriteLine ("Failed to determine whether there is Android target emulator or not" + ex);
 			}
 		}
@@ -53,6 +48,20 @@ namespace Xamarin.Android.Build.Tests
 			get {
 				return Path.GetDirectoryName (new Uri (typeof (XamarinProject).Assembly.CodeBase).LocalPath);
 			}
+		}
+
+		protected static string RunAdbCommand (string command, bool ignoreErrors = true)
+		{
+			string ext = Environment.OSVersion.Platform != PlatformID.Unix ? ".exe" : "";
+			var home = Environment.GetFolderPath (Environment.SpecialFolder.Personal);
+			var sdkPath = Environment.GetEnvironmentVariable ("ANDROID_SDK_PATH");
+			if (string.IsNullOrEmpty (sdkPath))
+				sdkPath = $"{home}/android-toolchain/sdk";
+			string adb = Path.Combine (sdkPath, "platform-tools", "adb" + ext);
+			var proc = System.Diagnostics.Process.Start (new System.Diagnostics.ProcessStartInfo (adb, command) { RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false });
+			proc.WaitForExit ();
+			var result = proc.StandardOutput.ReadToEnd ().Trim () + proc.StandardError.ReadToEnd ().Trim ();
+			return result;
 		}
 
 		protected ProjectBuilder CreateApkBuilder (string directory, bool cleanupAfterSuccessfulBuild = false, bool cleanupOnDispose = true)
