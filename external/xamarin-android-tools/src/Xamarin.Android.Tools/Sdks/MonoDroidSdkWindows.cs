@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,9 +11,6 @@ namespace Xamarin.Android.Tools
 		{
 			string monoAndroidPath = Environment.GetEnvironmentVariable ("MONO_ANDROID_PATH");
 			if (!string.IsNullOrEmpty (monoAndroidPath)) {
-				string libMandroid = Path.Combine (monoAndroidPath, "lib", "mandroid");
-				if (Directory.Exists (libMandroid) && ValidateRuntime (libMandroid))
-					return libMandroid;
 				if (Directory.Exists (monoAndroidPath) && ValidateRuntime (monoAndroidPath))
 					return monoAndroidPath;
 			}
@@ -24,6 +21,7 @@ namespace Xamarin.Android.Tools
 		}
 
 		static readonly string[] RuntimeToFrameworkPaths = new []{
+			Path.Combine ("..", "..", "..", "Common7", "IDE", "ReferenceAssemblies", "Microsoft", "Framework","MonoAndroid"),
 			Path.Combine ("..", "..", "..", "Reference Assemblies", "Microsoft", "Framework", "MonoAndroid"),
 			Path.Combine (OS.ProgramFilesX86, "Reference Assemblies", "Microsoft", "Framework", "MonoAndroid"),
 		};

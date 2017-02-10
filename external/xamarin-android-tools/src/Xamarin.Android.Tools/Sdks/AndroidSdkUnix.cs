@@ -230,4 +230,3 @@ namespace Xamarin.Android.Tools
 
 	}
 }
-

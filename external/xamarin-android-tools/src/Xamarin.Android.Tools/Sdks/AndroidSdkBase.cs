@@ -126,7 +126,7 @@ namespace Xamarin.Android.Tools
 		/// </summary>
 		public bool ValidateAndroidNdkLocation (string loc)
 		{
-			return !string.IsNullOrEmpty (loc) && FindExecutableInDirectory(NdkStack, loc).Any();
+			return !string.IsNullOrEmpty (loc) && FindExecutableInDirectory (NdkStack, loc).Any ();
 		}
 
 		protected IEnumerable<string> FindExecutableInPath (string executable)
@@ -135,14 +135,14 @@ namespace Xamarin.Android.Tools
 			var pathDirs = path.Split (new char[] { Path.PathSeparator }, StringSplitOptions.RemoveEmptyEntries);
 
 			foreach (var dir in pathDirs) {
-				foreach (var directory in FindExecutableInDirectory(executable, dir)) {
+				foreach (var directory in FindExecutableInDirectory (executable, dir)) {
 					yield return directory;
 				}
 			}
 		}
-		
-		protected IEnumerable<string> FindExecutableInDirectory(string executable, string dir)
-		{			
+
+		protected IEnumerable<string> FindExecutableInDirectory (string executable, string dir)
+		{
 			foreach (var exe in Executables (executable))
 				if (File.Exists (Path.Combine (dir, exe)))
 					yield return dir;

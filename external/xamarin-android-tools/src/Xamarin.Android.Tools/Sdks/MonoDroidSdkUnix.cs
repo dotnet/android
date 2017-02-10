@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Linq;
 using System.Collections.Generic;
@@ -16,6 +16,7 @@ namespace Xamarin.Android.Tools
 		readonly static string[] SearchPaths = {
 			"/Library/Frameworks/Xamarin.Android.framework/Versions/Current/lib/mandroid",
 			"/Developer/MonoAndroid/usr/lib/mandroid",
+			"/app/lib/mandroid",
 			"/opt/mono-android/lib/mandroid"
 		};
 
