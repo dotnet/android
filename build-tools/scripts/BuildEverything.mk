@@ -73,19 +73,14 @@ _MSBUILD_ARGS	= \
 	/p:AndroidSupportedHostJitAbis=$(call join-with,:,$(ALL_HOST_ABIS)) \
 	/p:AndroidSupportedTargetAotAbis=$(call join-with,:,$(ALL_AOT_ABIS))
 
-TASK_ASSEMBLIES = \
-	bin/Debug/lib/xbuild/Xamarin/Android/Xamarin.Android.Build.Tasks.dll    \
-	bin/Release/lib/xbuild/Xamarin/Android/Xamarin.Android.Build.Tasks.dll
+CONFIGURATIONS ?= Debug Release
+TASK_ASSEMBLIES = $(foreach conf, $(CONFIGURATIONS), bin/$(conf)/lib/xbuild/Xamarin/Android/Xamarin.Android.Build.Tasks.dll)
+RUNTIME_LIBRARIES = $(foreach conf, $(CONFIGURATIONS), $(ALL_JIT_ABIS:%=bin/$(conf)/lib/xbuild/Xamarin/Android/lib/%/libmonosgen-2.0.so))
+FRAMEWORK_ASSEMBLIES = $(foreach conf, $(CONFIGURATIONS), $(FRAMEWORKS:%=bin/$(conf)/lib/xbuild-frameworks/MonoAndroid/%/Mono.Android.dll))
 
-RUNTIME_LIBRARIES = \
-	$(ALL_JIT_ABIS:%=bin/Debug/lib/xbuild/Xamarin/Android/lib/%/libmonosgen-2.0.so) \
-	$(ALL_JIT_ABIS:%=bin/Release/lib/xbuild/Xamarin/Android/lib/%/libmonosgen-2.0.so)
+jenkins: leeroy $(ZIP_OUTPUT)
 
-FRAMEWORK_ASSEMBLIES = \
-	$(FRAMEWORKS:%=bin/Debug/lib/xbuild-frameworks/MonoAndroid/%/Mono.Android.dll)    \
-	$(FRAMEWORKS:%=bin/Release/lib/xbuild-frameworks/MonoAndroid/%/Mono.Android.dll)
-
-leeroy jenkins: prepare $(RUNTIME_LIBRARIES) $(TASK_ASSEMBLIES) $(FRAMEWORK_ASSEMBLIES) $(ZIP_OUTPUT)
+leeroy: prepare $(RUNTIME_LIBRARIES) $(TASK_ASSEMBLIES) $(FRAMEWORK_ASSEMBLIES)
 
 $(TASK_ASSEMBLIES): bin/%/lib/xbuild/Xamarin/Android/Xamarin.Android.Build.Tasks.dll:
 	$(MSBUILD) $(MSBUILD_FLAGS) /p:Configuration=$* $(_MSBUILD_ARGS) $(SOLUTION)
