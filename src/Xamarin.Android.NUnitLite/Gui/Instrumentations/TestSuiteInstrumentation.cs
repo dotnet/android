@@ -94,9 +94,12 @@ namespace Xamarin.Android.NUnitLite {
 		string GetResultsPath ()
 		{
 			var resultsPathFile = Context.GetExternalFilesDir (global::Android.OS.Environment.DirectoryDocuments);
-			var resultsPath = resultsPathFile != null && resultsPathFile.Exists ()
+			var usePathFile = resultsPathFile != null && resultsPathFile.Exists ();
+			var resultsPath = usePathFile
 				? resultsPathFile.AbsolutePath
 				: Path.Combine (Context.FilesDir.AbsolutePath, ".__override__");
+			if (!usePathFile && !Directory.Exists (resultsPath))
+				Directory.CreateDirectory (resultsPath);
 			return Path.Combine (resultsPath, "TestResults.xml");
 		}
 
