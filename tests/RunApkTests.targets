@@ -16,6 +16,7 @@
   <PropertyGroup>
     <RunApkTestsDependsOn>
       AcquireAndroidTarget;
+      UndeployUnitTestApks;
       DeployUnitTestApks;
       RunUnitTestApks;
       ReleaseAndroidTarget

@@ -78,7 +78,7 @@
   <Target Name="DeployUnitTestApks"
       Condition=" '@(UnitTestApk)' != '' ">
     <Adb
-        Arguments="$(_AdbTarget) $(AdbOptions) install -r &quot;%(UnitTestApk.Identity)&quot;"
+        Arguments="$(_AdbTarget) $(AdbOptions) install &quot;%(UnitTestApk.Identity)&quot;"
         ToolExe="$(AdbToolExe)"
         ToolPath="$(AdbToolPath)"
     />
