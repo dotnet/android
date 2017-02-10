@@ -387,6 +387,7 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
       Java7DocPaths="$(Java7DocPaths)"
       Java8DocPaths="$(Java8DocPaths)"
       DroidDocPaths="$(DroidDocPaths)"
+      JavaDocs="@(JavaDocJar->'$(IntermediateOutputPath)javadocs\%(FileName)')"
     />
 
     <BindingsGenerator Condition="'$(AndroidClassParser)' == 'class-parse'"
