@@ -32,7 +32,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <Optimize>true</Optimize>
     <OutputPath>..\..\bin\Release\lib\xbuild-frameworks\MonoAndroid\v1.0</OutputPath>
-    <DefineConstants>NUNITLITE;SILVERLIGHT;CLR_4_0;NET_4_5;__MOBILE__;MONOTOUCH</DefineConstants>
+    <DefineConstants>NUNITLITE;CLR_4_0;NET_4_5;__MOBILE__;MONOTOUCH</DefineConstants>
     <DocumentationFile>$(OutputPath)\$(AssemblyName).xml</DocumentationFile>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
