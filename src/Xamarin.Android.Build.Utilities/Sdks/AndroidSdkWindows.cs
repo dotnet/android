@@ -24,27 +24,36 @@ namespace Xamarin.Android.Build.Utilities
 		public override string NdkHostPlatform64Bit { get { return "windows-x86_64"; } }
 		public override string Javac { get; protected set; } = "javac.exe";
 
+		string GetMDRegistryKey ()
+		{
+			var regKey = Environment.GetEnvironmentVariable ("XAMARIN_ANDROID_REGKEY");
+			return string.IsNullOrWhiteSpace (regKey) ? MDREG_KEY : regKey;
+		}
+
 		public override string PreferedAndroidSdkPath {
 			get {
 				var wow = RegistryEx.Wow64.Key32;
-				if (CheckRegistryKeyForExecutable (RegistryEx.CurrentUser, MDREG_KEY, MDREG_ANDROID_SDK, wow, "platform-tools", Adb))
-					return RegistryEx.GetValueString (RegistryEx.CurrentUser, MDREG_KEY, MDREG_ANDROID_SDK, wow);
+				var regKey = GetMDRegistryKey ();
+				if (CheckRegistryKeyForExecutable (RegistryEx.CurrentUser, regKey, MDREG_ANDROID_SDK, wow, "platform-tools", Adb))
+					return RegistryEx.GetValueString (RegistryEx.CurrentUser, regKey, MDREG_ANDROID_SDK, wow);
 				return null;
 			}
 		}
 		public override string PreferedAndroidNdkPath {
 			get {
 				var wow = RegistryEx.Wow64.Key32;
-				if (CheckRegistryKeyForExecutable (RegistryEx.CurrentUser, MDREG_KEY, MDREG_ANDROID_NDK, wow, ".", NdkStack))
-					return RegistryEx.GetValueString (RegistryEx.CurrentUser, MDREG_KEY, MDREG_ANDROID_NDK, wow);
+				var regKey = GetMDRegistryKey ();
+				if (CheckRegistryKeyForExecutable (RegistryEx.CurrentUser, regKey, MDREG_ANDROID_NDK, wow, ".", NdkStack))
+					return RegistryEx.GetValueString (RegistryEx.CurrentUser, regKey, MDREG_ANDROID_NDK, wow);
 				return null;
 			}
 		}
 		public override string PreferedJavaSdkPath {
 			get {
 				var wow = RegistryEx.Wow64.Key32;
-				if (CheckRegistryKeyForExecutable (RegistryEx.CurrentUser, MDREG_KEY, MDREG_JAVA_SDK, wow, "bin", JarSigner))
-					return RegistryEx.GetValueString (RegistryEx.CurrentUser, MDREG_KEY, MDREG_JAVA_SDK, wow);
+				var regKey = GetMDRegistryKey ();
+				if (CheckRegistryKeyForExecutable (RegistryEx.CurrentUser, regKey, MDREG_JAVA_SDK, wow, "bin", JarSigner))
+					return RegistryEx.GetValueString (RegistryEx.CurrentUser, regKey, MDREG_JAVA_SDK, wow);
 				return null;
 			}
 		}
@@ -53,13 +62,14 @@ namespace Xamarin.Android.Build.Utilities
 		{
 			var roots = new[] { RegistryEx.CurrentUser, RegistryEx.LocalMachine };
 			var wow = RegistryEx.Wow64.Key32;
+			var regKey = GetMDRegistryKey ();
 
 			AndroidLogger.LogInfo ("sdk", "Looking for Android SDK..");
 
 			// Check for the key the user gave us in the VS/addin options
 			foreach (var root in roots)
-				if (CheckRegistryKeyForExecutable (root, MDREG_KEY, MDREG_ANDROID_SDK, wow, "platform-tools", Adb))
-					yield return RegistryEx.GetValueString (root, MDREG_KEY, MDREG_ANDROID_SDK, wow);
+				if (CheckRegistryKeyForExecutable (root, regKey, MDREG_ANDROID_SDK, wow, "platform-tools", Adb))
+					yield return RegistryEx.GetValueString (root, regKey, MDREG_ANDROID_SDK, wow);
 
 			// Check for the key written by the Xamarin installer
 			if (CheckRegistryKeyForExecutable (RegistryEx.CurrentUser, XAMARIN_ANDROID_INSTALLER_PATH, XAMARIN_ANDROID_INSTALLER_KEY, wow, "platform-tools", Adb))
@@ -90,10 +100,11 @@ namespace Xamarin.Android.Build.Utilities
 			// check the user specified path
 			var roots = new[] { RegistryEx.CurrentUser, RegistryEx.LocalMachine };
 			const RegistryEx.Wow64 wow = RegistryEx.Wow64.Key32;
+			var regKey = GetMDRegistryKey ();
 
 			foreach (var root in roots) {
-				if (CheckRegistryKeyForExecutable (root, MDREG_KEY, MDREG_JAVA_SDK, wow, "bin", JarSigner))
-					return RegistryEx.GetValueString (root, MDREG_KEY, MDREG_JAVA_SDK, wow);
+				if (CheckRegistryKeyForExecutable (root, regKey, MDREG_JAVA_SDK, wow, "bin", JarSigner))
+					return RegistryEx.GetValueString (root, regKey, MDREG_JAVA_SDK, wow);
 			}
 
 			string subkey = @"SOFTWARE\JavaSoft\Java Development Kit";
@@ -129,13 +140,14 @@ namespace Xamarin.Android.Build.Utilities
 		{
 			var roots = new[] { RegistryEx.CurrentUser, RegistryEx.LocalMachine };
 			var wow = RegistryEx.Wow64.Key32;
+			var regKey = GetMDRegistryKey ();
 
 			AndroidLogger.LogInfo ("sdk", "Looking for Android NDK..");
 
 			// Check for the key the user gave us in the VS/addin options
 			foreach (var root in roots)
-				if (CheckRegistryKeyForExecutable (root, MDREG_KEY, MDREG_ANDROID_NDK, wow, ".", NdkStack))
-					yield return RegistryEx.GetValueString (root, MDREG_KEY, MDREG_ANDROID_NDK, wow);
+				if (CheckRegistryKeyForExecutable (root, regKey, MDREG_ANDROID_NDK, wow, ".", NdkStack))
+					yield return RegistryEx.GetValueString (root, regKey, MDREG_ANDROID_NDK, wow);
 
 			/*
 			// Check for the key written by the Xamarin installer
@@ -162,17 +174,20 @@ namespace Xamarin.Android.Build.Utilities
 
 		public override void SetPreferredAndroidSdkPath (string path)
 		{
-			RegistryEx.SetValueString (RegistryEx.CurrentUser, MDREG_KEY, MDREG_ANDROID_SDK, path ?? "", RegistryEx.Wow64.Key32);
+			var regKey = GetMDRegistryKey ();
+			RegistryEx.SetValueString (RegistryEx.CurrentUser, regKey, MDREG_ANDROID_SDK, path ?? "", RegistryEx.Wow64.Key32);
 		}
 
 		public override void SetPreferredJavaSdkPath (string path)
 		{
-			RegistryEx.SetValueString (RegistryEx.CurrentUser, MDREG_KEY, MDREG_JAVA_SDK, path ?? "", RegistryEx.Wow64.Key32);
+			var regKey = GetMDRegistryKey ();
+			RegistryEx.SetValueString (RegistryEx.CurrentUser, regKey, MDREG_JAVA_SDK, path ?? "", RegistryEx.Wow64.Key32);
 		}
 
 		public override void SetPreferredAndroidNdkPath (string path)
 		{
-			RegistryEx.SetValueString (RegistryEx.CurrentUser, MDREG_KEY, MDREG_ANDROID_NDK, path ?? "", RegistryEx.Wow64.Key32);
+			var regKey = GetMDRegistryKey ();
+			RegistryEx.SetValueString (RegistryEx.CurrentUser, regKey, MDREG_ANDROID_NDK, path ?? "", RegistryEx.Wow64.Key32);
 		}
 
 		#region Helper Methods
