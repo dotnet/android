@@ -1,6 +1,6 @@
 PRODUCT_VERSION   = $(shell $(MSBUILD) $(MSBUILD_FLAGS) /p:DoNotLoadOSProperties=True /nologo /v:minimal /t:GetProductVersion build-tools/scripts/Info.targets | tr -d '[[:space:]]')
 
-GIT_BRANCH        = $(shell LANG=C git branch --contains HEAD | grep -E -v '\(.*detached.*\)' | sed 's/^. //' | head -1 | tr -d '[[:space:]]' | tr -C a-zA-Z0-9- _ )
+GIT_BRANCH        = $(shell LANG=C git rev-parse --abbrev-ref HEAD | tr -d '[[:space:]]' | tr -C a-zA-Z0-9- _)
 GIT_COMMIT        = $(shell LANG=C git log --no-color --first-parent -n1 --pretty=format:%h)
 
 # In which commit did $(PRODUCT_VERSION) change? 00000000 if uncommitted
