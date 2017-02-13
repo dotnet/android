@@ -15,8 +15,8 @@
     <AndroidUseLatestPlatformSdk>false</AndroidUseLatestPlatformSdk>
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
+  <Import Project="..\..\build-tools\scripts\MonoAndroidFramework.props" />
   <PropertyGroup>
-    <TargetFrameworkVersion>$(AndroidFrameworkVersion)</TargetFrameworkVersion>
     <AssemblyOriginatorKeyFile>$(MonoSourceFullPath)\mcs\class\mono.pub</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
