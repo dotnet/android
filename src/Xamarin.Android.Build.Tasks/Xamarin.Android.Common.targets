@@ -368,7 +368,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 </Target>
 
 <Target Name="_BuildAdditionalResourcesCache"
-	Inputs="@(ReferencePath);@(ReferenceDependencyPaths);$(MSBuildProjectFullPath)"
+	Inputs="@(ReferencePath);@(ReferenceDependencyPaths);$(MSBuildProjectFullPath);$(NugetPackagesConfig)"
 	Outputs="$(_AndroidResourcePathsCache)"
 	DependsOnTargets="$(_BeforeBuildAdditionalResourcesCache)"
 	>
@@ -389,6 +389,9 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 		<Output TaskParameter="IsResourceCacheValid" PropertyName="_IsResourceCacheValid" />
 	</ReadAdditionalResourcesFromAssemblyCache>
 	<Delete Files="$(_AndroidResourcePathsCache)" Condition=" '$(_IsResourceCacheValid)' == 'False' " />
+	<PropertyGroup>
+		<NugetPackagesConfig Condition="Exists('$(MSBuildProjectDirectory)\packages.config')">$(MSBuildProjectDirectory)\packages.config</NugetPackagesConfig>
+	</PropertyGroup>
 </Target>
 
 <Target Name="_GetAdditionalResourcesFromAssemblies"

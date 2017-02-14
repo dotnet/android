@@ -1,5 +1,7 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
+using System.Xml.Linq;
 using NUnit.Framework;
 using Xamarin.ProjectTools;
 
@@ -69,6 +71,23 @@ namespace Xamarin.Android.Build.Tests
 						   "lib/armeabi-v7a/libmono-btls-shared.so should not exist in the apk.");
 					}
 				}
+			}
+		}
+
+		[Test]
+		public void BuildAfterAddingNuget ()
+		{
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = true,
+				TargetFrameworkVersion = "7.1",
+			};
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
+				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
+				proj.Packages.Add (KnownPackages.SupportV7CardView_24_2_1);
+				b.Save (proj, doNotCleanupOnUpdate: true);
+				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
+				var doc = File.ReadAllText (Path.Combine (b.Root, b.ProjectDirectory, proj.IntermediateOutputPath, "resourcepaths.cache"));
+				Assert.IsTrue (doc.Contains ("Xamarin.Android.Support.v7.CardView/24.2.1"), "CardView should be resolved as a reference.");
 			}
 		}
 	}
