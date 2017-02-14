@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
@@ -15,6 +17,9 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 		public  ITaskItem[]         Directories         { get; set; }
 
 		public  bool                Required            { get; set; }
+
+		public  string              HostOS              { get; set; }
+		public  string              HostOSName          { get; set; }
 
 		[Output]
 		public  ITaskItem           Location            { get; set; }
@@ -63,6 +68,18 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 				.Split (Path.PathSeparator);
 		}
 
+		internal static string GetHostProperty (ITaskItem program, string property, string hostOS, string hostOSName)
+		{
+			var value = program.GetMetadata (hostOSName + property);
+			if (string.IsNullOrEmpty (value)) {
+				value = program.GetMetadata (hostOS + property);
+			}
+			if (string.IsNullOrEmpty (value)) {
+				value = program.GetMetadata (property);
+			}
+			return string.IsNullOrEmpty (value) ? null : value;
+		}
+
 		public override bool Execute ()
 		{
 			string[]    paths   = Directories?.Select (d => d.ItemSpec).ToArray ();
@@ -71,6 +88,8 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 			}
 
 			Log.LogMessage (MessageImportance.Low, $"Task {nameof (Which)}");
+			Log.LogMessage (MessageImportance.Low, $"  {nameof (HostOS)}: {HostOS}");
+			Log.LogMessage (MessageImportance.Low, $"  {nameof (HostOSName)}: {HostOSName}");
 			Log.LogMessage (MessageImportance.Low, $"  {nameof (Program)}: {Program}");
 			Log.LogMessage (MessageImportance.Low, $"  {nameof (Directories)}:");
 			foreach (var p in paths) {
@@ -80,7 +99,7 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 
 			string _;
 			var e = GetProgramLocation (Program.ItemSpec, out _, paths);
-			if (e != null) {
+			if (e != null && !NeedInstall ()) {
 				Location = new TaskItem (e);
 			}
 
@@ -91,6 +110,76 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 			Log.LogMessage (MessageImportance.Low, $"  [Output] {nameof (Location)}: {Location?.ItemSpec}");
 
 			return !Log.HasLoggedErrors;
+		}
+
+		bool NeedInstall ()
+		{
+			var min = Program.GetMetadata ("MinimumVersion");
+			var max = Program.GetMetadata ("MaximumVersion");
+
+			if (string.IsNullOrEmpty (min) && string.IsNullOrEmpty (max)) {
+				return false;
+			}
+
+			var zero        = new Version ();
+			var minVersion  = string.IsNullOrEmpty (min) ? zero : new Version (min);
+			var maxVersion  = string.IsNullOrEmpty (max) ? zero : new Version (max);
+			var curVersion  = GetCurrentVersion ();
+
+			Log.LogMessage (MessageImportance.Low, $"Checking '{Program.ItemSpec}' version: Minimum: {minVersion}; Maximum: {maxVersion}; Current: {curVersion}");
+
+			if (minVersion == zero) {
+				return curVersion > maxVersion;
+			}
+			if (curVersion < minVersion)
+				return true;
+			if (maxVersion == zero)
+				return false;
+			return curVersion > maxVersion;
+		}
+
+		static  readonly    Regex           VersionMatch    = new Regex (@"(?<version>\d+\.\d+(\.\d+(\.\d+)?)?)");
+
+		Version GetCurrentVersion ()
+		{
+			string shell, format;
+			GetShell (out shell, out format);
+
+			var command = GetHostProperty (Program, "CurrentVersionCommand", HostOS, HostOSName)
+				?? Program.ItemSpec + " --version";
+			var psi = new ProcessStartInfo (shell, string.Format (format, command)) {
+				CreateNoWindow = true,
+				UseShellExecute = false,
+				RedirectStandardOutput = true,
+			};
+			string curVersion = null;
+			using (var p = new Process { StartInfo = psi }) {
+				p.OutputDataReceived += (sender, e) => {
+					if (string.IsNullOrEmpty (e.Data) || curVersion != null)
+						return;
+					var m = VersionMatch.Match (e.Data);
+					if (!m.Success)
+						return;
+					curVersion = m.Groups ["version"].Value;
+				};
+				p.Start ();
+				p.BeginOutputReadLine ();
+				p.WaitForExit ();
+			}
+			return curVersion == null
+				? new Version ()
+				: new Version (curVersion);
+		}
+
+		void GetShell (out string shell, out string format)
+		{
+			if (HostOS == "Windows") {
+				shell = "cmd.exe";
+				format = "/c \"{0}\"";
+				return;
+			}
+			shell = "/bin/sh";
+			format = "-c \"{0}\"";
 		}
 	}
 }

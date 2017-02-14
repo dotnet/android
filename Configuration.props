@@ -13,6 +13,8 @@
   />
   <PropertyGroup>
     <ProductVersion>7.1.99</ProductVersion>
+    <AutoProvision Condition=" '$(AutoProvision)' == '' ">False</AutoProvision>
+    <AutoProvisionUsesSudo Condition=" '$(AutoProvisionUsesSudo)' == '' ">False</AutoProvisionUsesSudo>
     <HostOS Condition=" '$(HostOS)' == '' And '$(OS)' == 'Windows_NT' ">Windows</HostOS>
     <HostCc Condition=" '$(HostCc)' == '' ">$(HostCc64)</HostCc>
     <HostCxx Condition=" '$(HostCxx)' == '' ">$(HostCxx64)</HostCxx>

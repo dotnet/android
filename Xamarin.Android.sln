@@ -97,6 +97,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.Cecil", "ex
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.Cecil.Mdb", "external\Java.Interop\src\Xamarin.Android.Cecil\Xamarin.Android.Cecil.Mdb.csproj", "{C0487169-8F81-497F-919E-EB42B1D0243F}"
 EndProject
+Project("{9344BDBB-3E7F-41FC-A0DD-8665D75EE146}") = "dependencies", "build-tools\dependencies\dependencies.mdproj", "{C845ECC0-2ED3-498E-8EA8-02EF7AC6E9AD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|AnyCPU = Debug|AnyCPU
@@ -447,6 +449,14 @@ Global
 		{C876DA71-8573-4CEF-9149-716D72455ED4}.XAIntegrationDebug|AnyCPU.Build.0 = Debug|Any CPU
 		{C876DA71-8573-4CEF-9149-716D72455ED4}.XAIntegrationRelease|AnyCPU.ActiveCfg = Debug|Any CPU
 		{C876DA71-8573-4CEF-9149-716D72455ED4}.XAIntegrationRelease|AnyCPU.Build.0 = Debug|Any CPU
+		{C845ECC0-2ED3-498E-8EA8-02EF7AC6E9AD}.Debug|AnyCPU.ActiveCfg = Debug|Any CPU
+		{C845ECC0-2ED3-498E-8EA8-02EF7AC6E9AD}.Debug|AnyCPU.Build.0 = Debug|Any CPU
+		{C845ECC0-2ED3-498E-8EA8-02EF7AC6E9AD}.Release|AnyCPU.ActiveCfg = Release|Any CPU
+		{C845ECC0-2ED3-498E-8EA8-02EF7AC6E9AD}.Release|AnyCPU.Build.0 = Release|Any CPU
+		{C845ECC0-2ED3-498E-8EA8-02EF7AC6E9AD}.XAIntegrationDebug|AnyCPU.ActiveCfg = Debug|Any CPU
+		{C845ECC0-2ED3-498E-8EA8-02EF7AC6E9AD}.XAIntegrationDebug|AnyCPU.Build.0 = Debug|Any CPU
+		{C845ECC0-2ED3-498E-8EA8-02EF7AC6E9AD}.XAIntegrationRelease|AnyCPU.ActiveCfg = Debug|Any CPU
+		{C845ECC0-2ED3-498E-8EA8-02EF7AC6E9AD}.XAIntegrationRelease|AnyCPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{8FF78EB6-6FC8-46A7-8A15-EBBA9045C5FA} = {E351F97D-EA4F-4E7F-AAA0-8EBB1F2A4A62}
@@ -493,6 +503,7 @@ Global
 		{15945D4B-FF56-4BCC-B598-2718D199DD08} = {864062D3-A415-4A6F-9324-5820237BA058}
 		{C0487169-8F81-497F-919E-EB42B1D0243F} = {864062D3-A415-4A6F-9324-5820237BA058}
 		{C876DA71-8573-4CEF-9149-716D72455ED4} = {E351F97D-EA4F-4E7F-AAA0-8EBB1F2A4A62}
+		{C845ECC0-2ED3-498E-8EA8-02EF7AC6E9AD} = {E351F97D-EA4F-4E7F-AAA0-8EBB1F2A4A62}
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
 		Policies = $0

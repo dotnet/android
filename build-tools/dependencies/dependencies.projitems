@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <_DarwinMonoFramework>MonoFramework-MDK-4.8.0.489.macos10.xamarin.universal.pkg</_DarwinMonoFramework>
+    <_AptGetInstall>apt-get -f -u install</_AptGetInstall>
+  </PropertyGroup>
+  <ItemGroup>
+    <RequiredProgram Include="$(HostCcName)" />
+    <RequiredProgram Include="$(HostCxxName)" />
+    <RequiredProgram Include="7za"                  Condition=" '$(NeedMxe)' == 'true' And $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))">
+      <Homebrew>p7zip</Homebrew>
+    </RequiredProgram>
+    <RequiredProgram Include="autoconf">
+      <Homebrew>autoconf</Homebrew>
+    </RequiredProgram>
+    <RequiredProgram Include="automake">
+      <Homebrew>automake</Homebrew>
+    </RequiredProgram>
+    <RequiredProgram Include="cmake"                Condition=" '$(NeedMxe)' == 'true' And $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))">
+      <Homebrew>cmake</Homebrew>
+    </RequiredProgram>
+    <RequiredProgram Include="gdk-pixbuf-csource"   Condition=" '$(NeedMxe)' == 'true' And $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))">
+      <Homebrew>gdk-pixbuf</Homebrew>
+    </RequiredProgram>
+    <RequiredProgram Include="gettext"              Condition=" '$(NeedMxe)' == 'true' And $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))">
+      <Homebrew>gettext</Homebrew>
+    </RequiredProgram>
+    <RequiredProgram Include="glibtool"             Condition=" '$(NeedMxe)' == 'true' And $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))">
+      <Homebrew>libtool</Homebrew>
+    </RequiredProgram>
+    <RequiredProgram Include="gsed"                 Condition=" '$(NeedMxe)' == 'true' And $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))">
+      <Homebrew>gnu-sed</Homebrew>
+    </RequiredProgram>
+    <RequiredProgram Include="intltoolize"          Condition=" '$(NeedMxe)' == 'true' And $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))">
+      <Homebrew>intltool</Homebrew>
+    </RequiredProgram>
+    <RequiredProgram Include="javac">
+      <MinimumVersion>1.8</MinimumVersion>
+      <CurrentVersionCommand>$(MSBuildThisFileDirectory)..\scripts\javac-version</CurrentVersionCommand>
+      <UbuntuInstall>$(_AptGetInstall) openjdk-8-jdk</UbuntuInstall>
+    </RequiredProgram>
+    <RequiredProgram Include="make" />
+    <RequiredProgram Include="pkg-config"           Condition=" '$(NeedMxe)' == 'true' And $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))">
+      <Homebrew>pkg-config</Homebrew>
+    </RequiredProgram>
+    <RequiredProgram Include="ruby"                 Condition=" '$(NeedMxe)' == 'true' And $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))" />
+    <RequiredProgram Include="scons"                Condition=" '$(NeedMxe)' == 'true' And $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))">
+      <Homebrew>scons</Homebrew>
+    </RequiredProgram>
+    <RequiredProgram Include="wget"                 Condition=" '$(NeedMxe)' == 'true' And $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))">
+      <Homebrew>wget</Homebrew>
+    </RequiredProgram>
+    <RequiredProgram Include="xz"                   Condition=" '$(NeedMxe)' == 'true' And $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))">
+      <Homebrew>xz</Homebrew>
+    </RequiredProgram>
+    <RequiredProgram Include="xxd">
+      <UbuntuInstall>$(_AptGetInstall) vim-common</UbuntuInstall>
+    </RequiredProgram>
+    <RequiredProgram Include="$(ManagedRuntime)"    Condition=" '$(ManagedRuntime)' != '' ">
+      <MinimumVersion>4.4.0</MinimumVersion>
+      <MaximumVersion>4.8.99</MaximumVersion>
+      <CurrentVersionCommand>$(MSBuildThisFileDirectory)..\scripts\mono-version</CurrentVersionCommand>
+      <DarwinMinimumUrl>https://bosstoragemirror.blob.core.windows.net/wrench/mono-4.8.0/9a/9ac5bf2f0235ab75d2cc6be0866d6ca3ed302977/$(_DarwinMonoFramework)</DarwinMinimumUrl>
+      <DarwinInstall>installer -pkg "$(AndroidToolchainCacheDirectory)\$(_DarwinMonoFramework)" -target /</DarwinInstall>
+    </RequiredProgram>
+  </ItemGroup>
+</Project>

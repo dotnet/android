@@ -119,42 +119,4 @@
       <HostOS></HostOS>
     </AntItem>
   </ItemGroup>
-  <ItemGroup>
-    <RequiredProgram Include="$(ManagedRuntime)"    Condition=" '$(ManagedRuntime)' != '' " />
-    <RequiredProgram Include="$(HostCcName)" />
-    <RequiredProgram Include="$(HostCxxName)" />
-    <RequiredProgram Include="7za"                  Condition=" '$(NeedMxe)' == 'true' And $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))">
-      <Homebrew>p7zip</Homebrew>
-    </RequiredProgram>
-    <RequiredProgram Include="autoconf" />
-    <RequiredProgram Include="automake" />
-    <RequiredProgram Include="cmake"                Condition=" '$(NeedMxe)' == 'true' And $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))" />
-    <RequiredProgram Include="gdk-pixbuf-csource"   Condition=" '$(NeedMxe)' == 'true' And $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))">
-      <Homebrew>gdk-pixbuf</Homebrew>
-    </RequiredProgram>
-    <RequiredProgram Include="gettext"              Condition=" '$(NeedMxe)' == 'true' And $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))" />
-    <RequiredProgram Include="glibtool"             Condition=" '$(NeedMxe)' == 'true' And $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))">
-      <Homebrew>libtool</Homebrew>
-    </RequiredProgram>
-    <RequiredProgram Include="gsed"                 Condition=" '$(NeedMxe)' == 'true' And $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))">
-      <Homebrew>gnu-sed</Homebrew>
-    </RequiredProgram>
-    <RequiredProgram Include="intltoolize"          Condition=" '$(NeedMxe)' == 'true' And $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))">
-      <Homebrew>intltool</Homebrew>
-    </RequiredProgram>
-    <RequiredProgram Include="make" />
-    <RequiredProgram Include="pkg-config"           Condition=" '$(NeedMxe)' == 'true' And $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))">
-      <Homebrew>pkg-config</Homebrew>
-    </RequiredProgram>
-    <RequiredProgram Include="ruby"                 Condition=" '$(NeedMxe)' == 'true' And $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))" />
-    <RequiredProgram Include="scons"                Condition=" '$(NeedMxe)' == 'true' And $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))">
-      <Homebrew>scons</Homebrew>
-    </RequiredProgram>
-    <RequiredProgram Include="wget"                 Condition=" '$(NeedMxe)' == 'true' And $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))">
-      <Homebrew>wget</Homebrew>
-    </RequiredProgram>
-    <RequiredProgram Include="xz"                   Condition=" '$(NeedMxe)' == 'true' And $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))">
-      <Homebrew>xz</Homebrew>
-    </RequiredProgram>
-  </ItemGroup>
 </Project>

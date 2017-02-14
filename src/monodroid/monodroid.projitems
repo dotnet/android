@@ -1,9 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <RequiredProgram Include="xxd" />
-  </ItemGroup>
-  <ItemGroup>
     <_HostRuntime Include="host-Darwin" Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Darwin:'))">
       <Cc>$(HostCc)</Cc>
       <CFlags>$(_HostUnixCFlags) $(_HostDarwinCFlags) -DAPPLE_OS_X</CFlags>

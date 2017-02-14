@@ -1,20 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"  TaskName="Xamarin.Android.BuildTools.PrepTasks.DownloadUri" />
+  <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"  TaskName="Xamarin.Android.BuildTools.PrepTasks.PrepareInstall" />
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"  TaskName="Xamarin.Android.BuildTools.PrepTasks.Which" />
   <Target Name="CheckForRequiredPrograms"
-      Condition=" '@(RequiredProgram)' != '' ">
-    <Which Program="%(RequiredProgram.Identity)" Required="True" />
-    <OnError ExecuteTargets="_PrintRequiredPrograms" />
-  </Target>
-  <Target Name="_PrintRequiredPrograms">
+      Condition=" '@(RequiredProgram)' != '' "
+      Inputs="@(RequiredProgram)"
+      Outputs="%(RequiredProgram.Identity)-BATCH">
+    <Which
+        HostOS="$(HostOS)"
+        HostOSName="$(HostOsName)"
+        Program="@(RequiredProgram)"
+        Required="False">
+      <Output TaskParameter="Location"        PropertyName="_Location" />
+    </Which>
+    <PropertyGroup>
+      <_ReportError Condition=" '$(_Location)' == '' And '$(AutoProvision)' == 'False' ">True</_ReportError>
+      <_ReportError Condition=" '$(_ReportError)' == '' ">False</_ReportError>
+    </PropertyGroup>
+    <PrepareInstall
+        Condition=" '$(_Location)' == '' "
+        HostOS="$(HostOS)"
+        HostOSName="$(HostOsName)"
+        Program="@(RequiredProgram)"
+        UseSudo="$(AutoProvisionUsesSudo)">
+      <Output TaskParameter="InstallCommand"  PropertyName="_InstallCommand" />
+      <Output TaskParameter="DownloadUrl"     ItemName="_DownloadUrl" />
+    </PrepareInstall>
     <Error
-        ContinueOnError="True"
-        Text="The following programs are required: @(RequiredProgram->'%(Identity)', ' ')"
+        Condition=" '$(_ReportError)' == 'True' And '$(_InstallCommand)' == '' "
+        Text="Could not find required program '%(RequiredProgram.Identity)'."
     />
     <Error
-        Condition=" '$(HostOS)' == 'Darwin' "
-        ContinueOnError="True"
-        Text="Please try running: brew install @(RequiredProgram->'%(Homebrew)', ' ')`"
+        Condition=" '$(_ReportError)' == 'True' And '$(_InstallCommand)' != '' "
+        Text="Could not find required program '%(RequiredProgram.Identity)'. Please run: $(_InstallCommand)"
+    />
+    <DownloadUri
+        Condition=" '$(AutoProvision)' == 'True' And '@(_DownloadUrl)' != '' "
+        SourceUris="%(_DownloadUrl.Url)"
+        DestinationFiles="@(_DownloadUrl->'$(AndroidToolchainCacheDirectory)\%(Filename)%(Extension)')"
+    />
+    <Exec
+        Condition=" '$(AutoProvision)' == 'True' And '$(_InstallCommand)' != '' "
+        Command="$(_InstallCommand)"
     />
   </Target>
 </Project>
