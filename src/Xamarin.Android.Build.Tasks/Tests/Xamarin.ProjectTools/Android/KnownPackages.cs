@@ -103,6 +103,15 @@ namespace Xamarin.ProjectTools
 					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Support.v7.CardView.21.0.3.0\\lib\\MonoAndroid403\\Xamarin.Android.Support.v7.CardView.dll" }
 			}
 		};
+		public static Package SupportV7CardView_24_2_1 = new Package {
+			Id = "Xamarin.Android.Support.v7.Cardview",
+			Version = "24.2.1",
+			TargetFramework = "MonoAndroid70",
+			References = {
+				new BuildItem.Reference ("Xamarin.Android.Support.v7.CardView") {
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Support.v7.CardView.24.2.1\\lib\\MonoAndroid70\\Xamarin.Android.Support.v7.CardView.dll" }
+			}
+		};
 		public static Package SupportV7AppCompat_21_0_3_0 = new Package {
 			Id = "Xamarin.Android.Support.v7.AppCompat",
 			Version = "21.0.3.0",
