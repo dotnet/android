@@ -119,13 +119,21 @@ namespace Xamarin.Android.Tools.Bytecode
 			ShouldAlterArraySpec = true;
 			ShouldEliminateGenericArguments = true;
 		}
+
+		protected override string StripTagsFromParameters (string value)
+		{
+			// Java8 javadoc contains possibly linked types with <a> tags, so remove all of them.
+			while (value.IndexOf ('<') >= 0 && value.IndexOf ('>') > value.IndexOf ('<'))
+				value = value.Substring (0, value.IndexOf ('<')) + value.Substring (value.IndexOf ('>') + 1);
+			return value;
+		}
 	}
 
 	public abstract class AndroidDocScraper : IAndroidDocScraper
 	{
 		readonly String pattern_head;
 		readonly String reset_pattern_head;
-		readonly char [] parameter_pair_splitter;
+		readonly string [] parameter_pair_splitter;
 		readonly bool continuous_param_lines;
 		readonly String open_method;
 		readonly String param_sep;
@@ -145,7 +153,7 @@ namespace Xamarin.Android.Tools.Bytecode
 	
 			pattern_head = patternHead;
 			reset_pattern_head = resetPatternHead;
-			parameter_pair_splitter = (parameterPairSplitter != null ? parameterPairSplitter : "\\s+").ToCharArray ();
+			parameter_pair_splitter = new string [] { (parameterPairSplitter != null ? parameterPairSplitter : "\\s+") };
 			continuous_param_lines = continuousParamLines;
 			open_method = openMethod;
 			param_sep = paramSep;
@@ -177,6 +185,11 @@ namespace Xamarin.Android.Tools.Bytecode
 			// sometimes we get incomplete tag, so cache it until it gets complete or matched.
 			// I *know* this is a hack.
 			return reset_pattern_head == null || text.EndsWith (">", StringComparison.Ordinal) || !continuous_param_lines && !text.StartsWith (reset_pattern_head, StringComparison.Ordinal);
+		}
+
+		protected virtual string StripTagsFromParameters (string value)
+		{
+			return value;
 		}
 	
 		public virtual String[] GetParameterNames (string package, string type, string method, string[] ptypes, bool isVarArgs)
@@ -223,14 +236,14 @@ namespace Xamarin.Android.Tools.Bytecode
 					var matcher = pattern.Match (text);
 					if (matcher.Success) {
 						var plist = matcher.Groups [1];
-						String[] parms = plist.Value.Split (new string [] {", "}, StringSplitOptions.RemoveEmptyEntries);
+						String[] parms = StripTagsFromParameters (plist.Value).Split (new string [] { ", " }, StringSplitOptions.RemoveEmptyEntries);
 						if (parms.Length != ptypes.Length) {
 							Log.Warning (1, "failed matching {0} (expected {1} params, got {2} params)", buffer, ptypes.Length, parms.Length);
 							return null;
 						}
 						String[] result = new String [ptypes.Length];
 						for (int i = 0; i < ptypes.Length; i++) {
-							String[] toks = parms [i].Split (parameter_pair_splitter);
+							String[] toks = parms [i].Split (parameter_pair_splitter, StringSplitOptions.RemoveEmptyEntries);
 							result [i] = toks [toks.Length - 1];
 						}
 						return result;
