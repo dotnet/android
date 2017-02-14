@@ -33,14 +33,6 @@ using System.Text.RegularExpressions;
 
 namespace Xamarin.Android.Tools.Bytecode
 {
-	enum JavaDocKind {
-		DroidDoc,
-		DroidDoc2,
-		Java6,
-		Java7,
-		Java8
-	}
-	
 	class DroidDocScraper : AndroidDocScraper
 	{
 		const String pattern_head_droiddoc = "<span class=\"sympad\"><a href=\".*";
@@ -48,6 +40,7 @@ namespace Xamarin.Android.Tools.Bytecode
 		public DroidDocScraper (string dir)
 			: base (dir, pattern_head_droiddoc, null, " ", false)
 		{
+			ShouldEscapeBrackets = true;
 		}
 	}
 	
@@ -59,6 +52,7 @@ namespace Xamarin.Android.Tools.Bytecode
 		public DroidDoc2Scraper (string dir)
 			: base (dir, pattern_head_droiddoc, reset_pattern_head, " ", true, "\\(", ", ", "\\)", "\\s*</code>")
 		{
+			ShouldEscapeBrackets = true;
 		}
 
 		string prev_path;
@@ -115,13 +109,15 @@ namespace Xamarin.Android.Tools.Bytecode
 
 	class Java8DocScraper : AndroidDocScraper
 	{
-		const String pattern_head_javadoc = "<td class=\"col.+\"><code><strong><a href=\"[./]*"; // I'm not sure how path could be specified... (./ , ../ , or even /)
+		const String pattern_head_javadoc = "<td class=\"col.+\"><code><span class=\"memberNameLink\"><a href=\"[./]*"; // I'm not sure how path could be specified... (./ , ../ , or even /)
 		const String reset_pattern_head_javadoc = "<td><code>";
 		const String parameter_pair_splitter_javadoc = "&nbsp;";
 
 		public Java8DocScraper (string dir)
-			: base (dir, pattern_head_javadoc, reset_pattern_head_javadoc, parameter_pair_splitter_javadoc, true, "-", "-", "-", null)
+			: base (dir, pattern_head_javadoc, reset_pattern_head_javadoc, parameter_pair_splitter_javadoc, true, "\\-", "\\-", "\\-", null)
 		{
+			ShouldAlterArraySpec = true;
+			ShouldEliminateGenericArguments = true;
 		}
 	}
 
@@ -167,6 +163,10 @@ namespace Xamarin.Android.Tools.Bytecode
 			//	LoadDocument (f.Substring (dir.Length + 1), f);
 		}
 
+		protected bool ShouldEscapeBrackets { get; set; }
+		protected bool ShouldAlterArraySpec { get; set; }
+		protected bool ShouldEliminateGenericArguments { get; set; }
+
 		protected virtual IEnumerable<string> GetContentLines (string path)
 		{
 			return File.ReadAllText (path).Split ('\n');
@@ -197,11 +197,18 @@ namespace Xamarin.Android.Tools.Bytecode
 			for (int i = 0; i < ptypes.Length; i++) {
 				if (i != 0)
 					buffer.Append (param_sep);
-				buffer.Append (ptypes [i].Replace ('$', '.'));
+				var ptype = ptypes [i];
+				if (ShouldEliminateGenericArguments)
+					while (ptype.IndexOf ('<') > 0 && ptype.IndexOf ('>') > ptype.IndexOf ('<'))
+						ptype = ptype.Substring (0, ptype.IndexOf ('<')) + ptype.Substring (ptype.IndexOf ('>') + 1);
+				buffer.Append (ptype.Replace ('$', '.'));
 			}
-			buffer.Replace ("[", "\\[").Replace ("]", "\\]");
+			if (ShouldEscapeBrackets)
+				buffer.Replace ("[", "\\[").Replace ("]", "\\]");
+			if (ShouldAlterArraySpec)
+				buffer.Replace ("[]", ":A");
 			buffer.Append (close_method);
-			buffer.Append ("\".*\\(([^(]*)\\)");
+			buffer.Append ("\".*\\(([^\\(\\)]*)\\)");
 			buffer.Append (post_close_method_parens);
 			buffer.Replace ("?", "\\?");
 			Regex pattern = new Regex (buffer.ToString (), RegexOptions.Multiline);
