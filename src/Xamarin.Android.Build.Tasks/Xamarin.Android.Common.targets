@@ -232,7 +232,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
     <_LibraryProjectImportsDirectoryName>library_project_imports</_LibraryProjectImportsDirectoryName>
 	<_NativeLibraryImportsDirectoryName>native_library_imports</_NativeLibraryImportsDirectoryName>
 	<_AndroidResourcePathsCache>$(IntermediateOutputPath)resourcepaths.cache</_AndroidResourcePathsCache>
-	<_AndroidSdksCache>$(IntermediateOutputPath)sdks.cache</_AndroidSdksCache>
 	<_AndroidLibraryImportsCache>$(IntermediateOutputPath)libraryimports.cache</_AndroidLibraryImportsCache>
 	<_AndroidLibraryProjectImportsCache>$(IntermediateOutputPath)libraryprojectimports.cache</_AndroidLibraryProjectImportsCache>
 	
@@ -568,12 +567,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	</GetReferenceAssemblyPaths>
 </Target>
 
-<Target Name="_BuildSdkCache"
-	Inputs="$(MSBuildProjectFullPath);$(_AndroidBuildPropertiesCache);$(MSBuildThisFileFullPath)"
-	Outputs="$(_AndroidSdksCache)"
-	DependsOnTargets="_GetReferenceAssemblyPaths">
+<Target Name="_SetLatestTargetFrameworkVersion" DependsOnTargets="_GetReferenceAssemblyPaths">
 	<ResolveSdks
-			CacheFile="$(_AndroidSdksCache)"
 			AndroidApiLevel="$(AndroidApiLevel)"
 			AndroidSdkBuildToolsVersion="$(AndroidSdkBuildToolsVersion)"
 			AndroidSdkPath="$(AndroidSdkDirectory)"
@@ -589,12 +584,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 			TargetFrameworkVersion="$(TargetFrameworkVersion)"
 			UseLatestAndroidPlatformSdk="$(AndroidUseLatestPlatformSdk)"
 			ZipAlignPath="$(ZipAlignToolPath)">
-	</ResolveSdks>
-</Target>
-
-<Target Name="_SetLatestTargetFrameworkVersion" DependsOnTargets="_BuildSdkCache">
-	<ReadResolvedSdksCache
-			CacheFile="$(_AndroidSdksCache)">
 		<Output TaskParameter="AndroidApiLevel"           PropertyName="_AndroidApiLevel"           Condition="'$(_AndroidApiLevel)' == ''" />
 		<Output TaskParameter="AndroidApiLevelName"       PropertyName="_AndroidApiLevelName" />
 		<Output TaskParameter="SupportedApiLevel"         PropertyName="_SupportedApiLevel"	/>
@@ -611,7 +600,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 		<Output TaskParameter="ZipAlignPath"              PropertyName="ZipAlignToolPath"           Condition="'$(ZipAlignToolPath)' == ''" />
 		<Output TaskParameter="AndroidSdkBuildToolsBinPath" PropertyName="AndroidSdkBuildToolsBinPath" Condition="'$(AndroidSdkBuildToolsBinPath)' == ''" />
 		<Output TaskParameter="AndroidSequencePointsMode"   PropertyName="_SequencePointsMode"         Condition="'$(_SequencePointsMode)' == ''" />
-	</ReadResolvedSdksCache>
+	</ResolveSdks>
 	<CreateProperty Value="$(TargetFrameworkIdentifier),Version=$(_TargetFrameworkVersion),Profile=$(TargetFrameworkProfile)">
 		<Output TaskParameter="Value" PropertyName="TargetFrameworkMoniker"
 				Condition="'$(TargetFrameworkProfile)' != ''"
@@ -2524,7 +2513,6 @@ because xbuild doesn't support framework reference assemblies.
 	<Delete Files="$(_AndroidComponentResgenFlagFile)" />
 	<Delete Files="$(_AndroidDebugKeyStoreFlag)" />
 	<Delete Files="$(_AndroidResourcePathsCache)" />
-	<Delete Files="$(_AndroidSdksCache)" />
 	<Delete Files="$(_AndroidLintConfigFile)" />
 	<Delete Files="$(_AndroidResourceDesignerFile)" Condition=" '$(AndroidUseIntermediateDesignerFile)' == 'True' " />
 	<Delete Files="$(_AndroidBuildPropertiesCache)" />

@@ -59,6 +59,7 @@ namespace Xamarin.Android.Tasks
 		public bool   UseLatestAndroidPlatformSdk { get; set; }
 		public bool   AotAssemblies               { get; set; }
 
+		[Output]
 		public string[] ReferenceAssemblyPaths { get; set; }
 
 		public string CacheFile { get; set;}
@@ -241,6 +242,7 @@ namespace Xamarin.Android.Tasks
 				Log.LogCodedError ("XA0104", "Invalid Sequence Point mode: {0}", SequencePointsMode);
 			AndroidSequencePointsMode = mode.ToString ();
 
+			MonoAndroidHelper.TargetFrameworkDirectories = ReferenceAssemblyPaths;
 
 			AndroidApiLevelName = MonoAndroidHelper.GetPlatformApiLevelName (AndroidApiLevel);
 
