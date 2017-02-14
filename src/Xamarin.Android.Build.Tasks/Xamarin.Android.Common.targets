@@ -222,6 +222,13 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<!-- Chooses the native Android debug server, valid values are: gdbserver, llgs and ds2 -->
 	<AndroidGdbDebugServer Condition="'$(AndroidGdbDebugServer)' == ''">Gdb</AndroidGdbDebugServer>
 
+
+	<!--
+	  LLVM support is currently broken on Windows. Disable it for now.
+	-->
+	<EnableLLVM Condition="'$(OS)' == 'Windows_NT'">False</EnableLLVM>
+
+
     <!--
     <_LibraryProjectImportsDirectoryName Condition="'$(UseShortFileNames)' == 'true'">jlibs</_LibraryProjectImportsDirectoryName>
     <_LibraryProjectImportsDirectoryName Condition="'$(UseShortFileNames)' != 'true'">library_project_imports</_LibraryProjectImportsDirectoryName>
