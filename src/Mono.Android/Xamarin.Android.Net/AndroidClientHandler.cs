@@ -229,7 +229,12 @@ namespace Xamarin.Android.Net
 
 			return DoProcessRequest (request, javaUrl, httpConnection, cancellationToken, redirectState);
 		}
-		
+
+		Task DisconnectAsync (HttpURLConnection httpConnection)
+		{
+			return Task.Run (() => httpConnection?.Disconnect ());
+		}
+
 		async Task <HttpResponseMessage> DoProcessRequest (HttpRequestMessage request, URL javaUrl, HttpURLConnection httpConnection, CancellationToken cancellationToken, RequestRedirectionState redirectState)
 		{
 			if (Logger.LogNet)
@@ -272,25 +277,39 @@ namespace Xamarin.Android.Net
 				if(Logger.LogNet)
 					Logger.Log (LogLevel.Info, LOG_APP, " cancelled");
 
-				httpConnection.Disconnect ();
+				await DisconnectAsync (httpConnection).ConfigureAwait (continueOnCapturedContext: false);
 				cancellationToken.ThrowIfCancellationRequested ();
 			}
-			cancellationToken.Register (httpConnection.Disconnect);
 
-			if (httpConnection.DoOutput) {
-				using (var stream = await request.Content.ReadAsStreamAsync ()) {
-					await stream.CopyToAsync(httpConnection.OutputStream, 4096, cancellationToken)
-						.ConfigureAwait(false);
+			CancellationTokenRegistration cancelRegistration = default (CancellationTokenRegistration);
+			HttpStatusCode statusCode = HttpStatusCode.OK;
+			Uri connectionUri = null;
+
+			try {
+				cancelRegistration = cancellationToken.Register (() => {
+					DisconnectAsync (httpConnection).ContinueWith (t => {
+						if (t.Exception != null)
+							Logger.Log (LogLevel.Info, LOG_APP, $"Disconnection exception: {t.Exception}");
+					}, TaskScheduler.Default);
+				}, useSynchronizationContext: false);
+
+				if (httpConnection.DoOutput) {
+					using (var stream = await request.Content.ReadAsStreamAsync ().ConfigureAwait (false)) {
+						await stream.CopyToAsync(httpConnection.OutputStream, 4096, cancellationToken)
+							.ConfigureAwait(false);
+					}
 				}
+
+				statusCode = await Task.Run (() => (HttpStatusCode)httpConnection.ResponseCode).ConfigureAwait (false);
+				connectionUri = new Uri (httpConnection.URL.ToString ());
+			} finally {
+				cancelRegistration.Dispose ();
 			}
 
 			if (cancellationToken.IsCancellationRequested) {
-				httpConnection.Disconnect();
+				await DisconnectAsync (httpConnection).ConfigureAwait (continueOnCapturedContext: false);
 				cancellationToken.ThrowIfCancellationRequested();
 			}
-
-			var statusCode = await Task.Run (() => (HttpStatusCode)httpConnection.ResponseCode).ConfigureAwait (false);
-			var connectionUri = new Uri (httpConnection.URL.ToString ());
 
 			// If the request was redirected we need to put the new URL in the request
 			request.RequestUri = connectionUri;
