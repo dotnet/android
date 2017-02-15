@@ -24,6 +24,8 @@ namespace MonoDroid.Tuner {
 			// note: this also avoid calling FullName (which allocates a string)
 			var attr_type = attribute.Constructor.DeclaringType;
 			switch (attr_type.Name) {
+			case "IntDefinitionAttribute":
+				return attr_type.Namespace == "Android.Runtime";
 			case "ObsoleteAttribute":
 			// System.Mono*Attribute from mono/mcs/build/common/MonoTODOAttribute.cs
 			case "MonoDocumentationNoteAttribute":

@@ -11,6 +11,7 @@ namespace Android.Runtime
 		}
 
 		public string ConstantMember { get; set; }
+		public string JniField { get; set; }
 	}
 }
 
