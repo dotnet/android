@@ -708,8 +708,10 @@ namespace Xamarin.Android.Net
 				return;
 			}
 
-			if (Logger.LogNet)
-				Logger.Log (LogLevel.Info, LOG_APP, $"Authentication header '{data.UseProxyAuthentication ? "Proxy-Authorization" : "Authorization"}' will be set to '{authorization.Message}'");
+			if (Logger.LogNet) {
+				var header  = data.UseProxyAuthentication ? "Proxy-Authorization" : "Authorization";
+				Logger.Log (LogLevel.Info, LOG_APP, $"Authentication header '{header}' will be set to '{authorization.Message}'");
+			}
 			httpConnection.SetRequestProperty (data.UseProxyAuthentication ? "Proxy-Authorization" : "Authorization", authorization.Message);
 		}
 
