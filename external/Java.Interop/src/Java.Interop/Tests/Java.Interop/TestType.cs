@@ -103,35 +103,41 @@ namespace Java.InteropTests
 
 		static Delegate GetEqualsThisHandler ()
 		{
-			Func<IntPtr, IntPtr, IntPtr, bool> h = (jnienv, n_self, n_value) => {
-				var jvm     = JniEnvironment.Runtime;
-				var r_self  = new JniObjectReference (n_self);
-				var self    = jvm.ValueManager.GetValue<TestType>(ref r_self, JniObjectReferenceOptions.CopyAndDoNotRegister);
-				var r_value = new JniObjectReference (n_self);
-				var value   = jvm.ValueManager.GetValue<IJavaPeerable> (ref r_value, JniObjectReferenceOptions.CopyAndDoNotRegister);
-
-				try {
-					return self.EqualsThis (value);
-				} finally {
-					self.DisposeUnlessReferenced ();
-					value.DisposeUnlessReferenced ();
-				}
-			};
+			Func<IntPtr, IntPtr, IntPtr, bool> h = _EqualsThis;
 			return JniEnvironment.Runtime.MarshalMemberBuilder.CreateMarshalToManagedDelegate (h);
+		}
+
+		static bool _EqualsThis (IntPtr jnienv, IntPtr n_self, IntPtr n_value)
+		{
+			var jvm     = JniEnvironment.Runtime;
+			var r_self  = new JniObjectReference (n_self);
+			var self    = jvm.ValueManager.GetValue<TestType>(ref r_self, JniObjectReferenceOptions.CopyAndDoNotRegister);
+			var r_value = new JniObjectReference (n_self);
+			var value   = jvm.ValueManager.GetValue<IJavaPeerable> (ref r_value, JniObjectReferenceOptions.CopyAndDoNotRegister);
+
+			try {
+				return self.EqualsThis (value);
+			} finally {
+				self.DisposeUnlessReferenced ();
+				value.DisposeUnlessReferenced ();
+			}
 		}
 
 		static Delegate GetInt32ValueHandler ()
 		{
-			Func<IntPtr, IntPtr, int> h = (jnienv, n_self) => {
-				var r_self  = new JniObjectReference (n_self);
-				var self    = JniEnvironment.Runtime.ValueManager.GetValue<TestType>(ref r_self, JniObjectReferenceOptions.CopyAndDoNotRegister);
-				try {
-					return self.GetInt32Value ();
-				} finally {
-					self.DisposeUnlessReferenced ();
-				}
-			};
+			Func<IntPtr, IntPtr, int> h = _GetInt32Value;
 			return JniEnvironment.Runtime.MarshalMemberBuilder.CreateMarshalToManagedDelegate (h);
+		}
+
+		static int _GetInt32Value (IntPtr jnienv, IntPtr n_self)
+		{
+			var r_self  = new JniObjectReference (n_self);
+			var self    = JniEnvironment.Runtime.ValueManager.GetValue<TestType>(ref r_self, JniObjectReferenceOptions.CopyAndDoNotRegister);
+			try {
+				return self.GetInt32Value ();
+			} finally {
+				self.DisposeUnlessReferenced ();
+			}
 		}
 
 		static Delegate _GetStringValueHandler ()
