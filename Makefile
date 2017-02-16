@@ -26,7 +26,7 @@ all::
 all-tests::
 	MSBUILD="$(MSBUILD)" tools/scripts/xabuild $(MSBUILD_FLAGS) Xamarin.Android-Tests.sln
 
-prepare:: prepare-external prepare-props prepare-msbuild
+prepare:: prepare-external prepare-props prepare-deps prepare-msbuild
 
 # $(call GetPath,path)
 GetPath   = $(shell $(MSBUILD) $(MSBUILD_FLAGS) /p:DoNotLoadOSProperties=True /nologo /v:minimal /t:Get$(1)FullPath build-tools/scripts/Paths.targets | tr -d '[[:space:]]' )
@@ -45,6 +45,9 @@ prepare-props:
 	cp Configuration.Java.Interop.Override.props external/Java.Interop/Configuration.Override.props
 	./build-tools/scripts/generate-os-info Configuration.OperatingSystem.props
 	cp `$(MSBUILD) $(MSBUILD_FLAGS) /nologo /v:minimal /t:GetMonoSourceFullPath build-tools/scripts/Paths.targets`/mcs/class/msfinal.pub .
+
+prepare-deps:
+	$(MSBUILD) $(MSBUILD_FLAGS) build-tools/dependencies/dependencies.mdproj
 
 prepare-msbuild:
 ifeq ($(MSBUILD),msbuild)

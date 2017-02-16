@@ -54,6 +54,8 @@ and will override any default values specified in `Configuration.props`.
 
 Overridable MSBuild properties include:
 
+* `$(AutoProvision)`: Automatically install required dependencies, if possible.
+* `$(AutoProvisionUsesSudo)`: Use `sudo` when installing dependencies.
 * `$(AndroidApiLevel)`: The Android API level to bind in `src/Mono.Android`.
     This is an integer value, e.g. `15` for
     [API-15 (Android 4.0.3)](http://developer.android.com/about/versions/android-4.0.3.html).
@@ -113,6 +115,18 @@ Building Xamarin.Android requires:
 * [Autotools (`autoconf`, `automake`, etc.)](#autotools)
 * [`xxd`](#xxd)
 * [The Android SDK and NDK](#ndk)
+
+The `make prepare` build step will check that all required dependencies
+are present. If you would like `make prepare` to automatically install
+required dependencies, set the `$(AutoProvision)` MSBuild property to True
+and (if necessary) set the `$(AutoProvisionUsesSudo)` property to True.
+(This is not supported on all operating systems.)
+
+If `$(AutoProvision)` is False (the default) and a dependency is missing,
+then the build will fail and an error message will be displayed attempting
+to provide install instructions to obtain the missing dependency, e.g.:
+
+    error : Could not find required program '7za'. Please run: brew install 'p7zip'.
 
 <a name="mono-sdk" />
 ## Mono MDK

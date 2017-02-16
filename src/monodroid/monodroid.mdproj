@@ -17,7 +17,6 @@
   <PropertyGroup>
     <BuildDependsOn>
       ResolveReferences;
-      CheckForRequiredPrograms;
       _BuildRuntimes;
     </BuildDependsOn>
   </PropertyGroup>
@@ -26,6 +25,11 @@
     <ProjectReference Include="..\..\build-tools\android-toolchain\android-toolchain.mdproj">
       <Project>{8FF78EB6-6FC8-46A7-8A15-EBBA9045C5FA}</Project>
       <Name>android-toolchain</Name>
+      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\..\build-tools\dependencies\dependencies.mdproj">
+      <Project>{C845ECC0-2ED3-498E-8EA8-02EF7AC6E9AD}</Project>
+      <Name>dependencies</Name>
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
     </ProjectReference>
     <ProjectReference Include="..\..\build-tools\mono-runtimes\mono-runtimes.mdproj">

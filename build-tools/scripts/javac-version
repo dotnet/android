@@ -1,0 +1,5 @@
+#!/bin/bash -e
+
+sysname=`uname`
+cmdname=`basename "$0"`
+exec javac -version 2>&1
