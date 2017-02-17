@@ -12,6 +12,8 @@ namespace Java.Interop {
 
 		public static unsafe JniType DefineClass (string name, JniObjectReference loader, byte[] classFileData)
 		{
+			if (classFileData == null)
+				return null;
 			fixed (byte* buf = classFileData) {
 				var lref = JniEnvironment.Types.DefineClass (name, loader, (IntPtr) buf, classFileData.Length);
 				return new JniType (ref lref, JniObjectReferenceOptions.CopyAndDispose);

@@ -241,7 +241,7 @@ namespace Java.Interop
 				targetType  = GetPeerType (targetType);
 
 				if (!typeof (IJavaPeerable).GetTypeInfo ().IsAssignableFrom (targetType.GetTypeInfo ()))
-					throw new ArgumentException ("targetType must implement IJavaPeerable!", "targetType");
+					throw new ArgumentException ($"targetType `{targetType.AssemblyQualifiedName}` must implement IJavaPeerable!", "targetType");
 
 				var ctor = GetPeerConstructor (reference, targetType);
 				if (ctor == null)

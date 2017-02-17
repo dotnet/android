@@ -1,18 +1,31 @@
 diff --git a/Mono.Cecil.Cil/Symbols.cs b/Mono.Cecil.Cil/Symbols.cs
-index 426c4a7..1bc138d 100644
+index 6ca158e..dbca57a 100644
 --- a/Mono.Cecil.Cil/Symbols.cs
 +++ b/Mono.Cecil.Cil/Symbols.cs
-@@ -186,7 +186,7 @@ namespace Mono.Cecil.Cil {
- 			var cecil_name = typeof (SymbolProvider).Assembly.GetName ();
+@@ -637,7 +637,7 @@ namespace Mono.Cecil.Cil {
+ 			var cecil_name = typeof (SymbolProvider).GetAssembly ().GetName ();
  
  			var name = new SR.AssemblyName {
--				Name = "Mono.Cecil." + symbol_kind,
-+				Name = "Xamarin.Android.Cecil." + symbol_kind,
+-				Name = "Mono.Cecil." + symbolKind,
++				Name = "Xamarin.Android.Cecil." + symbolKind,
  				Version = cecil_name.Version,
  			};
  
+diff --git a/Mono.Cecil/AssemblyInfo.cs b/Mono.Cecil/AssemblyInfo.cs
+index 4d32f2b..9726954 100644
+--- a/Mono.Cecil/AssemblyInfo.cs
++++ b/Mono.Cecil/AssemblyInfo.cs
+@@ -12,7 +12,7 @@ using System.Reflection;
+ using System.Runtime.CompilerServices;
+ using System.Runtime.InteropServices;
+ 
+-[assembly: AssemblyTitle ("Mono.Cecil")]
++[assembly: AssemblyTitle ("Xamarin.Android.Cecil")]
+ 
+ #if !PCL && !NET_CORE
+ [assembly: Guid ("fd225bb4-fa53-44b2-a6db-85f5e48dcb54")]
 diff --git a/ProjectInfo.cs b/ProjectInfo.cs
-index 8d427a7..59bc253 100644
+index 6bfdedf..95b940c 100644
 --- a/ProjectInfo.cs
 +++ b/ProjectInfo.cs
 @@ -10,7 +10,7 @@
@@ -23,17 +36,4 @@ index 8d427a7..59bc253 100644
 +[assembly: AssemblyProduct ("Xamarin.Android.Cecil")]
  [assembly: AssemblyCopyright ("Copyright © 2008 - 2015 Jb Evain")]
  
- [assembly: ComVisible (false)]
-diff --git a/Mono.Cecil/AssemblyInfo.cs b/Mono.Cecil/AssemblyInfo.cs
-index 40cc0d4..41e159f 100644
---- a/Mono.Cecil/AssemblyInfo.cs
-+++ b/Mono.Cecil/AssemblyInfo.cs
-@@ -10,7 +10,7 @@ using System.Reflection;
- using System.Runtime.CompilerServices;
- using System.Runtime.InteropServices;
- 
--[assembly: AssemblyTitle ("Mono.Cecil")]
-+[assembly: AssemblyTitle ("Xamarin.Android.Cecil")]
- 
- [assembly: Guid ("fd225bb4-fa53-44b2-a6db-85f5e48dcb54")]
- 
+ #if !PCL

@@ -44,7 +44,7 @@ namespace Java.Interop.Tools.Cecil {
 
 		public static AssemblyDefinition GetAssembly (this IAssemblyResolver resolver, string fileName)
 		{
-			return resolver.Resolve (Path.GetFileNameWithoutExtension (fileName));
+			return resolver.Resolve (AssemblyNameReference.Parse (Path.GetFileNameWithoutExtension (fileName)));
 		}
 	}
 

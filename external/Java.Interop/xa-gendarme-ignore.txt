@@ -24,6 +24,9 @@ R: Gendarme.Rules.Correctness.CheckParametersNullityInVisibleMethodsRule
 M: System.Boolean Java.Interop.JniPeerMembers::UsesVirtualDispatch(Java.Interop.IJavaPeerable,System.Type)
 M: Java.Interop.JniPeerMembers Java.Interop.JniPeerMembers::GetPeerMembers(Java.Interop.IJavaPeerable)
 
+# I suspect a gendarme bug; I don't see what it's talking about
+M: System.Void Java.Interop.JniArgumentValue::.ctor(Java.Interop.IJavaPeerable)
+
 
 R: Gendarme.Rules.Correctness.EnsureLocalDisposalRule
 # We don't *want* to dispose the value!
@@ -212,6 +215,10 @@ M: System.Void Java.Interop.NativeMethods::java_interop_jnienv_release_boolean_a
 M: System.Void Java.Interop.NativeMethods::java_interop_jnienv_get_boolean_array_region(System.IntPtr,System.IntPtr&,System.IntPtr,System.Int32,System.Int32,System.Boolean*)
 M: System.Void Java.Interop.NativeMethods::java_interop_jnienv_set_boolean_array_region(System.IntPtr,System.IntPtr&,System.IntPtr,System.Int32,System.Int32,System.Boolean*)
 M: System.IntPtr Java.Interop.NativeMethods::java_interop_jnienv_get_primitive_array_critical(System.IntPtr,System.IntPtr,System.Boolean*)
+
+R: Gendarme.Rules.Maintainability.AvoidAlwaysNullFieldRule
+# I suspect that this is a Roslyn bug; mcs output doesn't produce this.
+T: Java.Interop.JniRuntime/JniTypeManager/<CreateGetTypesForSimpleReferenceEnumerator>d__15
 
 
 R: Gendarme.Rules.Maintainability.AvoidLackOfCohesionOfMethodsRule
