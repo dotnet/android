@@ -61,7 +61,7 @@ namespace Xamarin.Android.Tasks
 				if (MonoAndroidHelper.LogInternalExceptions)
 					Log.LogMessage (e.ToString ());
 			} catch (Exception ex) {
-				Log.LogMessage (MessageImportance.High, "Error: {0}", ex);
+				Log.LogErrorFromException (ex);
 			}
 			return !Log.HasLoggedErrors;
 		}
@@ -102,8 +102,7 @@ namespace Xamarin.Android.Tasks
 					return false;
 				}
 
-				// FIXME: it is kind of hacky, we should have something like NdkUtil.GetMinimumApiLevelFor(arch).
-				int level = NdkUtil.IsNdk64BitArch (arch) ? 21 : arch == AndroidTargetArch.Arm ? 4 : 9;
+				int level = NdkUtil.GetMinimumApiLevelFor (arch, AndroidNdkDirectory);
 				var outpath = Path.Combine (bundlepath, abi);
 				if (!Directory.Exists (outpath))
 					Directory.CreateDirectory (outpath);
