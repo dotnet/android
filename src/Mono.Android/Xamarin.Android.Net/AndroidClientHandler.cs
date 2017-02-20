@@ -306,7 +306,7 @@ namespace Xamarin.Android.Net
 					}
 					// Accessing the ResponseCode will throw an IOException if the code is 401
 					// and the server has not returned a WWW-Authenticate header on < API 19
-					catch (IOException ex) when (ex.Message.Contains("authentication challenges")) {
+					catch (Java.IO.IOException ex) when (ex.Message?.Contains("authentication challenges") ?? false) {
 						// Will return 401 as the connection's internal state is now correct
 						return (HttpStatusCode)httpConnection.ResponseCode;
 					}
