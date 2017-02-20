@@ -43,6 +43,10 @@
     <Compile Include="Utilities\BuildHelper.cs" />
     <Compile Include="BuildTest.cs" />
     <Compile Include="PackagingTest.cs" />
+    <Compile Include="AidlTest.cs" />
+    <Compile Include="BindingBuildTest.cs" />
+    <Compile Include="BuildAssetsTest.cs" />
+    <Compile Include="ManifestTest.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

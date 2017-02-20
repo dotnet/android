@@ -34,9 +34,9 @@ namespace Xamarin.ProjectTools
 			return Path.Combine (Builder.ProjectDirectory, IntermediateOutputPath, file.Replace ('/', Path.DirectorySeparatorChar));
 		}
 		
-		public string GetIntermediaryAsText (string file)
+		public string GetIntermediaryAsText (string root, string file)
 		{
-			return File.ReadAllText (GetIntermediaryPath (file));
+			return File.ReadAllText (Path.Combine (root, GetIntermediaryPath (file)));
 		}
 
 		public bool IsTargetSkipped (string target)
