@@ -24,7 +24,7 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = true,
 			};
 			proj.Jars.Add (new AndroidItem.EmbeddedJar ("Jars\\svg-android.jar") {
-				WebContent = "https://svg-android.googlecode.com/files/svg-android.jar"
+				WebContent = "https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/svg-android/svg-android.jar"
 			});
 			proj.AndroidClassParser = classParser;
 			using (var b = CreateDllBuilder ("temp/BuildBasicBindingLibrary")) {
@@ -40,7 +40,7 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = true,
 			};
 			proj.Jars.Add (new AndroidItem.EmbeddedJar ("Jars\\svg-android.jar") {
-				WebContent = "https://svg-android.googlecode.com/files/svg-android.jar"
+				WebContent = "https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/svg-android/svg-android.jar"
 			});
 			proj.AndroidClassParser = classParser;
 			using (var b = CreateDllBuilder ("temp/CleanBasicBindingLibrary")) {
