@@ -26,7 +26,7 @@ all::
 all-tests::
 	MSBUILD="$(MSBUILD)" tools/scripts/xabuild $(MSBUILD_FLAGS) Xamarin.Android-Tests.sln
 
-prepare:: prepare-external prepare-props prepare-deps prepare-msbuild
+prepare:: prepare-msbuild
 
 # $(call GetPath,path)
 GetPath   = $(shell $(MSBUILD) $(MSBUILD_FLAGS) /p:DoNotLoadOSProperties=True /nologo /v:minimal /t:Get$(1)FullPath build-tools/scripts/Paths.targets | tr -d '[[:space:]]' )
@@ -34,23 +34,23 @@ GetPath   = $(shell $(MSBUILD) $(MSBUILD_FLAGS) /p:DoNotLoadOSProperties=True /n
 MSBUILD_PREPARE_PROJS = \
 	src/Xamarin.Android.Build.Tasks/Xamarin.Android.Build.Tasks.csproj
 
-prepare-external:
+prepare-deps:
+	./build-tools/scripts/generate-os-info Configuration.OperatingSystem.props
+	$(MSBUILD) $(MSBUILD_FLAGS) build-tools/dependencies/dependencies.mdproj
+
+prepare-external: prepare-deps
 	git submodule update --init --recursive
 	nuget restore $(SOLUTION)
 	nuget restore Xamarin.Android-Tests.sln
 	(cd $(call GetPath,JavaInterop) && make prepare)
 	(cd $(call GetPath,JavaInterop) && make bin/BuildDebug/JdkInfo.props)
 
-prepare-props:
+prepare-props: prepare-external
 	cp Configuration.Java.Interop.Override.props external/Java.Interop/Configuration.Override.props
-	./build-tools/scripts/generate-os-info Configuration.OperatingSystem.props
-	cp `$(MSBUILD) $(MSBUILD_FLAGS) /nologo /v:minimal /t:GetMonoSourceFullPath build-tools/scripts/Paths.targets`/mcs/class/msfinal.pub .
+	cp $(call GetPath,MonoSource)/mcs/class/msfinal.pub .
 
-prepare-deps:
-	$(MSBUILD) $(MSBUILD_FLAGS) build-tools/dependencies/dependencies.mdproj
-
-prepare-msbuild:
-ifeq ($(MSBUILD),msbuild)
+prepare-msbuild: prepare-props
+ifeq ($(USE_MSBUILD),1)
 	for proj in $(MSBUILD_PREPARE_PROJS); do \
 		$(MSBUILD) $(MSBUILD_FLAGS) "$$proj"; \
 	done
