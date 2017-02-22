@@ -90,6 +90,22 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (doc.Contains ("Xamarin.Android.Support.v7.CardView/24.2.1"), "CardView should be resolved as a reference.");
 			}
 		}
+
+		[Test]
+		public void CheckTargetFrameworkVersion ()
+		{
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = true,
+			};
+			proj.SetProperty ("TargetFrameworkVersion", "v2.3");
+			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
+				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+				StringAssert.Contains ($"TargetFrameworkVersion: v2.3", builder.LastBuildOutput, "TargetFrameworkVerson should be v2.3");
+				Assert.IsTrue (builder.Build (proj, parameters: new [] { "TargetFrameworkVersion=v4.4" }), "Build should have succeeded.");
+				StringAssert.Contains ($"TargetFrameworkVersion: v4.4", builder.LastBuildOutput, "TargetFrameworkVerson should be v4.4");
+
+			}
+		}
 	}
 }
 
