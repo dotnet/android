@@ -14,7 +14,7 @@
   <PropertyGroup>
     <TargetFrameworkIdentifier>MonoAndroid</TargetFrameworkIdentifier>
     <TargetFrameworkVersion>$(AndroidFrameworkVersion)</TargetFrameworkVersion>
-    <TargetFrameworkRootPath>..\..\bin\$(Configuration)\lib\xbuild-frameworks</TargetFrameworkRootPath>
+    <TargetFrameworkRootPath>$(MSBuildThisFileDirectory)..\..\bin\$(Configuration)\lib\xbuild-frameworks</TargetFrameworkRootPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
