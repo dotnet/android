@@ -43,9 +43,11 @@ namespace Xamarin.Android.Manifest {
 
 			int c = type.IndexOf (',');
 			string typeName = c < 0 ? type  : type.Substring (0, c);
+
 			string assmName = c < 0 ? null  : type.Substring (c+1);
 
-			AssemblyDefinition assembly = assmName == null ? null : resolver.Resolve (assmName);
+			var assmNameRef = AssemblyNameReference.Parse (assmName);
+			var assembly    = assmName == null ? null : resolver.Resolve (assmNameRef);
 			if (assembly == null) {
 				assembly = provider as AssemblyDefinition;
 				if (assembly == null) {
