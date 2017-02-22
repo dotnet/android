@@ -466,7 +466,16 @@ namespace Xamarin.Android.Net
 			if (redirectState.RedirectCounter >= MaxAutomaticRedirections)
 				throw new WebException ($"Maximum automatic redirections exceeded (allowed {MaxAutomaticRedirections}, redirected {redirectState.RedirectCounter} times)");
 
-			Uri location = new Uri (locationHeader [0], UriKind.Absolute);
+			string redirectUrl = locationHeader[0];
+			string protocol = httpConnection.URL?.Protocol;
+			if (redirectUrl.StartsWith("//", StringComparison.OrdinalIgnoreCase))
+			{
+				// When redirecting to an URL without protocol, we use the protocol of previous request
+				// See https://tools.ietf.org/html/rfc3986#section-5 (example in section 5.4)
+				redirectUrl = protocol + ":" + redirectUrl;
+			}
+			
+			Uri location = new Uri (redirectUrl, UriKind.Absolute);
 			redirectState.NewUrl = location;
 			if (Logger.LogNet)
 				Logger.Log (LogLevel.Debug, LOG_APP, $"Request redirected to {location}");
