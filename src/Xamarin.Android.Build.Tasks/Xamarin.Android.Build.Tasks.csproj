@@ -64,6 +64,7 @@
     <Compile Include="Tasks\BuildApk.cs" />
     <Compile Include="Tasks\CilStrip.cs" />
     <Compile Include="Tasks\ConvertDebuggingFiles.cs" />
+    <Compile Include="Tasks\CollectPdbFiles.cs" />
     <Compile Include="Tasks\CopyMdbFiles.cs" />
     <Compile Include="Tasks\Generator.cs" />
     <Compile Include="Tasks\JarToXml.cs" />

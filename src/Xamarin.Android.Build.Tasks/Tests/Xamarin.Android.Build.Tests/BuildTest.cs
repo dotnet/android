@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
+using Microsoft.Build.Framework;
 using NUnit.Framework;
 using Xamarin.ProjectTools;
 
@@ -103,7 +104,77 @@ namespace Xamarin.Android.Build.Tests
 				StringAssert.Contains ($"TargetFrameworkVersion: v2.3", builder.LastBuildOutput, "TargetFrameworkVerson should be v2.3");
 				Assert.IsTrue (builder.Build (proj, parameters: new [] { "TargetFrameworkVersion=v4.4" }), "Build should have succeeded.");
 				StringAssert.Contains ($"TargetFrameworkVersion: v4.4", builder.LastBuildOutput, "TargetFrameworkVerson should be v4.4");
+			}
+		}
 
+		[Test]
+		public void BuildBasicApplicationCheckPdb ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			using (var b = CreateApkBuilder ("temp/BuildBasicApplicationCheckPdb", false, false)) {
+				b.Verbosity = LoggerVerbosity.Diagnostic;
+				var reference = new BuildItem.Reference ("PdbTestLibrary.dll") {
+					WebContent = "https://dl.dropboxusercontent.com/u/18881050/Xamarin/PdbTestLibrary.dll"
+				};
+				proj.References.Add (reference);
+				var pdb = new BuildItem.NoActionResource ("PdbTestLibrary.pdb") {
+					WebContent = "https://dl.dropboxusercontent.com/u/18881050/Xamarin/PdbTestLibrary.pdb"
+				};
+				proj.References.Add (pdb);
+				var netStandardRef = new BuildItem.Reference ("NetStandard16.dll") {
+					WebContent = "https://dl.dropboxusercontent.com/u/18881050/Xamarin/NetStandard16.dll"
+				};
+				proj.References.Add (netStandardRef);
+				var netStandardpdb = new BuildItem.NoActionResource ("NetStandard16.pdb") {
+					WebContent = "https://dl.dropboxusercontent.com/u/18881050/Xamarin/NetStandard16.pdb"
+				};
+				proj.References.Add (netStandardpdb);
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				var pdbToMdbPath = Path.Combine (Root, b.ProjectDirectory, "PdbTestLibrary.dll.mdb");
+				Assert.IsTrue (
+					File.Exists (pdbToMdbPath),
+					"PdbTestLibrary.dll.mdb must be generated next to the .pdb");
+				Assert.IsTrue (
+					File.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "assets", "UnnamedProject.dll.mdb")),
+					"UnnamedProject.dll.mdb must be copied to the Intermediate directory");
+				Assert.IsFalse (
+					File.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "assets", "PdbTestLibrary.pdb")),
+					"PdbTestLibrary.pdb must not be copied to Intermediate directory");
+				Assert.IsTrue (
+					File.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "assets", "PdbTestLibrary.dll.mdb")),
+					"PdbTestLibrary.dll.mdb must be copied to Intermediate directory");
+				FileAssert.AreNotEqual (pdbToMdbPath,
+					Path.Combine (Root, b.ProjectDirectory, "PdbTestLibrary.pdb"),
+					"The .pdb should NOT match the .mdb");
+				Assert.IsTrue (
+					File.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "assets", "NetStandard16.pdb")),
+					"NetStandard16.pdb must be copied to Intermediate directory");
+				var apk = Path.Combine (Root, b.ProjectDirectory,
+					proj.IntermediateOutputPath, "android", "bin", "UnnamedProject.UnnamedProject.apk");
+				using (var zipFile = ZipHelper.OpenZip (apk)) {
+					Assert.IsNotNull (ZipHelper.ReadFileFromZip (zipFile,
+							"assemblies/NetStandard16.pdb"),
+							"assemblies/NetStandard16.pdb should exist in the apk.");
+					Assert.IsNotNull (ZipHelper.ReadFileFromZip (zipFile,
+							"assemblies/PdbTestLibrary.dll.mdb"),
+							"assemblies/PdbTestLibrary.dll.mdb should exist in the apk.");
+					Assert.IsNull (ZipHelper.ReadFileFromZip (zipFile,
+							"assemblies/PdbTestLibrary.pdb"),
+							"assemblies/PdbTestLibrary.pdb should not exist in the apk.");
+				}
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "second build failed");
+				Assert.IsTrue (
+					b.LastBuildOutput.Contains ("Skipping target \"_CopyMdbFiles\" because"),
+					"the _CopyMdbFiles target should be skipped");
+				var lastTime = File.GetLastAccessTimeUtc (pdbToMdbPath);
+				pdb.Timestamp = DateTime.UtcNow;
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "third build failed");
+				Assert.IsFalse (
+					b.LastBuildOutput.Contains ("Skipping target \"_CopyMdbFiles\" because"),
+					"the _CopyMdbFiles target should not be skipped");
+				Assert.Less (lastTime,
+					File.GetLastAccessTimeUtc (pdbToMdbPath),
+					"{0} should have been updated", pdbToMdbPath);
 			}
 		}
 	}

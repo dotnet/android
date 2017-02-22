@@ -268,6 +268,11 @@ namespace Xamarin.Android.Tasks
 
 					if (File.Exists (symbols))
 						apk.AddFile (symbols, "assemblies/" + Path.GetFileName (symbols), compressionMethod: CompressionMethod.Store);
+
+					symbols = Path.ChangeExtension (assembly.ItemSpec, "pdb");
+
+					if (File.Exists (symbols))
+						apk.AddFile (symbols, "assemblies/" + Path.GetFileName (symbols), compressionMethod: CompressionMethod.Store);
 				}
 			}
 
@@ -282,6 +287,11 @@ namespace Xamarin.Android.Tasks
 				// Try to add symbols if Debug
 				if (debug) {
 					var symbols = Path.ChangeExtension (assembly.ItemSpec, "dll.mdb");
+
+					if (File.Exists (symbols))
+						apk.AddFile (symbols, "assemblies/" + Path.GetFileName (symbols), compressionMethod: CompressionMethod.Store);
+
+					symbols = Path.ChangeExtension (assembly.ItemSpec, "pdb");
 
 					if (File.Exists (symbols))
 						apk.AddFile (symbols, "assemblies/" + Path.GetFileName (symbols), compressionMethod: CompressionMethod.Store);
