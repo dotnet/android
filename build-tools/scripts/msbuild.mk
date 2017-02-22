@@ -29,8 +29,12 @@ MSBUILD_FLAGS += /v:diag
 endif   # $(V) != 0
 
 ifeq ($(MSBUILD),msbuild)
+USE_MSBUILD   = 1
+endif   # $(MSBUILD) == msbuild
+
+ifeq ($(USE_MSBUILD),1)
 _BROKEN_MSBUILD := $(shell if ! pkg-config --atleast-version=4.8 mono ; then echo Broken; fi )
 ifeq ($(_BROKEN_MSBUILD),Broken)
 MSBUILD_FLAGS += /p:_XAFixMSBuildFrameworkPathOverride=True
 endif   # $(_BROKEN_MSBUILD) == Broken
-endif   # $(MSBUILD) == msbuild
+endif   # $(USE_MSBUILD) == 1

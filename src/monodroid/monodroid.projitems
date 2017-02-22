@@ -3,7 +3,7 @@
   <ItemGroup>
     <_HostRuntime Include="host-Darwin" Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Darwin:'))">
       <Cc>$(HostCc)</Cc>
-      <CFlags>$(_HostUnixCFlags) $(_HostDarwinCFlags) -DAPPLE_OS_X</CFlags>
+      <CFlags>@(JdkIncludePath->'-I%(Identity)', ' ') $(_HostUnixCFlags) $(_HostDarwinCFlags) -DAPPLE_OS_X</CFlags>
       <LdFlags>$(_HostUnixLdFlags)</LdFlags>
       <ExtraSource>$(_UnixAdditionalSourceFiles)</ExtraSource>
       <NativeLibraryExtension>dylib</NativeLibraryExtension>
@@ -13,7 +13,7 @@
     </_HostRuntime>
     <_HostRuntime Include="host-Linux" Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Linux:'))">
       <Cc>$(HostCc)</Cc>
-      <CFlags>$(_HostUnixCFlags) $(_HostLinuxCFlags) -D_GNU_SOURCE</CFlags>
+      <CFlags>@(JdkIncludePath->'-I%(Identity)', ' ') $(_HostUnixCFlags) $(_HostLinuxCFlags) -D_GNU_SOURCE</CFlags>
       <LdFlags>$(_HostUnixLdFlags)</LdFlags>
       <ExtraSource>$(_UnixAdditionalSourceFiles)</ExtraSource>
       <NativeLibraryExtension>so</NativeLibraryExtension>
@@ -23,7 +23,7 @@
     </_HostRuntime>
     <_HostRuntime Include="host-mxe-Win64" Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))">
       <Cc>"$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-gcc"</Cc>
-      <CFlags>$(_HostCommonWinCFlags) $(_HostWin64CFlags) $(_LinuxFlatPakBuild)</CFlags>
+      <CFlags>@(JdkIncludePath->'-I%(Identity)', ' ') $(_HostCommonWinCFlags) $(_HostWin64CFlags) $(_LinuxFlatPakBuild)</CFlags>
       <LdFlags>$(_HostCommonWinLdFlags)</LdFlags>
       <ExtraSource></ExtraSource>
       <NativeLibraryExtension>dll</NativeLibraryExtension>
