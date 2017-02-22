@@ -599,6 +599,13 @@
         </Compile>
    </ItemGroup>
   <Import Project="$(OutputPath)\..\..\..\xbuild\Xamarin\Android\Xamarin.Android.CSharp.targets" />
+  <PropertyGroup>
+    <JavacSourceVersion Condition=" '$(JavacSourceVersion)' == '' And '$(AndroidApiLevel)' != '' And $(AndroidApiLevel) &gt; 23 ">1.8</JavacSourceVersion>
+    <JavacSourceVersion Condition=" '$(JavacSourceVersion)' == '' ">1.6</JavacSourceVersion>
+    <JavaCallableWrapperAbsAssembly>$(JavaCallableWrapperOutputPathAbs)$(AssemblyName).dll</JavaCallableWrapperAbsAssembly>
+    <JavaCallableWrapperAbsAssembly Condition="!Exists('$(JavaCallableWrapperAbsAssembly)')">$(MSBuildProjectDirectory)\..\..\bin\$(Configuration)\lib\xbuild-frameworks\MonoAndroid\$(AndroidLatestFrameworkVersion)\$(AssemblyName).dll</JavaCallableWrapperAbsAssembly>
+  </PropertyGroup>
+  <Import Project="..\..\build-tools\scripts\JavaCallableWrappers.targets" />
   <ItemGroup>
     <ProjectReference Include="..\Mono.Android\Mono.Android.csproj">
       <Project>{66CF299A-CE95-4131-BCD8-DB66E30C4BF7}</Project>

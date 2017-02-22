@@ -314,6 +314,11 @@
     <IntermediateOutputPath>$(IntermediateOutputPath)android-$(AndroidApiLevel)\</IntermediateOutputPath>
   </PropertyGroup>
   <Import Project="Mono.Android.targets" />
+  <PropertyGroup>
+    <JavaCallableWrapperAbsAssembly>$(JavaCallableWrapperOutputPathAbs)$(AssemblyName).dll</JavaCallableWrapperAbsAssembly>
+    <JavaCallableWrapperAfterTargets>CoreBuild</JavaCallableWrapperAfterTargets>
+  </PropertyGroup>
+  <Import Project="..\..\build-tools\scripts\JavaCallableWrappers.targets" />
   <Import Project="$(IntermediateOutputPath)mcw\Mono.Android.projitems" Condition="Exists('$(IntermediateOutputPath)mcw\Mono.Android.projitems')" />
   <ItemGroup>
     <ProjectReference Include="..\..\build-tools\api-merge\api-merge.csproj">

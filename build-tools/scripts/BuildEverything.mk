@@ -80,7 +80,7 @@ FRAMEWORK_ASSEMBLIES = $(foreach conf, $(CONFIGURATIONS), $(FRAMEWORKS:%=bin/$(c
 
 jenkins: leeroy $(ZIP_OUTPUT)
 
-leeroy: prepare $(RUNTIME_LIBRARIES) $(TASK_ASSEMBLIES) $(FRAMEWORK_ASSEMBLIES)
+leeroy: prepare $(RUNTIME_LIBRARIES) $(TASK_ASSEMBLIES) $(FRAMEWORK_ASSEMBLIES) opentk-jcw
 
 $(TASK_ASSEMBLIES): bin/%/lib/xbuild/Xamarin/Android/Xamarin.Android.Build.Tasks.dll:
 	$(MSBUILD) $(MSBUILD_FLAGS) /p:Configuration=$* $(_MSBUILD_ARGS) $(SOLUTION)
@@ -93,6 +93,12 @@ $(FRAMEWORK_ASSEMBLIES):
 $(RUNTIME_LIBRARIES):
 	$(MSBUILD) $(MSBUILD_FLAGS) /p:Configuration=Debug   $(_MSBUILD_ARGS) $(SOLUTION)
 	$(MSBUILD) $(MSBUILD_FLAGS) /p:Configuration=Release $(_MSBUILD_ARGS) $(SOLUTION)
+
+opentk-jcw:
+	$(foreach a, $(API_LEVELS), \
+		$(foreach conf, $(CONFIGURATIONS), \
+			touch bin/$(conf)/lib/xbuild-frameworks/MonoAndroid/*/OpenTK-1.0.dll; \
+			$(MSBUILD) $(MSBUILD_FLAGS) src/OpenTK-1.0/OpenTK.csproj /t:GenerateJavaCallableWrappers /p:Configuration=$(conf) $(_MSBUILD_ARGS) /p:AndroidApiLevel=$(a) /p:AndroidFrameworkVersion=$(word $(a), $(ALL_FRAMEWORKS)); ))
 
 _BUNDLE_ZIPS_INCLUDE  = \
 	$(ZIP_OUTPUT_BASENAME)/bin/Debug \
