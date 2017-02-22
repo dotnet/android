@@ -233,5 +233,33 @@ namespace Xamarin.Android.Tasks
 		{
 			return arch == AndroidTargetArch.Arm64 || arch == AndroidTargetArch.X86_64;
 		}
+
+		public static IEnumerable<int> GetSupportedPlatforms (string androidNdkPath)
+		{
+			foreach (var platform in Directory.EnumerateDirectories (Path.Combine (androidNdkPath, "platforms"))) {
+				var androidApi = Path.GetFileName (platform);
+				int api = -1;
+				if (int.TryParse (androidApi.Replace ("android-", String.Empty), out api)) {
+					yield return api;
+				}
+			}
+		}
+
+		static readonly Dictionary<AndroidTargetArch, string> archPathMap = new Dictionary<AndroidTargetArch, string> () {
+			{ AndroidTargetArch.Arm, "arm"},
+			{ AndroidTargetArch.Arm64, "arm64"},
+			{ AndroidTargetArch.Mips, "mips"},
+			{ AndroidTargetArch.None, "none"},
+			{ AndroidTargetArch.Other, "other"},
+			{ AndroidTargetArch.X86, "x86"},
+			{ AndroidTargetArch.X86_64, "x86_64"},
+		};
+
+		public static int GetMinimumApiLevelFor (AndroidTargetArch arch, string androidNdkPath)
+		{
+			var minValue = NdkUtil.IsNdk64BitArch (arch) ? 21 : arch == AndroidTargetArch.Arm ? 4 : 9;
+			var platforms = GetSupportedPlatforms (androidNdkPath).OrderBy (x => x).Where (x => x >= minValue);
+			return platforms.First (x => Directory.Exists (Path.Combine (androidNdkPath, "platforms", $"android-{x}", $"arch-{archPathMap[arch]}")));
+		}
 	}
 }
