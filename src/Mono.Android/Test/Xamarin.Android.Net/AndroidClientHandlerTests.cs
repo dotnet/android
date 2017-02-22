@@ -255,5 +255,18 @@ namespace Xamarin.Android.NetTests {
         }
       }
     }
+
+	  [Test]
+	  public void Redirect_Without_Protocol_Works()
+	  {
+		  var requestURI = new Uri ("http://tlstest.xamdev.com/redirect.php");
+		  var redirectedURI = new Uri ("http://tlstest.xamdev.com/redirect-301.html");
+		  using (var c = new HttpClient (CreateHandler ())) {
+			  var tr = c.GetAsync (requestURI);
+			  tr.Wait ();
+			  tr.Result.EnsureSuccessStatusCode ();
+			  Assert.AreEqual (redirectedURI, tr.Result.RequestMessage.RequestUri, "Invalid redirected URI");
+		  }
+	  }
   }
 }
