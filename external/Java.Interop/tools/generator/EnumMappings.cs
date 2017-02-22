@@ -152,8 +152,7 @@ namespace MonoDroid.Generation {
 
 					foreach (var member in enu.Value.Members) {
 						var managedMember = FindManagedMember (ns, enoom, enu.Value, member.Key, gens);
-						if (managedMember != null)
-							sw.WriteLine ("    [global::Android.Runtime.IntDefinition (\"" + managedMember + "\")]");
+						sw.WriteLine ("    [global::Android.Runtime.IntDefinition (" + (managedMember != null? "\"" + managedMember + "\"" : "null") + ", JniField = \"" + StripExtraInterfaceSpec (enu.Value.JniNames [member.Key]) + "\")]");
 						sw.WriteLine ("    {0} = {1},", member.Key.Trim (), member.Value.Trim ());
 					}
 					sw.WriteLine ("  }");
@@ -161,6 +160,11 @@ namespace MonoDroid.Generation {
 				}
 			}
 			return files;
+		}
+
+		string StripExtraInterfaceSpec (string jniFieldSpec)
+		{
+			return jniFieldSpec.StartsWith ("I:", StringComparison.Ordinal) ? jniFieldSpec.Substring (2) : jniFieldSpec;
 		}
 
 		string FindManagedMember (string ns, string enumName, EnumDescription desc, string enumFieldName, IEnumerable<GenBase> gens)
