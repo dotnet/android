@@ -87,12 +87,12 @@ $(TASK_ASSEMBLIES): bin/%/lib/xbuild/Xamarin/Android/Xamarin.Android.Build.Tasks
 
 $(FRAMEWORK_ASSEMBLIES):
 	$(foreach a, $(API_LEVELS), \
-		$(MSBUILD) $(MSBUILD_FLAGS) src/Mono.Android/Mono.Android.csproj /p:Configuration=Debug   $(_MSBUILD_ARGS) /p:AndroidApiLevel=$(a) /p:AndroidFrameworkVersion=$(word $(a), $(ALL_FRAMEWORKS));  \
-		$(MSBUILD) $(MSBUILD_FLAGS) src/Mono.Android/Mono.Android.csproj /p:Configuration=Release $(_MSBUILD_ARGS) /p:AndroidApiLevel=$(a) /p:AndroidFrameworkVersion=$(word $(a), $(ALL_FRAMEWORKS)); )
+		$(foreach conf, $(CONFIGURATIONS), \
+			$(MSBUILD) $(MSBUILD_FLAGS) src/Mono.Android/Mono.Android.csproj /p:Configuration=$(conf)   $(_MSBUILD_ARGS) /p:AndroidApiLevel=$(a) /p:AndroidFrameworkVersion=$(word $(a), $(ALL_FRAMEWORKS)); ))
 
 $(RUNTIME_LIBRARIES):
-	$(MSBUILD) $(MSBUILD_FLAGS) /p:Configuration=Debug   $(_MSBUILD_ARGS) $(SOLUTION)
-	$(MSBUILD) $(MSBUILD_FLAGS) /p:Configuration=Release $(_MSBUILD_ARGS) $(SOLUTION)
+	$(foreach conf, $(CONFIGURATIONS), \
+		$(MSBUILD) $(MSBUILD_FLAGS) /p:Configuration=$(conf)   $(_MSBUILD_ARGS) $(SOLUTION) )
 
 _BUNDLE_ZIPS_INCLUDE  = \
 	$(ZIP_OUTPUT_BASENAME)/bin/Debug \
