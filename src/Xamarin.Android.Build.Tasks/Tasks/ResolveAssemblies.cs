@@ -9,6 +9,7 @@ using Microsoft.Build.Utilities;
 using Mono.Cecil;
 using MonoDroid.Tuner;
 using System.IO;
+using Xamarin.Android.Tools;
 
 using Java.Interop.Tools.Cecil;
 
@@ -95,6 +96,11 @@ namespace Xamarin.Android.Tasks
 
 			ResolvedAssemblies = assemblies.Select (a => new TaskItem (a)).ToArray ();
 			ResolvedSymbols = assemblies.Select (a => a + ".mdb").Where (a => File.Exists (a)).Select (a => new TaskItem (a)).ToArray ();
+			ResolvedSymbols = ResolvedSymbols.Concat (
+					assemblies.Select (a => Path.ChangeExtension (a, "pdb"))
+					.Where (a => File.Exists (a) && Files.IsPortablePdb (a))
+					.Select (a => new TaskItem (a)))
+				.ToArray ();
 			ResolvedFrameworkAssemblies = ResolvedAssemblies.Where (p => MonoAndroidHelper.IsFrameworkAssembly (p.ItemSpec, true)).ToArray ();
 			ResolvedUserAssemblies = ResolvedAssemblies.Where (p => !MonoAndroidHelper.IsFrameworkAssembly (p.ItemSpec, true)).ToArray ();
 			ResolvedDoNotPackageAttributes = do_not_package_atts.ToArray ();

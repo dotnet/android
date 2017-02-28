@@ -31,6 +31,9 @@ namespace Xamarin.Android.Tasks
 		public ITaskItem[] ResolvedAssemblies { get; set; }
 
 		[Required]
+		public ITaskItem [] PortablePdbFiles { get; set; }
+
+		[Required]
 		public ITaskItem[] LinkDescriptions { get; set; }
 
 		public string I18nAssemblies { get; set; }
@@ -74,6 +77,7 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ("  LinkSkip: {0}", LinkSkip);
 			Log.LogDebugTaskItems ("  LinkDescriptions:", LinkDescriptions);
 			Log.LogDebugTaskItems ("  ResolvedAssemblies:", ResolvedAssemblies);
+			Log.LogDebugTaskItems ("  PortablePdbFiles:", PortablePdbFiles);
 			Log.LogDebugMessage ("  EnableProguard: {0}", EnableProguard);
 			Log.LogDebugMessage ("  ProguardConfiguration: {0}", ProguardConfiguration);
 			Log.LogDebugMessage ("  DumpDependencies: {0}", DumpDependencies);
@@ -141,7 +145,14 @@ namespace Xamarin.Android.Tasks
 				Linker.Process (options, out link_context);
 
 				var copydst = OptionalDestinationDirectory ?? OutputDirectory;
-				
+
+				foreach (var pdb in PortablePdbFiles) {
+					var copysrc = pdb.ItemSpec;
+					var filename = Path.GetFileName (pdb.ItemSpec);
+
+					MonoAndroidHelper.CopyIfChanged (copysrc, Path.Combine (copydst, filename));
+				}
+
 				foreach (var assembly in ResolvedAssemblies) {
 					var copysrc = assembly.ItemSpec;
 					var filename = Path.GetFileName (assembly.ItemSpec);

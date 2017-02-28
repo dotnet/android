@@ -33,6 +33,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.CheckForRemovedItems" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CheckTargetFrameworks" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CompileToDalvik" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.CollectPdbFiles" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ConvertDebuggingFiles" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ConvertResourcesCases" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CopyIfChanged" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -1507,10 +1508,11 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="_CollectPdbFiles"
 		Inputs="@(ResolvedAssemblies->'%(RootDir)%(Directory)%(Filename).pdb')"
 		Outputs="@(ResolvedAssemblies->'%(RootDir)%(Directory)%(Filename)%(Extension).mdb')">
-	<GetFilesThatExist
-			Files="@(ResolvedAssemblies->'%(RootDir)%(Directory)%(Filename).pdb')">
-		<Output TaskParameter="FilesThatExist" ItemName="_ResolvedPdbFiles" />
-	</GetFilesThatExist>
+	<CollectPdbFiles
+			ResolvedAssemblies="@(ResolvedAssemblies->'%(RootDir)%(Directory)%(Filename).pdb')">
+		<Output TaskParameter="PdbFiles" ItemName="_ResolvedPdbFiles" />
+		<Output TaskParameter="PortablePdbFiles" ItemName="_ResolvedPortablePdbFiles" />
+	</CollectPdbFiles>
 </Target>
 
 <Target Name="_ConvertPdbFiles"
@@ -1521,16 +1523,16 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_CopyMdbFiles"
-		Inputs="@(_ResolvedMdbFiles)"
-		Outputs="@(_ResolvedMdbFiles->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)')"
+		Inputs="@(_ResolvedMdbFiles);@(_ResolvedPortablePdbFiles)"
+		Outputs="@(_ResolvedMdbFiles->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)');@(_ResolvedPortablePdbFiles->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)')"
 		DependsOnTargets="_ConvertPdbFiles;_CollectMdbFiles" >
 	<CopyMdbFiles
-			SourceFiles="@(_ResolvedMdbFiles)"
-			DestinationFiles="@(_ResolvedMdbFiles->'$(OutputPath)%(Filename)%(Extension)')"
+			SourceFiles="@(_ResolvedMdbFiles);@(_ResolvedPortablePdbFiles)"
+			DestinationFiles="@(_ResolvedMdbFiles->'$(OutputPath)%(Filename)%(Extension)');@(_ResolvedPortablePdbFiles->'$(OutputPath)%(Filename)%(Extension)')"
 	/>
 	<Copy
-		SourceFiles="@(_ResolvedMdbFiles->'$(OutputPath)%(Filename)%(Extension)')"
-		DestinationFiles="@(_ResolvedMdbFiles->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)')"
+		SourceFiles="@(_ResolvedMdbFiles->'$(OutputPath)%(Filename)%(Extension)');@(_ResolvedPortablePdbFiles->'$(OutputPath)%(Filename)%(Extension)')"
+		DestinationFiles="@(_ResolvedMdbFiles->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)');@(_ResolvedPortablePdbFiles->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)')"
 		SkipUnchangedFiles="true"
 	/>
 </Target>
@@ -1553,6 +1555,7 @@ because xbuild doesn't support framework reference assemblies.
       LinkDescriptions="@(LinkDescription)"
       DumpDependencies="$(LinkerDumpDependencies)"
       LinkOnlyNewerThan="$(_AndroidLinkFlag)"
+      PortablePdbFiles="@(_ResolvedPortablePdbFiles)"
       ResolvedAssemblies="@(ResolvedAssemblies)" />
 
 	<!-- We don't have to depend on flag file for NoShrink, but it is used to check timestamp -->
@@ -1583,6 +1586,7 @@ because xbuild doesn't support framework reference assemblies.
       ProguardConfiguration="$(_ProguardProjectConfiguration)"
       EnableProguard="$(AndroidEnableProguard)"
       DumpDependencies="$(LinkerDumpDependencies)"
+      PortablePdbFiles="@(_ResolvedPortablePdbFiles->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)')"
       ResolvedAssemblies="@(ResolvedAssemblies->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)')"
       HttpClientHandlerType="$(AndroidHttpClientHandlerType)"
       TlsProvider="$(AndroidTlsProvider)" />
