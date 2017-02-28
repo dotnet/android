@@ -92,7 +92,7 @@ $(FRAMEWORK_ASSEMBLIES):
 
 $(RUNTIME_LIBRARIES):
 	$(foreach conf, $(CONFIGURATIONS), \
-		$(MSBUILD) $(MSBUILD_FLAGS) /p:Configuration=$(conf)   $(_MSBUILD_ARGS) $(SOLUTION) )
+		$(MSBUILD) $(MSBUILD_FLAGS) /p:Configuration=$(conf)   $(_MSBUILD_ARGS) $(SOLUTION); )
 
 opentk-jcw:
 	$(foreach a, $(API_LEVELS), \
