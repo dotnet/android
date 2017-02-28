@@ -31,7 +31,8 @@
     <MonoSgenBridgeVersion Condition=" '$(MonoSgenBridgeVersion)' == '' ">5</MonoSgenBridgeVersion>
     <HOME Condition=" '$(HOME)' == '' ">$(HOMEDRIVE)$(HOMEPATH)</HOME>
     <AndroidApiLevel Condition=" '$(AndroidApiLevel)' == '' ">25</AndroidApiLevel>
-    <AndroidFrameworkVersion Condition=" '$(AndroidFrameworkVersion)' == '' ">v7.1</AndroidFrameworkVersion>
+    <AndroidLatestFrameworkVersion>v7.1</AndroidLatestFrameworkVersion>
+    <AndroidFrameworkVersion Condition=" '$(AndroidFrameworkVersion)' == '' ">$(AndroidLatestFrameworkVersion)</AndroidFrameworkVersion>
     <AndroidToolchainCacheDirectory Condition=" '$(AndroidToolchainCacheDirectory)' == '' ">$(HOME)\android-archives</AndroidToolchainCacheDirectory>
     <AndroidToolchainDirectory Condition=" '$(AndroidToolchainDirectory)' == '' ">$(HOME)\android-toolchain</AndroidToolchainDirectory>
     <AndroidMxeInstallPrefix Condition=" '$(AndroidMxeInstallPrefix)' == '' And '$(NeedMxe)' == 'true' ">$(AndroidToolchainDirectory)\mxe</AndroidMxeInstallPrefix>

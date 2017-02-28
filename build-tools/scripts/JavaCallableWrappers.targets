@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Target Name="GenerateJavaCallableWrappers"
+      AfterTargets="$(JavaCallableWrapperAfterTargets)"
+      Inputs="$(JavaCallableWrapperAbsAssembly)"
+      Outputs="$(OutputPath)mono.android.jar">
+    <MakeDir Directories="$(IntermediateOutputPath)jcw;$(IntermediateOutputPath)jcw\bin" />
+    <PropertyGroup>
+      <OutputPathAbs>$(MSBuildProjectDirectory)\$(OutputPath)</OutputPathAbs>
+      <JcwGen>"$(JavaInteropFullPath)\bin\$(Configuration)\jcw-gen.exe" -v10</JcwGen>
+      <_LibDirs>-L "$(OutputPathAbs)" -L "$(OutputPathAbs)..\v1.0\" -L "$(OutputPathAbs)..\v1.0\Facades"</_LibDirs>
+      <_Out>-o "$(MSBuildProjectDirectory)\$(IntermediateOutputPath)jcw\src"</_Out>
+    </PropertyGroup>
+    <Exec
+        Command="$(ManagedRuntime) $(ManagedRuntimeArgs) $(JcwGen) $(_Out) $(_LibDirs) &quot;$(JavaCallableWrapperAbsAssembly)&quot;"
+    />
+    <ItemGroup>
+      <_JavaSources Include="$(IntermediateOutputPath)jcw\src\**\*.java" />
+    </ItemGroup>
+    <WriteLinesToFile
+        File="$(IntermediateOutputPath)jcw\classes.txt"
+        Lines="@(_CommonJavaSources);@(_JavaSources)"
+        Overwrite="True"
+    />
+    <PropertyGroup>
+      <_Target>-source $(JavacSourceVersion) -target $(JavacSourceVersion)</_Target>
+      <_D>-d "$(IntermediateOutputPath)jcw\bin"</_D>
+      <_AndroidJar>"$(AndroidToolchainDirectory)\sdk\platforms\android-$(AndroidApiLevel)\android.jar"</_AndroidJar>
+      <_MonoAndroidJar>$(OutputPath)mono.android.jar</_MonoAndroidJar>
+    </PropertyGroup>
+    <Exec
+        Command="javac $(_Target) $(_D) -bootclasspath $(_AndroidJar):&quot;$(_MonoAndroidJar)&quot; @$(IntermediateOutputPath)jcw\classes.txt"
+    />
+    <Exec
+        Condition="Exists('$(_MonoAndroidJar)')"
+        Command="jar uf &quot;$(_MonoAndroidJar)&quot; -C &quot;$(IntermediateOutputPath)jcw\bin&quot; ."
+    />
+    <Exec
+        Condition="!Exists('$(_MonoAndroidJar)')"
+        Command="jar cf &quot;$(_MonoAndroidJar)&quot; -C &quot;$(IntermediateOutputPath)jcw\bin&quot; ."
+    />
+  </Target>
+</Project>

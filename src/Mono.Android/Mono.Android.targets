@@ -133,43 +133,8 @@
   <ItemGroup>
     <_CommonJavaSources Include="java\**\*.java" />
   </ItemGroup>
-  <Target Name="_GenerateJavaCallableWrappers"
-      AfterTargets="CoreBuild"
-      Inputs="$(OutputPath)$(AssemblyName).dll"
-      Outputs="$(OutputPath)mono.android.jar">
-    <MakeDir Directories="$(IntermediateOutputPath)jcw;$(IntermediateOutputPath)jcw\bin" />
-    <PropertyGroup>
-      <OutputPathAbs>$(MSBuildProjectDirectory)\$(OutputPath)</OutputPathAbs>
-      <JcwGen>"$(JavaInteropFullPath)\bin\$(Configuration)\jcw-gen.exe" -v10</JcwGen>
-      <_LibDirs>-L "$(OutputPathAbs)" -L "$(OutputPathAbs)..\v1.0\" -L "$(OutputPathAbs)..\v1.0\Facades"</_LibDirs>
-      <_Assembly>"$(OutputPathAbs)$(AssemblyName).dll"</_Assembly>
-      <_Out>-o "$(MSBuildProjectDirectory)\$(IntermediateOutputPath)jcw\src"</_Out>
-    </PropertyGroup>
-    <Exec
-        Command="$(ManagedRuntime) $(ManagedRuntimeArgs) $(JcwGen) $(_Out) $(_LibDirs) $(_Assembly)"
-    />
-    <ItemGroup>
-      <_JavaSources Include="$(IntermediateOutputPath)jcw\src\**\*.java" />
-    </ItemGroup>
-    <WriteLinesToFile
-        File="$(IntermediateOutputPath)jcw\classes.txt"
-        Lines="@(_CommonJavaSources);@(_JavaSources)"
-        Overwrite="True"
-    />
-    <PropertyGroup>
-      <_Target>-source $(JavacSourceVersion) -target $(JavacSourceVersion)</_Target>
-      <_D>-d "$(IntermediateOutputPath)jcw\bin"</_D>
-      <_AndroidJar>"$(AndroidToolchainDirectory)\sdk\platforms\android-$(AndroidApiLevel)\android.jar"</_AndroidJar>
-    </PropertyGroup>
-    <Exec
-        Command="javac $(_Target) $(_D) -bootclasspath $(_AndroidJar) @$(IntermediateOutputPath)jcw\classes.txt"
-    />
-    <Exec
-        Command="jar cf &quot;$(OutputPath)mono.android.jar&quot; -C &quot;$(IntermediateOutputPath)jcw\bin&quot; ."
-    />
-  </Target>
   <Target Name="_GenerateMonoAndroidDex16"
-      AfterTargets="_GenerateJavaCallableWrappers"
+      AfterTargets="GenerateJavaCallableWrappers"
       Condition="'$(JavacSourceVersion)' == '1.6'"
       Inputs="$(OutputPath)mono.android.jar"
       Outputs="$(OutputPath)mono.android.dex">
@@ -178,7 +143,7 @@
     />
   </Target>
   <Target Name="_GenerateMonoAndroidDex18"
-      AfterTargets="_GenerateJavaCallableWrappers"
+      AfterTargets="GenerateJavaCallableWrappers"
       Condition="'$(JavacSourceVersion)' == '1.8'"
       Inputs="$(OutputPath)mono.android.jar"
       Outputs="$(OutputPath)mono.android.dex">
