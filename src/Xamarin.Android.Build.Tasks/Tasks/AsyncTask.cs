@@ -32,7 +32,7 @@ namespace Xamarin.Android.Tasks
 
 		public CancellationToken Token { get { return tcs.Token; } }
 
-		public bool YieldDuringExecution { get; set; }
+		public bool YieldDuringToolExecution { get; set; }
 
 		[Obsolete ("Do not use the Log.LogXXXX from within your Async task as it will Lock the Visual Studio UI. Use the this.LogXXXX methods instead.")]
 		private new TaskLoggingHelper Log
@@ -42,7 +42,7 @@ namespace Xamarin.Android.Tasks
 
 		public AsyncTask ()
 		{
-			YieldDuringExecution = false;
+			YieldDuringToolExecution = false;
 			UIThreadId = Thread.CurrentThread.ManagedThreadId;
 		}
 
@@ -250,7 +250,7 @@ namespace Xamarin.Android.Tasks
 				taskCancelled,
 				completed,
 			};
-			if (YieldDuringExecution && BuildEngine is IBuildEngine3)
+			if (YieldDuringToolExecution && BuildEngine is IBuildEngine3)
 				(BuildEngine as IBuildEngine3).Yield ();
 			try {
 				while (isRunning) {
@@ -277,7 +277,7 @@ namespace Xamarin.Android.Tasks
 
 			}
 			finally {
-				if (YieldDuringExecution && BuildEngine is IBuildEngine3)
+				if (YieldDuringToolExecution && BuildEngine is IBuildEngine3)
 					(BuildEngine as IBuildEngine3).Reacquire ();
 			}
 		}
