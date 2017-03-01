@@ -72,6 +72,7 @@ namespace Xamarin.Android.BuildTools.PrepTasks {
 				File.Move (tempPath, destinationFile);
 			}
 			catch (Exception e) {
+				Log.LogError ("Unable to download URL `{0}` to `{1}`: {2}", uri, destinationFile, e.Message);
 				Log.LogErrorFromException (e);
 			}
 		}

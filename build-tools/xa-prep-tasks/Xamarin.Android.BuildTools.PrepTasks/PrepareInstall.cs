@@ -86,7 +86,16 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 				return;
 			}
 			// TODO: other platforms
-			Log.LogError ($"Unsupported platform {HostOS}!");
+			var min = Program.GetMetadata ("MinimumVersion");
+			var ver = "";
+			if (!string.IsNullOrEmpty (min)) {
+				ver = $", version >= {min}";
+				var max = Program.GetMetadata ("MaximumVersion");
+				if (!string.IsNullOrEmpty (max)) {
+					ver += $" and <= {max}";
+				}
+			}
+			Log.LogError ($"Unsupported platform {HostOS}! Do not know how to install program `{Program.ItemSpec}`{ver}.");
 		}
 	}
 }
