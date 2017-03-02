@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <_NeedLlvm Condition=" '$(AndroidSupportedTargetAotAbis)' != '' ">True</_NeedLlvm>
+  </PropertyGroup>
+  <ItemGroup Condition=" '$(TpnIncludeExternalDependencies)' == 'True' And ('$(TpnIncludeBuildDependencies)' == 'True' Or '$(_NeedLlvm)' != '') ">
+    <ThirdPartyNotice Include="llvm">
+      <LicenseFile>$(MSBuildThisFileDirectory)\llvm\LICENSE.TXT</LicenseFile>
+      <SourceUrl>https://github.com/mono/llvm/</SourceUrl>
+    </ThirdPartyNotice>
+    <ThirdPartyNotice Include="llvm Autoconf">
+      <LicenseFile>$(MSBuildThisFileDirectory)\llvm\autoconf\LICENSE.TXT</LicenseFile>
+      <SourceUrl>https://github.com/mono/llvm/tree/master/autoconf/</SourceUrl>
+    </ThirdPartyNotice>
+    <ThirdPartyNotice Include="llvm Google Test">
+      <LicenseFile>$(MSBuildThisFileDirectory)\llvm\utils\unittest\googletest\LICENSE.TXT</LicenseFile>
+      <SourceUrl>https://github.com/mono/llvm/tree/master/utils/unittest/googletest/</SourceUrl>
+    </ThirdPartyNotice>
+    <ThirdPartyNotice Include="llvm OpenBSD regex">
+      <LicenseFile>$(MSBuildThisFileDirectory)\llvm\lib\Support\COPYRIGHT.regex</LicenseFile>
+      <SourceUrl>https://github.com/mono/llvm/tree/master/lib/Support/</SourceUrl>
+    </ThirdPartyNotice>
+    <ThirdPartyNotice Include="llvm pyyaml tests">
+      <LicenseFile>$(MSBuildThisFileDirectory)\llvm\test\YAMLParser\LICENSE.txt</LicenseFile>
+      <SourceUrl>https://github.com/mono/llvm/tree/master/test/YAMLParser/</SourceUrl>
+    </ThirdPartyNotice>
+    <ThirdPartyNotice Include="llvm ARM contributions">
+      <LicenseFile>$(MSBuildThisFileDirectory)\llvm\lib\Target\ARM\LICENSE.TXT</LicenseFile>
+      <SourceUrl>https://github.com/mono/llvm/tree/master/lib/Target/ARM/</SourceUrl>
+    </ThirdPartyNotice>
+    <ThirdPartyNotice Include="llvm md5 contributions">
+      <LicenseText>
+        This software was written by Alexander Peslyak in 2001.  No copyright is
+        claimed, and the software is hereby placed in the public domain.
+        In case this attempt to disclaim copyright and place the software in the
+        public domain is deemed null and void, then the software is
+        Copyright (c) 2001 Alexander Peslyak and it is hereby released to the
+        general public under the following terms:
+
+        Redistribution and use in source and binary forms, with or without
+        modification, are permitted.
+
+        There's ABSOLUTELY NO WARRANTY, express or implied.
+
+        (This is a heavily cut-down "BSD license".)
+      </LicenseText>
+      <SourceUrl>https://github.com/mono/llvm/blob/master/lib/Support/MD5.cpp</SourceUrl>
+    </ThirdPartyNotice>
+  </ItemGroup>
+</Project>

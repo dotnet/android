@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <_NeedMxe
+        Condition="'$(NeedMxe)' == 'true' And ( $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win32:')) Or  $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:')) )"
+    >True</_NeedMxe>
+  </PropertyGroup>
+  <ItemGroup Condition=" '$(TpnIncludeExternalDependencies)' == 'True' And ('$(TpnIncludeBuildDependencies)' == 'True' Or '$(_NeedMxe)' != '')">
+    <ThirdPartyNotice Include="xamarin/mxe">
+      <LicenseFile>$(MSBuildThisFileDirectory)\mxe\LICENSE.md</LicenseFile>
+      <SourceUrl>https://github.com/xamarin/mxe/</SourceUrl>
+    </ThirdPartyNotice>
+  </ItemGroup>
+</Project>
