@@ -41,6 +41,7 @@
       _BuildRuntimes;
       _InstallRuntimes;
       _InstallBcl;
+      _InstallCilStrip;
       _InstallMonoDoc;
       _InstallMonoSymbolicate;
       _ConfigureCrossRuntimes;
@@ -323,6 +324,15 @@
     />
     <Touch Files="@(_InstallMonoPosixHelperOutput);@(_InstallUnstrippedMonoPosixHelperOutput)" />
   </Target>
+  <Target Name="_InstallCilStrip"
+      Inputs="$(_MonoOutputDir)\mono-cil-strip.exe"
+      Outputs="$(_MandroidDir)\cil-strip.exe">
+    <MakeDir Directories="$(_MandroidDir)" />
+    <Copy
+        SourceFiles="$(_MonoOutputDir)\mono-cil-strip.exe"
+        DestinationFiles="$(_MandroidDir)\cil-strip.exe"
+    />
+  </Target>
   <Target Name="_InstallMonoDoc"
       Inputs="@(_MonoDocCopyItems);$(_MonoOutputDir)\mdoc.exe"
       Outputs="@(_MonoDocInstalledItems)">
@@ -333,6 +343,9 @@
     />
     <Exec
         Command="$(RemapAssemblyRefTool) &quot;$(_MonoOutputDir)\mdoc.exe&quot; &quot;$(_MandroidDir)\mdoc.exe&quot; Mono.Cecil &quot;$(_MandroidDir)\Xamarin.Android.Cecil.dll&quot;"
+    />
+    <Touch
+        Files="@(_MonoDocInstalledItems)"
     />
   </Target>
   <Target Name="_InstallMonoSymbolicate"
