@@ -924,6 +924,7 @@ because xbuild doesn't support framework reference assemblies.
 			SourceFiles="@(_AdditionalResourceCache)"
 			ToolPath="$(AaptToolPath)"
 			ToolExe="$(AaptToolExe)" 
+			YieldDuringToolExecution="$(YieldDuringToolExecution)"
 			Condition=" '$(AndroidExplicitCrunch)' == 'True' "
 	/>
 	<Touch Files="@(_AdditonalAndroidResourceCachePaths->'%(Identity)\cache.stamp')" AlwaysCreate="True" />
