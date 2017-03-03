@@ -4,5 +4,6 @@
 		<_JavaInteropReferences>Java.Interop;System.Runtime</_JavaInteropReferences>
 		<DependsOnSystemRuntime Condition=" '$(DependsOnSystemRuntime)' == '' ">true</DependsOnSystemRuntime>
 		<CopyNuGetImplementations Condition=" '$(CopyNuGetImplementations)' == ''">true</CopyNuGetImplementations>
+		<YieldDuringToolExecution Condition="'$(YieldDuringToolExecution)' == ''">true</YieldDuringToolExecution>
 	</PropertyGroup>
 </Project>
