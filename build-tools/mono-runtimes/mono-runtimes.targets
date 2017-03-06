@@ -491,6 +491,7 @@
     <ItemGroup>
       <BundleItem Include="@(_BclInstalledItem)" />
       <BundleItem Include="@(_MonoDocInstalledItems)" />
+      <BundleItem Include="$(_MandroidDir)\cil-strip.exe" />
       <BundleItem Include="$(_MandroidDir)\mono-symbolicate.exe" />
       <BundleItem Include="$(_MandroidDir)\mono-symbolicate.exe.mdb"  Condition=" Exists ('$(_MandroidDir)\mono-symbolicate.exe.mdb') " />
       <BundleItem Include="$(_MandroidDir)\mono-symbolicate.pdb"      Condition=" Exists ('$(_MandroidDir)\mono-symbolicate.pdb') " />
