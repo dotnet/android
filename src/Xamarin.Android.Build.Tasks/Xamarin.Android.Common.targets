@@ -756,7 +756,7 @@ because xbuild doesn't support framework reference assemblies.
 		/>
 	</CreateProperty>
 
-	<CreateProperty Value="$(AndroidSdkDirectory)\tools\proguard\">
+	<CreateProperty Value="$(MonoAndroidToolsDirectory)\proguard\">
 		<Output TaskParameter="Value" PropertyName="ProguardToolPath"
 				Condition="'$(ProguardToolPath)' == ''"
 		/>

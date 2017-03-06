@@ -1,0 +1,37 @@
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Target Name="_BuildProGuard">
+    <Exec
+        Command="$(AntDirectory)\bin\ant -verbose -f buildscripts\build.xml proguard"
+        WorkingDirectory="$(ProGuardSourceFullPath)"
+    />
+    <MakeDir Directories="$(OutputPath)" />
+    <Copy
+        SourceFiles="..\..\external\proguard\lib\proguard.jar"
+        DestinationFiles="$(OutputPath)\lib\proguard.jar"
+    />
+    <Copy
+        SourceFiles="..\..\external\proguard\bin\proguard.bat"
+        DestinationFiles="$(OutputPath)\bin\proguard.bat"
+    />
+    <Copy
+        SourceFiles="..\..\external\proguard\bin\proguard.sh"
+        DestinationFiles="$(OutputPath)\bin\proguard.sh"
+    />
+    <Copy
+        SourceFiles="..\..\external\proguard\docs\license.html"
+        DestinationFiles="$(OutputPath)\license.html"
+    />
+  </Target>
+  <Target Name="_CleanProGuard"
+      AfterTargets="Clean">
+    <Delete Files="$(OutputPath)\license.html" />
+    <Delete Files="$(OutputPath)\lib\proguard.jar" />
+    <Delete Files="$(OutputPath)\bin\proguard.sh" />
+    <Delete Files="$(OutputPath)\bin\proguard.bat" />
+    <Exec
+        Command="$(AntDirectory)\bin\ant -f buildscripts\build.xml clean"
+        WorkingDirectory="$(ProGuardSourceFullPath)"
+    />
+  </Target>
+</Project>
+

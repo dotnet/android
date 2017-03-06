@@ -49,6 +49,7 @@
     <OpenTKSourceDirectory>$(MSBuildThisFileDirectory)external\opentk</OpenTKSourceDirectory>
     <LibZipSourceDirectory Condition=" '$(LibZipSourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\libzip</LibZipSourceDirectory>
     <LibZipSharpSourceDirectory Condition=" '$(LibZipSharpSourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\LibZipSharp</LibZipSharpSourceDirectory>
+    <ProGuardSourceDirectory Condition=" '$(ProGuardSourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\proguard</ProGuardSourceDirectory>
     <SqliteSourceDirectory Condition=" '$(SqliteSourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\sqlite</SqliteSourceDirectory>
     <XamarinAndroidSourcePath>$(MSBuildThisFileDirectory)</XamarinAndroidSourcePath>
     <AllSupported32BitTargetAndroidAbis>armeabi;armeabi-v7a;x86</AllSupported32BitTargetAndroidAbis>
@@ -73,6 +74,7 @@
     <OpenTKSourceFullPath>$([System.IO.Path]::GetFullPath ('$(OpenTKSourceDirectory)'))</OpenTKSourceFullPath>
     <LibZipSourceFullPath>$([System.IO.Path]::GetFullPath ('$(LibZipSourceDirectory)'))</LibZipSourceFullPath>
     <LibZipSharpSourceFullPath>$([System.IO.Path]::GetFullPath ('$(LibZipSharpSourceDirectory)'))</LibZipSharpSourceFullPath>
+    <ProGuardSourceFullPath>$([System.IO.Path]::GetFullPath ('$(ProGuardSourceDirectory)'))</ProGuardSourceFullPath>
   </PropertyGroup>
   <PropertyGroup>
     <AdbToolPath Condition=" '$(AdbToolPath)' == '' ">$(AndroidSdkFullPath)\platform-tools</AdbToolPath>

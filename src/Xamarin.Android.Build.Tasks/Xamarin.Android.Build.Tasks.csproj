@@ -633,6 +633,15 @@
       <Name>Xamarin.Android.Tools.BootstrapTasks</Name>
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
     </ProjectReference>
+    <!--
+      *Logically* needs to be built first because executing the <Proguard/>
+      task will require the outputs of `proguard.mdproj`.
+      -->
+    <ProjectReference Include="..\proguard\proguard.mdproj">
+      <Project>{4B9D96BB-95AB-44E8-9F87-13B12C8BCED1}</Project>
+      <Name>proguard</Name>
+      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
+    </ProjectReference>
     <ProjectReference Include="$(LibZipSharpSourceFullPath)\libZipSharp.csproj">
       <Project>{E248B2CA-303B-4645-ADDC-9D4459D550FD}</Project>
       <Name>libZipSharp</Name>
