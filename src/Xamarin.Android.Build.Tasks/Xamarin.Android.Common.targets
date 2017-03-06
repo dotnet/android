@@ -491,6 +491,10 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 		UpdateAndroidResources;
 		$(ApplicationResolveReferencesDependsOn);
 	</ResolveReferencesDependsOn>
+	<ResolveAssemblyReferencesDependsOn>
+		_GenerateResourceDesignerStub;
+		$(ResolveAssemblyReferencesDependsOn)
+	</ResolveAssemblyReferencesDependsOn>
 </PropertyGroup>
 
 <PropertyGroup Condition="'$(AndroidApplication)' != '' And $(AndroidApplication)">
@@ -1020,8 +1024,35 @@ because xbuild doesn't support framework reference assemblies.
 <!-- Resource Build -->
 
 <Target Name="UpdateAndroidResources"
-	DependsOnTargets="$(CoreResolveReferencesDependsOn);_CheckForDeletedResourceFile;_ComputeAndroidResourcePaths;_UpdateAndroidResgen;_AddLibraryProjectsEmbeddedResourceToProject;_GenerateJavaDesignerForComponent" />
+	DependsOnTargets="$(CoreResolveReferencesDependsOn);_CheckForDeletedResourceFile;_ComputeAndroidResourcePaths;_UpdateAndroidResgen;_UseCompiledDesignerAssembly;_AddLibraryProjectsEmbeddedResourceToProject;_GenerateJavaDesignerForComponent" />
 
+
+<Target Name="_GenerateResourceDesignerStub" Condition=" !Exists ('$(IntermediateOutputPath)Resource.Designer.dll') And '$(Language)' == 'F#' ">
+	<Touch Files="$(IntermediateOutputPath)\Resource.Designer.stub.cs" AlwaysCreate="True" />
+	<Csc
+		KeyFile="$(KeyFile)"
+		KeyContainer="$(KeyContainer)"
+		NoStandardLib="True"
+		NoConfig="True"
+		TargetType="library"
+		Platform="$(PlatformTarget)"
+		DefineConstants="$(DefineConstants)"
+		References="$(_XATargetFrameworkDirectories)System.dll;$(_XATargetFrameworkDirectories)System.Core.dll;$(_XATargetFrameworkDirectories)Java.Interop.dll;$(_XATargetFrameworkDirectories)mscorlib.dll"
+		Sources="$(IntermediateOutputPath)\Resource.Designer.stub.cs"
+		OutputAssembly="$(IntermediateOutputPath)Resource.Designer.dll"
+	/>
+	<ItemGroup>
+		<Reference Include="$(IntermediateOutputPath)Resource.Designer.dll" />
+	</ItemGroup>
+</Target>
+	
+<Target Name="_UseCompiledDesignerAssembly"
+	Condition=" Exists ('$(IntermediateOutputPath)Resource.Designer.dll') And '$(_BuildResourceAssembly)' == 'true' ">
+	<ItemGroup>
+		<ReferencePath Include="$(IntermediateOutputPath)Resource.Designer.dll" />
+		<Compile Remove="$(_AndroidResourceDesignerFile)" />
+	</ItemGroup>
+</Target>
 <!-- Handle a case where the designer file has been deleted, but the flag file still exists -->
 <Target Name="_CheckForDeletedResourceFile">
 	<Delete Files="$(_AndroidResgenFlagFile)"
@@ -1316,7 +1347,11 @@ because xbuild doesn't support framework reference assemblies.
 		AdditionalResourceDirectories="@(LibraryResourceDirectories)"
 		IsApplication="$(AndroidApplication)"
 		References="@(ReferencePath)"
-	/>
+		IntermediateOutputPath="$(IntermediateOutputPath)"
+	>
+		<Output TaskParameter="BuildResourceAssembly" PropertyName="_BuildResourceAssembly" />
+		<Output TaskParameter="IntermediateDesignerFile" PropertyName="_IntermediateDesignerFile" />
+	</GenerateResourceDesigner>
 
 	<!-- Only copy if the file contents changed, so users only get Reload? dialog for real changes -->
 	<CopyIfChanged
@@ -1327,6 +1362,19 @@ because xbuild doesn't support framework reference assemblies.
 
 	<!-- Delete our temporary directory -->
 	<RemoveDirFixed Directories="$(ResgenTemporaryDirectory)" />
+
+	<Csc Condition=" '$(_BuildResourceAssembly)' == 'true' "
+		KeyFile="$(KeyFile)"
+		KeyContainer="$(KeyContainer)"
+		NoStandardLib="True"
+		TargetType="library"
+		NoConfig="True"
+		Platform="$(PlatformTarget)"
+		DefineConstants="$(DefineConstants)"
+		References="@(ReferencePath);@(ReferenceDependencyPaths);$(_XATargetFrameworkDirectories)\Java.Interop.dll;$(_XATargetFrameworkDirectories)\mscorlib.dll"
+		Sources="$(_IntermediateDesignerFile)"
+		OutputAssembly="$(IntermediateOutputPath)Resource.Designer.dll"
+	/>
 	
 	<!-- If there are no _AndroidResource items, create a blank file -->
 	<CreateAndroidResourceStamp
@@ -2532,6 +2580,8 @@ because xbuild doesn't support framework reference assemblies.
 	<Delete Files="$(_AndroidLibraryImportsCache)" />
 	<Delete Files="$(_AndroidStaticResourcesFlag)" />
 	<Delete Files="$(_AndroidLibraryProjectImportsCache)" />
+	<Delete Files="$(IntermediateOutputPath)Resource.Designer.dll" />
+	<Delete Files="$(IntermediateOutputPath)\Resource.Designer.stub.cs" />
 </Target>
 
 <Target Name="_CollectMonoAndroidOutputs" DependsOnTargets="_ValidateAndroidPackageProperties">

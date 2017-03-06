@@ -38,6 +38,15 @@ namespace Xamarin.Android.Tasks
 
 		public ITaskItem[] References { get; set; }
 
+		[Required]
+		public string IntermediateOutputPath { get; set; }
+
+		[Output]
+		public bool BuildResourceAssembly { get; set; }
+
+		[Output]
+		public string IntermediateDesignerFile { get; set; }
+
 		private Dictionary<string, string> resource_fixup = new Dictionary<string, string> (StringComparer.OrdinalIgnoreCase);
 
 		public override bool Execute ()
@@ -98,6 +107,14 @@ namespace Xamarin.Android.Tasks
 			bool isFSharp = string.Equals (language, "F#", StringComparison.OrdinalIgnoreCase);
 			bool isCSharp = string.Equals (language, "C#", StringComparison.OrdinalIgnoreCase);
 
+			if (isFSharp) {
+				language = "C#";
+				isCSharp = true;
+				NetResgenOutputFile = Path.Combine (IntermediateOutputPath, "Resource.Designer.cs");
+				IntermediateDesignerFile = NetResgenOutputFile;
+			}
+
+			BuildResourceAssembly = isFSharp;
 			// Let VB put this in the default namespace
 			if (isVB)
 				Namespace = string.Empty;
@@ -126,31 +143,25 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
-			AdjustConstructor (isFSharp, resources);
+			AdjustConstructor (resources);
 			foreach (var member in resources.Members)
 				if (member is CodeTypeDeclaration)
-					AdjustConstructor (isFSharp, (CodeTypeDeclaration) member);
+					AdjustConstructor ((CodeTypeDeclaration) member);
 
 			// Write out our Resources.Designer.cs file
 
-			WriteFile (NetResgenOutputFile, resources, language, isFSharp, isCSharp);
+			WriteFile (NetResgenOutputFile, resources, language, isCSharp, isFSharp);
+
+			Log.LogDebugMessage ($"[Output] BuildResourceAssembly : {BuildResourceAssembly}");
+			Log.LogDebugMessage ($"[Output] IntermediateDesignerFile : {IntermediateDesignerFile}");
 
 			return !Log.HasLoggedErrors;
 		}
 
 		// Remove private constructor in F#.
 		// Add static constructor. (but ignored in F#)
-		void AdjustConstructor (bool isFSharp, CodeTypeDeclaration type)
+		void AdjustConstructor (CodeTypeDeclaration type)
 		{			
-			if (isFSharp) {
-				foreach (CodeTypeMember tm in type.Members) {
-					if (tm is CodeConstructor) {
-						type.Members.Remove (tm);
-						break;
-					}
-				}
-			}
-
 			var staticCtor = new CodeTypeConstructor () { Attributes = MemberAttributes.Static };
 			staticCtor.Statements.Add (
 				new CodeExpressionStatement (
@@ -163,11 +174,9 @@ namespace Xamarin.Android.Tasks
 			type.Members.Add (staticCtor);
 		}
 
-		private void WriteFile (string file, CodeTypeDeclaration resources, string language, bool isFSharp, bool isCSharp)
+		private void WriteFile (string file, CodeTypeDeclaration resources, string language, bool isCSharp, bool isFSharp)
 		{
-			CodeDomProvider provider = 
-				isFSharp ? new FSharp.Compiler.CodeDom.FSharpCodeProvider () :
-				CodeDomProvider.CreateProvider (language);
+			CodeDomProvider provider = CodeDomProvider.CreateProvider (language);
 
 			string code = null;
 			using (var o = new StringWriter ()) {
@@ -182,6 +191,24 @@ namespace Xamarin.Android.Tasks
 
 				if (resources != null)
 					ns.Types.Add (resources);
+
+				if (isFSharp) {
+					foreach (CodeTypeMember member in resources.Members) {
+						var codeType = member as CodeTypeDeclaration;
+						if (codeType == null || !codeType.IsClass)
+							continue;
+						var dec = new CodeTypeDeclaration (resources.Name + "_" + member.Name);
+						dec.IsClass = true;
+						dec.IsPartial = true;
+						dec.TypeAttributes = System.Reflection.TypeAttributes.Public | System.Reflection.TypeAttributes.Sealed;
+						dec.BaseTypes.Add (new CodeTypeReference (resources.Name + "." + member.Name));
+						var codeAttrDecl = new CodeAttributeDeclaration (
+							"System.ObsoleteAttribute",
+							new CodeAttributeArgument (new CodePrimitiveExpression ($"You should use {resources.Name}.{member.Name} instead")));
+						dec.CustomAttributes.Add (codeAttrDecl);
+						ns.Types.Add (dec);
+					}
+				}
 
 				var unit = new CodeCompileUnit ();
 				unit.Namespaces.Add (ns);
@@ -202,23 +229,6 @@ namespace Xamarin.Android.Tasks
 					provider.GenerateCodeFromCompileUnit(new CodeSnippetCompileUnit("#pragma warning restore 1591"), o, options);
 
 				code = o.ToString ();
-
-				// post-processing for F#
-				if (isFSharp) {
-					code = code.Replace ("\r\n", "\n");
-					while (true) {
-						int skipLen = " = class".Length;
-						int idx = code.IndexOf (" = class");
-						if (idx < 0)
-							break;
-						int end = code.IndexOf ("        end");
-						string head = code.Substring (0, idx);
-						string mid = end < 0 ? code.Substring (idx) : code.Substring (idx + skipLen, end - idx - skipLen);
-						string last = end < 0 ? null : code.Substring (end + "        end".Length);
-						code = head + @" () =
-            static do Android.Runtime.ResourceIdManager.UpdateIdValues()" + mid + "\n" + last;
-					}
-				}
 			}
 			
 			var temp_o  = Path.Combine (Path.GetDirectoryName (file), "__" + Path.GetFileName (file) + ".new");
