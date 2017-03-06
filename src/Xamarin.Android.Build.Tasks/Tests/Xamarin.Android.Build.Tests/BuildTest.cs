@@ -177,6 +177,24 @@ namespace Xamarin.Android.Build.Tests
 					"{0} should have been updated", pdbToMdbPath);
 			}
 		}
+
+		[Test]
+		public void BuildInDesignTimeMode ()
+		{
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = true,
+			};
+			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name), false ,false)) {
+				builder.Verbosity = LoggerVerbosity.Diagnostic;
+				builder.Target = "UpdateAndroidResources";
+				builder.Build (proj, parameters: new string[] { "DesignTimeBuild=true" });
+				Assert.IsFalse (builder.Output.IsTargetSkipped ("_CreatePropertiesCache"), "target \"_CreatePropertiesCache\" should have been run.");
+				Assert.IsFalse (builder.Output.IsTargetSkipped ("_ResolveLibraryProjectImports"), "target \"_ResolveLibraryProjectImports\' should have been run.");
+				builder.Build (proj, parameters: new string[] { "DesignTimeBuild=true" });
+				Assert.IsFalse (builder.Output.IsTargetSkipped ("_CreatePropertiesCache"), "target \"_CreatePropertiesCache\" should have been run.");
+				Assert.IsTrue (builder.Output.IsTargetSkipped ("_ResolveLibraryProjectImports"), "target \"_ResolveLibraryProjectImports\' should have been skipped.");
+			}
+		}
 	}
 }
 
