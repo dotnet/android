@@ -33,10 +33,15 @@
     <ItemGroup>
       <_SdkStampFiles Include="@(_PlatformAntItem->'$(AntDirectory)\.stamp-%(Identity)')" />
     </ItemGroup>
+    <ItemGroup>
+      <_DownloadedItem Include="@(_PlatformAndroidSdkItem->'$(AndroidToolchainCacheDirectory)\%(Identity)')" />
+      <_DownloadedItem Include="@(_PlatformAndroidNdkItem->'$(AndroidToolchainCacheDirectory)\%(Identity)')" />
+      <_DownloadedItem Include="@(_PlatformAntItem->'$(AndroidToolchainCacheDirectory)\%(Identity)')" />
+    </ItemGroup>
   </Target>
   <Target Name="_DownloadItems"
       DependsOnTargets="_DetermineItems"
-      Outputs="@(_PlatformAndroidSdkItem->'$(AndroidToolchainCacheDirectory)\%(Identity)');@(_PlatformAndroidNdkItem->'$(AndroidToolchainCacheDirectory)\%(Identity)')">
+      Outputs="@(_DownloadedItem)">
     <MakeDir Directories="$(AndroidToolchainCacheDirectory)" />
     <DownloadUri
         SourceUris="@(_PlatformAndroidSdkItem->'$(AndroidUri)/%(RelUrl)%(Identity)');@(_PlatformAndroidNdkItem->'$(AndroidUri)/%(RelUrl)%(Identity)')"
@@ -49,7 +54,7 @@
   </Target>
   <Target Name="_UnzipFiles"
       DependsOnTargets="_DetermineItems"
-      Inputs="@(_PlatformAndroidSdkItem->'$(AndroidToolchainCacheDirectory)\%(Identity)');@(_PlatformAntItem->'$(AndroidToolchainCacheDirectory)\%(Identity)')"
+      Inputs="@(_DownloadedItem)"
       Outputs="@(_SdkStampFiles);$(AndroidToolchainDirectory)\ndk\.stamp-ndk">
     <CreateItem
         Include="@(_PlatformAndroidSdkItem->'$(AndroidToolchainCacheDirectory)\%(_PlatformAndroidSdkItem.Identity)">
