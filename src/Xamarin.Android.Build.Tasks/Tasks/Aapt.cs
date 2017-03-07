@@ -17,9 +17,6 @@ namespace Xamarin.Android.Tasks
 {
 	public class Aapt : AsyncTask
 	{
-		private const string error_regex_string = @"(?<file>.*)\s*:\s*(?<line>\d*)\s*:\s*error:\s*(?<error>.+)";
-		private Regex error_regex = new Regex (error_regex_string, RegexOptions.Compiled);
-
 		public ITaskItem[] AdditionalAndroidResourcePaths { get; set; }
 
 		public string AndroidComponentResgenFlagFile { get; set; }
@@ -155,7 +152,9 @@ namespace Xamarin.Android.Tasks
 			var abis = SupportedAbis?.Split (new char [] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
 			foreach (var abi in (CreatePackagePerAbi && abis?.Length > 1) ? defaultAbi.Concat (abis) : defaultAbi) {
 				var currentResourceOutputFile = abi != null ? string.Format ("{0}-{1}", ResourceOutputFile, abi) : ResourceOutputFile;
-				ExecuteForAbi (GenerateCommandLineCommands (manifestFile.ItemSpec, abi, currentResourceOutputFile), currentResourceOutputFile);
+				if (!ExecuteForAbi (GenerateCommandLineCommands (manifestFile.ItemSpec, abi, currentResourceOutputFile), currentResourceOutputFile)) {
+					Cancel ();
+				}
 			}
 
 			return 0;
@@ -315,13 +314,10 @@ namespace Xamarin.Android.Tasks
 
 		protected void LogEventsFromTextOutput (string singleLine, MessageImportance messageImportance)
 		{
-			// Aapt errors looks like this:
-			//   C:\Users\Jonathan\Documents\Visual Studio 2010\Projects\AndroidMSBuildTest\AndroidMSBuildTest\obj\Debug\res\layout\main.axml:7: error: No resource identifier found for attribute 'id2' in package 'android' (TaskId:22)
-			// Look for them and convert them to MSBuild compatible errors.
 			if (string.IsNullOrEmpty (singleLine)) 
 				return;
 
-			var match = error_regex.Match (singleLine);
+			var match = AndroidToolTask.AndroidErrorRegex.Match (singleLine);
 
 			if (match.Success) {
 				var file = match.Groups["file"].Value;

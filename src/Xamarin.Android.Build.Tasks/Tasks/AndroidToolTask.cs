@@ -73,11 +73,16 @@ namespace Xamarin.Android.Tasks
 		/* This gets pre-pended to any filenames that we get from error strings */
 		protected string BaseDirectory { get; set; }
 
+		// Aapt errors looks like this:
+		//   res\layout\main.axml:7: error: No resource identifier found for attribute 'id2' in package 'android' (TaskId:22)
+		//   Resources/values/theme.xml(2): error APT0000: Error retrieving parent for item: No resource found that matches the given name '@android:style/Theme.AppCompat'.
+		//   Resources/values/theme.xml:2: error APT0000: Error retrieving parent for item: No resource found that matches the given name '@android:style/Theme.AppCompat'.
+		// Look for them and convert them to MSBuild compatible errors.
 		static Regex androidErrorRegex;
-		static Regex AndroidErrorRegex {
+		internal static Regex AndroidErrorRegex {
 			get {
 				if (androidErrorRegex == null)
-					androidErrorRegex = new Regex (@"^(\s*(?<file>[^:]+):(?<line>\d*)?:\s+)*(?<level>\w+)\s*:\s*(?<message>.*)", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
+					androidErrorRegex = new Regex (@"^(?<file>.+?)(([:(](?<line>\d+)[:)]):?\s*(error)\s*(?<level>\w*(?=:))):?(?<message>.*)", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
 				return androidErrorRegex;
 			}
 		}
