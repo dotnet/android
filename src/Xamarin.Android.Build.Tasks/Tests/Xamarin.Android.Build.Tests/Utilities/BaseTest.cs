@@ -99,18 +99,27 @@ namespace Xamarin.Android.Build.Tests
 		[TearDown]
 		protected virtual void CleanupTest ()
 		{
-			if (TestContext.CurrentContext.Result.Outcome.Status == NUnit.Framework.Interfaces.TestStatus.Passed) {
-				if (TestContext.CurrentContext.Test.Properties ["Output"] == null)
+			if (TestContext.CurrentContext.Test.Properties ["Output"] == null)
 					return;
-				// find the "root" directory just below "temp" and clean from there because
-				// some tests create multiple subdirectories
-				var output = Path.GetFullPath (((string [])TestContext.CurrentContext.Test.Properties ["Output"]) [0]);
-				while (!Directory.GetParent (output).Name.EndsWith ("temp", StringComparison.OrdinalIgnoreCase)) {
+			// find the "root" directory just below "temp" and clean from there because
+			// some tests create multiple subdirectories
+			var output = Path.GetFullPath (((string [])TestContext.CurrentContext.Test.Properties ["Output"]) [0]);
+			while (!Directory.GetParent (output).Name.EndsWith ("temp", StringComparison.OrdinalIgnoreCase)) {
 					output = Directory.GetParent (output).FullName;
-				}
-				if (Directory.Exists (output)) {
-					FileSystemUtils.SetDirectoryWriteable (output);
-					Directory.Delete (output, recursive: true);
+			}
+			if (!Directory.Exists (output))
+				return;
+			if (TestContext.CurrentContext.Result.Outcome.Status == NUnit.Framework.Interfaces.TestStatus.Passed) {
+				FileSystemUtils.SetDirectoryWriteable (output);
+				Directory.Delete (output, recursive: true);
+			} else {
+				foreach (var file in Directory.GetFiles (Path.Combine (output), "build.log", SearchOption.AllDirectories)) {
+					TestContext.Out.WriteLine ("*************************************************************************");
+					TestContext.Out.WriteLine (file);
+					TestContext.Out.WriteLine ();
+					TestContext.Out.WriteLine (File.ReadAllText (file));
+					TestContext.Out.WriteLine ("*************************************************************************");
+					TestContext.Out.Flush ();
 				}
 			}
 		}

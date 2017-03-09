@@ -156,7 +156,10 @@ define RUN_NUNIT_TEST
 		$(if $(RUN),-run:$(RUN)) \
 		--result="TestResult-$(basename $(notdir $(1))).xml;format=nunit2" \
 		-output=bin/Test$(CONFIGURATION)/TestOutput-$(basename $(notdir $(1))).txt \
-	|| true ;
+	|| true ; \
+	if [ -f "bin/Test$(CONFIGURATION)/TestOutput-$(basename $(notdir $(1))).txt" ] ; then \
+		cat bin/Test$(CONFIGURATION)/TestOutput-$(basename $(notdir $(1))).txt ; \
+	fi
 endef
 
 run-nunit-tests: $(NUNIT_TESTS)
