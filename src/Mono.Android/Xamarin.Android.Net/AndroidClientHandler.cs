@@ -209,8 +209,8 @@ namespace Xamarin.Android.Net
 			while (true) {
 				URL java_url = new URL (EncodeUrl (redirectState.NewUrl));
 				URLConnection java_connection = java_url.OpenConnection ();
-				HttpURLConnection httpConnection = await SetupRequestInternal (request, java_connection);
-				HttpResponseMessage response = await ProcessRequest (request, java_url, httpConnection, cancellationToken, redirectState);
+				HttpURLConnection httpConnection = await SetupRequestInternal (request, java_connection).ConfigureAwait (continueOnCapturedContext: false);;
+				HttpResponseMessage response = await ProcessRequest (request, java_url, httpConnection, cancellationToken, redirectState).ConfigureAwait (continueOnCapturedContext: false);;
 				if (response != null)
 					return response;
 
@@ -235,6 +235,19 @@ namespace Xamarin.Android.Net
 			return Task.Run (() => httpConnection?.Disconnect ());
 		}
 
+		Task ConnectAsync (HttpURLConnection httpConnection, CancellationToken ct)
+		{
+			return Task.Run (() => {
+				try {
+					using (ct.Register (() => httpConnection?.Disconnect ()))
+						httpConnection?.Connect ();
+				} catch {
+					ct.ThrowIfCancellationRequested ();
+					throw;
+				}
+			}, ct);
+		}
+
 		async Task <HttpResponseMessage> DoProcessRequest (HttpRequestMessage request, URL javaUrl, HttpURLConnection httpConnection, CancellationToken cancellationToken, RequestRedirectionState redirectState)
 		{
 			if (Logger.LogNet)
@@ -250,7 +263,8 @@ namespace Xamarin.Android.Net
 			try {
 				if (Logger.LogNet)
 					Logger.Log (LogLevel.Info, LOG_APP, $"  connecting");
-				await httpConnection.ConnectAsync ().ConfigureAwait (false);
+
+				await ConnectAsync (httpConnection, cancellationToken).ConfigureAwait (continueOnCapturedContext: false);
 				if (Logger.LogNet)
 					Logger.Log (LogLevel.Info, LOG_APP, $"  connected");
 			} catch (Java.Net.ConnectException ex) {
@@ -528,7 +542,7 @@ namespace Xamarin.Android.Net
 		/// <param name="conn">Pre-configured connection instance</param>
 		protected virtual Task SetupRequest (HttpRequestMessage request, HttpURLConnection conn)
 		{
-			return Task.Factory.StartNew (AssertSelf);
+			return Task.Run (AssertSelf);
 		}
 
 		/// <summary>
@@ -632,9 +646,9 @@ namespace Xamarin.Android.Net
 			}
 			
 			HandlePreAuthentication (httpConnection);
-			await SetupRequest (request, httpConnection);
+			await SetupRequest (request, httpConnection).ConfigureAwait (continueOnCapturedContext: false);;
 			SetupRequestBody (httpConnection, request);
-			
+
 			return httpConnection;
 		}
 
