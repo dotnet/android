@@ -134,7 +134,7 @@ to create a new Android SDK & NDK within `$HOME/xa-sdk`:
 	mkdir -p $HOME/xa-sdk/android-sdk
 	cd $HOME/xa-sdk/android-sdk
 	unzip $HOME/Downloads/tools_r25.2.3-macosx.zip
-	tools/bin/sdkmanager build-tools;25.0.2"
+	tools/bin/sdkmanager "build-tools;25.0.2"
 	tools/bin/sdkmanager "platform-tools"
 	tools/bin/sdkmanager "platforms;android-25"
 	
@@ -160,7 +160,8 @@ to create a new Android SDK & NDK within `$HOME/xa-sdk`:
     **Extract All...**
 5. Within the **Extract Compressed (Zipped) Folders** dialog, enter
     a path such as `C:\xa-sdk\android-ndk`. Click **Next**.
-6. Within `cmd.exe`:
+6. Within `cmd.exe`, execute the following commands:
+
         cd C:\xa-sdk\android-sdk
         tools\bin\sdkmanager "build-tools;25.0.2"
         tools\bin\sdkmanager "platform-tools"
