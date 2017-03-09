@@ -21,8 +21,10 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 
 		public                  string[]            InstrumentationArguments    { get; set; }
 
-		[Output]
 		public                  string              NUnit2TestResultsFile       { get; set; }
+
+		[Output]
+		public                  string              FailedToRun                 { get; set; }
 
 		protected   override    bool                LogTaskMessages {
 			get { return false; }
@@ -63,14 +65,18 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			base.Execute ();
 
 			if (string.IsNullOrEmpty (targetTestResultsPath)) {
-				Log.LogError ("No `nunit2-results-path` bundle value found in command output! Cannot find NUnit2 XML output!");
-				return false;
+				FailedToRun = Component;
+				Log.LogError (
+						"Could not find NUnit2 results file after running component `{0}`: " +
+						"no `nunit2-results-path` bundle value found in command output!",
+						Component);
+				// Can return false once we use MSBuild and not xbuild
+				// return false;
+				return true;
 			}
 
 			executionState  = ExecuteState.PullFiles;
 			base.Execute ();
-
-			Log.LogMessage (MessageImportance.Low, $"  [Output] {nameof (NUnit2TestResultsFile)}: {NUnit2TestResultsFile}");
 
 			return !Log.HasLoggedErrors;
 		}

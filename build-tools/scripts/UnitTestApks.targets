@@ -63,6 +63,10 @@
         ToolExe="$(AdbToolExe)"
         ToolPath="$(AdbToolPath)"
     />
+    <Error
+        Condition="'@(_FailedComponent)' != ''"
+        Text="Execution of the following components did not complete successfully: @(_FailedComponent->'%(Identity)', ', ')"
+    />
   </Target>
 
   <!--
@@ -96,7 +100,6 @@
   <Target Name="RunUnitTestApks"
       Condition=" '@(UnitTestApk)' != '' ">
     <RunInstrumentationTests
-        ContinueOnError="True"
         AdbTarget="$(_AdbTarget)"
         AdbOptions="$(AdbOptions)"
         Component="%(UnitTestApk.Package)/%(UnitTestApk.InstrumentationType)"
@@ -104,7 +107,7 @@
         TestFixture="$(TestFixture)"
         ToolExe="$(AdbToolExe)"
         ToolPath="$(AdbToolPath)">
-      <Output TaskParameter="NUnit2TestResultsFile" PropertyName="_ResultsFile "/>
+      <Output TaskParameter="FailedToRun" ItemName="_FailedComponent"/>
     </RunInstrumentationTests>
   </Target>
 </Project>
