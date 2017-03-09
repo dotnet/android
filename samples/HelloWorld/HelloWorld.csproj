@@ -15,10 +15,13 @@
     <MonoAndroidResourcePrefix>Resources</MonoAndroidResourcePrefix>
     <MonoAndroidAssetsPrefix>Assets</MonoAndroidAssetsPrefix>
     <AndroidUseLatestPlatformSdk>true</AndroidUseLatestPlatformSdk>
-    <TargetFrameworkVersion>v7.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v7.1</TargetFrameworkVersion>
   </PropertyGroup>
-  <Import Project="..\..\Configuration.props" />
-  <PropertyGroup>
+  <Import
+      Condition="Exists('..\..\Configuration.props')"
+      Project="..\..\Configuration.props"
+  />
+  <PropertyGroup Condition="Exists('..\..\Configuration.props')">
     <TargetFrameworkVersion>$(AndroidFrameworkVersion)</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
