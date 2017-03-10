@@ -78,9 +78,15 @@ TASK_ASSEMBLIES = $(foreach conf, $(CONFIGURATIONS), bin/$(conf)/lib/xbuild/Xama
 RUNTIME_LIBRARIES = $(foreach conf, $(CONFIGURATIONS), $(ALL_JIT_ABIS:%=bin/$(conf)/lib/xbuild/Xamarin/Android/lib/%/libmonosgen-2.0.so))
 FRAMEWORK_ASSEMBLIES = $(foreach conf, $(CONFIGURATIONS), $(FRAMEWORKS:%=bin/$(conf)/lib/xbuild-frameworks/MonoAndroid/%/Mono.Android.dll))
 
+.PHONY: leeroy jenkins leeroy-all
+
 jenkins: prepare leeroy $(ZIP_OUTPUT)
 
-leeroy: $(RUNTIME_LIBRARIES) $(TASK_ASSEMBLIES) $(FRAMEWORK_ASSEMBLIES) opentk-jcw
+leeroy: leeroy-all $(RUNTIME_LIBRARIES) $(TASK_ASSEMBLIES) $(FRAMEWORK_ASSEMBLIES) opentk-jcw
+
+leeroy-all:
+	$(foreach conf, $(CONFIGURATIONS), \
+		$(MSBUILD) $(MSBUILD_FLAGS) Xamarin.Android.sln /p:Configuration=$(conf) $(_MSBUILD_ARGS) ; )
 
 $(TASK_ASSEMBLIES): bin/%/lib/xbuild/Xamarin/Android/Xamarin.Android.Build.Tasks.dll:
 	$(MSBUILD) $(MSBUILD_FLAGS) /p:Configuration=$* $(_MSBUILD_ARGS) $(SOLUTION)
