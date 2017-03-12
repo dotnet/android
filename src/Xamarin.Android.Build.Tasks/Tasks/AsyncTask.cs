@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using Microsoft.Build.Utilities;
 using Microsoft.Build.Framework;
 using System.Threading;
@@ -114,6 +115,14 @@ namespace Xamarin.Android.Tasks
 		protected void LogError (string message, params object[] messageArgs)
 		{
 			LogError (string.Format (message, messageArgs));
+		}
+
+		public void LogErrorFromException (Exception exception)
+		{
+			var sb = new StringBuilder ();
+			sb.Append (exception.Message);
+			sb.Append (exception.StackTrace);
+			LogError (sb.ToString ());
 		}
 
 		protected void LogCodedError (string code, string message, params object[] messageArgs)
