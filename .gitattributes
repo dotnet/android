@@ -33,3 +33,5 @@ Makefile	eol=lf
 *.wixproj	eol=crlf
 *.wxs	eol=crlf
 *.rtf	eol=crlf
+
+test commit
