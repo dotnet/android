@@ -3121,6 +3121,10 @@ init_android_runtime (MonoDomain *domain, JNIEnv *env, jobject loader)
 
 	init.grefLoader = (*env)->NewGlobalRef (env, loader);
 
+	GCUserPeer_class = lref_to_gref (env, (*env)->FindClass (env, "mono/android/GCUserPeer"));
+	GCUserPeer_ctor = (*env)->GetMethodID (env, GCUserPeer_class, "<init>", "()V");
+	assert ( (GCUserPeer_class && GCUserPeer_ctor) || !"Failed to load classes required for JNI" );
+
 	lrefIGCUserPeer       = (*env)->FindClass (env, "mono/android/IGCUserPeer");
 	init.grefIGCUserPeer  = (*env)->NewGlobalRef (env, lrefIGCUserPeer);
 	(*env)->DeleteLocalRef (env, lrefIGCUserPeer);
