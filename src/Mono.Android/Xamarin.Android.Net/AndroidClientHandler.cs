@@ -323,12 +323,29 @@ namespace Xamarin.Android.Net
 			if (Logger.LogNet)
 				Logger.Log (LogLevel.Info, LOG_APP, $"Status code: {statusCode}");
 
+			if (!IsErrorStatusCode (statusCode)) {
+				if (Logger.LogNet)
+					Logger.Log (LogLevel.Info, LOG_APP, $"Reading...");
+				ret.Content = GetContent (httpConnection, httpConnection.InputStream);
+			}
+			else {
+				if (Logger.LogNet)
+					Logger.Log (LogLevel.Info, LOG_APP, $"Status code is {statusCode}, reading...");
+				// For 400 >= response code <= 599 the Java client throws the FileNotFound exception when attempting to read from the input stream.
+				// Instead we try to read the error stream and return an empty string if the error stream isn't readable.
+				ret.Content = GetErrorContent (httpConnection, new StringContent (String.Empty, Encoding.ASCII));
+			}
+
 			bool disposeRet;
 			if (HandleRedirect (statusCode, httpConnection, redirectState, out disposeRet)) {
 				if (disposeRet) {
 					ret.Dispose ();
 					ret = null;
+				} else {
+					CopyHeaders (httpConnection, ret);
+					ParseCookies (ret, connectionUri);
 				}
+
 				return ret;
 			}
 
@@ -360,41 +377,9 @@ namespace Xamarin.Android.Net
 					ret.RequestedAuthentication = RequestedAuthentication;
 					return ret;
 			}
-			
-			if (!IsErrorStatusCode (statusCode)) {
-				if (Logger.LogNet)
-					Logger.Log (LogLevel.Info, LOG_APP, $"Reading...");
-				ret.Content = GetContent (httpConnection, httpConnection.InputStream);
-			}
-			else {
-				if (Logger.LogNet)
-					Logger.Log (LogLevel.Info, LOG_APP, $"Status code is {statusCode}, reading...");
-				// For 400 >= response code <= 599 the Java client throws the FileNotFound exception when attempting to read from the input stream.
-				// Instead we try to read the error stream and return an empty string if the error stream isn't readable.
-				ret.Content = GetErrorContent (httpConnection, new StringContent (String.Empty, Encoding.ASCII));
-			}
 
 			CopyHeaders (httpConnection, ret);
-
-			IEnumerable <string> cookieHeaderValue;
-			if (!UseCookies || CookieContainer == null || !ret.Headers.TryGetValues ("Set-Cookie", out cookieHeaderValue) || cookieHeaderValue == null) {
-				if (Logger.LogNet)
-					Logger.Log (LogLevel.Info, LOG_APP, $"No cookies");
-				return ret;
-			}
-
-			try {
-				if (Logger.LogNet)
-					Logger.Log (LogLevel.Info, LOG_APP, $"Parsing cookies");
-				CookieContainer.SetCookies (connectionUri, String.Join (",", cookieHeaderValue));
-			} catch (Exception ex) {
-				// We don't want to terminate the response because of a bad cookie, hence just reporting
-				// the issue. We might consider adding a virtual method to let the user handle the
-				// issue, but not sure if it's really needed. Set-Cookie header will be part of the
-				// header collection so the user can always examine it if they spot an error.
-				if (Logger.LogNet)
-					Logger.Log (LogLevel.Info, LOG_APP, $"Failed to parse cookies in the server response. {ex.GetType ()}: {ex.Message}");
-			}
+			ParseCookies (ret, connectionUri);
 
 			if (Logger.LogNet)
 				Logger.Log (LogLevel.Info, LOG_APP, $"Returning");
@@ -511,7 +496,30 @@ namespace Xamarin.Android.Net
 
 			return AuthenticationScheme.Unsupported;
 		}
-		
+
+		void ParseCookies (AndroidHttpResponseMessage ret, Uri connectionUri)
+		{
+			IEnumerable <string> cookieHeaderValue;
+			if (!UseCookies || CookieContainer == null || !ret.Headers.TryGetValues ("Set-Cookie", out cookieHeaderValue) || cookieHeaderValue == null) {
+				if (Logger.LogNet)
+					Logger.Log (LogLevel.Info, LOG_APP, $"No cookies");
+				return;
+			}
+
+			try {
+				if (Logger.LogNet)
+					Logger.Log (LogLevel.Info, LOG_APP, $"Parsing cookies");
+				CookieContainer.SetCookies (connectionUri, String.Join (",", cookieHeaderValue));
+			} catch (Exception ex) {
+				// We don't want to terminate the response because of a bad cookie, hence just reporting
+				// the issue. We might consider adding a virtual method to let the user handle the
+				// issue, but not sure if it's really needed. Set-Cookie header will be part of the
+				// header collection so the user can always examine it if they spot an error.
+				if (Logger.LogNet)
+					Logger.Log (LogLevel.Info, LOG_APP, $"Failed to parse cookies in the server response. {ex.GetType ()}: {ex.Message}");
+			}
+		}
+
 		void CopyHeaders (HttpURLConnection httpConnection, HttpResponseMessage response)
 		{
 			IDictionary <string, IList <string>> headers = httpConnection.HeaderFields;
