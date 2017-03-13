@@ -381,7 +381,7 @@ namespace Xamarin.ProjectTools
 				return;
 
 			IPackageRepository repo = PackageRepositoryFactory.Default.CreateRepository ("https://packages.nuget.org/api/v2");
-			PackageManager packageManager = new PackageManager (repo, Path.Combine (Root, "temp", "packages"));
+			PackageManager packageManager = new PackageManager (repo, Path.Combine (Root, directory, "..", "packages"));
 
 			foreach (var package in Packages) {
 				packageManager.InstallPackage (package.Id, new SemanticVersion (package.Version));

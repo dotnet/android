@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Collections;
 using System.Collections.Generic;
 using Xamarin.ProjectTools;
 using NUnit.Framework;
@@ -103,7 +104,10 @@ namespace Xamarin.Android.Build.Tests
 					return;
 			// find the "root" directory just below "temp" and clean from there because
 			// some tests create multiple subdirectories
-			var output = Path.GetFullPath (((string [])TestContext.CurrentContext.Test.Properties ["Output"]) [0]);
+			var items = (IList)TestContext.CurrentContext.Test.Properties ["Output"];
+			if (items.Count == 0)
+				return;
+			var output = Path.GetFullPath (items[0].ToString ());
 			while (!Directory.GetParent (output).Name.EndsWith ("temp", StringComparison.OrdinalIgnoreCase)) {
 					output = Directory.GetParent (output).FullName;
 			}
