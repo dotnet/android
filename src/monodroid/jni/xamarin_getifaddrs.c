@@ -170,22 +170,19 @@ _monodroid_getifaddrs_init ()
 int
 _monodroid_getifaddrs (struct _monodroid_ifaddrs **ifap)
 {
-	netlink_session session;
-	struct _monodroid_ifaddrs *ifaddrs_head;
-	struct _monodroid_ifaddrs *last_ifaddr;
 	int ret = -1;
 
 	if (getifaddrs_impl)
 		return (*getifaddrs_impl)(ifap);
 
-	if (!ifap) {
-		goto cleanup;
-	}
+	if (!ifap)
+		return ret;
 	
 	*ifap = NULL;
-	ifaddrs_head = 0;
-	last_ifaddr = 0;
-	
+	struct _monodroid_ifaddrs *ifaddrs_head = 0;
+	struct _monodroid_ifaddrs *last_ifaddr = 0;
+	netlink_session session;
+
 	if (open_netlink_session (&session) < 0) {
 		goto cleanup;
 	}
