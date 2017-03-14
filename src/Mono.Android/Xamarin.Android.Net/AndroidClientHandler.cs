@@ -431,6 +431,11 @@ namespace Xamarin.Android.Net
 					redirectState.Method = HttpMethod.Get;
 					break;
 
+				case HttpStatusCode.NotModified:       // 304
+					disposeRet = false;
+					return true; // Not much happening here, just return and let the client decide
+						     // what to do with the response
+
 				case HttpStatusCode.TemporaryRedirect: // 307
 					break;
 
