@@ -47,6 +47,8 @@
     <Compile Include="BindingBuildTest.cs" />
     <Compile Include="BuildAssetsTest.cs" />
     <Compile Include="ManifestTest.cs" />
+    <Compile Include="AndroidUpdateResourcesTest.cs" />
+    <Compile Include="IncrementalBuildTest.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
