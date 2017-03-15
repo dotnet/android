@@ -59,9 +59,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.GetJavaPlatformJar" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GetImportedLibraries" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GetMonoPlatformJar" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.Jack" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.Javac" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.Jill" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.Dx" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.KeyTool" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.LinkAssemblies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -805,18 +803,6 @@ because xbuild doesn't support framework reference assemblies.
 	<CreateProperty Value="$(_JavaSdkDirectory)\bin">
 		<Output TaskParameter="Value" PropertyName="KeytoolToolPath"
 				Condition="'$(KeytoolToolPath)' == ''"
-		/>
-	</CreateProperty>
-
-	<CreateProperty Value="$(AndroidSdkBuildToolsBinPath)\jack.jar">
-		<Output TaskParameter="Value" PropertyName="JackJarPath"
-				Condition="'$(JackJarPath)' == ''"
-		/>
-	</CreateProperty>
-
-	<CreateProperty Value="$(AndroidSdkBuildToolsBinPath)\jill.jar">
-		<Output TaskParameter="Value" PropertyName="JillJarPath"
-				Condition="'$(JillJarPath)' == ''"
 		/>
 	</CreateProperty>
 
@@ -1839,11 +1825,6 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <PropertyGroup>
-    <_CompileJavaDependsOnTargetsForJack>
-		_PrepareJackCompilation;
-		_ConvertJavaPlatformJar;
-		_ConvertJarToJack
-    </_CompileJavaDependsOnTargetsForJack>
     <_CompileJavaDependsOnTargets>
 		_AdjustJavacVersionArguments;
 		_GeneratePackageManagerJava;
@@ -1857,7 +1838,6 @@ because xbuild doesn't support framework reference assemblies.
 		_GetAdditionalResourcesFromAssemblies;
 		_CreateAdditionalResourceCache;
 		_DetermineJavaLibrariesToCompile;
-		$(_CompileJavaDependsOnTargetsForJack);
 		$(_CompileJavaDependsOnTargets)
 	</_CompileJavaDependsOnTargets>
 </PropertyGroup>
@@ -1884,56 +1864,6 @@ because xbuild doesn't support framework reference assemblies.
   <Touch Files="$(IntermediateOutputPath)_javac.stamp" AlwaysCreate="true" />
 </Target>
 
-<Target Name="_CompileJavaWithJack"
-  DependsOnTargets="$(_CompileJavaDependsOnTargets)"
-  Inputs="$(MSBuildAllProjects);$(MonoPlatformJarPath);@(_JavaStubFiles);@(AndroidJavaSource);@(AddOnPlatformLibraries)"
-  Outputs="$(IntermediateOutputPath)_dex_stamp">
-  <Error
-    Text="'UseJackAndJill' option is not supported when 'AndroidFastDeploymentType' contains 'Dexes'. Please disable either of those."
-    Condition="'$(UseJackAndJill)' == 'True' and '$(_InstantRunEnabled)' == 'True'" />
-  <Jack
-    TargetFrameworkDirectory="$(TargetFrameworkDirectory)"
-    StubSourceDirectory="$(IntermediateOutputPath)android\src"
-    JavaSourceFiles="@(AndroidJavaSource)"
-    JavaPlatformJackPath="$(_JavaPlatformJackPath)"
-    AndroidSdkDirectory="$(_AndroidSdkDirectory)"
-    InputJackFiles="@(_PreprocessedJavaLibrary)"
-    OutputDexDirectory="$(IntermediateOutputPath)android\bin"
-    ToolPath="$(JavaToolPath)"
-    ToolExe="$(JavaToolExe)"
-    JackJarPath="$(JackJarPath)"
-    ProguardJarPath="$(ProguardJarPath)"
-    AcwMapFile="$(_AcwMapFile)"
-    EnableMultiDex="$(AndroidEnableMultiDex)"
-    EnableProguard="$(AndroidEnableProguard)"
-    ProguardGeneratedApplicationConfiguration="$(IntermediateOutputPath)proguard\proguard_project_primary.cfg"
-    ProguardCommonXamarinConfiguration="$(IntermediateOutputPath)proguard\proguard_xamarin.cfg"
-    ProguardGeneratedReferenceConfiguration="$(_ProguardProjectConfiguration)"
-    ProguardConfigurationFiles="$(ProguardConfigFiles)"
-    CustomMainDexListFiles="@(MultiDexMainDexList)"
-       />
-  <Touch Files="$(IntermediateOutputPath)_dex_stamp" AlwaysCreate="true" />
-</Target>
-
-<Target
-    Name="_PrepareJackCompilation"
-    Condition="'$(UseJackAndJill)' == 'True'"
-    DependsOnTargets="_SetJackExtension;_PrepareJavaCompilation">
-  <GetConvertedJavaLibraries
-    Extension="$(_JavaConversionExtension)"
-    OutputJackDirectory="$(IntermediateOutputPath)android\bin\$(_JavaConversionExtension)"
-    JarsToConvert="$(JavaPlatformJarPath)"
-    >
-    <Output TaskParameter="ConvertedFilesToBeGenerated" PropertyName="_JavaPlatformJackPath" />
-  </GetConvertedJavaLibraries>
-</Target>
-
-
-<Target Name="_SetJackExtension">
-  <CreateProperty Value="jack">
-    <Output TaskParameter="Value" PropertyName="_JavaConversionExtension" />
-  </CreateProperty>
-</Target>
 
 <Target Name="_DetermineJavaLibrariesToCompile">
 
@@ -1954,44 +1884,6 @@ because xbuild doesn't support framework reference assemblies.
   <CreateItem Include="@(_JavaLibrariesToCompile)" Condition="'$(_InstantRunEnabled)' != 'True'">
     <Output TaskParameter="Include" ItemName="_JavaLibrariesToCompileForAppDx" />
   </CreateItem>
-</Target>
-
-<Target Name="_PrepareJavaCompilation" DependsOnTargets="_DetermineJavaLibrariesToCompile">
-
-  <GetConvertedJavaLibraries
-    Extension="$(_JavaConversionExtension)"
-    OutputJackDirectory="$(IntermediateOutputPath)android\bin\$(_JavaConversionExtension)"
-    JarsToConvert="@(_JavaLibrariesToCompile)"
-    >
-    <Output TaskParameter="ConvertedFilesToBeGenerated" ItemName="_PreprocessedJavaLibrary" />
-  </GetConvertedJavaLibraries>
-</Target>
-
-<Target Name="_ConvertJavaPlatformJar"
-		Condition="'$(UseJackAndJill)' == 'True'"
-		Inputs="$(JavaPlatformJarPath)"
-		Outputs="$(_JavaPlatformJackPath)">
-  <Jill
-    Condition="'$(UseJackAndJill)' == 'True'"
-    OutputJackDirectory="$(IntermediateOutputPath)android\bin\jack"
-    Jars="$(JavaPlatformJarPath)"
-    ToolPath="$(JavaToolPath)"
-    ToolExe="$(JavaToolExe)"
-    JillJarPath="$(JillJarPath)" />
-</Target>
-
-<Target Name="_ConvertJarToJack"
-		Condition="'$(UseJackAndJill)' == 'True'"
-        Inputs="@(_JavaLibrariesToCompile)"
-        Outputs="@(_PreprocessedJavaLibrary)">
-
-  <Jill
-    Condition="'$(UseJackAndJill)' == 'True'"
-    OutputJackDirectory="$(IntermediateOutputPath)android\bin\jack"
-    Jars="@(_JavaLibrariesToCompile)"
-    ToolPath="$(JavaToolPath)"
-    ToolExe="$(JavaToolExe)"
-    JillJarPath="$(JillJarPath)" />
 </Target>
 
 <Target Name="_FindCompiledJavaFiles" DependsOnTargets="_CompileJava">
@@ -2020,12 +1912,7 @@ because xbuild doesn't support framework reference assemblies.
 	</_CompileToDalvikInputs>
 </PropertyGroup>
 
-<Target Name="_CompileToDalvikWithJack"
-  Condition="'$(UseJackAndJill)' == 'True'"
-  DependsOnTargets="_CompileJavaWithJack" />
-
 <Target Name="_CompileToDalvikWithDx"
-  Condition="'$(UseJackAndJill)' != 'True'"
   DependsOnTargets="$(_CompileToDalvikDependsOnTargets)"
   Inputs="$(_CompileToDalvikInputs)"
   Outputs="$(IntermediateOutputPath)_dex_stamp">
@@ -2076,7 +1963,6 @@ because xbuild doesn't support framework reference assemblies.
 
   <!-- Compile java code to dalvik -->
   <CompileToDalvik 
-    Condition="'$(UseJackAndJill)'!='True'"
     DxJarPath="$(DxJarPath)"
     JavaToolPath="$(JavaToolPath)"
     JavaMaximumHeapSize="$(JavaMaximumHeapSize)"
@@ -2095,7 +1981,7 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_CompileDex"
-		DependsOnTargets="_CompileToDalvikWithDx;_CompileToDalvikWithJack">
+		DependsOnTargets="_CompileToDalvikWithDx">
 
 	<ItemGroup>
 		<_DexFile Include="$(IntermediateOutputPath)android\bin\dex\*.dex" />
