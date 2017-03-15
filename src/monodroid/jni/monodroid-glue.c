@@ -1933,7 +1933,7 @@ open_from_update_dir (MonoAssemblyName *aname, char **assemblies_path, void *use
 				result = mono.mono_assembly_open_full (fullpath, NULL, 0);
 			free (fullpath);
 			if (result) {
-				// TODO: register .mdb file
+				// TODO: register .mdb, .pdb file
 				break;
 			}
 		}

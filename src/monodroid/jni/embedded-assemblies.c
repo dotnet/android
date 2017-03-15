@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -300,8 +301,18 @@ md_mmap_error_file (void *opaque, void *stream)
 static mono_bool
 register_debug_symbols_for_assembly (struct DylibMono *mono, const char *entry_name, MonoBundledAssembly *assembly, const mono_byte *debug_contents, int debug_size)
 {
-	if (strncmp (assembly->name, strrchr (entry_name, '/') + 1, strlen (assembly->name)) != 0)
-		return 0;
+	const char *entry_basename  = strrchr (entry_name, '/') + 1;
+	// System.dll, System.dll.mdb case
+	if (strncmp (assembly->name, entry_basename, strlen (assembly->name)) != 0) {
+		// That failed; try for System.dll, System.pdb case
+		const char *eb_ext  = strrchr (entry_basename, '.');
+		if (eb_ext == NULL)
+			return 0;
+		int basename_len    = eb_ext - entry_basename;
+		assert (basename_len > 0 && "basename must have a length!");
+		if (strncmp (assembly->name, entry_basename, basename_len) != 0)
+			return 0;
+	}
 
 	mono->mono_register_symfile_for_assembly (assembly->name, debug_contents, debug_size);
 
@@ -391,7 +402,7 @@ gather_bundled_assemblies_from_apk (
 			if (should_register)
 				entry_is_overridden = !should_register (strrchr (cur_entry_name, '/') + 1, should_register_data);
 
-			if (ends_with (cur_entry_name, ".mdb") &&
+			if ((ends_with (cur_entry_name, ".mdb") || ends_with (cur_entry_name, ".pdb")) &&
 					register_debug_symbols &&
 					!entry_is_overridden &&
 					*bundle != NULL &&
