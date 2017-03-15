@@ -111,6 +111,11 @@ namespace Xamarin.Android.Tasks
 			log.LogError (string.Empty, code, string.Empty, string.Empty, 0, 0, 0, 0, message, messageArgs);
 		}
 
+		public static void LogCodedError (this TaskLoggingHelper log, string code, string file, int lineNumber, string message, params object[] messageArgs)
+		{
+			log.LogError (string.Empty, code, string.Empty, file, lineNumber, 0, 0, 0, message, messageArgs);
+		}
+
 		public static void LogCodedWarning (this TaskLoggingHelper log, string code, string message, params object [] messageArgs)
 		{
 			log.LogWarning (

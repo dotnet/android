@@ -4,6 +4,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Xml;
 using System.Xml.Linq;
 using Microsoft.Build.Utilities;
@@ -86,6 +87,8 @@ namespace Xamarin.Android.Tasks
 
 		bool RunAapt (string commandLine)
 		{
+			var stdout_completed = new ManualResetEvent (false);
+			var stderr_completed = new ManualResetEvent (false);
 			var psi = new ProcessStartInfo () {
 				FileName = GenerateFullPathToTool (),
 				Arguments = commandLine,
@@ -115,6 +118,10 @@ namespace Xamarin.Android.Tasks
 			});
 			LogDebugMessage ("Executing {0}", commandLine);
 			proc.WaitForExit ();
+			if (psi.RedirectStandardError)
+				stderr_completed.WaitOne (TimeSpan.FromSeconds (1));
+			if (psi.RedirectStandardOutput)
+				stdout_completed.WaitOne (TimeSpan.FromSeconds (1));
 			return proc.ExitCode == 0;
 		}
 
@@ -317,12 +324,12 @@ namespace Xamarin.Android.Tasks
 			if (string.IsNullOrEmpty (singleLine)) 
 				return;
 
-			var match = AndroidToolTask.AndroidErrorRegex.Match (singleLine);
+			var match = AndroidToolTask.AndroidErrorRegex.Match (singleLine.Trim ());
 
 			if (match.Success) {
 				var file = match.Groups["file"].Value;
 				var line = int.Parse (match.Groups["line"].Value) + 1;
-				var error = match.Groups["error"].Value;
+				var error = match.Groups["message"].Value;
 
 				// Try to map back to the original resource file, so when the user
 				// double clicks the error, it won't take them to the obj/Debug copy
@@ -336,14 +343,14 @@ namespace Xamarin.Android.Tasks
 				if (error.StartsWith ("error: ", StringComparison.InvariantCultureIgnoreCase))
 					error = error.Substring ("error: ".Length);
 
-				singleLine = string.Format ("{0}({1}): error APT0000: {2}", file, line, error);
-				messageImportance = MessageImportance.High;
+				LogError ("APT0000", error, file, line);
+				return;
 			}
 
 			// Handle additional error that doesn't match the regex
 			if (singleLine.Trim ().StartsWith ("invalid resource directory name:")) {
-				LogError ("", "", "", ToolName, -1, -1, -1, -1, "Invalid resource directory name: \"{0}\".", singleLine.Substring (singleLine.LastIndexOfAny (new char[] { '\\', '/' }) + 1));
-				messageImportance = MessageImportance.High;
+				LogError ("APT0000", string.Format ("Invalid resource directory name: \"{0}\".", singleLine.Substring (singleLine.LastIndexOfAny (new char[] { '\\', '/' }) + 1)), ToolName);
+				return;
 			}
 
 			LogMessage (singleLine, messageImportance);

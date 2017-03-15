@@ -108,19 +108,12 @@ namespace Bug12935
 				Assert.AreEqual ("sensorPortrait", screenOrientation.Value, "screenOrientation for targetSdkVersion 16 should have been sensorPortrait");
 
 				builder.Cleanup ();
+				builder.ThrowOnBuildFailure = false;
 				proj.TargetFrameworkVersion = "v4.0.3";
 				proj.AndroidManifest = string.Format (TargetSdkManifest, "15");
-				Assert.IsTrue (builder.Build (proj), "Build for TargetFrameworkVersion 15 should have succeeded");
-
-				doc = XDocument.Load (manifestFile);
-				usesSdk = doc.XPathSelectElement ("/manifest/uses-sdk");
-				Assert.IsNotNull (usesSdk, "Failed to read the uses-sdk element");
-				targetSdk = usesSdk.Attribute (targetSdkXName);
-				Assert.AreEqual ("15", targetSdk.Value, "targetSdkVersion should have been 15");
-				activityElement = doc.XPathSelectElement ("/manifest/application/activity");
-				Assert.IsNotNull (activityElement, "Failed to read the activity element");
-				screenOrientation = activityElement.Attribute (screenOrientationXName);
-				Assert.AreEqual ("sensorPortait", screenOrientation.Value, "screenOrientation for targetSdkVersion 15 should have been sensorPortait");
+				Assert.IsFalse (builder.Build (proj), "Build for TargetFrameworkVersion 15 should have failed");
+				StringAssert.Contains ("APT0000: ", builder.LastBuildOutput);
+				StringAssert.Contains ("1 Error(s)", builder.LastBuildOutput);
 			}
 		}
 
