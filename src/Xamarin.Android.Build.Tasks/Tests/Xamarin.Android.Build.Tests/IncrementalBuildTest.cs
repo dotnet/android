@@ -17,8 +17,8 @@ namespace Xamarin.Android.Build.Tests
 		public void AllProjectsHaveSameOutputDirectory()
 		{
 			var testPath = Path.Combine ("temp", "AllProjectsHaveSameOutputDirectory");
-			var sb = new SolutionBuilder () {
-				SolutionPath = Path.Combine (Root, testPath, "AllProjectsHaveSameOutputDirectory.sln"),
+			var sb = new SolutionBuilder("AllProjectsHaveSameOutputDirectory.sln") {
+				SolutionPath = Path.Combine (Root, testPath),
 				Verbosity = LoggerVerbosity.Diagnostic,
 			};
 

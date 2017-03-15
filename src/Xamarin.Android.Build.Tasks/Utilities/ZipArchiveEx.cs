@@ -1,21 +1,33 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using Xamarin.Tools.Zip;
 
 namespace Xamarin.Android.Tasks
 {
 	public class ZipArchiveEx : IDisposable
 	{
+
+		public static int ZipFlushLimit = 50;
+
 		ZipArchive zip;
 		string archive;
 
-		public ZipArchiveEx (string archive)
-		{
-			this.archive = archive;
-			zip = ZipArchive.Open (archive, FileMode.CreateNew);
+		public ZipArchive Archive {
+			get { return zip; }
 		}
 
-		void Flush ()
+		public ZipArchiveEx (string archive) : this (archive, FileMode.CreateNew)
+		{
+		}
+
+		public ZipArchiveEx(string archive, FileMode filemode)
+		{
+			this.archive = archive;
+			zip = ZipArchive.Open(archive, filemode);
+		}
+
+		public void Flush ()
 		{
 			if (zip != null) {
 				zip.Close ();
@@ -51,7 +63,7 @@ namespace Xamarin.Android.Tasks
 					continue;
 				zip.AddFile (fileName, ArchiveNameForFile (fileName, folderInArchive));
 				count++;
-				if (count == 50) {
+				if (count == ZipArchiveEx.ZipFlushLimit) {
 					Flush ();
 					count = 0;
 				}

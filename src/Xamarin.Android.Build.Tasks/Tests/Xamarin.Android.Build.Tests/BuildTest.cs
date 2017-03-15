@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Xml.Linq;
 using Microsoft.Build.Framework;
 using NUnit.Framework;
@@ -194,6 +195,101 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsFalse (builder.Output.IsTargetSkipped ("_CreatePropertiesCache"), "target \"_CreatePropertiesCache\" should have been run.");
 				Assert.IsTrue (builder.Output.IsTargetSkipped ("_ResolveLibraryProjectImports"), "target \"_ResolveLibraryProjectImports\' should have been skipped.");
 			}
+		}
+
+		[Test]
+		public void BuildAMassiveApp()
+		{
+			var testPath = Path.Combine("temp", "BuildAMassiveApp");
+			TestContext.CurrentContext.Test.Properties ["Output"] = new string [] { Path.Combine (Root, testPath) };
+			var sb = new SolutionBuilder("BuildAMassiveApp.sln") {
+				SolutionPath = Path.Combine(Root, testPath),
+				Verbosity = LoggerVerbosity.Diagnostic,
+			};
+			var app1 = new XamarinAndroidApplicationProject() {
+				ProjectName = "App1",
+				AotAssemblies = true,
+				IsRelease = true,
+				Packages = {
+					KnownPackages.AndroidSupportV4_21_0_3_0,
+					KnownPackages.GooglePlayServices_22_0_0_2,
+				},
+			};
+			app1.Imports.Add (new Import ("foo.targets") {
+				TextContent = () => @"<?xml version=""1.0"" encoding=""utf-16""?>
+<Project ToolsVersion=""4.0"" xmlns=""http://schemas.microsoft.com/developer/msbuild/2003"">
+<Target Name=""_CheckAbis"" BeforeTargets=""_DefineBuildTargetAbis"">
+	<PropertyGroup>
+		<AndroidSupportedAbis>armeabi-v7a;x86</AndroidSupportedAbis>
+		<AndroidSupportedAbis Condition=""Exists('$(MSBuildThisFileDirectory)..\..\..\..\Debug\lib\xbuild\Xamarin\Android\lib\armeabi\libmono-android.release.so')"">$(AndroidSupportedAbis);armeabi</AndroidSupportedAbis>
+		<AndroidSupportedAbis Condition=""Exists('$(MSBuildThisFileDirectory)..\..\..\..\Debug\lib\xbuild\Xamarin\Android\lib\arm64-v8a\libmono-android.release.so')"">$(AndroidSupportedAbis);arm64-v8a</AndroidSupportedAbis>
+		<AndroidSupportedAbis Condition=""Exists('$(MSBuildThisFileDirectory)..\..\..\..\Debug\lib\xbuild\Xamarin\Android\lib\x86_64\libmono-android.release.so')"">$(AndroidSupportedAbis);x86_64</AndroidSupportedAbis>
+	</PropertyGroup>
+	<Message Text=""$(AndroidSupportedAbis)"" />
+</Target>
+<Target Name=""_Foo"" AfterTargets=""_SetLatestTargetFrameworkVersion"">
+	<PropertyGroup>
+		<AotAssemblies Condition=""!Exists('$(MonoAndroidBinDirectory)"+ Path.DirectorySeparatorChar + @"cross-arm')"">False</AotAssemblies>
+	</PropertyGroup>
+	<Message Text=""$(AotAssemblies)"" />
+</Target>
+</Project>
+",
+			});
+			app1.SetProperty(KnownProperties.AndroidUseSharedRuntime, "False");
+			sb.Projects.Add(app1);
+			var code = new StringBuilder();
+			code.AppendLine("using System;");
+			code.AppendLine("namespace App1 {");
+			code.AppendLine("\tpublic class AppCode {");
+			code.AppendLine("\t\tpublic void Foo () {");
+			for (int i = 0; i < 128; i++) {
+				var libName = $"Lib{i}";
+				var lib = new XamarinAndroidLibraryProject() {
+					ProjectName = libName,
+					IsRelease = true,
+					OtherBuildItems = {
+						new AndroidItem.AndroidAsset ($"Assets\\{libName}.txt") {
+							TextContent = () => "Asset1",
+							Encoding = Encoding.ASCII,
+						},
+						new AndroidItem.AndroidAsset ($"Assets\\subfolder\\{libName}.txt") {
+							TextContent = () => "Asset2",
+							Encoding = Encoding.ASCII,
+						},
+					},
+					Sources = {
+						new BuildItem.Source ($"{libName}.cs") {
+							TextContent = () => @"using System;
+
+namespace "+ libName + @" {
+
+	public class " + libName + @" {
+		public static void Foo () {
+		}
+	}
+}"
+						},
+					}
+				};
+				var strings = lib.AndroidResources.First(x => x.Include() == "Resources\\values\\Strings.xml");
+				strings.TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
+<resources>
+	<string name=""" + libName + @"_name"">" + libName + @"</string>
+</resources>";
+				sb.Projects.Add(lib);
+				app1.References.Add(new BuildItem.ProjectReference($"..\\{libName}\\{libName}.csproj", libName, lib.ProjectGuid));
+				code.AppendLine($"\t\t\t{libName}.{libName}.Foo ();");
+			}
+			code.AppendLine("\t\t}");
+			code.AppendLine("\t}");
+			code.AppendLine("}");
+			app1.Sources.Add(new BuildItem.Source("Code.cs") {
+				TextContent = ()=> code.ToString (),
+			});
+			Assert.IsTrue(sb.Build(new string[] { "Configuration=Release" }), "Solution should have built.");
+			Assert.IsTrue(sb.BuildProject(app1, "SignAndroidPackage"), "Build of project should have succeeded");
+			sb.Dispose();
 		}
 	}
 }
