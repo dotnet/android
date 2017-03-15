@@ -423,6 +423,53 @@ namespace UnnamedProject
 		}
 
 		[Test]
+		public void CheckAaptErrorRaisedForMissingResource ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			var main = proj.AndroidResources.First (x => x.Include () == "Resources\\layout\\Main.axml");
+			main.TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
+<LinearLayout xmlns:android=""http://schemas.android.com/apk/res/android""
+	android:orientation=""vertical""
+	android:layout_width=""fill_parent""
+	android:layout_height=""fill_parent""
+	>
+<Button  
+	android:id=""@id/myButton""
+	android:layout_width=""fill_parent"" 
+	android:layout_height=""wrap_content"" 
+	android:text=""@string/foo""
+	/>
+</LinearLayout>";
+			var projectPath = string.Format ("temp/CheckAaptErrorRaisedForMissingResource");
+			using (var b = CreateApkBuilder (Path.Combine (projectPath, "UnamedApp"), false, false)) {
+				b.Verbosity = LoggerVerbosity.Diagnostic;
+				b.ThrowOnBuildFailure = false;
+				Assert.IsFalse (b.Build (proj), "Build should have failed");
+				StringAssert.Contains ("APT0000: ", b.LastBuildOutput);
+				StringAssert.Contains ("2 Error(s)", b.LastBuildOutput);
+			}
+		}
+
+		[Test]
+		public void CheckAaptErrorRaisedForInvalidDirectoryName ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.AndroidResources.Add (new AndroidItem.AndroidResource("Resources\\booboo\\stuff.xml") {
+				TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
+<resources>
+</resources>"
+			});
+			var projectPath = string.Format ("temp/CheckAaptErrorRaisedForInvalidDirectoryName");
+			using (var b = CreateApkBuilder (Path.Combine (projectPath, "UnamedApp"), false, false)) {
+				b.Verbosity = LoggerVerbosity.Diagnostic;
+				b.ThrowOnBuildFailure = false;
+				Assert.IsFalse (b.Build (proj), "Build should have failed");
+				StringAssert.Contains ("APT0000: ", b.LastBuildOutput);
+				StringAssert.Contains ("1 Error(s)", b.LastBuildOutput);
+			}
+		}
+
+		[Test]
 		public void CheckAaptErrorRaisedForDuplicateResourceinApp ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
@@ -440,6 +487,7 @@ namespace UnnamedProject
 				b.ThrowOnBuildFailure = false;
 				Assert.IsFalse (b.Build (proj), "Build should have failed");
 				StringAssert.Contains ("APT0000: ", b.LastBuildOutput);
+				StringAssert.Contains ("1 Error(s)", b.LastBuildOutput);
 			}
 		}
 

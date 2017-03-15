@@ -121,7 +121,7 @@ namespace Xamarin.Android.Tasks
 			LogError (code, string.Format (message, messageArgs));
 		}
 
-		protected void LogError (string code, string message)
+		protected void LogError (string code, string message, string file = null, int lineNumber = 0)
 		{
 			if (UIThreadId == Thread.CurrentThread.ManagedThreadId) {
 				#pragma warning disable 618
@@ -129,8 +129,8 @@ namespace Xamarin.Android.Tasks
 					subcategory: null,
 					errorCode: code,
 					helpKeyword: null,
-					file: null,
-					lineNumber: 0,
+					file: file,
+					lineNumber: lineNumber,
 					columnNumber: 0,
 					endLineNumber: 0,
 					endColumnNumber: 0,
@@ -144,8 +144,8 @@ namespace Xamarin.Android.Tasks
 				errorMessageQueue.Enqueue (new BuildErrorEventArgs (
 					subcategory: null,
 					code: code,
-					file: null,
-					lineNumber: 0,
+					file: file,
+					lineNumber: lineNumber,
 					columnNumber: 0,
 					endLineNumber: 0,
 					endColumnNumber: 0,
@@ -221,7 +221,7 @@ namespace Xamarin.Android.Tasks
 				while (errorMessageQueue.Count > 0) {
 					var args = (BuildErrorEventArgs)errorMessageQueue.Dequeue ();
 					#pragma warning disable 618
-					Log.LogCodedError (args.Code, args.Message);
+					Log.LogCodedError (args.Code, file: args.File, lineNumber: args.LineNumber, message: args.Message);
 					#pragma warning restore 618
 				}
 				errorDataAvailable.Reset ();
