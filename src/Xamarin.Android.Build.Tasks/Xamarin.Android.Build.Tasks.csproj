@@ -376,8 +376,6 @@
     </Compile>
     <Compile Include="Tasks\MergeResources.cs" />
     <Compile Include="Tasks\GetConvertedJavaLibraries.cs" />
-    <Compile Include="Tasks\Jack.cs" />
-    <Compile Include="Tasks\Jill.cs" />
     <Compile Include="Tasks\JavaCompileToolTask.cs" />
     <Compile Include="Tasks\AsyncTask.cs" />
     <Compile Include="Utilities\ResourceMerger.cs" />
