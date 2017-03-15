@@ -11,6 +11,8 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 {
 	public sealed class GitCommitHash : Git
 	{
+		public                  int         RequiredHashLength          { get; set; } = 7;
+
 		[Output]
 		public                  string      AbbreviatedCommitHash       { get; set; }
 
@@ -43,7 +45,11 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 		{
 			if (string.IsNullOrEmpty (singleLine))
 				return;
-			AbbreviatedCommitHash   = singleLine;
+			if (singleLine.Length < RequiredHashLength) {
+				Log.LogError ("Abbreviated commit hash `{0}` is shorter than required length of {1} characters", singleLine, RequiredHashLength);
+				return;
+			}
+			AbbreviatedCommitHash = singleLine.Substring (0, RequiredHashLength);
 		}
 	}
 }
