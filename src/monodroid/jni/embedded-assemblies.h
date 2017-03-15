@@ -3,7 +3,7 @@
 
 struct DylibMono;
 
-/* filename is e.g. System.dll, System.dll.mdb */
+/* filename is e.g. System.dll, System.dll.mdb, System.pdb */
 typedef int (*monodroid_should_register)(const char *filename, void *user_data);
 
 /* invoked for each assembly/debug symbol file to determine if the apk_file entry should be used */
