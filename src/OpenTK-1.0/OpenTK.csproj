@@ -13,7 +13,7 @@
     <AndroidResgenFile>Resources\Resource.designer.cs</AndroidResgenFile>
     <AssemblyName>OpenTK-1.0</AssemblyName>
     <SignAssembly>true</SignAssembly>
-    <DelaySign>true</DelaySign>
+    <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
     <AndroidUseSharedRuntime>False</AndroidUseSharedRuntime>
     <DefineConstants>MONODROID;MINIMAL;MOBILE;OPENTK_1;OPENTK_1_0</DefineConstants>
     <NoWarn>3001,3002,3003,3005,3006,3021,3014,0618,1591,0414,0169,0419,1635</NoWarn>
@@ -24,9 +24,6 @@
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
   <Import Project="..\..\build-tools\scripts\MonoAndroidFramework.props" />
-  <PropertyGroup>
-    <AssemblyOriginatorKeyFile>$(MonoSourceFullPath)\mcs\class\mono.pub</AssemblyOriginatorKeyFile>
-  </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
