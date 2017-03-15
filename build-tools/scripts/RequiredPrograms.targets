@@ -32,6 +32,11 @@
         Text="Could not find required program '%(RequiredProgram.Identity)'."
     />
     <Error
+        ContinueOnError="True"
+        Condition=" '$(_ReportError)' == 'True' And '@(_DownloadUrl)' != '' "
+        Text="Please download `%(_DownloadUrl.Url)` into `$(AndroidToolchainCacheDirectory)\%(Filename)%(Extension)`."
+    />
+    <Error
         Condition=" '$(_ReportError)' == 'True' And '$(_InstallCommand)' != '' "
         Text="Could not find required program '%(RequiredProgram.Identity)'. Please run: $(_InstallCommand)"
     />
