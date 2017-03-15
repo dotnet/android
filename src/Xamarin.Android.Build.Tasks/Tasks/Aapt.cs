@@ -101,10 +101,16 @@ namespace Xamarin.Android.Tasks
 
 			var proc = new Process ();
 			proc.OutputDataReceived += (sender, e) => {
-				LogEventsFromTextOutput (e.Data, MessageImportance.Normal);
+				if (e.Data != null)
+					LogEventsFromTextOutput (e.Data, MessageImportance.Normal);
+				else
+					stdout_completed.Set ();
 			};
 			proc.ErrorDataReceived += (sender, e) => {
-				LogEventsFromTextOutput (e.Data, MessageImportance.Normal);
+				if (e.Data != null)
+					LogEventsFromTextOutput (e.Data, MessageImportance.Normal);
+				else
+					stderr_completed.Set ();
 			};
 			proc.StartInfo = psi;
 			proc.Start ();
@@ -119,9 +125,9 @@ namespace Xamarin.Android.Tasks
 			LogDebugMessage ("Executing {0}", commandLine);
 			proc.WaitForExit ();
 			if (psi.RedirectStandardError)
-				stderr_completed.WaitOne (TimeSpan.FromSeconds (1));
+				stderr_completed.WaitOne (TimeSpan.FromSeconds (30));
 			if (psi.RedirectStandardOutput)
-				stdout_completed.WaitOne (TimeSpan.FromSeconds (1));
+				stdout_completed.WaitOne (TimeSpan.FromSeconds (30));
 			return proc.ExitCode == 0;
 		}
 
