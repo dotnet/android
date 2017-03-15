@@ -28,9 +28,11 @@ namespace Xamarin.Android.Tasks
 			var md5 = MD5.Create ();
 			ConvertedFilesToBeGenerated =
 				(JarsToConvert ?? new string [0]).Select (
-					j => Path.Combine (OutputJackDirectory,
-					                   BitConverter.ToString (md5.ComputeHash (Encoding.UTF8.GetBytes (j))) + Path.ChangeExtension (Path.GetFileName (j), Extension)))
-				             .ToArray ();
+					j => File.Exists (Path.Combine (Path.GetDirectoryName (j), "xamarin_cache.jack"))
+						? Path.Combine (Path.GetDirectoryName (j), "xamarin_cache.jack")
+						: Path.Combine (OutputJackDirectory,
+							BitConverter.ToString (md5.ComputeHash (Encoding.UTF8.GetBytes (j))) + Path.ChangeExtension (Path.GetFileName (j), Extension)))
+					.ToArray ();
 			Log.LogDebugTaskItems ("  ConvertedFilesToBeGenerated:", ConvertedFilesToBeGenerated);
 			return true;
 		}

@@ -21,6 +21,8 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string OutputJackDirectory { get; set; }
 
+		public string OutputFileName { get; set; }
+
 		public string [] Jars { get; set; }
 
 		[Output]
@@ -47,8 +49,10 @@ namespace Xamarin.Android.Tasks
 			var outputJackFiles = new List<string> ();
 			var md5 = System.Security.Cryptography.MD5.Create ();
 			foreach (var jar in Jars) {
+				if (File.Exists (Path.Combine (Path.GetDirectoryName (jar), "xamarin_cache.jack")))
+					continue;
 				context_jar = jar;
-				context_jack = Path.Combine (OutputJackDirectory, BitConverter.ToString (md5.ComputeHash (Encoding.UTF8.GetBytes (jar))) + Path.GetFileNameWithoutExtension (context_jar) + ".jack");
+				context_jack = Path.Combine (OutputJackDirectory, OutputFileName ?? BitConverter.ToString (md5.ComputeHash (Encoding.UTF8.GetBytes (jar))) + Path.GetFileNameWithoutExtension (context_jar) + ".jack");
 				retval &= base.Execute ();
 				outputJackFiles.Add (context_jack);
 			}
