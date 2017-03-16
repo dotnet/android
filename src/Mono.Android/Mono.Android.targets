@@ -167,7 +167,7 @@
       Outputs="$(OutputPath)RedistList\FrameworkList.xml">
    <MakeDir Directories="$(OutputPath)RedistList" />
    <ItemGroup>
-     <FrameworkList Include="&lt;FileList Redist=&quot;MonoAndroid&quot; Name=&quot;Xamarin.Android $(AndroidFrameworkVersion) Support&quot; IncludeFramework=&quot;v1.0&quot;&gt;" />
+     <FrameworkList Include="&lt;FileList Redist=&quot;MonoAndroid&quot; Name=&quot;Xamarin.Android $(AndroidFrameworkVersion) Support&quot; IncludeFramework=&quot;$(AndroidPreviousFrameworkVersion)&quot;&gt;" />
      <FrameworkList Include="&lt;/FileList&gt;" />
    </ItemGroup>
    <WriteLinesToFile
