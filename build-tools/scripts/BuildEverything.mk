@@ -92,9 +92,18 @@ $(TASK_ASSEMBLIES): bin/%/lib/xbuild/Xamarin/Android/Xamarin.Android.Build.Tasks
 	$(MSBUILD) $(MSBUILD_FLAGS) /p:Configuration=$* $(_MSBUILD_ARGS) $(SOLUTION)
 
 $(FRAMEWORK_ASSEMBLIES):
-	$(foreach a, $(API_LEVELS), \
+	PREV_VERSION="v1.0"; \
+	for a in $(API_LEVELS); do \
+		CUR_VERSION=`echo "$(ALL_FRAMEWORKS)"|tr -s " "|cut -d " " -s -f $${a}`; \
 		$(foreach conf, $(CONFIGURATIONS), \
-			$(MSBUILD) $(MSBUILD_FLAGS) src/Mono.Android/Mono.Android.csproj /p:Configuration=$(conf)   $(_MSBUILD_ARGS) /p:AndroidApiLevel=$(a) /p:AndroidFrameworkVersion=$(word $(a), $(ALL_FRAMEWORKS)); ))
+			REDIST_FILE=bin/$(conf)/lib/xbuild-frameworks/MonoAndroid/$${CUR_VERSION}/RedistList/FrameworkList.xml; \
+			grep -q $${PREV_VERSION} $${REDIST_FILE}; \
+			if [ $$? -ne 0 ] ; then \
+				rm -f bin/$(conf)/lib/xbuild-frameworks/MonoAndroid/$${CUR_VERSION}/RedistList/FrameworkList.xml; \
+			fi; \
+			$(MSBUILD) $(MSBUILD_FLAGS) src/Mono.Android/Mono.Android.csproj /p:Configuration=$(conf)   $(_MSBUILD_ARGS) /p:AndroidApiLevel=$${a} /p:AndroidFrameworkVersion=$${CUR_VERSION} /p:AndroidPreviousFrameworkVersion=$${PREV_VERSION}; ) \
+		PREV_VERSION=$${CUR_VERSION}; \
+	done
 
 $(RUNTIME_LIBRARIES):
 	$(foreach conf, $(CONFIGURATIONS), \
