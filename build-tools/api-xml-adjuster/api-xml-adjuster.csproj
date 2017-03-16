@@ -14,20 +14,20 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\..\bin\Debug\lib\mandroid</OutputPath>
+    <OutputPath>..\..\bin\BuildDebug</OutputPath>
     <DefineConstants>DEBUG;</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <ExternalConsole>true</ExternalConsole>
-    <IntermediateOutputPath>obj\Debug</IntermediateOutputPath>
+    <IntermediateOutputPath>obj\BuildDebug</IntermediateOutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <Optimize>true</Optimize>
-    <OutputPath>..\..\bin\Release\lib\mandroid</OutputPath>
+    <OutputPath>..\..\bin\BuildRelease</OutputPath>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <ExternalConsole>true</ExternalConsole>
-    <IntermediateOutputPath>obj\Release</IntermediateOutputPath>
+    <IntermediateOutputPath>obj\BuildRelease</IntermediateOutputPath>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
