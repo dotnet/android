@@ -8,7 +8,8 @@
   </PropertyGroup>
   <ItemGroup>
     <MonoDocCopyItem Include="monodoc.dll" />
-    <MonoDocCopyItem Include="monodoc.dll.mdb" />
+    <MonoDocCopyItem Include="monodoc.pdb"  Condition="Exists ('monodoc.pdb')" />
+    <MonoDocCopyItem Include="monodoc.dll.mdb"  Condition="Exists ('monodoc.dll.mdb')" />
     <MonoDocCopyItem Include="monodoc.dll.config" />
   </ItemGroup>
   <ItemGroup>
