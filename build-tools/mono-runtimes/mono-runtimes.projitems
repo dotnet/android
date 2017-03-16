@@ -277,6 +277,7 @@
   <ItemGroup>
     <!-- cross compilers -->
     <_MonoCrossRuntime Include="cross-arm" Condition="$(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':armeabi:'))">
+      <JitArch>armeabi</JitArch>
       <Ar>ar</Ar>
       <As>as</As>
       <Cc>$(HostCc)</Cc>
@@ -299,6 +300,7 @@
     </_MonoCrossRuntime>
 
     <_MonoCrossRuntime Include="cross-arm64" Condition="$(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':arm64:'))">
+      <JitArch>arm64-v8a</JitArch>
       <Ar>ar</Ar>
       <As>as</As>
       <Cc>$(HostCc)</Cc>
@@ -321,6 +323,7 @@
     </_MonoCrossRuntime>
 
     <_MonoCrossRuntime Include="cross-x86" Condition="$(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':x86:'))">
+      <JitArch>x86</JitArch>
       <Ar>ar</Ar>
       <As>as</As>
       <Cc>$(HostCc32)</Cc>
@@ -343,6 +346,7 @@
     </_MonoCrossRuntime>
 
     <_MonoCrossRuntime Include="cross-x86_64" Condition="$(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':x86_64:'))">
+      <JitArch>x86_64</JitArch>
       <Ar>ar</Ar>
       <As>as</As>
       <Cc>$(HostCc)</Cc>
@@ -365,6 +369,7 @@
     </_MonoCrossRuntime>
 
     <_MonoCrossRuntime Include="cross-arm-win" Condition="$(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':win-armeabi:'))">
+      <JitArch>armeabi</JitArch>
       <Ar>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-ar</Ar>
       <As>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-as</As>
       <Cc>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-gcc</Cc>
@@ -387,6 +392,7 @@
     </_MonoCrossRuntime>
 
     <_MonoCrossRuntime Include="cross-arm64-win" Condition="$(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':win-arm64:'))">
+      <JitArch>arm64-v8a</JitArch>
       <Ar>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-ar</Ar>
       <As>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-as</As>
       <Cc>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-gcc</Cc>
@@ -409,6 +415,7 @@
     </_MonoCrossRuntime>
 
     <_MonoCrossRuntime Include="cross-x86-win" Condition="$(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':win-x86:'))">
+      <JitArch>x86</JitArch>
       <Ar>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-ar</Ar>
       <As>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-as</As>
       <Cc>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-gcc</Cc>
@@ -431,6 +438,7 @@
     </_MonoCrossRuntime>
 
     <_MonoCrossRuntime Include="cross-x86_64-win" Condition="$(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':win-x86_64:'))">
+      <JitArch>x86_64</JitArch>
       <Ar>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-ar</Ar>
       <As>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-as</As>
       <Cc>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-gcc</Cc>
