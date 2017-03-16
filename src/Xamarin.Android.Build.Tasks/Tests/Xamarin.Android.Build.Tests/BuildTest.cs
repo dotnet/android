@@ -135,8 +135,8 @@ namespace Xamarin.Android.Build.Tests
 					File.Exists (pdbToMdbPath),
 					"PdbTestLibrary.dll.mdb must be generated next to the .pdb");
 				Assert.IsTrue (
-					File.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "assets", "UnnamedProject.dll.mdb")),
-					"UnnamedProject.dll.mdb must be copied to the Intermediate directory");
+					File.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "assets", "UnnamedProject.pdb")),
+					"UnnamedProject.pdb must be copied to the Intermediate directory");
 				Assert.IsFalse (
 					File.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "assets", "PdbTestLibrary.pdb")),
 					"PdbTestLibrary.pdb must not be copied to Intermediate directory");
