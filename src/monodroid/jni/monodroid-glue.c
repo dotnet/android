@@ -549,8 +549,8 @@ get_libmonoandroid_directory_path ()
 	if (libmonoandroid_directory_path != NULL)
 		return libmonoandroid_directory_path;
 
-	if (!GetModuleHandleEx (GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-	                        (LPCSTR)&libmonoandroid_directory_path, &module))
+	DWORD flags = GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT;
+	if (!GetModuleHandleEx (flags, (LPCSTR)&libmonoandroid_directory_path, &module))
 		return NULL;
 	GetModuleFileNameW (module, module_path, sizeof (module_path));
 	converted_path = utf16_to_utf8 (module_path);
