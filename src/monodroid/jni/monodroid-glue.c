@@ -550,7 +550,7 @@ get_libmonoandroid_directory_path ()
 		return libmonoandroid_directory_path;
 
 	DWORD flags = GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT;
-	if (!GetModuleHandleEx (flags, (void*)&libmonoandroid_directory_path, &module))
+	if (!GetModuleHandleExW (flags, (void*)&libmonoandroid_directory_path, &module))
 		return NULL;
 
 	GetModuleFileNameW (module, module_path, sizeof (module_path) / sizeof (module_path[0]));
