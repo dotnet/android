@@ -8,35 +8,16 @@
     <CecilOutputPath>$([System.IO.Path]::GetFullPath ($(CecilOutputPath)))</CecilOutputPath>
     <CecilAssemblies>$(OutputPath)\Xamarin.Android.Cecil.dll;$(OutputPath)\Xamarin.Android.Cecil.Mdb.dll</CecilAssemblies>
   </PropertyGroup>
-  <Target Name="PrepareCecil"
-      Inputs="$(CecilDirectory)\Mono.Cecil.sln;AssemblyInfo.cs;Mono.Cecil.overrides;Xamarin.Android.Cecil.targets"
-      Outputs="$(CecilPreparedFlag)">
-    <Copy SourceFiles="AssemblyInfo.cs" DestinationFiles="$(CecilDirectory)\Mono.Cecil.AssemblyInfo.cs" />
-    <Copy SourceFiles="Mono.Cecil.overrides" DestinationFolder="$(CecilDirectory)" />
-    <Touch Files="$(CecilPreparedFlag)" AlwaysCreate="True" />
-  </Target>
   <Target Name="BuildCecil"
-      Inputs="$(CecilPreparedFlag)"
-      Outputs="$(CecilAssemblies)" DependsOnTargets="PrepareCecil">
-    <Exec
-        Command="patch -Ep1 &lt; &quot;$(MSBuildThisFileDirectory)\assembly-rename.patch&quot;"
-        WorkingDirectory="$(CecilDirectory)"
-    />
+      Outputs="$(CecilAssemblies)">
     <MSBuild
         Projects="$(CecilDirectory)\Mono.Cecil.csproj;$(CecilDirectory)\symbols\mdb\Mono.Cecil.Mdb.csproj"
         Targets="Clean;Build"
         StopOnFirstFailure="True"
         Properties="Configuration=net_4_0_Debug;OutputPath=$(CecilOutputPath);BuildingSolutionFile=false" />
-    <Exec
-        Command="patch -REp1 &lt; &quot;$(MSBuildThisFileDirectory)\assembly-rename.patch&quot;"
-        WorkingDirectory="$(CecilDirectory)"
-    />
     <Touch Files="$(CecilAssemblies)" />
   </Target>
   <Target Name="Build" DependsOnTargets="BuildCecil" Returns="$(CecilOutputPath)\$(AssemblyName).dll">
     <MakeDir Directories="obj\$(Configuration)" />
-  </Target>
-  <Target Name="AfterClean">
-    <Delete Files="$(CecilPreparedFlag)" />
   </Target>
 </Project>
