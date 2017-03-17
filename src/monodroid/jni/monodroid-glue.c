@@ -45,7 +45,7 @@
 #include <shlobj.h>
 #include <objbase.h>
 #include <knownfolders.h>
-#include <libgen.h>
+#include <shlwapi.h>
 #endif
 
 #include <sys/stat.h>
@@ -543,7 +543,6 @@ static char*
 get_libmonoandroid_directory_path ()
 {
 	wchar_t module_path[MAX_PATH];
-	char *converted_path = NULL;
 	HMODULE module = NULL;
 
 	if (libmonoandroid_directory_path != NULL)
@@ -554,8 +553,8 @@ get_libmonoandroid_directory_path ()
 		return NULL;
 
 	GetModuleFileNameW (module, module_path, sizeof (module_path) / sizeof (module_path[0]));
-	converted_path = utf16_to_utf8 (module_path);
-	libmonoandroid_directory_path = dirname (converted_path);
+	PathRemoveFileSpecW (module_path);
+	libmonoandroid_directory_path = utf16_to_utf8 (module_path);
 	return libmonoandroid_directory_path;
 }
 
