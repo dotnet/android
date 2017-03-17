@@ -101,6 +101,10 @@ Project("{9344BDBB-3E7F-41FC-A0DD-8665D75EE146}") = "proguard", "src\proguard\pr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "api-xml-adjuster", "build-tools\api-xml-adjuster\api-xml-adjuster.csproj", "{8A6CB07C-E493-4A4F-AB94-038645A27118}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.Tools.JavadocImporter", "src\Xamarin.Android.Tools.JavadocImporter\Xamarin.Android.Tools.JavadocImporter.csproj", "{E0890301-F75F-40E7-B008-54C28B3BA542}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "javadoc2mdoc", "tools\javadoc2mdoc\javadoc2mdoc.csproj", "{A87352E6-CE7F-4346-B6B1-586AE931C0A7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|AnyCPU = Debug|AnyCPU
@@ -467,6 +471,22 @@ Global
 		{8A6CB07C-E493-4A4F-AB94-038645A27118}.XAIntegrationDebug|AnyCPU.Build.0 = Debug|Any CPU
 		{8A6CB07C-E493-4A4F-AB94-038645A27118}.XAIntegrationRelease|AnyCPU.ActiveCfg = Debug|Any CPU
 		{8A6CB07C-E493-4A4F-AB94-038645A27118}.XAIntegrationRelease|AnyCPU.Build.0 = Debug|Any CPU
+		{E0890301-F75F-40E7-B008-54C28B3BA542}.Debug|AnyCPU.ActiveCfg = Debug|Any CPU
+		{E0890301-F75F-40E7-B008-54C28B3BA542}.Debug|AnyCPU.Build.0 = Debug|Any CPU
+		{E0890301-F75F-40E7-B008-54C28B3BA542}.Release|AnyCPU.ActiveCfg = Release|Any CPU
+		{E0890301-F75F-40E7-B008-54C28B3BA542}.Release|AnyCPU.Build.0 = Release|Any CPU
+		{E0890301-F75F-40E7-B008-54C28B3BA542}.XAIntegrationDebug|AnyCPU.ActiveCfg = Debug|Any CPU
+		{E0890301-F75F-40E7-B008-54C28B3BA542}.XAIntegrationDebug|AnyCPU.Build.0 = Debug|Any CPU
+		{E0890301-F75F-40E7-B008-54C28B3BA542}.XAIntegrationRelease|AnyCPU.ActiveCfg = Debug|Any CPU
+		{E0890301-F75F-40E7-B008-54C28B3BA542}.XAIntegrationRelease|AnyCPU.Build.0 = Debug|Any CPU
+		{A87352E6-CE7F-4346-B6B1-586AE931C0A7}.Debug|AnyCPU.ActiveCfg = Debug|Any CPU
+		{A87352E6-CE7F-4346-B6B1-586AE931C0A7}.Debug|AnyCPU.Build.0 = Debug|Any CPU
+		{A87352E6-CE7F-4346-B6B1-586AE931C0A7}.Release|AnyCPU.ActiveCfg = Release|Any CPU
+		{A87352E6-CE7F-4346-B6B1-586AE931C0A7}.Release|AnyCPU.Build.0 = Release|Any CPU
+		{A87352E6-CE7F-4346-B6B1-586AE931C0A7}.XAIntegrationDebug|AnyCPU.ActiveCfg = Debug|Any CPU
+		{A87352E6-CE7F-4346-B6B1-586AE931C0A7}.XAIntegrationDebug|AnyCPU.Build.0 = Debug|Any CPU
+		{A87352E6-CE7F-4346-B6B1-586AE931C0A7}.XAIntegrationRelease|AnyCPU.ActiveCfg = Debug|Any CPU
+		{A87352E6-CE7F-4346-B6B1-586AE931C0A7}.XAIntegrationRelease|AnyCPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{8FF78EB6-6FC8-46A7-8A15-EBBA9045C5FA} = {E351F97D-EA4F-4E7F-AAA0-8EBB1F2A4A62}
@@ -515,6 +535,8 @@ Global
 		{C845ECC0-2ED3-498E-8EA8-02EF7AC6E9AD} = {E351F97D-EA4F-4E7F-AAA0-8EBB1F2A4A62}
 		{4B9D96BB-95AB-44E8-9F87-13B12C8BCED1} = {04E3E11E-B47D-4599-8AFC-50515A95E715}
 		{8A6CB07C-E493-4A4F-AB94-038645A27118} = {E351F97D-EA4F-4E7F-AAA0-8EBB1F2A4A62}
+		{E0890301-F75F-40E7-B008-54C28B3BA542} = {864062D3-A415-4A6F-9324-5820237BA058}
+		{A87352E6-CE7F-4346-B6B1-586AE931C0A7} = {864062D3-A415-4A6F-9324-5820237BA058}
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
 		Policies = $0
