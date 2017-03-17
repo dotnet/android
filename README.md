@@ -57,6 +57,7 @@ to provide install instructions to obtain the missing dependency, e.g.:
     error : Could not find required program '7za'. Please run: brew install 'p7zip'.
 
 <a name="mono-sdk" />
+
 ## Mono MDK
 
 Mono 4.4 or later is required to build on [OS X][osx-mono] and Linux.
@@ -68,6 +69,7 @@ was first added in Mono 4.4.)
 [xmlpeek]: https://msdn.microsoft.com/en-us/library/ff598684.aspx
 
 <a name="jdk" />
+
 ## Java Development Kit
 
 The Java Development Kit may be downloaded from the
@@ -76,6 +78,7 @@ The Java Development Kit may be downloaded from the
 [download-jdk]: http://www.oracle.com/technetwork/java/javase/downloads/
 
 <a name="autotools" />
+
 ## Autotools
 
 Autotools -- including `autoconf` and `automake` -- are required to build
@@ -88,6 +91,7 @@ If you run into issues regarding `autoconf` or `automake` try to install it with
     brew install automake
 
 <a name="xxd" />
+
 ## `xxd`
 
 The [xxd][xxd] utility is used to build [src/monodroid](src/monodroid).
@@ -98,13 +102,23 @@ install it; it may be part of the [**vim-common** package][sid-vim-common].
 [sid-vim-common]: https://packages.debian.org/sid/vim-common
 
 <a name="ndk" />
+
 ## Android NDK, SDK
 
-To simplify building Xamarin.Android, important pieces of the Android SDK
-and Android NDK will be automatically downloaded and installed from
-Google's website. Downloaded files are cached locally, by default into
-`$(AndroidToolchainCacheDirectory)`. The Android NDK and SDK will be installed by
-default into `$(AndroidToolchainDirectory)`.
+*Note*: A xamarin-android checkout maintains *its own* Android NDK + SDK
+to ensure consistent builds and build behavior, permitting reproducible
+builds and providing greater flexibility around when we need to perform
+Android SDK + NDK updates. The Android SDK and NDK are maintained by default
+via two directories in your home directory:
+
+* `$(AndroidToolchainCacheDirectory)`: Where downloaded files are cached.
+    Defaults to the `$HOME/android-archives` directory.
+* `$(AndroidToolchainDirectory)`: Where the Android NDK and SDK are installed.
+    Defaults to the `$HOME/android-toolchain` directory.
+
+Developers may use these directories for their own use, but *please* **DO NOT**
+update or alter the contents of the `$(AndroidToolchainDirectory)`, as that may
+prevent the xamarin-android build from working as expected.
 
 The files that will be downloaded and installed are controlled by
 [build-tools/android-toolchain/android-toolchain.projitems][android-toolchain.projitems]
@@ -156,6 +170,13 @@ Overridable MSBuild properties include:
     The default value is `$(HostOS)`, where `$(HostOS)` is based on probing
     various environment variables and filesystem locations.
     On OS X, the default would be `Darwin`.
+
+* `$(AndroidSupportedTargetAotAbis)`: The Android ABIs for which to build the
+    Mono AOT compilers. The AOT compilers are required in order to set the
+    [`$(AotAssemblies)`][aot-assemblies] app configuration property to True.
+    
+    [aot-assemblies]: https://developer.xamarin.com/guides/android/under_the_hood/build_process/#AotAssemblies
+
 * `$(AndroidSupportedTargetJitAbis)`: The Android ABIs for which to build the
     the Mono JIT for inclusion within apps. This is a `:`-separated list of
     ABIs to build. Supported values are:
@@ -329,6 +350,7 @@ For example, to generate `Mono.Android.dll` for API-19 (Android 4.4):
     # creates bin\Debug\lib\xbuild-frameworks\MonoAndroid\v4.4\Mono.Android.dll
 
 <a name="Samples" />
+
 # Samples
 
 The [HelloWorld](samples/HelloWorld) sample may be built with the

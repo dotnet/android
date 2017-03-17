@@ -9,20 +9,44 @@ within `build-tools/mono-runtimes/obj/$(Configuration)/TARGET`.
 
 If you change sources within `external/mono`, a top-level `make`/`xbuild`
 invocation may not rebuild those mono native binaries. To explicitly rebuild
-*all* Mono runtimes, use the `ForceBuild` target:
+*all* Mono runtimes, you must do two things:
+
+1. Ensure that the timestamp of the HEAD commit in `external/mono` has changed.
+2. Use the `ForceBuild` target on `mono-runtimes.mdproj`.
+
+Changing the timestamp of the HEAD commit can be done with `git pull`,
+`git commit` or `git commit --amend`. *How* the timestamp changes isn't
+important; it needs to change in order for `ForceBuild` to do anything.
+(This is admittedly annoying for those working directly on Mono; it requires
+an "intermediate" commit in order to trigger a rebuild.)
+
+The `ForceBuild` target can be executed as:
 
 	# Build and install all runtimes
 	$ xbuild /t:ForceBuild build-tools/mono-runtimes/mono-runtimes.mdproj
 
-To build Mono for a specific target, run `make` from the relevant directory
-and invoke the `_InstallRuntimes` target. For example, to rebuild
-Mono for armeabi-v7a:
+The `ForceBuild` target will build mono for *all* configured architectures,
+then invoke the `_InstallRuntimes` target when all the mono's have finished
+building; see the `$(AndroidSupportedHostJitAbis)`,
+`$(AndroidSupportedTargetAotAbis)`, and `$(AndroidSupportedTargetJitAbis)`
+MSBuild properties within [README.md](../README.md). This may not always be
+desirable, for example if you're trying to fix a Mono runtime bug for a
+specific ABI, and improving turnaround time is paramount.
+(Building for all ABIs can be time consuming.)
 
-	$ cd build-tools/mono-runtimes
-	$ make -C obj/Debug/armeabi-v7a
+To build Mono for a specific target, run `make` from the relevant directory,
+where the "relevant directory" is the target of interest within
+`build-tools/mono-runtimes/obj/$(Configuration)`. When `make` has completed,
+invoke the `_InstallRuntimes` target so that the updated native libraries
+are copied into `bin/$(Configuration)/lib`, which will allow subsequent
+top-level `make` and [`xabuild`](../tools/xabuild) invocations to use them.
+
+For example, to rebuild Mono for armeabi-v7a:
+
+	$ make -C build-tools/mono-runtimes/obj/Debug/armeabi-v7a
 	
 	# This updates bin/$(Configuration)/lib/xbuild/Xamarin/Android/lib/armeabi-v7a/libmonosgen-2.0.so
-	$ xbuild /t:_InstallRuntimes
+	$ xbuild /t:_InstallRuntimes build-tools/mono-runtimes/mono-runtimes.mdproj
 
 # How do I rebuild BCL assemblies?
 
@@ -43,6 +67,39 @@ Xamarin.Android SDK directory by using the `_InstallBcl` target:
 
 	# This updates bin/$(Configuration)/lib/xbuild-frameworks/MonoAndroid/v1.0/ASSEMBLY.dll
 	$ xbuild build-tools/mono-runtimes/mono-runtimes.mdproj /t:_InstallBcl
+
+# Update Directory
+
+When a Xamarin.Android app launches on an Android device, and the app was
+built in the `Debug` configuration, it will create an "update" directory
+during process startup, printing the created directory to `adb logcat`:
+
+	 W/monodroid( 2796): Creating public update directory: `/data/data/Mono.Android_Tests/files/.__override__`
+
+When the app needs to resolve native libraries and assemblies, it will look
+for those files within the update directory *first*. This includes the Mono
+runtime library and BCL assemblies.
+
+Note that the update directory is *per-app*. The above mentioned `Mono.Android_Tests`
+directory is created when running the
+[`Mono.Android-Tests.csproj`](../src/Mono.Android/Test/Mono.Android-Tests.csproj)
+unit tests.
+
+The update directory is not used in `Release` configuration builds.
+(Note: `Release` configuration for the *app itself*, not for xamarin-android.)
+
+For example, if you're working on a mono/x86 bug and need to quickly update
+the app on the device to test `libmonosgen-2.0.so` changes:
+
+	$ make -C build-tools/mono-runtimes/obj/Debug/x86 && \
+	  adb push build-tools/mono-runtimes/obj/Debug/x86/mono/mini/.libs/libmonosgen-2.0.so \
+	    /data/data/Mono.Android_Tests/files/.__override__
+
+Alternatively, if you're working on an `mscorlib.dll` bug:
+
+	$ make -C external/mono/mcs/class/corlib PROFILE=monodroid && \
+	  adb push external/mono/mcs/class/lib/monodroid/mscorlib.dll \
+	    /data/data/Mono.Android_Tests/files/.__override__
 
 # Unit Tests
 
@@ -128,39 +185,6 @@ For example:
 
 	$ adb shell am instrument -e suite Xamarin.Android.LocaleTests.SatelliteAssemblyTests \
 		-w "Xamarin.Android.Locale_Tests/xamarin.android.localetests.TestInstrumentation"
-
-
-# Testing Updated Assemblies
-
-The `xamarin-android` repo does not support [fast deployment][fastdep],
-which means that, *normally*, if you wanted to e.g. test a fix within
-`Mono.Android.dll` you would need to:
-
-[fastdep]: https://developer.xamarin.com/guides/android/under_the_hood/build_process/#Fast_Deployment
-
-1. Build `src/Mono.Android/Mono.Android.csproj`
-2. Rebuild your test project, e.g.
-    `src/Mono.Android/Test/Mono.Android-Tests.csproj`
-3. Reinstall the test project
-4. Re-run the test project.
-
-The resulting `.apk`s can be quite big, e.g.
-`bin/TestDebug/Mono.Android_Tests-Signed.apk` is 59MB, so steps
-(2) through (4) can be annoyingly time consuming.
-
-Fortunately, a key part of fast deployment *is* part of the `xamarin-android`:
-an "update directory" is created by `libmono-android*.so` during process
-startup, in *non*-`RELEASE` builds. This directory is printed to `adb logcat`:
-
-	 W/monodroid( 2796): Creating public update directory: `/data/data/Mono.Android_Tests/files/.__override__`
-
-Assemblies located within the "update directory" are used *in preference to*
-assemblies located within the executing `.apk`. Assemblies can be `adb push`ed
-into the update directory:
-
-	adb push bin/Debug/lib/xbuild-frameworks/MonoAndroid/v7.1/Mono.Android.dll /data/data/Mono.Android_Tests/files/.__override__
-
-When the process restarts the new assembly will be used.
 
 # Debugging using lldb
 
