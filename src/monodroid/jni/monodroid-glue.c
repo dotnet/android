@@ -45,6 +45,7 @@
 #include <shlobj.h>
 #include <objbase.h>
 #include <knownfolders.h>
+#include <shlwapi.h>
 #endif
 
 #include <sys/stat.h>
@@ -535,6 +536,28 @@ get_xamarin_android_msbuild_path (void)
 	return msbuild_folder_path;
 }
 
+static char *libmonoandroid_directory_path = NULL;
+
+// Returns the directory in which this library was loaded from
+static char*
+get_libmonoandroid_directory_path ()
+{
+	wchar_t module_path[MAX_PATH];
+	HMODULE module = NULL;
+
+	if (libmonoandroid_directory_path != NULL)
+		return libmonoandroid_directory_path;
+
+	DWORD flags = GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT;
+	if (!GetModuleHandleExW (flags, (void*)&libmonoandroid_directory_path, &module))
+		return NULL;
+
+	GetModuleFileNameW (module, module_path, sizeof (module_path) / sizeof (module_path[0]));
+	PathRemoveFileSpecW (module_path);
+	libmonoandroid_directory_path = utf16_to_utf8 (module_path);
+	return libmonoandroid_directory_path;
+}
+
 static int
 setenv(const char *name, const char *value, int overwrite)
 {
@@ -655,6 +678,10 @@ get_libmonosgen_path ()
 	if (libmonoso && file_exists (libmonoso))
 		return libmonoso;
 	free (libmonoso);
+
+#ifdef WINDOWS
+	TRY_LIBMONOSGEN (get_libmonoandroid_directory_path ())
+#endif
 
 	TRY_LIBMONOSGEN (SYSTEM_LIB_PATH)
 	
