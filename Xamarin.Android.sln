@@ -113,8 +113,6 @@ Global
 		Release|AnyCPU = Release|AnyCPU
 		XAIntegrationDebug|AnyCPU = XAIntegrationDebug|AnyCPU
 		XAIntegrationRelease|AnyCPU = XAIntegrationRelease|AnyCPU
-		XAIntegrationDebug|Any CPU = XAIntegrationDebug|Any CPU
-		XAIntegrationRelease|Any CPU = XAIntegrationRelease|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{3F1F2F50-AF1A-4A5A-BEDB-193372F068D7}.Debug|AnyCPU.ActiveCfg = Debug|Any CPU
