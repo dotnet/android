@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
 using System.Text;
@@ -443,9 +444,19 @@ namespace Xamarin.Android.Tools.Bytecode {
 				else if (Double.IsPositiveInfinity (doubleItem.Value))
 					value = "(1.0 / 0.0)";
 				else
-					value = doubleItem.Value.ToString ("R");
+					value = doubleItem.Value.ToString ("R", CultureInfo.InvariantCulture);
 				break;
-			case ConstantPoolItemType.Float:    value = ((ConstantPoolFloatItem)constant).Value.ToString ("R");    break;
+			case ConstantPoolItemType.Float:
+				var floatItem = (ConstantPoolFloatItem) constant;
+				if (Double.IsNaN (floatItem.Value))
+					value = "(0.0f / 0.0f)";
+				else if (Double.IsNegativeInfinity (floatItem.Value))
+					value = "(-1.0f / 0.0f)";
+				else if (Double.IsPositiveInfinity (floatItem.Value))
+					value = "(1.0f / 0.0f)";
+				else
+					value = floatItem.Value.ToString ("R", CultureInfo.InvariantCulture);
+				break;
 			case ConstantPoolItemType.Long:     value = ((ConstantPoolLongItem) constant).Value.ToString ();    break;
 			case ConstantPoolItemType.Integer:
 				if (field.Descriptor == "Z")
