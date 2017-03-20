@@ -105,6 +105,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.Tools.Javad
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "javadoc2mdoc", "tools\javadoc2mdoc\javadoc2mdoc.csproj", "{A87352E6-CE7F-4346-B6B1-586AE931C0A7}"
 EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Xamarin.Android.Build.Tests.Shared", "src\Xamarin.Android.Build.Tasks\Tests\Xamarin.Android.Build.Tests\Xamarin.Android.Build.Tests.Shared.shproj", "{BD1D66BF-5AC7-4926-8EBE-B2198A112EB0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|AnyCPU = Debug|AnyCPU
@@ -537,6 +539,7 @@ Global
 		{8A6CB07C-E493-4A4F-AB94-038645A27118} = {E351F97D-EA4F-4E7F-AAA0-8EBB1F2A4A62}
 		{E0890301-F75F-40E7-B008-54C28B3BA542} = {864062D3-A415-4A6F-9324-5820237BA058}
 		{A87352E6-CE7F-4346-B6B1-586AE931C0A7} = {864062D3-A415-4A6F-9324-5820237BA058}
+		{BD1D66BF-5AC7-4926-8EBE-B2198A112EB0} = {CAB438D8-B0F5-4AF0-BEBD-9E2ADBD7B483}
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
 		Policies = $0

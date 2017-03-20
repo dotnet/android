@@ -9,6 +9,7 @@
     <AssemblyName>Xamarin.Android.Build.Tests</AssemblyName>
     <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
   </PropertyGroup>
+  <Import Project="Xamarin.Android.Build.Tests.Shared.projitems" Label="Shared" Condition="Exists('Xamarin.Android.Build.Tests.Shared.projitems')" />
   <Import Project="..\..\..\..\Configuration.props" />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -38,18 +39,6 @@
       <HintPath>..\..\..\..\packages\NUnit.3.2.1\lib\net45\nunit.framework.dll</HintPath>
     </Reference>
   </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Utilities\BaseTest.cs" />
-    <Compile Include="Utilities\BuildHelper.cs" />
-    <Compile Include="BuildTest.cs" />
-    <Compile Include="PackagingTest.cs" />
-    <Compile Include="AidlTest.cs" />
-    <Compile Include="BindingBuildTest.cs" />
-    <Compile Include="BuildAssetsTest.cs" />
-    <Compile Include="ManifestTest.cs" />
-    <Compile Include="AndroidUpdateResourcesTest.cs" />
-    <Compile Include="IncrementalBuildTest.cs" />
-  </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
     <ProjectReference Include="..\Xamarin.ProjectTools\Xamarin.ProjectTools.csproj">
@@ -66,6 +55,5 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Properties\" />
-    <Folder Include="Utilities\" />
   </ItemGroup>
 </Project>

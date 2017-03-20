@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>{BD1D66BF-5AC7-4926-8EBE-B2198A112EB0}</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>Xamarin.Android.Build.Tests.Shared</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)AidlTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)AndroidUpdateResourcesTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)BindingBuildTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)BuildAssetsTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)BuildTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)IncrementalBuildTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ManifestTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)PackagingTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utilities\BaseTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utilities\BuildHelper.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="$(MSBuildThisFileDirectory)Utilities\" />
+  </ItemGroup>
+</Project>
