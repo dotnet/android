@@ -8,7 +8,8 @@
   </PropertyGroup>
   <ItemGroup>
     <MonoDocCopyItem Include="monodoc.dll" />
-    <MonoDocCopyItem Include="monodoc.dll.mdb" />
+    <MonoDocCopyItemOptional Include="monodoc.pdb" />
+    <MonoDocCopyItemOptional Include="monodoc.dll.mdb" />
     <MonoDocCopyItem Include="monodoc.dll.config" />
   </ItemGroup>
   <ItemGroup>
@@ -25,13 +26,6 @@
     <_MonoProfileDir>$(MonoSourceFullPath)\mcs\class\lib\monodroid</_MonoProfileDir>
     <_MonoOutputDir>$(MonoSourceFullPath)\mcs\class\lib\net_4_x</_MonoOutputDir>
   </PropertyGroup>
-  <ItemGroup>
-    <_MonoDocCopyItems Include="@(MonoDocCopyItem->'$(_MonoOutputDir)\%(Identity)')" />
-  </ItemGroup>
-  <ItemGroup>
-    <_MonoDocInstalledItems Include="@(MonoDocCopyItem->'$(_MandroidDir)\%(Identity)')" />
-    <_MonoDocInstalledItems Include="$(_MandroidDir)\mdoc.exe" />
-  </ItemGroup>
   <PropertyGroup>
     <ForceBuildDependsOn>
       _BuildLlvm;
@@ -147,7 +141,7 @@
     />
   </Target>
   <Target Name="_ConfigureRuntimes"
-      DependsOnTargets="_BuildLlvm"
+      DependsOnTargets="_BuildLlvm;_Autogen"
       Inputs="$(MonoSourceFullPath)\configure"
       Outputs="$(IntermediateOutputPath)\%(_MonoRuntime.Identity)\Makefile">
     <MakeDir Directories="$(IntermediateOutputPath)\%(_MonoRuntime.Identity)" />
@@ -231,7 +225,7 @@
     </ItemGroup>
   </Target>
   <Target Name="_BuildRuntimes"
-      DependsOnTargets="_GetRuntimesOutputItems"
+      DependsOnTargets="_GetRuntimesOutputItems;_ConfigureRuntimes"
       Inputs="@(_RuntimeBuildStamp)"
       Outputs="@(_RuntimeSource);@(_ProfilerSource);@(_MonoPosixHelperSource);@(_BclProfileItems);@(_MonoBtlsSource)">
     <Exec
@@ -333,9 +327,26 @@
         DestinationFiles="$(_MandroidDir)\cil-strip.exe"
     />
   </Target>
+  <Target Name="_GetMonodocItems" DependsOnTargets="_BuildRuntimes">
+    <ItemGroup>
+      <_MonoDocCopyItems Include="@(MonoDocCopyItem->'$(_MonoOutputDir)\%(Identity)')" />
+      <_MonoDocCopyItems
+          Condition=" Exists ('$(_MonoOutputDir)\%(Identity)') "
+          Include="@(MonoDocCopyItemOptional->'$(_MonoOutputDir)\%(Identity)')"
+      />
+
+      <_MonoDocInstalledItems Include="@(MonoDocCopyItem->'$(_MandroidDir)\%(Identity)')" />
+      <_MonoDocInstalledItems
+          Condition=" Exists ('$(_MonoOutputDir)\%(Identity)') "
+          Include="@(MonoDocCopyItemOptional->'$(_MandroidDir)\%(Identity)')"
+      />
+      <_MonoDocInstalledItems Include="$(_MandroidDir)\mdoc.exe" />
+    </ItemGroup>
+  </Target>
   <Target Name="_InstallMonoDoc"
       Inputs="@(_MonoDocCopyItems);$(_MonoOutputDir)\mdoc.exe"
-      Outputs="@(_MonoDocInstalledItems)">
+      Outputs="@(_MonoDocInstalledItems)"
+      DependsOnTargets="_GetMonodocItems">
     <MakeDir Directories="$(_MandroidDir)" />
     <Copy
         SourceFiles="@(_MonoDocCopyItems)"
@@ -442,7 +453,7 @@
       <_CppAbiDir Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Linux:'))">linux_64</_CppAbiDir>
     </PropertyGroup>
     <Exec
-        Command="MONO_PATH=$(_AotOffsetsDumperSourceDir)\CppSharp\$(_CppAbiDir) $(ManagedRuntime) $(_AotOffsetsDumperSourceDir)\$(_AotOffsetsDumperName) --xamarin-android --android-ndk=&quot;$(AndroidNdkFullPath)&quot; --mono=&quot;$(MonoSourceFullPath)&quot; --monodroid=&quot;$(XamarinAndroidSourcePath)&quot; --abi=&quot;%(_MonoCrossRuntime.TargetAbi)&quot; --out=&quot;$(MSBuildThisFileDirectory)$(IntermediateOutputPath)\%(_MonoCrossRuntime.Identity)&quot;"
+        Command="MONO_PATH=$(_AotOffsetsDumperSourceDir)\CppSharp\$(_CppAbiDir) $(ManagedRuntime) $(_AotOffsetsDumperSourceDir)\$(_AotOffsetsDumperName) --android-ndk=&quot;$(AndroidNdkFullPath)&quot; --mono=&quot;$(MonoSourceFullPath)&quot; --monodroid=&quot;$(XamarinAndroidSourcePath)&quot; --abi=&quot;%(_MonoCrossRuntime.TargetAbi)&quot; --targetdir=&quot;$(MSBuildThisFileDirectory)$(IntermediateOutputPath)\%(_MonoCrossRuntime.JitArch)&quot; --out=&quot;$(MSBuildThisFileDirectory)$(IntermediateOutputPath)\%(_MonoCrossRuntime.Identity)&quot;"
         WorkingDirectory="$(IntermediateOutputPath)\%(_MonoCrossRuntime.Identity)"
     />
     <Touch
@@ -487,7 +498,7 @@
     />
   </Target>
   <Target Name="GetMonoBundleItems"
-      DependsOnTargets="_GetRuntimesOutputItems;_PrepareLlvmItems">
+      DependsOnTargets="_GetRuntimesOutputItems;_GetMonodocItems;_PrepareLlvmItems">
     <ItemGroup>
       <BundleItem Include="@(_BclInstalledItem)" />
       <BundleItem Include="@(_MonoDocInstalledItems)" />

@@ -63,7 +63,7 @@ namespace Xamarin.Android.Build.Tests
 				var allFilesInArchive = Directory.GetFiles (archivePath, "*", SearchOption.AllDirectories);
 				Assert.IsTrue (allFilesInArchive.Any (x => Path.GetFileName (x) == string.Format ("{0}.dll", proj.ProjectName)), "{0}.dll should exist in {1}",
 					proj.ProjectName, archivePath);
-				Assert.IsTrue (allFilesInArchive.Any (x => Path.GetFileName (x) == string.Format ("{0}.dll.mdb", proj.ProjectName)), "{0}.mdb should exist in {1}",
+				Assert.IsTrue (allFilesInArchive.Any (x => Path.GetFileName (x) == string.Format ("{0}.pdb", proj.ProjectName)), "{0}.pdb should exist in {1}",
 					proj.ProjectName, archivePath);
 				foreach (var abi in new string [] { "armeabi-v7a", "x86" }) {
 					using (var apk = ZipHelper.OpenZip (Path.Combine (outputPath, proj.PackageName + "-" + abi + ".apk"))) {

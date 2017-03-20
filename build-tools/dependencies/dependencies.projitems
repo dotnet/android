@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <_DarwinMonoFramework>MonoFramework-MDK-4.8.0.489.macos10.xamarin.universal.pkg</_DarwinMonoFramework>
+    <_DarwinMonoFramework>MonoFramework-MDK-4.9.3.6.macos10.xamarin.universal.pkg</_DarwinMonoFramework>
     <_AptGetInstall>apt-get -f -u install</_AptGetInstall>
   </PropertyGroup>
   <ItemGroup>
@@ -57,10 +57,10 @@
       <UbuntuInstall>$(_AptGetInstall) vim-common</UbuntuInstall>
     </RequiredProgram>
     <RequiredProgram Include="$(ManagedRuntime)"    Condition=" '$(ManagedRuntime)' != '' ">
-      <MinimumVersion>4.4.0</MinimumVersion>
-      <MaximumVersion>4.8.99</MaximumVersion>
+      <MinimumVersion>4.9.3</MinimumVersion>
+      <MaximumVersion>4.9.99</MaximumVersion>
       <CurrentVersionCommand>$(MSBuildThisFileDirectory)..\scripts\mono-version</CurrentVersionCommand>
-      <DarwinMinimumUrl>https://bosstoragemirror.blob.core.windows.net/wrench/mono-4.8.0/9a/9ac5bf2f0235ab75d2cc6be0866d6ca3ed302977/$(_DarwinMonoFramework)</DarwinMinimumUrl>
+      <DarwinMinimumUrl>https://bosstoragemirror.blob.core.windows.net/wrench/mono-2017-02/c5/c52c4bd713e19339a5859e73a99dbb4cc21c6d3f/$(_DarwinMonoFramework)</DarwinMinimumUrl>
       <DarwinInstall>installer -pkg "$(AndroidToolchainCacheDirectory)\$(_DarwinMonoFramework)" -target /</DarwinInstall>
     </RequiredProgram>
   </ItemGroup>
