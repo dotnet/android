@@ -99,36 +99,37 @@ namespace Xamarin.Android.Tasks
 				WindowStyle = ProcessWindowStyle.Hidden,
 			};
 
-			var proc = new Process ();
-			proc.OutputDataReceived += (sender, e) => {
-				if (e.Data != null)
-					LogEventsFromTextOutput (e.Data, MessageImportance.Normal);
-				else
-					stdout_completed.Set ();
-			};
-			proc.ErrorDataReceived += (sender, e) => {
-				if (e.Data != null)
-					LogEventsFromTextOutput (e.Data, MessageImportance.Normal);
-				else
-					stderr_completed.Set ();
-			};
-			proc.StartInfo = psi;
-			proc.Start ();
-			proc.BeginOutputReadLine ();
-			proc.BeginErrorReadLine ();
-			Token.Register (() => {
-				try {
-					proc.Kill ();
-				} catch (Exception) {
-				}
-			});
-			LogDebugMessage ("Executing {0}", commandLine);
-			proc.WaitForExit ();
-			if (psi.RedirectStandardError)
-				stderr_completed.WaitOne (TimeSpan.FromSeconds (30));
-			if (psi.RedirectStandardOutput)
-				stdout_completed.WaitOne (TimeSpan.FromSeconds (30));
-			return proc.ExitCode == 0;
+			using (var proc = new Process ()) {
+				proc.OutputDataReceived += (sender, e) => {
+					if (e.Data != null)
+						LogEventsFromTextOutput (e.Data, MessageImportance.Normal);
+					else
+						stdout_completed.Set ();
+				};
+				proc.ErrorDataReceived += (sender, e) => {
+					if (e.Data != null)
+						LogEventsFromTextOutput (e.Data, MessageImportance.Normal);
+					else
+						stderr_completed.Set ();
+				};
+				proc.StartInfo = psi;
+				proc.Start ();
+				proc.BeginOutputReadLine ();
+				proc.BeginErrorReadLine ();
+				Token.Register (() => {
+					try {
+						proc.Kill ();
+					} catch (Exception) {
+					}
+				});
+				LogDebugMessage ("Executing {0}", commandLine);
+				proc.WaitForExit ();
+				if (psi.RedirectStandardError)
+					stderr_completed.WaitOne (TimeSpan.FromSeconds (30));
+				if (psi.RedirectStandardOutput)
+					stdout_completed.WaitOne (TimeSpan.FromSeconds (30));
+				return proc.ExitCode == 0;
+			}
 		}
 
 		bool ExecuteForAbi (string cmd, string currentResourceOutputFile)
