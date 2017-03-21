@@ -434,6 +434,8 @@ namespace Xamarin.Android.Tasks
 			
 		bool RunAotCompiler (string assembliesPath, string aotCompiler, string aotOptions, string assembly, CancellationToken token)
 		{
+			var stdout_completed = new ManualResetEvent (false);
+			var stderr_completed = new ManualResetEvent (false);
 			var psi = new ProcessStartInfo () {
 				FileName = aotCompiler,
 				Arguments = aotOptions + " \"" + assembly + "\"",
@@ -453,16 +455,32 @@ namespace Xamarin.Android.Tasks
 			LogDebugMessage ("[AOT] MONO_PATH=\"{0}\" MONO_ENV_OPTIONS=\"{1}\" {2} {3}",
 				psi.EnvironmentVariables ["MONO_PATH"], psi.EnvironmentVariables ["MONO_ENV_OPTIONS"], psi.FileName, psi.Arguments);
 
-			var proc = new Process ();
-			proc.OutputDataReceived += OnAotOutputData;
-			proc.ErrorDataReceived += OnAotErrorData;
-			proc.StartInfo = psi;
-			proc.Start ();
-			proc.BeginOutputReadLine ();
-			proc.BeginErrorReadLine ();
-			token.Register (() => { try { proc.Kill (); } catch (Exception) {} });
-			proc.WaitForExit ();
-			return proc.ExitCode == 0;
+			using (var proc = new Process ()) {
+				proc.OutputDataReceived += (s, e) => {
+					if (e.Data != null)
+						OnAotOutputData (s, e);
+					else
+						stdout_completed.Set ();
+				};
+				proc.ErrorDataReceived += (s, e) => {
+					if (e.Data != null)
+						OnAotErrorData (s, e);
+					else
+						stderr_completed.Set ();
+				};
+				proc.StartInfo = psi;
+				proc.Start ();
+				proc.BeginOutputReadLine ();
+				proc.BeginErrorReadLine ();
+				token.Register (() => { try { proc.Kill (); } catch (Exception) { } });
+				proc.WaitForExit ();
+				if (psi.RedirectStandardError)
+					stderr_completed.WaitOne (TimeSpan.FromSeconds (30));
+				if (psi.RedirectStandardOutput)
+					stdout_completed.WaitOne (TimeSpan.FromSeconds (30));
+				return proc.ExitCode == 0;
+			}
+			GC.Collect ();
 		}
 
 		void OnAotOutputData (object sender, DataReceivedEventArgs e)

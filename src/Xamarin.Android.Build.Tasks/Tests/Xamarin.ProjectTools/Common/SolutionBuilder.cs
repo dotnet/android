@@ -10,17 +10,19 @@ namespace Xamarin.ProjectTools
 	{
 		public IList<XamarinProject> Projects { get; }
 		public string SolutionPath { get; set; }
+		public string SolutionName { get; set; }
 		public bool BuildSucceeded { get; set; }
 
-		public SolutionBuilder () : base()
+		public SolutionBuilder (string solutionName) : base()
 		{
+			SolutionName = solutionName;
 			Projects = new List<XamarinProject> ();
 		}
 
 		public void Save ()
 		{
 			foreach (var p in Projects) {
-				using (var pb = new ProjectBuilder (Path.Combine (Path.GetDirectoryName (SolutionPath), p.ProjectName))) {
+				using (var pb = new ProjectBuilder (Path.Combine (SolutionPath, p.ProjectName))) {
 					pb.Save (p);
 				}
 			}
@@ -47,27 +49,33 @@ namespace Xamarin.ProjectTools
 			}
 			sb.Append ("\tEndGlobalSection\n");
 			sb.Append ("EndGlobal\n");
-			File.WriteAllText (SolutionPath, sb.ToString ());
+			File.WriteAllText (Path.Combine (SolutionPath, SolutionName), sb.ToString ());
 		}
 
-		public bool Build ()
+		public bool BuildProject(XamarinProject project, string target = "Build")
 		{
-			Save ();
-			BuildSucceeded = BuildInternal (SolutionPath, "Build");
+			BuildSucceeded = BuildInternal(Path.Combine (SolutionPath, project.ProjectName, project.ProjectFilePath), target);
 			return BuildSucceeded;
 		}
 
-		public bool ReBuild ()
+		public bool Build (params string[] parameters)
 		{
 			Save ();
-			BuildSucceeded = BuildInternal (SolutionPath, "ReBuild");
+			BuildSucceeded = BuildInternal (Path.Combine (SolutionPath, SolutionName), "Build", parameters);
 			return BuildSucceeded;
 		}
 
-		public bool Clean ()
+		public bool ReBuild(params string[] parameters)
 		{
 			Save ();
-			BuildSucceeded = BuildInternal (SolutionPath, "Clean");
+			BuildSucceeded = BuildInternal(Path.Combine(SolutionPath, SolutionName), "ReBuild", parameters);
+			return BuildSucceeded;
+		}
+
+		public bool Clean(params string[] parameters)
+		{
+			Save ();
+			BuildSucceeded = BuildInternal(Path.Combine(SolutionPath, SolutionName), "Clean", parameters);
 			return BuildSucceeded;
 		}
 
@@ -75,7 +83,7 @@ namespace Xamarin.ProjectTools
 		{
 			if (disposing)
 				if (BuildSucceeded)
-					Directory.Delete (Path.GetDirectoryName (SolutionPath), recursive: true);
+					Directory.Delete (SolutionPath, recursive: true);
 		}
 	}
 }
