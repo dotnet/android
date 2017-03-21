@@ -1,0 +1,27 @@
+android.content.pm/PackageInfo#versionCode
+android.content.pm/ResolveInfo#priority
+android.content.res/Configuration#mcc
+android.content.res/Configuration#mnc
+android.content.res/ObbInfo#version
+android.hardware/Camera.CameraInfo#orientation
+android.hardware/Camera.Face#score
+android.hardware/SensorEvent#accuracy
+android.inputmethodservice/InputMethodService.Insets#contentTopInsets
+android.inputmethodservice/InputMethodService.Insets#visibleTopInsets
+// maybe
+android.inputmethodservice/Keyboard.Row#mode
+android.net.rtp/AudioCodec#type
+// usage unknown
+android.net.wifi/WpsInfo#setup
+android.os/Message#arg1
+android.os/Message#arg2
+android.os/Message#what
+android.text.format/Time#isDst
+android.util/TypedValue#assetCookie
+android.util/TypedValue#changingConfigurations
+android.util/TypedValue#data
+android.util/TypedValue#density
+android.util/TypedValue#type
+// applicable values are not constants
+android.view.animation/Transformation#mTransformationType
+

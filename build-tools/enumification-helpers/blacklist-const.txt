@@ -1,0 +1,104 @@
+Android.App	SearchManager	FLAG_QUERY_REFINEMENT	/* maybe, actually I'm not very sure */
+Android.App	SearchManager	MENU_KEYCODE	/* Keycode? */
+Android.App.Job	JobScheduler	RESULT_*	/* schedule() returns them but could also be int */
+Android.App.Usage.Bucket	UID_*
+Android.Appwidget	AppWidgetProviderInfo	WIDGET_CATEGORY_* /* unknown usage */
+Android.Media	BassBoost	PARAM_STRENGTH_SUPPORTED
+Android.Net.Sip	SipManager	INCOMING_CALL_RESULT_CODE /* it seems used by open() and PendingIntent, not sure what its usage would look like */
+Android.Provider	ContactsContract.*	TYPE_CUSTOM	/* maybe we cannot do anything for them */
+Android.Telephony	PhoneNumberUtils	TOA_*	/* maybe we could turn them into enum, not sure if these carelessly named consts are in real use */
+Android.Util	TypedValue	DENSITY_*
+Android.Views	Display	DEFAULT_DISPLAY
+Android.Views	ViewGroup FLAG_CLIP_TO_PADDING	/* "We clip to padding when FLAG_CLIP_TO_PADDING and FLAG_PADDING_NOT_NULL are set at the same time" but no such field 'FLAG_PADDING_NOT_NULL' */
+Android.Views	ViewGroup CLIP_TO_PADDING_MASK	/* "We clip to padding when FLAG_CLIP_TO_PADDING and FLAG_PADDING_NOT_NULL are set at the same time" but no such field 'FLAG_PADDING_NOT_NULL' */
+
+Android.Animation	ValueAnimator	INFINITE /* used as a number in setRepeatCount() */
+Android.App	ActionBar.Tab	INVALID_POSITION /* numeric index, returned by getPosition() */
+Android.App	AlertDialog	Theme* /* used as resource ID */
+Android.App	Notification	STREAM_DEFAULT
+Android.App Notification	LedOffMS
+Android.App Notification	LedOnMS
+Android.App Notification	LedARGB
+Android.App.SearchManager	FLAG_QUERY_REFINEMENT /* used in startSearch() Bundle extra flag */
+Android.App.SearchManager	MENU_KEYCODE /* used in startSearch() Bundle extra flag */
+Android.Appwidget	AppWidgetManager	INVALID_APPWIDGET_ID
+Android.Bluetooth	BluetoothAdapter	ERROR /* Intent.getIntExtra() returns it */
+Android.Bluetooth	BluetoothDevice	ERROR /* Intent.getIntExtra() returns it */
+Android.Bluetooth	BluetoothDevice	PAIRING_* /* unknown usage */
+Android.Content	AbstractThreadSyncAdapter	LOG_SYNC_DETAILS	/* ignore it, obsoleted */
+Android.Content.PM	PackageManager	PKG_INSTALL_[IN]COMPLETE	/*removed_in_API_Level_16,_somehow_back_by_api-merge*/
+Android.Content.PM	ConfigurationInfo	GL_ES_VERSION_UNDEFINED /* version number */
+Android.Content.PM	FeatureInfo	GL_ES_VERSION_UNDEFINED /* version number */
+Android.Content.Res	Configuration	DENSITY_DPI_UNDEFINED  /* used for densityDpi */
+Android.Content.Res	Configuration	MNC_ZERO  /* represents Mobile Network Code "0" */ 
+Android.Content.Res	Configuration	SMALLEST_SCREEN_WIDTH_DP_UNDEFINED  /* used for smallestScreenWidthDp */ 
+Android.Content.Res	UriMatcher	NO_MATCH  /* returned by match() */
+Android.Database	DatabaseUtils	TABLE_INFO_PRAGMA_DEFAULT_INDEX	/* unintentionally public */
+Android.Graphics	Bitmap	DENSITY_NONE	/* getDensity() setDensity() returns it */
+Android.Graphics	Matrix	*
+Android.Hardware.Camera2.Params	Face	SCORE_*	/* used for confidence score */
+Android.Hardware.Camera2.Params	MeteringRectangle	METERING_WEIGHT_*	/* used for confidence score */
+Android.Hardware.Camera2.Params	StreamConfigurationMap	getOutputFormats	/* returns different enums mixed */
+Android.Hardware.Usb	UsbConstants	USB_INTERFACE_SUBCLASS_BOOT /* UsbInterface.getInterfaceSubclass(), maybe extensible */
+Android.Hardware.Usb	UsbConstants	USB_TYPE_*	/*_unknown_usage_*/
+Android.Media	AudioFormat	CHANNEL_INVALID	/* It should have been in ChannelIn and ChannelOut (instead of their None) but anyways no need anymore */
+Android.Media	AudioManager	NUM_STREAMS	/* ignore it, deprecated */
+Android.Media	AudioManager	USE_DEFAULT_STREAM_TYPE 	/* It should have been in Stream if included, but not useful outside adjustSuggestedStreamVolume() so maybe better ignored. */
+Android.Media.Audiofx	BassBoost	PARAM_STRENGTH_SUPPORTED 	/* It is documented as used in getParameter(), but AudioEffect#getParameter() is marked as @hide ! */
+Android.Net	ConnectivityManager	DEFAULT_NETWORK_PREFERENCE /* unknown usage */
+Android.Net	TrafficStats	UNSUPPORTED	/* used for numeric return value */
+Android.Net.Nsd	NsdManager	NSD_STATE_*	/*_used_with_Intent.getIntExtra()_so_better_left_as_int_*/
+Android.Net.Nsd	NsdManager	PROTOCOL_DNS_SD	/*_unknown_usage_*/
+Android.Net.Sip	SipManager	INCOMING_CALL_RESULT_CODE	/* used as result code in PendingIntent, so better left as int */
+Android.Net.Wifi	WifiManager	ERROR_AUTHENTICATING	/* getIntExtra() returns it for EXTRA_SUPPLICANT_ERROR */
+Android.Net.Wifi	WpsInfo	*	/*_unknown_usage_*/
+Android.Net.Wifi.P2p	WifiP2pManager	WIFI_P2P_DISCOVERY_*	/*_used_with_Intent.get_IntExtra()_so_better_left_as_int_*/
+Android.Net.Wifi.P2p.Nsd	WifiP2pServiceInfo	*	/*_unknown_usage_*/
+Android.Nfc	NfcAdapter	STATE_*	/* used with Intent.getIntExtra() with EXTRA_ADAPTER_STATE */
+Android.Nfc.Tech	MifareClassic		BLOCK_SIZE
+Android.Nfc.Tech	MifareUltralight	PAGE_SIZE
+Android.OS	IBinder	*_TRANSACTION	/* take custom int values */
+Android.OS	Parcelable	CONTENTS_FILE_DESCRIPTOR
+Android.OS	Process	BLUETOOTH_GID
+Android.OS	Process	*_UID
+Android.Preferences	Preference	DEFAULT_ORDER
+Android.Print	PrintDocumentInfo	PAGE_COUNT_UNKNOWN
+Android.Provider	Browser	TRUNCATE_*	/*_unknown_usage_*/
+Android.Renderscripts	ProgramFragmentFixedFunction	MaxTexture
+Android.Speech.Tts	TextToSpeech.Engine	DEFAULT_STREAM	/*_unknown_usage_*/
+Android.Telephony	SmsMessage	MAX_*
+Android.Telephony	NeighboringCellInfo	UNKNOWN_CID
+Android.Telephony	NeighboringCellInfo	UNKNOWN_RSSI
+Android.Text.Format	Time	EPOCH_JULIAN_DAY
+Android.Text.Style	BulletSpan	STANDARD_GAP_WIDTH
+Android.Text.Style	EasyEditSpan	TEXT_*	/* used in Intent.getIntExtra() for EXTRA_TEXT_CHANGED_TYPE */
+Android.Text.Style	SuggestionSpan	SUGGESTIONS_MAX_SIZE
+Android.Views.Accessibility	AccessibilityEvent	INVALID_POSITION
+Android.Views.Accessibility	AccessibilityEvent	MAX_TEXT_LENGTH
+Android.Views.Animations	Animation	INFINITE
+Android.Views.Animations	Animation	START_ON_FIRST_FRAME
+Android.Views	Menu	FIRST	/* used as index */
+Android.Views	Menu	NONE	/* maybe used as index */
+Android.Views	WindowManager	*_WINDOW
+Android.Views	KeyCharacterMap	COMBINING_ACCENT*
+Android.Views	KeyEvent	MAX_KEYCODE	/* ignore it, deprecated */
+Android.Views	MotionEvent	INVALID_POINTER_ID /* index */
+Android.Views	OrientationEventListener	ORIENTATION_UNKNOWN	/* used as angle */
+Android.Views	OrientationListener	ORIENTATION_UNKNOWN	/* deprecated one of the above */
+Android.Views	SURFACE	* /*removed_in_API_Level_16,_somehow_back_by_api-merge*/
+Android.Views	View	MEASURED_*	/* used by getMeasuredWidthAndState() */
+Android.Views	View	NO_ID	/* id for nothing, -1 */
+Android.Views	ViewGroup	FLAG_USE_CHILD_DRAWING_ORDER	/*removed_in_API_Level_16,_somehow_back_by_api-merge*/
+Android.Views	ViewGroup.LayoutParams	*
+Android.Views	Window	ID_ANDROID_CONTENT	/* used as id */
+Android.Webkit	DateSorter	DayCount
+Android.Widget	Adapter	IGNORE_ITEM_VIEW_TYPE	/* used as item type */
+(other Android.Widget types ... mostly obvious)
+Java.IO	ObjectStreamConstants	baseWireHandle
+Java.IO	ObjectInputStream	baseWireHandle
+Java.IO	ObjectOutputStream	baseWireHandle
+(other Java.Lang types ... mostly obvious)
+Java.Util	Calendar *	/* better left as ints */
+Java.Util.Zip	GZipInputStream GZIP_MAGIC /* magic number */
+(other Java.Util.Zip types ... haven't taken care, almost no need)
+Javax.Crypto.Spec	DES*KeySpec	*KeyLen

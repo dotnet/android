@@ -1,0 +1,29 @@
+Notes on non-convertible int method parameters
+----------------------------------------------
+
+android.appwidget.AppWidgetProviderInfo#initialKeyguardLayout
+	unknown usage
+android.appwidget.AppWidgetProviderInfo#widgetCategory
+	unknown usage
+android.bluetooth.BluetoothHealth#registerSinkAppConfiguration() :
+	dataType - no information.
+android.bluetooth.BluetoothHealthAppConfiguration#dataType :
+	ditto.
+android.bluetooth.le.ScanRecord#getAdvertiseFlags :
+	returns different kinds of flags mixed.
+android.hardware.SensorManager :
+	deprecated methods (getSensors(), registerListener, unregisterListener) take int from SensorManager constants, and not compatible with SensorType values (!). Seealso bug #2646
+android.mtp.MtpObjectInfo#getassociationDesc() :
+	no information on return value.
+android.speech.RecognitionListener#onEvent() :
+	eventType maps to private consts. Reserved for future use.
+android.util.StateSet#(stateSetMatches() :
+	states are represented as int[], so we don't convert single state.
+	Also there is no description on its type.
+android.view.Surface :
+	setFlags(), setFreezeTint(), setLayer() vanished in API Level 14. api-merge somehow brings them back. Just ignore them.
+android.webkit.PluginData :
+	the type vanished in the latest API Level. api-merge somehow brings it back. Just ignore it.
+android.widget.AbsListView.LayoutParams#ctor() :
+	viewType has no description.
+
