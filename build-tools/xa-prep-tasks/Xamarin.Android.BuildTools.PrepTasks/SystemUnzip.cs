@@ -109,6 +109,8 @@ namespace Xamarin.Android.BuildTools.PrepTasks {
 
 			var entries = GetExtractedSourceEntries (nestedTemp);
 
+			var seenDestFiles   = new HashSet<string> ();
+
 			// "merge" directories from `name`/within `sourceFile` and `destinationFolder`.
 			// If we did e.g. `mv foo/lib destination/lib` *and* `destination/lib` *already exists*,
 			// we'd create `destination/lib/lib`, which isn't intended.
@@ -125,10 +127,24 @@ namespace Xamarin.Android.BuildTools.PrepTasks {
 				foreach (var file in Directory.EnumerateFiles (entry, "*", SearchOption.AllDirectories)) {
 					var relPath = file.Substring (entry.Length + 1);
 					var dest    = Path.Combine (destDir, relPath);
+					seenDestFiles.Add (dest);
+					var destMdb = dest + ".mdb";
+					if (File.Exists (destMdb) && !seenDestFiles.Contains (destMdb)) {
+						Log.LogMessage (MessageImportance.Low, $"rm \"{destMdb}\"");
+						File.Delete (destMdb);
+					}
+					var destPdb = Path.ChangeExtension (dest, ".pdb");
+					if (File.Exists (destPdb) && !seenDestFiles.Contains (destPdb)) {
+						Log.LogMessage (MessageImportance.Low, $"rm \"{destPdb}\"");
+						File.Delete (destPdb);
+					}
 					Directory.CreateDirectory (Path.GetDirectoryName (dest));
 					Log.LogMessage (MessageImportance.Low, $"mv '{file}' '{dest}'");
-					if (Directory.Exists (entry))
-						Process.Start ("/bin/mv", $@"""{file}"" ""{dest}""").WaitForExit ();
+					if (Directory.Exists (entry)) {
+						using (var p = Process.Start ("/bin/mv", $@"""{file}"" ""{dest}""")) {
+							p.WaitForExit ();
+						}
+					}
 					else {
 						if (File.Exists (dest))
 							File.Delete (dest);
