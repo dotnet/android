@@ -9,13 +9,16 @@
         Condition=" '$(HostOS)' != 'Windows' "
         Command="chmod +x $(OutputPath)bin\generator"
     />
+    <ItemGroup>
+      <_ExecutableScript Include="$(OutputPath)bin\cross*" />
+      <_ExecutableScript
+          Condition=" Exists('$(OutputPath)bin\llc') "
+          Include="$(OutputPath)bin\llc"
+      />
+    </ItemGroup>
     <Exec
-        Condition=" '$(HostOS)' != 'Windows' And Exists( '$(OutputPath)bin\cross*' ) "
-        Command="chmod +x $(OutputPath)bin\cross*"
-    />
-    <Exec
-        Condition=" '$(HostOS)' != 'Windows' And Exists( '$(OutputPath)bin\llc' ) "
-        Command="chmod +x $(OutputPath)bin\llc"
+        Condition=" '$(HostOS)' != 'Windows' And '@(_ExecutableScript)' != '' "
+        Command="chmod +x @(_ExecutableScript->'&quot;%(Identity)&quot;', ' ')"
     />
   </Target>
 
