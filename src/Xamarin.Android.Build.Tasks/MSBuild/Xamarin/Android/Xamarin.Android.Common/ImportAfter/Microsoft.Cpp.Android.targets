@@ -1,0 +1,84 @@
+<!--
+***********************************************************************************************
+Microsoft.Cpp.Android.targets
+
+WARNING:  DO NOT MODIFY this file unless you are knowledgeable about MSBuild and have
+  created a backup copy.  Incorrect changes to this file will make it
+  impossible to load or build your projects from the command-line or the IDE.
+
+Copyright (C) 2014 Xamarin. All rights reserved.
+***********************************************************************************************
+-->
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+    <PropertyGroup>
+        <ApplicationTypeRevision Condition="'$(ApplicationTypeRevision)'==''">3.0</ApplicationTypeRevision>
+        <AndroidTaskPath>$(VCTargetsPath)\Application Type\Android\$(ApplicationTypeRevision)\</AndroidTaskPath>
+        <AndroidTasksFile>$(AndroidTaskPath)Microsoft.Build.CPPTasks.Android.dll</AndroidTasksFile>
+        <NativeAndroidInstalled Condition="Exists('$(AndroidTasksFile)')">true</NativeAndroidInstalled>
+        <NativeAndroidInstalled Condition="!Exists('$(AndroidTasksFile)')">false</NativeAndroidInstalled>
+    </PropertyGroup>
+
+    <UsingTask TaskName="MergeApkRecipelists" AssemblyFile="$(AndroidTasksFile)" Condition="$(NativeAndroidInstalled)" />
+
+    <Target Name="GetNativeProjectLibraries" AfterTargets="_GetLibraryImports" Condition="$(NativeAndroidInstalled)">
+        
+        <ItemGroup>
+            <_NativeAndroidProjectReference 
+                Include="@(_MSBuildProjectReferenceExistent->WithMetadataValue('TargetPlatformIdentifier', 'Android'))" />
+            <!-- If the user isn't building within the context of a solution, the Platform and Configuration for the 
+                 native library reference can't be determined automatically, and therefore we won't have it. -->
+            <_NativeAndroidProjectReferenceWithConfiguration
+                Include="@(_NativeAndroidProjectReference->HasMetadata('SetConfiguration'))" />
+            <_NativeAndroidProjectReferenceWithoutConfiguration
+                Include="@(_NativeAndroidProjectReference)" 
+                Exclude="@(_NativeAndroidProjectReferenceWithConfiguration)" />
+        </ItemGroup>
+
+        <!-- Detect situation where the user has project references to native libraries that we can't know the platform to build -->
+        <Error Text="Building the project outside of a solution is not supported since it contains project references to native libraries that need to be built for specific platforms and configurations." 
+               Condition="'$(BuildingSolutionFile)' == '' and '@(_NativeAndroidProjectReferenceWithoutConfiguration)' != ''" />
+        
+        <!-- TODO: provide overrides whenever the user chooses a given emulator for startup -->
+        <!-- Detect situation where the user has not configured a given project to build in the current solution configuration? -->
+        <!--<Error Text="Build configuration and platform has not been specified for Android native project reference '%(_NativeAndroidProjectReferenceWithoutConfiguration.Name)'. Please make sure the project is configured to build in the Solution Configuration Manager for the current solution configuration."
+               Condition="'@(_NativeAndroidProjectReferenceWithoutConfiguration)' != ''" />-->
+        
+        <MSBuild Projects="@(_NativeAndroidProjectReferenceWithConfiguration)"
+                 Targets="GetApkRecipeFile"
+                 BuildInParallel="$(BuildInParallel)"
+                 Properties="%(SetConfiguration); %(SetPlatform)"
+                 Condition="'@(_NativeAndroidProjectReferenceWithConfiguration)' != ''">
+            <Output TaskParameter="TargetOutputs" ItemName="_NativeAndroidRecipeFiles"/>
+        </MSBuild>
+
+        <MergeApkRecipelists RecipeFiles="@(_NativeAndroidRecipeFiles)" Condition="'@(_NativeAndroidRecipeFiles)' != ''">
+            <Output TaskParameter="SOLibPaths" ItemName="NativeLibraryPaths" />
+            <Output TaskParameter="AndroidArchitecture" PropertyName="NativeLibraryAbi" />
+            <Output TaskParameter="HasMismatchedConfigurations" PropertyName="NativeHasMismatchedConfigurations" />
+            <Output TaskParameter="HasMismatchedPlatforms" PropertyName="NativeHasMismatchedPlatforms" />
+        </MergeApkRecipelists>
+
+        <Error Text="The current solution configuration has mismatched platforms for referenced native libraries."
+               Condition="'$(NativeHasMismatchedPlatforms)' == 'true'" />
+        
+        <Error Text="The current solution configuration has mismatched configurations for referenced native libraries."
+               Condition="'$(NativeHasMismatchedConfigurations)' == 'true'" />
+
+        <Error Text="Native library references target platform $(NativeLibraryAbi) which is not supported by this project. Configured supported ABIs are: $(AndroidSupportedAbis)."
+               Condition="$(AndroidSupportedAbis.Contains('$(NativeLibraryAbi)').ToString().ToLowerInvariant()) == 'false'" />
+        
+        <ItemGroup Condition="'@(NativeLibraryPaths)' != ''">
+            <AndroidNativeLibrary Include="@(NativeLibraryPaths)"
+                                  Condition="'%(Extension)' == '.so' Or '%(FileName)' == 'gdbserver'">
+                <Abi>$(NativeLibraryAbi)</Abi>
+            </AndroidNativeLibrary>
+            <Content Include="@(NativeLibraryPaths)"
+                                  Condition="'%(Extension)' == '.so'">
+		<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            </Content>
+        </ItemGroup>
+        
+    </Target>
+
+</Project>

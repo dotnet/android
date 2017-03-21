@@ -107,6 +107,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "javadoc2mdoc", "tools\javad
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Xamarin.Android.Build.Tests.Shared", "src\Xamarin.Android.Build.Tasks\Tests\Xamarin.Android.Build.Tests\Xamarin.Android.Build.Tests.Shared.shproj", "{BD1D66BF-5AC7-4926-8EBE-B2198A112EB0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "create-vsix", "build-tools\create-vsix\create-vsix.csproj", "{94756FEB-1F64-411D-A18E-81B5158F776A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|AnyCPU = Debug|AnyCPU
@@ -489,6 +491,14 @@ Global
 		{A87352E6-CE7F-4346-B6B1-586AE931C0A7}.XAIntegrationDebug|AnyCPU.Build.0 = Debug|Any CPU
 		{A87352E6-CE7F-4346-B6B1-586AE931C0A7}.XAIntegrationRelease|AnyCPU.ActiveCfg = Debug|Any CPU
 		{A87352E6-CE7F-4346-B6B1-586AE931C0A7}.XAIntegrationRelease|AnyCPU.Build.0 = Debug|Any CPU
+		{94756FEB-1F64-411D-A18E-81B5158F776A}.Debug|AnyCPU.ActiveCfg = Debug|Any CPU
+		{94756FEB-1F64-411D-A18E-81B5158F776A}.Debug|AnyCPU.Build.0 = Debug|Any CPU
+		{94756FEB-1F64-411D-A18E-81B5158F776A}.Release|AnyCPU.ActiveCfg = Release|Any CPU
+		{94756FEB-1F64-411D-A18E-81B5158F776A}.Release|AnyCPU.Build.0 = Release|Any CPU
+		{94756FEB-1F64-411D-A18E-81B5158F776A}.XAIntegrationDebug|AnyCPU.ActiveCfg = Debug|Any CPU
+		{94756FEB-1F64-411D-A18E-81B5158F776A}.XAIntegrationDebug|AnyCPU.Build.0 = Debug|Any CPU
+		{94756FEB-1F64-411D-A18E-81B5158F776A}.XAIntegrationRelease|AnyCPU.ActiveCfg = Debug|Any CPU
+		{94756FEB-1F64-411D-A18E-81B5158F776A}.XAIntegrationRelease|AnyCPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{8FF78EB6-6FC8-46A7-8A15-EBBA9045C5FA} = {E351F97D-EA4F-4E7F-AAA0-8EBB1F2A4A62}
@@ -540,6 +550,7 @@ Global
 		{E0890301-F75F-40E7-B008-54C28B3BA542} = {864062D3-A415-4A6F-9324-5820237BA058}
 		{A87352E6-CE7F-4346-B6B1-586AE931C0A7} = {864062D3-A415-4A6F-9324-5820237BA058}
 		{BD1D66BF-5AC7-4926-8EBE-B2198A112EB0} = {CAB438D8-B0F5-4AF0-BEBD-9E2ADBD7B483}
+		{94756FEB-1F64-411D-A18E-81B5158F776A} = {E351F97D-EA4F-4E7F-AAA0-8EBB1F2A4A62}
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
 		Policies = $0

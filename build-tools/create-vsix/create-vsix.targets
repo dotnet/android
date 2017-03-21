@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"   TaskName="Xamarin.Android.BuildTools.PrepTasks.GitBlame" />
+  <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"   TaskName="Xamarin.Android.BuildTools.PrepTasks.GitBranch" />
+  <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"   TaskName="Xamarin.Android.BuildTools.PrepTasks.GitCommitHash" />
+  <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"   TaskName="Xamarin.Android.BuildTools.PrepTasks.GitCommitsInRange" />
+  <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"   TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" />
+  <PropertyGroup>
+    <!-- Don't ever deploy, since that won't work on Mac -->
+    <DeployExtension>False</DeployExtension>
+    <PrepareForBuildDependsOn Condition=" '$(CreateVsixContainer)' == 'True' ">
+      $(PrepareForBuildDependsOn);
+      AddContent
+    </PrepareForBuildDependsOn>
+    <LibDir>..\..\bin\$(Configuration)\lib\</LibDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <MSBuild>
+      <IncludeInVSIX>True</IncludeInVSIX>
+      <VSIXSubPath></VSIXSubPath>
+      <InstallRoot>MSBuild</InstallRoot>
+    </MSBuild>
+    <ReferenceAssemblies>
+      <IncludeInVSIX>True</IncludeInVSIX>
+      <VSIXSubPath></VSIXSubPath>
+      <InstallRoot>ReferenceAssemblies</InstallRoot>
+    </ReferenceAssemblies>
+  </ItemDefinitionGroup>
+  <Target Name="AddContent"
+      Returns="@(MSBuild);@(ReferenceAssemblies)">
+    <ItemGroup>
+      <MSBuild Include="$(LibDir)xbuild\**\*.*" />
+      <MSBuild Remove="$(LibDir)xbuild\Xamarin\Android\lib\host-*\**\*.*" />
+      <MSBuild>
+        <VSIXSubPath Condition=" '%(VSIXSubPath)' == '' ">%(RecursiveDir)</VSIXSubPath>
+      </MSBuild>
+      <MSBuild Include="$(LibDir)xbuild\Xamarin\Android\lib\host-mxe-Win64\*.*" />
+      <MSBuild>
+        <VSIXSubPath Condition=" '%(VSIXSubPath)' == '' ">Xamarin/Android</VSIXSubPath>
+      </MSBuild>
+      <MSBuild Include="$(LibDir)xbuild\Xamarin\Android\lib\host-win\*.*" />
+      <MSBuild>
+        <VSIXSubPath Condition=" '%(VSIXSubPath)' == '' ">Xamarin/Android/lib/host-win</VSIXSubPath>
+      </MSBuild>
+      <MSBuild Include="..\..\src\Xamarin.Android.Build.Tasks\MSBuild\Xamarin\**\*.*" />
+      <MSBuild>
+        <VSIXSubPath Condition=" '%(VSIXSubPath)' == '' ">Xamarin/%(RecursiveDir)</VSIXSubPath>
+      </MSBuild>
+      <MSBuild Include="..\..\bin\$(Configuration)\lib\mandroid\**\*.*" />
+      <MSBuild Remove="..\..\bin\$(Configuration)\lib\mandroid\**\*.d.exe" />
+      <MSBuild Remove="..\..\bin\$(Condition)\lib\mandroid\host-Darwin\**\*.*" />
+      <MSBuild>
+        <VSIXSubPath Condition=" '%(VSIXSubPath)' == '' ">Xamarin/Android/%(RecursiveDir)</VSIXSubPath>
+      </MSBuild>
+      <MSBuild Remove="$(LibDir)xbuild\**\*.d.dll" />
+      <ReferenceAssemblies Include="$(LibDir)xbuild-frameworks\**\*.*" />
+      <ReferenceAssemblies>
+        <VSIXSubPath Condition=" '%(VSIXSubPath)' == '' ">Microsoft/Framework/%(RecursiveDir)</VSIXSubPath>
+      </ReferenceAssemblies>
+    </ItemGroup>
+    <ItemGroup>
+      <Content Include="@(MSBuild)" />
+      <Content Include="@(ReferenceAssemblies)" />
+    </ItemGroup>
+  </Target>
+  <Target Name="GetVsixVersion"
+      DependsOnTargets="_GetVersionInfo"
+      Returns="$(VsixVersion)">
+    <PropertyGroup>
+      <VsixVersion>$(ProductVersion).$(_XACommitCount)</VsixVersion>
+    </PropertyGroup>
+  </Target>
+  <Target Name="GetIsExperimental"
+      Returns="$(IsExperimental)">
+    <PropertyGroup>
+      <IsExperimental>true</IsExperimental>
+      <IsExperimental Condition=" '$(IsProductComponent)' == 'True' ">false</IsExperimental>
+    </PropertyGroup>
+  </Target>
+  <Target Name="_GetVersionInfo">
+    <GitBlame
+        FileName="$(XamarinAndroidSourcePath)\Configuration.props"
+        LineFilter="&lt;ProductVersion&gt;"
+        WorkingDirectory="$(XamarinAndroidSourcePath)"
+        ToolPath="$(GitToolPath)"
+        ToolExe="$(GitToolExe)">
+      <Output TaskParameter="Commits"                 ItemName="_XAVersionCommit" />
+    </GitBlame>
+    <GitCommitsInRange
+        StartCommit="%(_XAVersionCommit.CommitHash)"
+        WorkingDirectory="$(XamarinAndroidSourcePath)"
+        ToolPath="$(GitToolPath)"
+        ToolExe="$(GitToolExe)">
+      <Output TaskParameter="CommitCount"             PropertyName="_XACommitCount" />
+    </GitCommitsInRange>
+    <GitCommitHash
+        WorkingDirectory="$(XamarinAndroidSourcePath)"
+        ToolPath="$(GitToolPath)"
+        ToolExe="$(GitToolExe)">
+      <Output TaskParameter="AbbreviatedCommitHash"   PropertyName="_XAHash" />
+    </GitCommitHash>
+    <GitBranch
+        WorkingDirectory="$(XamarinAndroidSourcePath)"
+        ToolPath="$(GitToolPath)"
+        ToolExe="$(GitToolExe)">
+      <Output TaskParameter="Branch"                  PropertyName="_XABranch" />
+    </GitBranch>
+  </Target>
+  <Target Name="_CreateDependencies"
+      DependsOnTargets="_GetVersionInfo"
+      BeforeTargets="Build"
+      Inputs="Xamarin.Android.Sdk.pkgdef.in"
+      Outputs="Xamarin.Android.Sdk.pkgdef">
+    <ReplaceFileContents
+        SourceFile="Xamarin.Android.Sdk.pkgdef.in"
+        DestinationFile="Xamarin.Android.Sdk.pkgdef"
+        Replacements="@PACKAGE_VERSION@=$(ProductVersion);@PACKAGE_VERSION_BUILD@=$(_XACommitCount);@PACKAGE_HEAD_REV@=$(_XAHash);@PACKAGE_HEAD_BRANCH@=$(_XABranch)">
+    </ReplaceFileContents>
+  </Target>
+  <Target Name="_CopyToBuildConfiguration"
+      DependsOnTargets="_GetVersionInfo"
+      Inputs="$(OutputPath)$(AssemblyName).vsix"
+      Outputs="..\..\bin\Build$(Configuration)\$(AssemblyName).vsix">
+    <PropertyGroup>
+      <_Branch>$(_XABranch.Replace ('/', '-'))</_Branch>
+      <_Branch>$(_Branch.Replace ('\', '-'))</_Branch>
+    </PropertyGroup>
+    <Copy
+        SourceFiles="$(OutputPath)$(AssemblyName).vsix"
+        DestinationFiles="..\..\bin\Build$(Configuration)\$(AssemblyName)-$(ProductVersion).$(_XACommitCount)_$(_Branch)_$(_XAHash).vsix"
+    />
+  </Target>
+</Project>
