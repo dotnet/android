@@ -11,11 +11,11 @@
     <MonoDocCopyItem Include="monodoc.dll" />
     <MonoDocCopyItem
         Condition=" '$(_DebugFileExt)' == '.pdb'"
-        Include="monodoc.pdb"
+        Include="mdoc.pdb;monodoc.pdb"
     />
     <MonoDocCopyItem
         Condition=" '$(_DebugFileExt)' == '.mdb'"
-        Include="monodoc.dll.mdb"
+        Include="mdoc.exe.mdb;monodoc.dll.mdb"
     />
     <MonoDocCopyItem Include="monodoc.dll.config" />
   </ItemGroup>
@@ -51,7 +51,7 @@
       _InstallBcl;
       _InstallCilStrip;
       _InstallMonoDoc;
-      _InstallMonoSymbolicate;
+      _InstallMonoUtilities;
       _ConfigureCrossRuntimes;
       _BuildCrossRuntimes;
       _InstallCrossRuntimes;
@@ -62,12 +62,57 @@
   <Import Project="ProfileAssemblies.projitems" />
   <ItemGroup>
     <_BclAssembly Include="@(MonoProfileAssembly)" />
+    <_BclExcludeDebugSymbols  Include="System.Windows.dll" />
+    <_BclExcludeDebugSymbols  Include="System.Xml.Serialization.dll" />
   </ItemGroup>
   <ItemGroup>
     <_BclProfileItems Include="@(_BclAssembly->'$(_MonoProfileDir)\%(Identity)')" />
+    <_BclProfileItems
+        Condition=" '$(_DebugFileExt)' == '.mdb' "
+        Include="@(_BclAssembly->'$(_MonoProfileDir)\%(Identity).mdb')"
+        Exclude="@(_BclExcludeDebugSymbols->'$(_MonoProfileDir)\%(Identity).mdb')"
+    />
+    <_BclProfileItems
+        Condition=" '$(_DebugFileExt)' == '.pdb' "
+        Include="@(_BclAssembly->'$(_MonoProfileDir)\%(Filename).pdb')"
+        Exclude="@(_BclExcludeDebugSymbols->'$(_MonoProfileDir)\%(Filename).pdb')"
+    />
   </ItemGroup>
   <ItemGroup>
     <_BclInstalledItem Include="@(_BclAssembly->'$(OutputPath)\lib\xbuild-frameworks\MonoAndroid\v1.0\%(Identity)')" />
+    <_BclInstalledItem
+        Condition=" '$(_DebugFileExt)' == '.mdb' "
+        Include="@(_BclAssembly->'$(OutputPath)\lib\xbuild-frameworks\MonoAndroid\v1.0\%(Identity).mdb')"
+        Exclude="@(_BclExcludeDebugSymbols->'$(OutputPath)\lib\xbuild-frameworks\MonoAndroid\v1.0\%(Identity).mdb')"
+    />
+    <_BclInstalledItem
+        Condition=" '$(_DebugFileExt)' == '.pdb' "
+        Include="@(_BclAssembly->'$(OutputPath)\lib\xbuild-frameworks\MonoAndroid\v1.0\%(Filename).pdb')"
+        Exclude="@(_BclExcludeDebugSymbols->'$(OutputPath)\lib\xbuild-frameworks\MonoAndroid\v1.0\%(Filename).pdb')"
+    />
+  </ItemGroup>
+  <ItemGroup>
+    <_MonoUtility  Include="mono-symbolicate.exe" />
+  </ItemGroup>
+  <ItemGroup>
+    <_MonoUtilitySource Include="@(_MonoUtility->'$(_MonoOutputDir)\%(Identity)')" />
+    <_MonoUtilityDest   Include="@(_MonoUtility->'$(_MandroidDir)\%(Identity)')" />
+    <_MonoUtilitySource
+        Condition=" '$(_DebugFileExt)' == '.mdb'"
+        Include="@(_MonoUtility->'$(_MonoOutputDir)\%(Identity).mdb')"
+    />
+    <_MonoUtilityDest
+        Condition=" '$(_DebugFileExt)' == '.mdb'"
+        Include="@(_MonoUtility->'$(_MandroidDir)\%(Identity).mdb')"
+    />
+    <_MonoUtilitySource
+        Condition=" '$(_DebugFileExt)' == '.pdb'"
+        Include="@(_MonoUtility->'$(_MonoOutputDir)\%(Filename).pdb')"
+    />
+    <_MonoUtilityDest
+        Condition=" '$(_DebugFileExt)' == '.pdb'"
+        Include="@(_MonoUtility->'$(_MandroidDir)\%(Filename).pdb')"
+    />
   </ItemGroup>
   <Target Name="_SetAutogenShTimeToLastCommitTimestamp">
     <Exec
@@ -332,13 +377,33 @@
     />
     <Touch Files="@(_InstallMonoPosixHelperOutput);@(_InstallUnstrippedMonoPosixHelperOutput)" />
   </Target>
+  <ItemGroup>
+    <_MonoCilStripSource  Include="$(_MonoOutputDir)\mono-cil-strip.exe" />
+    <_MonoCilStripDest    Include="$(_MandroidDir)\cil-strip.exe" />
+    <_MonoCilStripSource
+        Condition=" '$(_DebugFileExt)' == '.mdb' "
+        Include="$(_MonoOutputDir)\mono-cil-strip.exe.mdb"
+    />
+    <_MonoCilStripDest
+        Condition=" '$(_DebugFileExt)' == '.mdb' "
+        Include="$(_MonoOutputDir)\cil-strip.exe.mdb"
+    />
+    <_MonoCilStripSource
+        Condition=" '$(_DebugFileExt)' == '.pdb' "
+        Include="$(_MonoOutputDir)\mono-cil-strip.pdb"
+    />
+    <_MonoCilStripDest
+        Condition=" '$(_DebugFileExt)' == '.pdb' "
+        Include="$(_MandroidDir)\cil-strip.pdb"
+    />
+  </ItemGroup>
   <Target Name="_InstallCilStrip"
-      Inputs="$(_MonoOutputDir)\mono-cil-strip.exe"
-      Outputs="$(_MandroidDir)\cil-strip.exe">
+      Inputs="@(_MonoCilStripSource)"
+      Outputs="@(_MonoCilStripDest)">
     <MakeDir Directories="$(_MandroidDir)" />
     <Copy
-        SourceFiles="$(_MonoOutputDir)\mono-cil-strip.exe"
-        DestinationFiles="$(_MandroidDir)\cil-strip.exe"
+        SourceFiles="@(_MonoCilStripSource)"
+        DestinationFiles="@(_MonoCilStripDest)"
     />
   </Target>
   <Target Name="_InstallMonoDoc"
@@ -356,22 +421,13 @@
         Files="@(_MonoDocInstalledItems)"
     />
   </Target>
-  <Target Name="_InstallMonoSymbolicate"
-      Inputs="$(_MonoOutputDir)\mono-symbolicate.exe"
-      Outputs="$(_MandroidDir)\mono-symbolicate.exe">
+  <Target Name="_InstallMonoUtilities"
+      Inputs="@(_MonoUtilitySource)"
+      Outputs="@(_MonoUtilityDest)">
     <MakeDir Directories="$(_MandroidDir)" />
     <Copy
-        Condition=" Exists('$(_MonoOutputDir)\mono-symbolicate.exe.mdb') "
-        SourceFiles="$(_MonoOutputDir)\mono-symbolicate.exe.mdb"
-        DestinationFolder="$(_MandroidDir)"
-    />
-    <Copy
-        Condition=" Exists('$(_MonoOutputDir)\mono-symbolicate.pdb') "
-        SourceFiles="$(_MonoOutputDir)\mono-symbolicate.pdb"
-        DestinationFolder="$(_MandroidDir)"
-    />
-    <Exec
-        Command="$(RemapAssemblyRefTool) &quot;$(_MonoOutputDir)\mono-symbolicate.exe&quot; &quot;$(_MandroidDir)\mono-symbolicate.exe&quot; Mono.Cecil &quot;$(_MandroidDir)\Xamarin.Android.Cecil.dll&quot;"
+        SourceFiles="@(_MonoUtilitySource)"
+        DestinationFiles="@(_MonoUtilityDest)"
     />
   </Target>
   <Target Name="_InstallBcl"
@@ -388,12 +444,11 @@
     </GetNugetPackageBasePath>
     <ItemGroup>
       <_FSharp Include="$(_SourceTopDir)\$(_FSharpCorePackagePath)\lib\portable-net45+monoandroid10+monotouch10+xamarinios10\FSharp.Core*" />
-      <_Assemblies Include="$(_MonoProfileDir)\*.dll" />
       <_Facades Include="$(_MonoProfileDir)\Facades\*.dll" />
     </ItemGroup>
     <Copy
-        SourceFiles="@(_Assemblies)"
-        DestinationFolder="$(_BclFrameworkDir)"
+        SourceFiles="@(_BclProfileItems)"
+        DestinationFiles="@(_BclInstalledItem)"
     />
     <Copy
         SourceFiles="@(_Facades)"
@@ -499,10 +554,8 @@
     <ItemGroup>
       <BundleItem Include="@(_BclInstalledItem)" />
       <BundleItem Include="@(_MonoDocInstalledItems)" />
-      <BundleItem Include="$(_MandroidDir)\cil-strip.exe" />
-      <BundleItem Include="$(_MandroidDir)\mono-symbolicate.exe" />
-      <BundleItem Include="$(_MandroidDir)\mono-symbolicate.exe.mdb"  Condition=" Exists ('$(_MandroidDir)\mono-symbolicate.exe.mdb') " />
-      <BundleItem Include="$(_MandroidDir)\mono-symbolicate.pdb"      Condition=" Exists ('$(_MandroidDir)\mono-symbolicate.pdb') " />
+      <BundleItem Include="@(_MonoCilStripDest)" />
+      <BundleItem Include="@(_MonoUtilityDest)" />
       <BundleItem Include="@(_FSharpInstalledItems)" />
       <BundleItem Include="@(MonoFacadeAssembly->'$(OutputPath)\lib\xbuild-frameworks\MonoAndroid\v1.0\Facades\%(Identity)')" />
       <BundleItem Include="$(OutputPath)\lib\xbuild-frameworks\MonoAndroid\v1.0\RedistList\FrameworkList.xml" />
