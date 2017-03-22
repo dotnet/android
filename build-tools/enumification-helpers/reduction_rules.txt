@@ -1,0 +1,924 @@
+// OK this can be a comment that vi will actually do nothing.
+
+// First, strip extra characters
+:%s/.*Mono.Android\/platforms\/android-XXX\/src\/generated\///
+:%s/\t\t\t/ /
+:%s/\t\t/ /
+
+// :%s/Android\.Content\.Intent//eg
+:%s/int GetHashCode ()//
+:%s/int DescribeContents ()//
+
+// This needs to be re-reviewed when new API arrives, but so far only used by ColorStateList.ctor()
+:%s/int\[\]\[\]//
+
+// ignore parameters in undocumented methods: "p0", "p1"
+:%s/int p[0-9][,)]//eg
+
+// Type names that ends with "int". oops.
+:%s/Endpoint //eg
+:%s/Paint //eg
+:%s/Print //eg
+:%s/Point //eg
+:%s/Hint //eg
+:%s/Fingerprint //eg
+:%s/Lint //eg
+
+// Parameter, property or method names
+
+// Order of processing affects this sort of parameter list... (hence put here in front of many other rules)
+:%s/int segmentNum, int libNum, int repeatCount, int transpose//
+:%s/int s, int e, int start, int stop//
+
+:%s/int [Pp]ort//eg
+:%s/int [Oo]ffset//eg
+// Parcelable!!
+:%s/int offest//eg
+:%s/int [Ll]ength//eg
+:%s/int [Ee]ra//eg
+:%s/int [Yy]ear//eg
+:%s/int [Mm]onth//eg
+:%s/int [Dd]ayOfWeek//eg
+:%s/int [Dd]ay//eg
+:%s/int [Hh]our//eg
+:%s/int ampm//
+:%s/int timeOfDayMillis//
+:%s/int start\, int end//
+:%s/int start\, int stop//
+:%s/int val[^a-zA-Z0-9]//
+:%s/int [Ii]ndex//
+:%s/int LastIndex//
+:%s/int [Gg]roupPosition//
+:%s/int groupId//
+:%s/int group//
+:%s/int [Cc]odePoint//
+:%s/int byteCount//
+:%s/int labelId//
+:%s/int iconId//
+:%s/int prefId//
+:%s/int defStyle//
+:%s/int defStyleRes//
+:%s/int titleRes//
+:%s/int resI[Dd]//
+:%s/int layoutResID//
+:%s/int uid1, int uid2//
+:%s/int [Pp]id//
+:%s/int [Uu]id//
+:%s/int\[\] pids//
+:%s/int dx\, int dy//
+:%s/int [Pp]osition//
+:%s/int [Cc]hildPosition//
+:%s/int\[\] values//
+:%s/int\[\] attrs//
+:%s/int\[\] colors//
+:%s/int\[\] pixels//
+:%s/int\[\] [a-zA-Z0-9]*Ids//eg
+:%s/int [a-zA-Z0-9]*[Ww]idth//eg
+:%s/int [a-zA-Z0-9]*[Hh]eight//eg
+:%s/int count//
+:%s/int id[,)]//eg
+:%s/int [a-zA-Z0-9]*Id[^a-zA-Z0-9]//eg
+:%s/int resid//
+:%s/int optID//
+:%s/int [Tt]heme//
+:%s/int backlog//
+:%s/int GetPasswordMinimum//
+:%s/int whichButton//
+:%s/int CheckedItemCount//
+:%s/int CheckedItemPosition//
+:%s/int checkedItem//
+:%s/int [Ii]temPosition//
+:%s/int TargetRequestCode//
+:%s/int [Rr]equestCode//
+:%s/int columnIndex//
+:%s/int inputOffset\, int inputLen//
+:%s/int DoFinal//
+:%s/int c[^a-zA-Z0-9]//
+:%s/int i[^a-zA-Z0-9]//
+:%s/int n[^a-zA-Z0-9]//
+:%s/int [Xx][^a-zA-Z0-9]//
+:%s/int [Yy][^a-zA-Z0-9]//
+:%s/int [Zz][^a-zA-Z0-9)]//
+
+// Some wildcards involved
+:%s/int [Mm]ax[a-zA-Z0-9]*//
+:%s/int [Mm]in[a-zA-Z0-9]*//
+:%s/int [Ss]ize[a-zA-Z0-9]*//
+
+:%s/int extraFlags//
+:%s/int [a-zA-Z][a-zA-Z0-9]*Count//
+:%s/int [Vv]alue//
+:%s/int res[^a-zA-Z0-9]//
+:%s/int enter//
+:%s/int exit//
+:%s/int popEnter//
+:%s/int popExit//
+:%s/int icon//
+:%s/int label//
+:%s/int opmode//
+:%s/int [Tt]imeout//
+:%s/int time[^a-zA-Z0-9]//
+:%s/Android.Content.IDialogInterface dialog, int which//
+:%s/public DialogClickEventArgs (int which)//
+:%s/public DialogMultiChoiceClickEventArgs (int which, bool isChecked)//
+:%s/int Which //
+:%s/int Count//
+
+// Some wildcards involved
+:%s/int [Ss]tart[A-Za-z0-9]*//eg
+:%s/int [Ee]nd[A-Za-z0-9]*//eg
+
+:%s/int len[^a-zA-Z0-9]//
+:%s/int keysize//
+:%s/int [Rr]ead[a-zA-Z]*//
+:%s/int radix//
+:%s/int [a-zA-Z0-9]*[Oo]ffset//eg
+:%s/int [a-zA-Z0-9]*Index//eg
+:%s/int left, int top, int right, int bottom//
+:%s/int Left //
+:%s/int Right //
+:%s/int OldLeft //
+:%s/int OldRight //
+:%s/int OldTop //
+:%s/int OldBottom //
+:%s/int a, int r, int g, int b//
+:%s/int alpha//
+:%s/int Compare//
+:%s/int BinarySearch//
+:%s/int HashCode//
+:%s/int Get[a-zA-Z0-9]*Width//
+:%s/int Get[a-zA-Z0-9]*Height//
+:%s/int GetMax//
+:%s/int Select//
+
+:%s/int [Pp]rogress//
+:%s/int [Ss]econdaryProgress//
+:%s/int pPid//
+:%s/int Get[a-zA-Z0-9]*Length//
+:%s/int [Nn]um[a-zA-Z0-9]*//
+:%s/int viewSpacingLeft, int viewSpacingTop, int viewSpacingRight, int viewSpacingBottom//
+:%s/int appVersionCode//
+:%s/int Write[a-zA-Z0-9]*//
+:%s/int [Dd]ata[Ss]ize//
+:%s/int RequestRestore//
+:%s/int nowBeingRestored//
+:%s/RestoreFinished (int error)//
+:%s/int Show (Android.App.FragmentTransaction transaction, string tag)//
+:%s/int Remove (params  long[] ids)//
+:%s/int visibleCrumbs//
+:%s/public .* int Commit//
+:%s/int nextAnim//
+:%s/int styleRes//
+:%s/int GetRingtonePosition//
+:%s/int [a-zA-Z0-9]*Length//eg
+:%s/int [Rr]ow[^a-zA-Z0-9]//
+:%s/int [Cc]olumn[^a-zA-Z0-9]//
+:%s/int ellipsizedWidth//
+:%s/int [a-zA-Z0-9]*[Ss]ize[^a-zA-Z0-9]//eg
+:%s/int oldSelStart, int oldSelEnd//
+:%s/int newSelStart, int newSelEnd//
+:%s/int candidatesStart, int candidatesEnd//
+
+// They exclude things by entire source, so they absolutely need re-review when new API arrived.
+:%s/Sparse[a-zA-Z0-9]*Array\.cs.*//
+:%s/Java\.Lang\.AbstractStringBuilder\.cs.*//
+:%s/Java\.Lang\.StringBuilder\.cs.*//
+:%s/Java\.Lang\.StringBuffer\.cs.*//
+:%s/Java\.Lang\.Character\.cs.*//
+:%s/Java\.Lang\.Double\.cs.*//
+:%s/Java\.Lang\.Float\.cs.*//
+:%s/Java\.Lang\.Integer\.cs.*//
+:%s/Java\.Lang\.Long\.cs.*//
+:%s/Java\.Lang\.Math\.cs.*//
+:%s/Java\.Lang\.StrictMath\.cs.*//
+:%s/Java\.Lang\.JavaSystem\.cs.*//
+:%s/Java\.Lang\.Runtime\.cs.*//
+:%s/Java\.Nio\.IntBuffer\.cs.*//
+:%s/Java\.Util\.Arrays\.cs.*//
+:%s/Java\.Util\.BitSet\.cs.*//
+:%s/Org\.XmlPull\.V1\.IXmlPullParser\.cs.*//
+:%s/Android\.Content\.Res\.IXmlResourceParser\.cs.*//
+:%s/Android\.Util\.Log\.cs.*//
+:%s/Android\.Net\.DhcpInfo\.cs.*//
+:%s/Android\.Net\.Rtp\.AudioCodec\.cs.*//
+:%s/Android\.Net\.Wifi\.WifiInfo\.cs.*//
+:%s/Android\.OS\.Debug\.cs.*//
+:%s/Android\.Opengl\.GLU\.cs.*//
+:%s/Android\.Opengl\.GLUtils\.cs.*//
+:%s/Android\.Opengl\.Visibility\.cs.*//
+:%s/Android\.Telephony\.Gsm\.GsmCellLocation\.cs.*//
+:%s/Android\.Telephony\.Gsm\.SmsMessage\.cs.*//
+:%s/Android\.Telephony\.NeighboringCellInfo\.cs.*//
+:%s/Android\.Telephony\.SignalStrength\.cs.*//
+:%s/Android\.Telephony\.SmsMessage\.cs.*//
+:%s/Android\.Text\.Layout\.cs.*//
+:%s/Android\.Text\.SpannableStringInternal\.cs.*//
+:%s/Android\.Util\.MonthDisplayHelper\.cs.*//
+
+:%s/SpannableStringBuilder\.cs: public virtual int GetTextRunCursor (.*//
+:%s/GetSpans (int .*//
+:%s/AttributeSet.cs: public int GetAttributeInt.*//
+:%s/ViewConfiguration.cs\(.*\)int \(.*\)Timeout //
+:%s/ViewConfiguration.cs\(.*\)int \(.*\)Duration //
+:%s/ViewConfiguration.cs\(.*\)int \(.*\)Delay //
+:%s/ViewConfiguration.cs\(.*\)int \(.*\)Slop //
+
+// Check some parameter in certain source file.
+:%s/Camera\.cs\(.*\)int Orientation/Camera.cs\1/
+:%s/MediaPlayer\.cs\(.*\)int [Ee]xtra/MediaPlayer.cs\1/
+:%s/MediaRecorder\.cs\(.*\)int [Ee]xtra/MediaRecorder.cs\1/
+:%s/Keyboard.cs\(.*\)int Mode/Keyboard.cs\1/
+:%s/SoundPool.cs\(.*\)int [Ss]tatus/SoundPool.cs\1/
+:%s/TrafficStats.cs\(.*\)int tag/TrafficStats.cs\1/
+:%s/Handler.cs\(.*\)int what/Handler.cs\1/
+:%s/Android\.OS\.Handler\(.*\)int arg1, int arg2/Android.OS.Handler\1/
+:%s/Android\.OS\.Message\(.*\)int what/Android.OS.Message\1/
+:%s/Android\.OS\.Message\(.*\)int arg1, int arg2/Android.OS.Message\1/
+:%s/Android\.Opengl\(.*\)int target/Android.Opengl\1/
+:%s/Android\.Opengl\(.*\)int border/Android.Opengl\1/
+:%s/Android\.Opengl\(.*\)int error/Android.Opengl\1/
+:%s/Java\.Lang\.Thread\(.*\)int Enumerate/Java.Lang.Thread\1/
+:%s/Android\.Text\.Style\.IconMarginSpan\(.*\)int pad/Android.Text.Style.IconMarginSpan\1/
+:%s/Android\.Util\.EventLog\(.*\)int tag/Android.Util.EventLog\1/
+:%s/Android\.Util\.TypedValue\(.*\)int data/Android.Util.TypedValue\1/
+
+// similarly, check some parameter in methods with certain names.
+:%s/LinkToDeath \(.*\), int flags/LinkToDeath \1/
+:%s/UnlinkToDeath \(.*\), int flags/UnlinkToDeath \1/
+:%s/int GetInt \(.*\)int def/xxx GetInt \1/
+:%s/int GetInt \(.*\)int defaultValue/xxx GetInt \1/
+:%s/DrawLeadingMargin \(.*\)int dir/DrawLeadingMargin \1/
+:%s/DrawableMarginSpan \(.*\)int pad/DrawableMarginSpan \1/
+
+:%s/int Scaled[a-zA-Z0-9]*//
+:%s/int scale//
+:%s/int Scale ()//
+:%s/int [Cc]apacity//
+:%s/SetLights (int argb, int onMs, int offMs)//
+:%s/int [Ll]evel//
+:%s/SendDtmf (int code//
+:%s/UriMatcher (int code//
+:%s/AddURI (string authority, string path, int code)//
+:%s/IncrementProgressBy (int diff)//
+:%s/IncrementSecondaryProgressBy (int diff)//
+:%s/SetCellLocationData (.*//
+:%s/int animationIn, int animationOut//
+:%s/int [Tt]oken//
+:%s/int BulkInsert//
+:%s/int Delete //
+:%s/int Update //
+:%s/int previousResult//
+:%s/int GetIsSyncable //
+:%s/int syncable//
+:%s/int Dialog[a-zA-Z0-9]* (int which//
+:%s/MetaKeyKeyListener.cs: public static int GetMetaState//
+:%s/ISharedPreferences.cs: public int GetInt.*//
+:%s/int FilterHashCode//
+:%s/Android.Content.Intent.cs: public virtual int GetIntExtra//
+:%s/int GetPreferredActivities//
+:%s/int [Cc]ookie//
+:%s/int\[\] stateSet//
+:%s/TextView\.cs\(.*\)int def/TextView.cs\1/
+:%s/int [Cc]olorList//
+:%s/int BaselineShift//
+:%s/int [Bb]aseline//
+:%s/int BottomMargin//
+:%s/int BottomPadding//
+:%s/int [Bb]ottom//
+:%s/int TopMargin//
+:%s/int TopPadding//
+:%s/int [Tt]op//
+:%s/int quantity//
+:%s/int defValue//
+:%s/int GetDimension//
+:%s/int GetLayoutDimension//
+:%s/int GetInt //
+:%s/int GetInteger//
+:%s/int @base, int pbase//
+:%s/int at//
+:%s/int oldPosition, int newPosition//
+:%s/int columnNum//
+:%s/int dbVersion//
+:%s/int pos//
+:%s/int initialCapacity//
+:%s/int ReleaseMemory//
+:%s/int UpdateWithOnConflict//
+:%s/int [Vv]ersion//
+:%s/int oldVersion, int newVersion//
+:%s/int newVersion//
+:%s/int ExecuteUpdateDelete//
+:%s/UriMatcher.cs: public virtual int Match//
+:%s/int _offset//
+:%s/int OpenConvertSession//
+:%s/int insetLeft, int insetTop, int insetRight, int insetBottom//
+:%s/int inset//
+:%s/int tolerance//
+:%s/int quality//
+:%s/int stride//
+:%s/int\[\] strides//
+:%s/int\[\] GetStrides //
+:%s/int In[a-zA-Z0-9]*Density//
+:%s/int targetDensity//
+:%s/int GetPixel//
+:%s/int r, int g, int b//
+:%s/int texOffset//
+:%s/int indexCount//
+:%s/int SaveLayerAlpha //
+:%s/int SaveLayer //
+:%s/int Save //
+:%s/int [Oo]pacity//
+:%s/int ResolveOpacity (int op1, int op2)//
+:%s/int [Dd]uration//
+:%s/SetRotate (int axis, float degrees)//
+:%s/Android\.Graphics\.Drawables\.DrawableContainer\.cs.*//
+:%s/int l, int t, int r, int b//
+:%s/int argb//
+:%s/AddLevel (int low, int high//
+:%s/int [Dd]ensity//
+:%s/void OnOrientationChanged (int orientation)//
+:%s/int [a-zA-Z0-9]*Count//
+:%s/int msec//
+:%s/int srcIndex//
+:%s/int dstIndex//
+:%s/int relativeMilliseconds//
+:%s/int milliseconds//
+:%s/int BreakText//
+:%s/int GetFontMetricsInt//
+:%s/int Center//
+:%s/int newLeft, int newTop//
+:%s/int texName//
+:%s/int [Ww]eight//
+:%s/int [Zz]oomValue//
+:%s/int Zoom//
+:%s/int degrees//
+:%s/int GetBitsPerPixel//
+:%s/LightingColorFilter (int mul, int add)//
+:%s/int BulkTransfer//
+:%s/UsbDeviceConnection\.cs: public virtual int ControlTransfer.*//
+:%s/HideSoftInput (int flags//
+:%s/int [Ss]equence//
+:%s/int seq//
+:%s/int oldLeft, int oldTop, int oldRight, int oldBottom//
+
+// we started to review properties from here...
+:%s/int ImportanceReasonPid //
+:%s/int Lru //
+:%s/int ClientLabel //
+:%s/int [a-zA-Z0-9]*MemoryClass //
+:%s/int LauncherLargeIconDensity //
+:%s/int CurrentFailedPasswordAttempts //
+:%s/int UsagePercent //
+:%s/int [a-zA-Z0-9]*[Ll]ineNumber //
+:%s/int Remove //
+:%s/int [a-zA-Z0-9]*Res //
+:%s/int [a-zA-Z0-9]*Resource //
+:%s/int IconLevel //
+:%s/int Icon //
+:%s/int Hits //
+:%s/int SuggestThreshold //
+:%s/int VoiceMaxResults //
+:%s/int InitialLayout //
+:%s/int PreviewImage //
+:%s/int UpdatePeriodMillis //
+:%s/int\[\] GetIntArrayExtra//
+:%s/int\[\] GetIntArray//
+:%s/int\[\] value//
+:%s/int ReqGlEsVersion //
+:%s/int SharedUserLabel //
+:%s/int Logo //
+:%s/int\[\] GetPackageGids//
+:%s/int InitOrder //
+:%s/int PreferredOrder //
+:%s/int\[\] outLen//
+:%s/int Mcc //
+:%s/int Mnc //
+:%s/int GetIdentifier //
+:%s/int RowBytes /
+:%s/int\[\] offsetXY//
+:%s/int GetDuration //
+:%s/int Alpha //
+:%s/int\[\] GetState //
+:%s/int Ascent //
+:%s/int Descent //
+:%s/int Leading //
+:%s/int BitsPerPixel //
+:%s/int BytesPerPixel //
+:%s/Camera.cs: 	public int Orientation //
+:%s/Display.cs: public virtual int Orientation //
+:%s/int Score //
+:%s/int ExposureCompensation //
+:%s/int JpegQuality //
+:%s/int JpegThumbnailQuality //
+:%s/int PreviewFrameRate //
+:%s/IList<int\[\]> SupportedPreviewFpsRange//
+:%s/GetPreviewFpsRange (int\[\] range)//
+:%s/int DeviceProtocol //
+:%s/int InterfaceProtocol //
+:%s/int FileDescriptor //
+:%s/int ContentTopInsets //
+:%s/int VisibleTopInsets //
+:%s/int Gap //
+:%s/int DefaultHorizontalGap //
+:%s/int VerticalGap //
+:%s/int\[\] GetCurrentDrawableState //
+:%s/int SquaredDistanceFrom //
+:%s/Keyboard.cs: 	public int Mode //
+:%s/int columns//
+:%s/int\[\] GetNearestKeys//
+:%s/int w, int h, int oldw, int oldh//
+:%s/int\[\] array//
+:%s/int [a-zA-Z0-9]*Padding[a-zA-Z0-9]*//
+:%s/int streamID//
+:%s/int handshakeTimeoutMillis//
+:%s/int ch[^a-zA-Z0-9]//
+:%s/int low[^a-zA-Z0-9]//
+:%s/int hi[^a-zA-Z0-9]//
+:%s/int oneByte//
+:%s/int oneChar//
+:%s/int IntValue //
+:%s/int line//
+:%s/int w, int h//
+:%s/int layout[^a-zA-Z0-9]//eg
+:%s/int [a-zA-Z0-9]*X[^a-zA-Z0-9]//eg
+:%s/int [a-zA-Z0-9]*Y[^a-zA-Z0-9]//eg
+:%s/int st, int en//
+:%s/int [a-zA-Z0-9]*Port//eg
+:%s/int [Ee]ffectiveKeyBits//eg
+:%s/int Get[a-zA-Z0-9]*Maximum//eg
+:%s/int Get[a-zA-Z0-9]*Minimum//eg
+:%s/int ExitValue //
+:%s/int WaitFor //
+:%s/int Available[a-zA-Z0-9]*//eg
+:%s/int newCursorPosition//
+:%s/int [a-zA-Z0-9]*Position [^(]//eg
+:%s/int [a-zA-Z0-9]*Position[^ a-zA-Z0-9]//eg
+:%s/int [a-zA-Z0-9]*Rate//eg
+:%s/int newScale//
+:%s/int limit//
+:%s/int GetSpanStart //
+:%s/int GetSpanEnd //
+:%s/int Get[a-zA-Z0-9]*Margin//
+:%s/int repeat//
+:%s/int [Ss]can[Cc]ode//
+:%s/int GetComposingSpan[a-zA-Z0-9]*//
+:%s/int InitialSel[a-zA-Z0-9]*//
+:%s/int\[\] stateSpec//
+:%s/int\[\] states//
+:%s/int\[\] TrimStateSet//
+:%s/int SkipBytes //
+:%s/int Prn //
+:%s/int TimeToFirstFix //
+:%s/int Get[a-zA-Z0-9]*Volume//
+:%s/int bufferSizeInBytes//
+:%s/int markerInFrames//
+:%s/int periodInFrames//
+:%s/int audioSession//
+:%s/int DecayTime//
+:%s/int ReflectionsDelay//
+:%s/int ReverbDelay//
+:%s/int [Pp]aram2//
+:%s/int frequency//
+:%s/int\[\] GetBandFreqRange //
+:%s/int GetCenterFreq //
+:%s/int\[\] GetCaptureSizeRange //
+:%s/int rate//
+:%s/int AudioChannels //
+:%s/int Get[a-zA-Z0-9]*QualityParameter //
+:%s/ExifInterface\.cs: public virtual int GetAttributeInt (string tag, int defaultValue)//
+:%s/int GetAttributeInt//
+:%s/int FindFaces //
+:%s/int nbSegments//
+:%s/int paused//
+:%s/int muteFlags//
+:%s/int [Pp]ercent//
+:%s/int AudioSourceMax //
+:%s/int srcQuality//
+:%s/SoundPool\.cs: public virtual int Load//
+:%s/int soundID//
+:%s/int loop//
+:%s/int Play //
+
+:%s/int [Oo]bjectHandle//
+:%s/int ImagePixDepth //
+:%s/int Parent//
+:%s/int SequenceNumber//
+:%s/int hostAddress//
+:%s/int StopUsingNetworkFeature //
+:%s/int [Gg]id//
+:%s/int SoTimeout//
+:%s/SendDtmf (int e)//
+:%s/int DtmfType//
+:%s/int expiryTime/
+:%s/int ThreadStatsTag//
+:%s/int mtu/
+:%s/int socket/
+:%s/int GroupOwnerIntent//
+:%s/int Frequency//
+:%s/int AddNetwork //
+:%s/public static int CalculateSignalLevel (int rssi//
+:%s/int rssiA, int rssiB//
+:%s/int UpdateNetwork //
+:%s/int Setup //
+:%s/int BlockToSector //
+:%s/int SectorToBlock //
+:%s/int resultRequestCode//
+:%s/int before//
+:%s/int after//
+:%s/int [a-zA-Z0-9]*[PU]id //
+:%s/int GetUidForName //
+:%s/int Arg[12] //
+:%s/int What //
+:%s/int DataAvail //
+:%s/int DataCapacity //
+:%s/int DataPosition //
+:%s/ReadException (int code, string msg)//
+:%s/int [Ff]d//
+:%s/int DetachFd//
+:%s/int GetGidForName //
+:%s/int tid//
+:%s/int MyTid //
+:%s/int BeginBroadcast//
+:%s/int FreeBlocks //
+:%s/int instanceLimit//
+
+:%s/int validPixelMask//
+:%s/int fallbackFormat, int fallbackType//
+:%s/int Get.*Attribute.*Value\(.*\)int defaultValue/\1/
+:%s/int [a-zA-Z0-9][a-zA-Z0-9]*Res//
+:%s/int [a-zA-Z0-9][a-zA-Z0-9]*Res//
+
+:%s/Preference\.cs: public virtual int Order//
+:%s/View\.cs\(.*\)StartDrag\(.*\)int flags/View.cs\1StartDrag\2/
+
+:%s/EncodePredefinedImProtocol (int protocol)//
+:%s/int GetPresencePrecedence //
+:%s/MoveItem (Android.Content.ContentResolver res, long playlistId, int from, int to)//
+:%s/int FindTokenEnd (Java.Lang.ICharSequence text, int cursor)//
+:%s/int FindTokenEnd (string text, int cursor)//
+:%s/int FindTokenStart (Java.Lang.ICharSequence text, int cursor)//
+:%s/int FindTokenStart (string text, int cursor)//
+
+:%s/int Interval //
+
+:%s/int suggestionsLimit//
+:%s/int Pitch //
+:%s/int BaseStationLatitude //
+:%s/int BaseStationLongitude //
+:%s/int [Rr]ssi//
+:%s/int TOA//
+:%s/int ToaFromString//
+:%s/OnSignalStrengthChanged (int asu)//
+
+:%s/int margin//
+:%s/int substart, int subend//
+:%s/int off//
+
+:%s/int GetEllipsisStart //
+:%s/int GetLineDescent //
+:%s/int GetLineStart //
+:%s/int GetLineTop //
+:%s/int ipv4Address//
+:%s/int IsDst //
+:%s/int [Ss]econd//
+:%s/int [A-Za-z0-9]*[Ss]econds//
+:%s/int FirstDayOfWeek //
+:%s/int WeekNumber //
+:%s/int GetJulianDay //
+:%s/SetJulianDay (int julianDay)//
+:%s/int GetJulianMondayFromWeeksSinceEpoch (int week)//
+:%s/int GetWeeksSinceEpochFromJulianDay (int julianDay, int firstDayOfWeek)//
+:%s/int @where//
+:%s/int destoff//
+:%s/int dstart, int dend//
+:%s/int NextSpanTransition //
+:%s/int ostart, int oend, int nstart, int nend//
+:%s/int point//
+:%s/int PointToPosition//
+:%s/int GetSelectionEnd //
+:%s/int GetSelectionStart //
+:%s/int queryStart, int queryEnd//
+:%s/int tbstart, int tbend//
+:%s/int bufstart, int bufend//
+:%s/int first, int rest//
+:%s/int every//
+:%s/int left, int right//
+:%s/int lnum//
+:%s/int istartv, int v//
+:%s/int spanstartv, int v//
+:%s/int TabStop //
+:%s/int appearance//
+:%s/int last\([,)]\)/\1/
+
+:%s/int collapsedGroupLayout, int expandedGroupLayout//
+:%s/int childLayout//
+:%s/int lastChildLayout//
+:%s/int Tag //
+:%s/int MTag //
+:%s/int GetTagCode //
+:%s/int StyleAttribute //
+:%s/int NextInt//
+:%s/int AssetCookie//
+:%s/TypedValue.cs: public int Data //
+:%s/int complex//
+:%s/int resourceID//
+
+:%s/int xAdj, int yAdj//
+:%s/int [Oo]rder//
+:%s/int AddIntentOptions//
+:%s/int title//
+:%s/int WindowAnimations//
+:%s/int xpos, int ypos//
+:%s/int CopyFrom//
+:%s/int HintMaxChars//
+:%s/int HintMaxLines//
+:%s/int selStart, int selEnd//
+:%s/KeyCharacterMap.cs: public virtual int Get//
+:%s/int GetDeadChar (int accent//
+:%s/int GetUnicodeChar //
+:%s/int UnicodeChar //
+:%s/int newRepeat//
+:%s/int resource\([^a-zA-Z0-9]\)/\1/
+:%s/int [Ss]uggestionsAttributes//
+:%s/int units//
+
+:%s/int measureSpec//
+:%s/int MakeMeasureSpec //
+:%s/int MeasuredState //
+:%s/int GetChildMeasureSpec (int spec, int padding, int childDimension)//
+:%s/int ResolveSizeAndState //
+:%s/int childMeasuredState//
+:%s/int CombineMeasuredStates (int curState, int newState)//
+:%s/Java.Lang.Object GetTag (int key)//
+:%s/void SetTag (int key, Java.Lang.Object tag)//
+:%s/int LeftMargin //
+:%s/int RightMargin //
+
+:%s/int NPP//
+:%s/int newProgress//
+:%s/int TextZoom//
+:%s/int UserAgent//
+:%s/int steps//
+:%s/int FindAll//
+:%s/int vx, int vy//
+
+:%s/int [Ff]irstVisibleItem//
+:%s/int distance//
+:%s/int KeyProgressIncrement//
+:%s/int GetPositionForView//
+:%s/int DisplayedChild//
+:%s/int GetPositionForSection //
+:%s/int GetSectionForPosition //
+:%s/int GetPosition //
+:%s/int DropDownAnchor //
+:%s/int ListSelection //
+:%s/int Threshold //
+:%s/int GetItemViewType //
+:%s/int GetChildType //
+:%s/int GetGroupType//
+:%s/EdgeEffect\.cs\(.*\)int velocity/EdgeEffect.cs\1/
+:%s/int GetFlatListPosition //
+:%s/int GetPackedPositionChild //
+:%s/int GetPackedPositionGroup //
+:%s/int animationDurationMillis//
+:%s/int [a-zA-Z0-9]*[Ss]pacing//
+:%s/int GetItemViewType //
+:%s/int section//
+:%s/int extraSpace//
+:%s/int AnimationStyle //
+:%s/int BufferPercentage //
+:%s/int cursor//
+:%s/int oldVal, int newVal//
+:%s/int OldVal //
+:%s/int NewVal //
+:%s/int xoff, int yoff//
+:%s/int FindTokenStart //
+:%s/int FindTokenEnd //
+:%s/int anchor//
+:%s/int dropDownLayout//
+:%s/ExtendDuration (int extend)//
+:%s/int TimePassed //
+:%s/int StringConversionColumn //
+:%s/int expandedGroupLayout, int collapsedGroupLayout//
+:%s/int CurrentTab //
+:%s/int Span //
+:%s/Debug (int depth)//
+:%s/int GetLineBounds //
+:%s/SetEms (int ems)//
+:%s/int pixels//
+:%s/int marqueeLimit//
+
+:%s/int defaultContext//
+:%s/int context//
+
+:%s/int BytesTransferred //
+:%s/ObjectInputStream\.cs\(.*\)int Get\(.*\)int defaultValue/ObjectInputStream.cs\1xxx Get\2/
+:%s/int inum//
+:%s/int Lineno //
+:%s/int detailMessage//
+:%s/Java\.Lang\.Class.*int Modifiers//
+:%s/Java\.Lang\.Enum.*int Ordinal//
+:%s/int nanos//
+:%s/Java\.Lang\.SecurityManager.*//
+:%s/int high[^a-zA-Z0-9]//
+:%s/int thisStart//
+:%s/int [Pp]recision//
+
+:%s/Java\.Math\.BigDecimal.*//
+:%s/Java\.Math\.BigInteger.*//
+
+:%s/int TrafficClass //
+:%s/int scope_id//
+:%s/int ttl//
+:%s/int TimeToLive //
+:%s/int MTU //
+:%s/int connectionTime//
+:%s/int latency//
+:%s/int SoLinger //
+:%s/int ConnectTimeout //
+:%s/int GetHeaderFieldInt (string field, int defaultValue)//
+
+:%s/int Limit ()//
+:%s/int newLimit//
+:%s/int Remaining ()//
+:%s/int Int //
+:%s/int Send //
+
+:%s/int Depth //
+:%s/int BasicConstraints //
+:%s/AddPathToName (int type//
+:%s/AddSubjectAlternativeName (int tag//
+:%s/int modlen//
+:%s/int AddProvider //
+:%s/int InsertProviderAt //
+:%s/int Digest //
+:%s/int Sign //
+:%s/int m[^A-Za-z0-9]//
+:%s/int GetM //
+:%s/int Cofactor //
+:%s/int saltLen//
+:%s/int [Tt]railerField//
+
+:%s/int oldValue, int newValue//
+:%s/Java\.Util\.Calendar\.cs: public virtual int Get //
+:%s/int DefaultFractionDigits//
+:%s/int GetDate //
+:%s/IllegalFormatCodePointException\.cs: public virtual int Code//
+:%s/IllegalFormatPrecisionException\.cs\(.*\)int p/IllegalFormatPrecisionException.cs\1/
+:%s/IllegalFormatWidthException\.cs\(.*\)int w/IllegalFormatWidthException.cs\1/
+:%s/int RegionEnd //
+:%s/int RegionStart //
+:%s/int horizon//
+:%s/int Radix //
+:%s/int DSTSavings //
+:%s/int Purge //
+:%s/int ClockSequence ()//
+:%s/int Variant ()//
+
+:%s/int inputLen//
+:%s/int GenExemptionBlob //
+:%s/int GenerateSecret //
+:%s/int GetL //
+:%s/RC5ParameterSpec\.cs\(.*\)int rounds/RC5ParameterSpec.cs\1/
+:%s/int Rounds //
+:%s/int SessionTimeout //
+:%s/int [Bb]ytesConsumed//
+:%s/int [Bb]ytesProduced//
+:%s/int ColumnNumber //
+
+// New in API Level 15 - or - whatever might be added as public at a time(!)
+:%s/ReadEvents (int\[\] tags//
+:%s/int\[\] GetObjectHandles //
+:%s/int\[\] CreateIntArray ()//
+:%s/ReadIntArray (int\[\] val)//
+:%s/WriteIntArray (int\[\] val)//
+:%s/Android\.Test\..*//
+:%s/FocusFinder\.cs\(.*\)int\[\] deltas/FocusFinder.cs\1/
+:%s/int\[\] location//
+:%s/int\[\] GetDrawableState //
+:%s/int\[\] OnCreateDrawableState //
+:%s/SetImageState (int\[\] state/SetImageState (/
+:%s/int\[\] GetRules //
+:%s/int\[\] groupTo//
+:%s/int\[\] childTo//
+:%s/int\[\] codePoints//
+:%s/ECFieldF2m ( int\[\] ks)//
+:%s/int\[\] GetMidTermsOfReductionPolynomial ()//
+:%s/string\[\] from, int\[\] to//
+:%s/ViewDebug\.cs\(.*\)int\[\] parameters/ViewDebug.cs\1/
+
+// New in API Level 16
+:%s/CursorWindow\.cs\(.*\)int col/CursorWindow.cs\1/
+:%s/OnJetEventListener\.cs\(.*\)int nbSegments/OnJetEventListener.cs\1/
+:%s/OnJetEventListener\.cs\(.*\)int paused/OnJetEventListener.cs\1/
+:%s/int newNumSubSamples, int[] newNumBytesOfClearData, int[] newNumBytesOfEncryptedData//
+:%s/int DequeueInputBuffer//
+:%s/int DequeueOutputBuffer//
+:%s/OnVolumeSetRequest\(.*\)int volume/OnVolumeSetRequest\1/
+:%s/OnVolumeUpdateRequest\(.*\)int direction/OnVolumeUpdateRequest\1/
+:%s/RequestUpdateVolume \(int direction\)/RequestUpdateVolume()/
+:%s/MediaRouter\.cs\(.*\)int [Vv]olume[^Handling]/MediaRouter.cs\1/
+:%s/int insertAt//
+:%s/Binder\.cs\(.*\)int code/Binder.cs\1/
+:%s/Android\.Text\.Format\.Formatter\.cs\(.*\)int addr/Android.Text.Format.Formatter.cs\1/
+:%s/KeyCharacterMap Load (int keyboard)/KeyCharacterMap Load ()/
+:%s/SentenceSuggestionsInfo\.cs\(.*\)int\[\] offsets, int\[\] lengths/SentenceSuggestionsInfo.cs\1/
+:%s/int ScrollBarDefaultDelayBeforeFade//
+:%s/int ScrollBarFadeDuration//
+:%s/int [Aa]ctiveMatchOrdinal//
+:%s/int FlipInterval//
+:%s/int DateTextAppearance//
+:%s/int WeekDayTextAppearance//
+:%s/int ImageAlpha//
+:%s/int MarqueeRepeatLimit//
+:%s/int chunklen//
+:%s/ServerSocket\(.*\)int aport/ServerSocket\1/
+
+// New in API Level 17
+:%s/int AsuLevel //
+:%s/int .*Dbm //
+:%s/int .*Ecio //
+:%s/int CdmaLevel //
+:%s/int EvdoLevel //
+:%s/int EvdoSnr //
+:%s/int MarginStart //
+:%s/int MarginEnd //
+:%s/int Latitude //
+:%s/int Longtitude //
+:%s/int TimingAdvance //
+
+// New in API Level 18
+:%s/int geofenceId//
+:%s/MediaDrm\(.*\)int extra/MediaDrm\1/
+:%s/MediaMuxer\(.*\)int AddTrack/MediaMuxer\1/
+:%s/StatusBarNotification\(.*\)int initialPid\, int score/StatusBarNotification\1/
+:%s/int TextSelectionEnd //
+:%s/int TextSelectionStart //
+
+// New in API Level 19
+:%s/int [Pp]ageNumber//
+:%s/ConsumerIrManager\(.*\)Transmit\(.*\)int carrierFrequency, int\[\] pattern/ConsumerIrManager.cs\1Transmit\2\3/
+:%s/LoudnessEnhancer\(.*\)int gainmB/LoudnessEnhancer\1 - gainmB/
+:%s/Visualizer\(.*\)int MPeak/Visualizer\1 - MPeak/
+:%s/Visualizer\(.*\)int MRms/Visualizer\1 - MRms/
+:%s/Visualizer\(.*\)int GetMeasurementPeakRms/Visualizer\1 - GetMeasurementPeakRms/
+:%s/int PixelStride//
+:%s/int RowStride//
+// those typeless "Mils" were "int topMils" and "int bottomMils" (trimmed earlier)
+:%s/int [Hh]orizontalDpi//
+:%s/int [Vv]erticalDpi//
+:%s/int [Ll]eftMils//
+:%s/int [Rr]ightMils//
+:%s/PrintJobInfo\(.*\)int [Cc]opies/PrintJobInfo\1 - Copies/
+:%s/PrintJob\(.*\)int GetAdvancedIntOption/PrintJob\1 - GetAdvancedIntOption/
+:%s/AccessibilityNodeInfo\(.*\)int [Cc]olumnSpan/AccessibilityNodeInfo\1/
+:%s/AccessibilityNodeInfo\(.*\)int [Rr]owSpan/AccessibilityNodeInfo\1/
+:%s/int ControllerNumber//
+:%s/AbsListView\(.*\)CanScrollList (int direction)/AbsListView\1CanScrollList/
+:%s/Objects\(.*\)int Hash/Objects\1/
+:%s/int tagLen//
+:%s/GCMParameterSpec\(.*\)int TLen/GCMParameterSpec\1/
+
+:%s/int theInteger//
+:%s/Android.Content.Intent intent//
+:%s/int [Tt]int//
+:%s/[Tt]int/TINT/
+:%s/CameraCaptureSession\(.*\)int Capture /CameraCaptureSession\1/
+:%s/CameraCaptureSession\(.*\)int CaptureBurst /CameraCaptureSession\1/
+:%s/CameraCaptureSession\(.*\)int SetRepeatingBurst /CameraCaptureSession\1/
+:%s/CameraCaptureSession\(.*\)int SetRepeatingRequest /CameraCaptureSession\1/
+:%s/CameraDevice\(.*\)int Capture /CameraDevice\1/
+:%s/CameraDevice\(.*\)int CaptureBurst /CameraDevice\1/
+:%s/CameraDevice\(.*\)int SetRepeatingBurst /CameraDevice\1/
+:%s/CameraDevice\(.*\)int SetRepeatingRequest /CameraDevice\1/
+:%s/int FrameNumber//
+:%s/int [Mm]eteringWeight//
+:%s/StreamConfigurationMap\(.*\)int format/StreamConfigurationMap\1/
+:%s/int [Ee]rrno//
+:%s/int EnableSystemApp//
+:%s/int SetApplicationsBlocked//
+:%s/AddForwardingIntentFilter\(.*\)int flags/AddForwardingIntentFilter\1/
+:%s/JobScheduler.cs\(.*\)int Schedule/JobScheduler.cs\1/
+:%s/ScanRecord.cs: public int AdvertiseFlags//
+:%s/int OnGetCurrentVolume//
+:%s/OnAdjustVolumeBy (int delta)//
+:%s/OnSetVolumeTo (int volume)//
+:%s/Os.cs\(.*\)/Os.cs-/
+:%s/OsConstants.cs\(.*\)/OsConstants.cs-/
+:%s/StructStat.cs\(.*\)/StructStat.cs-/
+:%s/int d[xy]Unconsumed//eg
+:%s/int d[xy]Consumed//eg
+:%s/int newStart, int newEnd//
+:%s/int [Cc]omposingTextStart//
+:%s/ForkJoinPool.cs\(.*\)int [Pp]arallelism/ForkJoinPool.cs\1/
+:%s/Java.Util.Concurrent\(.*\)int DrainTo/Java.Util.Concurrent\1/
+:%s/int [Cc]olorModes//
+:%s/int defaultColorMode//
+:%s/int slotIdx//
+
+:%s/Icu.Lang\(.*\)int cp/Icu.Lang\1/
+:%s/Icu.Lang\(.*\)int [Dd]igit/Icu.Lang\1/
+:%s/Icu.Lang\(.*\)int FoldCase/Icu.Lang\1/
+:%s/Icu.Lang\(.*\)int GetChar/Icu.Lang\1/
+:%s/Icu.Lang\(.*\)int GetCode/Icu.Lang\1/
+
+:wq

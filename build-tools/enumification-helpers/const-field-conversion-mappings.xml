@@ -1,0 +1,52 @@
+<metadata>
+  <attr path="/api/package[@name='android.accessibilityservice']/class[@name='AccessibilityServiceInfo']/field[@name='eventTypes']" name="type">Android.Views.Accessibility.EventTypes</attr>
+  <attr path="/api/package[@name='android.accessibilityservice']/class[@name='AccessibilityServiceInfo']/field[@name='flags']" name="type">Android.AccessibilityServices.AccessibilityServiceFlags</attr>
+  <attr path="/api/package[@name='android.app']/class[@name='ActivityManager.ProcessErrorStateInfo']/field[@name='condition']" name="type">Android.App.ProcessError</attr>
+  <attr path="/api/package[@name='android.app']/class[@name='ActivityManager.RunningAppProcessInfo']/field[@name='importance']" name="type">Android.App.Importance</attr>
+  <attr path="/api/package[@name='android.app']/class[@name='ActivityManager.RunningAppProcessInfo']/field[@name='importanceReasonCode']" name="type">Android.App.ImportanceReason</attr>
+  <attr path="/api/package[@name='android.app']/class[@name='ActivityManager.RunningServiceInfo']/field[@name='flags']" name="type">Android.App.ServiceInfoFlags</attr>
+  <attr path="/api/package[@name='android.app']/class[@name='ApplicationErrorReport']/field[@name='type']" name="type">Android.App.ApplicationErrorReportType</attr>
+  <attr path="/api/package[@name='android.app']/class[@name='Notification']/field[@name='audioStreamType']" name="type">Android.Media.Stream</attr>
+  <attr path="/api/package[@name='android.content.pm']/class[@name='ActivityInfo']/field[@name='softInputMode']" name="type">Android.Views.SoftInput</attr>
+  <attr path="/api/package[@name='android.content.pm']/class[@name='ApplicationInfo']/field[@name='targetSdkVersion']" name="type">Android.OS.BuildVersionCodes</attr>
+  <attr path="/api/package[@name='android.content.pm']/class[@name='ConfigurationInfo']/field[@name='reqInputFeatures']" name="type">Android.Content.PM.InputFeature</attr>
+  <attr path="/api/package[@name='android.content.pm']/class[@name='FeatureInfo']/field[@name='flags']" name="type">Android.Content.PM.FeatureFlags</attr>
+  <attr path="/api/package[@name='android.content.pm']/class[@name='ServiceInfo']/field[@name='flags']" name="type">Android.Content.PM.ServiceInfoFlags</attr>
+  <attr path="/api/package[@name='android.content.res']/class[@name='Configuration']/field[@name='uiMode']" name="type">Android.Content.Res.UiMode</attr>
+  <attr path="/api/package[@name='android.content.res']/class[@name='ObbInfo']/field[@name='flags']" name="type">Android.Content.Res.ObbFlags</attr>
+  <attr path="/api/package[@name='android.hardware']/class[@name='Camera.CameraInfo']/field[@name='facing']" name="type">Android.Hardware.CameraFacing</attr>
+  <attr path="/api/package[@name='android.hardware']/class[@name='SensorEvent']/field[@name='accuracy']" name="type">Android.Hardware.SensorStatus</attr>
+  <attr path="/api/package[@name='android.media']/class[@name='CamcorderProfile']/field[@name='audioCodec']" name="type">Android.Media.AudioEncoder</attr>
+  <attr path="/api/package[@name='android.media']/class[@name='CamcorderProfile']/field[@name='fileFormat']" name="type">Android.Media.OutputFormat</attr>
+  <attr path="/api/package[@name='android.media']/class[@name='CamcorderProfile']/field[@name='videoCodec']" name="type">Android.Media.VideoEncoder</attr>
+  <attr path="/api/package[@name='android.net.wifi']/class[@name='WifiConfiguration']/field[@name='status']" name="type">Android.Net.Wifi.WifiStatus</attr>
+  <attr path="/api/package[@name='android.net.wifi.p2p']/class[@name='WifiP2pDevice']/field[@name='status']" name="type">Android.Net.Wifi.P2p.WifiP2pDeviceState</attr>
+  <attr path="/api/package[@name='android.util']/class[@name='DisplayMetrics']/field[@name='densityDpi']" name="type">Android.Util.DisplayMetricsDensity</attr>
+  <attr path="/api/package[@name='android.util']/class[@name='TypedValue']/field[@name='changingConfigurations']" name="type">Android.Content.PM.ConfigChanges</attr>
+  <attr path="/api/package[@name='android.util']/class[@name='TypedValue']/field[@name='type']" name="type">Android.Util.DataType</attr>
+  <attr path="/api/package[@name='android.view']/class[@name='MotionEvent.PointerProperties']/field[@name='toolType']" name="type">Android.Views.MotionEventToolType</attr>
+  <attr path="/api/package[@name='android.view']/class[@name='WindowManager.LayoutParams']/field[@name='format']" name="type">Android.Graphics.Format</attr>
+  <attr path="/api/package[@name='android.view']/class[@name='WindowManager.LayoutParams']/field[@name='gravity']" name="type">Android.Views.GravityFlags</attr>
+  <attr path="/api/package[@name='android.view']/class[@name='WindowManager.LayoutParams']/field[@name='screenOrientation']" name="type">Android.Content.PM.ScreenOrientation</attr>
+  <attr path="/api/package[@name='android.view.inputmethod']/class[@name='EditorInfo']/field[@name='inputType']" name="type">Android.Text.InputTypes</attr>
+  <attr path="/api/package[@name='android.view.inputmethod']/class[@name='ExtractedTextRequest']/field[@name='flags']" name="type">Android.Views.InputMethods.GetTextFlags</attr>
+  <attr path="/api/package[@name='android.widget']/class[@name='FrameLayout.LayoutParams']/field[@name='gravity']" name="type">Android.Views.GravityFlags</attr>
+  <attr path="/api/package[@name='java.io']/class[@name='StreamTokenizer']/field[@name='ttype']" name="type">Java.IO.TokenType</attr>
+  <attr path="/api/package[@name='java.net']/class[@name='HttpURLConnection']/field[@name='responseCode']" name="type">Java.Net.HttpStatus</attr>
+  <attr path="/api/package[@name='java.security']/class[@name='Signature']/field[@name='state']" name="type">Java.Security.SignatureState</attr>
+
+  <!-- below are constant fields -->
+  <attr path="/api/package[@name='android.os']/class[@name='Build.VERSION']/field[@name='SDK_INT']" name="type">Android.OS.BuildVersionCodes</attr>
+
+  <!-- Below are special rules for java.math.BigDecimal methods: they have "roundingMode" parameter in both *our* enum and *their* enum, in the same name. -->
+  <attr path="/api/package[@name='java.math']/class[@name='BigDecimal']/method[@name='divide']/parameter[@name='roundingMode' and @type='int']" name="type">Java.Math.RoundOptions</attr>
+  <attr path="/api/package[@name='java.math']/class[@name='BigDecimal']/method[@name='setScale']/parameter[@name='roundingMode' and @type='int']" name="type">Java.Math.RoundOptions</attr>
+
+  <!-- API Level 16 -->
+  <attr path="/api/package[@name='android.app']/class[@name='ActivityManager.RunningAppProcessInfo']/field[@name='lastTrimLevel']" name="type">Android.Content.TrimMemory</attr>
+  <attr path="/api/package[@name='android.media']/class[@name='MediaCodec.BufferInfo']/field[@name='flags']" name="type">Android.Media.MediaCodecBufferFlags</attr>
+  <attr path="/api/package[@name='android.media']/class[@name='MediaCodec.CryptoInfo']/field[@name='mode']" name="type">Android.Media.MediaCodecCryptoMode</attr>
+  <attr path="/api/package[@name='android.media']/class[@name='MediaCodecInfo.CodecProfileLevel']/field[@name='level']" name="type">Android.Media.MediaCodecProfileLevel</attr>
+  <attr path="/api/package[@name='android.media']/class[@name='MediaCodecInfo.CodecProfileLevel']/field[@name='profile']" name="type">Android.Media.MediaCodecProfileType</attr>
+
+</metadata>
