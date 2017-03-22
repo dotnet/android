@@ -22,6 +22,7 @@
       _UnzipFiles;
       _CreateNdkToolchains;
       _CreateMxeToolchains;
+      _AcceptAndroidSdkLicenses;
     </BuildDependsOn>
   </PropertyGroup>
   <ItemGroup>

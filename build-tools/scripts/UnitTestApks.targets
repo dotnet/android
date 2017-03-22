@@ -26,8 +26,8 @@
         AndroidSdkHome="$(AndroidSdkDirectory)"
         SdkVersion="21"
         ImageName="$(_TestImageName)"
-        ToolExe="$(AndroidToolExe)"
-        ToolPath="$(AndroidToolPath)"
+        ToolExe="$(AvdManagerToolExe)"
+        ToolPath="$(AndroidToolsBinPath)"
     />
     <StartAndroidEmulator
         Condition=" '$(_ValidAdbTarget)' != 'True' "

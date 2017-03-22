@@ -78,7 +78,7 @@
     <AndroidNativeLibrary Include="libs\x86_64\libsimple.so" />
   </ItemGroup>
   <ItemGroup>
-    <InputJar Include="java\JavaLib\bin\classes.jar">
+    <InputJar Include="java\JavaLib\library\build\intermediates\bundles\debug\classes.jar">
       <Link>Jars\classes.jar</Link>
     </InputJar>
   </ItemGroup>

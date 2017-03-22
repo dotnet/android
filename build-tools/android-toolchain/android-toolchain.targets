@@ -3,6 +3,7 @@
   <Import Project="..\..\Configuration.props" />
   <Import Project="android-toolchain.projitems" />
   <Import Project="..\scripts\RequiredPrograms.targets" />
+  <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"  TaskName="Xamarin.Android.BuildTools.PrepTasks.AcceptAndroidSdkLicenses" />
   <Target Name="_CopyBootstrapTasksAssembly"
       Outputs="$(OutputPath)\Xamarin.Android.Tools.BootstrapTasks.dll">
     <MSBuild
@@ -123,6 +124,9 @@
     <_AndroidMxeOutput Include="@(_AndroidMxeToolchain->'$(AndroidMxeFullPath)\%(Identity)\include\zlib.h')" />
     <_AndroidMxeOutput Include="@(_AndroidMxeToolchain->'$(AndroidMxeFullPath)\%(Identity)\lib\libz.a')" />
   </ItemGroup>
+  <Target Name="_AcceptAndroidSdkLicenses">
+	<AcceptAndroidSdkLicenses AndroidSdkDirectory="$(AndroidSdkDirectory)" />
+  </Target>
   <Target Name="_CreateMxeToolchains"
       DependsOnTargets="_SetMxeToolchainMakefileTimeToLastCommitTimestamp"
       Condition=" '$(NeedMxe)' == 'true' And ($(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win32:')) Or $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:')))"

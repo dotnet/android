@@ -13,30 +13,38 @@
       -->
     <AndroidSdkItem Include="build-tools_r$(XABuildToolsVersion)-linux.zip">
       <HostOS>Linux</HostOS>
-      <DestDir>build-tools\$(XABuildToolsVersion)</DestDir>
+      <DestDir>build-tools\$(XABuildToolsFolder)</DestDir>
     </AndroidSdkItem>
-    <AndroidSdkItem Include="platform-tools_r23-linux.zip">
+    <AndroidSdkItem Include="platform-tools_r26.0.0-rc1-linux.zip">
       <HostOS>Linux</HostOS>
       <DestDir>platform-tools</DestDir>
     </AndroidSdkItem>
-    <AndroidSdkItem Include="tools_r24.4.1-linux.zip">
+    <AndroidSdkItem Include="sdk-tools-linux-3859397.zip">
       <HostOS>Linux</HostOS>
       <DestDir>tools</DestDir>
+    </AndroidSdkItem>
+    <AndroidSdkItem Include="emulator-linux-3887480.zip">
+      <HostOS>Linux</HostOS>
+      <DestDir>emulator</DestDir>
     </AndroidSdkItem>
     <AndroidNdkItem Include="android-ndk-r11c-darwin-x86_64.zip">
       <HostOS>Darwin</HostOS>
     </AndroidNdkItem>
     <AndroidSdkItem Include="build-tools_r$(XABuildToolsVersion)-macosx.zip">
       <HostOS>Darwin</HostOS>
-      <DestDir>build-tools\$(XABuildToolsVersion)</DestDir>
+      <DestDir>build-tools\$(XABuildToolsFolder)</DestDir>
     </AndroidSdkItem>
-    <AndroidSdkItem Include="platform-tools_r23-macosx.zip">
+    <AndroidSdkItem Include="platform-tools_r26.0.0-rc1-darwin.zip">
       <HostOS>Darwin</HostOS>
       <DestDir>platform-tools</DestDir>
     </AndroidSdkItem>
-    <AndroidSdkItem Include="tools_r24.4.1-macosx.zip">
+    <AndroidSdkItem Include="sdk-tools-darwin-3859397.zip">
       <HostOS>Darwin</HostOS>
       <DestDir>tools</DestDir>
+    </AndroidSdkItem>
+    <AndroidSdkItem Include="emulator-darwin-3887480.zip">
+      <HostOS>Darwin</HostOS>
+      <DestDir>emulator</DestDir>
     </AndroidSdkItem>
     <AndroidSdkItem Include="android-2.3.3_r02-linux.zip">
       <HostOS></HostOS>
@@ -86,18 +94,22 @@
       <HostOS></HostOS>
       <DestDir>platforms\android-25</DestDir>
     </AndroidSdkItem>
-    <AndroidSdkItem Include="android_m2repository_r16.zip">
+    <AndroidSdkItem Include="platform-O_r01.zip">
       <HostOS></HostOS>
-      <DestDir>extras\android\m2repository</DestDir>
+      <DestDir>platforms\android-O</DestDir>
     </AndroidSdkItem>
     <AndroidSdkItem Include="docs-24_r01.zip">
       <HostOS></HostOS>
       <DestDir>docs</DestDir>
     </AndroidSdkItem>
-    <AndroidSdkItem Include="sysimg_x86-21_r03.zip">
+    <AndroidSdkItem Include="android_m2repository_r16.zip">
+      <HostOS></HostOS>
+      <DestDir>extras\android\m2repository</DestDir>
+    </AndroidSdkItem>
+    <AndroidSdkItem Include="x86-21_r04.zip">
       <HostOS></HostOS>
       <RelUrl>sys-img/android/</RelUrl>
-      <DestDir>system-images\android-21\x86</DestDir>
+      <DestDir>system-images\android-21\default\x86</DestDir>
     </AndroidSdkItem>
   </ItemGroup>
   <ItemGroup>
