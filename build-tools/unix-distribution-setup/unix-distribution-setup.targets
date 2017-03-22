@@ -10,11 +10,11 @@
         Command="chmod +x $(OutputPath)bin\generator"
     />
     <Exec
-        Condition=" '$(HostOS)' != 'Windows' "
+        Condition=" '$(HostOS)' != 'Windows' And Exists( '$(OutputPath)bin\cross*' ) "
         Command="chmod +x $(OutputPath)bin\cross*"
     />
     <Exec
-        Condition=" '$(HostOS)' != 'Windows' "
+        Condition=" '$(HostOS)' != 'Windows' And Exists( '$(OutputPath)bin\llc' ) "
         Command="chmod +x $(OutputPath)bin\llc"
     />
   </Target>
