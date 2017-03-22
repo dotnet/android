@@ -24,6 +24,18 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void BuildReleaseApplicationWithSpacesInPath ()
+		{
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = true,
+				AotAssemblies = true,
+			};
+			using (var b = CreateApkBuilder (Path.Combine ("temp", "BuildReleaseAppWithA InIt(1)"))) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+			}
+		}
+
+		[Test]
 		public void BuildReleaseApplicationWithNugetPackages ()
 		{
 			var proj = new XamarinAndroidApplicationProject () {
