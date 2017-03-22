@@ -89,7 +89,7 @@ namespace Xamarin.ProjectTools
 
 			var logger = buildLogFullPath == null
 				? string.Empty
-				: string.Format ("/noconsolelogger /flp1:LogFile={0};Encoding=UTF-8;Verbosity={1}",
+				: string.Format ("/noconsolelogger \"/flp1:LogFile={0};Encoding=UTF-8;Verbosity={1}\"",
 					buildLogFullPath, Verbosity.ToString ().ToLower ());
 
 			var start = DateTime.UtcNow;
@@ -133,11 +133,11 @@ namespace Xamarin.ProjectTools
 					psi.EnvironmentVariables ["XBUILD_FRAMEWORK_FOLDERS_PATH"] = Path.Combine (outdir, "lib", "xbuild-frameworks");
 					args.AppendFormat ("/p:MonoDroidInstallDirectory=\"{0}\" ", outdir);
 				}
-				args.AppendFormat ("/t:{0} {1}", target, Path.Combine (Root, projectOrSolution));
+				args.AppendFormat ("/t:{0} {1}", target, QuoteFileName (Path.Combine (Root, projectOrSolution)));
 			}
 			else {
 				args.AppendFormat ("{0} /t:{1} {2} /p:UseHostCompilerIfAvailable=false /p:BuildingInsideVisualStudio=true",
-					Path.Combine (Root, projectOrSolution), target, logger);
+					QuoteFileName(Path.Combine (Root, projectOrSolution)), target, logger);
 			}
 			if (parameters != null) {
 				foreach (var param in parameters) {
@@ -158,7 +158,7 @@ namespace Xamarin.ProjectTools
 			LastBuildTime = DateTime.UtcNow - start;
 
 			LastBuildOutput = String.Empty;
-			if (buildLogFullPath != null)
+			if (buildLogFullPath != null && File.Exists (buildLogFullPath))
 				LastBuildOutput += File.ReadAllText (buildLogFullPath);
 			LastBuildOutput += string.Format ("\n#stdout begin\n{0}\n#stdout end\n", p.StandardOutput.ReadToEnd ());
 			LastBuildOutput += string.Format ("\n#stderr begin\n{0}\n#stderr end\n", p.StandardError.ReadToEnd ());
@@ -171,6 +171,11 @@ namespace Xamarin.ProjectTools
 			}
 
 			return result;
+		}
+
+		string QuoteFileName (string fileName)
+		{
+			return fileName.Contains (" ") ? $"\"{fileName}\"" : fileName;
 		}
 	}
 }

@@ -438,7 +438,7 @@ namespace Xamarin.Android.Tasks
 			var stderr_completed = new ManualResetEvent (false);
 			var psi = new ProcessStartInfo () {
 				FileName = aotCompiler,
-				Arguments = aotOptions + " \"" + assembly + "\"",
+				Arguments = aotOptions + " " + assembly,
 				UseShellExecute = false,
 				RedirectStandardOutput = true,
 				RedirectStandardError = true,
@@ -480,7 +480,6 @@ namespace Xamarin.Android.Tasks
 					stdout_completed.WaitOne (TimeSpan.FromSeconds (30));
 				return proc.ExitCode == 0;
 			}
-			GC.Collect ();
 		}
 
 		void OnAotOutputData (object sender, DataReceivedEventArgs e)
