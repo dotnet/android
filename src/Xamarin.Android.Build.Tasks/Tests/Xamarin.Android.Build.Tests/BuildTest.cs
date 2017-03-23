@@ -30,6 +30,18 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = true,
 				AotAssemblies = true,
 			};
+			proj.Imports.Add (new Import ("foo.targets") {
+				TextContent = () => @"<?xml version=""1.0"" encoding=""utf-16""?>
+<Project ToolsVersion=""4.0"" xmlns=""http://schemas.microsoft.com/developer/msbuild/2003"">
+<Target Name=""_Foo"" AfterTargets=""_SetLatestTargetFrameworkVersion"">
+	<PropertyGroup>
+		<AotAssemblies Condition=""!Exists('$(MonoAndroidBinDirectory)"+ Path.DirectorySeparatorChar + @"cross-arm')"">False</AotAssemblies>
+	</PropertyGroup>
+	<Message Text=""$(AotAssemblies)"" />
+</Target>
+</Project>
+",
+			});
 			using (var b = CreateApkBuilder (Path.Combine ("temp", "BuildReleaseAppWithA InIt(1)"))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 			}
