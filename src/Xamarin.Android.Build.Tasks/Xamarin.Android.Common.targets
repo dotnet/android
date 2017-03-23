@@ -2361,10 +2361,10 @@ because xbuild doesn't support framework reference assemblies.
 <!-- Cleaning -->
 
 <Target Name="_CleanGeneratedDebuggingFiles">
-	<CreateItem Include="$(OutputPath)*.dll.mdb">
-		<Output TaskParameter="Include" ItemName="_OutputMdbFiles" />
-	</CreateItem>
-	<Delete Files="@(_OutputMdbFiles)"/>
+	<ItemGroup>
+		<_OutputDebugSymbolFiles Include="$(OutputPath)*.dll.mdb;$(OutputPath)*.pdb" />
+	</ItemGroup>
+	<Delete Files="@(_OutputDebugSymbolFiles)"/>
 </Target>
 
 <Target Name="_CleanMsymArchive">
