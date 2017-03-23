@@ -74,24 +74,22 @@ _MSBUILD_ARGS	= \
 	/p:AndroidSupportedTargetAotAbis=$(call join-with,:,$(ALL_AOT_ABIS))
 
 CONFIGURATIONS ?= Debug Release
-TASK_ASSEMBLIES = $(foreach conf, $(CONFIGURATIONS), bin/$(conf)/lib/xbuild/Xamarin/Android/Xamarin.Android.Build.Tasks.dll)
-RUNTIME_LIBRARIES = $(foreach conf, $(CONFIGURATIONS), $(ALL_JIT_ABIS:%=bin/$(conf)/lib/xbuild/Xamarin/Android/lib/%/libmonosgen-2.0.so))
-FRAMEWORK_ASSEMBLIES = $(foreach conf, $(CONFIGURATIONS), $(FRAMEWORKS:%=bin/$(conf)/lib/xbuild-frameworks/MonoAndroid/%/Mono.Android.dll))
 
-.PHONY: leeroy jenkins leeroy-all
+.PHONY: leeroy jenkins leeroy-all opentk-jcw framework-assemblies runtime-libraries task-assemblies
 
 jenkins: prepare leeroy $(ZIP_OUTPUT)
 
-leeroy: leeroy-all $(RUNTIME_LIBRARIES) $(TASK_ASSEMBLIES) $(FRAMEWORK_ASSEMBLIES) opentk-jcw
+leeroy: leeroy-all runtime-libraries task-assemblies framework-assemblies opentk-jcw
 
 leeroy-all:
 	$(foreach conf, $(CONFIGURATIONS), \
 		$(MSBUILD) $(MSBUILD_FLAGS) Xamarin.Android.sln /p:Configuration=$(conf) $(_MSBUILD_ARGS) ; )
 
-$(TASK_ASSEMBLIES): bin/%/lib/xbuild/Xamarin/Android/Xamarin.Android.Build.Tasks.dll:
-	$(MSBUILD) $(MSBUILD_FLAGS) /p:Configuration=$* $(_MSBUILD_ARGS) $(SOLUTION)
+task-assemblies:
+	$(foreach conf, $(CONFIGURATIONS), \
+		$(MSBUILD) $(MSBUILD_FLAGS) /p:Configuration=$(conf) $(_MSBUILD_ARGS) $(SOLUTION); )
 
-$(FRAMEWORK_ASSEMBLIES):
+framework-assemblies:
 	PREV_VERSION="v1.0"; \
 	for a in $(API_LEVELS); do \
 		CUR_VERSION=`echo "$(ALL_FRAMEWORKS)"|tr -s " "|cut -d " " -s -f $${a}`; \
@@ -105,7 +103,7 @@ $(FRAMEWORK_ASSEMBLIES):
 		PREV_VERSION=$${CUR_VERSION}; \
 	done
 
-$(RUNTIME_LIBRARIES):
+runtime-libraries:
 	$(foreach conf, $(CONFIGURATIONS), \
 		$(MSBUILD) $(MSBUILD_FLAGS) /p:Configuration=$(conf)   $(_MSBUILD_ARGS) $(SOLUTION); )
 
