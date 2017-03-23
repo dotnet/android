@@ -189,7 +189,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<AndroidUseDebugRuntime Condition="'$(AndroidUseDebugRuntime)' == '' And '$(AndroidUseSharedRuntime)' == 'False' And '$(EmbedAssembliesIntoApk)' == 'True' And ('$(DebugSymbols)' != 'True' Or '$(DebugType)' != 'Full')" >False</AndroidUseDebugRuntime>
 	<AndroidUseDebugRuntime Condition="'$(AndroidUseDebugRuntime)' == ''" >True</AndroidUseDebugRuntime>
 
-	<MonoSymbolArchive Condition=" '$(MonoSymbolArchive)' == '' And '$(AndroidUseSharedRuntime)' == 'False' And '$(EmbedAssembliesIntoApk)' == 'True' And '$(DebugSymbols)' == 'True' And '$(DebugType)' == 'PdbOnly'" >True</MonoSymbolArchive>  
+	<MonoSymbolArchive Condition=" '$(MonoSymbolArchive)' == '' And '$(AndroidUseSharedRuntime)' == 'False' And '$(EmbedAssembliesIntoApk)' == 'True' And '$(DebugSymbols)' == 'True' And ('$(DebugType)' == 'PdbOnly' Or '$(DebugType)' == 'Portable')" >True</MonoSymbolArchive>  
 	<MonoSymbolArchive Condition=" '$(MonoSymbolArchive)' == '' ">False</MonoSymbolArchive>
 
 	<BundleAssemblies Condition="'$(BundleAssemblies)' == ''">False</BundleAssemblies>
@@ -255,7 +255,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<_Android32bitArchitectures>armeabi-v7a;armeabi;x86;mips</_Android32bitArchitectures>
 	<_Android64bitArchitectures>arm64-v8a;x86_64;mips64</_Android64bitArchitectures>
 
-	<_AndroidSequencePointsMode Condition=" '$(MonoSymbolArchive)' == 'True' And '$(AndroidUseDebugRuntime)' == 'False' And '$(AotAssemblies)' == 'True' And '$(DebugSymbols)' == 'True' And '$(DebugType)' == 'PdbOnly'">Offline</_AndroidSequencePointsMode>
+	<_AndroidSequencePointsMode Condition=" '$(MonoSymbolArchive)' == 'True' And '$(AndroidUseDebugRuntime)' == 'False' And '$(AotAssemblies)' == 'True' And '$(DebugSymbols)' == 'True' And ('$(DebugType)' == 'PdbOnly' Or '$(DebugType)' == 'Portable')">Offline</_AndroidSequencePointsMode>
 	<_AndroidSequencePointsMode Condition=" '$(MonoSymbolArchive)' == 'True' And '$(AndroidUseDebugRuntime)' == 'False' And '$(_AndroidSequencePointsMode)' == ''">Normal</_AndroidSequencePointsMode>
 	<_AndroidSequencePointsMode Condition=" '$(_AndroidSequencePointsMode)' == ''">None</_AndroidSequencePointsMode>
 	<_InstantRunEnabled Condition=" '$(_InstantRunEnabled)' == '' ">False</_InstantRunEnabled>
@@ -268,6 +268,11 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 			<AndroidIncludeDebugSymbols>True</AndroidIncludeDebugSymbols>
 		</PropertyGroup>
 	</When>
+	<When Condition=" '$(DebugSymbols)' != '' And $(DebugSymbols) And '$(DebugType)' != '' And ('$(DebugType)' == 'PdbOnly' Or '$(DebugType)' == 'Portable')">
+		<PropertyGroup>
+			<AndroidIncludeDebugSymbols>True</AndroidIncludeDebugSymbols>
+		</PropertyGroup>
+	</When>	
 	<When Condition=" '$(DebugSymbols)' != '' And $(DebugSymbols) And '$(DebugType)' == '' ">
 		<PropertyGroup>
 			<AndroidIncludeDebugSymbols>True</AndroidIncludeDebugSymbols>
