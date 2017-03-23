@@ -5,18 +5,6 @@
         WorkingDirectory="$(SqliteSourceFullPath)"
     />
   </Target>
-  <Target Name="_CreateProject"
-      Inputs="$(SqliteSourceFullPath)\README.version"
-      Outputs="src\stamp">
-    <Exec Condition="!Exists('src')"
-        Command="$(AndroidSdkDirectory)\tools\android create project -g -n sqlitesample -p . -a MainActivity -t android-$(AndroidApiLevel) --package com.xamarin.sqlitesample -v 1.0.0"
-        IgnoreStandardErrorWarningFormat="True"
-    />
-    <Copy Condition="!Exists('src\stamp')"
-        SourceFiles="src-jni\Application.mk;src-jni\Android.mk"
-        DestinationFiles="src\main\jni\Application.mk;src\main\jni\Android.mk" />
-    <Touch Files="src\stamp" AlwaysCreate="true" />
-  </Target>
   <ItemGroup>
     <!-- build outputs include (if enabled):
       src/main/libs/x86/libsqlite3_xamarin.so

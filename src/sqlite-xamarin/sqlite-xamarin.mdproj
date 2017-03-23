@@ -15,7 +15,6 @@
   <Import Project="$(MSBuildBinPath)\Microsoft.Common.targets" />
   <PropertyGroup>
     <BuildDependsOn>
-      _CreateProject;
       _NdkBuild;
     </BuildDependsOn>
   </PropertyGroup>
