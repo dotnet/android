@@ -93,6 +93,7 @@
   </ItemGroup>
   <ItemGroup>
     <_MonoUtility  Include="mono-symbolicate.exe" />
+    <_MonoUtility  Include="mkbundle.exe" />
   </ItemGroup>
   <ItemGroup>
     <_MonoUtilitySource Include="@(_MonoUtility->'$(_MonoOutputDir)\%(Identity)')" />
