@@ -237,10 +237,10 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 						break;
 					if (reader.NodeType != XmlNodeType.Element)
 						throw XmlUtil.UnexpectedElementOrContent (elementName, reader, "parameter");
-					if (method != null && reader.LocalName == "typeParameters") {
-						var tp = new JavaTypeParameters (method);
+					if (reader.LocalName == "typeParameters") {
+						var tp = new JavaTypeParameters (methodBase);
 						tp.Load (reader);
-						method.TypeParameters = tp;
+						methodBase.TypeParameters = tp;
 					} else if (reader.LocalName == "parameter") {
 						var p = new JavaParameter (methodBase);
 						p.Load (reader);

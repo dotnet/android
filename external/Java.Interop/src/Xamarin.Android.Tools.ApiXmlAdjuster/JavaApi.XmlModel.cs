@@ -198,6 +198,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 
 		public IList<JavaParameter> Parameters { get; set; }
 		public IList<JavaException> Exceptions { get; set; }
+		public JavaTypeParameters TypeParameters { get; set; }
 		
 		public bool ExtendedBridge { get; set; }
 		public string ExtendedJniReturn { get; set; }
@@ -246,8 +247,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 		public bool Native { get; set; }
 		public string Return { get; set; }
 		public bool Synchronized { get; set; }
-		public JavaTypeParameters TypeParameters { get; set; }
-		
+
 		// Content of this value is not stable.
 		public override string ToString ()
 		{
@@ -287,14 +287,14 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 			TypeParameters = new List<JavaTypeParameter> ();
 		}
 		
-		public JavaTypeParameters (JavaMethod parent)
+		public JavaTypeParameters (JavaMethodBase parent)
 		{
 			ParentMethod = parent;
 			TypeParameters = new List<JavaTypeParameter> ();
 		}
 		
 		public JavaType ParentType { get; set; }
-		public JavaMethod ParentMethod { get; set; }
+		public JavaMethodBase ParentMethod { get; set; }
 		
 		public IList<JavaTypeParameter> TypeParameters { get; set; }
 	}
