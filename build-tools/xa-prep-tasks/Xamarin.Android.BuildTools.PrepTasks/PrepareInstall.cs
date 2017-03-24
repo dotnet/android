@@ -95,7 +95,7 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 					ver += $" and <= {max}";
 				}
 			}
-			Log.LogError ($"Unsupported platform {HostOS}! Do not know how to install program `{Program.ItemSpec}`{ver}.");
+			Log.LogError ($"Missing dependency detected. For {HostOS} we do not know how to install program `{Program.ItemSpec}`{ver}.");
 		}
 	}
 }
