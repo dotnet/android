@@ -58,7 +58,7 @@
     </RequiredProgram>
     <RequiredProgram Include="$(ManagedRuntime)"    Condition=" '$(ManagedRuntime)' != '' ">
       <MinimumVersion>4.9.3</MinimumVersion>
-      <MaximumVersion>4.9.99</MaximumVersion>
+      <MaximumVersion>5.1.99</MaximumVersion>
       <CurrentVersionCommand>$(MSBuildThisFileDirectory)..\scripts\mono-version</CurrentVersionCommand>
       <DarwinMinimumUrl>https://bosstoragemirror.blob.core.windows.net/wrench/mono-2017-02/c5/c52c4bd713e19339a5859e73a99dbb4cc21c6d3f/$(_DarwinMonoFramework)</DarwinMinimumUrl>
       <DarwinInstall>installer -pkg "$(AndroidToolchainCacheDirectory)\$(_DarwinMonoFramework)" -target /</DarwinInstall>
