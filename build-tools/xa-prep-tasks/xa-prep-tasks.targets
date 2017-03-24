@@ -1,11 +1,66 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <UsingTask AssemblyFile="$(OutputPath)xa-prep-tasks.dll"   TaskName="Xamarin.Android.BuildTools.PrepTasks.DownloadUri" />
+  <UsingTask AssemblyFile="$(OutputPath)xa-prep-tasks.dll"   TaskName="Xamarin.Android.BuildTools.PrepTasks.GitBlame" />
+  <UsingTask AssemblyFile="$(OutputPath)xa-prep-tasks.dll"   TaskName="Xamarin.Android.BuildTools.PrepTasks.GitBranch" />
+  <UsingTask AssemblyFile="$(OutputPath)xa-prep-tasks.dll"   TaskName="Xamarin.Android.BuildTools.PrepTasks.GitCommitHash" />
+  <UsingTask AssemblyFile="$(OutputPath)xa-prep-tasks.dll"   TaskName="Xamarin.Android.BuildTools.PrepTasks.GitCommitsInRange" />
   <UsingTask AssemblyFile="$(OutputPath)xa-prep-tasks.dll"   TaskName="Xamarin.Android.BuildTools.PrepTasks.SystemUnzip" />
   <Import Project="..\bundle\bundle-path.targets" />
   <PropertyGroup>
     <_AzureBaseUri>https://xamjenkinsartifact.blob.core.windows.net/xamarin-android/xamarin-android/bin/</_AzureBaseUri>
   </PropertyGroup>
+  <Target Name="_CreateVersion"
+      AfterTargets="Build">
+    <MakeDir Directories="..\..\bin\$(Configuration)" />
+    <PropertyGroup>
+      <_VersionFile>..\..\bin\$(Configuration)\Version</_VersionFile>
+      <_VersionCommitFile>..\..\bin\$(Configuration)\Version.commit</_VersionCommitFile>
+      <_VersionRevFile>..\..\bin\$(Configuration)\Version.rev</_VersionRevFile>
+    </PropertyGroup>
+    <WriteLinesToFile
+        File="$(_VersionFile)"
+        Lines="$(ProductVersion)"
+        Overwrite="True"
+    />
+    <GitBlame
+        FileName="$(XamarinAndroidSourcePath)\Configuration.props"
+        LineFilter="&lt;ProductVersion&gt;"
+        WorkingDirectory="$(XamarinAndroidSourcePath)"
+        ToolPath="$(GitToolPath)"
+        ToolExe="$(GitToolExe)">
+      <Output TaskParameter="Commits"                 ItemName="_XAVersionCommit" />
+    </GitBlame>
+    <GitCommitsInRange
+        StartCommit="%(_XAVersionCommit.CommitHash)"
+        WorkingDirectory="$(XamarinAndroidSourcePath)"
+        ToolPath="$(GitToolPath)"
+        ToolExe="$(GitToolExe)">
+      <Output TaskParameter="CommitCount"             PropertyName="_XACommitCount" />
+    </GitCommitsInRange>
+    <GitCommitHash
+        WorkingDirectory="$(XamarinAndroidSourcePath)"
+        ToolPath="$(GitToolPath)"
+        ToolExe="$(GitToolExe)">
+      <Output TaskParameter="AbbreviatedCommitHash"   PropertyName="_XAHash" />
+    </GitCommitHash>
+    <GitBranch
+        WorkingDirectory="$(XamarinAndroidSourcePath)"
+        ToolPath="$(GitToolPath)"
+        ToolExe="$(GitToolExe)">
+      <Output TaskParameter="Branch"                  PropertyName="_XABranch" />
+    </GitBranch>
+    <WriteLinesToFile
+        File="$(_VersionCommitFile)"
+        Lines="xamarin-android/$(_XABranch)/$(_XAHash)"
+        Overwrite="True"
+    />
+    <WriteLinesToFile
+        File="$(_VersionRevFile)"
+        Lines="$(_XACommitCount)"
+        Overwrite="True"
+    />
+  </Target>
   <Target Name="_GetBundleOutputPath"
       DependsOnTargets="GetBundleFileName">
     <PropertyGroup>
