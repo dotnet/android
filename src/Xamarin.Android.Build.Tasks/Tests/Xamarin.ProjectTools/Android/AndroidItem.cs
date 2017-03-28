@@ -133,5 +133,16 @@ namespace Xamarin.ProjectTools
 			{
 			}
 		}
+		public class InputJar : BuildItem
+		{
+			public InputJar (string include)
+				: this (() => include)
+			{
+			}
+			public InputJar (Func<string> include)
+				: base (AndroidBuildActions.InputJar, include)
+			{
+			}
+		}
 	}
 }

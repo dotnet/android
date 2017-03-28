@@ -39,6 +39,11 @@ namespace Xamarin.ProjectTools
 			return File.ReadAllText (Path.Combine (root, GetIntermediaryPath (file)));
 		}
 
+		public string GetIntermediaryAsText (string file)
+		{
+			return File.ReadAllText (Path.Combine (Project.Root, GetIntermediaryPath (file)));
+		}
+
 		public bool IsTargetSkipped (string target)
 		{
 			if (!Builder.LastBuildOutput.Contains (target))
