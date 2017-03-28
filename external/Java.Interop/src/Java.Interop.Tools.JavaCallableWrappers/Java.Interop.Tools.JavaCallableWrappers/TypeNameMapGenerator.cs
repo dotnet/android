@@ -69,7 +69,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 
 			Log             = logMessage;
 			var Assemblies  = assemblies.ToList ();
-			var rp          = new ReaderParameters (ReadingMode.Immediate);
+			var rp          = new ReaderParameters ();
 
 			Resolver = new DirectoryAssemblyResolver (Log, loadDebugSymbols: true, loadReaderParameters: rp);
 			foreach (var assembly in Assemblies) {
