@@ -124,8 +124,7 @@ namespace Xamarin.Android.Tasks
 				var dstdir = Path.Combine (OutputDirectory, "bin");
 				foreach (var file in Directory.GetFiles (projdir)) {
 					string dstpath = Path.Combine (dstdir, Path.GetFileName (file));
-					if (!File.Exists (dstpath))
-						MonoAndroidHelper.CopyIfChanged (file, dstpath);
+					MonoAndroidHelper.CopyIfChanged (file, dstpath);
 				}
 			}
 			return true;
@@ -136,8 +135,7 @@ namespace Xamarin.Android.Tasks
 			foreach (var file in Directory.GetFiles (srcdir)) {
 				if (file.EndsWith (".jar", StringComparison.OrdinalIgnoreCase)) {
 					var dstpath = Path.Combine (OutputJarsDirectory, Path.GetFileName (file));
-					if (!File.Exists (dstpath))
-						MonoAndroidHelper.CopyIfChanged (file, dstpath);
+					BMonoAndroidHelper.CopyIfChanged (file, dstpath);
 				} else if (file.EndsWith ("annotations.zip", StringComparison.OrdinalIgnoreCase)) {
 					var dstpath = Path.Combine (OutputAnnotationsDirectory, Path.GetFileName (file));
 					if (!File.Exists (dstpath))
