@@ -78,8 +78,9 @@
     <Compile Include="Android\ApkContents.cs" />
     <Compile Include="Common\BuildOutputFiles.cs" />
     <Compile Include="Utilities\FileSystemUtils.cs" />
+    <Compile Include="Android\JarContentBuilder.cs" />
+    <Compile Include="Common\ContentBuilder.cs" />
   </ItemGroup>
-  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
     <Folder Include="Common\" />
     <Folder Include="Android\" />
@@ -89,20 +90,48 @@
     <Folder Include="Utilities\" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Resources\Wear\LayoutMain.axml" />
-    <EmbeddedResource Include="Resources\Wear\LayoutRectMain.axml" />
-    <EmbeddedResource Include="Resources\Wear\LayoutRoundMain.axml" />
-    <EmbeddedResource Include="Resources\Wear\MainActivity.cs" />
-    <EmbeddedResource Include="Resources\Wear\Strings.xml" />
-    <EmbeddedResource Include="Resources\Base\AndroidManifest.xml" />
-    <EmbeddedResource Include="Resources\Base\Icon.png" />
-    <EmbeddedResource Include="Resources\Base\LayoutMain.axml" />
-    <EmbeddedResource Include="Resources\Base\MainActivity.cs" />
-    <EmbeddedResource Include="Resources\Base\MainActivity.fs" />
-    <EmbeddedResource Include="Resources\Base\AssemblyInfo.fs" />
-    <EmbeddedResource Include="Resources\Base\Image.9.png" />
-    <EmbeddedResource Include="Resources\Base\Image2.9.png" />
-    <EmbeddedResource Include="Resources\Base\test.keystore" />
+    <EmbeddedResource Include="Resources\Wear\LayoutMain.axml">
+      <LogicalName>Xamarin.ProjectTools.Resources.Wear.LayoutMain.axml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Wear\LayoutRectMain.axml">
+      <LogicalName>Xamarin.ProjectTools.Resources.Wear.LayoutRectMain.axml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Wear\LayoutRoundMain.axml">
+      <LogicalName>Xamarin.ProjectTools.Resources.Wear.LayoutRoundMain.axml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Wear\MainActivity.cs">
+      <LogicalName>Xamarin.ProjectTools.Resources.Wear.MainActivity.cs</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Wear\Strings.xml">
+      <LogicalName>Xamarin.ProjectTools.Resources.Wear.Strings.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Base\AndroidManifest.xml">
+      <LogicalName>Xamarin.ProjectTools.Resources.Base.AndroidManifest.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Base\Icon.png">
+      <LogicalName>Xamarin.ProjectTools.Resources.Base.Icon.png</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Base\LayoutMain.axml">
+      <LogicalName>Xamarin.ProjectTools.Resources.Base.LayoutMain.axml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Base\MainActivity.cs">
+      <LogicalName>Xamarin.ProjectTools.Resources.Base.MainActivity.cs</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Base\MainActivity.fs">
+      <LogicalName>Xamarin.ProjectTools.Resources.Base.MainActivity.fs</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Base\AssemblyInfo.fs">
+      <LogicalName>Xamarin.ProjectTools.Resources.Base.AssemblyInfo.fs</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Base\Image.9.png">
+      <LogicalName>Xamarin.ProjectTools.Resources.Base.Image.9.png</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Base\Image2.9.png">
+      <LogicalName>Xamarin.ProjectTools.Resources.Base.Image2.9.png</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Base\test.keystore">
+      <LogicalName>Xamarin.ProjectTools.Resources.Base.test.keystore</LogicalName>
+    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -123,4 +152,5 @@
       <Name>libZipSharp</Name>
     </ProjectReference>
   </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

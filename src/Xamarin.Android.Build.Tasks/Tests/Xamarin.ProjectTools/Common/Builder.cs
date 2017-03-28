@@ -8,15 +8,29 @@ namespace Xamarin.ProjectTools
 {
 	public class Builder : IDisposable
 	{
-		const string fixed_osx_xbuild_path = "/Library/Frameworks/Mono.framework/Commands/xbuild";
+		const string fixed_osx_xbuild_path = "/Library/Frameworks/Mono.framework/Commands";
+		const string xbuildapp = "xbuild";
+		const string msbuildapp = "msbuild";
 		string msbuildExe;
 
 		public bool RunXBuild { get; set; }
+		public bool RunningMSBuild { get; set; }
 		public LoggerVerbosity Verbosity { get; set; }
 		public string LastBuildOutput { get; set; }
 		public TimeSpan LastBuildTime { get; protected set; }
 		public string BuildLogFile { get; set; }
 		public bool ThrowOnBuildFailure { get; set; }
+
+		string GetXbuildPath ()
+		{
+			string path = Path.Combine (fixed_osx_xbuild_path, xbuildapp);
+			if (!string.IsNullOrEmpty (Environment.GetEnvironmentVariable ("USE_MSBUILD"))) {
+				path = Path.Combine (fixed_osx_xbuild_path, msbuildapp);
+				RunningMSBuild = true;
+			}
+			return File.Exists (path) ? path : xbuildapp;
+		}
+
 		public string MSBuildExe {
 			get {
 				return RunXBuild
@@ -29,7 +43,9 @@ namespace Xamarin.ProjectTools
 			get {
 				if (RunXBuild) {
 					var outdir = Environment.GetEnvironmentVariable ("XA_BUILD_OUTPUT_PATH");
-					if (String.IsNullOrEmpty (outdir))
+					if (String.IsNullOrEmpty(outdir))
+						outdir = Path.GetFullPath ("../../../../../../../out");
+					if (!Directory.Exists (Path.Combine (outdir, "lib")))
 						outdir = Path.GetFullPath (Path.Combine (Root, "..", "..", "..", "..", "..", "..", "bin", "Debug"));
 					if (!Directory.Exists (Path.Combine (outdir, "lib")))
 						outdir = Path.GetFullPath (Path.Combine (Root, "..", "..", "..", "..", "..", "..", "bin", "Release"));
@@ -115,7 +131,10 @@ namespace Xamarin.ProjectTools
 			}
 			if (RunXBuild) {
 				var outdir = Environment.GetEnvironmentVariable ("XA_BUILD_OUTPUT_PATH");
-				if (String.IsNullOrEmpty (outdir))
+				if (String.IsNullOrEmpty(outdir))
+					outdir = Path.GetFullPath ("../../../../../../../out");
+				
+				if (!Directory.Exists (Path.Combine (outdir, "lib", "xbuild")))
 					outdir = Path.GetFullPath (Path.Combine (Root, "..", "..", "bin", "Debug"));
 
 				if (!Directory.Exists (Path.Combine (outdir, "lib", "xbuild")))
@@ -133,7 +152,7 @@ namespace Xamarin.ProjectTools
 					psi.EnvironmentVariables ["XBUILD_FRAMEWORK_FOLDERS_PATH"] = Path.Combine (outdir, "lib", "xbuild-frameworks");
 					args.AppendFormat ("/p:MonoDroidInstallDirectory=\"{0}\" ", outdir);
 				}
-				args.AppendFormat ("/t:{0} {1}", target, QuoteFileName (Path.Combine (Root, projectOrSolution)));
+				args.AppendFormat ("/t:{0} {1} /p:UseHostCompilerIfAvailable=false /p:BuildingInsideVisualStudio=true", target, QuoteFileName (Path.Combine (Root, projectOrSolution)));
 			}
 			else {
 				args.AppendFormat ("{0} /t:{1} {2} /p:UseHostCompilerIfAvailable=false /p:BuildingInsideVisualStudio=true",
@@ -152,12 +171,14 @@ namespace Xamarin.ProjectTools
 			psi.StandardErrorEncoding = Encoding.UTF8;
 			psi.StandardOutputEncoding = Encoding.UTF8;
 			var p = Process.Start (psi);
-			p.WaitForExit ();
-			var result = p.ExitCode == 0;
+			var ranToCompletion = p.WaitForExit ((int)new TimeSpan (0,10,0).TotalMilliseconds);
+			var result = ranToCompletion && p.ExitCode == 0;
 
 			LastBuildTime = DateTime.UtcNow - start;
 
-			LastBuildOutput = String.Empty;
+			LastBuildOutput = psi.FileName + " " + args.ToString () + Environment.NewLine;
+			if (!ranToCompletion)
+				LastBuildOutput += "Build Timed Out!";
 			if (buildLogFullPath != null && File.Exists (buildLogFullPath))
 				LastBuildOutput += File.ReadAllText (buildLogFullPath);
 			LastBuildOutput += string.Format ("\n#stdout begin\n{0}\n#stdout end\n", p.StandardOutput.ReadToEnd ());
