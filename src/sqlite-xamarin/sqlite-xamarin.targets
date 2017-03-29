@@ -26,8 +26,6 @@
   </Target>
   <Target Name="_CleanLibraries"
       AfterTargets="Clean">
-    <Delete
-        Files="build.gradle;gradlew;gradlew.bat;local.properties" />
-    <RemoveDir Directories="gradle;src" />
+    <RemoveDir Directories="src/main/libs;src/main/obj" />
   </Target>
 </Project>
