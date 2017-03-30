@@ -1,4 +1,5 @@
 <img src="Documentation/banner.png" alt="Xamarin.Android banner" height="145" >
+
 Xamarin.Android
 ===============
 
@@ -226,7 +227,7 @@ Then, you may do one of the following:
 
 1. Run make:
 
-        make
+       make
 
 2. Load `Xamarin.Android.sln` into Xamarin Studio and Build the project.
 
@@ -245,11 +246,11 @@ for tools required by the build.
 
 To disable `binfmt_misc` you need to issue the following command as root:
 
-        echo 0 > /proc/sys/fs/binfmt_misc/status
+    echo 0 > /proc/sys/fs/binfmt_misc/status
 
 and to enable it again, issue the following command:
 
-        echo 1 > /proc/sys/fs/binfmt_misc/status
+    echo 1 > /proc/sys/fs/binfmt_misc/status
 
 ## macOS Build Notes
 
