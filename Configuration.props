@@ -12,7 +12,7 @@
       Condition=" '$(DoNotLoadOSProperties)' != 'True' "
   />
   <PropertyGroup>
-    <ProductVersion>7.2.99</ProductVersion>
+    <ProductVersion>7.3.99</ProductVersion>
     <AutoProvision Condition=" '$(AutoProvision)' == '' ">False</AutoProvision>
     <AutoProvisionUsesSudo Condition=" '$(AutoProvisionUsesSudo)' == '' ">False</AutoProvisionUsesSudo>
     <HostOS Condition=" '$(HostOS)' == '' And '$(OS)' == 'Windows_NT' ">Windows</HostOS>
