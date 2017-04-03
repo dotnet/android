@@ -33,7 +33,7 @@
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.Build.Framework" />
     <Reference Include="Microsoft.Build" />
-    <Reference Condition=" '$(OS)' != 'Unix' " Include="Microsoft.Build.Engine" />
+    <Reference Include="Microsoft.Build.Engine" />
     <Reference Include="System.Drawing" />
     <Reference Include="Microsoft.Web.XmlTransform">
       <HintPath>..\..\..\..\packages\Microsoft.Web.Xdt.2.1.1\lib\net40\Microsoft.Web.XmlTransform.dll</HintPath>
