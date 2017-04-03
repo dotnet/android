@@ -8,10 +8,16 @@
     <CecilOutputPath>$([System.IO.Path]::GetFullPath ($(CecilOutputPath)))</CecilOutputPath>
     <CecilAssemblies>$(OutputPath)\Xamarin.Android.Cecil.dll;$(OutputPath)\Xamarin.Android.Cecil.Mdb.dll</CecilAssemblies>
   </PropertyGroup>
+  <ItemGroup>
+    <_CecilProject  Include="$(CecilDirectory)\Mono.Cecil.csproj" />
+    <_CecilProject  Include="$(CecilDirectory)\symbols\mdb\Mono.Cecil.Mdb.csproj" />
+    <_CecilSource   Include="$(CecilDirectory)\**\*.cs" />
+  </ItemGroup>
   <Target Name="BuildCecil"
+      Inputs="@(_CecilSource)"
       Outputs="$(CecilAssemblies)">
     <MSBuild
-        Projects="$(CecilDirectory)\Mono.Cecil.csproj;$(CecilDirectory)\symbols\mdb\Mono.Cecil.Mdb.csproj"
+        Projects="@(_CecilProject)"
         Targets="Clean;Build"
         StopOnFirstFailure="True"
         Properties="Configuration=net_4_0_Debug;OutputPath=$(CecilOutputPath);BuildingSolutionFile=false" />
@@ -19,5 +25,13 @@
   </Target>
   <Target Name="Build" DependsOnTargets="BuildCecil" Returns="$(CecilOutputPath)\$(AssemblyName).dll">
     <MakeDir Directories="obj\$(Configuration)" />
+  </Target>
+  <Target Name="Clean" Returns="$(CecilOutputPath)\$(AssemblyName).dll">
+    <MSBuild
+        Projects="@(_CecilProject)"
+        Targets="Clean"
+        StopOnFirstFailure="True"
+        Properties="Configuration=net_4_0_Debug;OutputPath=$(CecilOutputPath);BuildingSolutionFile=false"
+    />
   </Target>
 </Project>
