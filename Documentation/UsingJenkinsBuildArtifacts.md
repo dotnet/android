@@ -104,6 +104,7 @@ For example (using the paths from [Android SDK Setup](#Android_SDK_Setup)):
 		samples\HelloWorld\HelloWorld.csproj
 
 <a name="Android_SDK_Setup" />
+
 # Android SDK Setup
 
 Please see the [Android Studio][android-studio] page to download the

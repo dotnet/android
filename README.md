@@ -24,14 +24,14 @@ Xamarin.Android provides open-source bindings of the Android SDK for use with
 
 | Platform        | Status |
 |-----------------|--------|
-| **Commercial Xamarin.Android 7.0 (Cycle 8)** for macOS       | [![Commercial Xamarin.Android 7.0, macOS][commercial-c8-macOS-x86_64-icon]][commercial-c8-macOS-x86_64-status] |
 | **Commercial Xamarin.Android 7.1 (Cycle 9)** for macOS       | [![Commercial Xamarin.Android 7.1, macOS][commercial-c9-macOS-x86_64-icon]][commercial-c9-macOS-x86_64-status] |
-| **Commercial Xamarin.Android 7.2.99 (master)** for macOS     | [![Commercial Xamarin.Android 7.2mon.99, macOS][commercial-master-macOS-x86_64-icon]][commercial-master-macOS-x86_64-status] |
+| **Commercial Xamarin.Android 7.3 (d15-2)** for macOS         | [![Commercial Xamarin.Android 7.3, macOS][commercial-d15-2-macOS-x86_64-icon]][commercial-d15-2-macOS-x86_64-status] |
+| **Commercial Xamarin.Android 7.3.99 (master)** for macOS     | [![Commercial Xamarin.Android 7.3.99, macOS][commercial-master-macOS-x86_64-icon]][commercial-master-macOS-x86_64-status] |
 
-[commercial-c8-macOS-x86_64-icon]: https://jenkins.mono-project.com/view/Xamarin.Android/job/xamarin-android-builds-cycle8/badge/icon
-[commercial-c8-macOS-x86_64-status]: https://jenkins.mono-project.com/view/Xamarin.Android/job/xamarin-android-builds-cycle8/
 [commercial-c9-macOS-x86_64-icon]: https://jenkins.mono-project.com/view/Xamarin.Android/job/xamarin-android-builds-cycle9/badge/icon
 [commercial-c9-macOS-x86_64-status]: https://jenkins.mono-project.com/view/Xamarin.Android/job/xamarin-android-builds-cycle9/
+[commercial-d15-2-macOS-x86_64-icon]: https://jenkins.mono-project.com/view/Xamarin.Android/job/xamarin-android-builds-d15-2/badge/icon
+[commercial-d15-2-macOS-x86_64-status]: https://jenkins.mono-project.com/view/Xamarin.Android/job/xamarin-android-builds-d15-2/
 [commercial-master-macOS-x86_64-icon]: https://jenkins.mono-project.com/view/Xamarin.Android/job/xamarin-android-builds-master/badge/icon
 [commercial-master-macOS-x86_64-status]: https://jenkins.mono-project.com/view/Xamarin.Android/job/xamarin-android-builds-master/
 
