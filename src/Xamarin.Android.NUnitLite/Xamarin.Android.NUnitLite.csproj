@@ -353,7 +353,7 @@
       <Name>Mono.Android</Name>
       <Private>False</Private>
     </ProjectReference>
-    <ProjectReference Include="..\Xamarin.Android.Build.Tasks\Xamarin.Android.Build.Tasks.csproj">
+    <ProjectReference Condition=" '$(AndroidApiLevel)' >= 24 " Include="..\Xamarin.Android.Build.Tasks\Xamarin.Android.Build.Tasks.csproj">
       <Project>{3F1F2F50-AF1A-4A5A-BEDB-193372F068D7}</Project>
       <Name>Xamarin.Android.Build.Tasks</Name>
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
