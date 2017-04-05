@@ -331,7 +331,7 @@
         DestinationFiles="@(_InstallUnstrippedRuntimeOutput)"
     />
     <Exec
-        Condition=" '$(Configuration)' != 'Debug' And '%(_MonoRuntime.DoBuild)' == 'true' "
+        Condition=" ('$(Configuration)' != 'Debug' Or '%(_MonoRuntime.NativeLibraryExtension)' == 'dll') And '%(_MonoRuntime.DoBuild)' == 'true' "
         Command="&quot;%(_MonoRuntime.Strip)&quot; %(_MonoRuntime.StripFlags) &quot;$(OutputPath)\lib\xbuild\Xamarin\Android\lib\%(_MonoRuntime.Identity)\%(_MonoRuntime.OutputRuntimeFilename).%(_MonoRuntime.NativeLibraryExtension)&quot;"
     />
     <Touch Files="@(_InstallRuntimeOutput);@(_InstallUnstrippedRuntimeOutput)" />
@@ -545,6 +545,14 @@
     <Copy
         SourceFiles="$(IntermediateOutputPath)\%(_MonoCrossRuntime.Identity)\mono\mini\mono-sgen%(_MonoCrossRuntime.ExeSuffix)"
         DestinationFiles="$(OutputPath)\%(_MonoCrossRuntime.InstallPath)%(_MonoCrossRuntime.CrossMonoName)%(_MonoCrossRuntime.ExeSuffix)"
+    />
+    <Copy
+        SourceFiles="$(OutputPath)\%(_MonoCrossRuntime.InstallPath)%(_MonoCrossRuntime.CrossMonoName)%(_MonoCrossRuntime.ExeSuffix)"
+        DestinationFiles="$(OutputPath)\%(_MonoCrossRuntime.InstallPath)%(_MonoCrossRuntime.CrossMonoName).d%(_MonoCrossRuntime.ExeSuffix)"
+    />
+    <Exec
+        Condition=" '$(Configuration)' != 'Debug' Or '%(_MonoCrossRuntime.ExeSuffix)' == '.exe' "
+        Command="&quot;%(_MonoCrossRuntime.Strip)&quot; %(_MonoCrossRuntime.StripFlags) &quot;$(OutputPath)\%(_MonoCrossRuntime.InstallPath)%(_MonoCrossRuntime.CrossMonoName)%(_MonoCrossRuntime.ExeSuffix)&quot;"
     />
     <Touch
         Files="$(OutputPath)\%(_MonoCrossRuntime.InstallPath)%(_MonoCrossRuntime.CrossMonoName)%(_MonoCrossRuntime.ExeSuffix)"

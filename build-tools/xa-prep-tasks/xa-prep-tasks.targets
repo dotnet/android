@@ -1,63 +1,53 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <UsingTask AssemblyFile="$(OutputPath)xa-prep-tasks.dll"   TaskName="Xamarin.Android.BuildTools.PrepTasks.DownloadUri" />
-  <UsingTask AssemblyFile="$(OutputPath)xa-prep-tasks.dll"   TaskName="Xamarin.Android.BuildTools.PrepTasks.GitBlame" />
-  <UsingTask AssemblyFile="$(OutputPath)xa-prep-tasks.dll"   TaskName="Xamarin.Android.BuildTools.PrepTasks.GitBranch" />
-  <UsingTask AssemblyFile="$(OutputPath)xa-prep-tasks.dll"   TaskName="Xamarin.Android.BuildTools.PrepTasks.GitCommitHash" />
-  <UsingTask AssemblyFile="$(OutputPath)xa-prep-tasks.dll"   TaskName="Xamarin.Android.BuildTools.PrepTasks.GitCommitsInRange" />
   <UsingTask AssemblyFile="$(OutputPath)xa-prep-tasks.dll"   TaskName="Xamarin.Android.BuildTools.PrepTasks.SystemUnzip" />
   <Import Project="..\bundle\bundle-path.targets" />
+  <Import Project="..\scripts\XAVersionInfo.targets" />
   <PropertyGroup>
     <_AzureBaseUri>https://xamjenkinsartifact.blob.core.windows.net/xamarin-android/xamarin-android/bin/</_AzureBaseUri>
   </PropertyGroup>
   <Target Name="_CreateVersion"
+      DependsOnTargets="GetXAVersionInfo"
       AfterTargets="Build">
-    <MakeDir Directories="..\..\bin\$(Configuration)" />
+    <MakeDir Directories="..\..\bin\$(Configuration)\lib\xbuild\Xamarin\Android" />
     <PropertyGroup>
+      <_XAPrefix>..\..\bin\$(Configuration)\lib\xbuild\Xamarin\Android</_XAPrefix>
       <_VersionFile>..\..\bin\$(Configuration)\Version</_VersionFile>
       <_VersionCommitFile>..\..\bin\$(Configuration)\Version.commit</_VersionCommitFile>
       <_VersionRevFile>..\..\bin\$(Configuration)\Version.rev</_VersionRevFile>
+      <_XAVersionFile>$(_XAPrefix)\Version</_XAVersionFile>
+      <_XAVersionCommitFile>$(_XAPrefix)\Version.commit</_XAVersionCommitFile>
+      <_XAVersionRevFile>$(_XAPrefix)\Version.rev</_XAVersionRevFile>
     </PropertyGroup>
     <WriteLinesToFile
         File="$(_VersionFile)"
         Lines="$(ProductVersion)"
         Overwrite="True"
     />
-    <GitBlame
-        FileName="$(XamarinAndroidSourcePath)\Configuration.props"
-        LineFilter="&lt;ProductVersion&gt;"
-        WorkingDirectory="$(XamarinAndroidSourcePath)"
-        ToolPath="$(GitToolPath)"
-        ToolExe="$(GitToolExe)">
-      <Output TaskParameter="Commits"                 ItemName="_XAVersionCommit" />
-    </GitBlame>
-    <GitCommitsInRange
-        StartCommit="%(_XAVersionCommit.CommitHash)"
-        WorkingDirectory="$(XamarinAndroidSourcePath)"
-        ToolPath="$(GitToolPath)"
-        ToolExe="$(GitToolExe)">
-      <Output TaskParameter="CommitCount"             PropertyName="_XACommitCount" />
-    </GitCommitsInRange>
-    <GitCommitHash
-        WorkingDirectory="$(XamarinAndroidSourcePath)"
-        ToolPath="$(GitToolPath)"
-        ToolExe="$(GitToolExe)">
-      <Output TaskParameter="AbbreviatedCommitHash"   PropertyName="_XAHash" />
-    </GitCommitHash>
-    <GitBranch
-        WorkingDirectory="$(XamarinAndroidSourcePath)"
-        ToolPath="$(GitToolPath)"
-        ToolExe="$(GitToolExe)">
-      <Output TaskParameter="Branch"                  PropertyName="_XABranch" />
-    </GitBranch>
+    <WriteLinesToFile
+        File="$(_XAVersionFile)"
+        Lines="$(ProductVersion)"
+        Overwrite="True"
+    />
     <WriteLinesToFile
         File="$(_VersionCommitFile)"
-        Lines="xamarin-android/$(_XABranch)/$(_XAHash)"
+        Lines="xamarin-android/$(XAVersionBranch)/$(XAVersionHash)"
+        Overwrite="True"
+    />
+    <WriteLinesToFile
+        File="$(_XAVersionCommitFile)"
+        Lines="xamarin-android/$(XAVersionBranch)/$(XAVersionHash)"
         Overwrite="True"
     />
     <WriteLinesToFile
         File="$(_VersionRevFile)"
-        Lines="$(_XACommitCount)"
+        Lines="$(XAVersionCommitCount)"
+        Overwrite="True"
+    />
+    <WriteLinesToFile
+        File="$(_XAVersionRevFile)"
+        Lines="$(XAVersionCommitCount)"
         Overwrite="True"
     />
   </Target>

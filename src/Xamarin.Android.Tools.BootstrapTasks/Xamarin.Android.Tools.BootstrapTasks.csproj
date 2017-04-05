@@ -51,11 +51,6 @@
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\Zip.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Xamarin.Android.Tools.BootstrapTasks.targets">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="$(LibZipSharpSourceFullPath)\libZipSharp.csproj">
       <Project>{E248B2CA-303B-4645-ADDC-9D4459D550FD}</Project>
       <Name>libZipSharp</Name>

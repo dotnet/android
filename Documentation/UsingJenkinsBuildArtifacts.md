@@ -2,8 +2,8 @@
 
 The [**Project xamarin-android** Jenkins page][xa-jenkins-page] has a link
 to the [Latest Azure Artifacts][xa-macOS-azure-artifacts], which contains an
-`oss-xamarin.android*.zip` file for every Jenkins build on macOS.
-The `oss-xamarin.android*.zip` file can be downloaded and used, without
+`oss-xamarin.android*.zip` and `Xamarin.Android.Sdk*.vsix` file for every
+Jenkins build on macOS. These files can be downloaded and used, without
 requiring a local `xamarin-android` repo build.
 
 [xa-jenkins-page]: https://jenkins.mono-project.com/view/Xamarin.Android/job/xamarin-android/
@@ -23,19 +23,14 @@ download the `oss-xamarin.android*.zip` file, e.g.
 
 [oss-xa-macOS]: https://jenkins.mono-project.com/view/Xamarin.Android/job/xamarin-android/lastSuccessfulBuild/Azure/processDownloadRequest/xamarin-android/oss-xamarin.android_v7.2.99.19_Darwin-x86_64_master_3b893cd.zip
 
+Windows users using Visual Studio 2017 may instead download the
+`Xamarin.Android.Sdk*.vsix` file.
+
 macOS users may just extract this into their **Downloads** folder using
 **Archive Utility.app** or `unzip` from **Terminal.app**. This will result
 in a file such as:
 
 	$HOME/Downloads/oss-xamarin.android_v7.2.99.19_Darwin-x86_64_master_3b893cd/bin/Debug/bin/xabuild
-
-Windows users should right-click this file within Explorer and click
-**Extract All...**, and in the **Extract Compressed (Zipped) Folders** dialog
-enter a *short* path such as `C:\xa-sdk`. This is necessary because some
-of the contained filenames are quite long. This will result in a path
-such as:
-
-	C:\xa-sdk\oss-xamarin.android_v7.2.99.19_Darwin-x86_64_master_3b893cd\bin\Debug\bin\mono-symbolicate.cmd
 
 Linux/x86_64 users can go to the
 [Latest xamarin-android-linux Azure Artifacts page][xa-linux-azure-artifacts]
@@ -44,6 +39,20 @@ and download the `oss-xamarin.android*.zip` file, e.g.
 
 [xa-linux-azure-artifacts]: https://jenkins.mono-project.com/view/Xamarin.Android/job/xamarin-android-linux/lastSuccessfulBuild/Azure/
 [oss-xa-Linux]: https://jenkins.mono-project.com/view/Xamarin.Android/job/xamarin-android-linux/lastSuccessfulBuild/Azure/processDownloadRequest/xamarin-android/oss-xamarin.android_v7.2.99.19_Linux-x86_64_master_3b893cd.zip
+
+## Windows Installation
+
+Windows users can right-click the `oss-xamarin.android*.zip` file within
+Windows Explorer and click **Extract All...**, and in the
+**Extract Compressed (Zipped) Folders** dialog enter a *short* path such as
+`C:\xa-sdk`. This is necessary because some of the contained filenames are
+quite long. This will result in a path such as:
+
+	C:\xa-sdk\oss-xamarin.android_v7.2.99.19_Darwin-x86_64_master_3b893cd\bin\Debug\bin\mono-symbolicate.cmd
+
+Alternatively, if you download the `Xamarin.Android.Sdk*.vsix` file, you can
+double-click the file to install the Xamarin.Android SDK extension into
+Visual Studio 2017.
 
 # Using Jenkins Build Artifacts
 

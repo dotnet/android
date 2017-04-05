@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"  TaskName="Xamarin.Android.BuildTools.PrepTasks.GitBlame" />
+  <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"  TaskName="Xamarin.Android.BuildTools.PrepTasks.GitBranch" />
+  <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"  TaskName="Xamarin.Android.BuildTools.PrepTasks.GitCommitHash" />
+  <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"  TaskName="Xamarin.Android.BuildTools.PrepTasks.GitCommitsInRange" />
+  <Target Name="GetXAVersionInfo">
+    <GitBlame
+        FileName="$(XamarinAndroidSourcePath)\Configuration.props"
+        LineFilter="&lt;ProductVersion&gt;"
+        WorkingDirectory="$(XamarinAndroidSourcePath)"
+        ToolPath="$(GitToolPath)"
+        ToolExe="$(GitToolExe)">
+      <Output TaskParameter="Commits"                 ItemName="_XAVersionCommit" />
+    </GitBlame>
+    <GitCommitsInRange
+        StartCommit="%(_XAVersionCommit.CommitHash)"
+        WorkingDirectory="$(XamarinAndroidSourcePath)"
+        ToolPath="$(GitToolPath)"
+        ToolExe="$(GitToolExe)">
+      <Output TaskParameter="CommitCount"             PropertyName="XAVersionCommitCount" />
+    </GitCommitsInRange>
+    <GitCommitHash
+        WorkingDirectory="$(XamarinAndroidSourcePath)"
+        ToolPath="$(GitToolPath)"
+        ToolExe="$(GitToolExe)">
+      <Output TaskParameter="AbbreviatedCommitHash"   PropertyName="XAVersionHash" />
+    </GitCommitHash>
+    <GitBranch
+        WorkingDirectory="$(XamarinAndroidSourcePath)"
+        ToolPath="$(GitToolPath)"
+        ToolExe="$(GitToolExe)">
+      <Output TaskParameter="Branch"                  PropertyName="XAVersionBranch" />
+    </GitBranch>
+  </Target>
+</Project>

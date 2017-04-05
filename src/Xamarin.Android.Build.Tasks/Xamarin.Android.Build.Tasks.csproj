@@ -132,13 +132,6 @@
     <Compile Include="Mono.Android\UsesLibraryAttribute.Partial.cs" />
     <Compile Include="Mono.Android\UsesPermissionAttribute.Partial.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\PreserveCode.cs" />
-    <None Include="Xamarin.Android.Bindings.targets">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <SubType>Designer</SubType>
-    </None>
-    <None Include="Xamarin.Android.VisualBasic.targets">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <Compile Include="Mono.Android\InstrumentationAttribute.Partial.cs" />
     <Compile Include="Tasks\CreateLibraryResourceArchive.cs" />
     <Compile Include="Tasks\ResolveLibraryProjectImports.cs" />
@@ -155,22 +148,6 @@
     <Compile Include="Tasks\CreateManagedLibraryResourceArchive.cs" />
     <Compile Include="Tasks\CheckForRemovedItems.cs" />
     <Compile Include="Tasks\StripEmbeddedLibraries.cs" />
-    <None Include="Xamarin.Android.Common.targets">
-      <SubType>Designer</SubType>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Xamarin.Android.Common.props">
-      <SubType>Designer</SubType>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Xamarin.Android.PCLSupport.targets">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Xamarin.Android.CSharp.targets">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Novell.MonoDroid.Common.targets" />
-    <None Include="Novell.MonoDroid.CSharp.targets" />
     <Compile Include="Tasks\CheckProjectItems.cs" />
     <Compile Include="Tasks\CheckDuplicateJavaLibraries.cs" />
     <Compile Include="Mono.Android\PermissionAttribute.Partial.cs" />
@@ -181,10 +158,6 @@
     <Compile Include="Tasks\CreateNativeLibraryArchive.cs" />
     <Compile Include="Tasks\GetImportedLibraries.cs" />
     <Compile Include="Tasks\CopyConfigFiles.cs" />
-    <None Include="Xamarin.Android.FSharp.targets">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="MonoDroid.FSharp.targets" />
     <Compile Include="Tasks\GetAdditionalResourcesFromAssemblies.cs" />
     <Compile Include="Tasks\CreateAndroidResourceStamp.cs" />
     <Compile Include="Tasks\CollectLibraryAssets.cs" />
@@ -290,15 +263,11 @@
       <Link>pdb2mdb\SourceLocationProvider.cs</Link>
     </Compile>
     <Compile Include="Tasks\Lint.cs" />
-    <None Include="packages.config" />
     <Compile Include="Tasks\ReadResolvedSdksCache.cs" />
     <Compile Include="Tasks\ReadLibraryProjectImportsCache.cs" />
     <Compile Include="Tasks\ReadImportedLibrariesCache.cs" />
     <Compile Include="Utilities\XDocumentExtensions.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\PreserveRuntimeSerialization.cs" />
-    <None Include="Xamarin.Android.Analysis.targets">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <Compile Include="$(LinkerSourceFullPath)\linker\Mono.Linker\Annotations.cs">
       <Link>Linker\Mono.Linker\Annotations.cs</Link>
     </Compile>
@@ -518,9 +487,17 @@
       <Link>Utilities\MD2Managed.cs</Link>
     </Compile>
     <Compile Include="Utilities\Profile.cs" />
-    <None Include="Xamarin.Android.Build.Tasks.targets" />
     <Compile Include="Linker\MonoDroid.Tuner\PreserveTlsProvider.cs" />
     <Compile Include="Tasks\Unzip.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Xamarin.Android.Build.Tasks.targets" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="updateinfo.dat">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <!-- MD doesn't handle MSBuildToolsPath yet
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

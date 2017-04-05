@@ -1,0 +1,58 @@
+<!--
+***********************************************************************************************
+Xamarin.Android.Sdk.props
+
+WARNING:  DO NOT MODIFY this file unless you are knowledgeable about MSBuild and have
+  created a backup copy.  Incorrect changes to this file will make it
+  impossible to load or build your projects from the command-line or the IDE.
+
+Copyright (C) 2011-2016 Xamarin. All rights reserved.
+***********************************************************************************************
+-->
+<Project InitialTargets="RedirectMonoAndroidSdkPaths;RemoveSdksCache" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+	<PropertyGroup Condition="'$(VsInstallRoot)' != ''">
+		<!-- Grab InstallationID from devenv.ini.isolation's InstallationID=[ID] -->
+		<DevEnvIni>$([System.IO.File]::ReadAllText('$(VsInstallRoot)\Common7\IDE\devenv.isolation.ini'))</DevEnvIni>
+		<InstallationIDEqualsIndex>$(DevEnvIni.IndexOf('InstallationID='))</InstallationIDEqualsIndex>
+		<InstallationIDEqualsIndex>$([MSBuild]::Add('$(InstallationIDEqualsIndex)', '15'))</InstallationIDEqualsIndex>
+		<VsInstallationID>$(DevEnvIni.Substring($(InstallationIDEqualsIndex), 8))</VsInstallationID>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(VsInstallRoot)' != ''">
+		<!-- Until VS2017+ includes its own ReferenceAssemblies outside of C:\Program Files (x86)\Reference Assemblies and into 
+			 the VsInstallRoot, we must override this ourselves for our SDKs -->
+		<TargetFrameworkRootPath Condition="'$(TargetFrameworkRootPath)' == ''">$(VsInstallRoot)\Common7\IDE\ReferenceAssemblies\Microsoft\Framework\</TargetFrameworkRootPath>
+		<FrameworkPathOverride Condition="'$(FrameworkPathOverride)' == ''">$(TargetFrameworkRootPath)MonoAndroid\v1.0</FrameworkPathOverride>
+		<XamarinAndroidSdkPropsImported>true</XamarinAndroidSdkPropsImported>
+	</PropertyGroup>
+
+	<Target Name="RedirectMonoAndroidSdkPaths" Condition="'$(VsInstallRoot)' != ''">
+		<PropertyGroup>
+			<MonoAndroidToolsDirectory Condition=" '$(MonoAndroidToolsDirectory)' == '' ">$(VsInstallRoot)\MSBuild\Xamarin\Android</MonoAndroidToolsDirectory>
+			<MonoAndroidBinDirectory Condition=" '$(MonoAndroidBinDirectory)' == '' ">$(VsInstallRoot)\MSBuild\Xamarin\Android</MonoAndroidBinDirectory>
+		</PropertyGroup>
+
+		<SetVsMonoAndroidRegistryKey InstallationID="$(VsInstallationID)" VisualStudioVersion="$(VisualStudioVersion)" />
+	</Target>
+
+	<Target Name="RemoveSdksCache" Condition="Exists('$(IntermediateOutputPath)sdks.cache')">
+		<Delete Files="$(IntermediateOutputPath)sdks.cache" />
+	</Target>
+
+	<UsingTask Condition="'$(VsInstallRoot)' != ''" TaskName="SetVsMonoAndroidRegistryKey" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll">
+		<ParameterGroup>
+			<InstallationID Required="true" />
+			<VisualStudioVersion Required="true" />
+		</ParameterGroup>
+		<Task>
+			<Code Type="Fragment" Language="cs">
+				Environment.SetEnvironmentVariable("XAMARIN_ANDROID_REGKEY", string.Format(@"SOFTWARE\Xamarin\VisualStudio\{0}_{1}\Android", VisualStudioVersion, InstallationID), EnvironmentVariableTarget.Process);
+				Log.LogMessage(Environment.GetEnvironmentVariable("XAMARIN_ANDROID_REGKEY"));
+			</Code>
+		</Task>
+	</UsingTask>
+
+	<!-- Allows providing Xamarin SDK-specific property overrides -->
+	<Import Project="Xamarin.Sdk.props" Condition="'$(XamarinSdkPropsImported)' != 'true' And Exists('Xamarin.Sdk.props')"/>
+</Project>

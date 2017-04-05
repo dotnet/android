@@ -76,6 +76,7 @@ _MSBUILD_ARGS	= \
 CONFIGURATIONS ?= Debug Release
 
 .PHONY: leeroy jenkins leeroy-all opentk-jcw framework-assemblies runtime-libraries task-assemblies
+.PHONY: create-vsix
 
 jenkins: prepare leeroy $(ZIP_OUTPUT)
 
@@ -119,6 +120,10 @@ _BUNDLE_ZIPS_INCLUDE  = \
 
 _BUNDLE_ZIPS_EXCLUDE  = \
 	$(ZIP_OUTPUT_BASENAME)/bin/*/bundle-*.zip
+
+create-vsix:
+	$(foreach conf, $(CONFIGURATIONS), \
+		MONO_IOMAP=all MONO_OPTIONS=--arch=64 msbuild $(MSBUILD_FLAGS) build-tools/create-vsix/create-vsix.csproj /p:Configuration=$(conf) /p:CreateVsixContainer=True ; )
 
 package-oss-name:
 	@echo ZIP_OUTPUT=$(ZIP_OUTPUT)
