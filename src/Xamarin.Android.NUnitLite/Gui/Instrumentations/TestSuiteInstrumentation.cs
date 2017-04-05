@@ -93,7 +93,11 @@ namespace Xamarin.Android.NUnitLite {
 
 		string GetResultsPath ()
 		{
-			var resultsPathFile = Context.GetExternalFilesDir (global::Android.OS.Environment.DirectoryDocuments);
+			Java.IO.File resultsPathFile = null;
+#if __ANDROID_19__
+			if (((int)Build.VERSION.SdkInt) >= 19)
+				resultsPathFile = Context.GetExternalFilesDir (global::Android.OS.Environment.DirectoryDocuments);
+#endif
 			var usePathFile = resultsPathFile != null && resultsPathFile.Exists ();
 			var resultsPath = usePathFile
 				? resultsPathFile.AbsolutePath
