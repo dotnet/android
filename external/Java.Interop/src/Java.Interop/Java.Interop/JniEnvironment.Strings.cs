@@ -16,12 +16,6 @@ namespace Java.Interop
 			}
 
 #if !XA_INTEGRATION
-			internal static JniObjectReference NewString (object value)
-			{
-				Debug.Assert (value == null || (value is string), "Expected value==null or string; was: " + (value ?? string.Empty).GetType ().FullName);
-				return NewString ((string) value);
-			}
-
 			public static string ToString (IntPtr reference)
 			{
 				return ToString (new JniObjectReference (reference));

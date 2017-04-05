@@ -52,6 +52,9 @@ namespace Java.Interop.GenericMarshaler {
 			<#= methodParams #>
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+
 			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return NewObject (peer, constructorSignature, declaringType, <#= methodArgs #>);
 			}
@@ -70,7 +73,7 @@ namespace Java.Interop.GenericMarshaler {
 			WriteLine ("\t\t\tvar __vm{1} = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<{0}> ();",
 					i == 1 ? "T" : "T" + a,
 					i == 1 ? "" : a.ToString ());
-			WriteLine ("\t\t\tvar arg{1} = __vm{1}.CreateArgumentState (value{1});",
+			WriteLine ("\t\t\tvar arg{1} = __vm{1}.CreateGenericArgumentState (value{1});",
 		            i == 1 ? "T" : "T" + a,
 		            i == 1 ? "" : a.ToString ());
 		}
@@ -88,7 +91,7 @@ namespace Java.Interop.GenericMarshaler {
 			} finally {
 <#
 		for (int a = 1; a <= i; ++a) {
-			WriteLine ("\t\t\t\t__vm{0}.DestroyArgumentState (value{0}, ref arg{0});",
+			WriteLine ("\t\t\t\t__vm{0}.DestroyGenericArgumentState (value{0}, ref arg{0});",
 		            i == 1 ? "" : a.ToString ());
 		}
 #>
@@ -102,6 +105,11 @@ namespace Java.Interop.GenericMarshaler {
 		    <#= methodParams #>
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
+
 			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return;
 			}
@@ -120,7 +128,7 @@ namespace Java.Interop.GenericMarshaler {
 			WriteLine ("\t\t\tvar __vm{1} = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<{0}> ();",
 					i == 1 ? "T" : "T" + a,
 					i == 1 ? "" : a.ToString ());
-			WriteLine ("\t\t\tvar arg{1} = __vm{1}.CreateArgumentState (value{1});",
+			WriteLine ("\t\t\tvar arg{1} = __vm{1}.CreateGenericArgumentState (value{1});",
 		            i == 1 ? "T" : "T" + a,
 		            i == 1 ? "" : a.ToString ());
 		}
@@ -140,7 +148,7 @@ namespace Java.Interop.GenericMarshaler {
 			} finally {
 <#
 		for (int a = 1; a <= i; ++a) {
-			WriteLine ("\t\t\t\t__vm{0}.DestroyArgumentState (value{0}, ref arg{0});",
+			WriteLine ("\t\t\t\t__vm{0}.DestroyGenericArgumentState (value{0}, ref arg{0});",
 		            i == 1 ? "" : a.ToString ());
 		}
 #>
@@ -190,12 +198,16 @@ namespace Java.Interop.GenericMarshaler {
 			IJavaPeerable   self<#= i == 0 ? "" : ",\n\t\t\t" + methodParams #>
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 <#
 			for (int a = 1; a <= i; ++a) {
 				WriteLine ("\t\t\tvar __vm{1} = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<{0}> ();",
 						i == 1 ? "T" : "T" + a,
 						i == 1 ? "" : a.ToString ());
-				WriteLine ("\t\t\tvar arg{1} = __vm{1}.CreateArgumentState (value{1});",
+				WriteLine ("\t\t\tvar arg{1} = __vm{1}.CreateGenericArgumentState (value{1});",
 			            i == 1 ? "T" : "T" + a,
 			            i == 1 ? "" : a.ToString ());
 			}
@@ -213,7 +225,7 @@ namespace Java.Interop.GenericMarshaler {
 			} finally {
 <#
 			for (int a = 1; a <= i; ++a) {
-				WriteLine ("\t\t\t\t__vm{0}.DestroyArgumentState (value{0}, ref arg{0});",
+				WriteLine ("\t\t\t\t__vm{0}.DestroyGenericArgumentState (value{0}, ref arg{0});",
 			            i == 1 ? "" : a.ToString ());
 			}
 #>
@@ -258,12 +270,14 @@ namespace Java.Interop.GenericMarshaler {
 			string encodedMember<#= i == 0 ? "" : ",\n\t\t\t" + methodParams #>
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 <#
 			for (int a = 1; a <= i; ++a) {
 				WriteLine ("\t\t\tvar __vm{1} = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<{0}> ();",
 						i == 1 ? "T" : "T" + a,
 						i == 1 ? "" : a.ToString ());
-				WriteLine ("\t\t\tvar arg{1} = __vm{1}.CreateArgumentState (value{1});",
+				WriteLine ("\t\t\tvar arg{1} = __vm{1}.CreateGenericArgumentState (value{1});",
 			            i == 1 ? "T" : "T" + a,
 			            i == 1 ? "" : a.ToString ());
 			}
@@ -281,7 +295,7 @@ namespace Java.Interop.GenericMarshaler {
 			} finally {
 <#
 			for (int a = 1; a <= i; ++a) {
-				WriteLine ("\t\t\t\t__vm{0}.DestroyArgumentState (value{0}, ref arg{0});",
+				WriteLine ("\t\t\t\t__vm{0}.DestroyGenericArgumentState (value{0}, ref arg{0});",
 			            i == 1 ? "" : a.ToString ());
 			}
 #>

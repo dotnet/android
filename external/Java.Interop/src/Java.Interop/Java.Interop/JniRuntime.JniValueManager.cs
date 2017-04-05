@@ -270,7 +270,11 @@ namespace Java.Interop
 
 				Type type = null;
 				while (jniTypeName != null) {
-					type = Runtime.TypeManager.GetType (JniTypeSignature.Parse (jniTypeName));
+					JniTypeSignature sig;
+					if (!JniTypeSignature.TryParse (jniTypeName, out sig))
+						return null;
+
+					type    = Runtime.TypeManager.GetType (sig);
 
 					if (type != null) {
 						var ctor = GetActivationConstructor (type);
@@ -362,7 +366,9 @@ namespace Java.Interop
 
 			internal Type GetRuntimeType (JniObjectReference reference)
 			{
-				var signature   = JniTypeSignature.Parse (JniEnvironment.Types.GetJniTypeNameFromInstance (reference));
+				JniTypeSignature signature;
+				if (!JniTypeSignature.TryParse (JniEnvironment.Types.GetJniTypeNameFromInstance (reference), out signature))
+					return null;
 				return Runtime.TypeManager.GetType (signature);
 			}
 

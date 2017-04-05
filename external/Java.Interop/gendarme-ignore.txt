@@ -1,3 +1,10 @@
+R: Gendarme.Rules.BadPractice.ConstructorShouldNotCallVirtualMethodsRule
+# We're attempting to establish a pattern/protocol around JavaObject + JniPeerMembers, and I hereby deem it acceptable -- in this instance -- to invoke the virtual `JniPeerMembers` property from constructors
+M: System.Void Java.Interop.JavaException::.ctor()
+M: System.Void Java.Interop.JavaException::.ctor(System.String)
+M: System.Void Java.Interop.JavaException::.ctor(System.String,System.Exception)
+M: System.Void Java.Interop.JavaObject::.ctor()
+
 R: Gendarme.Rules.BadPractice.OnlyUseDisposeForIDisposableTypesRule
 # We need *a* "cleanup" method, and I can't think of a better name than "Dispose"
 # (Close? Destroy?), and for these types I don't want them to have Dispose()
@@ -16,6 +23,10 @@ R: Gendarme.Rules.BadPractice.PreferSafeHandleRule
 T: Java.Interop.JniEnvironmentInfo
 T: Java.Interop.JniRuntime
 
+R: Gendarme.Rules.Correctness.AvoidFloatingPointEqualityRule
+# This is in from generated code. We could plausibly fix the generated code, but I'm not at all sure what to change it *to*.
+M: System.Int32 Java.Interop.JavaSingleArray::IndexOf(System.Single)
+M: System.Int32 Java.Interop.JavaDoubleArray::IndexOf(System.Double)
 
 R: Gendarme.Rules.Correctness.CheckParametersNullityInVisibleMethodsRule
 # These methods are protected, and thus we control the (public) callers,
@@ -27,12 +38,29 @@ M: Java.Interop.JniPeerMembers Java.Interop.JniPeerMembers::GetPeerMembers(Java.
 # I suspect a gendarme bug; I don't see what it's talking about
 M: System.Void Java.Interop.JniArgumentValue::.ctor(Java.Interop.IJavaPeerable)
 
-
 R: Gendarme.Rules.Correctness.EnsureLocalDisposalRule
 # We don't *want* to dispose the value!
+M: Java.Interop.JniType Java.Interop.JniBoolean::get_TypeRef()
+M: Java.Interop.JniType Java.Interop.JniByte::get_TypeRef()
+M: Java.Interop.JniType Java.Interop.JniCharacter::get_TypeRef()
+M: Java.Interop.JniType Java.Interop.JniDouble::get_TypeRef()
+M: System.Void Java.Interop.JniEnvironment/Exceptions::Throw(System.Exception)
 M: System.Void Java.Interop.JniEnvironmentInfo::set_EnvironmentPointer(System.IntPtr)
+M: Java.Interop.JniType Java.Interop.JniFloat::get_TypeRef()
+M: Java.Interop.JniType Java.Interop.JniInteger::get_TypeRef()
+M: Java.Interop.JniType Java.Interop.JniLong::get_TypeRef()
 M: Java.Interop.JniType Java.Interop.JniPeerMembers::get_JniPeerType()
 M: Java.Interop.JniRuntime Java.Interop.JniRuntime::get_CurrentRuntime()
+M: System.Void Java.Interop.JniRuntime::RaisePendingException(System.Exception)
+M: System.Void Java.Interop.JniRuntime/JniValueManager::DisposeUnlessReferenced(Java.Interop.IJavaPeerable)
+M: System.Object Java.Interop.JniRuntime/JniValueManager::PeekValue(Java.Interop.JniObjectReference)
+M: System.Object Java.Interop.JniRuntime/JniValueManager::PeekBoxedObject(Java.Interop.JniObjectReference)
+M: Java.Interop.JniType Java.Interop.JniShort::get_TypeRef()
+M: Java.Interop.JniType Java.Interop.JniSystem::get_TypeRef()
+M: System.Void Java.Interop.ManagedPeer::Construct(System.IntPtr,System.IntPtr,System.IntPtr,System.IntPtr,System.IntPtr,System.IntPtr)
+M: System.Void Java.Interop.ManagedPeer::RegisterNativeMembers(System.IntPtr,System.IntPtr,System.IntPtr,System.IntPtr,System.IntPtr)
+M: System.Object Java.Interop.ProxyValueMarshaler::CreateGenericValue(Java.Interop.JniObjectReference&,Java.Interop.JniObjectReferenceOptions,System.Type)
+M: Java.Interop.JniValueMarshalerState Java.Interop.ProxyValueMarshaler::CreateGenericObjectReferenceArgumentState(System.Object,System.Reflection.ParameterAttributes)
 
 # These look like gendarme bugs wrt C#2 `yield return` methods.
 M: System.Collections.IEnumerator Java.Interop.JniRuntime/JniTypeManager/<CreateGetTypeSignaturesEnumerator>c__Iterator0::System.Collections.IEnumerable.GetEnumerator()
@@ -43,6 +71,9 @@ M: System.Collections.IEnumerator Java.Interop.JniRuntime/JniTypeManager/<Create
 R: Gendarme.Rules.Correctness.ReviewInconsistentIdentityRule
 # It's consistent; GetHashCode()'s use of QualifiedReference pulls in everything Equals() compares.
 T: Java.Interop.JniTypeSignature
+# It's consistent; everything is delegated to Java!
+T: Java.Interop.JavaException
+T: Java.Interop.JavaObject
 
 
 R: Gendarme.Rules.Design.AvoidRefAndOutParametersRule
@@ -104,6 +135,7 @@ T: Java.Interop.JniRuntime/JniTypeManager
 
 R: Gendarme.Rules.Design.DisposableTypesShouldHaveFinalizerRule
 # No, not all IDisposable types should have finalizers.
+T: Java.Interop.JniArrayElements
 T: Java.Interop.JniEnvironmentInfo
 
 R: Gendarme.Rules.Design.EnumsShouldUseInt32Rule
@@ -161,10 +193,20 @@ R: Gendarme.Rules.Design.Generic.AvoidDeclaringCustomDelegatesRule
 T: Java.Interop.DestroyJavaVMDelegate
 T: Java.Interop.DetachCurrentThreadDelegate
 
+R: Gendarme.Rules.Design.Generic.DoNotExposeNestedGenericSignaturesRule
+M: System.Linq.Expressions.Expression`1<System.Func`4<System.Reflection.ConstructorInfo,Java.Interop.JniObjectReference,System.Object[],System.Object>> Java.Interop.JniRuntime/JniMarshalMemberBuilder::CreateConstructActivationPeerExpression(System.Reflection.ConstructorInfo)
 
 R: Gendarme.Rules.Exceptions.DoNotSwallowErrorsCatchingNonSpecificExceptionsRule
 M: System.Reflection.Assembly Java.Interop.JniRuntime/JniTypeManager::TryLoadAssembly(System.Reflection.AssemblyName)
 
+R: Gendarme.Rules.Exceptions.ExceptionShouldBeVisibleRule
+T: Java.Interop.JniLocationException
+
+R: Gendarme.Rules.Exceptions.MissingExceptionConstructorsRule
+# System.Runtime.Serialization.SerializationInfo doesn't exist in our targeted PCL profile, so we can't provide the (SerializationInfo, StreamingContext) constructor.
+T: Java.Interop.JavaException
+T: Java.Interop.JavaProxyThrowable
+T: Java.Interop.JniLocationException
 
 R: Gendarme.Rules.Exceptions.UseObjectDisposedExceptionRule
 # I don't want ~any overhead around reference tracking
@@ -181,6 +223,12 @@ M: System.IntPtr Java.Interop.JniRuntime/JniObjectReferenceManager::ReleaseLocal
 # These *do* validate, they just validate via AssertValid() helper method
 M: System.Void Java.Interop.JniRuntime::AttachCurrentThread(System.String,Java.Interop.JniObjectReference)
 M: System.Void Java.Interop.JniRuntime::DestroyRuntime()
+M: System.Void Java.Interop.JniRuntime/JniTypeManager::OnSetRuntime(Java.Interop.JniRuntime)
+M: Java.Interop.JniTypeSignature Java.Interop.JniRuntime/JniTypeManager::GetTypeSignature(System.Type)
+M: System.Collections.Generic.IEnumerable`1<Java.Interop.JniTypeSignature> Java.Interop.JniRuntime/JniTypeManager::GetTypeSignatures(System.Type)
+M: System.Type Java.Interop.JniRuntime/JniTypeManager::GetType(Java.Interop.JniTypeSignature)
+M: System.Collections.Generic.IEnumerable`1<System.Type> Java.Interop.JniRuntime/JniTypeManager::GetTypes(Java.Interop.JniTypeSignature)
+M: System.Void Java.Interop.JniRuntime/JniTypeManager::RegisterNativeMembers(Java.Interop.JniType,System.Type,System.String)
 M: Java.Interop.JniType Java.Interop.JniType::GetSuperclass()
 M: System.Boolean Java.Interop.JniType::IsAssignableFrom(Java.Interop.JniType)
 M: System.Boolean Java.Interop.JniType::IsInstanceOfType(Java.Interop.JniObjectReference)
@@ -219,6 +267,7 @@ M: System.IntPtr Java.Interop.NativeMethods::java_interop_jnienv_get_primitive_a
 R: Gendarme.Rules.Maintainability.AvoidAlwaysNullFieldRule
 # I suspect that this is a Roslyn bug; mcs output doesn't produce this.
 T: Java.Interop.JniRuntime/JniTypeManager/<CreateGetTypesForSimpleReferenceEnumerator>d__15
+T: Java.Interop.JniRuntime/JniTypeManager/<CreateGetTypesForSimpleReferenceEnumerator>d__19
 
 
 R: Gendarme.Rules.Maintainability.AvoidLackOfCohesionOfMethodsRule
@@ -483,6 +532,13 @@ M: Java.Interop.JniObjectReferenceType Java.Interop.JniEnvironment/References::G
 M: Java.Interop.JniObjectReference Java.Interop.JniEnvironment/Reflection::ToReflectedMethod(Java.Interop.JniObjectReference,Java.Interop.JniMethodInfo,System.Boolean)
 M: Java.Interop.JniObjectReference Java.Interop.JniEnvironment/Reflection::ToReflectedField(Java.Interop.JniObjectReference,Java.Interop.JniFieldInfo,System.Boolean)
 M: Java.Interop.JniObjectReferenceFlags Java.Interop.JniObjectReference::get_Flags()
+
+# I think Gendarme is buggy here; `JavaArray<T>.CheckLength(IList<T>)` *is* used.
+M: System.Int32 Java.Interop.JavaArray`1::CheckLength(System.Collections.Generic.IList`1<T>)
+
+# `__RegisterNativeMembers()` is invoked via Reflection
+M: System.Void Java.Interop.JavaProxyObject::__RegisterNativeMembers(Java.Interop.JniType,System.String)
+M: System.Void Java.Interop.JavaProxyThrowable::__RegisterNativeMembers(Java.Interop.JniType,System.String)
 
 # We need JNIEnv::FindClass() to be *bound* so that the JavaInterop_FindClass() wrapper is emitted.
 # We don't want to actually *use* it, so it's `internal` and unused. Ignore

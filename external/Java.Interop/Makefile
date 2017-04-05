@@ -73,7 +73,10 @@ src/Java.Runtime.Environment/Java.Runtime.Environment.dll.config: src/Java.Runti
 	sed 's#@JI_JVM_PATH@#$(JI_JVM_PATH)#g' < $< > $@
 
 xa-fxcop: lib/gendarme-2.10/gendarme.exe bin/$(XA_CONFIGURATION)/Java.Interop.dll
-	$(RUNTIME) $< --html xa-gendarme.html $(if @(GENDARME_XML),--xml xa-gendarme.xml) --ignore xa-gendarme-ignore.txt bin/$(XA_CONFIGURATION)/Java.Interop.dll
+	$(RUNTIME) $< --html xa-gendarme.html $(if @(GENDARME_XML),--xml xa-gendarme.xml) --ignore gendarme-ignore.txt bin/$(XA_CONFIGURATION)/Java.Interop.dll
+
+fxcop: lib/gendarme-2.10/gendarme.exe bin/$(CONFIGURATION)/Java.Interop.dll
+	$(RUNTIME) $< --html gendarme.html $(if @(GENDARME_XML),--xml gendarme.xml) --ignore gendarme-ignore.txt bin/$(CONFIGURATION)/Java.Interop.dll
 
 lib/gendarme-2.10/gendarme.exe:
 	-mkdir -p `dirname "$@"`

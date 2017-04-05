@@ -53,6 +53,10 @@
       <Project>{94BD81F7-B06F-4295-9636-F8A3B6BDC762}</Project>
       <Name>Java.Interop</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\src\Java.Interop.GenericMarshaler\Java.Interop.GenericMarshaler.csproj">
+      <Project>{D1243BAB-23CA-4566-A2A3-3ADA2C2DC3AF}</Project>
+      <Name>Java.Interop.GenericMarshaler</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\lib\mono.linq.expressions\Mono.Linq.Expressions.csproj">
       <Project>{0C001D50-4176-45AE-BDC8-BA626508B0CC}</Project>
       <Name>Mono.Linq.Expressions</Name>

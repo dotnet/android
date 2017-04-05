@@ -118,9 +118,6 @@
     <Compile Include="Java.Interop\JniGlobalReference.cs" />
     <Compile Include="Java.Interop\JniLocalReference.cs" />
     <Compile Include="Java.Interop\JniMarshal.cs" />
-    <Compile Include="Java.Interop\JniPeerMembers.JniMethods.cs">
-      <DependentUpon>JniPeerMembers.JniMethods.tt</DependentUpon>
-    </Compile>
     <Compile Include="Java.Interop\JniReferenceSafeHandle.cs" />
     <Compile Include="Java.Interop\JniRuntime.JniMarshalMemberBuilder.cs" />
     <Compile Include="Java.Interop\JniRuntime.JniValueManager.cs" />
@@ -168,10 +165,6 @@
     <None Include="Java.Interop\JniPeerMembers.JniFields.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>JniPeerMembers.JniFields.cs</LastGenOutput>
-    </None>
-    <None Include="Java.Interop\JniPeerMembers.JniMethods.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>JniPeerMembers.JniMethods.cs</LastGenOutput>
     </None>
     <None Include="Documentation\Java.Interop\IJavaPeerable.xml" />
     <None Include="Documentation\Java.Interop\JniManagedPeerStates.xml" />

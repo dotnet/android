@@ -97,6 +97,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.Cecil", "sr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.Cecil.Mdb", "src\Xamarin.Android.Cecil\Xamarin.Android.Cecil.Mdb.csproj", "{C0487169-8F81-497F-919E-EB42B1D0243F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Java.Interop.GenericMarshaler", "src\Java.Interop.GenericMarshaler\Java.Interop.GenericMarshaler.csproj", "{D1243BAB-23CA-4566-A2A3-3ADA2C2DC3AF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -335,6 +337,10 @@ Global
 		{C0487169-8F81-497F-919E-EB42B1D0243F}.XAIntegrationDebug|Any CPU.Build.0 = Debug|Any CPU
 		{C0487169-8F81-497F-919E-EB42B1D0243F}.XAIntegrationRelease|Any CPU.ActiveCfg = Release|Any CPU
 		{C0487169-8F81-497F-919E-EB42B1D0243F}.XAIntegrationRelease|Any CPU.Build.0 = Release|Any CPU
+		{D1243BAB-23CA-4566-A2A3-3ADA2C2DC3AF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D1243BAB-23CA-4566-A2A3-3ADA2C2DC3AF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D1243BAB-23CA-4566-A2A3-3ADA2C2DC3AF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D1243BAB-23CA-4566-A2A3-3ADA2C2DC3AF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{0C001D50-4176-45AE-BDC8-BA626508B0CC} = {C8F58966-94BF-407F-914A-8654F8B8AE3B}
@@ -377,5 +383,6 @@ Global
 		{58B564A1-570D-4DA2-B02D-25BDDB1A9F4F} = {271C9F30-F679-4793-942B-0D9527CB3E2F}
 		{15945D4B-FF56-4BCC-B598-2718D199DD08} = {C8F58966-94BF-407F-914A-8654F8B8AE3B}
 		{C0487169-8F81-497F-919E-EB42B1D0243F} = {C8F58966-94BF-407F-914A-8654F8B8AE3B}
+		{D1243BAB-23CA-4566-A2A3-3ADA2C2DC3AF} = {4C173212-371D-45D8-BA83-9226194F48DC}
 	EndGlobalSection
 EndGlobal

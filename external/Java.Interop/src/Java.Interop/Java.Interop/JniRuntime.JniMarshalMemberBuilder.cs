@@ -42,7 +42,7 @@ namespace Java.Interop {
 			marshalMemberBuilder    = SetRuntime (b);
 		}
 
-		public abstract class JniMarshalMemberBuilder : ISetRuntime
+		public abstract class JniMarshalMemberBuilder : IDisposable, ISetRuntime
 		{
 			public      JniRuntime  Runtime     {get; private set;}
 
@@ -53,6 +53,15 @@ namespace Java.Interop {
 			public virtual void OnSetRuntime (JniRuntime runtime)
 			{
 				Runtime = runtime;
+			}
+
+			public void Dispose ()
+			{
+				Dispose (false);
+			}
+
+			protected virtual void Dispose (bool disposing)
+			{
 			}
 
 			public  Delegate                                                CreateMarshalToManagedDelegate (Delegate value)
@@ -127,7 +136,7 @@ namespace Java.Interop {
 			// Heuristic: if first two parameters are IntPtr, this is a "direct" wrapper.
 			public bool IsDirectMethod (ParameterInfo[] methodParameters)
 			{
-				return methodParameters.Length >= 2 &&
+				return methodParameters?.Length >= 2 &&
 					methodParameters [0].ParameterType == typeof (IntPtr) &&
 					methodParameters [1].ParameterType == typeof (IntPtr);
 			}
@@ -155,12 +164,12 @@ namespace Java.Interop {
 
 		public override object CreateValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
 		{
-			throw new NotImplementedException ();
+			throw new NotSupportedException ();
 		}
 
 		public override IntPtr CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
 		{
-			throw new NotImplementedException ();
+			throw new NotSupportedException ();
 		}
 
 		public override JniValueMarshalerState CreateArgumentState (object value, ParameterAttributes synchronize)
@@ -175,22 +184,22 @@ namespace Java.Interop {
 
 		public override JniValueMarshalerState CreateObjectReferenceArgumentState (object value, ParameterAttributes synchronize)
 		{
-			throw new NotImplementedException ();
+			throw new NotSupportedException ();
 		}
 
 		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState (IntPtr value, ParameterAttributes synchronize)
 		{
-			throw new NotImplementedException ();
+			throw new NotSupportedException ();
 		}
 
 		public override void DestroyArgumentState (object value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
 		{
-			throw new NotImplementedException ();
+			throw new NotSupportedException ();
 		}
 
 		public override void DestroyGenericArgumentState (IntPtr value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
 		{
-			throw new NotImplementedException ();
+			throw new NotSupportedException ();
 		}
 	}
 }

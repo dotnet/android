@@ -8,22 +8,47 @@ namespace Java.Interop {
 
 	public partial class JniRuntime {
 
-		public class JniTypeManager : ISetRuntime {
+		public class JniTypeManager : IDisposable, ISetRuntime {
+
+			bool                    disposed;
+
 
 			public      JniRuntime  Runtime { get; private set; }
 
 			public virtual void OnSetRuntime (JniRuntime runtime)
 			{
+				AssertValid ();
 				Runtime = runtime;
+			}
+
+			public void Dispose ()
+			{
+				Dispose (false);
+			}
+
+			protected virtual void Dispose (bool disposing)
+			{
+				disposed    = true;
+			}
+
+			void AssertValid ()
+			{
+				if (!disposed)
+					return;
+				throw new ObjectDisposedException (nameof (JniTypeManager));
 			}
 
 			public JniTypeSignature GetTypeSignature (Type type)
 			{
+				AssertValid ();
+
 				return GetTypeSignatures (type).FirstOrDefault ();
 			}
 
 			public IEnumerable<JniTypeSignature> GetTypeSignatures (Type type)
 			{
+				AssertValid ();
+
 				if (type == null)
 					throw new ArgumentNullException ("type");
 				if (type.GetTypeInfo ().ContainsGenericParameters)
@@ -96,6 +121,8 @@ namespace Java.Interop {
 			// `type` will NOT be an array type.
 			protected virtual IEnumerable<string> GetSimpleReferences (Type type)
 			{
+				AssertValid ();
+
 				if (type == null)
 					throw new ArgumentNullException ("type");
 				if (type.IsArray)
@@ -109,11 +136,15 @@ namespace Java.Interop {
 
 			public  Type    GetType (JniTypeSignature typeSignature)
 			{
+				AssertValid ();
+
 				return GetTypes (typeSignature).FirstOrDefault ();
 			}
 
 			public virtual IEnumerable<Type> GetTypes (JniTypeSignature typeSignature)
 			{
+				AssertValid ();
+
 				if (typeSignature.SimpleReference == null)
 					return EmptyTypeArray;
 				return CreateGetTypesEnumerator (typeSignature);
@@ -153,6 +184,8 @@ namespace Java.Interop {
 
 			protected virtual IEnumerable<Type> GetTypesForSimpleReference (string jniSimpleReference)
 			{
+				AssertValid ();
+
 				if (jniSimpleReference == null)
 					throw new ArgumentNullException (nameof (jniSimpleReference));
 				if (jniSimpleReference != null && jniSimpleReference.Contains ("."))
@@ -178,6 +211,8 @@ namespace Java.Interop {
 
 			public virtual void RegisterNativeMembers (JniType nativeClass, Type type, string methods)
 			{
+				AssertValid ();
+
 				if (!TryLoadExternalJniMarshalMethods (nativeClass, type, methods) &&
 						!TryRegisterNativeMembers (nativeClass, type, methods)) {
 					throw new NotSupportedException ($"Could not register Java.class={nativeClass.Name} Managed.type={type.FullName}");

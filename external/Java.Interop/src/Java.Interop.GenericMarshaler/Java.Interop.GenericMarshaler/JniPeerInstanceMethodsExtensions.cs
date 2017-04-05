@@ -11,6 +11,9 @@ namespace Java.Interop.GenericMarshaler {
 			T value
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+
 			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return NewObject (peer, constructorSignature, declaringType, value);
 			}
@@ -44,6 +47,11 @@ namespace Java.Interop.GenericMarshaler {
 		    T value
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
+
 			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return;
 			}
@@ -79,6 +87,9 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+
 			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return NewObject (peer, constructorSignature, declaringType, value1, value2);
 			}
@@ -116,6 +127,11 @@ namespace Java.Interop.GenericMarshaler {
 		    T1 value1, T2 value2
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
+
 			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return;
 			}
@@ -155,6 +171,9 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+
 			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3);
 			}
@@ -196,6 +215,11 @@ namespace Java.Interop.GenericMarshaler {
 		    T1 value1, T2 value2, T3 value3
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
+
 			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return;
 			}
@@ -239,6 +263,9 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+
 			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3, value4);
 			}
@@ -284,6 +311,11 @@ namespace Java.Interop.GenericMarshaler {
 		    T1 value1, T2 value2, T3 value3, T4 value4
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
+
 			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return;
 			}
@@ -331,6 +363,9 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+
 			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3, value4, value5);
 			}
@@ -380,6 +415,11 @@ namespace Java.Interop.GenericMarshaler {
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
+
 			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return;
 			}
@@ -431,6 +471,9 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+
 			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3, value4, value5, value6);
 			}
@@ -484,6 +527,11 @@ namespace Java.Interop.GenericMarshaler {
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
+
 			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return;
 			}
@@ -539,6 +587,9 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+
 			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7);
 			}
@@ -596,6 +647,11 @@ namespace Java.Interop.GenericMarshaler {
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
+
 			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return;
 			}
@@ -655,6 +711,9 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+
 			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7, value8);
 			}
@@ -716,6 +775,11 @@ namespace Java.Interop.GenericMarshaler {
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
+
 			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return;
 			}
@@ -779,6 +843,9 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+
 			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7, value8, value9);
 			}
@@ -844,6 +911,11 @@ namespace Java.Interop.GenericMarshaler {
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
+
 			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return;
 			}
@@ -911,6 +983,9 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+
 			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10);
 			}
@@ -980,6 +1055,11 @@ namespace Java.Interop.GenericMarshaler {
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
+
 			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return;
 			}
@@ -1051,6 +1131,9 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+
 			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11);
 			}
@@ -1124,6 +1207,11 @@ namespace Java.Interop.GenericMarshaler {
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
+
 			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return;
 			}
@@ -1199,6 +1287,9 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+
 			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12);
 			}
@@ -1276,6 +1367,11 @@ namespace Java.Interop.GenericMarshaler {
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
+
 			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return;
 			}
@@ -1355,6 +1451,9 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+
 			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13);
 			}
@@ -1436,6 +1535,11 @@ namespace Java.Interop.GenericMarshaler {
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
+
 			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return;
 			}
@@ -1519,6 +1623,9 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+
 			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13, value14);
 			}
@@ -1604,6 +1711,11 @@ namespace Java.Interop.GenericMarshaler {
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
+
 			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return;
 			}
@@ -1691,6 +1803,9 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+
 			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13, value14, value15);
 			}
@@ -1780,6 +1895,11 @@ namespace Java.Interop.GenericMarshaler {
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
+
 			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return;
 			}
@@ -1871,6 +1991,9 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+
 			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13, value14, value15, value16);
 			}
@@ -1964,6 +2087,11 @@ namespace Java.Interop.GenericMarshaler {
 		    T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
+
 			if (JniEnvironment.Runtime.NewObjectRequired) {
 				return;
 			}
@@ -2058,6 +2186,10 @@ namespace Java.Interop.GenericMarshaler {
 			IJavaPeerable   self
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 
 			var args = stackalloc JniArgumentValue [0];
 
@@ -2074,6 +2206,10 @@ namespace Java.Interop.GenericMarshaler {
 			T value
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T> ();
 			var arg = __vm.CreateGenericArgumentState (value);
 
@@ -2094,6 +2230,10 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
 			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
@@ -2118,6 +2258,10 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
 			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
@@ -2146,6 +2290,10 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
 			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
@@ -2178,6 +2326,10 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
 			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
@@ -2214,6 +2366,10 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
 			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
@@ -2254,6 +2410,10 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
 			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
@@ -2298,6 +2458,10 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
 			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
@@ -2346,6 +2510,10 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
 			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
@@ -2398,6 +2566,10 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
 			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
@@ -2454,6 +2626,10 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
 			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
@@ -2514,6 +2690,10 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
 			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
@@ -2578,6 +2758,10 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
 			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
@@ -2646,6 +2830,10 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
 			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
@@ -2718,6 +2906,10 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
 			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
@@ -2794,6 +2986,10 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
 			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
@@ -2873,6 +3069,10 @@ namespace Java.Interop.GenericMarshaler {
 			IJavaPeerable   self
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 
 			var args = stackalloc JniArgumentValue [0];
 
@@ -2889,6 +3089,10 @@ namespace Java.Interop.GenericMarshaler {
 			T value
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T> ();
 			var arg = __vm.CreateGenericArgumentState (value);
 
@@ -2909,6 +3113,10 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
 			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
@@ -2933,6 +3141,10 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
 			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
@@ -2961,6 +3173,10 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
 			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
@@ -2993,6 +3209,10 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
 			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
@@ -3029,6 +3249,10 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
 			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
@@ -3069,6 +3293,10 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
 			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
@@ -3113,6 +3341,10 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
 			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
@@ -3161,6 +3393,10 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
 			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
@@ -3213,6 +3449,10 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
 			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
@@ -3269,6 +3509,10 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
 			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
@@ -3329,6 +3573,10 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
 			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
@@ -3393,6 +3641,10 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
 			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
@@ -3461,6 +3713,10 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
 			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
@@ -3533,6 +3789,10 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
 			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
@@ -3609,6 +3869,10 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
 			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
@@ -3688,6 +3952,10 @@ namespace Java.Interop.GenericMarshaler {
 			IJavaPeerable   self
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 
 			var args = stackalloc JniArgumentValue [0];
 
@@ -3704,6 +3972,10 @@ namespace Java.Interop.GenericMarshaler {
 			T value
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T> ();
 			var arg = __vm.CreateGenericArgumentState (value);
 
@@ -3724,6 +3996,10 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
 			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
@@ -3748,6 +4024,10 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
 			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
@@ -3776,6 +4056,10 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
 			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
@@ -3808,6 +4092,10 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
 			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
@@ -3844,6 +4132,10 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
 			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
@@ -3884,6 +4176,10 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
 			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
@@ -3928,6 +4224,10 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
 			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
@@ -3976,6 +4276,10 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
 			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
@@ -4028,6 +4332,10 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
 			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
@@ -4041,13 +4349,13 @@ namespace Java.Interop.GenericMarshaler {
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
 			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 
 			var args = stackalloc JniArgumentValue [10];
 			args [0] = arg1.JniArgumentValue;
@@ -4084,28 +4392,32 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 
 			var args = stackalloc JniArgumentValue [11];
 			args [0] = arg1.JniArgumentValue;
@@ -4144,30 +4456,34 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 
 			var args = stackalloc JniArgumentValue [12];
 			args [0] = arg1.JniArgumentValue;
@@ -4208,32 +4524,36 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 
 			var args = stackalloc JniArgumentValue [13];
 			args [0] = arg1.JniArgumentValue;
@@ -4276,34 +4596,38 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 			var __vm14 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T14> ();
-			var arg14 = __vm14.CreateArgumentState (value14);
+			var arg14 = __vm14.CreateGenericArgumentState (value14);
 
 			var args = stackalloc JniArgumentValue [14];
 			args [0] = arg1.JniArgumentValue;
@@ -4348,36 +4672,40 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 			var __vm14 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T14> ();
-			var arg14 = __vm14.CreateArgumentState (value14);
+			var arg14 = __vm14.CreateGenericArgumentState (value14);
 			var __vm15 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T15> ();
-			var arg15 = __vm15.CreateArgumentState (value15);
+			var arg15 = __vm15.CreateGenericArgumentState (value15);
 
 			var args = stackalloc JniArgumentValue [15];
 			args [0] = arg1.JniArgumentValue;
@@ -4424,38 +4752,42 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 			var __vm14 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T14> ();
-			var arg14 = __vm14.CreateArgumentState (value14);
+			var arg14 = __vm14.CreateGenericArgumentState (value14);
 			var __vm15 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T15> ();
-			var arg15 = __vm15.CreateArgumentState (value15);
+			var arg15 = __vm15.CreateGenericArgumentState (value15);
 			var __vm16 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T16> ();
-			var arg16 = __vm16.CreateArgumentState (value16);
+			var arg16 = __vm16.CreateGenericArgumentState (value16);
 
 			var args = stackalloc JniArgumentValue [16];
 			args [0] = arg1.JniArgumentValue;
@@ -4503,6 +4835,10 @@ namespace Java.Interop.GenericMarshaler {
 			IJavaPeerable   self
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 
 			var args = stackalloc JniArgumentValue [0];
 
@@ -4519,8 +4855,12 @@ namespace Java.Interop.GenericMarshaler {
 			T value
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T> ();
-			var arg = __vm.CreateArgumentState (value);
+			var arg = __vm.CreateGenericArgumentState (value);
 
 			var args = stackalloc JniArgumentValue [1];
 			args [0] = arg.JniArgumentValue;
@@ -4539,10 +4879,14 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 
 			var args = stackalloc JniArgumentValue [2];
 			args [0] = arg1.JniArgumentValue;
@@ -4563,12 +4907,16 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 
 			var args = stackalloc JniArgumentValue [3];
 			args [0] = arg1.JniArgumentValue;
@@ -4591,14 +4939,18 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 
 			var args = stackalloc JniArgumentValue [4];
 			args [0] = arg1.JniArgumentValue;
@@ -4623,16 +4975,20 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 
 			var args = stackalloc JniArgumentValue [5];
 			args [0] = arg1.JniArgumentValue;
@@ -4659,18 +5015,22 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 
 			var args = stackalloc JniArgumentValue [6];
 			args [0] = arg1.JniArgumentValue;
@@ -4699,20 +5059,24 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 
 			var args = stackalloc JniArgumentValue [7];
 			args [0] = arg1.JniArgumentValue;
@@ -4743,22 +5107,26 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 
 			var args = stackalloc JniArgumentValue [8];
 			args [0] = arg1.JniArgumentValue;
@@ -4791,24 +5159,28 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 
 			var args = stackalloc JniArgumentValue [9];
 			args [0] = arg1.JniArgumentValue;
@@ -4843,26 +5215,30 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 
 			var args = stackalloc JniArgumentValue [10];
 			args [0] = arg1.JniArgumentValue;
@@ -4899,28 +5275,32 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 
 			var args = stackalloc JniArgumentValue [11];
 			args [0] = arg1.JniArgumentValue;
@@ -4959,30 +5339,34 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 
 			var args = stackalloc JniArgumentValue [12];
 			args [0] = arg1.JniArgumentValue;
@@ -5023,32 +5407,36 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 
 			var args = stackalloc JniArgumentValue [13];
 			args [0] = arg1.JniArgumentValue;
@@ -5091,34 +5479,38 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 			var __vm14 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T14> ();
-			var arg14 = __vm14.CreateArgumentState (value14);
+			var arg14 = __vm14.CreateGenericArgumentState (value14);
 
 			var args = stackalloc JniArgumentValue [14];
 			args [0] = arg1.JniArgumentValue;
@@ -5139,20 +5531,20 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualCharMethod (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
-				__vm13.DestroyArgumentState (value13, ref arg13);
-				__vm14.DestroyArgumentState (value14, ref arg14);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
+				__vm13.DestroyGenericArgumentState (value13, ref arg13);
+				__vm14.DestroyGenericArgumentState (value14, ref arg14);
 			}
 		}
 
@@ -5163,36 +5555,40 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 			var __vm14 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T14> ();
-			var arg14 = __vm14.CreateArgumentState (value14);
+			var arg14 = __vm14.CreateGenericArgumentState (value14);
 			var __vm15 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T15> ();
-			var arg15 = __vm15.CreateArgumentState (value15);
+			var arg15 = __vm15.CreateGenericArgumentState (value15);
 
 			var args = stackalloc JniArgumentValue [15];
 			args [0] = arg1.JniArgumentValue;
@@ -5214,21 +5610,21 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualCharMethod (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
-				__vm13.DestroyArgumentState (value13, ref arg13);
-				__vm14.DestroyArgumentState (value14, ref arg14);
-				__vm15.DestroyArgumentState (value15, ref arg15);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
+				__vm13.DestroyGenericArgumentState (value13, ref arg13);
+				__vm14.DestroyGenericArgumentState (value14, ref arg14);
+				__vm15.DestroyGenericArgumentState (value15, ref arg15);
 			}
 		}
 
@@ -5239,38 +5635,42 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 			var __vm14 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T14> ();
-			var arg14 = __vm14.CreateArgumentState (value14);
+			var arg14 = __vm14.CreateGenericArgumentState (value14);
 			var __vm15 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T15> ();
-			var arg15 = __vm15.CreateArgumentState (value15);
+			var arg15 = __vm15.CreateGenericArgumentState (value15);
 			var __vm16 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T16> ();
-			var arg16 = __vm16.CreateArgumentState (value16);
+			var arg16 = __vm16.CreateGenericArgumentState (value16);
 
 			var args = stackalloc JniArgumentValue [16];
 			args [0] = arg1.JniArgumentValue;
@@ -5293,22 +5693,22 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualCharMethod (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
-				__vm13.DestroyArgumentState (value13, ref arg13);
-				__vm14.DestroyArgumentState (value14, ref arg14);
-				__vm15.DestroyArgumentState (value15, ref arg15);
-				__vm16.DestroyArgumentState (value16, ref arg16);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
+				__vm13.DestroyGenericArgumentState (value13, ref arg13);
+				__vm14.DestroyGenericArgumentState (value14, ref arg14);
+				__vm15.DestroyGenericArgumentState (value15, ref arg15);
+				__vm16.DestroyGenericArgumentState (value16, ref arg16);
 			}
 		}
 
@@ -5318,6 +5718,10 @@ namespace Java.Interop.GenericMarshaler {
 			IJavaPeerable   self
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 
 			var args = stackalloc JniArgumentValue [0];
 
@@ -5334,8 +5738,12 @@ namespace Java.Interop.GenericMarshaler {
 			T value
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T> ();
-			var arg = __vm.CreateArgumentState (value);
+			var arg = __vm.CreateGenericArgumentState (value);
 
 			var args = stackalloc JniArgumentValue [1];
 			args [0] = arg.JniArgumentValue;
@@ -5343,7 +5751,7 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualInt16Method (encodedMember, self, args);
 			} finally {
-				__vm.DestroyArgumentState (value, ref arg);
+				__vm.DestroyGenericArgumentState (value, ref arg);
 			}
 		}
 
@@ -5354,10 +5762,14 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 
 			var args = stackalloc JniArgumentValue [2];
 			args [0] = arg1.JniArgumentValue;
@@ -5366,8 +5778,8 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualInt16Method (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
 			}
 		}
 
@@ -5378,12 +5790,16 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 
 			var args = stackalloc JniArgumentValue [3];
 			args [0] = arg1.JniArgumentValue;
@@ -5393,9 +5809,9 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualInt16Method (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
 			}
 		}
 
@@ -5406,14 +5822,18 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 
 			var args = stackalloc JniArgumentValue [4];
 			args [0] = arg1.JniArgumentValue;
@@ -5424,10 +5844,10 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualInt16Method (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
 			}
 		}
 
@@ -5438,16 +5858,20 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 
 			var args = stackalloc JniArgumentValue [5];
 			args [0] = arg1.JniArgumentValue;
@@ -5459,11 +5883,11 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualInt16Method (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
 			}
 		}
 
@@ -5474,18 +5898,22 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 
 			var args = stackalloc JniArgumentValue [6];
 			args [0] = arg1.JniArgumentValue;
@@ -5498,12 +5926,12 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualInt16Method (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
 			}
 		}
 
@@ -5514,20 +5942,24 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 
 			var args = stackalloc JniArgumentValue [7];
 			args [0] = arg1.JniArgumentValue;
@@ -5541,13 +5973,13 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualInt16Method (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
 			}
 		}
 
@@ -5558,22 +5990,26 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 
 			var args = stackalloc JniArgumentValue [8];
 			args [0] = arg1.JniArgumentValue;
@@ -5588,14 +6024,14 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualInt16Method (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
 			}
 		}
 
@@ -5606,24 +6042,28 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 
 			var args = stackalloc JniArgumentValue [9];
 			args [0] = arg1.JniArgumentValue;
@@ -5639,15 +6079,15 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualInt16Method (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
 			}
 		}
 
@@ -5658,26 +6098,30 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 
 			var args = stackalloc JniArgumentValue [10];
 			args [0] = arg1.JniArgumentValue;
@@ -5694,16 +6138,16 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualInt16Method (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
 			}
 		}
 
@@ -5714,28 +6158,32 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 
 			var args = stackalloc JniArgumentValue [11];
 			args [0] = arg1.JniArgumentValue;
@@ -5753,17 +6201,17 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualInt16Method (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
 			}
 		}
 
@@ -5774,30 +6222,34 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 
 			var args = stackalloc JniArgumentValue [12];
 			args [0] = arg1.JniArgumentValue;
@@ -5816,18 +6268,18 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualInt16Method (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
 			}
 		}
 
@@ -5838,32 +6290,36 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 
 			var args = stackalloc JniArgumentValue [13];
 			args [0] = arg1.JniArgumentValue;
@@ -5883,19 +6339,19 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualInt16Method (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
-				__vm13.DestroyArgumentState (value13, ref arg13);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
+				__vm13.DestroyGenericArgumentState (value13, ref arg13);
 			}
 		}
 
@@ -5906,34 +6362,38 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 			var __vm14 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T14> ();
-			var arg14 = __vm14.CreateArgumentState (value14);
+			var arg14 = __vm14.CreateGenericArgumentState (value14);
 
 			var args = stackalloc JniArgumentValue [14];
 			args [0] = arg1.JniArgumentValue;
@@ -5954,20 +6414,20 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualInt16Method (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
-				__vm13.DestroyArgumentState (value13, ref arg13);
-				__vm14.DestroyArgumentState (value14, ref arg14);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
+				__vm13.DestroyGenericArgumentState (value13, ref arg13);
+				__vm14.DestroyGenericArgumentState (value14, ref arg14);
 			}
 		}
 
@@ -5978,36 +6438,40 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 			var __vm14 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T14> ();
-			var arg14 = __vm14.CreateArgumentState (value14);
+			var arg14 = __vm14.CreateGenericArgumentState (value14);
 			var __vm15 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T15> ();
-			var arg15 = __vm15.CreateArgumentState (value15);
+			var arg15 = __vm15.CreateGenericArgumentState (value15);
 
 			var args = stackalloc JniArgumentValue [15];
 			args [0] = arg1.JniArgumentValue;
@@ -6029,21 +6493,21 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualInt16Method (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
-				__vm13.DestroyArgumentState (value13, ref arg13);
-				__vm14.DestroyArgumentState (value14, ref arg14);
-				__vm15.DestroyArgumentState (value15, ref arg15);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
+				__vm13.DestroyGenericArgumentState (value13, ref arg13);
+				__vm14.DestroyGenericArgumentState (value14, ref arg14);
+				__vm15.DestroyGenericArgumentState (value15, ref arg15);
 			}
 		}
 
@@ -6054,38 +6518,42 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 			var __vm14 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T14> ();
-			var arg14 = __vm14.CreateArgumentState (value14);
+			var arg14 = __vm14.CreateGenericArgumentState (value14);
 			var __vm15 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T15> ();
-			var arg15 = __vm15.CreateArgumentState (value15);
+			var arg15 = __vm15.CreateGenericArgumentState (value15);
 			var __vm16 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T16> ();
-			var arg16 = __vm16.CreateArgumentState (value16);
+			var arg16 = __vm16.CreateGenericArgumentState (value16);
 
 			var args = stackalloc JniArgumentValue [16];
 			args [0] = arg1.JniArgumentValue;
@@ -6108,22 +6576,22 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualInt16Method (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
-				__vm13.DestroyArgumentState (value13, ref arg13);
-				__vm14.DestroyArgumentState (value14, ref arg14);
-				__vm15.DestroyArgumentState (value15, ref arg15);
-				__vm16.DestroyArgumentState (value16, ref arg16);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
+				__vm13.DestroyGenericArgumentState (value13, ref arg13);
+				__vm14.DestroyGenericArgumentState (value14, ref arg14);
+				__vm15.DestroyGenericArgumentState (value15, ref arg15);
+				__vm16.DestroyGenericArgumentState (value16, ref arg16);
 			}
 		}
 
@@ -6133,6 +6601,10 @@ namespace Java.Interop.GenericMarshaler {
 			IJavaPeerable   self
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 
 			var args = stackalloc JniArgumentValue [0];
 
@@ -6149,8 +6621,12 @@ namespace Java.Interop.GenericMarshaler {
 			T value
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T> ();
-			var arg = __vm.CreateArgumentState (value);
+			var arg = __vm.CreateGenericArgumentState (value);
 
 			var args = stackalloc JniArgumentValue [1];
 			args [0] = arg.JniArgumentValue;
@@ -6158,7 +6634,7 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualInt32Method (encodedMember, self, args);
 			} finally {
-				__vm.DestroyArgumentState (value, ref arg);
+				__vm.DestroyGenericArgumentState (value, ref arg);
 			}
 		}
 
@@ -6169,10 +6645,14 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 
 			var args = stackalloc JniArgumentValue [2];
 			args [0] = arg1.JniArgumentValue;
@@ -6181,8 +6661,8 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualInt32Method (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
 			}
 		}
 
@@ -6193,12 +6673,16 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 
 			var args = stackalloc JniArgumentValue [3];
 			args [0] = arg1.JniArgumentValue;
@@ -6208,9 +6692,9 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualInt32Method (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
 			}
 		}
 
@@ -6221,14 +6705,18 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 
 			var args = stackalloc JniArgumentValue [4];
 			args [0] = arg1.JniArgumentValue;
@@ -6239,10 +6727,10 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualInt32Method (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
 			}
 		}
 
@@ -6253,16 +6741,20 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 
 			var args = stackalloc JniArgumentValue [5];
 			args [0] = arg1.JniArgumentValue;
@@ -6274,11 +6766,11 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualInt32Method (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
 			}
 		}
 
@@ -6289,18 +6781,22 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 
 			var args = stackalloc JniArgumentValue [6];
 			args [0] = arg1.JniArgumentValue;
@@ -6313,12 +6809,12 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualInt32Method (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
 			}
 		}
 
@@ -6329,20 +6825,24 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 
 			var args = stackalloc JniArgumentValue [7];
 			args [0] = arg1.JniArgumentValue;
@@ -6356,13 +6856,13 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualInt32Method (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
 			}
 		}
 
@@ -6373,22 +6873,26 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 
 			var args = stackalloc JniArgumentValue [8];
 			args [0] = arg1.JniArgumentValue;
@@ -6403,14 +6907,14 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualInt32Method (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
 			}
 		}
 
@@ -6421,24 +6925,28 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 
 			var args = stackalloc JniArgumentValue [9];
 			args [0] = arg1.JniArgumentValue;
@@ -6454,15 +6962,15 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualInt32Method (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
 			}
 		}
 
@@ -6473,26 +6981,30 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 
 			var args = stackalloc JniArgumentValue [10];
 			args [0] = arg1.JniArgumentValue;
@@ -6509,16 +7021,16 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualInt32Method (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
 			}
 		}
 
@@ -6529,28 +7041,32 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 
 			var args = stackalloc JniArgumentValue [11];
 			args [0] = arg1.JniArgumentValue;
@@ -6568,17 +7084,17 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualInt32Method (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
 			}
 		}
 
@@ -6589,30 +7105,34 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 
 			var args = stackalloc JniArgumentValue [12];
 			args [0] = arg1.JniArgumentValue;
@@ -6631,18 +7151,18 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualInt32Method (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
 			}
 		}
 
@@ -6653,32 +7173,36 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 
 			var args = stackalloc JniArgumentValue [13];
 			args [0] = arg1.JniArgumentValue;
@@ -6698,19 +7222,19 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualInt32Method (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
-				__vm13.DestroyArgumentState (value13, ref arg13);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
+				__vm13.DestroyGenericArgumentState (value13, ref arg13);
 			}
 		}
 
@@ -6721,34 +7245,38 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 			var __vm14 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T14> ();
-			var arg14 = __vm14.CreateArgumentState (value14);
+			var arg14 = __vm14.CreateGenericArgumentState (value14);
 
 			var args = stackalloc JniArgumentValue [14];
 			args [0] = arg1.JniArgumentValue;
@@ -6769,20 +7297,20 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualInt32Method (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
-				__vm13.DestroyArgumentState (value13, ref arg13);
-				__vm14.DestroyArgumentState (value14, ref arg14);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
+				__vm13.DestroyGenericArgumentState (value13, ref arg13);
+				__vm14.DestroyGenericArgumentState (value14, ref arg14);
 			}
 		}
 
@@ -6793,36 +7321,40 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 			var __vm14 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T14> ();
-			var arg14 = __vm14.CreateArgumentState (value14);
+			var arg14 = __vm14.CreateGenericArgumentState (value14);
 			var __vm15 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T15> ();
-			var arg15 = __vm15.CreateArgumentState (value15);
+			var arg15 = __vm15.CreateGenericArgumentState (value15);
 
 			var args = stackalloc JniArgumentValue [15];
 			args [0] = arg1.JniArgumentValue;
@@ -6844,21 +7376,21 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualInt32Method (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
-				__vm13.DestroyArgumentState (value13, ref arg13);
-				__vm14.DestroyArgumentState (value14, ref arg14);
-				__vm15.DestroyArgumentState (value15, ref arg15);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
+				__vm13.DestroyGenericArgumentState (value13, ref arg13);
+				__vm14.DestroyGenericArgumentState (value14, ref arg14);
+				__vm15.DestroyGenericArgumentState (value15, ref arg15);
 			}
 		}
 
@@ -6869,38 +7401,42 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 			var __vm14 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T14> ();
-			var arg14 = __vm14.CreateArgumentState (value14);
+			var arg14 = __vm14.CreateGenericArgumentState (value14);
 			var __vm15 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T15> ();
-			var arg15 = __vm15.CreateArgumentState (value15);
+			var arg15 = __vm15.CreateGenericArgumentState (value15);
 			var __vm16 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T16> ();
-			var arg16 = __vm16.CreateArgumentState (value16);
+			var arg16 = __vm16.CreateGenericArgumentState (value16);
 
 			var args = stackalloc JniArgumentValue [16];
 			args [0] = arg1.JniArgumentValue;
@@ -6923,22 +7459,22 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualInt32Method (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
-				__vm13.DestroyArgumentState (value13, ref arg13);
-				__vm14.DestroyArgumentState (value14, ref arg14);
-				__vm15.DestroyArgumentState (value15, ref arg15);
-				__vm16.DestroyArgumentState (value16, ref arg16);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
+				__vm13.DestroyGenericArgumentState (value13, ref arg13);
+				__vm14.DestroyGenericArgumentState (value14, ref arg14);
+				__vm15.DestroyGenericArgumentState (value15, ref arg15);
+				__vm16.DestroyGenericArgumentState (value16, ref arg16);
 			}
 		}
 
@@ -6948,6 +7484,10 @@ namespace Java.Interop.GenericMarshaler {
 			IJavaPeerable   self
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 
 			var args = stackalloc JniArgumentValue [0];
 
@@ -6964,8 +7504,12 @@ namespace Java.Interop.GenericMarshaler {
 			T value
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T> ();
-			var arg = __vm.CreateArgumentState (value);
+			var arg = __vm.CreateGenericArgumentState (value);
 
 			var args = stackalloc JniArgumentValue [1];
 			args [0] = arg.JniArgumentValue;
@@ -6973,7 +7517,7 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualInt64Method (encodedMember, self, args);
 			} finally {
-				__vm.DestroyArgumentState (value, ref arg);
+				__vm.DestroyGenericArgumentState (value, ref arg);
 			}
 		}
 
@@ -6984,10 +7528,14 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 
 			var args = stackalloc JniArgumentValue [2];
 			args [0] = arg1.JniArgumentValue;
@@ -6996,8 +7544,8 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualInt64Method (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
 			}
 		}
 
@@ -7008,12 +7556,16 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 
 			var args = stackalloc JniArgumentValue [3];
 			args [0] = arg1.JniArgumentValue;
@@ -7023,9 +7575,9 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualInt64Method (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
 			}
 		}
 
@@ -7036,14 +7588,18 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 
 			var args = stackalloc JniArgumentValue [4];
 			args [0] = arg1.JniArgumentValue;
@@ -7054,10 +7610,10 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualInt64Method (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
 			}
 		}
 
@@ -7068,16 +7624,20 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 
 			var args = stackalloc JniArgumentValue [5];
 			args [0] = arg1.JniArgumentValue;
@@ -7089,11 +7649,11 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualInt64Method (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
 			}
 		}
 
@@ -7104,18 +7664,22 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 
 			var args = stackalloc JniArgumentValue [6];
 			args [0] = arg1.JniArgumentValue;
@@ -7128,12 +7692,12 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualInt64Method (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
 			}
 		}
 
@@ -7144,20 +7708,24 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 
 			var args = stackalloc JniArgumentValue [7];
 			args [0] = arg1.JniArgumentValue;
@@ -7171,13 +7739,13 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualInt64Method (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
 			}
 		}
 
@@ -7188,22 +7756,26 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 
 			var args = stackalloc JniArgumentValue [8];
 			args [0] = arg1.JniArgumentValue;
@@ -7218,14 +7790,14 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualInt64Method (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
 			}
 		}
 
@@ -7236,24 +7808,28 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 
 			var args = stackalloc JniArgumentValue [9];
 			args [0] = arg1.JniArgumentValue;
@@ -7269,15 +7845,15 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualInt64Method (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
 			}
 		}
 
@@ -7288,26 +7864,30 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 
 			var args = stackalloc JniArgumentValue [10];
 			args [0] = arg1.JniArgumentValue;
@@ -7324,16 +7904,16 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualInt64Method (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
 			}
 		}
 
@@ -7344,28 +7924,32 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 
 			var args = stackalloc JniArgumentValue [11];
 			args [0] = arg1.JniArgumentValue;
@@ -7383,17 +7967,17 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualInt64Method (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
 			}
 		}
 
@@ -7404,30 +7988,34 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 
 			var args = stackalloc JniArgumentValue [12];
 			args [0] = arg1.JniArgumentValue;
@@ -7446,18 +8034,18 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualInt64Method (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
 			}
 		}
 
@@ -7468,32 +8056,36 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 
 			var args = stackalloc JniArgumentValue [13];
 			args [0] = arg1.JniArgumentValue;
@@ -7513,19 +8105,19 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualInt64Method (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
-				__vm13.DestroyArgumentState (value13, ref arg13);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
+				__vm13.DestroyGenericArgumentState (value13, ref arg13);
 			}
 		}
 
@@ -7536,34 +8128,38 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 			var __vm14 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T14> ();
-			var arg14 = __vm14.CreateArgumentState (value14);
+			var arg14 = __vm14.CreateGenericArgumentState (value14);
 
 			var args = stackalloc JniArgumentValue [14];
 			args [0] = arg1.JniArgumentValue;
@@ -7584,20 +8180,20 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualInt64Method (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
-				__vm13.DestroyArgumentState (value13, ref arg13);
-				__vm14.DestroyArgumentState (value14, ref arg14);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
+				__vm13.DestroyGenericArgumentState (value13, ref arg13);
+				__vm14.DestroyGenericArgumentState (value14, ref arg14);
 			}
 		}
 
@@ -7608,36 +8204,40 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 			var __vm14 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T14> ();
-			var arg14 = __vm14.CreateArgumentState (value14);
+			var arg14 = __vm14.CreateGenericArgumentState (value14);
 			var __vm15 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T15> ();
-			var arg15 = __vm15.CreateArgumentState (value15);
+			var arg15 = __vm15.CreateGenericArgumentState (value15);
 
 			var args = stackalloc JniArgumentValue [15];
 			args [0] = arg1.JniArgumentValue;
@@ -7659,21 +8259,21 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualInt64Method (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
-				__vm13.DestroyArgumentState (value13, ref arg13);
-				__vm14.DestroyArgumentState (value14, ref arg14);
-				__vm15.DestroyArgumentState (value15, ref arg15);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
+				__vm13.DestroyGenericArgumentState (value13, ref arg13);
+				__vm14.DestroyGenericArgumentState (value14, ref arg14);
+				__vm15.DestroyGenericArgumentState (value15, ref arg15);
 			}
 		}
 
@@ -7684,38 +8284,42 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 			var __vm14 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T14> ();
-			var arg14 = __vm14.CreateArgumentState (value14);
+			var arg14 = __vm14.CreateGenericArgumentState (value14);
 			var __vm15 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T15> ();
-			var arg15 = __vm15.CreateArgumentState (value15);
+			var arg15 = __vm15.CreateGenericArgumentState (value15);
 			var __vm16 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T16> ();
-			var arg16 = __vm16.CreateArgumentState (value16);
+			var arg16 = __vm16.CreateGenericArgumentState (value16);
 
 			var args = stackalloc JniArgumentValue [16];
 			args [0] = arg1.JniArgumentValue;
@@ -7738,22 +8342,22 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualInt64Method (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
-				__vm13.DestroyArgumentState (value13, ref arg13);
-				__vm14.DestroyArgumentState (value14, ref arg14);
-				__vm15.DestroyArgumentState (value15, ref arg15);
-				__vm16.DestroyArgumentState (value16, ref arg16);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
+				__vm13.DestroyGenericArgumentState (value13, ref arg13);
+				__vm14.DestroyGenericArgumentState (value14, ref arg14);
+				__vm15.DestroyGenericArgumentState (value15, ref arg15);
+				__vm16.DestroyGenericArgumentState (value16, ref arg16);
 			}
 		}
 
@@ -7763,6 +8367,10 @@ namespace Java.Interop.GenericMarshaler {
 			IJavaPeerable   self
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 
 			var args = stackalloc JniArgumentValue [0];
 
@@ -7779,8 +8387,12 @@ namespace Java.Interop.GenericMarshaler {
 			T value
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T> ();
-			var arg = __vm.CreateArgumentState (value);
+			var arg = __vm.CreateGenericArgumentState (value);
 
 			var args = stackalloc JniArgumentValue [1];
 			args [0] = arg.JniArgumentValue;
@@ -7788,7 +8400,7 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualSingleMethod (encodedMember, self, args);
 			} finally {
-				__vm.DestroyArgumentState (value, ref arg);
+				__vm.DestroyGenericArgumentState (value, ref arg);
 			}
 		}
 
@@ -7799,10 +8411,14 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 
 			var args = stackalloc JniArgumentValue [2];
 			args [0] = arg1.JniArgumentValue;
@@ -7811,8 +8427,8 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualSingleMethod (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
 			}
 		}
 
@@ -7823,12 +8439,16 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 
 			var args = stackalloc JniArgumentValue [3];
 			args [0] = arg1.JniArgumentValue;
@@ -7838,9 +8458,9 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualSingleMethod (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
 			}
 		}
 
@@ -7851,14 +8471,18 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 
 			var args = stackalloc JniArgumentValue [4];
 			args [0] = arg1.JniArgumentValue;
@@ -7869,10 +8493,10 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualSingleMethod (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
 			}
 		}
 
@@ -7883,16 +8507,20 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 
 			var args = stackalloc JniArgumentValue [5];
 			args [0] = arg1.JniArgumentValue;
@@ -7904,11 +8532,11 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualSingleMethod (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
 			}
 		}
 
@@ -7919,18 +8547,22 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 
 			var args = stackalloc JniArgumentValue [6];
 			args [0] = arg1.JniArgumentValue;
@@ -7943,12 +8575,12 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualSingleMethod (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
 			}
 		}
 
@@ -7959,20 +8591,24 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 
 			var args = stackalloc JniArgumentValue [7];
 			args [0] = arg1.JniArgumentValue;
@@ -7986,13 +8622,13 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualSingleMethod (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
 			}
 		}
 
@@ -8003,22 +8639,26 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 
 			var args = stackalloc JniArgumentValue [8];
 			args [0] = arg1.JniArgumentValue;
@@ -8033,14 +8673,14 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualSingleMethod (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
 			}
 		}
 
@@ -8051,24 +8691,28 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 
 			var args = stackalloc JniArgumentValue [9];
 			args [0] = arg1.JniArgumentValue;
@@ -8084,15 +8728,15 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualSingleMethod (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
 			}
 		}
 
@@ -8103,26 +8747,30 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 
 			var args = stackalloc JniArgumentValue [10];
 			args [0] = arg1.JniArgumentValue;
@@ -8139,16 +8787,16 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualSingleMethod (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
 			}
 		}
 
@@ -8159,28 +8807,32 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 
 			var args = stackalloc JniArgumentValue [11];
 			args [0] = arg1.JniArgumentValue;
@@ -8198,17 +8850,17 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualSingleMethod (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
 			}
 		}
 
@@ -8219,30 +8871,34 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 
 			var args = stackalloc JniArgumentValue [12];
 			args [0] = arg1.JniArgumentValue;
@@ -8261,18 +8917,18 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualSingleMethod (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
 			}
 		}
 
@@ -8283,32 +8939,36 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 
 			var args = stackalloc JniArgumentValue [13];
 			args [0] = arg1.JniArgumentValue;
@@ -8328,19 +8988,19 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualSingleMethod (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
-				__vm13.DestroyArgumentState (value13, ref arg13);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
+				__vm13.DestroyGenericArgumentState (value13, ref arg13);
 			}
 		}
 
@@ -8351,34 +9011,38 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 			var __vm14 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T14> ();
-			var arg14 = __vm14.CreateArgumentState (value14);
+			var arg14 = __vm14.CreateGenericArgumentState (value14);
 
 			var args = stackalloc JniArgumentValue [14];
 			args [0] = arg1.JniArgumentValue;
@@ -8399,20 +9063,20 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualSingleMethod (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
-				__vm13.DestroyArgumentState (value13, ref arg13);
-				__vm14.DestroyArgumentState (value14, ref arg14);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
+				__vm13.DestroyGenericArgumentState (value13, ref arg13);
+				__vm14.DestroyGenericArgumentState (value14, ref arg14);
 			}
 		}
 
@@ -8423,36 +9087,40 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 			var __vm14 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T14> ();
-			var arg14 = __vm14.CreateArgumentState (value14);
+			var arg14 = __vm14.CreateGenericArgumentState (value14);
 			var __vm15 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T15> ();
-			var arg15 = __vm15.CreateArgumentState (value15);
+			var arg15 = __vm15.CreateGenericArgumentState (value15);
 
 			var args = stackalloc JniArgumentValue [15];
 			args [0] = arg1.JniArgumentValue;
@@ -8474,21 +9142,21 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualSingleMethod (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
-				__vm13.DestroyArgumentState (value13, ref arg13);
-				__vm14.DestroyArgumentState (value14, ref arg14);
-				__vm15.DestroyArgumentState (value15, ref arg15);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
+				__vm13.DestroyGenericArgumentState (value13, ref arg13);
+				__vm14.DestroyGenericArgumentState (value14, ref arg14);
+				__vm15.DestroyGenericArgumentState (value15, ref arg15);
 			}
 		}
 
@@ -8499,38 +9167,42 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 			var __vm14 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T14> ();
-			var arg14 = __vm14.CreateArgumentState (value14);
+			var arg14 = __vm14.CreateGenericArgumentState (value14);
 			var __vm15 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T15> ();
-			var arg15 = __vm15.CreateArgumentState (value15);
+			var arg15 = __vm15.CreateGenericArgumentState (value15);
 			var __vm16 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T16> ();
-			var arg16 = __vm16.CreateArgumentState (value16);
+			var arg16 = __vm16.CreateGenericArgumentState (value16);
 
 			var args = stackalloc JniArgumentValue [16];
 			args [0] = arg1.JniArgumentValue;
@@ -8553,22 +9225,22 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualSingleMethod (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
-				__vm13.DestroyArgumentState (value13, ref arg13);
-				__vm14.DestroyArgumentState (value14, ref arg14);
-				__vm15.DestroyArgumentState (value15, ref arg15);
-				__vm16.DestroyArgumentState (value16, ref arg16);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
+				__vm13.DestroyGenericArgumentState (value13, ref arg13);
+				__vm14.DestroyGenericArgumentState (value14, ref arg14);
+				__vm15.DestroyGenericArgumentState (value15, ref arg15);
+				__vm16.DestroyGenericArgumentState (value16, ref arg16);
 			}
 		}
 
@@ -8578,6 +9250,10 @@ namespace Java.Interop.GenericMarshaler {
 			IJavaPeerable   self
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 
 			var args = stackalloc JniArgumentValue [0];
 
@@ -8594,8 +9270,12 @@ namespace Java.Interop.GenericMarshaler {
 			T value
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T> ();
-			var arg = __vm.CreateArgumentState (value);
+			var arg = __vm.CreateGenericArgumentState (value);
 
 			var args = stackalloc JniArgumentValue [1];
 			args [0] = arg.JniArgumentValue;
@@ -8603,7 +9283,7 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualDoubleMethod (encodedMember, self, args);
 			} finally {
-				__vm.DestroyArgumentState (value, ref arg);
+				__vm.DestroyGenericArgumentState (value, ref arg);
 			}
 		}
 
@@ -8614,10 +9294,14 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 
 			var args = stackalloc JniArgumentValue [2];
 			args [0] = arg1.JniArgumentValue;
@@ -8626,8 +9310,8 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualDoubleMethod (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
 			}
 		}
 
@@ -8638,12 +9322,16 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 
 			var args = stackalloc JniArgumentValue [3];
 			args [0] = arg1.JniArgumentValue;
@@ -8653,9 +9341,9 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualDoubleMethod (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
 			}
 		}
 
@@ -8666,14 +9354,18 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 
 			var args = stackalloc JniArgumentValue [4];
 			args [0] = arg1.JniArgumentValue;
@@ -8684,10 +9376,10 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualDoubleMethod (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
 			}
 		}
 
@@ -8698,16 +9390,20 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 
 			var args = stackalloc JniArgumentValue [5];
 			args [0] = arg1.JniArgumentValue;
@@ -8719,11 +9415,11 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualDoubleMethod (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
 			}
 		}
 
@@ -8734,18 +9430,22 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 
 			var args = stackalloc JniArgumentValue [6];
 			args [0] = arg1.JniArgumentValue;
@@ -8758,12 +9458,12 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualDoubleMethod (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
 			}
 		}
 
@@ -8774,20 +9474,24 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 
 			var args = stackalloc JniArgumentValue [7];
 			args [0] = arg1.JniArgumentValue;
@@ -8801,13 +9505,13 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualDoubleMethod (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
 			}
 		}
 
@@ -8818,22 +9522,26 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 
 			var args = stackalloc JniArgumentValue [8];
 			args [0] = arg1.JniArgumentValue;
@@ -8848,14 +9556,14 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualDoubleMethod (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
 			}
 		}
 
@@ -8866,24 +9574,28 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 
 			var args = stackalloc JniArgumentValue [9];
 			args [0] = arg1.JniArgumentValue;
@@ -8899,15 +9611,15 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualDoubleMethod (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
 			}
 		}
 
@@ -8918,26 +9630,30 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 
 			var args = stackalloc JniArgumentValue [10];
 			args [0] = arg1.JniArgumentValue;
@@ -8954,16 +9670,16 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualDoubleMethod (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
 			}
 		}
 
@@ -8974,28 +9690,32 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 
 			var args = stackalloc JniArgumentValue [11];
 			args [0] = arg1.JniArgumentValue;
@@ -9013,17 +9733,17 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualDoubleMethod (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
 			}
 		}
 
@@ -9034,30 +9754,34 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 
 			var args = stackalloc JniArgumentValue [12];
 			args [0] = arg1.JniArgumentValue;
@@ -9076,18 +9800,18 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualDoubleMethod (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
 			}
 		}
 
@@ -9098,32 +9822,36 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 
 			var args = stackalloc JniArgumentValue [13];
 			args [0] = arg1.JniArgumentValue;
@@ -9143,19 +9871,19 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualDoubleMethod (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
-				__vm13.DestroyArgumentState (value13, ref arg13);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
+				__vm13.DestroyGenericArgumentState (value13, ref arg13);
 			}
 		}
 
@@ -9166,34 +9894,38 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 			var __vm14 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T14> ();
-			var arg14 = __vm14.CreateArgumentState (value14);
+			var arg14 = __vm14.CreateGenericArgumentState (value14);
 
 			var args = stackalloc JniArgumentValue [14];
 			args [0] = arg1.JniArgumentValue;
@@ -9214,20 +9946,20 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualDoubleMethod (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
-				__vm13.DestroyArgumentState (value13, ref arg13);
-				__vm14.DestroyArgumentState (value14, ref arg14);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
+				__vm13.DestroyGenericArgumentState (value13, ref arg13);
+				__vm14.DestroyGenericArgumentState (value14, ref arg14);
 			}
 		}
 
@@ -9238,36 +9970,40 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 			var __vm14 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T14> ();
-			var arg14 = __vm14.CreateArgumentState (value14);
+			var arg14 = __vm14.CreateGenericArgumentState (value14);
 			var __vm15 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T15> ();
-			var arg15 = __vm15.CreateArgumentState (value15);
+			var arg15 = __vm15.CreateGenericArgumentState (value15);
 
 			var args = stackalloc JniArgumentValue [15];
 			args [0] = arg1.JniArgumentValue;
@@ -9289,21 +10025,21 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualDoubleMethod (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
-				__vm13.DestroyArgumentState (value13, ref arg13);
-				__vm14.DestroyArgumentState (value14, ref arg14);
-				__vm15.DestroyArgumentState (value15, ref arg15);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
+				__vm13.DestroyGenericArgumentState (value13, ref arg13);
+				__vm14.DestroyGenericArgumentState (value14, ref arg14);
+				__vm15.DestroyGenericArgumentState (value15, ref arg15);
 			}
 		}
 
@@ -9314,38 +10050,42 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 			var __vm14 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T14> ();
-			var arg14 = __vm14.CreateArgumentState (value14);
+			var arg14 = __vm14.CreateGenericArgumentState (value14);
 			var __vm15 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T15> ();
-			var arg15 = __vm15.CreateArgumentState (value15);
+			var arg15 = __vm15.CreateGenericArgumentState (value15);
 			var __vm16 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T16> ();
-			var arg16 = __vm16.CreateArgumentState (value16);
+			var arg16 = __vm16.CreateGenericArgumentState (value16);
 
 			var args = stackalloc JniArgumentValue [16];
 			args [0] = arg1.JniArgumentValue;
@@ -9368,22 +10108,22 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualDoubleMethod (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
-				__vm13.DestroyArgumentState (value13, ref arg13);
-				__vm14.DestroyArgumentState (value14, ref arg14);
-				__vm15.DestroyArgumentState (value15, ref arg15);
-				__vm16.DestroyArgumentState (value16, ref arg16);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
+				__vm13.DestroyGenericArgumentState (value13, ref arg13);
+				__vm14.DestroyGenericArgumentState (value14, ref arg14);
+				__vm15.DestroyGenericArgumentState (value15, ref arg15);
+				__vm16.DestroyGenericArgumentState (value16, ref arg16);
 			}
 		}
 
@@ -9393,6 +10133,10 @@ namespace Java.Interop.GenericMarshaler {
 			IJavaPeerable   self
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 
 			var args = stackalloc JniArgumentValue [0];
 
@@ -9409,8 +10153,12 @@ namespace Java.Interop.GenericMarshaler {
 			T value
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T> ();
-			var arg = __vm.CreateArgumentState (value);
+			var arg = __vm.CreateGenericArgumentState (value);
 
 			var args = stackalloc JniArgumentValue [1];
 			args [0] = arg.JniArgumentValue;
@@ -9418,7 +10166,7 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualObjectMethod (encodedMember, self, args);
 			} finally {
-				__vm.DestroyArgumentState (value, ref arg);
+				__vm.DestroyGenericArgumentState (value, ref arg);
 			}
 		}
 
@@ -9429,10 +10177,14 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 
 			var args = stackalloc JniArgumentValue [2];
 			args [0] = arg1.JniArgumentValue;
@@ -9441,8 +10193,8 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualObjectMethod (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
 			}
 		}
 
@@ -9453,12 +10205,16 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 
 			var args = stackalloc JniArgumentValue [3];
 			args [0] = arg1.JniArgumentValue;
@@ -9468,9 +10224,9 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualObjectMethod (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
 			}
 		}
 
@@ -9481,14 +10237,18 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 
 			var args = stackalloc JniArgumentValue [4];
 			args [0] = arg1.JniArgumentValue;
@@ -9499,10 +10259,10 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualObjectMethod (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
 			}
 		}
 
@@ -9513,16 +10273,20 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 
 			var args = stackalloc JniArgumentValue [5];
 			args [0] = arg1.JniArgumentValue;
@@ -9534,11 +10298,11 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualObjectMethod (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
 			}
 		}
 
@@ -9549,18 +10313,22 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 
 			var args = stackalloc JniArgumentValue [6];
 			args [0] = arg1.JniArgumentValue;
@@ -9573,12 +10341,12 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualObjectMethod (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
 			}
 		}
 
@@ -9589,20 +10357,24 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 
 			var args = stackalloc JniArgumentValue [7];
 			args [0] = arg1.JniArgumentValue;
@@ -9616,13 +10388,13 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualObjectMethod (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
 			}
 		}
 
@@ -9633,22 +10405,26 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 
 			var args = stackalloc JniArgumentValue [8];
 			args [0] = arg1.JniArgumentValue;
@@ -9663,14 +10439,14 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualObjectMethod (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
 			}
 		}
 
@@ -9681,24 +10457,28 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 
 			var args = stackalloc JniArgumentValue [9];
 			args [0] = arg1.JniArgumentValue;
@@ -9714,15 +10494,15 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualObjectMethod (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
 			}
 		}
 
@@ -9733,26 +10513,30 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 
 			var args = stackalloc JniArgumentValue [10];
 			args [0] = arg1.JniArgumentValue;
@@ -9769,16 +10553,16 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualObjectMethod (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
 			}
 		}
 
@@ -9789,28 +10573,32 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 
 			var args = stackalloc JniArgumentValue [11];
 			args [0] = arg1.JniArgumentValue;
@@ -9828,17 +10616,17 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualObjectMethod (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
 			}
 		}
 
@@ -9849,30 +10637,34 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 
 			var args = stackalloc JniArgumentValue [12];
 			args [0] = arg1.JniArgumentValue;
@@ -9891,18 +10683,18 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualObjectMethod (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
 			}
 		}
 
@@ -9913,32 +10705,36 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 
 			var args = stackalloc JniArgumentValue [13];
 			args [0] = arg1.JniArgumentValue;
@@ -9958,19 +10754,19 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualObjectMethod (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
-				__vm13.DestroyArgumentState (value13, ref arg13);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
+				__vm13.DestroyGenericArgumentState (value13, ref arg13);
 			}
 		}
 
@@ -9981,34 +10777,38 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 			var __vm14 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T14> ();
-			var arg14 = __vm14.CreateArgumentState (value14);
+			var arg14 = __vm14.CreateGenericArgumentState (value14);
 
 			var args = stackalloc JniArgumentValue [14];
 			args [0] = arg1.JniArgumentValue;
@@ -10029,20 +10829,20 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualObjectMethod (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
-				__vm13.DestroyArgumentState (value13, ref arg13);
-				__vm14.DestroyArgumentState (value14, ref arg14);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
+				__vm13.DestroyGenericArgumentState (value13, ref arg13);
+				__vm14.DestroyGenericArgumentState (value14, ref arg14);
 			}
 		}
 
@@ -10053,36 +10853,40 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 			var __vm14 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T14> ();
-			var arg14 = __vm14.CreateArgumentState (value14);
+			var arg14 = __vm14.CreateGenericArgumentState (value14);
 			var __vm15 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T15> ();
-			var arg15 = __vm15.CreateArgumentState (value15);
+			var arg15 = __vm15.CreateGenericArgumentState (value15);
 
 			var args = stackalloc JniArgumentValue [15];
 			args [0] = arg1.JniArgumentValue;
@@ -10104,21 +10908,21 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualObjectMethod (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
-				__vm13.DestroyArgumentState (value13, ref arg13);
-				__vm14.DestroyArgumentState (value14, ref arg14);
-				__vm15.DestroyArgumentState (value15, ref arg15);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
+				__vm13.DestroyGenericArgumentState (value13, ref arg13);
+				__vm14.DestroyGenericArgumentState (value14, ref arg14);
+				__vm15.DestroyGenericArgumentState (value15, ref arg15);
 			}
 		}
 
@@ -10129,38 +10933,42 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 			var __vm14 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T14> ();
-			var arg14 = __vm14.CreateArgumentState (value14);
+			var arg14 = __vm14.CreateGenericArgumentState (value14);
 			var __vm15 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T15> ();
-			var arg15 = __vm15.CreateArgumentState (value15);
+			var arg15 = __vm15.CreateGenericArgumentState (value15);
 			var __vm16 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T16> ();
-			var arg16 = __vm16.CreateArgumentState (value16);
+			var arg16 = __vm16.CreateGenericArgumentState (value16);
 
 			var args = stackalloc JniArgumentValue [16];
 			args [0] = arg1.JniArgumentValue;
@@ -10183,22 +10991,22 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeVirtualObjectMethod (encodedMember, self, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
-				__vm13.DestroyArgumentState (value13, ref arg13);
-				__vm14.DestroyArgumentState (value14, ref arg14);
-				__vm15.DestroyArgumentState (value15, ref arg15);
-				__vm16.DestroyArgumentState (value16, ref arg16);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
+				__vm13.DestroyGenericArgumentState (value13, ref arg13);
+				__vm14.DestroyGenericArgumentState (value14, ref arg14);
+				__vm15.DestroyGenericArgumentState (value15, ref arg15);
+				__vm16.DestroyGenericArgumentState (value16, ref arg16);
 			}
 		}
 	}
@@ -10212,8 +11020,10 @@ namespace Java.Interop.GenericMarshaler {
 			T value
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T> ();
-			var arg = __vm.CreateArgumentState (value);
+			var arg = __vm.CreateGenericArgumentState (value);
 
 			var args = stackalloc JniArgumentValue [1];
 			args [0] = arg.JniArgumentValue;
@@ -10221,7 +11031,7 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				peer.InvokeVoidMethod (encodedMember, args);
 			} finally {
-				__vm.DestroyArgumentState (value, ref arg);
+				__vm.DestroyGenericArgumentState (value, ref arg);
 			}
 		}
 
@@ -10231,10 +11041,12 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 
 			var args = stackalloc JniArgumentValue [2];
 			args [0] = arg1.JniArgumentValue;
@@ -10243,8 +11055,8 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				peer.InvokeVoidMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
 			}
 		}
 
@@ -10254,12 +11066,14 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 
 			var args = stackalloc JniArgumentValue [3];
 			args [0] = arg1.JniArgumentValue;
@@ -10269,9 +11083,9 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				peer.InvokeVoidMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
 			}
 		}
 
@@ -10281,14 +11095,16 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 
 			var args = stackalloc JniArgumentValue [4];
 			args [0] = arg1.JniArgumentValue;
@@ -10299,10 +11115,10 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				peer.InvokeVoidMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
 			}
 		}
 
@@ -10312,16 +11128,18 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 
 			var args = stackalloc JniArgumentValue [5];
 			args [0] = arg1.JniArgumentValue;
@@ -10333,11 +11151,11 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				peer.InvokeVoidMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
 			}
 		}
 
@@ -10347,18 +11165,20 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 
 			var args = stackalloc JniArgumentValue [6];
 			args [0] = arg1.JniArgumentValue;
@@ -10371,12 +11191,12 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				peer.InvokeVoidMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
 			}
 		}
 
@@ -10386,20 +11206,22 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 
 			var args = stackalloc JniArgumentValue [7];
 			args [0] = arg1.JniArgumentValue;
@@ -10413,13 +11235,13 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				peer.InvokeVoidMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
 			}
 		}
 
@@ -10429,22 +11251,24 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 
 			var args = stackalloc JniArgumentValue [8];
 			args [0] = arg1.JniArgumentValue;
@@ -10459,14 +11283,14 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				peer.InvokeVoidMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
 			}
 		}
 
@@ -10476,24 +11300,26 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 
 			var args = stackalloc JniArgumentValue [9];
 			args [0] = arg1.JniArgumentValue;
@@ -10509,15 +11335,15 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				peer.InvokeVoidMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
 			}
 		}
 
@@ -10527,26 +11353,28 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 
 			var args = stackalloc JniArgumentValue [10];
 			args [0] = arg1.JniArgumentValue;
@@ -10563,16 +11391,16 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				peer.InvokeVoidMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
 			}
 		}
 
@@ -10582,28 +11410,30 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 
 			var args = stackalloc JniArgumentValue [11];
 			args [0] = arg1.JniArgumentValue;
@@ -10621,17 +11451,17 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				peer.InvokeVoidMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
 			}
 		}
 
@@ -10641,30 +11471,32 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 
 			var args = stackalloc JniArgumentValue [12];
 			args [0] = arg1.JniArgumentValue;
@@ -10683,18 +11515,18 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				peer.InvokeVoidMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
 			}
 		}
 
@@ -10704,32 +11536,34 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 
 			var args = stackalloc JniArgumentValue [13];
 			args [0] = arg1.JniArgumentValue;
@@ -10749,19 +11583,19 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				peer.InvokeVoidMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
-				__vm13.DestroyArgumentState (value13, ref arg13);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
+				__vm13.DestroyGenericArgumentState (value13, ref arg13);
 			}
 		}
 
@@ -10771,34 +11605,36 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 			var __vm14 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T14> ();
-			var arg14 = __vm14.CreateArgumentState (value14);
+			var arg14 = __vm14.CreateGenericArgumentState (value14);
 
 			var args = stackalloc JniArgumentValue [14];
 			args [0] = arg1.JniArgumentValue;
@@ -10819,20 +11655,20 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				peer.InvokeVoidMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
-				__vm13.DestroyArgumentState (value13, ref arg13);
-				__vm14.DestroyArgumentState (value14, ref arg14);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
+				__vm13.DestroyGenericArgumentState (value13, ref arg13);
+				__vm14.DestroyGenericArgumentState (value14, ref arg14);
 			}
 		}
 
@@ -10842,36 +11678,38 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 			var __vm14 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T14> ();
-			var arg14 = __vm14.CreateArgumentState (value14);
+			var arg14 = __vm14.CreateGenericArgumentState (value14);
 			var __vm15 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T15> ();
-			var arg15 = __vm15.CreateArgumentState (value15);
+			var arg15 = __vm15.CreateGenericArgumentState (value15);
 
 			var args = stackalloc JniArgumentValue [15];
 			args [0] = arg1.JniArgumentValue;
@@ -10893,21 +11731,21 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				peer.InvokeVoidMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
-				__vm13.DestroyArgumentState (value13, ref arg13);
-				__vm14.DestroyArgumentState (value14, ref arg14);
-				__vm15.DestroyArgumentState (value15, ref arg15);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
+				__vm13.DestroyGenericArgumentState (value13, ref arg13);
+				__vm14.DestroyGenericArgumentState (value14, ref arg14);
+				__vm15.DestroyGenericArgumentState (value15, ref arg15);
 			}
 		}
 
@@ -10917,38 +11755,40 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 			var __vm14 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T14> ();
-			var arg14 = __vm14.CreateArgumentState (value14);
+			var arg14 = __vm14.CreateGenericArgumentState (value14);
 			var __vm15 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T15> ();
-			var arg15 = __vm15.CreateArgumentState (value15);
+			var arg15 = __vm15.CreateGenericArgumentState (value15);
 			var __vm16 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T16> ();
-			var arg16 = __vm16.CreateArgumentState (value16);
+			var arg16 = __vm16.CreateGenericArgumentState (value16);
 
 			var args = stackalloc JniArgumentValue [16];
 			args [0] = arg1.JniArgumentValue;
@@ -10971,22 +11811,22 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				peer.InvokeVoidMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
-				__vm13.DestroyArgumentState (value13, ref arg13);
-				__vm14.DestroyArgumentState (value14, ref arg14);
-				__vm15.DestroyArgumentState (value15, ref arg15);
-				__vm16.DestroyArgumentState (value16, ref arg16);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
+				__vm13.DestroyGenericArgumentState (value13, ref arg13);
+				__vm14.DestroyGenericArgumentState (value14, ref arg14);
+				__vm15.DestroyGenericArgumentState (value15, ref arg15);
+				__vm16.DestroyGenericArgumentState (value16, ref arg16);
 			}
 		}
 
@@ -10996,8 +11836,10 @@ namespace Java.Interop.GenericMarshaler {
 			T value
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T> ();
-			var arg = __vm.CreateArgumentState (value);
+			var arg = __vm.CreateGenericArgumentState (value);
 
 			var args = stackalloc JniArgumentValue [1];
 			args [0] = arg.JniArgumentValue;
@@ -11005,7 +11847,7 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeBooleanMethod (encodedMember, args);
 			} finally {
-				__vm.DestroyArgumentState (value, ref arg);
+				__vm.DestroyGenericArgumentState (value, ref arg);
 			}
 		}
 
@@ -11015,10 +11857,12 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 
 			var args = stackalloc JniArgumentValue [2];
 			args [0] = arg1.JniArgumentValue;
@@ -11027,8 +11871,8 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeBooleanMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
 			}
 		}
 
@@ -11038,12 +11882,14 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 
 			var args = stackalloc JniArgumentValue [3];
 			args [0] = arg1.JniArgumentValue;
@@ -11053,9 +11899,9 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeBooleanMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
 			}
 		}
 
@@ -11065,14 +11911,16 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 
 			var args = stackalloc JniArgumentValue [4];
 			args [0] = arg1.JniArgumentValue;
@@ -11083,10 +11931,10 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeBooleanMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
 			}
 		}
 
@@ -11096,16 +11944,18 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 
 			var args = stackalloc JniArgumentValue [5];
 			args [0] = arg1.JniArgumentValue;
@@ -11117,11 +11967,11 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeBooleanMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
 			}
 		}
 
@@ -11131,18 +11981,20 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 
 			var args = stackalloc JniArgumentValue [6];
 			args [0] = arg1.JniArgumentValue;
@@ -11155,12 +12007,12 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeBooleanMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
 			}
 		}
 
@@ -11170,20 +12022,22 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 
 			var args = stackalloc JniArgumentValue [7];
 			args [0] = arg1.JniArgumentValue;
@@ -11197,13 +12051,13 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeBooleanMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
 			}
 		}
 
@@ -11213,22 +12067,24 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 
 			var args = stackalloc JniArgumentValue [8];
 			args [0] = arg1.JniArgumentValue;
@@ -11243,14 +12099,14 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeBooleanMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
 			}
 		}
 
@@ -11260,24 +12116,26 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 
 			var args = stackalloc JniArgumentValue [9];
 			args [0] = arg1.JniArgumentValue;
@@ -11293,15 +12151,15 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeBooleanMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
 			}
 		}
 
@@ -11311,26 +12169,28 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 
 			var args = stackalloc JniArgumentValue [10];
 			args [0] = arg1.JniArgumentValue;
@@ -11347,16 +12207,16 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeBooleanMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
 			}
 		}
 
@@ -11366,28 +12226,30 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 
 			var args = stackalloc JniArgumentValue [11];
 			args [0] = arg1.JniArgumentValue;
@@ -11405,17 +12267,17 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeBooleanMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
 			}
 		}
 
@@ -11425,30 +12287,32 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 
 			var args = stackalloc JniArgumentValue [12];
 			args [0] = arg1.JniArgumentValue;
@@ -11467,18 +12331,18 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeBooleanMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
 			}
 		}
 
@@ -11488,32 +12352,34 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 
 			var args = stackalloc JniArgumentValue [13];
 			args [0] = arg1.JniArgumentValue;
@@ -11533,19 +12399,19 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeBooleanMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
-				__vm13.DestroyArgumentState (value13, ref arg13);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
+				__vm13.DestroyGenericArgumentState (value13, ref arg13);
 			}
 		}
 
@@ -11555,34 +12421,36 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 			var __vm14 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T14> ();
-			var arg14 = __vm14.CreateArgumentState (value14);
+			var arg14 = __vm14.CreateGenericArgumentState (value14);
 
 			var args = stackalloc JniArgumentValue [14];
 			args [0] = arg1.JniArgumentValue;
@@ -11603,20 +12471,20 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeBooleanMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
-				__vm13.DestroyArgumentState (value13, ref arg13);
-				__vm14.DestroyArgumentState (value14, ref arg14);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
+				__vm13.DestroyGenericArgumentState (value13, ref arg13);
+				__vm14.DestroyGenericArgumentState (value14, ref arg14);
 			}
 		}
 
@@ -11626,36 +12494,38 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 			var __vm14 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T14> ();
-			var arg14 = __vm14.CreateArgumentState (value14);
+			var arg14 = __vm14.CreateGenericArgumentState (value14);
 			var __vm15 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T15> ();
-			var arg15 = __vm15.CreateArgumentState (value15);
+			var arg15 = __vm15.CreateGenericArgumentState (value15);
 
 			var args = stackalloc JniArgumentValue [15];
 			args [0] = arg1.JniArgumentValue;
@@ -11677,21 +12547,21 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeBooleanMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
-				__vm13.DestroyArgumentState (value13, ref arg13);
-				__vm14.DestroyArgumentState (value14, ref arg14);
-				__vm15.DestroyArgumentState (value15, ref arg15);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
+				__vm13.DestroyGenericArgumentState (value13, ref arg13);
+				__vm14.DestroyGenericArgumentState (value14, ref arg14);
+				__vm15.DestroyGenericArgumentState (value15, ref arg15);
 			}
 		}
 
@@ -11701,38 +12571,40 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 			var __vm14 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T14> ();
-			var arg14 = __vm14.CreateArgumentState (value14);
+			var arg14 = __vm14.CreateGenericArgumentState (value14);
 			var __vm15 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T15> ();
-			var arg15 = __vm15.CreateArgumentState (value15);
+			var arg15 = __vm15.CreateGenericArgumentState (value15);
 			var __vm16 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T16> ();
-			var arg16 = __vm16.CreateArgumentState (value16);
+			var arg16 = __vm16.CreateGenericArgumentState (value16);
 
 			var args = stackalloc JniArgumentValue [16];
 			args [0] = arg1.JniArgumentValue;
@@ -11755,22 +12627,22 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeBooleanMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
-				__vm13.DestroyArgumentState (value13, ref arg13);
-				__vm14.DestroyArgumentState (value14, ref arg14);
-				__vm15.DestroyArgumentState (value15, ref arg15);
-				__vm16.DestroyArgumentState (value16, ref arg16);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
+				__vm13.DestroyGenericArgumentState (value13, ref arg13);
+				__vm14.DestroyGenericArgumentState (value14, ref arg14);
+				__vm15.DestroyGenericArgumentState (value15, ref arg15);
+				__vm16.DestroyGenericArgumentState (value16, ref arg16);
 			}
 		}
 
@@ -11780,8 +12652,10 @@ namespace Java.Interop.GenericMarshaler {
 			T value
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T> ();
-			var arg = __vm.CreateArgumentState (value);
+			var arg = __vm.CreateGenericArgumentState (value);
 
 			var args = stackalloc JniArgumentValue [1];
 			args [0] = arg.JniArgumentValue;
@@ -11789,7 +12663,7 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeSByteMethod (encodedMember, args);
 			} finally {
-				__vm.DestroyArgumentState (value, ref arg);
+				__vm.DestroyGenericArgumentState (value, ref arg);
 			}
 		}
 
@@ -11799,10 +12673,12 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 
 			var args = stackalloc JniArgumentValue [2];
 			args [0] = arg1.JniArgumentValue;
@@ -11811,8 +12687,8 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeSByteMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
 			}
 		}
 
@@ -11822,12 +12698,14 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 
 			var args = stackalloc JniArgumentValue [3];
 			args [0] = arg1.JniArgumentValue;
@@ -11837,9 +12715,9 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeSByteMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
 			}
 		}
 
@@ -11849,14 +12727,16 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 
 			var args = stackalloc JniArgumentValue [4];
 			args [0] = arg1.JniArgumentValue;
@@ -11867,10 +12747,10 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeSByteMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
 			}
 		}
 
@@ -11880,16 +12760,18 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 
 			var args = stackalloc JniArgumentValue [5];
 			args [0] = arg1.JniArgumentValue;
@@ -11901,11 +12783,11 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeSByteMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
 			}
 		}
 
@@ -11915,18 +12797,20 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 
 			var args = stackalloc JniArgumentValue [6];
 			args [0] = arg1.JniArgumentValue;
@@ -11939,12 +12823,12 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeSByteMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
 			}
 		}
 
@@ -11954,20 +12838,22 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 
 			var args = stackalloc JniArgumentValue [7];
 			args [0] = arg1.JniArgumentValue;
@@ -11981,13 +12867,13 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeSByteMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
 			}
 		}
 
@@ -11997,22 +12883,24 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 
 			var args = stackalloc JniArgumentValue [8];
 			args [0] = arg1.JniArgumentValue;
@@ -12027,14 +12915,14 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeSByteMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
 			}
 		}
 
@@ -12044,24 +12932,26 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 
 			var args = stackalloc JniArgumentValue [9];
 			args [0] = arg1.JniArgumentValue;
@@ -12077,15 +12967,15 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeSByteMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
 			}
 		}
 
@@ -12095,26 +12985,28 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 
 			var args = stackalloc JniArgumentValue [10];
 			args [0] = arg1.JniArgumentValue;
@@ -12131,16 +13023,16 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeSByteMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
 			}
 		}
 
@@ -12150,28 +13042,30 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 
 			var args = stackalloc JniArgumentValue [11];
 			args [0] = arg1.JniArgumentValue;
@@ -12189,17 +13083,17 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeSByteMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
 			}
 		}
 
@@ -12209,30 +13103,32 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 
 			var args = stackalloc JniArgumentValue [12];
 			args [0] = arg1.JniArgumentValue;
@@ -12251,18 +13147,18 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeSByteMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
 			}
 		}
 
@@ -12272,32 +13168,34 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 
 			var args = stackalloc JniArgumentValue [13];
 			args [0] = arg1.JniArgumentValue;
@@ -12317,19 +13215,19 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeSByteMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
-				__vm13.DestroyArgumentState (value13, ref arg13);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
+				__vm13.DestroyGenericArgumentState (value13, ref arg13);
 			}
 		}
 
@@ -12339,34 +13237,36 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 			var __vm14 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T14> ();
-			var arg14 = __vm14.CreateArgumentState (value14);
+			var arg14 = __vm14.CreateGenericArgumentState (value14);
 
 			var args = stackalloc JniArgumentValue [14];
 			args [0] = arg1.JniArgumentValue;
@@ -12387,20 +13287,20 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeSByteMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
-				__vm13.DestroyArgumentState (value13, ref arg13);
-				__vm14.DestroyArgumentState (value14, ref arg14);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
+				__vm13.DestroyGenericArgumentState (value13, ref arg13);
+				__vm14.DestroyGenericArgumentState (value14, ref arg14);
 			}
 		}
 
@@ -12410,36 +13310,38 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 			var __vm14 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T14> ();
-			var arg14 = __vm14.CreateArgumentState (value14);
+			var arg14 = __vm14.CreateGenericArgumentState (value14);
 			var __vm15 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T15> ();
-			var arg15 = __vm15.CreateArgumentState (value15);
+			var arg15 = __vm15.CreateGenericArgumentState (value15);
 
 			var args = stackalloc JniArgumentValue [15];
 			args [0] = arg1.JniArgumentValue;
@@ -12461,21 +13363,21 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeSByteMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
-				__vm13.DestroyArgumentState (value13, ref arg13);
-				__vm14.DestroyArgumentState (value14, ref arg14);
-				__vm15.DestroyArgumentState (value15, ref arg15);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
+				__vm13.DestroyGenericArgumentState (value13, ref arg13);
+				__vm14.DestroyGenericArgumentState (value14, ref arg14);
+				__vm15.DestroyGenericArgumentState (value15, ref arg15);
 			}
 		}
 
@@ -12485,38 +13387,40 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 			var __vm14 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T14> ();
-			var arg14 = __vm14.CreateArgumentState (value14);
+			var arg14 = __vm14.CreateGenericArgumentState (value14);
 			var __vm15 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T15> ();
-			var arg15 = __vm15.CreateArgumentState (value15);
+			var arg15 = __vm15.CreateGenericArgumentState (value15);
 			var __vm16 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T16> ();
-			var arg16 = __vm16.CreateArgumentState (value16);
+			var arg16 = __vm16.CreateGenericArgumentState (value16);
 
 			var args = stackalloc JniArgumentValue [16];
 			args [0] = arg1.JniArgumentValue;
@@ -12539,22 +13443,22 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeSByteMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
-				__vm13.DestroyArgumentState (value13, ref arg13);
-				__vm14.DestroyArgumentState (value14, ref arg14);
-				__vm15.DestroyArgumentState (value15, ref arg15);
-				__vm16.DestroyArgumentState (value16, ref arg16);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
+				__vm13.DestroyGenericArgumentState (value13, ref arg13);
+				__vm14.DestroyGenericArgumentState (value14, ref arg14);
+				__vm15.DestroyGenericArgumentState (value15, ref arg15);
+				__vm16.DestroyGenericArgumentState (value16, ref arg16);
 			}
 		}
 
@@ -12564,8 +13468,10 @@ namespace Java.Interop.GenericMarshaler {
 			T value
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T> ();
-			var arg = __vm.CreateArgumentState (value);
+			var arg = __vm.CreateGenericArgumentState (value);
 
 			var args = stackalloc JniArgumentValue [1];
 			args [0] = arg.JniArgumentValue;
@@ -12573,7 +13479,7 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeCharMethod (encodedMember, args);
 			} finally {
-				__vm.DestroyArgumentState (value, ref arg);
+				__vm.DestroyGenericArgumentState (value, ref arg);
 			}
 		}
 
@@ -12583,10 +13489,12 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 
 			var args = stackalloc JniArgumentValue [2];
 			args [0] = arg1.JniArgumentValue;
@@ -12595,8 +13503,8 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeCharMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
 			}
 		}
 
@@ -12606,12 +13514,14 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 
 			var args = stackalloc JniArgumentValue [3];
 			args [0] = arg1.JniArgumentValue;
@@ -12621,9 +13531,9 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeCharMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
 			}
 		}
 
@@ -12633,14 +13543,16 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 
 			var args = stackalloc JniArgumentValue [4];
 			args [0] = arg1.JniArgumentValue;
@@ -12651,10 +13563,10 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeCharMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
 			}
 		}
 
@@ -12664,16 +13576,18 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 
 			var args = stackalloc JniArgumentValue [5];
 			args [0] = arg1.JniArgumentValue;
@@ -12685,11 +13599,11 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeCharMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
 			}
 		}
 
@@ -12699,18 +13613,20 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 
 			var args = stackalloc JniArgumentValue [6];
 			args [0] = arg1.JniArgumentValue;
@@ -12723,12 +13639,12 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeCharMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
 			}
 		}
 
@@ -12738,20 +13654,22 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 
 			var args = stackalloc JniArgumentValue [7];
 			args [0] = arg1.JniArgumentValue;
@@ -12765,13 +13683,13 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeCharMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
 			}
 		}
 
@@ -12781,22 +13699,24 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 
 			var args = stackalloc JniArgumentValue [8];
 			args [0] = arg1.JniArgumentValue;
@@ -12811,14 +13731,14 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeCharMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
 			}
 		}
 
@@ -12828,24 +13748,26 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 
 			var args = stackalloc JniArgumentValue [9];
 			args [0] = arg1.JniArgumentValue;
@@ -12861,15 +13783,15 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeCharMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
 			}
 		}
 
@@ -12879,26 +13801,28 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 
 			var args = stackalloc JniArgumentValue [10];
 			args [0] = arg1.JniArgumentValue;
@@ -12915,16 +13839,16 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeCharMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
 			}
 		}
 
@@ -12934,28 +13858,30 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 
 			var args = stackalloc JniArgumentValue [11];
 			args [0] = arg1.JniArgumentValue;
@@ -12973,17 +13899,17 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeCharMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
 			}
 		}
 
@@ -12993,30 +13919,32 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 
 			var args = stackalloc JniArgumentValue [12];
 			args [0] = arg1.JniArgumentValue;
@@ -13035,18 +13963,18 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeCharMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
 			}
 		}
 
@@ -13056,32 +13984,34 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 
 			var args = stackalloc JniArgumentValue [13];
 			args [0] = arg1.JniArgumentValue;
@@ -13101,19 +14031,19 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeCharMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
-				__vm13.DestroyArgumentState (value13, ref arg13);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
+				__vm13.DestroyGenericArgumentState (value13, ref arg13);
 			}
 		}
 
@@ -13123,34 +14053,36 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 			var __vm14 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T14> ();
-			var arg14 = __vm14.CreateArgumentState (value14);
+			var arg14 = __vm14.CreateGenericArgumentState (value14);
 
 			var args = stackalloc JniArgumentValue [14];
 			args [0] = arg1.JniArgumentValue;
@@ -13171,20 +14103,20 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeCharMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
-				__vm13.DestroyArgumentState (value13, ref arg13);
-				__vm14.DestroyArgumentState (value14, ref arg14);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
+				__vm13.DestroyGenericArgumentState (value13, ref arg13);
+				__vm14.DestroyGenericArgumentState (value14, ref arg14);
 			}
 		}
 
@@ -13194,36 +14126,38 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 			var __vm14 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T14> ();
-			var arg14 = __vm14.CreateArgumentState (value14);
+			var arg14 = __vm14.CreateGenericArgumentState (value14);
 			var __vm15 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T15> ();
-			var arg15 = __vm15.CreateArgumentState (value15);
+			var arg15 = __vm15.CreateGenericArgumentState (value15);
 
 			var args = stackalloc JniArgumentValue [15];
 			args [0] = arg1.JniArgumentValue;
@@ -13245,21 +14179,21 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeCharMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
-				__vm13.DestroyArgumentState (value13, ref arg13);
-				__vm14.DestroyArgumentState (value14, ref arg14);
-				__vm15.DestroyArgumentState (value15, ref arg15);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
+				__vm13.DestroyGenericArgumentState (value13, ref arg13);
+				__vm14.DestroyGenericArgumentState (value14, ref arg14);
+				__vm15.DestroyGenericArgumentState (value15, ref arg15);
 			}
 		}
 
@@ -13269,38 +14203,40 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 			var __vm14 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T14> ();
-			var arg14 = __vm14.CreateArgumentState (value14);
+			var arg14 = __vm14.CreateGenericArgumentState (value14);
 			var __vm15 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T15> ();
-			var arg15 = __vm15.CreateArgumentState (value15);
+			var arg15 = __vm15.CreateGenericArgumentState (value15);
 			var __vm16 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T16> ();
-			var arg16 = __vm16.CreateArgumentState (value16);
+			var arg16 = __vm16.CreateGenericArgumentState (value16);
 
 			var args = stackalloc JniArgumentValue [16];
 			args [0] = arg1.JniArgumentValue;
@@ -13323,22 +14259,22 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeCharMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
-				__vm13.DestroyArgumentState (value13, ref arg13);
-				__vm14.DestroyArgumentState (value14, ref arg14);
-				__vm15.DestroyArgumentState (value15, ref arg15);
-				__vm16.DestroyArgumentState (value16, ref arg16);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
+				__vm13.DestroyGenericArgumentState (value13, ref arg13);
+				__vm14.DestroyGenericArgumentState (value14, ref arg14);
+				__vm15.DestroyGenericArgumentState (value15, ref arg15);
+				__vm16.DestroyGenericArgumentState (value16, ref arg16);
 			}
 		}
 
@@ -13348,8 +14284,10 @@ namespace Java.Interop.GenericMarshaler {
 			T value
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T> ();
-			var arg = __vm.CreateArgumentState (value);
+			var arg = __vm.CreateGenericArgumentState (value);
 
 			var args = stackalloc JniArgumentValue [1];
 			args [0] = arg.JniArgumentValue;
@@ -13357,7 +14295,7 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeInt16Method (encodedMember, args);
 			} finally {
-				__vm.DestroyArgumentState (value, ref arg);
+				__vm.DestroyGenericArgumentState (value, ref arg);
 			}
 		}
 
@@ -13367,10 +14305,12 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 
 			var args = stackalloc JniArgumentValue [2];
 			args [0] = arg1.JniArgumentValue;
@@ -13379,8 +14319,8 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeInt16Method (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
 			}
 		}
 
@@ -13390,12 +14330,14 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 
 			var args = stackalloc JniArgumentValue [3];
 			args [0] = arg1.JniArgumentValue;
@@ -13405,9 +14347,9 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeInt16Method (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
 			}
 		}
 
@@ -13417,14 +14359,16 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 
 			var args = stackalloc JniArgumentValue [4];
 			args [0] = arg1.JniArgumentValue;
@@ -13435,10 +14379,10 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeInt16Method (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
 			}
 		}
 
@@ -13448,16 +14392,18 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 
 			var args = stackalloc JniArgumentValue [5];
 			args [0] = arg1.JniArgumentValue;
@@ -13469,11 +14415,11 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeInt16Method (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
 			}
 		}
 
@@ -13483,18 +14429,20 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 
 			var args = stackalloc JniArgumentValue [6];
 			args [0] = arg1.JniArgumentValue;
@@ -13507,12 +14455,12 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeInt16Method (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
 			}
 		}
 
@@ -13522,20 +14470,22 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 
 			var args = stackalloc JniArgumentValue [7];
 			args [0] = arg1.JniArgumentValue;
@@ -13549,13 +14499,13 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeInt16Method (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
 			}
 		}
 
@@ -13565,22 +14515,24 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 
 			var args = stackalloc JniArgumentValue [8];
 			args [0] = arg1.JniArgumentValue;
@@ -13595,14 +14547,14 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeInt16Method (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
 			}
 		}
 
@@ -13612,24 +14564,26 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 
 			var args = stackalloc JniArgumentValue [9];
 			args [0] = arg1.JniArgumentValue;
@@ -13645,15 +14599,15 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeInt16Method (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
 			}
 		}
 
@@ -13663,26 +14617,28 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 
 			var args = stackalloc JniArgumentValue [10];
 			args [0] = arg1.JniArgumentValue;
@@ -13699,16 +14655,16 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeInt16Method (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
 			}
 		}
 
@@ -13718,28 +14674,30 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 
 			var args = stackalloc JniArgumentValue [11];
 			args [0] = arg1.JniArgumentValue;
@@ -13757,17 +14715,17 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeInt16Method (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
 			}
 		}
 
@@ -13777,30 +14735,32 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 
 			var args = stackalloc JniArgumentValue [12];
 			args [0] = arg1.JniArgumentValue;
@@ -13819,18 +14779,18 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeInt16Method (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
 			}
 		}
 
@@ -13840,32 +14800,34 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 
 			var args = stackalloc JniArgumentValue [13];
 			args [0] = arg1.JniArgumentValue;
@@ -13885,19 +14847,19 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeInt16Method (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
-				__vm13.DestroyArgumentState (value13, ref arg13);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
+				__vm13.DestroyGenericArgumentState (value13, ref arg13);
 			}
 		}
 
@@ -13907,34 +14869,36 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 			var __vm14 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T14> ();
-			var arg14 = __vm14.CreateArgumentState (value14);
+			var arg14 = __vm14.CreateGenericArgumentState (value14);
 
 			var args = stackalloc JniArgumentValue [14];
 			args [0] = arg1.JniArgumentValue;
@@ -13955,20 +14919,20 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeInt16Method (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
-				__vm13.DestroyArgumentState (value13, ref arg13);
-				__vm14.DestroyArgumentState (value14, ref arg14);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
+				__vm13.DestroyGenericArgumentState (value13, ref arg13);
+				__vm14.DestroyGenericArgumentState (value14, ref arg14);
 			}
 		}
 
@@ -13978,36 +14942,38 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 			var __vm14 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T14> ();
-			var arg14 = __vm14.CreateArgumentState (value14);
+			var arg14 = __vm14.CreateGenericArgumentState (value14);
 			var __vm15 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T15> ();
-			var arg15 = __vm15.CreateArgumentState (value15);
+			var arg15 = __vm15.CreateGenericArgumentState (value15);
 
 			var args = stackalloc JniArgumentValue [15];
 			args [0] = arg1.JniArgumentValue;
@@ -14029,21 +14995,21 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeInt16Method (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
-				__vm13.DestroyArgumentState (value13, ref arg13);
-				__vm14.DestroyArgumentState (value14, ref arg14);
-				__vm15.DestroyArgumentState (value15, ref arg15);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
+				__vm13.DestroyGenericArgumentState (value13, ref arg13);
+				__vm14.DestroyGenericArgumentState (value14, ref arg14);
+				__vm15.DestroyGenericArgumentState (value15, ref arg15);
 			}
 		}
 
@@ -14053,38 +15019,40 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 			var __vm14 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T14> ();
-			var arg14 = __vm14.CreateArgumentState (value14);
+			var arg14 = __vm14.CreateGenericArgumentState (value14);
 			var __vm15 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T15> ();
-			var arg15 = __vm15.CreateArgumentState (value15);
+			var arg15 = __vm15.CreateGenericArgumentState (value15);
 			var __vm16 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T16> ();
-			var arg16 = __vm16.CreateArgumentState (value16);
+			var arg16 = __vm16.CreateGenericArgumentState (value16);
 
 			var args = stackalloc JniArgumentValue [16];
 			args [0] = arg1.JniArgumentValue;
@@ -14107,22 +15075,22 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeInt16Method (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
-				__vm13.DestroyArgumentState (value13, ref arg13);
-				__vm14.DestroyArgumentState (value14, ref arg14);
-				__vm15.DestroyArgumentState (value15, ref arg15);
-				__vm16.DestroyArgumentState (value16, ref arg16);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
+				__vm13.DestroyGenericArgumentState (value13, ref arg13);
+				__vm14.DestroyGenericArgumentState (value14, ref arg14);
+				__vm15.DestroyGenericArgumentState (value15, ref arg15);
+				__vm16.DestroyGenericArgumentState (value16, ref arg16);
 			}
 		}
 
@@ -14132,8 +15100,10 @@ namespace Java.Interop.GenericMarshaler {
 			T value
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T> ();
-			var arg = __vm.CreateArgumentState (value);
+			var arg = __vm.CreateGenericArgumentState (value);
 
 			var args = stackalloc JniArgumentValue [1];
 			args [0] = arg.JniArgumentValue;
@@ -14141,7 +15111,7 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeInt32Method (encodedMember, args);
 			} finally {
-				__vm.DestroyArgumentState (value, ref arg);
+				__vm.DestroyGenericArgumentState (value, ref arg);
 			}
 		}
 
@@ -14151,10 +15121,12 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 
 			var args = stackalloc JniArgumentValue [2];
 			args [0] = arg1.JniArgumentValue;
@@ -14163,8 +15135,8 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeInt32Method (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
 			}
 		}
 
@@ -14174,12 +15146,14 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 
 			var args = stackalloc JniArgumentValue [3];
 			args [0] = arg1.JniArgumentValue;
@@ -14189,9 +15163,9 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeInt32Method (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
 			}
 		}
 
@@ -14201,14 +15175,16 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 
 			var args = stackalloc JniArgumentValue [4];
 			args [0] = arg1.JniArgumentValue;
@@ -14219,10 +15195,10 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeInt32Method (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
 			}
 		}
 
@@ -14232,16 +15208,18 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 
 			var args = stackalloc JniArgumentValue [5];
 			args [0] = arg1.JniArgumentValue;
@@ -14253,11 +15231,11 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeInt32Method (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
 			}
 		}
 
@@ -14267,18 +15245,20 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 
 			var args = stackalloc JniArgumentValue [6];
 			args [0] = arg1.JniArgumentValue;
@@ -14291,12 +15271,12 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeInt32Method (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
 			}
 		}
 
@@ -14306,20 +15286,22 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 
 			var args = stackalloc JniArgumentValue [7];
 			args [0] = arg1.JniArgumentValue;
@@ -14333,13 +15315,13 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeInt32Method (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
 			}
 		}
 
@@ -14349,22 +15331,24 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 
 			var args = stackalloc JniArgumentValue [8];
 			args [0] = arg1.JniArgumentValue;
@@ -14379,14 +15363,14 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeInt32Method (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
 			}
 		}
 
@@ -14396,24 +15380,26 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 
 			var args = stackalloc JniArgumentValue [9];
 			args [0] = arg1.JniArgumentValue;
@@ -14429,15 +15415,15 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeInt32Method (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
 			}
 		}
 
@@ -14447,26 +15433,28 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 
 			var args = stackalloc JniArgumentValue [10];
 			args [0] = arg1.JniArgumentValue;
@@ -14483,16 +15471,16 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeInt32Method (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
 			}
 		}
 
@@ -14502,28 +15490,30 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 
 			var args = stackalloc JniArgumentValue [11];
 			args [0] = arg1.JniArgumentValue;
@@ -14541,17 +15531,17 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeInt32Method (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
 			}
 		}
 
@@ -14561,30 +15551,32 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 
 			var args = stackalloc JniArgumentValue [12];
 			args [0] = arg1.JniArgumentValue;
@@ -14603,18 +15595,18 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeInt32Method (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
 			}
 		}
 
@@ -14624,32 +15616,34 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 
 			var args = stackalloc JniArgumentValue [13];
 			args [0] = arg1.JniArgumentValue;
@@ -14669,19 +15663,19 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeInt32Method (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
-				__vm13.DestroyArgumentState (value13, ref arg13);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
+				__vm13.DestroyGenericArgumentState (value13, ref arg13);
 			}
 		}
 
@@ -14691,34 +15685,36 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 			var __vm14 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T14> ();
-			var arg14 = __vm14.CreateArgumentState (value14);
+			var arg14 = __vm14.CreateGenericArgumentState (value14);
 
 			var args = stackalloc JniArgumentValue [14];
 			args [0] = arg1.JniArgumentValue;
@@ -14739,20 +15735,20 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeInt32Method (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
-				__vm13.DestroyArgumentState (value13, ref arg13);
-				__vm14.DestroyArgumentState (value14, ref arg14);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
+				__vm13.DestroyGenericArgumentState (value13, ref arg13);
+				__vm14.DestroyGenericArgumentState (value14, ref arg14);
 			}
 		}
 
@@ -14762,36 +15758,38 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 			var __vm14 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T14> ();
-			var arg14 = __vm14.CreateArgumentState (value14);
+			var arg14 = __vm14.CreateGenericArgumentState (value14);
 			var __vm15 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T15> ();
-			var arg15 = __vm15.CreateArgumentState (value15);
+			var arg15 = __vm15.CreateGenericArgumentState (value15);
 
 			var args = stackalloc JniArgumentValue [15];
 			args [0] = arg1.JniArgumentValue;
@@ -14813,21 +15811,21 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeInt32Method (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
-				__vm13.DestroyArgumentState (value13, ref arg13);
-				__vm14.DestroyArgumentState (value14, ref arg14);
-				__vm15.DestroyArgumentState (value15, ref arg15);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
+				__vm13.DestroyGenericArgumentState (value13, ref arg13);
+				__vm14.DestroyGenericArgumentState (value14, ref arg14);
+				__vm15.DestroyGenericArgumentState (value15, ref arg15);
 			}
 		}
 
@@ -14837,38 +15835,40 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 			var __vm14 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T14> ();
-			var arg14 = __vm14.CreateArgumentState (value14);
+			var arg14 = __vm14.CreateGenericArgumentState (value14);
 			var __vm15 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T15> ();
-			var arg15 = __vm15.CreateArgumentState (value15);
+			var arg15 = __vm15.CreateGenericArgumentState (value15);
 			var __vm16 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T16> ();
-			var arg16 = __vm16.CreateArgumentState (value16);
+			var arg16 = __vm16.CreateGenericArgumentState (value16);
 
 			var args = stackalloc JniArgumentValue [16];
 			args [0] = arg1.JniArgumentValue;
@@ -14891,22 +15891,22 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeInt32Method (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
-				__vm13.DestroyArgumentState (value13, ref arg13);
-				__vm14.DestroyArgumentState (value14, ref arg14);
-				__vm15.DestroyArgumentState (value15, ref arg15);
-				__vm16.DestroyArgumentState (value16, ref arg16);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
+				__vm13.DestroyGenericArgumentState (value13, ref arg13);
+				__vm14.DestroyGenericArgumentState (value14, ref arg14);
+				__vm15.DestroyGenericArgumentState (value15, ref arg15);
+				__vm16.DestroyGenericArgumentState (value16, ref arg16);
 			}
 		}
 
@@ -14916,8 +15916,10 @@ namespace Java.Interop.GenericMarshaler {
 			T value
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T> ();
-			var arg = __vm.CreateArgumentState (value);
+			var arg = __vm.CreateGenericArgumentState (value);
 
 			var args = stackalloc JniArgumentValue [1];
 			args [0] = arg.JniArgumentValue;
@@ -14925,7 +15927,7 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeInt64Method (encodedMember, args);
 			} finally {
-				__vm.DestroyArgumentState (value, ref arg);
+				__vm.DestroyGenericArgumentState (value, ref arg);
 			}
 		}
 
@@ -14935,10 +15937,12 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 
 			var args = stackalloc JniArgumentValue [2];
 			args [0] = arg1.JniArgumentValue;
@@ -14947,8 +15951,8 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeInt64Method (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
 			}
 		}
 
@@ -14958,12 +15962,14 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 
 			var args = stackalloc JniArgumentValue [3];
 			args [0] = arg1.JniArgumentValue;
@@ -14973,9 +15979,9 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeInt64Method (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
 			}
 		}
 
@@ -14985,14 +15991,16 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 
 			var args = stackalloc JniArgumentValue [4];
 			args [0] = arg1.JniArgumentValue;
@@ -15003,10 +16011,10 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeInt64Method (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
 			}
 		}
 
@@ -15016,16 +16024,18 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 
 			var args = stackalloc JniArgumentValue [5];
 			args [0] = arg1.JniArgumentValue;
@@ -15037,11 +16047,11 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeInt64Method (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
 			}
 		}
 
@@ -15051,18 +16061,20 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 
 			var args = stackalloc JniArgumentValue [6];
 			args [0] = arg1.JniArgumentValue;
@@ -15075,12 +16087,12 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeInt64Method (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
 			}
 		}
 
@@ -15090,20 +16102,22 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 
 			var args = stackalloc JniArgumentValue [7];
 			args [0] = arg1.JniArgumentValue;
@@ -15117,13 +16131,13 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeInt64Method (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
 			}
 		}
 
@@ -15133,22 +16147,24 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 
 			var args = stackalloc JniArgumentValue [8];
 			args [0] = arg1.JniArgumentValue;
@@ -15163,14 +16179,14 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeInt64Method (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
 			}
 		}
 
@@ -15180,24 +16196,26 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 
 			var args = stackalloc JniArgumentValue [9];
 			args [0] = arg1.JniArgumentValue;
@@ -15213,15 +16231,15 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeInt64Method (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
 			}
 		}
 
@@ -15231,26 +16249,28 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 
 			var args = stackalloc JniArgumentValue [10];
 			args [0] = arg1.JniArgumentValue;
@@ -15267,16 +16287,16 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeInt64Method (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
 			}
 		}
 
@@ -15286,28 +16306,30 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 
 			var args = stackalloc JniArgumentValue [11];
 			args [0] = arg1.JniArgumentValue;
@@ -15325,17 +16347,17 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeInt64Method (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
 			}
 		}
 
@@ -15345,30 +16367,32 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 
 			var args = stackalloc JniArgumentValue [12];
 			args [0] = arg1.JniArgumentValue;
@@ -15387,18 +16411,18 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeInt64Method (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
 			}
 		}
 
@@ -15408,32 +16432,34 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 
 			var args = stackalloc JniArgumentValue [13];
 			args [0] = arg1.JniArgumentValue;
@@ -15453,19 +16479,19 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeInt64Method (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
-				__vm13.DestroyArgumentState (value13, ref arg13);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
+				__vm13.DestroyGenericArgumentState (value13, ref arg13);
 			}
 		}
 
@@ -15475,34 +16501,36 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 			var __vm14 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T14> ();
-			var arg14 = __vm14.CreateArgumentState (value14);
+			var arg14 = __vm14.CreateGenericArgumentState (value14);
 
 			var args = stackalloc JniArgumentValue [14];
 			args [0] = arg1.JniArgumentValue;
@@ -15523,20 +16551,20 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeInt64Method (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
-				__vm13.DestroyArgumentState (value13, ref arg13);
-				__vm14.DestroyArgumentState (value14, ref arg14);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
+				__vm13.DestroyGenericArgumentState (value13, ref arg13);
+				__vm14.DestroyGenericArgumentState (value14, ref arg14);
 			}
 		}
 
@@ -15546,36 +16574,38 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 			var __vm14 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T14> ();
-			var arg14 = __vm14.CreateArgumentState (value14);
+			var arg14 = __vm14.CreateGenericArgumentState (value14);
 			var __vm15 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T15> ();
-			var arg15 = __vm15.CreateArgumentState (value15);
+			var arg15 = __vm15.CreateGenericArgumentState (value15);
 
 			var args = stackalloc JniArgumentValue [15];
 			args [0] = arg1.JniArgumentValue;
@@ -15597,21 +16627,21 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeInt64Method (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
-				__vm13.DestroyArgumentState (value13, ref arg13);
-				__vm14.DestroyArgumentState (value14, ref arg14);
-				__vm15.DestroyArgumentState (value15, ref arg15);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
+				__vm13.DestroyGenericArgumentState (value13, ref arg13);
+				__vm14.DestroyGenericArgumentState (value14, ref arg14);
+				__vm15.DestroyGenericArgumentState (value15, ref arg15);
 			}
 		}
 
@@ -15621,38 +16651,40 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 			var __vm14 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T14> ();
-			var arg14 = __vm14.CreateArgumentState (value14);
+			var arg14 = __vm14.CreateGenericArgumentState (value14);
 			var __vm15 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T15> ();
-			var arg15 = __vm15.CreateArgumentState (value15);
+			var arg15 = __vm15.CreateGenericArgumentState (value15);
 			var __vm16 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T16> ();
-			var arg16 = __vm16.CreateArgumentState (value16);
+			var arg16 = __vm16.CreateGenericArgumentState (value16);
 
 			var args = stackalloc JniArgumentValue [16];
 			args [0] = arg1.JniArgumentValue;
@@ -15675,22 +16707,22 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeInt64Method (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
-				__vm13.DestroyArgumentState (value13, ref arg13);
-				__vm14.DestroyArgumentState (value14, ref arg14);
-				__vm15.DestroyArgumentState (value15, ref arg15);
-				__vm16.DestroyArgumentState (value16, ref arg16);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
+				__vm13.DestroyGenericArgumentState (value13, ref arg13);
+				__vm14.DestroyGenericArgumentState (value14, ref arg14);
+				__vm15.DestroyGenericArgumentState (value15, ref arg15);
+				__vm16.DestroyGenericArgumentState (value16, ref arg16);
 			}
 		}
 
@@ -15700,8 +16732,10 @@ namespace Java.Interop.GenericMarshaler {
 			T value
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T> ();
-			var arg = __vm.CreateArgumentState (value);
+			var arg = __vm.CreateGenericArgumentState (value);
 
 			var args = stackalloc JniArgumentValue [1];
 			args [0] = arg.JniArgumentValue;
@@ -15709,7 +16743,7 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeSingleMethod (encodedMember, args);
 			} finally {
-				__vm.DestroyArgumentState (value, ref arg);
+				__vm.DestroyGenericArgumentState (value, ref arg);
 			}
 		}
 
@@ -15719,10 +16753,12 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 
 			var args = stackalloc JniArgumentValue [2];
 			args [0] = arg1.JniArgumentValue;
@@ -15731,8 +16767,8 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeSingleMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
 			}
 		}
 
@@ -15742,12 +16778,14 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 
 			var args = stackalloc JniArgumentValue [3];
 			args [0] = arg1.JniArgumentValue;
@@ -15757,9 +16795,9 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeSingleMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
 			}
 		}
 
@@ -15769,14 +16807,16 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 
 			var args = stackalloc JniArgumentValue [4];
 			args [0] = arg1.JniArgumentValue;
@@ -15787,10 +16827,10 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeSingleMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
 			}
 		}
 
@@ -15800,16 +16840,18 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 
 			var args = stackalloc JniArgumentValue [5];
 			args [0] = arg1.JniArgumentValue;
@@ -15821,11 +16863,11 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeSingleMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
 			}
 		}
 
@@ -15835,18 +16877,20 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 
 			var args = stackalloc JniArgumentValue [6];
 			args [0] = arg1.JniArgumentValue;
@@ -15859,12 +16903,12 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeSingleMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
 			}
 		}
 
@@ -15874,20 +16918,22 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 
 			var args = stackalloc JniArgumentValue [7];
 			args [0] = arg1.JniArgumentValue;
@@ -15901,13 +16947,13 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeSingleMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
 			}
 		}
 
@@ -15917,22 +16963,24 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 
 			var args = stackalloc JniArgumentValue [8];
 			args [0] = arg1.JniArgumentValue;
@@ -15947,14 +16995,14 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeSingleMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
 			}
 		}
 
@@ -15964,24 +17012,26 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 
 			var args = stackalloc JniArgumentValue [9];
 			args [0] = arg1.JniArgumentValue;
@@ -15997,15 +17047,15 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeSingleMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
 			}
 		}
 
@@ -16015,26 +17065,28 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 
 			var args = stackalloc JniArgumentValue [10];
 			args [0] = arg1.JniArgumentValue;
@@ -16051,16 +17103,16 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeSingleMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
 			}
 		}
 
@@ -16070,28 +17122,30 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 
 			var args = stackalloc JniArgumentValue [11];
 			args [0] = arg1.JniArgumentValue;
@@ -16109,17 +17163,17 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeSingleMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
 			}
 		}
 
@@ -16129,30 +17183,32 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 
 			var args = stackalloc JniArgumentValue [12];
 			args [0] = arg1.JniArgumentValue;
@@ -16171,18 +17227,18 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeSingleMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
 			}
 		}
 
@@ -16192,32 +17248,34 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 
 			var args = stackalloc JniArgumentValue [13];
 			args [0] = arg1.JniArgumentValue;
@@ -16237,19 +17295,19 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeSingleMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
-				__vm13.DestroyArgumentState (value13, ref arg13);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
+				__vm13.DestroyGenericArgumentState (value13, ref arg13);
 			}
 		}
 
@@ -16259,34 +17317,36 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 			var __vm14 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T14> ();
-			var arg14 = __vm14.CreateArgumentState (value14);
+			var arg14 = __vm14.CreateGenericArgumentState (value14);
 
 			var args = stackalloc JniArgumentValue [14];
 			args [0] = arg1.JniArgumentValue;
@@ -16307,20 +17367,20 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeSingleMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
-				__vm13.DestroyArgumentState (value13, ref arg13);
-				__vm14.DestroyArgumentState (value14, ref arg14);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
+				__vm13.DestroyGenericArgumentState (value13, ref arg13);
+				__vm14.DestroyGenericArgumentState (value14, ref arg14);
 			}
 		}
 
@@ -16330,36 +17390,38 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 			var __vm14 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T14> ();
-			var arg14 = __vm14.CreateArgumentState (value14);
+			var arg14 = __vm14.CreateGenericArgumentState (value14);
 			var __vm15 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T15> ();
-			var arg15 = __vm15.CreateArgumentState (value15);
+			var arg15 = __vm15.CreateGenericArgumentState (value15);
 
 			var args = stackalloc JniArgumentValue [15];
 			args [0] = arg1.JniArgumentValue;
@@ -16381,21 +17443,21 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeSingleMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
-				__vm13.DestroyArgumentState (value13, ref arg13);
-				__vm14.DestroyArgumentState (value14, ref arg14);
-				__vm15.DestroyArgumentState (value15, ref arg15);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
+				__vm13.DestroyGenericArgumentState (value13, ref arg13);
+				__vm14.DestroyGenericArgumentState (value14, ref arg14);
+				__vm15.DestroyGenericArgumentState (value15, ref arg15);
 			}
 		}
 
@@ -16405,38 +17467,40 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 			var __vm14 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T14> ();
-			var arg14 = __vm14.CreateArgumentState (value14);
+			var arg14 = __vm14.CreateGenericArgumentState (value14);
 			var __vm15 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T15> ();
-			var arg15 = __vm15.CreateArgumentState (value15);
+			var arg15 = __vm15.CreateGenericArgumentState (value15);
 			var __vm16 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T16> ();
-			var arg16 = __vm16.CreateArgumentState (value16);
+			var arg16 = __vm16.CreateGenericArgumentState (value16);
 
 			var args = stackalloc JniArgumentValue [16];
 			args [0] = arg1.JniArgumentValue;
@@ -16459,22 +17523,22 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeSingleMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
-				__vm13.DestroyArgumentState (value13, ref arg13);
-				__vm14.DestroyArgumentState (value14, ref arg14);
-				__vm15.DestroyArgumentState (value15, ref arg15);
-				__vm16.DestroyArgumentState (value16, ref arg16);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
+				__vm13.DestroyGenericArgumentState (value13, ref arg13);
+				__vm14.DestroyGenericArgumentState (value14, ref arg14);
+				__vm15.DestroyGenericArgumentState (value15, ref arg15);
+				__vm16.DestroyGenericArgumentState (value16, ref arg16);
 			}
 		}
 
@@ -16484,8 +17548,10 @@ namespace Java.Interop.GenericMarshaler {
 			T value
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T> ();
-			var arg = __vm.CreateArgumentState (value);
+			var arg = __vm.CreateGenericArgumentState (value);
 
 			var args = stackalloc JniArgumentValue [1];
 			args [0] = arg.JniArgumentValue;
@@ -16493,7 +17559,7 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeDoubleMethod (encodedMember, args);
 			} finally {
-				__vm.DestroyArgumentState (value, ref arg);
+				__vm.DestroyGenericArgumentState (value, ref arg);
 			}
 		}
 
@@ -16503,10 +17569,12 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 
 			var args = stackalloc JniArgumentValue [2];
 			args [0] = arg1.JniArgumentValue;
@@ -16515,8 +17583,8 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeDoubleMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
 			}
 		}
 
@@ -16526,12 +17594,14 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 
 			var args = stackalloc JniArgumentValue [3];
 			args [0] = arg1.JniArgumentValue;
@@ -16541,9 +17611,9 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeDoubleMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
 			}
 		}
 
@@ -16553,14 +17623,16 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 
 			var args = stackalloc JniArgumentValue [4];
 			args [0] = arg1.JniArgumentValue;
@@ -16571,10 +17643,10 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeDoubleMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
 			}
 		}
 
@@ -16584,16 +17656,18 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 
 			var args = stackalloc JniArgumentValue [5];
 			args [0] = arg1.JniArgumentValue;
@@ -16605,11 +17679,11 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeDoubleMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
 			}
 		}
 
@@ -16619,18 +17693,20 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 
 			var args = stackalloc JniArgumentValue [6];
 			args [0] = arg1.JniArgumentValue;
@@ -16643,12 +17719,12 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeDoubleMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
 			}
 		}
 
@@ -16658,20 +17734,22 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 
 			var args = stackalloc JniArgumentValue [7];
 			args [0] = arg1.JniArgumentValue;
@@ -16685,13 +17763,13 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeDoubleMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
 			}
 		}
 
@@ -16701,22 +17779,24 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 
 			var args = stackalloc JniArgumentValue [8];
 			args [0] = arg1.JniArgumentValue;
@@ -16731,14 +17811,14 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeDoubleMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
 			}
 		}
 
@@ -16748,24 +17828,26 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 
 			var args = stackalloc JniArgumentValue [9];
 			args [0] = arg1.JniArgumentValue;
@@ -16781,15 +17863,15 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeDoubleMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
 			}
 		}
 
@@ -16799,26 +17881,28 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 
 			var args = stackalloc JniArgumentValue [10];
 			args [0] = arg1.JniArgumentValue;
@@ -16835,16 +17919,16 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeDoubleMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
 			}
 		}
 
@@ -16854,28 +17938,30 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 
 			var args = stackalloc JniArgumentValue [11];
 			args [0] = arg1.JniArgumentValue;
@@ -16893,17 +17979,17 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeDoubleMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
 			}
 		}
 
@@ -16913,30 +17999,32 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 
 			var args = stackalloc JniArgumentValue [12];
 			args [0] = arg1.JniArgumentValue;
@@ -16955,18 +18043,18 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeDoubleMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
 			}
 		}
 
@@ -16976,32 +18064,34 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 
 			var args = stackalloc JniArgumentValue [13];
 			args [0] = arg1.JniArgumentValue;
@@ -17021,19 +18111,19 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeDoubleMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
-				__vm13.DestroyArgumentState (value13, ref arg13);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
+				__vm13.DestroyGenericArgumentState (value13, ref arg13);
 			}
 		}
 
@@ -17043,34 +18133,36 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 			var __vm14 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T14> ();
-			var arg14 = __vm14.CreateArgumentState (value14);
+			var arg14 = __vm14.CreateGenericArgumentState (value14);
 
 			var args = stackalloc JniArgumentValue [14];
 			args [0] = arg1.JniArgumentValue;
@@ -17091,20 +18183,20 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeDoubleMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
-				__vm13.DestroyArgumentState (value13, ref arg13);
-				__vm14.DestroyArgumentState (value14, ref arg14);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
+				__vm13.DestroyGenericArgumentState (value13, ref arg13);
+				__vm14.DestroyGenericArgumentState (value14, ref arg14);
 			}
 		}
 
@@ -17114,36 +18206,38 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 			var __vm14 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T14> ();
-			var arg14 = __vm14.CreateArgumentState (value14);
+			var arg14 = __vm14.CreateGenericArgumentState (value14);
 			var __vm15 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T15> ();
-			var arg15 = __vm15.CreateArgumentState (value15);
+			var arg15 = __vm15.CreateGenericArgumentState (value15);
 
 			var args = stackalloc JniArgumentValue [15];
 			args [0] = arg1.JniArgumentValue;
@@ -17165,21 +18259,21 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeDoubleMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
-				__vm13.DestroyArgumentState (value13, ref arg13);
-				__vm14.DestroyArgumentState (value14, ref arg14);
-				__vm15.DestroyArgumentState (value15, ref arg15);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
+				__vm13.DestroyGenericArgumentState (value13, ref arg13);
+				__vm14.DestroyGenericArgumentState (value14, ref arg14);
+				__vm15.DestroyGenericArgumentState (value15, ref arg15);
 			}
 		}
 
@@ -17189,38 +18283,40 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 			var __vm14 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T14> ();
-			var arg14 = __vm14.CreateArgumentState (value14);
+			var arg14 = __vm14.CreateGenericArgumentState (value14);
 			var __vm15 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T15> ();
-			var arg15 = __vm15.CreateArgumentState (value15);
+			var arg15 = __vm15.CreateGenericArgumentState (value15);
 			var __vm16 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T16> ();
-			var arg16 = __vm16.CreateArgumentState (value16);
+			var arg16 = __vm16.CreateGenericArgumentState (value16);
 
 			var args = stackalloc JniArgumentValue [16];
 			args [0] = arg1.JniArgumentValue;
@@ -17243,22 +18339,22 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeDoubleMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
-				__vm13.DestroyArgumentState (value13, ref arg13);
-				__vm14.DestroyArgumentState (value14, ref arg14);
-				__vm15.DestroyArgumentState (value15, ref arg15);
-				__vm16.DestroyArgumentState (value16, ref arg16);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
+				__vm13.DestroyGenericArgumentState (value13, ref arg13);
+				__vm14.DestroyGenericArgumentState (value14, ref arg14);
+				__vm15.DestroyGenericArgumentState (value15, ref arg15);
+				__vm16.DestroyGenericArgumentState (value16, ref arg16);
 			}
 		}
 
@@ -17268,8 +18364,10 @@ namespace Java.Interop.GenericMarshaler {
 			T value
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T> ();
-			var arg = __vm.CreateArgumentState (value);
+			var arg = __vm.CreateGenericArgumentState (value);
 
 			var args = stackalloc JniArgumentValue [1];
 			args [0] = arg.JniArgumentValue;
@@ -17277,7 +18375,7 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeObjectMethod (encodedMember, args);
 			} finally {
-				__vm.DestroyArgumentState (value, ref arg);
+				__vm.DestroyGenericArgumentState (value, ref arg);
 			}
 		}
 
@@ -17287,10 +18385,12 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 
 			var args = stackalloc JniArgumentValue [2];
 			args [0] = arg1.JniArgumentValue;
@@ -17299,8 +18399,8 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeObjectMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
 			}
 		}
 
@@ -17310,12 +18410,14 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 
 			var args = stackalloc JniArgumentValue [3];
 			args [0] = arg1.JniArgumentValue;
@@ -17325,9 +18427,9 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeObjectMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
 			}
 		}
 
@@ -17337,14 +18439,16 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 
 			var args = stackalloc JniArgumentValue [4];
 			args [0] = arg1.JniArgumentValue;
@@ -17355,10 +18459,10 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeObjectMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
 			}
 		}
 
@@ -17368,16 +18472,18 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 
 			var args = stackalloc JniArgumentValue [5];
 			args [0] = arg1.JniArgumentValue;
@@ -17389,11 +18495,11 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeObjectMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
 			}
 		}
 
@@ -17403,18 +18509,20 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 
 			var args = stackalloc JniArgumentValue [6];
 			args [0] = arg1.JniArgumentValue;
@@ -17427,12 +18535,12 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeObjectMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
 			}
 		}
 
@@ -17442,20 +18550,22 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 
 			var args = stackalloc JniArgumentValue [7];
 			args [0] = arg1.JniArgumentValue;
@@ -17469,13 +18579,13 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeObjectMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
 			}
 		}
 
@@ -17485,22 +18595,24 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 
 			var args = stackalloc JniArgumentValue [8];
 			args [0] = arg1.JniArgumentValue;
@@ -17515,14 +18627,14 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeObjectMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
 			}
 		}
 
@@ -17532,24 +18644,26 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 
 			var args = stackalloc JniArgumentValue [9];
 			args [0] = arg1.JniArgumentValue;
@@ -17565,15 +18679,15 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeObjectMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
 			}
 		}
 
@@ -17583,26 +18697,28 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 
 			var args = stackalloc JniArgumentValue [10];
 			args [0] = arg1.JniArgumentValue;
@@ -17619,16 +18735,16 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeObjectMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
 			}
 		}
 
@@ -17638,28 +18754,30 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 
 			var args = stackalloc JniArgumentValue [11];
 			args [0] = arg1.JniArgumentValue;
@@ -17677,17 +18795,17 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeObjectMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
 			}
 		}
 
@@ -17697,30 +18815,32 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 
 			var args = stackalloc JniArgumentValue [12];
 			args [0] = arg1.JniArgumentValue;
@@ -17739,18 +18859,18 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeObjectMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
 			}
 		}
 
@@ -17760,32 +18880,34 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 
 			var args = stackalloc JniArgumentValue [13];
 			args [0] = arg1.JniArgumentValue;
@@ -17805,19 +18927,19 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeObjectMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
-				__vm13.DestroyArgumentState (value13, ref arg13);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
+				__vm13.DestroyGenericArgumentState (value13, ref arg13);
 			}
 		}
 
@@ -17827,34 +18949,36 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 			var __vm14 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T14> ();
-			var arg14 = __vm14.CreateArgumentState (value14);
+			var arg14 = __vm14.CreateGenericArgumentState (value14);
 
 			var args = stackalloc JniArgumentValue [14];
 			args [0] = arg1.JniArgumentValue;
@@ -17875,20 +18999,20 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeObjectMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
-				__vm13.DestroyArgumentState (value13, ref arg13);
-				__vm14.DestroyArgumentState (value14, ref arg14);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
+				__vm13.DestroyGenericArgumentState (value13, ref arg13);
+				__vm14.DestroyGenericArgumentState (value14, ref arg14);
 			}
 		}
 
@@ -17898,36 +19022,38 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 			var __vm14 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T14> ();
-			var arg14 = __vm14.CreateArgumentState (value14);
+			var arg14 = __vm14.CreateGenericArgumentState (value14);
 			var __vm15 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T15> ();
-			var arg15 = __vm15.CreateArgumentState (value15);
+			var arg15 = __vm15.CreateGenericArgumentState (value15);
 
 			var args = stackalloc JniArgumentValue [15];
 			args [0] = arg1.JniArgumentValue;
@@ -17949,21 +19075,21 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeObjectMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
-				__vm13.DestroyArgumentState (value13, ref arg13);
-				__vm14.DestroyArgumentState (value14, ref arg14);
-				__vm15.DestroyArgumentState (value15, ref arg15);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
+				__vm13.DestroyGenericArgumentState (value13, ref arg13);
+				__vm14.DestroyGenericArgumentState (value14, ref arg14);
+				__vm15.DestroyGenericArgumentState (value15, ref arg15);
 			}
 		}
 
@@ -17973,38 +19099,40 @@ namespace Java.Interop.GenericMarshaler {
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
 		)
 		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
 			var __vm1 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T1> ();
-			var arg1 = __vm1.CreateArgumentState (value1);
+			var arg1 = __vm1.CreateGenericArgumentState (value1);
 			var __vm2 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T2> ();
-			var arg2 = __vm2.CreateArgumentState (value2);
+			var arg2 = __vm2.CreateGenericArgumentState (value2);
 			var __vm3 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T3> ();
-			var arg3 = __vm3.CreateArgumentState (value3);
+			var arg3 = __vm3.CreateGenericArgumentState (value3);
 			var __vm4 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T4> ();
-			var arg4 = __vm4.CreateArgumentState (value4);
+			var arg4 = __vm4.CreateGenericArgumentState (value4);
 			var __vm5 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T5> ();
-			var arg5 = __vm5.CreateArgumentState (value5);
+			var arg5 = __vm5.CreateGenericArgumentState (value5);
 			var __vm6 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T6> ();
-			var arg6 = __vm6.CreateArgumentState (value6);
+			var arg6 = __vm6.CreateGenericArgumentState (value6);
 			var __vm7 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T7> ();
-			var arg7 = __vm7.CreateArgumentState (value7);
+			var arg7 = __vm7.CreateGenericArgumentState (value7);
 			var __vm8 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T8> ();
-			var arg8 = __vm8.CreateArgumentState (value8);
+			var arg8 = __vm8.CreateGenericArgumentState (value8);
 			var __vm9 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T9> ();
-			var arg9 = __vm9.CreateArgumentState (value9);
+			var arg9 = __vm9.CreateGenericArgumentState (value9);
 			var __vm10 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T10> ();
-			var arg10 = __vm10.CreateArgumentState (value10);
+			var arg10 = __vm10.CreateGenericArgumentState (value10);
 			var __vm11 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T11> ();
-			var arg11 = __vm11.CreateArgumentState (value11);
+			var arg11 = __vm11.CreateGenericArgumentState (value11);
 			var __vm12 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T12> ();
-			var arg12 = __vm12.CreateArgumentState (value12);
+			var arg12 = __vm12.CreateGenericArgumentState (value12);
 			var __vm13 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T13> ();
-			var arg13 = __vm13.CreateArgumentState (value13);
+			var arg13 = __vm13.CreateGenericArgumentState (value13);
 			var __vm14 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T14> ();
-			var arg14 = __vm14.CreateArgumentState (value14);
+			var arg14 = __vm14.CreateGenericArgumentState (value14);
 			var __vm15 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T15> ();
-			var arg15 = __vm15.CreateArgumentState (value15);
+			var arg15 = __vm15.CreateGenericArgumentState (value15);
 			var __vm16 = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T16> ();
-			var arg16 = __vm16.CreateArgumentState (value16);
+			var arg16 = __vm16.CreateGenericArgumentState (value16);
 
 			var args = stackalloc JniArgumentValue [16];
 			args [0] = arg1.JniArgumentValue;
@@ -18027,22 +19155,22 @@ namespace Java.Interop.GenericMarshaler {
 			try {
 				return peer.InvokeObjectMethod (encodedMember, args);
 			} finally {
-				__vm1.DestroyArgumentState (value1, ref arg1);
-				__vm2.DestroyArgumentState (value2, ref arg2);
-				__vm3.DestroyArgumentState (value3, ref arg3);
-				__vm4.DestroyArgumentState (value4, ref arg4);
-				__vm5.DestroyArgumentState (value5, ref arg5);
-				__vm6.DestroyArgumentState (value6, ref arg6);
-				__vm7.DestroyArgumentState (value7, ref arg7);
-				__vm8.DestroyArgumentState (value8, ref arg8);
-				__vm9.DestroyArgumentState (value9, ref arg9);
-				__vm10.DestroyArgumentState (value10, ref arg10);
-				__vm11.DestroyArgumentState (value11, ref arg11);
-				__vm12.DestroyArgumentState (value12, ref arg12);
-				__vm13.DestroyArgumentState (value13, ref arg13);
-				__vm14.DestroyArgumentState (value14, ref arg14);
-				__vm15.DestroyArgumentState (value15, ref arg15);
-				__vm16.DestroyArgumentState (value16, ref arg16);
+				__vm1.DestroyGenericArgumentState (value1, ref arg1);
+				__vm2.DestroyGenericArgumentState (value2, ref arg2);
+				__vm3.DestroyGenericArgumentState (value3, ref arg3);
+				__vm4.DestroyGenericArgumentState (value4, ref arg4);
+				__vm5.DestroyGenericArgumentState (value5, ref arg5);
+				__vm6.DestroyGenericArgumentState (value6, ref arg6);
+				__vm7.DestroyGenericArgumentState (value7, ref arg7);
+				__vm8.DestroyGenericArgumentState (value8, ref arg8);
+				__vm9.DestroyGenericArgumentState (value9, ref arg9);
+				__vm10.DestroyGenericArgumentState (value10, ref arg10);
+				__vm11.DestroyGenericArgumentState (value11, ref arg11);
+				__vm12.DestroyGenericArgumentState (value12, ref arg12);
+				__vm13.DestroyGenericArgumentState (value13, ref arg13);
+				__vm14.DestroyGenericArgumentState (value14, ref arg14);
+				__vm15.DestroyGenericArgumentState (value15, ref arg15);
+				__vm16.DestroyGenericArgumentState (value16, ref arg16);
 			}
 		}
 	}

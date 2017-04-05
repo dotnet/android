@@ -303,6 +303,8 @@ namespace Java.Interop
 				ClearTrackedReferences ();
 #if !XA_INTEGRATION
 				ValueManager.Dispose ();
+				marshalMemberBuilder?.Dispose ();
+				TypeManager.Dispose ();
 #endif  // !XA_INTEGRATION
 				ObjectReferenceManager.Dispose ();
 			}
@@ -380,16 +382,6 @@ namespace Java.Interop
 
 		public JniObjectReferenceManager    ObjectReferenceManager      {get; private set;}
 		public JniTypeManager               TypeManager                 {get; private set;}
-
-#if !XA_INTEGRATION
-		internal void TrackID (IntPtr key, IDisposable value)
-		{
-			AssertValid ();
-
-			if (TrackIDs)
-				TrackedInstances.TryAdd (key, value);
-		}
-#endif  // !XA_INTEGRATION
 
 		internal void Track (JniType value)
 		{

@@ -62,13 +62,13 @@ namespace Java.Interop
 		internal static void CheckArrayCopy (int sourceIndex, int sourceLength, int destinationIndex, int destinationLength, int length)
 		{
 			if (sourceIndex < 0)
-				throw new ArgumentOutOfRangeException ("sourceIndex", "source index must be >= 0; was " + sourceIndex + ".");
+				throw new ArgumentOutOfRangeException ("sourceIndex", $"source index must be >= 0; was {sourceIndex}.");
 			if (sourceIndex != 0 && sourceIndex >= sourceLength)
 				throw new ArgumentException ("source index is > source length.", "sourceIndex");
 			if (checked(sourceIndex + length) > sourceLength)
 				throw new ArgumentException ("source index + length >= source length", "length");
 			if (destinationIndex < 0)
-				throw new ArgumentOutOfRangeException ("destinationIndex", "destination index must be >= 0; was " + destinationIndex + ".");
+				throw new ArgumentOutOfRangeException ("destinationIndex", $"destination index must be >= 0; was {destinationIndex}.");
 			if (destinationIndex != 0 && destinationIndex >= destinationLength)
 				throw new ArgumentException ("destination index is > destination length.", "destinationIndex");
 			if (checked (destinationIndex + length) > destinationLength)
