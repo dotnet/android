@@ -102,6 +102,9 @@ framework-assemblies:
 			$(MSBUILD) $(MSBUILD_FLAGS) src/Mono.Android/Mono.Android.csproj /p:Configuration=$(conf)   $(_MSBUILD_ARGS) /p:AndroidApiLevel=$${a} /p:AndroidFrameworkVersion=$${CUR_VERSION} /p:AndroidPreviousFrameworkVersion=$${PREV_VERSION}; ) \
 		PREV_VERSION=$${CUR_VERSION}; \
 	done
+	$(foreach conf, $(CONFIGURATIONS), \
+		rm -f bin/$(conf)/lib/xbuild-frameworks/MonoAndroid/v1.0/Xamarin.Android.NUnitLite.dll; \
+		$(MSBUILD) $(MSBUILD_FLAGS) src/Xamarin.Android.NUnitLite/Xamarin.Android.NUnitLite.csproj /p:Configuration=$(conf)   $(_MSBUILD_ARGS) /p:AndroidApiLevel=19 /p:AndroidFrameworkVersion=v4.4; )
 
 runtime-libraries:
 	$(foreach conf, $(CONFIGURATIONS), \
