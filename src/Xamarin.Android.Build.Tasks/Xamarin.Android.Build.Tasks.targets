@@ -143,9 +143,11 @@
     <Copy
       SourceFiles="$(IntermediateOutputPath)multidex-aar\classes.jar"
       DestinationFiles="$(OutputPath)..\..\..\mandroid\android-support-multidex.jar" />
+    <Touch Files="$(OutputPath)..\..\..\mandroid\android-support-multidex.jar" />
     <Copy
       SourceFiles="$(_SupportLicense)"
       DestinationFiles="$(OutputPath)..\..\..\mandroid\MULTIDEX_JAR_LICENSE" />
+    <Touch Files="$(OutputPath)..\..\..\mandroid\MULTIDEX_JAR_LICENSE" />
   </Target>
 
   <ItemGroup>
