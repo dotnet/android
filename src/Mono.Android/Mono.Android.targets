@@ -40,6 +40,7 @@
     <Exec
         Command="$(ManagedRuntime) ..\..\bin\Build$(Configuration)\jnienv-gen.exe -o Android.Runtime\JNIEnv.g.cs --use-java-interop"
     />
+    <Touch Files="Android.Runtime\JNIEnv.g.cs" />
   </Target>
   <ItemGroup>
     <_AndroidProfile Include="Profiles\api-*.xml.in" />
@@ -128,6 +129,7 @@
         SourceFiles="$(IntermediateOutputPath)__dex\classes.dex"
         DestinationFiles="$(OutputPath)mono.android.dex"
     />
+    <Touch Files="$(OutputPath)mono.android.dex" />
     <RemoveDir
         Directories="$(IntermediateOutputPath)__dex"
     />

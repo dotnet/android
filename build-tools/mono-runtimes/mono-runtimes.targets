@@ -295,7 +295,7 @@
         WorkingDirectory="$(IntermediateOutputPath)\%(_MonoRuntime.Identity)"
     />
     <Touch
-        Files="@(_RuntimeSource);@(_ProfilerSource);@(_MonoPosixHelperSource);@(_BclProfileItems)"
+        Files="@(_RuntimeSource);@(_ProfilerSource);@(_MonoPosixHelperSource);@(_BclProfileItems);@(_MonoBtlsSource)"
     />
   </Target>
   <Target Name="_InstallRuntimes"
@@ -458,6 +458,9 @@
     <Copy
         SourceFiles="@(_FSharp)"
         DestinationFolder="$(_BclFrameworkDir)"
+    />
+    <Touch
+        Files="@(_FSharp->'$(_BclFrameworkDir)\%(Filename)%(Extension)')"
     />
     <Touch
         Files="@(_BclInstalledItem)"
