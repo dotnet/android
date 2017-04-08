@@ -58,6 +58,23 @@
         <VSIXSubPath Condition=" '%(VSIXSubPath)' == '' ">Microsoft/Framework/%(RecursiveDir)</VSIXSubPath>
       </ReferenceAssemblies>
     </ItemGroup>
+    <!-- https://bugzilla.xamarin.com/show_bug.cgi?id=54804
+      Mono's `ZipPackage` mis-handles files w/o an extension,
+      causing VS to state that the .vsix is invalid.
+      Remove these files for now.
+      -->
+    <ItemGroup>
+      <_MSBuildFilesWithoutExtension
+          Condition=" '%(Extension)' == '' "
+          Include="@(MSBuild)"
+      />
+      <MSBuild Remove="@(_MSBuildFilesWithoutExtension)" />
+      <_ReferenceFilesWithoutExtension
+          Condition=" '%(Extension)' == '' "
+          Include="@(ReferenceAssemblies)"
+      />
+      <ReferenceAssemblies Remove="@(_ReferenceFilesWithoutExtension)" />
+    </ItemGroup>
     <ItemGroup>
       <Content Include="@(MSBuild)" />
       <Content Include="@(ReferenceAssemblies)" />
