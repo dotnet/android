@@ -23,7 +23,7 @@ Copyright (C) 2011-2016 Xamarin. All rights reserved.
 		<!-- Until VS2017+ includes its own ReferenceAssemblies outside of C:\Program Files (x86)\Reference Assemblies and into 
 			 the VsInstallRoot, we must override this ourselves for our SDKs -->
 		<TargetFrameworkRootPath Condition="'$(TargetFrameworkRootPath)' == ''">$(VsInstallRoot)\Common7\IDE\ReferenceAssemblies\Microsoft\Framework\</TargetFrameworkRootPath>
-		<FrameworkPathOverride Condition="'$(FrameworkPathOverride)' == ''">$(TargetFrameworkRootPath)MonoAndroid\v1.0</FrameworkPathOverride>
+		<FrameworkPathOverride>$(TargetFrameworkRootPath)MonoAndroid\v1.0</FrameworkPathOverride>
 		<XamarinAndroidSdkPropsImported>true</XamarinAndroidSdkPropsImported>
 	</PropertyGroup>
 
