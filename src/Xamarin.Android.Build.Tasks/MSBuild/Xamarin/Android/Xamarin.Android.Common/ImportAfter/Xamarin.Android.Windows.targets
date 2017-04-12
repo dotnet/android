@@ -9,6 +9,10 @@ Copyright (C) 2014 Xamarin. All rights reserved.
 -->
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
+	<PropertyGroup>
+		<Debugger Condition="'$(Debugger)'==''">Xamarin</Debugger>
+	</PropertyGroup>
+
 	<Target Name="_RegisterMdbFilesWithFileWrites" BeforeTargets="IncrementalClean">  
 		<CreateItem Include="$(OutDir)*.dll.mdb;$(MonoAndroidIntermediateAssemblyDir)*.dll.mdb">  
 			<Output TaskParameter="Include" ItemName="_FilesToRegister" />  
