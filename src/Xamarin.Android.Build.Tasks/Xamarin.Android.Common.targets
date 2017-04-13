@@ -168,6 +168,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <!-- Version/fx properties -->
 <PropertyGroup>
 	<_XAMajorVersionNumber>1</_XAMajorVersionNumber>
+	<_XASupportsFastDev Condition=" Exists ('$(MSBuildThisFileDirectory)Xamarin.Android.Common.Debugging.targets') ">True</_XASupportsFastDev>
+	<_XASupportsFastDev Condition=" '$(_XASupportsFastDev)' == '' ">False</_XASupportsFastDev>
 	<AndroidApplication Condition="'$(AndroidApplication)' == ''">false</AndroidApplication>
 	<AndroidNeedsInternetPermission Condition="'$(AndroidNeedsInternetPermission)' == '' And '$(AndroidEmbedProfilers)' == ''">False</AndroidNeedsInternetPermission>
 	<AndroidNeedsInternetPermission Condition="'$(AndroidNeedsInternetPermission)' == '' And '$(AndroidEmbedProfilers)' != ''">True</AndroidNeedsInternetPermission>
@@ -175,7 +177,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<TargetFrameworkIdentifier Condition="'$(TargetFrameworkIdentifier)' == ''">MonoAndroid</TargetFrameworkIdentifier>
 	<MonoAndroidVersion>v$(_XAMajorVersionNumber).0</MonoAndroidVersion>
 	<AndroidUpdateResourceReferences Condition="'$(AndroidUpdateResourceReferences)' == ''">True</AndroidUpdateResourceReferences>
-	<EmbedAssembliesIntoApk Condition="'$(EmbedAssembliesIntoApk)' == ''">True</EmbedAssembliesIntoApk>
+	<EmbedAssembliesIntoApk Condition=" '$(EmbedAssembliesIntoApk)' == '' Or '$(_XASupportsFastDev)' == 'False' ">True</EmbedAssembliesIntoApk>
 	<AndroidSkipJavacVersionCheck Condition="'$(AndroidSkipJavacVersionCheck)' == ''">False</AndroidSkipJavacVersionCheck>
 	<AndroidBuildApplicationPackage Condition=" '$(AndroidBuildApplicationPackage)' == ''">False</AndroidBuildApplicationPackage>
 
@@ -183,7 +185,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<AndroidAotMode Condition=" '$(AndroidAotMode)' == '' And '$(AotAssemblies)' == 'True' ">Normal</AndroidAotMode>
 	<AotAssemblies Condition=" '$(AndroidAotMode)' != '' ">True</AotAssemblies>
 	<AotAssemblies Condition=" '$(AotAssemblies)' == '' ">False</AotAssemblies>
-	<AndroidUseSharedRuntime Condition=" '$(AndroidUseSharedRuntime)' == ''">False</AndroidUseSharedRuntime>
+	<AndroidUseSharedRuntime Condition=" '$(AndroidUseSharedRuntime)' == '' Or '$(_XASupportsFastDev)' == 'False' ">False</AndroidUseSharedRuntime>
 
 	<AndroidExplicitCrunch Condition=" '$(AndroidExplicitCrunch)' == '' ">False</AndroidExplicitCrunch>
 	<AndroidUseDebugRuntime Condition="'$(AndroidUseDebugRuntime)' == '' And '$(Optimize)' == 'True'" >False</AndroidUseDebugRuntime>
@@ -2450,6 +2452,22 @@ because xbuild doesn't support framework reference assemblies.
     DependsOnTargets="AndroidPrepareForBuild">
   <WriteLinesToFile File="$(_LldbConfigFile)" Lines="PKG=$(_AndroidPackage)" Overwrite="true"/>
   <WriteLinesToFile File="$(_LldbConfigFile)" Lines="MANIFEST=$(IntermediateOutputPath)android\AndroidManifest.xml"/>
+</Target>
+
+<PropertyGroup>
+  <InstallDependsOnTargets>
+    SignAndroidPackage;
+    _Deploy
+  </InstallDependsOnTargets>
+</PropertyGroup>
+
+<Target Name="_Deploy">
+  <Exec Command="&quot;$(AdbToolPath)\adb&quot; install &quot;$(ApkFileSigned)&quot;" />
+</Target>
+
+<Target Name="Install"
+    Condition="'$(AndroidApplication)'!='' And $(AndroidApplication)"
+    DependsOnTargets="$(InstallDependsOnTargets)">
 </Target>
 
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Common.Debugging.targets"
