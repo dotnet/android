@@ -1,0 +1,27 @@
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Target Name="_BuildSystemDrawingPrimitivesFacade">
+   <MSBuild Projects="..\Mono.Android\Mono.Android.csproj"
+             Targets="GetTargetPath"
+             Properties="Configuration=$(Configuration)">
+        <Output TaskParameter="TargetOutputs"
+                ItemName="MonoAndroidAssembly" />
+    </MSBuild>
+    <Exec
+        Command="make -C $(MonoSourceFullPath)\mcs\class\Facades\System.Drawing.Primitives PROFILE=monodroid EXTERNAL_FACADE_DRAWING_REFERENCE=&quot;%(MonoAndroidAssembly.Identity)&quot;"
+        WorkingDirectory="$(MonoSourceFullPath)"
+    />
+    <Copy
+        SourceFiles="$(MonoSourceFullPath)\mcs\class\lib\monodroid\Facades\System.Drawing.Primitives.dll"
+        DestinationFiles="$(OutputPath)\System.Drawing.Primitives.dll"
+    />
+  </Target>
+  <Target Name="_CleanSystemDrawingPrimitivesFacade"
+      AfterTargets="Clean">
+    <Delete Files="$(OutputPath)\System.Drawing.Primitives.dll" />
+    <Exec
+        Command="make -C $(MonoSourceFullPath)\mcs\class\Facades\System.Drawing.Primitives PROFILE=monodroid clean"
+        WorkingDirectory="$(MonoSourceFullPath)"
+    />
+  </Target>
+</Project>
+
