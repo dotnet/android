@@ -124,6 +124,7 @@
     <MonoFacadeAssembly Include="System.Threading.Thread.dll" />
     <MonoFacadeAssembly Include="System.Threading.ThreadPool.dll" />
     <MonoFacadeAssembly Include="System.Threading.Timer.dll" />
+    <MonoFacadeAssembly Include="System.ValueTuple.dll" />
     <MonoFacadeAssembly Include="System.Xml.ReaderWriter.dll" />
     <MonoFacadeAssembly Include="System.Xml.XDocument.dll" />
     <MonoFacadeAssembly Include="System.Xml.XmlDocument.dll" />
