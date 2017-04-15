@@ -263,7 +263,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 </PropertyGroup>
 
 <Choose>
-	<When Condition=" '$(DebugSymbols)' != '' And $(DebugSymbols) And '$(DebugType)' != '' And '$(Optimize)' == 'False' ">
+	<When Condition=" '$(DebugSymbols)' != '' And $(DebugSymbols) And '$(DebugType)' != '' And '$(Optimize)' != 'True' ">
 		<PropertyGroup>
 			<AndroidIncludeDebugSymbols>True</AndroidIncludeDebugSymbols>
 		</PropertyGroup>
