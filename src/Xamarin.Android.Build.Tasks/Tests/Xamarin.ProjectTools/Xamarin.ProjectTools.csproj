@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -37,9 +37,6 @@
     <Reference Include="System.Drawing" />
     <Reference Include="Microsoft.Web.XmlTransform">
       <HintPath>..\..\..\..\packages\Microsoft.Web.Xdt.2.1.1\lib\net40\Microsoft.Web.XmlTransform.dll</HintPath>
-    </Reference>
-    <Reference Include="NuGet.Core">
-      <HintPath>..\..\..\..\packages\NuGet.Core.2.11.1\lib\net40-Client\NuGet.Core.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -143,6 +140,10 @@
     <Content
         Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Linux:')) And '$(_LinuxBuildLibZip)' == 'True' "
         Include="..\..\..\..\bin\$(Configuration)\lib\xbuild\Xamarin\Android\libzip.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content
+        Include="..\..\..\..\.nuget\NuGet.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
