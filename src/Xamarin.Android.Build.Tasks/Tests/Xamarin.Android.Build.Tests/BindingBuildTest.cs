@@ -109,7 +109,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.AndroidClassParser = classParser;
 			proj.Packages.Add (KnownPackages.AndroidSupportV4_22_1_1_1);
 			proj.Jars.Add (new AndroidItem.LibraryProjectZip ("Jars\\aFileChooserBinaries.zip") {
-				WebContent = "https://dl.dropboxusercontent.com/u/493047/2016/aFileChooserBinaries.zip"
+				WebContent = "https://www.dropbox.com/s/hl98jrvlw4d9vjy/aFileChooserBinaries.zip?dl=1"
 			});
 			proj.MetadataXml = @"
 				<metadata>
@@ -180,7 +180,7 @@ namespace Com.Ipaulpro.Afilechooser {
 			};
 			binding.AndroidClassParser = "class-parse";
 			binding.Jars.Add (new AndroidItem.LibraryProjectZip ("Jars\\adal-1.0.7.aar") {
-				WebContent = "https://dl.dropboxusercontent.com/u/493047/2014/adal-1.0.7.aar"
+				WebContent = "https://www.dropbox.com/s/bubopadhd9d1l4b/adal-1.0.7.aar?dl=1"
 			});
 			binding.MetadataXml = @"
 <metadata>
@@ -211,7 +211,7 @@ namespace Com.Ipaulpro.Afilechooser {
 			};
 			binding.AndroidClassParser = "class-parse";
 			binding.Jars.Add (new AndroidItem.LibraryProjectZip ("Jars\\mylibrary.aar") {
-				WebContent = "https://dl.dropboxusercontent.com/u/493047/2015/mylibrary-debug.aar"
+				WebContent = "https://www.dropbox.com/s/53679881kg9rdiq/mylibrary-debug.aar?dl=1"
 			});
 			var bindingBuilder = CreateDllBuilder ("temp/AnnotationSupport");
 			Assert.IsTrue (bindingBuilder.Build (binding), "binding build failed");
@@ -227,7 +227,10 @@ namespace Com.Ipaulpro.Afilechooser {
 				IsRelease = true,
 			};
 			binding.AndroidClassParser = "class-parse";
-			binding.Jars.Add (new AndroidItem.EmbeddedJar (() => "$(MonoDroidInstallDirectory)\\lib\\mandroid\\android-support-multidex.jar"));
+			var multidexJar = Environment.OSVersion.Platform == PlatformID.Win32NT
+				? Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.ProgramFilesX86), "MSBuild", "Xamarin", "Android", "android-support-multidex.jar") 
+				: Path.Combine ("$(MonoDroidInstallDirectory)", "lib", "mandroid", "android-support-multidex.jar");
+			binding.Jars.Add (new AndroidItem.EmbeddedJar (() => multidexJar));
 			using (var bindingBuilder = CreateDllBuilder ("temp/BindingCustomJavaApplicationClass/MultiDexBinding")) {
 				bindingBuilder.Build (binding);
 				var proj = new XamarinAndroidApplicationProject ();
