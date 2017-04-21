@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Diagnostics;
 using Microsoft.Build.Framework;
-using Microsoft.Build.BuildEngine;
 
 namespace Xamarin.ProjectTools
 {
