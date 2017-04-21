@@ -38,7 +38,7 @@
         synthetic="false"
         jni-signature="(Ljava/lang/Object;)Z">
         <parameter
-          name="object"
+          name="e"
           type="E"
           jni-type="TE;" />
       </method>

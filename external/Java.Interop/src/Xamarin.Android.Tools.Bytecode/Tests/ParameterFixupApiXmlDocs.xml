@@ -3,7 +3,7 @@
 	<package name="java.util">
 		<class name="Collection">
 			<method name="add">
-				<parameter name="object" type="E" />
+				<parameter name="e" type="E" />
 			</method>
 		</class>
 	</package>
