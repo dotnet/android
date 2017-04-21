@@ -83,7 +83,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenTK", "src\OpenTK-1.0\Op
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "libZipSharp", "external\LibZipSharp\libZipSharp.csproj", "{E248B2CA-303B-4645-ADDC-9D4459D550FD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "System.Drawing.Primitives", "src\System.Drawing.Primitives\System.Drawing.Primitives.csproj", "{C9FF2E4D-D927-479E-838B-647C16763F64}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "System.Drawing.Primitives", "src\System.Drawing.Primitives\System.Drawing.Primitives.mdproj", "{C9FF2E4D-D927-479E-838B-647C16763F64}"
 EndProject
 Project("{9344BDBB-3E7F-41FC-A0DD-8665D75EE146}") = "libzip-windows", "build-tools\libzip-windows\libzip-windows.mdproj", "{0DE278D6-000F-4001-BB98-187C0AF58A61}"
 EndProject
@@ -106,6 +106,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "javadoc2mdoc", "tools\javadoc2mdoc\javadoc2mdoc.csproj", "{A87352E6-CE7F-4346-B6B1-586AE931C0A7}"
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Xamarin.Android.Build.Tests.Shared", "src\Xamarin.Android.Build.Tasks\Tests\Xamarin.Android.Build.Tests\Xamarin.Android.Build.Tests.Shared.shproj", "{BD1D66BF-5AC7-4926-8EBE-B2198A112EB0}"
+EndProject
+Project("{9344BDBB-3E7F-41FC-A0DD-8665D75EE146}") = "netstandard", "src\netstandard\netstandard.mdproj", "{93614CB8-4564-43B9-93B0-4AF4B3B16AAE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -489,6 +491,14 @@ Global
 		{A87352E6-CE7F-4346-B6B1-586AE931C0A7}.XAIntegrationDebug|AnyCPU.Build.0 = Debug|Any CPU
 		{A87352E6-CE7F-4346-B6B1-586AE931C0A7}.XAIntegrationRelease|AnyCPU.ActiveCfg = Debug|Any CPU
 		{A87352E6-CE7F-4346-B6B1-586AE931C0A7}.XAIntegrationRelease|AnyCPU.Build.0 = Debug|Any CPU
+		{93614CB8-4564-43B9-93B0-4AF4B3B16AAE}.Debug|AnyCPU.ActiveCfg = Debug|Any CPU
+		{93614CB8-4564-43B9-93B0-4AF4B3B16AAE}.Debug|AnyCPU.Build.0 = Debug|Any CPU
+		{93614CB8-4564-43B9-93B0-4AF4B3B16AAE}.Release|AnyCPU.ActiveCfg = Release|Any CPU
+		{93614CB8-4564-43B9-93B0-4AF4B3B16AAE}.Release|AnyCPU.Build.0 = Release|Any CPU
+		{93614CB8-4564-43B9-93B0-4AF4B3B16AAE}.XAIntegrationDebug|AnyCPU.ActiveCfg = Debug|Any CPU
+		{93614CB8-4564-43B9-93B0-4AF4B3B16AAE}.XAIntegrationDebug|AnyCPU.Build.0 = Debug|Any CPU
+		{93614CB8-4564-43B9-93B0-4AF4B3B16AAE}.XAIntegrationRelease|AnyCPU.ActiveCfg = Debug|Any CPU
+		{93614CB8-4564-43B9-93B0-4AF4B3B16AAE}.XAIntegrationRelease|AnyCPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{8FF78EB6-6FC8-46A7-8A15-EBBA9045C5FA} = {E351F97D-EA4F-4E7F-AAA0-8EBB1F2A4A62}
@@ -540,6 +550,7 @@ Global
 		{E0890301-F75F-40E7-B008-54C28B3BA542} = {864062D3-A415-4A6F-9324-5820237BA058}
 		{A87352E6-CE7F-4346-B6B1-586AE931C0A7} = {864062D3-A415-4A6F-9324-5820237BA058}
 		{BD1D66BF-5AC7-4926-8EBE-B2198A112EB0} = {CAB438D8-B0F5-4AF0-BEBD-9E2ADBD7B483}
+		{93614CB8-4564-43B9-93B0-4AF4B3B16AAE} = {04E3E11E-B47D-4599-8AFC-50515A95E715}
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
 		Policies = $0
