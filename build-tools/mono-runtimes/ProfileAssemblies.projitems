@@ -132,6 +132,15 @@
     <MonoFacadeAssembly Include="System.Xml.XPath.dll" />
     <MonoFacadeAssembly Include="System.Xml.XPath.XDocument.dll" />
     <MonoFacadeAssembly Include="System.Xml.Xsl.Primitives.dll" />
+    <!--
+      System.Drawing.Primitives and netstandard need a reference to Mono.Android.dll so their
+      build is driven from the XA repo by invoking make in the Mono submodule and passing the path
+      to Mono.Android.dll. This doesn't work however if we just have a bundle because the Mono
+      submodule won't be built. We need to add the facades to the bundle and not rebuild them in
+      this case (which is fine since all they depend on is the Mono.Android.dll assembly identity).
+    -->
+    <MonoFacadeAssembly Include="System.Drawing.Primitives.dll" />
+    <MonoFacadeAssembly Include="netstandard.dll" />
   </ItemGroup>
   <ItemGroup>
     <MonoProfileAssembly Include="I18N.CJK.dll" />

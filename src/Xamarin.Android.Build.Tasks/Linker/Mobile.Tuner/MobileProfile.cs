@@ -179,6 +179,7 @@ namespace Mobile.Tuner {
 			"System.Threading.ThreadPool",
 			"System.Threading.Timer",
 			"System.Threading",
+			"System.ValueTuple",
 			"System.Xml.ReaderWriter",
 			"System.Xml.XDocument",
 			"System.Xml.XPath.XDocument",
@@ -186,6 +187,7 @@ namespace Mobile.Tuner {
 			"System.Xml.XmlDocument",
 			"System.Xml.XmlSerializer",
 			"System.Xml.Xsl.Primitives",
+			"netstandard",
 		};
 
 		protected override bool IsSdk (string assemblyName)
