@@ -14,4 +14,10 @@ Copyright (C) 2014 Xamarin. All rights reserved.
     <Import Project="$(MSBuildThisFileDirectory)\Xamarin.Android.Common\ImportAfter\*"
             Condition="Exists('$(MSBuildThisFileDirectory)\Xamarin.Android.Common\ImportAfter')"/>
 
+    <!-- Allows providing SDK-specific targets overrides -->
+    <PropertyGroup>
+        <XamarinAndroidSdkTargets>$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), 'Xamarin.Android.Sdk.targets'))\Xamarin.Android.Sdk.targets</XamarinAndroidSdkTargets>
+    </PropertyGroup>
+    <Import Project="$(XamarinAndroidSdkTargets)" Condition="'$(XamarinAndroidSdkTargetsImported)' != 'true' And Exists('$(XamarinAndroidSdkTargets)')"/>
+
 </Project>
