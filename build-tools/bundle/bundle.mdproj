@@ -49,5 +49,17 @@
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </ProjectReference>
+    <ProjectReference Include="..\..\src\System.Drawing.Primitives\System.Drawing.Primitives.mdproj">
+      <Project>{C9FF2E4D-D927-479E-838B-647C16763F64}</Project>
+      <Name>System.Drawing.Primitives</Name>
+      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </ProjectReference>
+    <ProjectReference Include="..\..\src\netstandard\netstandard.mdproj">
+      <Project>{93614CB8-4564-43B9-93B0-4AF4B3B16AAE}</Project>
+      <Name>netstandard</Name>
+      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </ProjectReference>
   </ItemGroup>
 </Project>
