@@ -108,6 +108,16 @@
     <_SharedRuntimeAssemblies Include="$(_SharedRuntimeBuildPath)$(AndroidFrameworkVersion)\OpenTK.dll" />
     <_SharedRuntimeAssemblies Include="$(_SharedRuntimeBuildPath)$(AndroidFrameworkVersion)\OpenTK-1.0.dll" />
   </ItemGroup>
+  <Target Name="_GenerateMonoAndroidEnums"
+      BeforeTargets="CoreCompile"
+      Inputs="..\Mono.Android\obj\$(Configuration)\android-$(AndroidLatestApiLevel)\mcw\api.xml"
+      Outputs="@(_MonoAndroidEnum)">
+    <MSBuild
+        Condition=" !Exists ('%(_MonoAndroidEnum.Identity)') "
+        Projects="..\Mono.Android\Mono.Android.csproj"
+        Properties="Configuration=$(Configuration);AndroidApiLevel=$(AndroidLatestApiLevel);AndroidFrameworkVersion=$(AndroidLatestFrameworkVersion)"
+    />
+  </Target>
   <Target Name="_GenerateXACommonProps"
       DependsOnTargets="GetXAVersionInfo"
       BeforeTargets="DeployOutputFiles"
@@ -143,9 +153,11 @@
     <Copy
       SourceFiles="$(IntermediateOutputPath)multidex-aar\classes.jar"
       DestinationFiles="$(OutputPath)..\..\..\mandroid\android-support-multidex.jar" />
+    <Touch Files="$(OutputPath)..\..\..\mandroid\android-support-multidex.jar" />
     <Copy
       SourceFiles="$(_SupportLicense)"
       DestinationFiles="$(OutputPath)..\..\..\mandroid\MULTIDEX_JAR_LICENSE" />
+    <Touch Files="$(OutputPath)..\..\..\mandroid\MULTIDEX_JAR_LICENSE" />
   </Target>
 
   <ItemGroup>

@@ -202,6 +202,12 @@ Overridable MSBuild properties include:
 * `$(MakeConcurrency)`: **make**(1) parameters to use intended to influence
     the number of CPU cores used when **make**(1) executes. By default this uses
     `-jCOUNT`, where `COUNT` is obtained from `sysctl hw.ncpu`.
+* `$(MonoRequiredMinimumVersion)`: The minimum *system* mono version that is
+    supported in order to allow a build to continue. Policy is to require a
+    system mono which corresponds vaguely to the [`external/mono`](external)
+    version. This is not strictly required; older mono versions *may* work, they
+    just are not tested, and thus not guaranteed or supported.  
+    By default this is `4.9.3`.
 * `$(MonoSgenBridgeVersion)`: The Mono SGEN Bridge version to support.
     Valid values include:
 

@@ -90,6 +90,10 @@
       <HostOS></HostOS>
       <DestDir>extras\android\m2repository</DestDir>
     </AndroidSdkItem>
+    <AndroidSdkItem Include="docs-24_r01.zip">
+      <HostOS></HostOS>
+      <DestDir>docs</DestDir>
+    </AndroidSdkItem>
     <AndroidSdkItem Include="sysimg_x86-21_r03.zip">
       <HostOS></HostOS>
       <RelUrl>sys-img/android/</RelUrl>

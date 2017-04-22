@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -6,7 +6,6 @@ using System.Xml;
 using Microsoft.Build.Construction;
 using System.Diagnostics;
 using System.Text;
-using NuGet;
 
 namespace Xamarin.ProjectTools
 {
@@ -380,12 +379,12 @@ namespace Xamarin.ProjectTools
 			if (!Packages.Any ())
 				return;
 
-			IPackageRepository repo = PackageRepositoryFactory.Default.CreateRepository ("https://packages.nuget.org/api/v2");
-			PackageManager packageManager = new PackageManager (repo, Path.Combine (Root, directory, "..", "packages"));
-
-			foreach (var package in Packages) {
-				packageManager.InstallPackage (package.Id, new SemanticVersion (package.Version));
-			}
+			var isWindows = Environment.OSVersion.Platform == PlatformID.Win32NT;
+			var psi = new ProcessStartInfo (isWindows ? "NuGet.exe" : "mono") {
+				Arguments = $"{(isWindows ? "" : "\"" + Path.Combine (Root,"NuGet.exe") + "\"")} restore -PackagesDirectory \"{Path.Combine (Root, directory, "..", "packages")}\" \"{Path.Combine (Root, directory, "packages.config")}\"",
+			};
+			var process = Process.Start (psi);
+			process.WaitForExit ();
 		}
 
 		public string ProcessSourceTemplate (string source)

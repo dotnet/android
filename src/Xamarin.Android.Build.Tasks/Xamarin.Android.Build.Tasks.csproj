@@ -34,7 +34,7 @@
   </PropertyGroup>
   <PropertyGroup>
     <DefineConstants Condition="'$(__XA_NO_PREVIEW_L_SUPPORT__)' != ''">$(DefineConstants);XA_NO_PREVIEW_L_SUPPORT</DefineConstants>
-    <AndroidGeneratedClassDirectory Condition=" '$(AndroidGeneratedClassDirectory)' == '' ">..\..\src\Mono.Android\obj\$(Configuration)\android-$(AndroidApiLevel)\mcw</AndroidGeneratedClassDirectory>
+    <AndroidGeneratedClassDirectory Condition=" '$(AndroidGeneratedClassDirectory)' == '' ">..\..\src\Mono.Android\obj\$(Configuration)\android-$(AndroidLatestApiLevel)\mcw</AndroidGeneratedClassDirectory>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.Build.Framework" />
@@ -414,27 +414,6 @@
     <Compile Include="..\Mono.Android\\Android.Content\GrantUriPermissionAttribute.cs">
       <Link>Mono.Android\GrantUriPermissionAttribute.cs</Link>
     </Compile>
-    <Compile Include="$(AndroidGeneratedClassDirectory)\Android.Content.PM.LaunchMode.cs">
-      <Link>Mono.Android\Android.Content.PM.LaunchMode.cs</Link>
-    </Compile>
-    <Compile Include="$(AndroidGeneratedClassDirectory)\Android.Content.PM.ScreenOrientation.cs">
-      <Link>Mono.Android\Android.Content.PM.ScreenOrientation.cs</Link>
-    </Compile>
-    <Compile Include="$(AndroidGeneratedClassDirectory)\Android.Content.PM.ConfigChanges.cs">
-      <Link>Mono.Android\Android.Content.PM.ConfigChanges.cs</Link>
-    </Compile>
-    <Compile Include="$(AndroidGeneratedClassDirectory)\Android.Content.PM.UiOptions.cs">
-      <Link>Mono.Android\Android.Content.PM.UiOptions.cs</Link>
-    </Compile>
-    <Compile Include="$(AndroidGeneratedClassDirectory)\Android.Views.SoftInput.cs">
-      <Link>Mono.Android\Android.Views.SoftInput.cs</Link>
-    </Compile>
-    <Compile Include="$(AndroidGeneratedClassDirectory)\Android.Content.PM.Protection.cs">
-      <Link>Mono.Android\Android.Content.PM.Protection.cs</Link>
-    </Compile>
-    <Compile Include="$(AndroidGeneratedClassDirectory)\Android.Views.LayoutDirection.cs">
-      <Link>Mono.Android\Android.Views.LayoutDirection.cs</Link>
-    </Compile>
     <Compile Include="..\Mono.Android\Android.Runtime\IntDefinitionAttribute.cs">
       <Link>Mono.Android\IntDefinitionAttribute.cs</Link>
     </Compile>
@@ -495,6 +474,18 @@
     <Compile Include="Utilities\Profile.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\PreserveTlsProvider.cs" />
     <Compile Include="Tasks\Unzip.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <_MonoAndroidEnum Include="$(AndroidGeneratedClassDirectory)\Android.Content.PM.LaunchMode.cs" />
+    <_MonoAndroidEnum Include="$(AndroidGeneratedClassDirectory)\Android.Content.PM.ScreenOrientation.cs" />
+    <_MonoAndroidEnum Include="$(AndroidGeneratedClassDirectory)\Android.Content.PM.ConfigChanges.cs" />
+    <_MonoAndroidEnum Include="$(AndroidGeneratedClassDirectory)\Android.Content.PM.UiOptions.cs" />
+    <_MonoAndroidEnum Include="$(AndroidGeneratedClassDirectory)\Android.Views.SoftInput.cs" />
+    <_MonoAndroidEnum Include="$(AndroidGeneratedClassDirectory)\Android.Content.PM.Protection.cs" />
+    <_MonoAndroidEnum Include="$(AndroidGeneratedClassDirectory)\Android.Views.LayoutDirection.cs" />
+    <Compile Include="@(_MonoAndroidEnum)">
+      <Link>Mono.Android\%(Filename)%(Extension)</Link>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Xamarin.Android.Build.Tasks.targets" />

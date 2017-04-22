@@ -19,12 +19,14 @@ Copyright (C) 2011-2016 Xamarin. All rights reserved.
 		<VsInstallationID>$(DevEnvIni.Substring($(InstallationIDEqualsIndex), 8))</VsInstallationID>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(VsInstallRoot)' != ''">
+	<PropertyGroup>
 		<!-- Until VS2017+ includes its own ReferenceAssemblies outside of C:\Program Files (x86)\Reference Assemblies and into 
 			 the VsInstallRoot, we must override this ourselves for our SDKs -->
-		<TargetFrameworkRootPath Condition="'$(TargetFrameworkRootPath)' == ''">$(VsInstallRoot)\Common7\IDE\ReferenceAssemblies\Microsoft\Framework\</TargetFrameworkRootPath>
-		<FrameworkPathOverride Condition="'$(FrameworkPathOverride)' == ''">$(TargetFrameworkRootPath)MonoAndroid\v1.0</FrameworkPathOverride>
-		<XamarinAndroidSdkPropsImported>true</XamarinAndroidSdkPropsImported>
+		<TargetFrameworkRootPath Condition="'$(VsInstallRoot)' != '' And '$(TargetFrameworkRootPath)' == ''">$(VsInstallRoot)\Common7\IDE\ReferenceAssemblies\Microsoft\Framework\</TargetFrameworkRootPath>
+		<TargetFrameworkRootPath Condition="'$(VsInstallRoot)' == '' And '$(TargetFrameworkRootPath)' == ''">$(ProgramFiles)\Reference Assemblies\Microsoft\Framework\</TargetFrameworkRootPath>
+
+		<!-- We should always override the framework path so that XA resolves to its own mscorlib.dll -->
+		<FrameworkPathOverride>$(TargetFrameworkRootPath)MonoAndroid\v1.0</FrameworkPathOverride>
 	</PropertyGroup>
 
 	<Target Name="RedirectMonoAndroidSdkPaths" Condition="'$(VsInstallRoot)' != ''">
@@ -52,6 +54,10 @@ Copyright (C) 2011-2016 Xamarin. All rights reserved.
 			</Code>
 		</Task>
 	</UsingTask>
+
+	<PropertyGroup>
+		<XamarinAndroidSdkPropsImported>true</XamarinAndroidSdkPropsImported>
+	</PropertyGroup>
 
 	<!-- Allows providing Xamarin SDK-specific property overrides -->
 	<Import Project="Xamarin.Sdk.props" Condition="'$(XamarinSdkPropsImported)' != 'true' And Exists('Xamarin.Sdk.props')"/>

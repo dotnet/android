@@ -295,7 +295,7 @@
         WorkingDirectory="$(IntermediateOutputPath)\%(_MonoRuntime.Identity)"
     />
     <Touch
-        Files="@(_RuntimeSource);@(_ProfilerSource);@(_MonoPosixHelperSource);@(_BclProfileItems)"
+        Files="@(_RuntimeSource);@(_ProfilerSource);@(_MonoPosixHelperSource);@(_BclProfileItems);@(_MonoBtlsSource)"
     />
   </Target>
   <Target Name="_InstallRuntimes"
@@ -460,6 +460,9 @@
         DestinationFolder="$(_BclFrameworkDir)"
     />
     <Touch
+        Files="@(_FSharp->'$(_BclFrameworkDir)\%(Filename)%(Extension)')"
+    />
+    <Touch
         Files="@(_BclInstalledItem)"
     />
     <ItemGroup>
@@ -579,6 +582,9 @@
       <BundleItem Include="@(_RuntimeEglibHeaderOutput)" />
       <BundleItem Include="@(_MonoConstsOutput)" />
       <BundleItem Include="@(_LlvmTargetBinary)" />
+      <BundleItem Include="$(OutputPath)\%(_MonoCrossRuntime.InstallPath)%(_MonoCrossRuntime.CrossMonoName).d%(_MonoCrossRuntime.ExeSuffix)"
+          Condition=" '@(_MonoCrossRuntime)' != '' "
+      />
       <BundleItem Include="$(OutputPath)\%(_MonoCrossRuntime.InstallPath)%(_MonoCrossRuntime.CrossMonoName)%(_MonoCrossRuntime.ExeSuffix)"
           Condition=" '@(_MonoCrossRuntime)' != '' "
       />

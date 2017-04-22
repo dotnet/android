@@ -136,7 +136,7 @@ linux-prepare-$(LINUX_DISTRO)::
 linux-prepare-$(LINUX_DISTRO)-$(LINUX_DISTRO_RELEASE)::
 endif
 
-run-all-tests: run-nunit-tests run-apk-tests
+run-all-tests: run-nunit-tests run-ji-tests run-apk-tests
 
 clean:
 	$(MSBUILD) $(MSBUILD_FLAGS) /t:Clean Xamarin.Android.sln
@@ -164,6 +164,11 @@ endef
 
 run-nunit-tests: $(NUNIT_TESTS)
 	$(foreach t,$(NUNIT_TESTS), $(call RUN_NUNIT_TEST,$(t),1))
+
+run-ji-tests:
+	$(MAKE) -C "$(call GetPath,JavaInterop)" CONFIGURATION=$(CONFIGURATION) all
+	ANDROID_SDK_PATH="$(call GetPath,AndroidSdk)" $(MAKE) -C "$(call GetPath,JavaInterop)" CONFIGURATION=$(CONFIGURATION) run-all-tests || true
+	cp "$(call GetPath,JavaInterop)"/TestResult-*.xml .
 
 # .apk files to test on-device need to:
 # (1) Have their .csproj files listed here

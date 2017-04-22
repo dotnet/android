@@ -393,23 +393,23 @@
 
     <_MonoCrossRuntime Include="cross-arm64-win" Condition="$(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':win-arm64:'))">
       <JitArch>arm64-v8a</JitArch>
-      <Ar>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-ar</Ar>
-      <As>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-as</As>
-      <Cc>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-gcc</Cc>
+      <Ar>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-ar</Ar>
+      <As>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-as</As>
+      <Cc>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-gcc</Cc>
       <CFlags>$(_CrossCFlagsWin) -static -static-libgcc</CFlags>
-      <Cxx>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-g++</Cxx>
-      <CxxCpp>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-cpp</CxxCpp>
+      <Cxx>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-g++</Cxx>
+      <CxxCpp>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-cpp</CxxCpp>
       <CxxFlags>$(_CrossCXXFlagsWin) -static -static-libgcc</CxxFlags>
-      <Ld>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-ld</Ld>
+      <Ld>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-ld</Ld>
       <LdFlags>-static -static-libgcc -static-libstdc++</LdFlags>
-      <RanLib>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-ranlib</RanLib>
-      <Strip>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-strip</Strip>
+      <RanLib>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-ranlib</RanLib>
+      <Strip>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-strip</Strip>
       <StripFlags>-S</StripFlags>
       <TargetAbi>aarch64-v8a-linux-android</TargetAbi>
-      <ConfigureFlags>--target=aarch64-v8a-linux-android --host="$(_CrossConfigureBuildHostWin32)" --cache-file=$(_CrossConfigureCachePrefix)arm64-win.config.cache --with-cross-offsets=aarch64-v8a-linux-android.h $(_CrossConfigureFlags) --with-llvm=$(_LlvmPrefixWin32)</ConfigureFlags>
+      <ConfigureFlags>--target=aarch64-v8a-linux-android --host="$(_CrossConfigureBuildHostWin64)" --cache-file=$(_CrossConfigureCachePrefix)arm64-win.config.cache --with-cross-offsets=aarch64-v8a-linux-android.h $(_CrossConfigureFlags) --with-llvm=$(_LlvmPrefixWin64)</ConfigureFlags>
       <ExeSuffix>.exe</ExeSuffix>
       <BuildEnvironment>PATH="$(AndroidMxeFullPath)\bin:$(PATH)"</BuildEnvironment>
-      <ConfigureEnvironment>$(_LlvmConfigureEnvironmentWin32)</ConfigureEnvironment>
+      <ConfigureEnvironment>$(_LlvmConfigureEnvironmentWin64)</ConfigureEnvironment>
       <InstallPath>lib/mandroid/</InstallPath>
       <CrossMonoName>cross-arm64</CrossMonoName>
     </_MonoCrossRuntime>

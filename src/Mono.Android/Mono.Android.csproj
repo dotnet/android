@@ -315,7 +315,7 @@
   </PropertyGroup>
   <Import Project="Mono.Android.targets" />
   <PropertyGroup>
-    <JavaCallableWrapperAbsAssembly>$(JavaCallableWrapperOutputPathAbs)$(AssemblyName).dll</JavaCallableWrapperAbsAssembly>
+    <JavaCallableWrapperAbsAssembly>$([System.IO.Path]::GetFullPath ('$(OutputPath)$(AssemblyName).dll'))</JavaCallableWrapperAbsAssembly>
     <JavaCallableWrapperAfterTargets>CoreBuild</JavaCallableWrapperAfterTargets>
   </PropertyGroup>
   <Import Project="..\..\build-tools\scripts\JavaCallableWrappers.targets" />

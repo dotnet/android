@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <UsingTask AssemblyFile="$(OutputPath)xa-prep-tasks.dll"   TaskName="Xamarin.Android.BuildTools.PrepTasks.DownloadUri" />
   <UsingTask AssemblyFile="$(OutputPath)xa-prep-tasks.dll"   TaskName="Xamarin.Android.BuildTools.PrepTasks.SystemUnzip" />
@@ -6,6 +6,8 @@
   <Import Project="..\scripts\XAVersionInfo.targets" />
   <PropertyGroup>
     <_AzureBaseUri>https://xamjenkinsartifact.blob.core.windows.net/xamarin-android/xamarin-android/bin/</_AzureBaseUri>
+    <_NuGetUri>https://dist.nuget.org/win-x86-commandline/latest/nuget.exe</_NuGetUri>
+    <_NuGetPath>$(MSBuildThisFileDirectory)\..\..\.nuget</_NuGetPath>
   </PropertyGroup>
   <Target Name="_CreateVersion"
       DependsOnTargets="GetXAVersionInfo"
@@ -67,6 +69,17 @@
         DestinationFiles="$(_BundlePath)"
     />
   </Target>
+  <Target Name="_DownloadNuGet"
+	Inputs=""
+	Outputs="$(_NuGetPath)\NuGet.exe">
+    <MakeDir
+        Directories="$(_NuGetPath)"
+    />
+    <DownloadUri
+        SourceUris="$(_NuGetUri)"
+        DestinationFiles="$(_NuGetPath)\NuGet.exe"
+    />
+  </Target>
   <Target Name="_ExtractBundle"
       Condition=" Exists('$(_BundlePath)') "
       Inputs="$(_BundlePath)"
@@ -84,6 +97,6 @@
   </Target>
   <Target Name="_DownloadAndExtractBundle"
       AfterTargets="Build"
-      DependsOnTargets="_GetBundleOutputPath;_DownloadBundle;_ExtractBundle">
+      DependsOnTargets="_GetBundleOutputPath;_DownloadBundle;_ExtractBundle;_DownloadNuGet">
   </Target>
 </Project>

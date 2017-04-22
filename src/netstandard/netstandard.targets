@@ -1,15 +1,13 @@
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Target Name="_BuildNetstandardFacade">
-   <MSBuild Projects="..\Mono.Android\Mono.Android.csproj"
-             Targets="GetTargetPath"
-             Properties="Configuration=$(Configuration)">
-        <Output TaskParameter="TargetOutputs"
-                ItemName="MonoAndroidAssembly" />
+  <Target Name="_BuildNetstandardFacade"
+      Inputs="$(MonoSourceFullPath)\autogen.sh"
+      Outputs="$(OutputPath)\netstandard.dll">
+    <MSBuild Projects="..\Mono.Android\Mono.Android.csproj"
+        Targets="GetTargetPath"
+        Properties="Configuration=$(Configuration)">
+      <Output TaskParameter="TargetOutputs" ItemName="MonoAndroidAssembly" />
     </MSBuild>
-    <Exec
-        Command="make -C $(MonoSourceFullPath)\mcs\class\Facades\netstandard PROFILE=monodroid EXTERNAL_FACADE_DRAWING_REFERENCE=&quot;%(MonoAndroidAssembly.Identity)&quot;"
-        WorkingDirectory="$(MonoSourceFullPath)"
-    />
+    <Exec Command="make -C $(MonoSourceFullPath)\mcs\class\Facades\netstandard PROFILE=monodroid EXTERNAL_FACADE_DRAWING_REFERENCE=&quot;%(MonoAndroidAssembly.Identity)&quot;" />
     <Copy
         SourceFiles="$(MonoSourceFullPath)\mcs\class\lib\monodroid\Facades\netstandard.dll"
         DestinationFiles="$(OutputPath)\netstandard.dll"
@@ -18,10 +16,7 @@
   <Target Name="_CleanNetstandardFacade"
       AfterTargets="Clean">
     <Delete Files="$(OutputPath)\netstandard.dll" />
-    <Exec
-        Command="make -C $(MonoSourceFullPath)\mcs\class\Facades\netstandard PROFILE=monodroid clean"
-        WorkingDirectory="$(MonoSourceFullPath)"
-    />
+    <Exec Command="make -C $(MonoSourceFullPath)\mcs\class\Facades\netstandard PROFILE=monodroid clean" />
   </Target>
 </Project>
 

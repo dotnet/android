@@ -57,8 +57,7 @@
       <UbuntuInstall>$(_AptGetInstall) vim-common</UbuntuInstall>
     </RequiredProgram>
     <RequiredProgram Include="$(ManagedRuntime)"    Condition=" '$(ManagedRuntime)' != '' ">
-      <MinimumVersion>5.2.0</MinimumVersion>
-      <MaximumVersion>5.2.99</MaximumVersion>
+      <MinimumVersion>$(MonoRequiredMinimumVersion)</MinimumVersion>
       <CurrentVersionCommand>$(MSBuildThisFileDirectory)..\scripts\mono-version</CurrentVersionCommand>
       <DarwinMinimumUrl>https://bosstoragemirror.blob.core.windows.net/wrench/mono-2017-04/92/92503db79568d1ef66a5445cb889ccbb8c8bd343/$(_DarwinMonoFramework)</DarwinMinimumUrl>
       <DarwinInstall>installer -pkg "$(AndroidToolchainCacheDirectory)\$(_DarwinMonoFramework)" -target /</DarwinInstall>

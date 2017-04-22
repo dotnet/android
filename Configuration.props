@@ -13,6 +13,11 @@
   />
   <PropertyGroup>
     <ProductVersion>7.3.99</ProductVersion>
+    <!-- *Latest* API level binding that we support; used when building src/Xamarin.Android.Build.Tasks -->
+    <AndroidLatestApiLevel>25</AndroidLatestApiLevel>
+    <AndroidLatestFrameworkVersion>v7.1</AndroidLatestFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup>
     <AutoProvision Condition=" '$(AutoProvision)' == '' ">False</AutoProvision>
     <AutoProvisionUsesSudo Condition=" '$(AutoProvisionUsesSudo)' == '' ">False</AutoProvisionUsesSudo>
     <HostOS Condition=" '$(HostOS)' == '' And '$(OS)' == 'Windows_NT' ">Windows</HostOS>
@@ -32,7 +37,6 @@
     <HOME Condition=" '$(HOME)' == '' ">$(HOMEDRIVE)$(HOMEPATH)</HOME>
     <AndroidApiLevel Condition=" '$(AndroidApiLevel)' == '' ">25</AndroidApiLevel>
     <AndroidPreviousFrameworkVersion Condition=" '$(AndroidPreviousFrameworkVersion)' == '' ">v1.0</AndroidPreviousFrameworkVersion>
-    <AndroidLatestFrameworkVersion>v7.1</AndroidLatestFrameworkVersion>
     <AndroidFrameworkVersion Condition=" '$(AndroidFrameworkVersion)' == '' ">$(AndroidLatestFrameworkVersion)</AndroidFrameworkVersion>
     <AndroidToolchainCacheDirectory Condition=" '$(AndroidToolchainCacheDirectory)' == '' ">$(HOME)\android-archives</AndroidToolchainCacheDirectory>
     <AndroidToolchainDirectory Condition=" '$(AndroidToolchainDirectory)' == '' ">$(HOME)\android-toolchain</AndroidToolchainDirectory>
@@ -46,6 +50,7 @@
     <JavaInteropSourceDirectory Condition=" '$(JavaInteropSourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\Java.Interop</JavaInteropSourceDirectory>
     <LlvmSourceDirectory Condition=" '$(LlvmSourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\llvm</LlvmSourceDirectory>
     <MonoSourceDirectory>$(MSBuildThisFileDirectory)external\mono</MonoSourceDirectory>
+    <MonoRequiredMinimumVersion Condition=" '$(MonoRequiredMinimumVersion)' == '' ">5.2.0</MonoRequiredMinimumVersion>
     <LinkerSourceDirectory>$(MSBuildThisFileDirectory)external\linker</LinkerSourceDirectory>
     <OpenTKSourceDirectory>$(MSBuildThisFileDirectory)external\opentk</OpenTKSourceDirectory>
     <LibZipSourceDirectory Condition=" '$(LibZipSourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\libzip</LibZipSourceDirectory>

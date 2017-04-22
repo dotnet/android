@@ -38,7 +38,14 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			sb.AppendLine ("\t}");
 			sb.AppendLine ("}");
 
-			File.WriteAllText (OutputFile.ItemSpec, sb.ToString ());
+			var newContents = sb.ToString ();
+			var curContents = "";
+			if (File.Exists (OutputFile.ItemSpec)) {
+				curContents = File.ReadAllText (OutputFile.ItemSpec);
+			}
+			if (newContents != curContents) {
+				File.WriteAllText (OutputFile.ItemSpec, sb.ToString ());
+			}
 
 			return !Log.HasLoggedErrors;
 		}
