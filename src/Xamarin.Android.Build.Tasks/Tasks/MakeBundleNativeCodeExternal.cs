@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Diagnostics;
@@ -111,6 +111,7 @@ namespace Xamarin.Android.Tasks
 				clb.AppendSwitch ("--dos2unix=false");
 				clb.AppendSwitch ("--nomain");
 				clb.AppendSwitch ("--i18n none");
+				clb.AppendSwitch ("--bundled-header");
 				clb.AppendSwitch ("--style");
 				clb.AppendSwitch ("linux");
 				clb.AppendSwitch ("-c");
