@@ -23,7 +23,7 @@ using Android.App;
 
 [assembly: Android.IncludeAndroidResourcesFromAttribute ("./",
 	SourceUrl="file:///JavaLib.zip")]
-[assembly: Java.Interop.JavaLibraryReference ("bin/classes.jar",
+[assembly: Java.Interop.JavaLibraryReference ("classes.jar",
 	SourceUrl="file:///JavaLib.zip")]
 
 // native library path should contain abi

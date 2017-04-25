@@ -26,7 +26,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 		public override bool Execute ()
 		{
 			if (string.IsNullOrEmpty (TargetId) && !string.IsNullOrEmpty (SdkVersion)) {
-				TargetId    = "android-" + SdkVersion;
+				TargetId    = "system-images;android-" + SdkVersion + ";default;" + AndroidAbi;
 			}
 			Log.LogMessage (MessageImportance.Low, $"Task {nameof (CreateAndroidEmulator)}");
 			Log.LogMessage (MessageImportance.Low, $"  {nameof (AndroidAbi)}: {AndroidAbi}");
@@ -45,7 +45,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 		string GetAndroidPath ()
 		{
 			if (string.IsNullOrEmpty (ToolExe))
-				ToolExe = "android";
+				ToolExe = "avdmanager";
 
 			var dirs = string.IsNullOrEmpty (ToolPath)
 				? null
@@ -53,7 +53,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			string filename;
 			var path = Which.GetProgramLocation (ToolExe, out filename, dirs);
 			if (path == null) {
-				Log.LogError ($"Could not find `android`. Please set the `{nameof (CreateAndroidEmulator)}.{nameof (ToolPath)}` property appropriately.");
+				Log.LogError ($"Could not find `avdmanager`. Please set the `{nameof (CreateAndroidEmulator)}.{nameof (ToolPath)}` property appropriately.");
 				return null;
 			}
 			return path;
@@ -64,16 +64,13 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			if (android == null)
 				return;
 
-			var arguments   = $"create avd --abi \"{AndroidAbi}\" -f -n \"{ImageName}\" -t \"{TargetId}\"";
-			foreach (var line in Exec (android, arguments)) {
-				stdin.WriteLine ("no");
-				Log.LogMessage (MessageImportance.Low, line);
-			}
+			var arguments   = $"create avd --abi {AndroidAbi} -f -n {ImageName} --package \"{TargetId}\"";
+			Exec (android, arguments);
 		}
 
 		StreamWriter stdin;
 
-		IEnumerable<string> Exec (string android, string arguments, DataReceivedEventHandler stderr = null)
+		void Exec (string android, string arguments, DataReceivedEventHandler stderr = null)
 		{
 			Log.LogMessage (MessageImportance.Low, $"Tool {android} execution started with arguments: {arguments}");
 			var psi = new ProcessStartInfo () {
@@ -81,8 +78,8 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 				Arguments               = arguments,
 				UseShellExecute         = false,
 				RedirectStandardInput   = true,
-				RedirectStandardOutput  = true,
-				RedirectStandardError   = true,
+				RedirectStandardOutput  = false,
+				RedirectStandardError   = false,
 				CreateNoWindow          = true,
 				WindowStyle             = ProcessWindowStyle.Hidden,
 			};
@@ -100,16 +97,12 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			using (p) {
 				p.StartInfo = psi;
 				p.Start ();
-				p.BeginErrorReadLine ();
-
 				stdin = p.StandardInput;
 
-				string line;
-				while ((line = p.StandardOutput.ReadLine ()) != null) {
-					yield return line;
+				while (!p.HasExited) {
+					stdin.WriteLine ();
+					p.WaitForExit (1000);
 				}
-
-				p.WaitForExit ();
 				if (p.ExitCode != 0) {
 					Log.LogError ($"Process `{android}` exited with value {p.ExitCode}.");
 				}
@@ -120,7 +113,10 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 		{
 			if (string.IsNullOrEmpty (e.Data))
 				return;
-			Log.LogError ($"{e.Data}");
+			if (e.Data.StartsWith ("Warning:", StringComparison.Ordinal))
+				Log.LogMessage ($"{e.Data}");
+			else
+				Log.LogError ($"{e.Data}");
 		}
 	}
 }

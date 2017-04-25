@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
-
+using System.IO;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
@@ -60,8 +60,8 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			if (emulator == null)
 				return;
 
-			var port = string.IsNullOrEmpty (Port) ? "" : $" -port \"{Port}\"";
-			var arguments   = $"-avd \"{ImageName}\"{port}";
+			var port = string.IsNullOrEmpty (Port) ? "" : $" -port {Port}";
+			var arguments = $"-avd {ImageName}{port}";
 			Log.LogMessage (MessageImportance.Low, $"Tool {emulator} execution started with arguments: {arguments}");
 			var psi = new ProcessStartInfo () {
 				FileName                = emulator,
@@ -71,10 +71,6 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 				WindowStyle             = ProcessWindowStyle.Hidden,
 			};
 			Log.LogMessage (MessageImportance.Low, $"Environment variables being passed to the tool:");
-			if (!string.IsNullOrEmpty (AndroidSdkHome)) {
-				psi.EnvironmentVariables ["ANDROID_SDK_HOME"] = AndroidSdkHome;
-				Log.LogMessage (MessageImportance.Low, $"\tANDROID_SDK_HOME=\"{AndroidSdkHome}\"");
-			}
 			var p = new Process () {
 				StartInfo = psi,
 			};

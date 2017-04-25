@@ -1128,7 +1128,7 @@
   <!-- name conflict resolution -->
   <attr path="/api/package[@name='android.net.wifi']/class[@name='WifiConfiguration']/field[@name='status']" name="managedName">StatusField</attr>
 
-  <!-- Android M -->
+  <!-- Android M (API Level 23) -->
 
   <!-- FIXME: there is another M-preview specific build error:
 
@@ -1141,7 +1141,7 @@
   
   <attr path="/api/package[@name='android.app']/class[@name='Notification']/method[@name='getLargeIcon']" name="propertyName"></attr>
 
-  <!-- Android N Preview -->
+  <!-- Android N (API Level 24-25) -->
 
   <attr path="/api/package[@name='java.util.function']" name="managedName">Java.Util.Functions</attr>
   <attr path="/api/package[@name='java.util.stream']" name="managedName">Java.Util.Streams</attr>
@@ -1319,4 +1319,39 @@
   <attr path="/api/package[@name='java.util.concurrent.atomic']/class[@name='AtomicLong']/method[@name='getAndDecrement']" name="propertyName"></attr>
   <attr path="/api/package[@name='java.util.concurrent.atomic']/class[@name='AtomicLong']/method[@name='getAndIncrement']" name="propertyName"></attr>
   
+
+  <!-- Android O (API Level 26) -->
+
+  <attr path="/api/package[@name='android.view.autofill']" name="managedName">Android.Views.AutoFill</attr>
+  <attr path="/api/package[@name='android.view.textclassifier']" name="managedName">Android.Views.TextClassifiers</attr>
+  <attr path="/api/package[@name='java.nio.file']" name="managedName">Java.Nio.FileNio</attr>
+  <attr path="/api/package[@name='java.nio.file.attribute']" name="managedName">Java.Nio.FileNio.Attributes</attr>
+  <attr path="/api/package[@name='java.nio.file.spi']" name="managedName">Java.Nio.FileNio.Spi</attr>
+
+  <!-- FIXME: fix build and enable these packages -->
+  <remove-node path="/api/package[@name='java.time']" api-since="26" />
+  <remove-node path="/api/package[@name='java.time.chrono']" api-since="26" />
+  
+  <!-- FIXME: fix build and enable these types -->
+  <remove-node path="/api/package[@name='java.nio.channels']/class[@name='AsynchronousFileChannel']" api-since="26" />
+  <remove-node path="/api/package[@name='java.nio.channels']/class[@name='AsynchronousSocketChannel']" api-since="26" />
+  <remove-node path="/api/package[@name='java.nio.channels']/class[@name='AsynchronousServerSocketChannel']" api-since="26" />
+
+  <!-- FIXME: fix build and enable this method -->
+  <remove-node path="/api/package[@name='android.text']/class[@name='TextUtils']/method[@name='listEllipsize']" api-since="26" />
+
+
+  <!-- interface default method -->
+  <remove-node path="/api/package[@name='java.lang.reflect']/interface[@name='AnnotatedElement']/method[@name='isAnnotationPresent']" api-since="26" />
+
+  <!-- This is possibly a new kind of problem that a class can have a pair of
+       methods where one returns a CharSequence and the other returns java.lang.String.
+       Such a pair will result in build error as both result in System.String
+       overloads (therefore duplicates in C# land).
+       We remove one with java.lang.String; with a System.String overload it should be fine for most of managed developers. -->
+  <remove-node path="/api/package[@name='android.text']/class[@name='BidiFormatter']/method[@name='unicodeWrap' and @return='java.lang.String']" api-since="26" />
+
+  <!-- interfaces that implement BasicFileAttributeView often have return value of a derived type. So change the managed return type. --> 
+  <attr path="/api/package[@name='java.nio.file.attribute']/*[implements[@name='java.nio.file.attribute.BasicFileAttributeView']]/method[@name='readAttributes']" name="managedReturn">Java.Nio.FileNio.Attributes.IBasicFileAttributes</attr>
+
 </metadata>
