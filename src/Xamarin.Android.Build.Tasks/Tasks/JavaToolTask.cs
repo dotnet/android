@@ -66,8 +66,8 @@ namespace Xamarin.Android.Tasks
 			at com.android.dx.command.Main.main(Main.java:106)
 		*/
 		const string ExceptionRegExString = @"(?<exception>java.lang.+):(?<error>.+)";
-		Regex codeErrorRegEx = new Regex (CodeErrorRegExString, RegexOptions.Compiled);
-		Regex exceptionRegEx = new Regex (ExceptionRegExString, RegexOptions.Compiled);
+		protected static readonly Regex CodeErrorRegEx = new Regex (CodeErrorRegExString, RegexOptions.Compiled);
+		protected static readonly Regex ExceptionRegEx = new Regex (ExceptionRegExString, RegexOptions.Compiled);
 		bool foundError = false;
 		List<string> errorLines = new List<string> ();
 		StringBuilder errorText = new StringBuilder ();
@@ -114,8 +114,8 @@ namespace Xamarin.Android.Tasks
 
 		bool ProcessOutput (string singleLine)
 		{
-			var match = codeErrorRegEx.Match (singleLine);
-			var exceptionMatch = exceptionRegEx.Match (singleLine);
+			var match = CodeErrorRegEx.Match (singleLine);
+			var exceptionMatch = ExceptionRegEx.Match (singleLine);
 
 			if (match.Success) {
 				if (!string.IsNullOrEmpty (file)) {
@@ -157,8 +157,8 @@ namespace Xamarin.Android.Tasks
 
 		protected override void LogEventsFromTextOutput (string singleLine, MessageImportance messageImportance)
 		{
-			var match = codeErrorRegEx.Match (singleLine);
-			var exceptionMatch = exceptionRegEx.Match (singleLine);
+			var match = CodeErrorRegEx.Match (singleLine);
+			var exceptionMatch = ExceptionRegEx.Match (singleLine);
 
 			if (match.Success || exceptionMatch.Success) {
 				Log.LogMessage (MessageImportance.High, singleLine);
