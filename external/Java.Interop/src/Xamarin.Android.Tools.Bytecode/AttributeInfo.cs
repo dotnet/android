@@ -322,7 +322,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 		public override string ToString ()
 		{
 			return string.Format ("InnerClass(InnerClass='{0}', OuterClass='{1}', InnerName='{2}', InnerClassAccessFlags={3})",
-				InnerClass.Name.Value, OuterClass.Name.Value, InnerName, InnerClassAccessFlags);
+				InnerClass?.Name?.Value, OuterClass?.Name?.Value, InnerName, InnerClassAccessFlags);
 		}
 	}
 
