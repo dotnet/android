@@ -240,7 +240,7 @@ namespace Xamarin.Android.Tasks
 
 			NativeLibrariesReferences = nativeLibs.ToArray ();
 
-			LogDebugTaskItems ("Aot Outputs:");
+			LogDebugMessage ("Aot Outputs:");
 			LogDebugTaskItems ("  NativeLibrariesReferences: ", NativeLibrariesReferences);
 
 			return !Log.HasLoggedErrors;
