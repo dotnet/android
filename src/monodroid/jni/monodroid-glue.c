@@ -106,7 +106,11 @@ monodroid_clear_gdb_wait (void)
 #elif LINUX_FLATPAK
 #define SYSTEM_LIB_PATH "/app/lib/mono"
 #elif LINUX
+#ifdef LINUX_FLATPAK
+#define SYSTEM_LIB_PATH "/app/lib/mono"
+#else
 #define SYSTEM_LIB_PATH "/usr/lib"
+#endif
 #elif APPLE_OS_X
 #define SYSTEM_LIB_PATH "/Library/Frameworks/Xamarin.Android.framework/Libraries/"
 #elif WINDOWS
