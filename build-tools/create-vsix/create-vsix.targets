@@ -1,9 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"   TaskName="Xamarin.Android.BuildTools.PrepTasks.GitBlame" />
-  <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"   TaskName="Xamarin.Android.BuildTools.PrepTasks.GitBranch" />
-  <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"   TaskName="Xamarin.Android.BuildTools.PrepTasks.GitCommitHash" />
-  <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"   TaskName="Xamarin.Android.BuildTools.PrepTasks.GitCommitsInRange" />
+  <Import Project="..\scripts\XAVersionInfo.targets" />
   <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"   TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" />
   <PropertyGroup>
     <!-- Don't ever deploy, since that won't work on Mac -->
@@ -81,7 +78,7 @@
     </ItemGroup>
   </Target>
   <Target Name="GetVsixVersion"
-      DependsOnTargets="_GetVersionInfo"
+      DependsOnTargets="GetXAVersionInfo"
       Returns="$(VsixVersion)">
     <PropertyGroup>
       <VsixVersion>$(ProductVersion).$(_XACommitCount)</VsixVersion>
@@ -94,57 +91,34 @@
       <IsExperimental Condition=" '$(IsProductComponent)' == 'True' ">false</IsExperimental>
     </PropertyGroup>
   </Target>
-  <Target Name="_GetVersionInfo">
-    <GitBlame
-        FileName="$(XamarinAndroidSourcePath)\Configuration.props"
-        LineFilter="&lt;ProductVersion&gt;"
-        WorkingDirectory="$(XamarinAndroidSourcePath)"
-        ToolPath="$(GitToolPath)"
-        ToolExe="$(GitToolExe)">
-      <Output TaskParameter="Commits"                 ItemName="_XAVersionCommit" />
-    </GitBlame>
-    <GitCommitsInRange
-        StartCommit="%(_XAVersionCommit.CommitHash)"
-        WorkingDirectory="$(XamarinAndroidSourcePath)"
-        ToolPath="$(GitToolPath)"
-        ToolExe="$(GitToolExe)">
-      <Output TaskParameter="CommitCount"             PropertyName="_XACommitCount" />
-    </GitCommitsInRange>
-    <GitCommitHash
-        WorkingDirectory="$(XamarinAndroidSourcePath)"
-        ToolPath="$(GitToolPath)"
-        ToolExe="$(GitToolExe)">
-      <Output TaskParameter="AbbreviatedCommitHash"   PropertyName="_XAHash" />
-    </GitCommitHash>
-    <GitBranch
-        WorkingDirectory="$(XamarinAndroidSourcePath)"
-        ToolPath="$(GitToolPath)"
-        ToolExe="$(GitToolExe)">
-      <Output TaskParameter="Branch"                  PropertyName="_XABranch" />
-    </GitBranch>
-  </Target>
   <Target Name="_CreateDependencies"
-      DependsOnTargets="_GetVersionInfo"
+      DependsOnTargets="GetXAVersionInfo"
       BeforeTargets="Build"
       Inputs="Xamarin.Android.Sdk.pkgdef.in"
       Outputs="Xamarin.Android.Sdk.pkgdef">
     <ReplaceFileContents
         SourceFile="Xamarin.Android.Sdk.pkgdef.in"
         DestinationFile="Xamarin.Android.Sdk.pkgdef"
-        Replacements="@PACKAGE_VERSION@=$(ProductVersion);@PACKAGE_VERSION_BUILD@=$(_XACommitCount);@PACKAGE_HEAD_REV@=$(_XAHash);@PACKAGE_HEAD_BRANCH@=$(_XABranch)">
+        Replacements="@PACKAGE_VERSION@=$(ProductVersion);@PACKAGE_VERSION_BUILD@=$(XAVersionCommitCount);@PACKAGE_HEAD_REV@=$(XAVersionHash);@PACKAGE_HEAD_BRANCH@=$(XAVersionBranch)">
     </ReplaceFileContents>
   </Target>
-  <Target Name="_CopyToBuildConfiguration"
-      DependsOnTargets="_GetVersionInfo"
-      Inputs="$(OutputPath)$(AssemblyName).vsix"
-      Outputs="..\..\bin\Build$(Configuration)\$(AssemblyName).vsix">
+  <Target Name="_GetVsixPath"
+      DependsOnTargets="GetXAVersionInfo">
     <PropertyGroup>
-      <_Branch>$(_XABranch.Replace ('/', '-'))</_Branch>
+      <_Branch>$(XAVersionBranch.Replace ('/', '-'))</_Branch>
       <_Branch>$(_Branch.Replace ('\', '-'))</_Branch>
     </PropertyGroup>
+    <PropertyGroup>
+      <VsixPath Condition=" '$(VsixPath)' == '' ">..\..\bin\Build$(Configuration)\$(AssemblyName)-$(ProductVersion).$(XAVersionCommitCount)_$(XAVersionBranch)_$(XAVersionHash).vsix</VsixPath>
+    </PropertyGroup>
+  </Target>
+  <Target Name="_CopyToBuildConfiguration"
+      DependsOnTargets="_GetVsixPath"
+      Inputs="$(OutputPath)$(AssemblyName).vsix"
+      Outputs="$(VsixPath)">
     <Copy
         SourceFiles="$(OutputPath)$(AssemblyName).vsix"
-        DestinationFiles="..\..\bin\Build$(Configuration)\$(AssemblyName)-$(ProductVersion).$(_XACommitCount)_$(_Branch)_$(_XAHash).vsix"
+        DestinationFiles="$(VsixPath)"
     />
   </Target>
 </Project>
