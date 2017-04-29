@@ -47,14 +47,14 @@
   </ItemGroup>
   <Target Name="_GenerateApiDescription"
       BeforeTargets="_GenerateBinding"
-      Inputs="Profiles\api-$(AndroidApiLevel).xml.in"
+      Inputs="Profiles\api-$(AndroidPlatformId).xml.in"
       Outputs="$(IntermediateOutputPath)mcw\api.xml">
     <MakeDir Directories="$(IntermediateOutputPath)mcw" />
     <PropertyGroup>
       <ApiMerge>..\..\bin\Build$(Configuration)\api-merge.exe</ApiMerge>
       <_Profiles>@(_AndroidProfile->'%(Identity)', ' ')</_Profiles>
       <_Glob>-s 'Profiles\api-*.xml.in'</_Glob>
-      <_LastProfile>--last-description=Profiles\api-$(AndroidApiLevel).xml.in</_LastProfile>
+      <_LastProfile>--last-description=Profiles\api-$(AndroidPlatformId).xml.in</_LastProfile>
       <_Out>-o "$(IntermediateOutputPath)mcw\api.xml"</_Out>
     </PropertyGroup>
     <Exec
