@@ -105,11 +105,14 @@ framework-assemblies:
 			if [ $$? -ne 0 ] ; then \
 				rm -f bin/$(conf)/lib/xbuild-frameworks/MonoAndroid/$${CUR_VERSION}/RedistList/FrameworkList.xml; \
 			fi; \
-			$(MSBUILD) $(MSBUILD_FLAGS) src/Mono.Android/Mono.Android.csproj /p:Configuration=$(conf)   $(_MSBUILD_ARGS) /p:AndroidApiLevel=$(a)  /p:AndroidPlatformId=$(word $(a), $(ALL_PLATFORM_IDS)) /p:AndroidFrameworkVersion=$${CUR_VERSION} /p:AndroidPreviousFrameworkVersion=$${PREV_VERSION}; ) \
+			$(MSBUILD) $(MSBUILD_FLAGS) src/Mono.Android/Mono.Android.csproj /p:Configuration=$(conf) $(_MSBUILD_ARGS) \
+				/p:AndroidApiLevel=$(a) /p:AndroidPlatformId=$(word $(a), $(ALL_PLATFORM_IDS)) /p:AndroidFrameworkVersion=$${CUR_VERSION} \
+				/p:AndroidPreviousFrameworkVersion=$${PREV_VERSION}; ) \
 		PREV_VERSION=$${CUR_VERSION}; ) \
 	$(foreach conf, $(CONFIGURATIONS), \
 		rm -f bin/$(conf)/lib/xbuild-frameworks/MonoAndroid/v1.0/Xamarin.Android.NUnitLite.dll; \
-		$(MSBUILD) $(MSBUILD_FLAGS) src/Xamarin.Android.NUnitLite/Xamarin.Android.NUnitLite.csproj /p:Configuration=$(conf) $(_MSBUILD_ARGS) /p:AndroidApiLevel=$(firstword $(API_LEVELS)) /p:AndroidFrameworkVersion=$(firstword $(FRAMEWORKS)); )
+		$(MSBUILD) $(MSBUILD_FLAGS) src/Xamarin.Android.NUnitLite/Xamarin.Android.NUnitLite.csproj /p:Configuration=$(conf) $(_MSBUILD_ARGS) \
+			/p:AndroidApiLevel=$(firstword $(API_LEVELS)) /p:AndroidPlatformId=$(word $(firstword $(API_LEVELS)), $(ALL_PLATFORM_IDS)) /p:AndroidFrameworkVersion=$(firstword $(FRAMEWORKS)); )
 
 runtime-libraries:
 	$(foreach conf, $(CONFIGURATIONS), \
