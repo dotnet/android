@@ -14,14 +14,19 @@ ZIP_OUTPUT_BASENAME   = oss-xamarin.android_v$(PRODUCT_VERSION).$(-num-commits-s
 ZIP_OUTPUT            = $(ZIP_OUTPUT_BASENAME).zip
 
 
+## The following values *must* use SPACE, **not** TAB, to separate values.
+
 # $(ALL_API_LEVELS) and $(ALL_FRAMEWORKS) must be kept in sync w/ each other
-ALL_API_LEVELS    = 1 2 3 4 5 6 7 8 9 10    11  12  13  14  15      16    17    18    19    20        21    22    23    24    25
-# this was different when API Level 21 was "L". Same could happen in the future.
-ALL_PLATFORM_IDS  = 1 2 3 4 5 6 7 8 9 10    11  12  13  14  15      16    17    18    19    20        21    22    23    24    25
+ALL_API_LEVELS    = 1 2 3 4 5 6 7 8 9 10    11  12  13  14  15      16    17    18    19    20        21    22    23    24    25    26
+# this was different from ALL_API_LEVELS when API Level 26 was "O". Same could happen in the future.
+ALL_PLATFORM_IDS  = 1 2 3 4 5 6 7 8 9 10    11  12  13  14  15      16    17    18    19    20        21    22    23    24    25    O
 # supported api levels
-ALL_FRAMEWORKS    = _ _ _ _ _ _ _ _ _ v2.3  _   _   _   _   v4.0.3  v4.1  v4.2  v4.3  v4.4  v4.4.87   v5.0  v5.1  v6.0  v7.0  v7.1
-API_LEVELS        =                   10                    15      16    17    18    19    20        21    22    23    24    25
+ALL_FRAMEWORKS    = _ _ _ _ _ _ _ _ _ v2.3  _   _   _   _   v4.0.3  v4.1  v4.2  v4.3  v4.4  v4.4.87   v5.0  v5.1  v6.0  v7.0  v7.1  v7.99.0
+API_LEVELS        =                   10                    15      16    17    18    19    20        21    22    23    24    25    26
 STABLE_API_LEVELS =                   10                    15      16    17    18    19    20        21    22    23    24
+
+## The preceding values *must* use SPACE, **not** TAB, to separate values.
+
 
 FRAMEWORKS        = $(foreach a, $(API_LEVELS), $(word $(a),$(ALL_FRAMEWORKS)))
 STABLE_FRAMEWORKS = $(foreach a, $(STABLE_API_LEVELS), $(word $(a),$(ALL_FRAMEWORKS)))
@@ -75,47 +80,51 @@ _MSBUILD_ARGS	= \
 
 CONFIGURATIONS ?= Debug Release
 
-.PHONY: leeroy jenkins leeroy-all opentk-jcw framework-assemblies runtime-libraries task-assemblies
+.PHONY: leeroy jenkins leeroy-all opentk-jcw framework-assemblies
 .PHONY: create-vsix
 
 jenkins: prepare leeroy $(ZIP_OUTPUT)
 
-leeroy: leeroy-all runtime-libraries task-assemblies framework-assemblies opentk-jcw
+leeroy: leeroy-all framework-assemblies opentk-jcw
 
 leeroy-all:
 	$(foreach conf, $(CONFIGURATIONS), \
-		$(MSBUILD) $(MSBUILD_FLAGS) Xamarin.Android.sln /p:Configuration=$(conf) $(_MSBUILD_ARGS) ; )
-
-task-assemblies:
-	$(foreach conf, $(CONFIGURATIONS), \
-		$(MSBUILD) $(MSBUILD_FLAGS) /p:Configuration=$(conf) $(_MSBUILD_ARGS) $(SOLUTION); )
+		$(MSBUILD) $(MSBUILD_FLAGS) $(SOLUTION) /p:Configuration=$(conf) $(_MSBUILD_ARGS) ; )
 
 framework-assemblies:
 	PREV_VERSION="v1.0"; \
-	for a in $(API_LEVELS); do \
-		CUR_VERSION=`echo "$(ALL_FRAMEWORKS)"|tr -s " "|cut -d " " -s -f $${a}`; \
+	$(foreach a, $(API_LEVELS), \
+		CUR_VERSION=`echo "$(ALL_FRAMEWORKS)"|tr -s " "|cut -d " " -s -f $(a)`; \
 		$(foreach conf, $(CONFIGURATIONS), \
 			REDIST_FILE=bin/$(conf)/lib/xbuild-frameworks/MonoAndroid/$${CUR_VERSION}/RedistList/FrameworkList.xml; \
 			grep -q $${PREV_VERSION} $${REDIST_FILE}; \
 			if [ $$? -ne 0 ] ; then \
 				rm -f bin/$(conf)/lib/xbuild-frameworks/MonoAndroid/$${CUR_VERSION}/RedistList/FrameworkList.xml; \
 			fi; \
-			$(MSBUILD) $(MSBUILD_FLAGS) src/Mono.Android/Mono.Android.csproj /p:Configuration=$(conf)   $(_MSBUILD_ARGS) /p:AndroidApiLevel=$${a} /p:AndroidFrameworkVersion=$${CUR_VERSION} /p:AndroidPreviousFrameworkVersion=$${PREV_VERSION}; ) \
-		PREV_VERSION=$${CUR_VERSION}; \
-	done
+			$(MSBUILD) $(MSBUILD_FLAGS) src/Mono.Android/Mono.Android.csproj /p:Configuration=$(conf) $(_MSBUILD_ARGS) \
+				/p:AndroidApiLevel=$(a) /p:AndroidPlatformId=$(word $(a), $(ALL_PLATFORM_IDS)) /p:AndroidFrameworkVersion=$${CUR_VERSION} \
+				/p:AndroidPreviousFrameworkVersion=$${PREV_VERSION}; ) \
+		PREV_VERSION=$${CUR_VERSION}; )
 	$(foreach conf, $(CONFIGURATIONS), \
 		rm -f bin/$(conf)/lib/xbuild-frameworks/MonoAndroid/v1.0/Xamarin.Android.NUnitLite.dll; \
-		$(MSBUILD) $(MSBUILD_FLAGS) src/Xamarin.Android.NUnitLite/Xamarin.Android.NUnitLite.csproj /p:Configuration=$(conf) $(_MSBUILD_ARGS) /p:AndroidApiLevel=$(firstword $(API_LEVELS)) /p:AndroidFrameworkVersion=$(firstword $(FRAMEWORKS)); )
-
-runtime-libraries:
+		$(MSBUILD) $(MSBUILD_FLAGS) src/Xamarin.Android.NUnitLite/Xamarin.Android.NUnitLite.csproj /p:Configuration=$(conf) $(_MSBUILD_ARGS) \
+			/p:AndroidApiLevel=$(firstword $(API_LEVELS)) /p:AndroidPlatformId=$(word $(firstword $(API_LEVELS)), $(ALL_PLATFORM_IDS)) /p:AndroidFrameworkVersion=$(firstword $(FRAMEWORKS)); )
+	_latest_framework=$$($(MSBUILD) /p:DoNotLoadOSProperties=True /nologo /v:minimal /t:GetAndroidLatestFrameworkVersion build-tools/scripts/Info.targets | tr -d '[[:space:]]') ; \
 	$(foreach conf, $(CONFIGURATIONS), \
-		$(MSBUILD) $(MSBUILD_FLAGS) /p:Configuration=$(conf)   $(_MSBUILD_ARGS) $(SOLUTION); )
+		rm -f "bin/$(conf)/lib/xbuild-frameworks/MonoAndroid/$$_latest_framework"/Mono.Android.Export.* ; \
+		$(MSBUILD) $(MSBUILD_FLAGS) src/Mono.Android.Export/Mono.Android.Export.csproj /p:Configuration=$(conf) $(_MSBUILD_ARGS) \
+			/p:AndroidApiLevel=$(firstword $(API_LEVELS)) /p:AndroidPlatformId=$(word $(firstword $(API_LEVELS)), $(ALL_PLATFORM_IDS)) /p:AndroidFrameworkVersion=$(firstword $(FRAMEWORKS)); ) \
+	$(foreach conf, $(CONFIGURATIONS), \
+		rm -f "bin/$(conf)/lib/xbuild-frameworks/MonoAndroid/$$_latest_framework"/OpenTK-1.0.* ; \
+		$(MSBUILD) $(MSBUILD_FLAGS) src/OpenTK-1.0/OpenTK.csproj /p:Configuration=$(conf) $(_MSBUILD_ARGS) \
+			/p:AndroidApiLevel=$(firstword $(API_LEVELS)) /p:AndroidPlatformId=$(word $(firstword $(API_LEVELS)), $(ALL_PLATFORM_IDS)) /p:AndroidFrameworkVersion=$(firstword $(FRAMEWORKS)); )
 
 opentk-jcw:
 	$(foreach a, $(API_LEVELS), \
 		$(foreach conf, $(CONFIGURATIONS), \
 			touch bin/$(conf)/lib/xbuild-frameworks/MonoAndroid/*/OpenTK-1.0.dll; \
-			$(MSBUILD) $(MSBUILD_FLAGS) src/OpenTK-1.0/OpenTK.csproj /t:GenerateJavaCallableWrappers /p:Configuration=$(conf) $(_MSBUILD_ARGS) /p:AndroidApiLevel=$(a) /p:AndroidFrameworkVersion=$(word $(a), $(ALL_FRAMEWORKS)); ))
+			$(MSBUILD) $(MSBUILD_FLAGS) src/OpenTK-1.0/OpenTK.csproj /t:GenerateJavaCallableWrappers /p:Configuration=$(conf) $(_MSBUILD_ARGS) \
+				/p:AndroidApiLevel=$(a) /p:AndroidPlatformId=$(word $(a), $(ALL_PLATFORM_IDS)) /p:AndroidFrameworkVersion=$(word $(a), $(ALL_FRAMEWORKS)); ))
 
 _BUNDLE_ZIPS_INCLUDE  = \
 	$(ZIP_OUTPUT_BASENAME)/bin/Debug \
@@ -126,7 +135,14 @@ _BUNDLE_ZIPS_EXCLUDE  = \
 
 create-vsix:
 	$(foreach conf, $(CONFIGURATIONS), \
-		MONO_IOMAP=all MONO_OPTIONS=--arch=64 msbuild $(MSBUILD_FLAGS) build-tools/create-vsix/create-vsix.csproj /p:Configuration=$(conf) /p:CreateVsixContainer=True ; )
+		MONO_IOMAP=all MONO_OPTIONS=--arch=64 msbuild $(MSBUILD_FLAGS) /p:Configuration=$(conf) /p:CreateVsixContainer=True \
+			build-tools/create-vsix/create-vsix.csproj \
+			$(if $(VSIX),"/p:VsixPath=$(VSIX)") \
+			$(if $(PRODUCT_COMPONENT),/p:IsProductComponent="$(PRODUCT_COMPONENT)") \
+			$(if $(PACKAGE_VERSION),/p:ProductVersion="$(PACKAGE_VERSION)") \
+			$(if $(PACKAGE_HEAD_BRANCH),/p:XAVersionBranch="$(PACKAGE_HEAD_BRANCH)") \
+			$(if $(PACKAGE_VERSION_REV),/p:XAVersionCommitCount="$(PACKAGE_VERSION_REV)") \
+			$(if $(COMMIT),/p:XAVersionHash="$(COMMIT)") ; )
 
 package-oss-name:
 	@echo ZIP_OUTPUT=$(ZIP_OUTPUT)

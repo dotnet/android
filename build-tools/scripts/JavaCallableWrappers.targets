@@ -25,7 +25,7 @@
     <PropertyGroup>
       <_Target>-source $(JavacSourceVersion) -target $(JavacSourceVersion)</_Target>
       <_D>-d "$(IntermediateOutputPath)jcw\bin"</_D>
-      <_AndroidJar>"$(AndroidToolchainDirectory)\sdk\platforms\android-$(AndroidApiLevel)\android.jar"</_AndroidJar>
+      <_AndroidJar>"$(AndroidToolchainDirectory)\sdk\platforms\android-$(AndroidPlatformId)\android.jar"</_AndroidJar>
       <_MonoAndroidJar>$(OutputPath)mono.android.jar</_MonoAndroidJar>
     </PropertyGroup>
     <Exec

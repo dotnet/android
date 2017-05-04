@@ -36,6 +36,7 @@
     <MonoSgenBridgeVersion Condition=" '$(MonoSgenBridgeVersion)' == '' ">5</MonoSgenBridgeVersion>
     <HOME Condition=" '$(HOME)' == '' ">$(HOMEDRIVE)$(HOMEPATH)</HOME>
     <AndroidApiLevel Condition=" '$(AndroidApiLevel)' == '' ">25</AndroidApiLevel>
+    <AndroidPlatformId Condition=" '$(AndroidPlatformId)' == '' ">$(AndroidApiLevel)</AndroidPlatformId>
     <AndroidPreviousFrameworkVersion Condition=" '$(AndroidPreviousFrameworkVersion)' == '' ">v1.0</AndroidPreviousFrameworkVersion>
     <AndroidFrameworkVersion Condition=" '$(AndroidFrameworkVersion)' == '' ">$(AndroidLatestFrameworkVersion)</AndroidFrameworkVersion>
     <AndroidToolchainCacheDirectory Condition=" '$(AndroidToolchainCacheDirectory)' == '' ">$(HOME)\android-archives</AndroidToolchainCacheDirectory>
@@ -61,7 +62,8 @@
     <AllSupported32BitTargetAndroidAbis>armeabi;armeabi-v7a;x86</AllSupported32BitTargetAndroidAbis>
     <AllSupported64BitTargetAndroidAbis>arm64-v8a;x86_64</AllSupported64BitTargetAndroidAbis>
     <AllSupportedTargetAndroidAbis>$(AllSupported32BitTargetAndroidAbis);$(AllSupported64BitTargetAndroidAbis)</AllSupportedTargetAndroidAbis>
-    <XABuildToolsVersion>25.0.1</XABuildToolsVersion>
+    <XABuildToolsVersion>26-rc1</XABuildToolsVersion>
+    <XABuildToolsFolder Condition="'$(XABuildToolsFolder)' == ''">26.0.0-rc1</XABuildToolsFolder>
   </PropertyGroup>
   <PropertyGroup>
     <_MingwPrefixTail Condition=" '$(HostOS)' == 'Darwin' ">.static</_MingwPrefixTail>
@@ -85,7 +87,9 @@
   <PropertyGroup>
     <AdbToolPath Condition=" '$(AdbToolPath)' == '' ">$(AndroidSdkFullPath)\platform-tools</AdbToolPath>
     <AdbToolExe Condition=" '$(AdbToolExe)' == '' ">adb</AdbToolExe>
+    <AvdManagerToolExe Condition=" '$(AvdManagerToolExe)' == '' ">avdmanager</AvdManagerToolExe>
     <AndroidToolPath Condition=" '$(AndroidToolPath)' == '' ">$(AndroidSdkFullPath)\tools</AndroidToolPath>
+    <AndroidToolsBinPath Condition=" '$(AndroidToolsBinPath)' == '' ">$(AndroidToolPath)\bin</AndroidToolsBinPath>
     <AndroidToolExe Condition=" '$(AndroidToolExe)' == '' ">android</AndroidToolExe>
     <EmulatorToolPath Condition=" '$(EmulatorToolPath)' == '' ">$(AndroidSdkFullPath)\tools</EmulatorToolPath>
     <EmulatorToolExe Condition=" '$(EmulatorToolExe)' == '' ">emulator</EmulatorToolExe>

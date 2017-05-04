@@ -42,19 +42,17 @@
       DependsOnTargets="AndroidPrepareForBuild"
       Inputs="java\JavaLib\project.properties"
       Outputs="$(OutputPath)JavaLib.zip">
-    <Exec
-        Command="&quot;$(AndroidSdkDirectory)\tools\android&quot; update project -p ."
-        WorkingDirectory="java\JavaLib"
+    <WriteLinesToFile
+        Overwrite="true"
+        File="java\JavaLib\local.properties"
+        Lines="sdk.dir=$(AndroidSdkDirectory)"
     />
     <Exec
-        Command="$(AntDirectory)\bin\ant debug"
-        WorkingDirectory="java\JavaLib"
+        Command=".\gradlew assembleDebug --stacktrace"
+        WorkingDirectory="$(MSBuildThisFileDirectory)java\JavaLib"
     />
     <MakeDir Directories="$(OutputPath)" />
-    <Exec
-        Command="zip -r ../../$(OutputPath)JavaLib.zip bin res AndroidManifest.xml"
-        WorkingDirectory="java\JavaLib"
-    />
+    <Copy SourceFiles="java\JavaLib\library\build\outputs\aar\library-debug.aar" DestinationFiles="$(OutputPath)JavaLib.zip" />
   </Target>
   <Target Name="CleanLocal">
     <RemoveDir Directories="java\JavaLib\bin;java\JavaLib\gen;bin;obj;libs;simple2\libs" />

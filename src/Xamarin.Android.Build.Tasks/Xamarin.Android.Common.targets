@@ -1950,9 +1950,10 @@ because xbuild doesn't support framework reference assemblies.
 
   <CreateMultiDexMainDexClassList
     Condition="'$(AndroidEnableMultiDex)' == 'True' And '$(AndroidCustomMainDexListFile)' == ''"
-    ToolPath="$(MainDexClassesToolPath)"
-    ToolExe="$(MainDexClassesToolExe)"
-    ProguardHome="$(ProguardToolPath)"
+    ToolPath="$(JavaToolPath)"
+    ToolExe="$(JavaToolExe)"
+    ProguardJarPath="$(ProguardJarPath)"
+    AndroidSdkBuildToolsPath="$(AndroidSdkBuildToolsPath)"
     ClassesOutputDirectory="$(IntermediateOutputPath)android\bin\classes"
     JavaLibraries="@(_JavaLibrariesToCompile)"
     MultiDexMainDexListFile="$(_AndroidMainDexListFile)"

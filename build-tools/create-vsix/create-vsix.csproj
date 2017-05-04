@@ -7,7 +7,7 @@
     <ProjectGuid>{94756FEB-1F64-411D-A18E-81B5158F776A}</ProjectGuid>
     <OutputType>Library</OutputType>
     <RootNamespace>Xamarin.Android.Sdk</RootNamespace>
-    <AssemblyName>Xamarin.Android.Sdk</AssemblyName>
+    <AssemblyName>Xamarin.Android.Sdk-OSS</AssemblyName>
     <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <CreateVsixContainer Condition=" '$(CreateVsixContainer)' == '' ">False</CreateVsixContainer>
     <CopyBuildOutputToOutputDirectory>False</CopyBuildOutputToOutputDirectory>

@@ -56,7 +56,7 @@ namespace Xamarin.Android.Tasks
 			completed.Set ();
 		}
 
-		public void LogDebugTaskItems (string message, params string[] items)
+		public void LogDebugTaskItems (string message, string[] items)
 		{
 			LogDebugMessage (message);
 
@@ -78,9 +78,19 @@ namespace Xamarin.Android.Tasks
 				LogDebugMessage ("    {0}", item.ItemSpec);
 		}
 
+		protected void LogMessage (string message)
+		{
+			LogMessage (message, importance: MessageImportance.Normal);
+		}
+
 		protected void LogMessage (string message, params object[] messageArgs)
 		{
 			LogMessage (string.Format (message, messageArgs));
+		}
+
+		protected void LogDebugMessage (string message)
+		{
+			LogMessage (message , importance: MessageImportance.Low);
 		}
 
 		protected void LogDebugMessage (string message, params object[] messageArgs)
@@ -111,14 +121,24 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
+		protected void LogError (string message)
+		{
+			LogError (code: null, message: message, file: null, lineNumber: 0);
+		}
+
 		protected void LogError (string message, params object[] messageArgs)
 		{
-			LogError (string.Format (message, messageArgs));
+			LogError (code: null, message: string.Format (message, messageArgs));
+		}
+
+		protected void LogCodedError (string code, string message)
+		{
+			LogError (code: code, message: message, file: null, lineNumber: 0);
 		}
 
 		protected void LogCodedError (string code, string message, params object[] messageArgs)
 		{
-			LogError (code, string.Format (message, messageArgs));
+			LogError (code: code, message: string.Format (message, messageArgs), file: null, lineNumber: 0);
 		}
 
 		protected void LogError (string code, string message, string file = null, int lineNumber = 0)

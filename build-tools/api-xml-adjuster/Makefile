@@ -14,7 +14,7 @@ API_XML_TOOL = $(BUILDBIN)/api-xml-adjuster.exe
 RUNTIME = mono
 RUN_CLASS_PARSE = $(RUNTIME) $(CLASS_PARSE)
 RUN_API_XML_TOOL = $(RUNTIME) $(API_XML_TOOL)
-API_LEVELS = 10 15 16 17 18 19 20 21 22 23 24 25
+API_LEVELS = 10 15 16 17 18 19 20 21 22 23 24 25 O
 
 XML_OUTPUT_DIR = .
 
@@ -81,6 +81,9 @@ docs-%.zip:
 docs-25_web.zip:
 	curl -L https://dl.dropboxusercontent.com/u/493047/2016/docs-25-web.zip > $@ || exit 1
 
+docs-O_web.zip:
+	curl -L https://www.dropbox.com/s/3xr11fpd08xpolg/docs-O-web.zip?dl=0 > $@ || exit 1
+
 # API level 10 is Android v2.3.3; it's API level 9 (Android v2.3) with a few
 # bugfixes which don't impact the documentation.
 $(DOCS_DIR)/docs-api-10: docs-2.3_r01-linux.zip
@@ -119,3 +122,7 @@ $(DOCS_DIR)/docs-api-24: docs-24_r01.zip
 
 $(DOCS_DIR)/docs-api-25: docs-25_web.zip	# Google hadn't published docs component yet!
 	$(call extract-docs,$<,docs)
+
+docs-api-O: docs-O_web.zip	# No preview docs yet
+	$(call extract-docs,$<,docs)
+

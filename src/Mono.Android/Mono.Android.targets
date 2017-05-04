@@ -47,14 +47,14 @@
   </ItemGroup>
   <Target Name="_GenerateApiDescription"
       BeforeTargets="_GenerateBinding"
-      Inputs="Profiles\api-$(AndroidApiLevel).xml.in"
+      Inputs="Profiles\api-$(AndroidPlatformId).xml.in"
       Outputs="$(IntermediateOutputPath)mcw\api.xml">
     <MakeDir Directories="$(IntermediateOutputPath)mcw" />
     <PropertyGroup>
       <ApiMerge>..\..\bin\Build$(Configuration)\api-merge.exe</ApiMerge>
       <_Profiles>@(_AndroidProfile->'%(Identity)', ' ')</_Profiles>
       <_Glob>-s 'Profiles\api-*.xml.in'</_Glob>
-      <_LastProfile>--last-description=Profiles\api-$(AndroidApiLevel).xml.in</_LastProfile>
+      <_LastProfile>--last-description=Profiles\api-$(AndroidPlatformId).xml.in</_LastProfile>
       <_Out>-o "$(IntermediateOutputPath)mcw\api.xml"</_Out>
     </PropertyGroup>
     <Exec
@@ -107,31 +107,10 @@
   </ItemGroup>
   <Target Name="_GenerateMonoAndroidDex16"
       AfterTargets="GenerateJavaCallableWrappers"
-      Condition="'$(JavacSourceVersion)' == '1.6'"
       Inputs="$(OutputPath)mono.android.jar"
       Outputs="$(OutputPath)mono.android.dex">
     <Exec
-        Command="&quot;$(AndroidSdkDirectory)&quot;\build-tools\$(XABuildToolsVersion)\dx --dex --output=&quot;$(OutputPath)mono.android.dex&quot; &quot;$(OutputPath)mono.android.jar&quot;"
-    />
-  </Target>
-  <Target Name="_GenerateMonoAndroidDex18"
-      AfterTargets="GenerateJavaCallableWrappers"
-      Condition="'$(JavacSourceVersion)' == '1.8'"
-      Inputs="$(OutputPath)mono.android.jar"
-      Outputs="$(OutputPath)mono.android.dex">
-    <MakeDir
-        Directories="$(IntermediateOutputPath)__dex"
-    />
-    <Exec
-        Command="java -jar &quot;$(AndroidSdkDirectory)&quot;\build-tools\$(XABuildToolsVersion)\jack.jar --output-dex=&quot;$(IntermediateOutputPath)__dex&quot; -cp &quot;$(AndroidToolchainDirectory)\sdk\platforms\android-$(AndroidApiLevel)\android.jar&quot; @&quot;$(IntermediateOutputPath)jcw\classes.txt&quot;"
-    />
-    <Copy
-        SourceFiles="$(IntermediateOutputPath)__dex\classes.dex"
-        DestinationFiles="$(OutputPath)mono.android.dex"
-    />
-    <Touch Files="$(OutputPath)mono.android.dex" />
-    <RemoveDir
-        Directories="$(IntermediateOutputPath)__dex"
+        Command="&quot;$(AndroidSdkDirectory)\build-tools\$(XABuildToolsFolder)\dx&quot; --dex --no-strict --output=&quot;$(OutputPath)mono.android.dex&quot; &quot;$(OutputPath)mono.android.jar&quot;"
     />
   </Target>
   <Target Name="_GenerateFrameworkList"

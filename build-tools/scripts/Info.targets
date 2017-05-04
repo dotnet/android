@@ -7,4 +7,10 @@
         Importance="High"
     />
   </Target>
+  <Target Name="GetAndroidLatestFrameworkVersion">
+    <Message
+        Text="$(AndroidLatestFrameworkVersion)"
+        Importance="High"
+    />
+  </Target>
 </Project>
