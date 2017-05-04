@@ -8,7 +8,7 @@
 
   <PropertyGroup>
     <_TestImageName>XamarinAndroidUnitTestRunner</_TestImageName>
-    <_AdbEmulatorPort>5600</_AdbEmulatorPort>
+    <_AdbEmulatorPort>5570</_AdbEmulatorPort>
   </PropertyGroup>
 
   <Target Name="AcquireAndroidTarget">
