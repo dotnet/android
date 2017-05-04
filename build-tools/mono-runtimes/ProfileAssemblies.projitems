@@ -80,6 +80,7 @@
     <MonoFacadeAssembly Include="System.Runtime.InteropServices.dll" />
     <MonoFacadeAssembly Include="System.Runtime.InteropServices.RuntimeInformation.dll" />
     <MonoFacadeAssembly Include="System.Runtime.InteropServices.WindowsRuntime.dll" />
+    <MonoFacadeAssembly Include="System.Runtime.Loader.dll" />
     <MonoFacadeAssembly Include="System.Runtime.Numerics.dll" />
     <MonoFacadeAssembly Include="System.Runtime.Serialization.Formatters.dll" />
     <MonoFacadeAssembly Include="System.Runtime.Serialization.Json.dll" />
