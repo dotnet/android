@@ -64,6 +64,7 @@
     <MonoFacadeAssembly Include="System.Net.WebSockets.dll" />
     <MonoFacadeAssembly Include="System.ObjectModel.dll" />
     <MonoFacadeAssembly Include="System.Reflection.dll" />
+    <MonoFacadeAssembly Include="System.Reflection.DispatchProxy.dll" />
     <MonoFacadeAssembly Include="System.Reflection.Emit.dll" />
     <MonoFacadeAssembly Include="System.Reflection.Emit.ILGeneration.dll" />
     <MonoFacadeAssembly Include="System.Reflection.Emit.Lightweight.dll" />
@@ -77,6 +78,7 @@
     <MonoFacadeAssembly Include="System.Runtime.Extensions.dll" />
     <MonoFacadeAssembly Include="System.Runtime.Handles.dll" />
     <MonoFacadeAssembly Include="System.Runtime.InteropServices.dll" />
+    <MonoFacadeAssembly Include="System.Runtime.InteropServices.RuntimeInformation.dll" />
     <MonoFacadeAssembly Include="System.Runtime.InteropServices.WindowsRuntime.dll" />
     <MonoFacadeAssembly Include="System.Runtime.Numerics.dll" />
     <MonoFacadeAssembly Include="System.Runtime.Serialization.Formatters.dll" />
@@ -131,6 +133,7 @@
     <MonoFacadeAssembly Include="System.Xml.XmlSerializer.dll" />
     <MonoFacadeAssembly Include="System.Xml.XPath.dll" />
     <MonoFacadeAssembly Include="System.Xml.XPath.XDocument.dll" />
+    <MonoFacadeAssembly Include="System.Xml.XPath.XmlDocument.dll" />
     <MonoFacadeAssembly Include="System.Xml.Xsl.Primitives.dll" />
     <!--
       System.Drawing.Primitives and netstandard need a reference to Mono.Android.dll so their
@@ -172,8 +175,6 @@
     <MonoProfileAssembly Include="System.Numerics.dll" />
     <MonoProfileAssembly Include="System.Numerics.Vectors.dll" />
     <MonoProfileAssembly Include="System.Reflection.Context.dll" />
-    <MonoProfileAssembly Include="System.Reflection.DispatchProxy.dll" />
-    <MonoProfileAssembly Include="System.Runtime.InteropServices.RuntimeInformation.dll" />
     <MonoProfileAssembly Include="System.Runtime.Serialization.dll" />
     <MonoProfileAssembly Include="System.Security.dll" />
     <MonoProfileAssembly Include="System.ServiceModel.dll" />
@@ -185,6 +186,5 @@
     <MonoProfileAssembly Include="System.Xml.dll" />
     <MonoProfileAssembly Include="System.Xml.Linq.dll" />
     <MonoProfileAssembly Include="System.Xml.Serialization.dll" />
-    <MonoProfileAssembly Include="System.Xml.XPath.XmlDocument.dll" />
   </ItemGroup>
 </Project>
