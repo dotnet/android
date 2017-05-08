@@ -296,5 +296,34 @@ namespace Bug12935
 				Assert.IsTrue (manifest.Contains ("AAAAAAAA"), "#1");
 			}
 		}
+
+		static object[] DebuggerAttributeCases = new object[] {
+			// DebugType, isRelease, extpected
+			new object[] { "", true, false, },
+			new object[] { "", false, true, },
+			new object[] { "None", true, false, },
+			new object[] { "None", false, false, },
+			new object[] { "PdbOnly", true, false, },
+			new object[] { "PdbOnly", false, true, },
+			new object[] { "Full", true, false, },
+			new object[] { "Full", false, true, },
+			new object[] { "Portable", true, false, },
+			new object[] { "Portable", false, true, },
+		};
+
+		[Test]
+		[TestCaseSource ("DebuggerAttributeCases")]
+		public void DebuggerAttribute (string debugType, bool isRelease, bool expected)
+		{
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = isRelease,
+			};
+			proj.SetProperty (isRelease ? proj.ReleaseProperties : proj.DebugProperties, "DebugType", debugType);
+			using (var builder = CreateApkBuilder (Path.Combine ("temp", $"DebuggerAttribute_{debugType}_{isRelease}_{expected}"), false, false)) {
+				Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
+				var manifest = builder.Output.GetIntermediaryAsText (Root, Path.Combine ("android", "AndroidManifest.xml"));
+				Assert.AreEqual (expected, manifest.Contains ("android:debuggable=\"true\""), $"Manifest  {(expected ? "should" : "should not")} contain the andorid:debuggable attribute");
+			}
+		}
 	}
 }
