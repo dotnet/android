@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:xamarin="http://schemas.xamarin.com/android/xamarin/tools"
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    >
+  <fragment
+      android:name="Xamarin.Android.RuntimeTests.MyFragment"
+      android:id="@+id/csharp_simple_fragment"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+  />
+  <fragment
+      android:name="xamarin.android.runtimetests.MyFragment"
+      xamarin:managedType="Xamarin.Android.RuntimeTests.MyFragment"
+      android:id="@+id/csharp_legacy_fragment"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+  />
+  <fragment
+      android:name="Xamarin.Android.RuntimeTests.MyFragment, Mono.Android-Tests"
+      android:id="@+id/csharp_partial_assembly"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+  />
+  <fragment
+      android:name="Xamarin.Android.RuntimeTests.MyFragment, Mono.Android-Tests, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"
+      android:id="@+id/csharp_full_assembly"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+  />
+</LinearLayout>

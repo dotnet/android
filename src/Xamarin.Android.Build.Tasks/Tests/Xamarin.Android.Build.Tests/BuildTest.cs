@@ -789,6 +789,17 @@ namespace Xamarin.Android.Tests
 		[Test]
 		public void MultiDexCustomMainDexFileList ()
 		{
+			var expected = @"android/support/multidex/ZipUtil$CentralDirectory.class
+android/support/multidex/MultiDexApplication.class
+android/support/multidex/MultiDex$V19.class
+android/support/multidex/MultiDex$V4.class
+android/support/multidex/ZipUtil.class
+android/support/multidex/MultiDexExtractor$1.class
+android/support/multidex/MultiDexExtractor.class
+android/support/multidex/MultiDex$V14.class
+android/support/multidex/MultiDex.class
+MyTest
+";
 			var proj = CreateMultiDexRequiredApplication ();
 			proj.SetProperty ("AndroidEnableMultiDex", "True");
 			proj.OtherBuildItems.Add (new BuildItem ("MultiDexMainDexList", "mymultidex.keep") { TextContent = () => "MyTest", Encoding = Encoding.ASCII });
@@ -796,7 +807,10 @@ namespace Xamarin.Android.Tests
 			var b = CreateApkBuilder ("temp/MultiDexCustomMainDexFileList");
 			b.ThrowOnBuildFailure = false;
 			Assert.IsTrue (b.Build (proj), "build should succeed. Run will fail.");
-			Assert.AreEqual ("MyTest", File.ReadAllText (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "multidex.keep")), "unexpected multidex.keep content");
+			var data = File.ReadAllText (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "multidex.keep"));
+			data = Regex.Replace (data, @"\r\n|\n\r|\n|\r", "\r\n");
+			expected = Regex.Replace (expected, @"\r\n|\n\r|\n|\r", "\r\n");
+			Assert.AreEqual (expected, data, "unexpected multidex.keep content");
 			b.Clean (proj);
 			b.Dispose ();
 		}
@@ -2899,6 +2913,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				Verbosity = LoggerVerbosity.Diagnostic,
 			};
 			var app1 = new XamarinAndroidApplicationProject() {
+				TargetFrameworkVersion = sb.LatestTargetFrameworkVersion (),
 				ProjectName = "App1",
 				AotAssemblies = true,
 				IsRelease = true,
@@ -2939,6 +2954,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 			for (int i = 0; i < 128; i++) {
 				var libName = $"Lib{i}";
 				var lib = new XamarinAndroidLibraryProject() {
+					TargetFrameworkVersion = sb.LatestTargetFrameworkVersion (),
 					ProjectName = libName,
 					IsRelease = true,
 					OtherBuildItems = {

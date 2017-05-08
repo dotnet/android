@@ -83,7 +83,6 @@ namespace Xamarin.Android.Tasks
 
 		public bool EnableSGenConcurrent { get; set; }
 
-		public string StubApplicationDataFile { get; set; }
 		public string AndroidEmbedProfilers { get; set; }
 		public string HttpClientHandlerType { get; set; }
 		public string TlsProvider { get; set; }
@@ -189,8 +188,7 @@ namespace Xamarin.Android.Tasks
 						count = 0;
 					}
 				}
-				if (StubApplicationDataFile != null && File.Exists (StubApplicationDataFile))
-					apk.Archive.AddFile (StubApplicationDataFile, Path.GetFileName (StubApplicationDataFile));
+
 			}
 			MonoAndroidHelper.CopyIfZipChanged (apkOutputPath + "new", apkOutputPath);
 			File.Delete (apkOutputPath + "new");

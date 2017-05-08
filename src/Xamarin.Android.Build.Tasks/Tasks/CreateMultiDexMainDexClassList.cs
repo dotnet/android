@@ -47,12 +47,6 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ("  ProguardJarPath: {0}", ProguardJarPath);
 			Log.LogDebugMessage ("  ProguardInputJarFilter: {0}", ProguardInputJarFilter);
 
-			if (CustomMainDexListFiles != null && CustomMainDexListFiles.Any ()) {
-				var content = string.Concat (CustomMainDexListFiles.Select (i => File.ReadAllText (i.ItemSpec)));
-				File.WriteAllText (MultiDexMainDexListFile, content);
-				return true;
-			}
-
 			tempJar = Path.Combine (Path.GetTempPath (), Path.GetRandomFileName () + ".jar");
 			commandlineAction = GenerateProguardCommands;
 			// run proguard first
@@ -63,7 +57,17 @@ namespace Xamarin.Android.Tasks
 			commandlineAction = GenerateMainDexListBuilderCommands;
 			// run java second
 
-			return base.Execute () && !Log.HasLoggedErrors; 
+			if (File.Exists (MultiDexMainDexListFile))
+				File.WriteAllText (MultiDexMainDexListFile, string.Empty);
+
+			var result = base.Execute () && !Log.HasLoggedErrors;
+
+			if (result && CustomMainDexListFiles != null && CustomMainDexListFiles.Any (x => File.Exists (x.ItemSpec))) {
+				foreach (var content in CustomMainDexListFiles.Select (i => File.ReadAllLines (i.ItemSpec)))
+					File.AppendAllLines (MultiDexMainDexListFile, content);
+			}
+
+			return result;
 
 		}
 

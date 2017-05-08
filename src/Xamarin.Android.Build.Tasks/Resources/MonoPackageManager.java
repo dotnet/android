@@ -5,6 +5,7 @@ import java.lang.String;
 import java.util.Locale;
 import java.util.HashSet;
 import java.util.zip.*;
+import java.util.Arrays;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
@@ -21,6 +22,7 @@ public class MonoPackageManager {
 
 	public static void LoadApplication (Context context, ApplicationInfo runtimePackage, String[] apks)
 	{
+		Log.v("MonoPackageManager", "LoadApplication Called");
 		synchronized (lock) {
 			if (context instanceof android.app.Application) {
 				Context = context;
@@ -30,8 +32,7 @@ public class MonoPackageManager {
 						android.content.Intent.ACTION_TIMEZONE_CHANGED
 				);
 				context.registerReceiver (new mono.android.app.NotifyTimeZoneChanges (), timezoneChangedFilter);
-				
-				System.loadLibrary("monodroid");
+
 				Locale locale       = Locale.getDefault ();
 				String language     = locale.getLanguage () + "-" + locale.getCountry ();
 				String filesDir     = context.getFilesDir ().getAbsolutePath ();
@@ -46,6 +47,16 @@ public class MonoPackageManager {
 							external0,
 							"../legacy/Android/data/" + context.getPackageName () + "/files/.__override__").getAbsolutePath ();
 
+				Log.v("MonoPackageManager", "Loading monodroid " + System.getProperty("java.library.path") + " " + dataDir);
+				System.loadLibrary("monodroid");
+
+				Log.v("MonoPackageManager", "Language = " + language);
+				Log.v("MonoPackageManager", "apks = " + Arrays.toString(apks));
+				Log.v("MonoPackageManager", "nativeLibraryPath = " + getNativeLibraryPath (runtimePackage));
+				Log.v("MonoPackageManager", "dirs = " + filesDir + ":" + cacheDir + ":" + dataDir);
+				Log.v("MonoPackageManager", "external = " + externalDir + ":" + externalLegacyDir);
+				Log.v("MonoPackageManager", "assemblies = " + Arrays.toString(MonoPackageManager_Resources.Assemblies));
+				Log.v("MonoPackageManager", "packagename = " + context.getPackageName ());
 				Runtime.init (
 						language,
 						apks,

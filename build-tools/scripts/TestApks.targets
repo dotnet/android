@@ -128,6 +128,7 @@
     <Exec
         Condition=" '$(HostOS)' != 'Windows' And '$(_EmuTarget)' != '' "
         ContinueOnError="WarnAndContinue"
+        IgnoreStandardErrorWarningFormat="true"
         Command="kill -KILL $(_EmuPid)"
     />
   </Target>

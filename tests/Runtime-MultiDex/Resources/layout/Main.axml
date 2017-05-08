@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    xmlns:xamarin="http://schemas.xamarin.com/android/xamarin/tools"
+    xamarin:classes="Xamarin.Android.RuntimeTests.MainActivity">
+  <TextView
+      android:id="@+id/first_text_view"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:editable="false"
+  />
+  <TextView
+      android:id="@+id/second_text_view"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:editable="false"
+  />
+  <ScrollView
+      android:id="@+id/my_scroll_view">
+    <TextView
+        android:id="@+id/first_text_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:editable="false"
+    />
+    <TextView
+        android:id="@+id/second_text_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:editable="false"
+    />
+  </ScrollView>
+
+  <fragment
+      android:name="Xamarin.Android.RuntimeTests.MyFragment"
+      android:id="@+id/csharp_simple_fragment"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+  />
+  <fragment
+      android:name="Xamarin.Android.RuntimeTests.MyFragment, Hello"
+      android:id="@+id/csharp_partial_assembly"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+  />
+  <fragment
+      android:name="Xamarin.Android.RuntimeTests.MyFragment, Hello, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"
+      android:id="@+id/csharp_full_assembly"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+  />
+</LinearLayout>
