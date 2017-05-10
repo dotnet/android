@@ -56,4 +56,7 @@
   <ItemGroup>
     <Folder Include="Properties\" />
   </ItemGroup>
+  <ItemGroup>
+    <Compile Include="BuildTest.OSS.cs" />
+  </ItemGroup>
 </Project>
