@@ -750,7 +750,13 @@ because xbuild doesn't support framework reference assemblies.
 		/>
 	</CreateProperty>
 
-	<CreateProperty Value="$(_AndroidToolsDirectory)">
+	<CreateProperty Value="$(_AndroidToolsDirectory)bin\" Condition="Exists ('$(_AndroidToolsDirectory)bin\')">
+		<Output TaskParameter="Value" PropertyName="LintToolPath"
+				Condition="'$(LintToolPath)' == ''"
+		/>
+	</CreateProperty>
+
+	<CreateProperty Value="$(_AndroidToolsDirectory)" Condition="Exists ('$(_AndroidToolsDirectory)')">
 		<Output TaskParameter="Value" PropertyName="LintToolPath"
 				Condition="'$(LintToolPath)' == ''"
 		/>
