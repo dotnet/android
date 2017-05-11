@@ -1573,6 +1573,8 @@ public class Test
 		public void BuildBasicApplicationCheckPdb ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetProperty ("EmbedAssembliesIntoApk", true.ToString ());
+			proj.SetProperty ("AndroidUseSharedRuntime", false.ToString ());
 			using (var b = CreateApkBuilder ("temp/BuildBasicApplicationCheckPdb", false, false)) {
 				b.Verbosity = LoggerVerbosity.Diagnostic;
 				var reference = new BuildItem.Reference ("PdbTestLibrary.dll") {
