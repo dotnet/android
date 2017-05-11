@@ -44,11 +44,11 @@ namespace Xamarin.ProjectTools
 				if (RunXBuild) {
 					var outdir = Environment.GetEnvironmentVariable ("XA_BUILD_OUTPUT_PATH");
 					if (String.IsNullOrEmpty(outdir))
-						outdir = Path.GetFullPath ("../../../../../../../out");
+						outdir = Path.GetFullPath (Path.Combine (Root, "..", "..", "..", "..", "..", "..", "..", "out"));
 					if (!Directory.Exists (Path.Combine (outdir, "lib")))
-						outdir = Path.GetFullPath (Path.Combine (Root, "..", "..", "..", "..", "..", "..", "bin", "Debug"));
+						outdir = Path.GetFullPath (Path.Combine (Root, "..", "..", "bin", "Debug"));
 					if (!Directory.Exists (Path.Combine (outdir, "lib")))
-						outdir = Path.GetFullPath (Path.Combine (Root, "..", "..", "..", "..", "..", "..", "bin", "Release"));
+						outdir = Path.GetFullPath (Path.Combine (Root, "..", "..", "bin", "Release"));
 					if (!Directory.Exists (outdir))
 						outdir = "/Library/Frameworks/Xamarin.Android.framework/Versions/Current";
 					return Path.Combine (outdir, "lib");
@@ -130,17 +130,8 @@ namespace Xamarin.ProjectTools
 				args.AppendFormat ("/p:AndroidNdkDirectory=\"{0}\" ", ndkPath);
 			}
 			if (RunXBuild) {
-				var outdir = Environment.GetEnvironmentVariable ("XA_BUILD_OUTPUT_PATH");
-				if (String.IsNullOrEmpty(outdir))
-					outdir = Path.GetFullPath ("../../../../../../../out");
-				
-				if (!Directory.Exists (Path.Combine (outdir, "lib", "xbuild")))
-					outdir = Path.GetFullPath (Path.Combine (Root, "..", "..", "bin", "Debug"));
-
-				if (!Directory.Exists (Path.Combine (outdir, "lib", "xbuild")))
-					outdir = Path.GetFullPath (Path.Combine (Root, "..", "..", "bin", "Release"));
-
-				var targetsdir = Path.Combine (outdir, "lib", "xbuild");
+				var outdir = Path.GetFullPath (Path.Combine (FrameworkLibDirectory, ".."));
+				var targetsdir = Path.Combine (FrameworkLibDirectory, "xbuild");
 				args.AppendFormat (" {0} ", logger);
 
 				if (Directory.Exists (targetsdir)) {
