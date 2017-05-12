@@ -31,17 +31,17 @@ namespace Xamarin.ProjectTools
 
 		public string GetIntermediaryPath (string file)
 		{
-			return Path.Combine (Builder.ProjectDirectory, IntermediateOutputPath, file.Replace ('/', Path.DirectorySeparatorChar));
+			return Path.Combine (Project.Root, Builder.ProjectDirectory, IntermediateOutputPath, file.Replace ('/', Path.DirectorySeparatorChar));
 		}
 		
 		public string GetIntermediaryAsText (string root, string file)
 		{
-			return File.ReadAllText (Path.Combine (root, GetIntermediaryPath (file)));
+			return File.ReadAllText (GetIntermediaryPath (file));
 		}
 
 		public string GetIntermediaryAsText (string file)
 		{
-			return File.ReadAllText (Path.Combine (Project.Root, GetIntermediaryPath (file)));
+			return File.ReadAllText (GetIntermediaryPath (file));
 		}
 
 		public bool IsTargetSkipped (string target)
