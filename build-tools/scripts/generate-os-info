@@ -51,7 +51,7 @@ function getInfo_Linux()
         HOST_CXX=c++
     fi
 
-    HOST_TRIPLET="$HOST_CC -dumpmachine"
+    HOST_TRIPLET="`$HOST_CC -dumpmachine`"
 
     if [ "x$ARCHITECTURE_BITS" = "x64" ]; then
         HOST_CC64="$HOST_CC"
