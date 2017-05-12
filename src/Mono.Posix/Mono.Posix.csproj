@@ -68,9 +68,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="$(XamarinAndroidSourcePath)\src\Mono.Posix\Mono.Unix.Native\NativeConvert.Android.cs" />
-    <Compile Include="$(XamarinAndroidSourcePath)\src\Mono.Posix\Mono.Unix.Android\AndroidUtils.cs" />
-
     <Compile Include="$(XamarinAndroidSourcePath)\src\Mono.Android\Android.Runtime\CPUArchitecture.cs">
       <Link>Android.Runtime\CPUArchitecture.cs</Link>
     </Compile>
@@ -127,6 +124,9 @@
     </Compile>
     <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix.Native\NativeConvert.cs">
       <Link>Mono.Unix.Native\NativeConvert.cs</Link>
+    </Compile>
+    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix.Android\AndroidUtils.cs">
+      <Link>Mono.Unix.Android\AndroidUtils.cs</Link>
     </Compile>
     <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix.Native\NativeConvert.generated.cs">
       <Link>Mono.Unix.Native\NativeConvert.generated.cs</Link>

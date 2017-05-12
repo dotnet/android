@@ -7,7 +7,7 @@
         Properties="Configuration=$(Configuration)">
       <Output TaskParameter="TargetOutputs" ItemName="MonoAndroidAssembly" />
     </MSBuild>
-    <Exec Command="make -C $(MonoSourceFullPath)\mcs\class\Facades\netstandard PROFILE=monodroid EXTRA_LIB_MCS_FLAGS=&quot;-r:%(MonoAndroidAssembly.Identity)&quot;" />
+    <Exec Command="make -C $(MonoSourceFullPath)\mcs\class\Facades\netstandard PROFILE=monodroid EXTERNAL_FACADE_DRAWING_REFERENCE=&quot;%(MonoAndroidAssembly.Identity)&quot;" />
     <Copy
         SourceFiles="$(MonoSourceFullPath)\mcs\class\lib\monodroid\Facades\netstandard.dll"
         DestinationFiles="$(OutputPath)\netstandard.dll"
