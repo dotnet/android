@@ -5,6 +5,7 @@
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.CreateAndroidEmulator" />
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.RunInstrumentationTests" />
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.StartAndroidEmulator" />
+  <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.KillProcess" />
 
   <PropertyGroup>
     <_TestImageName>XamarinAndroidUnitTestRunner</_TestImageName>
@@ -38,7 +39,7 @@
         ToolPath="$(EmulatorToolPath)">
       <Output TaskParameter="AdbTarget" PropertyName="_AdbTarget" />
       <Output TaskParameter="AdbTarget" PropertyName="_EmuTarget" />
-      <Output TaskParameter="AdbProcess" PropertyName="_EmuProcess" />
+      <Output TaskParameter="EmulatorProcessId" PropertyName="_EmuPid" />
     </StartAndroidEmulator>
     <Exec
         Condition=" '$(_ValidAdbTarget)' != 'True' "
@@ -66,6 +67,15 @@
     <Adb
         Condition=" '$(_EmuTarget)' != '' "
         Arguments="$(_EmuTarget) emu kill"
+        ToolExe="$(AdbToolExe)"
+        ToolPath="$(AdbToolPath)"
+    />
+    <KillProcess
+        Condition=" '$(_EmuTarget)' != '' "
+        ProcessId="$(_EmuPid)"
+    />
+    <Adb
+        Arguments="kill-server"
         ToolExe="$(AdbToolExe)"
         ToolPath="$(AdbToolPath)"
     />

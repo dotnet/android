@@ -14,7 +14,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 		public                  string          AdbTarget       {get; set;}
 
 		[Output]
-		public                  Process         AdbProcess      {get; set;}
+		public                  int             EmulatorProcessId       {get; set;}
 
 		public                  string          AndroidSdkHome  {get; set;}
 		public                  string          Port            {get; set;}
@@ -75,6 +75,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 				StartInfo = psi,
 			};
 			p.Start ();
+			EmulatorProcessId = p.Id;
 		}
 	}
 }
