@@ -15,6 +15,10 @@
           Condition=" Exists('$(OutputPath)bin\llc') "
           Include="$(OutputPath)bin\llc"
       />
+      <_ExecutableScript
+          Condition=" Exists('$(OutputPath)bin\opt') "
+          Include="$(OutputPath)bin\opt"
+      />
     </ItemGroup>
     <Exec
         Condition=" '$(HostOS)' != 'Windows' And '@(_ExecutableScript)' != '' "
