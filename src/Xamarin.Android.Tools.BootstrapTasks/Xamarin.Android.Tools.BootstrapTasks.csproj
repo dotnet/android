@@ -49,6 +49,7 @@
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\StartAndroidEmulator.cs" />
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\UnzipDirectoryChildren.cs" />
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\Zip.cs" />
+    <Compile Include="Xamarin.Android.Tools.BootstrapTasks\KillProcess.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(LibZipSharpSourceFullPath)\libZipSharp.csproj">
