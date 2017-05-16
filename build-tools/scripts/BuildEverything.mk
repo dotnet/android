@@ -76,7 +76,8 @@ join-with = $(subst $(_space),$(1),$(strip $(2)))
 _MSBUILD_ARGS	= \
 	/p:AndroidSupportedTargetJitAbis=$(call join-with,:,$(ALL_JIT_ABIS)) \
 	/p:AndroidSupportedHostJitAbis=$(call join-with,:,$(ALL_HOST_ABIS)) \
-	/p:AndroidSupportedTargetAotAbis=$(call join-with,:,$(ALL_AOT_ABIS))
+	/p:AndroidSupportedTargetAotAbis=$(call join-with,:,$(ALL_AOT_ABIS)) \
+	/p:AndroidBuildCross=$(BUILD_CROSS)
 
 CONFIGURATIONS ?= Debug Release
 
