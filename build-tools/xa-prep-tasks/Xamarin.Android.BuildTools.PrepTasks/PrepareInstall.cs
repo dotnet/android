@@ -24,9 +24,7 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 		[Output]
 		public  ITaskItem           DownloadUrl         { get; set; }
 
-		string Sudo {
-			get {return (UseSudo && HostOS != "Windows") ? "sudo " : "";}
-		}
+		string Sudo;
 
 		public override bool Execute ()
 		{
@@ -36,6 +34,7 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 			Log.LogMessage (MessageImportance.Low, $"  {nameof (Program)}: {Program}");
 			Log.LogMessage (MessageImportance.Low, $"  {nameof (UseSudo)}: {UseSudo}");
 
+			SetSudo ();
 			SetDownloadUrl ();
 			SetInstallCommand ();
 
@@ -48,6 +47,27 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 		string GetHostProperty (string property)
 		{
 			return Which.GetHostProperty (Program, property, HostOS, HostOSName);
+		}
+
+		void SetSudo ()
+		{
+			if (!UseSudo || string.Equals ("Windows", HostOS, StringComparison.OrdinalIgnoreCase))
+				return;
+
+			if (!string.Equals ("Darwin", HostOS, StringComparison.OrdinalIgnoreCase)) {
+				Sudo = "sudo ";
+				return;
+			}
+			string brewFilename;
+			var brewPath = Which.GetProgramLocation ("brew", out brewFilename);
+			if (string.IsNullOrEmpty (brewPath)) {
+				return;
+			}
+			var brewVersion	= Which.GetProgramVersion (HostOS, $"{brewPath} --version");
+			if (brewVersion < new Version (1, 1)) {
+				Sudo = "sudo ";
+				return;
+			}
 		}
 
 		void SetDownloadUrl ()
@@ -78,7 +98,7 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 				InstallCommand = Sudo + install;
 				return;
 			}
-			if (HostOS == "Darwin") {
+			if (string.Equals (HostOS, "Darwin", StringComparison.OrdinalIgnoreCase)) {
 				var brew    = Program.GetMetadata ("Homebrew");
 				if (!string.IsNullOrEmpty (brew)) {
 					InstallCommand = $"{Sudo}brew install '{brew}'";

@@ -142,11 +142,17 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 
 		Version GetCurrentVersion ()
 		{
-			string shell, format;
-			GetShell (out shell, out format);
-
 			var command = GetHostProperty (Program, "CurrentVersionCommand", HostOS, HostOSName)
 				?? Program.ItemSpec + " --version";
+
+			return GetProgramVersion (HostOS, command);
+		}
+
+		internal static Version GetProgramVersion (string hostOS, string command)
+		{
+			string shell, format;
+			GetShell (hostOS, out shell, out format);
+
 			var psi = new ProcessStartInfo (shell, string.Format (format, command)) {
 				CreateNoWindow = true,
 				UseShellExecute = false,
@@ -171,9 +177,9 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 				: new Version (curVersion);
 		}
 
-		void GetShell (out string shell, out string format)
+		static void GetShell (string hostOS, out string shell, out string format)
 		{
-			if (HostOS == "Windows") {
+			if (string.Equals (hostOS, "Windows", StringComparison.OrdinalIgnoreCase)) {
 				shell = "cmd.exe";
 				format = "/c \"{0}\"";
 				return;
