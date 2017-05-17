@@ -94,7 +94,7 @@
       <HostOS></HostOS>
       <DestDir>platforms\android-25</DestDir>
     </AndroidSdkItem>
-    <AndroidSdkItem Include="platform-O_r01.zip">
+    <AndroidSdkItem Include="platform-O_r02.zip">
       <HostOS></HostOS>
       <DestDir>platforms\android-O</DestDir>
     </AndroidSdkItem>
