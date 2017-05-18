@@ -40,4 +40,12 @@
         Command="jar cf &quot;$(_MonoAndroidJar)&quot; -C &quot;$(IntermediateOutputPath)jcw\bin&quot; ."
     />
   </Target>
+  <Target Name="_GenerateMonoAndroidDex16"
+      AfterTargets="GenerateJavaCallableWrappers"
+      Inputs="$(OutputPath)mono.android.jar"
+      Outputs="$(OutputPath)mono.android.dex">
+    <Exec
+        Command="&quot;$(AndroidSdkDirectory)\build-tools\$(XABuildToolsFolder)\dx&quot; --dex --no-strict --output=&quot;$(OutputPath)mono.android.dex&quot; &quot;$(OutputPath)mono.android.jar&quot;"
+    />
+  </Target>
 </Project>
