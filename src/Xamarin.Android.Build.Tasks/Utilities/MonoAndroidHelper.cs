@@ -26,6 +26,8 @@ namespace Xamarin.Android.Tasks
 		// Set in ResolveSdks.Execute();
 		// Requires that ResolveSdks.Execute() run before anything else
 		public static string[] TargetFrameworkDirectories;
+		public static AndroidVersions   SupportedVersions;
+
 		readonly static byte[] Utf8Preamble = System.Text.Encoding.UTF8.GetPreamble ();
 
 		public static int RunProcess (string name, string args, DataReceivedEventHandler onOutput, DataReceivedEventHandler onError)
@@ -83,15 +85,9 @@ namespace Xamarin.Android.Tasks
 			AndroidSdk.Refresh (sdkPath, ndkPath, javaPath);
 		}
 
-		public static void RefreshMonoDroidSdk (string toolsPath, string binPath, string[] referenceAssemblyPaths)
+		public static void RefreshSupportedVersions (string[] referenceAssemblyPaths)
 		{
-			MonoDroidSdk.Refresh (toolsPath, binPath,
-					(from   refPath in referenceAssemblyPaths ?? new string [0]
-					 where  !string.IsNullOrEmpty (refPath)
-					 let    path = refPath.TrimEnd (Path.DirectorySeparatorChar)
-					 where  File.Exists (Path.Combine (path, "mscorlib.dll"))
-					 select path)
-					.FirstOrDefault ());
+			SupportedVersions   = new AndroidVersions (referenceAssemblyPaths);
 		}
 #endif  // MSBUILD
 
@@ -464,30 +460,6 @@ namespace Xamarin.Android.Tasks
 			"Mono.Android.Support.v4.dll",
 			"Xamarin.Android.NUnitLite.dll",
 		};
-
-		// It used to replace "21" with "L" when it was preview, or "23" with "MNC" (ditto).
-		// We may have to use this in the future too.
-		public static string GetPlatformApiLevelName (string platformApiLevel)
-		{
-			switch (platformApiLevel.Trim ()) {
-			//case "26":
-			//	return "O";
-			default:
-				return platformApiLevel;
-			}
-		}
-
-		// It used to replace "21" with "L" when it was preview, or "23" with "MNC" (ditto).
-		// We may have to use this in the future too.
-		public static string GetPlatformApiLevel (string platformApiLevelName)
-		{
-			switch (platformApiLevelName.Trim ()) {
-			//case "O":
-			//	return "26";
-			default:
-				return platformApiLevelName;
-			}
-		}
 
 		public static Dictionary<string, string> LoadAcwMapFile (string acwPath)
 		{

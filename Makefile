@@ -21,8 +21,15 @@ export MONO_OPTIONS
 endif
 
 include build-tools/scripts/msbuild.mk
+
+ifeq ($(USE_MSBUILD),1)
+_SLN_BUILD  = $(MSBUILD)
+else    # $(MSBUILD) != 1
+_SLN_BUILD  = MSBUILD="$(MSBUILD)" tools/scripts/xabuild
+endif   # $(USE_MSBUILD) == 1
+
 all::
-	$(MSBUILD) $(MSBUILD_FLAGS) $(SOLUTION)
+	$(_SLN_BUILD) $(MSBUILD_FLAGS) $(SOLUTION)
 
 all-tests::
 	MSBUILD="$(MSBUILD)" tools/scripts/xabuild $(MSBUILD_FLAGS) Xamarin.Android-Tests.sln
