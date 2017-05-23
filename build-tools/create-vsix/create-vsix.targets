@@ -121,4 +121,34 @@
         DestinationFiles="$(VsixPath)"
     />
   </Target>
+  <!--
+    This *replaces* `Microsoft.VSSDK.BuildTools.15.0.26201\build\Microsoft.VSSDK.BuildTools.targets`
+    -->
+  <PropertyGroup>
+    <_TasksAssembly Condition=" Exists('$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll') ">$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll</_TasksAssembly>
+    <_TasksAssembly Condition=" '$(_TasksAssembly)' == '' ">$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll</_TasksAssembly>
+  </PropertyGroup>
+  <UsingTask TaskName="SetVsSDKEnvironmentVariables"
+      TaskFactory="CodeTaskFactory"
+      AssemblyFile="$(_TasksAssembly)">
+    <ParameterGroup>
+      <ProjectDirectory Required="true" />
+    </ParameterGroup>
+    <Task>
+      <Code Type="Fragment" Language="cs">
+        var toolsPath = System.IO.Path.Combine(ProjectDirectory, "tools", "VSSDK", "bin");
+        System.Environment.SetEnvironmentVariable("VsSDKToolsPath",
+            System.IO.Path.GetFullPath(toolsPath),
+            EnvironmentVariableTarget.Process);
+        var schemaDir = System.IO.Path.Combine(ProjectDirectory, "tools", "VSSDK", "schemas");
+        System.Environment.SetEnvironmentVariable("VsSDKSchemaDir",
+            System.IO.Path.GetFullPath(schemaDir),
+            EnvironmentVariableTarget.Process);
+      </Code>
+    </Task>
+  </UsingTask>
+  <Target Name="SetVsSDKEnvironmentVariables"
+      BeforeTargets="GeneratePkgDef;VSCTCompile;VSIXNameProjectOutputGroup">
+    <SetVsSDKEnvironmentVariables ProjectDirectory="$(ThisPackageDirectory)" />
+  </Target>
 </Project>
