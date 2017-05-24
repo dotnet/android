@@ -60,22 +60,26 @@
   <Target Name="ReleaseAndroidTarget">
     <Adb
         Condition="'@(_FailedComponent)' != ''"
+        ContinueOnError="True"
         Arguments="$(_EmuTarget) logcat -d"
         ToolExe="$(AdbToolExe)"
         ToolPath="$(AdbToolPath)"
     />
     <Adb
         Condition=" '$(_EmuTarget)' != '' "
+        ContinueOnError="True"
         Arguments="$(_EmuTarget) emu kill"
         ToolExe="$(AdbToolExe)"
         ToolPath="$(AdbToolPath)"
     />
     <KillProcess
         Condition=" '$(_EmuTarget)' != '' "
+        ContinueOnError="True"
         ProcessId="$(_EmuPid)"
     />
     <Adb
         Arguments="kill-server"
+        ContinueOnError="True"
         ToolExe="$(AdbToolExe)"
         ToolPath="$(AdbToolPath)"
     />
