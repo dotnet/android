@@ -59,10 +59,11 @@ namespace Xamarin.Android.NUnitLite {
 					results.PutString ("nunit2-results-path", ToAdbPath (resultsFile));
 				}
 				Log.Info (TAG, "NUnit automated tests completed");
-				int passed = 0, skipped = 0, inconclusive = 0;
+				int run = 0, passed = 0, skipped = 0, inconclusive = 0;
 				foreach (TestResult result in AndroidRunner.Results.Values) {
 					if (result.HasChildren)
 						continue;
+					run           += 1;
 					inconclusive  += result.InconclusiveCount;
 					failed        += result.FailCount;
 					passed        += result.PassCount;
@@ -77,6 +78,7 @@ namespace Xamarin.Android.NUnitLite {
 						Log.Error (TAG, "  "); // makes it easier to read the failures in logcat output
 					}
 				}
+				results.PutInt ("run", run);
 				results.PutInt ("passed", passed);
 				results.PutInt ("failed", failed);
 				results.PutInt ("skipped", skipped);
