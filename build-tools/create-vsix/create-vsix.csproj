@@ -17,14 +17,19 @@
     <IncludeCopyLocalReferencesInVSIXContainer>False</IncludeCopyLocalReferencesInVSIXContainer>
     <IncludeDebugSymbolsInLocalVSIXDeployment>False</IncludeDebugSymbolsInLocalVSIXDeployment>
     <IncludeDebugSymbolsInVSIXContainer>False</IncludeDebugSymbolsInVSIXContainer>
-    <IsProductComponent Condition=" '$(IsProductComponent)' == '' ">False</IsProductComponent>
+    <IsExperimental Condition=" '$(IsExperimental)' == '' ">true</IsExperimental>
+    <IsProductComponent Condition=" '$(IsProductComponent)' == '' ">True</IsProductComponent>
     <_BuildVsix Condition=" '$(CreateVsixContainer)' == 'True' And Exists ('$(VsSDKInstall)') ">True</_BuildVsix>
     <_BuildVsix Condition=" '$(_BuildVsix)' == '' ">False</_BuildVsix>
+    <ExtensionInstallationFolder>Xamarin.Android.Sdk</ExtensionInstallationFolder>
     <OutputPath>bin\$(Configuration)</OutputPath>
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
   <ItemGroup>
-    <Content Include="Resources\AndroidSdkPackage.ico" />
+    <Content Include="Resources\AndroidSdkPackage.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
     <Content Include="Xamarin.Android.Sdk.pkgdef">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>True</IncludeInVSIX>

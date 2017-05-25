@@ -138,6 +138,7 @@ create-vsix:
 		MONO_IOMAP=all MONO_OPTIONS=--arch=64 msbuild $(MSBUILD_FLAGS) /p:Configuration=$(conf) /p:CreateVsixContainer=True \
 			build-tools/create-vsix/create-vsix.csproj \
 			$(if $(VSIX),"/p:VsixPath=$(VSIX)") \
+			$(if $(EXPERIMENTAL),/p:IsExperimental="$(EXPERIMENTAL)") \
 			$(if $(PRODUCT_COMPONENT),/p:IsProductComponent="$(PRODUCT_COMPONENT)") \
 			$(if $(PACKAGE_VERSION),/p:ProductVersion="$(PACKAGE_VERSION)") \
 			$(if $(PACKAGE_HEAD_BRANCH),/p:XAVersionBranch="$(PACKAGE_HEAD_BRANCH)") \
