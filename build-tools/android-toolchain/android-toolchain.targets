@@ -134,12 +134,12 @@
       Outputs="@(_AndroidMxeOutput)">
     <Exec
         Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win32:'))"
-        Command="make $(MAKEFLAGS) MXE_TARGETS=&quot;$(MingwCommandPrefix32)&quot; gcc cmake zlib pthreads dlfcn-win32 mman-win32 PREFIX=&quot;$(AndroidMxeFullPath)&quot;"
+        Command="make MXE_TARGETS=&quot;$(MingwCommandPrefix32)&quot; gcc cmake zlib pthreads dlfcn-win32 mman-win32 PREFIX=&quot;$(AndroidMxeFullPath)&quot;"
         WorkingDirectory="..\..\external\mxe"
     />
     <Exec
         Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))"
-        Command="make $(MAKEFLAGS) MXE_TARGETS=&quot;$(MingwCommandPrefix64)&quot; gcc cmake zlib pthreads dlfcn-win32 mman-win32 PREFIX=&quot;$(AndroidMxeFullPath)&quot;"
+        Command="make MXE_TARGETS=&quot;$(MingwCommandPrefix64)&quot; gcc cmake zlib pthreads dlfcn-win32 mman-win32 PREFIX=&quot;$(AndroidMxeFullPath)&quot;"
         WorkingDirectory="..\..\external\mxe"
     />
     <Touch Files="@(_AndroidMxeOutput)" />
