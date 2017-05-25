@@ -27,15 +27,14 @@
       Returns="@(MSBuild);@(ReferenceAssemblies)">
     <ItemGroup>
       <MSBuild Include="$(LibDir)xbuild\**\*.*" />
-      <MSBuild Remove="$(LibDir)xbuild\Xamarin\Android\lib\host-*\**\*.*" />
+      <MSBuild Remove="$(LibDir)xbuild\Xamarin\Android\lib\host-Darwin\**\*.*" />
+      <MSBuild Remove="$(LibDir)xbuild\Xamarin\Android\lib\host-Linux\**\*.*" />
       <MSBuild>
         <VSIXSubPath Condition=" '%(VSIXSubPath)' == '' ">%(RecursiveDir)</VSIXSubPath>
       </MSBuild>
-      <MSBuild Include="$(LibDir)xbuild\Xamarin\Android\lib\host-mxe-Win64\*.*" />
       <MSBuild>
         <VSIXSubPath Condition=" '%(VSIXSubPath)' == '' ">Xamarin/Android</VSIXSubPath>
       </MSBuild>
-      <MSBuild Include="$(LibDir)xbuild\Xamarin\Android\lib\host-win\*.*" />
       <MSBuild>
         <VSIXSubPath Condition=" '%(VSIXSubPath)' == '' ">Xamarin/Android/lib/host-win</VSIXSubPath>
       </MSBuild>
@@ -45,7 +44,6 @@
       </MSBuild>
       <MSBuild Include="..\..\bin\$(Configuration)\lib\mandroid\**\*.*" />
       <MSBuild Remove="..\..\bin\$(Configuration)\lib\mandroid\**\*.d.exe" />
-      <MSBuild Remove="..\..\bin\$(Condition)\lib\mandroid\host-Darwin\**\*.*" />
       <MSBuild>
         <VSIXSubPath Condition=" '%(VSIXSubPath)' == '' ">Xamarin/Android/%(RecursiveDir)</VSIXSubPath>
       </MSBuild>
@@ -81,15 +79,11 @@
       DependsOnTargets="GetXAVersionInfo"
       Returns="$(VsixVersion)">
     <PropertyGroup>
-      <VsixVersion>$(ProductVersion).$(_XACommitCount)</VsixVersion>
+      <VsixVersion>$(ProductVersion).$(XAVersionCommitCount)</VsixVersion>
     </PropertyGroup>
   </Target>
   <Target Name="GetIsExperimental"
       Returns="$(IsExperimental)">
-    <PropertyGroup>
-      <IsExperimental>true</IsExperimental>
-      <IsExperimental Condition=" '$(IsProductComponent)' == 'True' ">false</IsExperimental>
-    </PropertyGroup>
   </Target>
   <Target Name="_CreateDependencies"
       DependsOnTargets="GetXAVersionInfo"
