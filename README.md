@@ -41,7 +41,7 @@ Building Xamarin.Android requires:
 
 * [Mono 4.4 or later](#mono-sdk)
 * [The Java Development Kit (JDK)](#jdk)
-* [Autotools (`autoconf`, `automake`, etc.)](#autotools)
+* [Homebrew or some other package manager](#package-manager)
 * [`xxd`](#xxd)
 * [The Android SDK and NDK](#ndk)
 
@@ -61,7 +61,7 @@ to provide install instructions to obtain the missing dependency, e.g.:
 
 ## Mono MDK
 
-Mono 4.4 or later is required to build on [OS X][osx-mono] and Linux.
+Mono 4.4 or later is required to build on [macOS][osx-mono] and Linux.
 
 (This is because the build system uses the [XmlPeek][xmlpeek] task, which
 was first added in Mono 4.4.)
@@ -78,25 +78,40 @@ The Java Development Kit may be downloaded from the
 
 [download-jdk]: http://www.oracle.com/technetwork/java/javase/downloads/
 
-<a name="autotools" />
+<a name="package-manager" />
 
-## Autotools
+## Homebrew or Some Other Package Manager
 
-Autotools -- including `autoconf` and `automake` -- are required to build
-the Mono runtimes.
+On macOS, [Homebrew](https://brew.sh) is used in order to install
+build system dependencies, particularly when `$(AutoProvision)` is True.
 
-On OS X, autotools are distributed with [Mono.framework][osx-mono].
+The Homebrew `brew` command will be used to install `autoconf`, `automake`,
+`gettext`, and a slew of other utilities.
 
-If you run into issues regarding `autoconf` or `automake` try to install it with `brew` via:
+Linux developers should use their package manager of choice to install
+build system dependencies.
 
-    brew install automake
+### autopoint
+
+When e.g. the `$(AndroidSupportedHostJitAbis)` MSBuild property contains
+`mxe-Win64` or `mxe-Win32`, the [M cross environment (MXE)](http://mxe.cc)
+will be built via [`external/mxe`](external/mxe). The MXE build in turn
+requires that `autopoint` be located within `$PATH`.
+
+Homebrew 1.2 and later do not install `autopoint` into `$PATH` when the
+`gettext` package is installed, which means that MXE can't be built.
+To fix this error, force-link the `gettext` package:
+
+	brew link --force gettext
+
+This will place `autopoint` into `$PATH`, allowing MXE to be built.
 
 <a name="xxd" />
 
 ## `xxd`
 
 The [xxd][xxd] utility is used to build [src/monodroid](src/monodroid).
-It is installed by default on OS X. Linux users may need to separately
+It is installed by default on macOS. Linux users may need to separately
 install it; it may be part of the [**vim-common** package][sid-vim-common].
 
 [xxd]: http://linux.die.net/man/1/xxd
@@ -161,7 +176,7 @@ Overridable MSBuild properties include:
     The "host JIT" is used e.g. with the Xamarin Studio Designer, to render
     Xamarin.Android apps on the developer's machine.
     There can also be support for cross-compiling mono for a different
-    host, e.g. to build Windows `libmonosgen-2.0.dll` from OS X.
+    host, e.g. to build Windows `libmonosgen-2.0.dll` from macOS.
     Supported host values include:
 
     * `Darwin`
@@ -170,7 +185,7 @@ Overridable MSBuild properties include:
 
     The default value is `$(HostOS)`, where `$(HostOS)` is based on probing
     various environment variables and filesystem locations.
-    On OS X, the default would be `Darwin`.
+    On macOS, the default would be `Darwin`.
 
 * `$(AndroidSupportedTargetAotAbis)`: The Android ABIs for which to build the
     Mono AOT compilers. The AOT compilers are required in order to set the
@@ -216,7 +231,7 @@ Overridable MSBuild properties include:
 
 # Build
 
-At this point in time, building Xamarin.Android is only supported on OS X.
+At this point in time, building Xamarin.Android is only supported on macOS.
 We will work to improve this.
 
 To build Xamarin.Android, first prepare the project:
@@ -318,7 +333,7 @@ for later execution.
 The `bin\$(Configuration)` directory, e.g. `bin\Debug`, contains
 *redistributable* artifacts, such as tooling and runtimes. This directory
 acts as a *local installation prefix*, in which the directory structure
-mirrors that of the OS X Xamarin.Android.framework directory structure:
+mirrors that of the macOS Xamarin.Android.framework directory structure:
 
 * `bin\$(Configuration)\lib\xbuild\Xamarin\Android`: MSBuild-related support
     files and required runtimes used by the MSBuild tooling.
