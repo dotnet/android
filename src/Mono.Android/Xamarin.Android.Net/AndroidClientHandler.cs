@@ -220,6 +220,20 @@ namespace Xamarin.Android.Net
 		}
 
 		/// <summary>
+		/// Returns a custom host name verifier for a HTTPS connection. By default it returns <c>null</c> and
+		/// thus the connection uses whatever host name verification mechanism the operating system defaults to.
+		/// Override in your class to define custom host name verification behavior. The overriding class should
+		/// not set the <see cref="m:HttpsURLConnection.HostnameVerifier"/> property directly on the passed
+		/// <paramref name="connection"/>
+		/// </summary>
+		/// <returns>Instance of IHostnameVerifier to be used for this HTTPS connection</returns>
+		/// <param name="connection">HTTPS connection object.</param>
+		protected virtual IHostnameVerifier GetSSLHostnameVerifier (HttpsURLConnection connection)
+		{
+			return null;
+		}
+
+		/// <summary>
 		/// Creates, configures and processes an asynchronous request to the indicated resource.
 		/// </summary>
 		/// <returns>Task in which the request is executed</returns>
@@ -241,7 +255,19 @@ namespace Xamarin.Android.Net
 			};
 			while (true) {
 				URL java_url = new URL (EncodeUrl (redirectState.NewUrl));
-				URLConnection java_connection = java_url.OpenConnection ();
+				URLConnection java_connection;
+				if (UseProxy)
+					java_connection = java_url.OpenConnection ();
+				else
+					java_connection = java_url.OpenConnection (Java.Net.Proxy.NoProxy);
+
+				var httpsConnection = java_connection as HttpsURLConnection;
+				if (httpsConnection != null) {
+					IHostnameVerifier hnv = GetSSLHostnameVerifier (httpsConnection);
+					if (hnv != null)
+						httpsConnection.HostnameVerifier = hnv;
+				}
+
 				if (ConnectTimeout != TimeSpan.Zero)
 					java_connection.ConnectTimeout = checked ((int)ConnectTimeout.TotalMilliseconds);
 
@@ -729,10 +755,32 @@ namespace Xamarin.Android.Net
 			return httpConnection;
 		}
 
+		/// <summary>
+		/// Configure and return a custom <see cref="t:SSLSocketFactory"/> for the passed HTTPS <paramref
+		/// name="connection"/>. If the class overriding the method returns anything but the default
+		/// <c>null</c>, the SSL setup code will not call the <see cref="ConfigureKeyManagerFactory"/> nor the
+		/// <see cref="ConfigureTrustManagerFactory"/> methods used to configure a custom trust manager which is
+		/// then used to create a default socket factory.
+		/// Deriving class must perform all the key manager and trust manager configuration to ensure proper
+		/// operation of the returned socket factory.
+		/// </summary>
+		/// <returns>Instance of SSLSocketFactory ready to use with the HTTPS connection.</returns>
+		/// <param name="connection">HTTPS connection to return socket factory for</param>
+		protected virtual SSLSocketFactory ConfigureCustomSSLSocketFactory (HttpsURLConnection connection)
+		{
+			return null;
+		}
+
 		void SetupSSL (HttpsURLConnection httpsConnection)
 		{
 			if (httpsConnection == null)
 				return;
+
+			SSLSocketFactory socketFactory = ConfigureCustomSSLSocketFactory (httpsConnection);
+			if (socketFactory != null) {
+				httpsConnection.SSLSocketFactory = socketFactory;
+				return;
+			}
 
 			KeyStore keyStore = KeyStore.GetInstance (KeyStore.DefaultType);
 			keyStore.Load (null, null);
