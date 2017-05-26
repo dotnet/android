@@ -155,6 +155,39 @@ namespace Xamarin.Android.Net
 		/// <value>The trusted certs.</value>
 		public IList <Certificate> TrustedCerts { get; set; }
 
+		/// <summary>
+		/// <para>
+		/// Specifies the connection read timeout.
+		/// </para>
+		/// <para>
+		/// Since there's no way for the handler to access <see cref="t:System.Net.Http.HttpClient.Timeout"/>
+		/// directly, this property should be set by the calling party to the same desired value. Value of this
+		/// property will be passed to the native Java HTTP client, unless it is set to <see
+		/// cref="t:System.TimeSpan.Zero"/>
+		/// </para>
+		/// <para>
+		/// The default value is <c>100</c> seconds, the same as the documented value of <see
+		/// cref="t:System.Net.Http.HttpClient.Timeout"/>
+		/// </para>
+		/// </summary>
+		public TimeSpan ReadTimeout { get; set; } = TimeSpan.FromSeconds (100);
+
+		/// <summary>
+		/// <para>
+		/// Specifies the connect timeout
+		/// </para>
+		/// <para>
+		/// The native Java client supports two separate timeouts - one for reading from the connection (<see
+		/// cref="ReadTimeout"/>) and another for establishing the connection. This property sets the value of
+		/// the latter timeout, unless it is set to <see cref="t:System.TimeSpan.Zero"/> in which case the
+		/// native Java client defaults are used.
+		/// </para>
+		/// <para>
+		/// The default value is <c>120</c> seconds.
+		/// </para>
+		/// </summary>
+		public TimeSpan ConnectTimeout { get; set; } = TimeSpan.FromSeconds (120);
+
 		protected override void Dispose (bool disposing)
 		{
 			disposed  = true;
@@ -209,6 +242,12 @@ namespace Xamarin.Android.Net
 			while (true) {
 				URL java_url = new URL (EncodeUrl (redirectState.NewUrl));
 				URLConnection java_connection = java_url.OpenConnection ();
+				if (ConnectTimeout != TimeSpan.Zero)
+					java_connection.ConnectTimeout = checked ((int)ConnectTimeout.TotalMilliseconds);
+
+				if (ReadTimeout != TimeSpan.Zero)
+					java_connection.ReadTimeout = checked ((int)ReadTimeout.TotalMilliseconds);
+
 				HttpURLConnection httpConnection = await SetupRequestInternal (request, java_connection).ConfigureAwait (continueOnCapturedContext: false);;
 				HttpResponseMessage response = await ProcessRequest (request, java_url, httpConnection, cancellationToken, redirectState).ConfigureAwait (continueOnCapturedContext: false);;
 				if (response != null)
