@@ -287,6 +287,34 @@ namespace Xamarin.Android.Net
 			}, ct);
 		}
 
+		protected virtual async Task WriteRequestContentToOutput (HttpRequestMessage request, HttpURLConnection httpConnection, CancellationToken cancellationToken)
+		{
+			using (var stream = await request.Content.ReadAsStreamAsync ().ConfigureAwait (false)) {
+				await stream.CopyToAsync(httpConnection.OutputStream, 4096, cancellationToken).ConfigureAwait(false);
+
+				//
+				// Rewind the stream to beginning in case the HttpContent implementation
+				// will be accessed again (e.g. after redirect) and it keeps its stream
+				// open behind the scenes instead of recreating it on the next call to
+				// ReadAsStreamAsync. If we don't rewind it, the ReadAsStreamAsync
+				// call above will throw an exception as we'd be attempting to read an
+				// already "closed" stream (that is one whose Position is set to its
+				// end).
+				//
+				// This is not a perfect solution since the HttpContent may do weird
+				// things in its implementation, but it's better than copying the
+				// content into a buffer since we have no way of knowing how the data is
+				// read or generated and also we don't want to keep potentially large
+				// amounts of data in memory (which would happen if we read the content
+				// into a byte[] buffer and kept it cached for re-use on redirect).
+				//
+				// See https://bugzilla.xamarin.com/show_bug.cgi?id=55477
+				//
+				if (stream.CanSeek)
+					stream.Seek (0, SeekOrigin.Begin);
+			}
+		}
+
 		async Task <HttpResponseMessage> DoProcessRequest (HttpRequestMessage request, URL javaUrl, HttpURLConnection httpConnection, CancellationToken cancellationToken, RequestRedirectionState redirectState)
 		{
 			if (Logger.LogNet)
@@ -333,12 +361,8 @@ namespace Xamarin.Android.Net
 					}, TaskScheduler.Default);
 				}, useSynchronizationContext: false);
 
-				if (httpConnection.DoOutput) {
-					using (var stream = await request.Content.ReadAsStreamAsync ().ConfigureAwait (false)) {
-						await stream.CopyToAsync(httpConnection.OutputStream, 4096, cancellationToken)
-							.ConfigureAwait(false);
-					}
-				}
+				if (httpConnection.DoOutput)
+					await WriteRequestContentToOutput (request, httpConnection, cancellationToken);
 
 				statusCode = await Task.Run (() => (HttpStatusCode)httpConnection.ResponseCode).ConfigureAwait (false);
 				connectionUri = new Uri (httpConnection.URL.ToString ());
