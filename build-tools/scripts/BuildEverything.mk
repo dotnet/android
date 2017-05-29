@@ -42,10 +42,15 @@ ALL_JIT_ABIS  = \
 ALL_HOST_ABIS = \
 	$(shell uname)
 
+ALL_AOT_ABIS = \
+	armeabi \
+	arm64 \
+	x86 \
+	x86_64 \
 #
-# On Linux we no disable building of all the cross-compiler/AOT environments.
-# This is because CppSharp as used in Mono to generate C headers with
-# runtime struct offsets doesn't work on Linux in the version used by Mono
+# On Linux we now disable building of all the Windows cross-compiler/AOT environments.
+# This is because Linux builds don't use mxe and the system-provided mingw environment
+# is missing a handful of libraries required by libmonodroid and libzip-windows
 #
 # When/if CppSharp is fixed to work on Linux we can re-enable the code below
 #
@@ -54,14 +59,10 @@ ALL_HOST_ABIS += \
 	mxe-Win32 \
 	mxe-Win64
 
-ALL_AOT_ABIS = \
-	armeabi \
+ALL_AOT_ABIS += \
 	win-armeabi \
-	arm64 \
 	win-arm64 \
-	x86 \
 	win-x86 \
-	x86_64 \
 	win-x86_64
 endif
 

@@ -120,6 +120,7 @@
       DependsOnTargets="_GetBuildHostRuntimes"
       Inputs="@(_CFile);@(_UnixCFile)"
       Outputs="@(_HostRuntime->'$(OutputPath)%(OutputDirectory)\libmono-android.debug.%(NativeLibraryExtension)')">
+    <Message Text="Building host runtime %(_HostRuntime.Identity) in $(OutputPath)%(_HostRuntime.OutputDirectory)"/>
     <MakeDir Directories="$(OutputPath)%(_HostRuntime.OutputDirectory)" />
     <Exec
         Command="%(_HostRuntime.Cc) -o &quot;$(OutputPath)%(_HostRuntime.OutputDirectory)\libmono-android.debug.%(_HostRuntime.NativeLibraryExtension)&quot; $(_DebugCFlags) %(_HostRuntime.CFlags) @(_CFile->'%(Identity)', ' ') %(_HostRuntime.ExtraSource) %(_HostRuntime.LdFlags)"

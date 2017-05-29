@@ -484,6 +484,7 @@
           Inputs="$(MonoSourceFullPath)\configure"
           Outputs="$(IntermediateOutputPath)\%(_MonoCrossRuntime.Identity)\Makefile;$(IntermediateOutputPath)\%(_MonoCrossRuntime.Identity)\.stamp"
           Condition=" '@(_MonoCrossRuntime)' != '' ">
+    <Message Text="Configuring %(_MonoCrossRuntime.Identity) in $(IntermediateOutputPath)\%(_MonoCrossRuntime.Identity)"/>
     <MakeDir Directories="$(IntermediateOutputPath)\%(_MonoCrossRuntime.Identity)" />
     <Exec
         Command="%(_MonoCrossRuntime.ConfigureEnvironment) $(MonoSourceFullPath)\configure LDFLAGS=&quot;%(_MonoCrossRuntime.LdFlags)&quot; CFLAGS=&quot;%(_MonoCrossRuntime.CFlags)&quot; CXXFLAGS=&quot;%(_MonoCrossRuntime.CxxFlags)&quot; CC=&quot;%(_MonoCrossRuntime.Cc)&quot; CXX=&quot;%(_MonoCrossRuntime.Cxx)&quot; CPP=&quot;%(_MonoCrossRuntime.Cpp)&quot; CXXCPP=&quot;%(_MonoCrossRuntime.CxxCpp)&quot; LD=&quot;%(_MonoCrossRuntime.Ld)&quot; AR=&quot;%(_MonoCrossRuntime.Ar)&quot; AS=&quot;%(_MonoCrossRuntime.As)&quot; RANLIB=&quot;%(_MonoCrossRuntime.RanLib)&quot; STRIP=&quot;%(_MonoCrossRuntime.Strip)&quot; DLLTOOL=&quot;%(_MonoCrossRuntime.DllTool)&quot; OBJDUMP=&quot;%(_MonoCrossRuntime.Objdump)&quot; --cache-file=..\%(_MonoCrossRuntime.Identity).config.cache %(_MonoCrossRuntime.ConfigureFlags)"
@@ -499,7 +500,7 @@
   <Target Name="_GenerateCrossOffsetHeaderFiles"
       Inputs="$(MonoSourceFullPath)\configure"
       Outputs="$(IntermediateOutputPath)\%(_MonoCrossRuntime.Identity)\%(_MonoCrossRuntime.TargetAbi).h"
-      Condition=" '$(HostOS)' != 'Linux' And '@(_MonoCrossRuntime)' != '' ">
+      Condition=" '@(_MonoCrossRuntime)' != '' ">
     <Exec
         Command="make $(_AotOffsetsDumperName)"
         WorkingDirectory="$(_AotOffsetsDumperSourceDir)" 

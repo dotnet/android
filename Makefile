@@ -72,6 +72,7 @@ UBUNTU_DEPS          = \
 	gcc-mingw-w64 \
 	git \
 	libtool \
+	libz-mingw-w64-dev \
 	libzip4 \
 	linux-libc-dev \
 	make \
