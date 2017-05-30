@@ -13,14 +13,14 @@
   </PropertyGroup>
 
   <Target Name="AcquireAndroidTarget">
-    <CheckAdbTarget
+    <Xamarin.Android.Tools.BootstrapTasks.CheckAdbTarget
         Condition=" '$(RequireNewEmulator)' != 'True' "
         AdbTarget="$(AdbTarget)"
         ToolExe="$(AdbToolExe)"
         ToolPath="$(AdbToolPath)">
       <Output TaskParameter="AdbTarget"     PropertyName="_AdbTarget" />
       <Output TaskParameter="IsValidTarget" PropertyName="_ValidAdbTarget"  />
-    </CheckAdbTarget>
+    </Xamarin.Android.Tools.BootstrapTasks.CheckAdbTarget>
     <CreateAndroidEmulator
         Condition=" '$(_ValidAdbTarget)' != 'True' "
         AndroidAbi="x86"
@@ -45,7 +45,7 @@
         Condition=" '$(_ValidAdbTarget)' != 'True' "
         Command="sleep 10"
     />
-    <Adb
+    <Xamarin.Android.Tools.BootstrapTasks.Adb
         Condition=" '$(_ValidAdbTarget)' != 'True' "
         Arguments="$(_AdbTarget) wait-for-device"
         ToolExe="$(AdbToolExe)"
@@ -58,14 +58,14 @@
   </Target>
 
   <Target Name="ReleaseAndroidTarget">
-    <Adb
+    <Xamarin.Android.Tools.BootstrapTasks.Adb
         Condition="'@(_FailedComponent)' != ''"
         ContinueOnError="True"
         Arguments="$(_EmuTarget) logcat -d"
         ToolExe="$(AdbToolExe)"
         ToolPath="$(AdbToolPath)"
     />
-    <Adb
+    <Xamarin.Android.Tools.BootstrapTasks.Adb
         Condition=" '$(_EmuTarget)' != '' "
         ContinueOnError="True"
         Arguments="$(_EmuTarget) emu kill"
@@ -77,7 +77,7 @@
         ContinueOnError="True"
         ProcessId="$(_EmuPid)"
     />
-    <Adb
+    <Xamarin.Android.Tools.BootstrapTasks.Adb
         Arguments="kill-server"
         ContinueOnError="True"
         ToolExe="$(AdbToolExe)"
@@ -101,7 +101,7 @@
 
   <Target Name="DeployUnitTestApks"
       Condition=" '@(UnitTestApk)' != '' ">
-    <Adb
+    <Xamarin.Android.Tools.BootstrapTasks.Adb
         Arguments="$(_AdbTarget) $(AdbOptions) install &quot;%(UnitTestApk.Identity)&quot;"
         ToolExe="$(AdbToolExe)"
         ToolPath="$(AdbToolPath)"
@@ -110,7 +110,7 @@
 
   <Target Name="UndeployUnitTestApks"
       Condition=" '@(UnitTestApk)' != '' ">
-    <Adb
+    <Xamarin.Android.Tools.BootstrapTasks.Adb
         Arguments="$(_AdbTarget) $(AdbOptions) uninstall &quot;%(UnitTestApk.Package)&quot;"
         ToolExe="$(AdbToolExe)"
         ToolPath="$(AdbToolPath)"
