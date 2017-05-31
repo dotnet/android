@@ -18,19 +18,19 @@
         WorkingDirectory="$(XamarinAndroidSourcePath)"
         ToolPath="$(GitToolPath)"
         ToolExe="$(GitToolExe)">
-      <Output TaskParameter="CommitCount"             PropertyName="XAVersionCommitCount" />
+      <Output TaskParameter="CommitCount"             PropertyName="XAVersionCommitCount"   Condition=" '$(XAVersionCommitCount)' == '' " />
     </GitCommitsInRange>
     <GitCommitHash
         WorkingDirectory="$(XamarinAndroidSourcePath)"
         ToolPath="$(GitToolPath)"
         ToolExe="$(GitToolExe)">
-      <Output TaskParameter="AbbreviatedCommitHash"   PropertyName="XAVersionHash" />
+      <Output TaskParameter="AbbreviatedCommitHash"   PropertyName="XAVersionHash"          Condition=" '$(XAVersionHash)' == '' " />
     </GitCommitHash>
     <GitBranch
         WorkingDirectory="$(XamarinAndroidSourcePath)"
         ToolPath="$(GitToolPath)"
         ToolExe="$(GitToolExe)">
-      <Output TaskParameter="Branch"                  PropertyName="XAVersionBranch" />
+      <Output TaskParameter="Branch"                  PropertyName="XAVersionBranch"        Condition=" '$(XAVersionBranch)' == '' " />
     </GitBranch>
   </Target>
 </Project>
