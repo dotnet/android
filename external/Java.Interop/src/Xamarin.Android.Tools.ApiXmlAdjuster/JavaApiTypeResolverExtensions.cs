@@ -104,23 +104,23 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 			f.ResolvedType = f.GetApi ().Parse (f.TypeGeneric, f.Parent.TypeParameters);
 		}
 		
-		static void ResolveMethodBase (this JavaMethodBase m, JavaTypeParameters methodTypeParameters)
+		static void ResolveMethodBase (this JavaMethodBase m)
 		{
+			if (m.TypeParameters != null)
+				m.TypeParameters.Resolve (m.GetApi (), m.TypeParameters);
 			foreach (var p in m.Parameters)
-				p.ResolvedType = m.GetApi ().Parse (p.Type, m.Parent.TypeParameters, methodTypeParameters);
+				p.ResolvedType = m.GetApi ().Parse (p.Type, m.Parent.TypeParameters, m.TypeParameters);
 		}
 		
 		public static void Resolve (this JavaMethod m)
 		{
-			if (m.TypeParameters != null)
-				m.TypeParameters.Resolve (m.GetApi (), m.TypeParameters);
-			m.ResolveMethodBase (m.TypeParameters);
+			m.ResolveMethodBase ();
 			m.ResolvedReturnType = m.GetApi ().Parse (m.Return, m.Parent.TypeParameters, m.TypeParameters);
 		}
 		
 		public static void Resolve (this JavaConstructor c)
 		{
-			c.ResolveMethodBase (null);
+			c.ResolveMethodBase ();
 		}
 		
 		static void Resolve (this JavaTypeParameters tp, JavaApi api, params JavaTypeParameters [] additionalTypeParameters)
