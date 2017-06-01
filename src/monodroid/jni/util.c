@@ -6,7 +6,7 @@
 #ifndef WINDOWS
 #include <sys/socket.h>
 #else
-#include <Winsock2.h>
+#include <winsock2.h>
 #endif
 #include <sys/stat.h>
 #include <sys/types.h>

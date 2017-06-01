@@ -152,7 +152,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <_MonoRuntime Include="host-mxe-Win64" Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))">
+    <_MonoRuntime Include="host-mxe-Win64" Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:')) Or $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':linux-Win64:'))">
       <Ar>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-ar</Ar>
       <As>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-as</As>
       <Cc>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-gcc</Cc>
@@ -168,6 +168,29 @@
       <RanLib>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-ranlib</RanLib>
       <Strip>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-strip</Strip>
       <ConfigureFlags>PATH="$PATH:$(AndroidMxeFullPath)\bin" --host=$(MingwCommandPrefix64) --target=$(MingwCommandPrefix64) --disable-boehm --enable-mcs-build=no --enable-nls=no --enable-maintainer-mode --with-monodroid --disable-llvm ac_cv_header_zlib_h=no ac_cv_search_dlopen=no</ConfigureFlags>
+      <NativeLibraryExtension>dll</NativeLibraryExtension>
+      <OutputRuntimeFilename>libmonosgen-2.0</OutputRuntimeFilename>
+      <OutputProfilerFilename></OutputProfilerFilename>
+      <OutputMonoBtlsFilename></OutputMonoBtlsFilename>
+      <OutputMonoPosixHelperFilename>libMonoPosixHelper</OutputMonoPosixHelperFilename>
+      <DoBuild>True</DoBuild>
+    </_MonoRuntime>
+    <_MonoRuntime Include="host-mxe-Win32" Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':linux-Win32:'))">
+      <Ar>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-ar</Ar>
+      <As>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-as</As>
+      <Cc>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-gcc</Cc>
+      <Cpp></Cpp>
+      <CFlags>$(_HostWin32CFlags)</CFlags>
+      <Cxx>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-g++</Cxx>
+      <CxxFlags>$(_HostWin32CFlags)</CxxFlags>
+      <CxxCpp></CxxCpp>
+      <DllTool>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-dlltool</DllTool>
+      <Ld>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-ld</Ld>
+      <LdFlags></LdFlags>
+      <Objdump>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-objdump</Objdump>
+      <RanLib>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-ranlib</RanLib>
+      <Strip>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-strip</Strip>
+      <ConfigureFlags>PATH="$PATH:$(AndroidMxeFullPath)\bin" --host=$(MingwCommandPrefix32) --target=$(MingwCommandPrefix32) --disable-boehm --enable-mcs-build=no --enable-nls=no --enable-maintainer-mode --with-monodroid --disable-llvm ac_cv_header_zlib_h=no ac_cv_search_dlopen=no</ConfigureFlags>
       <NativeLibraryExtension>dll</NativeLibraryExtension>
       <OutputRuntimeFilename>libmonosgen-2.0</OutputRuntimeFilename>
       <OutputProfilerFilename></OutputProfilerFilename>
@@ -251,7 +274,7 @@
       <InstallPath>bin/</InstallPath>
     </_LlvmRuntime>
 
-    <_LlvmRuntime Include="llvmwin32" Condition=" '$(_LlvmNeeded)' != '' And $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win32:')) ">
+    <_LlvmRuntime Include="llvmwin32" Condition=" '$(_LlvmNeeded)' != '' And ($(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win32:')) Or $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':linux-Win32:'))) ">
       <BuildDir>build-win32</BuildDir>
       <Prefix>$(_LlvmPrefixWin32)</Prefix>
       <ConfigureFlags>$(_LlvmConfigureFlagsWin32)</ConfigureFlags>
@@ -262,7 +285,7 @@
       <InstallPath>lib/mandroid/</InstallPath>
     </_LlvmRuntime>
 
-    <_LlvmRuntime Include="llvmwin64" Condition=" '$(_LlvmNeeded)' != '' And $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:')) ">
+    <_LlvmRuntime Include="llvmwin64" Condition=" '$(_LlvmNeeded)' != '' And ($(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:')) Or $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':linux-Win64:'))) ">
       <BuildDir>build-win64</BuildDir>
       <Prefix>$(_LlvmPrefixWin64)</Prefix>
       <ConfigureFlags>$(_LlvmConfigureFlagsWin64)</ConfigureFlags>
@@ -280,9 +303,9 @@
       <JitArch>armeabi</JitArch>
       <Ar>ar</Ar>
       <As>as</As>
-      <Cc>$(HostCc)</Cc>
+      <Cc>$(HostCc32)</Cc>
       <CFlags>$(_CrossCFlags)</CFlags>
-      <Cxx>$(HostCxx)</Cxx>
+      <Cxx>$(HostCxx32)</Cxx>
       <CxxCpp>cpp</CxxCpp>
       <CxxFlags>$(_CrossCXXFlags)</CxxFlags>
       <Ld>ld</Ld>
