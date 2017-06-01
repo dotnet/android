@@ -25,7 +25,7 @@
     <_MingwTriplet64>x86_64-w64-mingw32$(_MingwPrefixTail)</_MingwTriplet64>
 
     <!-- LLVM -->
-    <_LlvmNeeded Condition=" '$(AndroidSupportedTargetAotAbis)' != '' ">yes</_LlvmNeeded>
+    <_LlvmNeeded Condition=" '$(AndroidBuildCross)' != 'false' And '$(AndroidSupportedTargetAotAbis)' != '' ">yes</_LlvmNeeded>
     <_LlvmCanBuild64 Condition=" '$(HostBits)' == '64' ">yes</_LlvmCanBuild64>
     <_LlvmOutputDirTop>$(_CrossOutputDirTop)\llvm</_LlvmOutputDirTop>
 
