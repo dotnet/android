@@ -89,11 +89,12 @@ namespace Xamarin.Android.Tasks
 
 		void GenerateMainDexListBuilderCommands(CommandLineBuilder cmd)
 		{
+			var enclosingChar = OS.IsWindows ? "\"" : string.Empty;
 			var jars = JavaLibraries.Select (i => i.ItemSpec).Concat (new string [] { ClassesOutputDirectory });
 			cmd.AppendSwitchIfNotNull ("-Djava.ext.dirs=", Path.Combine (AndroidSdkBuildToolsPath, "lib"));
 			cmd.AppendSwitch ("com.android.multidex.MainDexListBuilder");
-			cmd.AppendSwitch (tempJar);
-			cmd.AppendSwitchUnquotedIfNotNull ("", "\"" + string.Join ($"{Path.PathSeparator}", jars) + "\"");
+			cmd.AppendSwitch ($"{enclosingChar}{tempJar}{enclosingChar}");
+			cmd.AppendSwitchUnquotedIfNotNull ("", $"{enclosingChar}" + string.Join ($"{Path.PathSeparator}", jars) + $"{enclosingChar}");
 			writeOutputToKeepFile = true;
 		}
 
