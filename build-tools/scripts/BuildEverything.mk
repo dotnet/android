@@ -64,6 +64,8 @@ ALL_AOT_ABIS += \
 	win-arm64 \
 	win-x86 \
 	win-x86_64
+
+MONO_OPTIONS += --arch=64
 endif
 
 _space :=
@@ -136,7 +138,7 @@ _BUNDLE_ZIPS_EXCLUDE  = \
 
 create-vsix:
 	$(foreach conf, $(CONFIGURATIONS), \
-		MONO_IOMAP=all MONO_OPTIONS=--arch=64 msbuild $(MSBUILD_FLAGS) /p:Configuration=$(conf) /p:CreateVsixContainer=True \
+		MONO_IOMAP=all MONO_OPTIONS="$(MONO_OPTIONS)" msbuild $(MSBUILD_FLAGS) /p:Configuration=$(conf) /p:CreateVsixContainer=True \
 			build-tools/create-vsix/create-vsix.csproj \
 			$(if $(VSIX),"/p:VsixPath=$(VSIX)") \
 			$(if $(EXPERIMENTAL),/p:IsExperimental="$(EXPERIMENTAL)") \
