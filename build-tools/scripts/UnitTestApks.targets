@@ -51,6 +51,12 @@
         ToolExe="$(AdbToolExe)"
         ToolPath="$(AdbToolPath)"
     />
+    <Xamarin.Android.Tools.BootstrapTasks.Adb
+        Condition=" '$(_ValidAdbTarget)' != 'True' "
+        Arguments="$(_EmuTarget) shell 'counter=0; while [ $counter -lt 60 ] &amp;&amp; [ &quot;`getprop sys.boot_completed`&quot; != &quot;1&quot; ]; do echo Waiting for device to fully boot; sleep 1; let &quot;counter++&quot;; done'"
+        ToolExe="$(AdbToolExe)"
+        ToolPath="$(AdbToolPath)"
+    />
     <Message
         Condition=" '$(_EmuTarget)' != '' "
         Text="Launched Android emulator; `adb` target: '$(_AdbTarget)'"
