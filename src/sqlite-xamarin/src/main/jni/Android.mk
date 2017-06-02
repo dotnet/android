@@ -45,13 +45,13 @@ LOCAL_SRC_FILES := $(common_src_files)
 
 LOCAL_CFLAGS += $(device_sqlite_flags)
 
-LOCAL_SHARED_LIBRARIES := libdl
+LOCAL_EXPORT_LDLIBS := -ldl
 
 LOCAL_MODULE:= libsqlite3_xamarin
 
 LOCAL_C_INCLUDES += $(call include-path-for, system-core)/cutils
 
-LOCAL_SHARED_LIBRARIES += liblog
+LOCAL_EXPORT_LDLIBS += -llog
 
 # include android specific methods
 #LOCAL_WHOLE_STATIC_LIBRARIES := libsqlite3_xamarin
