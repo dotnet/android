@@ -477,6 +477,10 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   </BuildDependsOn>
 </PropertyGroup>
 
+<PropertyGroup >
+  <CoreCompileDependsOn>UpdateGeneratedFiles;$(CoreCompileDependsOn)</CoreCompileDependsOn>
+</PropertyGroup>
+
 <PropertyGroup>
     <!-- no need to add those wear resources into C#, hence this order... -->
 	<CoreResolveReferencesDependsOn>
@@ -517,6 +521,11 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<CreateProperty Value="None" Condition="'$(AndroidLinkMode)' == 'SdkOnly' And '$(AndroidUseSharedRuntime)' == 'true'">
 		<Output TaskParameter="Value" PropertyName="AndroidLinkMode" />
 	</CreateProperty>
+</Target>
+
+<Target Name="UpdateGeneratedFiles"
+		DependsOnTargets="_RemoveLegacyDesigner;UpdateAndroidResources"
+	>
 </Target>
 
 <Target Name="_RemoveLegacyDesigner" Condition="'$(AndroidUseIntermediateDesignerFile)' == 'True'">

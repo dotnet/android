@@ -5,5 +5,6 @@
 		<DependsOnSystemRuntime Condition=" '$(DependsOnSystemRuntime)' == '' ">true</DependsOnSystemRuntime>
 		<CopyNuGetImplementations Condition=" '$(CopyNuGetImplementations)' == ''">true</CopyNuGetImplementations>
 		<YieldDuringToolExecution Condition="'$(YieldDuringToolExecution)' == ''">true</YieldDuringToolExecution>
+		<AndroidResourceGeneratorTargetName>UpdateGeneratedFiles</AndroidResourceGeneratorTargetName>
 	</PropertyGroup>
 </Project>
