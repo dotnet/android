@@ -1322,11 +1322,16 @@
 
   <!-- Android O (API Level 26) -->
 
-  <attr path="/api/package[@name='android.view.autofill']" name="managedName">Android.Views.AutoFill</attr>
-  <attr path="/api/package[@name='android.view.textclassifier']" name="managedName">Android.Views.TextClassifiers</attr>
-  <attr path="/api/package[@name='java.nio.file']" name="managedName">Java.Nio.FileNio</attr>
-  <attr path="/api/package[@name='java.nio.file.attribute']" name="managedName">Java.Nio.FileNio.Attributes</attr>
-  <attr path="/api/package[@name='java.nio.file.spi']" name="managedName">Java.Nio.FileNio.Spi</attr>
+  <attr path="/api/package[@name='android.view.autofill']" name="managedName" api-since="26">Android.Views.AutoFill</attr>
+  <attr path="/api/package[@name='android.view.textclassifier']" name="managedName" api-since="26">Android.Views.TextClassifiers</attr>
+  <attr path="/api/package[@name='java.nio.file']" name="managedName" api-since="26">Java.Nio.FileNio</attr>
+  <attr path="/api/package[@name='java.nio.file.attribute']" name="managedName" api-since="26">Java.Nio.FileNio.Attributes</attr>
+  <attr path="/api/package[@name='java.nio.file.spi']" name="managedName" api-since="26">Java.Nio.FileNio.Spi</attr>
+
+  <!-- This is really annoying. We had introduced `AudioFocusRequest` enum type
+  in very early age of this product, and then Google introduced name conflicts.
+  (It's all Xamarin's fault to have introduced enumification, after all. -->
+  <attr path="/api/package[@name='android.media']/class[@name='AudioFocusRequest']" name="managedName" api-since="26">AudioFocusRequestClass</attr>
 
   <!-- FIXME: fix build and enable these packages -->
   <remove-node path="/api/package[@name='java.time']" api-since="26" />

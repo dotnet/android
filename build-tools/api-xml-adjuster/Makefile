@@ -49,10 +49,12 @@ clean-api-xml:
 
 $(CLASS_PARSE_XML): $(CLASS_PARSE) $(ANDROID_JAR) $(DOCS_DIR_CUR_LEVEL)
 	mkdir -p $(CLASS_PARSE_XML_DIR)
-	if [ $(LEVEL) -ge 24 ]; then \
+	if [ '$(LEVEL)' -eq 'O' ]; then \
 		$(RUN_CLASS_PARSE) $(ANDROID_JAR) -docspath=$(DOCS_DIR_CUR_LEVEL)/reference --docstype=droiddoc2 > $(CLASS_PARSE_XML) || rm -f $(CLASS_PARSE_XML) ;\
-	else \
+	elif [ $(LEVEL) -le 25 ]; then \
 		$(RUN_CLASS_PARSE) $(ANDROID_JAR) -docspath=$(DOCS_DIR_CUR_LEVEL)/reference --docstype=droiddoc > $(CLASS_PARSE_XML) || rm -f $(CLASS_PARSE_XML) ;\
+	else \
+		$(RUN_CLASS_PARSE) $(ANDROID_JAR) -docspath=$(DOCS_DIR_CUR_LEVEL)/reference --docstype=droiddoc2 > $(CLASS_PARSE_XML) || rm -f $(CLASS_PARSE_XML) ;\
 	fi
 
 $(ANALYZED_XML): $(API_XML_TOOL) $(CLASS_PARSE_XML)
@@ -71,7 +73,7 @@ DOCS_DIR_CUR_LEVEL: $(DOCS_DIR_CUR_LEVEL)
 
 define extract-docs
 	mkdir -p $(DOCS_DIR)
-	unzip -d $(DOCS_DIR) $1 || exit 1
+	unzip $1 || exit 1
 	mv $2 $@
 endef
 
@@ -82,7 +84,7 @@ docs-25_web.zip:
 	curl -L https://dl.dropboxusercontent.com/u/493047/2016/docs-25-web.zip > $@ || exit 1
 
 docs-O_web.zip:
-	curl -L https://www.dropbox.com/s/3xr11fpd08xpolg/docs-O-web.zip?dl=0 > $@ || exit 1
+	curl -L https://www.dropbox.com/s/35sty6h7oszc488/docs-api-O.zip?dl=0 > $@ || exit 1
 
 # API level 10 is Android v2.3.3; it's API level 9 (Android v2.3) with a few
 # bugfixes which don't impact the documentation.
@@ -123,6 +125,6 @@ $(DOCS_DIR)/docs-api-24: docs-24_r01.zip
 $(DOCS_DIR)/docs-api-25: docs-25_web.zip	# Google hadn't published docs component yet!
 	$(call extract-docs,$<,docs)
 
-docs-api-O: docs-O_web.zip	# No preview docs yet
+$(DOCS_DIR)/docs-api-O: docs-O_web.zip	# No preview docs yet
 	$(call extract-docs,$<,docs)
 
