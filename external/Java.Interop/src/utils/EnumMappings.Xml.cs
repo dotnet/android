@@ -2,7 +2,8 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Xml;
-
+using System.Xml.Linq;
+using System.Xml.XPath;
 using Xamarin.Android.Tools;
 
 namespace MonoDroid.Generation {
@@ -23,19 +24,18 @@ namespace MonoDroid.Generation {
 				return null;
 
 			var sw = new StringWriter ();
-			var doc = new XmlDocument ();
-			doc.Load (file);
+			var doc = XDocument.Load (file, LoadOptions.SetBaseUri | LoadOptions.SetLineInfo);
 
-			foreach (XmlElement e in doc.SelectNodes ("/enum-field-mappings/mapping")) {
+			foreach (var e in doc.XPathSelectElements ("/enum-field-mappings/mapping")) {
 				string enu = GetMandatoryAttribute (e, "clr-enum-type");
-				string jni_type = e.HasAttribute ("jni-class")
+				string jni_type = e.Attribute ("jni-class") != null
 					? e.XGetAttribute ("jni-class")
-					: e.HasAttribute ("jni-interface")
+					: e.Attribute ("jni-interface") != null
 						? "I:" + e.XGetAttribute ("jni-interface")
 						: GetMandatoryAttribute (e, "jni-class or jni-interface");
-				bool bitfield = e.HasAttribute ("bitfield") && e.XGetAttribute ("bitfield") == "true";
-				foreach (XmlElement m in e.SelectNodes ("field")) {
-					string verstr = m.HasAttribute ("api-level")
+				bool bitfield = e.Attribute ("bitfield") != null && e.XGetAttribute ("bitfield") == "true";
+				foreach (var m in e.XPathSelectElements ("field")) {
+					string verstr = m.Attribute ("api-level") != null
 						? m.XGetAttribute ("api-level")
 						: "0";
 					string member   = GetMandatoryAttribute (m, "clr-name");
@@ -48,10 +48,10 @@ namespace MonoDroid.Generation {
 			return new StringReader (sw.ToString ());
 		}
 
-		static string GetMandatoryAttribute (XmlElement e, string name)
+		static string GetMandatoryAttribute (XElement e, string name)
 		{
-			if (!e.HasAttribute (name)) {
-				throw new InvalidOperationException (String.Format ("Mandatory attribute '{0}' is missing on a mapping element: {1}", name, e.OuterXml));
+			if (e.Attribute (name) == null) {
+				throw new InvalidOperationException (String.Format ("Mandatory attribute '{0}' is missing on a mapping element: {1}", name, e.ToString ()));
 			}
 			return e.XGetAttribute (name);
 		}

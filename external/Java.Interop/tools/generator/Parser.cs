@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml;
-
+using System.Xml.Linq;
 using Xamarin.Android.Tools;
 
 namespace MonoDroid.Generation {
@@ -12,16 +12,15 @@ namespace MonoDroid.Generation {
 
 		public string ApiSource { get; private set; }
 
-		public XmlDocument Load (string filename)
+		public XDocument Load (string filename)
 		{
-			XmlDocument doc = new XmlDocument ();
+			XDocument doc = null;
 
 			try {
-				doc.Load (filename);
+				doc = XDocument.Load (filename, LoadOptions.SetBaseUri | LoadOptions.SetLineInfo);
 			} catch (XmlException e) {
 				Report.Verbose (0, "Exception: {0}", e);
 				Report.Warning (0, Report.WarningParser + 0, e, "Invalid XML file '{0}': {1}", filename, e.Message);
-				doc = null;
 			}
 
 			return doc;
@@ -39,7 +38,7 @@ namespace MonoDroid.Generation {
 			}
 		}
 
-		public List<GenBase> Parse (XmlDocument doc, IEnumerable<string> fixups, string apiLevel, int productVersion)
+		public List<GenBase> Parse (XDocument doc, IEnumerable<string> fixups, string apiLevel, int productVersion)
 		{
 			if (doc == null)
 				return null;
@@ -53,21 +52,17 @@ namespace MonoDroid.Generation {
 				return null;
 			}
 
-			XmlElement root = doc.DocumentElement;
+			var root = doc.Root;
 
-			if ((root == null) || !root.HasChildNodes) {
+			if ((root == null) || !root.HasElements) {
 				Report.Warning (0, Report.WarningParser + 1, "No packages found.");
 				return null;
 			}
 
 			List<GenBase> gens = new List<GenBase> ();
 
-			foreach (XmlNode child in root.ChildNodes) {
-				XmlElement elem = child as XmlElement;
-				if (elem == null)
-					continue;
-
-				switch (child.Name) {
+			foreach (var elem in root.Elements ()) {
+				switch (elem.Name.LocalName) {
 				case "package":
 					gens.AddRange (ParsePackage (elem));
 					break;
@@ -76,7 +71,7 @@ namespace MonoDroid.Generation {
 					SymbolTable.AddType (elem.XGetAttribute ("name"), sym);
 					continue;
 				default:
-					Report.Warning (0, Report.WarningParser + 2, "Unexpected child node: {0}.", child.Name);
+					Report.Warning (0, Report.WarningParser + 2, "Unexpected child node: {0}.", elem.Name);
 					break;
 				}
 			}
@@ -84,26 +79,22 @@ namespace MonoDroid.Generation {
 			return gens;
 		}
 
-		List<GenBase> ParsePackage (XmlElement ns)
+		List<GenBase> ParsePackage (XElement ns)
 		{
 			return ParsePackage (ns, null);
 		}
 
-		List<GenBase> ParsePackage (XmlElement ns, Predicate<XmlElement> p)
+		List<GenBase> ParsePackage (XElement ns, Predicate<XElement> p)
 		{
 			List<GenBase> result = new List<GenBase> ();
 			Dictionary<string, GenBase> nested = new Dictionary<string, GenBase> ();
 			Dictionary<string, GenBase> by_name = new Dictionary<string, GenBase> ();
 
-			foreach (XmlNode def in ns.ChildNodes) {
-
-				XmlElement elem = def as XmlElement;
-				if (elem == null)
-					continue;
+			foreach (var elem in ns.Elements ()) {
 
 				string name = elem.XGetAttribute ("name");
 				GenBase gen = null;
-				switch (def.Name) {
+				switch (elem.Name.LocalName) {
 				case "class":
 					if (elem.XGetAttribute ("obfuscated") == "true")
 						continue;
@@ -115,7 +106,7 @@ namespace MonoDroid.Generation {
 					gen = new XmlInterfaceGen (ns, elem);
 					break;
 				default:
-					Report.Warning (0, Report.WarningParser + 3, "Unexpected node in package element: {0}.", def.Name);
+					Report.Warning (0, Report.WarningParser + 3, "Unexpected node in package element: {0}.", elem.Name);
 					break;
 				}
 

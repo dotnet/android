@@ -9,6 +9,7 @@ using Mono.Cecil;
 using Xamarin.Android.Tools;
 
 using MonoDroid.Utils;
+using System.Xml.Linq;
 
 namespace MonoDroid.Generation {
 #if USE_CECIL
@@ -124,15 +125,15 @@ namespace MonoDroid.Generation {
 
 	public class XmlMethod : Method {
 
-		XmlElement elem;
+		XElement elem;
 
-		public XmlMethod (GenBase declaringType, XmlElement elem)
+		public XmlMethod (GenBase declaringType, XElement elem)
 			: base (declaringType, new XmlMethodBaseSupport (elem))
 		{
 			this.elem = elem;
 			is_static = elem.XGetAttribute ("static") == "true";
 			is_virtual = !is_static && elem.XGetAttribute ("final") == "false";
-			if (elem.HasAttribute ("managedName"))
+			if (elem.Attribute ("managedName") != null)
 				name = elem.XGetAttribute ("managedName");
 			else
 				name = StringRocks.MemberToPascalCase (JavaName);
@@ -141,11 +142,11 @@ namespace MonoDroid.Generation {
 			if (declaringType is InterfaceGen)
 				is_interface_default_method = !is_abstract && !is_static;
 
-			GenerateDispatchingSetter = elem.HasAttribute ("generateDispatchingSetter");
+			GenerateDispatchingSetter = elem.Attribute ("generateDispatchingSetter") != null;
 
-			foreach (XmlNode child in elem.ChildNodes) {
+			foreach (var child in elem.Elements ()) {
 				if (child.Name == "parameter")
-					Parameters.Add (Parameter.FromElement (child as XmlElement));
+					Parameters.Add (Parameter.FromElement (child));
 			}
 			FillReturnType ();
 		}
@@ -154,7 +155,7 @@ namespace MonoDroid.Generation {
 
 		public override string ArgsType {
 			get {
-				var a = elem.Attributes ["argsType"];
+				var a = elem.Attribute ("argsType");
 				if (a == null)
 					return null;
 				return a.Value;
@@ -163,7 +164,7 @@ namespace MonoDroid.Generation {
 
 		public override string EventName {
 			get {
-				var a = elem.Attributes ["eventName"];
+				var a = elem.Attribute ("eventName");
 				if (a == null)
 					return null;
 				return a.Value;
@@ -207,24 +208,19 @@ namespace MonoDroid.Generation {
 		
 		// FIXME: this should not require enumReturn. Somewhere in generator uses this property improperly.
 		public override string Return {
-			get { return elem.HasAttribute ("enumReturn") ? elem.XGetAttribute ("enumReturn") : elem.XGetAttribute ("return"); }
+			get { return IsReturnEnumified ? elem.XGetAttribute ("enumReturn") : elem.XGetAttribute ("return"); }
 		}
 		
 		public override string ManagedReturn {
-			get { return elem.HasAttribute ("enumReturn") ? elem.XGetAttribute ("enumReturn") : elem.XGetAttribute ("managedReturn"); }
+			get { return IsReturnEnumified ? elem.XGetAttribute ("enumReturn") : elem.XGetAttribute ("managedReturn"); }
 		}
 		
 		public override bool IsReturnEnumified {
-			get { return elem.HasAttribute ("enumReturn"); }
+			get { return elem.Attribute ("enumReturn") != null; }
 		}
 
 		protected override string PropertyNameOverride {
-			get {
-				var pn = elem.Attributes ["propertyName"];
-				if (pn == null)
-					return null;
-				return pn.Value;
-			}
+			get { return elem.XGetAttribute ("propertyName"); }
 		}
 
 		static readonly Regex ApiLevel = new Regex (@"api-(\d+).xml");
@@ -248,17 +244,12 @@ namespace MonoDroid.Generation {
 				if (IsOverride)
 					return false;
 
-				return elem.HasAttribute ("generateAsyncWrapper");
+				return elem.Attribute ("generateAsyncWrapper") != null;
 			}
 		}
 
 		public override string CustomAttributes {
-			get {
-				if (!elem.HasAttribute ("customAttributes"))
-					return null;
-
-				return elem.GetAttribute ("customAttributes");
-			}
+			get { return elem.XGetAttribute ("customAttributes"); }
 		}
 	}
 

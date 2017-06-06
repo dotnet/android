@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml;
+using System.Xml.Linq;
 using Mono.Cecil;
 
 using Xamarin.Android.Binder;
@@ -261,25 +262,25 @@ namespace MonoDroid.Generation {
 			return true;
 		}
 
-		public static Parameter FromElement (XmlElement elem)
+		public static Parameter FromElement (XElement elem)
 		{
 			string managedName = elem.XGetAttribute ("managedName");
 			string name = !string.IsNullOrEmpty (managedName) ? managedName : SymbolTable.MangleName (elem.XGetAttribute ("name"));
 			string java_type = elem.XGetAttribute ("type");
-			string enum_type = elem.HasAttribute ("enumType") ? elem.XGetAttribute ("enumType") : null;
-			string managed_type = elem.HasAttribute ("managedType") ? elem.XGetAttribute ("managedType") : null;
+			string enum_type = elem.Attribute ("enumType") != null ? elem.XGetAttribute ("enumType") : null;
+			string managed_type = elem.Attribute ("managedType") != null ? elem.XGetAttribute ("managedType") : null;
 			// FIXME: "enum_type ?? java_type" should be extraneous. Somewhere in generator uses it improperly.
 			var result = new Parameter (name, enum_type ?? java_type, enum_type ?? managed_type, enum_type != null, java_type);
-			if (elem.HasAttribute ("sender"))
+			if (elem.Attribute ("sender") != null)
 				result.IsSender = true;
 			return result;
 		}
 
-		public static Parameter FromClassElement (XmlElement elem)
+		public static Parameter FromClassElement (XElement elem)
 		{
 			string name          = "__self";
 			string java_type     = elem.XGetAttribute ("name");
-			string java_package  = elem.ParentNode.Attributes ["name"].Value;
+			string java_package  = elem.Parent.XGetAttribute ("name");
 			return new Parameter (name, java_package + "." + java_type, null, false);
 		}
 		

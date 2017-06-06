@@ -9,6 +9,7 @@ using MonoDroid.Utils;
 using Java.Interop.Tools.TypeNameMappings;
 
 using Xamarin.Android.Tools;
+using System.Xml.Linq;
 
 namespace MonoDroid.Generation {
 
@@ -82,17 +83,17 @@ namespace MonoDroid.Generation {
 	
 	public class XmlMethodBaseSupport : IMethodBaseSupport {
 
-		XmlElement elem;
+		XElement elem;
 		GenericParameterDefinitionList generic_arguments;
 		
-		public XmlMethodBaseSupport (XmlElement elem)
+		public XmlMethodBaseSupport (XElement elem)
 		{
 			this.elem = elem;
-			var tps = elem.SelectSingleNode ("typeParameters");
+			var tps = elem.Element ("typeParameters");
 			generic_arguments = tps != null ? GenericParameterDefinitionList.FromXml (tps) : null;
 		}
 		
-		public XmlElement Element {
+		public XElement Element {
 			get { return elem; }
 		}
 		

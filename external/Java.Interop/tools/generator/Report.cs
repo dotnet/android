@@ -1,5 +1,8 @@
 using System;
 using System.Linq;
+using System.Xml;
+using System.Xml.Linq;
+using System.Xml.XPath;
 
 namespace MonoDroid.Generation
 {
@@ -31,25 +34,63 @@ namespace MonoDroid.Generation
 
 		public static void Error (int errorCode, string format, params object[] args)
 		{
-			Error (errorCode, null, format, args);
+			Error (errorCode, null, null, -1, -1, format, args);
 		}
-		
-		public static void Error (int errorCode, Exception innerException, string format, params object[] args)
+
+		public static void Error (int errorCode, string sourceFile, int line, int column, string format, params object [] args)
 		{
-			throw new BindingGeneratorException (errorCode, string.Format (format, args), innerException);
+			Error (errorCode, null, sourceFile, line, column, format, args);
+		}
+
+		public static void Error (int errorCode, Exception innerException, string format, params object [] args)
+		{
+			Error (errorCode, innerException, null, -1, -1, format, args);
+		}
+
+		public static void Error (int errorCode, Exception innerException, XNode node, string format, params object [] args)
+		{
+			Uri uri;
+			string file = Uri.TryCreate (node.BaseUri, UriKind.Absolute, out uri) ? uri.LocalPath : null;
+			IXmlLineInfo li = node as IXmlLineInfo;
+			li = li != null && li.HasLineInfo () ? li : null;
+			Error (errorCode, innerException, file, li != null ? li.LineNumber : -1, li != null ? li.LinePosition : -1, format, args);
+		}
+
+		public static void Error (int errorCode, Exception innerException, string sourceFile, int line, int column, string format, params object[] args)
+		{
+			throw new BindingGeneratorException (errorCode, sourceFile, line, column, string.Format (format, args), innerException);
 		}
 		
 		public static void Warning (int verbosity, int errorCode, string format, params object[] args)
 		{
 			Warning (verbosity, errorCode, null, format, args);
 		}
+
+		public static void Warning (int verbosity, int errorCode, Exception innerException, XNode node, string format, params object [] args)
+		{
+			Uri uri;
+			string file = Uri.TryCreate (node.BaseUri, UriKind.Absolute, out uri) ? uri.LocalPath : null;
+			IXmlLineInfo li = node as IXmlLineInfo;
+			li = li != null && li.HasLineInfo () ? li : null;
+			Warning (verbosity, errorCode, innerException, file, li != null ? li.LineNumber : -1, li != null ? li.LinePosition : -1, format, args);
+		}
+
+		public static void Warning (int verbosity, int errorCode, string sourceFile, int line, int column, string format, params object[] args)
+		{
+			Warning (verbosity, errorCode, null, sourceFile, line, column, format, args);
+		}
+
+		public static void Warning (int verbosity, int errorCode, Exception innerException, string format, params object [] args)
+		{
+			Warning (verbosity, errorCode, innerException, null, -1, -1, format, args);
+		}
 		
-		public static void Warning (int verbosity, int errorCode, Exception innerException, string format, params object[] args)
+		public static void Warning (int verbosity, int errorCode, Exception innerException, string sourceFile, int line, int column, string format, params object[] args)
 		{
 			if (verbosity > (Verbosity ?? 0))
 				return;
 			string supp = innerException != null ? "  For details, see verbose output." : null;
-			Console.Error.WriteLine (Format (false, errorCode, format, args) + supp);
+			Console.Error.WriteLine (Format (false, errorCode, sourceFile, line, column, format, args) + supp);
 			if (innerException != null)
 				Console.Error.WriteLine (innerException);
 		}
@@ -60,10 +101,16 @@ namespace MonoDroid.Generation
 				return;
 			Console.Error.WriteLine (format, args);
 		}
-		
-		public static string Format (bool error, int errorCode, string format, params object[] args)
+
+		public static string Format (bool error, int errorCode, string format, params object [] args)
 		{
-			return string.Format ("{0}{1} BG{2:X04}: ", "" /* origin? */, error ? "error" : "warning", errorCode) +
+			return Format (error, errorCode, null, -1, -1, format, args); 
+		}
+		
+		public static string Format (bool error, int errorCode, string sourceFile, int line, int column, string format, params object[] args)
+		{
+			var origin = sourceFile != null ? sourceFile + (line > 0 ? column > 0 ? $"({line}, {column})" : $"({line})" : null) + ' ' : null;
+			return string.Format ("{0}{1} BG{2:X04}: ", origin, error ? "error" : "warning", errorCode) +
 				string.Format (format, args);
 		}
 	}
@@ -75,7 +122,11 @@ namespace MonoDroid.Generation
 		{
 		}
 		public BindingGeneratorException (int errorCode, string message, Exception innerException)
-			: base (Report.Format (true, errorCode, message), innerException)
+			: this (errorCode, null, -1, -1, message, innerException)
+		{
+		}
+		public BindingGeneratorException (int errorCode, string sourceFile, int line, int column, string message, Exception innerException)
+			: base (Report.Format (true, errorCode, sourceFile, line, column, message), innerException)
 		{
 		}
 	}

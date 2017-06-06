@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Xml;
+using System.Xml.Linq;
+using System.Xml.XPath;
 using Mono.Cecil;
 
 using Xamarin.Android.Tools;
@@ -75,13 +77,13 @@ namespace MonoDroid.Generation
 			return ret;
 		}
 		
-		public static GenericParameterDefinitionList FromXml (XmlNode tps)
+		public static GenericParameterDefinitionList FromXml (XElement tps)
 		{
 			var ret = new GenericParameterDefinitionList ();
-			var tpl = tps.SelectNodes ("typeParameter");
-			foreach (XmlElement n in tpl) {
+			var tpl = tps.Elements ("typeParameter");
+			foreach (var n in tpl) {
 				var csts = new List<string> ();
-				foreach (XmlElement x in n.SelectNodes ("genericConstraints/genericConstraint"))
+				foreach (var x in n.XPathSelectElements ("genericConstraints/genericConstraint"))
 					csts.Add (x.XGetAttribute ("type"));
 				ret.Add (new GenericParameterDefinition (n.XGetAttribute ("name"), csts.ToArray ()));
 			}

@@ -4,6 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Xml;
+using System.Xml.Linq;
+using System.Xml.XPath;
 using Mono.Options;
 
 using Xamarin.Android.Tools;
@@ -231,27 +233,26 @@ namespace MonoDroid.Generation {
 				return null;
 
 			var sw = new StringWriter ();
-			var doc = new XmlDocument ();
-			doc.Load (file);
-			foreach (XmlElement e in doc.SelectNodes ("/enum-method-mappings/mapping")) {
+			var doc = XDocument.Load (file, LoadOptions.SetBaseUri | LoadOptions.SetLineInfo);
+			foreach (XElement e in doc.XPathSelectElements ("/enum-method-mappings/mapping")) {
 				string version = e.XGetAttribute ("api-level");
 				string package = null;
 				string java_class = null;
-				if (e.HasAttribute ("jni-class")) {
+				if (e.Attribute ("jni-class") != null) {
 					string c    = e.XGetAttribute ("jni-class");
 					int    s    = c.LastIndexOf ('/');
 					package     = c.Substring (0, s).Replace ('/', '.');
 					java_class  = c.Substring (s+1).Replace ('$', '.');
-				} else if (e.HasAttribute ("jni-interface")) {
+				} else if (e.Attribute ("jni-interface") != null) {
 					string c    = e.XGetAttribute ("jni-interface");
 					int    s    = c.LastIndexOf ('/');
 					package     = c.Substring (0, s).Replace ('/', '.');
 					java_class  = "[Interface]" + c.Substring (s+1).Replace ('$', '.');
 				} else {
-					throw new InvalidOperationException (string.Format ("Missing mandatory attribute 'jni-class' or 'jni-interface' on a mapping element: {0}", e.OuterXml));
+					throw new InvalidOperationException (string.Format ("Missing mandatory attribute 'jni-class' or 'jni-interface' on a mapping element: {0}", e));
 				}
 
-				foreach (XmlElement m in e.SelectNodes ("method")) {
+				foreach (var m in e.XPathSelectElements ("method")) {
 					string method     = GetMandatoryAttribute (m, "jni-name");
 					string parameter  = GetMandatoryAttribute (m, "parameter");
 					string enum_type  = GetMandatoryAttribute (m, "clr-enum-type");

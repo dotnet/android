@@ -12,6 +12,7 @@ using Xamarin.Android.Binder;
 using Xamarin.Android.Tools;
 
 using MonoDroid.Utils;
+using System.Xml.Linq;
 
 namespace MonoDroid.Generation {
 #if USE_CECIL
@@ -75,26 +76,23 @@ namespace MonoDroid.Generation {
 		bool is_final;
 		string base_type;
 
-		public XmlClassGen (XmlElement pkg, XmlElement elem)
+		public XmlClassGen (XElement pkg, XElement elem)
 			: base (new XmlGenBaseSupport (pkg, elem))//FIXME: should not be xml specific
 		{
 			is_abstract = elem.XGetAttribute ("abstract") == "true";
 			is_final = elem.XGetAttribute ("final") == "true";
 			base_type = elem.XGetAttribute ("extends");
-			foreach (XmlNode node in elem.ChildNodes) {
-				XmlElement child = node as XmlElement;
-				if (child == null)
-					continue;
-				switch (node.Name) {
+			foreach (var child in elem.Elements ()) {
+				switch (child.Name.LocalName) {
 				case "implements":
 					string iname = child.XGetAttribute ("name-generic-aware");
 					iname = iname.Length > 0 ? iname : child.XGetAttribute ("name");
 					AddInterface (iname);
 					break;
 				case "method":
-					var synthetic = child.GetAttribute ("synthetic") == "true";
-					var finalizer = child.GetAttribute ("name") == "finalize" &&
-						child.GetAttribute ("jni-signature") == "()V";
+					var synthetic = child.XGetAttribute ("synthetic") == "true";
+					var finalizer = child.XGetAttribute ("name") == "finalize" &&
+						child.XGetAttribute ("jni-signature") == "()V";
 					if (!(synthetic || finalizer))
 						AddMethod (new XmlMethod (this, child));
 					break;
@@ -107,7 +105,7 @@ namespace MonoDroid.Generation {
 				case "typeParameters":
 					break; // handled at GenBaseSupport
 				default:
-					Report.Warning (0, Report.WarningClassGen + 1, "unexpected class child {0}.", node.Name);
+					Report.Warning (0, Report.WarningClassGen + 1, "unexpected class child {0}.", child.Name);
 					break;
 				}
 			}

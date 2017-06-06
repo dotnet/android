@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Xml;
+using System.Xml.Linq;
 using Mono.Cecil;
 
 using Xamarin.Android.Tools;
@@ -60,7 +61,7 @@ namespace MonoDroid.Generation {
 		bool missing_enclosing_class;
 		string custom_attributes;
 
-		public XmlCtor (GenBase declaringType, XmlElement elem) : base (declaringType, new XmlMethodBaseSupport (elem))
+		public XmlCtor (GenBase declaringType, XElement elem) : base (declaringType, new XmlMethodBaseSupport (elem))
 		{
 			name = elem.XGetAttribute ("name");
 			int idx = name.LastIndexOf ('.');
@@ -69,11 +70,11 @@ namespace MonoDroid.Generation {
 			// If 'elem' is a constructor for a non-static nested type, then
 			// the type of the containing class must be inserted as the first
 			// argument
-			nonStaticNestedType = idx > 0 && elem.ParentNode.Attributes ["static"].Value == "false";
+			nonStaticNestedType = idx > 0 && elem.Parent.Attribute ("static").Value == "false";
 			if (nonStaticNestedType) {
-				string     declName              = elem.ParentNode.Attributes ["name"].Value;
+				string     declName              = elem.Parent.XGetAttribute ("name");
 				string     expectedEnclosingName = declName.Substring (0, idx);
-				XmlElement enclosingType         = GetPreviousClass (elem.ParentNode.PreviousSibling, expectedEnclosingName);
+				XElement enclosingType         = GetPreviousClass (elem.Parent.PreviousNode, expectedEnclosingName);
 				if (enclosingType == null) {
 					missing_enclosing_class = true;
 					Report.Warning (0, Report.WarningCtor + 0, "For {0}, could not find enclosing type '{1}'.", name, expectedEnclosingName);
@@ -82,26 +83,27 @@ namespace MonoDroid.Generation {
 					Parameters.AddFirst (Parameter.FromClassElement (enclosingType));
 			}
 			
-			foreach (XmlNode child in elem.ChildNodes) {
+			foreach (var child in elem.Elements ()) {
 				if (child.Name == "parameter")
-					Parameters.Add (Parameter.FromElement (child as XmlElement));
+					Parameters.Add (Parameter.FromElement (child));
 			}
 
-			if (elem.HasAttribute ("customAttributes"))
-				custom_attributes = elem.GetAttribute ("customAttributes");
+			if (elem.Attribute ("customAttributes") != null)
+				custom_attributes = elem.XGetAttribute ("customAttributes");
 		}
 
-		static XmlElement GetPreviousClass (XmlNode e, string nameValue)
+		static XElement GetPreviousClass (XNode n, string nameValue)
 		{
-			while (e != null &&
-					(e.NodeType != XmlNodeType.Element ||
-					 e.Name != "class" ||
-					 !e.Attributes ["name"].Value.StartsWith (nameValue) ||
-					 // this complicated check (instead of simple name string equivalence match) is required for nested class inside a generic class e.g. android.content.Loader.ForceLoadContentObserver.
-					 (e.Attributes ["name"].Value != nameValue && e.Attributes ["name"].Value.IndexOf ('<') < 0))) {
-				e = e.PreviousSibling;
+			XElement e = null;
+			while (n != null &&
+			       ((e = n as XElement) == null ||
+			        e.Name != "class" ||
+			        !e.XGetAttribute ("name").StartsWith (nameValue, StringComparison.Ordinal) ||
+			        // this complicated check (instead of simple name string equivalence match) is required for nested class inside a generic class e.g. android.content.Loader.ForceLoadContentObserver.
+			        (e.XGetAttribute ("name") != nameValue && e.XGetAttribute ("name").IndexOf ('<') < 0))) {
+				n = n.PreviousNode;
 			}
-			return (XmlElement) e;
+			return (XElement) e;
 		}
 
 		public override bool IsNonStaticNestedType {

@@ -8,6 +8,7 @@ using Mono.Cecil;
 using Xamarin.Android.Tools;
 
 using MonoDroid.Utils;
+using System.Xml.Linq;
 
 namespace MonoDroid.Generation {
 #if USE_CECIL
@@ -86,20 +87,20 @@ namespace MonoDroid.Generation {
 
 	public class XmlField : Field {
 
-		XmlElement elem;
+		XElement elem;
 		string java_name;
 		string name;
 		string enum_type;
 
-		public XmlField (XmlElement elem)
+		public XmlField (XElement elem)
 		{
 			this.elem = elem;
 			java_name = elem.XGetAttribute ("name");
-			if (elem.HasAttribute ("managedName"))
+			if (elem.Attribute ("managedName") != null)
 				name = elem.XGetAttribute ("managedName");
 			else
 				name = SymbolTable.StudlyCase (Char.IsLower (java_name [0]) || java_name.ToLower ().ToUpper () != java_name ? java_name : java_name.ToLower ());
-			if (elem.HasAttribute ("enumType"))
+			if (elem.Attribute ("enumType") != null)
 				enum_type = elem.XGetAttribute ("enumType");
 		}
 
@@ -138,7 +139,7 @@ namespace MonoDroid.Generation {
 
 		public override string Value {
 			get { 
-				string val = elem.GetAttribute ("value"); // do not trim
+				string val = elem.XGetAttribute ("value"); // do not trim
 				if (!String.IsNullOrEmpty (val) && Symbol != null && Symbol.FullName == "char")
 					val = "(char)" + val;
 				return val;

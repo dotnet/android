@@ -8,6 +8,7 @@ using Mono.Cecil;
 using Xamarin.Android.Tools;
 
 using MonoDroid.Utils;
+using System.Xml.Linq;
 
 namespace MonoDroid.Generation
 {
@@ -155,7 +156,7 @@ namespace MonoDroid.Generation
 
 	public class XmlGenBaseSupport : GenBaseSupport
 	{
-		public XmlGenBaseSupport (XmlElement pkg, XmlElement elem)
+		public XmlGenBaseSupport (XElement pkg, XElement elem)
 		{
 			deprecated = elem.XGetAttribute ("deprecated") != "not deprecated";
 			if (deprecated) {
@@ -169,13 +170,13 @@ namespace MonoDroid.Generation
 
 			pkg_name = pkg.XGetAttribute ("name");
 			java_name = elem.XGetAttribute ("name");
-			if (pkg.HasAttribute ("managedName")) {
+			if (pkg.Attribute ("managedName") != null) {
 				ns = pkg.XGetAttribute ("managedName");
 			} else {
 				ns = StringRocks.PackageToPascalCase (PackageName);
 			}
 			
-			var tpn = elem.SelectSingleNode ("typeParameters");
+			var tpn = elem.Element ("typeParameters");
 			if (tpn != null) {
 				type_params = GenericParameterDefinitionList.FromXml (tpn);
 				is_generic = true;
@@ -188,7 +189,7 @@ namespace MonoDroid.Generation
 					throw new NotSupportedException ("Looks like old API XML is used, which we don't support anymore.");
 			}
  
-			if (elem.HasAttribute ("managedName")) {
+			if (elem.Attribute ("managedName") != null) {
 				name = elem.XGetAttribute ("managedName");
 				full_name = String.Format ("{0}.{1}", ns, name);
 				int idx = name.LastIndexOf ('.');
@@ -204,7 +205,7 @@ namespace MonoDroid.Generation
 				full_name = String.Format ("{0}.{1}{2}", ns, idx > 0 ? StringRocks.TypeToPascalCase (java_name.Substring (0, idx + 1)) : String.Empty, name);
 			}
 
-			obfuscated = IsObfuscatedName (pkg.ChildNodes.Count, java_name) && elem.XGetAttribute ("obfuscated") != "false";
+			obfuscated = IsObfuscatedName (pkg.Elements ().Count (), java_name) && elem.XGetAttribute ("obfuscated") != "false";
 		}
 
 		public override bool IsAcw {
@@ -325,7 +326,7 @@ namespace MonoDroid.Generation
 	
 	public class InterfaceXmlGenBaseSupport : XmlGenBaseSupport
 	{
-		public InterfaceXmlGenBaseSupport (XmlElement pkg, XmlElement elem)
+		public InterfaceXmlGenBaseSupport (XElement pkg, XElement elem)
 			: base (pkg, elem)
 		{
 		}
