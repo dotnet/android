@@ -1497,9 +1497,12 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_CollectMdbFiles"
 		Inputs="@(ResolvedAssemblies->'%(RootDir)%(Directory)%(Filename)%(Extension)')"
-		Outputs="@(ResolvedAssemblies->'%(RootDir)%(Directory)%(Filename)%(Extension).mdb')">
+		Outputs="@(ResolvedAssemblies->'%(RootDir)%(Directory)%(Filename)%(Extension).mdb')"
+		DependsOnTargets="_CollectPdbFiles">
 	<GetFilesThatExist
-			Files="@(ResolvedAssemblies->'%(RootDir)%(Directory)%(Filename)%(Extension).mdb')">
+			Files="@(ResolvedAssemblies->'%(RootDir)%(Directory)%(Filename)%(Extension).mdb')"
+			IgnoreFiles="@(_ResolvedPortablePdbFiles->'%(RootDir)%(Directory)%(Filename).dll.mdb')"
+	>
 		<Output TaskParameter="FilesThatExist" ItemName="_ResolvedMdbFiles" />
 	</GetFilesThatExist>
 </Target>
