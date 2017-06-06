@@ -96,14 +96,9 @@ namespace Java.Interop.Tools.Cecil {
 			cache = null;
 		}
 
-		[Obsolete ("Should not be used; was required with previous Cecil versions.")]
-		public IDictionary ToResolverCache ()
+		public Dictionary<string, AssemblyDefinition> ToResolverCache ()
 		{
-			var resolver_cache = new Hashtable ();
-			foreach (var pair in cache)
-				resolver_cache.Add (pair.Key, pair.Value);
-
-			return resolver_cache;
+			return new Dictionary<string, AssemblyDefinition>(cache);
 		}
 
 		public virtual AssemblyDefinition Load (string fileName)
