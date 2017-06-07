@@ -1,6 +1,7 @@
 ﻿// Copyright (C) 2011 Xamarin, Inc. All rights reserved.
 
 using System;
+using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.Build.Framework;
@@ -16,21 +17,25 @@ namespace Xamarin.Android.Tasks
 		public string ProductVersion         { get; set; }
 
 		[Output]
-		public string AndroidDefineConstants { get; set; }
+		public  ITaskItem[]     AndroidDefineConstants      { get; set; }
 
 		public override bool Execute ()
 		{
-			var sb = new StringBuilder ();
+			var constants = new List<ITaskItem> ();
 
 			if (!string.IsNullOrEmpty (ProductVersion)) {
-				sb.AppendFormat ("__XAMARIN_ANDROID_{0}__;", Regex.Replace (ProductVersion, "[^A-Za-z0-9]", "_"));
+				var version = Regex.Replace (ProductVersion, "[^A-Za-z0-9]", "_");
+				constants.Add (new TaskItem ($"__XAMARIN_ANDROID_{version}__"));
 			}
-			sb.Append ("__MOBILE__;__ANDROID__");
 
-			for (int i = 1; i <= AndroidApiLevel; ++i)
-				sb.Append (";__ANDROID_").Append (i).Append ("__");
+			constants.Add (new TaskItem ("__MOBILE__"));
+			constants.Add (new TaskItem ("__ANDROID__"));
 
-			AndroidDefineConstants = sb.ToString ();
+			for (int i = 1; i <= AndroidApiLevel; ++i) {
+				constants.Add (new TaskItem ($"__ANDROID_{i}__"));
+			}
+
+			AndroidDefineConstants = constants.ToArray ();
 
 			return true;
 		}
