@@ -31,9 +31,6 @@ namespace Xamarin.Android.Tasks
 		public ITaskItem[] ResolvedAssemblies { get; set; }
 
 		[Required]
-		public ITaskItem [] PortablePdbFiles { get; set; }
-
-		[Required]
 		public ITaskItem[] LinkDescriptions { get; set; }
 
 		public string I18nAssemblies { get; set; }
@@ -77,7 +74,6 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ("  LinkSkip: {0}", LinkSkip);
 			Log.LogDebugTaskItems ("  LinkDescriptions:", LinkDescriptions);
 			Log.LogDebugTaskItems ("  ResolvedAssemblies:", ResolvedAssemblies);
-			Log.LogDebugTaskItems ("  PortablePdbFiles:", PortablePdbFiles);
 			Log.LogDebugMessage ("  EnableProguard: {0}", EnableProguard);
 			Log.LogDebugMessage ("  ProguardConfiguration: {0}", ProguardConfiguration);
 			Log.LogDebugMessage ("  DumpDependencies: {0}", DumpDependencies);
@@ -146,13 +142,6 @@ namespace Xamarin.Android.Tasks
 
 				var copydst = OptionalDestinationDirectory ?? OutputDirectory;
 
-				foreach (var pdb in PortablePdbFiles) {
-					var copysrc = pdb.ItemSpec;
-					var filename = Path.GetFileName (pdb.ItemSpec);
-
-					MonoAndroidHelper.CopyIfChanged (copysrc, Path.Combine (copydst, filename));
-				}
-
 				foreach (var assembly in ResolvedAssemblies) {
 					var copysrc = assembly.ItemSpec;
 					var filename = Path.GetFileName (assembly.ItemSpec);
@@ -180,6 +169,9 @@ namespace Xamarin.Android.Tasks
 						MonoAndroidHelper.CopyIfChanged (assembly.ItemSpec + ".mdb", Path.Combine (copydst, filename + ".mdb"));
 					} catch (Exception) { // skip it, mdb sometimes fails to read and it's optional
 					}
+					var pdb = Path.ChangeExtension (copysrc, "pdb");
+					if (File.Exists (pdb))
+						MonoAndroidHelper.CopyIfChanged (pdb, Path.ChangeExtension (Path.Combine (copydst, filename), "pdb"));
 				}
 			} catch (ResolutionException ex) {
 				Diagnostic.Error (2006, ex, "Could not resolve reference to '{0}' (defined in assembly '{1}') with scope '{2}'. When the scope is different from the defining assembly, it usually means that the type is forwarded.", ex.Member, ex.Member.Module.Assembly, ex.Scope);

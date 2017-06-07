@@ -1557,7 +1557,6 @@ because xbuild doesn't support framework reference assemblies.
       LinkDescriptions="@(LinkDescription)"
       DumpDependencies="$(LinkerDumpDependencies)"
       LinkOnlyNewerThan="$(_AndroidLinkFlag)"
-      PortablePdbFiles="@(_ResolvedPortablePdbFiles)"
       ResolvedAssemblies="@(ResolvedAssemblies)" />
 
 	<!-- We don't have to depend on flag file for NoShrink, but it is used to check timestamp -->
@@ -1588,7 +1587,6 @@ because xbuild doesn't support framework reference assemblies.
       ProguardConfiguration="$(_ProguardProjectConfiguration)"
       EnableProguard="$(AndroidEnableProguard)"
       DumpDependencies="$(LinkerDumpDependencies)"
-      PortablePdbFiles="@(_ResolvedPortablePdbFiles->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)')"
       ResolvedAssemblies="@(ResolvedAssemblies->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)')"
       HttpClientHandlerType="$(AndroidHttpClientHandlerType)"
       TlsProvider="$(AndroidTlsProvider)" />
