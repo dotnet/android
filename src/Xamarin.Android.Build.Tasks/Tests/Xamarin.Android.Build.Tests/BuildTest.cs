@@ -272,7 +272,7 @@ namespace Xamarin.Android.Build.Tests
 		public void BuildProguardEnabledProject (bool isRelease, bool enableProguard, bool useLatestSdk)
 		{
 			var proj = new XamarinAndroidApplicationProject () { IsRelease = isRelease, EnableProguard = enableProguard, UseLatestPlatformSdk = useLatestSdk, TargetFrameworkVersion = useLatestSdk ? "v7.1" : "v5.0" };
-			using (var b = CreateApkBuilder ("temp/BuildProguardEnabledProject")) {
+			using (var b = CreateApkBuilder ("temp/BuildProguard Enabled Project(1)")) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 			}
 		}

@@ -179,14 +179,12 @@ namespace Xamarin.Android.Tasks
 				foreach (var jarfile in ExternalJavaLibraries.Select (p => p.ItemSpec))
 					libjars.Add (jarfile);
 
-			cmd.AppendSwitch ("\"-injars");
-			cmd.AppendSwitch (string.Join (Path.PathSeparator.ToString (), injars.Distinct ().Select (s => '\'' + s + '\''))+"\"");
+			var enclosingChar = OS.IsWindows ? "\"" : string.Empty;
+			cmd.AppendSwitchUnquotedIfNotNull ("-injars ", $"{enclosingChar}'" + string.Join ($"'{Path.PathSeparator}'", injars.Distinct ()) + $"'{enclosingChar}");
+
+			cmd.AppendSwitchIfNotNull ("-libraryjars ", $"{enclosingChar}'" + string.Join ($"'{Path.PathSeparator}'", libjars.Distinct ()) + $"'{enclosingChar}");
 			
-			cmd.AppendSwitch ("\"-libraryjars");
-			cmd.AppendSwitch (string.Join (Path.PathSeparator.ToString (), libjars.Distinct ().Select (s => '\'' + s + '\''))+"\"");
-			
-			cmd.AppendSwitch ("-outjars");
-			cmd.AppendSwitch ('"' + ProguardJarOutput + '"');
+			cmd.AppendSwitchIfNotNull ("-outjars ", ProguardJarOutput);
 
 			if (EnableLogging) {
 				cmd.AppendSwitchIfNotNull ("-dump ", DumpOutput);
