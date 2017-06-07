@@ -822,12 +822,12 @@ because xbuild doesn't support framework reference assemblies.
 
 	<!-- Get the defined constants for this API Level -->
 	<GetAndroidDefineConstants AndroidApiLevel="$(_SupportedApiLevel)" ProductVersion="$(MonoAndroidVersion)">
-		<Output TaskParameter="AndroidDefineConstants" PropertyName="AndroidDefineConstants" />
+		<Output TaskParameter="AndroidDefineConstants" ItemName="AndroidDefineConstants" />
 	</GetAndroidDefineConstants>
 
-	<CreateProperty Value="$(DefineConstants);$(AndroidDefineConstants)">
-		<Output TaskParameter="Value" PropertyName="DefineConstants" />
-	</CreateProperty>
+	<PropertyGroup>
+		<DefineConstants>$(DefineConstants);@(AndroidDefineConstants)</DefineConstants>
+	</PropertyGroup>
 </Target>
 
 <Target Name="AndroidPrepareForBuild" DependsOnTargets="$(_OnResolveMonoAndroidSdks)" />

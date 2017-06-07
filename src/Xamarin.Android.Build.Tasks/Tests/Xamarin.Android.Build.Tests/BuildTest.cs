@@ -51,6 +51,29 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void FSharpAppHasAndroidDefine ()
+		{
+			var proj = new XamarinAndroidApplicationProject () {
+				Language  = XamarinAndroidProjectLanguage.FSharp,
+			};
+			proj.Sources.Add (new BuildItem ("Compile", "IsAndroidDefined.fs") {
+				TextContent = () => @"
+module Xamarin.Android.Tests
+// conditional compilation; can we elicit a compile-time error?
+let x =
+#if __ANDROID__
+  42
+#endif  // __ANDROID__
+
+printf ""%d"" x
+",
+			});
+			using (var b = CreateApkBuilder ("temp/" + nameof (FSharpAppHasAndroidDefine))) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+			}
+		}
+
+		[Test]
 		public void BuildApplicationAndClean ([Values (false, true)] bool isRelease)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
