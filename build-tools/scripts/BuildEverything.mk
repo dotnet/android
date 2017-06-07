@@ -156,6 +156,16 @@ package-oss $(ZIP_OUTPUT):
 	if [ -d bin/Release/bin ] ; then cp tools/scripts/xabuild bin/Release/bin ; fi
 	if [ ! -d $(ZIP_OUTPUT_BASENAME) ] ; then mkdir $(ZIP_OUTPUT_BASENAME) ; fi
 	if [ ! -L $(ZIP_OUTPUT_BASENAME)/bin ] ; then ln -s ../bin $(ZIP_OUTPUT_BASENAME) ; fi
+	_exclude_list=".__exclude_list.txt"; \
+	ls -1d $(_BUNDLE_ZIPS_EXCLUDE) > "$$_exclude_list" 2>/dev/null ; \
+	for c in $(CONFIGURATIONS) ; do \
+		_sl="$(ZIP_OUTPUT_BASENAME)/bin/$$c/lib/xbuild/.__sys_links.txt"; \
+		if [ ! -f "$$_sl" ]; then continue; fi; \
+		for f in `cat $$_sl` ; do \
+			echo "$(ZIP_OUTPUT_BASENAME)/bin/$$c/lib/xbuild/$$f" >> "$$_exclude_list"; \
+		done; \
+	done; \
 	zip -r "$(ZIP_OUTPUT)" \
 		`ls -1d $(_BUNDLE_ZIPS_INCLUDE) 2>/dev/null` \
-		--exclude `ls -1d $(_BUNDLE_ZIPS_EXCLUDE) 2>/dev/null`
+		"-x@$$_exclude_list"
+	-rm ".__exclude_list.txt"

@@ -1,26 +1,83 @@
 #!/bin/bash -e
 
+#
+# MSBuild wrapper to build Xamarin.Android apps from the command-line,
+# without pesky IDE interference.
+#
+# Supported MSBuild targets and properties:
+#   https://developer.xamarin.com/guides/android/under_the_hood/build_process/
+#
+# Overridable environment variables:
+#   ANDROID_NDK_PATH:
+#     Path to Android NDK.
+#     Defaults to `$(AndroidNdkDirectory)` in ../../Configuration.props.
+#   ANDROID_SDK_PATH:
+#     Path to Android SDK.
+#     Defaults to `$(AndroidNdkDirectory)` in ../../Configuration.props.
+#   CONFIGURATION:
+#     For in-source-tree invocations, the `bin/$(CONFIGURATION)` directory to
+#     use as the installation prefix. If not specified, defaults to `Debug`.
+#   MSBUILD:
+#     MSBuild engine to use. Defaults to `xbuild`, assumed to be in `$PATH`
+#   TARGETS_DIR:
+#     The MSBuild `$(MSBuildExtensionsPath)` root location.
+#     Defaults to `$prefix/lib/xbuild`.
+#
+# Examples:
+#   To create a .apk for the HelloWorld sample:
+#     tools/scripts/xabuild /t:SignAndroidPackage samples/HelloWorld/HelloWorld.csproj
+#
+#   To explicitly use `msbuild` for builds:
+#     MSBUILD=msbuild tools/scripts/xabuild /t:SignAndroidPackage samples/HelloWorld/HelloWorld.csproj
+#
+#   To explicitly use `xbuild` for builds:
+#     MSBUILD=xbuild tools/scripts/xabuild /t:SignAndroidPackage samples/HelloWorld/HelloWorld.csproj
+#
+
 name=$(basename "$0")
-
-if [ -z "$CONFIGURATION" ] ; then
-	CONFIGURATION=Debug
-fi
-
-xabuilddir="$(cd `dirname "$0"` && pwd)"
-
-if [[ "$xabuilddir" == */tools/scripts ]] ; then
-	topdir="$xabuilddir/../../bin/$CONFIGURATION"
-	Paths_targets="$xabuilddir/../../build-tools/scripts/Paths.targets"
-elif [[ "$xabuilddir" == */bin ]] ; then
-	topdir="$xabuilddir/.."
-else
-	(>&2 echo "$name: Could not determine location to Xamarin.Android locations.")
-	exit 1
-fi
+prefix="$(cd `dirname "$0"` && pwd)"
 
 if [ -z "$MSBUILD" ] ; then
 	MSBUILD=xbuild
 fi
+
+if [[ "$prefix" == */tools/scripts ]] ; then
+	Paths_targets="$prefix/../../build-tools/scripts/Paths.targets"
+	for c in "$CONFIGURATION" Debug Release ; do
+		if [ -z "$c" ]; then
+			continue
+		fi
+		if [ -d "$prefix/../../bin/$c" ]; then
+			real_prefix="$prefix/../../bin/$c"
+			break
+		fi
+	done
+	if [ -z "$real_prefix" ]; then
+		(>&2 echo "$name: Could not determine Xamarin.Android prefix.")
+		exit 1
+	fi
+	prefix="$real_prefix"
+elif [[ "$prefix" == */bin ]] ; then
+	prefix="$prefix/.."
+else
+	(>&2 echo "$name: Could not determine Xamarin.Android prefix.")
+	exit 1
+fi
+
+for t in "$TARGETS_DIR" "$prefix/lib/mono/xbuild" "$prefix/lib/xbuild" ; do
+	if [ -z "$t" -o ! -d "$t" ]; then
+		continue
+	fi
+	TARGETS_DIR="$t"
+	break
+done
+
+if [ ! -d "$TARGETS_DIR" ]; then
+	(>&2 echo "$name: Could not determine Xamarin.Android targets path.")
+fi
+export TARGETS_DIR
+export MONO_ANDROID_PATH="$prefix"
+
 
 if [ -z "$ANDROID_NDK_PATH" -a -f "$Paths_targets" ] ; then
 	ANDROID_NDK_PATH=$($MSBUILD /nologo /v:minimal /t:GetAndroidNdkFullPath "$Paths_targets")
@@ -34,23 +91,75 @@ if [ -z "$ANDROID_SDK_PATH" -a -f "$Paths_targets" ] ; then
 	export ANDROID_SDK_PATH
 fi
 
-if [ -z "$ANDROID_NDK_PATH" ] ; then
-	>&2 echo "$name: Could not determine Android NDK path. Please export the \$ANDROID_NDK_PATH environment variable."
-	exit 1
+declare -a XABUILD_FLAGS
+
+XABUILD_FLAGS=(
+	/p:MonoAndroidBinDirectory="$prefix/bin"
+	/p:MonoAndroidToolsDirectory="$prefix/lib/mandroid"
+	/p:MonoDroidInstallDirectory="$MONO_ANDROID_PATH"
+)
+
+if [ -n "$ANDROID_NDK_PATH" ] ; then
+	XABUILD_FLAGS+=(/p:AndroidNdkDirectory="$ANDROID_NDK_PATH")
+fi
+if [ -n "$ANDROID_SDK_PATH" ] ; then
+	XABUILD_FLAGS+=(/p:AndroidSdkDirectory="$ANDROID_SDK_PATH")
 fi
 
-if [ -z "$ANDROID_SDK_PATH" ] ; then
-	>&2 echo "$name: Could not determine Android SDK path. Please export the \$ANDROID_SDK_PATH environment variable."
-	exit 1
-fi
-
-export TARGETS_DIR="$topdir/lib/xbuild"
 export MSBuildExtensionsPath="$TARGETS_DIR"
-export MONO_ANDROID_PATH="$topdir"
-export XBUILD_FRAMEWORK_FOLDERS_PATH="$topdir/lib/xbuild-frameworks"
 
-exec $MSBUILD /p:Configuration=$CONFIGURATION $MSBUILD_OPTIONS \
-	/p:AndroidNdkDirectory="$ANDROID_NDK_PATH" \
-	/p:AndroidSdkDirectory="$ANDROID_SDK_PATH" \
-	/p:MonoDroidInstallDirectory="$MONO_ANDROID_PATH" \
-	"$@"
+case "$MSBUILD" in
+	*msbuild*)
+		XABUILD_FLAGS+=(/p:TargetFrameworkRootPath="$TARGETS_DIR-frameworks")
+		;;
+	*xbuild*)
+		export XBUILD_FRAMEWORK_FOLDERS_PATH="$TARGETS_DIR-frameworks"
+		;;
+esac
+
+function GetXbuildDir()
+{
+	read -r -d '' get_xbuild_dir_cmd <<-'EOF' || true
+		using System.IO;
+		var corlib_loc = typeof (int).Assembly.Location;
+		// e.g. /Library/Frameworks/Mono.framework/Versions/5.2.0/lib/mono/4.5
+		var corlib_dir = Path.GetDirectoryName (corlib_loc);
+		// e.g. /Library/Frameworks/Mono.framework/Versions/5.2.0/lib/mono/xbuild
+		var xbuild_dir = Path.Combine (corlib_dir, "..", "xbuild");
+		print (Path.GetFullPath (xbuild_dir));
+	EOF
+	echo "$get_xbuild_dir_cmd" | csharp
+}
+
+function ConfigureLocalXbuild()
+{
+	if [ -d "$prefix/lib/mono" ]; then
+		# System installation, e.g. Linux?
+		return 0
+	fi
+	xbuild_dir=`GetXbuildDir`
+	local sys_entry=`ls -1 "$xbuild_dir" | head -1`
+	if [ -d "$TARGETS_DIR/$sys_entry" ] ; then
+		# already configured; bail
+		return 0
+	fi
+	local sys_links="$TARGETS_DIR/.__sys_links.txt"
+	echo ".__sys_links.txt" > "$sys_links"
+	local e
+	for e in "$xbuild_dir"/* ; do
+		local b=`basename "$e"`
+		if [ -e "$TARGETS_DIR/$b" -o -f "$TARGETS_DIR/$b" -o -L "$TARGETS_DIR/$b" ]; then
+			rm "$TARGETS_DIR/$b"
+		fi
+		ln -s "$e" "$TARGETS_DIR"
+		if [ -d "$e" ]; then
+			echo "$b"'/*' >> "$sys_links"
+		else
+			echo $b >> "$sys_links"
+		fi
+	done
+}
+
+ConfigureLocalXbuild
+
+exec $MSBUILD "${XABUILD_FLAGS[@]}" "$@"
