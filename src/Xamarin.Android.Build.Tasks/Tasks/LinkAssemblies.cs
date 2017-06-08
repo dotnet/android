@@ -10,6 +10,7 @@ using Mono.Cecil;
 using System.IO;
 using MonoDroid.Tuner;
 using Mono.Linker;
+using Xamarin.Android.Tools;
 
 using Java.Interop.Tools.Cecil;
 using Java.Interop.Tools.Diagnostics;
@@ -170,7 +171,7 @@ namespace Xamarin.Android.Tasks
 					} catch (Exception) { // skip it, mdb sometimes fails to read and it's optional
 					}
 					var pdb = Path.ChangeExtension (copysrc, "pdb");
-					if (File.Exists (pdb))
+					if (File.Exists (pdb) && Files.IsPortablePdb (pdb))
 						MonoAndroidHelper.CopyIfChanged (pdb, Path.ChangeExtension (Path.Combine (copydst, filename), "pdb"));
 				}
 			} catch (ResolutionException ex) {
