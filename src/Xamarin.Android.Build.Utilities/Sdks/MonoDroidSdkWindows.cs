@@ -70,6 +70,7 @@ namespace Xamarin.Android.Build.Utilities
 		protected override IEnumerable<string> GetVersionFileLocations ()
 		{
 			yield return Path.GetFullPath (Path.Combine (RuntimePath, "Version"));
+			yield return Path.GetFullPath (Path.Combine (RuntimePath, "Version.txt"));
 		}
 	}
 }
