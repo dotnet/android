@@ -15,7 +15,7 @@
       <HostOS>Linux</HostOS>
       <DestDir>build-tools\$(XABuildToolsFolder)</DestDir>
     </AndroidSdkItem>
-    <AndroidSdkItem Include="platform-tools_r26.0.0-rc2-linux.zip">
+    <AndroidSdkItem Include="platform-tools_r26.0.0-linux.zip">
       <HostOS>Linux</HostOS>
       <DestDir>platform-tools</DestDir>
     </AndroidSdkItem>
@@ -34,7 +34,7 @@
       <HostOS>Darwin</HostOS>
       <DestDir>build-tools\$(XABuildToolsFolder)</DestDir>
     </AndroidSdkItem>
-    <AndroidSdkItem Include="platform-tools_r26.0.0-rc2-darwin.zip">
+    <AndroidSdkItem Include="platform-tools_r26.0.0-darwin.zip">
       <HostOS>Darwin</HostOS>
       <DestDir>platform-tools</DestDir>
     </AndroidSdkItem>
@@ -82,21 +82,21 @@
       <HostOS></HostOS>
       <DestDir>platforms\android-22</DestDir>
     </AndroidSdkItem>
-    <AndroidSdkItem Include="android-23_r01.zip">
+    <AndroidSdkItem Include="platform-23_r03.zip">
       <HostOS></HostOS>
       <DestDir>platforms\android-23</DestDir>
     </AndroidSdkItem>
-    <AndroidSdkItem Include="platform-24_r01.zip">
+    <AndroidSdkItem Include="platform-24_r02.zip">
       <HostOS></HostOS>
       <DestDir>platforms\android-24</DestDir>
     </AndroidSdkItem>
-    <AndroidSdkItem Include="platform-25_r01.zip">
+    <AndroidSdkItem Include="platform-25_r03.zip">
       <HostOS></HostOS>
       <DestDir>platforms\android-25</DestDir>
     </AndroidSdkItem>
-    <AndroidSdkItem Include="platform-O_r02.zip">
+    <AndroidSdkItem Include="platform-26_r01.zip">
       <HostOS></HostOS>
-      <DestDir>platforms\android-O</DestDir>
+      <DestDir>platforms\android-26</DestDir>
     </AndroidSdkItem>
     <AndroidSdkItem Include="docs-24_r01.zip">
       <HostOS></HostOS>
