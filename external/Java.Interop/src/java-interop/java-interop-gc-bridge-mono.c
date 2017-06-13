@@ -9,6 +9,7 @@
 #include "java-interop-mono.h"
 
 #ifdef __linux__
+	#include <sys/syscall.h>
 	#include <unistd.h>
 #endif  /* !defined (__linux__) */
 
@@ -1178,7 +1179,7 @@ get_thread_id (void)
 		return _mono_thread_get_managed_id (thread);
 	}
 #if __linux__
-	int64_t tid = gettid ();
+	int64_t tid = (int64_t)((pid_t)syscall(SYS_gettid));
 #else
 	int64_t tid = (int64_t) pthread_self ();
 #endif
