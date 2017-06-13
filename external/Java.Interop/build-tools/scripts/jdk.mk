@@ -92,21 +92,38 @@ endif   # Darwin
 ifeq ($(OS),Linux)
 
 # This is for Ubuntu and derivatives (possibly Debian too)
-_DEFAULT_LINUX_JAVA_INCLUDE_DIRS  = /usr/lib/jvm/default-java/include/
+_DEFAULT_LINUX_JAVA_ROOT          = /usr/lib/jvm/default-java
+_DEFAULT_LINUX_JAVA_INCLUDE_DIRS  = $(_DEFAULT_LINUX_JAVA_ROOT)/include/
 _LINUX_JAVA_FALLBACK_DIRS         = /usr/lib/jvm/java*
 _LINUX_JAVA_JNI_INCLUDE_DIR       = include
+_LINUX_JAVA_ROOT                  = $(_DEFAULT_LINUX_JAVA_ROOT)
+_LINUX_JAVA_ARCH_64               = amd64
+_LINUX_JAVA_ARCH_32               = i386
 
 _DESKTOP_JAVA_INCLUDE_DIRS = $(_DEFAULT_LINUX_JAVA_INCLUDE_DIRS)
 
 ifeq ($(wildcard $(_DESKTOP_JAVA_INCLUDE_DIRS)),)
 _DESKTOP_JAVA_INCLUDE_DIRS  = $(wildcard $(JAVA_HOME)/include)
-endif
+_LINUX_JAVA_ROOT            = $(JAVA_HOME)
+endif # No default Java location, $JAVA_HOME check
+
 ifeq ($(wildcard $(_DESKTOP_JAVA_INCLUDE_DIRS)),)
 LATEST_JDK            := $(shell ls -dtr $(_LINUX_JAVA_FALLBACK_DIRS) | sort | tail -1)
 _DESKTOP_JAVA_INCLUDE_DIRS  = $(LATEST_JDK)/$(_LINUX_JAVA_JNI_INCLUDE_DIR)
-endif
+_LINUX_JAVA_ROOT            = $(LATEST_JDK)
+endif # No $JAVA_HOME, find the latest version
 
 JI_JDK_INCLUDE_PATHS = $(_DESKTOP_JAVA_INCLUDE_DIRS) $(_DESKTOP_JAVA_INCLUDE_DIRS)/linux
+
+ifneq ($(wildcard $(_LINUX_JAVA_ROOT)/jre/lib/$(_LINUX_JAVA_ARCH_64)/server/libjvm.so),)
+JI_JVM_PATH                 = $(_LINUX_JAVA_ROOT)/jre/lib/$(_LINUX_JAVA_ARCH_64)/server/libjvm.so
+endif # Find 64-bit libjvm
+
+ifeq ($(JI_JVM_PATH),) # (1) No 64-bit java arch
+ifneq ($(wildcard $(_LINUX_JAVA_ROOT)/jre/lib/$(_LINUX_JAVA_ARCH_32)/server/libjvm.so),) # (2) check 32-bit instead, even on a 64-bit system
+JI_JVM_PATH                 = $(_LINUX_JAVA_ROOT)/jre/lib/$(_LINUX_JAVA_ARCH_32)/server/libjvm.so
+endif # (2)
+endif # (1)
 
 endif   # Linux
 

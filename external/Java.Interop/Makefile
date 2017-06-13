@@ -5,9 +5,11 @@ CONFIGURATION = Debug
 
 ifeq ($(OS),Darwin)
 NATIVE_EXT = .dylib
+DLLMAP_OS_NAME = osx
 endif
 ifeq ($(OS),Linux)
 NATIVE_EXT = .so
+DLLMAP_OS_NAME = linux
 endif
 
 XA_CONFIGURATION  = XAIntegrationDebug
@@ -70,7 +72,7 @@ $(PACKAGES) $(NUNIT_CONSOLE):
 
 src/Java.Runtime.Environment/Java.Runtime.Environment.dll.config: src/Java.Runtime.Environment/Java.Runtime.Environment.dll.config.in \
 		bin/Build$(CONFIGURATION)/JdkInfo.props
-	sed 's#@JI_JVM_PATH@#$(JI_JVM_PATH)#g' < $< > $@
+	sed -e 's#@JI_JVM_PATH@#$(JI_JVM_PATH)#g' -e 's#@OS_NAME@#$(DLLMAP_OS_NAME)#g' < $< > $@
 
 xa-fxcop: lib/gendarme-2.10/gendarme.exe bin/$(XA_CONFIGURATION)/Java.Interop.dll
 	$(RUNTIME) $< --html xa-gendarme.html $(if @(GENDARME_XML),--xml xa-gendarme.xml) --ignore gendarme-ignore.txt bin/$(XA_CONFIGURATION)/Java.Interop.dll
