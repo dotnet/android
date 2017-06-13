@@ -28,6 +28,7 @@ namespace MonoDroid.Tuner
 			}
 
 			if (changed) {
+				Context.SafeReadSymbols (assembly);
 				AssemblyAction action = Annotations.HasAction (assembly) ? Annotations.GetAction (assembly) : AssemblyAction.Skip;
 				if (action == AssemblyAction.Skip || action == AssemblyAction.Copy || action == AssemblyAction.Delete)
 					Annotations.SetAction (assembly, AssemblyAction.Save);
