@@ -500,6 +500,70 @@ namespace UnnamedProject {
 		}
 
 		[Test]
+		public void BuildAppCheckDebugSymbols ()
+		{
+			var path = Path.Combine ("temp", TestContext.CurrentContext.Test.Name);
+			var lib = new XamarinAndroidLibraryProject () {
+				IsRelease = false,
+				ProjectName = "Library1",
+				Sources = {
+					new BuildItem.Source ("Class1.cs") {
+						TextContent = () => @"using System;
+namespace Library1 {
+	public class Class1 : Java.Lang.Object, global::Android.Views.View.IOnClickListener {
+		void global::Android.Views.View.IOnClickListener.OnClick(global::Android.Views.View v)
+		{
+		}
+	}
+}
+",
+					},
+				},
+			};
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = false,
+				ProjectName = "App1",
+				References = { new BuildItem ("ProjectReference", "..\\Library1\\Library1.csproj") },
+				Sources = {
+					new BuildItem.Source ("Class2.cs") {
+						TextContent= () => @"
+using System;
+namespace App1
+{
+	public class Class2
+	{
+		Library1.Class1 c;
+		public Class2 ()
+		{
+		}
+	}
+}"
+					},
+				},
+			};
+			proj.SetProperty (KnownProperties.AndroidLinkMode, AndroidLinkMode.None.ToString ());
+			using (var libb = CreateDllBuilder (Path.Combine (path, "Library1"))) {
+				Assert.IsTrue (libb.Build (lib), "Library1 Build should have succeeded.");
+				using (var b = CreateApkBuilder (Path.Combine (path, "App1"))) {
+					Assert.IsTrue (b.Build (proj), "App1 Build should have succeeded.");
+					var assetsPdb = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "assets", "Library1.pdb");
+					var linkDst = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "linkdst", "Library1.pdb");
+					var linkSrc = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "linksrc", "Library1.pdb");
+					Assert.IsTrue (
+						File.Exists (assetsPdb),
+						"Library1.pdb must be copied to Intermediate directory");
+					Assert.IsTrue (
+						File.Exists (linkDst),
+						"Library1.pdb must be copied to linkdst directory");
+					Assert.IsTrue (
+						File.Exists (linkSrc),
+						"Library1.pdb must be copied to linksrc directory");
+					FileAssert.AreEqual (linkDst, assetsPdb, $"Library1.pdb in {assetsPdb} should match {linkDst}");
+				}
+			}
+		}
+
+		[Test]
 		public void BuildBasicApplicationCheckMdbAndPortablePdb ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
