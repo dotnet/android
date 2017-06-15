@@ -129,6 +129,9 @@
     <EmbeddedResource Include="Resources\Base\test.keystore">
       <LogicalName>Xamarin.ProjectTools.Resources.Base.test.keystore</LogicalName>
     </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Base\classes.jar">
+      <LogicalName>Xamarin.ProjectTools.Resources.Base.classes.jar</LogicalName>
+    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

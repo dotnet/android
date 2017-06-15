@@ -6,6 +6,7 @@ using System.IO;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.XPath;
+using Xamarin.Tools.Zip;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -461,6 +462,67 @@ namespace Bug12935
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
 				var manifest = builder.Output.GetIntermediaryAsText (Root, Path.Combine ("android", "AndroidManifest.xml"));
 				Assert.AreEqual (expected, manifest.Contains ("android:debuggable=\"true\""), $"Manifest  {(expected ? "should" : "should not")} contain the andorid:debuggable attribute");
+			}
+		}
+
+		[Test]
+		public void MergeLibraryManifest ()
+		{
+			byte [] classesJar;
+			using (var stream = typeof (XamarinAndroidCommonProject).Assembly.GetManifestResourceStream ("Xamarin.ProjectTools.Resources.Base.classes.jar")) {
+				classesJar = new byte [stream.Length];
+				stream.Read (classesJar, 0, (int)stream.Length);
+			}
+			byte [] data;
+			using (var ms = new MemoryStream ()) {
+				using (var zip = ZipArchive.Create (ms)) {
+					zip.AddEntry ("AndroidManifest.xml", @"<?xml version='1.0'?>
+<manifest xmlns:android='http://schemas.android.com/apk/res/android' package='com.xamarin.test'>
+    <uses-sdk android:minSdkVersion='14'/>
+
+    <application>
+        <activity android:name='.signin.internal.SignInHubActivity' />
+        <provider
+            android:authorities='${applicationId}.FacebookInitProvider'
+            android:name='.internal.FacebookInitProvider'
+            android:exported='false' />
+    </application>
+</manifest>
+", encoding: System.Text.Encoding.UTF8);
+					zip.CreateDirectory ("res");
+					zip.AddEntry (classesJar, "classes.jar");
+					zip.AddEntry ("R.txt", " ", encoding: System.Text.Encoding.UTF8);
+				}
+				data = ms.ToArray ();
+			}
+			var path = Path.Combine ("temp", TestContext.CurrentContext.Test.Name);
+			var lib = new XamarinAndroidBindingProject () {
+				ProjectName = "Binding1",
+				AndroidClassParser = "class-parse",
+				Jars = {
+					new AndroidItem.LibraryProjectZip ("Jars\\foo.aar") {
+						BinaryContent = () => data,
+					}
+				},
+			};
+			var proj = new XamarinAndroidApplicationProject () {
+				PackageName = "com.xamarin.manifest",
+				References = {
+					new BuildItem.ProjectReference ("..\\Binding1\\Binding1.csproj", lib.ProjectGuid)
+				},
+			};
+			using (var libbuilder = CreateDllBuilder (Path.Combine (path, "Binding1"))) {
+				Assert.IsTrue (libbuilder.Build (lib), "Build should have succeeded.");
+				using (var builder = CreateApkBuilder (Path.Combine (path, "App1"))) {
+					Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+					var manifest = builder.Output.GetIntermediaryAsText (Root, "android/AndroidManifest.xml");
+					Assert.IsTrue (manifest.Contains ("com.xamarin.test.signin.internal.SignInHubActivity"),
+						".signin.internal.SignInHubActivity was not replaced with com.xamarin.test.signin.internal.SignInHubActivity");
+					Assert.IsTrue (manifest.Contains ("com.xamarin.manifest.FacebookInitProvider"),
+						"${applicationId}.FacebookInitProvider was not replaced with com.xamarin.manifest.FacebookInitProvider");
+					Assert.IsTrue (manifest.Contains ("com.xamarin.test.internal.FacebookInitProvider"),
+						".internal.FacebookInitProvider was not replaced with com.xamarin.test.internal.FacebookInitProvider");
+				}
 			}
 		}
 	}
