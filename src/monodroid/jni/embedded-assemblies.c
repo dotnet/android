@@ -31,7 +31,7 @@ static  int                           bundled_assemblies_count;
 static  monodroid_should_register     should_register;
 static  void                         *should_register_data;
 static  int                           register_debug_symbols;
-static  char                         *assemblies_prefix = "assemblies/";
+static  char                         *assemblies_prefix;
 
 static  struct TypeMappingInfo       *java_to_managed_maps;
 static  struct TypeMappingInfo       *managed_to_java_maps;
@@ -323,8 +323,18 @@ register_debug_symbols_for_assembly (struct DylibMono *mono, const char *entry_n
 MONO_API int
 monodroid_embedded_assemblies_set_assemblies_prefix (const char *prefix)
 {
-	assemblies_prefix = prefix;
+	free (assemblies_prefix);
+	assemblies_prefix = strdup (prefix);
 	return 0;
+}
+
+static const char *
+get_assemblies_prefix (void)
+{
+	if (!assemblies_prefix) {
+		assemblies_prefix = strdup ("assemblies/");
+	}
+	return assemblies_prefix;
 }
 
 static int
@@ -396,7 +406,9 @@ gather_bundled_assemblies_from_apk (
 				add_type_mapping (&managed_to_java_maps, apk, cur_entry_name, ((const char*) mmap_info.area) + offset);
 				continue;
 			}
-			if (strncmp (assemblies_prefix, cur_entry_name, strlen (assemblies_prefix)-1) != 0)
+
+			const char *prefix = get_assemblies_prefix();
+			if (strncmp (prefix, cur_entry_name, strlen (prefix)) != 0)
 				continue;
 
 			// assemblies must be 4-byte aligned, or Bad Things happen
@@ -440,7 +452,7 @@ gather_bundled_assemblies_from_apk (
 			cur = (*bundle) [*bundle_count] = xcalloc (1, sizeof (MonoBundledAssembly));
 			++*bundle_count;
 
-			cur->name = monodroid_strdup_printf ("%s", strstr (cur_entry_name, assemblies_prefix) + strlen (assemblies_prefix));
+			cur->name = monodroid_strdup_printf ("%s", strstr (cur_entry_name, prefix) + strlen (prefix));
 			cur->data = ((const unsigned char*) mmap_info.area) + offset;
 
 			// MonoBundledAssembly::size is const?!
