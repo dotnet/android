@@ -5,4 +5,4 @@
 [submodule "external/cecil"]
 	path = external/cecil
 	url = https://github.com/mono/cecil.git
-	branch = mono-2017-02
+	branch = master
