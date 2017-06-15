@@ -207,6 +207,7 @@
 21,Android.App.Job.BackoffPolicy,Exponential,android/app/job/JobInfo.BACKOFF_POLICY_EXPONENTIAL,1
 21,Android.App.Job.BackoffPolicy,Linear,android/app/job/JobInfo.BACKOFF_POLICY_LINEAR,0
 21,Android.App.Job.NetworkType,Any,android/app/job/JobInfo.NETWORK_TYPE_ANY,1
+26,Android.App.Job.NetworkType,Metered,android/app/job/JobInfo.NETWORK_TYPE_METERED,4
 21,Android.App.Job.NetworkType,None,android/app/job/JobInfo.NETWORK_TYPE_NONE,0
 24,Android.App.Job.NetworkType,NotRoaming,android/app/job/JobInfo.NETWORK_TYPE_NOT_ROAMING,3
 21,Android.App.Job.NetworkType,Unmetered,android/app/job/JobInfo.NETWORK_TYPE_UNMETERED,2
@@ -328,6 +329,7 @@
 19,Android.Content.ActivityFlags,ReceiverNoAbort,android/content/Intent.FLAG_RECEIVER_NO_ABORT,134217728
 1,Android.Content.ActivityFlags,ReceiverRegisteredOnly,android/content/Intent.FLAG_RECEIVER_REGISTERED_ONLY,1073741824
 8,Android.Content.ActivityFlags,ReceiverReplacePending,android/content/Intent.FLAG_RECEIVER_REPLACE_PENDING,536870912
+26,Android.Content.ActivityFlags,ReceiverVisibleToInstantApps,android/content/Intent.FLAG_RECEIVER_VISIBLE_TO_INSTANT_APPS,2097152
 1,Android.Content.FillInFlags,Action,android/content/Intent.FILL_IN_ACTION,1
 1,Android.Content.FillInFlags,Categories,android/content/Intent.FILL_IN_CATEGORIES,4
 16,Android.Content.FillInFlags,ClipData,android/content/Intent.FILL_IN_CLIP_DATA,128
@@ -394,6 +396,7 @@
 4,Android.Content.PM.ApplicationInfoFlags,UpdatedSystemApp,android/content/pm/ApplicationInfo.FLAG_UPDATED_SYSTEM_APP,128
 23,Android.Content.PM.ApplicationInfoFlags,UsesCleartextTraffic,android/content/pm/ApplicationInfo.FLAG_USES_CLEARTEXT_TRAFFIC,134217728
 8,Android.Content.PM.ApplicationInfoFlags,VMSafeMode,android/content/pm/ApplicationInfo.FLAG_VM_SAFE_MODE,16384
+26,Android.Content.PM.ConfigChanges,ColorMode,android/content/pm/ActivityInfo.CONFIG_COLOR_MODE,16384
 17,Android.Content.PM.ConfigChanges,Density,android/content/pm/ActivityInfo.CONFIG_DENSITY,4096
 1,Android.Content.PM.ConfigChanges,FontScale,android/content/pm/ActivityInfo.CONFIG_FONT_SCALE,1073741824
 1,Android.Content.PM.ConfigChanges,Keyboard,android/content/pm/ActivityInfo.CONFIG_KEYBOARD,16
@@ -497,11 +500,12 @@
 23,Android.Content.PM.Protection,FlagPre23,android/content/pm/PermissionInfo.PROTECTION_FLAG_PRE23,128
 23,Android.Content.PM.Protection,FlagPreinstalled,android/content/pm/PermissionInfo.PROTECTION_FLAG_PREINSTALLED,1024
 23,Android.Content.PM.Protection,FlagPrivileged,android/content/pm/PermissionInfo.PROTECTION_FLAG_PRIVILEGED,16
+26,Android.Content.PM.Protection,FlagRuntimeOnly,android/content/pm/PermissionInfo.PROTECTION_FLAG_RUNTIME_ONLY,8192
 24,Android.Content.PM.Protection,FlagSetup,android/content/pm/PermissionInfo.PROTECTION_FLAG_SETUP,2048
 16,Android.Content.PM.Protection,FlagSystem,android/content/pm/PermissionInfo.PROTECTION_FLAG_SYSTEM,16
 23,Android.Content.PM.Protection,FlagVerifier,android/content/pm/PermissionInfo.PROTECTION_FLAG_VERIFIER,512
 16,Android.Content.PM.Protection,MaskBase,android/content/pm/PermissionInfo.PROTECTION_MASK_BASE,15
-16,Android.Content.PM.Protection,MaskFlags,android/content/pm/PermissionInfo.PROTECTION_MASK_FLAGS,4080
+16,Android.Content.PM.Protection,MaskFlags,android/content/pm/PermissionInfo.PROTECTION_MASK_FLAGS,65520
 1,Android.Content.PM.Protection,Normal,android/content/pm/PermissionInfo.PROTECTION_NORMAL,0
 1,Android.Content.PM.Protection,Signature,android/content/pm/PermissionInfo.PROTECTION_SIGNATURE,2
 1,Android.Content.PM.Protection,SignatureOrSystem,android/content/pm/PermissionInfo.PROTECTION_SIGNATURE_OR_SYSTEM,3
@@ -551,9 +555,11 @@
 1,Android.Graphics.Format,La88,android/graphics/PixelFormat.LA_88,10
 1,Android.Graphics.Format,L8,android/graphics/PixelFormat.L_8,9
 1,Android.Graphics.Format,Opaque,android/graphics/PixelFormat.OPAQUE,-1
+26,Android.Graphics.Format,Rgba1010102,android/graphics/PixelFormat.RGBA_1010102,43
 1,Android.Graphics.Format,Rgba4444,android/graphics/PixelFormat.RGBA_4444,7
 1,Android.Graphics.Format,Rgba5551,android/graphics/PixelFormat.RGBA_5551,6
 1,Android.Graphics.Format,Rgba8888,android/graphics/PixelFormat.RGBA_8888,1
+26,Android.Graphics.Format,RgbaF16,android/graphics/PixelFormat.RGBA_F16,22
 1,Android.Graphics.Format,Rgbx8888,android/graphics/PixelFormat.RGBX_8888,2
 1,Android.Graphics.Format,Rgb332,android/graphics/PixelFormat.RGB_332,11
 1,Android.Graphics.Format,Rgb565,android/graphics/PixelFormat.RGB_565,4
@@ -575,6 +581,7 @@
 21,Android.Hardware.ReportingMode,OnChange,android/hardware/Sensor.REPORTING_MODE_ON_CHANGE,1
 21,Android.Hardware.ReportingMode,SpecialTrigger,android/hardware/Sensor.REPORTING_MODE_SPECIAL_TRIGGER,3
 3,Android.Hardware.SensorType,Accelerometer,android/hardware/Sensor.TYPE_ACCELEROMETER,1
+26,Android.Hardware.SensorType,AccelerometerUncalibrated,android/hardware/Sensor.TYPE_ACCELEROMETER_UNCALIBRATED,35
 3,Android.Hardware.SensorType,All,android/hardware/Sensor.TYPE_ALL,-1
 14,Android.Hardware.SensorType,AmbientTemperature,android/hardware/Sensor.TYPE_AMBIENT_TEMPERATURE,13
 24,Android.Hardware.SensorType,DevicePrivateBase,android/hardware/Sensor.TYPE_DEVICE_PRIVATE_BASE,65536
@@ -587,6 +594,7 @@
 20,Android.Hardware.SensorType,HeartRate,android/hardware/Sensor.TYPE_HEART_RATE,21
 3,Android.Hardware.SensorType,Light,android/hardware/Sensor.TYPE_LIGHT,5
 9,Android.Hardware.SensorType,LinearAcceleration,android/hardware/Sensor.TYPE_LINEAR_ACCELERATION,10
+26,Android.Hardware.SensorType,LowLatencyOffbodyDetect,android/hardware/Sensor.TYPE_LOW_LATENCY_OFFBODY_DETECT,34
 3,Android.Hardware.SensorType,MagneticField,android/hardware/Sensor.TYPE_MAGNETIC_FIELD,2
 18,Android.Hardware.SensorType,MagneticFieldUncalibrated,android/hardware/Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED,14
 24,Android.Hardware.SensorType,MotionDetect,android/hardware/Sensor.TYPE_MOTION_DETECT,30
@@ -887,6 +895,7 @@
 21,Android.Media.AudioUsageKind,AssistanceAccessibility,android/media/AudioAttributes.USAGE_ASSISTANCE_ACCESSIBILITY,11
 21,Android.Media.AudioUsageKind,AssistanceNavigationGuidance,android/media/AudioAttributes.USAGE_ASSISTANCE_NAVIGATION_GUIDANCE,12
 21,Android.Media.AudioUsageKind,AssistanceSonification,android/media/AudioAttributes.USAGE_ASSISTANCE_SONIFICATION,13
+26,Android.Media.AudioUsageKind,Assistant,android/media/AudioAttributes.USAGE_ASSISTANT,16
 21,Android.Media.AudioUsageKind,Game,android/media/AudioAttributes.USAGE_GAME,14
 21,Android.Media.AudioUsageKind,Media,android/media/AudioAttributes.USAGE_MEDIA,1
 21,Android.Media.AudioUsageKind,Notification,android/media/AudioAttributes.USAGE_NOTIFICATION,5
@@ -1062,6 +1071,7 @@
 17,Android.Media.MediaError,TimedOut,android/media/MediaPlayer.MEDIA_ERROR_TIMED_OUT,-110
 1,Android.Media.MediaError,Unknown,android/media/MediaPlayer.MEDIA_ERROR_UNKNOWN,1
 17,Android.Media.MediaError,Unsupported,android/media/MediaPlayer.MEDIA_ERROR_UNSUPPORTED,-1010
+26,Android.Media.MediaInfo,AudioNotPlaying,android/media/MediaPlayer.MEDIA_INFO_AUDIO_NOT_PLAYING,804
 3,Android.Media.MediaInfo,BadInterleaving,android/media/MediaPlayer.MEDIA_INFO_BAD_INTERLEAVING,800
 9,Android.Media.MediaInfo,BufferingEnd,android/media/MediaPlayer.MEDIA_INFO_BUFFERING_END,702
 9,Android.Media.MediaInfo,BufferingStart,android/media/MediaPlayer.MEDIA_INFO_BUFFERING_START,701
@@ -1070,10 +1080,13 @@
 19,Android.Media.MediaInfo,SubtitleTimedOut,android/media/MediaPlayer.MEDIA_INFO_SUBTITLE_TIMED_OUT,902
 3,Android.Media.MediaInfo,Unknown,android/media/MediaPlayer.MEDIA_INFO_UNKNOWN,1
 19,Android.Media.MediaInfo,UnsupportedSubtitle,android/media/MediaPlayer.MEDIA_INFO_UNSUPPORTED_SUBTITLE,901
+26,Android.Media.MediaInfo,VideoNotPlaying,android/media/MediaPlayer.MEDIA_INFO_VIDEO_NOT_PLAYING,805
 17,Android.Media.MediaInfo,VideoRenderingStart,android/media/MediaPlayer.MEDIA_INFO_VIDEO_RENDERING_START,3
 3,Android.Media.MediaInfo,VideoTrackLagging,android/media/MediaPlayer.MEDIA_INFO_VIDEO_TRACK_LAGGING,700
 3,Android.Media.MediaRecorderInfo,MaxDurationReached,android/media/MediaRecorder.MEDIA_RECORDER_INFO_MAX_DURATION_REACHED,800
+26,Android.Media.MediaRecorderInfo,MaxFilesizeApproaching,android/media/MediaRecorder.MEDIA_RECORDER_INFO_MAX_FILESIZE_APPROACHING,802
 3,Android.Media.MediaRecorderInfo,MaxFilesizeReached,android/media/MediaRecorder.MEDIA_RECORDER_INFO_MAX_FILESIZE_REACHED,801
+26,Android.Media.MediaRecorderInfo,NextOutputFileStarted,android/media/MediaRecorder.MEDIA_RECORDER_INFO_NEXT_OUTPUT_FILE_STARTED,803
 3,Android.Media.MediaRecorderInfo,Unknown,android/media/MediaRecorder.MEDIA_RECORDER_INFO_UNKNOWN,1
 10,Android.Media.AudioEncoder,Aac,android/media/MediaRecorder$AudioEncoder.AAC,3
 16,Android.Media.AudioEncoder,AacEld,android/media/MediaRecorder$AudioEncoder.AAC_ELD,5
@@ -1096,6 +1109,7 @@
 10,Android.Media.OutputFormat,AmrNb,android/media/MediaRecorder$OutputFormat.AMR_NB,3
 10,Android.Media.OutputFormat,AmrWb,android/media/MediaRecorder$OutputFormat.AMR_WB,4
 1,Android.Media.OutputFormat,Default,android/media/MediaRecorder$OutputFormat.DEFAULT,0
+26,Android.Media.OutputFormat,Mpeg2Ts,android/media/MediaRecorder$OutputFormat.MPEG_2_TS,8
 1,Android.Media.OutputFormat,Mpeg4,android/media/MediaRecorder$OutputFormat.MPEG_4,2
 3,Android.Media.OutputFormat,RawAmr,android/media/MediaRecorder$OutputFormat.RAW_AMR,3
 1,Android.Media.OutputFormat,ThreeGpp,android/media/MediaRecorder$OutputFormat.THREE_GPP,1
@@ -1357,6 +1371,7 @@
 1,Android.OS.ParcelFileMode,WorldReadable,android/os/ParcelFileDescriptor.MODE_WORLD_READABLE,1
 1,Android.OS.ParcelFileMode,WorldWriteable,android/os/ParcelFileDescriptor.MODE_WORLD_WRITEABLE,2
 1,Android.OS.ParcelFileMode,WriteOnly,android/os/ParcelFileDescriptor.MODE_WRITE_ONLY,536870912
+26,Android.OS.Pattern,AdvancedGlob,android/os/PatternMatcher.PATTERN_ADVANCED_GLOB,3
 1,Android.OS.Pattern,Literal,android/os/PatternMatcher.PATTERN_LITERAL,0
 1,Android.OS.Pattern,Prefix,android/os/PatternMatcher.PATTERN_PREFIX,1
 1,Android.OS.Pattern,SimpleGlob,android/os/PatternMatcher.PATTERN_SIMPLE_GLOB,2
@@ -2112,6 +2127,7 @@
 12,Android.Views.Axis,Rx,android/view/MotionEvent.AXIS_RX,12
 12,Android.Views.Axis,Ry,android/view/MotionEvent.AXIS_RY,13
 12,Android.Views.Axis,Rz,android/view/MotionEvent.AXIS_RZ,14
+26,Android.Views.Axis,Scroll,android/view/MotionEvent.AXIS_SCROLL,26
 12,Android.Views.Axis,Size,android/view/MotionEvent.AXIS_SIZE,3
 12,Android.Views.Axis,Throttle,android/view/MotionEvent.AXIS_THROTTLE,19
 14,Android.Views.Axis,Tilt,android/view/MotionEvent.AXIS_TILT,25
@@ -2180,6 +2196,7 @@
 1,Android.Views.WindowManagerTypes,Application,android/view/WindowManager$LayoutParams.TYPE_APPLICATION,2
 3,Android.Views.WindowManagerTypes,ApplicationAttachedDialog,android/view/WindowManager$LayoutParams.TYPE_APPLICATION_ATTACHED_DIALOG,1003
 1,Android.Views.WindowManagerTypes,ApplicationMedia,android/view/WindowManager$LayoutParams.TYPE_APPLICATION_MEDIA,1001
+26,Android.Views.WindowManagerTypes,ApplicationOverlay,android/view/WindowManager$LayoutParams.TYPE_APPLICATION_OVERLAY,2038
 1,Android.Views.WindowManagerTypes,ApplicationPanel,android/view/WindowManager$LayoutParams.TYPE_APPLICATION_PANEL,1000
 1,Android.Views.WindowManagerTypes,ApplicationStarting,android/view/WindowManager$LayoutParams.TYPE_APPLICATION_STARTING,3
 1,Android.Views.WindowManagerTypes,ApplicationSubPanel,android/view/WindowManager$LayoutParams.TYPE_APPLICATION_SUB_PANEL,1002
@@ -2220,6 +2237,7 @@
 3,Android.Views.InputMethods.ImeFlags,NoEnterAction,android/view/inputmethod/EditorInfo.IME_FLAG_NO_ENTER_ACTION,1073741824
 3,Android.Views.InputMethods.ImeFlags,NoExtractUi,android/view/inputmethod/EditorInfo.IME_FLAG_NO_EXTRACT_UI,268435456
 11,Android.Views.InputMethods.ImeFlags,NoFullscreen,android/view/inputmethod/EditorInfo.IME_FLAG_NO_FULLSCREEN,33554432
+26,Android.Views.InputMethods.ImeFlags,NoPersonalizedLearning,android/view/inputmethod/EditorInfo.IME_FLAG_NO_PERSONALIZED_LEARNING,16777216
 21,Android.Webkit.ChromeFileChooserMode,Open,android/webkit/WebChromeClient.FileChooserParams.MODE_OPEN,0
 21,Android.Webkit.ChromeFileChooserMode,OpenMultiple,android/webkit/WebChromeClient.FileChooserParams.MODE_OPEN_MULTIPLE,1
 21,Android.Webkit.ChromeFileChooserMode,Save,android/webkit/WebChromeClient.FileChooserParams.MODE_SAVE,3
@@ -2480,7 +2498,11 @@
 1,Android.Telephony.PhoneType,None,android/telephony/TelephonyManager.PHONE_TYPE_NONE,0
 11,Android.Telephony.PhoneType,Sip,android/telephony/TelephonyManager.PHONE_TYPE_SIP,3
 1,Android.Telephony.SimState,Absent,android/telephony/TelephonyManager.SIM_STATE_ABSENT,1
+26,Android.Telephony.SimState,CardIoError,android/telephony/TelephonyManager.SIM_STATE_CARD_IO_ERROR,8
+26,Android.Telephony.SimState,CardRestricted,android/telephony/TelephonyManager.SIM_STATE_CARD_RESTRICTED,9
 1,Android.Telephony.SimState,NetworkLocked,android/telephony/TelephonyManager.SIM_STATE_NETWORK_LOCKED,4
+26,Android.Telephony.SimState,NotReady,android/telephony/TelephonyManager.SIM_STATE_NOT_READY,6
+26,Android.Telephony.SimState,PermDisabled,android/telephony/TelephonyManager.SIM_STATE_PERM_DISABLED,7
 1,Android.Telephony.SimState,PinRequired,android/telephony/TelephonyManager.SIM_STATE_PIN_REQUIRED,2
 1,Android.Telephony.SimState,PukRequired,android/telephony/TelephonyManager.SIM_STATE_PUK_REQUIRED,3
 1,Android.Telephony.SimState,Ready,android/telephony/TelephonyManager.SIM_STATE_READY,5
@@ -2587,6 +2609,7 @@
 20,Android.Views.DisplayState,Off,android/view/Display.STATE_OFF,1
 20,Android.Views.DisplayState,On,android/view/Display.STATE_ON,2
 20,Android.Views.DisplayState,Unknown,android/view/Display.STATE_UNKNOWN,0
+26,Android.Views.DisplayState,Vr,android/view/Display.STATE_VR,5
 11,Android.Views.DragAction,Drop,android/view/DragEvent.ACTION_DROP,3
 11,Android.Views.DragAction,Ended,android/view/DragEvent.ACTION_DRAG_ENDED,4
 11,Android.Views.DragAction,Entered,android/view/DragEvent.ACTION_DRAG_ENTERED,5
@@ -2739,6 +2762,7 @@
 5,Android.Webkit.ClientError,Timeout,android/webkit/WebViewClient.ERROR_TIMEOUT,-8
 5,Android.Webkit.ClientError,TooManyRequests,android/webkit/WebViewClient.ERROR_TOO_MANY_REQUESTS,-15
 5,Android.Webkit.ClientError,Unknown,android/webkit/WebViewClient.ERROR_UNKNOWN,-1
+26,Android.Webkit.ClientError,UnsafeResource,android/webkit/WebViewClient.ERROR_UNSAFE_RESOURCE,-16
 5,Android.Webkit.ClientError,UnsupportedAuthScheme,android/webkit/WebViewClient.ERROR_UNSUPPORTED_AUTH_SCHEME,-3
 5,Android.Webkit.ClientError,UnsupportedScheme,android/webkit/WebViewClient.ERROR_UNSUPPORTED_SCHEME,-10
 1,Android.Widget.ChoiceMode,Multiple,android/widget/AbsListView.CHOICE_MODE_MULTIPLE,2
@@ -2888,6 +2912,7 @@
 23,Android.Media.AudioDeviceType,Unknown,android/media/AudioDeviceInfo.TYPE_UNKNOWN,0
 23,Android.Media.AudioDeviceType,UsbAccessory,android/media/AudioDeviceInfo.TYPE_USB_ACCESSORY,12
 23,Android.Media.AudioDeviceType,UsbDevice,android/media/AudioDeviceInfo.TYPE_USB_DEVICE,11
+26,Android.Media.AudioDeviceType,UsbHeadset,android/media/AudioDeviceInfo.TYPE_USB_HEADSET,22
 23,Android.Media.AudioDeviceType,WiredHeadphones,android/media/AudioDeviceInfo.TYPE_WIRED_HEADPHONES,4
 23,Android.Media.AudioDeviceType,WiredHeadset,android/media/AudioDeviceInfo.TYPE_WIRED_HEADSET,3
 23,Android.Media.GetDevicesTargets,All,android/media/AudioManager.GET_DEVICES_ALL,3
@@ -2981,6 +3006,7 @@
 25,Android.Telecom.CallProperty,HasCdmaVoicePrivacy,android/telecom/Call.Details.PROPERTY_HAS_CDMA_VOICE_PRIVACY,128
 23,Android.Telecom.CallProperty,HighDefAudio,android/telecom/Call.Details.PROPERTY_HIGH_DEF_AUDIO,16
 25,Android.Telecom.CallProperty,IsExternalCall,android/telecom/Call.Details.PROPERTY_IS_EXTERNAL_CALL,64
+26,Android.Telecom.CallProperty,SelfManaged,android/telecom/Call.Details.PROPERTY_SELF_MANAGED,256
 23,Android.Telecom.CallProperty,Wifi,android/telecom/Call.Details.PROPERTY_WIFI,8
 23,Android.Telecom.CallAudioRoute,Bluetooth,android/telecom/CallAudioState.ROUTE_BLUETOOTH,2
 23,Android.Telecom.CallAudioRoute,Earpiece,android/telecom/CallAudioState.ROUTE_EARPIECE,1
@@ -3016,6 +3042,7 @@
 25,Android.Telecom.ConnectionState,PullingCall,android/telecom/Connection.STATE_PULLING_CALL,7
 23,Android.Telecom.ConnectionState,Ringing,android/telecom/Connection.STATE_RINGING,2
 23,Android.Telecom.VideoSessionEvent,CameraFailure,android/telecom/Connection.VideoProvider.SESSION_EVENT_CAMERA_FAILURE,5
+26,Android.Telecom.VideoSessionEvent,CameraPermissionError,android/telecom/Connection.VideoProvider.SESSION_EVENT_CAMERA_PERMISSION_ERROR,7
 23,Android.Telecom.VideoSessionEvent,CameraReady,android/telecom/Connection.VideoProvider.SESSION_EVENT_CAMERA_READY,6
 23,Android.Telecom.VideoSessionEvent,RxPause,android/telecom/Connection.VideoProvider.SESSION_EVENT_RX_PAUSE,1
 23,Android.Telecom.VideoSessionEvent,RxResume,android/telecom/Connection.VideoProvider.SESSION_EVENT_RX_RESUME,2
@@ -3043,7 +3070,10 @@
 23,Android.Telecom.PhoneAccountCapability,CallSubject,android/telecom/PhoneAccount.CAPABILITY_CALL_SUBJECT,64
 23,Android.Telecom.PhoneAccountCapability,ConnectionManager,android/telecom/PhoneAccount.CAPABILITY_CONNECTION_MANAGER,1
 23,Android.Telecom.PhoneAccountCapability,PlaceEmergencyCalls,android/telecom/PhoneAccount.CAPABILITY_PLACE_EMERGENCY_CALLS,16
+26,Android.Telecom.PhoneAccountCapability,Rtt,android/telecom/PhoneAccount.CAPABILITY_RTT,4096
+26,Android.Telecom.PhoneAccountCapability,SelfManaged,android/telecom/PhoneAccount.CAPABILITY_SELF_MANAGED,2048
 23,Android.Telecom.PhoneAccountCapability,SimSubscription,android/telecom/PhoneAccount.CAPABILITY_SIM_SUBSCRIPTION,4
+26,Android.Telecom.PhoneAccountCapability,SupportsVideoCalling,android/telecom/PhoneAccount.CAPABILITY_SUPPORTS_VIDEO_CALLING,1024
 23,Android.Telecom.PhoneAccountCapability,VideoCalling,android/telecom/PhoneAccount.CAPABILITY_VIDEO_CALLING,8
 24,Android.Telecom.PhoneAccountCapability,VideoCallingReliesOnPresence,android/telecom/PhoneAccount.CAPABILITY_VIDEO_CALLING_RELIES_ON_PRESENCE,256
 23,Android.Telecom.VideoQuality,Default,android/telecom/VideoProfile.QUALITY_DEFAULT,4
@@ -3217,10 +3247,13 @@
 1,Javax.Crypto.CipherMode,UnwrapMode,javax/crypto/Cipher.UNWRAP_MODE,4
 1,Javax.Crypto.CipherMode,WrapMode,javax/crypto/Cipher.WRAP_MODE,3
 4,Android.AccessibilityServices.AccessibilityServiceFlags,Default,android/accessibilityservice/AccessibilityServiceInfo.DEFAULT,1
+26,Android.AccessibilityServices.AccessibilityServiceFlags,EnableAccessibilityVolume,android/accessibilityservice/AccessibilityServiceInfo.FLAG_ENABLE_ACCESSIBILITY_VOLUME,128
 16,Android.AccessibilityServices.AccessibilityServiceFlags,IncludeNotImportantViews,android/accessibilityservice/AccessibilityServiceInfo.FLAG_INCLUDE_NOT_IMPORTANT_VIEWS,2
 18,Android.AccessibilityServices.AccessibilityServiceFlags,ReportViewIds,android/accessibilityservice/AccessibilityServiceInfo.FLAG_REPORT_VIEW_IDS,16
+26,Android.AccessibilityServices.AccessibilityServiceFlags,RequestAccessibilityButton,android/accessibilityservice/AccessibilityServiceInfo.FLAG_REQUEST_ACCESSIBILITY_BUTTON,256
 18,Android.AccessibilityServices.AccessibilityServiceFlags,RequestEnhancedWebAccessibility,android/accessibilityservice/AccessibilityServiceInfo.FLAG_REQUEST_ENHANCED_WEB_ACCESSIBILITY,8
 18,Android.AccessibilityServices.AccessibilityServiceFlags,RequestFilterKeyEvents,android/accessibilityservice/AccessibilityServiceInfo.FLAG_REQUEST_FILTER_KEY_EVENTS,32
+26,Android.AccessibilityServices.AccessibilityServiceFlags,RequestFingerprintGestures,android/accessibilityservice/AccessibilityServiceInfo.FLAG_REQUEST_FINGERPRINT_GESTURES,512
 16,Android.AccessibilityServices.AccessibilityServiceFlags,RequestTouchExplorationMode,android/accessibilityservice/AccessibilityServiceInfo.FLAG_REQUEST_TOUCH_EXPLORATION_MODE,4
 21,Android.AccessibilityServices.AccessibilityServiceFlags,RetrieveInteractiveWindows,android/accessibilityservice/AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS,64
 0,Android.AccessibilityServices.AccessibilityServiceCapabilities,None,,0
@@ -3228,6 +3261,7 @@
 24,Android.AccessibilityServices.AccessibilityServiceCapabilities,CanPerformGestures,android/accessibilityservice/AccessibilityServiceInfo.CAPABILITY_CAN_PERFORM_GESTURES,32
 18,Android.AccessibilityServices.AccessibilityServiceCapabilities,CanRequestEnhancedWebAccessibility,android/accessibilityservice/AccessibilityServiceInfo.CAPABILITY_CAN_REQUEST_ENHANCED_WEB_ACCESSIBILITY,4
 18,Android.AccessibilityServices.AccessibilityServiceCapabilities,CanRequestFilterKeyEvents,android/accessibilityservice/AccessibilityServiceInfo.CAPABILITY_CAN_REQUEST_FILTER_KEY_EVENTS,8
+26,Android.AccessibilityServices.AccessibilityServiceCapabilities,CanRequestFingerprintGestures,android/accessibilityservice/AccessibilityServiceInfo.CAPABILITY_CAN_REQUEST_FINGERPRINT_GESTURES,64
 18,Android.AccessibilityServices.AccessibilityServiceCapabilities,CanRequestTouchExploration,android/accessibilityservice/AccessibilityServiceInfo.CAPABILITY_CAN_REQUEST_TOUCH_EXPLORATION,2
 18,Android.AccessibilityServices.AccessibilityServiceCapabilities,CanRetrieveWindowContent,android/accessibilityservice/AccessibilityServiceInfo.CAPABILITY_CAN_RETRIEVE_WINDOW_CONTENT,1
 5,Android.Accounts.ErrorCode,BadArguments,android/accounts/AccountManager.ERROR_CODE_BAD_ARGUMENTS,7
@@ -3249,11 +3283,13 @@
 1,Android.App.ProcessError,NotResponding,android/app/ActivityManager$ProcessErrorStateInfo.NOT_RESPONDING,2
 1,Android.App.ProcessError,NoError,android/app/ActivityManager$ProcessErrorStateInfo.NO_ERROR,0
 3,Android.App.Importance,Background,android/app/ActivityManager$RunningAppProcessInfo.IMPORTANCE_BACKGROUND,400
+26,Android.App.Importance,Cached,android/app/ActivityManager$RunningAppProcessInfo.IMPORTANCE_CACHED,400
 3,Android.App.Importance,Empty,android/app/ActivityManager$RunningAppProcessInfo.IMPORTANCE_EMPTY,500
 3,Android.App.Importance,Foreground,android/app/ActivityManager$RunningAppProcessInfo.IMPORTANCE_FOREGROUND,100
 23,Android.App.Importance,ForegroundService,android/app/ActivityManager$RunningAppProcessInfo.IMPORTANCE_FOREGROUND_SERVICE,125
 21,Android.App.Importance,Gone,android/app/ActivityManager$RunningAppProcessInfo.IMPORTANCE_GONE,1000
-9,Android.App.Importance,Perceptible,android/app/ActivityManager$RunningAppProcessInfo.IMPORTANCE_PERCEPTIBLE,130
+9,Android.App.Importance,Perceptible,android/app/ActivityManager$RunningAppProcessInfo.IMPORTANCE_PERCEPTIBLE,230
+26,Android.App.Importance,PerceptiblePre26,android/app/ActivityManager$RunningAppProcessInfo.IMPORTANCE_PERCEPTIBLE_PRE_26,130
 3,Android.App.Importance,Service,android/app/ActivityManager$RunningAppProcessInfo.IMPORTANCE_SERVICE,300
 23,Android.App.Importance,TopSleeping,android/app/ActivityManager$RunningAppProcessInfo.IMPORTANCE_TOP_SLEEPING,150
 3,Android.App.Importance,Visible,android/app/ActivityManager$RunningAppProcessInfo.IMPORTANCE_VISIBLE,200
@@ -3324,6 +3360,7 @@
 8,Android.App.Admin.DeviceAdminUses,PolicyWatchLogin,android/app/admin/DeviceAdminInfo.USES_POLICY_WATCH_LOGIN,1
 8,Android.App.Admin.DeviceAdminUses,PolicyWipeData,android/app/admin/DeviceAdminInfo.USES_POLICY_WIPE_DATA,4
 0,Android.App.Admin.DevicePolicyManagerFlags,None,,0
+26,Android.App.Admin.DevicePolicyManagerFlags,EvictCredentialEncryptionKey,android/app/admin/DevicePolicyManager.FLAG_EVICT_CREDENTIAL_ENCRYPTION_KEY,1
 21,Android.App.Admin.DevicePolicyManagerFlags,ManagedCanAccessParent,android/app/admin/DevicePolicyManager.FLAG_MANAGED_CAN_ACCESS_PARENT,2
 21,Android.App.Admin.DevicePolicyManagerFlags,ParentCanAccessManaged,android/app/admin/DevicePolicyManager.FLAG_PARENT_CAN_ACCESS_MANAGED,1
 23,Android.App.Admin.ResetPasswordFlags,DoNotAskCredentialsOnBoot,android/app/admin/DevicePolicyManager.RESET_PASSWORD_DO_NOT_ASK_CREDENTIALS_ON_BOOT,2
@@ -3519,6 +3556,7 @@
 8,Android.Content.Res.UiMode,TypeNormal,android/content/res/Configuration.UI_MODE_TYPE_NORMAL,1
 13,Android.Content.Res.UiMode,TypeTelevision,android/content/res/Configuration.UI_MODE_TYPE_TELEVISION,4
 8,Android.Content.Res.UiMode,TypeUndefined,android/content/res/Configuration.UI_MODE_TYPE_UNDEFINED,0
+26,Android.Content.Res.UiMode,TypeVrHeadset,android/content/res/Configuration.UI_MODE_TYPE_VR_HEADSET,7
 20,Android.Content.Res.UiMode,TypeWatch,android/content/res/Configuration.UI_MODE_TYPE_WATCH,6
 18,Android.Content.RestrictionEntryType,Boolean,android/content/RestrictionEntry.TYPE_BOOLEAN,1
 23,Android.Content.RestrictionEntryType,Bundle,android/content/RestrictionEntry.TYPE_BUNDLE,7
@@ -3589,6 +3627,7 @@
 19,Android.Hardware.Display.VirtualDisplayFlags,Presentation,android/hardware/display/DisplayManager.VIRTUAL_DISPLAY_FLAG_PRESENTATION,2
 19,Android.Hardware.Display.VirtualDisplayFlags,Public,android/hardware/display/DisplayManager.VIRTUAL_DISPLAY_FLAG_PUBLIC,1
 19,Android.Hardware.Display.VirtualDisplayFlags,Secure,android/hardware/display/DisplayManager.VIRTUAL_DISPLAY_FLAG_SECURE,4
+26,Android.Media.AudioFocusRequest,Delayed,android/media/AudioManager.AUDIOFOCUS_REQUEST_DELAYED,2
 8,Android.Media.AudioFocusRequest,Failed,android/media/AudioManager.AUDIOFOCUS_REQUEST_FAILED,0
 8,Android.Media.AudioFocusRequest,Granted,android/media/AudioManager.AUDIOFOCUS_REQUEST_GRANTED,1
 8,Android.Media.AudioFocus,Gain,android/media/AudioManager.AUDIOFOCUS_GAIN,1
@@ -3598,6 +3637,7 @@
 8,Android.Media.AudioFocus,Loss,android/media/AudioManager.AUDIOFOCUS_LOSS,-1
 8,Android.Media.AudioFocus,LossTransient,android/media/AudioManager.AUDIOFOCUS_LOSS_TRANSIENT,-2
 8,Android.Media.AudioFocus,LossTransientCanDuck,android/media/AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK,-3
+26,Android.Media.AudioFocus,None,android/media/AudioManager.AUDIOFOCUS_NONE,0
 8,Android.Media.ScoAudioState,Connected,android/media/AudioManager.SCO_AUDIO_STATE_CONNECTED,1
 14,Android.Media.ScoAudioState,Connecting,android/media/AudioManager.SCO_AUDIO_STATE_CONNECTING,2
 8,Android.Media.ScoAudioState,Disconnected,android/media/AudioManager.SCO_AUDIO_STATE_DISCONNECTED,0
@@ -3627,6 +3667,7 @@
 19,Android.Media.MediaMetadataEditKey,BitmapKeyArtwork,android/media/MediaMetadataEditor.BITMAP_KEY_ARTWORK,100
 19,Android.Media.MediaMetadataEditKey,RatingKeyByOthers,android/media/MediaMetadataEditor.RATING_KEY_BY_OTHERS,101
 19,Android.Media.MediaMetadataEditKey,RatingKeyByUser,android/media/MediaMetadataEditor.RATING_KEY_BY_USER,268435457
+26,Android.Media.MuxerOutputType,M3gpp,android/media/MediaMuxer$OutputFormat.MUXER_OUTPUT_3GPP,2
 18,Android.Media.MuxerOutputType,Mpeg4,android/media/MediaMuxer$OutputFormat.MUXER_OUTPUT_MPEG_4,0
 21,Android.Media.MuxerOutputType,Webm,android/media/MediaMuxer$OutputFormat.MUXER_OUTPUT_WEBM,1
 10,Android.Media.MetadataKey,Album,android/media/MediaMetadataRetriever.METADATA_KEY_ALBUM,1
@@ -3787,6 +3828,7 @@
 21,Android.Net.TransportType,Ethernet,android/net/NetworkCapabilities.TRANSPORT_ETHERNET,3
 21,Android.Net.TransportType,Vpn,android/net/NetworkCapabilities.TRANSPORT_VPN,4
 21,Android.Net.TransportType,Wifi,android/net/NetworkCapabilities.TRANSPORT_WIFI,1
+26,Android.Net.TransportType,WifiAware,android/net/NetworkCapabilities.TRANSPORT_WIFI_AWARE,5
 14,Android.Net.Http.SslErrorType,DateInvalid,android/net/http/SslError.SSL_DATE_INVALID,4
 8,Android.Net.Http.SslErrorType,Expired,android/net/http/SslError.SSL_EXPIRED,1
 8,Android.Net.Http.SslErrorType,Idmismatch,android/net/http/SslError.SSL_IDMISMATCH,2
@@ -3857,11 +3899,14 @@
 18,Android.Net.Wifi.WifiEapMethod,Tls,android/net/wifi/WifiEnterpriseConfig$Eap.TLS,1
 18,Android.Net.Wifi.WifiEapMethod,Ttls,android/net/wifi/WifiEnterpriseConfig$Eap.TTLS,2
 24,Android.Net.Wifi.WifiEapMethod,UnauthTls,android/net/wifi/WifiEnterpriseConfig$Eap.UNAUTH_TLS,7
+26,Android.Net.Wifi.WifiPhase2Method,Aka,android/net/wifi/WifiEnterpriseConfig$Phase2.AKA,6
+26,Android.Net.Wifi.WifiPhase2Method,AkaPrime,android/net/wifi/WifiEnterpriseConfig$Phase2.AKA_PRIME,7
 18,Android.Net.Wifi.WifiPhase2Method,Gtc,android/net/wifi/WifiEnterpriseConfig$Phase2.GTC,4
 18,Android.Net.Wifi.WifiPhase2Method,Mschap,android/net/wifi/WifiEnterpriseConfig$Phase2.MSCHAP,2
 18,Android.Net.Wifi.WifiPhase2Method,Mschapv2,android/net/wifi/WifiEnterpriseConfig$Phase2.MSCHAPV2,3
 18,Android.Net.Wifi.WifiPhase2Method,None,android/net/wifi/WifiEnterpriseConfig$Phase2.NONE,0
 18,Android.Net.Wifi.WifiPhase2Method,Pap,android/net/wifi/WifiEnterpriseConfig$Phase2.PAP,1
+26,Android.Net.Wifi.WifiPhase2Method,Sim,android/net/wifi/WifiEnterpriseConfig$Phase2.SIM,5
 19,Android.Nfc.CardEmulators.CardSelectionMode,AlwaysAsk,android/nfc/cardemulation/CardEmulation.SELECTION_MODE_ALWAYS_ASK,1
 19,Android.Nfc.CardEmulators.CardSelectionMode,AskIfConflict,android/nfc/cardemulation/CardEmulation.SELECTION_MODE_ASK_IF_CONFLICT,2
 19,Android.Nfc.CardEmulators.CardSelectionMode,PreferDefault,android/nfc/cardemulation/CardEmulation.SELECTION_MODE_PREFER_DEFAULT,0
@@ -3907,6 +3952,7 @@
 21,Android.OS.BatteryProperty,CurrentAverage,android/os/BatteryManager.BATTERY_PROPERTY_CURRENT_AVERAGE,3
 21,Android.OS.BatteryProperty,CurrentNow,android/os/BatteryManager.BATTERY_PROPERTY_CURRENT_NOW,2
 21,Android.OS.BatteryProperty,EnergyCounter,android/os/BatteryManager.BATTERY_PROPERTY_ENERGY_COUNTER,5
+26,Android.OS.BatteryProperty,Status,android/os/BatteryManager.BATTERY_PROPERTY_STATUS,6
 1,Android.OS.BatteryStatus,Charging,android/os/BatteryManager.BATTERY_STATUS_CHARGING,2
 1,Android.OS.BatteryStatus,Discharging,android/os/BatteryManager.BATTERY_STATUS_DISCHARGING,3
 1,Android.OS.BatteryStatus,Full,android/os/BatteryManager.BATTERY_STATUS_FULL,5
@@ -3938,6 +3984,7 @@
 23,Android.OS.BuildVersionCodes,M,android/os/Build$VERSION_CODES.M,23
 24,Android.OS.BuildVersionCodes,N,android/os/Build$VERSION_CODES.N,24
 25,Android.OS.BuildVersionCodes,NMr1,android/os/Build$VERSION_CODES.N_MR1,25
+26,Android.OS.BuildVersionCodes,O,android/os/Build$VERSION_CODES.O,26
 0,Android.OS.DebugShow,Default,,0
 1,Android.OS.DebugShow,Classloader,android/os/Debug.SHOW_CLASSLOADER,2
 1,Android.OS.DebugShow,FullDetail,android/os/Debug.SHOW_FULL_DETAIL,1
@@ -4075,11 +4122,14 @@
 24,Android.Provider.DocumentContractFlags,SupportsMove,android/provider/DocumentsContract$Document.FLAG_SUPPORTS_MOVE,256
 24,Android.Provider.DocumentContractFlags,SupportsRemove,android/provider/DocumentsContract$Document.FLAG_SUPPORTS_REMOVE,1024
 21,Android.Provider.DocumentContractFlags,SupportsRename,android/provider/DocumentsContract$Document.FLAG_SUPPORTS_RENAME,64
+26,Android.Provider.DocumentContractFlags,SupportsSettings,android/provider/DocumentsContract$Document.FLAG_SUPPORTS_SETTINGS,2048
 19,Android.Provider.DocumentContractFlags,SupportsThumbnail,android/provider/DocumentsContract$Document.FLAG_SUPPORTS_THUMBNAIL,1
 19,Android.Provider.DocumentContractFlags,SupportsWrite,android/provider/DocumentsContract$Document.FLAG_SUPPORTS_WRITE,2
 24,Android.Provider.DocumentContractFlags,VirtualDocument,android/provider/DocumentsContract$Document.FLAG_VIRTUAL_DOCUMENT,512
+26,Android.Provider.DocumentContractFlags,WebLinkable,android/provider/DocumentsContract$Document.FLAG_WEB_LINKABLE,4096
 19,Android.Provider.DocumentRootFlags,LocalOnly,android/provider/DocumentsContract$Root.FLAG_LOCAL_ONLY,2
 19,Android.Provider.DocumentRootFlags,SupportsCreate,android/provider/DocumentsContract$Root.FLAG_SUPPORTS_CREATE,1
+26,Android.Provider.DocumentRootFlags,SupportsEject,android/provider/DocumentsContract$Root.FLAG_SUPPORTS_EJECT,32
 21,Android.Provider.DocumentRootFlags,SupportsIsChild,android/provider/DocumentsContract$Root.FLAG_SUPPORTS_IS_CHILD,16
 19,Android.Provider.DocumentRootFlags,SupportsRecents,android/provider/DocumentsContract$Root.FLAG_SUPPORTS_RECENTS,4
 19,Android.Provider.DocumentRootFlags,SupportsSearch,android/provider/DocumentsContract$Root.FLAG_SUPPORTS_SEARCH,8
@@ -4288,6 +4338,7 @@
 18,Android.Views.WindowRotationAnimation,Crossfade,android/view/WindowManager$LayoutParams.ROTATION_ANIMATION_CROSSFADE,1
 18,Android.Views.WindowRotationAnimation,Jumpcut,android/view/WindowManager$LayoutParams.ROTATION_ANIMATION_JUMPCUT,2
 18,Android.Views.WindowRotationAnimation,Rotate,android/view/WindowManager$LayoutParams.ROTATION_ANIMATION_ROTATE,0
+26,Android.Views.WindowRotationAnimation,Seamless,android/view/WindowManager$LayoutParams.ROTATION_ANIMATION_SEAMLESS,3
 9,Android.Views.InputKeyboardType,Alphabetic,android/view/InputDevice.KEYBOARD_TYPE_ALPHABETIC,2
 9,Android.Views.InputKeyboardType,None,android/view/InputDevice.KEYBOARD_TYPE_NONE,0
 9,Android.Views.InputKeyboardType,NonAlphabetic,android/view/InputDevice.KEYBOARD_TYPE_NON_ALPHABETIC,1
@@ -4315,6 +4366,8 @@
 12,Android.Views.InputSourceType,Joystick,android/view/InputDevice.SOURCE_JOYSTICK,16777232
 9,Android.Views.InputSourceType,Keyboard,android/view/InputDevice.SOURCE_KEYBOARD,257
 9,Android.Views.InputSourceType,Mouse,android/view/InputDevice.SOURCE_MOUSE,8194
+26,Android.Views.InputSourceType,MouseRelative,android/view/InputDevice.SOURCE_MOUSE_RELATIVE,131076
+26,Android.Views.InputSourceType,RotaryEncoder,android/view/InputDevice.SOURCE_ROTARY_ENCODER,4194304
 14,Android.Views.InputSourceType,Stylus,android/view/InputDevice.SOURCE_STYLUS,16386
 9,Android.Views.InputSourceType,Touchpad,android/view/InputDevice.SOURCE_TOUCHPAD,1048584
 9,Android.Views.InputSourceType,Touchscreen,android/view/InputDevice.SOURCE_TOUCHSCREEN,4098
@@ -4355,6 +4408,7 @@
 16,Android.Views.SystemUiFlags,LayoutFullscreen,android/view/View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN,1024
 16,Android.Views.SystemUiFlags,LayoutHideNavigation,android/view/View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION,512
 16,Android.Views.SystemUiFlags,LayoutStable,android/view/View.SYSTEM_UI_FLAG_LAYOUT_STABLE,256
+26,Android.Views.SystemUiFlags,LightNavigationBar,android/view/View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR,16
 23,Android.Views.SystemUiFlags,LightStatusBar,android/view/View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR,8192
 14,Android.Views.SystemUiFlags,LowProfile,android/view/View.SYSTEM_UI_FLAG_LOW_PROFILE,1
 14,Android.Views.SystemUiFlags,Visible,android/view/View.SYSTEM_UI_FLAG_VISIBLE,0
@@ -4617,6 +4671,7 @@
 24,Android.Media.MediaCodecProfileType,Vp9profile3hdr,android/media/MediaCodecInfo$CodecProfileLevel.VP9Profile3HDR,8192
 16,Android.Media.MediaCodecProfileType,Aacobjecteld,android/media/MediaCodecInfo$CodecProfileLevel.AACObjectELD,39
 16,Android.Media.MediaCodecProfileType,Aacobjecterlc,android/media/MediaCodecInfo$CodecProfileLevel.AACObjectERLC,17
+26,Android.Media.MediaCodecProfileType,Aacobjecterscalable,android/media/MediaCodecInfo$CodecProfileLevel.AACObjectERScalable,20
 16,Android.Media.MediaCodecProfileType,Aacobjecthe,android/media/MediaCodecInfo$CodecProfileLevel.AACObjectHE,5
 16,Android.Media.MediaCodecProfileType,AacobjecthePs,android/media/MediaCodecInfo$CodecProfileLevel.AACObjectHE_PS,29
 16,Android.Media.MediaCodecProfileType,Aacobjectlc,android/media/MediaCodecInfo$CodecProfileLevel.AACObjectLC,2
@@ -4633,6 +4688,7 @@
 16,Android.Media.MediaCodecBufferFlags,CodecConfig,android/media/MediaCodec.BUFFER_FLAG_CODEC_CONFIG,2
 16,Android.Media.MediaCodecBufferFlags,EndOfStream,android/media/MediaCodec.BUFFER_FLAG_END_OF_STREAM,4
 21,Android.Media.MediaCodecBufferFlags,KeyFrame,android/media/MediaCodec.BUFFER_FLAG_KEY_FRAME,1
+26,Android.Media.MediaCodecBufferFlags,PartialFrame,android/media/MediaCodec.BUFFER_FLAG_PARTIAL_FRAME,8
 16,Android.Media.MediaCodecBufferFlags,SyncFrame,android/media/MediaCodec.BUFFER_FLAG_SYNC_FRAME,1
 0,Android.Media.MediaCodecConfigFlags,None,,0
 16,Android.Media.MediaCodecConfigFlags,Encode,android/media/MediaCodec.CONFIGURE_FLAG_ENCODE,1
@@ -4646,6 +4702,7 @@
 16,Android.Media.VideoScalingMode,ScaleToFitWithCropping,android/media/MediaCodec.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING,2
 0,Android.Media.MediaExtractorSampleFlags,None,,0
 16,Android.Media.MediaExtractorSampleFlags,Encrypted,android/media/MediaExtractor.SAMPLE_FLAG_ENCRYPTED,2
+26,Android.Media.MediaExtractorSampleFlags,PartialFrame,android/media/MediaExtractor.SAMPLE_FLAG_PARTIAL_FRAME,4
 16,Android.Media.MediaExtractorSampleFlags,Sync,android/media/MediaExtractor.SAMPLE_FLAG_SYNC,1
 0,Android.Media.MediaExtractorSeekTo,None,,0
 16,Android.Media.MediaExtractorSeekTo,ClosestSync,android/media/MediaExtractor.SEEK_TO_CLOSEST_SYNC,2
@@ -4935,6 +4992,7 @@
 24,Android.Icu.Text.NumberFormatStyles,Percent,android/icu/text/NumberFormat.PERCENTSTYLE,2
 24,Android.Icu.Text.NumberFormatStyles,Pluralcurrency,android/icu/text/NumberFormat.PLURALCURRENCYSTYLE,6
 24,Android.Icu.Text.NumberFormatStyles,Scientific,android/icu/text/NumberFormat.SCIENTIFICSTYLE,3
+26,Android.Icu.Text.NumberFormatStyles,Standardcurrency,android/icu/text/NumberFormat.STANDARDCURRENCYSTYLE,9
 24,Android.Icu.Text.NumberFormatField,Fraction,android/icu/text/NumberFormat.FRACTION_FIELD,1
 24,Android.Icu.Text.NumberFormatField,Integer,android/icu/text/NumberFormat.INTEGER_FIELD,0
 24,Android.Icu.Text.StringPrepParseExceptionError,AcePrefixError,android/icu/text/StringPrepParseException.ACE_PREFIX_ERROR,6
@@ -5006,11 +5064,13 @@
 24,Android.Locations.GnssState,GalE1c2ndCodeLock,android/location/GnssMeasurement.STATE_GAL_E1C_2ND_CODE_LOCK,2048
 24,Android.Locations.GnssState,GloStringSync,android/location/GnssMeasurement.STATE_GLO_STRING_SYNC,64
 24,Android.Locations.GnssState,GloTodDecoded,android/location/GnssMeasurement.STATE_GLO_TOD_DECODED,128
+26,Android.Locations.GnssState,GloTodKnown,android/location/GnssMeasurement.STATE_GLO_TOD_KNOWN,32768
 24,Android.Locations.GnssState,MsecAmbiguous,android/location/GnssMeasurement.STATE_MSEC_AMBIGUOUS,16
 24,Android.Locations.GnssState,SbasSync,android/location/GnssMeasurement.STATE_SBAS_SYNC,8192
 24,Android.Locations.GnssState,SubframeSync,android/location/GnssMeasurement.STATE_SUBFRAME_SYNC,4
 24,Android.Locations.GnssState,SymbolSync,android/location/GnssMeasurement.STATE_SYMBOL_SYNC,32
 24,Android.Locations.GnssState,TowDecoded,android/location/GnssMeasurement.STATE_TOW_DECODED,8
+26,Android.Locations.GnssState,TowKnown,android/location/GnssMeasurement.STATE_TOW_KNOWN,16384
 24,Android.Locations.GnssState,Unknown,android/location/GnssMeasurement.STATE_UNKNOWN,0
 24,Android.Locations.GnssMeasurementCallbackStatus,LocationDisabled,android/location/GnssMeasurementsEvent.Callback.STATUS_LOCATION_DISABLED,2
 24,Android.Locations.GnssMeasurementCallbackStatus,NotSupported,android/location/GnssMeasurementsEvent.Callback.STATUS_NOT_SUPPORTED,0
@@ -5166,11 +5226,13 @@
 24,Android.Views.FrameMetricsId,DrawDuration,android/view/FrameMetrics.DRAW_DURATION,4
 24,Android.Views.FrameMetricsId,FirstDrawFrame,android/view/FrameMetrics.FIRST_DRAW_FRAME,9
 24,Android.Views.FrameMetricsId,InputHandlingDuration,android/view/FrameMetrics.INPUT_HANDLING_DURATION,1
+26,Android.Views.FrameMetricsId,IntendedVsyncTimestamp,android/view/FrameMetrics.INTENDED_VSYNC_TIMESTAMP,10
 24,Android.Views.FrameMetricsId,LayoutMeasureDuration,android/view/FrameMetrics.LAYOUT_MEASURE_DURATION,3
 24,Android.Views.FrameMetricsId,SwapBuffersDuration,android/view/FrameMetrics.SWAP_BUFFERS_DURATION,7
 24,Android.Views.FrameMetricsId,SyncDuration,android/view/FrameMetrics.SYNC_DURATION,5
 24,Android.Views.FrameMetricsId,TotalDuration,android/view/FrameMetrics.TOTAL_DURATION,8
 24,Android.Views.FrameMetricsId,UnknownDelayDuration,android/view/FrameMetrics.UNKNOWN_DELAY_DURATION,0
+26,Android.Views.FrameMetricsId,VsyncTimestamp,android/view/FrameMetrics.VSYNC_TIMESTAMP,11
 24,Android.Views.PixelCopyResult,ErrorDestinationInvalid,android/view/PixelCopy.ERROR_DESTINATION_INVALID,5
 24,Android.Views.PixelCopyResult,ErrorSourceInvalid,android/view/PixelCopy.ERROR_SOURCE_INVALID,4
 24,Android.Views.PixelCopyResult,ErrorSourceNoData,android/view/PixelCopy.ERROR_SOURCE_NO_DATA,3
@@ -5229,5 +5291,6 @@
 0,Android.Telecom.ConnectionProperties,None,,0
 25,Android.Telecom.ConnectionProperties,HasCdmaVoicePrivacy,android/telecom/Connection.PROPERTY_HAS_CDMA_VOICE_PRIVACY,32
 25,Android.Telecom.ConnectionProperties,IsExternalCall,android/telecom/Connection.PROPERTY_IS_EXTERNAL_CALL,16
+26,Android.Telecom.ConnectionProperties,SelfManaged,android/telecom/Connection.PROPERTY_SELF_MANAGED,128
 0,Android.Views.InputMethods.InputContentFlags,None,,0
 25,Android.Views.InputMethods.InputContentFlags,GrantReadUriPermission,I:android/view/inputmethod/InputConnection.INPUT_CONTENT_GRANT_READ_URI_PERMISSION,1
