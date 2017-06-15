@@ -193,6 +193,16 @@ The results are to be saved as "map.ext.csv" and "methodmap.ext.csv" that are to
 	    after "// automatically generated ones" line) just edit map.csv.
 	  - then run "make API_LEVELS=[latest] clean all" in src/Mono.Android
 	    to build enumified dll.
+	  - note tht API Level description in the API docs are used to
+	    become part of the CSV entry. The first item is the API Level.
+	    That often brings problem. This is what happened when API Level
+	    26 as stable has arrived: Google had published "android-26" API
+	    which used to be "android-O", they still hadn't published the
+	    corresponding docs and therefore the docs say "O" but the actual
+	    API was "26". That later brought confusion at generator.exe ran.
+	    To workaround this issue, replace the wrong API level specifier
+	    (e.g. "O") with the actual API level (e.g. "26"). Use regex like
+	    /^O/26/ to achieve this.
 	  - go back to this directory and rebuild remaining-int-consts.txt
 	    and check if the enumified lines disappeared.
 	  - There are some constaints that are NOT enumified
