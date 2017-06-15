@@ -1,11 +1,10 @@
 topdir = ../..
 
-API_LEVEL = 25
-API_LEVEL_NAME = 25
+API_LEVEL = 26
+API_LEVEL_NAME = 26
 
 CONFIGURATION = Debug
-API_XML_ANALYZER_DIR = $(topdir)/build-tools/api-xml-adjuster
-JAR2XML_DIR = $(topdir)/external/jar2xml
+DOCS_DIR=~/android-toolchain/docs/docs-api-$(API_LEVEL_NAME)
 
 CONST_MAPPER_SOURCES = \
 	generate-const-mapping.cs \
@@ -20,7 +19,7 @@ generate-const-list.exe: generate-const-list.cs
 	mcs generate-const-list.cs -debug
 
 const-list-$(API_LEVEL).xml: generate-const-list.exe
-	mono --debug generate-const-list.exe $(API_XML_ANALYZER_DIR)/docs-api-$(API_LEVEL_NAME)/reference/ -v > const-list-$(API_LEVEL).xml || rm const-list-$(API_LEVEL).xml
+	mono --debug generate-const-list.exe $(DOCS_DIR)/reference/ -v > const-list-$(API_LEVEL).xml || rm const-list-$(API_LEVEL).xml
 
 generate-intermediary-enum-candidates.exe : generate-intermediary-enum-candidates.cs
 	mcs generate-intermediary-enum-candidates.cs -debug
@@ -60,10 +59,10 @@ intermediary-enum-list.txt: generate-enumlist-to-query.exe
 	mono --debug generate-enumlist-to-query.exe const-list-$(API_LEVEL).xml > intermediary-enum-list.txt || rm intermediary-enum-list.txt
 
 intermediary-doc-enum-mapping.tsv: generate-intermediary-doc-enum-mapping.exe intermediary-enum-list.txt
-	mono --debug generate-intermediary-doc-enum-mapping.exe $(API_XML_ANALYZER_DIR)/docs-api-$(API_LEVEL_NAME)/reference intermediary-enum-list.txt > intermediary-doc-enum-mapping.tsv || rm intermediary-doc-enum-mapping.tsv
+	mono --debug generate-intermediary-doc-enum-mapping.exe $(DOCS_DIR)/reference intermediary-enum-list.txt > intermediary-doc-enum-mapping.tsv || rm intermediary-doc-enum-mapping.tsv
 
 intermediary-method-mapping.txt: generate-intermediary-method-mapping.exe
-	mono --debug generate-intermediary-method-mapping.exe intermediary-doc-enum-mapping.tsv const-list-$(API_LEVEL).xml $(API_XML_ANALYZER_DIR)/docs-api-$(API_LEVEL_NAME)/reference > intermediary-method-mapping.txt || rm intermediary-method-mapping.txt
+	mono --debug generate-intermediary-method-mapping.exe intermediary-doc-enum-mapping.tsv const-list-$(API_LEVEL).xml $(DOCS_DIR)/reference > intermediary-method-mapping.txt || rm intermediary-method-mapping.txt
 
 intermediary-field-candidates.txt: intermediary-method-mapping.txt
 	grep "#[a-z]" intermediary-method-mapping.txt  | grep -v '('  > intermediary-field-candidates.txt
