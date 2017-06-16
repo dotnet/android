@@ -9,6 +9,25 @@ namespace Java.Lang {
 	[global::Android.Runtime.Register ("java/lang/String", DoNotGenerateAcw=true)]
 	public partial class String : global::Java.Lang.Object {
 
+		internal    new     static  readonly    JniPeerMembers  _members    = new JniPeerMembers ("java/lang/String", typeof (String));
+		internal static new IntPtr class_ref {
+			get {
+				return _members.JniPeerType.PeerReference.Handle;
+			}
+		}
+
+		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
+			get { return _members; }
+		}
+
+		protected override IntPtr ThresholdClass {
+			get { return _members.JniPeerType.PeerReference.Handle; }
+		}
+
+		protected override global::System.Type ThresholdType {
+			get { return _members.ManagedPeerType; }
+		}
+
 		protected String (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer) {}
 
 	}

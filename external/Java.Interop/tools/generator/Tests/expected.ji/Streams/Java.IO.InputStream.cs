@@ -9,8 +9,8 @@ namespace Java.IO {
 	[global::Android.Runtime.Register ("java/io/InputStream", DoNotGenerateAcw=true)]
 	public abstract partial class InputStream : global::Java.Lang.Object {
 
-		internal            static  readonly    JniPeerMembers  _members    = new JniPeerMembers ("java/io/InputStream", typeof (InputStream));
-		internal static IntPtr class_ref {
+		internal    new     static  readonly    JniPeerMembers  _members    = new JniPeerMembers ("java/io/InputStream", typeof (InputStream));
+		internal static new IntPtr class_ref {
 			get {
 				return _members.JniPeerType.PeerReference.Handle;
 			}

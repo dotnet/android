@@ -8,8 +8,8 @@ namespace Xamarin.Test {
 	[global::Android.Runtime.Register ("xamarin/test/GenericReturnObject", DoNotGenerateAcw=true)]
 	public partial class GenericReturnObject : global::Java.Lang.Object {
 
-		internal static IntPtr java_class_handle;
-		internal static IntPtr class_ref {
+		internal static new IntPtr java_class_handle;
+		internal static new IntPtr class_ref {
 			get {
 				return JNIEnv.FindClass ("xamarin/test/GenericReturnObject", ref java_class_handle);
 			}

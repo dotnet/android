@@ -10,8 +10,8 @@ namespace Xamarin.Test {
 	[global::Java.Interop.JavaTypeParameters (new string [] {"T extends xamarin.test.Adapter"})]
 	public abstract partial class AdapterView : global::Java.Lang.Object {
 
-		internal            static  readonly    JniPeerMembers  _members    = new JniPeerMembers ("xamarin/test/AdapterView", typeof (AdapterView));
-		internal static IntPtr class_ref {
+		internal    new     static  readonly    JniPeerMembers  _members    = new JniPeerMembers ("xamarin/test/AdapterView", typeof (AdapterView));
+		internal static new IntPtr class_ref {
 			get {
 				return _members.JniPeerType.PeerReference.Handle;
 			}

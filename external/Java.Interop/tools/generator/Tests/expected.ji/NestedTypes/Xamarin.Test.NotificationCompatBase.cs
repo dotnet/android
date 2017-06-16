@@ -103,6 +103,25 @@ namespace Xamarin.Test {
 			}
 
 
+			internal    new     static  readonly    JniPeerMembers  _members    = new JniPeerMembers ("xamarin/test/NotificationCompatBase$Action", typeof (Action));
+			internal static new IntPtr class_ref {
+				get {
+					return _members.JniPeerType.PeerReference.Handle;
+				}
+			}
+
+			public override global::Java.Interop.JniPeerMembers JniPeerMembers {
+				get { return _members; }
+			}
+
+			protected override IntPtr ThresholdClass {
+				get { return _members.JniPeerType.PeerReference.Handle; }
+			}
+
+			protected override global::System.Type ThresholdType {
+				get { return _members.ManagedPeerType; }
+			}
+
 			protected Action (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer) {}
 
 		}
@@ -129,8 +148,8 @@ namespace Xamarin.Test {
 		[global::Android.Runtime.Register ("xamarin/test/NotificationCompatBase$InstanceInner", DoNotGenerateAcw=true)]
 		public abstract partial class InstanceInner : global::Java.Lang.Object {
 
-			internal            static  readonly    JniPeerMembers  _members    = new JniPeerMembers ("xamarin/test/NotificationCompatBase$InstanceInner", typeof (InstanceInner));
-			internal static IntPtr class_ref {
+			internal    new     static  readonly    JniPeerMembers  _members    = new JniPeerMembers ("xamarin/test/NotificationCompatBase$InstanceInner", typeof (InstanceInner));
+			internal static new IntPtr class_ref {
 				get {
 					return _members.JniPeerType.PeerReference.Handle;
 				}
@@ -189,6 +208,25 @@ namespace Xamarin.Test {
 
 		}
 
+
+		internal    new     static  readonly    JniPeerMembers  _members    = new JniPeerMembers ("xamarin/test/NotificationCompatBase", typeof (NotificationCompatBase));
+		internal static new IntPtr class_ref {
+			get {
+				return _members.JniPeerType.PeerReference.Handle;
+			}
+		}
+
+		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
+			get { return _members; }
+		}
+
+		protected override IntPtr ThresholdClass {
+			get { return _members.JniPeerType.PeerReference.Handle; }
+		}
+
+		protected override global::System.Type ThresholdType {
+			get { return _members.ManagedPeerType; }
+		}
 
 		protected NotificationCompatBase (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer) {}
 

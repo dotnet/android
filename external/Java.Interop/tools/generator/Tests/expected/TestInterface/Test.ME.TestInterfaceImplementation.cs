@@ -31,8 +31,8 @@ namespace Test.ME {
 			}
 		}
 
-		internal static IntPtr java_class_handle;
-		internal static IntPtr class_ref {
+		internal static new IntPtr java_class_handle;
+		internal static new IntPtr class_ref {
 			get {
 				return JNIEnv.FindClass ("test/me/TestInterfaceImplementation", ref java_class_handle);
 			}

@@ -10,8 +10,8 @@ namespace Xamarin.Test {
 	[global::Java.Interop.JavaTypeParameters (new string [] {"T extends xamarin.test.C"})]
 	public partial class C : global::Java.Lang.Object {
 
-		internal            static  readonly    JniPeerMembers  _members    = new JniPeerMembers ("xamarin/test/C", typeof (C));
-		internal static IntPtr class_ref {
+		internal    new     static  readonly    JniPeerMembers  _members    = new JniPeerMembers ("xamarin/test/C", typeof (C));
+		internal static new IntPtr class_ref {
 			get {
 				return _members.JniPeerType.PeerReference.Handle;
 			}

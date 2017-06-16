@@ -14,8 +14,8 @@ namespace Xamarin.Test {
 		[global::Java.Interop.JavaTypeParameters (new string [] {"T extends xamarin.test.A.B"})]
 		public partial class B : global::Java.Lang.Object {
 
-			internal            static  readonly    JniPeerMembers  _members    = new JniPeerMembers ("xamarin/test/A$B", typeof (B));
-			internal static IntPtr class_ref {
+			internal    new     static  readonly    JniPeerMembers  _members    = new JniPeerMembers ("xamarin/test/A$B", typeof (B));
+			internal static new IntPtr class_ref {
 				get {
 					return _members.JniPeerType.PeerReference.Handle;
 				}
@@ -67,8 +67,8 @@ namespace Xamarin.Test {
 
 		}
 
-		internal            static  readonly    JniPeerMembers  _members    = new JniPeerMembers ("xamarin/test/A", typeof (A));
-		internal static IntPtr class_ref {
+		internal    new     static  readonly    JniPeerMembers  _members    = new JniPeerMembers ("xamarin/test/A", typeof (A));
+		internal static new IntPtr class_ref {
 			get {
 				return _members.JniPeerType.PeerReference.Handle;
 			}

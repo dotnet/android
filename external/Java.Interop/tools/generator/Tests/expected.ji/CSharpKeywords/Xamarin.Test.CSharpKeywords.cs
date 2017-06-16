@@ -9,8 +9,8 @@ namespace Xamarin.Test {
 	[global::Android.Runtime.Register ("xamarin/test/CSharpKeywords", DoNotGenerateAcw=true)]
 	public partial class CSharpKeywords : global::Java.Lang.Object {
 
-		internal            static  readonly    JniPeerMembers  _members    = new JniPeerMembers ("xamarin/test/CSharpKeywords", typeof (CSharpKeywords));
-		internal static IntPtr class_ref {
+		internal    new     static  readonly    JniPeerMembers  _members    = new JniPeerMembers ("xamarin/test/CSharpKeywords", typeof (CSharpKeywords));
+		internal static new IntPtr class_ref {
 			get {
 				return _members.JniPeerType.PeerReference.Handle;
 			}

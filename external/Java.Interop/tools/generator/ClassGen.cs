@@ -160,10 +160,6 @@ namespace MonoDroid.Generation {
 			get { return "IntPtr"; }
 		}
 
-		public bool HasClassHandle {
-			get { return ctors.Count > 0 || Fields.Count > 0 || Methods.Count > 0 || Properties.Count > 0 || IsAnnotation; }
-		}
-
 		public IList<Ctor> Ctors {
 			get { return ctors; }
 		}
@@ -450,17 +446,16 @@ namespace MonoDroid.Generation {
 				sw.WriteLine ();
 			}
 
-			if (HasClassHandle) {
-				bool requireNew = false;
+			bool requireNew = InheritsObject;
+			if (!requireNew) {
 				for (var bg = BaseGen; bg != null && bg is XmlClassGen; bg = bg.BaseGen) {
-					if (bg.HasClassHandle) {
+					if (bg.InheritsObject) {
 						requireNew = true;
 						break;
 					}
 				}
-
-				opt.CodeGenerator.WriteClassHandle (this, sw, indent, opt, requireNew);
 			}
+			opt.CodeGenerator.WriteClassHandle (this, sw, indent, opt, requireNew);
 
 			GenConstructors (sw, indent + "\t", opt);
 

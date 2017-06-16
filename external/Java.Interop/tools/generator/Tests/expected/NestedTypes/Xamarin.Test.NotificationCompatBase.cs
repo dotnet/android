@@ -94,6 +94,21 @@ namespace Xamarin.Test {
 			}
 
 
+			internal static new IntPtr java_class_handle;
+			internal static new IntPtr class_ref {
+				get {
+					return JNIEnv.FindClass ("xamarin/test/NotificationCompatBase$Action", ref java_class_handle);
+				}
+			}
+
+			protected override IntPtr ThresholdClass {
+				get { return class_ref; }
+			}
+
+			protected override global::System.Type ThresholdType {
+				get { return typeof (Action); }
+			}
+
 			protected Action (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer) {}
 
 		}
@@ -114,8 +129,8 @@ namespace Xamarin.Test {
 		[global::Android.Runtime.Register ("xamarin/test/NotificationCompatBase$InstanceInner", DoNotGenerateAcw=true)]
 		public abstract partial class InstanceInner : global::Java.Lang.Object {
 
-			internal static IntPtr java_class_handle;
-			internal static IntPtr class_ref {
+			internal static new IntPtr java_class_handle;
+			internal static new IntPtr class_ref {
 				get {
 					return JNIEnv.FindClass ("xamarin/test/NotificationCompatBase$InstanceInner", ref java_class_handle);
 				}
@@ -174,6 +189,21 @@ namespace Xamarin.Test {
 
 		}
 
+
+		internal static new IntPtr java_class_handle;
+		internal static new IntPtr class_ref {
+			get {
+				return JNIEnv.FindClass ("xamarin/test/NotificationCompatBase", ref java_class_handle);
+			}
+		}
+
+		protected override IntPtr ThresholdClass {
+			get { return class_ref; }
+		}
+
+		protected override global::System.Type ThresholdType {
+			get { return typeof (NotificationCompatBase); }
+		}
 
 		protected NotificationCompatBase (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer) {}
 

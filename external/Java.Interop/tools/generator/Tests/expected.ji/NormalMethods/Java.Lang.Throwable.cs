@@ -9,5 +9,12 @@ namespace Java.Lang {
 	[global::Android.Runtime.Register ("java/lang/Throwable", DoNotGenerateAcw=true)]
 	public partial class Throwable  {
 
+		internal            static  readonly    JniPeerMembers  _members    = new JniPeerMembers ("java/lang/Throwable", typeof (Throwable));
+		internal static IntPtr class_ref {
+			get {
+				return _members.JniPeerType.PeerReference.Handle;
+			}
+		}
+
 	}
 }

@@ -8,8 +8,8 @@ namespace Java.IO {
 	[global::Android.Runtime.Register ("java/io/OutputStream", DoNotGenerateAcw=true)]
 	public abstract partial class OutputStream : global::Java.Lang.Object {
 
-		internal static IntPtr java_class_handle;
-		internal static IntPtr class_ref {
+		internal static new IntPtr java_class_handle;
+		internal static new IntPtr class_ref {
 			get {
 				return JNIEnv.FindClass ("java/io/OutputStream", ref java_class_handle);
 			}

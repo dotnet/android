@@ -13,8 +13,8 @@ namespace Xamarin.Test {
 		[global::Java.Interop.JavaTypeParameters (new string [] {"T extends xamarin.test.A.B"})]
 		public partial class B : global::Java.Lang.Object {
 
-			internal static IntPtr java_class_handle;
-			internal static IntPtr class_ref {
+			internal static new IntPtr java_class_handle;
+			internal static new IntPtr class_ref {
 				get {
 					return JNIEnv.FindClass ("xamarin/test/A$B", ref java_class_handle);
 				}
@@ -67,8 +67,8 @@ namespace Xamarin.Test {
 
 		}
 
-		internal static IntPtr java_class_handle;
-		internal static IntPtr class_ref {
+		internal static new IntPtr java_class_handle;
+		internal static new IntPtr class_ref {
 			get {
 				return JNIEnv.FindClass ("xamarin/test/A", ref java_class_handle);
 			}

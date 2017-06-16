@@ -10,8 +10,8 @@ namespace Java.Lang {
 	[global::Java.Interop.JavaTypeParameters (new string [] {"E extends java.lang.Enum<E>"})]
 	public abstract partial class Enum : global::Java.Lang.Object, global::Java.Lang.IComparable {
 
-		internal            static  readonly    JniPeerMembers  _members    = new JniPeerMembers ("java/lang/Enum", typeof (Enum));
-		internal static IntPtr class_ref {
+		internal    new     static  readonly    JniPeerMembers  _members    = new JniPeerMembers ("java/lang/Enum", typeof (Enum));
+		internal static new IntPtr class_ref {
 			get {
 				return _members.JniPeerType.PeerReference.Handle;
 			}

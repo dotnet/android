@@ -9,8 +9,8 @@ namespace Java.Lang {
 	[global::Java.Interop.JavaTypeParameters (new string [] {"E extends java.lang.Enum<E>"})]
 	public abstract partial class Enum : global::Java.Lang.Object, global::Java.Lang.IComparable {
 
-		internal static IntPtr java_class_handle;
-		internal static IntPtr class_ref {
+		internal static new IntPtr java_class_handle;
+		internal static new IntPtr class_ref {
 			get {
 				return JNIEnv.FindClass ("java/lang/Enum", ref java_class_handle);
 			}

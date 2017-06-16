@@ -8,8 +8,8 @@ namespace Xamarin.Test {
 	[global::Android.Runtime.Register ("xamarin/test/SomeObject", DoNotGenerateAcw=true)]
 	public abstract partial class SomeObject : global::Java.Lang.Object {
 
-		internal static IntPtr java_class_handle;
-		internal static IntPtr class_ref {
+		internal static new IntPtr java_class_handle;
+		internal static new IntPtr class_ref {
 			get {
 				return JNIEnv.FindClass ("xamarin/test/SomeObject", ref java_class_handle);
 			}

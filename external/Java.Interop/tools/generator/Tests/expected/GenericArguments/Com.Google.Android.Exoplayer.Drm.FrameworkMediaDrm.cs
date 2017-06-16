@@ -8,8 +8,8 @@ namespace Com.Google.Android.Exoplayer.Drm {
 	[global::Android.Runtime.Register ("com/google/android/exoplayer/drm/FrameworkMediaDrm", DoNotGenerateAcw=true)]
 	public sealed partial class FrameworkMediaDrm : global::Java.Lang.Object, global::Com.Google.Android.Exoplayer.Drm.IExoMediaDrm {
 
-		internal static IntPtr java_class_handle;
-		internal static IntPtr class_ref {
+		internal static new IntPtr java_class_handle;
+		internal static new IntPtr class_ref {
 			get {
 				return JNIEnv.FindClass ("com/google/android/exoplayer/drm/FrameworkMediaDrm", ref java_class_handle);
 			}

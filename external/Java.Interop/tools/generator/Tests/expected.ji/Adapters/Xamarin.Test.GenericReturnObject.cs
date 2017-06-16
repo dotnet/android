@@ -9,8 +9,8 @@ namespace Xamarin.Test {
 	[global::Android.Runtime.Register ("xamarin/test/GenericReturnObject", DoNotGenerateAcw=true)]
 	public partial class GenericReturnObject : global::Java.Lang.Object {
 
-		internal            static  readonly    JniPeerMembers  _members    = new JniPeerMembers ("xamarin/test/GenericReturnObject", typeof (GenericReturnObject));
-		internal static IntPtr class_ref {
+		internal    new     static  readonly    JniPeerMembers  _members    = new JniPeerMembers ("xamarin/test/GenericReturnObject", typeof (GenericReturnObject));
+		internal static new IntPtr class_ref {
 			get {
 				return _members.JniPeerType.PeerReference.Handle;
 			}

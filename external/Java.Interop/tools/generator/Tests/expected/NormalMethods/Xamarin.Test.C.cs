@@ -9,8 +9,8 @@ namespace Xamarin.Test {
 	[global::Java.Interop.JavaTypeParameters (new string [] {"T extends xamarin.test.C"})]
 	public partial class C : global::Java.Lang.Object {
 
-		internal static IntPtr java_class_handle;
-		internal static IntPtr class_ref {
+		internal static new IntPtr java_class_handle;
+		internal static new IntPtr class_ref {
 			get {
 				return JNIEnv.FindClass ("xamarin/test/C", ref java_class_handle);
 			}
