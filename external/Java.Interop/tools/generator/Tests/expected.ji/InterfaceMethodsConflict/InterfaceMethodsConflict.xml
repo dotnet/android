@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<api>
+	<package name="xamarin.test">
+	    <class abstract="false" deprecated="not deprecated" final="false" name="Object" static="false" visibility="public">
+	    </class>
+	  </package>
+	<package name="xamarin.test">
+	  <interface abstract="true" deprecated="not deprecated" final="false" name="I1" static="false" visibility="public">
+		<method abstract="true" deprecated="not deprecated" final="false" name="close" native="false" return="void" static="false" synchronized="false" visibility="public">
+		</method>
+	  </interface>
+	  <interface abstract="true" deprecated="not deprecated" final="false" name="I2" static="false" visibility="public">
+		<method abstract="true" deprecated="not deprecated" final="false" name="close" native="false" return="void" static="false" synchronized="false" visibility="public">
+		</method>
+	  </interface>
+	  <class abstract="true" deprecated="not deprecated" extends="java.lang.Object" extends-generic-aware="java.lang.Object" 
+	  		final="false" name="SomeObject" static="false" visibility="public">
+		<implements name="xamarin.test.I1" name-generic-aware="xamarin.test.I1" />
+		<implements name="xamarin.test.I2" name-generic-aware="xamarin.test.I2" />
+	  </class>
+	</package>
+</api>
+
+
+

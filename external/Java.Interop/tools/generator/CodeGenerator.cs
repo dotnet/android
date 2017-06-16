@@ -560,6 +560,7 @@ namespace MonoDroid.Generation {
 		public Stack<GenBase> ContextTypes {
 			get { return context_types; }
 		}
+		public List<Method> ContextGeneratedMethods { get; set; } = new List<Method> ();
 		public GenBase ContextType {
 			get { return context_types.Any () ? context_types.Peek () : null; }
 		}

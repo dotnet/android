@@ -495,6 +495,12 @@
     <Content Include='expected.ji\TestInterface\Test.ME.TestInterfaceImplementation.cs'>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include='expected.ji\InterfaceMethodsConflict\InterfaceMethodsConflict.xml'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\InterfaceMethodsConflict\Xamarin.Test.SomeObject.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include='expected\GenericArguments\GenericArguments.xml'>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -613,6 +619,12 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include='expected\TestInterface\Test.ME.TestInterfaceImplementation.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected\InterfaceMethodsConflict\InterfaceMethodsConflict.xml'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected\InterfaceMethodsConflict\Xamarin.Test.SomeObject.cs'>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

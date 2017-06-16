@@ -620,6 +620,8 @@ namespace MonoDroid.Generation {
 			foreach (Method m in Methods.Where (m => !m.IsInterfaceDefaultMethod && !m.IsStatic)) {
 				bool mapped = false;
 				string sig = m.GetSignature ();
+				if (opt.ContextGeneratedMethods.Any (_ => _.Name == m.Name && _.JniSignature == m.JniSignature))
+					continue;
 				for (var cls = gen; cls != null; cls = cls.BaseGen)
 					if (cls.ContainsMethod (m, false) || cls != gen && gen.ExplicitlyImplementedInterfaceMethods.Contains (sig)) {
 						mapped = true;
@@ -631,6 +633,7 @@ namespace MonoDroid.Generation {
 					m.GenerateExplicitInterfaceImplementation (sw, indent, opt, this);
 				else
 					m.GenerateAbstractDeclaration (sw, indent, opt, this, gen);
+				opt.ContextGeneratedMethods.Add (m); 
 			}
 			foreach (Property prop in Properties) {
 				if (gen.ContainsProperty (prop.Name, false))

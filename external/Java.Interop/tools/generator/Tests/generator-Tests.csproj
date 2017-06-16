@@ -61,6 +61,7 @@
     <Compile Include="PamareterXPath.cs" />
     <Compile Include="CSharpKeywords.cs" />
     <Compile Include="GenericArguments.cs" />
+    <Compile Include="InterfaceMethodsConflict.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

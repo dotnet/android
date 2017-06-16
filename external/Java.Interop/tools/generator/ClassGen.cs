@@ -313,9 +313,7 @@ namespace MonoDroid.Generation {
 		void GenerateAbstractMembers (StreamWriter sw, string indent, CodeGenerationOptions opt)
 		{
 			foreach (InterfaceGen gen in GetAllDerivedInterfaces ())
-				// FIXME: this is an ugly workaround for bug in generator that generates extraneous member.
-				if (FullName != "Android.Views.Animations.BaseInterpolator" || gen.FullName != "Android.Views.Animations.IInterpolator")
-					gen.GenerateAbstractMembers (this, sw, indent, opt);
+				gen.GenerateAbstractMembers (this, sw, indent, opt);
 		}
 
 		void GenMethods (StreamWriter sw, string indent, CodeGenerationOptions opt)
@@ -339,6 +337,7 @@ namespace MonoDroid.Generation {
 					m.GenerateAbstractDeclaration (sw, indent, opt, null, this);
 				else
 					m.Generate (sw, indent, opt, this, true);
+				opt.ContextGeneratedMethods.Add (m);
 				m.IsVirtual = virt;
 			}
 
@@ -371,6 +370,8 @@ namespace MonoDroid.Generation {
 		public override void Generate (StreamWriter sw, string indent, CodeGenerationOptions opt, GenerationInfo gen_info)
 		{
 			opt.ContextTypes.Push (this);
+			opt.ContextGeneratedMethods = new List<Method> ();
+
 			gen_info.TypeRegistrations.Add (new KeyValuePair<string, string>(RawJniName, AssemblyQualifiedName));
 			bool is_enum = base_symbol != null && base_symbol.FullName == "Java.Lang.Enum";
 			if (is_enum)
@@ -497,6 +498,9 @@ namespace MonoDroid.Generation {
 				sw.WriteLine ();
 				GenerateInvoker (sw, indent, opt);
 			}
+
+			opt.ContextGeneratedMethods.Clear ();
+
 			opt.ContextTypes.Pop ();
 		}
 
