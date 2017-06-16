@@ -1318,6 +1318,9 @@
   <attr path="/api/package[@name='java.util.concurrent.atomic']/class[@name='AtomicInteger']/method[@name='getAndIncrement']" name="propertyName"></attr>
   <attr path="/api/package[@name='java.util.concurrent.atomic']/class[@name='AtomicLong']/method[@name='getAndDecrement']" name="propertyName"></attr>
   <attr path="/api/package[@name='java.util.concurrent.atomic']/class[@name='AtomicLong']/method[@name='getAndIncrement']" name="propertyName"></attr>
+
+  <!-- interface default method -->
+  <remove-node path="/api/package[@name='java.lang.reflect']/interface[@name='AnnotatedElement']/method[@name='isAnnotationPresent']" api-since="25" />
   
 
   <!-- Android O (API Level 26) -->
@@ -1327,27 +1330,32 @@
   <attr path="/api/package[@name='java.nio.file']" name="managedName" api-since="26">Java.Nio.FileNio</attr>
   <attr path="/api/package[@name='java.nio.file.attribute']" name="managedName" api-since="26">Java.Nio.FileNio.Attributes</attr>
   <attr path="/api/package[@name='java.nio.file.spi']" name="managedName" api-since="26">Java.Nio.FileNio.Spi</attr>
+  <attr path="/api/package[@name='java.time']" name="managedName" api-since="26">Java.Times</attr>
+  <attr path="/api/package[@name='java.time.chrono']" name="managedName" api-since="26">Java.Times.Chrono</attr>
+  <attr path="/api/package[@name='java.time.format']" name="managedName" api-since="26">Java.Times.Formats</attr>
+  <attr path="/api/package[@name='java.time.temporal']" name="managedName" api-since="26">Java.Times.Temporals</attr>
+  <attr path="/api/package[@name='java.time.zone']" name="managedName" api-since="26">Java.Times.Zones</attr>
 
   <!-- This is really annoying. We had introduced `AudioFocusRequest` enum type
   in very early age of this product, and then Google introduced name conflicts.
   (It's all Xamarin's fault to have introduced enumification, after all. -->
   <attr path="/api/package[@name='android.media']/class[@name='AudioFocusRequest']" name="managedName" api-since="26">AudioFocusRequestClass</attr>
 
-  <!-- FIXME: fix build and enable these packages -->
-  <remove-node path="/api/package[@name='java.time']" api-since="26" />
-  <remove-node path="/api/package[@name='java.time.chrono']" api-since="26" />
+  <!-- unsupported contravariance -->
+  <attr path="/api/package[starts-with(@name, 'java.time')]/class[implements/@name='java.time.temporal.Temporal']/method[@name='plus' and parameter[2]/@type='java.time.temporal.TemporalUnit']" name="managedReturn" api-since="26">Java.Times.Temporals.ITemporal</attr>
+  <attr path="/api/package[starts-with(@name, 'java.time')]/class[implements/@name='java.time.temporal.Temporal']/method[@name='with' and count(parameter)=2]" name="managedReturn" api-since="26">Java.Times.Temporals.ITemporal</attr>
   
-  <!-- FIXME: fix build and enable these types -->
-  <remove-node path="/api/package[@name='java.nio.channels']/class[@name='AsynchronousFileChannel']" api-since="26" />
-  <remove-node path="/api/package[@name='java.nio.channels']/class[@name='AsynchronousSocketChannel']" api-since="26" />
-  <remove-node path="/api/package[@name='java.nio.channels']/class[@name='AsynchronousServerSocketChannel']" api-since="26" />
-
-  <!-- FIXME: fix build and enable this method -->
+  <attr path="/api/package[@name= 'java.time.chrono']/class[@extends='java.time.chrono.AbstractChronology']/method[@name='date' or @name='dateEpochDay' or @name='dateNow' or @name='dateYearDay']" name="managedReturn" api-since="26">Java.Times.Chrono.IChronoLocalDate</attr>
+  <!-- FIXME: enable this API once we got generator fixes for marking methods that are part of interface implementations in the base abstract class as overrides -->
+  <remove-node path="/api/package[@name= 'java.time.chrono']/class[@extends='java.time.chrono.AbstractChronology']" />
+  <remove-node path="/api/package[@name= 'java.time.chrono']" />
+  
+  <!--
+  FIXME: there is a generator issue that does not properly convert IList<string> to IList<ICharSequence> which prevents this method to compile.
+  We need solid and decent parameter conversions, not hack.
+   -->
   <remove-node path="/api/package[@name='android.text']/class[@name='TextUtils']/method[@name='listEllipsize']" api-since="26" />
 
-
-  <!-- interface default method -->
-  <remove-node path="/api/package[@name='java.lang.reflect']/interface[@name='AnnotatedElement']/method[@name='isAnnotationPresent']" api-since="26" />
 
   <!-- This is possibly a new kind of problem that a class can have a pair of
        methods where one returns a CharSequence and the other returns java.lang.String.
