@@ -1,0 +1,6 @@
+map.ext.csv
+const-list-*.xml
+*.exe
+*.mdb
+*.pdb
+
