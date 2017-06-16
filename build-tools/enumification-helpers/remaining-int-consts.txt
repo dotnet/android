@@ -25,8 +25,11 @@
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Bluetooth.BluetoothDevice.cs:		public const int PairingVariantPasskeyConfirmation = (int) 2;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Bluetooth.BluetoothDevice.cs:		public const int PairingVariantPin = (int) 0;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Content.AbstractThreadedSyncAdapter.cs:		public const int LogSyncDetails = (int) 2743;
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Content.Context.cs:		public const int ReceiverVisibleToInstantApps = (int) 1;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Content.PM.ConfigurationInfo.cs:		public const int GlEsVersionUndefined = (int) 0;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Content.PM.FeatureInfo.cs:		public const int GlEsVersionUndefined = (int) 0;
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Content.PM.PackageManager.cs:		public const int VersionCodeHighest = (int) -1;
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Content.PM.SharedLibraryInfo.cs:		public const int VersionUndefined = (int) -1;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Content.Res.Configuration.cs:		public const int DensityDpiUndefined = (int) 0;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Content.Res.Configuration.cs:		public const int MncZero = (int) 65535;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Content.Res.Configuration.cs:		public const int SmallestScreenWidthDpUndefined = (int) 0;
@@ -35,6 +38,8 @@
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Database.Sqlite.SQLiteDatabase.cs:		public const int MaxSqlCacheSize = (int) 100;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Database.Sqlite.SQLiteDatabase.cs:		public const int SqliteMaxLikePatternLength = (int) 50000;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Graphics.Bitmap.cs:		public const int DensityNone = (int) 0;
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Graphics.ColorSpace.cs:		public const int MaxId = (int) 63;
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Graphics.ColorSpace.cs:		public const int MinId = (int) -1;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Graphics.Drawables.LayerDrawable.cs:		public const int InsetUndefined = (int) -2147483648;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Graphics.Drawables.RippleDrawable.cs:		public const int RadiusAuto = (int) -1;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Graphics.Matrix.cs:		public const int Mpersp0 = (int) 6;
@@ -233,7 +238,11 @@
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int Wide = (int) 5;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int Control = (int) 1;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int Cr = (int) 2;
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int EBase = (int) 13;
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int EBaseGaz = (int) 14;
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int EModifier = (int) 15;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int Extend = (int) 3;
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int GlueAfterZwj = (int) 16;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int L = (int) 4;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int Lf = (int) 5;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int Lv = (int) 6;
@@ -244,12 +253,16 @@
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int SpacingMark = (int) 10;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int T = (int) 8;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int V = (int) 9;
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int Zwj = (int) 17;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int LeadingJamo = (int) 1;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int LvSyllable = (int) 4;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int LvtSyllable = (int) 5;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int NotApplicable = (int) 0;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int TrailingJamo = (int) 3;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int VowelJamo = (int) 2;
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int AfricanFeh = (int) 86;
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int AfricanNoon = (int) 87;
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int AfricanQaf = (int) 88;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int Ain = (int) 1;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int Alaph = (int) 2;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int Alef = (int) 3;
@@ -356,6 +369,8 @@
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int ComplexContext = (int) 24;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int ConditionalJapaneseStarter = (int) 37;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int ContingentBreak = (int) 7;
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int EBase = (int) 40;
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int EModifier = (int) 41;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int Exclamation = (int) 11;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int Glue = (int) 12;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int H2 = (int) 31;
@@ -383,6 +398,7 @@
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int Surrogate = (int) 25;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int Unknown = (int) 0;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int WordJoiner = (int) 30;
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int Zwj = (int) 42;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int Zwspace = (int) 28;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int Decimal = (int) 1;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int Digit = (int) 2;
@@ -403,6 +419,7 @@
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int Sp = (int) 8;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int Sterm = (int) 9;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int Upper = (int) 10;
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int AdlamId = (int) 263;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int AegeanNumbersId = (int) 119;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int AhomId = (int) 253;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int AlchemicalSymbolsId = (int) 208;
@@ -427,6 +444,7 @@
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int BassaVahId = (int) 221;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int BatakId = (int) 199;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int BengaliId = (int) 16;
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int BhaiksukiId = (int) 264;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int BlockElementsId = (int) 53;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int BopomofoExtendedId = (int) 67;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int BopomofoId = (int) 64;
@@ -471,6 +489,7 @@
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int CypriotSyllabaryId = (int) 123;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int CyrillicExtendedAId = (int) 158;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int CyrillicExtendedBId = (int) 160;
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int CyrillicExtendedCId = (int) 265;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int CyrillicId = (int) 9;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int CyrillicSupplementId = (int) 97;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int CyrillicSupplementaryId = (int) 97;
@@ -498,6 +517,7 @@
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int GeorgianId = (int) 29;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int GeorgianSupplementId = (int) 135;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int GlagoliticId = (int) 136;
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int GlagoliticSupplementId = (int) 266;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int GothicId = (int) 89;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int GranthaId = (int) 228;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int GreekExtendedId = (int) 39;
@@ -517,6 +537,7 @@
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int HighSurrogatesId = (int) 75;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int HiraganaId = (int) 62;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int IdeographicDescriptionCharactersId = (int) 60;
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int IdeographicSymbolsAndPunctuationId = (int) 267;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int ImperialAramaicId = (int) 186;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int InscriptionalPahlaviId = (int) 190;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int InscriptionalParthianId = (int) 189;
@@ -559,6 +580,7 @@
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int MalayalamId = (int) 23;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int MandaicId = (int) 198;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int ManichaeanId = (int) 234;
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int MarchenId = (int) 268;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int MathematicalAlphanumericSymbolsId = (int) 93;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int MathematicalOperatorsId = (int) 47;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int MeeteiMayekExtensionsId = (int) 213;
@@ -576,6 +598,7 @@
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int ModiId = (int) 236;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int ModifierToneLettersId = (int) 138;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int MongolianId = (int) 37;
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int MongolianSupplementId = (int) 269;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int MroId = (int) 237;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int MultaniId = (int) 259;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int MusicalSymbolsId = (int) 92;
@@ -584,6 +607,7 @@
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int MyanmarId = (int) 28;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int NabataeanId = (int) 239;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int NewTaiLueId = (int) 139;
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int NewaId = (int) 270;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int NkoId = (int) 146;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int NumberFormsId = (int) 45;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int OghamId = (int) 34;
@@ -598,6 +622,7 @@
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int OpticalCharacterRecognitionId = (int) 50;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int OriyaId = (int) 19;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int OrnamentalDingbatsId = (int) 242;
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int OsageId = (int) 271;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int OsmanyaId = (int) 122;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int PahawhHmongId = (int) 243;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int PalmyreneId = (int) 244;
@@ -649,6 +674,8 @@
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int TaiXuanJingSymbolsId = (int) 124;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int TakriId = (int) 220;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int TamilId = (int) 20;
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int TangutComponentsId = (int) 273;
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int TangutId = (int) 272;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int TeluguId = (int) 21;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int ThaanaId = (int) 14;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int ThaiId = (int) 25;
@@ -671,9 +698,13 @@
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int Aletter = (int) 1;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int Cr = (int) 8;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int DoubleQuote = (int) 16;
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int EBase = (int) 17;
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int EBaseGaz = (int) 18;
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int EModifier = (int) 19;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int Extend = (int) 9;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int Extendnumlet = (int) 7;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int Format = (int) 2;
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int GlueAfterZwj = (int) 20;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int HebrewLetter = (int) 14;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int Katakana = (int) 3;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int Lf = (int) 10;
@@ -685,6 +716,7 @@
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int Other = (int) 0;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int RegionalIndicator = (int) 13;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int SingleQuote = (int) 15;
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacter.cs:			public const int Zwj = (int) 21;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacterDirection.cs:			public const int ArabicNumber = (int) 5;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacterDirection.cs:			public const int BlockSeparator = (int) 7;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacterDirection.cs:			public const int BoundaryNeutral = (int) 18;
@@ -723,6 +755,7 @@
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacterEnums.cs:			public const int RightToLeftOverride = (int) 15;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacterEnums.cs:			public const int SegmentSeparator = (int) 8;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UCharacterEnums.cs:			public const int WhiteSpaceNeutral = (int) 9;
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UScript.cs:		public const int Adlam = (int) 167;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UScript.cs:		public const int Afaka = (int) 147;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UScript.cs:		public const int Ahom = (int) 161;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UScript.cs:		public const int AnatolianHieroglyphs = (int) 156;
@@ -734,6 +767,7 @@
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UScript.cs:		public const int BassaVah = (int) 134;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UScript.cs:		public const int Batak = (int) 63;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UScript.cs:		public const int Bengali = (int) 4;
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UScript.cs:		public const int Bhaiksuki = (int) 168;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UScript.cs:		public const int Blissymbols = (int) 64;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UScript.cs:		public const int BookPahlavi = (int) 124;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UScript.cs:		public const int Bopomofo = (int) 5;
@@ -770,6 +804,7 @@
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UScript.cs:		public const int Gujarati = (int) 15;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UScript.cs:		public const int Gurmukhi = (int) 16;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UScript.cs:		public const int Han = (int) 17;
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UScript.cs:		public const int HanWithBopomofo = (int) 172;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UScript.cs:		public const int Hangul = (int) 18;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UScript.cs:		public const int Hanunoo = (int) 43;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UScript.cs:		public const int HarappanIndus = (int) 77;
@@ -782,6 +817,7 @@
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UScript.cs:		public const int InscriptionalPahlavi = (int) 122;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UScript.cs:		public const int InscriptionalParthian = (int) 125;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UScript.cs:		public const int InvalidCode = (int) -1;
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UScript.cs:		public const int Jamo = (int) 173;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UScript.cs:		public const int Japanese = (int) 105;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UScript.cs:		public const int Javanese = (int) 78;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UScript.cs:		public const int Jurchen = (int) 148;
@@ -815,6 +851,7 @@
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UScript.cs:		public const int Mandaean = (int) 84;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UScript.cs:		public const int Mandaic = (int) 84;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UScript.cs:		public const int Manichaean = (int) 121;
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UScript.cs:		public const int Marchen = (int) 169;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UScript.cs:		public const int MathematicalNotation = (int) 128;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UScript.cs:		public const int MayanHieroglyphs = (int) 85;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UScript.cs:		public const int MeiteiMayek = (int) 115;
@@ -832,6 +869,7 @@
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UScript.cs:		public const int Nabataean = (int) 143;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UScript.cs:		public const int NakhiGeba = (int) 132;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UScript.cs:		public const int NewTaiLue = (int) 59;
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UScript.cs:		public const int Newa = (int) 170;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UScript.cs:		public const int Nko = (int) 87;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UScript.cs:		public const int Nushu = (int) 150;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UScript.cs:		public const int Ogham = (int) 29;
@@ -845,6 +883,7 @@
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UScript.cs:		public const int OldSouthArabian = (int) 133;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UScript.cs:		public const int Oriya = (int) 31;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UScript.cs:		public const int Orkhon = (int) 88;
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UScript.cs:		public const int Osage = (int) 171;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UScript.cs:		public const int Osmanya = (int) 50;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UScript.cs:		public const int PahawhHmong = (int) 75;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UScript.cs:		public const int Palmyrene = (int) 144;
@@ -870,6 +909,7 @@
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UScript.cs:		public const int Sundanese = (int) 113;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UScript.cs:		public const int SylotiNagri = (int) 58;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UScript.cs:		public const int Symbols = (int) 129;
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UScript.cs:		public const int SymbolsEmoji = (int) 174;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UScript.cs:		public const int Syriac = (int) 34;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UScript.cs:		public const int Tagalog = (int) 42;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Lang.UScript.cs:		public const int Tagbanwa = (int) 45;
@@ -1140,6 +1180,7 @@
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.OS.Process.cs:		public const int LastApplicationUid = (int) 99999;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.OS.Process.cs:		public const int PhoneUid = (int) 1001;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.OS.Process.cs:		public const int SystemUid = (int) 1000;
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.OS.VibrationEffect.cs:		public const int DefaultAmplitude = (int) -1;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Opengl.EGL14.cs:		public const int EglAlphaMaskSize = (int) 12350;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Opengl.EGL14.cs:		public const int EglAlphaSize = (int) 12321;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Opengl.EGL14.cs:		public const int EglBackBuffer = (int) 12420;
@@ -1255,6 +1296,7 @@
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Opengl.EGLExt.cs:		public const int EglContextMajorVersionKhr = (int) 12440;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Opengl.EGLExt.cs:		public const int EglContextMinorVersionKhr = (int) 12539;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Opengl.EGLExt.cs:		public const int EglOpenglEs3BitKhr = (int) 64;
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Opengl.EGLExt.cs:		public const int EglRecordableAndroid = (int) 12610;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Opengl.ETC1.cs:		public const int DecodedBlockSize = (int) 48;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Opengl.ETC1.cs:		public const int EncodedBlockSize = (int) 8;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Opengl.ETC1.cs:		public const int EtcPkmHeaderSize = (int) 16;
@@ -1266,8 +1308,10 @@
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Provider.Browser.cs:		public const int TruncateNOldest = (int) 5;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Provider.CalendarContract.cs:				public const int MinutesDefault = (int) -1;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Provider.CalendarContract.cs:			public const int MinutesDefault = (int) -1;
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Provider.CallLog.cs:			public const int FeaturesHdCall = (int) 4;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Provider.CallLog.cs:			public const int FeaturesPulledExternally = (int) 2;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Provider.CallLog.cs:			public const int FeaturesVideo = (int) 1;
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Provider.CallLog.cs:			public const int FeaturesWifi = (int) 8;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Provider.ContactsContract.cs:				public const int TypeCustom = (int) 0;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Provider.ContactsContract.cs:					public const int TypeCustom = (int) 0;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Provider.ContactsContract.cs:					public const int CarrierPresenceVtCapable = (int) 1;
@@ -1320,10 +1364,12 @@
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Renderscripts.ScriptIntrinsicBLAS.cs:		public const int Transpose = (int) 112;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Renderscripts.ScriptIntrinsicBLAS.cs:		public const int Unit = (int) 132;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Renderscripts.ScriptIntrinsicBLAS.cs:		public const int Upper = (int) 121;
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Service.Autofill.FillRequest.cs:		public const int FlagManualRequest = (int) 1;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Service.Carrier.CarrierMessagingService.cs:		public const int SendFlagRequestDeliveryStatus = (int) 1;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Speech.Tts.TextToSpeech.cs:			public const int DefaultStream = (int) 3;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Telecom.PhoneAccount.cs:		public const int NoHighlightColor = (int) 0;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Telecom.PhoneAccount.cs:		public const int NoResourceId = (int) -1;
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Telephony.CarrierConfigManager.cs:		public const int DataCycleThresholdDisabled = (int) -2;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Telephony.CellSignalStrength.cs:		public const int SignalStrengthGood = (int) 3;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Telephony.CellSignalStrength.cs:		public const int SignalStrengthGreat = (int) 4;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Telephony.CellSignalStrength.cs:		public const int SignalStrengthModerate = (int) 2;
@@ -1340,11 +1386,16 @@
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Telephony.SmsMessage.cs:		public const int MaxUserDataSeptets = (int) 160;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Telephony.SmsMessage.cs:		public const int MaxUserDataSeptetsWithHeader = (int) 153;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Telephony.SubscriptionManager.cs:		public const int InvalidSubscriptionId = (int) -1;
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Telephony.VisualVoicemailSmsFilterSettings.cs:		public const int DestinationPortAny = (int) -1;
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Telephony.VisualVoicemailSmsFilterSettings.cs:		public const int DestinationPortDataSms = (int) -2;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Text.Format.Time.cs:		public const int EpochJulianDay = (int) 2440588;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Text.Style.BulletSpan.cs:		public const int StandardGapWidth = (int) 2;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Text.Style.EasyEditSpan.cs:		public const int TextDeleted = (int) 1;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Text.Style.EasyEditSpan.cs:		public const int TextModified = (int) 2;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Text.Style.SuggestionSpan.cs:		public const int SuggestionsMaxSize = (int) 5;
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Util.Half.cs:		public const int MaxExponent = (int) 15;
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Util.Half.cs:		public const int MinExponent = (int) -14;
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Util.Half.cs:		public const int Size = (int) 16;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Util.TypedValue.cs:		public const int DataNullEmpty = (int) 1;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Util.TypedValue.cs:		public const int DataNullUndefined = (int) 0;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Util.TypedValue.cs:		public const int DensityDefault = (int) 0;
@@ -1360,6 +1411,7 @@
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Views.Display.cs:		public const int StateDozing = (int) 3;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Views.IMenu.cs:		public const int First = (int) 1;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Views.IMenu.cs:		public const int None = (int) 0;
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Views.IMenu.cs:		public const int SupportedModifiersMask = (int) 69647;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Views.IWindowManager.cs:		public const int FirstApplicationWindow = (int) 1;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Views.IWindowManager.cs:		public const int FirstSubWindow = (int) 1000;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Views.IWindowManager.cs:		public const int FirstSystemWindow = (int) 2000;
@@ -1441,14 +1493,12 @@
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Lang.Integer.cs:		public const int Size = (int) 32;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Lang.Long.cs:		public const int Bytes = (int) 8;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Lang.Long.cs:		public const int Size = (int) 64;
-../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Lang.Reflect.Constructor.cs:			public const int Declared = (int) 1;
-../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Lang.Reflect.Constructor.cs:			public const int Public = (int) 0;
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Lang.Reflect.Executable.cs:			public const int Declared = (int) 1;
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Lang.Reflect.Executable.cs:			public const int Public = (int) 0;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Lang.Reflect.Field.cs:			public const int Declared = (int) 1;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Lang.Reflect.Field.cs:			public const int Public = (int) 0;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Lang.Reflect.IMember.cs:		public const int Declared = (int) 1;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Lang.Reflect.IMember.cs:		public const int Public = (int) 0;
-../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Lang.Reflect.Method.cs:			public const int Declared = (int) 1;
-../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Lang.Reflect.Method.cs:			public const int Public = (int) 0;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Lang.Reflect.Modifier.cs:		public const int Abstract = (int) 1024;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Lang.Reflect.Modifier.cs:		public const int Final = (int) 16;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Lang.Reflect.Modifier.cs:		public const int Interface = (int) 512;
@@ -1626,6 +1676,8 @@
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Text.DateFormat.cs:		public const int YearField = (int) 1;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Text.NumberFormat.cs:		public const int FractionField = (int) 1;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Text.NumberFormat.cs:		public const int IntegerField = (int) 0;
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Times.Year.cs:		public const int MaxValue = (int) 999999999;
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Times.Year.cs:		public const int MinValue = (int) -999999999;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Util.Calendar.cs:		public const int Am = (int) 0;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Util.Calendar.cs:		public const int April = (int) 3;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Util.Calendar.cs:		public const int August = (int) 7;
@@ -1636,14 +1688,20 @@
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Util.Calendar.cs:		public const int January = (int) 0;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Util.Calendar.cs:		public const int July = (int) 6;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Util.Calendar.cs:		public const int June = (int) 5;
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Util.Calendar.cs:		public const int LongFormat = (int) 2;
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Util.Calendar.cs:		public const int LongStandalone = (int) 32770;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Util.Calendar.cs:		public const int March = (int) 2;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Util.Calendar.cs:		public const int May = (int) 4;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Util.Calendar.cs:		public const int Monday = (int) 2;
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Util.Calendar.cs:		public const int NarrowFormat = (int) 4;
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Util.Calendar.cs:		public const int NarrowStandalone = (int) 32772;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Util.Calendar.cs:		public const int November = (int) 10;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Util.Calendar.cs:		public const int October = (int) 9;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Util.Calendar.cs:		public const int Pm = (int) 1;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Util.Calendar.cs:		public const int Saturday = (int) 7;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Util.Calendar.cs:		public const int September = (int) 8;
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Util.Calendar.cs:		public const int ShortFormat = (int) 1;
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Util.Calendar.cs:		public const int ShortStandalone = (int) 32769;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Util.Calendar.cs:		public const int Sunday = (int) 1;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Util.Calendar.cs:		public const int Thursday = (int) 5;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Util.Calendar.cs:		public const int Tuesday = (int) 3;
