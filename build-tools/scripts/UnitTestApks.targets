@@ -6,6 +6,7 @@
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.RunInstrumentationTests" />
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.StartAndroidEmulator" />
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.KillProcess" />
+  <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.Sleep" />
 
   <PropertyGroup>
     <_TestImageName>XamarinAndroidUnitTestRunner</_TestImageName>
@@ -41,17 +42,23 @@
       <Output TaskParameter="AdbTarget" PropertyName="_EmuTarget" />
       <Output TaskParameter="EmulatorProcessId" PropertyName="_EmuPid" />
     </StartAndroidEmulator>
-    <Exec
+    <Sleep
         Condition=" '$(_ValidAdbTarget)' != 'True' "
-        Command="sleep 10"
+        Milliseconds="10000"
     />
     <Xamarin.Android.Tools.BootstrapTasks.Adb
+        EnvironmentVariables="ADB_TRACE=all"
         Condition=" '$(_ValidAdbTarget)' != 'True' "
         Arguments="$(_AdbTarget) wait-for-device"
         ToolExe="$(AdbToolExe)"
         ToolPath="$(AdbToolPath)"
     />
+    <Sleep
+        Condition=" '$(_ValidAdbTarget)' != 'True' "
+        Milliseconds="1000"
+    />
     <Xamarin.Android.Tools.BootstrapTasks.Adb
+        EnvironmentVariables="ADB_TRACE=all"
         Condition=" '$(_ValidAdbTarget)' != 'True' "
         Arguments="$(_EmuTarget) shell 'counter=0; while [ $counter -lt 60 ] &amp;&amp; [ &quot;`getprop sys.boot_completed`&quot; != &quot;1&quot; ]; do echo Waiting for device to fully boot; sleep 1; let &quot;counter++&quot;; done'"
         ToolExe="$(AdbToolExe)"
