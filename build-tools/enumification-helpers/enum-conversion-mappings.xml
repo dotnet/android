@@ -56,10 +56,10 @@
   <map package="android.app" class="DownloadManager.Request" fields="" prefix="VISIBILITY_" enum-name="DownloadVisibility" />
   <map package="android.app" class="FragmentManager" fields="" prefix="POP_BACK_STACK_" enum-name="PopBackStackFlags" extra-default="None" />
   <map package="android.app" class="FragmentTransaction" fields="" prefix="TRANSIT_" enum-name="FragmentTransit" is-transient="false" />
-  <map package="android.app" class="Notification" fields="" prefix="BADGE_ICON_" enum-name="NotificationBadgeIcon" is-transient="false" api-since="26" />
+  <map package="android.app" class="Notification" fields="" prefix="BADGE_ICON_" enum-name="NotificationBadgeIconType" is-transient="false" api-since="26" />
   <map package="android.app" class="Notification" fields="" prefix="FLAG_" enum-name="NotificationFlags" is-transient="false" />
   <map package="android.app" class="Notification" fields="" prefix="DEFAULT_" enum-name="NotificationDefaults" is-transient="false" />
-  <map package="android.app" class="Notification" fields="" prefix="GROUP_ALERT_" enum-name="NotificationGroupAlert" is-transient="false" api-since="26" />
+  <map package="android.app" class="Notification" fields="" prefix="GROUP_ALERT_" enum-name="NotificationGroupAlertBehavior" is-transient="false" api-since="26" />
   <map package="android.app" class="Notification" fields="" prefix="VISIBILITY_" enum-name="NotificationVisibility" is-transient="false" api-level="20" />
   <map package="android.app" class="Notification.WearableExtender" fields="" prefix="SIZE_" enum-name="WearableSizePreset" is-transient="false" api-level="20" />
   <map package='android.app' class='PendingIntent' prefix='FLAG_' enum-name='PendingIntentFlags' is-transient='false' />
@@ -97,6 +97,8 @@
   <map package="android.bluetooth" class="BluetoothDevice" fields="" prefix="BOND_" enum-name="Bond" is-transient="false" />
   <map package="android.bluetooth" class="BluetoothDevice" fields="PHY_LE_*" prefix="PHY_" enum-name="BluetoothPhy" is-transient="false" api-level="26" />
   <map package="android.bluetooth" class="BluetoothDevice" prefix="PHY_OPTION_" enum-name="BluetoothPhyOption" is-transient="false" api-level="26" />
+  <!-- used by ScanResult#getSecondaryPhy() -->
+  <map package="android.bluetooth.le" class="ScanResult" fields="PHY_UNUSED" prefix="PHY_" enum-name="BluetoothPhy" is-transient="false" api-level="26" />
   <map package="android.bluetooth" class="BluetoothGatt" fields="" prefix="GATT_" enum-name="GattStatus" api-level="18" />
   <map package="android.bluetooth" class="BluetoothGatt" fields="" prefix="CONNECTION_PRIORITY_" enum-name="GattConnectionPriority" api-level="21" />
   <map package="android.bluetooth" class="BluetoothGattCharacteristic" fields="" prefix="FORMAT_" enum-name="GattFormat" api-level="18" />
@@ -118,10 +120,9 @@
   <map package="android.bluetooth.le" class="AdvertiseSettings" fields="" prefix="ADVERTISE_TX_" enum-name="AdvertiseTx" is-transient="false" api-level="21" />
   <map package="android.bluetooth.le" class="AdvertiseSettings" fields="" prefix="ADVERTISE_TYPE_" enum-name="AdvertiseType" is-transient="false" api-level="21" />
   <map package="android.bluetooth.le" class="AdvertisingSetCallback" fields="" prefix="ADVERTISE_" enum-name="AdvertiseResult" is-transient="false" api-level="26" />
-  <map package="android.bluetooth.le" class="AdvertisingSetParameters" fields="" prefix="INTERVAL_" enum-name="AdvertiseInterval" is-transient="false" api-level="26" />
   <map package="android.bluetooth.le" class="AdvertisingSetParameters" fields="" prefix="TX_POWER_" enum-name="AdvertiseTxPower" is-transient="false" api-level="26" />
   <map package="android.bluetooth.le" class="ScanCallback" fields="" prefix="SCAN_FAILED_" enum-name="ScanFailure" is-transient="false" api-level="21" />
-  <map package="android.bluetooth.le" class="ScanResult" fields="*" prefix="" enum-name="ScanResultCode" is-transient="false" api-level="26" />
+  <map package="android.bluetooth.le" class="ScanResult" prefix="DATA_" enum-name="DataStatus" is-transient="false" api-level="26" />
   <map package="android.bluetooth.le" class="ScanSettings" fields="" prefix="SCAN_MODE_" enum-name="ScanMode" is-transient="false" api-level="21" />
   <map package="android.bluetooth.le" class="ScanSettings" fields="" prefix="CALLBACK_TYPE_" enum-name="ScanCallbackType" is-transient="false" api-level="21" />
   <map package="android.bluetooth.le" class="ScanSettings" fields="" prefix="PHY_LE_" enum-name="ScanSettingsPhy" is-transient="false" api-level="26" />
@@ -198,11 +199,12 @@
   <map package='android.hardware' class='Camera$CameraInfo' fields='' prefix='CAMERA_FACING_' enum-name="CameraFacing" />
   <map package='android.hardware' class='Camera$Parameters' fields='' prefix='FOCUS_DISTANCE_' enum-name="FocusDistance" />
   <map package='android.hardware' class='Camera$Parameters' fields='' prefix='PREVIEW_' enum-name="Preview" />
-  <map package='android.hardware' class='HardwareBuffer' fields='*' enum-name="HardwareBufferFlags" is-transient="false" api-level="26" />
+  <map package='android.hardware' class='HardwareBuffer' fields='RGB.* BLOB' enum-name="HardwareBufferFormat" is-transient="false" api-level="26" />
+  <map package='android.hardware' class='HardwareBuffer' prefix='USAGE_' enum-name="HardwareBufferUsage" is-transient="false" api-level="26" />
   <map package='android.hardware' class='Sensor' prefix='REPORTING_MODE_' enum-name="ReportingMode" is-transient="false" api-level="21" />
   <map package='android.hardware' class='Sensor' fields='' prefix='TYPE_' enum-name="SensorType" is-transient="false" />
   <map package='android.hardware' class='SensorDirectChannel' prefix='RATE_' enum-name="SensorDirectRateLevel" is-transient="false" api-level="26" />
-  <map package='android.hardware' class='SensorDirectChannel' prefix='TYPE_' enum-name="SensorDirectType" is-transient="false" api-level="26" />
+  <map package='android.hardware' class='SensorDirectChannel' prefix='TYPE_' enum-name="SensorDirectChannelType" is-transient="false" api-level="26" />
   <map package='android.hardware.camera2' class='CameraAccessException' fields='' prefix='CAMERA_' enum-name="CameraAccessErrorType" is-transient="false" api-level="21" />
   <map package='android.hardware.camera2' class='CameraDevice.StateCallback' fields='' prefix='ERROR_' enum-name="CameraError" is-transient="false" api-level="21" />
   <map package='android.hardware.camera2' class='CameraDevice' fields='' prefix='TEMPLATE_' enum-name="CameraTemplate" is-transient="false" api-level="21" />
@@ -1000,7 +1002,6 @@
   <map package='android.icu.util' class='Calendar' fields='AM_PM DATE DAY_OF_MONTH DAY_OF_WEEK DAY_OF_WEEK_IN_MONTH DAY_OF_YEAR DOW_LOCAL DST_OFFSET ERA EXTENDED_YEAR HOUR HOUR_OF_DAY JULIAN_DAY MILLISECOND MILLISECONDS_IN_DAY MINUTE MONTH SECOND WEEK_OF_MONTH WEEK_OF_YEAR YEAR YEAR_WOY ZONE_OFFSET' prefix='' enum-name="CalendarField" />
   <map package="android.icu.util" class="Calendar" fields="" prefix="WALLTIME_" enum-name="WalltimeOptions" api-level="24" />
   <map package="android.icu.util" class="Currency" fields="" suffix="_NAME" enum-name="CurrencyNameStyle" api-level="24" />
-  <map package="android.icu.util" class="EthiopicCalendar" fields="*" prefix="" enum-name="EthiopicMonth" api-level="26" />
   <map package="android.icu.util" class="TimeZone" fields="GENERIC_LOCATION LONG* SHORT*" enum-name="TimeZoneNameStyle" api-level="24" />
   <map package="android.icu.util" class="TimeZone" prefix="TIMEZONE_" enum-name="TimeZoneType" api-level="26" />
   <map package="android.icu.util" class="UniversalTimeScale" fields=".*_TIME MAX_SCALE" enum-name="UniversalTimeScaleType" api-level="26" />

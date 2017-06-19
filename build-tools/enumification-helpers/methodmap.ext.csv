@@ -819,7 +819,7 @@
 18, android.bluetooth, BluetoothGattServer, sendResponse, status, Android.Bluetooth.ProfileState
 18, android.bluetooth, BluetoothGattServerCallback, onConnectionStateChange, status, Android.Bluetooth.ProfileState
 18, android.bluetooth, BluetoothGattServerCallback, onConnectionStateChange, newState, Android.Bluetooth.ProfileState
-18, android.bluetooth, BluetoothGattServerCallback, onServiceAdded, status, Android.Bluetooth.ProfileState
+18, android.bluetooth, BluetoothGattServerCallback, onServiceAdded, status, Android.Bluetooth.GattStatus	
 18, android.bluetooth, BluetoothGattService, ctor, serviceType, Android.Bluetooth.GattServiceType
 18, android.bluetooth, BluetoothGattService, getType, return, Android.Bluetooth.GattServiceType
 18, android.bluetooth, BluetoothManager, getConnectedDevices, profile, Android.Bluetooth.ProfileType
@@ -981,7 +981,6 @@
 21, android.bluetooth.le, AdvertiseSettings.Builder, setType, type, Android.Bluetooth.LE.AdvertiseType
 21, android.bluetooth.le, ScanCallback, onScanFailed, errorCode, Android.Bluetooth.LE.ScanFailure
 21, android.bluetooth.le, ScanCallback, onScanResult, callbackType, Android.Bluetooth.LE.ScanCallbackType
-21, android.bluetooth.le, ScanRecord, getTxPowerLevel, return, Android.Bluetooth.LE.AdvertiseTx
 21, android.bluetooth.le, ScanSettings, getCallbackType, return, Android.Bluetooth.LE.ScanCallbackType
 21, android.bluetooth.le, ScanSettings, getScanMode, return, Android.Bluetooth.LE.ScanMode
 21, android.bluetooth.le, ScanSettings.Builder, setCallbackType, callbackType, Android.Bluetooth.LE.ScanCallbackType
@@ -1020,8 +1019,8 @@
 21, android.media, MediaCodecList, ctor, kind, Android.Media.MediaCodecListKind
 21, android.media, MediaPlayer, getSelectedTrack, trackType, Android.Media.MediaTrackType
 21, android.media, MediaRouter.RouteInfo, getPlaybackStream, return, Android.Media.Stream
-21, android.media, VolumeProvider, ctor, volumeControl, Android.Media.Session.VolumeControlType
-21, android.media, VolumeProvider, getVolumeControl, return, Android.Media.Session.VolumeControlType
+21, android.media, VolumeProvider, ctor, volumeControl, Android.Media.VolumeControl
+21, android.media, VolumeProvider, getVolumeControl, return, Android.Media.VolumeControl
 21, android.media, VolumeProvider, onAdjustVolume, direction, Android.Media.Adjust
 21, android.media.projection, MediaProjection, createVirtualDisplay, flags, Android.Views.DisplayFlags
 21, android.media.audiofx, Virtualizer, canVirtualize, inputChannelMask, Android.Media.ChannelIn
@@ -1359,13 +1358,13 @@
 24, android.app, FragmentHostCallback, onStartIntentSenderFromFragment, flagsMask, Android.Content.ActivityFlags
 24, android.app, FragmentHostCallback, onStartIntentSenderFromFragment, flagsValues, Android.Content.ActivityFlags
 24, android.app, Instrumentation, getUiAutomation, flags, Android.App.UiAutomationFlags
-24, android.app.job, JobInfo.TriggerContentUri, ctor, flags, Android.App.TriggerContentUriFlags
-24, android.app.job, JobInfo.TriggerContentUri, getFlags, return, Android.App.TriggerContentUriFlags
+24, android.app.job, JobInfo.TriggerContentUri, ctor, flags, Android.App.Job.TriggerContentUriFlags
+24, android.app.job, JobInfo.TriggerContentUri, getFlags, return, Android.App.Job.TriggerContentUriFlags
 24, android.app, NotificationManager.Policy, suppressedVisualEffects, , Android.App.SuppressedEffects
 24, android.app, NotificationManager.Policy, suppressedEffectsToString, effects, Android.App.SuppressedEffects
 24, android.app, NotificationManager, getImportance, return, Android.App.NotificationImportance
 24, android.app, Service, stopForeground, flags, Android.App.StopForegroundFlags
-24, android.app.usage, NetworkStats.Bucket, getRoaming, return, Android.App.NetworkUsageRoaming
+24, android.app.usage, NetworkStats.Bucket, getRoaming, return, Android.App.Usage.NetworkUsageRoaming
 24, android.app.usage, NetworkStatsManager, queryDetailsForUid, networkType, Android.Net.ConnectivityType
 24, android.app.usage, NetworkStatsManager, queryDetailsForUidTag, networkType, Android.Net.ConnectivityType
 24, android.app.usage, NetworkStatsManager, registerUsageCallback, networkType, Android.Net.ConnectivityType
@@ -1551,3 +1550,208 @@
 25, android.telecom, RemoteConference, getConnectionProperties, return, Android.Telecom.ConnectionProperties
 25, android.telecom, RemoteConference.Callback, onConnectionPropertiesChanged, connectionProperties, Android.Telecom.ConnectionProperties
 25, android.view.inputmethod, [Interface]InputConnection, commitContent, flags, Android.Views.InputMethods.InputContentFlags
+
+// API Level 26
+
+26, java.lang.invoke, [Interface]MethodHandleInfo, getReferenceKind, return, Java.Lang.Invoke.ReferenceKind
+26, java.lang.invoke, [Interface]MethodHandleInfo, refKindIsField, refKind, Java.Lang.Invoke.ReferenceKind
+26, java.lang.invoke, [Interface]MethodHandleInfo, refKindIsValid, refKind, Java.Lang.Invoke.ReferenceKind
+26, java.lang.invoke, [Interface]MethodHandleInfo, refKindName, refKind, Java.Lang.Invoke.ReferenceKind
+26, java.lang.invoke, [Interface]MethodHandleInfo, referenceKindToString, referenceKind, Java.Lang.Invoke.ReferenceKind
+26, java.lang.invoke, [Interface]MethodHandleInfo, toString, kind, Java.Lang.Invoke.ReferenceKind
+26, java.lang.invoke, MethodHandles.Lookup, lookupModes, return, Java.Lang.Invoke.MethodLookupModes
+
+26, android.accessibilityservice, FingerprintGestureController.FingerprintGestureCallback, onGestureDetected, gesture, Android.AccessibilityServices.FingerptintGestureTypes
+26, android.accessibilityservice, FingerprintGestureController.FingerprintGestureCallback, onGestureDetected, gesture, Android.AccessibilityServices.FingerptintGestureTypes
+26, android.accounts, AccountManager, getAccountVisibility, return, Android.Accounts.AccountVisibility
+// We have problem binding getAccountVisibilityForPackage() and getPackagesAndVisibilityForAccount(). They should be Map<Account,AccountVisibility> and Map<String,AccountVisibility> instead of Map<Account,int> and Map<String,int> respectively, but they require run-time mapping too...
+26, android.accounts, AccountManager, setAccountVisibility, visibility, Android.Accounts.AccountVisibility
+26, android.app, Notification.Builder, setBadgeIconType, icon, Android.App.NotificationBadgeIconType
+26, android.app, Notification.Builder, setGroupAlertBehavior, groupAlertBehavior, Android.App.NotificationGroupAlertBehavior
+26, android.app, Notification, getBadgeIconType, return, Android.App.NotificationBadgeIconType
+26, android.app, Notification, getGroupAlertBehavior, return, Android.App.NotificationGroupAlertBehavior
+26, android.app, Notification.Builder, setGroupAlertBehavior, groupAlertBehavior, Android.App.NotificationGroupAlertBehavior
+26, android.app.admin, SystemUpdateInfo, getSecurityPatchState, return, Android.App.Admin.SecurityPatchStates
+26, android.app.usage, NetworkStats.Bucket, getMetered, return, Android.App.Usage.MeteredStates
+
+26, android.bluetooth, BluetoothGatt, setPreferredPhy, txPhy, Android.Bluetooth.BluetoothPhy
+26, android.bluetooth, BluetoothGatt, setPreferredPhy, rxPhy, Android.Bluetooth.BluetoothPhy
+26, android.bluetooth, BluetoothGatt, setPreferredPhy, phyOptions, Android.Bluetooth.BluetoothPhyOption
+26, android.bluetooth.le, ScanSettings.Builder, setPhy, phy, Android.Bluetooth.BluetoothPhy
+26, android.bluetooth.le, ScanSettings, getPhy, return, Android.Bluetooth.LE.ScanSettingsPhy
+26, android.bluetooth.le, AdvertisingSetParameters.Builder, setPrimaryPhy, primaryPhy,  Android.Bluetooth.LE.ScanSettingsPhy
+26, android.bluetooth.le, AdvertisingSetParameters.Builder, setSecondaryPhy, secondaryPhy,  Android.Bluetooth.LE.ScanSettingsPhy
+26, android.bluetooth.le, AdvertisingSetParameters.Builder, setTxPowerLevel, txPowerLevel,  Android.Bluetooth.LE.AdvertiseTxPower
+26, android.bluetooth.le, ScanResult, ctor, primaryPhy, Android.Bluetooth.LE.ScanSettingsPhy
+26, android.bluetooth.le, ScanResult, ctor, secondaryPhy, Android.Bluetooth.LE.ScanSettingsPhy
+26, android.bluetooth.le, ScanResult, ctor, txPower, Android.Bluetooth.LE.AdvertiseTxPower
+26, android.bluetooth.le, ScanResult, getPrimaryPhy, return,  Android.Bluetooth.LE.ScanSettingsPhy
+26, android.bluetooth.le, ScanResult, getSecondaryPhy, return,  Android.Bluetooth.LE.ScanSettingsPhy
+26, android.bluetooth.le, ScanResult, getTxPower, return,  Android.Bluetooth.LE.AdvertiseTxPower
+26, android.bluetooth.le, ScanResult, getDataStatus, return,  Android.Bluetooth.LE.DataStatus
+26, android.bluetooth, BluetoothGattServerCallback, onPhyRead, txPhy,  Android.Bluetooth.LE.ScanSettingsPhy
+26, android.bluetooth, BluetoothGattServerCallback, onPhyRead, rxPhy,  Android.Bluetooth.LE.ScanSettingsPhy
+26, android.bluetooth, BluetoothGattServerCallback, onPhyRead, status, Android.Bluetooth.GattStatus
+26, android.bluetooth, BluetoothGattServerCallback, onPhyUpdate, txPhy,  Android.Bluetooth.LE.ScanSettingsPhy
+26, android.bluetooth, BluetoothGattServerCallback, onPhyUpdate, rxPhy,  Android.Bluetooth.LE.ScanSettingsPhy
+26, android.bluetooth, BluetoothGattServerCallback, onPhyUpdate, status, Android.Bluetooth.GattStatus
+26, android.bluetooth, BluetoothDevice, connectGatt, phy,  Android.Bluetooth.LE.ScanSettingsPhy
+26, android.bluetooth, BluetoothDevice, connectGatt, transport,  Android.Bluetooth.BluetoothTransports
+26, android.bluetooth, BluetoothGattCallback, onPhyRead, txPhy,  Android.Bluetooth.LE.ScanSettingsPhy
+26, android.bluetooth, BluetoothGattCallback, onPhyRead, rxPhy,  Android.Bluetooth.LE.ScanSettingsPhy
+26, android.bluetooth, BluetoothGattCallback, onPhyRead, status, Android.Bluetooth.GattStatus
+26, android.bluetooth, BluetoothGattCallback, onPhyUpdate, txPhy,  Android.Bluetooth.LE.ScanSettingsPhy
+26, android.bluetooth, BluetoothGattCallback, onPhyUpdate, rxPhy,  Android.Bluetooth.LE.ScanSettingsPhy
+26, android.bluetooth, BluetoothGattCallback, onPhyUpdate, status, Android.Bluetooth.GattStatus
+26, android.bluetooth, BluetoothGattServer, setPreferredPhy, txPhy, Android.Bluetooth.BluetoothPhy
+26, android.bluetooth, BluetoothGattServer, setPreferredPhy, rxPhy, Android.Bluetooth.BluetoothPhy
+26, android.bluetooth, BluetoothGattServer, setPreferredPhy, phyOptions, Android.Bluetooth.BluetoothPhyOption
+
+26, android.view, Window, getColorMode, return, Android.Content.PM.ActivityColorMode
+26, android.view, Window, setColorMode, colorMode, Android.Content.PM.ActivityColorMode
+26, android.view, WindowManager.LayoutParams, getColorMode, return, Android.Content.PM.ActivityColorMode
+26, android.view, WindowManager.LayoutParams, setColorMode, colorMode, Android.Content.PM.ActivityColorMode
+26, android.content.pm, ActivityInfo, colorMode, , Android.Content.PM.ActivityColorMode
+26, android.content.pm, ApplicationInfo, category, , Android.Content.PM.ApplicationCategories
+26, android.content.pm, LauncherApps.PinItemRequest, getRequestType, return, Android.Content.PM.PinItemRequestType
+26, android.content.pm, PackageInstaller.SessionInfo, getInstallReason, return, Android.Content.PM.PackageInstallReason
+26, android.content.pm, PackageInstaller.SessionInfo, getInstallReason, return, Android.Content.PM.PackageInstallReason
+26, android.content.pm, PackageInstaller.SessionParams, setInstallReason, installReason, Android.Content.PM.PackageInstallReason
+26, android.content.pm, PackageManager, getSharedLibraries, flags, Android.Content.PM.PackageInstallReason
+26, android.content.pm, SharedLibraryInfo, getType, return, Android.Content.PM.SharedLibraryType
+26, android.content.res, Configuration, colorMode, , Android.Content.Res.ColorMode
+
+26, android.hardware, HardwareBuffer, create, format, Android.Hardware.HardwareBufferFormat
+26, android.hardware, HardwareBuffer, create, usage, Android.Hardware.HardwareBufferUsage
+26, android.hardware, HardwareBuffer, getFormat, return, Android.Hardware.HardwareBufferFormat
+26, android.hardware, HardwareBuffer, getUsage, return, Android.Hardware.HardwareBufferUsage
+26, android.hardware, Sensor, getHighestDirectReportRateLevel, return, Android.Hardware.SensorDirectRateLevel
+26, android.hardware, Sensor, isDirectChannelTypeSupported, sharedMemType, Android.Hardware.SensorDirectChannelType
+26, android.hardware, SensorDirectChannel, configure, rateLevel, Android.Hardware.SensorDirectRateLevel
+
+26, android.media, AudioTrack.Builder, setPerformanceMode, performanceMode, Android.Media.AudioTrackPerformanceMode
+26, android.media, AudioTrack, getPerformanceMode, return, Android.Media.AudioTrackPerformanceMode
+26, android.media, MediaPlayer.OnDrmPreparedListener, onDrmPrepared, status, Android.Media.PrepareDrmStatus
+26, android.media, MediaPlayer, seekTo, mode, Android.Media.MediaPlayerSeekMode
+26, android.media, VolumeShaper.Configuration.Builder, setInterpolatorType, interpolatorType, Android.Media.VolumeInterpolatorType
+// Those enums in TvContract.*Programs are used only with settings columns.
+// I assume they are replaced by those consts in each FooBarPrograms class?
+26, android.net, ConnectivityManager, getMultipathPreference, return, Android.Net.MultipathPreference
+26, android.net.wifi, WifiManager.LocalOnlyHotspotCallback, onFailed, reason, Android.Net.Wifi.LocalOnlyHotspotCallbackErrorCode
+26, android.net.wifi.aware, PublishConfig.Builder, setPublishType, publishType, Android.Net.Wifi.Aware.PublishType
+26, android.net.wifi.aware, SubscribeConfig.Builder, setSubscribeType, subscribeType, Android.Net.Wifi.Aware.SubscribeType
+26, android.net.wifi.aware, WifiAwareSession, createNetworkSpecifierOpen, role, Android.Net.Wifi.Aware.WifiAwareDataPathRole
+26, android.net.wifi.aware, WifiAwareSession, createNetworkSpecifierPassphrase, role, Android.Net.Wifi.Aware.WifiAwareDataPathRole
+
+26, android.service.autofill, FillEventHistory.Event, getType, return, Android.Service.Autofill.EventType
+26, android.service.autofill, SaveInfo.Builder, ctor, type, Android.Service.Autofill.SaveDataType
+26, android.service.autofill, SaveInfo.Builder, setNegativeAction, style, Android.Service.Autofill.NegativeButtonStyle
+26, android.service.autofill, SaveInfo.Builder, setFlags, flags, Android.Service.Autofill.SaveFlags
+26, android.service.notification, NotificationListenerService, onNotificationChannelGroupModified, modificationType, Android.Service.Notification.NotificationChannelOrGroupEventType
+26, android.service.notification, NotificationListenerService, onNotificationChannelModified, modificationType, Android.Service.Notification.NotificationChannelOrGroupEventType
+26, android.service.notification, NotificationListenerService, onNotificationRemoved, reason, Android.Service.Notification.NotificationCancelReason
+
+26, android.view, View, dispatchProvideAutofillStructure, flags, Android.Views.AutofillFlags
+26, android.view, View, onProvideAutofillStructure, flags, Android.Views.AutofillFlags
+26, android.view, View, onProvideAutofillVirtualStructure, flags, Android.Views.AutofillFlags
+26, android.view, View, getAutofillType, return, Android.Views.AutofillType
+// The setter brings conflict with setFocusable(boolean) so it cannot be simply
+// generated here. The corresponding manual fixup is added to "metadata".
+//26, android.view, View, getFocusable, return, Android.Views.ViewFocusability
+//26, android.view, View, setFocusable, focusable, Android.Views.ViewFocusability
+26, android.view, View, getImportantForAutofill, return, Android.Views.ImportantForAutofill
+26, android.view, View, setImportantForAutofill, mode, Android.Views.ImportantForAutofill
+26, android.webkit, WebView, getRendererRequestedPriority, return, Android.Webkit.RendererPriority
+26, android.webkit, WebView, setRendererPriorityPolicy, rendererRequestedPriority, Android.Webkit.RendererPriority
+26, android.widget, TextView, getAutoSizeTextType, return, Android.Widget.AutoSizeTextType
+26, android.widget, TextView, setAutoSizeTextTypeWithDefaults, autoSizeTextType, Android.Widget.AutoSizeTextType
+26, android.widget, TextView, setJustificationMode, justificationMode, Android.Text.JustificationMode
+26, android.text, StaticLayout.Builder, setJustificationMode, justificationMode, Android.Text.JustificationMode
+26, android.view.autofill, AutofillManager.AutofillCallback, onAutofillEvent, event, Android.Views.Autofill.AutofillEventType
+
+26, android.telecom, Call.Callback, onRttModeChanged, mode, Android.Telecom.RttMode
+26, android.telecom, Call.RttCall, getRttAudioMode, return, Android.Telecom.RttMode
+26, android.telecom, Call.RttCall, setRttMode, mode, Android.Telecom.RttMode
+26, android.telecom, Call.Callback, onRttInitiationFailure, reason, Android.Telecom.RttSessionModifyResult
+26, android.telephony, TelephonyManager.UssdResponseCallback, onReceiveUssdResponseFailed, failureCode, Android.Telephony.UssdResultCode
+
+26, android.icu.util, TimeZone, getTimeZone, type, Android.Icu.Util.TimeZoneType
+26, android.icu.util, UniversalTimeScale, bigDecimalFrom, timeScale, Android.Icu.Util.UniversalTimeScaleType
+26, android.icu.util, UniversalTimeScale, from, timeScale, Android.Icu.Util.UniversalTimeScaleType
+26, android.icu.util, UniversalTimeScale, getTimeScaleValue, scale, Android.Icu.Util.UniversalTimeScaleType
+26, android.icu.util, UniversalTimeScale, toBigDecimal, timeScale, Android.Icu.Util.UniversalTimeScaleType
+26, android.icu.util, UniversalTimeScale, toBigDecimal, timeScale, Android.Icu.Util.UniversalTimeScaleType
+26, android.icu.util, UniversalTimeScale, toLong, timeScale, Android.Icu.Util.UniversalTimeScaleType
+26, android.icu.util, UniversalTimeScale, getTimeScaleValue, value, Android.Icu.Util.UniversalTimeScaleValue
+
+26, android.app.admin, DevicePolicyManager, bindDeviceAdminServiceAsUser, flags, Android.Content.Bind
+26, android.app.admin, DevicePolicyManager, resetPasswordWithToken, flags, Android.App.Admin.ResetPasswordFlags
+26, android.app.admin, DevicePolicyManager, lockNow, flags, Android.App.Admin.DevicePolicyManagerFlags
+26, android.app.assist, AssistStructure.ViewNode, getAutofillType, return, Android.Text.InputTypes
+26, android.app.assist, AssistStructure.ViewNode, getInputType, return, Android.Views.AutofillType
+26, android.app.job, JobInfo.Builder, setClipData, grantFlags, Android.Content.ActivityFlags
+26, android.app.job, JobInfo, getClipGrandFlags, grantFlags, Android.Content.ActivityFlags
+26, android.app.job, JobParameters, getClipGrandFlags, grantFlags, Android.Content.ActivityFlags
+// 26, android.app.job, JobScheduler, enqueue, return, -it-was-not-enumified-at-api-level-21-
+26, android.app, NotificationChannel, getImportance, return, Android.App.NotificationImportance
+26, android.app, NotificationChannel, setImportance, importance, Android.App.NotificationImportance
+26, android.app, NotificationChannel, getLockScreenVisibility, return, Android.App.NotificationVisibility
+26, android.app, NotificationChannel, setLockScreenVisibility, lockScreenVisibility, Android.App.NotificationVisibility
+26, android.app, NotificationChannel, ctor, importance, Android.App.NotificationImportance
+26, android.app, PendingIntent, getForegroundService, flags, Android.App.PendingIntentFlags
+
+26, android.bluetooth.le, AdvertisingSetCallback, onAdvertisingDataSet, status, Android.Bluetooth.LE.AdvertiseResult
+26, android.bluetooth.le, AdvertisingSetCallback, onAdvertisingEnabled, status, Android.Bluetooth.LE.AdvertiseResult
+26, android.bluetooth.le, AdvertisingSetCallback, onAdvertisingParametersUpdated, status, Android.Bluetooth.LE.AdvertiseResult
+26, android.bluetooth.le, AdvertisingSetCallback, onAdvertisingSetStarted, status, Android.Bluetooth.LE.AdvertiseResult
+26, android.bluetooth.le, AdvertisingSetCallback, onPeriodicAdvertisingDataSet, status, Android.Bluetooth.LE.AdvertiseResult
+26, android.bluetooth.le, AdvertisingSetCallback, onPeriodicAdvertisingEnabled, status, Android.Bluetooth.LE.AdvertiseResult
+26, android.bluetooth.le, AdvertisingSetCallback, onPeriodicAdvertisingParametersUpdated, status, Android.Bluetooth.LE.AdvertiseResult
+26, android.bluetooth.le, AdvertisingSetCallback, onScanResponseDataSet, status, Android.Bluetooth.LE.AdvertiseResult
+26, android.bluetooth.le, AdvertisingSetParameters, getPrimaryPhy, return, Android.Bluetooth.BluetoothPhy
+26, android.bluetooth.le, AdvertisingSetParameters, getSecondaryPhy, return, Android.Bluetooth.BluetoothPhy
+26, android.bluetooth.le, AdvertisingSetParameters, getTxPowerLevel, return, Android.Bluetooth.LE.AdvertiseTxPower
+// ScanRecord has different TxPowerLevel context...
+26, android.bluetooth.le, ScanResult, getDataStatus, return, Android.Bluetooth.LE.DataStatus
+
+26, android.content, ContextWrapper, registerReceiver, flags, Android.Content.ActivityFlags
+26, android.content, Context, revokeUriPermission, modeFlags, Android.Content.ActivityFlags
+26, android.content, ContextWrapper, revokeUriPermission, modeFlags, Android.Content.ActivityFlags
+26, android.content, Intent, removeFlags, flags, Android.Content.ActivityFlags
+26, android.content.pm, ApplicationInfo, getCategoryTitle, category, Android.Content.PM.ApplicationCategories
+26, android.content.pm, LauncherApps, getApplicationInfo, flags, Android.Content.PM.PackageInfoFlags
+26, android.icu.util, TimeZone, getTimeZone, type, Android.Icu.Util.TimeZoneType
+
+26, android.media, AudioAttributes, getVolumeControlStream, return, Android.Media.Stream
+26, android.media, AudioAttributes, getVolumeControlStream, return, Android.Media.Stream
+26, android.media, AudioFocusRequest, getFocusGain, return, Android.Media.AudioFocus
+26, android.media, AudioFocusRequest.Builder, ctor, focusGain, Android.Media.AudioFocus
+26, android.media, AudioFocusRequest.Builder, setFocusGain, focusGain, Android.Media.AudioFocus
+26, android.media, AudioManager, abandonAudioFocusRequest, return, Android.Media.AudioFocusRequest
+// MediaCas - the methods lack description so it's impossible to enumify them at this moment.
+// ditto for MediaDescrambler.
+26, android.media, MediaPlayer, getKeyRequest, keyType, Android.Media.MediaDrmKeyType
+26, android.media, MediaRecorder, setVideoEncodingProfileLevel, profile, Android.Media.MediaCodecProfileType
+26, android.media, VolumeShaper.Configuration, getInterpolatorType, return, Android.Media.VolumeInterpolatorType
+// Android.Net.Wifi.Hotspot2.Pps.Credential.*Credential#getEapType() has no description.
+
+26, android.os.storage, StorageManager, openProxyFileDescriptor, mode, Android.OS.ParcelFileMode
+26, android.provider, FontsContract.FontFamilyResult, getStatusCode, return, Android.Provider.FontFamilyResultStatus
+26, android.provider, FontsContract.FontRequestCallback, onTypefaceRequestFailed, reason, Android.Provider.FontRequestFailureReason
+26, android.provider, FontsContract.FontInfo, getResultCode, return, Android.Provider.FontResultCode
+// android.service.autofill.FillRequest#getFlags() is not enumified because the flag can be used by writeToParcel(int) which is an override.
+26, android.service.voice, VoiceInteractionSession, onPrepareShow, showFlags, Android.Service.Voice.ShowFlags
+26, android.telecom, Connection, setAudioRoute, route, Android.Telecom.CallAudioRoute
+// android.telecom.TelecomManager#acceptRingingCall(videoState) has no information on which consts can be used.
+
+26, android.view, FocusFinder, findNextKeyboardNavigationCluster, direction, Android.Views.FocusSearchDirection
+26, android.view, ViewParent, keyboardNavigationClusterSearch, direction, Android.Views.FocusSearchDirection
+// workaround doc scraper issue - it somehow failed to retrieve parameter names for this.
+26, android.view, ViewParent, keyboardNavigationClusterSearch, p1, Android.Views.FocusSearchDirection
+26, android.view, View, keyboardNavigationClusterSearch, direction, Android.Views.FocusSearchDirection
+26, android.view, View, addKeyboardNavigationClusters, direction, Android.Views.FocusSearchDirection
+26, android.widget, TextView, getJustificationMode, return, Android.Text.JustificationMode
+26, android.widget, TextView, setJustificationMode, justificationMode, Android.Text.JustificationMode
+26, android.widget, VideoView, setAudioFocusRequest, focusGain, Android.Media.AudioFocus
+
+26, java.util, Calendar.Builder, set, field, Java.Util.CalendarField

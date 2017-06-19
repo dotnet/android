@@ -231,6 +231,15 @@ The results are to be saved as "map.ext.csv" and "methodmap.ext.csv" that are to
 		  convert to enums" methods, or blacklist-field.txt for fields.
 		- in general those notes do not describe *everything*. git diff
 		  would tell what is new and what should be taken care this time.
+	  - Here is how I worked on it at API Level 26 to add new lines to methodmap.ext.csv:
+		- Read git diff on remaining-int-consts.txt to iterate all the new enum types.
+		- For each new enum type that (typically) has prefix P_ in type T, I run `grep -R P_ | grep T | grep "\w*.html:"` in the local reference docs, to see which documentation HTML mention that const (I ran the command on GNOME terminal, so I got the final grep matches with color highlights).
+		- And for each HTML doc, look up that const and add records to methodmap.ext.csv.
+		- I usually bring in mistakes. When there are wrong const mappings, they will result in binding generator warnings for unmatched XPath selectors that you can find them by looking up enummetadata.
+		- For method mappings, mistakes can be twofolds:
+		  - For the wrong matching, you'll see them as binding generator warnings for unmatched XPath selectors just like const mappings.
+		  - For the wrong replacement enum type, that's NOT going to be unmatched XPath. Instead it will result in a reference to missing type warning that can be still found as a generator warning (but harder to find).
+		  - It is often hard to identify why the mappings are regarded as invalid; sometimes Google API reference tells you lies(!) that there are some methods that actually don't exist(!). You'd like to check `obj/Debug/android-*/api.xml`, `obj/Debug/android-*/api.xml.fixed` (XML after applying metadata fixup) or `Profiles/api-*.xml.in` (for "raw" API data before `api-merge` step).
 	  - At some stage, go to src/Mono.Android and append
 	    methodmap.ext.csv contents to methodmap.csv and run
 	    "make API_LEVELS=[latest] clean all" to get enumified dll.
