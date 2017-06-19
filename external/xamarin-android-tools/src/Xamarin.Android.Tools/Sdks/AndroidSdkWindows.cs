@@ -146,9 +146,10 @@ namespace Xamarin.Android.Tools
 			// Check some hardcoded paths for good measure
 			var xamarin_private = Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.LocalApplicationData), "Xamarin", "MonoAndroid");
 			var android_default = Path.Combine (OS.ProgramFilesX86, "Android");
+			var vs_2017_default = Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.CommonApplicationData), "Microsoft", "AndroidNDK64");
 			var cdrive_default = @"C:\";
 
-			foreach (var basePath in new string [] {xamarin_private, android_default, cdrive_default})
+			foreach (var basePath in new string [] {xamarin_private, android_default, vs_2017_default, cdrive_default})
 				if (Directory.Exists (basePath))
 					foreach (var dir in Directory.GetDirectories (basePath, "android-ndk-r*"))
 						if (ValidateAndroidNdkLocation (dir))
