@@ -590,6 +590,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 			ReferenceAssemblyPaths="$(_XATargetFrameworkDirectories)"
 			TargetFrameworkVersion="$(TargetFrameworkVersion)"
 			UseLatestAndroidPlatformSdk="$(AndroidUseLatestPlatformSdk)"
+			LintToolPath="$(LintToolPath)"
 			ZipAlignPath="$(ZipAlignToolPath)">
 		<Output TaskParameter="AndroidApiLevel"           PropertyName="_AndroidApiLevel"           Condition="'$(_AndroidApiLevel)' == ''" />
 		<Output TaskParameter="AndroidApiLevelName"       PropertyName="_AndroidApiLevelName" />
@@ -607,6 +608,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 		<Output TaskParameter="ZipAlignPath"              PropertyName="ZipAlignToolPath"           Condition="'$(ZipAlignToolPath)' == ''" />
 		<Output TaskParameter="AndroidSdkBuildToolsBinPath" PropertyName="AndroidSdkBuildToolsBinPath" Condition="'$(AndroidSdkBuildToolsBinPath)' == ''" />
 		<Output TaskParameter="AndroidSequencePointsMode"   PropertyName="_SequencePointsMode"         Condition="'$(_SequencePointsMode)' == ''" />
+		<Output TaskParameter="LintToolPath"              PropertyName="LintToolPath"               Condition="'$(LintToolPath)' == ''" />
 	</ResolveSdks>
 	<CreateProperty Value="$(TargetFrameworkIdentifier),Version=$(_TargetFrameworkVersion),Profile=$(TargetFrameworkProfile)">
 		<Output TaskParameter="Value" PropertyName="TargetFrameworkMoniker"
@@ -749,12 +751,6 @@ because xbuild doesn't support framework reference assemblies.
 	<CreateProperty Value="$(AndroidSdkBuildToolsBinPath)">
 		<Output TaskParameter="Value" PropertyName="ZipAlignToolPath"
 				Condition="'$(ZipAlignToolPath)' == ''"
-		/>
-	</CreateProperty>
-
-	<CreateProperty Value="$(_AndroidToolsDirectory)bin\" Condition="Exists ('$(_AndroidToolsDirectory)bin\')">
-		<Output TaskParameter="Value" PropertyName="LintToolPath"
-				Condition="'$(LintToolPath)' == ''"
 		/>
 	</CreateProperty>
 
