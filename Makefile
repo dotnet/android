@@ -91,8 +91,14 @@ endif
 LINUX_DISTRO         := $(shell lsb_release -i -s || true)
 LINUX_DISTRO_RELEASE := $(shell lsb_release -r -s || true)
 BINFMT_MISC_TROUBLE  := cli win
+LIBZIP_SO            := $(shell ldconfig -p | grep libzip | tr -d '\t' | cut -d ' ' -f 1)
+LIBZIPSHARP_CONFIG   := external/LibZipSharp/libZipSharp.dll.config
 
 prepare:: linux-prepare-$(LINUX_DISTRO) linux-prepare-$(LINUX_DISTRO)-$(LINUX_DISTRO_RELEASE)
+	@echo
+	@echo Updating LibZipSharp shared library mapping to look for $(LIBZIP_SO)
+	sed -e 's;target="\(libzip\.so.*\)"\(.*\);target="$(LIBZIP_SO)"\2;g' < $(LIBZIPSHARP_CONFIG) > $(LIBZIPSHARP_CONFIG).new && \
+	mv $(LIBZIPSHARP_CONFIG).new $(LIBZIPSHARP_CONFIG)
 	@BINFMT_WARN=no ; \
 	for m in $(BINFMT_MISC_TROUBLE); do \
 		if [ -f /proc/sys/fs/binfmt_misc/$$m ]; then \
