@@ -62,12 +62,34 @@ include build-tools/scripts/BuildEverything.mk
 ifeq ($(OS),Linux)
 NO_SUDO ?= false
 ARCH_DEPS			= \
-	base-devel \
+	autoconf \
+	automake \
+	binutils \
+	bison \
+	fakeroot \
+	file \
+	findutils \
+	flex \
+	gawk \
+	gettext \
+	grep \
+	groff \
+	gzip \
+	libtool \
+	m4 \
+	make \
+	patch \
+	pkg-config \
+	sed \
+	texinfo \
+	which \
 	git \
 	curl \
 	unzip \
 	jdk8-openjdk \
-	xxd \
+	xxd 
+ARCH_DEPS_GCC		= \
+	gcc
 UBUNTU_DEPS          = \
 	autoconf \
 	autotools-dev \
@@ -93,6 +115,8 @@ UBUNTU_DEPS          += \
 	libx32tinfo-dev \
 	linux-libc-dev:i386 \
 	zlib1g-dev:i386
+ARCH_DEPS_GCC		= \
+	gcc-multilib
 endif
 LINUX_DISTRO         := $(shell lsb_release -i -s || true)
 LINUX_DISTRO_RELEASE := $(shell lsb_release -r -s || true)
@@ -110,16 +134,17 @@ prepare:: linux-prepare-$(LINUX_DISTRO) linux-prepare-$(LINUX_DISTRO)-$(LINUX_DI
 	fi
 
 ifeq ($(NO_SUDO),false)
-linux-prepare-msg-sudo::
+linux-prepare-Arch::
 	@echo
 	@echo Installing build depedencies for $(LINUX_DISTRO)
 	@echo Will use sudo, please provide your password as needed
 	@echo
-linux-prepare-Arch::
-	linux-prepare-msg-sudo
-	sudo pacman -S --noconfirm $(ARCH_DEPS)
+	sudo pacman -S --noconfirm $(ARCH_DEPS) $(ARCH_DEPS_GCC)
 linux-prepare-Ubuntu::
-	linux-prepare-msg-sudo
+	@echo
+	@echo Installing build depedencies for $(LINUX_DISTRO)
+	@echo Will use sudo, please provide your password as needed
+	@echo
 	sudo apt-get -f -u install $(UBUNTU_DEPS)
 else
 linux-prepare-Ubuntu::
