@@ -12,6 +12,7 @@ namespace Xamarin.Android.Tools
 			Path.Combine (OS.ProgramFilesX86, "Microsoft Visual Studio", "2017", "Enterprise"),
 			Path.Combine (OS.ProgramFilesX86, "Microsoft Visual Studio", "2017", "Professional"),
 			Path.Combine (OS.ProgramFilesX86, "Microsoft Visual Studio", "2017", "Community"),
+			Path.Combine (OS.ProgramFilesX86, "MSBuild", "Xamarin", "Android"), //VS older than 2017
 		};
 
 		protected override string FindRuntime ()
@@ -22,15 +23,11 @@ namespace Xamarin.Android.Tools
 					return monoAndroidPath;
 			}
 
-			string xamarinSdk = Path.Combine (OS.ProgramFilesX86, "MSBuild", "Xamarin", "Android");
-			if (Directory.Exists(xamarinSdk))
-				return xamarinSdk;
-
 			foreach (var vsPath in VisualStudioPaths) {
-				if (string.IsNullOrEmpty(vsPath))
+				if (string.IsNullOrEmpty (vsPath))
 					continue;
-				xamarinSdk = Path.Combine(vsPath, "MSBuild", "Xamarin", "Android");
-				if (Directory.Exists(xamarinSdk) && ValidateRuntime(xamarinSdk))
+				var xamarinSdk = Path.Combine (vsPath, "MSBuild", "Xamarin", "Android");
+				if (Directory.Exists (xamarinSdk) && ValidateRuntime (xamarinSdk))
 					return xamarinSdk;
 			}
 			return OS.ProgramFilesX86 + @"\MSBuild\Novell";
