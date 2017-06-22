@@ -8,7 +8,7 @@ namespace Xamarin.Android.Tools.Tests
 	class MonoDroidSdkTests
 	{
 		[TestFixtureSetUp]
-		public void FixtureSetUp()
+		public void FixtureSetUp ()
 		{
 			AndroidLogger.Info += OnInfo;
 			AndroidLogger.Warning += OnWarning;
@@ -16,54 +16,54 @@ namespace Xamarin.Android.Tools.Tests
 		}
 
 		[TestFixtureTearDown]
-		public void FixtureTearDown()
+		public void FixtureTearDown ()
 		{
 			AndroidLogger.Info -= OnInfo;
 			AndroidLogger.Warning -= OnWarning;
 			AndroidLogger.Error -= OnError;
 		}
 
-		void OnInfo(string task, string message)
+		void OnInfo (string task, string message)
 		{
-			Debug.WriteLine(task + ": " + message);
+			Debug.WriteLine (task + ": " + message);
 		}
 
-		void OnWarning(string task, string message)
+		void OnWarning (string task, string message)
 		{
-			Assert.Fail(task + ": " + message);
+			Assert.Fail (task + ": " + message);
 		}
 
-		void OnError(string task, string message)
+		void OnError (string task, string message)
 		{
-			Assert.Fail(task + ": " + message);
+			Assert.Fail (task + ": " + message);
 		}
 
 		[Test]
-		public void RefreshWithoutParameters()
+		public void RefreshWithoutParameters ()
 		{
 			//Just checking for exceptions, or AndroidLogger
-			MonoDroidSdk.Refresh();
+			MonoDroidSdk.Refresh ();
 		}
 
 		[Test]
-		public void BinPathExists()
+		public void BinPathExists ()
 		{
 			string path = MonoDroidSdk.BinPath;
-			Assert.IsTrue(Directory.Exists(path), path + " does not exist!"); 
+			Assert.IsTrue (Directory.Exists (path), path + " does not exist!");
 		}
 
 		[Test]
-		public void FrameworkPathExists()
+		public void FrameworkPathExists ()
 		{
 			string path = MonoDroidSdk.FrameworkPath;
-			Assert.IsTrue(Directory.Exists(path), path + " does not exist!");
+			Assert.IsTrue (Directory.Exists (path), path + " does not exist!");
 		}
 
 		[Test]
-		public void RuntimePathExists()
+		public void RuntimePathExists ()
 		{
 			string path = MonoDroidSdk.RuntimePath;
-			Assert.IsTrue(Directory.Exists(path), path + " does not exist!");
+			Assert.IsTrue (Directory.Exists (path), path + " does not exist!");
 		}
 	}
 }
