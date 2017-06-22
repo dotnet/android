@@ -14,10 +14,23 @@ namespace Xamarin.Android.Tools
 				if (Directory.Exists (monoAndroidPath) && ValidateRuntime (monoAndroidPath))
 					return monoAndroidPath;
 			}
+
 			string xamarinSdk = Path.Combine (OS.ProgramFilesX86, "MSBuild", "Xamarin", "Android");
-			return Directory.Exists (xamarinSdk)
-				? xamarinSdk
-					: OS.ProgramFilesX86 + @"\MSBuild\Novell";
+			if (Directory.Exists(xamarinSdk))
+				return xamarinSdk;
+			xamarinSdk = Path.Combine(OS.ProgramFilesX86, "Microsoft Visual Studio", "2017");
+			if (Directory.Exists(xamarinSdk))
+			{
+				xamarinSdk = Directory.GetDirectories(xamarinSdk).FirstOrDefault();
+				if (!string.IsNullOrEmpty(xamarinSdk))
+				{
+					xamarinSdk = Path.Combine(xamarinSdk, "MSBuild", "Xamarin", "Android");
+					if (Directory.Exists(xamarinSdk))
+						return xamarinSdk;
+				}
+			}
+
+			return OS.ProgramFilesX86 + @"\MSBuild\Novell";
 		}
 
 		static readonly string[] RuntimeToFrameworkPaths = new []{
