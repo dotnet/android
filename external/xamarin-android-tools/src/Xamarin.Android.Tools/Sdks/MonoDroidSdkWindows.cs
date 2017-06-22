@@ -12,7 +12,7 @@ namespace Xamarin.Android.Tools
 			Path.Combine (OS.ProgramFilesX86, "Microsoft Visual Studio", "2017", "Enterprise"),
 			Path.Combine (OS.ProgramFilesX86, "Microsoft Visual Studio", "2017", "Professional"),
 			Path.Combine (OS.ProgramFilesX86, "Microsoft Visual Studio", "2017", "Community"),
-			Path.Combine (OS.ProgramFilesX86, "MSBuild", "Xamarin", "Android"), //VS older than 2017
+			Path.Combine (OS.ProgramFilesX86), //VS older than 2017, MSBuild\Xamarin\Android is located in C:\Program Files (x86)\
 		};
 
 		protected override string FindRuntime ()
