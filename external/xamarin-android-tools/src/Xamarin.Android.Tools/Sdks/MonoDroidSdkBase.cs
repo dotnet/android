@@ -108,8 +108,7 @@ namespace Xamarin.Android.Tools
 			return !string.IsNullOrWhiteSpace (loc) &&
 				(File.Exists (Path.Combine (loc, DebugRuntime)) ||    // Normal/expected
 				 File.Exists (Path.Combine (loc, ClassParseExe)) ||    // Normal/expected
-					File.Exists (Path.Combine (loc, "Ionic.Zip.dll")) || // Wrench builds
-					File.Exists (Path.Combine (loc, "Xamarin.Android.Common.targets"))); //VS on Windows
+				 File.Exists (Path.Combine (loc, "Xamarin.Android.Common.targets"))); //VS on Windows
 		}
 
 		protected static bool ValidateFramework (string loc)
