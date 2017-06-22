@@ -179,11 +179,6 @@ namespace Xamarin.Android.Tasks
 					break;
 				}
 			}
-			if (string.IsNullOrEmpty (LintToolPath)) {
-				Log.LogCodedError ("XA5205", $"Cannot find {Lint} in the AndroidSdk. Please set via /p:LintToolPath.");
-				return false;
-			}
-
 
 			foreach (var dir in AndroidSdk.GetBuildToolsPaths (AndroidSdkBuildToolsVersion)) {
 				Log.LogDebugMessage ("Trying build-tools path: {0}", dir);
