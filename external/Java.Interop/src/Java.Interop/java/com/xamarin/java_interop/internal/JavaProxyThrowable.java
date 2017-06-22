@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import com.xamarin.java_interop.GCUserPeerable;
 
 /* package */ final class JavaProxyThrowable
-		extends java.lang.Throwable
+		extends java.lang.Error
 		implements GCUserPeerable
 {
 	static  final   String  assemblyQualifiedName   = "Java.Interop.JavaProxyThrowable, Java.Interop, Version=0.1.0.0, Culture=neutral, PublicKeyToken=null";
