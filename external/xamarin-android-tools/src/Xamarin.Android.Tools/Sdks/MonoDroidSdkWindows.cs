@@ -2,12 +2,18 @@ using System;
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
-using System.Diagnostics;
 
 namespace Xamarin.Android.Tools
 {
 	class MonoDroidSdkWindows : MonoDroidSdkBase
 	{
+		static readonly string[] VisualStudioPaths = new[] {
+			Environment.GetEnvironmentVariable ("VSINSTALLDIR"),
+			Path.Combine (OS.ProgramFilesX86, "Microsoft Visual Studio", "2017", "Enterprise"),
+			Path.Combine (OS.ProgramFilesX86, "Microsoft Visual Studio", "2017", "Professional"),
+			Path.Combine (OS.ProgramFilesX86, "Microsoft Visual Studio", "2017", "Community"),
+		};
+
 		protected override string FindRuntime ()
 		{
 			string monoAndroidPath = Environment.GetEnvironmentVariable ("MONO_ANDROID_PATH");
@@ -19,36 +25,15 @@ namespace Xamarin.Android.Tools
 			string xamarinSdk = Path.Combine (OS.ProgramFilesX86, "MSBuild", "Xamarin", "Android");
 			if (Directory.Exists(xamarinSdk))
 				return xamarinSdk;
-			if (TryVSWhere(out xamarinSdk))
-				return xamarinSdk;
+
+			foreach (var vsPath in VisualStudioPaths) {
+				if (string.IsNullOrEmpty(vsPath))
+					continue;
+				xamarinSdk = Path.Combine(vsPath, "MSBuild", "Xamarin", "Android");
+				if (Directory.Exists(xamarinSdk) && ValidateRuntime(xamarinSdk))
+					return xamarinSdk;
+			}
 			return OS.ProgramFilesX86 + @"\MSBuild\Novell";
-		}
-
-		bool TryVSWhere(out string xamarinSdk)
-		{
-			xamarinSdk = null;
-
-			//Docs on this tool here: https://github.com/Microsoft/vswhere
-			string vswhere = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Microsoft Visual Studio", "Installer", "vswhere.exe");
-			if (!File.Exists(vswhere))
-				return false;
-
-			//VS Workload ID here: https://docs.microsoft.com/en-us/visualstudio/install/workload-component-id-vs-community
-			var p = Process.Start(new ProcessStartInfo
-			{
-				FileName = vswhere,
-				Arguments = "-latest -requires Component.Xamarin -property installationPath",
-				RedirectStandardError = true,
-				RedirectStandardOutput = true,
-				UseShellExecute = false,
-			});
-			p.WaitForExit();
-
-			if (p.ExitCode != 0)
-				return false;
-
-			xamarinSdk = Path.Combine(p.StandardOutput.ReadToEnd().Trim(), "MSBuild", "Xamarin", "Android");
-			return true;
 		}
 
 		static readonly string[] RuntimeToFrameworkPaths = new []{
