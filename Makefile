@@ -61,7 +61,13 @@ include build-tools/scripts/BuildEverything.mk
 # Please keep the package names sorted
 ifeq ($(OS),Linux)
 NO_SUDO ?= false
-
+ARCH_DEPS			= \
+	base-devel \
+	git \
+	curl \
+	unzip \
+	jdk8-openjdk \
+	xxd \
 UBUNTU_DEPS          = \
 	autoconf \
 	autotools-dev \
@@ -104,11 +110,16 @@ prepare:: linux-prepare-$(LINUX_DISTRO) linux-prepare-$(LINUX_DISTRO)-$(LINUX_DI
 	fi
 
 ifeq ($(NO_SUDO),false)
-linux-prepare-Ubuntu::
+linux-prepare-msg-sudo::
 	@echo
 	@echo Installing build depedencies for $(LINUX_DISTRO)
 	@echo Will use sudo, please provide your password as needed
 	@echo
+linux-prepare-Arch::
+	linux-prepare-msg-sudo
+	sudo pacman -S --noconfirm $(ARCH_DEPS)
+linux-prepare-Ubuntu::
+	linux-prepare-msg-sudo
 	sudo apt-get -f -u install $(UBUNTU_DEPS)
 else
 linux-prepare-Ubuntu::
