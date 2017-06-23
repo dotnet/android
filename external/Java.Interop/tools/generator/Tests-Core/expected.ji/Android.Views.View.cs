@@ -128,8 +128,8 @@ namespace Android.Views {
 		}
 
 
-		internal            static  readonly    JniPeerMembers  _members    = new JniPeerMembers ("android/view/View", typeof (View));
-		internal static IntPtr class_ref {
+		internal    new     static  readonly    JniPeerMembers  _members    = new JniPeerMembers ("android/view/View", typeof (View));
+		internal static new IntPtr class_ref {
 			get {
 				return _members.JniPeerType.PeerReference.Handle;
 			}

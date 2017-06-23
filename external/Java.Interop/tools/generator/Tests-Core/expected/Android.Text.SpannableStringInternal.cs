@@ -8,8 +8,8 @@ namespace Android.Text {
 	[global::Android.Runtime.Register ("android/text/SpannableStringInternal", DoNotGenerateAcw=true)]
 	public abstract partial class SpannableStringInternal : Java.Lang.Object {
 
-		internal static IntPtr java_class_handle;
-		internal static IntPtr class_ref {
+		internal static new IntPtr java_class_handle;
+		internal static new IntPtr class_ref {
 			get {
 				return JNIEnv.FindClass ("android/text/SpannableStringInternal", ref java_class_handle);
 			}

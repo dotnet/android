@@ -119,8 +119,8 @@ namespace Android.Views {
 		}
 
 
-		internal static IntPtr java_class_handle;
-		internal static IntPtr class_ref {
+		internal static new IntPtr java_class_handle;
+		internal static new IntPtr class_ref {
 			get {
 				return JNIEnv.FindClass ("android/view/View", ref java_class_handle);
 			}
