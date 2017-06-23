@@ -31,30 +31,20 @@ namespace MonoDroid.Generation
 		{
 			string preserveAttr = PreserveType ? " preserveType=\"true\"" : null;
 
+			string cls = Class.StartsWith ("[Interface]", StringComparison.Ordinal) ? Class.Substring ("[Interface]".Length) : Class;
+
 			if (string.IsNullOrEmpty (Parameter)) {
 				// This is a field
-				sw.WriteLine ("  <attr path=\"/api/package[@name='{0}']/class[@name='{1}']/field[@name='{2}']\" name=\"enumType\"{4}>{3}</attr>", Package, Class, Member, Enum, preserveAttr);
-		
-			} else if (Class.StartsWith ("[Interface]") && Parameter == "return") {
-				// This is the return type on an interface method
-				sw.WriteLine ("  <attr path=\"/api/package[@name='{0}']/interface[@name='{1}']/method[@name='{2}']\" name=\"enumReturn\"{4}>{3}</attr>", Package, Class.Substring ("[Interface]".Length), Member, Enum, preserveAttr);
-
-			} else if (Class.StartsWith ("[Interface]")) {
-				// This is the return type on an interface method
-					sw.WriteLine ("  <attr path=\"/api/package[@name='{0}']/interface[@name='{1}']/method[@name='{2}']/parameter[@name='{3}']\" name=\"enumType\"{5}>{4}</attr>", Package, Class.Substring ("[Interface]".Length), Member, Parameter, Enum, preserveAttr);
-
+				sw.WriteLine ("  <attr path=\"/api/package[@name='{0}']/*[@name='{1}']/field[@name='{2}']\" name=\"enumType\"{4}>{3}</attr>", Package, Class, Member, Enum, preserveAttr);		
 			} else if (Parameter == "return") {
-				// This is the return type on a class method
-					sw.WriteLine ("  <attr path=\"/api/package[@name='{0}']/class[@name='{1}']/method[@name='{2}']\" name=\"enumReturn\"{4}>{3}</attr>", Package, Class, Member, Enum, preserveAttr);
-
+				// This is the return type
+				sw.WriteLine ("  <attr path=\"/api/package[@name='{0}']/*[@name='{1}']/method[@name='{2}']\" name=\"enumReturn\"{4}>{3}</attr>", Package, cls, Member, Enum, preserveAttr);
 			} else if (Member == "ctor" || Member == "constructor") {
-				// This is the return type on a class constructor
-					sw.WriteLine ("  <attr path=\"/api/package[@name='{0}']/class[@name='{1}']/constructor/parameter[@name='{2}']\" name=\"enumType\"{4}>{3}</attr>", Package, Class, Parameter, Enum, preserveAttr);
-
+				// This is the return type
+				sw.WriteLine ("  <attr path=\"/api/package[@name='{0}']/*[@name='{1}']/constructor/parameter[@name='{2}']\" name=\"enumType\"{4}>{3}</attr>", Package, cls, Parameter, Enum, preserveAttr);
 			} else {
-				// This is a parameter on a class method
-				sw.WriteLine ("  <attr path=\"/api/package[@name='{0}']/class[@name='{1}']/method[@name='{2}']/parameter[@name='{3}']\" name=\"enumType\"{5}>{4}</attr>", Package, Class, Member, Parameter, Enum, preserveAttr);
-
+				// This is a parameter
+				sw.WriteLine ("  <attr path=\"/api/package[@name='{0}']/*[@name='{1}']/method[@name='{2}']/parameter[@name='{3}']\" name=\"enumType\"{5}>{4}</attr>", Package, cls, Member, Parameter, Enum, preserveAttr);
 			}
 		}
 	}
