@@ -11,6 +11,7 @@ namespace Xamarin.ProjectTools
 	{
 		public abstract string DefaultAssemblyInfo { get; }
 		public abstract string DefaultExtension { get; }
+		public abstract string DefaultDesignerExtension { get; }
 		public abstract string DefaultProjectExtension { get; }
 		public abstract string ProjectTypeGuid { get; }
 	}

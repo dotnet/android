@@ -383,7 +383,7 @@ namespace UnnamedProject
 			};
 			using (var b = CreateApkBuilder ("temp/CheckResourceDesignerIsUpdatedWhenReadOnly")) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				var designerPath = Path.Combine (Root, b.ProjectDirectory, "Resources", "Resource.designer" + language.DefaultExtension);
+				var designerPath = Path.Combine (Root, b.ProjectDirectory, "Resources", "Resource.designer" + language.DefaultDesignerExtension);
 				var attr = File.GetAttributes (designerPath);
 				File.SetAttributes (designerPath, FileAttributes.ReadOnly);
 				Assert.IsTrue ((File.GetAttributes (designerPath) & FileAttributes.ReadOnly) == FileAttributes.ReadOnly,
@@ -400,25 +400,28 @@ namespace UnnamedProject
 		[TestCaseSource("ReleaseLanguage")]
 		public void CheckOldResourceDesignerIsNotUsed (bool isRelease, ProjectLanguage language)
 		{
+			if (language == XamarinAndroidProjectLanguage.FSharp)
+				Assert.Ignore ("Skipping CheckOldResourceDesignerIsNotUsed for FSharp until Xamarin.Android.FSharp.ResourceProvider supports it.");
 			var proj = new XamarinAndroidApplicationProject () {
 				Language = language,
 				IsRelease = isRelease,
 			};
 			proj.SetProperty ("AndroidUseIntermediateDesignerFile", "True");
 			using (var b = CreateApkBuilder ("temp/CheckOldResourceDesignerIsNotUsed")) {
-				var designer = proj.Sources.First (x => x.Include() == "Resources\\Resource.designer" + proj.Language.DefaultExtension);
-				designer.Deleted = true;
+				var designer = Path.Combine ("Resources", "Resource.designer" + proj.Language.DefaultDesignerExtension);
+				if (File.Exists (designer))
+					File.Delete (Path.Combine (Root, b.ProjectDirectory, designer));
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsFalse (File.Exists (Path.Combine (b.ProjectDirectory, "Resources",
-					"Resource.designer"  + proj.Language.DefaultExtension)),
-					"{0} should not exists", designer.Include ());
+					"Resource.designer"  + proj.Language.DefaultDesignerExtension)),
+					"{0} should not exists", designer);
 				var outputFile = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath,
-					"Resource.Designer"  + proj.Language.DefaultExtension);
+					"Resource.Designer"  + proj.Language.DefaultDesignerExtension);
 				Assert.IsTrue (File.Exists (outputFile), "Resource.Designer{1} should have been created in {0}",
-					proj.IntermediateOutputPath, proj.Language.DefaultExtension);
+					proj.IntermediateOutputPath, proj.Language.DefaultDesignerExtension);
 				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
 				Assert.IsFalse (File.Exists (outputFile), "Resource.Designer{1} should have been cleaned in {0}",
-					proj.IntermediateOutputPath, proj.Language.DefaultExtension);
+					proj.IntermediateOutputPath, proj.Language.DefaultDesignerExtension);
 			}
 		}
 
@@ -427,6 +430,8 @@ namespace UnnamedProject
 		[TestCaseSource("ReleaseLanguage")]
 		public void CheckOldResourceDesignerWithWrongCasingIsRemoved (bool isRelease, ProjectLanguage language)
 		{
+			if (language == XamarinAndroidProjectLanguage.FSharp)
+				Assert.Ignore ("Skipping CheckOldResourceDesignerIsNotUsed for FSharp until Xamarin.Android.FSharp.ResourceProvider supports it.");
 			var proj = new XamarinAndroidApplicationProject () {
 				Language = language,
 				IsRelease = isRelease,
@@ -434,19 +439,21 @@ namespace UnnamedProject
 			proj.SetProperty ("AndroidUseIntermediateDesignerFile", "True");
 			proj.SetProperty ("AndroidResgenFile", "Resources\\Resource.Designer" + proj.Language.DefaultExtension);
 			using (var b = CreateApkBuilder ("temp/CheckOldResourceDesignerWithWrongCasingIsRemoved")) {
-				var designer = proj.Sources.First (x => x.Include() == "Resources\\Resource.designer" + proj.Language.DefaultExtension);
+				var designer = proj.Sources.FirstOrDefault (x => x.Include() == "Resources\\Resource.designer" + proj.Language.DefaultDesignerExtension);
+				designer = designer ?? proj.OtherBuildItems.FirstOrDefault (x => x.Include () == "Resources\\Resource.designer" + proj.Language.DefaultDesignerExtension);
+				Assert.IsNotNull (designer, $"Failed to retrieve the Resource.designer.{proj.Language.DefaultDesignerExtension}");
 				designer.Deleted = true;
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsFalse (File.Exists (Path.Combine (b.ProjectDirectory, "Resources",
-					"Resource.designer"  + proj.Language.DefaultExtension)),
+					"Resource.designer"  + proj.Language.DefaultDesignerExtension)),
 					"{0} should not exists", designer.Include ());
 				var outputFile = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath,
-					"Resource.Designer"  + proj.Language.DefaultExtension);
+					"Resource.Designer"  + proj.Language.DefaultDesignerExtension);
 				Assert.IsTrue (File.Exists (outputFile), "Resource.Designer{1} should have been created in {0}",
-					proj.IntermediateOutputPath, proj.Language.DefaultExtension);
+					proj.IntermediateOutputPath, proj.Language.DefaultDesignerExtension);
 				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
 				Assert.IsFalse (File.Exists (outputFile), "Resource.Designer{1} should have been cleaned in {0}",
-					proj.IntermediateOutputPath, proj.Language.DefaultExtension);
+					proj.IntermediateOutputPath, proj.Language.DefaultDesignerExtension);
 			}
 		}
 

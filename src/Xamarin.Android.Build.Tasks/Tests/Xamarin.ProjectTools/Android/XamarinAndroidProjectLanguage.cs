@@ -33,6 +33,9 @@ namespace Xamarin.ProjectTools
 			public override string DefaultExtension {
 				get { return ".fs"; }
 			}
+			public override string DefaultDesignerExtension {
+				get { return ".cs"; }
+			}
 			public override string DefaultProjectExtension {
 				get { return ".fsproj"; }
 			}
@@ -53,6 +56,9 @@ namespace Xamarin.ProjectTools
 				get { return "EFBA0AD7-5A72-4C68-AF49-83D382785DCF"; }
 			}
 			public override string DefaultExtension {
+				get { return ".cs"; }
+			}
+			public override string DefaultDesignerExtension {
 				get { return ".cs"; }
 			}
 			public override string DefaultProjectExtension {
