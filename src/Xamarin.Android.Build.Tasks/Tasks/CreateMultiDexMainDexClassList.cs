@@ -84,7 +84,7 @@ namespace Xamarin.Android.Tasks
 			cmd.AppendSwitch ("-dontoptimize");
 			cmd.AppendSwitch ("-dontobfuscate");
 			cmd.AppendSwitch ("-dontpreverify");
-			cmd.AppendSwitchIfNotNull ("-include ", $"'{Path.Combine (AndroidSdkBuildToolsPath, "mainDexClasses.rules")}'");
+			cmd.AppendSwitchUnquotedIfNotNull ("-include ", $"{enclosingChar}'{Path.Combine (AndroidSdkBuildToolsPath, "mainDexClasses.rules")}'{enclosingChar}");
 		}
 
 		void GenerateMainDexListBuilderCommands(CommandLineBuilder cmd)
