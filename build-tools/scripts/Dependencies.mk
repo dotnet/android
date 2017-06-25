@@ -26,7 +26,10 @@ ARCH_DEPS			= \
 	unzip \
 	jdk8-openjdk \
 	xxd \
-	pkg-config
+	pkg-config \
+	gtk-sharp-2 \
+	referenceassemblies-pcl \
+	nuget
 ARCH_DEPS_GCC		= \
 	gcc
 UBUNTU_DEPS          = \
