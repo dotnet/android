@@ -62,17 +62,14 @@ LINUX_DISTRO         := $(shell lsb_release -i -s || true)
 LINUX_DISTRO_RELEASE := $(shell lsb_release -r -s || true)
 BINFMT_MISC_TROUBLE  := cli win
 ifeq ($(NO_SUDO),false)
-linux-prepare-Arch::
+linux-prepare-message::
 	@echo
 	@echo Installing build depedencies for $(LINUX_DISTRO)
 	@echo Will use sudo, please provide your password as needed
 	@echo
+linux-prepare-Arch:: linux-prepare-message
 	sudo pacman -S --noconfirm $(ARCH_DEPS) $(ARCH_DEPS_GCC)
-linux-prepare-Ubuntu::
-	@echo
-	@echo Installing build depedencies for $(LINUX_DISTRO)
-	@echo Will use sudo, please provide your password as needed
-	@echo
+linux-prepare-Ubuntu:: linux-prepare-message
 	sudo apt-get -f -u install $(UBUNTU_DEPS)
 else
 linux-prepare-Ubuntu::
