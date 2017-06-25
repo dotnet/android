@@ -92,8 +92,4 @@ linux-prepare-Ubuntu::
 		false ; \
 	fi
 endif
-
-linux-prepare-$(LINUX_DISTRO)::
-
-linux-prepare-$(LINUX_DISTRO)-$(LINUX_DISTRO_RELEASE)::
 endif
