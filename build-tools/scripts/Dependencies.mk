@@ -29,7 +29,8 @@ ARCH_DEPS			= \
 	pkg-config \
 	gtk-sharp-2 \
 	referenceassemblies-pcl \
-	nuget
+	nuget \
+	libzip
 ARCH_DEPS_GCC		= \
 	gcc
 UBUNTU_DEPS          = \
