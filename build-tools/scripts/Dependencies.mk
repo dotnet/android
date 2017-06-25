@@ -1,4 +1,3 @@
-ifeq ($(OS),Linux)
 NO_SUDO ?= false
 ARCH_DEPS			= \
 	autoconf \
@@ -62,6 +61,10 @@ LINUX_DISTRO         := $(shell lsb_release -i -s || true)
 LINUX_DISTRO_RELEASE := $(shell lsb_release -r -s || true)
 BINFMT_MISC_TROUBLE  := cli win
 ifeq ($(NO_SUDO),false)
+linux-prepare-none::
+	@echo
+	@echo Not running on Linux!
+	@echo
 linux-prepare-message::
 	@echo
 	@echo Installing build depedencies for $(LINUX_DISTRO)
@@ -91,5 +94,4 @@ linux-prepare-Ubuntu::
 		echo ; \
 		false ; \
 	fi
-endif
 endif
