@@ -26,10 +26,11 @@ all::
 all-tests::
 	MSBUILD="$(MSBUILD)" tools/scripts/xabuild $(MSBUILD_FLAGS) Xamarin.Android-Tests.sln
 
-ifneq ($(OS),Linux)
-	export LINUX_DISTRO=none
-endif
+
 include build-tools/scripts/Dependencies.mk
+ifneq ($(OS),Linux)
+export LINUX_DISTRO=none
+endif
 prepare:: linux-prepare-$(LINUX_DISTRO) prepare-msbuild
 	@BINFMT_WARN=no ; \
 	for m in $(BINFMT_MISC_TROUBLE); do \
