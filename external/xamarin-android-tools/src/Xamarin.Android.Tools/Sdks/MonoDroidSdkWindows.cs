@@ -7,6 +7,14 @@ namespace Xamarin.Android.Tools
 {
 	class MonoDroidSdkWindows : MonoDroidSdkBase
 	{
+		static readonly string[] VisualStudioPaths = new[] {
+			Environment.GetEnvironmentVariable ("VSINSTALLDIR"),
+			Path.Combine (OS.ProgramFilesX86, "Microsoft Visual Studio", "2017", "Enterprise"),
+			Path.Combine (OS.ProgramFilesX86, "Microsoft Visual Studio", "2017", "Professional"),
+			Path.Combine (OS.ProgramFilesX86, "Microsoft Visual Studio", "2017", "Community"),
+			Path.Combine (OS.ProgramFilesX86), //VS older than 2017, MSBuild\Xamarin\Android is located in C:\Program Files (x86)\
+		};
+
 		protected override string FindRuntime ()
 		{
 			string monoAndroidPath = Environment.GetEnvironmentVariable ("MONO_ANDROID_PATH");
@@ -14,10 +22,15 @@ namespace Xamarin.Android.Tools
 				if (Directory.Exists (monoAndroidPath) && ValidateRuntime (monoAndroidPath))
 					return monoAndroidPath;
 			}
-			string xamarinSdk = Path.Combine (OS.ProgramFilesX86, "MSBuild", "Xamarin", "Android");
-			return Directory.Exists (xamarinSdk)
-				? xamarinSdk
-					: OS.ProgramFilesX86 + @"\MSBuild\Novell";
+
+			foreach (var vsPath in VisualStudioPaths) {
+				if (string.IsNullOrEmpty (vsPath))
+					continue;
+				var xamarinSdk = Path.Combine (vsPath, "MSBuild", "Xamarin", "Android");
+				if (Directory.Exists (xamarinSdk) && ValidateRuntime (xamarinSdk))
+					return xamarinSdk;
+			}
+			return OS.ProgramFilesX86 + @"\MSBuild\Novell";
 		}
 
 		static readonly string[] RuntimeToFrameworkPaths = new []{
