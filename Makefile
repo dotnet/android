@@ -1,5 +1,6 @@
 OS            := $(shell uname)
 OS_ARCH       := $(shell uname -m)
+export OS_ARCH
 V             ?= 0
 CONFIGURATION = Debug
 RUNTIME       := $(shell if [ -f "`which mono64`" ] ; then echo mono64 ; else echo mono; fi) --debug=casts
@@ -18,6 +19,13 @@ ifneq ($(MONO_OPTIONS),)
 export MONO_OPTIONS
 endif
 
+ifeq ($(OS), Linux)
+export OS_LINUX=true
+endif
+
+export LINUX_DISTRO         := $(shell lsb_release -i -s || true)
+export LINUX_DISTRO_RELEASE := $(shell lsb_release -r -s || true)
+BINFMT_MISC_TROUBLE  := cli win
 
 include build-tools/scripts/msbuild.mk
 all::
@@ -25,22 +33,27 @@ all::
 
 all-tests::
 	MSBUILD="$(MSBUILD)" tools/scripts/xabuild $(MSBUILD_FLAGS) Xamarin.Android-Tests.sln
-
-
-include build-tools/scripts/Dependencies.mk
-ifneq ($(OS),Linux)
-export LINUX_DISTRO=none
-endif
-prepare:: linux-prepare-$(LINUX_DISTRO) prepare-msbuild
-	@BINFMT_WARN=no ; \
-	for m in $(BINFMT_MISC_TROUBLE); do \
-		if [ -f /proc/sys/fs/binfmt_misc/$$m ]; then \
-			BINFMT_WARN=yes ; \
-		fi ; \
-	done ; \
-	if [ "x$$BINFMT_WARN" = "xyes" ]; then \
-		cat Documentation/binfmt_misc-warning-Linux.txt ; \
+	
+prepare:: linux-prepare prepare-msbuild
+ 	
+linux-prepare::
+	if [ "$(OS_LINUX)" = "true" ]; then \
+		BINFMT_WARN=no ; \
+		for m in $(BINFMT_MISC_TROUBLE); do \
+ 		if [ -f /proc/sys/fs/binfmt_misc/$$m ]; then \
+ 			BINFMT_WARN=yes ; \
+ 		fi ; \
+		done ; \
+ 	if [ "x$$BINFMT_WARN" = "xyes" ]; then \
+ 		cat Documentation/binfmt_misc-warning-Linux.txt ; \
+ 	fi; \
+		if [ -f build-tools/scripts/dependencies/linux-prepare-$(LINUX_DISTRO).sh ]; then \
+			sh build-tools/scripts/dependencies/linux-prepare-$(LINUX_DISTRO).sh; \
+		elif [ -f build-tools/scripts/dependencies/linux-prepare-$(LINUX_DISTRO)-$(LINUX_DISTRO_RELEASE).sh ]; then \
+			sh build-tools/scripts/dependencies/linux-prepare-$(LINUX_DISTRO)-$(LINUX_DISTRO_RELEASE).sh; \
+		fi; \
 	fi
+
 # $(call GetPath,path)
 GetPath   = $(shell $(MSBUILD) $(MSBUILD_FLAGS) /p:DoNotLoadOSProperties=True /nologo /v:minimal /t:Get$(1)FullPath build-tools/scripts/Paths.targets | tr -d '[[:space:]]' )
 

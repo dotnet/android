@@ -1,0 +1,33 @@
+ARCH_DEPS="autoconf \
+	automake \
+	binutils \
+	bison \
+	fakeroot \
+	file \
+	findutils \
+	flex \
+	gawk \
+	gettext \
+	grep \
+	groff \
+	gzip \
+	libtool \
+	m4 \
+	make \
+	patch \
+	pkg-config \
+	sed \
+	texinfo \
+	which \
+	git \
+	curl \
+	unzip \
+	jdk8-openjdk \
+	xxd \
+	pkg-config \
+	gtk-sharp-2 \
+	referenceassemblies-pcl \
+	nuget \
+	libzip \
+	gcc"
+sudo pacman -S --noconfirm $ARCH_DEPS
