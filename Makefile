@@ -1,6 +1,7 @@
-OS            := $(shell uname)
-OS_ARCH       := $(shell uname -m)
-export OS_ARCH
+export OS            := $(shell uname)
+export OS_ARCH       := $(shell uname -m)
+export LINUX_DISTRO         := $(shell lsb_release -i -s || true)
+export LINUX_DISTRO_RELEASE := $(shell lsb_release -r -s || true)
 V             ?= 0
 CONFIGURATION = Debug
 RUNTIME       := $(shell if [ -f "`which mono64`" ] ; then echo mono64 ; else echo mono; fi) --debug=casts
@@ -19,14 +20,6 @@ ifneq ($(MONO_OPTIONS),)
 export MONO_OPTIONS
 endif
 
-ifeq ($(OS), Linux)
-export OS_LINUX=true
-endif
-
-export LINUX_DISTRO         := $(shell lsb_release -i -s || true)
-export LINUX_DISTRO_RELEASE := $(shell lsb_release -r -s || true)
-BINFMT_MISC_TROUBLE  := cli win
-
 include build-tools/scripts/msbuild.mk
 all::
 	$(MSBUILD) $(MSBUILD_FLAGS) $(SOLUTION)
@@ -37,7 +30,8 @@ all-tests::
 prepare:: linux-prepare prepare-msbuild
  	
 linux-prepare::
-	if [ "$(OS_LINUX)" = "true" ]; then \
+	if [ "$(OS)" = "Linux" ]; then \
+		BINFMT_MISC_TROUBLE  := cli win \
 		BINFMT_WARN=no ; \
 		for m in $(BINFMT_MISC_TROUBLE); do \
  		if [ -f /proc/sys/fs/binfmt_misc/$$m ]; then \
