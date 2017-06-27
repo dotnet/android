@@ -29,6 +29,8 @@ namespace Xamarin.Android.Tasks {
 	{
 		public static XNamespace AndroidXmlNamespace = "http://schemas.android.com/apk/res/android";
 
+		const int maxVersionCode = 2100000000;
+
 		static XNamespace androidNs = AndroidXmlNamespace;
 
 		XDocument doc;
@@ -68,6 +70,17 @@ namespace Xamarin.Android.Tasks {
 				doc.Root.SetAttributeValue (androidNs + "versionCode", value);
 			}
 		}
+		public string GetMinimumSdk () {
+			var minAttr = doc.Root.Element ("uses-sdk")?.Attribute (androidNs + "minSdkVersion");
+			if (minAttr == null) {
+				int minSdkVersion;
+				if (!int.TryParse (SdkVersionName, out minSdkVersion))
+					minSdkVersion = 11;
+				return Math.Min (minSdkVersion, 11).ToString ();
+			}
+			return minAttr.Value;
+		}
+
 		TaskLoggingHelper log;
 
 		public ManifestDocument (string templateFilename, TaskLoggingHelper log) : base ()
@@ -839,11 +852,45 @@ namespace Xamarin.Android.Tasks {
 			int code = 1;
 			if (!string.IsNullOrEmpty (VersionCode)) {
 				code = Convert.ToInt32 (VersionCode);
-				if (code > 0xffff || code < 0)
-					throw new ArgumentOutOfRangeException ("VersionCode", "VersionCode is outside 0, 65535 interval");
+				if (code > maxVersionCode || code < 0)
+					throw new ArgumentOutOfRangeException ("VersionCode", $"VersionCode is outside 0, {maxVersionCode} interval");
 			}
 			code |= GetAbiCode (abi) << 16;
 			VersionCode = code.ToString ();
+		}
+
+		public void CalculateVersionCode (string currentAbi, string versionCodePattern, string versionCodeProperties)
+		{
+			var regex = new Regex ("\\{(?<key>([A-Za-z]+)):?[D0-9]*[\\}]");
+			var kvp = new Dictionary<string, int> ();
+			foreach (var item in versionCodeProperties?.Split (new char [] { ';', ':' }) ?? new string [0]) {
+				var keyValue = item.Split (new char [] { '=' });
+				int val;
+				if (!int.TryParse (keyValue [1], out val))
+					continue;
+				kvp.Add (keyValue [0], val);
+			}
+			if (!kvp.ContainsKey ("abi") && !string.IsNullOrEmpty (currentAbi))
+				kvp.Add ("abi", GetAbiCode (currentAbi));
+			if (!kvp.ContainsKey ("versionCode"))
+				kvp.Add ("versionCode", int.Parse (VersionCode));
+			if (!kvp.ContainsKey ("minSDK")) {
+				kvp.Add ("minSDK", int.Parse (GetMinimumSdk ()));
+			}
+			var versionCode = String.Empty;
+			foreach (Match match in regex.Matches (versionCodePattern)) {
+				var key = match.Groups ["key"].Value;
+				var format = match.Value.Replace (key, "0");
+				if (!kvp.ContainsKey (key))
+					continue;
+				versionCode += string.Format (format, kvp [key]);
+			}
+			int code;
+			if (!int.TryParse (versionCode, out code))
+				throw new ArgumentOutOfRangeException ("VersionCode", $"VersionCode {versionCode} is invalid. It must be an integer value.");
+			if (code > maxVersionCode || code < 0)
+				throw new ArgumentOutOfRangeException ("VersionCode", $"VersionCode {code} is outside 0, {maxVersionCode} interval");
+			VersionCode = versionCode;
 		}
 	}
 }
