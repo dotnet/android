@@ -20,6 +20,10 @@ ifneq ($(MONO_OPTIONS),)
 export MONO_OPTIONS
 endif
 
+ifeq ($(OS),Linux)
+prepare:: linux-prepare
+endif # $(OS)=Linux
+
 include build-tools/scripts/msbuild.mk
 all::
 	$(MSBUILD) $(MSBUILD_FLAGS) $(SOLUTION)
@@ -27,26 +31,24 @@ all::
 all-tests::
 	MSBUILD="$(MSBUILD)" tools/scripts/xabuild $(MSBUILD_FLAGS) Xamarin.Android-Tests.sln
 	
-prepare:: linux-prepare prepare-msbuild
+prepare:: prepare-msbuild
  	
 linux-prepare::
-	if [ "$(OS)" = "Linux" ]; then \
-		BINFMT_MISC_TROUBLE="cli win" \
-		BINFMT_WARN=no ; \
-		for m in $BINFMT_MISC_TROUBLE; do \
-			if [ -f /proc/sys/fs/binfmt_misc/$$m ]; then \
-				BINFMT_WARN=yes ; \
-			fi ; \
-		done ; \
- 	if [ "x$$BINFMT_WARN" = "xyes" ]; then \
- 		cat Documentation/binfmt_misc-warning-Linux.txt ; \
- 	fi; \
-		if [ -f build-tools/scripts/dependencies/linux-prepare-$(LINUX_DISTRO).sh ]; then \
-			sh build-tools/scripts/dependencies/linux-prepare-$(LINUX_DISTRO).sh; \
-		elif [ -f build-tools/scripts/dependencies/linux-prepare-$(LINUX_DISTRO)-$(LINUX_DISTRO_RELEASE).sh ]; then \
-			sh build-tools/scripts/dependencies/linux-prepare-$(LINUX_DISTRO)-$(LINUX_DISTRO_RELEASE).sh; \
-		fi; \
-	fi
+	BINFMT_MISC_TROUBLE="cli win" \
+	BINFMT_WARN=no ; \
+	for m in $BINFMT_MISC_TROUBLE; do \
+		if [ -f /proc/sys/fs/binfmt_misc/$$m ]; then \
+			BINFMT_WARN=yes ; \
+		fi ; \
+	done ; \
+	if [ "x$$BINFMT_WARN" = "xyes" ]; then \
+		cat Documentation/binfmt_misc-warning-Linux.txt ; \
+	fi; \
+	if [ -f build-tools/scripts/dependencies/linux-prepare-$(LINUX_DISTRO).sh ]; then \
+		sh build-tools/scripts/dependencies/linux-prepare-$(LINUX_DISTRO).sh; \
+	elif [ -f build-tools/scripts/dependencies/linux-prepare-$(LINUX_DISTRO)-$(LINUX_DISTRO_RELEASE).sh ]; then \
+		sh build-tools/scripts/dependencies/linux-prepare-$(LINUX_DISTRO)-$(LINUX_DISTRO_RELEASE).sh; \
+	fi; \
 
 # $(call GetPath,path)
 GetPath   = $(shell $(MSBUILD) $(MSBUILD_FLAGS) /p:DoNotLoadOSProperties=True /nologo /v:minimal /t:Get$(1)FullPath build-tools/scripts/Paths.targets | tr -d '[[:space:]]' )
