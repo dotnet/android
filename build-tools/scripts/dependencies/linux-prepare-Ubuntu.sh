@@ -37,7 +37,7 @@ if [ $NO_SUDO = "true" ]; then
 	if [ "x$$PACKAGES_MISSING" = "xyes" ]; then 
 		echo Some packages are missing, cannot continue 
 		echo 
-		false 
+		exit 1
 	fi
 else
 	sudo apt-get -f -u install $UBUNTU_DEPS

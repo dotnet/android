@@ -31,7 +31,7 @@ all::
 
 all-tests::
 	MSBUILD="$(MSBUILD)" tools/scripts/xabuild $(MSBUILD_FLAGS) Xamarin.Android-Tests.sln
-	
+
 prepare:: prepare-msbuild
  	
 linux-prepare::
