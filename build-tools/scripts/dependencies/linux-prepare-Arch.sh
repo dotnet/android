@@ -1,33 +1,34 @@
-ARCH_DEPS="autoconf \
-	automake \
-	binutils \
-	bison \
-	fakeroot \
-	file \
-	findutils \
-	flex \
-	gawk \
-	gettext \
-	grep \
-	groff \
-	gzip \
-	libtool \
-	m4 \
-	make \
-	patch \
-	pkg-config \
-	sed \
-	texinfo \
-	which \
-	git \
-	curl \
-	unzip \
-	jdk8-openjdk \
-	xxd \
-	pkg-config \
-	gtk-sharp-2 \
-	referenceassemblies-pcl \
-	nuget \
-	libzip \
-	gcc"
+ARCH_DEPS="autoconf
+	automake
+	binutils
+	bison
+	curl
+	fakeroot
+	file
+	findutils
+	flex
+	gawk
+	gcc
+	gettext
+	git
+	grep
+	groff
+	gtk-sharp-2
+	gzip
+	jdk8-openjdk
+	libtool
+	libzip
+	m4
+	make
+	nuget
+	patch
+	pkg-config
+	pkg-config
+	referenceassemblies-pcl
+	sed
+	texinfo
+	unzip
+	which
+	xxd
+	"
 sudo pacman -S --noconfirm $ARCH_DEPS
