@@ -31,9 +31,9 @@ prepare:: linux-prepare prepare-msbuild
  	
 linux-prepare::
 	if [ "$(OS)" = "Linux" ]; then \
-		BINFMT_MISC_TROUBLE  := cli win \
+		BINFMT_MISC_TROUBLE="cli win" \
 		BINFMT_WARN=no ; \
-		for m in $(BINFMT_MISC_TROUBLE); do \
+		for m in $BINFMT_MISC_TROUBLE; do \
  		if [ -f /proc/sys/fs/binfmt_misc/$$m ]; then \
  			BINFMT_WARN=yes ; \
  		fi ; \
