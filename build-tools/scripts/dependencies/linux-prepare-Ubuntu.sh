@@ -40,5 +40,5 @@ if [ $NO_SUDO = "true" ]; then
 		false 
 	fi
 else
-sudo apt-get -f -u install $UBUNTU_DEPS
+	sudo apt-get -f -u install $UBUNTU_DEPS
 fi
