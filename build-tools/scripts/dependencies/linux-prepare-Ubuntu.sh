@@ -24,4 +24,20 @@ UBUNTU_DEPS="$UBUNTU_DEPS
 	linux-libc-dev:i386 \
 	zlib1g-dev:i386 "
 fi 
+if [ $NO_SUDO = "true" ]; then
+	for p in $UBUNTU_DEPS; do 
+		if dpkg -l $$p > /dev/null 2>&1 ; then 
+			echo "[INSTALLED] $$p" 
+		else 
+			echo "[ MISSING ] $$p" 
+			PACKAGES_MISSING=yes 
+		fi 
+	done 
+	if [ "x$$PACKAGES_MISSING" = "xyes" ]; then 
+		echo Some packages are missing, cannot continue 
+		echo 
+		false 
+	fi
+else
 sudo apt-get -f -u install $UBUNTU_DEPS
+fi

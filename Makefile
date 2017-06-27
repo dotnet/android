@@ -2,6 +2,7 @@ export OS            := $(shell uname)
 export OS_ARCH       := $(shell uname -m)
 export LINUX_DISTRO         := $(shell lsb_release -i -s || true)
 export LINUX_DISTRO_RELEASE := $(shell lsb_release -r -s || true)
+export NO_SUDO ?= false
 V             ?= 0
 CONFIGURATION = Debug
 RUNTIME       := $(shell if [ -f "`which mono64`" ] ; then echo mono64 ; else echo mono; fi) --debug=casts
