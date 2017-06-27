@@ -8,10 +8,10 @@
     <_BtlsConfigureFlags>--enable-dynamic-btls --with-btls-android-ndk=$(AndroidToolchainDirectory)\ndk</_BtlsConfigureFlags>
     <_CommonConfigureFlags>--without-ikvm-native --enable-maintainer-mode --with-profile2=no --with-profile4=no --with-profile4_5=no --with-monodroid --enable-nls=no --with-sigaltstack=yes --with-tls=pthread mono_cv_uscore=yes</_CommonConfigureFlags>
     <_TargetConfigureFlags>$(_CommonConfigureFlags) --enable-minimal=ssa,portability,attach,verifier,full_messages,sgen_remset,sgen_marksweep_par,sgen_marksweep_fixed,sgen_marksweep_fixed_par,sgen_copying,logging,security,shared_handles --disable-mcs-build --disable-executables --disable-iconv --disable-boehm $(_BtlsConfigureFlags)</_TargetConfigureFlags>
-    <_SecurityCFlags>-Wl,-z,now -Wl,-z,relro -Wl,-z,noexecstack -fstack-protector</_SecurityCFlags>
+    <_SecurityCFlags>-fstack-protector</_SecurityCFlags>
     <_TargetCFlags>$(_SecurityCFlags) -DMONODROID=1</_TargetCFlags>
     <_TargetCxxFlags>$(_SecurityCFlags) -DMONODROID=1</_TargetCxxFlags>
-    <_TargetLdFlags>-ldl -lm -llog -lc -lgcc</_TargetLdFlags>
+    <_TargetLdFlags>-z now -z relro -z noexecstack -ldl -lm -llog -lc -lgcc</_TargetLdFlags>
   </PropertyGroup>
 
   <!-- LLVM+cross common -->
