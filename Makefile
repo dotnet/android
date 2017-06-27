@@ -34,9 +34,9 @@ linux-prepare::
 		BINFMT_MISC_TROUBLE="cli win" \
 		BINFMT_WARN=no ; \
 		for m in $BINFMT_MISC_TROUBLE; do \
- 		if [ -f /proc/sys/fs/binfmt_misc/$$m ]; then \
- 			BINFMT_WARN=yes ; \
- 		fi ; \
+			if [ -f /proc/sys/fs/binfmt_misc/$$m ]; then \
+				BINFMT_WARN=yes ; \
+			fi ; \
 		done ; \
  	if [ "x$$BINFMT_WARN" = "xyes" ]; then \
  		cat Documentation/binfmt_misc-warning-Linux.txt ; \
