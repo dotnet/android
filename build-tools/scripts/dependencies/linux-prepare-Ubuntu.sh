@@ -18,11 +18,12 @@ UBUNTU_DEPS="autoconf
 
 if [ $OS_ARCH = "x86_64" ]; then
 UBUNTU_DEPS="$UBUNTU_DEPS 
-	lib32stdc++6 \
-	lib32z1 \
-	libx32tinfo-dev \
-	linux-libc-dev:i386 \
-	zlib1g-dev:i386 "
+	lib32stdc++6 
+	lib32z1 
+	libx32tinfo-dev 
+	linux-libc-dev:i386 
+	zlib1g-dev:i386
+	"
 fi 
 if [ $NO_SUDO = "true" ]; then
 	for p in $UBUNTU_DEPS; do 
