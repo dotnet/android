@@ -450,7 +450,6 @@
   <remove-node path="/api/package[@name='android.content']/class[@name='ContentValues']/method[@name='put']/parameter[@type='java.lang.Short']/.." />
   <remove-node path="/api/package[@name='android.content']/class[@name='ContentValues']/method[@name='valueSet']" />
   <remove-node api-since="8" path="/api/package[@name='android.content']/interface[@name='EntityIterator']" />
-  <remove-node path="/api/package[@name='android.content.res']/class[@name='AssetManager.AssetInputStream']" />
   <remove-node path="/api/package[@name='com.android.internal.util']" />
   <remove-node path="/api/package[@name='android.text.method']/class[@name='PasswordTransformationMethod']/implements[@name='android.text.TextWatcher']" />
   <!-- Adding global:: to everywhere before System.* is annoying, so let's just rename it to SystemInterop -->
