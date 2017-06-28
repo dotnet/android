@@ -45,12 +45,6 @@ linux-prepare::
 	if [ "x$$BINFMT_WARN" = "xyes" ]; then \
 		cat Documentation/binfmt_misc-warning-Linux.txt ; \
 	fi; \
-	if  [ -f build-tools/scripts/dependencies/linux-prepare-$(LINUX_DISTRO).sh ] || [ -f build-tools/scripts/dependencies/linux-prepare-$(LINUX_DISTRO)-$(LINUX_DISTRO_RELEASE).sh ]  &&  [ "$(NO_SUDO)" = "false" ]; then \
-		echo; \
-		echo "Installing build dependencies for $(LINUX_DISTRO)"; \
-		echo "Will use sudo, please provide your password as needed"; \
-		echo; \
-	fi; \
 	if [ -f build-tools/scripts/dependencies/linux-prepare-$(LINUX_DISTRO).sh ]; then \
 		sh build-tools/scripts/dependencies/linux-prepare-$(LINUX_DISTRO).sh; \
 	elif [ -f build-tools/scripts/dependencies/linux-prepare-$(LINUX_DISTRO)-$(LINUX_DISTRO_RELEASE).sh ]; then \
