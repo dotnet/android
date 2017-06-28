@@ -19,18 +19,18 @@ ifneq ($(MONO_OPTIONS),)
 export MONO_OPTIONS
 endif
 
-ifeq ($(OS),Linux)
-export LINUX_DISTRO         := $(shell lsb_release -i -s || true)
-export LINUX_DISTRO_RELEASE := $(shell lsb_release -r -s || true)
-prepare:: linux-prepare
-endif # $(OS)=Linux
-
 include build-tools/scripts/msbuild.mk
 all::
 	$(MSBUILD) $(MSBUILD_FLAGS) $(SOLUTION)
 
 all-tests::
 	MSBUILD="$(MSBUILD)" tools/scripts/xabuild $(MSBUILD_FLAGS) Xamarin.Android-Tests.sln
+	
+ifeq ($(OS),Linux)
+export LINUX_DISTRO         := $(shell lsb_release -i -s || true)
+export LINUX_DISTRO_RELEASE := $(shell lsb_release -r -s || true)
+prepare:: linux-prepare
+endif # $(OS)=Linux
 
 prepare:: prepare-msbuild
  	
