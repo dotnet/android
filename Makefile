@@ -47,7 +47,7 @@ linux-prepare::
 	fi; \
 	if  [ -f build-tools/scripts/dependencies/linux-prepare-$(LINUX_DISTRO).sh ] || [ -f build-tools/scripts/dependencies/linux-prepare-$(LINUX_DISTRO)-$(LINUX_DISTRO_RELEASE).sh ]  &&  [ "$(NO_SUDO)" = "false" ]; then \
 		echo; \
-		echo "Installing build depedencies for $(LINUX_DISTRO)"; \
+		echo "Installing build dependencies for $(LINUX_DISTRO)"; \
 		echo "Will use sudo, please provide your password as needed"; \
 		echo; \
 	fi; \
