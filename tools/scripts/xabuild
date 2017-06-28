@@ -41,6 +41,21 @@ if [ -z "$MSBUILD" ] ; then
 	MSBUILD=xbuild
 fi
 
+if [ -z "$CONFIGURATION" ]; then
+	for p in "$*"; do
+		case $p in
+			/property:Configuration=*|                                                   \
+			/p:Configuration=*|                                                          \
+			-p:Configuration=*|                                                          \
+			--property:Configuration=*) CONFIGURATION="`echo $p | cut -d '=' -f 2`" ;;
+		esac
+
+		if [ -n "$CONFIGURATION" ]; then
+			break
+		fi
+	done
+fi
+
 if [[ "$prefix" == */tools/scripts ]] ; then
 	Paths_targets="$prefix/../../build-tools/scripts/Paths.targets"
 	for c in "$CONFIGURATION" Debug Release ; do
