@@ -19,13 +19,50 @@ ifneq ($(MONO_OPTIONS),)
 export MONO_OPTIONS
 endif
 
+ifeq ($(PREFIX),)
+export PREFIX=/usr
+endif
+
 include build-tools/scripts/msbuild.mk
 all::
 	$(MSBUILD) $(MSBUILD_FLAGS) $(SOLUTION)
 
 all-tests::
 	MSBUILD="$(MSBUILD)" tools/scripts/xabuild $(MSBUILD_FLAGS) Xamarin.Android-Tests.sln
-	
+
+install::
+	@if [ ! -d bin/Debug ]; then \
+		echo "run 'make all' before you execute 'make linux-install'!"; \
+			exit 1; \
+	fi; \
+	if [ "$(NO_SUDO)" = "true" ]; then \
+		echo; \
+		echo "Sudo is required to install xamarin.android on your system!"; \
+		echo; \
+			exit 1; \
+	fi; \
+	if [ ! -d "$(PREFIX)/lib/mono/xbuild-frameworks" ]; then \
+	echo "Mono isn't installed in the prefix, aborting!"; \
+		exit 1; \
+	fi; \
+	echo; \
+	echo "Please provide your password to install xamarin.android on your system."; \
+	echo
+	sudo cp -R bin/Debug "$(PREFIX)/lib/xamarin.android"
+	sudo cp tools/scripts/xabuild "$(PREFIX)/bin/xabuild"
+	sudo ln -s "$(PREFIX)/lib/mono/xbuild-frameworks/MonoAndroid" "$(PREFIX)/lib/mono/xbuild-frameworks/MonoAndroid"
+
+uninstall::
+	@echo; \
+	echo "Please provide your password to uninstall xamarin.android from your system."; \
+	echo; \
+	if [ ! -d "$(PREFIX)/lib/mono/xbuild-frameworks" ]; then \
+	echo "Mono isn't installed in the prefix, aborting!"; \
+		exit 1; \
+	fi
+	sudo rm -rf "$(PREFIX)/lib/xamarin.android" "$(PREFIX)/bin/xabuild"
+	sudo rm "$(PREFIX)/lib/mono/xbuild-frameworks/MonoAndroid"
+
 ifeq ($(OS),Linux)
 export LINUX_DISTRO         := $(shell lsb_release -i -s || true)
 export LINUX_DISTRO_RELEASE := $(shell lsb_release -r -s || true)
@@ -33,7 +70,7 @@ prepare:: linux-prepare
 endif # $(OS)=Linux
 
 prepare:: prepare-msbuild
- 	
+
 linux-prepare::
 	BINFMT_MISC_TROUBLE="cli win" \
 	BINFMT_WARN=no ; \
