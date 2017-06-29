@@ -368,6 +368,12 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 		<DesignTimeBuild Condition=" '$(DesignTimeBuild)' == '' ">false</DesignTimeBuild>
 	</PropertyGroup>
 </Target>
+  
+<Target Name="_SetupDesignTimeBuildForCompile">
+	<PropertyGroup>
+		<DesignTimeBuild Condition=" '$(DesignTimeBuild)' == '' ">true</DesignTimeBuild>
+	</PropertyGroup>
+</Target>
 
 <Target Name="_BuildAdditionalResourcesCache"
 	Inputs="@(ReferencePath);@(ReferenceDependencyPaths);$(MSBuildProjectFullPath);$(NugetPackagesConfig)"
@@ -478,6 +484,13 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
     $(BuildDependsOn);
   </BuildDependsOn>
 </PropertyGroup>
+  
+ <PropertyGroup>
+   <CompileDependsOn>
+     _SetupDesignTimeBuildForCompile;
+     $(CompileDependsOn);
+   </CompileDependsOn>
+ </PropertyGroup>
 
 <PropertyGroup>
     <!-- no need to add those wear resources into C#, hence this order... -->

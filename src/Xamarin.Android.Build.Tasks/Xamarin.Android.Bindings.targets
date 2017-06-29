@@ -133,6 +133,11 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
       BuildDocumentation;
     </BuildDependsOn>
 
+    <CompileDependsOn>
+      _SetupDesignTimeBuildForCompile;
+      $(CompileDependsOn);
+    </CompileDependsOn>
+
     <ResolveReferencesDependsOn>
       $(ResolveReferencesDependsOn);
       AddBindingsToCompile;
@@ -274,7 +279,13 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
       <DesignTimeBuild Condition=" '$(DesignTimeBuild)' == '' ">false</DesignTimeBuild>
     </PropertyGroup>
   </Target>
-
+  
+  <Target Name="_SetupDesignTimeBuildForCompile">
+    <PropertyGroup>
+      <DesignTimeBuild Condition=" '$(DesignTimeBuild)' == '' ">true</DesignTimeBuild>
+    </PropertyGroup>
+  </Target>
+  
   <Target Name="_BuildAdditionalResourcesCache"
     Inputs="@(ReferencePath);@(ReferenceDependencyPaths)"
     Outputs="$(_AndroidResourcePathsCache)"
@@ -284,7 +295,7 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
       AndroidNdkDirectory="$(_AndroidNdkDirectory)"
       Assemblies="@(ReferencePath);@(ReferenceDependencyPaths)"
       CacheFile="$(IntermediateOutputPath)resourcepaths.cache"
-      Condition=" '$(DesignTimeBuild)' != 'true' "
+      Condition=" '$(DesignTimeBuild)' == 'false' Or '$(DesignTimeBuild)' == '' "
     />
   </Target>
 
