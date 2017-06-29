@@ -35,33 +35,21 @@ install::
 		echo "run 'make all' before you execute 'make linux-install'!"; \
 			exit 1; \
 	fi; \
-	if [ "$(NO_SUDO)" = "true" ]; then \
-		echo; \
-		echo "Sudo is required to install xamarin.android on your system!"; \
-		echo; \
-			exit 1; \
-	fi; \
 	if [ ! -d "$(PREFIX)/lib/mono/xbuild-frameworks" ]; then \
 	echo "Mono isn't installed in the prefix, aborting!"; \
 		exit 1; \
 	fi; \
-	echo; \
-	echo "Please provide your password to install xamarin.android on your system."; \
-	echo
-	sudo cp -R bin/Debug "$(PREFIX)/lib/xamarin.android"
-	sudo cp tools/scripts/xabuild "$(PREFIX)/bin/xabuild"
-	sudo ln -s "$(PREFIX)/lib/mono/xbuild-frameworks/MonoAndroid" "$(PREFIX)/lib/mono/xbuild-frameworks/MonoAndroid"
+	cp -R bin/Debug "$(PREFIX)/lib/xamarin.android"
+	cp tools/scripts/xabuild "$(PREFIX)/bin/xabuild"
+	ln -s "$(PREFIX)/lib/mono/xbuild-frameworks/MonoAndroid" "$(PREFIX)/lib/mono/xbuild-frameworks/MonoAndroid"
 
 uninstall::
-	@echo; \
-	echo "Please provide your password to uninstall xamarin.android from your system."; \
-	echo; \
 	if [ ! -d "$(PREFIX)/lib/mono/xbuild-frameworks" ]; then \
 	echo "Mono isn't installed in the prefix, aborting!"; \
 		exit 1; \
 	fi
-	sudo rm -rf "$(PREFIX)/lib/xamarin.android" "$(PREFIX)/bin/xabuild"
-	sudo rm "$(PREFIX)/lib/mono/xbuild-frameworks/MonoAndroid"
+	rm -rf "$(PREFIX)/lib/xamarin.android" "$(PREFIX)/bin/xabuild"
+	rm "$(PREFIX)/lib/mono/xbuild-frameworks/MonoAndroid"
 
 ifeq ($(OS),Linux)
 export LINUX_DISTRO         := $(shell lsb_release -i -s || true)
