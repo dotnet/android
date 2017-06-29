@@ -16,7 +16,7 @@ UBUNTU_DEPS="autoconf
 	vim-common
 	"
 
-if [ $OS_ARCH = "x86_64" ]; then
+if [ "$OS_ARCH" = "x86_64" ]; then
 UBUNTU_DEPS="$UBUNTU_DEPS 
 	lib32stdc++6 
 	lib32z1 
@@ -25,16 +25,16 @@ UBUNTU_DEPS="$UBUNTU_DEPS
 	zlib1g-dev:i386
 	"
 fi 
-if [ $NO_SUDO = "true" ]; then
+if [ "$NO_SUDO" = "true" ]; then
 	for p in $UBUNTU_DEPS; do 
-		if dpkg -l $$p > /dev/null 2>&1 ; then 
-			echo "[INSTALLED] $$p" 
+		if dpkg -l $p > /dev/null 2>&1 ; then 
+			echo "[INSTALLED] $p" 
 		else 
-			echo "[ MISSING ] $$p" 
+			echo "[ MISSING ] $p" 
 			PACKAGES_MISSING=yes 
 		fi 
 	done 
-	if [ "x$$PACKAGES_MISSING" = "xyes" ]; then 
+	if [ "x$PACKAGES_MISSING" = "xyes" ]; then 
 		echo Some packages are missing, cannot continue 
 		echo 
 		exit 1
