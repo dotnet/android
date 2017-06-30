@@ -78,9 +78,11 @@ ifeq ($(USE_MSBUILD),1)
 		$(MSBUILD) $(MSBUILD_FLAGS) "$$proj"; \
 	done
 endif	# msbuild
-include build-tools/scripts/BuildEverything.mk
 
-run-all-tests: run-nunit-tests run-ji-tests run-apk-tests
+include build-tools/scripts/BuildEverything.mk
+include tests/api-compatibility/api-compatibility.mk
+
+run-all-tests: run-nunit-tests run-ji-tests run-apk-tests run-api-compatibility-tests
 
 clean:
 	$(MSBUILD) $(MSBUILD_FLAGS) /t:Clean Xamarin.Android.sln
