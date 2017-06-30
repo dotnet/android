@@ -19,8 +19,8 @@ ifneq ($(MONO_OPTIONS),)
 export MONO_OPTIONS
 endif
 
-ifeq ($(PREFIX),)
-export PREFIX=/usr
+ifeq ($(prefix),)
+prefix=/usr/local
 endif
 
 include build-tools/scripts/msbuild.mk
@@ -34,22 +34,20 @@ install::
 	@if [ ! -d bin/Debug ]; then \
 		echo "run 'make all' before you execute 'make linux-install'!"; \
 			exit 1; \
-	fi; \
-	if [ ! -d "$(PREFIX)/lib/mono/xbuild-frameworks" ]; then \
-	echo "Mono isn't installed in the prefix, aborting!"; \
-		exit 1; \
-	fi; \
-	cp -R bin/Debug "$(PREFIX)/lib/xamarin.android"
-	cp tools/scripts/xabuild "$(PREFIX)/bin/xabuild"
-	ln -s "$(PREFIX)/lib/mono/xbuild-frameworks/MonoAndroid" "$(PREFIX)/lib/mono/xbuild-frameworks/MonoAndroid"
+	fi
+	-mkdir -p "$(prefix)/lib/mono/xbuild-frameworks"
+	-mkdir -p "$(prefix)/lib/xamarin.android"
+	cp -a "bin/Debug/." "$(prefix)/lib/xamarin.android/"
+	cp tools/scripts/xabuild "$(prefix)/bin/xabuild"
+	ln -s "$(prefix)/lib/xamarin.android/lib/xbuild/Xamarin/" "/usr/lib/mono/xbuild/Xamarin"
+	ln -s "$(prefix)/lib/xamarin.android/lib/mandroid/" "/usr/lib/mono/mandroid"
+	ln -s "$(prefix)/lib/xamarin.android/lib/xbuild-frameworks/MonoAndroid/" "/usr/lib/mono/xbuild-frameworks/MonoAndroid"
 
 uninstall::
-	if [ ! -d "$(PREFIX)/lib/mono/xbuild-frameworks" ]; then \
-	echo "Mono isn't installed in the prefix, aborting!"; \
-		exit 1; \
-	fi
-	rm -rf "$(PREFIX)/lib/xamarin.android" "$(PREFIX)/bin/xabuild"
-	rm "$(PREFIX)/lib/mono/xbuild-frameworks/MonoAndroid"
+	rm -rf "$(prefix)/lib/xamarin.android/" "$(PREFIX)/bin/xabuild"
+	rm "/usr/lib/mono/xbuild/Xamarin"
+	rm "/usr/lib/mono/mandroid"
+	rm "/usr/lib/mono/xbuild-frameworks/MonoAndroid"
 
 ifeq ($(OS),Linux)
 export LINUX_DISTRO         := $(shell lsb_release -i -s || true)
