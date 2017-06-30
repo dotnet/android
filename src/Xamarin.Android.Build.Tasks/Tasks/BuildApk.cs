@@ -75,6 +75,8 @@ namespace Xamarin.Android.Tasks
 
 		public string Debug { get; set; }
 
+		public bool PreferNativeLibrariesWithDebugSymbols { get; set; }
+
 		public string AndroidAotMode { get; set; }		
 
 		public string AndroidSequencePointsMode { get; set; }
@@ -208,6 +210,7 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ("  SupportedAbis: {0}", SupportedAbis);
 			Log.LogDebugMessage ("  UseSharedRuntime: {0}", UseSharedRuntime);
 			Log.LogDebugMessage ("  Debug: {0}", Debug ?? "no");
+			Log.LogDebugMessage ("  PreferNativeLibrariesWithDebugSymbols: {0}", PreferNativeLibrariesWithDebugSymbols);
 			Log.LogDebugMessage ("  EmbedAssemblies: {0}", EmbedAssemblies);
 			Log.LogDebugMessage ("  AndroidAotMode: {0}", AndroidAotMode);
 			Log.LogDebugMessage ("  AndroidSequencePointsMode: {0}", AndroidSequencePointsMode);
@@ -459,10 +462,19 @@ namespace Xamarin.Android.Tasks
 			return results;
 		}
 
-		void AddNativeLibrary (ZipArchiveEx apk, string abi, string filename)
+		void AddNativeLibrary (ZipArchiveEx apk, string abi, string filename, string inArchiveFileName = null)
 		{
-			var path    = Path.Combine (MSBuildXamarinAndroidDirectory, "lib", abi, filename);
-			apk.Archive.AddEntry (string.Format ("lib/{0}/{1}", abi, filename), File.OpenRead (path));
+			string libPath = Path.Combine (MSBuildXamarinAndroidDirectory, "lib", abi);
+			string path    = Path.Combine (libPath, filename);
+			if (PreferNativeLibrariesWithDebugSymbols) {
+				string debugPath = Path.Combine (libPath, Path.ChangeExtension (filename, ".d.so"));
+				if (File.Exists (debugPath))
+					path = debugPath;
+			}
+
+			string archivePath = string.Format ("lib/{0}/{1}", abi, inArchiveFileName ?? filename);
+			Log.LogDebugMessage ($"Adding native library: {path} (APK path: {archivePath})");
+			apk.Archive.AddEntry (archivePath, File.OpenRead (path));
 		}
 
 		void AddProfilers (ZipArchiveEx apk, string abi)
@@ -491,8 +503,7 @@ namespace Xamarin.Android.Tasks
 			var abis = supportedAbis.Split (new char[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
 			foreach (var abi in abis) {
 				string library = string.Format ("libmono-android.{0}.so", _Debug ? "debug" : "release");
-				var path = Path.Combine (MSBuildXamarinAndroidDirectory, "lib", abi, library);
-				apk.Archive.AddEntry (string.Format ("lib/{0}/libmonodroid.so", abi), File.OpenRead (path));
+				AddNativeLibrary (apk, abi, library, "libmonodroid.so");
 				if (!use_shared_runtime) {
 					// include the sgen
 					AddNativeLibrary (apk, abi, "libmonosgen-2.0.so");
