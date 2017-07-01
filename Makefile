@@ -31,22 +31,23 @@ all-tests::
 	MSBUILD="$(MSBUILD)" tools/scripts/xabuild $(MSBUILD_FLAGS) Xamarin.Android-Tests.sln
 
 install::
-	@if [ ! -d bin/Debug ]; then \
+	@if [ ! -d "bin/$(CONFIGURATION)" ]; then \
 		echo "run 'make all' before you execute 'make linux-install'!"; \
 			exit 1; \
 	fi
 	-mkdir -p "$(prefix)/lib/mono/xbuild-frameworks"
 	-mkdir -p "$(prefix)/lib/xamarin.android"
-	cp -a "bin/Debug/." "$(prefix)/lib/xamarin.android/"
+	-mkdir -p "/usr/lib/mono/xbuild/Xamarin/"
+	cp -a "bin/$(CONFIGURATION)/." "$(prefix)/lib/xamarin.android/"
 	cp tools/scripts/xabuild "$(prefix)/bin/xabuild"
-	ln -s "$(prefix)/lib/xamarin.android/lib/xbuild/Xamarin/" "/usr/lib/mono/xbuild/Xamarin"
-	ln -s "$(prefix)/lib/xamarin.android/lib/mandroid/" "/usr/lib/mono/mandroid"
+	-rm "/usr/lib/mono/xbuild/Xamarin/Android"
+	-rm "/usr/lib/mono/xbuild-frameworks/MonoAndroid"
+	ln -s "$(prefix)/lib/xamarin.android/lib/xbuild/Xamarin/Android/" "/usr/lib/mono/xbuild/Xamarin/Android"
 	ln -s "$(prefix)/lib/xamarin.android/lib/xbuild-frameworks/MonoAndroid/" "/usr/lib/mono/xbuild-frameworks/MonoAndroid"
 
 uninstall::
 	rm -rf "$(prefix)/lib/xamarin.android/" "$(PREFIX)/bin/xabuild"
-	rm "/usr/lib/mono/xbuild/Xamarin"
-	rm "/usr/lib/mono/mandroid"
+	rm "/usr/lib/mono/xbuild/Xamarin/Android"
 	rm "/usr/lib/mono/xbuild-frameworks/MonoAndroid"
 
 ifeq ($(OS),Linux)
