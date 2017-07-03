@@ -30,7 +30,7 @@ all-tests::
 install::
 	@if [ ! -d "bin/$(CONFIGURATION)" ]; then \
 		echo "run 'make all' before you execute 'make install'!"; \
-			exit 1; \
+		exit 1; \
 	fi
 	-mkdir -p "$(prefix)/lib/mono/xbuild-frameworks"
 	-mkdir -p "$(prefix)/lib/xamarin.android"
