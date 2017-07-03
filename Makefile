@@ -19,9 +19,8 @@ ifneq ($(MONO_OPTIONS),)
 export MONO_OPTIONS
 endif
 
-ifeq ($(prefix),)
 prefix=/usr/local
-endif
+
 
 include build-tools/scripts/msbuild.mk
 all::
@@ -32,7 +31,7 @@ all-tests::
 
 install::
 	@if [ ! -d "bin/$(CONFIGURATION)" ]; then \
-		echo "run 'make all' before you execute 'make linux-install'!"; \
+		echo "run 'make all' before you execute 'make install'!"; \
 			exit 1; \
 	fi
 	-mkdir -p "$(prefix)/lib/mono/xbuild-frameworks"
