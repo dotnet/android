@@ -19,9 +19,6 @@ ifneq ($(MONO_OPTIONS),)
 export MONO_OPTIONS
 endif
 
-prefix=/usr/local
-
-
 include build-tools/scripts/msbuild.mk
 all::
 	$(MSBUILD) $(MSBUILD_FLAGS) $(SOLUTION)
@@ -36,18 +33,18 @@ install::
 	fi
 	-mkdir -p "$(prefix)/lib/mono/xbuild-frameworks"
 	-mkdir -p "$(prefix)/lib/xamarin.android"
-	-mkdir -p "/usr/lib/mono/xbuild/Xamarin/"
+	-mkdir -p " $(prefix)/lib/mono/xbuild/Xamarin/"
 	cp -a "bin/$(CONFIGURATION)/." "$(prefix)/lib/xamarin.android/"
 	cp tools/scripts/xabuild "$(prefix)/bin/xabuild"
-	-rm "/usr/lib/mono/xbuild/Xamarin/Android"
-	-rm "/usr/lib/mono/xbuild-frameworks/MonoAndroid"
-	ln -s "$(prefix)/lib/xamarin.android/lib/xbuild/Xamarin/Android/" "/usr/lib/mono/xbuild/Xamarin/Android"
-	ln -s "$(prefix)/lib/xamarin.android/lib/xbuild-frameworks/MonoAndroid/" "/usr/lib/mono/xbuild-frameworks/MonoAndroid"
+	-rm "$(prefix)/lib/mono/xbuild/Xamarin/Android"
+	-rm "$(prefix)/lib/mono/xbuild-frameworks/MonoAndroid"
+	ln -s "$(prefix)/lib/xamarin.android/lib/xbuild/Xamarin/Android/" "$(prefix)/lib/mono/xbuild/Xamarin/Android"
+	ln -s "$(prefix)/lib/xamarin.android/lib/xbuild-frameworks/MonoAndroid/" "$(prefix)/lib/mono/xbuild-frameworks/MonoAndroid"
 
 uninstall::
-	rm -rf "$(prefix)/lib/xamarin.android/" "$(PREFIX)/bin/xabuild"
-	rm "/usr/lib/mono/xbuild/Xamarin/Android"
-	rm "/usr/lib/mono/xbuild-frameworks/MonoAndroid"
+	rm -rf "$(prefix)/lib/xamarin.android/" "$(prefix)/bin/xabuild"
+	rm "$(prefix)/lib/mono/xbuild/Xamarin/Android"
+	rm "$(prefix)/lib/mono/xbuild-frameworks/MonoAndroid"
 
 ifeq ($(OS),Linux)
 export LINUX_DISTRO         := $(shell lsb_release -i -s || true)
