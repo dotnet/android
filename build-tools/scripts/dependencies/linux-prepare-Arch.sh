@@ -32,7 +32,7 @@ ARCH_DEPS="autoconf
 	xxd
 	"
 if [ $NO_SUDO = "false" ]; then
-	sudo pacman -S --noconfirm $ARCH_DEPS
+	sudo pacman -S --noconfirm --needed $ARCH_DEPS
 else
 	echo "Sudo is required!"
 fi
