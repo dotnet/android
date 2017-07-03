@@ -2,6 +2,7 @@ export OS            := $(shell uname)
 export OS_ARCH       := $(shell uname -m)
 export NO_SUDO ?= false
 V             ?= 0
+prefix				= /usr/local
 CONFIGURATION = Debug
 RUNTIME       := $(shell if [ -f "`which mono64`" ] ; then echo mono64 ; else echo mono; fi) --debug=casts
 SOLUTION      = Xamarin.Android.sln
@@ -33,7 +34,7 @@ install::
 	fi
 	-mkdir -p "$(prefix)/lib/mono/xbuild-frameworks"
 	-mkdir -p "$(prefix)/lib/xamarin.android"
-	-mkdir -p " $(prefix)/lib/mono/xbuild/Xamarin/"
+	-mkdir -p "$(prefix)/lib/mono/xbuild/Xamarin/"
 	cp -a "bin/$(CONFIGURATION)/." "$(prefix)/lib/xamarin.android/"
 	cp tools/scripts/xabuild "$(prefix)/bin/xabuild"
 	-rm "$(prefix)/lib/mono/xbuild/Xamarin/Android"
