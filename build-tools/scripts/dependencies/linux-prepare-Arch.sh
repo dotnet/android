@@ -29,6 +29,7 @@ ARCH_DEPS="autoconf
 	texinfo
 	unzip
 	which
+	zip
 	xxd
 	"
 if [ $NO_SUDO = "false" ]; then
