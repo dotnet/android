@@ -2,6 +2,7 @@ export OS            := $(shell uname)
 export OS_ARCH       := $(shell uname -m)
 export NO_SUDO ?= false
 V             ?= 0
+prefix				= /usr/local
 CONFIGURATION = Debug
 RUNTIME       := $(shell if [ -f "`which mono64`" ] ; then echo mono64 ; else echo mono; fi) --debug=casts
 SOLUTION      = Xamarin.Android.sln
@@ -25,7 +26,27 @@ all::
 
 all-tests::
 	MSBUILD="$(MSBUILD)" tools/scripts/xabuild $(MSBUILD_FLAGS) Xamarin.Android-Tests.sln
-	
+
+install::
+	@if [ ! -d "bin/$(CONFIGURATION)" ]; then \
+		echo "run 'make all' before you execute 'make install'!"; \
+		exit 1; \
+	fi
+	-mkdir -p "$(prefix)/lib/mono/xbuild-frameworks"
+	-mkdir -p "$(prefix)/lib/xamarin.android"
+	-mkdir -p "$(prefix)/lib/mono/xbuild/Xamarin/"
+	cp -a "bin/$(CONFIGURATION)/." "$(prefix)/lib/xamarin.android/"
+	cp tools/scripts/xabuild "$(prefix)/bin/xabuild"
+	-rm "$(prefix)/lib/mono/xbuild/Xamarin/Android"
+	-rm "$(prefix)/lib/mono/xbuild-frameworks/MonoAndroid"
+	ln -s "$(prefix)/lib/xamarin.android/lib/xbuild/Xamarin/Android/" "$(prefix)/lib/mono/xbuild/Xamarin/Android"
+	ln -s "$(prefix)/lib/xamarin.android/lib/xbuild-frameworks/MonoAndroid/" "$(prefix)/lib/mono/xbuild-frameworks/MonoAndroid"
+
+uninstall::
+	rm -rf "$(prefix)/lib/xamarin.android/" "$(prefix)/bin/xabuild"
+	rm "$(prefix)/lib/mono/xbuild/Xamarin/Android"
+	rm "$(prefix)/lib/mono/xbuild-frameworks/MonoAndroid"
+
 ifeq ($(OS),Linux)
 export LINUX_DISTRO         := $(shell lsb_release -i -s || true)
 export LINUX_DISTRO_RELEASE := $(shell lsb_release -r -s || true)
@@ -33,7 +54,7 @@ prepare:: linux-prepare
 endif # $(OS)=Linux
 
 prepare:: prepare-msbuild
- 	
+
 linux-prepare::
 	BINFMT_MISC_TROUBLE="cli win" \
 	BINFMT_WARN=no ; \
