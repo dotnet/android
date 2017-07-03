@@ -72,8 +72,10 @@ if [[ "$prefix" == */tools/scripts ]] ; then
 		exit 1
 	fi
 	prefix="$real_prefix"
+	xa_prefix="$real_prefix"
 elif [[ "$prefix" == */bin ]] ; then
 	prefix="$prefix/.."
+	xa_prefix="$prefix/../lib/xamarin.android"
 else
 	(>&2 echo "$name: Could not determine Xamarin.Android prefix.")
 	exit 1
@@ -109,8 +111,8 @@ fi
 declare -a XABUILD_FLAGS
 
 XABUILD_FLAGS=(
-	/p:MonoAndroidBinDirectory="$prefix/bin"
-	/p:MonoAndroidToolsDirectory="$prefix/lib/mandroid"
+	/p:MonoAndroidBinDirectory="$xa_prefix/bin"
+	/p:MonoAndroidToolsDirectory="$xa_prefix/lib/mandroid"
 	/p:MonoDroidInstallDirectory="$MONO_ANDROID_PATH"
 )
 
