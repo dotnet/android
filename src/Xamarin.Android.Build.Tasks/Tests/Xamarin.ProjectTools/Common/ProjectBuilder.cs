@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Diagnostics;
@@ -119,17 +119,21 @@ namespace Xamarin.ProjectTools
 		public RuntimeInfo [] GetSupportedRuntimes ()
 		{
 			var runtimeInfo = new List<RuntimeInfo> ();
-			var outdir = FrameworkLibDirectory;
-			var path = Path.Combine (outdir, RunXBuild ? Path.Combine ("xbuild", "Xamarin", "Android", "lib") : "");
+			string outdir = FrameworkLibDirectory;
+			string path = Path.Combine (outdir, RunXBuild ? Path.Combine ("xbuild", "Xamarin", "Android", "lib") : "");
 			foreach (var file in Directory.EnumerateFiles (path, "libmono-android.*.*.so", SearchOption.AllDirectories)) {
-				var items = Path.GetFileName (file).Split (new char [] { '.' });
-				if (items.Length != 4)
+				string fullFilePath = Path.GetFullPath (file);
+				DirectoryInfo parentDir = Directory.GetParent (fullFilePath);
+				if (parentDir == null)
 					continue;
-				var fi = new FileInfo (file);
+				string[] items = Path.GetFileName (fullFilePath).Split ('.' );
+				if (items.Length != 3)
+					continue;
+				var fi = new FileInfo (fullFilePath);
 				runtimeInfo.Add (new RuntimeInfo () {
 					Name = "libmonodroid.so",
 					Runtime = items [1], // release|debug
-					Abi = items [2], // armaebi|x86|arm64-v8a
+					Abi = parentDir.Name, // armaebi|x86|arm64-v8a
 					Size = (int)fi.Length, // int
 				});
 			}

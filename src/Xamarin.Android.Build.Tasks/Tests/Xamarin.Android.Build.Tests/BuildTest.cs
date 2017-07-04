@@ -989,21 +989,6 @@ namespace App1
 			}
 		}
 
-#pragma warning disable 414
-		static object [] RuntimeChecks = new object [] {
-			new object[] {
-				/* supportedAbi */     new string[] { "armeabi-v7a"},
-				/* optimize */         true ,
-				/* expectedResult */   "release",
-			},
-			new object[] {
-				/* supportedAbi */     new string[] { "armeabi-v7a"},
-				/* optimize */         false ,
-				/* expectedResult */   "debug",
-			},
-		};
-#pragma warning restore 414
-
 		[Test]
 		[TestCaseSource ("RuntimeChecks")]
 		public void CheckWhichRuntimeIsIncluded (string [] supportedAbi, bool optimize, string expectedRuntime)
@@ -1024,7 +1009,7 @@ namespace App1
 						Assert.IsNotNull (inApkRuntime, "Could not find the actual runtime used.");
 						Assert.AreEqual (runtime.Size, inApkRuntime.Size, "expected {0} got {1}", expectedRuntime, inApkRuntime.Runtime);
 						inApk = ZipHelper.ReadFileFromZip (apk, string.Format ("lib/{0}/libmono-profiler-log.so", abi));
-						if (!optimize) {
+						if (string.Compare (expectedRuntime, "debug", StringComparison.OrdinalIgnoreCase) == 0) {
 							Assert.IsNotNull (inApk, "libmono-profiler-log.so should exist in the apk.");
 						} else {
 							Assert.IsNull (inApk, "libmono-profiler-log.so should not exist in the apk.");

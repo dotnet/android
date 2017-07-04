@@ -72,6 +72,19 @@ namespace Xamarin.Android.Build.Tests
 			//new Object [] { true, true },
 		};
 
+		static object [] RuntimeChecks = new object [] {
+			new object[] {
+				/* supportedAbi */     new string[] { "armeabi-v7a"},
+				/* optimize */         true ,
+				/* expectedResult */   "release",
+			},
+			new object[] {
+				/* supportedAbi */     new string[] { "armeabi-v7a"},
+				/* optimize */         false ,
+				/* expectedResult */   "debug",
+			},
+		};
+
 		static object [] SequencePointChecks = new object [] {
 			new object[] {
 				/* isRelease */          false,
