@@ -1357,4 +1357,13 @@
   <attr path="/api/package[@name='android.view']/*[@name='View']/method[@name='getFocusable']" name="enumReturn">Android.Views.ViewFocusability</attr>
   <attr path="/api/package[@name='android.view']/*[@name='View']/method[@name='setFocusable']/parameter[@name='focusable' and @type='int']" name="enumType">Android.Views.ViewFocusability</attr>
 
+  <!-- API Level 26 changed findViewById() to have a generic type parameter.
+  That is technically different in Java sources, but are identical to
+  former non-generic version. So they should be regarded as identical.
+  Also, for this method we have *manually* bound generic method.
+  
+  We could make fixes in api-merge, but manual fix is 100x simpler. -->
+  <remove-node path="/api/package[@name='android.view']/class/method[@name='findViewById']/typeParameters" api-since="26" />
+  <attr path="/api/package[@name='android.view']/class/method[@name='findViewById']" name="return" api-since="26">android.view.View</attr>
+
 </metadata>
