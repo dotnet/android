@@ -78,8 +78,8 @@
   </attr>
 
   <!-- return type in a method in a class cannot be more specific in C# -->
-  <attr path="/api/package[@name='java.nio.channels']/class[@name='FileChannel']/method[@name='position' and parameter[1]/@type='long']" name="managedReturn">Java.Nio.Channels.ISeekableByteChannel</attr>
-  <attr path="/api/package[@name='java.nio.channels']/class[@name='FileChannel']/method[@name='truncate']" name="managedReturn">Java.Nio.Channels.ISeekableByteChannel</attr>
+  <attr path="/api/package[@name='java.nio.channels']/class[@name='FileChannel']/method[@name='position' and parameter[1]/@type='long']" name="managedReturn" api-since="24">Java.Nio.Channels.ISeekableByteChannel</attr>
+  <attr path="/api/package[@name='java.nio.channels']/class[@name='FileChannel']/method[@name='truncate']" name="managedReturn" api-since="24">Java.Nio.Channels.ISeekableByteChannel</attr>
 
   <!-- Also, it seems to lack some non-public types even in android.jar but the derived types still reference...!
     - java.lang.ClassNotFoundException is marked as derived from java.lang.ReflectiveOperationException which does not exist.
