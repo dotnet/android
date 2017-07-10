@@ -336,6 +336,12 @@ namespace Xamarin.Android.Tasks
 			if (UseLatestAndroidPlatformSdk) {
 				AndroidApiLevel         = GetMaxInstalledApiLevel ().ToString ();
 				SupportedApiLevel       = GetMaxSupportedApiLevel (AndroidApiLevel);
+				int maxInstalled, maxSupported = 0;
+				if (int.TryParse (AndroidApiLevel, out maxInstalled) && int.TryParse (SupportedApiLevel, out maxSupported) && maxInstalled > maxSupported) {
+					Log.LogDebugMessage ($"API Level {AndroidApiLevel} is greater than the maximum supported API level of {SupportedApiLevel}. " +
+						"Support for this API will be added in a future release.");
+					AndroidApiLevel = SupportedApiLevel;
+				}
 				TargetFrameworkVersion  = GetTargetFrameworkVersionFromApiLevel ();
 				return TargetFrameworkVersion != null;
 			}
