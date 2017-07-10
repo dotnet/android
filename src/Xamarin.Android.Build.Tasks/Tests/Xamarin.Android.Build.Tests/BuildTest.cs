@@ -991,15 +991,23 @@ namespace App1
 
 		[Test]
 		[TestCaseSource ("RuntimeChecks")]
-		public void CheckWhichRuntimeIsIncluded (string [] supportedAbi, bool optimize, string expectedRuntime)
-		{
+		public void CheckWhichRuntimeIsIncluded (string[] supportedAbi, bool debugSymbols, string debugType, bool? optimize, bool? embedassebmlies, string expectedRuntime) {
 			var proj = new XamarinAndroidApplicationProject ();
-			proj.SetProperty (proj.ActiveConfigurationProperties, "Optimize", optimize);
+			proj.SetProperty (proj.ActiveConfigurationProperties, "DebugSymbols", debugSymbols);
+			proj.SetProperty (proj.ActiveConfigurationProperties, "DebugType", debugType);
+			if (optimize.HasValue)
+				proj.SetProperty (proj.ActiveConfigurationProperties, "Optimize", optimize.Value);
+			else
+				proj.RemoveProperty (proj.ActiveConfigurationProperties, "Optimize");
+			if (embedassebmlies.HasValue)
+				proj.SetProperty (proj.ActiveConfigurationProperties, "EmbedAssembliesIntoApk", embedassebmlies.Value);
+			else
+				proj.RemoveProperty (proj.ActiveConfigurationProperties, "EmbedAssembliesIntoApk");
 			using (var b = CreateApkBuilder (Path.Combine ("temp", "CheckWhichRuntimeIsIncluded"))) {
 				var runtimeInfo = b.GetSupportedRuntimes ();
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				var apkPath = Path.Combine (Root, b.ProjectDirectory,
-					proj.IntermediateOutputPath, "android", "bin", "UnnamedProject.UnnamedProject.apk");
+					proj.IntermediateOutputPath,"android", "bin", "UnnamedProject.UnnamedProject.apk");
 				using (var apk = ZipHelper.OpenZip (apkPath)) {
 					foreach (var abi in supportedAbi) {
 						var runtime = runtimeInfo.FirstOrDefault (x => x.Abi == abi && x.Runtime == expectedRuntime);
