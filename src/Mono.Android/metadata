@@ -77,10 +77,6 @@
   Please use SetSystemScope() instead. This setter is not really public in Android API and will vanish in the future versions.
   </attr>
 
-  <!-- return type in a method in a class cannot be more specific in C# -->
-  <attr path="/api/package[@name='java.nio.channels']/class[@name='FileChannel']/method[@name='position' and parameter[1]/@type='long']" name="managedReturn" api-since="24">Java.Nio.Channels.ISeekableByteChannel</attr>
-  <attr path="/api/package[@name='java.nio.channels']/class[@name='FileChannel']/method[@name='truncate']" name="managedReturn" api-since="24">Java.Nio.Channels.ISeekableByteChannel</attr>
-
   <!-- Also, it seems to lack some non-public types even in android.jar but the derived types still reference...!
     - java.lang.ClassNotFoundException is marked as derived from java.lang.ReflectiveOperationException which does not exist.
     Also, this class has disappeared at some stage. -->
@@ -1362,8 +1358,9 @@
   former non-generic version. So they should be regarded as identical.
   Also, for this method we have *manually* bound generic method.
   
-  We could make fixes in api-merge, but manual fix is 100x simpler. -->
-  <remove-node path="/api/package[@name='android.view']/class/method[@name='findViewById']/typeParameters" api-since="26" />
-  <attr path="/api/package[@name='android.view']/class/method[@name='findViewById']" name="return" api-since="26">android.view.View</attr>
+  We could make fixes in api-merge, but manual fix is 100x simpler.
+  Sadly api-merge is processed before metadata fixup, so it cannot be simple overload removal. -->
+  <remove-node path="/api/package/class/method[@name='findViewById' or @name='onFindViewById' or @name='findViewWithTag']/typeParameters" api-since="26" />
+  <attr path="/api/package/class/method[@name='findViewById' or @name='onFindViewById' or @name='findViewWithTag']" name="return" api-since="26">android.view.View</attr>
 
 </metadata>

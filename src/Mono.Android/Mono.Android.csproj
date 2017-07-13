@@ -267,11 +267,14 @@
     <Compile Include="Java.Lang\RuntimeException.cs" />
     <Compile Include="Java.Lang\Short.cs" />
     <Compile Include="Java.Lang\String.cs" />
+    <Compile Include="Java.Lang\StringBuffer.cs" />
+    <Compile Include="Java.Lang\StringBuilder.cs" />
     <Compile Include="Java.Lang\Thread.cs" />
     <Compile Include="Java.Lang\Throwable.cs" />
     <Compile Include="Java.Lang.Reflect\InvocationTargetException.cs" />
     <Compile Include="Java.Nio\Buffer.cs" />
     <Compile Include="Java.Nio\CharBuffer.cs" />
+    <Compile Include="Java.Nio\FileChannel.cs" />
     <Compile Include="Java.Security\IdentityScope.cs" />
     <Compile Include="Java.Util\Spliterators.cs" />
     <Compile Include="Java.Util.Concurrent.Atomic\AtomicInteger.cs" />

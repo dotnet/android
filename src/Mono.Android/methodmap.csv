@@ -2271,7 +2271,8 @@
 26, android.telecom, Call.Callback, onRttInitiationFailure, reason, Android.Telecom.RttSessionModifyResult
 26, android.telephony, TelephonyManager.UssdResponseCallback, onReceiveUssdResponseFailed, failureCode, Android.Telephony.UssdResultCode
 
-26, android.icu.util, TimeZone, getTimeZone, type, Android.Icu.Util.TimeZoneType
+// cannot change this at this state.
+// 24, android.icu.util, TimeZone, getTimeZone, type, Android.Icu.Util.TimeZoneType
 26, android.icu.util, UniversalTimeScale, bigDecimalFrom, timeScale, Android.Icu.Util.UniversalTimeScaleType
 26, android.icu.util, UniversalTimeScale, from, timeScale, Android.Icu.Util.UniversalTimeScaleType
 26, android.icu.util, UniversalTimeScale, getTimeScaleValue, scale, Android.Icu.Util.UniversalTimeScaleType
@@ -2316,7 +2317,6 @@
 26, android.content, Intent, removeFlags, flags, Android.Content.ActivityFlags
 26, android.content.pm, ApplicationInfo, getCategoryTitle, category, Android.Content.PM.ApplicationCategories
 26, android.content.pm, LauncherApps, getApplicationInfo, flags, Android.Content.PM.PackageInfoFlags
-26, android.icu.util, TimeZone, getTimeZone, type, Android.Icu.Util.TimeZoneType
 
 26, android.media, AudioAttributes, getVolumeControlStream, return, Android.Media.Stream
 26, android.media, AudioAttributes, getVolumeControlStream, return, Android.Media.Stream
