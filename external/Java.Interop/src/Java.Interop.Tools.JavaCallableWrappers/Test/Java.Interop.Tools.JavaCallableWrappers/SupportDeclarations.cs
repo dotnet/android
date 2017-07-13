@@ -36,6 +36,11 @@ namespace Java.Lang {
 	class Object : Android.Runtime.IJavaObject
 	{
 	}
+
+	[Register ("java/lang/Throwable", DoNotGenerateAcw = true)]
+	class Throwable : Exception, Android.Runtime.IJavaObject
+	{
+	}
 }
 
 namespace Xamarin.Android.ToolsTests {
@@ -219,5 +224,38 @@ namespace Xamarin.Android.ToolsTests {
 		{
 			return value;
 		}
+
+		[Export (Throws = new [] { typeof (Java.Lang.Throwable) })]
+		public void methodThatThrows() 
+		{
+		}
+
+		[Export (Throws = new Type [0])]
+		public void methodThatThrowsEmptyArray ()
+		{
+		}
+	}
+
+	[Register ("register.ExportsConstructors")]
+	class ExportsConstructors : Java.Lang.Object
+	{
+		[Export]
+		public ExportsConstructors () { }
+
+		[Export]
+		public ExportsConstructors (int value) { }
+	}
+
+	[Register ("register.ExportsThrowsConstructors")]
+	class ExportsThrowsConstructors : Java.Lang.Object
+	{
+		[Export (Throws = new [] { typeof (Java.Lang.Throwable) })]
+		public ExportsThrowsConstructors () { }
+
+		[Export (Throws = new [] { typeof (Java.Lang.Throwable) })]
+		public ExportsThrowsConstructors (int value) { }
+
+		[Export (Throws = new Type [0])]
+		public ExportsThrowsConstructors (string value) { }
 	}
 }

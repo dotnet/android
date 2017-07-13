@@ -738,6 +738,10 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 				get { return retval; }
 			}
 
+			public string ThrowsDeclaration {
+				get { return ThrownTypeNames?.Length > 0 ? " throws " + String.Join (", ", ThrownTypeNames) : null; }
+			}
+
 			public readonly string JavaAccess;
 			public readonly string ManagedParameters;
 			public readonly string JniSignature;
@@ -757,7 +761,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 			sw.WriteLine ();
 			if (ctor.Annotations != null)
 				sw.WriteLine (ctor.Annotations);
-			sw.WriteLine ("\tpublic {0} ({1}) throws java.lang.Throwable", name, ctor.Params);
+			sw.WriteLine ("\tpublic {0} ({1}){2}", name, ctor.Params, ctor.ThrowsDeclaration);
 			sw.WriteLine ("\t{");
 			sw.WriteLine ("\t\tsuper ({0});", ctor.SuperCall);
 #if MONODROID_TIMING
@@ -796,7 +800,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 			sw.WriteLine ();
 			if (method.Annotations != null)
 				sw.WriteLine (method.Annotations);
-			sw.WriteLine ("\t{0} {1}{2} {3} ({4}){5}", method.IsExport ? method.JavaAccess : "public", method.IsStatic ? "static " : null, method.Retval, method.JavaName, method.Params, method.ThrownTypeNames != null ? " throws " + String.Join (", ", method.ThrownTypeNames) : null);
+			sw.WriteLine ("\t{0} {1}{2} {3} ({4}){5}", method.IsExport ? method.JavaAccess : "public", method.IsStatic ? "static " : null, method.Retval, method.JavaName, method.Params, method.ThrowsDeclaration);
 			sw.WriteLine ("\t{");
 #if MONODROID_TIMING
 			sw.WriteLine ("\t\tandroid.util.Log.i(\"MonoDroid-Timing\", \"{0}.{1}: time: \"+java.lang.System.currentTimeMillis());", name, method.Name);

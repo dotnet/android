@@ -160,6 +160,8 @@ public class ExportsMembers
 			""n_GetValue:()Ljava/lang/String;:__export__\n"" +
 			""n_methodNamesNotMangled:()V:__export__\n"" +
 			""n_CompletelyDifferentName:(Ljava/lang/String;I)Ljava/lang/String;:__export__\n"" +
+			""n_methodThatThrows:()V:__export__\n"" +
+			""n_methodThatThrowsEmptyArray:()V:__export__\n"" +
 			"""";
 		mono.android.Runtime.register (""Xamarin.Android.ToolsTests.ExportsMembers, Java.Interop.Tools.JavaCallableWrappers-Tests, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null"", ExportsMembers.class, __md_methods);
 	}
@@ -199,6 +201,22 @@ public class ExportsMembers
 	}
 
 	private native java.lang.String n_CompletelyDifferentName (java.lang.String p0, int p1);
+
+
+	public void methodThatThrows () throws java.lang.Throwable
+	{
+		n_methodThatThrows ();
+	}
+
+	private native void n_methodThatThrows ();
+
+
+	public void methodThatThrowsEmptyArray ()
+	{
+		n_methodThatThrowsEmptyArray ();
+	}
+
+	private native void n_methodThatThrowsEmptyArray ();
 
 	private java.util.ArrayList refList;
 	public void monodroidAddReference (java.lang.Object obj)
@@ -337,6 +355,122 @@ public class Name$Override
 		__md_methods = 
 			"""";
 		mono.android.Runtime.register (""Xamarin.Android.ToolsTests.RegisterName+OverrideNestedName, Java.Interop.Tools.JavaCallableWrappers-Tests, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null"", Name$Override.class, __md_methods);
+	}
+
+	private java.util.ArrayList refList;
+	public void monodroidAddReference (java.lang.Object obj)
+	{
+		if (refList == null)
+			refList = new java.util.ArrayList ();
+		refList.add (obj);
+	}
+
+	public void monodroidClearReferences ()
+	{
+		if (refList != null)
+			refList.clear ();
+	}
+}
+";
+			Assert.AreEqual (expected, actual);
+		}
+
+		[Test]
+		public void GenerateConstructors ()
+		{
+			var actual = Generate (typeof (ExportsConstructors));
+			var expected = @"package register;
+
+
+public class ExportsConstructors
+	extends java.lang.Object
+	implements
+		mono.android.IGCUserPeer
+{
+/** @hide */
+	public static final String __md_methods;
+	static {
+		__md_methods = 
+			"""";
+		mono.android.Runtime.register (""Xamarin.Android.ToolsTests.ExportsConstructors, Java.Interop.Tools.JavaCallableWrappers-Tests, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null"", ExportsConstructors.class, __md_methods);
+	}
+
+
+	public ExportsConstructors ()
+	{
+		super ();
+		if (getClass () == ExportsConstructors.class)
+			mono.android.TypeManager.Activate (""Xamarin.Android.ToolsTests.ExportsConstructors, Java.Interop.Tools.JavaCallableWrappers-Tests, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null"", """", this, new java.lang.Object[] {  });
+	}
+
+
+	public ExportsConstructors (int p0)
+	{
+		super (p0);
+		if (getClass () == ExportsConstructors.class)
+			mono.android.TypeManager.Activate (""Xamarin.Android.ToolsTests.ExportsConstructors, Java.Interop.Tools.JavaCallableWrappers-Tests, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null"", """", this, new java.lang.Object[] { p0 });
+	}
+
+	private java.util.ArrayList refList;
+	public void monodroidAddReference (java.lang.Object obj)
+	{
+		if (refList == null)
+			refList = new java.util.ArrayList ();
+		refList.add (obj);
+	}
+
+	public void monodroidClearReferences ()
+	{
+		if (refList != null)
+			refList.clear ();
+	}
+}
+";
+			Assert.AreEqual (expected, actual);
+		}
+
+		[Test]
+		public void GenerateConstructors_WithThrows ()
+		{
+			var actual = Generate (typeof (ExportsThrowsConstructors));
+			var expected = @"package register;
+
+
+public class ExportsThrowsConstructors
+	extends java.lang.Object
+	implements
+		mono.android.IGCUserPeer
+{
+/** @hide */
+	public static final String __md_methods;
+	static {
+		__md_methods = 
+			"""";
+		mono.android.Runtime.register (""Xamarin.Android.ToolsTests.ExportsThrowsConstructors, Java.Interop.Tools.JavaCallableWrappers-Tests, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null"", ExportsThrowsConstructors.class, __md_methods);
+	}
+
+
+	public ExportsThrowsConstructors () throws java.lang.Throwable
+	{
+		super ();
+		if (getClass () == ExportsThrowsConstructors.class)
+			mono.android.TypeManager.Activate (""Xamarin.Android.ToolsTests.ExportsThrowsConstructors, Java.Interop.Tools.JavaCallableWrappers-Tests, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null"", """", this, new java.lang.Object[] {  });
+	}
+
+
+	public ExportsThrowsConstructors (int p0) throws java.lang.Throwable
+	{
+		super (p0);
+		if (getClass () == ExportsThrowsConstructors.class)
+			mono.android.TypeManager.Activate (""Xamarin.Android.ToolsTests.ExportsThrowsConstructors, Java.Interop.Tools.JavaCallableWrappers-Tests, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null"", """", this, new java.lang.Object[] { p0 });
+	}
+
+
+	public ExportsThrowsConstructors (java.lang.String p0)
+	{
+		super (p0);
+		if (getClass () == ExportsThrowsConstructors.class)
+			mono.android.TypeManager.Activate (""Xamarin.Android.ToolsTests.ExportsThrowsConstructors, Java.Interop.Tools.JavaCallableWrappers-Tests, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null"", """", this, new java.lang.Object[] { p0 });
 	}
 
 	private java.util.ArrayList refList;
