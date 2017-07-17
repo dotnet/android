@@ -50,6 +50,7 @@
     <Compile Include="Xamarin.Android.BuildTools.PrepTasks\PrepareInstall.cs" />
     <Compile Include="Xamarin.Android.BuildTools.PrepTasks\AcceptAndroidSdkLicenses.cs" />
     <Compile Include="Xamarin.Android.BuildTools.PrepTasks\Sleep.cs" />
+    <Compile Include="Xamarin.Android.BuildTools.PrepTasks\ProcessLogcatTiming.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <Import Project="xa-prep-tasks.targets" />
