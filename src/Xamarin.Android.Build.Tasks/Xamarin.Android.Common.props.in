@@ -1,6 +1,6 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 	<PropertyGroup>
-		<XamarinAndroidVersion>Unknown</XamarinAndroidVersion>
+		<XamarinAndroidVersion>@PACKAGE_VERSION@-@PACKAGE_VERSION_BUILD@</XamarinAndroidVersion>
 		<_JavaInteropReferences>Java.Interop;System.Runtime</_JavaInteropReferences>
 		<DependsOnSystemRuntime Condition=" '$(DependsOnSystemRuntime)' == '' ">true</DependsOnSystemRuntime>
 		<CopyNuGetImplementations Condition=" '$(CopyNuGetImplementations)' == ''">true</CopyNuGetImplementations>

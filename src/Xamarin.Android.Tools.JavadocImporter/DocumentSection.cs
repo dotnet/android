@@ -144,7 +144,7 @@ namespace Xamarin.Android.Tools.JavaDocToMdoc
 
 		XElement GetJavaDocSectionTable (XElement jd, string section)
 		{
-			return jd.Descendants ("table").FirstOrDefault (t => t.XPathSelectElement ("tr[string(th) = '" + section + "']") != null);
+			return jd.Descendants ("table").FirstOrDefault (t => t.XPathSelectElement ("tr/th[string(th) = '" + section + "']") != null);
 		}
 	}
 

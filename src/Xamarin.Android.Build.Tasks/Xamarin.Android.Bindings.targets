@@ -111,7 +111,6 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
     <_LibraryProjectImportsDirectoryName>library_project_imports</_LibraryProjectImportsDirectoryName>
 	<_NativeLibraryImportsDirectoryName>native_library_imports</_NativeLibraryImportsDirectoryName>
 	<_AndroidResourcePathsCache>$(IntermediateOutputPath)resourcepaths.cache</_AndroidResourcePathsCache>
-	<_AndroidSdksCache>$(IntermediateOutputPath)sdks.cache</_AndroidSdksCache>
 	<_AndroidLibraryImportsCache>$(IntermediateOutputPath)libraryimports.cache</_AndroidLibraryImportsCache>
 	<_AndroidLibraryProjectImportsCache>$(IntermediateOutputPath)libraryprojectimports.cache</_AndroidLibraryProjectImportsCache>
 
@@ -133,6 +132,11 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
       $(BuildDependsOn);
       BuildDocumentation;
     </BuildDependsOn>
+
+    <CompileDependsOn>
+      _SetupDesignTimeBuildForCompile;
+      $(CompileDependsOn);
+    </CompileDependsOn>
 
     <ResolveReferencesDependsOn>
       $(ResolveReferencesDependsOn);
@@ -159,12 +163,8 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
 	</GetReferenceAssemblyPaths>
 </Target>
 
-<Target Name="_BuildSdkCache"
-		Inputs="$(MSBuildProjectFullPath);$(_AndroidBuildPropertiesCache)"
-		Outputs="$(_AndroidSdksCache)"
-		DependsOnTargets="_GetReferenceAssemblyPaths">
+<Target Name="_SetLatestTargetFrameworkVersion" DependsOnTargets="_GetReferenceAssemblyPaths">
 	<ResolveSdks
-			CacheFile="$(_AndroidSdksCache)"
 			AndroidApiLevel="$(AndroidApiLevel)"
 			AndroidSdkBuildToolsVersion="$(AndroidSdkBuildToolsVersion)"
 			AndroidSdkPath="$(AndroidSdkDirectory)"
@@ -177,14 +177,9 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
 			ReferenceAssemblyPaths="$(_XATargetFrameworkDirectories)"
 			TargetFrameworkVersion="$(TargetFrameworkVersion)"
 			SequencePointsMode="$(AndroidSequencePointsMode)"
-			UseLatestAndroidPlatformSdk="$(AndroidUseLatestPlatformSdk)">
-	</ResolveSdks>
-</Target>
-
-<Target Name="_SetLatestTargetFrameworkVersion" DependsOnTargets="_BuildSdkCache">
-	<ReadResolvedSdksCache
-			CacheFile="$(_AndroidSdksCache)">
-		<Output TaskParameter="AndroidApiLevel"           PropertyName="_AndroidApiLevel" />
+			UseLatestAndroidPlatformSdk="$(AndroidUseLatestPlatformSdk)"
+	>
+		<Output TaskParameter="AndroidApiLevel"           PropertyName="_AndroidApiLevel"           Condition="'$(_AndroidApiLevel)' == ''" />
 		<Output TaskParameter="AndroidApiLevelName"       PropertyName="_AndroidApiLevelName" />
 		<Output TaskParameter="TargetFrameworkVersion"    PropertyName="_TargetFrameworkVersion" />
 		<Output TaskParameter="TargetFrameworkVersion"    PropertyName="TargetFrameworkVersion" />
@@ -195,7 +190,7 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
 		<Output TaskParameter="MonoAndroidToolsPath"      PropertyName="MonoAndroidToolsDirectory"  Condition="'$(MonoAndroidToolsDirectory)' == ''" />
 		<Output TaskParameter="MonoAndroidBinPath"        PropertyName="MonoAndroidBinDirectory"    Condition="'$(MonoAndroidBinDirectory)' == ''" />
 		<Output TaskParameter="AndroidSdkBuildToolsBinPath" PropertyName="AndroidSdkBuildToolsBinPath" Condition="'$(AndroidSdkBuildToolsBinPath)' == ''" />
-	</ReadResolvedSdksCache>
+	</ResolveSdks>
     <CreateProperty Value="$(TargetFrameworkIdentifier),Version=$(TargetFrameworkVersion),Profile=$(TargetFrameworkProfile)">
       <Output TaskParameter="Value" PropertyName="TargetFrameworkMoniker"
           Condition="'$(TargetFrameworkProfile)' != ''"
@@ -284,7 +279,13 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
       <DesignTimeBuild Condition=" '$(DesignTimeBuild)' == '' ">false</DesignTimeBuild>
     </PropertyGroup>
   </Target>
-
+  
+  <Target Name="_SetupDesignTimeBuildForCompile">
+    <PropertyGroup>
+      <DesignTimeBuild Condition=" '$(DesignTimeBuild)' == '' ">true</DesignTimeBuild>
+    </PropertyGroup>
+  </Target>
+  
   <Target Name="_BuildAdditionalResourcesCache"
     Inputs="@(ReferencePath);@(ReferenceDependencyPaths)"
     Outputs="$(_AndroidResourcePathsCache)"
@@ -294,7 +295,7 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
       AndroidNdkDirectory="$(_AndroidNdkDirectory)"
       Assemblies="@(ReferencePath);@(ReferenceDependencyPaths)"
       CacheFile="$(IntermediateOutputPath)resourcepaths.cache"
-      Condition=" '$(DesignTimeBuild)' != 'true' "
+      Condition=" '$(DesignTimeBuild)' == 'false' Or '$(DesignTimeBuild)' == '' "
     />
   </Target>
 
@@ -564,7 +565,6 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
   <Target Name="CleanLibraryProjectIntermediaries">
     <Delete Files="$(IntermediateOutputPath)__AndroidLibraryProjects__.zip" />
     <Delete Files="$(_AndroidResourcePathsCache)" />
-    <Delete Files="$(_AndroidSdksCache)" />
     <Delete Files="$(_AndroidLibraryImportsCache)" />
     <Delete Files="$(_AndroidLibraryProjectImportsCache)" />
     <RemoveDirFixed Directories="$(IntermediateOutputPath)library_project_jars" Condition="Exists ('$(IntermediateOutputPath)library_project_jars')" />

@@ -63,7 +63,7 @@
   </Target>
   <Target Name="_GenerateBinding"
       BeforeTargets="CoreCompile"
-      Inputs="$(IntermediateOutputPath)mcw\api.xml"
+      Inputs="metadata;enumflags;map.csv;methodmap.csv;$(IntermediateOutputPath)mcw\api.xml"
       Outputs="$(IntermediateOutputPath)mcw\Mono.Android.projitems">
     <MakeDir Directories="$(IntermediateOutputPath)mcw" />
     <PropertyGroup>

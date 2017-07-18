@@ -30,3 +30,14 @@ MSBuild /t:Clean.
 It had existed as such, and it's not part of the build, no need to be
 built on Windows so far.
 
+
+## How do you get the docs archive for the preview APIs?
+
+Google publishes the docs SDK component only against the stable API,
+which means that preview API types are not included.
+That makes our parameter names retrieval impossible for the preview API.
+
+To workaround the issue, we create corresponding API docs zip archive
+from developer.android.com using the following tool:
+https://github.com/xamarin/components/tree/master/AndroidDocUtil
+

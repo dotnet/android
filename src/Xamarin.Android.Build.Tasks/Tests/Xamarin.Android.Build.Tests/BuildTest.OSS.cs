@@ -72,6 +72,73 @@ namespace Xamarin.Android.Build.Tests
 			//new Object [] { true, true },
 		};
 
+		static object [] RuntimeChecks = new object [] {
+			new object[] {
+				/* supportedAbi */     new string[] { "armeabi-v7a"},
+				/* debugSymbols */     true ,
+				/* debugType */        "Full",
+				/* optimize */         true ,
+				/* embedassebmlies */  true ,
+				/* expectedResult */   "release",
+			},
+			new object[] {
+				/* supportedAbi */     new string[] { "armeabi-v7a"},
+				/* debugSymbols */     true ,
+				/* debugType */        "Full",
+				/* optimize */         false ,
+				/* embedassebmlies */  true ,
+				/* expectedResult */   "debug",
+			},
+			new object[] {
+				/* supportedAbi */     new string[] { "armeabi-v7a"},
+				/* debugSymbols */     true ,
+				/* debugType */        "Full",
+				/* optimize */         false ,
+				/* embedassebmlies */  false ,
+				/* expectedResult */   "debug",
+			},
+			new object[] {
+				/* supportedAbi */     new string[] { "armeabi-v7a"},
+				/* debugSymbols */     true ,
+				/* debugType */        "",
+				/* optimize */         true ,
+				/* embedassebmlies */  true ,
+				/* expectedResult */   "debug",
+			},
+			new object[] {
+				/* supportedAbi */     new string[] { "armeabi-v7a"},
+				/* debugSymbols */     true ,
+				/* debugType */        "",
+				/* optimize */         true ,
+				/* embedassebmlies */  false ,
+				/* expectedResult */   "debug",
+			},
+			new object[] {
+				/* supportedAbi */     new string[] { "armeabi-v7a"},
+				/* debugSymbols */     true ,
+				/* debugType */        "",
+				/* optimize */         false ,
+				/* embedassebmlies */  true ,
+				/* expectedResult */   "debug",
+			},
+			new object[] {
+				/* supportedAbi */     new string[] { "armeabi-v7a"},
+				/* debugSymbols */     true ,
+				/* debugType */        "",
+				/* optimize */         false ,
+				/* embedassebmlies */  false ,
+				/* expectedResult */   "debug",
+			},
+			new object[] {
+				/* supportedAbi */     new string[] { "armeabi-v7a"},
+				/* debugSymbols */     false ,
+				/* debugType */        "",
+				/* optimize */         null ,
+				/* embedassebmlies */  null ,
+				/* expectedResult */   "release",
+			},
+		};
+
 		static object [] SequencePointChecks = new object [] {
 			new object[] {
 				/* isRelease */          false,

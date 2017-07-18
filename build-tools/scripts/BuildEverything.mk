@@ -19,11 +19,11 @@ ZIP_OUTPUT            = $(ZIP_OUTPUT_BASENAME).zip
 # $(ALL_API_LEVELS) and $(ALL_FRAMEWORKS) must be kept in sync w/ each other
 ALL_API_LEVELS    = 1 2 3 4 5 6 7 8 9 10    11  12  13  14  15      16    17    18    19    20        21    22    23    24    25    26
 # this was different from ALL_API_LEVELS when API Level 26 was "O". Same could happen in the future.
-ALL_PLATFORM_IDS  = 1 2 3 4 5 6 7 8 9 10    11  12  13  14  15      16    17    18    19    20        21    22    23    24    25    O
+ALL_PLATFORM_IDS  = 1 2 3 4 5 6 7 8 9 10    11  12  13  14  15      16    17    18    19    20        21    22    23    24    25    26
 # supported api levels
-ALL_FRAMEWORKS    = _ _ _ _ _ _ _ _ _ v2.3  _   _   _   _   v4.0.3  v4.1  v4.2  v4.3  v4.4  v4.4.87   v5.0  v5.1  v6.0  v7.0  v7.1  v7.99.0
+ALL_FRAMEWORKS    = _ _ _ _ _ _ _ _ _ v2.3  _   _   _   _   v4.0.3  v4.1  v4.2  v4.3  v4.4  v4.4.87   v5.0  v5.1  v6.0  v7.0  v7.1  v8.0
 API_LEVELS        =                   10                    15      16    17    18    19    20        21    22    23    24    25    26
-STABLE_API_LEVELS =                   10                    15      16    17    18    19    20        21    22    23    24
+STABLE_API_LEVELS =                   10                    15      16    17    18    19    20        21    22    23    24    25
 
 ## The preceding values *must* use SPACE, **not** TAB, to separate values.
 
@@ -156,6 +156,16 @@ package-oss $(ZIP_OUTPUT):
 	if [ -d bin/Release/bin ] ; then cp tools/scripts/xabuild bin/Release/bin ; fi
 	if [ ! -d $(ZIP_OUTPUT_BASENAME) ] ; then mkdir $(ZIP_OUTPUT_BASENAME) ; fi
 	if [ ! -L $(ZIP_OUTPUT_BASENAME)/bin ] ; then ln -s ../bin $(ZIP_OUTPUT_BASENAME) ; fi
+	_exclude_list=".__exclude_list.txt"; \
+	ls -1d $(_BUNDLE_ZIPS_EXCLUDE) > "$$_exclude_list" 2>/dev/null ; \
+	for c in $(CONFIGURATIONS) ; do \
+		_sl="$(ZIP_OUTPUT_BASENAME)/bin/$$c/lib/xbuild/.__sys_links.txt"; \
+		if [ ! -f "$$_sl" ]; then continue; fi; \
+		for f in `cat $$_sl` ; do \
+			echo "$(ZIP_OUTPUT_BASENAME)/bin/$$c/lib/xbuild/$$f" >> "$$_exclude_list"; \
+		done; \
+	done; \
 	zip -r "$(ZIP_OUTPUT)" \
 		`ls -1d $(_BUNDLE_ZIPS_INCLUDE) 2>/dev/null` \
-		--exclude `ls -1d $(_BUNDLE_ZIPS_EXCLUDE) 2>/dev/null`
+		"-x@$$_exclude_list"
+	-rm ".__exclude_list.txt"

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Threading;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
@@ -68,14 +69,79 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 				Arguments               = arguments,
 				UseShellExecute         = false,
 				CreateNoWindow          = true,
+				RedirectStandardOutput  = true,
+				RedirectStandardError   = true,
 				WindowStyle             = ProcessWindowStyle.Hidden,
 			};
+
 			Log.LogMessage (MessageImportance.Low, $"Environment variables being passed to the tool:");
 			var p = new Process () {
 				StartInfo = psi,
 			};
+
+			var sawError        = new AutoResetEvent (false);
+
+			DataReceivedEventHandler output = null;
+			output = (o, e) => {
+				Log.LogMessage (MessageImportance.Low, $"[emulator stdout] {e.Data}");
+				if (string.IsNullOrWhiteSpace (e.Data))
+					return;
+				if (e.Data.StartsWith ("Hax ram_size", StringComparison.Ordinal) &&
+						e.Data.EndsWith (" 0x0", StringComparison.Ordinal)) {
+					Log.LogError ("Emulator failed to start: ram_size is 0MB! Please re-install HAXM.");
+					sawError.Set ();
+				}
+			};
+			DataReceivedEventHandler error = null;
+			error = (o, e) => {
+				Log.LogMessage (MessageImportance.Low, $"[emulator stderr] {e.Data}");
+				if (string.IsNullOrWhiteSpace (e.Data))
+					return;
+				if (e.Data.StartsWith ("Failed to sync", StringComparison.Ordinal) ||
+						e.Data.Contains ("Internal error")) {
+					Log.LogError ($"Emulator failed to start: {e.Data}");
+					Log.LogError ($"Do you have another VM running on the machine? If so, please try exiting the VM and try again.");
+					sawError.Set ();
+				}
+			};
+
+			p.OutputDataReceived  += output;
+			p.ErrorDataReceived   += error;
+
 			p.Start ();
+			p.BeginOutputReadLine ();
+			p.BeginErrorReadLine ();
+
+			const int Timeout = 20*1000;
+			int i = WaitHandle.WaitAny (new[]{sawError}, millisecondsTimeout: Timeout);
+			if (i == 0 || Log.HasLoggedErrors) {
+				p.Kill ();
+				return;
+			}
+
+			p.CancelOutputRead ();
+			p.CancelErrorRead ();
+
+			p.OutputDataReceived  -= output;
+			p.ErrorDataReceived   -= error;
+
+			p.OutputDataReceived  += WriteProcessOutputMessage;
+			p.ErrorDataReceived   += WriteProcessErrorMessage;
+
+			p.BeginOutputReadLine ();
+			p.BeginErrorReadLine ();
+
 			EmulatorProcessId = p.Id;
+		}
+
+		static void WriteProcessOutputMessage (object sender, DataReceivedEventArgs e)
+		{
+			Console.WriteLine (e.Data);
+		}
+
+		static void WriteProcessErrorMessage (object sender, DataReceivedEventArgs e)
+		{
+			Console.Error.WriteLine (e.Data);
 		}
 	}
 }

@@ -179,6 +179,11 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugTaskItems ("  LibraryDirectories:", LibraryDirectories);
 			Log.LogDebugTaskItems ("  LibraryJars:", LibraryJars);
 
+			if (string.IsNullOrEmpty (ToolPath) || !File.Exists (GenerateFullPathToTool ())) {
+				Log.LogCodedError ("XA5205", $"Cannot find `{ToolName}` in the Android SDK. Please set its path via /p:LintToolPath.");
+				return false;
+			}
+
 			base.Execute ();
 
 			return !Log.HasLoggedErrors;

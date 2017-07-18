@@ -167,9 +167,11 @@ namespace Xamarin.Android.Tasks
 				.Select (s => s.Trim ())
 				.Where (s => !string.IsNullOrWhiteSpace (s));
 
+			var enclosingChar = OS.IsWindows ? "\"" : string.Empty;
+
 			foreach (var file in configs) {
 				if (File.Exists (file))
-					cmd.AppendSwitchIfNotNull ("-include ", file);
+					cmd.AppendSwitchUnquotedIfNotNull ("-include ", $"{enclosingChar}'{file}'{enclosingChar}");
 				else
 					Log.LogWarning ("Proguard configuration file '{0}' was not found.", file);
 			}
@@ -179,14 +181,11 @@ namespace Xamarin.Android.Tasks
 				foreach (var jarfile in ExternalJavaLibraries.Select (p => p.ItemSpec))
 					libjars.Add (jarfile);
 
-			cmd.AppendSwitch ("\"-injars");
-			cmd.AppendSwitch (string.Join (Path.PathSeparator.ToString (), injars.Distinct ().Select (s => '\'' + s + '\''))+"\"");
+			cmd.AppendSwitchUnquotedIfNotNull ("-injars ", $"{enclosingChar}'" + string.Join ($"'{Path.PathSeparator}'", injars.Distinct ()) + $"'{enclosingChar}");
+
+			cmd.AppendSwitchUnquotedIfNotNull ("-libraryjars ", $"{enclosingChar}'" + string.Join ($"'{Path.PathSeparator}'", libjars.Distinct ()) + $"'{enclosingChar}");
 			
-			cmd.AppendSwitch ("\"-libraryjars");
-			cmd.AppendSwitch (string.Join (Path.PathSeparator.ToString (), libjars.Distinct ().Select (s => '\'' + s + '\''))+"\"");
-			
-			cmd.AppendSwitch ("-outjars");
-			cmd.AppendSwitch ('"' + ProguardJarOutput + '"');
+			cmd.AppendSwitchIfNotNull ("-outjars ", ProguardJarOutput);
 
 			if (EnableLogging) {
 				cmd.AppendSwitchIfNotNull ("-dump ", DumpOutput);

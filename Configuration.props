@@ -14,8 +14,8 @@
   <PropertyGroup>
     <ProductVersion>7.4.99</ProductVersion>
     <!-- *Latest* API level binding that we support; used when building src/Xamarin.Android.Build.Tasks -->
-    <AndroidLatestApiLevel>25</AndroidLatestApiLevel>
-    <AndroidLatestFrameworkVersion>v7.1</AndroidLatestFrameworkVersion>
+    <AndroidLatestApiLevel Condition="'$(AndroidLatestApiLevel)' == ''">25</AndroidLatestApiLevel>
+    <AndroidLatestFrameworkVersion Condition="'$(AndroidLatestFrameworkVersion)' == ''">v7.1</AndroidLatestFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup>
     <AutoProvision Condition=" '$(AutoProvision)' == '' ">False</AutoProvision>
@@ -63,8 +63,8 @@
     <AllSupported32BitTargetAndroidAbis>armeabi;armeabi-v7a;x86</AllSupported32BitTargetAndroidAbis>
     <AllSupported64BitTargetAndroidAbis>arm64-v8a;x86_64</AllSupported64BitTargetAndroidAbis>
     <AllSupportedTargetAndroidAbis>$(AllSupported32BitTargetAndroidAbis);$(AllSupported64BitTargetAndroidAbis)</AllSupportedTargetAndroidAbis>
-    <XABuildToolsVersion>26-rc1</XABuildToolsVersion>
-    <XABuildToolsFolder Condition="'$(XABuildToolsFolder)' == ''">26.0.0-rc1</XABuildToolsFolder>
+    <XABuildToolsVersion>26-rc2</XABuildToolsVersion>
+    <XABuildToolsFolder Condition="'$(XABuildToolsFolder)' == ''">26.0.0-rc2</XABuildToolsFolder>
   </PropertyGroup>
   <PropertyGroup>
     <_MingwPrefixTail Condition=" '$(HostOS)' == 'Darwin' ">.static</_MingwPrefixTail>

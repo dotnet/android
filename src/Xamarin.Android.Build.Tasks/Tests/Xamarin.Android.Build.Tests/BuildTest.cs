@@ -51,6 +51,29 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void FSharpAppHasAndroidDefine ()
+		{
+			var proj = new XamarinAndroidApplicationProject () {
+				Language  = XamarinAndroidProjectLanguage.FSharp,
+			};
+			proj.Sources.Add (new BuildItem ("Compile", "IsAndroidDefined.fs") {
+				TextContent = () => @"
+module Xamarin.Android.Tests
+// conditional compilation; can we elicit a compile-time error?
+let x =
+#if __ANDROID__
+  42
+#endif  // __ANDROID__
+
+printf ""%d"" x
+",
+			});
+			using (var b = CreateApkBuilder ("temp/" + nameof (FSharpAppHasAndroidDefine))) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+			}
+		}
+
+		[Test]
 		public void BuildApplicationAndClean ([Values (false, true)] bool isRelease)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
@@ -272,7 +295,7 @@ namespace Xamarin.Android.Build.Tests
 		public void BuildProguardEnabledProject (bool isRelease, bool enableProguard, bool useLatestSdk)
 		{
 			var proj = new XamarinAndroidApplicationProject () { IsRelease = isRelease, EnableProguard = enableProguard, UseLatestPlatformSdk = useLatestSdk, TargetFrameworkVersion = useLatestSdk ? "v7.1" : "v5.0" };
-			using (var b = CreateApkBuilder ("temp/BuildProguardEnabledProject")) {
+			using (var b = CreateApkBuilder ("temp/BuildProguard Enabled Project(1)")) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 			}
 		}
@@ -473,6 +496,70 @@ namespace UnnamedProject {
 					File.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android/assets/UnnamedProject.dll.mdb")) ||
 					File.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android/assets/UnnamedProject.pdb")),
 					"UnnamedProject.dll.mdb must be copied to the Intermediate directory");
+			}
+		}
+
+		[Test]
+		public void BuildAppCheckDebugSymbols ()
+		{
+			var path = Path.Combine ("temp", TestContext.CurrentContext.Test.Name);
+			var lib = new XamarinAndroidLibraryProject () {
+				IsRelease = false,
+				ProjectName = "Library1",
+				Sources = {
+					new BuildItem.Source ("Class1.cs") {
+						TextContent = () => @"using System;
+namespace Library1 {
+	public class Class1 : Java.Lang.Object, global::Android.Views.View.IOnClickListener {
+		void global::Android.Views.View.IOnClickListener.OnClick(global::Android.Views.View v)
+		{
+		}
+	}
+}
+",
+					},
+				},
+			};
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = false,
+				ProjectName = "App1",
+				References = { new BuildItem ("ProjectReference", "..\\Library1\\Library1.csproj") },
+				Sources = {
+					new BuildItem.Source ("Class2.cs") {
+						TextContent= () => @"
+using System;
+namespace App1
+{
+	public class Class2
+	{
+		Library1.Class1 c;
+		public Class2 ()
+		{
+		}
+	}
+}"
+					},
+				},
+			};
+			proj.SetProperty (KnownProperties.AndroidLinkMode, AndroidLinkMode.None.ToString ());
+			using (var libb = CreateDllBuilder (Path.Combine (path, "Library1"))) {
+				Assert.IsTrue (libb.Build (lib), "Library1 Build should have succeeded.");
+				using (var b = CreateApkBuilder (Path.Combine (path, "App1"))) {
+					Assert.IsTrue (b.Build (proj), "App1 Build should have succeeded.");
+					var assetsPdb = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "assets", "Library1.pdb");
+					var linkDst = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "linkdst", "Library1.pdb");
+					var linkSrc = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "linksrc", "Library1.pdb");
+					Assert.IsTrue (
+						File.Exists (assetsPdb),
+						"Library1.pdb must be copied to Intermediate directory");
+					Assert.IsTrue (
+						File.Exists (linkDst),
+						"Library1.pdb must be copied to linkdst directory");
+					Assert.IsTrue (
+						File.Exists (linkSrc),
+						"Library1.pdb must be copied to linksrc directory");
+					FileAssert.AreEqual (linkDst, assetsPdb, $"Library1.pdb in {assetsPdb} should match {linkDst}");
+				}
 			}
 		}
 
@@ -902,32 +989,25 @@ namespace UnnamedProject {
 			}
 		}
 
-#pragma warning disable 414
-		static object [] RuntimeChecks = new object [] {
-			new object[] {
-				/* supportedAbi */     new string[] { "armeabi-v7a"},
-				/* optimize */         true ,
-				/* expectedResult */   "release",
-			},
-			new object[] {
-				/* supportedAbi */     new string[] { "armeabi-v7a"},
-				/* optimize */         false ,
-				/* expectedResult */   "debug",
-			},
-		};
-#pragma warning restore 414
-
 		[Test]
 		[TestCaseSource ("RuntimeChecks")]
-		public void CheckWhichRuntimeIsIncluded (string [] supportedAbi, bool optimize, string expectedRuntime)
-		{
+		public void CheckWhichRuntimeIsIncluded (string[] supportedAbi, bool debugSymbols, string debugType, bool? optimize, bool? embedassebmlies, string expectedRuntime) {
 			var proj = new XamarinAndroidApplicationProject ();
-			proj.SetProperty (proj.ActiveConfigurationProperties, "Optimize", optimize);
+			proj.SetProperty (proj.ActiveConfigurationProperties, "DebugSymbols", debugSymbols);
+			proj.SetProperty (proj.ActiveConfigurationProperties, "DebugType", debugType);
+			if (optimize.HasValue)
+				proj.SetProperty (proj.ActiveConfigurationProperties, "Optimize", optimize.Value);
+			else
+				proj.RemoveProperty (proj.ActiveConfigurationProperties, "Optimize");
+			if (embedassebmlies.HasValue)
+				proj.SetProperty (proj.ActiveConfigurationProperties, "EmbedAssembliesIntoApk", embedassebmlies.Value);
+			else
+				proj.RemoveProperty (proj.ActiveConfigurationProperties, "EmbedAssembliesIntoApk");
 			using (var b = CreateApkBuilder (Path.Combine ("temp", "CheckWhichRuntimeIsIncluded"))) {
 				var runtimeInfo = b.GetSupportedRuntimes ();
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				var apkPath = Path.Combine (Root, b.ProjectDirectory,
-					proj.IntermediateOutputPath, "android", "bin", "UnnamedProject.UnnamedProject.apk");
+					proj.IntermediateOutputPath,"android", "bin", "UnnamedProject.UnnamedProject.apk");
 				using (var apk = ZipHelper.OpenZip (apkPath)) {
 					foreach (var abi in supportedAbi) {
 						var runtime = runtimeInfo.FirstOrDefault (x => x.Abi == abi && x.Runtime == expectedRuntime);
@@ -937,7 +1017,7 @@ namespace UnnamedProject {
 						Assert.IsNotNull (inApkRuntime, "Could not find the actual runtime used.");
 						Assert.AreEqual (runtime.Size, inApkRuntime.Size, "expected {0} got {1}", expectedRuntime, inApkRuntime.Runtime);
 						inApk = ZipHelper.ReadFileFromZip (apk, string.Format ("lib/{0}/libmono-profiler-log.so", abi));
-						if (!optimize) {
+						if (string.Compare (expectedRuntime, "debug", StringComparison.OrdinalIgnoreCase) == 0) {
 							Assert.IsNotNull (inApk, "libmono-profiler-log.so should exist in the apk.");
 						} else {
 							Assert.IsNull (inApk, "libmono-profiler-log.so should not exist in the apk.");

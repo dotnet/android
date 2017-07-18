@@ -6,6 +6,8 @@
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.RunInstrumentationTests" />
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.StartAndroidEmulator" />
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.KillProcess" />
+  <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.Sleep" />
+  <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.ProcessLogcatTiming" />
 
   <PropertyGroup>
     <_TestImageName>XamarinAndroidUnitTestRunner</_TestImageName>
@@ -41,19 +43,27 @@
       <Output TaskParameter="AdbTarget" PropertyName="_EmuTarget" />
       <Output TaskParameter="EmulatorProcessId" PropertyName="_EmuPid" />
     </StartAndroidEmulator>
-    <Exec
-        Condition=" '$(_ValidAdbTarget)' != 'True' "
-        Command="sleep 10"
-    />
     <Xamarin.Android.Tools.BootstrapTasks.Adb
+        EnvironmentVariables="ADB_TRACE=all"
         Condition=" '$(_ValidAdbTarget)' != 'True' "
         Arguments="$(_AdbTarget) wait-for-device"
         ToolExe="$(AdbToolExe)"
         ToolPath="$(AdbToolPath)"
     />
     <Xamarin.Android.Tools.BootstrapTasks.Adb
+        EnvironmentVariables="ADB_TRACE=all"
         Condition=" '$(_ValidAdbTarget)' != 'True' "
         Arguments="$(_EmuTarget) shell 'counter=0; while [ $counter -lt 60 ] &amp;&amp; [ &quot;`getprop sys.boot_completed`&quot; != &quot;1&quot; ]; do echo Waiting for device to fully boot; sleep 1; let &quot;counter++&quot;; done'"
+        ToolExe="$(AdbToolExe)"
+        ToolPath="$(AdbToolPath)"
+	/>
+    <Xamarin.Android.Tools.BootstrapTasks.Adb
+        Arguments="$(_AdbTarget) shell setprop debug.mono.log timing"
+        ToolExe="$(AdbToolExe)"
+        ToolPath="$(AdbToolPath)"
+    />
+    <Xamarin.Android.Tools.BootstrapTasks.Adb
+        Arguments="$(_AdbTarget) logcat -G 4M"
         ToolExe="$(AdbToolExe)"
         ToolPath="$(AdbToolPath)"
     />
@@ -135,5 +145,7 @@
         ToolPath="$(AdbToolPath)">
       <Output TaskParameter="FailedToRun" ItemName="_FailedComponent"/>
     </RunInstrumentationTests>
+    <Exec Command="&quot;$(AdbToolPath)\$(AdbToolExe)&quot; $(_AdbTarget) $(AdbOptions) logcat -v threadtime -d > test-logcat.txt" />
+    <ProcessLogcatTiming LogcatFilename="test-logcat.txt" ApplicationPackageName="%(UnitTestApk.Package)" ResultsFilename="%(UnitTestApk.ResultsPath)" />
   </Target>
 </Project>

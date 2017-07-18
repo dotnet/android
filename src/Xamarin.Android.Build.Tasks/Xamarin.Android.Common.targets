@@ -178,6 +178,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<MonoAndroidVersion>v$(_XAMajorVersionNumber).0</MonoAndroidVersion>
 	<AndroidUpdateResourceReferences Condition="'$(AndroidUpdateResourceReferences)' == ''">True</AndroidUpdateResourceReferences>
 	<EmbedAssembliesIntoApk Condition=" '$(EmbedAssembliesIntoApk)' == '' Or '$(_XASupportsFastDev)' == 'False' ">True</EmbedAssembliesIntoApk>
+	<AndroidPreferNativeLibrariesWithDebugSymbols Condition=" '$(AndroidPreferNativeLibrariesWithDebugSymbols)' == '' ">False</AndroidPreferNativeLibrariesWithDebugSymbols>
 	<AndroidSkipJavacVersionCheck Condition="'$(AndroidSkipJavacVersionCheck)' == ''">False</AndroidSkipJavacVersionCheck>
 	<AndroidBuildApplicationPackage Condition=" '$(AndroidBuildApplicationPackage)' == ''">False</AndroidBuildApplicationPackage>
 
@@ -188,7 +189,9 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<AndroidUseSharedRuntime Condition=" '$(AndroidUseSharedRuntime)' == '' Or '$(_XASupportsFastDev)' == 'False' ">False</AndroidUseSharedRuntime>
 
 	<AndroidExplicitCrunch Condition=" '$(AndroidExplicitCrunch)' == '' ">False</AndroidExplicitCrunch>
-	<AndroidUseDebugRuntime Condition="'$(AndroidUseDebugRuntime)' == '' And '$(Optimize)' == 'True'" >False</AndroidUseDebugRuntime>
+	<AndroidUseDebugRuntime
+			Condition="'$(AndroidUseDebugRuntime)' == '' And '$(EmbedAssembliesIntoApk)' == 'True' And '$(Optimize)' == 'True' "
+	>False</AndroidUseDebugRuntime>
 	<AndroidUseDebugRuntime Condition="'$(AndroidUseDebugRuntime)' == ''" >True</AndroidUseDebugRuntime>
 
 	<MonoSymbolArchive Condition=" '$(MonoSymbolArchive)' == '' And '$(AndroidUseSharedRuntime)' == 'False' And '$(EmbedAssembliesIntoApk)' == 'True' And '$(DebugSymbols)' == 'True' And '$(Optimize)' == 'True'" >True</MonoSymbolArchive>  
@@ -265,7 +268,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 </PropertyGroup>
 
 <Choose>
-	<When Condition=" '$(DebugSymbols)' != '' And $(DebugSymbols) And '$(DebugType)' != '' And '$(Optimize)' != 'True' ">
+	<When Condition=" '$(DebugSymbols)' == 'True' And '$(DebugType)' != '' And ('$(EmbedAssembliesIntoApk)' == 'False' Or '$(Optimize)' != 'True') ">
 		<PropertyGroup>
 			<AndroidIncludeDebugSymbols>True</AndroidIncludeDebugSymbols>
 		</PropertyGroup>
@@ -364,6 +367,12 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <Target Name="_SetupDesignTimeBuildForBuild">
 	<PropertyGroup>
 		<DesignTimeBuild Condition=" '$(DesignTimeBuild)' == '' ">false</DesignTimeBuild>
+	</PropertyGroup>
+</Target>
+  
+<Target Name="_SetupDesignTimeBuildForCompile">
+	<PropertyGroup>
+		<DesignTimeBuild Condition=" '$(DesignTimeBuild)' == '' ">true</DesignTimeBuild>
 	</PropertyGroup>
 </Target>
 
@@ -476,6 +485,13 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
     $(BuildDependsOn);
   </BuildDependsOn>
 </PropertyGroup>
+  
+ <PropertyGroup>
+   <CompileDependsOn>
+     _SetupDesignTimeBuildForCompile;
+     $(CompileDependsOn);
+   </CompileDependsOn>
+ </PropertyGroup>
 
 <PropertyGroup>
     <!-- no need to add those wear resources into C#, hence this order... -->
@@ -588,6 +604,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 			ReferenceAssemblyPaths="$(_XATargetFrameworkDirectories)"
 			TargetFrameworkVersion="$(TargetFrameworkVersion)"
 			UseLatestAndroidPlatformSdk="$(AndroidUseLatestPlatformSdk)"
+			LintToolPath="$(LintToolPath)"
 			ZipAlignPath="$(ZipAlignToolPath)">
 		<Output TaskParameter="AndroidApiLevel"           PropertyName="_AndroidApiLevel"           Condition="'$(_AndroidApiLevel)' == ''" />
 		<Output TaskParameter="AndroidApiLevelName"       PropertyName="_AndroidApiLevelName" />
@@ -605,6 +622,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 		<Output TaskParameter="ZipAlignPath"              PropertyName="ZipAlignToolPath"           Condition="'$(ZipAlignToolPath)' == ''" />
 		<Output TaskParameter="AndroidSdkBuildToolsBinPath" PropertyName="AndroidSdkBuildToolsBinPath" Condition="'$(AndroidSdkBuildToolsBinPath)' == ''" />
 		<Output TaskParameter="AndroidSequencePointsMode"   PropertyName="_SequencePointsMode"         Condition="'$(_SequencePointsMode)' == ''" />
+		<Output TaskParameter="LintToolPath"              PropertyName="LintToolPath"               Condition="'$(LintToolPath)' == ''" />
 	</ResolveSdks>
 	<CreateProperty Value="$(TargetFrameworkIdentifier),Version=$(_TargetFrameworkVersion),Profile=$(TargetFrameworkProfile)">
 		<Output TaskParameter="Value" PropertyName="TargetFrameworkMoniker"
@@ -750,12 +768,6 @@ because xbuild doesn't support framework reference assemblies.
 		/>
 	</CreateProperty>
 
-	<CreateProperty Value="$(_AndroidToolsDirectory)bin\" Condition="Exists ('$(_AndroidToolsDirectory)bin\')">
-		<Output TaskParameter="Value" PropertyName="LintToolPath"
-				Condition="'$(LintToolPath)' == ''"
-		/>
-	</CreateProperty>
-
 	<CreateProperty Value="$(_AndroidToolsDirectory)" Condition="Exists ('$(_AndroidToolsDirectory)')">
 		<Output TaskParameter="Value" PropertyName="LintToolPath"
 				Condition="'$(LintToolPath)' == ''"
@@ -822,12 +834,12 @@ because xbuild doesn't support framework reference assemblies.
 
 	<!-- Get the defined constants for this API Level -->
 	<GetAndroidDefineConstants AndroidApiLevel="$(_SupportedApiLevel)" ProductVersion="$(MonoAndroidVersion)">
-		<Output TaskParameter="AndroidDefineConstants" PropertyName="AndroidDefineConstants" />
+		<Output TaskParameter="AndroidDefineConstants" ItemName="AndroidDefineConstants" />
 	</GetAndroidDefineConstants>
 
-	<CreateProperty Value="$(DefineConstants);$(AndroidDefineConstants)">
-		<Output TaskParameter="Value" PropertyName="DefineConstants" />
-	</CreateProperty>
+	<PropertyGroup>
+		<DefineConstants>$(DefineConstants);@(AndroidDefineConstants)</DefineConstants>
+	</PropertyGroup>
 </Target>
 
 <Target Name="AndroidPrepareForBuild" DependsOnTargets="$(_OnResolveMonoAndroidSdks)" />
@@ -1497,9 +1509,12 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_CollectMdbFiles"
 		Inputs="@(ResolvedAssemblies->'%(RootDir)%(Directory)%(Filename)%(Extension)')"
-		Outputs="@(ResolvedAssemblies->'%(RootDir)%(Directory)%(Filename)%(Extension).mdb')">
+		Outputs="@(ResolvedAssemblies->'%(RootDir)%(Directory)%(Filename)%(Extension).mdb')"
+		DependsOnTargets="_CollectPdbFiles">
 	<GetFilesThatExist
-			Files="@(ResolvedAssemblies->'%(RootDir)%(Directory)%(Filename)%(Extension).mdb')">
+			Files="@(ResolvedAssemblies->'%(RootDir)%(Directory)%(Filename)%(Extension).mdb')"
+			IgnoreFiles="@(_ResolvedPortablePdbFiles->'%(RootDir)%(Directory)%(Filename).dll.mdb')"
+	>
 		<Output TaskParameter="FilesThatExist" ItemName="_ResolvedMdbFiles" />
 	</GetFilesThatExist>
 </Target>
@@ -1554,7 +1569,6 @@ because xbuild doesn't support framework reference assemblies.
       LinkDescriptions="@(LinkDescription)"
       DumpDependencies="$(LinkerDumpDependencies)"
       LinkOnlyNewerThan="$(_AndroidLinkFlag)"
-      PortablePdbFiles="@(_ResolvedPortablePdbFiles)"
       ResolvedAssemblies="@(ResolvedAssemblies)" />
 
 	<!-- We don't have to depend on flag file for NoShrink, but it is used to check timestamp -->
@@ -1585,7 +1599,6 @@ because xbuild doesn't support framework reference assemblies.
       ProguardConfiguration="$(_ProguardProjectConfiguration)"
       EnableProguard="$(AndroidEnableProguard)"
       DumpDependencies="$(LinkerDumpDependencies)"
-      PortablePdbFiles="@(_ResolvedPortablePdbFiles->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)')"
       ResolvedAssemblies="@(ResolvedAssemblies->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)')"
       HttpClientHandlerType="$(AndroidHttpClientHandlerType)"
       TlsProvider="$(AndroidTlsProvider)" />
@@ -2148,6 +2161,7 @@ because xbuild doesn't support framework reference assemblies.
     CreatePackagePerAbi="$(AndroidCreatePackagePerAbi)"
     UseSharedRuntime="$(AndroidUseSharedRuntime)"
     Debug="$(AndroidIncludeDebugSymbols)"
+    PreferNativeLibrariesWithDebugSymbols="$(AndroidPreferNativeLibrariesWithDebugSymbols)"
     TypeMappings="$(_AndroidTypeMappingJavaToManaged);$(_AndroidTypeMappingManagedToJava)"
     AndroidAotMode="$(AndroidAotMode)"
     EnableLLVM="$(EnableLLVM)"

@@ -82,6 +82,9 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public string AndroidSequencePointsMode { get; set; }
 
+		[Output]
+		public string LintToolPath { get; set; }
+
 		public override bool Execute ()
 		{
 			MonoAndroidHelper.InitializeAndroidLogger (ErrorHandler, WarningHandler, InfoHandler, DebugHandler);
@@ -121,6 +124,7 @@ namespace Xamarin.Android.Tasks
 				.Select (e => e.Value)
 				.ToArray ();
 			AndroidSequencePointsMode = sdk.Element ("AndroidSequencePointsMode")?.Value ?? "None";
+			LintToolPath = sdk.Element ("LintToolPath")?.Value ?? Path.Combine (AndroidSdkPath, "tools");
 
 			Log.LogDebugMessage ("ResolveSdksTask Outputs:");
 			Log.LogDebugMessage ("  AndroidApiLevel: {0}", AndroidApiLevel);
@@ -137,6 +141,7 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ("  ZipAlignPath: {0}", ZipAlignPath);
 			Log.LogDebugMessage ("  SupportedApiLevel: {0}", SupportedApiLevel);
 			Log.LogDebugMessage ("  AndroidSequencePointsMode: {0}", AndroidSequencePointsMode);
+			Log.LogDebugMessage ("  LintToolPath: {0}", LintToolPath);
 
 			MonoAndroidHelper.TargetFrameworkDirectories	= ReferenceAssemblyPaths;
 

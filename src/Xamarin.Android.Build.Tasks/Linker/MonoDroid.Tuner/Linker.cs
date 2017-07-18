@@ -8,6 +8,7 @@ using Mono.Linker.Steps;
 using Mono.Cecil.Mdb;
 using Mono.Tuner;
 using Mono.Cecil;
+using Mono.Cecil.Cil;
 using MonoTouch.Tuner;
 
 namespace MonoDroid.Tuner
@@ -45,8 +46,8 @@ namespace MonoDroid.Tuner
 			context.LogInternalExceptions = Xamarin.Android.Tasks.MonoAndroidHelper.LogInternalExceptions;
 			context.CoreAction = AssemblyAction.Link;
 			context.LinkSymbols = true;
-			context.SymbolReaderProvider = new MdbReaderProvider ();
-			context.SymbolWriterProvider = new MdbWriterProvider ();
+			context.SymbolReaderProvider = new DefaultSymbolReaderProvider (true);
+			context.SymbolWriterProvider = new DefaultSymbolWriterProvider ();
 			context.OutputDirectory = options.OutputDirectory;
 			return context;
 		}

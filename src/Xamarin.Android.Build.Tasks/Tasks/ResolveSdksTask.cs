@@ -99,10 +99,14 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public string AndroidSequencePointsMode { get; set; }
 
+		[Output]
+		public string LintToolPath { get; set; }
+
 		static bool             IsWindows = Path.DirectorySeparatorChar == '\\';
 		static readonly string  ZipAlign  = IsWindows ? "zipalign.exe" : "zipalign";
 		static readonly string  Aapt      = IsWindows ? "aapt.exe" : "aapt";
 		static readonly string  Android   = IsWindows ? "android.bat" : "android";
+		static readonly string  Lint      = IsWindows ? "lint.bat" : "lint";
 
 
 		public override bool Execute ()
@@ -127,6 +131,7 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ("  SequencePointsMode: {0}", SequencePointsMode);
 			Log.LogDebugMessage ("  MonoAndroidToolsPath: {0}", MonoAndroidToolsPath);
 			Log.LogDebugMessage ("  MonoAndroidBinPath: {0}", MonoAndroidBinPath);
+			Log.LogDebugMessage ("  LintToolPath: {0}", LintToolPath);
 
 			MonoAndroidHelper.RefreshMonoDroidSdk (MonoAndroidToolsPath, MonoAndroidBinPath, ReferenceAssemblyPaths);
 			MonoAndroidHelper.RefreshAndroidSdk (AndroidSdkPath, AndroidNdkPath, JavaSdkPath);
@@ -160,6 +165,20 @@ namespace Xamarin.Android.Tasks
 
 			string toolsZipAlignPath = Path.Combine (AndroidSdkPath, "tools", ZipAlign);
 			bool findZipAlign = (string.IsNullOrEmpty (ZipAlignPath) || !Directory.Exists (ZipAlignPath)) && !File.Exists (toolsZipAlignPath);
+
+			var lintPaths = new string [] {
+				LintToolPath ?? string.Empty,
+				Path.Combine (AndroidSdkPath, "tools"),
+				Path.Combine (AndroidSdkPath, "tools", "bin"),
+			};
+
+			LintToolPath = null;
+			foreach ( var path in lintPaths) {
+				if (File.Exists (Path.Combine (path, Lint))) {
+					LintToolPath = path;
+					break;
+				}
+			}
 
 			foreach (var dir in AndroidSdk.GetBuildToolsPaths (AndroidSdkBuildToolsVersion)) {
 				Log.LogDebugMessage ("Trying build-tools path: {0}", dir);
@@ -261,6 +280,7 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ("  ZipAlignPath: {0}", ZipAlignPath);
 			Log.LogDebugMessage ("  SupportedApiLevel: {0}", SupportedApiLevel);
 			Log.LogDebugMessage ("  AndroidSequencePointMode: {0}", AndroidSequencePointsMode);
+			Log.LogDebugMessage ("  LintToolPath: {0}", LintToolPath);
 
 			if (!string.IsNullOrEmpty (CacheFile)) {
 				Directory.CreateDirectory (Path.GetDirectoryName (CacheFile));
@@ -284,7 +304,8 @@ namespace Xamarin.Android.Tasks
 						new XElement ("ZipAlignPath", ZipAlignPath),
 						new XElement ("MonoAndroidIncludePath", MonoAndroidIncludePath),
 						new XElement ("SupportedApiLevel", SupportedApiLevel),
-						new XElement ("AndroidSequencePointsMode", AndroidSequencePointsMode.ToString ())
+						new XElement ("AndroidSequencePointsMode", AndroidSequencePointsMode.ToString ()),
+						new XElement ("LintToolPath", LintToolPath)
 					));
 				document.Save (CacheFile);
 			}
@@ -315,6 +336,12 @@ namespace Xamarin.Android.Tasks
 			if (UseLatestAndroidPlatformSdk) {
 				AndroidApiLevel         = GetMaxInstalledApiLevel ().ToString ();
 				SupportedApiLevel       = GetMaxSupportedApiLevel (AndroidApiLevel);
+				int maxInstalled, maxSupported = 0;
+				if (int.TryParse (AndroidApiLevel, out maxInstalled) && int.TryParse (SupportedApiLevel, out maxSupported) && maxInstalled > maxSupported) {
+					Log.LogDebugMessage ($"API Level {AndroidApiLevel} is greater than the maximum supported API level of {SupportedApiLevel}. " +
+						"Support for this API will be added in a future release.");
+					AndroidApiLevel = SupportedApiLevel;
+				}
 				TargetFrameworkVersion  = GetTargetFrameworkVersionFromApiLevel ();
 				return TargetFrameworkVersion != null;
 			}
