@@ -42,12 +42,8 @@
       DependsOnTargets="AndroidPrepareForBuild"
       Inputs="java\JavaLib\project.properties"
       Outputs="$(OutputPath)JavaLib.zip">
-    <WriteLinesToFile
-        Overwrite="true"
-        File="java\JavaLib\local.properties"
-        Lines="sdk.dir=$(AndroidSdkDirectory)"
-    />
     <Exec
+        EnvironmentVariables="ANDROID_HOME=$(AndroidSdkDirectory)"
         Command=".\gradlew assembleDebug --stacktrace"
         WorkingDirectory="$(MSBuildThisFileDirectory)java\JavaLib"
     />
