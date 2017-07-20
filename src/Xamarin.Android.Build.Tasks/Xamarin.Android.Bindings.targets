@@ -61,7 +61,8 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
     <TargetFrameworkIdentifier>MonoAndroid</TargetFrameworkIdentifier>
     <MonoAndroidVersion>v5.0</MonoAndroidVersion>
     <TargetFrameworkVersion Condition="'$(TargetFrameworkVersion)' == '' And '$(AndroidUseLatestPlatformSdk)' == 'False'">v2.3</TargetFrameworkVersion>
-	<UseShortFileNames Condition="'$(UseShortFileNames)' != 'True'">False</UseShortFileNames>
+    <UseShortFileNames Condition="'$(UseShortFileNames)' == ''">True</UseShortFileNames>
+    <UseShortGeneratorFileNames Condition="'$(UseShortGeneratorFileNames)' == ''">False</UseShortGeneratorFileNames>
     <AndroidClassParser Condition=" '$(AndroidClassParser)' == '' ">jar2xml</AndroidClassParser>
   </PropertyGroup>
   
@@ -102,19 +103,18 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
     <ApiOutputFile Condition="'$(ApiOutputFile)' == ''">$(IntermediateOutputPath)api.xml</ApiOutputFile>
     <_GeneratorStampFile>$(IntermediateOutputPath)generator.stamp</_GeneratorStampFile>
     <AndroidSequencePointsMode Condition=" '$(AndroidSequencePointsMode)' == ''">None</AndroidSequencePointsMode>
-    <!--
-    <_LibraryProjectImportsDirectoryName Condition="$(UseShortFileNames)">jlibs</_LibraryProjectImportsDirectoryName>
-    <_LibraryProjectImportsDirectoryName Condition="!$(UseShortFileNames)">library_project_imports</_LibraryProjectImportsDirectoryName>
-    <_NativeLibraryImportsDirectoryName Condition="$(UseShortFileNames)">libs</_NativeLibraryImportsDirectoryName>
-    <_NativeLibraryImportsDirectoryName Condition="!$(UseShortFileNames)">native_library_imports</_NativeLibraryImportsDirectoryName>
-    -->
-    <_LibraryProjectImportsDirectoryName>library_project_imports</_LibraryProjectImportsDirectoryName>
-	<_NativeLibraryImportsDirectoryName>native_library_imports</_NativeLibraryImportsDirectoryName>
+	<_LibraryProjectImportsDirectoryName Condition=" '$(_LibraryProjectImportsDirectoryName)'=='' And '$(UseShortFileNames)' == 'True' ">jl</_LibraryProjectImportsDirectoryName>
+	<_NativeLibraryImportsDirectoryName Condition=" '$(_NativeLibraryImportsDirectoryName)'=='' And '$(UseShortFileNames)' == 'True' ">nl</_NativeLibraryImportsDirectoryName>
+
+	<_LibraryProjectImportsDirectoryName Condition=" '$(_LibraryProjectImportsDirectoryName)'==''">library_project_imports</_LibraryProjectImportsDirectoryName>
+	<_NativeLibraryImportsDirectoryName Condition=" '$(_NativeLibraryImportsDirectoryName)'==''">native_library_imports</_NativeLibraryImportsDirectoryName>
 	<_AndroidResourcePathsCache>$(IntermediateOutputPath)resourcepaths.cache</_AndroidResourcePathsCache>
 	<_AndroidLibraryImportsCache>$(IntermediateOutputPath)libraryimports.cache</_AndroidLibraryImportsCache>
 	<_AndroidLibraryProjectImportsCache>$(IntermediateOutputPath)libraryprojectimports.cache</_AndroidLibraryProjectImportsCache>
-
-
+	<_AndroidLibrayProjectIntermediatePath Condition=" '$(_AndroidLibrayProjectIntermediatePath)' == '' And '$(UseShortFileNames)' == 'True' ">$(IntermediateOutputPath)lp\</_AndroidLibrayProjectIntermediatePath>
+	<_AndroidLibrayProjectIntermediatePath Condition=" '$(_AndroidLibrayProjectIntermediatePath)' == '' ">$(IntermediateOutputPath)__library_projects__\</_AndroidLibrayProjectIntermediatePath>
+	<_AndroidLibrayProjectAssemblyMapFile>$(_AndroidLibrayProjectIntermediatePath)map.cache</_AndroidLibrayProjectAssemblyMapFile>
+		
 	<!-- Prevent warnings about assembly version conflicts -->
 	<AutoUnifyAssemblyReferences>True</AutoUnifyAssemblyReferences>
 	<AutoGenerateBindingRedirects>False</AutoGenerateBindingRedirects>
@@ -318,7 +318,8 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
 		ImportsDirectory="$(_LibraryProjectImportsDirectoryName)"
 		UseShortFileNames="$(UseShortFileNames)"
 		OutputDirectory="$(IntermediateOutputPath)"
-		OutputImportDirectory="$(IntermediateOutputPath)__library_projects__\">
+		AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
+		OutputImportDirectory="$(_AndroidLibrayProjectIntermediatePath)">
 	</ResolveLibraryProjectImports>
 </Target>
 
@@ -333,7 +334,7 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
 <Target Name="_BuildLibraryImportsCache"
 		Inputs="$(MSBuildProjectFullPath)"
 		Outputs="$(_AndroidLibraryImportsCache)">
-	<GetImportedLibraries TargetDirectory="$(IntermediateOutputPath)__library_projects__\"
+	<GetImportedLibraries TargetDirectory="$(_AndroidLibrayProjectIntermediatePath)"
 			CacheFile="$(_AndroidLibraryImportsCache)">
 		<Output TaskParameter="Jars" ItemName="ExtractedJarImports" />
 	</GetImportedLibraries>
@@ -418,7 +419,7 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
       Java7DocPaths="$(Java7DocPaths)"
       Java8DocPaths="$(Java8DocPaths)"
       JavaDocs="@(JavaDocIndex)"
-      LibraryProjectJars="$(IntermediateOutputPath)__library_projects__\*.jar"
+      LibraryProjectJars="$(_AndroidLibrayProjectIntermediatePath)\*.jar"
     />
 
   </Target>
@@ -451,7 +452,7 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
       TypeMappingReportFile="$(GeneratedOutputPath)type-mapping.txt"
       ToolPath="$(_MonoAndroidBinDirectory)"
       ToolExe="$(BindingsGeneratorToolExe)"
-      UseShortFileNames="$(UseShortFileNames)"
+      UseShortFileNames="$(UseShortGeneratorFileNames)"
     />
 
     <!-- Write a flag so we won't redo this target if nothing changed -->
@@ -567,10 +568,12 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
     <Delete Files="$(_AndroidResourcePathsCache)" />
     <Delete Files="$(_AndroidLibraryImportsCache)" />
     <Delete Files="$(_AndroidLibraryProjectImportsCache)" />
+    <Delete Files="$(_AndroidLibrayProjectAssemblyMapFile)" />
     <RemoveDirFixed Directories="$(IntermediateOutputPath)library_project_jars" Condition="Exists ('$(IntermediateOutputPath)library_project_jars')" />
     <RemoveDirFixed Directories="$(IntermediateOutputPath)library_project_annotations" Condition="Exists ('$(IntermediateOutputPath)library_project_annotations')" />
     <RemoveDirFixed Directories="$(IntermediateOutputPath)$(_LibraryProjectImportsDirectoryName)" Condition="Exists ('$(IntermediateOutputPath)$(_LibraryProjectImportsDirectoryName)')" />
     <RemoveDirFixed Directories="$(IntermediateOutputPath)__library_projects__" Condition="Exists ('$(IntermediateOutputPath)__library_projects__')"/>
+    <RemoveDirFixed Directories="$(_AndroidLibrayProjectIntermediatePath)" Condition="Exists ('$(_AndroidLibrayProjectIntermediatePath)')" />
   </Target>
 
   <Target Name="CleanNativeLibraryIntermediaries">

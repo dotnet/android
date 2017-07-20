@@ -193,7 +193,7 @@ namespace Xamarin.Android.Tools {
 			return ZipArchive.Open (filename, FileMode.Open, strictConsistencyChecks: strictConsistencyChecks);
 		}
 
-		public static void ExtractAll(ZipArchive zip, string destination, Action<int, int> progressCallback = null)
+		public static void ExtractAll(ZipArchive zip, string destination, Action<int, int> progressCallback = null, Func<string, string> modifyCallback = null)
 		{
 			int i = 0;
 			int total = (int)zip.EntryCount;
@@ -202,14 +202,15 @@ namespace Xamarin.Android.Tools {
 						entry.FullName.EndsWith ("/__MACOSX", StringComparison.OrdinalIgnoreCase) ||
 						entry.FullName.EndsWith ("/.DS_Store", StringComparison.OrdinalIgnoreCase))
 					continue;
+				var fullName = modifyCallback?.Invoke (entry.FullName) ?? entry.FullName;
 				if (entry.IsDirectory) {
-					Directory.CreateDirectory (Path.Combine (destination, entry.FullName));
+					Directory.CreateDirectory (Path.Combine (destination, fullName));
 					continue;
 				}
 				if (progressCallback != null)
 					progressCallback (i++, total);
-				Directory.CreateDirectory (Path.Combine (destination, Path.GetDirectoryName (entry.FullName)));
-				entry.Extract (destination, entry.FullName);
+				Directory.CreateDirectory (Path.Combine (destination, Path.GetDirectoryName (fullName)));
+				entry.Extract (destination, fullName);
 			}
 		}
 

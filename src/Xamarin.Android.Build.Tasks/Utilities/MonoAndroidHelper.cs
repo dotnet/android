@@ -454,11 +454,6 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		public static string GetLibraryImportDirectoryNameForAssembly (string assemblyIdentName)
-		{
-			return string.Concat (new MD2Managed ().ComputeHash (Encoding.UTF8.GetBytes (assemblyIdentName)).Take (5).Select (b => b.ToString ("X02")));
-		}
-
 		public static Dictionary<string, string> LoadAcwMapFile (string acwPath)
 		{
 			var acw_map = new Dictionary<string, string> ();
