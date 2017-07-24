@@ -61,13 +61,29 @@ namespace Xamarin.Android.Tasks
 				var fi = new FileInfo (fileName);
 				if ((fi.Attributes & FileAttributes.Hidden) != 0)
 					continue;
-				zip.AddFile (fileName, ArchiveNameForFile (fileName, folderInArchive));
+				var archiveFileName = ArchiveNameForFile (fileName, folderInArchive);
+				long index = -1;
+				if (zip.ContainsEntry (archiveFileName, out index)) {
+					var e = zip.First (x => x.FullName == archiveFileName);
+					if (e.ModificationTime < fi.LastWriteTimeUtc)
+						zip.AddFile (fileName, archiveFileName);
+				} else {
+					zip.AddFile (fileName, archiveFileName);
+				}
 				count++;
 				if (count == ZipArchiveEx.ZipFlushLimit) {
 					Flush ();
 					count = 0;
 				}
 			}
+		}
+
+		public void RemoveFile (string folder, string file)
+		{
+			var archiveName = ArchiveNameForFile (file, Path.Combine (folder, Path.GetDirectoryName (file)));
+			long index = -1;
+			if (zip.ContainsEntry (archiveName, out index))
+				zip.DeleteEntry ((ulong)index);
 		}
 
 		public void AddDirectory (string folder, string folderInArchive)
@@ -79,7 +95,11 @@ namespace Xamarin.Android.Tasks
 					continue;
 				var internalDir = dir.Replace ("./", string.Empty).Replace (folder, string.Empty);
 				string fullDirPath = folderInArchive + internalDir;
-				zip.CreateDirectory (fullDirPath);
+				try {
+					zip.CreateDirectory (fullDirPath);
+				} catch (ZipException) {
+					
+				}
 				AddFiles (dir, fullDirPath);
 			}
 		}

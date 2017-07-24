@@ -31,6 +31,8 @@ namespace Xamarin.Android.Tasks
 		
 		public ITaskItem[] AndroidResourcesInThisExactProject { get; set; }
 
+		public ITaskItem [] RemovedAndroidResourceFiles { get; set; }
+
 		[Required]
 		public string ResourceDirectory { get; set; }
 
@@ -49,6 +51,8 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugTaskItems ("  AndroidAssets:", AndroidAssets);
 			Log.LogDebugTaskItems ("  AndroidJavaSources:", AndroidJavaSources);
 			Log.LogDebugTaskItems ("  AndroidJavaLibraries:", AndroidJavaLibraries);
+			Log.LogDebugTaskItems ("  AndroidResourcesInThisExactProject:", AndroidResourcesInThisExactProject);
+			Log.LogDebugTaskItems ("  RemovedAndroidResourceFiles:", RemovedAndroidResourceFiles);
 
 			var outDirInfo = new DirectoryInfo (OutputDirectory);
 			
@@ -85,6 +89,16 @@ namespace Xamarin.Android.Tasks
 					MonoAndroidHelper.CopyIfChanged (file, Path.Combine (dstsub, Path.GetFileName (file)));
 				}
 			}
+			if (RemovedAndroidResourceFiles != null) {
+				foreach (var removedFile in RemovedAndroidResourceFiles) {
+					var removed = Path.Combine (outDirInfo.FullName, removedFile.ItemSpec);
+					if (File.Exists (removed)) {
+						File.Delete (removed);
+						Log.LogDebugMessage ($"Removed: {removed}");
+					}
+
+				}
+			}
 			if (hasInvalidName)
 				return false;
 			if (AndroidJavaSources != null)
@@ -105,10 +119,16 @@ namespace Xamarin.Android.Tasks
 			}
 
 			var outpath = Path.Combine (outDirInfo.Parent.FullName, "__AndroidLibraryProjects__.zip");
-
-			if (Files.ArchiveZip (outpath, f => {
-				using (var zip = new ZipArchiveEx (f)) {
+			var fileMode = File.Exists (outpath) ? FileMode.Open : FileMode.CreateNew;
+			if (Files.ArchiveZipUpdate (outpath, f => {
+				using (var zip = new ZipArchiveEx (f, fileMode)) {
 					zip.AddDirectory (OutputDirectory, "library_project_imports");
+					if (RemovedAndroidResourceFiles != null) {
+						foreach (var r in RemovedAndroidResourceFiles) {
+							Log.LogDebugMessage ($"Removed {r.ItemSpec} from {outpath}");
+							zip.RemoveFile ("library_project_imports", r.ItemSpec);
+						}
+					}
 				}
 			})) {
 				Log.LogDebugMessage ("Saving contents to " + outpath);
