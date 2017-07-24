@@ -9,10 +9,10 @@
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <OutputPath>..\..\bin\$(Configuration)</OutputPath>
+    <OutputPath>$(XAInstallPrefix)xbuild\Xamarin\Android\</OutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <OutputPath>..\..\bin\$(Configuration)</OutputPath>
+    <OutputPath>$(XAInstallPrefix)xbuild\Xamarin\Android\</OutputPath>
   </PropertyGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.Common.targets" />
   <PropertyGroup>
@@ -24,6 +24,7 @@
   <Import Project="libzip-windows.props" />
   <Import Project="libzip-windows.projitems" />
   <Import Project="libzip-windows.targets" />
+  <Import Project="..\libzip\libzip.targets" />
   <ItemGroup>
     <ProjectReference Include="..\android-toolchain\android-toolchain.mdproj">
       <Project>{8FF78EB6-6FC8-46A7-8A15-EBBA9045C5FA}</Project>

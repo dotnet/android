@@ -171,8 +171,6 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
 			AndroidNdkPath="$(AndroidNdkDirectory)"
 			BuildingInsideVisualStudio="$(BuildingInsideVisualStudio)"
 			JavaSdkPath="$(JavaSdkDirectory)"
-			MonoAndroidBinPath="$(MonoAndroidBinDirectory)"
-			MonoAndroidToolsPath="$(MonoAndroidToolsDirectory)"
 			ProjectFilePath="$(MSBuildProjectFullPath)"
 			ReferenceAssemblyPaths="$(_XATargetFrameworkDirectories)"
 			TargetFrameworkVersion="$(TargetFrameworkVersion)"
@@ -187,8 +185,7 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
 		<Output TaskParameter="AndroidSdkPath"            PropertyName="AndroidSdkDirectory"        Condition="'$(AndroidSdkDirectory)' == ''" />
 		<Output TaskParameter="AndroidSdkBuildToolsPath"  PropertyName="AndroidSdkBuildToolsPath"   Condition="'$(AndroidSdkBuildToolsPath)' == ''" />
 		<Output TaskParameter="JavaSdkPath"               PropertyName="JavaSdkDirectory"           Condition="'$(JavaSdkDirectory)' == ''" />
-		<Output TaskParameter="MonoAndroidToolsPath"      PropertyName="MonoAndroidToolsDirectory"  Condition="'$(MonoAndroidToolsDirectory)' == ''" />
-		<Output TaskParameter="MonoAndroidBinPath"        PropertyName="MonoAndroidBinDirectory"    Condition="'$(MonoAndroidBinDirectory)' == ''" />
+		<Output TaskParameter="MonoAndroidToolsPath"      PropertyName="MonoAndroidToolsDirectory" />
 		<Output TaskParameter="AndroidSdkBuildToolsBinPath" PropertyName="AndroidSdkBuildToolsBinPath" Condition="'$(AndroidSdkBuildToolsBinPath)' == ''" />
 	</ResolveSdks>
     <CreateProperty Value="$(TargetFrameworkIdentifier),Version=$(TargetFrameworkVersion),Profile=$(TargetFrameworkProfile)">
@@ -209,26 +206,8 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
   <!-- Find all the needed SDKs -->
   <Target Name="_ResolveMonoAndroidSdks" DependsOnTargets="_ResolveMonoAndroidFramework">
 
-    <Error Text="Could not locate MonoAndroid SDK." Condition="'$(MonoAndroidToolsDirectory)'==''" />
     <Error Text="Could not locate Android SDK." Condition="'$(AndroidSdkDirectory)'==''" />
     <Error Text="Could not locate Java 6 or 7 SDK.  (Download from http://www.oracle.com/technetwork/java/javase/downloads.)" Condition="'$(JavaSdkDirectory)'==''" />
-
-    <!-- ensure a version of paths with trailing slashes even if overridden by /p:foo=bar -->
-    <CreateProperty Value="$(MonoAndroidToolsDirectory)">
-      <Output TaskParameter="Value" PropertyName="_MonoAndroidToolsDirectory"/>
-    </CreateProperty>
-    <CreateProperty Value="$(_MonoAndroidToolsDirectory)\">
-      <Output TaskParameter="Value" PropertyName="_MonoAndroidToolsDirectory"
-        Condition="!HasTrailingSlash('$(_MonoAndroidToolsDirectory)')" />
-    </CreateProperty>
-
-    <CreateProperty Value="$(MonoAndroidBinDirectory)">
-      <Output TaskParameter="Value" PropertyName="_MonoAndroidBinDirectory"/>
-    </CreateProperty>
-    <CreateProperty Value="$(_MonoAndroidBinDirectory)\">
-      <Output TaskParameter="Value" PropertyName="_MonoAndroidBinDirectory"
-        Condition="!HasTrailingSlash('$(_MonoAndroidBinDirectory)')" />
-    </CreateProperty>
 
     <CreateProperty Value="$(AndroidNdkDirectory)">
       <Output TaskParameter="Value" PropertyName="_AndroidNdkDirectory"/>
@@ -255,7 +234,6 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
     </CreateProperty>
 
     <Message Text="MonoAndroid Tools: $(_MonoAndroidToolsDirectory)"/>
-	<Message Text="MonoAndroid Binaries: $(_MonoAndroidBinDirectory)"/>
     <Message Text="Android NDK: $(_AndroidNdkDirectory)"/>
     <Message Text="Android SDK: $(_AndroidSdkDirectory)"/>
     <Message Text="Java SDK: $(_JavaSdkDirectory)"/>
@@ -399,7 +377,7 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
       ApiXmlInput="$(ApiOutputFile).class-parse"
       ReferencedManagedLibraries="@(ReferencePath);@(ReferenceDependencyPaths)"
       MonoAndroidFrameworkDirectories="$(_TargetFrameworkDirectories)"
-      ToolPath="$(_MonoAndroidBinDirectory)"
+      ToolPath="$(MonoAndroidToolsDirectory)"
       ToolExe="$(BindingsGeneratorToolExe)"
     />
 
@@ -449,7 +427,7 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
       ReferencedManagedLibraries="@(ReferencePath);@(ReferenceDependencyPaths)"
       MonoAndroidFrameworkDirectories="$(_TargetFrameworkDirectories)"
       TypeMappingReportFile="$(GeneratedOutputPath)type-mapping.txt"
-      ToolPath="$(_MonoAndroidBinDirectory)"
+      ToolPath="$(MonoAndroidToolsDirectory)"
       ToolExe="$(BindingsGeneratorToolExe)"
       UseShortFileNames="$(UseShortFileNames)"
     />
@@ -513,7 +491,7 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
     	References="@(ReferencePath);@(ReferenceDependencyPaths)"
     	TargetAssembly="@(IntermediateAssembly)"
     	OutputDocDirectory="$(IntermediateOutputPath)docs"
-		ToolPath="$(_MonoAndroidBinDirectory)"
+    	ToolPath="$(MonoAndroidToolsDirectory)"
 		ToolExe="$(MDocToolExe)"
     	 />
     <ImportJavaDoc
@@ -527,7 +505,7 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
     	References="@(ReferencePath);@(ReferenceDependencyPaths)"
     	TargetAssembly="@(IntermediateAssembly)"
     	OutputDocDirectory="$(IntermediateOutputPath)docs"
-		ToolPath="$(_MonoAndroidBinDirectory)"
+    	ToolPath="$(MonoAndroidToolsDirectory)"
 		ToolExe="$(MDocToolExe)"
     	 />
     <!-- Then export .NET doc xml -->
@@ -535,7 +513,7 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
     	RunExport="True"
     	TargetAssembly="@(IntermediateAssembly)"
     	OutputDocDirectory="$(IntermediateOutputPath)docs"
-		ToolPath="$(_MonoAndroidBinDirectory)"
+    	ToolPath="$(MonoAndroidToolsDirectory)"
 		ToolExe="$(MDocToolExe)"
     	 />
     <Copy

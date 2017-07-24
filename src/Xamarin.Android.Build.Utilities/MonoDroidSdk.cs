@@ -45,16 +45,7 @@ namespace Xamarin.Android.Build.Utilities
 			return sdk;
 		}
 
-		public static string RuntimePath { get { return GetSdk ().RuntimePath; } }
-
-		public static string BinPath { get { return GetSdk ().BinPath; } }
-
 		public static string FrameworkPath { get { return GetSdk ().BclPath; } }
-
-		[Obsolete ("Do not use.")]
-		public static string JavaDocToMDocExe {
-			get { return Path.Combine (BinPath, OS.IsWindows ? "javadoc-to-mdoc.exe" : "javadoc-to-mdoc"); }
-		}
 	}
 }
 

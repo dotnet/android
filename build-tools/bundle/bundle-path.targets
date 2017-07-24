@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"  TaskName="Xamarin.Android.BuildTools.PrepTasks.GitCommitHash" />
+  <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"  TaskName="Xamarin.Android.BuildTools.PrepTasks.HashFileContents" />
   <Target Name="_GetHashes">
     <GitCommitHash
         WorkingDirectory="$(LibZipSourceFullPath)"
@@ -20,11 +21,19 @@
         ToolExe="$(GitToolExe)">
       <Output TaskParameter="AbbreviatedCommitHash"   PropertyName="_MonoHash" />
     </GitCommitHash>
+    <!-- Files which contribute to the bundle "version" -->
+    <ItemGroup>
+      <VersionFile Include="..\mono-runtimes\mono-runtimes.*" />
+    </ItemGroup>
+    <HashFileContents
+        Files="@(VersionFile)">
+      <Output TaskParameter="AbbreviatedCompleteHash" PropertyName="_VersionHash"/>
+    </HashFileContents>
   </Target>
   <Target Name="GetBundleFileName"
       DependsOnTargets="_GetHashes">
     <PropertyGroup>
-      <XABundleFileName>bundle-v18-$(Configuration)-$(HostOS)-libzip=$(_LibZipHash),llvm=$(_LlvmHash),mono=$(_MonoHash).zip</XABundleFileName>
+      <XABundleFileName>bundle-v19-h$(_VersionHash)-$(Configuration)-$(HostOS)-libzip=$(_LibZipHash),llvm=$(_LlvmHash),mono=$(_MonoHash).zip</XABundleFileName>
     </PropertyGroup>
   </Target>
 </Project>

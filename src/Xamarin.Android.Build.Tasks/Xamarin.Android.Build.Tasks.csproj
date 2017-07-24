@@ -9,7 +9,7 @@
     <RootNamespace>Xamarin.Android.Tasks</RootNamespace>
     <AssemblyName>Xamarin.Android.Build.Tasks</AssemblyName>
     <FileAlignment>512</FileAlignment>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
     <SchemaVersion>2.0</SchemaVersion>
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
@@ -19,7 +19,7 @@
     <DebugSymbols>True</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>False</Optimize>
-    <OutputPath>..\..\bin\$(Configuration)\lib\xbuild\Xamarin\Android</OutputPath>
+    <OutputPath>$(XAInstallPrefix)xbuild\Xamarin\Android\</OutputPath>
     <DefineConstants Condition="'$(MonoDroidTiming)' == ''">TRACE;DEBUG;HAVE_CECIL;MSBUILD;ANDROID_24</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -27,7 +27,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType></DebugType>
     <Optimize>True</Optimize>
-    <OutputPath>..\..\bin\$(Configuration)\lib\xbuild\Xamarin\Android</OutputPath>
+    <OutputPath>$(XAInstallPrefix)xbuild\Xamarin\Android\</OutputPath>
     <DefineConstants>TRACE;HAVE_CECIL;MSBUILD;ANDROID_24</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>

@@ -156,9 +156,9 @@ For example (using the paths from [Android SDK Setup](#Android_SDK_Setup)):
 
 	msbuild /p:AndroidSdkDirectory="C:\xa-sdk\android-sdk" ^
 		/p:AndroidNdkDirectory="C:\xa-sdk\android-ndk\android-ndk-r14" ^
-		/p:MonoAndroidBinDirectory="C:\xa-sdk\oss-xamarin.android_v7.2.99.19_Darwin-x86_64_master_3b893cd\bin\Debug\lib\xbuild\Xamarin\Android" ^
-		/p:MonoAndroidToolsDirectory="C:\xa-sdk\oss-xamarin.android_v7.2.99.19_Darwin-x86_64_master_3b893cd\bin\Debug\lib\xbuild\Xamarin\Android" ^
-		/p:TargetFrameworkRootPath="C:\xa-sdk\oss-xamarin.android_v7.2.99.19_Darwin-x86_64_master_3b893cd\bin\Debug\lib\xbuild-frameworks" ^
+		/p:MonoAndroidBinDirectory="C:\xa-sdk\oss-xamarin.android_v7.2.99.19_Darwin-x86_64_master_3b893cd\bin\Debug\lib\xamarin.android\xbuild\Xamarin\Android" ^
+		/p:MonoAndroidToolsDirectory="C:\xa-sdk\oss-xamarin.android_v7.2.99.19_Darwin-x86_64_master_3b893cd\bin\Debug\lib\xamarin.android\xbuild\Xamarin\Android" ^
+		/p:TargetFrameworkRootPath="C:\xa-sdk\oss-xamarin.android_v7.2.99.19_Darwin-x86_64_master_3b893cd\bin\Debug\lib\xamarin.android\xbuild-frameworks" ^
 		/t:SignAndroidPackage ^
 		samples\HelloWorld\HelloWorld.csproj
 

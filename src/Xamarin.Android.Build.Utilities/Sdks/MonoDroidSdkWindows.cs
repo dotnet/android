@@ -9,18 +9,20 @@ namespace Xamarin.Android.Build.Utilities
 	{
 		protected override string FindRuntime ()
 		{
-			string monoAndroidPath = Environment.GetEnvironmentVariable ("MONO_ANDROID_PATH");
-			if (!string.IsNullOrEmpty (monoAndroidPath)) {
-				if (Directory.Exists (monoAndroidPath) && ValidateRuntime (monoAndroidPath))
-					return monoAndroidPath;
-			}
-			string xamarinSdk = Path.Combine (OS.ProgramFilesX86, "MSBuild", "Xamarin", "Android");
-			return Directory.Exists (xamarinSdk)
-				? xamarinSdk
-					: OS.ProgramFilesX86 + @"\MSBuild\Novell";
+			var r = base.FindRuntime ();
+			if (r != null)
+				return r;
+			var paths = new []{
+				Path.GetFullPath (Path.GetDirectoryName (GetType ().Assembly.Location)),
+				Path.Combine (OS.ProgramFilesX86, "MSBuild", "Xamarin", "Android"),
+				Path.Combine (OS.ProgramFilesX86, "MSBuild", "Novell"),
+			};
+			return paths.FirstOrDefault (p => ValidateRuntime (p));
 		}
 
 		static readonly string[] RuntimeToFrameworkPaths = new []{
+			// runtimePath=$prefix/lib/xamarin.android/xbuild/Xamarin/Android/
+			Path.Combine ("..", "..", "..", "xbuild-frameworks", "MonoAndroid"),
 			Path.Combine ("..", "..", "..", "Common7", "IDE", "ReferenceAssemblies", "Microsoft", "Framework","MonoAndroid"),
 			Path.Combine ("..", "..", "..", "Reference Assemblies", "Microsoft", "Framework", "MonoAndroid"),
 			Path.Combine (OS.ProgramFilesX86, "Reference Assemblies", "Microsoft", "Framework", "MonoAndroid"),
@@ -46,30 +48,9 @@ namespace Xamarin.Android.Build.Utilities
 			return null;
 		}
 
-		protected override string FindBin (string runtimePath)
-		{
-			return runtimePath;
-		}
-
-		protected override bool ValidateBin (string binPath)
-		{
-			return !string.IsNullOrWhiteSpace (binPath) &&
-				File.Exists (Path.Combine (binPath, "generator.exe"));
-		}
-
-		protected override string FindInclude (string runtimePath)
-		{
-			return Path.GetFullPath (Path.Combine (runtimePath, "include"));
-		}
-
 		protected override string FindLibraries (string runtimePath)
 		{
 			return Path.GetFullPath (runtimePath);
-		}
-
-		protected override IEnumerable<string> GetVersionFileLocations ()
-		{
-			yield return Path.GetFullPath (Path.Combine (RuntimePath, "Version"));
 		}
 	}
 }

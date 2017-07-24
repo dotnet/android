@@ -6,8 +6,9 @@
       Outputs="$(OutputPath)mono.android.jar">
     <MakeDir Directories="$(IntermediateOutputPath)jcw;$(IntermediateOutputPath)jcw\bin" />
     <PropertyGroup>
-      <OutputPathAbs>$(MSBuildProjectDirectory)\$(OutputPath)</OutputPathAbs>
-      <JcwGen>"$(MSBuildThisFileDirectory)..\..\bin\$(Configuration)\lib\mandroid\jcw-gen.exe" -v10</JcwGen>
+      <OutputPathAbs Condition="$([System.IO.Path]::IsPathRooted($(OutputPath)))">$(OutputPath)</OutputPathAbs>
+      <OutputPathAbs Condition=" '$(OutputPathAbs)' == '' ">$(MSBuildProjectDirectory)\$(OutputPath)</OutputPathAbs>
+      <JcwGen>"$(XAInstallPrefix)xbuild\Xamarin\Android\jcw-gen.exe" -v10</JcwGen>
       <_LibDirs>-L "$(OutputPathAbs)" -L "$(OutputPathAbs)..\v1.0\" -L "$(OutputPathAbs)..\v1.0\Facades"</_LibDirs>
       <_Out>-o "$(MSBuildProjectDirectory)\$(IntermediateOutputPath)jcw\src"</_Out>
     </PropertyGroup>

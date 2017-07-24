@@ -125,34 +125,23 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ("ResolveSdksTask:");
 			Log.LogDebugMessage ("  AndroidApiLevel: {0}", AndroidApiLevel);
 			Log.LogDebugMessage ("  AndroidSdkBuildToolsVersion: {0}", AndroidSdkBuildToolsVersion);
+			Log.LogDebugMessage ($"  {nameof (AndroidSdkPath)}: {AndroidSdkPath}");
+			Log.LogDebugMessage ($"  {nameof (AndroidNdkPath)}: {AndroidNdkPath}");
 			Log.LogDebugTaskItems ("  ReferenceAssemblyPaths: ", ReferenceAssemblyPaths);
 			Log.LogDebugMessage ("  TargetFrameworkVersion: {0}", TargetFrameworkVersion);
 			Log.LogDebugMessage ("  UseLatestAndroidPlatformSdk: {0}", UseLatestAndroidPlatformSdk);
 			Log.LogDebugMessage ("  SequencePointsMode: {0}", SequencePointsMode);
-			Log.LogDebugMessage ("  MonoAndroidToolsPath: {0}", MonoAndroidToolsPath);
-			Log.LogDebugMessage ("  MonoAndroidBinPath: {0}", MonoAndroidBinPath);
 			Log.LogDebugMessage ("  LintToolPath: {0}", LintToolPath);
 
-			MonoAndroidHelper.RefreshMonoDroidSdk (MonoAndroidToolsPath, MonoAndroidBinPath, ReferenceAssemblyPaths);
-			MonoAndroidHelper.RefreshAndroidSdk (AndroidSdkPath, AndroidNdkPath, JavaSdkPath);
-			
-			// OS X:    $prefix/lib/mandroid
+			// OS X:    $prefix/lib/xamarin.android/xbuild/Xamarin/Android
 			// Windows: %ProgramFiles(x86)%\MSBuild\Xamarin\Android
-			this.MonoAndroidToolsPath = MonoDroidSdk.RuntimePath;
-
-			// OS X:    $prefix/bin
-			// Windows: %ProgramFiles(x86)%\MSBuild\Xamarin\Android
-			this.MonoAndroidBinPath = MonoDroidSdk.BinPath;
-
-			if (this.MonoAndroidBinPath == null) {
-				Log.LogCodedError ("XA0020", "Could not find mandroid!");
-				return false;
+			if (string.IsNullOrEmpty (MonoAndroidToolsPath)) {
+				MonoAndroidToolsPath  = Path.GetDirectoryName (typeof (ResolveSdks).Assembly.Location);
 			}
+			MonoAndroidBinPath  = MonoAndroidHelper.GetOSBinPath () + Path.DirectorySeparatorChar;
 
-			string include;
-			if (MonoAndroidToolsPath != null &&
-					Directory.Exists (include = Path.Combine (MonoAndroidToolsPath, "include")))
-				MonoAndroidIncludePath = include;
+			MonoAndroidHelper.RefreshMonoDroidSdk (MonoAndroidToolsPath, null, ReferenceAssemblyPaths);
+			MonoAndroidHelper.RefreshAndroidSdk (AndroidSdkPath, AndroidNdkPath, JavaSdkPath);
 
 			this.AndroidNdkPath = AndroidSdk.AndroidNdkPath;
 			this.AndroidSdkPath = AndroidSdk.AndroidSdkPath;
@@ -275,7 +264,6 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ("  JavaSdkPath: {0}", JavaSdkPath);
 			Log.LogDebugMessage ("  MonoAndroidBinPath: {0}", MonoAndroidBinPath);
 			Log.LogDebugMessage ("  MonoAndroidToolsPath: {0}", MonoAndroidToolsPath);
-			Log.LogDebugMessage ("  MonoAndroidIncludePath: {0}", MonoAndroidIncludePath);
 			Log.LogDebugMessage ("  TargetFrameworkVersion: {0}", TargetFrameworkVersion);
 			Log.LogDebugMessage ("  ZipAlignPath: {0}", ZipAlignPath);
 			Log.LogDebugMessage ("  SupportedApiLevel: {0}", SupportedApiLevel);
