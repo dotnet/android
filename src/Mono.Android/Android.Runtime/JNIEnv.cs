@@ -288,6 +288,11 @@ namespace Android.Runtime {
 				if (!IsRunningOnDesktop)
 					Java.Lang.Thread.DefaultUncaughtExceptionHandler = defaultUncaughtExceptionHandler;
 			}
+
+			if (Logger.LogTiming)
+				Logger.Log (LogLevel.Info,
+						"monodroid-timing",
+						"JNIEnv.Initialize end: " + (DateTime.UtcNow - new DateTime (1970, 1, 1)).TotalMilliseconds);
 		}
 
 		internal static void Exit ()
