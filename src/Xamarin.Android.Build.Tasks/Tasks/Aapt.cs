@@ -335,7 +335,9 @@ namespace Xamarin.Android.Tasks
 
 			if (match.Success) {
 				var file = match.Groups["file"].Value;
-				var line = int.Parse (match.Groups["line"].Value) + 1;
+				int line = 0;
+				if (!string.IsNullOrEmpty (match.Groups["line"]?.Value))
+					line = int.Parse (match.Groups["line"].Value) + 1;
 				var error = match.Groups["message"].Value;
 
 				// Try to map back to the original resource file, so when the user

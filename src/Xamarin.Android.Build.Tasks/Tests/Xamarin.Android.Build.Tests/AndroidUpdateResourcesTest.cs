@@ -470,6 +470,23 @@ namespace UnnamedProject
 		}
 
 		[Test]
+		public void CheckAaptErrorRaisedForInvalidFileName ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\drawable\\icon-2.png") {
+				BinaryContent = () => XamarinAndroidCommonProject.icon_binary_hdpi,
+			});
+			var projectPath = string.Format ("temp/CheckAaptErrorRaisedForInvalidDirectoryName");
+			using (var b = CreateApkBuilder (Path.Combine (projectPath, "UnamedApp"), false, false)) {
+				b.Verbosity = LoggerVerbosity.Diagnostic;
+				b.ThrowOnBuildFailure = false;
+				Assert.IsFalse (b.Build (proj), "Build should have failed");
+				StringAssert.Contains ("Invalid file name:", b.LastBuildOutput);
+				StringAssert.Contains ("1 Error(s)", b.LastBuildOutput);
+			}
+		}
+
+		[Test]
 		public void CheckAaptErrorRaisedForDuplicateResourceinApp ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
@@ -487,7 +504,7 @@ namespace UnnamedProject
 				b.ThrowOnBuildFailure = false;
 				Assert.IsFalse (b.Build (proj), "Build should have failed");
 				StringAssert.Contains ("APT0000: ", b.LastBuildOutput);
-				StringAssert.Contains ("1 Error(s)", b.LastBuildOutput);
+				StringAssert.Contains ("2 Error(s)", b.LastBuildOutput);
 			}
 		}
 

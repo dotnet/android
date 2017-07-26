@@ -77,12 +77,13 @@ namespace Xamarin.Android.Tasks
 		//   res\layout\main.axml:7: error: No resource identifier found for attribute 'id2' in package 'android' (TaskId:22)
 		//   Resources/values/theme.xml(2): error APT0000: Error retrieving parent for item: No resource found that matches the given name '@android:style/Theme.AppCompat'.
 		//   Resources/values/theme.xml:2: error APT0000: Error retrieving parent for item: No resource found that matches the given name '@android:style/Theme.AppCompat'.
+		//   res/drawable/foo-bar.jpg: Invalid file name: must contain only [a-z0-9_.]
 		// Look for them and convert them to MSBuild compatible errors.
 		static Regex androidErrorRegex;
 		internal static Regex AndroidErrorRegex {
 			get {
 				if (androidErrorRegex == null)
-					androidErrorRegex = new Regex (@"^(?<file>.+?)(([:(](?<line>\d+)[:)]):?\s*(error)\s*(?<level>\w*(?=:))):?(?<message>.*)", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
+					androidErrorRegex = new Regex (@"^(?<file>.+?)([:(](?<line>\d+)[:)])?:+\s*((error)\s*(?<level>\w*(?=:)):?)?(?<message>.*)", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
 				return androidErrorRegex;
 			}
 		}
