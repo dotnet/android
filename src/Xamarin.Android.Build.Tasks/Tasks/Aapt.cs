@@ -76,6 +76,19 @@ namespace Xamarin.Android.Tasks
 
 		public bool ExplicitCrunch { get; set; }
 
+		// pattern to use for the version code. Used in CreatePackagePerAbi
+		// eg. {abi:00}{dd}{version}
+		// known keyworks
+		//  {abi} the value for the current abi
+		//  {version} the version code from the manifest.
+		public string VersionCodePattern { get; set; }
+
+		// Name=Value pair seperated by ';'
+		// e.g screen=21;abi=11
+		public string VersionCodeProperties { get; set; }
+
+		public string AndroidSdkPlatform { get; set; }
+
 		Dictionary<string,string> resource_name_case_map = new Dictionary<string,string> ();
 
 		bool ManifestIsUpToDate (string manifestFile)
@@ -190,6 +203,8 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ("  ExtraArgs: {0}", ExtraArgs);
 			Log.LogDebugMessage ("  CreatePackagePerAbi: {0}", CreatePackagePerAbi);
 			Log.LogDebugMessage ("  ResourceNameCaseMap: {0}", ResourceNameCaseMap);
+			Log.LogDebugMessage ("  VersionCodePattern: {0}", VersionCodePattern);
+			Log.LogDebugMessage ("  VersionCodeProperties: {0}", VersionCodeProperties);
 			if (CreatePackagePerAbi)
 				Log.LogDebugMessage ("  SupportedAbis: {0}", SupportedAbis);
 
@@ -244,8 +259,15 @@ namespace Xamarin.Android.Tasks
 			Directory.CreateDirectory (manifestDir);
 			manifestFile = Path.Combine (manifestDir, Path.GetFileName (ManifestFile));
 			ManifestDocument manifest = new ManifestDocument (ManifestFile, this.Log);
-			if (currentAbi != null)	
-				manifest.SetAbi (currentAbi);
+			manifest.SdkVersion = AndroidSdkPlatform;
+			if (currentAbi != null) {
+				if (!string.IsNullOrEmpty (VersionCodePattern))
+					manifest.CalculateVersionCode (currentAbi, VersionCodePattern, VersionCodeProperties);
+				else
+					manifest.SetAbi (currentAbi);
+			} else if (!string.IsNullOrEmpty (VersionCodePattern)) {
+				manifest.CalculateVersionCode (null, VersionCodePattern, VersionCodeProperties);
+			}
 			manifest.ApplicationName = ApplicationName;
 			manifest.Save (manifestFile);
 

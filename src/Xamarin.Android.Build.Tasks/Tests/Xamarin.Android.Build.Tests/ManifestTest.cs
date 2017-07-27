@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿﻿﻿using System;
 using System.Linq;
 using NUnit.Framework;
 using Xamarin.ProjectTools;
@@ -261,6 +261,144 @@ namespace Bug12935
 				Assert.IsNotNull (le, "no activity element found");
 				Assert.IsTrue (doc.XPathSelectElements ("//activity[@android:directBootAware='true']", nsResolver).Any (),
 						   "'activity' element is not generated as expected.");
+			}
+		}
+
+		static object [] VersionCodeTestSource = new object [] {
+			new object[] {
+				/* seperateApk */ false,
+				/* abis */ "armeabi-v7a",
+				/* versionCode */ "123",
+				/* pattern */ null,
+				/* props */ null,
+				/* shouldBuild */ true,
+				/* expected */ "123",
+			},
+			new object[] {
+				/* seperateApk */ false,
+				/* abis */ "armeabi-v7a",
+				/* versionCode */ "123",
+				/* pattern */ "{abi}{versionCode}",
+				/* props */ null,
+				/* shouldBuild */ true,
+				/* expected */ "123",
+			},
+			new object[] {
+				/* seperateApk */ false,
+				/* abis */ "armeabi-v7a",
+				/* versionCode */ "1",
+				/* pattern */ "{abi}{versionCode}",
+				/* props */ "versionCode=123",
+				/* shouldBuild */ true,
+				/* expected */ "123",
+			},
+			new object[] {
+				/* seperateApk */ false,
+				/* abis */ "armeabi-v7a;x86",
+				/* versionCode */ "123",
+				/* pattern */ "{abi}{versionCode}",
+				/* props */ null,
+				/* shouldBuild */ true,
+				/* expected */ "123",
+			},
+			new object[] {
+				/* seperateApk */ true,
+				/* abis */ "armeabi-v7a;x86",
+				/* versionCode */ "123",
+				/* pattern */ null,
+				/* props */ null,
+				/* shouldBuild */ true,
+				/* expected */ "131195;196731",
+			},
+			new object[] {
+				/* seperateApk */ true,
+				/* abis */ "armeabi-v7a;x86",
+				/* versionCode */ "123",
+				/* pattern */ "{abi}{versionCode}",
+				/* props */ null,
+				/* shouldBuild */ true,
+				/* expected */ "2123;3123",
+			},
+			new object[] {
+				/* seperateApk */ true,
+				/* abis */ "armeabi-v7a;x86",
+				/* versionCode */ "12",
+				/* pattern */ "{abi}{minSDK:00}{versionCode:000}",
+				/* props */ null,
+				/* shouldBuild */ true,
+				/* expected */ "211012;311012",
+			},
+			new object[] {
+				/* seperateApk */ true,
+				/* abis */ "armeabi-v7a;x86",
+				/* versionCode */ "12",
+				/* pattern */ "{abi}{minSDK:00}{screen}{versionCode:000}",
+				/* props */ "screen=24",
+				/* shouldBuild */ true,
+				/* expected */ "21124012;31124012",
+			},
+			new object[] {
+				/* seperateApk */ true,
+				/* abis */ "armeabi-v7a;x86",
+				/* versionCode */ "12",
+				/* pattern */ "{abi}{minSDK:00}{screen}{foo:0}{versionCode:000}",
+				/* props */ "screen=24;foo=$(Foo)",
+				/* shouldBuild */ true,
+				/* expected */ "211241012;311241012",
+			},
+			new object[] {
+				/* seperateApk */ true,
+				/* abis */ "armeabi-v7a;x86",
+				/* versionCode */ "12",
+				/* pattern */ "{abi}{minSDK:00}{screen}{foo:00}{versionCode:000}",
+				/* props */ "screen=24;foo=$(Foo)",
+				/* shouldBuild */ false,
+				/* expected */ "2112401012;3112401012",
+			},
+		};
+
+		[Test]
+		[TestCaseSource("VersionCodeTestSource")]
+		public void VersionCodeTests (bool seperateApk, string abis, string versionCode, string versionCodePattern, string versionCodeProperties, bool shouldBuild, string expectedVersionCode)
+		{
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = true,
+			};
+			proj.SetProperty ("Foo", "1");
+			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidCreatePackagePerAbi, seperateApk);
+			if (!string.IsNullOrEmpty (abis))
+				proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidSupportedAbis, abis);
+			if (!string.IsNullOrEmpty (versionCodePattern))
+				proj.SetProperty (proj.ReleaseProperties, "AndroidVersionCodePattern", versionCodePattern);
+			else
+				proj.RemoveProperty (proj.ReleaseProperties, "AndroidVersionCodePattern");
+			if (!string.IsNullOrEmpty (versionCodeProperties))
+				proj.SetProperty (proj.ReleaseProperties, "AndroidVersionCodeProperties", versionCodeProperties);
+			else
+				proj.RemoveProperty (proj.ReleaseProperties, "AndroidVersionCodeProperties");
+			proj.AndroidManifest = proj.AndroidManifest.Replace ("android:versionCode=\"1\"", $"android:versionCode=\"{versionCode}\"");
+			using (var builder = CreateApkBuilder (Path.Combine ("temp", "VersionCodeTests"), false, false)) {
+				builder.ThrowOnBuildFailure = false;
+				Assert.AreEqual (shouldBuild, builder.Build (proj), shouldBuild ? "Build should have succeeded." : "Build should have failed.");
+				if (!shouldBuild)
+					return;
+				var abiItems = seperateApk ? abis.Split (';') : new string[1];
+				var expectedItems = expectedVersionCode.Split (';');
+				XNamespace aNS = "http://schemas.android.com/apk/res/android";
+				Assert.AreEqual (abiItems.Length, expectedItems.Length, "abis parameter should have matching elements for expected");
+				for (int i = 0; i < abiItems.Length; i++) {
+					var path = seperateApk ? Path.Combine ("android", abiItems[i], "AndroidManifest.xml") : Path.Combine ("android", "manifest", "AndroidManifest.xml");
+					var manifest = builder.Output.GetIntermediaryAsText (Root, path);
+					var doc = XDocument.Parse (manifest);
+					var nsResolver = new XmlNamespaceManager (new NameTable ());
+					nsResolver.AddNamespace ("android", "http://schemas.android.com/apk/res/android");
+					var m = doc.XPathSelectElement ("/manifest") as XElement;
+					Assert.IsNotNull (m, "no manifest element found");
+					var vc = m.Attribute (aNS + "versionCode");
+					Assert.IsNotNull (vc, "no versionCode attribute found");
+					StringAssert.AreEqualIgnoringCase (expectedItems[i], vc.Value,
+						$"Version Code is incorrect. Found {vc.Value} expect {expectedItems[i]}");
+				}
 			}
 		}
 
