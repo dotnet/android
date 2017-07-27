@@ -199,7 +199,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 
 	<BundleAssemblies Condition="'$(BundleAssemblies)' == ''">False</BundleAssemblies>
 	<DeployExternal Condition="'$(DeployExternal)' == ''">False</DeployExternal>
-	<UseShortFileNames Condition="'$(UseShortFileNames)' != 'True'">False</UseShortFileNames>
+	<UseShortFileNames Condition="'$(UseShortFileNames)' == ''">True</UseShortFileNames>
 
 	<!-- Obsolete build property: should be removed in the future releases -->
 	<AndroidMultiDexSupportJar></AndroidMultiDexSupportJar>
@@ -227,18 +227,18 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<!-- Chooses the native Android debug server, valid values are: gdbserver, llgs and ds2 -->
 	<AndroidGdbDebugServer Condition="'$(AndroidGdbDebugServer)' == ''">Gdb</AndroidGdbDebugServer>
 
-    <!--
-    <_LibraryProjectImportsDirectoryName Condition="'$(UseShortFileNames)' == 'true'">jlibs</_LibraryProjectImportsDirectoryName>
-    <_LibraryProjectImportsDirectoryName Condition="'$(UseShortFileNames)' != 'true'">library_project_imports</_LibraryProjectImportsDirectoryName>
-	<_NativeLibraryImportsDirectoryName Condition="'$(UseShortFileNames)' == 'true'">libs</_NativeLibraryImportsDirectoryName>
-	<_NativeLibraryImportsDirectoryName Condition="'$(UseShortFileNames)' != 'true'">native_library_imports</_NativeLibraryImportsDirectoryName>
-    -->
-    <_LibraryProjectImportsDirectoryName>library_project_imports</_LibraryProjectImportsDirectoryName>
-	<_NativeLibraryImportsDirectoryName>native_library_imports</_NativeLibraryImportsDirectoryName>
+	<_LibraryProjectImportsDirectoryName Condition=" '$(_LibraryProjectImportsDirectoryName)'=='' And '$(UseShortFileNames)' == 'True' ">jl</_LibraryProjectImportsDirectoryName>
+	<_NativeLibraryImportsDirectoryName Condition=" '$(_NativeLibraryImportsDirectoryName)'=='' And '$(UseShortFileNames)' == 'True' ">nl</_NativeLibraryImportsDirectoryName>
+
+	<_LibraryProjectImportsDirectoryName Condition=" '$(_LibraryProjectImportsDirectoryName)'==''">library_project_imports</_LibraryProjectImportsDirectoryName>
+	<_NativeLibraryImportsDirectoryName Condition=" '$(_NativeLibraryImportsDirectoryName)'==''">native_library_imports</_NativeLibraryImportsDirectoryName>
 	<_AndroidResourcePathsCache>$(IntermediateOutputPath)resourcepaths.cache</_AndroidResourcePathsCache>
 	<_AndroidLibraryImportsCache>$(IntermediateOutputPath)libraryimports.cache</_AndroidLibraryImportsCache>
 	<_AndroidLibraryProjectImportsCache>$(IntermediateOutputPath)libraryprojectimports.cache</_AndroidLibraryProjectImportsCache>
-	
+	<_AndroidLibrayProjectIntermediatePath Condition=" '$(_AndroidLibrayProjectIntermediatePath)' == '' And '$(UseShortFileNames)' == 'True' ">$(IntermediateOutputPath)lp\</_AndroidLibrayProjectIntermediatePath>
+	<_AndroidLibrayProjectIntermediatePath Condition=" '$(_AndroidLibrayProjectIntermediatePath)' == '' ">$(IntermediateOutputPath)__library_projects__\</_AndroidLibrayProjectIntermediatePath>
+	<_AndroidLibrayProjectAssemblyMapFile>$(_AndroidLibrayProjectIntermediatePath)map.cache</_AndroidLibrayProjectAssemblyMapFile>
+		
 	<!-- $(EnableProguard) is an obsolete property that should be removed at some stage. -->
 	<AndroidEnableProguard Condition="'$(AndroidEnableProguard)'==''">$(EnableProguard)</AndroidEnableProguard>
 	<AndroidEnableMultiDex Condition="'$(AndroidEnableMultiDex)'==''">False</AndroidEnableMultiDex>
@@ -1077,7 +1077,8 @@ because xbuild doesn't support framework reference assemblies.
 		ImportsDirectory="$(_LibraryProjectImportsDirectoryName)"
 		UseShortFileNames="$(UseShortFileNames)"
 		OutputDirectory="$(IntermediateOutputPath)"
-		OutputImportDirectory="$(IntermediateOutputPath)__library_projects__\">
+		AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
+		OutputImportDirectory="$(_AndroidLibrayProjectIntermediatePath)">
 	</ResolveLibraryProjectImports>
 </Target>
 
@@ -1137,7 +1138,7 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="_BuildLibraryImportsCache"
 		Inputs="$(MSBuildProjectFullPath);@(ReferencePath);@(ReferenceDependencyPaths);$(_AndroidBuildPropertiesCache)"
 		Outputs="$(_AndroidLibraryImportsCache)">
-	<GetImportedLibraries TargetDirectory="$(IntermediateOutputPath)__library_projects__\"
+	<GetImportedLibraries TargetDirectory="$(_AndroidLibrayProjectIntermediatePath)"
 			CacheFile="$(_AndroidLibraryImportsCache)">
 	</GetImportedLibraries>
 </Target>
@@ -1205,7 +1206,7 @@ because xbuild doesn't support framework reference assemblies.
  <!-- Run aapt to generate R.java for additional Android resources-->
  <Aapt
    ImportsDirectory="$(_LibraryProjectImportsDirectoryName)"
-   OutputImportDirectory="$(IntermediateOutputPath)__library_projects__\"
+   OutputImportDirectory="$(_AndroidLibrayProjectIntermediatePath)"
    UseShortFileNames="$(UseShortFileNames)"
    ManifestFiles="@(_AdditonalAndroidResourceCachePaths->'%(Identity)\AndroidManifest.xml')"
    ApplicationName="$(_AndroidPackage)"
@@ -1221,6 +1222,7 @@ because xbuild doesn't support framework reference assemblies.
    ApiLevel="$(_AndroidTargetSdkVersion)"
    AndroidUseLatestPlatformSdk="$(AndroidUseLatestPlatformSdk)"
    ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
+   AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
    YieldDuringToolExecution="$(YieldDuringToolExecution)"
    ExplicitCrunch="$(AndroidExplicitCrunch)"
  />
@@ -1271,7 +1273,7 @@ because xbuild doesn't support framework reference assemblies.
 	<!-- Run aapt to generate R.java -->
 	<Aapt Condition="'$(_AndroidResourceDesignerFile)' != ''"
 		ImportsDirectory="$(_LibraryProjectImportsDirectoryName)"
-		OutputImportDirectory="$(IntermediateOutputPath)__library_projects__\"
+		OutputImportDirectory="$(_AndroidLibrayProjectIntermediatePath)"
 		UseShortFileNames="$(UseShortFileNames)"
 		JavaPlatformJarPath="$(JavaPlatformJarPath)"
 		ManifestFiles="$(ResgenTemporaryDirectory)\AndroidManifest.xml"
@@ -1290,6 +1292,7 @@ because xbuild doesn't support framework reference assemblies.
 		ApiLevel="$(_AndroidTargetSdkVersion)"
 		AndroidUseLatestPlatformSdk="$(AndroidUseLatestPlatformSdk)"
 		ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
+		AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
 		YieldDuringToolExecution="$(YieldDuringToolExecution)"
 		ExplicitCrunch="$(AndroidExplicitCrunch)"
 		SupportedAbis="$(_BuildTargetAbis)"
@@ -1786,7 +1789,7 @@ because xbuild doesn't support framework reference assemblies.
   <!-- Create the base .apk with resources and assets -->
   <Aapt
 	ImportsDirectory="$(_LibraryProjectImportsDirectoryName)"
-	OutputImportDirectory="$(IntermediateOutputPath)__library_projects__\"
+	OutputImportDirectory="$(_AndroidLibrayProjectIntermediatePath)"
 	UseShortFileNames="$(UseShortFileNames)"
     JavaPlatformJarPath="$(JavaPlatformJarPath)"
     ManifestFiles="$(IntermediateOutputPath)android\AndroidManifest.xml"
@@ -1806,6 +1809,7 @@ because xbuild doesn't support framework reference assemblies.
     ApiLevel="$(_AndroidTargetSdkVersion)"
     AndroidUseLatestPlatformSdk="$(AndroidUseLatestPlatformSdk)"
 	ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
+    AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
     SupportedAbis="$(_BuildTargetAbis)"
     CreatePackagePerAbi="$(AndroidCreatePackagePerAbi)"
     YieldDuringToolExecution="$(YieldDuringToolExecution)"
@@ -2420,6 +2424,7 @@ because xbuild doesn't support framework reference assemblies.
 	<RemoveDirFixed Directories="$(MonoAndroidIntermediate)aidl" Condition="Exists ('$(MonoAndroidIntermediate)aidl')" />
 	<RemoveDirFixed Directories="$(MonoAndroidIntermediate)bundles" Condition="Exists ('$(MonoAndroidIntermediate)bundles')" />
 	<RemoveDirFixed Directories="$(MonoAndroidIntermediate)__library_projects__" Condition="Exists ('$(MonoAndroidIntermediate)__library_projects__')" />
+	<RemoveDirFixed Directories="$(_AndroidLibrayProjectIntermediatePath)" Condition="Exists ('$(_AndroidLibrayProjectIntermediatePath)')" />
 	<RemoveDirFixed Directories="$(MonoAndroidIntermediate)$(_LibraryProjectImportsDirectoryName)" Condition="Exists ('$(MonoAndroidIntermediate)$(_LibraryProjectImportsDirectoryName)')" />
 	<RemoveDirFixed Directories="$(MonoAndroidIntermediate)$(_NativeLibraryImportsDirectoryName)" Condition="Exists ('$(MonoAndroidIntermediate)$(_NativeLibraryImportsDirectoryName)')" />
 	<RemoveDirFixed Directories="$(MonoAndroidIntermediate)assets" Condition="Exists ('$(MonoAndroidIntermediate)assets')" />
@@ -2448,6 +2453,7 @@ because xbuild doesn't support framework reference assemblies.
 	<Delete Files="$(_AndroidLibraryImportsCache)" />
 	<Delete Files="$(_AndroidStaticResourcesFlag)" />
 	<Delete Files="$(_AndroidLibraryProjectImportsCache)" />
+	<Delete Files="$(_AndroidLibrayProjectAssemblyMapFile)" />
 </Target>
 
 <Target Name="_CollectMonoAndroidOutputs" DependsOnTargets="_ValidateAndroidPackageProperties">

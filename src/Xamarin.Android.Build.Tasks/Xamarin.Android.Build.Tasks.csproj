@@ -474,6 +474,7 @@
     <Compile Include="Utilities\Profile.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\PreserveTlsProvider.cs" />
     <Compile Include="Tasks\Unzip.cs" />
+    <Compile Include="Utilities\AssemblyIdentityMap.cs" />
   </ItemGroup>
   <ItemGroup>
     <_MonoAndroidEnum Include="$(AndroidGeneratedClassDirectory)\Android.Content.PM.LaunchMode.cs" />

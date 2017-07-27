@@ -66,7 +66,7 @@ namespace Xamarin.Android.Tasks
 
 			if (Files.ArchiveZip (outpath, f => {
 				using (var zip = new ZipArchiveEx (f)) {
-					zip.AddDirectory (OutputDirectory, outDirInfo.Name);
+					zip.AddDirectory (OutputDirectory, "native_library_imports");
 				}
 			})) {
 				Log.LogDebugMessage ("Saving contents to " + outpath);

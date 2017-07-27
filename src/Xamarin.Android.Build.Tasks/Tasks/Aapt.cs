@@ -71,6 +71,7 @@ namespace Xamarin.Android.Tasks
 		public string ImportsDirectory { get; set; }
 		public string OutputImportDirectory { get; set; }
 		public bool UseShortFileNames { get; set; }
+		public string AssemblyIdentityMapFile { get; set; }
 
 		public string ResourceNameCaseMap { get; set; }
 
@@ -90,6 +91,7 @@ namespace Xamarin.Android.Tasks
 		public string AndroidSdkPlatform { get; set; }
 
 		Dictionary<string,string> resource_name_case_map = new Dictionary<string,string> ();
+		AssemblyIdentityMap assemblyMap = new AssemblyIdentityMap ();
 
 		bool ManifestIsUpToDate (string manifestFile)
 		{
@@ -211,6 +213,8 @@ namespace Xamarin.Android.Tasks
 			if (ResourceNameCaseMap != null)
 				foreach (var arr in ResourceNameCaseMap.Split (';').Select (l => l.Split ('|')).Where (a => a.Length == 2))
 					resource_name_case_map [arr [1]] = arr [0]; // lowercase -> original
+
+			assemblyMap.Load (AssemblyIdentityMapFile);
 
 			ThreadingTasks.Parallel.ForEach (ManifestFiles, () => 0, DoExecute, (obj) => { Complete (); });
 
@@ -337,7 +341,7 @@ namespace Xamarin.Android.Tasks
 					return s.Substring (0, st + 1) + ExpandString (s.Substring (st + 1));
 				int ast = st + "${library.imports:".Length;
 				string aname = s.Substring (ast, ed - ast);
-				return s.Substring (0, st) + Path.Combine (OutputImportDirectory, UseShortFileNames ? MonoAndroidHelper.GetLibraryImportDirectoryNameForAssembly (aname) : aname, ImportsDirectory) + Path.DirectorySeparatorChar + ExpandString (s.Substring (ed + 1));
+				return s.Substring (0, st) + Path.Combine (OutputImportDirectory, UseShortFileNames ? assemblyMap.GetLibraryImportDirectoryNameForAssembly (aname) : aname, ImportsDirectory) + Path.DirectorySeparatorChar + ExpandString (s.Substring (ed + 1));
 			}
 			else
 				return s;
