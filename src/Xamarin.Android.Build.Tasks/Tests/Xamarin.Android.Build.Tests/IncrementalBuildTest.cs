@@ -80,7 +80,7 @@ public class TestMe {
 		}
 
 		[Test]
-		public void ResolveNativeLibrariesInManagedReferences ()
+		public void ResolveNativeLibrariesInManagedReferences ([Values(true, false)] bool useShortFileNames)
 		{
 			var lib = new XamarinAndroidLibraryProject () {
 				ProjectName = "Lib",
@@ -108,6 +108,7 @@ namespace Lib
 					},
 				},
 			};
+			lib.SetProperty (lib.ActiveConfigurationProperties, "UseShortFileNames", useShortFileNames);
 			var so = lib.OtherBuildItems.First (x => x.Include () == "libs/armeabi-v7a/libfoo.so");
 
 			var lib2 = new XamarinAndroidLibraryProject () {
@@ -139,7 +140,7 @@ namespace Lib2
 					},
 				},
 			};
-
+			lib2.SetProperty (lib.ActiveConfigurationProperties, "UseShortFileNames", useShortFileNames);
 			var path = Path.Combine (Root, "temp", "ResolveNativeLibrariesInManagedReferences");
 			using (var libbuilder = CreateDllBuilder (Path.Combine(path, "Lib"))) {
 
@@ -154,6 +155,7 @@ namespace Lib2
 							new BuildItem.ProjectReference (@"..\Lib2\Lib2.csproj", "Lib2", lib2.ProjectGuid),
 						}
 					};
+					app.SetProperty (app.ActiveConfigurationProperties, "UseShortFileNames", useShortFileNames);
 					using (var builder = CreateApkBuilder (Path.Combine (path, "App"))) {
 						builder.Verbosity = LoggerVerbosity.Diagnostic;
 						Assert.IsTrue (builder.Build (app), "app 1st. build failed");
@@ -171,7 +173,7 @@ namespace Lib2
 						Assert.IsNotNull (libfoo, "libfoo.so should exist in the .apk");
 
 						Assert.AreEqual (so.TextContent ().Length, new FileInfo (Path.Combine (Root, libbuilder.ProjectDirectory, lib.IntermediateOutputPath,
-							"native_library_imports", "armeabi-v7a", "libfoo.so")).Length,
+							useShortFileNames ? "nl" : "native_library_imports", "armeabi-v7a", "libfoo.so")).Length,
 							"intermediate size mismatch");
 						libfoo = ZipHelper.ReadFileFromZip (Path.Combine (Root, builder.ProjectDirectory, app.OutputPath, app.PackageName + ".apk"),
 							"lib/armeabi-v7a/libfoo.so");
