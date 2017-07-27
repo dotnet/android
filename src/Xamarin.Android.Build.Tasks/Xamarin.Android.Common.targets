@@ -1810,6 +1810,9 @@ because xbuild doesn't support framework reference assemblies.
     CreatePackagePerAbi="$(AndroidCreatePackagePerAbi)"
     YieldDuringToolExecution="$(YieldDuringToolExecution)"
     ExplicitCrunch="$(AndroidExplicitCrunch)"
+    VersionCodePattern="$(AndroidVersionCodePattern)"
+    VersionCodeProperties="$(AndroidVersionCodeProperties)"
+    AndroidSdkPlatform="$(_AndroidApiLevel)"
      />
   <Touch Files="$(_PackagedResources)" />
   <!-- LibraryProjectJars must not be used for aapt in BuildApk*, or it will *bundle* the jar! -->
