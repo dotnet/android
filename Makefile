@@ -149,7 +149,7 @@ TEST_APK_PROJECTS = \
 # Syntax: $(call BUILD_TEST_APK,path/to/project.csproj)
 define BUILD_TEST_APK
 	# Must use xabuild to ensure correct assemblies are resolved
-	MSBUILD="$(MSBUILD)" tools/scripts/xabuild /t:SignAndroidPackage $(1)
+	MSBUILD="$(MSBUILD)" tools/scripts/xabuild $(MSBUILD_FLAGS) /t:SignAndroidPackage $(1)
 endef	# BUILD_TEST_APK
 
 run-apk-tests:
