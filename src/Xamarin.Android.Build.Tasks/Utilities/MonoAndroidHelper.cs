@@ -20,6 +20,8 @@ namespace Xamarin.Android.Tasks
 {
 	public class MonoAndroidHelper
 	{
+		static Lazy<string> uname = new Lazy<string> (GetOSBinDirName, System.Threading.LazyThreadSafetyMode.PublicationOnly);
+
 		// Set in ResolveSdks.Execute();
 		// Requires that ResolveSdks.Execute() run before anything else
 		public static string[] TargetFrameworkDirectories;
@@ -48,6 +50,30 @@ namespace Xamarin.Android.Tasks
 			} finally {
 				p.Close ();
 			}
+		}
+
+		static string GetOSBinDirName ()
+		{
+			if (OS.IsWindows)
+				return "";
+			string os = null;
+			DataReceivedEventHandler output = (o, e) => {
+				if (string.IsNullOrWhiteSpace (e.Data))
+					return;
+				os = e.Data.Trim ();
+			};
+			DataReceivedEventHandler error = (o, e) => {};
+			int r = RunProcess ("uname", "-s", output, error);
+			if (r == 0)
+				return os;
+			return null;
+		}
+
+		// Path which contains OS-specific binaries; formerly known as $prefix/bin
+		internal static string GetOSBinPath ()
+		{
+			var toolsDir = Path.GetFullPath (Path.GetDirectoryName (typeof (MonoAndroidHelper).Assembly.Location));
+			return Path.Combine (toolsDir, uname.Value);
 		}
 
 #if MSBUILD
@@ -264,7 +290,7 @@ namespace Xamarin.Android.Tasks
 		{
 			return TargetFrameworkDirectories
 					// TargetFrameworkDirectories will contain a "versioned" directory,
-					// e.g. $prefix/lib/xbuild-frameworks/MonoAndroid/v1.0.
+					// e.g. $prefix/lib/xamarin.android/xbuild-frameworks/MonoAndroid/v1.0.
 					// Trim off the version.
 					.Select (p => Path.GetDirectoryName (p.TrimEnd (Path.DirectorySeparatorChar)))
 					.Any (p => assembly.StartsWith (p));

@@ -21,7 +21,7 @@
 #     MSBuild engine to use. Defaults to `xbuild`, assumed to be in `$PATH`
 #   TARGETS_DIR:
 #     The MSBuild `$(MSBuildExtensionsPath)` root location.
-#     Defaults to `$prefix/lib/xbuild`.
+#     Defaults to `$prefix/lib/xamarin.android/xbuild`.
 #
 # Examples:
 #   To create a .apk for the HelloWorld sample:
@@ -72,16 +72,16 @@ if [[ "$prefix" == */tools/scripts ]] ; then
 		exit 1
 	fi
 	prefix="$real_prefix"
-	xa_prefix="$real_prefix"
+	xa_prefix="$real_prefix/lib/xamarin.android"
 elif [[ "$prefix" == */bin ]] ; then
 	prefix="$prefix/.."
-	xa_prefix="$prefix/../lib/xamarin.android"
+	xa_prefix="$prefix/lib/xamarin.android"
 else
 	(>&2 echo "$name: Could not determine Xamarin.Android prefix.")
 	exit 1
 fi
 
-for t in "$TARGETS_DIR" "$prefix/lib/mono/xbuild" "$prefix/lib/xbuild" ; do
+for t in "$TARGETS_DIR" "$prefix/lib/mono/xbuild" "$xa_prefix/xbuild" ; do
 	if [ -z "$t" -o ! -d "$t" ]; then
 		continue
 	fi
@@ -111,8 +111,7 @@ fi
 declare -a XABUILD_FLAGS
 
 XABUILD_FLAGS=(
-	/p:MonoAndroidBinDirectory="$xa_prefix/bin"
-	/p:MonoAndroidToolsDirectory="$xa_prefix/lib/mandroid"
+	/p:MonoAndroidToolsDirectory="$xa_prefix/xbuild/Xamarin/Android"
 	/p:MonoDroidInstallDirectory="$MONO_ANDROID_PATH"
 )
 
@@ -139,9 +138,9 @@ function GetXbuildDir()
 	read -r -d '' get_xbuild_dir_cmd <<-'EOF' || true
 		using System.IO;
 		var corlib_loc = typeof (int).Assembly.Location;
-		// e.g. /Library/Frameworks/Mono.framework/Versions/5.2.0/lib/mono/4.5
+		// e.g. corlib_dir=/Library/Frameworks/Mono.framework/Versions/5.2.0/lib/mono/4.5
 		var corlib_dir = Path.GetDirectoryName (corlib_loc);
-		// e.g. /Library/Frameworks/Mono.framework/Versions/5.2.0/lib/mono/xbuild
+		// e.g. xbuild_dir=/Library/Frameworks/Mono.framework/Versions/5.2.0/lib/mono/xbuild
 		var xbuild_dir = Path.Combine (corlib_dir, "..", "xbuild");
 		print (Path.GetFullPath (xbuild_dir));
 	EOF
@@ -156,7 +155,7 @@ function ConfigureLocalXbuild()
 	fi
 	xbuild_dir=`GetXbuildDir`
 	local sys_entry=`ls -1 "$xbuild_dir" | head -1`
-	if [ -d "$TARGETS_DIR/$sys_entry" ] ; then
+	if [ -f "$TARGETS_DIR/.__sys_links.txt" ] ; then
 		# already configured; bail
 		return 0
 	fi

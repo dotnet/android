@@ -9,11 +9,12 @@
     <AssemblyName>Xamarin.Android.Tools.Aidl</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
   </PropertyGroup>
+  <Import Project="..\..\Configuration.props" />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>True</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>False</Optimize>
-    <OutputPath>..\..\bin\$(Configuration)\lib\xbuild\Xamarin\Android</OutputPath>
+    <OutputPath>$(XAInstallPrefix)xbuild\Xamarin\Android</OutputPath>
     <DefineConstants>DEBUG;</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -22,7 +23,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>none</DebugType>
     <Optimize>True</Optimize>
-    <OutputPath>..\..\bin\$(Configuration)\lib\xbuild\Xamarin\Android</OutputPath>
+    <OutputPath>$(XAInstallPrefix)xbuild\Xamarin\Android</OutputPath>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <ConsolePause>False</ConsolePause>
@@ -35,7 +36,6 @@
       <Private>False</Private>
     </Reference>
   </ItemGroup>
-  <Import Project="..\..\Configuration.props" />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
     <Compile Include="AidlAst.cs" />

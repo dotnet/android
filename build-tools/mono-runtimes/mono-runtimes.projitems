@@ -260,7 +260,8 @@
       <BuildEnvironment></BuildEnvironment>
       <ExeSuffix></ExeSuffix>
       <InstallBinaries>true</InstallBinaries>
-      <InstallPath>bin/</InstallPath>
+      <InstallPath Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Darwin:'))">Darwin/</InstallPath>
+      <InstallPath Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Linux:'))">Linux/</InstallPath>
     </_LlvmRuntime>
 
     <_LlvmRuntime Include="llvm64" Condition=" '$(_LlvmNeeded)' != '' And '$(_LlvmCanBuild64)' == 'yes' ">
@@ -271,7 +272,8 @@
       <BuildEnvironment></BuildEnvironment>
       <ExeSuffix></ExeSuffix>
       <InstallBinaries>true</InstallBinaries>
-      <InstallPath>bin/</InstallPath>
+      <InstallPath Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Darwin:'))">Darwin/</InstallPath>
+      <InstallPath Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Linux:'))">Linux/</InstallPath>
     </_LlvmRuntime>
 
     <_LlvmRuntime Include="llvmwin32" Condition=" '$(_LlvmNeeded)' != '' And ($(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win32:')) Or $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':linux-Win32:'))) ">
@@ -282,7 +284,7 @@
       <BuildEnvironment>PATH="$(AndroidMxeFullPath)\bin:$(PATH)"</BuildEnvironment>
       <ExeSuffix>.exe</ExeSuffix>
       <InstallBinaries>true</InstallBinaries>
-      <InstallPath>lib/mandroid/</InstallPath>
+      <InstallPath></InstallPath>
     </_LlvmRuntime>
 
     <_LlvmRuntime Include="llvmwin64" Condition=" '$(_LlvmNeeded)' != '' And ($(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:')) Or $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':linux-Win64:'))) ">
@@ -293,7 +295,7 @@
       <BuildEnvironment>PATH="$(AndroidMxeFullPath)\bin:$(PATH)"</BuildEnvironment>
       <ExeSuffix>.exe</ExeSuffix>
       <InstallBinaries>false</InstallBinaries>
-      <InstallPath>lib/mandroid/</InstallPath>
+      <InstallPath></InstallPath>
     </_LlvmRuntime>
   </ItemGroup>
 
@@ -318,7 +320,8 @@
       <ExeSuffix></ExeSuffix>
       <BuildEnvironment></BuildEnvironment>
       <ConfigureEnvironment></ConfigureEnvironment>
-      <InstallPath>bin/</InstallPath>
+      <InstallPath Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Darwin:'))">Darwin/</InstallPath>
+      <InstallPath Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Linux:'))">Linux/</InstallPath>
       <CrossMonoName>cross-arm</CrossMonoName>
     </_MonoCrossRuntime>
 
@@ -341,7 +344,8 @@
       <ExeSuffix></ExeSuffix>
       <BuildEnvironment></BuildEnvironment>
       <ConfigureEnvironment></ConfigureEnvironment>
-      <InstallPath>bin/</InstallPath>
+      <InstallPath Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Darwin:'))">Darwin/</InstallPath>
+      <InstallPath Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Linux:'))">Linux/</InstallPath>
       <CrossMonoName>cross-arm64</CrossMonoName>
     </_MonoCrossRuntime>
 
@@ -364,7 +368,8 @@
       <ExeSuffix></ExeSuffix>
       <BuildEnvironment></BuildEnvironment>
       <ConfigureEnvironment></ConfigureEnvironment>
-      <InstallPath>bin/</InstallPath>
+      <InstallPath Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Darwin:'))">Darwin/</InstallPath>
+      <InstallPath Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Linux:'))">Linux/</InstallPath>
       <CrossMonoName>cross-x86</CrossMonoName>
     </_MonoCrossRuntime>
 
@@ -387,7 +392,8 @@
       <ExeSuffix></ExeSuffix>
       <BuildEnvironment></BuildEnvironment>
       <ConfigureEnvironment></ConfigureEnvironment>
-      <InstallPath>bin/</InstallPath>
+      <InstallPath Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Darwin:'))">Darwin/</InstallPath>
+      <InstallPath Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Linux:'))">Linux/</InstallPath>
       <CrossMonoName>cross-x86_64</CrossMonoName>
     </_MonoCrossRuntime>
 
@@ -410,7 +416,7 @@
       <ExeSuffix>.exe</ExeSuffix>
       <BuildEnvironment>PATH="$(AndroidMxeFullPath)\bin:$(PATH)"</BuildEnvironment>
       <ConfigureEnvironment>$(_LlvmConfigureEnvironmentWin32)</ConfigureEnvironment>
-      <InstallPath>lib/mandroid/</InstallPath>
+      <InstallPath></InstallPath>
       <CrossMonoName>cross-arm</CrossMonoName>
     </_MonoCrossRuntime>
 
@@ -433,7 +439,7 @@
       <ExeSuffix>.exe</ExeSuffix>
       <BuildEnvironment>PATH="$(AndroidMxeFullPath)\bin:$(PATH)"</BuildEnvironment>
       <ConfigureEnvironment>$(_LlvmConfigureEnvironmentWin64)</ConfigureEnvironment>
-      <InstallPath>lib/mandroid/</InstallPath>
+      <InstallPath></InstallPath>
       <CrossMonoName>cross-arm64</CrossMonoName>
     </_MonoCrossRuntime>
 
@@ -456,7 +462,7 @@
       <ExeSuffix>.exe</ExeSuffix>
       <BuildEnvironment>PATH="$(AndroidMxeFullPath)\bin:$(PATH)"</BuildEnvironment>
       <ConfigureEnvironment>$(_LlvmConfigureEnvironmentWin32)</ConfigureEnvironment>
-      <InstallPath>lib/mandroid/</InstallPath>
+      <InstallPath></InstallPath>
       <CrossMonoName>cross-x86</CrossMonoName>
     </_MonoCrossRuntime>
 
@@ -479,7 +485,7 @@
       <ExeSuffix>.exe</ExeSuffix>
       <BuildEnvironment>PATH="$(AndroidMxeFullPath)\bin:$(PATH)"</BuildEnvironment>
       <ConfigureEnvironment>$(_LlvmConfigureEnvironmentWin32)</ConfigureEnvironment>
-      <InstallPath>lib/mandroid/</InstallPath>
+      <InstallPath></InstallPath>
       <CrossMonoName>cross-x86_64</CrossMonoName>
     </_MonoCrossRuntime>
   </ItemGroup>

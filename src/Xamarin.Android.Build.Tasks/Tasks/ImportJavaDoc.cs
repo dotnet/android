@@ -23,12 +23,14 @@ namespace Xamarin.Android.Tasks
 		public string OutputDocDirectory { get; set; }
 
 		protected override string ToolName {
-			get { return "javadoc-to-mdoc"; }
+			get { return "javadoc-to-mdoc.exe"; }
 		}
 
 		protected override string GenerateFullPathToTool ()
 		{
-			return MonoDroidSdk.JavaDocToMDocExe;
+			return Path.Combine (
+					Path.GetFullPath (Path.GetDirectoryName (GetType ().Assembly.Location)),
+					"javadoc-to-mdoc.exe");
 		}
 
 		protected override string GenerateCommandLineCommands ()

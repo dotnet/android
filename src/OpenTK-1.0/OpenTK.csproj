@@ -28,10 +28,10 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\..\bin\$(Configuration)\lib\xbuild-frameworks\MonoAndroid\$(AndroidFrameworkVersion)</OutputPath>
+    <OutputPath>$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\$(AndroidFrameworkVersion)</OutputPath>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>..\..\bin\$(Configuration)\lib\xbuild-frameworks\MonoAndroid\$(AndroidFrameworkVersion)\OpenTK-1.0.xml</DocumentationFile>
+    <DocumentationFile>$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\$(AndroidFrameworkVersion)\OpenTK-1.0.xml</DocumentationFile>
     <AndroidLinkMode>None</AndroidLinkMode>
     <ConsolePause>false</ConsolePause>
   </PropertyGroup>
@@ -39,10 +39,10 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>..\..\bin\$(Configuration)\lib\xbuild-frameworks\MonoAndroid\$(AndroidFrameworkVersion)</OutputPath>
+    <OutputPath>$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\$(AndroidFrameworkVersion)</OutputPath>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>..\..\bin\$(Configuration)\lib\xbuild-frameworks\MonoAndroid\$(AndroidFrameworkVersion)\OpenTK-1.0.xml</DocumentationFile>
+    <DocumentationFile>$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\$(AndroidFrameworkVersion)\OpenTK-1.0.xml</DocumentationFile>
     <ConsolePause>false</ConsolePause>
   </PropertyGroup>
   <ItemGroup>

@@ -41,6 +41,7 @@
     <Compile Include="Xamarin.Android.BuildTools.PrepTasks\Git.cs" />
     <Compile Include="Xamarin.Android.BuildTools.PrepTasks\GitBranch.cs" />
     <Compile Include="Xamarin.Android.BuildTools.PrepTasks\GitCommitHash.cs" />
+    <Compile Include="Xamarin.Android.BuildTools.PrepTasks\HashFileContents.cs" />
     <Compile Include="Xamarin.Android.BuildTools.PrepTasks\PathToolTask.cs" />
     <Compile Include="Xamarin.Android.BuildTools.PrepTasks\SystemUnzip.cs" />
     <Compile Include="Xamarin.Android.BuildTools.PrepTasks\Which.cs" />

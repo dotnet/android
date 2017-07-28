@@ -1,6 +1,0 @@
-#!/bin/sh
-BINDIR=`dirname "$0"`
-MANDROID_DIR="$BINDIR/../lib/mandroid"
-
-unset MONO_PATH
-exec mono $MONO_OPTIONS "$MANDROID_DIR/generator.exe" "$@"

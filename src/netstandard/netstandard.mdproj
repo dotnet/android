@@ -4,12 +4,13 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ItemType>GenericProject</ItemType>
     <ProjectGuid>{93614CB8-4564-43B9-93B0-4AF4B3B16AAE}</ProjectGuid>
-    <OutputPath>..\..\bin\$(Configuration)\lib\xbuild-frameworks\MonoAndroid\v1.0\Facades</OutputPath>
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <OutputPath>$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\v1.0\Facades</OutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <OutputPath>$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\v1.0\Facades</OutputPath>
   </PropertyGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.Common.targets" />
   <PropertyGroup>

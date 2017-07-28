@@ -24,8 +24,6 @@ namespace Xamarin.Android.Tasks
 	{
 		public string AndroidNdkDirectory { get; set; }
 
-		public string SdkBinDirectory { get; set; }
-
 		[Required]
 		public string ApkInputPath { get; set; }
 		
@@ -616,6 +614,7 @@ namespace Xamarin.Android.Tasks
 			if (string.IsNullOrEmpty (AndroidNdkDirectory))
 				return;
 
+			var sdkBinDirectory = MonoAndroidHelper.GetOSBinPath ();
 			int count = 0;
 			foreach (var sabi in supportedAbis.Split (new char[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries)) {
 				var arch = GdbPaths.GetArchFromAbi (sabi);
@@ -627,7 +626,7 @@ namespace Xamarin.Android.Tasks
 							string.Equals (f.Item2, "lib/" + sabi, StringComparison.Ordinal)))
 					continue;
 				var entryName = string.Format ("lib/{0}/{1}", sabi, debugServerFile);
-				var debugServerPath = GdbPaths.GetDebugServerPath (debugServer, arch, AndroidNdkDirectory, SdkBinDirectory);
+				var debugServerPath = GdbPaths.GetDebugServerPath (debugServer, arch, AndroidNdkDirectory, sdkBinDirectory);
 				if (!File.Exists (debugServerPath))
 					continue;
 				Log.LogDebugMessage ("Adding {0} debug server '{1}' to the APK as '{2}'", sabi, debugServerPath, entryName);

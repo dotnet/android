@@ -21,7 +21,7 @@ namespace Xamarin.Android.Tasks
 		public bool RunExport { get; set; }
 
 		protected override string ToolName {
-			get { return OS.IsWindows ? "mdoc.exe" : "mdoc"; }
+			get { return "mdoc.exe"; }
 		}
 
 		protected override string GenerateFullPathToTool ()

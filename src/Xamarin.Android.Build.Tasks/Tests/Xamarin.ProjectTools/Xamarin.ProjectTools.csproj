@@ -134,12 +134,12 @@
     <None Include="packages.config" />
     <Content
         Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Darwin:'))"
-        Include="..\..\..\..\bin\$(Configuration)\lib\xbuild\Xamarin\Android\libzip.3.0.dylib">
+        Include="$(XAInstallPrefix)xbuild\Xamarin\Android\libzip.3.0.dylib">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content
         Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Linux:')) And '$(_LinuxBuildLibZip)' == 'True' "
-        Include="..\..\..\..\bin\$(Configuration)\lib\xbuild\Xamarin\Android\libzip.so">
+        Include="$(XAInstallPrefix)xbuild\Xamarin\Android\libzip.so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content
@@ -151,6 +151,18 @@
     <ProjectReference Include="$(LibZipSharpSourceFullPath)\libZipSharp.csproj">
       <Project>{E248B2CA-303B-4645-ADDC-9D4459D550FD}</Project>
       <Name>libZipSharp</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\build-tools\libzip\libzip.mdproj"
+        Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Darwin:'))">
+      <Project>{900A0F71-BAAD-417A-8D1A-8D330297CDD0}</Project>
+      <Name>libzip</Name>
+      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\build-tools\libzip-windows\libzip-windows.mdproj"
+        Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))">
+      <Project>{0DE278D6-000F-4001-BB98-187C0AF58A61}</Project>
+      <Name>libzip-windows</Name>
+      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
