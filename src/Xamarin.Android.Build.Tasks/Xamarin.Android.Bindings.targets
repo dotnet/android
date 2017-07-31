@@ -295,7 +295,8 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
       AndroidNdkDirectory="$(_AndroidNdkDirectory)"
       Assemblies="@(ReferencePath);@(ReferenceDependencyPaths)"
       CacheFile="$(IntermediateOutputPath)resourcepaths.cache"
-      Condition=" '$(DesignTimeBuild)' == 'false' Or '$(DesignTimeBuild)' == '' "
+      YieldDuringToolExecution="$(YieldDuringToolExecution)"
+      DesignTimeBuild="$(DesignTimeBuild)"
     />
   </Target>
 
