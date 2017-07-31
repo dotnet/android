@@ -44,22 +44,8 @@ and download the `oss-xamarin.android*.zip` file, e.g.
 
 There are two ways to install a Jenkins build of Xamarin.Android on Windows:
 
-1. Through the `oss-xamarin.android*.zip` file.
-2. Through the `Xamarin.Android.Sdk-OSS*.vsix` file.
-
-### `oss-xamarin.android*.zip` Installation
-
-Windows users can right-click the `oss-xamarin.android*.zip` file within
-Windows Explorer and click **Extract All...**, and in the
-**Extract Compressed (Zipped) Folders** dialog enter a *short* path such as
-`C:\xa-sdk`. This is necessary because some of the contained filenames are
-quite long. This will result in a path such as:
-
-	C:\xa-sdk\oss-xamarin.android_v7.2.99.19_Darwin-x86_64_master_3b893cd\bin\Debug\bin\mono-symbolicate.cmd
-
-See the [**Command-line use: Windows**](#cmd-use-Windows) section for details
-on using this installation within a **Developer Command Prompt for VS 2017**
-window.
+1. Through the `Xamarin.Android.Sdk-OSS*.vsix` file.
+2. Through the `oss-xamarin.android*.zip` file.
 
 ### `Xamarin.Android.Sdk-OSS*.vsix` Installation
 
@@ -103,6 +89,51 @@ Once you've selected the desired Visual Studio products, click the **Install**
 button to install the Xamarin.Android SDK extension into Visual Studio 2017.
 
 
+### `oss-xamarin.android*.zip` Installation
+
+Windows users can right-click the `oss-xamarin.android*.zip` file within
+Windows Explorer and click **Extract All...**, and in the
+**Extract Compressed (Zipped) Folders** dialog enter a *short* path such as
+`C:\xa-sdk`. This is necessary because some of the contained filenames are
+quite long. This will result in a path such as:
+
+	C:\xa-sdk\oss-xamarin.android_v7.4.99.57_Darwin-x86_64_master_97f08f7\bin\Debug\bin\setup-windows.exe
+
+Once the `.zip` file has been extracted, please run the `setup-windows.exe`
+utility within the `bin\Debug` or `bin\Release` folders. If you have
+Visual Studio 2017 installed, this utility *must* be run within an
+Administrator-elevated **Developer Command Prompt for VS 2017** window:
+
+1. In the Start menu, search for **Developer Command Prompt for VS 2017**.
+2. Right-click the **Developer Command Prompt for VS 2017** entry.
+3. Click **Run as administrator**.
+
+Within the elevated command prompt, execute the `setup-windows.exe` program:
+
+	> C:\xa-sdk\oss-xamarin.android_v7.4.99.57_Darwin-x86_64_master_97f08f7\bin\Debug\bin\setup-windows.exe
+	Executing: MKLINK /D "C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\MonoAndroid" "C:\xa-sdk\oss-xamarin.android_v7.4.99.57_Darwin-x86_64_master_97f08f7\bin\Debug\lib\xamarin.android\xbuild-frameworks\MonoAndroid"
+	Executing: MKLINK /D "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\MSBuild\Xamarin\Android" "C:\xa-sdk\oss-xamarin.android_v7.4.99.57_Darwin-x86_64_master_97f08f7\bin\Debug\lib\xamarin.android\xbuild\Xamarin\Android"
+	Success!
+
+To uninstall, run `setup-windows.exe /uninstall`:
+
+	> C:\xa-sdk\oss-xamarin.android_v7.4.99.57_Darwin-x86_64_master_97f08f7\bin\Debug\bin\setup-windows.exe /uninstall
+
+The `setup-windows.exe` utility checks for an existing Xamarin.Android install,
+renames the existing directories for backup/easy restoration purposes, then
+create symbolic links into the extracted Xamarin.Android directory.
+
+(Unfortunately, this means that you can't easily have side-by-side installs
+of the Xamarin.Android SDK. Only one install can be active at a time.)
+
+If Visual Studio 2017 isn't installed, it should be fine to right-click
+`setup-windows.exe` from within Windows Explorer, then click
+**Run as administrator**. (`setup-windows.exe` will *not* do the correct thing
+when Visual Studio 2017 is installed, as `%VSINSTALLDIR%` isn't properly
+set outside of the Developer Command Prompt for VS 2017, so the *global*
+`%ProgramFiles(x86)%\MSBuild\Xamarin\Android` directory is modified, not the
+per-SKU Visual Studio 2017 directory.)
+
 # Using Jenkins Build Artifacts
 
 ## Command-line use: Linux and macOS
@@ -145,20 +176,11 @@ MSBuild properties:
 * `AndroidSdkDirectory`: The location of the Android SDK.
 * `AndroidNdkDirectory`: The location of the Android NDK.
 * `JavaSdkDirectory`:  The location of the Java SDK/JDK.
-* `MonoAndroidBinDirectory`: The `xbuild\Xamarin\Android` directory in the
-    `oss-xamarin.android*.zip` installation.
-* `MonoAndroidToolsDirectory`: The `xbuild\Xamarin\Android` directory in the
-    `oss-xamarin.android*.zip` installation.
-* `TargetFrameworkRootPath`: The `xbuild-frameworks` directory in the
-    `oss-xamarin.android*.zip` installation.
 
 For example (using the paths from [Android SDK Setup](#Android_SDK_Setup)):
 
 	msbuild /p:AndroidSdkDirectory="C:\xa-sdk\android-sdk" ^
 		/p:AndroidNdkDirectory="C:\xa-sdk\android-ndk\android-ndk-r14" ^
-		/p:MonoAndroidBinDirectory="C:\xa-sdk\oss-xamarin.android_v7.2.99.19_Darwin-x86_64_master_3b893cd\bin\Debug\lib\xamarin.android\xbuild\Xamarin\Android" ^
-		/p:MonoAndroidToolsDirectory="C:\xa-sdk\oss-xamarin.android_v7.2.99.19_Darwin-x86_64_master_3b893cd\bin\Debug\lib\xamarin.android\xbuild\Xamarin\Android" ^
-		/p:TargetFrameworkRootPath="C:\xa-sdk\oss-xamarin.android_v7.2.99.19_Darwin-x86_64_master_3b893cd\bin\Debug\lib\xamarin.android\xbuild-frameworks" ^
 		/t:SignAndroidPackage ^
 		samples\HelloWorld\HelloWorld.csproj
 
