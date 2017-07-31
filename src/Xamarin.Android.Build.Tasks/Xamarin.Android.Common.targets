@@ -264,6 +264,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<_AndroidSequencePointsMode Condition=" '$(MonoSymbolArchive)' == 'True' And '$(AndroidUseDebugRuntime)' == 'False' And '$(_AndroidSequencePointsMode)' == ''">Normal</_AndroidSequencePointsMode>
 	<_AndroidSequencePointsMode Condition=" '$(_AndroidSequencePointsMode)' == ''">None</_AndroidSequencePointsMode>
 	<_InstantRunEnabled Condition=" '$(_InstantRunEnabled)' == '' ">False</_InstantRunEnabled>
+	<_AndroidBuildPropertiesCache>$(IntermediateOutputPath)build.props</_AndroidBuildPropertiesCache>
 
 </PropertyGroup>
 
@@ -377,7 +378,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 </Target>
 
 <Target Name="_BuildAdditionalResourcesCache"
-	Inputs="@(ReferencePath);@(ReferenceDependencyPaths);$(MSBuildProjectFullPath);$(NugetPackagesConfig)"
+	Inputs="@(ReferencePath);@(ReferenceDependencyPaths);$(MSBuildProjectFullPath);$(NugetPackagesConfig);$(_AndroidBuildPropertiesCache)"
 	Outputs="$(_AndroidResourcePathsCache)"
 	DependsOnTargets="$(_BeforeBuildAdditionalResourcesCache)"
 	>
@@ -387,7 +388,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
    Assemblies="@(ReferencePath);@(ReferenceDependencyPaths)"
    CacheFile="$(_AndroidResourcePathsCache)"
    YieldDuringToolExecution="$(YieldDuringToolExecution)"
-   Condition=" '$(DesignTimeBuild)' == 'false' Or '$(DesignTimeBuild)' == '' "
+   DesignTimeBuild="$(DesignTimeBuild)"
   />
 </Target>
 
@@ -967,7 +968,6 @@ because xbuild doesn't support framework reference assemblies.
 	<_AndroidLintConfigFile>$(IntermediateOutputPath)lint.xml</_AndroidLintConfigFile>
 	<_AndroidResourceDesignerFile Condition=" '$(AndroidUseIntermediateDesignerFile)' == 'True' ">$(IntermediateOutputPath)$(_AndroidResourceDesigner)</_AndroidResourceDesignerFile>
 	<_AndroidResourceDesignerFile Condition=" '$(AndroidUseIntermediateDesignerFile)' != 'True' ">$(AndroidResgenFile)</_AndroidResourceDesignerFile>
-	<_AndroidBuildPropertiesCache>$(IntermediateOutputPath)build.props</_AndroidBuildPropertiesCache>
 	<_AndroidStaticResourcesFlag>$(IntermediateOutputPath)static.flag</_AndroidStaticResourcesFlag>
 	<_AndroidResourcesCacheFile>$(IntermediateOutputPath)mergeresources.cache</_AndroidResourcesCacheFile>
 </PropertyGroup>
@@ -994,6 +994,7 @@ because xbuild doesn't support framework reference assemblies.
 	<_PropertyCacheItems Include="TargetFrameworkVersion=$(TargetFrameworkVersion)" />
 	<_PropertyCacheItems Include="AndroidCreatePackagePerAbi=$(AndroidCreatePackagePerAbi)" />
 	<_PropertyCacheItems Include="OS=$(OS)" />
+	<_PropertyCacheItems Include="DesignTimeBuild=$(DesignTimeBuild)" />
 </ItemGroup>
 
 <Target Name="_ReadPropertiesCache">

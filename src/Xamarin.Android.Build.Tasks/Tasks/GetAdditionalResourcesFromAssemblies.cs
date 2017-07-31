@@ -48,6 +48,9 @@ namespace Xamarin.Android.Tasks {
 		public ITaskItem[] Assemblies { get; set; }
 
 		[Required]
+		public bool DesignTimeBuild { get; set; }
+
+		[Required]
 		public string CacheFile { get; set; }
 
 		string CachePath;
@@ -153,7 +156,8 @@ namespace Xamarin.Android.Tasks {
 				items.Add (Path.GetFullPath (path).TrimEnd (Path.DirectorySeparatorChar));
 				return;
 			}
-			LogCodedError (errorCode, errorFmt, ErrorMessage (attr), path);
+			if (!DesignTimeBuild)
+				LogCodedError (errorCode, errorFmt, ErrorMessage (attr), path);
 		}
 
 		bool ExtractArchive (string url, string file, string contentDir)
@@ -180,7 +184,7 @@ namespace Xamarin.Android.Tasks {
 				catch (Exception e) {
 					LogCodedError ("XA5209", "Unzipping failed. Please download {0} and extract it to the {1} directory.", url, contentDir);
 					LogCodedError ("XA5209", "Reason: {0}", e.Message);
-					Log.LogMessage (MessageImportance.Low, e.ToString ());
+					LogMessage (e.ToString (), MessageImportance.Low);
 					Directory.Delete (contentDir, true);
 					return false;
 				}
@@ -198,9 +202,9 @@ namespace Xamarin.Android.Tasks {
 				return true;
 			
 			var hash = Xamarin.Android.Tools.Files.HashFile (file).Replace ("-", String.Empty);
-			Log.LogDebugMessage ("File :{0}", file);
-			Log.LogDebugMessage ("SHA1 : {0}", hash);
-			Log.LogDebugMessage ("Expected SHA1 : {0}", sha1);
+			LogDebugMessage ("File :{0}", file);
+			LogDebugMessage ("SHA1 : {0}", hash);
+			LogDebugMessage ("Expected SHA1 : {0}", sha1);
 
 			var isValid = string.Compare (hash, sha1, StringComparison.InvariantCultureIgnoreCase) == 0;
 			if (isValid)
@@ -274,7 +278,7 @@ namespace Xamarin.Android.Tasks {
 			if (string.IsNullOrEmpty (url))
 				return null;
 
-			Log.LogDebugMessage ("Making sure we have {0} downloaded and extracted {1} from it...", url, embeddedArchive);
+			LogDebugMessage ("Making sure we have {0} downloaded and extracted {1} from it...", url, embeddedArchive);
 
 			string destinationDir = version == null ? destinationBase : Path.Combine (destinationBase, version);
 			bool createDestinationDirectory = !Directory.Exists (destinationDir);
@@ -293,6 +297,11 @@ namespace Xamarin.Android.Tasks {
 
 			string file = Path.Combine (zipDir, !uri.IsFile ? hash + ".zip" : Path.GetFileName (uri.AbsolutePath));
 			if (string.IsNullOrEmpty (extraPath) && (!File.Exists (file) || !IsValidDownload (file, sha1) || !MonoAndroidHelper.IsValidZip (file))) {
+				if (DesignTimeBuild) {
+					LogWarning ($"DesignTimeBuild={DesignTimeBuild}. Skipping download of {url}");
+					return null;
+				}
+
 				int progress = -1;
 				var downloadHandler = new Action<long, long, int>((r,t,p) => {
 					if (p % 10 != 0 || progress == p)
@@ -311,7 +320,7 @@ namespace Xamarin.Android.Tasks {
 				} catch (Exception e) {
 					LogCodedError ("XA5208", "Download failed. Please build again.");
 					LogCodedError ("XA5208", "Reason: {0}", e.GetBaseException ().Message);
-					Log.LogMessage (MessageImportance.Low, e.ToString ());
+					LogMessage (e.ToString (), MessageImportance.Low);
 				}
 			}
 			else {
@@ -340,7 +349,7 @@ namespace Xamarin.Android.Tasks {
 					if (Log.HasLoggedErrors)
 						break;
 					if (!success) {
-						Log.LogWarning ("Expected File {0} does not exist. Trying to extract again.", Path.Combine (contentDir, embeddedArchive));
+						LogWarning ("Expected File {0} does not exist. Trying to extract again.", Path.Combine (contentDir, embeddedArchive));
 						if (Directory.Exists (contentDir))
 							Directory.Delete (contentDir, recursive: true);
 					}
@@ -385,7 +394,7 @@ namespace Xamarin.Android.Tasks {
 				? CachePath
 				: Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.LocalApplicationData), CacheBaseDir);
 
-				using (var resolver = new DirectoryAssemblyResolver (Log.LogWarning, loadDebugSymbols: false)) {
+				using (var resolver = new DirectoryAssemblyResolver (LogWarning, loadDebugSymbols: false)) {
 					foreach (var assemblyItem in Assemblies) {
 						string fullPath = Path.GetFullPath (assemblyItem.ItemSpec);
 						if (assemblies.Contains (fullPath)) {
