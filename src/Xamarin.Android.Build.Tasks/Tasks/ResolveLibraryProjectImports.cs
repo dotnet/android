@@ -203,10 +203,13 @@ namespace Xamarin.Android.Tasks
 					continue;
 				}
 
-				if (Directory.Exists (outDirForDll))
-					Directory.Delete (outDirForDll, true);
+				Log.LogDebugMessage ("Refreshing {0}", assemblyPath);
+
+				Directory.CreateDirectory (importsDir);
 
 				var assembly = res.GetAssembly (assemblyPath);
+				var assemblyLastWrite = new FileInfo (assemblyPath).LastWriteTime;
+				bool updated = false;
 
 				foreach (var mod in assembly.Modules) {
 					// android environment files
@@ -217,9 +220,12 @@ namespace Xamarin.Android.Tasks
 						if (!Directory.Exists (outDirForDll))
 							Directory.CreateDirectory (outDirForDll);
 						var finfo = new FileInfo (Path.Combine (outDirForDll, envtxt.Name));
-						using (var fs = finfo.Create ()) {
-							var data = envtxt.GetResourceData ();
-							fs.Write (data, 0, data.Length);
+						if (!finfo.Exists || finfo.LastWriteTime > assemblyLastWrite) {
+							using (var fs = finfo.Create ()) {
+								var data = envtxt.GetResourceData ();
+								fs.Write (data, 0, data.Length);
+							}
+							updated = true;
 						}
 						resolvedEnvironments.Add (finfo.FullName);
 					}
@@ -229,11 +235,14 @@ namespace Xamarin.Android.Tasks
 						.Where (r => r.Name.EndsWith (".jar", StringComparison.InvariantCultureIgnoreCase))
 						.Select (r => (EmbeddedResource) r);
 					foreach (var resjar in resjars) {
-						var data = resjar.GetResourceData ();
-						if (!Directory.Exists (importsDir))
-							Directory.CreateDirectory (importsDir);
-						using (var outfs = File.Create (Path.Combine (importsDir, resjar.Name)))
-							outfs.Write (data, 0, data.Length);
+						var outjarFile = Path.Combine (importsDir, resjar.Name);
+						var fi = new FileInfo (outjarFile);
+						if (!fi.Exists || fi.LastWriteTime > assemblyLastWrite) {
+							var data = resjar.GetResourceData ();
+							using (var outfs = File.Create (outjarFile))
+								outfs.Write (data, 0, data.Length);
+							updated = true;
+						}
 					}
 
 					// embedded AndroidResourceLibrary archive
@@ -250,9 +259,9 @@ namespace Xamarin.Android.Tasks
 						// temporarily extracted directory will look like:
 						//    __library_projects__/[dllname]/[library_project_imports | jlibs]/bin
 						using (var zip = MonoAndroidHelper.ReadZipFile (finfo.FullName)) {
-							Files.ExtractAll (zip, outDirForDll, modifyCallback: (entryFullName) => {
+							updated |= Files.ExtractAll (zip, outDirForDll, modifyCallback: (entryFullName) => {
 								return entryFullName.Replace ("library_project_imports", ImportsDirectory);
-							});
+							}, forceUpdate: false);
 						}
 
 						// We used to *copy* the resources to overwrite other resources,
@@ -275,8 +284,10 @@ namespace Xamarin.Android.Tasks
 					}
 				}
 
-				if (Directory.Exists (importsDir))
-					stamp.Create ().Close ();
+				if (Directory.Exists (importsDir) && (updated || !stamp.Exists)) {
+						Log.LogDebugMessage ("Touch {0}", stamp.FullName);
+						stamp.Create ().Close ();
+				}
 			}
 
 			foreach (var f in outdir.GetFiles ("*.jar")

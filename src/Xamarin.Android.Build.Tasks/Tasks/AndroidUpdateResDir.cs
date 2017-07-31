@@ -135,16 +135,25 @@ namespace Xamarin.Android.Tasks
 		public string Directory { get; set; }
 		
 		public bool RemoveDirectories { get; set; }
+
+		[Output]
+		public ITaskItem[] RemovedFiles { get; set; }
+
+		[Output]
+		public ITaskItem [] RemovedDirectories { get; set; }
 		
 		public override bool Execute ()
 		{
 			Log.LogDebugMessage ("RemoveUnknownFiles Task");
 			Log.LogDebugTaskItems ("Files", Files);
+			Log.LogDebugMessage ($"Directory {Directory}");
+			Log.LogDebugMessage ($"RemoveDirectories {RemoveDirectories}");
 
 			var absDir = Path.GetFullPath (Directory);
 			
 			HashSet<string> knownFiles;
-			
+			List<ITaskItem> removedFiles = new List<ITaskItem> ();
+			List<ITaskItem> removedDirectories = new List<ITaskItem> ();
 			// Do a case insensitive compare on windows, because the file
 			// system is case insensitive [Bug #645833]
 			if (IsWindows)
@@ -156,6 +165,8 @@ namespace Xamarin.Android.Tasks
 			foreach (string f in files)
 				if (!knownFiles.Contains (f)) {
 					Log.LogDebugMessage ("Deleting File {0}", f);
+					var item = new TaskItem (f.Replace (absDir, "res" + Path.DirectorySeparatorChar));
+					removedFiles.Add (item);
 					MonoAndroidHelper.SetWriteable (f);
 					File.Delete (f);
 				}
@@ -167,10 +178,16 @@ namespace Xamarin.Android.Tasks
 				foreach (string d in dirs.OrderByDescending (s => s.Length))
 					if (!knownDirs.Contains (d) && IsDirectoryEmpty (d)) {
 						Log.LogDebugMessage ("Deleting Directory {0}", d);
+						removedDirectories.Add (new TaskItem(d));
 						MonoAndroidHelper.SetDirectoryWriteable (d);
 						System.IO.Directory.Delete (d);
 					}
 			}
+
+			RemovedFiles = removedFiles.ToArray ();
+			RemovedDirectories = removedDirectories.ToArray ();
+			Log.LogDebugTaskItems ("[Output] RemovedFiles", RemovedFiles);
+			Log.LogDebugTaskItems ("[Output] RemovedDirectories", RemovedDirectories);
 			return true;
 		}
 

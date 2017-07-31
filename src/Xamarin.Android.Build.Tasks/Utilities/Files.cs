@@ -3,6 +3,7 @@ using System.IO;
 using System.Security.Cryptography;
 
 using Xamarin.Tools.Zip;
+using System.Collections.Generic;
 #if MSBUILD
 using Microsoft.Build.Utilities;
 using Xamarin.Android.Tasks;
@@ -26,6 +27,13 @@ namespace Xamarin.Android.Tools {
 			}
 
 			return changed;
+		}
+
+		public static bool ArchiveZipUpdate(string target, Action<string> archiver)
+		{
+			var lastWrite = File.Exists (target) ? File.GetLastWriteTimeUtc (target) : DateTime.MinValue;
+			archiver (target);
+			return lastWrite < File.GetLastWriteTimeUtc (target);
 		}
 
 		public static bool ArchiveZip (string target, Action<string> archiver)
@@ -193,10 +201,12 @@ namespace Xamarin.Android.Tools {
 			return ZipArchive.Open (filename, FileMode.Open, strictConsistencyChecks: strictConsistencyChecks);
 		}
 
-		public static void ExtractAll(ZipArchive zip, string destination, Action<int, int> progressCallback = null, Func<string, string> modifyCallback = null)
+		public static bool ExtractAll(ZipArchive zip, string destination, Action<int, int> progressCallback = null, Func<string, string> modifyCallback = null, bool forceUpdate = true)
 		{
 			int i = 0;
 			int total = (int)zip.EntryCount;
+			bool updated = false;
+			HashSet<string> files = new HashSet<string> ();
 			foreach (var entry in zip) {
 				if (entry.FullName.Contains ("/__MACOSX/") ||
 						entry.FullName.EndsWith ("/__MACOSX", StringComparison.OrdinalIgnoreCase) ||
@@ -210,8 +220,27 @@ namespace Xamarin.Android.Tools {
 				if (progressCallback != null)
 					progressCallback (i++, total);
 				Directory.CreateDirectory (Path.Combine (destination, Path.GetDirectoryName (fullName)));
-				entry.Extract (destination, fullName);
+				var outfile = Path.GetFullPath (Path.Combine (destination, fullName));
+				files.Add (outfile);
+				var dt = File.Exists (outfile) ? File.GetLastWriteTimeUtc (outfile) : DateTime.MinValue;
+				if (forceUpdate || entry.ModificationTime > dt) {
+					entry.Extract (destination, fullName, FileMode.OpenOrCreate);
+					updated = true;
+				}
 			}
+			foreach (var file in Directory.GetFiles (destination, "*.*", SearchOption.AllDirectories)) {
+				var outfile = Path.GetFullPath (file);
+				if (outfile.Contains ("/__MACOSX/") ||
+				    		outfile.EndsWith ("__AndroidLibraryProjects__.zip", StringComparison.OrdinalIgnoreCase) ||
+						outfile.EndsWith ("/__MACOSX", StringComparison.OrdinalIgnoreCase) ||
+						outfile.EndsWith ("/.DS_Store", StringComparison.OrdinalIgnoreCase))
+					continue;
+				if (!files.Contains (outfile)) {
+					File.Delete (outfile);
+					updated = true;
+				}
+			}
+			return updated;
 		}
 
 		public static string HashFile (string filename)

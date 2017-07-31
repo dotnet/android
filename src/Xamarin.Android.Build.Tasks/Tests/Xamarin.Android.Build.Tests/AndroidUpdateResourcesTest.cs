@@ -809,5 +809,77 @@ namespace UnnamedProject
 					"Theme.xml was NOT removed from the intermediate directory");
 			}
 		}
+
+		[Test]
+		public void CheckDontUpdateResourceIfNotNeeded ()
+		{
+			var path = Path.Combine ("temp", "CheckDontUpdateResourceIfNotNeeded");
+			var foo = new BuildItem.Source ("Foo.cs") {
+				TextContent = () => @"using System;
+namespace Lib1 {
+	public class Foo {
+		public string GetFoo () {
+			return ""Foo"";
+		}
+	}
+}"
+			};
+			var theme = new AndroidItem.AndroidResource ("Resources\\values\\Theme.xml") {
+				TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
+<resources>
+	<color name=""theme_devicedefault_background"">#ffffffff</color>
+</resources>", 
+			};
+			var libProj = new XamarinAndroidLibraryProject () {
+				IsRelease = true,
+				ProjectName = "Lib1",
+				Sources = {
+					foo,
+				},
+				AndroidResources = {
+					theme,
+				},
+			};
+			var appProj = new XamarinAndroidApplicationProject () {
+				IsRelease = true,
+				ProjectName = "App1",
+				References = {
+					new BuildItem.ProjectReference (@"..\Lib1\Lib1.csproj", libProj.ProjectName, libProj.ProjectGuid),
+				},
+			};
+			using (var libBuilder = CreateDllBuilder (Path.Combine (path, libProj.ProjectName), false, false)) {
+				libBuilder.Verbosity = LoggerVerbosity.Diagnostic;
+				Assert.IsTrue (libBuilder.Build (libProj), "Library project should have built");
+				using (var appBuilder = CreateApkBuilder (Path.Combine (path, appProj.ProjectName), false, false)) {
+					appBuilder.Verbosity = LoggerVerbosity.Diagnostic;
+					Assert.IsTrue (appBuilder.Build (appProj), "Application Build should have succeeded.");
+					Assert.IsFalse (appBuilder.Output.IsTargetSkipped ("_UpdateAndroidResgen"), "_UpdateAndroidResgen target not should be skipped.");
+					foo.Timestamp = DateTime.UtcNow;
+					Assert.IsTrue (libBuilder.Build (libProj, doNotCleanupOnUpdate: true, saveProject: false), "Library project should have built");
+					Assert.IsTrue (libBuilder.Output.IsTargetSkipped ("_AddLibraryProjectsEmbeddedResourceToProject"), "_AddLibraryProjectsEmbeddedResourceToProject should be skipped.");
+					Assert.IsTrue (appBuilder.Build (appProj, doNotCleanupOnUpdate: true, saveProject: false), "Application Build should have succeeded.");
+					Assert.IsTrue (appBuilder.Output.IsTargetSkipped ("_UpdateAndroidResgen"), "_UpdateAndroidResgen target should be skipped.");
+					theme.TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
+<resources>
+	<color name=""theme_devicedefault_background"">#00000000</color>
+	<color name=""theme_devicedefault_background2"">#ffffffff</color>
+</resources>";
+					theme.Timestamp = DateTime.UtcNow;
+					Assert.IsTrue (libBuilder.Build (libProj, doNotCleanupOnUpdate: true, saveProject: false), "Library project should have built");
+					Assert.IsFalse (libBuilder.Output.IsTargetSkipped ("_AddLibraryProjectsEmbeddedResourceToProject"), "_AddLibraryProjectsEmbeddedResourceToProject should not be skipped.");
+					Assert.IsTrue (appBuilder.Build (appProj, doNotCleanupOnUpdate: true, saveProject: false), "Application Build should have succeeded.");
+					string text = File.ReadAllText (Path.Combine (Root, path, appProj.ProjectName, "Resources", "Resource.designer.cs"));
+					Assert.IsTrue (text.Contains ("theme_devicedefault_background2"), "Resource.designer.cs was not updated.");
+					Assert.IsFalse (appBuilder.Output.IsTargetSkipped ("_UpdateAndroidResgen"), "_UpdateAndroidResgen target should NOT be skipped.");
+					theme.Deleted = true;
+					theme.Timestamp = DateTime.UtcNow;
+					Assert.IsTrue (libBuilder.Build (libProj, saveProject: true), "Library project should have built");
+					var themeFile = Path.Combine (Root, path, libProj.ProjectName, libProj.IntermediateOutputPath, "res", "values", "theme.xml");
+					Assert.IsTrue (!File.Exists (themeFile), $"{themeFile} should have been deleted.");
+					var archive = Path.Combine (Root, path, libProj.ProjectName, libProj.IntermediateOutputPath, "__AndroidLibraryProjects__.zip");
+					Assert.IsNull (ZipHelper.ReadFileFromZip (archive, "res/values/theme.xml"), "res/values/theme.xml should have been removed from __AndroidLibraryProjects__.zip");
+				}
+			}
+		}
 	}
 }
