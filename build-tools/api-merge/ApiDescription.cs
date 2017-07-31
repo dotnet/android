@@ -121,14 +121,21 @@ namespace Xamarin.Android.ApiMerge {
 								var sa = smember.Attribute (a.Name);
 								if (sa == null)
 									smember.Add (a);
-								else if (sa.Value != a.Value)
-									sa.SetValue (a.Value);
-							}
+								else {
+									// An interface method can become a default interface method in
+									// the later API Levels, but since such a method still has to be 
+									// explicitly implemented in older API versions, they should be non-default.
+									// So, do not change this attribute if it is an interface method.
+									if (sa.Name.LocalName == "abstract") {
 #if KEEP_OLD_WRONG_COMPATIBILITY
-							var isAbstract = smember.Attribute ("abstract");
-							if (isAbstract != null)
-								isAbstract.Value = nmember.Attribute ("abstract").Value;
+										if (stype.Name.LocalName != "interface")
+											sa.Value = a.Value;
 #endif
+									}
+									else if (sa.Value != a.Value)
+										sa.SetValue (a.Value);
+								}
+							}
 							// This is required to workaround the
 							// issue that API Level 20 does not offer
 							// reference docs and we use API Level 21
