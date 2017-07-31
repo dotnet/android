@@ -1046,7 +1046,7 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_GenerateAndroidResourceDir"
-	Inputs="$(MSBuildAllProjects);@(AndroidResource);$(_AndroidBuildPropertiesCache)"
+	Inputs="$(MSBuildProjectFullPath);$(MSBuildAllProjects);@(AndroidResource);$(_AndroidBuildPropertiesCache)"
 	Outputs="@(_AndroidResourceDest)"
 	DependsOnTargets="$(_OnResolveMonoAndroidSdks)">
 	<CopyAndConvertResources SourceFiles="@(AndroidResource)"
@@ -1063,7 +1063,9 @@ because xbuild doesn't support framework reference assemblies.
 		SkipUnchangedFiles="true"
 		Condition=" '$(AndroidExplicitCrunch)' != 'True' Or '$(AndroidApplication)' == '' Or !($(AndroidApplication))"
 	/>
-	<RemoveUnknownFiles Files="@(_AndroidResourceDest)" Directory="$(MonoAndroidResDirIntermediate)" RemoveDirectories="true" />
+	<RemoveUnknownFiles Files="@(_AndroidResourceDest)" Directory="$(MonoAndroidResDirIntermediate)" RemoveDirectories="true">
+		<Output ItemName="_AndroidResourceDestRemovedFiles" TaskParameter="RemovedFiles" />
+	</RemoveUnknownFiles>
 	<Touch Files="@(_AndroidResourceDest)"
 		Condition=" '$(AndroidExplicitCrunch)' != 'True' Or '$(AndroidApplication)' == '' Or !($(AndroidApplication))"
 	/>
@@ -1241,10 +1243,16 @@ because xbuild doesn't support framework reference assemblies.
 		_GenerateAndroidResourceDir;
 		_DefineBuildTargetAbis;
 	</_UpdateAndroidResgenDependsOnTargets>
+	<_UpdateAndroidResgenInputs>
+		$(MSBuildAllProjects);
+		@(_AndroidResourceDest);
+		@(_LibraryResourceDirectoryStamps);
+		@(_AdditonalAndroidResourceCachePaths->'%(Identity)\cache.stamp')
+	</_UpdateAndroidResgenInputs>
 </PropertyGroup>
 
 <Target Name="_UpdateAndroidResgen"
-	Inputs="$(MSBuildAllProjects);@(ReferencePath);@(ReferenceDependencyPaths);@(_AndroidResourceDest)"
+	Inputs="$(_UpdateAndroidResgenInputs)"
 	Outputs="$(_AndroidResgenFlagFile)"
 	DependsOnTargets="$(_UpdateAndroidResgenDependsOnTargets)">
 
@@ -1348,7 +1356,12 @@ because xbuild doesn't support framework reference assemblies.
 		AndroidResgenFlagFile="$(_AndroidResgenFlagFile)" />
 </Target>
 
-<Target Name="_AddLibraryProjectsEmbeddedResourceToProject">
+<Target Name="_AddLibraryProjectsEmbeddedResourceToProject"
+		Inputs="@(_AndroidResourceDest);@(AndroidAsset);@(AndroidJavaLibrary);@(AndroidJavaSource);@(_AndroidResourceDestRemovedFiles)"
+		Outputs="$(IntermediateOutputPath)__AndroidLibraryProjects__.zip"
+		Condition=" '$(AndroidApplication)' != 'True' "
+	>
+
 	<!-- embed managed resources into dll as a zip archive, like AndroidLibraryProjectZip -->
 	<CreateManagedLibraryResourceArchive
 		OutputDirectory="$(IntermediateOutputPath)$(_LibraryProjectImportsDirectoryName)"
@@ -1359,6 +1372,7 @@ because xbuild doesn't support framework reference assemblies.
 		AndroidJavaLibraries="@(AndroidJavaLibrary)"
 		IsApplication="$(AndroidApplication)"
 		AndroidResourcesInThisExactProject="@(_AndroidResourceDest)"
+		RemovedAndroidResourceFiles="@(_AndroidResourceDestRemovedFiles)"
 	/>
 	<CreateItem
 		Include="$(IntermediateOutputPath)__AndroidLibraryProjects__.zip"
