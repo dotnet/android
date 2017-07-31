@@ -272,6 +272,7 @@
     <Compile Include="Java.Lang\Thread.cs" />
     <Compile Include="Java.Lang\Throwable.cs" />
     <Compile Include="Java.Lang.Reflect\InvocationTargetException.cs" />
+    <Compile Include="Java.Lang.Reflect\Parameter.cs" />
     <Compile Include="Java.Nio\Buffer.cs" />
     <Compile Include="Java.Nio\CharBuffer.cs" />
     <Compile Include="Java.Nio\FileChannel.cs" />

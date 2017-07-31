@@ -1290,14 +1290,6 @@
   <remove-node path="/api/package[@name='android.media']/class[@name='AudioRecord']/method[@name='addOnRoutingChangedListener' and parameter[1]/@type='android.media.AudioRouting.OnRoutingChangedListener']" />
   <remove-node path="/api/package[@name='android.media']/class[@name='AudioTrack']/method[@name='addOnRoutingChangedListener' and parameter[1]/@type='android.media.AudioRouting.OnRoutingChangedListener']" />
 
-  <!-- FIXME: this should be fixed rather in api-merge
-  
-  These methods are "default" in API Level 24, but they weren't before.
-  Default methods are not bound like non-default ones, so they are removed
-  in the latest API if we change them to non-default. -->
-  <attr path="/api/package[@name='java.lang.reflect']/interface[@name='AnnotatedElement']/method[@name='isAnnotationPresent']" name="abstract">true</attr>
-  <attr path="/api/package[@name='java.util']/interface[@name='Iterator&lt;E&gt;' or @name='Iterator']/method[@name='remove']" name="abstract">true</attr>
-
   <!-- field name conflict -->
   <attr path="/api/package[@name='android.provider']/class[@name='ContactsContract.CommonDataKinds.Organization']/field[@name='PHONETIC_NAME_STYLE']" name="managedName">PhoneticNameStyleField</attr>
   <attr path="/api/package[@name='android.provider']/class[@name='ContactsContract.CommonDataKinds.StructuredName']/field[@name='PHONETIC_NAME_STYLE']" name="managedName">PhoneticNameStyleField</attr>
@@ -1329,9 +1321,6 @@
   <!-- FIXME: fix build and enable this method -->
   <remove-node path="/api/package[@name='android.text']/class[@name='TextUtils']/method[@name='listEllipsize']" api-since="26" />
 
-
-  <!-- interface default method -->
-  <remove-node path="/api/package[@name='java.lang.reflect']/interface[@name='AnnotatedElement']/method[@name='isAnnotationPresent']" api-since="26" />
 
   <!-- This is possibly a new kind of problem that a class can have a pair of
        methods where one returns a CharSequence and the other returns java.lang.String.
