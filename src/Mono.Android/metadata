@@ -1363,4 +1363,22 @@
   <remove-node path="/api/package/class/method[@name='findViewById' or @name='onFindViewById' or @name='findViewWithTag']/typeParameters" api-since="26" />
   <attr path="/api/package/class/method[@name='findViewById' or @name='onFindViewById' or @name='findViewWithTag']" name="return" api-since="26">android.view.View</attr>
 
+  <!-- Since API Level 26, SecretKey added a new implementing interface
+  Destroyable, which is not a breaking change in Java land, but it DOES
+  break in C# land without default interface method support. And it
+  does break build at javax.crypto.spec.SecretKeySpec.
+  
+  Until C# supports default interface methods, we have to eliminate this
+  "implements" part. Since it contains only default methods, an
+  implementing JCW can be safely compiled with this unbound Java interface.
+  
+  java.security.PrivateKey seems also affected, so removed any query condition for package names and interface names.
+  -->
+  <remove-node path="/api/package/interface/implements[@name='javax.security.auth.Destroyable']" />
+
+  <!-- Same goes for AutoCloseable. Closeable implements this and makes
+  everything optional after API Level 26, but we cannot follow that yet.-->
+  <remove-node path="/api/package/interface/implements[@name='java.lang.AutoCloseable']" />
+
+
 </metadata>
