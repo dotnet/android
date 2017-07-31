@@ -8,6 +8,7 @@ using System.Text;
 using System.Collections.Generic;
 using Microsoft.Build.Framework;
 using System.Xml.Linq;
+using System.Security.Cryptography;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -36,19 +37,49 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void DesignTimeBuild ([Values(false, true)] bool isRelease)
 		{
+			var url = "http://dl-ssl.google.com/android/repository/build-tools_r24-macosx.zip";
+			var md5 = MD5.Create ();
+			var hash = string.Concat (md5.ComputeHash (Encoding.UTF8.GetBytes (url)).Select (b => b.ToString ("X02")));
+			var zipPath = Path.Combine (CachePath, "zips", $"{hash}.zip");
+			if (File.Exists (zipPath))
+				File.Delete (zipPath);
+
+			var extractedDir = Path.Combine (CachePath, "Lib1");
+			if (Directory.Exists (extractedDir))
+				Directory.Delete (extractedDir, recursive: true);
+
+			var lib = new XamarinAndroidLibraryProject () {
+				ProjectName = "Lib1",
+				IsRelease = isRelease,
+				AssemblyInfo = @"using System.Reflection;
+using System.Runtime.CompilerServices;
+
+[assembly: Android.NativeLibraryReferenceAttribute (""android-N/renderscript/lib/packaged/x86/librsjni.so"",
+	SourceUrl="""+ url +@""",
+	Version=""1"", PackageName=""Lib1"")]
+",
+			};
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
+				References = {
+					new BuildItem.ProjectReference (@"..\Lib1\Lib1.csproj", lib.ProjectName, lib.ProjectGuid),
+				},
 			};
-			using (var b = CreateApkBuilder (string.Format ("temp/DesignTimeBuild_{0}", isRelease))) {
-				b.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Diagnostic;
-				b.ThrowOnBuildFailure = false;
-				Assert.IsTrue (b.UpdateAndroidResources (proj, parameters: new string[] { "DesignTimeBuild=true" }),
-					"first build failed");
-				Assert.IsFalse (b.LastBuildOutput.Contains ("Done executing task \"GetAdditionalResourcesFromAssemblies\""),
-					"failed to skip GetAdditionalResourcesFromAssemblies");
-				Assert.IsTrue (b.Build (proj), "second build failed");
-				Assert.IsTrue (b.LastBuildOutput.Contains ("Task \"GetAdditionalResourcesFromAssemblies\""),
-					"failed to run GetAdditionalResourcesFromAssemblies");
+			var path = Path.Combine (Root, "temp", $"DesignTimeBuild_{isRelease}");
+			using (var l = CreateDllBuilder (Path.Combine (path, lib.ProjectName))) {
+				using (var b = CreateApkBuilder (Path.Combine (path, proj.ProjectName))) {
+					l.Verbosity = LoggerVerbosity.Diagnostic;
+					Assert.IsTrue (l.Build (lib), "Lib1 should have built successfully");
+					b.Verbosity = LoggerVerbosity.Diagnostic;
+					b.ThrowOnBuildFailure = false;
+					Assert.IsTrue (b.UpdateAndroidResources (proj, parameters: new string [] { "DesignTimeBuild=true" }),
+						"first build failed");
+					Assert.IsTrue (b.LastBuildOutput.Contains ("Skipping download of "),
+						"failed to skip the downloading of files.");
+					Assert.IsTrue (b.Build (proj), "second build failed");
+					Assert.IsTrue (File.Exists (zipPath), $"Zip should have been downloaded to {zipPath}");
+					Assert.IsTrue (File.Exists (Path.Combine (extractedDir, "1", "content", "android-N", "aapt")), $"Files should have been extracted to {extractedDir}");
+				}
 			}
 		}
 
