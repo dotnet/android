@@ -31,6 +31,7 @@ public class MonoPackageManager {
 				);
 				context.registerReceiver (new mono.android.app.NotifyTimeZoneChanges (), timezoneChangedFilter);
 				
+				preloadAppNativeLibraries(context);
 				System.loadLibrary("monodroid");
 				Locale locale       = Locale.getDefault ();
 				String language     = locale.getLanguage () + "-" + locale.getCountry ();
@@ -77,6 +78,27 @@ public class MonoPackageManager {
 		if (android.os.Build.VERSION.SDK_INT >= 9)
 			return ainfo.nativeLibraryDir;
 		return ainfo.dataDir + "/lib";
+	}
+
+	static void preloadAppNativeLibraries(Context context) {
+		InputStream assetStream = null;
+		try {
+			assetStream = context.getAssets().open("ld_preload.txt");
+			BufferedReader reader = new BufferedReader(new InputStreamReader(assetStream));
+
+			String lib = null;
+			while ((lib = reader.readLine()) != null) {
+				try {
+					System.loadLibrary(lib);
+				} catch (Throwable t) {
+					Log.e("MonoPackageManager", "OOPS : " + t);
+				}
+			}
+		} catch (Throwable t) {
+
+		} finally {
+			try { assetStream.close(); } catch (Throwable t2) { }
+		}
 	}
 
 	public static String[] getAssemblies ()
