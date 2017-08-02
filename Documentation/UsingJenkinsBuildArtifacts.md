@@ -19,9 +19,9 @@ on setting up the Android NDK & SDK if an Android SDK is not already setup.
 macOS and Windows users should go to the
 [Latest xamarin-android Azure Artifacts][xa-macOS-azure-artifacts] page and
 download the `oss-xamarin.android*.zip` file, e.g.
-[oss-xamarin.android_v7.2.99.19_Darwin-x86_64_master_3b893cd.zip][oss-xa-macOS].
+[oss-xamarin.android_v7.4.99.60_Darwin-x86_64_master_4f3d604.zip][oss-xa-macOS].
 
-[oss-xa-macOS]: https://jenkins.mono-project.com/view/Xamarin.Android/job/xamarin-android/lastSuccessfulBuild/Azure/processDownloadRequest/xamarin-android/oss-xamarin.android_v7.2.99.19_Darwin-x86_64_master_3b893cd.zip
+[oss-xa-macOS]: https://jenkins.mono-project.com/view/Xamarin.Android/job/xamarin-android/499/Azure/processDownloadRequest/xamarin-android/oss-xamarin.android_v7.4.99.60_Darwin-x86_64_master_4f3d604.zip
 
 Windows users using Visual Studio 2017 may instead download the
 `Xamarin.Android.Sdk*.vsix` file.
@@ -30,7 +30,7 @@ macOS users may just extract this into their **Downloads** folder using
 **Archive Utility.app** or `unzip` from **Terminal.app**. This will result
 in a file such as:
 
-	$HOME/Downloads/oss-xamarin.android_v7.2.99.19_Darwin-x86_64_master_3b893cd/bin/Debug/bin/xabuild
+	$HOME/Downloads/oss-xamarin.android_v7.4.99.60_Darwin-x86_64_master_4f3d604/bin/Debug/bin/xabuild
 
 Linux/x86_64 users can go to the
 [Latest xamarin-android-linux Azure Artifacts page][xa-linux-azure-artifacts]
@@ -97,7 +97,7 @@ Windows Explorer and click **Extract All...**, and in the
 `C:\xa-sdk`. This is necessary because some of the contained filenames are
 quite long. This will result in a path such as:
 
-	C:\xa-sdk\oss-xamarin.android_v7.4.99.57_Darwin-x86_64_master_97f08f7\bin\Debug\bin\setup-windows.exe
+	C:\xa-sdk\oss-xamarin.android_v7.4.99.60_Darwin-x86_64_master_4f3d604\bin\Debug\bin\setup-windows.exe
 
 Once the `.zip` file has been extracted, please run the `setup-windows.exe`
 utility within the `bin\Debug` or `bin\Release` folders. If you have
@@ -110,14 +110,14 @@ Administrator-elevated **Developer Command Prompt for VS 2017** window:
 
 Within the elevated command prompt, execute the `setup-windows.exe` program:
 
-	> C:\xa-sdk\oss-xamarin.android_v7.4.99.57_Darwin-x86_64_master_97f08f7\bin\Debug\bin\setup-windows.exe
+	> C:\xa-sdk\oss-xamarin.android_v7.4.99.60_Darwin-x86_64_master_4f3d604\bin\Debug\bin\setup-windows.exe
 	Executing: MKLINK /D "C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\MonoAndroid" "C:\xa-sdk\oss-xamarin.android_v7.4.99.57_Darwin-x86_64_master_97f08f7\bin\Debug\lib\xamarin.android\xbuild-frameworks\MonoAndroid"
 	Executing: MKLINK /D "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\MSBuild\Xamarin\Android" "C:\xa-sdk\oss-xamarin.android_v7.4.99.57_Darwin-x86_64_master_97f08f7\bin\Debug\lib\xamarin.android\xbuild\Xamarin\Android"
 	Success!
 
 To uninstall, run `setup-windows.exe /uninstall`:
 
-	> C:\xa-sdk\oss-xamarin.android_v7.4.99.57_Darwin-x86_64_master_97f08f7\bin\Debug\bin\setup-windows.exe /uninstall
+	> C:\xa-sdk\oss-xamarin.android_v7.4.99.60_Darwin-x86_64_master_4f3d604\bin\Debug\bin\setup-windows.exe /uninstall
 
 The `setup-windows.exe` utility checks for an existing Xamarin.Android install,
 renames the existing directories for backup/easy restoration purposes, then

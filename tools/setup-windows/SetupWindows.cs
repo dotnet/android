@@ -20,9 +20,9 @@ namespace Xamarin.Android.Tools
 		public static int Main (string [] args)
 		{
 			// appPath is expected to be similar to: oss-xamarin.anroid-*/bin/Debug/bin/setup-windows.exe
-			var appPath = Environment.GetCommandLineArgs () [0];
-			AppName = Path.GetFileName (appPath);
-			var appDir = Path.GetDirectoryName (appPath);
+			var appPath = typeof (SetupWindows).Assembly.Location;
+			AppName     = Path.GetFileName (appPath);
+			var appDir  = Path.GetDirectoryName (appPath);
 			if (Path.GetFileName (appDir) != "bin") {
 				Console.Error.WriteLine ($"{AppName}: This program must be run from the `bin` directory.");
 				return 1;
