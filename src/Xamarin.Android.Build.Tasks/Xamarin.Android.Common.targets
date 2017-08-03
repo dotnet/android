@@ -377,6 +377,12 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	</PropertyGroup>
 </Target>
 
+<PropertyGroup>
+	<_BeforeBuildAdditionalResourcesCache>
+		_CreatePropertiesCache;
+	</_BeforeBuildAdditionalResourcesCache>
+</PropertyGroup>
+
 <Target Name="_BuildAdditionalResourcesCache"
 	Inputs="@(ReferencePath);@(ReferenceDependencyPaths);$(MSBuildProjectFullPath);$(NugetPackagesConfig);$(_AndroidBuildPropertiesCache)"
 	Outputs="$(_AndroidResourcePathsCache)"

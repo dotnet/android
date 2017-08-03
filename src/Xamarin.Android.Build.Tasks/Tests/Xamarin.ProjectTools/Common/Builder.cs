@@ -3,6 +3,7 @@ using System.IO;
 using System.Diagnostics;
 using Microsoft.Build.Framework;
 using System.Text;
+using System.Collections.Generic;
 
 namespace Xamarin.ProjectTools
 {
@@ -97,7 +98,7 @@ namespace Xamarin.ProjectTools
 			return null;
 		}
 
-		protected bool BuildInternal (string projectOrSolution, string target, string [] parameters = null)
+		protected bool BuildInternal (string projectOrSolution, string target, string [] parameters = null, Dictionary<string, string> environmentVariables = null)
 		{
 			string buildLogFullPath = (!string.IsNullOrEmpty (BuildLogFile))
 				? Path.GetFullPath (Path.Combine (Root, Path.GetDirectoryName (projectOrSolution), BuildLogFile))
@@ -154,7 +155,13 @@ namespace Xamarin.ProjectTools
 					args.AppendFormat (" /p:{0}", param);
 				}
 			}
+			if (environmentVariables != null) {
+				foreach (var kvp in environmentVariables) {
+					psi.EnvironmentVariables[kvp.Key] = kvp.Value;
+				}
+			}
 			psi.Arguments = args.ToString ();
+			
 			psi.CreateNoWindow = true;
 			psi.UseShellExecute = false;
 			psi.RedirectStandardOutput = true;
