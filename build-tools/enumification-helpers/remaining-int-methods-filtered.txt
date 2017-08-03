@@ -15,6 +15,12 @@
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.App.AutomaticZenRule.cs: public unsafe int InterruptionFilter {
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.App.FragmentHostCallback.cs: public unsafe FragmentHostCallback (Android.Content.Context context, Android.OS.Handler handler, int windowAnimations)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.App.FragmentHostCallback.cs: public virtual unsafe int OnGetWindowAnimations ()
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.App.Job.JobInfo.cs: public virtual unsafe int ClipGrantFlags {
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.App.Job.JobParameters.cs: public virtual unsafe int ClipGrantFlags {
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.App.Job.JobScheduler.cs: public abstract int Enqueue (Android.App.Job.JobInfo p0, Android.App.Job.JobWorkItem p1);
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.App.Job.JobScheduler.cs: public override unsafe int Enqueue (Android.App.Job.JobInfo p0, Android.App.Job.JobWorkItem p1)
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.App.NotificationChannel.cs: public unsafe int LightColor {
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.App.NotificationChannel.cs: public unsafe int LockscreenVisibility {
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.App.Notification.cs: public int Color {
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.App.Notification.cs: public int LedARGB {
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.App.Notification.cs: public int LedOffMS {
@@ -31,7 +37,14 @@
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Appwidget.AppWidgetProviderInfo.cs: public int InitialKeyguardLayout {
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Bluetooth.BluetoothHealthAppConfiguration.cs: public unsafe int DataType {
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Bluetooth.BluetoothHealth.cs: public unsafe bool RegisterSinkAppConfiguration (string name, int dataType, Android.Bluetooth.BluetoothHealthCallback @callback)
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Bluetooth.LE.AdvertisingSetParameters.cs: public unsafe Android.Bluetooth.LE.AdvertisingSetParameters.Builder SetInterval (int interval)
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Bluetooth.LE.PeriodicAdvertisingParameters.cs: public unsafe Android.Bluetooth.LE.PeriodicAdvertisingParameters.Builder SetInterval (int interval)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Bluetooth.LE.ScanRecord.cs: public unsafe int AdvertiseFlags {
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Bluetooth.LE.ScanRecord.cs: public unsafe int TxPowerLevel {
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Bluetooth.LE.ScanResult.cs: public unsafe int AdvertisingSid {
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Bluetooth.LE.ScanResult.cs: public unsafe int PeriodicAdvertisingInterval {
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Companion.BluetoothLeDeviceFilter.cs: public unsafe Android.Companion.BluetoothLeDeviceFilter.Builder SetRenameFromBytes (string prefix, string suffix, int bytesFrom, , Java.Nio.ByteOrder byteOrder)
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Companion.BluetoothLeDeviceFilter.cs: public unsafe Android.Companion.BluetoothLeDeviceFilter.Builder SetRenameFromName (string prefix, string suffix, int nameFrom, )
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Content.Context.cs: public unsafe int GetColor (
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Content.Intent.cs: public virtual unsafe int GetIntExtra (string name, int defaultValue)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Content.IntentFilter.cs: public unsafe int Priority {
@@ -40,7 +53,9 @@
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Content.PM.PackageInstaller.cs: public virtual unsafe void SetOriginatingUid (int originatingUid)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Content.PM.PackageItemInfo.cs: public int Banner {
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Content.PM.PackageManager.cs: public abstract Android.Graphics.Drawables.Drawable GetUserBadgedDrawableForDensity (Android.Graphics.Drawables.Drawable drawable, Android.OS.UserHandle user, Android.Graphics.Rect badgeLocation, int badgeDensity);
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Content.PM.PackageManager.cs: public abstract int InstantAppCookieMaxBytes {
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Content.PM.PackageManager.cs: public override unsafe Android.Graphics.Drawables.Drawable GetUserBadgedDrawableForDensity (Android.Graphics.Drawables.Drawable drawable, Android.OS.UserHandle user, Android.Graphics.Rect badgeLocation, int badgeDensity)
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Content.PM.PackageManager.cs: public override unsafe int InstantAppCookieMaxBytes {
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Content.PM.PermissionGroupInfo.cs: public int Priority {
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Content.PM.ResolveInfo.cs: public int Priority {
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Content.PM.ShortcutInfo.cs: public unsafe int Rank {
@@ -53,6 +68,7 @@
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Content.UriMatcher.cs: public virtual unsafe int Match (Android.Net.Uri uri)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Graphics.Canvas.cs: public virtual unsafe void DrawTextRun (Java.Lang.ICharSequence text, , Start, int contextEnd, float x, float y, bool isRtl, Android.Graphics.paint)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Graphics.Canvas.cs: public void DrawTextRun (string text, , Start, int contextEnd, float x, float y, bool isRtl, Android.Graphics.paint)
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Graphics._Color.cs: public static unsafe int Argb (float alpha, float red, float green, float blue)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Graphics._Color.cs: public static unsafe int Argb (, int red, int green, int blue)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Graphics._Color.cs: public static unsafe int Blue (Android.Graphics.Color color)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Graphics._Color.cs: public static unsafe int Green (Android.Graphics.Color color)
@@ -60,8 +76,14 @@
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Graphics._Color.cs: public static unsafe int HSVToColor (, float[] hsv)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Graphics._Color.cs: public static unsafe int ParseColor (string colorString)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Graphics._Color.cs: public static unsafe int Red (Android.Graphics.Color color)
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Graphics._Color.cs: public static unsafe int Rgb (float red, float green, float blue)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Graphics._Color.cs: public static unsafe int Rgb (int red, int green, int blue)
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Graphics._Color.cs: public static unsafe int ToArgb (long color)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Graphics._Color.cs: public static unsafe void RGBToHSV (int red, int green, int blue, float[] hsv)
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Graphics._Color.cs: public virtual unsafe float GetComponent (int component)
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Graphics._Color.cs: public virtual unsafe int ToArgb ()
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Graphics.ColorSpace.cs: public override unsafe float GetMaxValue (int component)
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Graphics.ColorSpace.cs: public override unsafe float GetMinValue (int component)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Graphics.Drawables.GradientDrawable.cs: public virtual unsafe int[] GetColors ()
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Graphics.Drawables.LayerDrawable.cs: public virtual unsafe int AddLayer (Android.Graphics.Drawables.Drawable dr)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Graphics.Drawables.LayerDrawable.cs: public virtual unsafe int GetLayerInsetBottom ()
@@ -80,6 +102,8 @@
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Graphics.Drawables.LayerDrawable.cs: public virtual unsafe void SetLayerInsetTop (, int t)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Graphics.Drawables.LayerDrawable.cs: public virtual unsafe void SetLayerWidth (, int w)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Graphics.Drawables.RippleDrawable.cs: public virtual unsafe int Radius {
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Graphics.LightingColorFilter.cs: public virtual unsafe int ColorAdd {
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Graphics.LightingColorFilter.cs: public virtual unsafe int ColorMultiply {
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Graphics.Paint.cs: public float GetRunAdvance (string text, , Start, int contextEnd, bool isRtl, )
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Graphics.Paint.cs: public ForAdvance (string text, , Start, int contextEnd, bool isRtl, float advance)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Graphics.Paint.cs: public virtual unsafe float GetRunAdvance (char[] text, , Start, int contextEnd, bool isRtl, )
@@ -99,6 +123,7 @@
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Hardware.Camera2.Params.StreamConfigurationMap.cs: public unsafe int[] GetOutputFormats ()
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Hardware.Camera2.Params.StreamConfigurationMap.cs: public unsafe int[] GetValidOutputFormatsForInput (int inputFormat)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Hardware.Camera.cs: public virtual unsafe void SetRotation (int rotation)
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Hardware.HardwareBuffer.cs: public unsafe int Layers {
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Hardware.Location.GeofenceHardware.cs: public unsafe int[] GetMonitoringTypes ()
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Hardware.Location.GeofenceHardwareRequest.cs: public unsafe int UnknownTimer {
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Hardware.SensorAdditionalInfo.cs: public int Serial {
@@ -250,6 +275,8 @@
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Util.CopticCalendar.cs: public unsafe CopticCalendar (, , int date)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Util.CopticCalendar.cs: public unsafe CopticCalendar (, , int date, , , )
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Util.Currency.cs: public virtual unsafe int GetDefaultFractionDigits (Android.Icu.Util.Currency.CurrencyUsage Usage)
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Util.EthiopicCalendar.cs: public unsafe EthiopicCalendar (, , int date)
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Util.EthiopicCalendar.cs: public unsafe EthiopicCalendar (, , int date, , , )
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Util.GregorianCalendar.cs: public unsafe GregorianCalendar (, , int date)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Util.GregorianCalendar.cs: public unsafe GregorianCalendar (, , int date, , )
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Util.GregorianCalendar.cs: public unsafe GregorianCalendar (, , int date, , , )
@@ -272,7 +299,6 @@
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Util.MeasureUnit.cs: public static Android.Icu.Util.MeasureUnit Pint {
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Util.TaiwanCalendar.cs: public unsafe TaiwanCalendar (, , int date)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Util.TaiwanCalendar.cs: public unsafe TaiwanCalendar (, , int date, , , )
-../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Util.TimeZone.cs: public static unsafe Android.Icu.Util.TimeZone GetTimeZone (string ID, int type)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Util.TimeZone.cs: public virtual unsafe void GetOffset (long date, bool local, int[] offsets)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Util.VersionInfo.cs: public static unsafe Android.Icu.Util.VersionInfo GetInstance (int major)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Icu.Util.VersionInfo.cs: public static unsafe Android.Icu.Util.VersionInfo GetInstance (int major, )
@@ -303,13 +329,22 @@
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Media.ExifInterface.cs: public virtual unsafe  (string tag, int defaultValue)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Media.JetPlayer.cs: public int NbSegments {
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Media.JetPlayer.cs: public int Paused {
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Media.MediaCas.cs: public int P1 {
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Media.MediaCas.cs: public int P2 {
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Media.MediaCas.cs: public static unsafe bool IsSystemIdSupported (int CA_system_id)
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Media.MediaCas.cs: public unsafe MediaCas (int CA_system_id)
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Media.MediaCas.cs: public unsafe void RefreshEntitlements (int refreshType, byte[] refreshData)
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Media.MediaCas.cs: public unsafe void SendEvent (int e, int arg, byte[] data)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Media.MediaCodec.cs: 	public unsafe int EncryptBlocks {
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Media.MediaCodec.cs: 	public unsafe int SkipBlocks {
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Media.MediaCodec.cs: 	public unsafe Pattern (int blocksToEncrypt, int blocksToSkip)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Media.MediaCodec.cs: 	public unsafe void Set (int blocksToEncrypt, int blocksToSkip)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Media.MediaCodecInfo.cs: public unsafe int[] GetSupportedSampleRates ()
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Media.MediaDescrambler.cs: public unsafe int Descramble (Java.Nio.ByteBuffer srcBuf, Java.Nio.ByteBuffer dstBuf, Android.Media.MediaCodec.CryptoInfo cryptoInfo)
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Media.MediaDescrambler.cs: public unsafe MediaDescrambler (int CA_system_id)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Media.MediaDrm.cs: public int Extra {
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Media.MediaDrm.cs: public unsafe int RequestType {
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Media.MediaPlayer.cs: public int P1 {
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Media.MediaRouter.cs: public virtual unsafe void RequestUpdateVolume (int direction)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Media.MediaSync.cs: public ErrorEventArgs (Android.Media.MediaSync sync, Android.Media.MediaSyncErrorCode what, int extra)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Media.MediaSync.cs: public int Extra {
@@ -335,7 +370,10 @@
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Mtp.MtpObjectInfo.cs: public unsafe int AssociationDesc {
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Net.LinkAddress.cs: public virtual unsafe int Flags {
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Net.LinkAddress.cs: public virtual unsafe int Scope {
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Net.TrafficStats.cs: public static unsafe int GetAndSetThreadStatsTag ()
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Net.VpnService.cs: public virtual unsafe Android.Net.VpnService.Builder AllowFamily (int family)
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Net.Wifi.Hotspot2.Pps.Credential.cs: public unsafe int EapType {
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Net.Wifi.Hotspot2.Pps.Credential.cs: public unsafe int EapType {
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Net.Wifi.WifiConfiguration.cs: public int Priority {
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Net.Wifi.WifiConfiguration.cs: public virtual unsafe bool IsPasspoint {
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Net.Wifi.WifiManager.cs: public static unsafe int CalculateSignalLevel (, )
@@ -382,7 +420,13 @@
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.OS.Health.HealthStats.cs: public virtual unsafe System.Collections.Generic.IDictionary<string, Java.Lang.Long> GetMeasurements (int key)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.OS.Health.SystemHealthManager.cs: public virtual unsafe Android.OS.Health.HealthStats[] TakeUidSnapshots (int[] uids)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.OS.Process.cs: public static unsafe int[] GetExclusiveCores ()
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.OS.ProxyFileDescriptorCallback.cs: public virtual unsafe int OnRead (long offset, , byte[] data)
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.OS.ProxyFileDescriptorCallback.cs: public virtual unsafe int OnWrite (long offset, , byte[] data)
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.OS.TestLooperManager.cs: public virtual unsafe bool HasMessages (Android.OS.Handler h, Java.Lang.Object @object, int what)
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.OS.VibrationEffect.cs: public static unsafe Android.OS.VibrationEffect CreateOneShot (long milliseconds, int amplitude)
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.OS.VibrationEffect.cs: public static unsafe Android.OS.VibrationEffect CreateWaveform (long[] timings, int[] amplitudes, )
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Provider.BlockedNumberContract.cs: public static unsafe int Unblock (Android.Content.Context context, string phoneNumber)
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Service.Autofill.FillRequest.cs: public unsafe int Flags {
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Service.Carrier.CarrierMessagingService.cs: public unsafe int[] GetMessageRefs ()
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Service.Carrier.CarrierMessagingService.cs: public unsafe int MessageRef {
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Service.Carrier.CarrierMessagingService.cs: public virtual unsafe void OnSendDataSms (byte[] data,  string destAddress, , int sendSmsFlag, Android.Service.Carrier.CarrierMessagingService.IResultCallback @callback)
@@ -395,6 +439,7 @@
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Speech.IRecognitionListener.cs: public int EventType {
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Speech.IRecognitionListener.cs: public unsafe void OnEvent (int eventType, Android.OS.Bundle @params)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Speech.IRecognitionListener.cs: public void OnEvent (int eventType, Android.OS.Bundle @params)
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Speech.Tts.UtteranceProgressListener.cs: public virtual unsafe void OnRangeStart (string utteranceId, , int frame)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Telecom.Connection.cs: public abstract void OnSetDeviceOrientation (int rotation);
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Telecom.Connection.cs: public override unsafe void OnSetDeviceOrientation (int rotation)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Telecom.Connection.cs: public static unsafe string PropertiesToString (int properties)
@@ -402,6 +447,7 @@
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Telecom.InCallService.cs: public override unsafe void SetDeviceOrientation (int rotation)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Telecom.PhoneAccount.cs: public unsafe int HighlightColor {
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Telecom.RemoteConnection.cs: public virtual unsafe void SetDeviceOrientation (int rotation)
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Telecom.TelecomManager.cs: public virtual unsafe void AcceptRingingCall (int videoState)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Telephony.Cdma.CdmaCellLocation.cs: public static unsafe double ConvertQuartSecToDecDegrees (int quartSec)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Telephony.CellIdentityCdma.cs: public unsafe int Longitude {
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Telephony.CellIdentityGsm.cs: public unsafe int Arfcn {
@@ -417,6 +463,10 @@
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Telephony.CellIdentityWcdma.cs: public unsafe int Lac {
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Telephony.CellIdentityWcdma.cs: public unsafe int Psc {
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Telephony.CellIdentityWcdma.cs: public unsafe int Uarfcn {
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Telephony.CellSignalStrengthLte.cs: public unsafe int Cqi {
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Telephony.CellSignalStrengthLte.cs: public unsafe int Rsrp {
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Telephony.CellSignalStrengthLte.cs: public unsafe int Rsrq {
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Telephony.CellSignalStrengthLte.cs: public unsafe int Rssnr {
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Telephony.IccOpenLogicalChannelResponse.cs: public virtual unsafe int Channel {
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Telephony.IccOpenLogicalChannelResponse.cs: public virtual unsafe int Status {
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Telephony.TelephonyManager.cs: public virtual unsafe bool IccCloseLogicalChannel (int channel)
@@ -438,6 +488,12 @@
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Util.Base64InputStream.cs: public unsafe Base64InputStream (System.IO.Stream @in, int flags)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Util.Base64OutputStream.cs: public unsafe Base64OutputStream (System.IO.Stream @out, int flags)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Util.EventLog.cs: public static global::System.Threading.Tasks.Task ReadEventsAsync (int[] tags, System.Collections.Generic.ICollection<Android.Util.EventLog.Event> output)
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Util.Half.cs: public static unsafe int GetExponent (short h)
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Util.Half.cs: public static unsafe int GetSignificand (short h)
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Util.Half.cs: public static unsafe int GetSign (short h)
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Util.Half.cs: public static unsafe int HalfToIntBits (short h)
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Util.Half.cs: public static unsafe int HalfToRawIntBits (short h)
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Util.Half.cs: public static unsafe short IntBitsToHalf (int bits)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Util.IAttributeSet.cs: public unsafe Value (, int defaultValue)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Util.IAttributeSet.cs: public unsafe Value (string @namespace, string attribute, int defaultValue)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Util.Rational.cs: public unsafe int Denominator {
@@ -451,6 +507,7 @@
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Views.Accessibility.CaptioningManager.cs: public int ForegroundColor {
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Views.Accessibility.CaptioningManager.cs: public int WindowColor {
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Views.Animations.Animation.cs: public virtual unsafe int BackgroundColor {
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Views.Autofill.AutofillValue.cs: public unsafe int ListValue {
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Views.Display.cs: public virtual unsafe int Orientation {
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Views.InputDevice.cs: public unsafe bool[] HasKeys (params  int[] keys)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Views.IViewParent.cs: public unsafe void OnNestedPreScroll (Android.Views.View target, , int[] consumed)
@@ -494,6 +551,8 @@
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Views.WindowInsets.cs: public unsafe int SystemWindowInsetTop {
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Webkit.PluginData.cs: public unsafe int StatusCode {
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Webkit.PluginData.cs: public unsafe PluginData (System.IO.Stream stream, long length, System.Collections.Generic.IDictionary<string, string[]> headers, int code)
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Webkit.RenderProcessGoneDetail.cs: public abstract int RendererPriorityAtExit ();
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Webkit.RenderProcessGoneDetail.cs: public override unsafe int RendererPriorityAtExit ()
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Webkit.WebChromeClient.cs: public static unsafe Android.Net.Uri[] ParseResult (int resultCode, Android.Content.Intent data)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Webkit.WebResourceResponse.cs: public unsafe WebResourceResponse (string mimeType, string encoding, int statusCode, string reasonPhrase, System.Collections.Generic.IDictionary<string, string> responseHeaders, System.IO.Stream data)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Webkit.WebResourceResponse.cs: public virtual unsafe int StatusCode {
@@ -506,6 +565,10 @@
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Widget.TextView.cs: public static unsafe int GetTextColor (Android.Content.Context context, Android.Content.Res.TypedArray attrs, )
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Widget.TextView.cs: public unsafe int CurrentHintTextColor {
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Widget.TextView.cs: public unsafe int CurrentTextColor {
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Widget.TextView.cs: public virtual unsafe int AutoSizeStepGranularity {
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Widget.TextView.cs: public virtual unsafe int[] GetAutoSizeTextAvailableSizes ()
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Widget.TextView.cs: public virtual unsafe void SetAutoSizeTextTypeUniformWithConfiguration (  int autoSizeStepGranularity, int unit)
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Widget.TextView.cs: public virtual unsafe void SetAutoSizeTextTypeUniformWithPresetSizes (int[] presetSizes, int unit)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Widget.Toolbar.cs: public virtual unsafe int ContentInsetEnd {
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Widget.Toolbar.cs: public virtual unsafe int ContentInsetEndWithActions {
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Widget.Toolbar.cs: public virtual unsafe int ContentInsetLeft {
@@ -568,11 +631,16 @@
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.IO.RandomAccessFile.cs: public unsafe void WriteInt (int v)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.IO.RandomAccessFile.cs: public unsafe void WriteShort (int v)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.IO.RandomAccessFile.cs: public virtual unsafe void Write (int b)
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Lang.Byte.cs: public static unsafe int ToUnsignedInt (sbyte x)
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Lang.Invoke.IMethodHandleInfo.cs: public unsafe int Modifiers {
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Lang.Invoke.MethodHandles.cs: public static unsafe Java.Lang.Invoke.MethodHandle PermuteArguments (Java.Lang.Invoke.MethodHandle target, Java.Lang.Invoke.MethodType newType, params  int[] reorder)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Lang.Reflect.Array.cs: public static unsafe Java.Lang.Object NewInstance (Java.Lang.Class componentType, params  int[] dimensions)
-../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Lang.Reflect.Constructor.cs: public unsafe int Modifiers {
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Lang.Reflect.Constructor.cs: public override unsafe int Modifiers {
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Lang.Reflect.Executable.cs: public abstract int Modifiers {
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Lang.Reflect.Executable.cs: public override unsafe int Modifiers {
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Lang.Reflect.Field.cs: public unsafe int Modifiers {
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Lang.Reflect.IMember.cs: public unsafe int Modifiers {
-../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Lang.Reflect.Method.cs: public unsafe int Modifiers {
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Lang.Reflect.Method.cs: public override unsafe int Modifiers {
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Lang.Reflect.Modifier.cs: public static unsafe bool IsAbstract (int mod)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Lang.Reflect.Modifier.cs: public static unsafe bool IsFinal (int mod)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Lang.Reflect.Modifier.cs: public static unsafe bool IsInterface (int mod)
@@ -590,7 +658,10 @@
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Lang.Reflect.Modifier.cs: public static unsafe int FieldModifiers ()
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Lang.Reflect.Modifier.cs: public static unsafe int InterfaceModifiers ()
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Lang.Reflect.Modifier.cs: public static unsafe int MethodModifiers ()
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Lang.Reflect.Modifier.cs: public static unsafe int ParameterModifiers ()
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Lang.Reflect.Modifier.cs: public static unsafe string ToString (int mod)
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Lang.Reflect.Parameter.cs: public unsafe int Modifiers {
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Lang.Short.cs: public static unsafe int ToUnsignedInt (short x)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Lang.String.cs: public unsafe String (byte[] ascii, int hibyte)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Lang.String.cs: public unsafe String (byte[] ascii, int hibyte, , )
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Lang.String.cs: public unsafe void GetBytes (int srcBegin, int srcEnd, byte[] dst, int dstBegin)
@@ -600,6 +671,7 @@
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Net.Socket.cs: public virtual unsafe void SendUrgentData (int data)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Net.Socket.cs: public virtual unsafe void SetSoLinger (bool on, int linger)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Net.URLConnection.cs: public virtual unsafe int GetHeaderFieldInt (string name, int Default)
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Nio.Channels.AsynchronousChannelGroup.cs: public static unsafe Java.Nio.Channels.AsynchronousChannelGroup WithFixedThreadPool (int nThreads, Java.Util.Concurrent.IThreadFactory threadFactory)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Security.Cert.X509CertSelector.cs: public virtual unsafe void AddSubjectAlternativeName (int type, byte[] name)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Security.Cert.X509CertSelector.cs: public virtual unsafe void AddSubjectAlternativeName (int type, string name)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Sql.BatchUpdateException.cs: public unsafe BatchUpdateException (int[] updateCounts)
@@ -805,12 +877,19 @@
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Text.IAttributedCharacterIterator.cs: public unsafe int RunStart {
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Text.StringCharacterIterator.cs: public unsafe char SetIndex (int p)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Text.StringCharacterIterator.cs: public unsafe StringCharacterIterator (string text, int begin, , )
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Time.Format.DateTimeFormatterBuilder.cs: public unsafe Java.Time.Format.DateTimeFormatterBuilder AppendInstant (int fractionalDigits)
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Time.Temporal.ChronoField.cs: public unsafe int CheckValidIntValue (long value)
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Util.Base64.cs: public virtual unsafe int Decode (byte[] src, byte[] dst)
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Util.Base64.cs: public virtual unsafe int Encode (byte[] src, byte[] dst)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Util.Calendar.cs: public unsafe void Set (, , int date)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Util.Calendar.cs: public unsafe void Set (, , int date, OfDay, )
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Util.Calendar.cs: public unsafe void Set (, , int date, OfDay, , )
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Util.Calendar.cs: public virtual unsafe int WeeksInWeekYear {
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Util.Calendar.cs: public virtual unsafe int WeekYear {
-../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Util.Calendar.cs: public virtual unsafe void SetWeekDate (int weekYear, int weekOfYear, )
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Util.Calendar.cs: public virtual unsafe Java.Util.Calendar.Builder SetFields (params  int[] fieldValuePairs)
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Util.Calendar.cs: public virtual unsafe Java.Util.Calendar.Builder SetTimeOfDay (OfDay, , , int millis)
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Util.Calendar.cs: public virtual unsafe Java.Util.Calendar.Builder SetWeekDate (int weekYear, int weekOfYear, )
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Util.Calendar.cs: public virtual unsafe Java.Util.Calendar.Builder SetWeekDefinition (int firstDayOfWeek, )
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Util.Collections.cs: public static unsafe bool Disjoint (System.Collections.Generic.ICollection<object> c1, System.Collections.Generic.ICollection<object> c2)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Util.Collections.cs: public static unsafe void Swap (System.Collections.Generic.IList<object> list,  int j)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Util.Concurrent.ArrayBlockingQueue.cs: public virtual unsafe int RemainingCapacity ()
@@ -880,10 +959,8 @@
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Util.Concurrent.ConcurrentHashMap.cs: public virtual unsafe int ReduceKeysToInt (long parallelismThreshold, Java.Util.Functions.IToIntFunction transformer, int basis, Java.Util.Functions.IIntBinaryOperator reducer)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Util.Concurrent.ConcurrentHashMap.cs: public virtual unsafe int ReduceToInt (long parallelismThreshold, Java.Util.Functions.IToIntBiFunction transformer, int basis, Java.Util.Functions.IIntBinaryOperator reducer)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Util.Concurrent.ConcurrentHashMap.cs: public virtual unsafe int ReduceValuesToInt (long parallelismThreshold, Java.Util.Functions.IToIntFunction transformer, int basis, Java.Util.Functions.IIntBinaryOperator reducer)
-../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Util.Concurrent.CopyOnWriteArrayList.cs: public virtual unsafe int AddAllAbsent (System.Collections.ICollection collection)
-../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Util.Concurrent.CopyOnWriteArrayList.cs: public virtual unsafe Of (Java.Lang.Object @object, int from)
-../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Util.Concurrent.CopyOnWriteArrayList.cs: public virtual unsafe Of (Java.Lang.Object @object, int to)
-../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Util.Concurrent.CopyOnWriteArrayList.cs: public virtual unsafe System.Collections.IList SubList (int from, int to)
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Util.Concurrent.CopyOnWriteArrayList.cs: public virtual unsafe int AddAllAbsent (System.Collections.ICollection c)
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Util.Concurrent.CopyOnWriteArrayList.cs: public virtual unsafe Of (Java.Lang.Object e, int index)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Util.Concurrent.CountedCompleter.cs: public unsafe bool CompareAndSetPendingCount (int expected, )
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Util.Concurrent.CountedCompleter.cs: public unsafe void AddToPendingCount (int delta)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Util.Concurrent.CyclicBarrier.cs: public unsafe CyclicBarrier (int parties)
@@ -956,6 +1033,7 @@
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Util.OptionalInt.cs: public unsafe int OrElseGet (Java.Util.Functions.IIntSupplier other)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Util.OptionalInt.cs: public unsafe int OrElse (int other)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Util.OptionalInt.cs: public unsafe int OrElseThrow (Java.Util.Functions.ISupplier exceptionSupplier)
+../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Util.Random.cs: public virtual unsafe  (int bound)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Util.SimpleTimeZone.cs: public override unsafe  (, , , , , int millis)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Util.SimpleTimeZone.cs: public unsafe SimpleTimeZone (, string ID, , , , , , , , , int dstSavings)
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Java.Util.SimpleTimeZone.cs: public unsafe SimpleTimeZone (, string ID, , , , , , , , , , , int dstSavings)
