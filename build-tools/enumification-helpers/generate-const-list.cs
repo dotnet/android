@@ -65,15 +65,14 @@ public class Driver
 		doc_base = args [0];
 		verbose = args.Any (a => a == "-v" || a == "--verbose");
 
-		var doc = GetDocument ("packages.html");
-
-		foreach (XmlElement package in doc.SelectNodes ("//div[@id='packages-nav' or @class='dac-reference-nav']/ul/li")) {
-			// This internal package broke API Level 20 processing...
-			if (package.InnerText.StartsWith ("com.android.internal"))
+		foreach (var rawPkgName in File.ReadAllLines (Path.Combine (Path.GetFullPath (doc_base), "packages.html"))) {
+			if (rawPkgName.Length == 0)
+				continue;
+			if (rawPkgName.StartsWith ("com.android.internal"))
 				continue;
 
-			output.WriteLine ("  <package name='{0}'>", package.InnerText);
-			string pkgName = package.InnerText.Replace ('.', '/');
+			output.WriteLine ("  <package name='{0}'>", rawPkgName);
+			string pkgName = rawPkgName.Replace ('.', '/');
 
 			if (pkgName.StartsWith ("org") && pkgName != "org/xmlpull/v1") {
 				output.WriteLine ("  </package>");

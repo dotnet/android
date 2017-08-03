@@ -77,16 +77,6 @@
   Please use SetSystemScope() instead. This setter is not really public in Android API and will vanish in the future versions.
   </attr>
 
-  <!-- Non-public intermediaries -->
-  <!-- starting with API Level 15 *updated* doc (docs-15-r02.zip), java.lang.Closeable implements nonpublic java.lang.AutoCloseable,
-    which does NOT exist in the API documentation. It is not added by jar2xml either, so here we have to either add one as a dummy or remove "implements". -->
-  <remove-node path="/api/package/class/implements[@name='java.lang.AutoCloseable']" />
-  <remove-node path="/api/package/interface/implements[@name='java.lang.AutoCloseable']" />
-  <!-- Same for some java.nio.channels stuff -->
-  <remove-node path="/api/package/class/implements[@name='java.nio.channels.SeekableByteChannel']" />
-  <!-- Same for java.util.zip.ZipConstants -->
-  <remove-node path="/api/package/class/implements[@name='java.util.zip.ZipConstants']" />
-
   <!-- Also, it seems to lack some non-public types even in android.jar but the derived types still reference...!
     - java.lang.ClassNotFoundException is marked as derived from java.lang.ReflectiveOperationException which does not exist.
     Also, this class has disappeared at some stage. -->
@@ -456,7 +446,6 @@
   <remove-node path="/api/package[@name='android.content']/class[@name='ContentValues']/method[@name='put']/parameter[@type='java.lang.Short']/.." />
   <remove-node path="/api/package[@name='android.content']/class[@name='ContentValues']/method[@name='valueSet']" />
   <remove-node api-since="8" path="/api/package[@name='android.content']/interface[@name='EntityIterator']" />
-  <remove-node path="/api/package[@name='android.content.res']/class[@name='AssetManager.AssetInputStream']" />
   <remove-node path="/api/package[@name='com.android.internal.util']" />
   <remove-node path="/api/package[@name='android.text.method']/class[@name='PasswordTransformationMethod']/implements[@name='android.text.TextWatcher']" />
   <!-- Adding global:: to everywhere before System.* is annoying, so let's just rename it to SystemInterop -->
@@ -1301,14 +1290,6 @@
   <remove-node path="/api/package[@name='android.media']/class[@name='AudioRecord']/method[@name='addOnRoutingChangedListener' and parameter[1]/@type='android.media.AudioRouting.OnRoutingChangedListener']" />
   <remove-node path="/api/package[@name='android.media']/class[@name='AudioTrack']/method[@name='addOnRoutingChangedListener' and parameter[1]/@type='android.media.AudioRouting.OnRoutingChangedListener']" />
 
-  <!-- FIXME: this should be fixed rather in api-merge
-  
-  These methods are "default" in API Level 24, but they weren't before.
-  Default methods are not bound like non-default ones, so they are removed
-  in the latest API if we change them to non-default. -->
-  <attr path="/api/package[@name='java.lang.reflect']/interface[@name='AnnotatedElement']/method[@name='isAnnotationPresent']" name="abstract">true</attr>
-  <attr path="/api/package[@name='java.util']/interface[@name='Iterator&lt;E&gt;' or @name='Iterator']/method[@name='remove']" name="abstract">true</attr>
-
   <!-- field name conflict -->
   <attr path="/api/package[@name='android.provider']/class[@name='ContactsContract.CommonDataKinds.Organization']/field[@name='PHONETIC_NAME_STYLE']" name="managedName">PhoneticNameStyleField</attr>
   <attr path="/api/package[@name='android.provider']/class[@name='ContactsContract.CommonDataKinds.StructuredName']/field[@name='PHONETIC_NAME_STYLE']" name="managedName">PhoneticNameStyleField</attr>
@@ -1322,7 +1303,7 @@
 
   <!-- Android O (API Level 26) -->
 
-  <attr path="/api/package[@name='android.view.autofill']" name="managedName" api-since="26">Android.Views.AutoFill</attr>
+  <attr path="/api/package[@name='android.view.autofill']" name="managedName" api-since="26">Android.Views.Autofill</attr>
   <attr path="/api/package[@name='android.view.textclassifier']" name="managedName" api-since="26">Android.Views.TextClassifiers</attr>
   <attr path="/api/package[@name='java.nio.file']" name="managedName" api-since="26">Java.Nio.FileNio</attr>
   <attr path="/api/package[@name='java.nio.file.attribute']" name="managedName" api-since="26">Java.Nio.FileNio.Attributes</attr>
@@ -1337,17 +1318,9 @@
   <remove-node path="/api/package[@name='java.time']" api-since="26" />
   <remove-node path="/api/package[@name='java.time.chrono']" api-since="26" />
   
-  <!-- FIXME: fix build and enable these types -->
-  <remove-node path="/api/package[@name='java.nio.channels']/class[@name='AsynchronousFileChannel']" api-since="26" />
-  <remove-node path="/api/package[@name='java.nio.channels']/class[@name='AsynchronousSocketChannel']" api-since="26" />
-  <remove-node path="/api/package[@name='java.nio.channels']/class[@name='AsynchronousServerSocketChannel']" api-since="26" />
-
   <!-- FIXME: fix build and enable this method -->
   <remove-node path="/api/package[@name='android.text']/class[@name='TextUtils']/method[@name='listEllipsize']" api-since="26" />
 
-
-  <!-- interface default method -->
-  <remove-node path="/api/package[@name='java.lang.reflect']/interface[@name='AnnotatedElement']/method[@name='isAnnotationPresent']" api-since="26" />
 
   <!-- This is possibly a new kind of problem that a class can have a pair of
        methods where one returns a CharSequence and the other returns java.lang.String.
@@ -1358,5 +1331,43 @@
 
   <!-- interfaces that implement BasicFileAttributeView often have return value of a derived type. So change the managed return type. --> 
   <attr path="/api/package[@name='java.nio.file.attribute']/*[implements[@name='java.nio.file.attribute.BasicFileAttributeView']]/method[@name='readAttributes']" name="managedReturn">Java.Nio.FileNio.Attributes.IBasicFileAttributes</attr>
+
+  <!-- When propertized, they conflict with existing boolean property (isFocused()/setFocused(boolean)) -->
+  <attr path="/api/package[@name='android.view']/class[@name='View']/method[@name='getFocusable' and @return='int']" name="propertyName"></attr>
+  <attr path="/api/package[@name='android.view']/class[@name='View']/method[@name='setFocusable' and parameter/@type='int']" name="propertyName"></attr>
+  <!-- ... and then the setter cannot be simply specified at methodmap.csv because
+    the generated enummetadata line confuses boolean override(!)
+    We manually copy the generated metadata, adding setter type
+  -->
+  <attr path="/api/package[@name='android.view']/*[@name='View']/method[@name='getFocusable']" name="enumReturn">Android.Views.ViewFocusability</attr>
+  <attr path="/api/package[@name='android.view']/*[@name='View']/method[@name='setFocusable']/parameter[@name='focusable' and @type='int']" name="enumType">Android.Views.ViewFocusability</attr>
+
+  <!-- API Level 26 changed findViewById() to have a generic type parameter.
+  That is technically different in Java sources, but are identical to
+  former non-generic version. So they should be regarded as identical.
+  Also, for this method we have *manually* bound generic method.
+  
+  We could make fixes in api-merge, but manual fix is 100x simpler.
+  Sadly api-merge is processed before metadata fixup, so it cannot be simple overload removal. -->
+  <remove-node path="/api/package/class/method[@name='findViewById' or @name='onFindViewById' or @name='findViewWithTag']/typeParameters" api-since="26" />
+  <attr path="/api/package/class/method[@name='findViewById' or @name='onFindViewById' or @name='findViewWithTag']" name="return" api-since="26">android.view.View</attr>
+
+  <!-- Since API Level 26, SecretKey added a new implementing interface
+  Destroyable, which is not a breaking change in Java land, but it DOES
+  break in C# land without default interface method support. And it
+  does break build at javax.crypto.spec.SecretKeySpec.
+  
+  Until C# supports default interface methods, we have to eliminate this
+  "implements" part. Since it contains only default methods, an
+  implementing JCW can be safely compiled with this unbound Java interface.
+  
+  java.security.PrivateKey seems also affected, so removed any query condition for package names and interface names.
+  -->
+  <remove-node path="/api/package/interface/implements[@name='javax.security.auth.Destroyable']" />
+
+  <!-- Same goes for AutoCloseable. Closeable implements this and makes
+  everything optional after API Level 26, but we cannot follow that yet.-->
+  <remove-node path="/api/package/interface/implements[@name='java.lang.AutoCloseable']" />
+
 
 </metadata>
