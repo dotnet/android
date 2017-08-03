@@ -390,7 +390,7 @@ namespace Java.Lang {
 			}
 		}
 
-		internal static IJavaObject PeekObject (IntPtr handle)
+		internal static IJavaObject PeekObject (IntPtr handle, Type requiredType = null)
 		{
 			if (handle == IntPtr.Zero)
 				return null;
@@ -401,12 +401,20 @@ namespace Java.Lang {
 					for (int i  = 0; i < wrefs.Count; ++i) {
 						var wref  = wrefs [i];
 						IJavaObject res = wref.Target as IJavaObject;
-						if (res != null && res.Handle != IntPtr.Zero && JNIEnv.IsSameObject (handle, res.Handle))
+						if (res != null && res.Handle != IntPtr.Zero && JNIEnv.IsSameObject (handle, res.Handle)) {
+							if (requiredType != null && !requiredType.IsAssignableFrom (res.GetType ()))
+								return null;
 							return res;
+						}
 					}
 				}
 			}
 			return null;
+		}
+
+		internal static T PeekObject <T> (IntPtr handle)
+		{
+			return (T)PeekObject (handle, typeof (T));
 		}
 
 		public static T GetObject<T> (IntPtr jnienv, IntPtr handle, JniHandleOwnership transfer)
