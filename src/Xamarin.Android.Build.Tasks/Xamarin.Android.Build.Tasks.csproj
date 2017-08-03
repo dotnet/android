@@ -289,11 +289,17 @@
     <Compile Include="$(LinkerSourceFullPath)\linker\Mono.Linker\MethodAction.cs">
       <Link>Linker\Mono.Linker\MethodAction.cs</Link>
     </Compile>
+    <Compile Include="$(LinkerSourceFullPath)\linker\Mono.Linker\MethodReferenceExtensions.cs">
+      <Link>Linker\Mono.Linker\MethodReferenceExtensions.cs</Link>
+    </Compile>
     <Compile Include="$(LinkerSourceFullPath)\linker\Mono.Linker\Pipeline.cs">
       <Link>Linker\Mono.Linker\Pipeline.cs</Link>
     </Compile>
     <Compile Include="$(LinkerSourceFullPath)\linker\Mono.Linker\TypePreserve.cs">
       <Link>Linker\Mono.Linker\TypePreserve.cs</Link>
+    </Compile>
+    <Compile Include="$(LinkerSourceFullPath)\linker\Mono.Linker\TypeReferenceExtensions.cs">
+      <Link>Linker\Mono.Linker\TypeReferenceExtensions.cs</Link>
     </Compile>
     <Compile Include="$(LinkerSourceFullPath)\linker\Mono.Linker\XApiReader.cs">
       <Link>Linker\Mono.Linker\XApiReader.cs</Link>
