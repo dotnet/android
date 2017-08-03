@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using Xamarin.ProjectTools;
 using NUnit.Framework;
 using System.Linq;
@@ -37,14 +37,19 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void DesignTimeBuild ([Values(false, true)] bool isRelease)
 		{
+			var path = Path.Combine (Root, "temp", $"DesignTimeBuild_{isRelease}");
+			var cachePath = Path.Combine (path, "Cache");
+			var envVar = new Dictionary<string, string> () {
+				{ "XAMARIN_CACHEPATH", cachePath },
+			};
 			var url = "http://dl-ssl.google.com/android/repository/build-tools_r24-macosx.zip";
 			var md5 = MD5.Create ();
 			var hash = string.Concat (md5.ComputeHash (Encoding.UTF8.GetBytes (url)).Select (b => b.ToString ("X02")));
-			var zipPath = Path.Combine (CachePath, "zips", $"{hash}.zip");
+			var zipPath = Path.Combine (cachePath, "zips", $"{hash}.zip");
 			if (File.Exists (zipPath))
 				File.Delete (zipPath);
 
-			var extractedDir = Path.Combine (CachePath, "Lib1");
+			var extractedDir = Path.Combine (cachePath, "Lib1");
 			if (Directory.Exists (extractedDir))
 				Directory.Delete (extractedDir, recursive: true);
 
@@ -65,19 +70,24 @@ using System.Runtime.CompilerServices;
 					new BuildItem.ProjectReference (@"..\Lib1\Lib1.csproj", lib.ProjectName, lib.ProjectGuid),
 				},
 			};
-			var path = Path.Combine (Root, "temp", $"DesignTimeBuild_{isRelease}");
+			
 			using (var l = CreateDllBuilder (Path.Combine (path, lib.ProjectName))) {
 				using (var b = CreateApkBuilder (Path.Combine (path, proj.ProjectName))) {
 					l.Verbosity = LoggerVerbosity.Diagnostic;
+					Assert.IsTrue(l.Clean(lib), "Lib1 should have cleaned successfully");
 					Assert.IsTrue (l.Build (lib), "Lib1 should have built successfully");
 					b.Verbosity = LoggerVerbosity.Diagnostic;
 					b.ThrowOnBuildFailure = false;
-					Assert.IsTrue (b.UpdateAndroidResources (proj, parameters: new string [] { "DesignTimeBuild=true" }),
+					Assert.IsTrue (b.Clean(proj), "App should have cleaned successfully");
+					Assert.IsTrue (b.UpdateAndroidResources (proj, doNotCleanupOnUpdate: true, parameters: new string [] { "DesignTimeBuild=true" }, environmentVariables: envVar),
 						"first build failed");
 					Assert.IsTrue (b.LastBuildOutput.Contains ("Skipping download of "),
 						"failed to skip the downloading of files.");
-					Assert.IsTrue (b.Build (proj), "second build failed");
-					Assert.IsTrue (File.Exists (zipPath), $"Zip should have been downloaded to {zipPath}");
+					WaitFor (1000);
+					b.Target = "Build";
+					Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, parameters: new string [] { "DesignTimeBuild=false" }, environmentVariables: envVar), "second build failed");
+					Assert.IsFalse(b.Output.IsTargetSkipped ("_BuildAdditionalResourcesCache"), "_BuildAdditionalResourcesCache should have run.");
+					Assert.IsTrue (b.LastBuildOutput.Contains($"Downloading {url}") || b.LastBuildOutput.Contains ($"reusing existing archive: {zipPath}"), $"{url} should have been downloaded.");
 					Assert.IsTrue (File.Exists (Path.Combine (extractedDir, "1", "content", "android-N", "aapt")), $"Files should have been extracted to {extractedDir}");
 				}
 			}

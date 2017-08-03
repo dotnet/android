@@ -54,7 +54,7 @@ namespace Xamarin.ProjectTools
 				project.UpdateProjectFiles (ProjectDirectory, files, doNotCleanupOnUpdate);
 		}
 
-		public bool Build (XamarinProject project, bool doNotCleanupOnUpdate = false, string [] parameters = null, bool saveProject = true)
+		public bool Build (XamarinProject project, bool doNotCleanupOnUpdate = false, string [] parameters = null, bool saveProject = true, Dictionary<string, string> environmentVariables = null)
 		{
 			Save (project, doNotCleanupOnUpdate, saveProject);
 
@@ -62,7 +62,7 @@ namespace Xamarin.ProjectTools
 
 			project.NuGetRestore (ProjectDirectory, PackagesDirectory);
 
-			bool result = BuildInternal (Path.Combine (ProjectDirectory, project.ProjectFilePath), Target, parameters);
+			bool result = BuildInternal (Path.Combine (ProjectDirectory, project.ProjectFilePath), Target, parameters, environmentVariables);
 			built_before = true;
 
 			if (CleanupAfterSuccessfulBuild)
@@ -83,12 +83,12 @@ namespace Xamarin.ProjectTools
 			}
 		}
 
-		public bool UpdateAndroidResources (XamarinProject project, bool doNotCleanupOnUpdate = false, string [] parameters = null)
+		public bool UpdateAndroidResources (XamarinProject project, bool doNotCleanupOnUpdate = false, string [] parameters = null, Dictionary<string, string> environmentVariables = null)
 		{
 			var oldTarget = Target;
 			Target = "UpdateAndroidResources";
 			try {
-				return Build (project, doNotCleanupOnUpdate: doNotCleanupOnUpdate, parameters: parameters);
+				return Build (project, doNotCleanupOnUpdate: doNotCleanupOnUpdate, parameters: parameters, environmentVariables: environmentVariables);
 			}
 			finally {
 				Target = oldTarget;
