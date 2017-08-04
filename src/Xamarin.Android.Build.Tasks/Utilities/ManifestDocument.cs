@@ -39,6 +39,34 @@ namespace Xamarin.Android.Tasks {
 
 		XElement app;
 
+		// the elements and attributes which we apply the "." -> PackageName replacement on
+		static readonly Dictionary<string, string []> ManifestAttributeFixups = new Dictionary<string, string []> {
+			{ "activity", new string[] {
+					"name",
+				}
+			},
+			{ "application", new string[] {
+					"backupAgent",
+				}
+			},
+			{ "instrumentation", new string[] {
+					"name",
+				}
+			},
+			{ "provider", new string[] {
+					"name",
+				}
+			},
+			{ "receiver", new string[] {
+					"name",
+				}
+			},
+			{ "service", new string[] {
+					"name",
+				}
+			},
+		};
+
 		// (element, android:name attribute value) which must ALL be present for
 		// the <activity/> to be considered a launcher
 		static readonly Dictionary<string, string> LauncherIntentElements = new Dictionary<string, string> {
@@ -358,6 +386,7 @@ namespace Xamarin.Android.Tasks {
 			var nsResolver = new XmlNamespaceManager (new NameTable ());
 			nsResolver.AddNamespace ("android", androidNs.NamespaceName);
 			var xdoc = XDocument.Load (mergedManifest);
+			var package = xdoc.Root.Attribute ("package")?.Value ?? string.Empty;
 			foreach (var top in xdoc.XPathSelectElements ("/manifest/*")) {
 				var name = top.Attribute (AndroidXmlNamespace.GetName ("name"));
 				var existing = (name != null) ?
@@ -365,11 +394,23 @@ namespace Xamarin.Android.Tasks {
 					doc.XPathSelectElement (string.Format ("/manifest/{0}", top.Name.LocalName));
 				if (existing != null)
 					// if there is existing node with the same android:name, then append contents to existing node.
-					existing.Add (top.Nodes ());
+					existing.Add (FixupNameElements (package, top.Nodes ()));
 				else
 					// otherwise, just add to the doc.
-					doc.Root.Add (top);
+					doc.Root.Add (FixupNameElements (package, new XNode [] { top }));
 			}
+		}
+
+		IEnumerable<XNode> FixupNameElements(string packageName, IEnumerable<XNode> nodes)
+		{
+			foreach (var element in nodes.Select ( x => x as XElement).Where (x => x != null && ManifestAttributeFixups.ContainsKey (x.Name.LocalName))) {
+				var attributes = ManifestAttributeFixups [element.Name.LocalName];
+				foreach (var attr in element.Attributes ().Where (x => attributes.Contains (x.Name.LocalName))) {
+					var typeName = attr.Value;
+					attr.Value = typeName.StartsWith (".", StringComparison.InvariantCultureIgnoreCase) ? packageName + typeName : typeName;
+				}
+			}
+			return nodes;
 		}
 
 		Func<TypeDefinition, string, int, XElement> GetGenerator (TypeDefinition type)
