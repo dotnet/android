@@ -2,6 +2,8 @@
   <map package='java.awt.font' class='NumericShaper' fields='*' prefix='' enum-name="Ranges" />
   <map package='java.io' class='ObjectStreamConstants' fields='' prefix='PROTOCOL_' enum-name="ObjectStreamProtocol" />
   <map package='java.io' class='StreamTokenizer' fields='' prefix='TT_' enum-name="TokenType" />
+  <map package='java.lang.invoke' class='MethodHandleInfo' fields='' prefix='REF_' enum-name="ReferenceKind" />
+  <map package='java.lang.invoke' class='MethodHandles.Lookup' fields='*' enum-name="MethodLookupModes" />
   <map package='java.math' class='BigDecimal' fields='' prefix='ROUND_' enum-name="RoundOptions" />
   <map package="java.net" class="HttpURLConnection" fields="*" prefix="HTTP_" enum-name="HttpStatus" />
   <map package='java.net' class='SocketOptions' fields='*' prefix='' enum-name="SocketOption" />
@@ -27,6 +29,9 @@
     <!-- FIXME: this stupid compatibility enum should be fixed in 5.0 -->
     <field java='ERROR_CODE_BAD_AUTHENTICATION' managed='ErrorCodeBadAuthentication' />
   </map>
+  <!-- okay, this can be FINGERPRINT_GESTURE_SWIPE_* for now, but I'm afraid that there could be non-swipe gestures later... -->
+  <map package="android.accessibilityservice" class="FingerprintGestureController" fields="" prefix="FINGERPRINT_GESTURE_" enum-name="FingerptintGestureTypes" is-transient="false" api-since="26" />
+  <map package="android.accounts" class="AccountManager" fields="" prefix="VISIBILITY_" enum-name="AccountVisibility" is-transient="false" api-since="26" />
   <!-- it is not transient enum, but Infinite was not there -->
   <map package='android.animation' class='ValueAnimator' fields='*' exclude='INFINITE' enum-name='ValueAnimatorRepeatMode' />
   <map package="android.animation" class="LayoutTransition" fields="*" prefix="" enum-name="LayoutTransitionType" />
@@ -51,8 +56,10 @@
   <map package="android.app" class="DownloadManager.Request" fields="" prefix="VISIBILITY_" enum-name="DownloadVisibility" />
   <map package="android.app" class="FragmentManager" fields="" prefix="POP_BACK_STACK_" enum-name="PopBackStackFlags" extra-default="None" />
   <map package="android.app" class="FragmentTransaction" fields="" prefix="TRANSIT_" enum-name="FragmentTransit" is-transient="false" />
+  <map package="android.app" class="Notification" fields="" prefix="BADGE_ICON_" enum-name="NotificationBadgeIconType" is-transient="false" api-since="26" />
   <map package="android.app" class="Notification" fields="" prefix="FLAG_" enum-name="NotificationFlags" is-transient="false" />
   <map package="android.app" class="Notification" fields="" prefix="DEFAULT_" enum-name="NotificationDefaults" is-transient="false" />
+  <map package="android.app" class="Notification" fields="" prefix="GROUP_ALERT_" enum-name="NotificationGroupAlertBehavior" is-transient="false" api-since="26" />
   <map package="android.app" class="Notification" fields="" prefix="VISIBILITY_" enum-name="NotificationVisibility" is-transient="false" api-level="20" />
   <map package="android.app" class="Notification.WearableExtender" fields="" prefix="SIZE_" enum-name="WearableSizePreset" is-transient="false" api-level="20" />
   <map package='android.app' class='PendingIntent' prefix='FLAG_' enum-name='PendingIntentFlags' is-transient='false' />
@@ -70,11 +77,13 @@
   <map package='android.app.admin' class='DevicePolicyManager' prefix='PASSWORD_QUALITY_' enum-name='PasswordQuality' is-transient='false' />
   <map package="android.app.admin" class="DevicePolicyManager" fields="" prefix="RESET_PASSWORD_" enum-name="ResetPasswordFlags" />
   <map package="android.app.admin" class="DevicePolicyManager" fields="WIPE_EXTERNAL_STORAGE WIPE_RESET_PROTECTION_DATA" prefix="" enum-name="WipeDataFlags" extra-default="None" isInterface="false" api-level="9" />
+  <map package="android.app.admin" class="SystemUpdateInfo" fields="" prefix="SECURITY_PATCH_" enum-name="SecurityPatchStates" is-transient="false" api-since="26" />
   <map package="android.app.backup" class="BackupAgent" fields="" prefix="TYPE_" enum-name="BackupFileType" />
   <map package="android.app.job" class="JobInfo" prefix="BACKOFF_POLICY_" enum-name="BackoffPolicy" isInterface="true" is-transient="false" api-level="21" />
   <map package="android.app.job" class="JobInfo" prefix="NETWORK_TYPE_" enum-name="NetworkType"  isInterface="true" is-transient="false" api-level="21" />
   <map package="android.app.usage" class="UsageEvents.Event" fields="*" enum-name="UsageEventType"  isInterface="true" is-transient="false" api-level="21" />
   <map package="android.app.usage" class="UsageStatsManager" prefix="INTERVAL_" enum-name="UsageStatsInterval"  isInterface="true" is-transient="false" api-level="21" />
+  <map package="android.app.usage" class="NetworkStats.Bucket" prefix="METERED_" enum-name="MeteredStates" is-transient="false" api-level="26" />
   <map package="android.appwidget" class="AppWidgetProviderInfo" fields="" prefix="WIDGET_CATEGORY_" enum-name="AppWidgetCategory" api-level="17" />
   <map package='android.appwidget' class='AppWidgetProviderInfo' prefix='RESIZE_' enum-name='ResizeMode' is-transient='false' />
   <map package="android.bluetooth" class="BluetoothA2dp" fields="" prefix="STATE_" enum-name="A2dpState" />
@@ -86,6 +95,10 @@
   <map package="android.bluetooth" class="BluetoothClass$Service" fields="*" prefix="" enum-name="ServiceClass" is-transient="false" />
   <map package="android.bluetooth" class="BluetoothDevice" fields="" prefix="DEVICE_TYPE_" enum-name="BluetoothDeviceType" api-level="18" />
   <map package="android.bluetooth" class="BluetoothDevice" fields="" prefix="BOND_" enum-name="Bond" is-transient="false" />
+  <map package="android.bluetooth" class="BluetoothDevice" fields="PHY_LE_*" prefix="PHY_" enum-name="BluetoothPhy" is-transient="false" api-level="26" />
+  <map package="android.bluetooth" class="BluetoothDevice" prefix="PHY_OPTION_" enum-name="BluetoothPhyOption" is-transient="false" api-level="26" />
+  <!-- used by ScanResult#getSecondaryPhy() -->
+  <map package="android.bluetooth.le" class="ScanResult" fields="PHY_UNUSED" prefix="PHY_" enum-name="BluetoothPhy" is-transient="false" api-level="26" />
   <map package="android.bluetooth" class="BluetoothGatt" fields="" prefix="GATT_" enum-name="GattStatus" api-level="18" />
   <map package="android.bluetooth" class="BluetoothGatt" fields="" prefix="CONNECTION_PRIORITY_" enum-name="GattConnectionPriority" api-level="21" />
   <map package="android.bluetooth" class="BluetoothGattCharacteristic" fields="" prefix="FORMAT_" enum-name="GattFormat" api-level="18" />
@@ -106,11 +119,16 @@
   <map package="android.bluetooth.le" class="AdvertiseSettings" fields="" prefix="ADVERTISE_MODE_" enum-name="AdvertiseMode" is-transient="false" api-level="21" />
   <map package="android.bluetooth.le" class="AdvertiseSettings" fields="" prefix="ADVERTISE_TX_" enum-name="AdvertiseTx" is-transient="false" api-level="21" />
   <map package="android.bluetooth.le" class="AdvertiseSettings" fields="" prefix="ADVERTISE_TYPE_" enum-name="AdvertiseType" is-transient="false" api-level="21" />
+  <map package="android.bluetooth.le" class="AdvertisingSetCallback" fields="" prefix="ADVERTISE_" enum-name="AdvertiseResult" is-transient="false" api-level="26" />
+  <map package="android.bluetooth.le" class="AdvertisingSetParameters" fields="" prefix="TX_POWER_" enum-name="AdvertiseTxPower" is-transient="false" api-level="26" />
   <map package="android.bluetooth.le" class="ScanCallback" fields="" prefix="SCAN_FAILED_" enum-name="ScanFailure" is-transient="false" api-level="21" />
+  <map package="android.bluetooth.le" class="ScanResult" prefix="DATA_" enum-name="DataStatus" is-transient="false" api-level="26" />
   <map package="android.bluetooth.le" class="ScanSettings" fields="" prefix="SCAN_MODE_" enum-name="ScanMode" is-transient="false" api-level="21" />
   <map package="android.bluetooth.le" class="ScanSettings" fields="" prefix="CALLBACK_TYPE_" enum-name="ScanCallbackType" is-transient="false" api-level="21" />
+  <map package="android.bluetooth.le" class="ScanSettings" fields="" prefix="PHY_LE_" enum-name="ScanSettingsPhy" is-transient="false" api-level="26" />
   <map package="android.content" class="ComponentCallbacks2" fields="" prefix="TRIM_MEMORY_" enum-name="TrimMemory" />
   <map package="android.content" class="ContentResolver" fields="" prefix="SYNC_OBSERVER_TYPE_" enum-name="SyncObserverType" />
+  <map package="android.content" class="ContentResolver" fields="" prefix="QUERY_SORT_DIRECTION_" enum-name="QuerySortDirection" api-level="26" />
   <map package="android.content" class="Context" fields="" prefix="BIND_" enum-name="Bind" extra-default="None" is-transient="false" />
   <map package="android.content" class="DialogInterface" fields="BUTTON1 BUTTON2 BUTTON3" prefix="" enum-name="DialogButtonTypeObsoleted" />
   <map package="android.content" class="DialogInterface" fields="" prefix="BUTTON_" enum-name="DialogButtonType" />
@@ -124,6 +142,7 @@
   <!-- ok this picks up NO_MATCH_* too because it partially matches regex... -->
   <map package="android.content" class="IntentFilter" fields="MATCH_*" prefix="" enum-name="MatchResults" is-transient="false" />
   <map package="android.content" class="RestrictionsManager" prefix="RESULT_" enum-name="RestrictionResults" is-transient="false" api-level="21" />
+  <map package="android.content.pm" class="ActivityInfo" fields="" prefix="COLOR_MODE_" enum-name="ActivityColorMode" is-transient="false" api-level="26" />
   <map package="android.content.pm" class="ActivityInfo" fields="" prefix="PERSIST_" enum-name="ActivityPersistableMode" is-transient="false" api-level="21" />
   <map package="android.content.pm" class="ApplicationInfo" fields="" prefix="FLAG_" enum-name="ApplicationInfoFlags" extra-default="None" is-transient="false">
 	<!-- stupid mistype and compatibility requirement needs them -->
@@ -134,9 +153,12 @@
   <map package="android.content.pm" class="ActivityInfo" fields="" prefix="DOCUMENT_LAUNCH_" enum-name="DocumentLaunchMode" is-transient="false" api-level="21" />
   <map package="android.content.pm" class="ActivityInfo" fields="" prefix="FLAG_" enum-name="ActivityInfoFlags" extra-default="None" is-transient="false" />
   <map package="android.content.pm" class="ActivityInfo" fields="" prefix="SCREEN_ORIENTATION_" enum-name="ScreenOrientation" is-transient="false" />
+  <map package="android.content.pm" class="ApplicationInfo" fields="" prefix="CATEGORY_" enum-name="ApplicationCategories" is-transient="false" api-level="26" />
   <map package="android.content.pm" class="ConfigurationInfo" fields="" prefix="INPUT_FEATURE_" enum-name="InputFeature" extra-default="None" />
   <map package="android.content.pm" class="FeatureInfo" fields="" prefix="FLAG_" enum-name="FeatureFlags" extra-default="None" />
+  <map package="android.content.pm" class="LauncherApps.PinItemRequest" fields="" prefix="REQUEST_TYPE_" enum-name="PinItemRequestType" api-level="26" />
   <map package="android.content.pm" class="PackageInfo" fields="" prefix="INSTALL_LOCATION_" enum-name="PackageInstallLocation" is-transient="false" api-level="21" />
+  <map package="android.content.pm" class="PackageManager" fields="" prefix="INSTALL_REASON_" enum-name="PackageInstallReason" is-transient="false" api-level="26" />
   <map package="android.content.pm" class="PackageInstaller" fields="" prefix="STATUS_" enum-name="PackageInstallStatus" is-transient="false" api-level="21" />
   <map package="android.content.pm" class="PackageInstaller.SessionParams" fields="" prefix="MODE_" enum-name="PackageInstallMode" is-transient="false" api-level="21" />
   <map package="android.content.pm" class="PackageManager" fields="" prefix="GET_" enum-name="PackageInfoFlags" is-transient="false" />
@@ -146,11 +168,11 @@
   <map package="android.content.pm" class="PackageManager" fields="" prefix="VERIFICATION_" enum-name="PackageInstallVerification" />
   <!--  includes new in API Level 16 -->
   <map package='android.content.pm' class='PermissionInfo' fields='' prefix='PROTECTION_' enum-name="Protection" is-transient="false" />
-
-
   <map package="android.content.pm" class="ServiceInfo" fields="" prefix="FLAG_" enum-name="ServiceInfoFlags" />
+  <map package="android.content.pm" class="SharedLibraryInfo" fields="" prefix="TYPE_" enum-name="SharedLibraryType" />
   <map package='android.content.res' class='Configuration' fields='' prefix='SCREENLAYOUT_' enum-name="ScreenLayout" is-transient="false" />
   <map package='android.content.res' class='ObbInfo' fields='' prefix='OBB_' enum-name="ObbFlags" extra-default="None" />
+  <map package='android.content.res' class='Configuration' fields='' prefix='COLOR_MODE_' enum-name="ColorMode" api-level="26" />
   <map package='android.content.res' class='Configuration' fields='' prefix='SCREEN_' enum-name="Screen" />
   <map package='android.content.res' class='Configuration' fields='' prefix='UI_MODE_' enum-name="UiMode" />
   <map package='android.content' class='RestrictionEntry' fields='' prefix='TYPE_' enum-name="RestrictionEntryType" api-level="18" />
@@ -166,7 +188,6 @@
   </map>
 
   <map package='android.gesture' class='GestureOverlayView' fields='' prefix='GESTURE_STROKE_TYPE_' enum-name="GestureStrokeType" is-transient="false" />
-
   <map package='android.graphics.drawable' class='ClipDrawable' fields='HORIZONTAL VERTICAL' prefix='' enum-name="ClipDrawableOrientation" />
   <map package='android.graphics.drawable' class='LayerDrawable' fields='' prefix='PADDING_MODE_' enum-name="LayerDrawablePaddingMode" api-level="21" />
   <!-- ambiguous stupid naming. It should be renamed in 5.0 -->
@@ -178,8 +199,12 @@
   <map package='android.hardware' class='Camera$CameraInfo' fields='' prefix='CAMERA_FACING_' enum-name="CameraFacing" />
   <map package='android.hardware' class='Camera$Parameters' fields='' prefix='FOCUS_DISTANCE_' enum-name="FocusDistance" />
   <map package='android.hardware' class='Camera$Parameters' fields='' prefix='PREVIEW_' enum-name="Preview" />
+  <map package='android.hardware' class='HardwareBuffer' fields='RGB.* BLOB' enum-name="HardwareBufferFormat" is-transient="false" api-level="26" />
+  <map package='android.hardware' class='HardwareBuffer' prefix='USAGE_' enum-name="HardwareBufferUsage" is-transient="false" api-level="26" />
   <map package='android.hardware' class='Sensor' prefix='REPORTING_MODE_' enum-name="ReportingMode" is-transient="false" api-level="21" />
   <map package='android.hardware' class='Sensor' fields='' prefix='TYPE_' enum-name="SensorType" is-transient="false" />
+  <map package='android.hardware' class='SensorDirectChannel' prefix='RATE_' enum-name="SensorDirectRateLevel" is-transient="false" api-level="26" />
+  <map package='android.hardware' class='SensorDirectChannel' prefix='TYPE_' enum-name="SensorDirectChannelType" is-transient="false" api-level="26" />
   <map package='android.hardware.camera2' class='CameraAccessException' fields='' prefix='CAMERA_' enum-name="CameraAccessErrorType" is-transient="false" api-level="21" />
   <map package='android.hardware.camera2' class='CameraDevice.StateCallback' fields='' prefix='ERROR_' enum-name="CameraError" is-transient="false" api-level="21" />
   <map package='android.hardware.camera2' class='CameraDevice' fields='' prefix='TEMPLATE_' enum-name="CameraTemplate" is-transient="false" api-level="21" />
@@ -281,6 +306,7 @@
   <map package='android.media' class='AudioRecord' fields='' prefix='STATE_' enum-name="State" is-transient="false" />
   <map package='android.media' class='AudioTrack' fields='ERROR ERROR_BAD_VALUE ERROR_DEAD_OBJECT ERROR_INVALID_OPERATION SUCCESS' prefix='' enum-name="TrackStatus" />
   <map package='android.media' class='AudioTrack' fields='' prefix='MODE_' enum-name="AudioTrackMode" is-transient="false" />
+  <map package='android.media' class='AudioTrack' fields='' prefix='PERFORMANCE_MODE_' enum-name="AudioTrackPerformanceMode" is-transient="false" api-level="26" />
   <map package='android.media' class='AudioTrack' fields='' prefix='PLAYSTATE_' enum-name="PlayState" is-transient="false" />
   <map package='android.media' class='AudioTrack' fields='' prefix='STATE_' enum-name="AudioTrackState" is-transient="false" />
   <map package='android.media' class='AudioTrack' fields='' prefix='WRITE_' enum-name="WriteMode" is-transient="false" api-level="21" />
@@ -298,8 +324,10 @@
   <map package='android.media' class='MediaMuxer$OutputFormat' fields='' prefix='MUXER_OUTPUT_' enum-name="MuxerOutputType" api-level="18" />
   <map package='android.media' class='MediaMetadataRetriever' fields='' prefix='METADATA_KEY_' enum-name="MetadataKey" />
   <map package='android.media' class='MediaMetadataRetriever' fields='' prefix='OPTION_' enum-name="Option" />
+  <map package='android.media' class='MediaPlayer' fields='' prefix='PREPARE_DRM_STATUS_' enum-name="PrepareDrmStatus" is-transient="false" />
   <map package='android.media' class='MediaPlayer' fields='' prefix='MEDIA_ERROR_' enum-name="MediaError" is-transient="false" />
   <map package='android.media' class='MediaPlayer' fields='' prefix='MEDIA_INFO_' enum-name="MediaInfo" is-transient="false" />
+  <map package='android.media' class='MediaPlayer' fields='' prefix='SEEK_' enum-name="MediaPlayerSeekMode" is-transient="false" api-level="26" />
   <map package='android.media' class='MediaRecorder' fields='' prefix='MEDIA_RECORDER_INFO_' enum-name="MediaRecorderInfo" is-transient="false" />
   <map package='android.media' class='MediaRecorder' fields='' prefix='MEDIA_ERROR_' enum-name="MediaRecorderError" />
   <map package='android.media' class='MediaRecorder' fields='' prefix='MEDIA_RECORDER_ERROR_' enum-name="MediaRecorderError" />
@@ -322,6 +350,7 @@
   <map package='android.media' class='ToneGenerator' fields='' prefix='TONE_' enum-name="Tone" is-transient="false" />
   <map package='android.media' class='ThumbnailUtils' fields='' prefix='OPTIONS_' enum-name="ThumnailExtractOptions" extra-default="None" />
   <map package='android.media' class='VolumeProvider' fields='' prefix='VOLUME_CONTROL_' enum-name="VolumeControl" is-transient="false" api-level="21" />
+  <map package='android.media' class='VolumeShaper.Configuration' fields='' prefix='INTERPOLATOR_TYPE_' enum-name="VolumeInterpolatorType" is-transient="false" api-level="26" />
   <map package='android.media.audiofx' class='AudioEffect' fields='' prefix='CONTENT_TYPE_' enum-name="ContentType" />
   <map package='android.media.audiofx' class='AudioEffect' fields='ALREADY_EXISTS ERROR SUCCESS' prefix='' enum-name="AudioEffectStatus" />
   <map package='android.media.audiofx' class='AudioEffect' fields='' prefix='ERROR_' enum-name="AudioEffectStatus" />
@@ -340,6 +369,25 @@
   <map package='android.media.browse' class='MediaBrowser.MediaItem' prefix='FLAG_' enum-name="MediaItemFlags" extra-default="None" is-transient="false" api-level="21" />
   <map package='android.media.tv' class='TvContract.Channels' fields='' prefix='SERVICE_TYPE_' enum-name="ServiceType" is-transient="false" api-level="21" />
   <map package='android.media.tv' class='TvContract.Channels' fields='' prefix='TYPE_' enum-name="TvType" is-transient="false" api-level="21" />
+
+  <!-- How come are they defined respectively...? -->
+  <map package='android.media.tv' class='TvContract.Programs' prefix='REVIEW_RATING_STYLE_' enum-name="ReviewRatingStyle" is-transient="false" api-level="26" />
+  <map package='android.media.tv' class='TvContract.PreviewPrograms' prefix='ASPECT_RATIO_' enum-name="PreviewAspectRatio" is-transient="false" api-level="26" />
+  <map package='android.media.tv' class='TvContract.PreviewPrograms' prefix='AVAILABILITY_' enum-name="PreviewAvailability" is-transient="false" api-level="26" />
+  <map package='android.media.tv' class='TvContract.PreviewPrograms' prefix='INTERACTION_TYPE_' enum-name="PreviewInteractionType" is-transient="false" api-level="26" />
+  <map package='android.media.tv' class='TvContract.PreviewPrograms' prefix='REVIEW_RATING_STYLE_' enum-name="PreviewReviewRatingStyle" is-transient="false" api-level="26" />
+  <map package='android.media.tv' class='TvContract.PreviewPrograms' prefix='TYPE_' enum-name="PreviewType" is-transient="false" api-level="26" />
+
+  <map package='android.media.tv' class='TvContract.RecordedPrograms' prefix='REVIEW_RATING_STYLE_' enum-name="RecordedReviewRatingStyle" is-transient="false" api-level="26" />
+
+  <map package='android.media.tv' class='TvContract.WatchNextPrograms' prefix='ASPECT_RATIO_' enum-name="WatchNextAspectRatio" is-transient="false" api-level="26" />
+  <map package='android.media.tv' class='TvContract.WatchNextPrograms' prefix='AVAILABILITY_' enum-name="WatchNextAvailability" is-transient="false" api-level="26" />
+  <map package='android.media.tv' class='TvContract.WatchNextPrograms' prefix='INTERACTION_TYPE_' enum-name="WatchNextInteractionType" is-transient="false" api-level="26" />
+  <map package='android.media.tv' class='TvContract.WatchNextPrograms' prefix='REVIEW_RATING_STYLE_' enum-name="WatchNextReviewRatingStyle" is-transient="false" api-level="26" />
+  <map package='android.media.tv' class='TvContract.WatchNextPrograms' prefix='TYPE_' enum-name="WatchNextType" is-transient="false" api-level="26" />
+  <!-- ugh, this is ugly. -->
+  <map package='android.media.tv' class='TvContract.WatchNextPrograms' prefix='WATCH_NEXT_TYPE_' enum-name="WatchNextWatchNextType" is-transient="false" api-level="26" />
+
   <map package='android.media.tv' class='TvInputInfo' fields='' prefix='TYPE_' enum-name="TvInputType" is-transient="false" api-level="21" />
   <map package='android.media.tv' class='TvInputManager' fields='' prefix='INPUT_STATE_' enum-name="TvInputState" is-transient="false" api-level="21" />
   <map package='android.media.tv' class='TvInputManager' fields='' prefix='VIDEO_UNAVAILABLE_REASON_' enum-name="VideoUnavailableReason" is-transient="false" api-level="21" />
@@ -350,6 +398,7 @@
   <map package='android.mtp' class='MtpConstants' fields='' prefix='FORMAT_' enum-name="MtpFormat" is-transient="false" />
   <map package='android.mtp' class='MtpConstants' fields='' prefix='PROTECTION_STATUS_' enum-name="ProtectionStatus" is-transient="false" />
   <map package='android.net' class='ConnectivityManager' fields='' prefix='TYPE_' enum-name="ConnectivityType" is-transient="false" />
+  <map package='android.net' class='ConnectivityManager' fields='' prefix='MULTIPATH_PREFERENCE_' enum-name="MultipathPreference" is-transient="false" />
   <map package='android.net' class='LocalSocket' fields='' prefix='SOCKET_' enum-name="SocketType" />
   <map package='android.net' class='NetworkCapabilities' fields='' prefix='NET_CAPABILITY_' enum-name="NetCapability" api-level="21" />
   <map package='android.net' class='NetworkCapabilities' fields='' prefix='TRANSPORT_' enum-name="TransportType" api-level="21" />
@@ -357,6 +406,10 @@
   <map package='android.net.http' class='SslError' fields='' prefix='SSL_' enum-name="SslErrorType" />
   <map package='android.net.sip' class='SipErrorCode' fields='*' prefix='' enum-name="SipErrorCodes" />
   <map package='android.net.sip' class='SipSession$State' fields='*' prefix='' enum-name="SipSessionState" />
+  <map package='android.net.wifi' class='WifiManager.LocalOnlyHotspotCallback' fields='' prefix='ERROR_' enum-name="LocalOnlyHotspotCallbackErrorCode" is-transient="false" />
+  <map package='android.net.wifi.aware' class='PublishConfig' fields='' prefix='PUBLISH_TYPE' enum-name="PublishType" is-transient="false" />
+  <map package='android.net.wifi.aware' class='SubscribeConfig' fields='' prefix='SUBSCRIBE_TYPE' enum-name="SubscribeType" is-transient="false" />
+  <map package='android.net.wifi.aware' class='WifiAwareManager' fields='' prefix='WIFI_AWARE_DATA_PATH_ROLE' enum-name="WifiAwareDataPathRole" is-transient="false" />
   <map package='android.net.wifi.p2p' class='WifiP2pDevice' fields='*' prefix='' enum-name="WifiP2pDeviceState" />
   <map package='android.net.wifi.p2p' class='WifiP2pManager' fields='BUSY ERROR NO_SERVICE_REQUESTS P2P_UNSUPPORTED' prefix='' enum-name="WifiP2pFailureReason" />
   <map package='android.net.wifi.p2p' class='WifiP2pManager' fields='' prefix='WIFI_P2P_STATE' enum-name="WifiP2pState" />
@@ -445,6 +498,9 @@
   <map package='android.provider' class='ContactsContract$PhoneticNameStyle' fields='*' prefix='' enum-name="PhoneticNameStyle" />
   <map package='android.provider' class='DocumentsContract$Document' fields='' prefix='FLAG_' enum-name="DocumentContractFlags" />
   <map package='android.provider' class='DocumentsContract$Root' fields='' prefix='FLAG_' enum-name="DocumentRootFlags" />
+  <map package='android.provider' class='FontsContract.Columns' fields='' prefix='RESULT_CODE' enum-name="FontResultCode" is-transient="false" />
+  <map package='android.provider' class='FontsContract.FontFamilyResult' fields='' prefix='STATUS_' enum-name="FontFamilyResultStatus" is-transient="false" />
+  <map package='android.provider' class='FontsContract.FontRequestCallback' fields='' prefix='FAIL_REASON_' enum-name="FontRequestFailureReason" is-transient="false" />
   <map package='android.provider' class='LiveFolders' fields='' prefix='DISPLAY_MODE_' enum-name="DisplayMode" is-transient="false" />
   <map package='android.provider' class='MediaStore$Files$FileColumns' fields='' prefix='MEDIA_TYPE_' enum-name="MediaType" />
   <map package='android.provider' class='MediaStore$Images$Thumbnails' fields='*' prefix='' enum-name="ThumbnailKind" is-transient="false" />
@@ -466,10 +522,16 @@
   <map package='android.renderscript' class='Allocation' fields='' prefix='USAGE_' enum-name="AllocationUsage" is-transient="false" />
   <map package='android.renderscript' class='RenderScript' fields='' prefix='CREATE_FLAG_' enum-name="CreateFlag" is-transient="false" api-level="21" />
   <map package='android.speech' class='SpeechRecognizer' fields='' prefix='ERROR_' enum-name="SpeechRecognizerError" />
+  <map package='android.service.autofill' class='FillEventHistory.Event' prefix='TYPE_' enum-name="EventType" is-transient="false" />
+  <map package='android.service.autofill' class='SaveInfo' prefix='FLAG_' enum-name="SaveFlags" extra-default="None" is-transient="false" />
+  <map package='android.service.autofill' class='SaveInfo' prefix='NEGATIVE_BUTTON_STYLE_' enum-name="NegativeButtonStyle" is-transient="false" />
+  <map package='android.service.autofill' class='SaveInfo' prefix='SAVE_DATA_TYPE_' enum-name="SaveDataType" is-transient="false" />
   <map package='android.service.carrier' class='CarrierMessagingService' prefix='DOWNLOAD_STATUS_' enum-name="MessageDownloadStatus" is-transient="false" api-level="22" />
   <map package='android.service.carrier' class='CarrierMessagingService' prefix='SEND_STATUS_' enum-name="MessageSendStatus" is-transient="false" api-level="22" />
   <map package='android.service.notification' class='NotificationListenerService' prefix='HINT_' enum-name="NotificationListenerServiceHint" is-transient="false" api-level="21" />
   <map package='android.service.notification' class='NotificationListenerService' prefix='INTERRUPTION_FILTER_' enum-name="InterruptionFilterType" is-transient="false" api-level="21" />
+  <map package='android.service.notification' class='NotificationListenerService' prefix='NOTIFICATION_CHANNEL_OR_GROUP_' enum-name="NotificationChannelOrGroupEventType" is-transient="false" />
+  <map package='android.service.notification' class='NotificationListenerService' prefix='REASON_' enum-name="NotificationCancelReason" is-transient="false" />
   <map package='android.service.voice' class='VoiceInteractionSession.Insets' fields='' prefix='TOUCHABLE_INSETS_' enum-name="ToucheableInsetsType" />
   <map package='android.service.voice' class='AlwaysOnHotwordDetector' prefix='RECOGNITION_FLAG_' enum-name="RecognitionFlag" extra-default="None" is-transient="false" api-level="21" />
   <map package='android.service.voice' class='AlwaysOnHotwordDetector' prefix='RECOGNITION_MODE_' enum-name="RecognitionMode" extra-default="None" is-transient="false" api-level="21" />
@@ -559,7 +621,11 @@
   <map package='android.view' class='MotionEvent' fields='' prefix='TOOL_TYPE_' enum-name="MotionEventToolType" />
   <map package='android.view' class='MotionEvent' fields='' prefix='FLAG_' enum-name="MotionEventFlags" extra-default="None" />
   <map package='android.view.textservice' class='SuggestionsInfo' fields='' prefix='RESULT_ATTR_' enum-name="SuggestionsAttributes" extra-default="None" />
+  <map package='android.view' class='View' fields='' prefix='AUTOFILL_FLAG_' enum-name="AutofillFlags" extra-default="None" />
+  <map package='android.view' class='View' fields='' prefix='AUTOFILL_TYPE_' enum-name="AutofillType" />
   <map package='android.view' class='View' fields='' prefix='FIND_VIEWS_WITH_' enum-name="FindViewsWith" />
+  <map package='android.view' class='View' fields='FOCUSABLE FOCUSABLE_AUTO NOT_FOCUSABLE' prefix='' enum-name="ViewFocusability" />
+  <map package='android.view' class='View' fields='' prefix='IMPORTANT_FOR_AUTOFILL_' enum-name="ImportantForAutofill" />
   <map package='android.view' class='View' fields='' prefix='OVER_SCROLL_' enum-name="OverScrollMode" />
   <map package='android.view' class='View' fields='' prefix='SYSTEM_UI_FLAG_' enum-name="SystemUiFlags" />
   <map package='android.view' class='View' fields='SYSTEM_UI_LAYOUT_FLAGS' prefix='SYSTEM_UI_' enum-name="SystemUiFlags" />
@@ -775,6 +841,7 @@
   <map package='android.view.inputmethod' class='ExtractedText' prefix='FLAG_' enum-name='ExtractedTextFlags' is-transient='false' />
   <map package='android.view.inputmethod' class='InputMethod' prefix='SHOW_' enum-name='ShowSoftInputFlags' extra-default='None' is-transient='false' />
   <map package='android.webkit' class='WebSettings' prefix='LOAD_' enum-name='CacheModes' is-transient='false' />
+  <map package='android.webkit' class='WebView' prefix='RENDERER_PRIORITY_' enum-name='RendererPriority' is-transient='false' />
   <map package='android.webkit' class='WebView.HitTestResult' fields='*' enum-name='HitTestResult' is-transient='false' />
   <map package='android.webkit' class='WebViewClient' prefix='ERROR_' enum-name='ClientError' is-transient='false' />
   <map package='android.widget' class='AbsListView' prefix='CHOICE_MODE_' enum-name='ChoiceMode' is-transient='false' />
@@ -791,6 +858,7 @@
   <map package='android.widget' class='RelativeLayout' fields='*' enum-name='LayoutRules' is-transient='false' />
   <map package='android.widget' class='Spinner' prefix='MODE_' enum-name='SpinnerMode' is-transient='false' />
   <map package='android.widget' class='Toast' prefix='LENGTH_' enum-name='ToastLength' is-transient='false' />
+  <map package='android.widget' class='TextView' prefix='AUTO_SIZE_TEXT_TYPE_' enum-name='AutoSizeTextType' is-transient='false' />
   <map package='android.widget' class='AbsListView.OnScrollListener' prefix='SCROLL_STATE_' enum-name='ScrollState' is-transient='false' />
   <map package='android.widget' class='NumberPicker.OnScrollListener' prefix='SCROLL_STATE_' enum-name='NumberPickerScrollState' is-transient='false' />
 
@@ -837,11 +905,13 @@
   <map package='android.security.keystore' class='KeyProperties' prefix='PURPOSE_' enum-name='KeyStorePurpose' is-transient='false' />
   <map package='android.service.voice' class='VoiceInteractionSession' prefix='SHOW_' enum-name='ShowFlags' is-transient='false' />
   <map package='android.telecom' class='Call' prefix='STATE_' enum-name='CallState' is-transient='false' />
+  <map package='android.telecom' class='Call.RttCall' prefix='RTT_MODE_' enum-name='RttMode' is-transient='false' />
   <map package='android.telecom' class='Call.Details' prefix='CAPABILITY_' enum-name='CallCapability' is-transient='false' />
   <map package='android.telecom' class='Call.Details' prefix='PROPERTY_' enum-name='CallProperty' is-transient='false' />
   <map package='android.telecom' class='CallAudioState' prefix='ROUTE_' enum-name='CallAudioRoute' is-transient='false' />
   <map package='android.telecom' class='Connection' prefix='CAPABILITY_' enum-name='ConnectionCapability' is-transient='false' />
   <map package='android.telecom' class='Connection' prefix='STATE_' enum-name='ConnectionState' is-transient='false' />
+  <map package='android.telecom' class='Connection.RttModifyStatus' prefix='SESSION_MODIFY_REQUEST_' enum-name='RttSessionModifyResult' is-transient='false' />
   <map package='android.telecom' class='Connection.VideoProvider' prefix='SESSION_EVENT_' enum-name='VideoSessionEvent' is-transient='false' />
   <map package='android.telecom' class='Connection.VideoProvider' prefix='SESSION_MODIFY_REQUEST_' enum-name='ModifyRequestResult' is-transient='false' />
   <map package='android.telecom' class='DisconnectCause' fields='*' enum-name='Causes' is-transient='false' />
@@ -852,10 +922,14 @@
   <!-- CellSignalStrength.getLevel() was added at API Level 17 but those signal strength constants were added at API Level 23!
   So, it is not good to convert those values to enum at this stage. -->
   <!-- map package='android.telephony' class='CellSignalStrength' prefix='SIGNAL_STRENGTH_' enum-name='CallSignalStrengthValue' is-transient='false' /-->
+  <map package='android.telephony' class='TelephonyManager' prefix='USSD_' enum-name='UssdResultCode' is-transient='false' />
   <map package='android.text' class='Layout' prefix='BREAK_STRATEGY_' enum-name='BreakStrategy' is-transient='false' />
+  <map package='android.text' class='Layout' prefix='JUSTIFICATION_MODE_' enum-name='JustificationMode' is-transient='false' />
   <map package='android.text' class='Layout' prefix='HYPHENATION_FREQUENCY_' enum-name='HyphenationFrequency' is-transient='false' />
   <map package='android.view' class='ActionMode' prefix='TYPE_' enum-name='ActionModeType' is-transient='false' />
+  <!-- maybe it can be AutofillInputEventType but I'm afraid that there will be non- INPUT_* events in the future -->
   <map package='android.view' class='View' prefix='SCROLL_INDICATOR_' enum-name='ScrollIndicatorPosition' is-transient='false' />
+  <map package='android.view.autofill' class='AutofillManager.AutofillCallback' prefix='EVENT_' enum-name='AutofillEventType' is-transient='false' />
 
   <!-- This does not exist, but FingerprintManager.authenticate() expects int flags, which is poorly documented as "should be 0". So we cannot really bind any field, but it will be some flag in the future! So far, create a dummy enum that would be used in the future... -->
   <map package='android.hardware.fingerprint' class='FingerprintManager' prefix='___NO_SUCH_VALUE_EXISTS___' enum-name='FingerprintAuthenticationFlags' extra-default="None" is-transient='false' />
@@ -929,6 +1003,9 @@
   <map package="android.icu.util" class="Calendar" fields="" prefix="WALLTIME_" enum-name="WalltimeOptions" api-level="24" />
   <map package="android.icu.util" class="Currency" fields="" suffix="_NAME" enum-name="CurrencyNameStyle" api-level="24" />
   <map package="android.icu.util" class="TimeZone" fields="GENERIC_LOCATION LONG* SHORT*" enum-name="TimeZoneNameStyle" api-level="24" />
+  <map package="android.icu.util" class="TimeZone" prefix="TIMEZONE_" enum-name="TimeZoneType" api-level="26" />
+  <map package="android.icu.util" class="UniversalTimeScale" fields=".*_TIME MAX_SCALE" enum-name="UniversalTimeScaleType" api-level="26" />
+  <map package="android.icu.util" class="UniversalTimeScale" suffix="_VALUE" enum-name="UniversalTimeScaleValue" api-level="26" />
 
   <map package="android.location" class="GnssMeasurement" fields="" prefix="ADR_STATE_" enum-name="AccumulatedDeltaRangeState" api-level="24" />
   <map package="android.location" class="GnssMeasurement" fields="" prefix="MULTIPATH_INDICATOR_" enum-name="MultipathIndicator" api-level="24" />
