@@ -273,6 +273,10 @@ namespace Xamarin.Android.Tasks
 
 			int count = 0;
 			foreach (ITaskItem assembly in ResolvedUserAssemblies) {
+
+				if (MonoAndroidHelper.IsReferenceAssembly (assembly.ItemSpec)) {
+					Log.LogWarning ($"{assembly.ItemSpec} is a reference assembly!");
+				}
 				// Add assembly
 				apk.Archive.AddFile (assembly.ItemSpec, GetTargetDirectory (assembly.ItemSpec) + "/"  + Path.GetFileName (assembly.ItemSpec), compressionMethod: CompressionMethod.Store);
 
@@ -305,6 +309,9 @@ namespace Xamarin.Android.Tasks
 			count = 0;
 			// Add framework assemblies
 			foreach (ITaskItem assembly in ResolvedFrameworkAssemblies) {
+				if (MonoAndroidHelper.IsReferenceAssembly (assembly.ItemSpec)) {
+					Log.LogWarning ($"{assembly.ItemSpec} is a reference assembly!");
+				}
 				apk.Archive.AddFile (assembly.ItemSpec, "assemblies/" + Path.GetFileName (assembly.ItemSpec), compressionMethod: CompressionMethod.Store);
 				var config = Path.ChangeExtension (assembly.ItemSpec, "dll.config");
 				AddAssemblyConfigEntry (apk, config);
