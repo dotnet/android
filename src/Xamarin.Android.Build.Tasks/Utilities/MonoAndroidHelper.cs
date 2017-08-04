@@ -8,6 +8,7 @@ using System.Security.Cryptography;
 using Mono.Security.Cryptography;
 using Xamarin.Android.Build.Utilities;
 using Xamarin.Tools.Zip;
+using Mono.Cecil;
 
 #if MSBUILD
 using Microsoft.Build.Framework;
@@ -258,6 +259,14 @@ namespace Xamarin.Android.Tasks
 				return true;
 			}
 			return TargetFrameworkDirectories == null || !checkSdkPath ? false : ExistsInFrameworkPath (assembly);
+		}
+
+		public static bool IsReferenceAssembly (string assembly)
+		{
+			var a = AssemblyDefinition.ReadAssembly (assembly, new ReaderParameters() { InMemory = true, ReadSymbols = false, });
+			if (!a.HasCustomAttributes)
+				return false;
+			return a.CustomAttributes.Any (t => t.AttributeType.FullName == "System.Runtime.CompilerServices.ReferenceAssemblyAttribute");
 		}
 
 		public static bool ExistsInFrameworkPath (string assembly)
