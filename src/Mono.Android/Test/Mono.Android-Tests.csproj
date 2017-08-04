@@ -84,6 +84,7 @@
     <Compile Include="Xamarin.Android.RuntimeTests\MyIntent.cs" />
     <Compile Include="Xamarin.Android.RuntimeTests\NonJavaObject.cs" />
     <Compile Include="Xamarin.Android.RuntimeTests\TestInstrumentation.cs" />
+    <Compile Include="Android.OS\BundleTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\AboutResources.txt" />
