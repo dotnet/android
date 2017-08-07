@@ -29,6 +29,8 @@ namespace Xamarin.Android.Tasks {
 	{
 		public static XNamespace AndroidXmlNamespace = "http://schemas.android.com/apk/res/android";
 
+		const int maxVersionCode = 2100000000;
+
 		static XNamespace androidNs = AndroidXmlNamespace;
 
 		XDocument doc;
@@ -36,6 +38,34 @@ namespace Xamarin.Android.Tasks {
 		XName attName;
 
 		XElement app;
+
+		// the elements and attributes which we apply the "." -> PackageName replacement on
+		static readonly Dictionary<string, string []> ManifestAttributeFixups = new Dictionary<string, string []> {
+			{ "activity", new string[] {
+					"name",
+				}
+			},
+			{ "application", new string[] {
+					"backupAgent",
+				}
+			},
+			{ "instrumentation", new string[] {
+					"name",
+				}
+			},
+			{ "provider", new string[] {
+					"name",
+				}
+			},
+			{ "receiver", new string[] {
+					"name",
+				}
+			},
+			{ "service", new string[] {
+					"name",
+				}
+			},
+		};
 
 		// (element, android:name attribute value) which must ALL be present for
 		// the <activity/> to be considered a launcher
@@ -68,6 +98,17 @@ namespace Xamarin.Android.Tasks {
 				doc.Root.SetAttributeValue (androidNs + "versionCode", value);
 			}
 		}
+		public string GetMinimumSdk () {
+			var minAttr = doc.Root.Element ("uses-sdk")?.Attribute (androidNs + "minSdkVersion");
+			if (minAttr == null) {
+				int minSdkVersion;
+				if (!int.TryParse (SdkVersionName, out minSdkVersion))
+					minSdkVersion = 11;
+				return Math.Min (minSdkVersion, 11).ToString ();
+			}
+			return minAttr.Value;
+		}
+
 		TaskLoggingHelper log;
 
 		public ManifestDocument (string templateFilename, TaskLoggingHelper log) : base ()
@@ -345,6 +386,7 @@ namespace Xamarin.Android.Tasks {
 			var nsResolver = new XmlNamespaceManager (new NameTable ());
 			nsResolver.AddNamespace ("android", androidNs.NamespaceName);
 			var xdoc = XDocument.Load (mergedManifest);
+			var package = xdoc.Root.Attribute ("package")?.Value ?? string.Empty;
 			foreach (var top in xdoc.XPathSelectElements ("/manifest/*")) {
 				var name = top.Attribute (AndroidXmlNamespace.GetName ("name"));
 				var existing = (name != null) ?
@@ -352,11 +394,23 @@ namespace Xamarin.Android.Tasks {
 					doc.XPathSelectElement (string.Format ("/manifest/{0}", top.Name.LocalName));
 				if (existing != null)
 					// if there is existing node with the same android:name, then append contents to existing node.
-					existing.Add (top.Nodes ());
+					existing.Add (FixupNameElements (package, top.Nodes ()));
 				else
 					// otherwise, just add to the doc.
-					doc.Root.Add (top);
+					doc.Root.Add (FixupNameElements (package, new XNode [] { top }));
 			}
+		}
+
+		IEnumerable<XNode> FixupNameElements(string packageName, IEnumerable<XNode> nodes)
+		{
+			foreach (var element in nodes.Select ( x => x as XElement).Where (x => x != null && ManifestAttributeFixups.ContainsKey (x.Name.LocalName))) {
+				var attributes = ManifestAttributeFixups [element.Name.LocalName];
+				foreach (var attr in element.Attributes ().Where (x => attributes.Contains (x.Name.LocalName))) {
+					var typeName = attr.Value;
+					attr.Value = typeName.StartsWith (".", StringComparison.InvariantCultureIgnoreCase) ? packageName + typeName : typeName;
+				}
+			}
+			return nodes;
 		}
 
 		Func<TypeDefinition, string, int, XElement> GetGenerator (TypeDefinition type)
@@ -839,11 +893,45 @@ namespace Xamarin.Android.Tasks {
 			int code = 1;
 			if (!string.IsNullOrEmpty (VersionCode)) {
 				code = Convert.ToInt32 (VersionCode);
-				if (code > 0xffff || code < 0)
-					throw new ArgumentOutOfRangeException ("VersionCode", "VersionCode is outside 0, 65535 interval");
+				if (code > maxVersionCode || code < 0)
+					throw new ArgumentOutOfRangeException ("VersionCode", $"VersionCode is outside 0, {maxVersionCode} interval");
 			}
 			code |= GetAbiCode (abi) << 16;
 			VersionCode = code.ToString ();
+		}
+
+		public void CalculateVersionCode (string currentAbi, string versionCodePattern, string versionCodeProperties)
+		{
+			var regex = new Regex ("\\{(?<key>([A-Za-z]+)):?[D0-9]*[\\}]");
+			var kvp = new Dictionary<string, int> ();
+			foreach (var item in versionCodeProperties?.Split (new char [] { ';', ':' }) ?? new string [0]) {
+				var keyValue = item.Split (new char [] { '=' });
+				int val;
+				if (!int.TryParse (keyValue [1], out val))
+					continue;
+				kvp.Add (keyValue [0], val);
+			}
+			if (!kvp.ContainsKey ("abi") && !string.IsNullOrEmpty (currentAbi))
+				kvp.Add ("abi", GetAbiCode (currentAbi));
+			if (!kvp.ContainsKey ("versionCode"))
+				kvp.Add ("versionCode", int.Parse (VersionCode));
+			if (!kvp.ContainsKey ("minSDK")) {
+				kvp.Add ("minSDK", int.Parse (GetMinimumSdk ()));
+			}
+			var versionCode = String.Empty;
+			foreach (Match match in regex.Matches (versionCodePattern)) {
+				var key = match.Groups ["key"].Value;
+				var format = match.Value.Replace (key, "0");
+				if (!kvp.ContainsKey (key))
+					continue;
+				versionCode += string.Format (format, kvp [key]);
+			}
+			int code;
+			if (!int.TryParse (versionCode, out code))
+				throw new ArgumentOutOfRangeException ("VersionCode", $"VersionCode {versionCode} is invalid. It must be an integer value.");
+			if (code > maxVersionCode || code < 0)
+				throw new ArgumentOutOfRangeException ("VersionCode", $"VersionCode {code} is outside 0, {maxVersionCode} interval");
+			VersionCode = versionCode;
 		}
 	}
 }

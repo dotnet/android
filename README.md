@@ -320,13 +320,13 @@ The `bin\$(Configuration)` directory, e.g. `bin\Debug`, contains
 acts as a *local installation prefix*, in which the directory structure
 mirrors that of the OS X Xamarin.Android.framework directory structure:
 
-* `bin\$(Configuration)\lib\xbuild\Xamarin\Android`: MSBuild-related support
+* `bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android`: MSBuild-related support
     files and required runtimes used by the MSBuild tooling.
-* `bin\$(Configuration)\lib\xbuild-frameworks\MonoAndroid`: Xamarin.Android
+* `bin\$(Configuration)\lib\xamarin.android\xbuild-frameworks\MonoAndroid`: Xamarin.Android
     profiles.
-* `bin\$(Configuration)\lib\xbuild-frameworks\MonoAndroid\v1.0`: Xamarin.Android
+* `bin\$(Configuration)\lib\xamarin.android\xbuild-frameworks\MonoAndroid\v1.0`: Xamarin.Android
     Base Class Library assemblies such as `mscorlib.dll`.
-* `bin\$(Configuration)\lib\xbuild-frameworks\MonoAndroid\*`: Contains
+* `bin\$(Configuration)\lib\xamarin.android\xbuild-frameworks\MonoAndroid\*`: Contains
     `Mono.Android.dll` for a given Xamarin.Android `$(TargetFrameworkVersion)`.
 
 # Xamarin.Android `$(TargetFrameworkVersion)`s
@@ -354,7 +354,7 @@ For example, to generate `Mono.Android.dll` for API-19 (Android 4.4):
 
     cd src/Mono.Android
     xbuild /p:AndroidApiLevel=19 /p:AndroidFrameworkVersion=v4.4
-    # creates bin\Debug\lib\xbuild-frameworks\MonoAndroid\v4.4\Mono.Android.dll
+    # creates bin\Debug\lib\xamarin.android\xbuild-frameworks\MonoAndroid\v4.4\Mono.Android.dll
 
 <a name="Samples" />
 

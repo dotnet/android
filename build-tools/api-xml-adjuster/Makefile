@@ -6,7 +6,7 @@ ANDROID_SDK_PATH=$(shell find ~/ -maxdepth 1 -name android-sdk-*)
 
 DOCS_DIR=~/android-toolchain/docs
 
-MANDROID = ../../bin/$(CONFIGURATION)/lib/mandroid
+MANDROID = ../../bin/$(CONFIGURATION)/lib/xamarin.anroid/xbuild/Xamarin/Android
 BUILDBIN = ../../bin/Build$(CONFIGURATION)
 
 CLASS_PARSE = $(MANDROID)/class-parse.exe
@@ -62,7 +62,7 @@ $(ANALYZED_XML): $(API_XML_TOOL) $(CLASS_PARSE_XML)
 	$(RUN_API_XML_TOOL) $(CLASS_PARSE_XML) $(ANALYZED_XML) || rm -f $(ANALYZED_XML)
 
 $(CLASS_PARSE):
-	cd $(JAVA_INTEROP_PATH)/tools/class-parse && $(XBUILD) /p:OutputPath=$(TOP)/out/lib/mandroid
+	cd $(JAVA_INTEROP_PATH)/tools/class-parse && $(XBUILD) /p:OutputPath=$(TOP)/out/lib/xamarin.android/xbuild/Xamarin.Android/
 
 $(API_XML_TOOL):
 	$(XBUILD)

@@ -8,6 +8,7 @@ using System.Security.Cryptography;
 using Mono.Security.Cryptography;
 using Xamarin.Android.Build.Utilities;
 using Xamarin.Tools.Zip;
+using Mono.Cecil;
 
 #if MSBUILD
 using Microsoft.Build.Framework;
@@ -20,6 +21,8 @@ namespace Xamarin.Android.Tasks
 {
 	public class MonoAndroidHelper
 	{
+		static Lazy<string> uname = new Lazy<string> (GetOSBinDirName, System.Threading.LazyThreadSafetyMode.PublicationOnly);
+
 		// Set in ResolveSdks.Execute();
 		// Requires that ResolveSdks.Execute() run before anything else
 		public static string[] TargetFrameworkDirectories;
@@ -48,6 +51,30 @@ namespace Xamarin.Android.Tasks
 			} finally {
 				p.Close ();
 			}
+		}
+
+		static string GetOSBinDirName ()
+		{
+			if (OS.IsWindows)
+				return "";
+			string os = null;
+			DataReceivedEventHandler output = (o, e) => {
+				if (string.IsNullOrWhiteSpace (e.Data))
+					return;
+				os = e.Data.Trim ();
+			};
+			DataReceivedEventHandler error = (o, e) => {};
+			int r = RunProcess ("uname", "-s", output, error);
+			if (r == 0)
+				return os;
+			return null;
+		}
+
+		// Path which contains OS-specific binaries; formerly known as $prefix/bin
+		internal static string GetOSBinPath ()
+		{
+			var toolsDir = Path.GetFullPath (Path.GetDirectoryName (typeof (MonoAndroidHelper).Assembly.Location));
+			return Path.Combine (toolsDir, uname.Value);
 		}
 
 #if MSBUILD
@@ -260,11 +287,19 @@ namespace Xamarin.Android.Tasks
 			return TargetFrameworkDirectories == null || !checkSdkPath ? false : ExistsInFrameworkPath (assembly);
 		}
 
+		public static bool IsReferenceAssembly (string assembly)
+		{
+			var a = AssemblyDefinition.ReadAssembly (assembly, new ReaderParameters() { InMemory = true, ReadSymbols = false, });
+			if (!a.HasCustomAttributes)
+				return false;
+			return a.CustomAttributes.Any (t => t.AttributeType.FullName == "System.Runtime.CompilerServices.ReferenceAssemblyAttribute");
+		}
+
 		public static bool ExistsInFrameworkPath (string assembly)
 		{
 			return TargetFrameworkDirectories
 					// TargetFrameworkDirectories will contain a "versioned" directory,
-					// e.g. $prefix/lib/xbuild-frameworks/MonoAndroid/v1.0.
+					// e.g. $prefix/lib/xamarin.android/xbuild-frameworks/MonoAndroid/v1.0.
 					// Trim off the version.
 					.Select (p => Path.GetDirectoryName (p.TrimEnd (Path.DirectorySeparatorChar)))
 					.Any (p => assembly.StartsWith (p));
@@ -452,11 +487,6 @@ namespace Xamarin.Android.Tasks
 			default:
 				return platformApiLevelName;
 			}
-		}
-
-		public static string GetLibraryImportDirectoryNameForAssembly (string assemblyIdentName)
-		{
-			return string.Concat (new MD2Managed ().ComputeHash (Encoding.UTF8.GetBytes (assemblyIdentName)).Take (5).Select (b => b.ToString ("X02")));
 		}
 
 		public static Dictionary<string, string> LoadAcwMapFile (string acwPath)

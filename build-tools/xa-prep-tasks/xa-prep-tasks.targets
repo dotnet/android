@@ -12,9 +12,8 @@
   <Target Name="_CreateVersion"
       DependsOnTargets="GetXAVersionInfo"
       AfterTargets="Build">
-    <MakeDir Directories="..\..\bin\$(Configuration)\lib\xbuild\Xamarin\Android" />
     <PropertyGroup>
-      <_XAPrefix>..\..\bin\$(Configuration)\lib\xbuild\Xamarin\Android</_XAPrefix>
+      <_XAPrefix>$(XAInstallPrefix)xbuild\Xamarin\Android</_XAPrefix>
       <_VersionFile>..\..\bin\$(Configuration)\Version</_VersionFile>
       <_VersionCommitFile>..\..\bin\$(Configuration)\Version.commit</_VersionCommitFile>
       <_VersionRevFile>..\..\bin\$(Configuration)\Version.rev</_VersionRevFile>
@@ -23,6 +22,7 @@
       <_XAVersionCommitFile>$(_XAPrefix)\Version.commit</_XAVersionCommitFile>
       <_XAVersionRevFile>$(_XAPrefix)\Version.rev</_XAVersionRevFile>
     </PropertyGroup>
+    <MakeDir Directories="$(_XAPrefix)" />
     <WriteLinesToFile
         File="$(_VersionFile)"
         Lines="$(ProductVersion)"

@@ -1,23 +1,18 @@
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <Target Name="Build">
-    <Copy
-        SourceFiles="..\..\tools\scripts\generator"
-        DestinationFiles="$(OutputPath)bin\generator"
-    />
-    <Exec
-        Condition=" '$(HostOS)' != 'Windows' "
-        Command="chmod +x $(OutputPath)bin\generator"
-    />
+    <PropertyGroup>
+      <_CrossDir>$(OutputPath)lib\xamarin.android\xbuild\Xamarin\Android\$(HostOS)</_CrossDir>
+    </PropertyGroup>
     <ItemGroup>
-      <_ExecutableScript Include="$(OutputPath)bin\cross*" />
+      <_ExecutableScript Include="$(_CrossDir)\cross*" />
       <_ExecutableScript
-          Condition=" Exists('$(OutputPath)bin\llc') "
-          Include="$(OutputPath)bin\llc"
+          Condition=" Exists('$(_CrossDir)\llc') "
+          Include="$(_CrossDir)\llc"
       />
       <_ExecutableScript
-          Condition=" Exists('$(OutputPath)bin\opt') "
-          Include="$(OutputPath)bin\opt"
+          Condition=" Exists('$(_CrossDir)\opt') "
+          Include="$(_CrossDir)\opt"
       />
     </ItemGroup>
     <Exec
@@ -27,7 +22,6 @@
   </Target>
 
   <Target Name="Clean">
-    <Delete Files="$(OutputPath)bin\generator" />
   </Target>
 </Project>
 

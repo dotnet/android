@@ -6,7 +6,7 @@
   <Import Project="..\..\build-tools\mono-runtimes\ProfileAssemblies.projitems" />
   <Import Project="..\..\build-tools\scripts\XAVersionInfo.targets" />
   <PropertyGroup>
-    <_SharedRuntimeBuildPath Condition=" '$(_SharedRuntimeBuildPath)' == '' ">..\..\bin\$(Configuration)\lib\xbuild-frameworks\MonoAndroid\</_SharedRuntimeBuildPath>
+    <_SharedRuntimeBuildPath Condition=" '$(_SharedRuntimeBuildPath)' == '' ">$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\</_SharedRuntimeBuildPath>
     <_GeneratedProfileClass>$(IntermediateOutputPath)Profile.g.cs</_GeneratedProfileClass>
     <BuildDependsOn>
       _GenerateXACommonProps;
@@ -145,37 +145,38 @@
   
   <Target Name="_CopyExtractedMultiDexJar"
     Inputs="$(_AndroidSdkLocation)\$(_MultiDexAarInAndroidSdk);$(_SupportLicense)"
-    Outputs="$(OutputPath)..\..\..\mandroid\android-support-multidex.jar;$(OutputPath)..\..\..\mandroid\MULTIDEX_JAR_LICENSE">
+    Outputs="$(OutputPath)android-support-multidex.jar;$(OutputPath)MULTIDEX_JAR_LICENSE">
     <UnzipDirectoryChildren
       NoSubdirectory="true"
       SourceFiles="$(_AndroidSdkLocation)\$(_MultiDexAarInAndroidSdk)"
       DestinationFolder="$(IntermediateOutputPath)multidex-aar" />
     <Copy
       SourceFiles="$(IntermediateOutputPath)multidex-aar\classes.jar"
-      DestinationFiles="$(OutputPath)..\..\..\mandroid\android-support-multidex.jar" />
-    <Touch Files="$(OutputPath)..\..\..\mandroid\android-support-multidex.jar" />
+      DestinationFiles="$(OutputPath)android-support-multidex.jar" />
+    <Touch Files="$(OutputPath)android-support-multidex.jar" />
     <Copy
       SourceFiles="$(_SupportLicense)"
-      DestinationFiles="$(OutputPath)..\..\..\mandroid\MULTIDEX_JAR_LICENSE" />
+      DestinationFiles="$(OutputPath)MULTIDEX_JAR_LICENSE" />
     <Copy
         SourceFiles="$(_SupportLicense)"
-        DestinationFiles="$(OutputPath)..\..\..\mandroid\MULTIDEX_JAR_LICENSE.txt"
+        DestinationFiles="$(OutputPath)MULTIDEX_JAR_LICENSE.txt"
     />
-    <Touch Files="$(OutputPath)..\..\..\mandroid\MULTIDEX_JAR_LICENSE;$(OutputPath)..\..\..\mandroid\MULTIDEX_JAR_LICENSE.txt" />
+    <Touch Files="$(OutputPath)MULTIDEX_JAR_LICENSE;$(OutputPath)MULTIDEX_JAR_LICENSE.txt" />
   </Target>
 
   <ItemGroup>
-    <_MonoSymbolicateScript             Include="mono-symbolicate;mono-symbolicate.cmd" />
-    <_MonoSymbolicateScriptSource       Include="@(_MonoSymbolicateScript->'..\..\tools\scripts\%(Identity)')" />
-    <_MonoSymbolicateScriptDestination  Include="@(_MonoSymbolicateScript->'$(OutputPath)..\..\..\..\bin\%(Identity)')" />
+    <_MonoSymbolicateScriptSource       Include="..\..\tools\scripts\mono-symbolicate" />
+    <_MonoSymbolicateScriptDestination  Include="$(OutputPath)$(HostOS)\mono-symbolicate" />
   </ItemGroup>
 
   <Target Name="_BuildMonoSymbolicateScripts"
       Inputs="@(_MonoSymbolicateScriptSource)"
       Outputs="@(_MonoSymbolicateScriptDestination)">
+    <MakeDir Directories="$(OutputPath)$(HostOS)" />
     <Copy
         SourceFiles="@(_MonoSymbolicateScriptSource)"
         DestinationFiles="@(_MonoSymbolicateScriptDestination)"
     />
+    <Exec Command="chmod +x @(_MonoSymbolicateScriptDestination->'%(Identity)', ' ')" />
   </Target>
 </Project>

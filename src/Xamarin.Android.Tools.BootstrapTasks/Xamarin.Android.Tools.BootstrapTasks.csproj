@@ -59,6 +59,7 @@
     <ProjectReference Include="..\..\build-tools\libzip\libzip.mdproj">
       <Project>{900A0F71-BAAD-417A-8D1A-8D330297CDD0}</Project>
       <Name>libzip</Name>
+      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
     </ProjectReference>
     <ProjectReference Include="..\..\build-tools\xa-prep-tasks\xa-prep-tasks.csproj">
       <Project>{7CE69551-BD73-4726-ACAA-AAF89C84BAF8}</Project>

@@ -8,6 +8,7 @@
       _Configure;
       _Make
     </ForceBuildDependsOn>
+    <_LibZipOutputPath>$(XAInstallPrefix)xbuild\Xamarin\Android\</_LibZipOutputPath>
   </PropertyGroup>
   <Target Name="Build" DependsOnTargets="$(BuildDependsOn)" />
   <Target Name="Clean" />
@@ -29,7 +30,7 @@
     />
   </Target>
   <ItemGroup>
-    <Content Include="@(_LibZipTarget->'$(OutputPath)\lib\xbuild\Xamarin\Android\%(OutputLibrary)')">
+    <Content Include="@(_LibZipTarget->'$(_LibZipOutputPath)%(OutputLibrary)')">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
@@ -43,7 +44,7 @@
      /> 
     <Copy
         SourceFiles="@(_LibZipTarget->'$(IntermediateOutputPath)\%(Identity)\%(OutputLibraryPath)')"
-        DestinationFiles="@(_LibZipTarget->'$(OutputPath)\lib\xbuild\Xamarin\Android\%(OutputLibrary)')"
+        DestinationFiles="@(_LibZipTarget->'$(_LibZipOutputPath)%(OutputLibrary)')"
     />
     <Touch Files="@(Content)" />
   </Target>
@@ -73,6 +74,6 @@
   <Target Name="_CleanBinaries"
       AfterTargets="Clean">
     <RemoveDir Directories="$(IntermediateOutputPath)\%(_LibZipTarget.Identity)" />
-    <Delete Files="@(_LibZipTarget->'$(OutputPath)\lib\xbuild\Xamarin\Android\%(OutputLibrary)')" />
+    <Delete Files="@(_LibZipTarget->'$(_LibZipOutputPath)%(OutputLibrary)')" />
   </Target>
 </Project>

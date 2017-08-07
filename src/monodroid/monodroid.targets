@@ -42,8 +42,8 @@
   </Target>
   <Target Name="_GenerateIncludeFiles"
       Inputs="@(_EmbeddedBlob);jni/config.h"
-      Outputs="@(_EmbeddedBlob->'jni\%(Include)');$(OutputPath)\..\..\..\..\..\include\config.h">
-    <Copy SourceFiles="jni/config.h" DestinationFiles="$(OutputPath)\..\..\..\..\..\include\config.h" />
+      Outputs="@(_EmbeddedBlob->'jni\%(Include)');$(MSBuildThisFileDirectory)bin\$(Configuration)\include\config.h">
+    <Copy SourceFiles="jni/config.h" DestinationFiles="$(MSBuildThisFileDirectory)bin\$(Configuration)\include\config.h" />
     <Exec Command="(cat &quot;@(_EmbeddedBlob)&quot; ; dd if=/dev/zero bs=1 count=1 2>/dev/null) > %(_EmbeddedBlob.Config)" />
     <Exec Command="xxd -i %(_EmbeddedBlob.Config) | sed 's/^unsigned /static const unsigned /g' > jni/%(_EmbeddedBlob.Include)" />
     <Exec Command="rm %(_EmbeddedBlob.Config)" />

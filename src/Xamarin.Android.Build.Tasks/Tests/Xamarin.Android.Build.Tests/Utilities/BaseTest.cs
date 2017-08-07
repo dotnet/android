@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using Xamarin.ProjectTools;
 using NUnit.Framework;
 using System.Linq;
+using System.Threading;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -49,6 +50,12 @@ namespace Xamarin.Android.Build.Tests
 			get {
 				return Path.GetDirectoryName (new Uri (typeof (XamarinProject).Assembly.CodeBase).LocalPath);
 			}
+		}
+
+		protected void WaitFor(int milliseconds)
+		{
+			var pause = new ManualResetEvent(false);
+			pause.WaitOne(milliseconds);
 		}
 
 		protected static string RunAdbCommand (string command, bool ignoreErrors = true)

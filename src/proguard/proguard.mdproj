@@ -4,12 +4,13 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ItemType>GenericProject</ItemType>
     <ProjectGuid>{4B9D96BB-95AB-44E8-9F87-13B12C8BCED1}</ProjectGuid>
-    <OutputPath>..\..\bin\$(Configuration)\lib\mandroid\proguard</OutputPath>
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <OutputPath>$(XAInstallPrefix)xbuild\Xamarin\Android\proguard\</OutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <OutputPath>$(XAInstallPrefix)xbuild\Xamarin\Android\proguard\</OutputPath>
   </PropertyGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.Common.targets" />
   <PropertyGroup>

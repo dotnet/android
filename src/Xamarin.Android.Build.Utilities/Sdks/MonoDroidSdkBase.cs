@@ -8,22 +8,7 @@ namespace Xamarin.Android.Build.Utilities
 {
 	abstract class MonoDroidSdkBase
 	{
-		protected readonly static string DebugRuntime = "Mono.Android.DebugRuntime-debug.apk";
 		protected readonly static string ClassParseExe = "class-parse.exe";
-		protected readonly static string GeneratorScript = "generator";
-
-		// I can never remember the difference between SdkPath and anything else...
-		[Obsolete ("Do not use.")]
-		public string SdkPath { get; private set; }
-
-		// Contains mandroid
-		public string BinPath { get; private set; }
-
-		// Not actually shipped...
-		public string IncludePath { get; private set; }
-
-		// Contains Mono.Android.DebugRuntime-*.apk, platforms/*/*.apk.
-		public string RuntimePath { get; private set; }
 
 		// Root directory for XA libraries, contains designer dependencies
 		public string LibrariesPath { get; private set; }
@@ -31,41 +16,23 @@ namespace Xamarin.Android.Build.Utilities
 		// Contains mscorlib.dll
 		public string BclPath { get; private set; }
 
-		public int SharedRuntimeVersion { get; private set; }
-
-		// expectedRuntimePath: contains Mono.Android.DebugRuntime-*.apk
-		// binPath:     contains mandroid
-		// mscorlibDir: contains mscorlib.dll
+		// expectedRuntimePath: contains class-parse.exe
+		// binPath: ignored; present for compatibility
+		// bclPath: contains mscorlib.dll
 		public void Initialize (string expectedRuntimePath = null, string binPath = null, string bclPath = null)
 		{
-			var runtimePath = GetValidPath ("MonoAndroidToolsPath", expectedRuntimePath,  ValidateRuntime, () => FindRuntime ());
-			if (runtimePath != null) {
-				binPath = GetValidPath ("MonoAndroidBinPath", binPath, ValidateBin, () => FindBin (runtimePath));
-				bclPath = GetValidPath ("mscorlib.dll", bclPath, ValidateFramework, () => FindFramework (runtimePath));
-			} else {
-				if (expectedRuntimePath != null)
-					AndroidLogger.LogWarning (null, "Runtime was not found at {0}", expectedRuntimePath);
-				binPath = bclPath = null;
-			}
+			var runtimePath = GetValidPath ("MonoAndroidToolsPath", expectedRuntimePath,  ValidateRuntime, () => FindRuntime ())
+				?? Path.GetFullPath (Path.GetDirectoryName (GetType ().Assembly.Location));
+			bclPath = GetValidPath ("mscorlib.dll", bclPath, ValidateFramework, () => FindFramework (runtimePath));
 
-			if (runtimePath == null || binPath == null || bclPath == null) {
+			if (runtimePath == null || bclPath == null) {
 				Reset ();
 				return;
 			}
 
-			RuntimePath = runtimePath;
-			#pragma warning disable 0618
-			SdkPath     = Path.GetFullPath (Path.Combine (runtimePath, "..", ".."));
-			#pragma warning restore 0618
-			BinPath     = binPath;
 			BclPath     = bclPath;
 			LibrariesPath = FindLibraries (runtimePath);
 
-			IncludePath = FindInclude (runtimePath);
-			if (IncludePath != null && !Directory.Exists (IncludePath))
-				IncludePath = null;
-
-			SharedRuntimeVersion = GetCurrentSharedRuntimeVersion ();
 			FindSupportedFrameworks ();
 		}
 
@@ -92,23 +59,32 @@ namespace Xamarin.Android.Build.Utilities
 		public void Reset ()
 		{
 			#pragma warning disable 0618
-			SdkPath = BinPath = IncludePath = RuntimePath = BclPath = null;
+			BclPath = LibrariesPath = null;
 			#pragma warning restore 0618
-			SharedRuntimeVersion = 0;
 		}
 
-		protected abstract string FindRuntime ();
-		protected abstract string FindFramework (string runtimePath);
+		protected virtual string FindRuntime ()
+		{
+			string monoAndroidPath = Environment.GetEnvironmentVariable ("MONO_ANDROID_PATH");
+			if (!string.IsNullOrEmpty (monoAndroidPath)) {
+				string msbuildDir = Path.Combine (monoAndroidPath, "lib", "xamarin.android", "xbuild", "Xamarin", "Android");
+				if (Directory.Exists (msbuildDir)) {
+					if (ValidateRuntime (msbuildDir))
+						return msbuildDir;
+					AndroidLogger.LogInfo (null, $"MONO_ANDROID_PATH points to {monoAndroidPath}, but `{msbuildDir}{Path.DirectorySeparatorChar}class-parse.exe` does not exist.");
+				}
+				else
+					AndroidLogger.LogInfo (null, $"MONO_ANDROID_PATH points to {monoAndroidPath}, but it does not exist.");
+			}
+			return null;
+		}
 
-		// Check for platform-specific `mandroid` name
-		protected abstract bool ValidateBin (string binPath);
+		protected abstract string FindFramework (string runtimePath);
 
 		protected static bool ValidateRuntime (string loc)
 		{
 			return !string.IsNullOrWhiteSpace (loc) &&
-				(File.Exists (Path.Combine (loc, DebugRuntime)) ||    // Normal/expected
-				 File.Exists (Path.Combine (loc, ClassParseExe)) ||    // Normal/expected
-					File.Exists (Path.Combine (loc, "Ionic.Zip.dll")));  // Wrench builds
+				 File.Exists (Path.Combine (loc, ClassParseExe));
 		}
 
 		protected static bool ValidateFramework (string loc)
@@ -116,102 +92,7 @@ namespace Xamarin.Android.Build.Utilities
 			return loc != null && File.Exists (Path.Combine (loc, "mscorlib.dll"));
 		}
 
-		public string FindVersionFile ()
-		{
-			#pragma warning disable 0618
-			if (string.IsNullOrEmpty (SdkPath))
-				return null;
-			#pragma warning restore 0618
-			foreach (var loc in GetVersionFileLocations ()) {
-				if (File.Exists (loc)) {
-					return loc;
-				}
-			}
-			return null;
-		}
-
-		protected virtual IEnumerable<string> GetVersionFileLocations ()
-		{
-			#pragma warning disable 0618
-			yield return Path.Combine (SdkPath, "Version");
-			#pragma warning restore 0618
-		}
-
-		protected abstract string FindBin (string runtimePath);
-
-		protected abstract string FindInclude (string runtimePath);
-
 		protected abstract string FindLibraries (string runtimePath);
-
-		[Obsolete ("Do not use.")]
-		public string GetPlatformNativeLibPath (string abi)
-		{
-			return FindPlatformNativeLibPath (SdkPath, abi);
-		}
-
-		[Obsolete ("Do not use.")]
-		public string GetPlatformNativeLibPath (AndroidTargetArch arch)
-		{
-			return FindPlatformNativeLibPath (SdkPath, GetMonoDroidArchName (arch));
-		}
-
-		[Obsolete ("Do not use.")]
-		static string GetMonoDroidArchName (AndroidTargetArch arch)
-		{
-			switch (arch) {
-			case AndroidTargetArch.Arm:
-				return "armeabi";
-			case AndroidTargetArch.Mips:
-				return "mips";
-			case AndroidTargetArch.X86:
-				return "x86";
-			}
-			return null;
-		}
-
-		[Obsolete]
-		protected string FindPlatformNativeLibPath (string sdk, string arch)
-		{
-			return Path.Combine (sdk, "lib", arch);
-		}
-
-		static XmlReaderSettings GetSafeReaderSettings ()
-		{
-			//allow DTD but not try to resolve it from web
-			return new XmlReaderSettings {
-				CloseInput = true,
-				DtdProcessing = DtdProcessing.Ignore,
-				XmlResolver = null,
-			};
-		}
-
-		int GetCurrentSharedRuntimeVersion ()
-		{
-			string file = Path.Combine (RuntimePath, "Mono.Android.DebugRuntime-debug.xml");
-
-			return GetManifestVersion (file);
-		}
-
-		internal static int GetManifestVersion (string file)
-		{
-			// It seems that MfA 1.0 on Windows didn't include the xml files to get the runtime version.
-			if (!File.Exists (file))
-				return int.MaxValue;
-
-			try {
-				using (var r = XmlReader.Create (file, GetSafeReaderSettings())) {
-					if (r.MoveToContent () == XmlNodeType.Element && r.MoveToAttribute ("android:versionCode")) {
-						int value;
-						if (int.TryParse (r.Value, out value))
-							return value;
-						AndroidLogger.LogInfo ("Cannot parse runtime version code: ({0})", r.Value);
-					}
-				}
-			} catch (Exception ex) {
-				AndroidLogger.LogError ("Error trying to find shared runtime version", ex);
-			}
-			return int.MaxValue;
-		}
 
 		internal static Version ToVersion (string frameworkDir)
 		{

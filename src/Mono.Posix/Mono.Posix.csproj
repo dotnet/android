@@ -26,7 +26,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\..\bin\$(Configuration)\lib\xbuild-frameworks\MonoAndroid\v1.0</OutputPath>
+    <OutputPath>$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\v1.0</OutputPath>
     <DefineConstants>DEBUG;TRACE;NET_4_0;NET_4_5;MONO;DISABLE_CAS_USE;MONODROID</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <AndroidUseSharedRuntime>True</AndroidUseSharedRuntime>
@@ -37,7 +37,7 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <Optimize>true</Optimize>
-    <OutputPath>..\..\bin\$(Configuration)\lib\xbuild-frameworks\MonoAndroid\v1.0</OutputPath>
+    <OutputPath>$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\v1.0</OutputPath>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AndroidUseSharedRuntime>false</AndroidUseSharedRuntime>
@@ -230,11 +230,11 @@
     <Compile Include="$(MonoSourceDirectory)\mcs\build\common\Locale.cs">
       <Link>Locale.cs</Link>
     </Compile>
-    <Compile Include="$(OutputPath)..\..\..\..\include\Consts.cs">
+    <Compile Include="..\..\bin\$(Configuration)\include\Consts.cs">
       <Link>Consts.cs</Link>
     </Compile>
   </ItemGroup>
-  <Import Project="$(OutputPath)\..\..\..\xbuild\Xamarin\Android\Xamarin.Android.CSharp.targets" />
+  <Import Project="$(XAInstallPrefix)xbuild\Xamarin\Android\Xamarin.Android.CSharp.targets" />
   <ItemGroup>
     <Folder Include="MonoPosixHelper\" />
     <Folder Include="Assembly\" />

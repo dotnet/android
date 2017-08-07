@@ -3,6 +3,7 @@ using System.IO;
 using System.Diagnostics;
 using Microsoft.Build.Framework;
 using System.Text;
+using System.Collections.Generic;
 
 namespace Xamarin.ProjectTools
 {
@@ -51,7 +52,7 @@ namespace Xamarin.ProjectTools
 						outdir = Path.GetFullPath (Path.Combine (Root, "..", "..", "bin", "Release"));
 					if (!Directory.Exists (outdir))
 						outdir = "/Library/Frameworks/Xamarin.Android.framework/Versions/Current";
-					return Path.Combine (outdir, "lib");
+					return Path.Combine (outdir, "lib", "xamarin.android");
 				}
 				else {
 					var x86 = Environment.GetFolderPath (Environment.SpecialFolder.ProgramFilesX86);
@@ -97,7 +98,7 @@ namespace Xamarin.ProjectTools
 			return null;
 		}
 
-		protected bool BuildInternal (string projectOrSolution, string target, string [] parameters = null)
+		protected bool BuildInternal (string projectOrSolution, string target, string [] parameters = null, Dictionary<string, string> environmentVariables = null)
 		{
 			string buildLogFullPath = (!string.IsNullOrEmpty (BuildLogFile))
 				? Path.GetFullPath (Path.Combine (Root, Path.GetDirectoryName (projectOrSolution), BuildLogFile))
@@ -130,7 +131,7 @@ namespace Xamarin.ProjectTools
 				args.AppendFormat ("/p:AndroidNdkDirectory=\"{0}\" ", ndkPath);
 			}
 			if (RunXBuild) {
-				var outdir = Path.GetFullPath (Path.Combine (FrameworkLibDirectory, ".."));
+				var outdir = Path.GetFullPath (Path.Combine (FrameworkLibDirectory, "..", ".."));
 				var targetsdir = Path.Combine (FrameworkLibDirectory, "xbuild");
 				args.AppendFormat (" {0} ", logger);
 
@@ -140,7 +141,7 @@ namespace Xamarin.ProjectTools
 				}
 				if (Directory.Exists (outdir)) {
 					psi.EnvironmentVariables ["MONO_ANDROID_PATH"] = outdir;
-					psi.EnvironmentVariables ["XBUILD_FRAMEWORK_FOLDERS_PATH"] = Path.Combine (outdir, "lib", "xbuild-frameworks");
+					psi.EnvironmentVariables ["XBUILD_FRAMEWORK_FOLDERS_PATH"] = Path.Combine (outdir, "lib", "xamarin.android", "xbuild-frameworks");
 					args.AppendFormat ("/p:MonoDroidInstallDirectory=\"{0}\" ", outdir);
 				}
 				args.AppendFormat ("/t:{0} {1} /p:UseHostCompilerIfAvailable=false /p:BuildingInsideVisualStudio=true", target, QuoteFileName (Path.Combine (Root, projectOrSolution)));
@@ -154,7 +155,13 @@ namespace Xamarin.ProjectTools
 					args.AppendFormat (" /p:{0}", param);
 				}
 			}
+			if (environmentVariables != null) {
+				foreach (var kvp in environmentVariables) {
+					psi.EnvironmentVariables[kvp.Key] = kvp.Value;
+				}
+			}
 			psi.Arguments = args.ToString ();
+			
 			psi.CreateNoWindow = true;
 			psi.UseShellExecute = false;
 			psi.RedirectStandardOutput = true;

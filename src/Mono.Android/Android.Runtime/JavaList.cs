@@ -550,7 +550,7 @@ namespace Android.Runtime {
 			if (handle == IntPtr.Zero)
 				return null;
 
-			IJavaObject inst = Java.Lang.Object.PeekObject (handle);
+			IJavaObject inst = Java.Lang.Object.PeekObject (handle, typeof (IList<T>));
 			if (inst == null)
 				inst = new JavaList<T> (handle, transfer);
 			else

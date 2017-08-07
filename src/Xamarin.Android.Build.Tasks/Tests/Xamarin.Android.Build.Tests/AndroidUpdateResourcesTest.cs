@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using Xamarin.ProjectTools;
 using NUnit.Framework;
 using System.Linq;
@@ -8,6 +8,7 @@ using System.Text;
 using System.Collections.Generic;
 using Microsoft.Build.Framework;
 using System.Xml.Linq;
+using System.Security.Cryptography;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -36,19 +37,59 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void DesignTimeBuild ([Values(false, true)] bool isRelease)
 		{
+			var path = Path.Combine (Root, "temp", $"DesignTimeBuild_{isRelease}");
+			var cachePath = Path.Combine (path, "Cache");
+			var envVar = new Dictionary<string, string> () {
+				{ "XAMARIN_CACHEPATH", cachePath },
+			};
+			var url = "http://dl-ssl.google.com/android/repository/build-tools_r24-macosx.zip";
+			var md5 = MD5.Create ();
+			var hash = string.Concat (md5.ComputeHash (Encoding.UTF8.GetBytes (url)).Select (b => b.ToString ("X02")));
+			var zipPath = Path.Combine (cachePath, "zips", $"{hash}.zip");
+			if (File.Exists (zipPath))
+				File.Delete (zipPath);
+
+			var extractedDir = Path.Combine (cachePath, "Lib1");
+			if (Directory.Exists (extractedDir))
+				Directory.Delete (extractedDir, recursive: true);
+
+			var lib = new XamarinAndroidLibraryProject () {
+				ProjectName = "Lib1",
+				IsRelease = isRelease,
+				AssemblyInfo = @"using System.Reflection;
+using System.Runtime.CompilerServices;
+
+[assembly: Android.NativeLibraryReferenceAttribute (""android-N/renderscript/lib/packaged/x86/librsjni.so"",
+	SourceUrl="""+ url +@""",
+	Version=""1"", PackageName=""Lib1"")]
+",
+			};
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
+				References = {
+					new BuildItem.ProjectReference (@"..\Lib1\Lib1.csproj", lib.ProjectName, lib.ProjectGuid),
+				},
 			};
-			using (var b = CreateApkBuilder (string.Format ("temp/DesignTimeBuild_{0}", isRelease))) {
-				b.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Diagnostic;
-				b.ThrowOnBuildFailure = false;
-				Assert.IsTrue (b.UpdateAndroidResources (proj, parameters: new string[] { "DesignTimeBuild=true" }),
-					"first build failed");
-				Assert.IsFalse (b.LastBuildOutput.Contains ("Done executing task \"GetAdditionalResourcesFromAssemblies\""),
-					"failed to skip GetAdditionalResourcesFromAssemblies");
-				Assert.IsTrue (b.Build (proj), "second build failed");
-				Assert.IsTrue (b.LastBuildOutput.Contains ("Task \"GetAdditionalResourcesFromAssemblies\""),
-					"failed to run GetAdditionalResourcesFromAssemblies");
+			
+			using (var l = CreateDllBuilder (Path.Combine (path, lib.ProjectName))) {
+				using (var b = CreateApkBuilder (Path.Combine (path, proj.ProjectName))) {
+					l.Verbosity = LoggerVerbosity.Diagnostic;
+					Assert.IsTrue(l.Clean(lib), "Lib1 should have cleaned successfully");
+					Assert.IsTrue (l.Build (lib), "Lib1 should have built successfully");
+					b.Verbosity = LoggerVerbosity.Diagnostic;
+					b.ThrowOnBuildFailure = false;
+					Assert.IsTrue (b.Clean(proj), "App should have cleaned successfully");
+					Assert.IsTrue (b.UpdateAndroidResources (proj, doNotCleanupOnUpdate: true, parameters: new string [] { "DesignTimeBuild=true" }, environmentVariables: envVar),
+						"first build failed");
+					Assert.IsTrue (b.LastBuildOutput.Contains ("Skipping download of "),
+						"failed to skip the downloading of files.");
+					WaitFor (1000);
+					b.Target = "Build";
+					Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, parameters: new string [] { "DesignTimeBuild=false" }, environmentVariables: envVar), "second build failed");
+					Assert.IsFalse(b.Output.IsTargetSkipped ("_BuildAdditionalResourcesCache"), "_BuildAdditionalResourcesCache should have run.");
+					Assert.IsTrue (b.LastBuildOutput.Contains($"Downloading {url}") || b.LastBuildOutput.Contains ($"reusing existing archive: {zipPath}"), $"{url} should have been downloaded.");
+					Assert.IsTrue (File.Exists (Path.Combine (extractedDir, "1", "content", "android-N", "aapt")), $"Files should have been extracted to {extractedDir}");
+				}
 			}
 		}
 
@@ -470,6 +511,23 @@ namespace UnnamedProject
 		}
 
 		[Test]
+		public void CheckAaptErrorRaisedForInvalidFileName ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\drawable\\icon-2.png") {
+				BinaryContent = () => XamarinAndroidCommonProject.icon_binary_hdpi,
+			});
+			var projectPath = string.Format ("temp/CheckAaptErrorRaisedForInvalidDirectoryName");
+			using (var b = CreateApkBuilder (Path.Combine (projectPath, "UnamedApp"), false, false)) {
+				b.Verbosity = LoggerVerbosity.Diagnostic;
+				b.ThrowOnBuildFailure = false;
+				Assert.IsFalse (b.Build (proj), "Build should have failed");
+				StringAssert.Contains ("Invalid file name:", b.LastBuildOutput);
+				StringAssert.Contains ("1 Error(s)", b.LastBuildOutput);
+			}
+		}
+
+		[Test]
 		public void CheckAaptErrorRaisedForDuplicateResourceinApp ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
@@ -487,7 +545,7 @@ namespace UnnamedProject
 				b.ThrowOnBuildFailure = false;
 				Assert.IsFalse (b.Build (proj), "Build should have failed");
 				StringAssert.Contains ("APT0000: ", b.LastBuildOutput);
-				StringAssert.Contains ("1 Error(s)", b.LastBuildOutput);
+				StringAssert.Contains ("2 Error(s)", b.LastBuildOutput);
 			}
 		}
 
@@ -759,6 +817,78 @@ namespace UnnamedProject
 
 				Assert.IsFalse (File.Exists (Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath, "res", "values", "theme.xml")),
 					"Theme.xml was NOT removed from the intermediate directory");
+			}
+		}
+
+		[Test]
+		public void CheckDontUpdateResourceIfNotNeeded ()
+		{
+			var path = Path.Combine ("temp", "CheckDontUpdateResourceIfNotNeeded");
+			var foo = new BuildItem.Source ("Foo.cs") {
+				TextContent = () => @"using System;
+namespace Lib1 {
+	public class Foo {
+		public string GetFoo () {
+			return ""Foo"";
+		}
+	}
+}"
+			};
+			var theme = new AndroidItem.AndroidResource ("Resources\\values\\Theme.xml") {
+				TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
+<resources>
+	<color name=""theme_devicedefault_background"">#ffffffff</color>
+</resources>", 
+			};
+			var libProj = new XamarinAndroidLibraryProject () {
+				IsRelease = true,
+				ProjectName = "Lib1",
+				Sources = {
+					foo,
+				},
+				AndroidResources = {
+					theme,
+				},
+			};
+			var appProj = new XamarinAndroidApplicationProject () {
+				IsRelease = true,
+				ProjectName = "App1",
+				References = {
+					new BuildItem.ProjectReference (@"..\Lib1\Lib1.csproj", libProj.ProjectName, libProj.ProjectGuid),
+				},
+			};
+			using (var libBuilder = CreateDllBuilder (Path.Combine (path, libProj.ProjectName), false, false)) {
+				libBuilder.Verbosity = LoggerVerbosity.Diagnostic;
+				Assert.IsTrue (libBuilder.Build (libProj), "Library project should have built");
+				using (var appBuilder = CreateApkBuilder (Path.Combine (path, appProj.ProjectName), false, false)) {
+					appBuilder.Verbosity = LoggerVerbosity.Diagnostic;
+					Assert.IsTrue (appBuilder.Build (appProj), "Application Build should have succeeded.");
+					Assert.IsFalse (appBuilder.Output.IsTargetSkipped ("_UpdateAndroidResgen"), "_UpdateAndroidResgen target not should be skipped.");
+					foo.Timestamp = DateTime.UtcNow;
+					Assert.IsTrue (libBuilder.Build (libProj, doNotCleanupOnUpdate: true, saveProject: false), "Library project should have built");
+					Assert.IsTrue (libBuilder.Output.IsTargetSkipped ("_AddLibraryProjectsEmbeddedResourceToProject"), "_AddLibraryProjectsEmbeddedResourceToProject should be skipped.");
+					Assert.IsTrue (appBuilder.Build (appProj, doNotCleanupOnUpdate: true, saveProject: false), "Application Build should have succeeded.");
+					Assert.IsTrue (appBuilder.Output.IsTargetSkipped ("_UpdateAndroidResgen"), "_UpdateAndroidResgen target should be skipped.");
+					theme.TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
+<resources>
+	<color name=""theme_devicedefault_background"">#00000000</color>
+	<color name=""theme_devicedefault_background2"">#ffffffff</color>
+</resources>";
+					theme.Timestamp = DateTime.UtcNow;
+					Assert.IsTrue (libBuilder.Build (libProj, doNotCleanupOnUpdate: true, saveProject: false), "Library project should have built");
+					Assert.IsFalse (libBuilder.Output.IsTargetSkipped ("_AddLibraryProjectsEmbeddedResourceToProject"), "_AddLibraryProjectsEmbeddedResourceToProject should not be skipped.");
+					Assert.IsTrue (appBuilder.Build (appProj, doNotCleanupOnUpdate: true, saveProject: false), "Application Build should have succeeded.");
+					string text = File.ReadAllText (Path.Combine (Root, path, appProj.ProjectName, "Resources", "Resource.designer.cs"));
+					Assert.IsTrue (text.Contains ("theme_devicedefault_background2"), "Resource.designer.cs was not updated.");
+					Assert.IsFalse (appBuilder.Output.IsTargetSkipped ("_UpdateAndroidResgen"), "_UpdateAndroidResgen target should NOT be skipped.");
+					theme.Deleted = true;
+					theme.Timestamp = DateTime.UtcNow;
+					Assert.IsTrue (libBuilder.Build (libProj, saveProject: true), "Library project should have built");
+					var themeFile = Path.Combine (Root, path, libProj.ProjectName, libProj.IntermediateOutputPath, "res", "values", "theme.xml");
+					Assert.IsTrue (!File.Exists (themeFile), $"{themeFile} should have been deleted.");
+					var archive = Path.Combine (Root, path, libProj.ProjectName, libProj.IntermediateOutputPath, "__AndroidLibraryProjects__.zip");
+					Assert.IsNull (ZipHelper.ReadFileFromZip (archive, "res/values/theme.xml"), "res/values/theme.xml should have been removed from __AndroidLibraryProjects__.zip");
+				}
 			}
 		}
 	}

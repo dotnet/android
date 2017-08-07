@@ -147,7 +147,7 @@ namespace Xamarin.Android.Tasks
 		}
 
 		protected override string ToolName {
-			get { return OS.IsWindows ? "generator.exe" : "generator"; }
+			get { return "generator.exe"; }
 		}
 
 		protected override string GenerateFullPathToTool ()

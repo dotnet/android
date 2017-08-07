@@ -9,18 +9,19 @@
     <AssemblyName>Mono.Android</AssemblyName>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
+    <NoWarn>0618;0809;0108;0114</NoWarn>
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
   <PropertyGroup>
     <TargetFrameworkIdentifier>MonoAndroid</TargetFrameworkIdentifier>
     <TargetFrameworkVersion>v1.0</TargetFrameworkVersion>
-    <TargetFrameworkRootPath>$(MSBuildThisFileDirectory)..\..\bin\$(Configuration)\lib\xbuild-frameworks</TargetFrameworkRootPath>
+    <TargetFrameworkRootPath>$(XAInstallPrefix)xbuild-frameworks</TargetFrameworkRootPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\..\bin\Debug\lib\xbuild-frameworks\MonoAndroid\$(AndroidFrameworkVersion)</OutputPath>
+    <OutputPath>$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\$(AndroidFrameworkVersion)\</OutputPath>
     <DefineConstants>DEBUG;JAVA_INTEROP;NET_2_0</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -32,7 +33,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>..\..\bin\Release\lib\xbuild-frameworks\MonoAndroid\$(AndroidFrameworkVersion)</OutputPath>
+    <OutputPath>$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\$(AndroidFrameworkVersion)\</OutputPath>
     <DefineConstants>JAVA_INTEROP;NET_2_0</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -120,6 +121,7 @@
     <Compile Include="Android.App\UsesPermissionAttribute.cs" />
     <Compile Include="Android.App.Admin\DevicePolicyManager.cs" />
     <Compile Include="Android.Bluetooth\BluetoothGattServer.cs" />
+    <Compile Include="Android.Bluetooth\BluetoothGattServerCallback.cs" />
     <Compile Include="Android.Content\ContentProvider.cs" />
     <Compile Include="Android.Content\ContentValues.cs" />
     <Compile Include="Android.Content\Context.cs" />
@@ -203,7 +205,6 @@
     <Compile Include="Android.Runtime\XAPeerMembers.cs" />
     <Compile Include="Android.Runtime\XmlPullParserReader.cs" />
     <Compile Include="Android.Runtime\XmlReaderPullParser.cs" />
-    <Compile Include="Android.Service.Quicksettings\TileState.cs" />
     <Compile Include="Android.Telephony\PhoneNumberUtils.cs" />
     <Compile Include="Android.Telephony\TelephonyManager.cs" />
     <Compile Include="Android.Test\MoreAsserts.cs" />
@@ -267,11 +268,15 @@
     <Compile Include="Java.Lang\RuntimeException.cs" />
     <Compile Include="Java.Lang\Short.cs" />
     <Compile Include="Java.Lang\String.cs" />
+    <Compile Include="Java.Lang\StringBuffer.cs" />
+    <Compile Include="Java.Lang\StringBuilder.cs" />
     <Compile Include="Java.Lang\Thread.cs" />
     <Compile Include="Java.Lang\Throwable.cs" />
     <Compile Include="Java.Lang.Reflect\InvocationTargetException.cs" />
+    <Compile Include="Java.Lang.Reflect\Parameter.cs" />
     <Compile Include="Java.Nio\Buffer.cs" />
     <Compile Include="Java.Nio\CharBuffer.cs" />
+    <Compile Include="Java.Nio\FileChannel.cs" />
     <Compile Include="Java.Security\IdentityScope.cs" />
     <Compile Include="Java.Util\Spliterators.cs" />
     <Compile Include="Java.Util.Concurrent.Atomic\AtomicInteger.cs" />

@@ -10,10 +10,10 @@ dateupdated: 2017-06-22
 
 The Xamarin.Android build process is responsible for gluing everything
 together:
-[generating `Resource.designer.cs`](/guides/android/advanced_topics/api_design#Resources),
+[generating `Resource.designer.cs`](https://developer.xamarin.com/guides/android/advanced_topics/api_design#Resources),
 supporting the `AndroidAsset`, `AndroidResource`, and other
 [build actions](#Build_Actions), generating
-[Android-callable wrappers](/guides/android/advanced_topics/java_integration_overview/android_callable_wrappers),
+[Android-callable wrappers](https://developer.xamarin.com/guides/android/advanced_topics/java_integration_overview/android_callable_wrappers),
 and generating a `.apk` for execution on Android devices.
 
 <a name="App_Packaging" class="injected"></a>
@@ -247,7 +247,7 @@ when packaing Release applications.
     Added in Xamarin.Android 6.1.
 
 -   **AndroidHttpClientHandlerType** &ndash; Allow setting the value of the
-    [`XA_HTTP_CLIENT_HANDLER_TYPE` environment variable](/guides/android/advanced_topics/environment/#XA_HTTP_CLIENT_HANDLER_TYPE).
+    [`XA_HTTP_CLIENT_HANDLER_TYPE` environment variable](https://developer.xamarin.com/guides/android/advanced_topics/environment/#XA_HTTP_CLIENT_HANDLER_TYPE).
     This value will not override an explicitly specified
     `XA_HTTP_CLIENT_HANDLER_TYPE` value. An
     `XA_HTTP_CLIENT_HANDLER_TYPE` environment variable value specified
@@ -278,7 +278,7 @@ when packaing Release applications.
     **Experimental**. Added in Xamarin.Android 7.1.
 
 -   **AndroidLinkMode** &ndash; Specifies which type of
-    [linking](/guides/android/advanced_topics/linking/) should be
+    [linking](https://developer.xamarin.com/guides/android/advanced_topics/linking/) should be
     performed on assemblies contained within the Android package. Only
     used in Android Application projects. The default value is
     *SdkOnly*. Valid values are:
@@ -310,7 +310,7 @@ when packaing Release applications.
 
 -   **AndroidManifest** &ndash; Specifies a filename to use as the
     template for the app's
-    [`AndroidManifest.xml`](/guides/android/advanced_topics/working_with_androidmanifest.xml/).
+    [`AndroidManifest.xml`](https://developer.xamarin.com/guides/android/advanced_topics/working_with_androidmanifest.xml/).
     During the build, any other necessary values will be merged into to
     produce the actual `AndroidManifest.xml`.
     The `$(AndroidManifest)` must contain the package name in the `/manifest/@package` attribute.
@@ -501,6 +501,71 @@ when packaing Release applications.
 
     Added in Xamarin.Android 7.1.
 
+    <a name="AndroidVersionCodePattern" class="injected"></a>
+-   **AndroidVersionCodePattern** &ndash; A string property which allows
+    the developer to customize the `versionCode` in the manifest.
+    See [Creating the Version Code for the APK](https://developer.xamarin.com/guides/android/advanced_topics/build-abi-specific-apks/#Creating_the_Version_Code_for_the_APK)
+    for information on deciding a `versionCode`.
+    
+    Some examples, if `abi` is `armeabi` and `versionCode` in the manifest
+    is `123`
+
+        {abi}{versionCode}
+
+    will produce a versionCode of `1123` when `$(AndroidCreatePackagePerAbi)`
+    is True, otherwise will produce a value of 123.
+    If `abi` is `x86_64` and `versionCode` in the manifest
+    is `44`. This will produce `544` when `$(AndroidCreatePackagePerAbi)`
+    is True, otherwise will produce a value of `44`.
+
+    If we include a left padding format string 
+
+        {abi}{versionCode:0000}
+
+    it would produde `50044` because we are left padding the `versionCode`
+    with `0`. Alternatively you can use the decimal padding such as
+
+        {abi}{versionCode:D4}
+
+    which does the same as the previous example. 
+
+    Only '0' and 'Dx' padding format strings are supported since the value
+    MUST be an integer.
+    
+    Pre defined key items
+        
+    -   **abi**  &ndash; Inserts the targetted abi for the app
+        -   1 &ndash; `armeabi`
+        -   2 &ndash; `armeabi-v7a`
+        -   3 &ndash; `x86`
+        -   4 &ndash; `arm64-v8a`
+        -   5 &ndash; `x86_64`
+
+    -   **minSDK**  &ndash; Inserts the minimum supported Sdk
+        value from the `AndroidManifest.xml` or `11` if none is
+        defined.
+
+    -   **versionCode** &ndash; Uses the version code direrctly from 
+        `Properties\AndroidManifest.xml`. 
+
+    You can define custom items using the [AndroidVersionCodeProperties](#AndroidVersionCodeProperties) 
+    property.
+
+    Added in Xamarin.Android 7.2.
+
+    <a name="AndroidVersionCodeProperties" class="injected"></a>
+-   **AndroidVersionCodeProperties** &ndash; A string property which allows
+    the developer to define custom items to use with the [AndroidVersionCodePattern](#AndroidVersionCodePattern).
+    They are in the form of a `key=value` pair. All items in the `value` should
+    be integer values. 
+
+            screen=23;target=$(_SupportedApiLevel)
+
+    As you can see you can make use of existing or custom MSBuild properties
+    in the string. 
+
+    Added in Xamarin.Android 7.2.
+
 ## Binding Project Build Properties
 
 The following MSBuild properties are used with
@@ -675,7 +740,7 @@ within the project and control how the file is processed.
 ## AndroidEnvironment
 
 Files with a Build action of `AndroidEnvironment` are used
-to [initialize environment variables and system properties during process startup](/guides/android/advanced_topics/environment/).
+to [initialize environment variables and system properties during process startup](https://developer.xamarin.com/guides/android/advanced_topics/environment/).
 The `AndroidEnvironment` Build action may be applied to
 multiple files, and they will be evaluated in no particular order (so don't
 specify the same environment variable or system property in multiple
@@ -748,7 +813,7 @@ example:
 
 ## AndroidNativeLibrary
 
-[Native libraries](/guides/android/advanced_topics/cpu_architecture/#Android_Native_Library_Installation)
+[Native libraries](https://developer.xamarin.com/guides/android/advanced_topics/cpu_architecture/#Android_Native_Library_Installation)
 are added to the build by setting their Build action to
 `AndroidNativeLibrary`.
 
@@ -787,7 +852,7 @@ Build action will result in a `XA0101` warning.
 ## LinkDescription
 
 Files with a *LinkDescription* build action are used to
-[control linker behavior](/guides/cross-platform/advanced/custom_linking/).
+[control linker behavior](https://developer.xamarin.com/guides/cross-platform/advanced/custom_linking/).
 
 
 <a name="ProguardConfiguration"></a>
@@ -797,7 +862,7 @@ Files with a *LinkDescription* build action are used to
 Files with a *ProguardConfiguration* build action contain options which 
 are used to control `proguard` behavior. For more information about 
 this build action, see 
-[ProGuard](/guides/android/deployment,_testing,_and_metrics/proguard/). 
+[ProGuard](https://developer.xamarin.com/guides/android/deployment,_testing,_and_metrics/proguard/). 
 
 These files are ignored unless the `$(EnableProguard)` MSBuild property
 is `True`.

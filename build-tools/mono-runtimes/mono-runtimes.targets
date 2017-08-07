@@ -3,8 +3,9 @@
   <Target Name="Build" DependsOnTargets="$(BuildDependsOn)" />
   <PropertyGroup>
     <_SourceTopDir>..\..</_SourceTopDir>
-    <_BclFrameworkDir>$(OutputPath)\lib\xbuild-frameworks\MonoAndroid\v1.0</_BclFrameworkDir>
-    <_MandroidDir>$(OutputPath)\lib\mandroid</_MandroidDir>
+    <_BclFrameworkDir>$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\v1.0\</_BclFrameworkDir>
+    <_MSBuildDir>$(XAInstallPrefix)xbuild\Xamarin\Android</_MSBuildDir>
+    <_OutputIncludeDir>..\..\bin\$(Configuration)\include\</_OutputIncludeDir>
     <_DebugFileExt Condition=" '$(_DebugFileExt)' == '' ">.pdb</_DebugFileExt>
   </PropertyGroup>
   <ItemGroup>
@@ -25,16 +26,15 @@
     <FSharpItem Include="FSharp.Core.sigdata" />
   </ItemGroup>
   <ItemGroup>
-    <_FSharpInstalledItems Include="@(FSharpItem->'$(OutputPath)\lib\xbuild-frameworks\MonoAndroid\v1.0\%(Identity)')" />
+    <_FSharpInstalledItems Include="@(FSharpItem->'$(_BclFrameworkDir)%(Identity)')" />
   </ItemGroup>
   <UsingTask AssemblyFile="$(_SourceTopDir)\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.GetNugetPackageBasePath" />
-  <Import Project="$(_SourceTopDir)\Configuration.props" />
   <ItemGroup>
     <_MonoDocCopyItems Include="@(MonoDocCopyItem->'$(_MonoOutputDir)\%(Identity)')" />
   </ItemGroup>
   <ItemGroup>
-    <_MonoDocInstalledItems Include="@(MonoDocCopyItem->'$(_MandroidDir)\%(Identity)')" />
-    <_MonoDocInstalledItems Include="$(_MandroidDir)\mdoc.exe" />
+    <_MonoDocInstalledItems Include="@(MonoDocCopyItem->'$(_MSBuildDir)\%(Identity)')" />
+    <_MonoDocInstalledItems Include="$(_MSBuildDir)\mdoc.exe" />
   </ItemGroup>
   <PropertyGroup>
     <_MonoProfileDir>$(MonoSourceFullPath)\mcs\class\lib\monodroid</_MonoProfileDir>
@@ -79,16 +79,16 @@
     />
   </ItemGroup>
   <ItemGroup>
-    <_BclInstalledItem Include="@(_BclAssembly->'$(OutputPath)\lib\xbuild-frameworks\MonoAndroid\v1.0\%(Identity)')" />
+    <_BclInstalledItem Include="@(_BclAssembly->'$(_BclFrameworkDir)%(Identity)')" />
     <_BclInstalledItem
         Condition=" '$(_DebugFileExt)' == '.mdb' "
-        Include="@(_BclAssembly->'$(OutputPath)\lib\xbuild-frameworks\MonoAndroid\v1.0\%(Identity).mdb')"
-        Exclude="@(_BclExcludeDebugSymbols->'$(OutputPath)\lib\xbuild-frameworks\MonoAndroid\v1.0\%(Identity).mdb')"
+        Include="@(_BclAssembly->'$(_BclFrameworkDir)%(Identity).mdb')"
+        Exclude="@(_BclExcludeDebugSymbols->'$(_BclFrameworkDir)%(Identity).mdb')"
     />
     <_BclInstalledItem
         Condition=" '$(_DebugFileExt)' == '.pdb' "
-        Include="@(_BclAssembly->'$(OutputPath)\lib\xbuild-frameworks\MonoAndroid\v1.0\%(Filename).pdb')"
-        Exclude="@(_BclExcludeDebugSymbols->'$(OutputPath)\lib\xbuild-frameworks\MonoAndroid\v1.0\%(Filename).pdb')"
+        Include="@(_BclAssembly->'$(_BclFrameworkDir)%(Filename).pdb')"
+        Exclude="@(_BclExcludeDebugSymbols->'$(_BclFrameworkDir)%(Filename).pdb')"
     />
   </ItemGroup>
   <ItemGroup>
@@ -97,14 +97,14 @@
   </ItemGroup>
   <ItemGroup>
     <_MonoUtilitySource Include="@(_MonoUtility->'$(_MonoOutputDir)\%(Identity)')" />
-    <_MonoUtilityDest   Include="@(_MonoUtility->'$(_MandroidDir)\%(Identity)')" />
+    <_MonoUtilityDest   Include="@(_MonoUtility->'$(_MSBuildDir)\%(Identity)')" />
     <_MonoUtilitySource
         Condition=" '$(_DebugFileExt)' == '.mdb'"
         Include="@(_MonoUtility->'$(_MonoOutputDir)\%(Identity).mdb')"
     />
     <_MonoUtilityDest
         Condition=" '$(_DebugFileExt)' == '.mdb'"
-        Include="@(_MonoUtility->'$(_MandroidDir)\%(Identity).mdb')"
+        Include="@(_MonoUtility->'$(_MSBuildDir)\%(Identity).mdb')"
     />
     <_MonoUtilitySource
         Condition=" '$(_DebugFileExt)' == '.pdb'"
@@ -112,7 +112,7 @@
     />
     <_MonoUtilityDest
         Condition=" '$(_DebugFileExt)' == '.pdb'"
-        Include="@(_MonoUtility->'$(_MandroidDir)\%(Filename).pdb')"
+        Include="@(_MonoUtility->'$(_MSBuildDir)\%(Filename).pdb')"
     />
   </ItemGroup>
   <Target Name="_SetAutogenShTimeToLastCommitTimestamp">
@@ -137,10 +137,10 @@
       <_LlvmArchive Include="$(_LlvmOutputDirTop)\%(_LlvmRuntime.BuildDir)\Release\lib\*.a" />
 
       <_LlvmSourceBinary Include="@(_LlvmRuntime->'$(_LlvmOutputDirTop)\%(BuildDir)\Release\bin\opt%(ExeSuffix)')" Condition=" '%(_LlvmRuntime.InstallBinaries)' == 'true' " />
-      <_LlvmTargetBinary Include="@(_LlvmRuntime->'$(OutputPath)\%(InstallPath)opt%(ExeSuffix)')" Condition=" '%(_LlvmRuntime.InstallBinaries)' == 'true' "/>
+      <_LlvmTargetBinary Include="@(_LlvmRuntime->'$(_MSBuildDir)\%(InstallPath)opt%(ExeSuffix)')" Condition=" '%(_LlvmRuntime.InstallBinaries)' == 'true' "/>
 
       <_LlvmSourceBinary Include="@(_LlvmRuntime->'$(_LlvmOutputDirTop)\%(BuildDir)\Release\bin\llc%(ExeSuffix)')" Condition=" '%(_LlvmRuntime.InstallBinaries)' == 'true' " />
-      <_LlvmTargetBinary Include="@(_LlvmRuntime->'$(OutputPath)\%(InstallPath)llc%(ExeSuffix)')" Condition=" '%(_LlvmRuntime.InstallBinaries)' == 'true' " />
+      <_LlvmTargetBinary Include="@(_LlvmRuntime->'$(_MSBuildDir)\%(InstallPath)llc%(ExeSuffix)')" Condition=" '%(_LlvmRuntime.InstallBinaries)' == 'true' " />
     </ItemGroup>
   </Target>
 
@@ -223,11 +223,11 @@
       />
       <_InstallRuntimeOutput
           Condition=" '%(_MonoRuntime.DoBuild)' == 'True' "
-          Include="@(_MonoRuntime->'$(OutputPath)\lib\xbuild\Xamarin\Android\lib\%(Identity)\%(OutputRuntimeFilename).%(NativeLibraryExtension)')"
+          Include="@(_MonoRuntime->'$(_MSBuildDir)\lib\%(Identity)\%(OutputRuntimeFilename).%(NativeLibraryExtension)')"
       />
       <_InstallUnstrippedRuntimeOutput
           Condition=" '%(_MonoRuntime.DoBuild)' == 'True' "
-          Include="@(_MonoRuntime->'$(OutputPath)\lib\xbuild\Xamarin\Android\lib\%(Identity)\%(OutputRuntimeFilename).d.%(NativeLibraryExtension)')"
+          Include="@(_MonoRuntime->'$(_MSBuildDir)\lib\%(Identity)\%(OutputRuntimeFilename).d.%(NativeLibraryExtension)')"
       />
       <_ProfilerSource
           Condition=" '%(_MonoRuntime.DoBuild)' == 'True' And '%(_MonoRuntime.OutputProfilerFilename)' != '' "
@@ -235,11 +235,11 @@
       />
       <_InstallProfilerOutput
           Condition=" '%(_MonoRuntime.DoBuild)' == 'True' And '%(_MonoRuntime.OutputProfilerFilename)' != '' "
-          Include="@(_MonoRuntime->'$(OutputPath)\lib\xbuild\Xamarin\Android\lib\%(Identity)\%(OutputProfilerFilename).%(NativeLibraryExtension)')"
+          Include="@(_MonoRuntime->'$(_MSBuildDir)\lib\%(Identity)\%(OutputProfilerFilename).%(NativeLibraryExtension)')"
       />
       <_InstallUnstrippedProfilerOutput
           Condition=" '%(_MonoRuntime.DoBuild)' == 'True' And '%(_MonoRuntime.OutputProfilerFilename)' != '' "
-          Include="@(_MonoRuntime->'$(OutputPath)\lib\xbuild\Xamarin\Android\lib\%(Identity)\%(OutputProfilerFilename).d.%(NativeLibraryExtension)')"
+          Include="@(_MonoRuntime->'$(_MSBuildDir)\lib\%(Identity)\%(OutputProfilerFilename).d.%(NativeLibraryExtension)')"
       />
       <_MonoBtlsSource
           Condition=" '%(_MonoRuntime.DoBuild)' == 'True' And '%(_MonoRuntime.OutputMonoBtlsFilename)' != '' "
@@ -247,11 +247,11 @@
       />
       <_InstallMonoBtlsOutput
           Condition=" '%(_MonoRuntime.DoBuild)' == 'True' And '%(_MonoRuntime.OutputMonoBtlsFilename)' != '' "
-          Include="@(_MonoRuntime->'$(OutputPath)\lib\xbuild\Xamarin\Android\lib\%(Identity)\%(OutputMonoBtlsFilename).%(NativeLibraryExtension)')"
+          Include="@(_MonoRuntime->'$(_MSBuildDir)\lib\%(Identity)\%(OutputMonoBtlsFilename).%(NativeLibraryExtension)')"
       />
       <_InstallUnstrippedMonoBtlsOutput
           Condition=" '%(_MonoRuntime.DoBuild)' == 'True' And '%(_MonoRuntime.OutputMonoBtlsFilename)' != '' "
-          Include="@(_MonoRuntime->'$(OutputPath)\lib\xbuild\Xamarin\Android\lib\%(Identity)\%(OutputMonoBtlsFilename).d.%(NativeLibraryExtension)')"
+          Include="@(_MonoRuntime->'$(_MSBuildDir)\lib\%(Identity)\%(OutputMonoBtlsFilename).d.%(NativeLibraryExtension)')"
       />
       <_MonoPosixHelperSource
           Condition=" '%(_MonoRuntime.DoBuild)' == 'True' And '%(_MonoRuntime.OutputMonoPosixHelperFilename)' != '' "
@@ -259,11 +259,11 @@
       />
       <_InstallMonoPosixHelperOutput
           Condition=" '%(_MonoRuntime.DoBuild)' == 'True' And '%(_MonoRuntime.OutputMonoPosixHelperFilename)' != '' "
-          Include="@(_MonoRuntime->'$(OutputPath)\lib\xbuild\Xamarin\Android\lib\%(Identity)\%(OutputMonoPosixHelperFilename).%(NativeLibraryExtension)')"
+          Include="@(_MonoRuntime->'$(_MSBuildDir)\lib\%(Identity)\%(OutputMonoPosixHelperFilename).%(NativeLibraryExtension)')"
       />
       <_InstallUnstrippedMonoPosixHelperOutput
           Condition=" '%(_MonoRuntime.DoBuild)' == 'True' And '%(_MonoRuntime.OutputMonoPosixHelperFilename)' != '' "
-          Include="@(_MonoRuntime->'$(OutputPath)\lib\xbuild\Xamarin\Android\lib\%(Identity)\%(OutputMonoPosixHelperFilename).d.%(NativeLibraryExtension)')"
+          Include="@(_MonoRuntime->'$(_MSBuildDir)\lib\%(Identity)\%(OutputMonoPosixHelperFilename).d.%(NativeLibraryExtension)')"
       />
       <_RuntimeEglibHeaderSource
           Condition=" '%(_MonoRuntime.DoBuild)' == 'True' "
@@ -271,7 +271,7 @@
       />
       <_RuntimeEglibHeaderOutput
           Condition=" '%(_MonoRuntime.DoBuild)' == 'True' "
-          Include="@(_MonoRuntime->'$(OutputPath)\include\%(Identity)\eglib\config.h');@(_MonoRuntime->'$(OutputPath)\include\%(Identity)\eglib\eglib-config.h')"
+          Include="@(_MonoRuntime->'$(_OutputIncludeDir)%(Identity)\eglib\config.h');@(_MonoRuntime->'$(_OutputIncludeDir)%(Identity)\eglib\eglib-config.h')"
       />
       <_MonoConstsSource
           Condition=" '%(_MonoRuntime.DoBuild)' == 'True' "
@@ -279,7 +279,7 @@
       />
       <_MonoConstsOutput
           Condition=" '%(_MonoRuntime.DoBuild)' == 'True' "
-          Include="$(OutputPath)\include\Consts.cs"
+          Include="$(_OutputIncludeDir)Consts.cs"
       />
       <_RuntimeBuildStamp       Condition=" '%(_MonoRuntime.DoBuild)' == 'true' " Include="@(_MonoRuntime->'$(IntermediateOutputPath)\%(Identity)\.stamp')" />
     </ItemGroup>
@@ -300,15 +300,15 @@
   </Target>
   <Target Name="_InstallRuntimes"
       DependsOnTargets="_GetRuntimesOutputItems"
-      Inputs="@(_RuntimeSource);@(_ProfilerSource);@(_MonoPosixHelperSource)"
-      Outputs="@(_InstallRuntimeOutput);@(_InstallProfilerOutput);@(_InstallMonoPosixHelperOutput)">
+      Inputs="@(_RuntimeSource);@(_ProfilerSource);@(_MonoPosixHelperSource);@(_RuntimeEglibHeaderSource)"
+      Outputs="@(_InstallRuntimeOutput);@(_InstallProfilerOutput);@(_InstallMonoPosixHelperOutput);@(_RuntimeEglibHeaderOutput)">
     <MakeDir
         Condition=" '%(_MonoRuntime.DoBuild)' == 'true' "
-        Directories="$(OutputPath)\lib\xbuild\Xamarin\Android\lib\%(_MonoRuntime.Identity)"
+        Directories="$(_MSBuildDir)\lib\%(_MonoRuntime.Identity)"
     />
     <MakeDir
         Condition=" '%(_MonoRuntime.DoBuild)' == 'true' "
-        Directories="$(OutputPath)\include\%(_MonoRuntime.Identity)\eglib"
+        Directories="$(_OutputIncludeDir)%(_MonoRuntime.Identity)\eglib"
     />
     <Copy
         SourceFiles="@(_RuntimeEglibHeaderSource)"
@@ -332,7 +332,7 @@
     />
     <Exec
         Condition=" ('$(Configuration)' != 'Debug' Or '%(_MonoRuntime.NativeLibraryExtension)' == 'dll') And '%(_MonoRuntime.DoBuild)' == 'true' "
-        Command="&quot;%(_MonoRuntime.Strip)&quot; %(_MonoRuntime.StripFlags) &quot;$(OutputPath)\lib\xbuild\Xamarin\Android\lib\%(_MonoRuntime.Identity)\%(_MonoRuntime.OutputRuntimeFilename).%(_MonoRuntime.NativeLibraryExtension)&quot;"
+        Command="&quot;%(_MonoRuntime.Strip)&quot; %(_MonoRuntime.StripFlags) &quot;$(_MSBuildDir)\lib\%(_MonoRuntime.Identity)\%(_MonoRuntime.OutputRuntimeFilename).%(_MonoRuntime.NativeLibraryExtension)&quot;"
     />
     <Touch Files="@(_InstallRuntimeOutput);@(_InstallUnstrippedRuntimeOutput)" />
 
@@ -346,7 +346,7 @@
     />
     <Exec
         Condition=" '$(Configuration)' != 'Debug' And '%(_MonoRuntime.DoBuild)' == 'true' And '%(_MonoRuntime.OutputProfilerFilename)' != '' "
-        Command="&quot;%(_MonoRuntime.Strip)&quot; %(_MonoRuntime.StripFlags) &quot;$(OutputPath)\lib\xbuild\Xamarin\Android\lib\%(_MonoRuntime.Identity)\%(_MonoRuntime.OutputProfilerFilename).%(_MonoRuntime.NativeLibraryExtension)&quot;"
+        Command="&quot;%(_MonoRuntime.Strip)&quot; %(_MonoRuntime.StripFlags) &quot;$(_MSBuildDir)\lib\%(_MonoRuntime.Identity)\%(_MonoRuntime.OutputProfilerFilename).%(_MonoRuntime.NativeLibraryExtension)&quot;"
     />
     <Touch Files="@(_InstallProfilerOutput);@(_InstallUnstrippedProfilerOutput)" />
 
@@ -360,7 +360,7 @@
     />
     <Exec
         Condition=" '$(Configuration)' != 'Debug' And '%(_MonoRuntime.DoBuild)' == 'true' And '%(_MonoRuntime.OutputMonoBtlsFilename)' != '' "
-        Command="&quot;%(_MonoRuntime.Strip)&quot; %(_MonoRuntime.StripFlags) &quot;$(OutputPath)\lib\xbuild\Xamarin\Android\lib\%(_MonoRuntime.Identity)\%(_MonoRuntime.OutputMonoBtlsFilename).%(_MonoRuntime.NativeLibraryExtension)&quot;"
+        Command="&quot;%(_MonoRuntime.Strip)&quot; %(_MonoRuntime.StripFlags) &quot;$(_MSBuildDir)\lib\%(_MonoRuntime.Identity)\%(_MonoRuntime.OutputMonoBtlsFilename).%(_MonoRuntime.NativeLibraryExtension)&quot;"
     />
     <Touch Files="@(_InstallMonoBtlsOutput);@(_InstallUnstrippedMonoBtlsOutput)" />
 
@@ -374,13 +374,13 @@
     />
     <Exec
         Condition=" '$(Configuration)' != 'Debug' And '%(_MonoRuntime.DoBuild)' == 'true' And '%(_MonoRuntime.OutputMonoPosixHelperFilename)' != '' "
-        Command="&quot;%(_MonoRuntime.Strip)&quot; %(_MonoRuntime.StripFlags) &quot;$(OutputPath)\lib\xbuild\Xamarin\Android\lib\%(_MonoRuntime.Identity)\%(_MonoRuntime.OutputMonoPosixHelperFilename).%(_MonoRuntime.NativeLibraryExtension)&quot;"
+        Command="&quot;%(_MonoRuntime.Strip)&quot; %(_MonoRuntime.StripFlags) &quot;$(_MSBuildDir)\lib\%(_MonoRuntime.Identity)\%(_MonoRuntime.OutputMonoPosixHelperFilename).%(_MonoRuntime.NativeLibraryExtension)&quot;"
     />
     <Touch Files="@(_InstallMonoPosixHelperOutput);@(_InstallUnstrippedMonoPosixHelperOutput)" />
   </Target>
   <ItemGroup>
     <_MonoCilStripSource  Include="$(_MonoOutputDir)\mono-cil-strip.exe" />
-    <_MonoCilStripDest    Include="$(_MandroidDir)\cil-strip.exe" />
+    <_MonoCilStripDest    Include="$(_MSBuildDir)\cil-strip.exe" />
     <_MonoCilStripSource
         Condition=" '$(_DebugFileExt)' == '.mdb' "
         Include="$(_MonoOutputDir)\mono-cil-strip.exe.mdb"
@@ -395,13 +395,13 @@
     />
     <_MonoCilStripDest
         Condition=" '$(_DebugFileExt)' == '.pdb' "
-        Include="$(_MandroidDir)\cil-strip.pdb"
+        Include="$(_MSBuildDir)\cil-strip.pdb"
     />
   </ItemGroup>
   <Target Name="_InstallCilStrip"
       Inputs="@(_MonoCilStripSource)"
       Outputs="@(_MonoCilStripDest)">
-    <MakeDir Directories="$(_MandroidDir)" />
+    <MakeDir Directories="$(_MSBuildDir)" />
     <Copy
         SourceFiles="@(_MonoCilStripSource)"
         DestinationFiles="@(_MonoCilStripDest)"
@@ -410,13 +410,13 @@
   <Target Name="_InstallMonoDoc"
       Inputs="@(_MonoDocCopyItems);$(_MonoOutputDir)\mdoc.exe"
       Outputs="@(_MonoDocInstalledItems)">
-    <MakeDir Directories="$(_MandroidDir)" />
+    <MakeDir Directories="$(_MSBuildDir)" />
     <Copy
         SourceFiles="@(_MonoDocCopyItems)"
-        DestinationFolder="$(_MandroidDir)"
+        DestinationFolder="$(_MSBuildDir)"
     />
     <Exec
-        Command="$(RemapAssemblyRefTool) &quot;$(_MonoOutputDir)\mdoc.exe&quot; &quot;$(_MandroidDir)\mdoc.exe&quot; Mono.Cecil &quot;$(_MandroidDir)\Xamarin.Android.Cecil.dll&quot;"
+        Command="$(RemapAssemblyRefTool) &quot;$(_MonoOutputDir)\mdoc.exe&quot; &quot;$(_MSBuildDir)\mdoc.exe&quot; Mono.Cecil &quot;..\..\bin\Build$(Configuration)\Xamarin.Android.Cecil.dll&quot;"
     />
     <Touch
         Files="@(_MonoDocInstalledItems)"
@@ -425,7 +425,7 @@
   <Target Name="_InstallMonoUtilities"
       Inputs="@(_MonoUtilitySource)"
       Outputs="@(_MonoUtilityDest)">
-    <MakeDir Directories="$(_MandroidDir)" />
+    <MakeDir Directories="$(_MSBuildDir)" />
     <Copy
         SourceFiles="@(_MonoUtilitySource)"
         DestinationFiles="@(_MonoUtilityDest)"
@@ -433,10 +433,10 @@
   </Target>
   <Target Name="_InstallBcl"
       Inputs="@(_BclProfileItems)"
-      Outputs="@(_BclInstalledItem);$(OutputPath)\lib\xbuild-frameworks\MonoAndroid\v1.0\RedistList\FrameworkList.xml">
+      Outputs="@(_BclInstalledItem);$(_BclFrameworkDir)RedistList\FrameworkList.xml">
     <MakeDir Directories="$(_BclFrameworkDir)" />
-    <MakeDir Directories="$(_BclFrameworkDir)\RedistList" />
-    <MakeDir Directories="$(_BclFrameworkDir)\Facades" />
+    <MakeDir Directories="$(_BclFrameworkDir)RedistList" />
+    <MakeDir Directories="$(_BclFrameworkDir)Facades" />
     <ItemGroup>
       <_PackageConfigFiles Include="$(_SourceTopDir)\src\Xamarin.Android.Build.Tasks\packages.config" />
     </ItemGroup>
@@ -453,14 +453,14 @@
     />
     <Copy
         SourceFiles="@(_Facades)"
-        DestinationFolder="$(_BclFrameworkDir)\Facades"
+        DestinationFolder="$(_BclFrameworkDir)Facades"
     />
     <Copy
         SourceFiles="@(_FSharp)"
         DestinationFolder="$(_BclFrameworkDir)"
     />
     <Touch
-        Files="@(_FSharp->'$(_BclFrameworkDir)\%(Filename)%(Extension)')"
+        Files="@(_FSharp->'$(_BclFrameworkDir)%(Filename)%(Extension)')"
     />
     <Touch
         Files="@(_BclInstalledItem)"
@@ -470,7 +470,7 @@
       <FrameworkList Include="&lt;/FileList&gt;" />
     </ItemGroup>
     <WriteLinesToFile
-        File="$(OutputPath)\lib\xbuild-frameworks\MonoAndroid\v1.0\RedistList\FrameworkList.xml"
+        File="$(_BclFrameworkDir)RedistList\FrameworkList.xml"
         Lines="@(FrameworkList)"
         Overwrite="True"
     />
@@ -545,23 +545,22 @@
   -->
   <Target Name="_InstallCrossRuntimes"
       Inputs="$(IntermediateOutputPath)\%(_MonoCrossRuntime.Identity)\mono\mini\mono-sgen%(_MonoCrossRuntime.ExeSuffix)"
-      Outputs="$(OutputPath)\%(_MonoCrossRuntime.InstallPath)%(_MonoCrossRuntime.CrossMonoName)%(_MonoCrossRuntime.ExeSuffix)"
+      Outputs="$(_MSBuildDir)\%(_MonoCrossRuntime.InstallPath)%(_MonoCrossRuntime.CrossMonoName)%(_MonoCrossRuntime.ExeSuffix)"
       Condition=" '@(_MonoCrossRuntime)' != '' ">
-    <MakeDir Directories="$(OutputPath)\bin\" />
     <Copy
         SourceFiles="$(IntermediateOutputPath)\%(_MonoCrossRuntime.Identity)\mono\mini\mono-sgen%(_MonoCrossRuntime.ExeSuffix)"
-        DestinationFiles="$(OutputPath)\%(_MonoCrossRuntime.InstallPath)%(_MonoCrossRuntime.CrossMonoName)%(_MonoCrossRuntime.ExeSuffix)"
+        DestinationFiles="$(_MSBuildDir)\%(_MonoCrossRuntime.InstallPath)%(_MonoCrossRuntime.CrossMonoName)%(_MonoCrossRuntime.ExeSuffix)"
     />
     <Copy
-        SourceFiles="$(OutputPath)\%(_MonoCrossRuntime.InstallPath)%(_MonoCrossRuntime.CrossMonoName)%(_MonoCrossRuntime.ExeSuffix)"
-        DestinationFiles="$(OutputPath)\%(_MonoCrossRuntime.InstallPath)%(_MonoCrossRuntime.CrossMonoName).d%(_MonoCrossRuntime.ExeSuffix)"
+        SourceFiles="$(_MSBuildDir)\%(_MonoCrossRuntime.InstallPath)%(_MonoCrossRuntime.CrossMonoName)%(_MonoCrossRuntime.ExeSuffix)"
+        DestinationFiles="$(_MSBuildDir)\%(_MonoCrossRuntime.InstallPath)%(_MonoCrossRuntime.CrossMonoName).d%(_MonoCrossRuntime.ExeSuffix)"
     />
     <Exec
         Condition=" '$(Configuration)' != 'Debug' Or '%(_MonoCrossRuntime.ExeSuffix)' == '.exe' "
-        Command="&quot;%(_MonoCrossRuntime.Strip)&quot; %(_MonoCrossRuntime.StripFlags) &quot;$(OutputPath)\%(_MonoCrossRuntime.InstallPath)%(_MonoCrossRuntime.CrossMonoName)%(_MonoCrossRuntime.ExeSuffix)&quot;"
+        Command="&quot;%(_MonoCrossRuntime.Strip)&quot; %(_MonoCrossRuntime.StripFlags) &quot;$(_MSBuildDir)\%(_MonoCrossRuntime.InstallPath)%(_MonoCrossRuntime.CrossMonoName)%(_MonoCrossRuntime.ExeSuffix)&quot;"
     />
     <Touch
-        Files="$(OutputPath)\%(_MonoCrossRuntime.InstallPath)%(_MonoCrossRuntime.CrossMonoName)%(_MonoCrossRuntime.ExeSuffix)"
+        Files="$(_MSBuildDir)\%(_MonoCrossRuntime.InstallPath)%(_MonoCrossRuntime.CrossMonoName)%(_MonoCrossRuntime.ExeSuffix)"
     />
   </Target>
   <Target Name="GetMonoBundleItems"
@@ -572,8 +571,8 @@
       <BundleItem Include="@(_MonoCilStripDest)" />
       <BundleItem Include="@(_MonoUtilityDest)" />
       <BundleItem Include="@(_FSharpInstalledItems)" />
-      <BundleItem Include="@(MonoFacadeAssembly->'$(OutputPath)\lib\xbuild-frameworks\MonoAndroid\v1.0\Facades\%(Identity)')" />
-      <BundleItem Include="$(OutputPath)\lib\xbuild-frameworks\MonoAndroid\v1.0\RedistList\FrameworkList.xml" />
+      <BundleItem Include="@(MonoFacadeAssembly->'$(_BclFrameworkDir)Facades\%(Identity)')" />
+      <BundleItem Include="$(_BclFrameworkDir)RedistList\FrameworkList.xml" />
       <BundleItem Include="@(_InstallRuntimeOutput)" />
       <BundleItem Include="@(_InstallUnstrippedRuntimeOutput)" />
       <BundleItem Include="@(_InstallProfilerOutput)" />
@@ -585,10 +584,10 @@
       <BundleItem Include="@(_RuntimeEglibHeaderOutput)" />
       <BundleItem Include="@(_MonoConstsOutput)" />
       <BundleItem Include="@(_LlvmTargetBinary)" />
-      <BundleItem Include="$(OutputPath)\%(_MonoCrossRuntime.InstallPath)%(_MonoCrossRuntime.CrossMonoName).d%(_MonoCrossRuntime.ExeSuffix)"
+      <BundleItem Include="$(_MSBuildDir)\%(_MonoCrossRuntime.InstallPath)%(_MonoCrossRuntime.CrossMonoName).d%(_MonoCrossRuntime.ExeSuffix)"
           Condition=" '@(_MonoCrossRuntime)' != '' "
       />
-      <BundleItem Include="$(OutputPath)\%(_MonoCrossRuntime.InstallPath)%(_MonoCrossRuntime.CrossMonoName)%(_MonoCrossRuntime.ExeSuffix)"
+      <BundleItem Include="$(_MSBuildDir)\%(_MonoCrossRuntime.InstallPath)%(_MonoCrossRuntime.CrossMonoName)%(_MonoCrossRuntime.ExeSuffix)"
           Condition=" '@(_MonoCrossRuntime)' != '' "
       />
     </ItemGroup>

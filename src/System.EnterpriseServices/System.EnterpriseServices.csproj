@@ -17,7 +17,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\..\bin\Debug\lib\xbuild-frameworks\MonoAndroid\v1.0</OutputPath>
+    <OutputPath>$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\v1.0\</OutputPath>
     <DefineConstants>DEBUG;</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -26,7 +26,7 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <Optimize>true</Optimize>
-    <OutputPath>..\..\bin\Release\lib\xbuild-frameworks\MonoAndroid\v1.0</OutputPath>
+    <OutputPath>$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\v1.0\</OutputPath>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <ConsolePause>false</ConsolePause>

@@ -1231,7 +1231,7 @@ namespace App1
 		[Test]
 		public void BuildWithExternalJavaLibrary ()
 		{
-			string multidex_jar = "$(MonoDroidInstallDirectory)\\lib\\mandroid\\android-support-multidex.jar";
+			string multidex_jar = @"$(MonoDroidInstallDirectory)\lib\xamarin.android\xbuild\Xamarin\Android\android-support-multidex.jar";
 			var binding = new XamarinAndroidBindingProject () {
 				ProjectName = "BuildWithExternalJavaLibraryBinding",
 				Jars = { new AndroidItem.InputJar (() => multidex_jar), },
@@ -1741,6 +1741,54 @@ public class Test
 		}
 
 		[Test]
+		public void CheckLibraryImportsUpgrade ([Values(false, true)] bool useShortFileNames)
+		{
+			var path = Path.Combine ("temp", "CheckLibraryImportsUpgrade");
+			var libproj = new XamarinAndroidLibraryProject () {
+				IsRelease = true,
+				ProjectName = "Library1"
+			};
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = true,
+				ProjectName = "App1",
+			};
+			proj.References.Add (new BuildItem ("ProjectReference", $"..\\Library1\\Library1.csproj"));
+			proj.SetProperty ("_AndroidLibrayProjectIntermediatePath", Path.Combine (proj.IntermediateOutputPath, "__library_projects__"));
+			proj.SetProperty (proj.ActiveConfigurationProperties, "UseShortFileNames", useShortFileNames);
+			using (var libb = CreateDllBuilder (Path.Combine (path, libproj.ProjectName), false, false)) {
+				Assert.IsTrue (libb.Build (libproj), "Build should have succeeded.");
+				using (var builder = CreateApkBuilder (Path.Combine (path, proj.ProjectName), false, false)) {
+					builder.Verbosity = LoggerVerbosity.Diagnostic;
+					Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+					Assert.IsTrue (Directory.Exists (Path.Combine (Root, path, proj.ProjectName, proj.IntermediateOutputPath, "__library_projects__")),
+						"The __library_projects__ directory should exist.");
+					proj.RemoveProperty ("_AndroidLibrayProjectIntermediatePath");
+					Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+					Assert.IsTrue (Directory.Exists (Path.Combine (Root, path, proj.ProjectName, proj.IntermediateOutputPath, "__library_projects__")),
+						"The __library_projects__ directory should exist.");
+					Assert.IsTrue (libb.Clean (libproj), "Clean should have succeeded.");
+					Assert.IsTrue (libb.Build (libproj), "Build should have succeeded.");
+					Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+					var zipFile = libb.Output.GetIntermediaryPath ("__AndroidLibraryProjects__.zip");
+					Assert.IsTrue (File.Exists (zipFile));
+					using (var zip = ZipHelper.OpenZip (zipFile)) {
+						Assert.IsTrue (zip.ContainsEntry ("library_project_imports/__res_name_case_map.txt"), $"{zipFile} should contain a library_project_imports/__res_name_case_map.txt entry");
+					}
+					if (!useShortFileNames) {
+						Assert.IsTrue (Directory.Exists (Path.Combine (Root, path, proj.ProjectName, proj.IntermediateOutputPath, "__library_projects__")),
+							"The __library_projects__ directory should exist.");
+					} else {
+						Assert.IsFalse (Directory.Exists (Path.Combine (Root, path, proj.ProjectName, proj.IntermediateOutputPath, "__library_projects__")),
+							"The __library_projects__ directory should not exist.");
+						Assert.IsTrue (Directory.Exists (Path.Combine (Root, path, proj.ProjectName, proj.IntermediateOutputPath, "lp")),
+							"The lp directory should exist.");
+					}
+
+				}
+			}
+		}
+
+		[Test]
 		public void BuildAMassiveApp()
 		{
 			var testPath = Path.Combine("temp", "BuildAMassiveApp");
@@ -1764,9 +1812,9 @@ public class Test
 <Target Name=""_CheckAbis"" BeforeTargets=""_DefineBuildTargetAbis"">
 	<PropertyGroup>
 		<AndroidSupportedAbis>armeabi-v7a;x86</AndroidSupportedAbis>
-		<AndroidSupportedAbis Condition=""Exists('$(MSBuildThisFileDirectory)..\..\..\..\Debug\lib\xbuild\Xamarin\Android\lib\armeabi\libmono-android.release.so')"">$(AndroidSupportedAbis);armeabi</AndroidSupportedAbis>
-		<AndroidSupportedAbis Condition=""Exists('$(MSBuildThisFileDirectory)..\..\..\..\Debug\lib\xbuild\Xamarin\Android\lib\arm64-v8a\libmono-android.release.so')"">$(AndroidSupportedAbis);arm64-v8a</AndroidSupportedAbis>
-		<AndroidSupportedAbis Condition=""Exists('$(MSBuildThisFileDirectory)..\..\..\..\Debug\lib\xbuild\Xamarin\Android\lib\x86_64\libmono-android.release.so')"">$(AndroidSupportedAbis);x86_64</AndroidSupportedAbis>
+		<AndroidSupportedAbis Condition=""Exists('$(MSBuildThisFileDirectory)..\..\..\..\Debug\lib\xamarin.android\xbuild\Xamarin\Android\lib\armeabi\libmono-android.release.so')"">$(AndroidSupportedAbis);armeabi</AndroidSupportedAbis>
+		<AndroidSupportedAbis Condition=""Exists('$(MSBuildThisFileDirectory)..\..\..\..\Debug\lib\xamarin.android\xbuild\Xamarin\Android\lib\arm64-v8a\libmono-android.release.so')"">$(AndroidSupportedAbis);arm64-v8a</AndroidSupportedAbis>
+		<AndroidSupportedAbis Condition=""Exists('$(MSBuildThisFileDirectory)..\..\..\..\Debug\lib\xamarin.android\xbuild\Xamarin\Android\lib\x86_64\libmono-android.release.so')"">$(AndroidSupportedAbis);x86_64</AndroidSupportedAbis>
 	</PropertyGroup>
 	<Message Text=""$(AndroidSupportedAbis)"" />
 </Target>

@@ -24,8 +24,6 @@ namespace Xamarin.Android.Tasks
 	{
 		public string AndroidNdkDirectory { get; set; }
 
-		public string SdkBinDirectory { get; set; }
-
 		[Required]
 		public string ApkInputPath { get; set; }
 		
@@ -275,6 +273,10 @@ namespace Xamarin.Android.Tasks
 
 			int count = 0;
 			foreach (ITaskItem assembly in ResolvedUserAssemblies) {
+
+				if (MonoAndroidHelper.IsReferenceAssembly (assembly.ItemSpec)) {
+					Log.LogWarning ($"{assembly.ItemSpec} is a reference assembly!");
+				}
 				// Add assembly
 				apk.Archive.AddFile (assembly.ItemSpec, GetTargetDirectory (assembly.ItemSpec) + "/"  + Path.GetFileName (assembly.ItemSpec), compressionMethod: CompressionMethod.Store);
 
@@ -307,6 +309,9 @@ namespace Xamarin.Android.Tasks
 			count = 0;
 			// Add framework assemblies
 			foreach (ITaskItem assembly in ResolvedFrameworkAssemblies) {
+				if (MonoAndroidHelper.IsReferenceAssembly (assembly.ItemSpec)) {
+					Log.LogWarning ($"{assembly.ItemSpec} is a reference assembly!");
+				}
 				apk.Archive.AddFile (assembly.ItemSpec, "assemblies/" + Path.GetFileName (assembly.ItemSpec), compressionMethod: CompressionMethod.Store);
 				var config = Path.ChangeExtension (assembly.ItemSpec, "dll.config");
 				AddAssemblyConfigEntry (apk, config);
@@ -616,6 +621,7 @@ namespace Xamarin.Android.Tasks
 			if (string.IsNullOrEmpty (AndroidNdkDirectory))
 				return;
 
+			var sdkBinDirectory = MonoAndroidHelper.GetOSBinPath ();
 			int count = 0;
 			foreach (var sabi in supportedAbis.Split (new char[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries)) {
 				var arch = GdbPaths.GetArchFromAbi (sabi);
@@ -627,7 +633,7 @@ namespace Xamarin.Android.Tasks
 							string.Equals (f.Item2, "lib/" + sabi, StringComparison.Ordinal)))
 					continue;
 				var entryName = string.Format ("lib/{0}/{1}", sabi, debugServerFile);
-				var debugServerPath = GdbPaths.GetDebugServerPath (debugServer, arch, AndroidNdkDirectory, SdkBinDirectory);
+				var debugServerPath = GdbPaths.GetDebugServerPath (debugServer, arch, AndroidNdkDirectory, sdkBinDirectory);
 				if (!File.Exists (debugServerPath))
 					continue;
 				Log.LogDebugMessage ("Adding {0} debug server '{1}' to the APK as '{2}'", sabi, debugServerPath, entryName);

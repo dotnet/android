@@ -8,10 +8,10 @@
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <OutputPath>..\..\bin\Debug\lib\xbuild\Xamarin\Android\lib</OutputPath>
+    <OutputPath>$(XAInstallPrefix)xbuild\Xamarin\Android\lib\</OutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <OutputPath>..\..\bin\Release\lib\xbuild\Xamarin\Android\lib</OutputPath>
+    <OutputPath>$(XAInstallPrefix)xbuild\Xamarin\Android\lib\</OutputPath>
   </PropertyGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.Common.targets" />
   <PropertyGroup>

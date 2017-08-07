@@ -32,15 +32,16 @@ install::
 		echo "run 'make all' before you execute 'make install'!"; \
 		exit 1; \
 	fi
+	-mkdir -p "$(prefix)/bin"
 	-mkdir -p "$(prefix)/lib/mono/xbuild-frameworks"
 	-mkdir -p "$(prefix)/lib/xamarin.android"
 	-mkdir -p "$(prefix)/lib/mono/xbuild/Xamarin/"
-	cp -a "bin/$(CONFIGURATION)/." "$(prefix)/lib/xamarin.android/"
+	cp -a "bin/$(CONFIGURATION)/lib/xamarin.android/." "$(prefix)/lib/xamarin.android/"
 	cp tools/scripts/xabuild "$(prefix)/bin/xabuild"
 	-rm -rf "$(prefix)/lib/mono/xbuild/Xamarin/Android"
 	-rm -rf "$(prefix)/lib/mono/xbuild-frameworks/MonoAndroid"
-	ln -s "$(prefix)/lib/xamarin.android/lib/xbuild/Xamarin/Android/" "$(prefix)/lib/mono/xbuild/Xamarin/Android"
-	ln -s "$(prefix)/lib/xamarin.android/lib/xbuild-frameworks/MonoAndroid/" "$(prefix)/lib/mono/xbuild-frameworks/MonoAndroid"
+	ln -s "$(prefix)/lib/xamarin.android/xbuild/Xamarin/Android/" "$(prefix)/lib/mono/xbuild/Xamarin/Android"
+	ln -s "$(prefix)/lib/xamarin.android/xbuild-frameworks/MonoAndroid/" "$(prefix)/lib/mono/xbuild-frameworks/MonoAndroid"
 
 uninstall::
 	rm -rf "$(prefix)/lib/xamarin.android/" "$(prefix)/bin/xabuild"
@@ -90,7 +91,7 @@ prepare-external: prepare-deps
 	(cd $(call GetPath,JavaInterop) && make bin/BuildDebug/JdkInfo.props)
 
 prepare-props: prepare-external
-	cp Configuration.Java.Interop.Override.props external/Java.Interop/Configuration.Override.props
+	cp build-tools/scripts/Configuration.Java.Interop.Override.props external/Java.Interop/Configuration.Override.props
 	cp $(call GetPath,MonoSource)/mcs/class/msfinal.pub .
 
 prepare-msbuild: prepare-props
@@ -148,7 +149,7 @@ TEST_APK_PROJECTS = \
 # Syntax: $(call BUILD_TEST_APK,path/to/project.csproj)
 define BUILD_TEST_APK
 	# Must use xabuild to ensure correct assemblies are resolved
-	MSBUILD="$(MSBUILD)" tools/scripts/xabuild /t:SignAndroidPackage $(1)
+	MSBUILD="$(MSBUILD)" tools/scripts/xabuild $(MSBUILD_FLAGS) /t:SignAndroidPackage $(1)
 endef	# BUILD_TEST_APK
 
 run-apk-tests:

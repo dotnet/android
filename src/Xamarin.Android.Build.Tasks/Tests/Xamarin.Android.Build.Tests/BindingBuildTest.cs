@@ -3,6 +3,7 @@ using Xamarin.ProjectTools;
 using NUnit.Framework;
 using System.IO;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -229,7 +230,7 @@ namespace Com.Ipaulpro.Afilechooser {
 			binding.AndroidClassParser = "class-parse";
 			var multidexJar = Environment.OSVersion.Platform == PlatformID.Win32NT
 				? Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.ProgramFilesX86), "MSBuild", "Xamarin", "Android", "android-support-multidex.jar") 
-				: Path.Combine ("$(MonoDroidInstallDirectory)", "lib", "mandroid", "android-support-multidex.jar");
+				: Path.Combine ("$(MonoDroidInstallDirectory)", "lib", "xamarin.android", "xbuild", "Xamarin", "Android", "android-support-multidex.jar");
 			binding.Jars.Add (new AndroidItem.EmbeddedJar (() => multidexJar));
 			using (var bindingBuilder = CreateDllBuilder ("temp/BindingCustomJavaApplicationClass/MultiDexBinding")) {
 				bindingBuilder.Build (binding);
@@ -263,7 +264,7 @@ namespace Com.Ipaulpro.Afilechooser {
 		}
 
 		[Test]
-		public void BindingCheckHiddenFiles ()
+		public void BindingCheckHiddenFiles ([Values (true, false)] bool useShortFileNames)
 		{
 			var binding = new XamarinAndroidBindingProject () {
 				UseLatestPlatformSdk = true,
@@ -273,15 +274,31 @@ namespace Com.Ipaulpro.Afilechooser {
 			binding.Jars.Add (new AndroidItem.LibraryProjectZip ("Jars\\mylibrary.aar") {
 				WebContent = "https://www.dropbox.com/s/astiqp8jo97x91h/mylibrary.aar?dl=1"
 			});
+			binding.SetProperty (binding.ActiveConfigurationProperties, "UseShortFileNames", useShortFileNames);
 			using (var bindingBuilder = CreateDllBuilder (Path.Combine ("temp", "BindingCheckHiddenFiles", "Binding"))) {
 				bindingBuilder.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Diagnostic;
 				Assert.IsTrue (bindingBuilder.Build (binding), "binding build should have succeeded");
 				var proj = new XamarinAndroidApplicationProject ();
 				proj.OtherBuildItems.Add (new BuildItem ("ProjectReference", "..\\Binding\\UnnamedProject.csproj"));
+				proj.SetProperty (proj.ActiveConfigurationProperties, "UseShortFileNames", useShortFileNames);
 				using (var b = CreateApkBuilder (Path.Combine ("temp", "BindingCheckHiddenFiles", "App"))) {
 					Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-					var dsStorePath = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "__library_projects__",
-						"UnnamedProject", "library_project_imports");
+					var assemblyMap = b.Output.GetIntermediaryPath (Path.Combine ("lp", "map.cache"));
+					if (useShortFileNames)
+						Assert.IsTrue (File.Exists (assemblyMap), $"{assemblyMap} should exist.");
+					else
+						Assert.IsFalse (File.Exists (assemblyMap), $"{assemblyMap} should not exist.");
+					var assemblyIdentityMap = new List<string> ();
+					if (useShortFileNames) {
+						foreach (var s in File.ReadLines (assemblyMap)) {
+							assemblyIdentityMap.Add (s);
+						}
+					}
+					var assmeblyIdentity = useShortFileNames ? assemblyIdentityMap.IndexOf ("UnnamedProject").ToString () : "UnnamedProject";
+					var libaryImportsFolder = useShortFileNames ? "lp" : "__library_projects__";
+					var jlibs = useShortFileNames ? "jl" : "library_project_imports";
+					var dsStorePath = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, libaryImportsFolder,
+						assmeblyIdentity, jlibs);
 					Assert.IsTrue (Directory.Exists (dsStorePath), "{0} should exist.", dsStorePath);
 					Assert.IsFalse (File.Exists (Path.Combine (dsStorePath, ".DS_Store")), "{0} should NOT exist.",
 						Path.Combine (dsStorePath, ".DS_Store"));

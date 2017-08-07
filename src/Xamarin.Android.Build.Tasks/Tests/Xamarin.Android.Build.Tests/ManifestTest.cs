@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿﻿﻿using System;
 using System.Linq;
 using NUnit.Framework;
 using Xamarin.ProjectTools;
@@ -6,6 +6,7 @@ using System.IO;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.XPath;
+using Xamarin.Tools.Zip;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -264,6 +265,144 @@ namespace Bug12935
 			}
 		}
 
+		static object [] VersionCodeTestSource = new object [] {
+			new object[] {
+				/* seperateApk */ false,
+				/* abis */ "armeabi-v7a",
+				/* versionCode */ "123",
+				/* pattern */ null,
+				/* props */ null,
+				/* shouldBuild */ true,
+				/* expected */ "123",
+			},
+			new object[] {
+				/* seperateApk */ false,
+				/* abis */ "armeabi-v7a",
+				/* versionCode */ "123",
+				/* pattern */ "{abi}{versionCode}",
+				/* props */ null,
+				/* shouldBuild */ true,
+				/* expected */ "123",
+			},
+			new object[] {
+				/* seperateApk */ false,
+				/* abis */ "armeabi-v7a",
+				/* versionCode */ "1",
+				/* pattern */ "{abi}{versionCode}",
+				/* props */ "versionCode=123",
+				/* shouldBuild */ true,
+				/* expected */ "123",
+			},
+			new object[] {
+				/* seperateApk */ false,
+				/* abis */ "armeabi-v7a;x86",
+				/* versionCode */ "123",
+				/* pattern */ "{abi}{versionCode}",
+				/* props */ null,
+				/* shouldBuild */ true,
+				/* expected */ "123",
+			},
+			new object[] {
+				/* seperateApk */ true,
+				/* abis */ "armeabi-v7a;x86",
+				/* versionCode */ "123",
+				/* pattern */ null,
+				/* props */ null,
+				/* shouldBuild */ true,
+				/* expected */ "131195;196731",
+			},
+			new object[] {
+				/* seperateApk */ true,
+				/* abis */ "armeabi-v7a;x86",
+				/* versionCode */ "123",
+				/* pattern */ "{abi}{versionCode}",
+				/* props */ null,
+				/* shouldBuild */ true,
+				/* expected */ "2123;3123",
+			},
+			new object[] {
+				/* seperateApk */ true,
+				/* abis */ "armeabi-v7a;x86",
+				/* versionCode */ "12",
+				/* pattern */ "{abi}{minSDK:00}{versionCode:000}",
+				/* props */ null,
+				/* shouldBuild */ true,
+				/* expected */ "211012;311012",
+			},
+			new object[] {
+				/* seperateApk */ true,
+				/* abis */ "armeabi-v7a;x86",
+				/* versionCode */ "12",
+				/* pattern */ "{abi}{minSDK:00}{screen}{versionCode:000}",
+				/* props */ "screen=24",
+				/* shouldBuild */ true,
+				/* expected */ "21124012;31124012",
+			},
+			new object[] {
+				/* seperateApk */ true,
+				/* abis */ "armeabi-v7a;x86",
+				/* versionCode */ "12",
+				/* pattern */ "{abi}{minSDK:00}{screen}{foo:0}{versionCode:000}",
+				/* props */ "screen=24;foo=$(Foo)",
+				/* shouldBuild */ true,
+				/* expected */ "211241012;311241012",
+			},
+			new object[] {
+				/* seperateApk */ true,
+				/* abis */ "armeabi-v7a;x86",
+				/* versionCode */ "12",
+				/* pattern */ "{abi}{minSDK:00}{screen}{foo:00}{versionCode:000}",
+				/* props */ "screen=24;foo=$(Foo)",
+				/* shouldBuild */ false,
+				/* expected */ "2112401012;3112401012",
+			},
+		};
+
+		[Test]
+		[TestCaseSource("VersionCodeTestSource")]
+		public void VersionCodeTests (bool seperateApk, string abis, string versionCode, string versionCodePattern, string versionCodeProperties, bool shouldBuild, string expectedVersionCode)
+		{
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = true,
+			};
+			proj.SetProperty ("Foo", "1");
+			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidCreatePackagePerAbi, seperateApk);
+			if (!string.IsNullOrEmpty (abis))
+				proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidSupportedAbis, abis);
+			if (!string.IsNullOrEmpty (versionCodePattern))
+				proj.SetProperty (proj.ReleaseProperties, "AndroidVersionCodePattern", versionCodePattern);
+			else
+				proj.RemoveProperty (proj.ReleaseProperties, "AndroidVersionCodePattern");
+			if (!string.IsNullOrEmpty (versionCodeProperties))
+				proj.SetProperty (proj.ReleaseProperties, "AndroidVersionCodeProperties", versionCodeProperties);
+			else
+				proj.RemoveProperty (proj.ReleaseProperties, "AndroidVersionCodeProperties");
+			proj.AndroidManifest = proj.AndroidManifest.Replace ("android:versionCode=\"1\"", $"android:versionCode=\"{versionCode}\"");
+			using (var builder = CreateApkBuilder (Path.Combine ("temp", "VersionCodeTests"), false, false)) {
+				builder.ThrowOnBuildFailure = false;
+				Assert.AreEqual (shouldBuild, builder.Build (proj), shouldBuild ? "Build should have succeeded." : "Build should have failed.");
+				if (!shouldBuild)
+					return;
+				var abiItems = seperateApk ? abis.Split (';') : new string[1];
+				var expectedItems = expectedVersionCode.Split (';');
+				XNamespace aNS = "http://schemas.android.com/apk/res/android";
+				Assert.AreEqual (abiItems.Length, expectedItems.Length, "abis parameter should have matching elements for expected");
+				for (int i = 0; i < abiItems.Length; i++) {
+					var path = seperateApk ? Path.Combine ("android", abiItems[i], "AndroidManifest.xml") : Path.Combine ("android", "manifest", "AndroidManifest.xml");
+					var manifest = builder.Output.GetIntermediaryAsText (Root, path);
+					var doc = XDocument.Parse (manifest);
+					var nsResolver = new XmlNamespaceManager (new NameTable ());
+					nsResolver.AddNamespace ("android", "http://schemas.android.com/apk/res/android");
+					var m = doc.XPathSelectElement ("/manifest") as XElement;
+					Assert.IsNotNull (m, "no manifest element found");
+					var vc = m.Attribute (aNS + "versionCode");
+					Assert.IsNotNull (vc, "no versionCode attribute found");
+					StringAssert.AreEqualIgnoringCase (expectedItems[i], vc.Value,
+						$"Version Code is incorrect. Found {vc.Value} expect {expectedItems[i]}");
+				}
+			}
+		}
+
 		[Test]
 		public void ManifestPlaceholders ()
 		{
@@ -294,6 +433,96 @@ namespace Bug12935
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
 				var manifest = builder.Output.GetIntermediaryAsText (Root, "android/AndroidManifest.xml");
 				Assert.IsTrue (manifest.Contains ("AAAAAAAA"), "#1");
+			}
+		}
+
+		static object[] DebuggerAttributeCases = new object[] {
+			// DebugType, isRelease, extpected
+			new object[] { "", true, false, },
+			new object[] { "", false, true, },
+			new object[] { "None", true, false, },
+			new object[] { "None", false, false, },
+			new object[] { "PdbOnly", true, false, },
+			new object[] { "PdbOnly", false, true, },
+			new object[] { "Full", true, false, },
+			new object[] { "Full", false, true, },
+			new object[] { "Portable", true, false, },
+			new object[] { "Portable", false, true, },
+		};
+
+		[Test]
+		[TestCaseSource ("DebuggerAttributeCases")]
+		public void DebuggerAttribute (string debugType, bool isRelease, bool expected)
+		{
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = isRelease,
+			};
+			proj.SetProperty (isRelease ? proj.ReleaseProperties : proj.DebugProperties, "DebugType", debugType);
+			using (var builder = CreateApkBuilder (Path.Combine ("temp", $"DebuggerAttribute_{debugType}_{isRelease}_{expected}"), false, false)) {
+				Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
+				var manifest = builder.Output.GetIntermediaryAsText (Root, Path.Combine ("android", "AndroidManifest.xml"));
+				Assert.AreEqual (expected, manifest.Contains ("android:debuggable=\"true\""), $"Manifest  {(expected ? "should" : "should not")} contain the andorid:debuggable attribute");
+			}
+		}
+
+		[Test]
+		public void MergeLibraryManifest ()
+		{
+			byte [] classesJar;
+			using (var stream = typeof (XamarinAndroidCommonProject).Assembly.GetManifestResourceStream ("Xamarin.ProjectTools.Resources.Base.classes.jar")) {
+				classesJar = new byte [stream.Length];
+				stream.Read (classesJar, 0, (int)stream.Length);
+			}
+			byte [] data;
+			using (var ms = new MemoryStream ()) {
+				using (var zip = ZipArchive.Create (ms)) {
+					zip.AddEntry ("AndroidManifest.xml", @"<?xml version='1.0'?>
+<manifest xmlns:android='http://schemas.android.com/apk/res/android' package='com.xamarin.test'>
+    <uses-sdk android:minSdkVersion='14'/>
+
+    <application>
+        <activity android:name='.signin.internal.SignInHubActivity' />
+        <provider
+            android:authorities='${applicationId}.FacebookInitProvider'
+            android:name='.internal.FacebookInitProvider'
+            android:exported='false' />
+    </application>
+</manifest>
+", encoding: System.Text.Encoding.UTF8);
+					zip.CreateDirectory ("res");
+					zip.AddEntry (classesJar, "classes.jar");
+					zip.AddEntry ("R.txt", " ", encoding: System.Text.Encoding.UTF8);
+				}
+				data = ms.ToArray ();
+			}
+			var path = Path.Combine ("temp", TestContext.CurrentContext.Test.Name);
+			var lib = new XamarinAndroidBindingProject () {
+				ProjectName = "Binding1",
+				AndroidClassParser = "class-parse",
+				Jars = {
+					new AndroidItem.LibraryProjectZip ("Jars\\foo.aar") {
+						BinaryContent = () => data,
+					}
+				},
+			};
+			var proj = new XamarinAndroidApplicationProject () {
+				PackageName = "com.xamarin.manifest",
+				References = {
+					new BuildItem.ProjectReference ("..\\Binding1\\Binding1.csproj", lib.ProjectGuid)
+				},
+			};
+			using (var libbuilder = CreateDllBuilder (Path.Combine (path, "Binding1"))) {
+				Assert.IsTrue (libbuilder.Build (lib), "Build should have succeeded.");
+				using (var builder = CreateApkBuilder (Path.Combine (path, "App1"))) {
+					Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+					var manifest = builder.Output.GetIntermediaryAsText (Root, "android/AndroidManifest.xml");
+					Assert.IsTrue (manifest.Contains ("com.xamarin.test.signin.internal.SignInHubActivity"),
+						".signin.internal.SignInHubActivity was not replaced with com.xamarin.test.signin.internal.SignInHubActivity");
+					Assert.IsTrue (manifest.Contains ("com.xamarin.manifest.FacebookInitProvider"),
+						"${applicationId}.FacebookInitProvider was not replaced with com.xamarin.manifest.FacebookInitProvider");
+					Assert.IsTrue (manifest.Contains ("com.xamarin.test.internal.FacebookInitProvider"),
+						".internal.FacebookInitProvider was not replaced with com.xamarin.test.internal.FacebookInitProvider");
+				}
 			}
 		}
 	}

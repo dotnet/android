@@ -71,12 +71,27 @@ namespace Xamarin.Android.Tasks
 		public string ImportsDirectory { get; set; }
 		public string OutputImportDirectory { get; set; }
 		public bool UseShortFileNames { get; set; }
+		public string AssemblyIdentityMapFile { get; set; }
 
 		public string ResourceNameCaseMap { get; set; }
 
 		public bool ExplicitCrunch { get; set; }
 
+		// pattern to use for the version code. Used in CreatePackagePerAbi
+		// eg. {abi:00}{dd}{version}
+		// known keyworks
+		//  {abi} the value for the current abi
+		//  {version} the version code from the manifest.
+		public string VersionCodePattern { get; set; }
+
+		// Name=Value pair seperated by ';'
+		// e.g screen=21;abi=11
+		public string VersionCodeProperties { get; set; }
+
+		public string AndroidSdkPlatform { get; set; }
+
 		Dictionary<string,string> resource_name_case_map = new Dictionary<string,string> ();
+		AssemblyIdentityMap assemblyMap = new AssemblyIdentityMap ();
 
 		bool ManifestIsUpToDate (string manifestFile)
 		{
@@ -190,12 +205,16 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ("  ExtraArgs: {0}", ExtraArgs);
 			Log.LogDebugMessage ("  CreatePackagePerAbi: {0}", CreatePackagePerAbi);
 			Log.LogDebugMessage ("  ResourceNameCaseMap: {0}", ResourceNameCaseMap);
+			Log.LogDebugMessage ("  VersionCodePattern: {0}", VersionCodePattern);
+			Log.LogDebugMessage ("  VersionCodeProperties: {0}", VersionCodeProperties);
 			if (CreatePackagePerAbi)
 				Log.LogDebugMessage ("  SupportedAbis: {0}", SupportedAbis);
 
 			if (ResourceNameCaseMap != null)
 				foreach (var arr in ResourceNameCaseMap.Split (';').Select (l => l.Split ('|')).Where (a => a.Length == 2))
 					resource_name_case_map [arr [1]] = arr [0]; // lowercase -> original
+
+			assemblyMap.Load (AssemblyIdentityMapFile);
 
 			ThreadingTasks.Parallel.ForEach (ManifestFiles, () => 0, DoExecute, (obj) => { Complete (); });
 
@@ -244,8 +263,15 @@ namespace Xamarin.Android.Tasks
 			Directory.CreateDirectory (manifestDir);
 			manifestFile = Path.Combine (manifestDir, Path.GetFileName (ManifestFile));
 			ManifestDocument manifest = new ManifestDocument (ManifestFile, this.Log);
-			if (currentAbi != null)	
-				manifest.SetAbi (currentAbi);
+			manifest.SdkVersion = AndroidSdkPlatform;
+			if (currentAbi != null) {
+				if (!string.IsNullOrEmpty (VersionCodePattern))
+					manifest.CalculateVersionCode (currentAbi, VersionCodePattern, VersionCodeProperties);
+				else
+					manifest.SetAbi (currentAbi);
+			} else if (!string.IsNullOrEmpty (VersionCodePattern)) {
+				manifest.CalculateVersionCode (null, VersionCodePattern, VersionCodeProperties);
+			}
 			manifest.ApplicationName = ApplicationName;
 			manifest.Save (manifestFile);
 
@@ -315,7 +341,7 @@ namespace Xamarin.Android.Tasks
 					return s.Substring (0, st + 1) + ExpandString (s.Substring (st + 1));
 				int ast = st + "${library.imports:".Length;
 				string aname = s.Substring (ast, ed - ast);
-				return s.Substring (0, st) + Path.Combine (OutputImportDirectory, UseShortFileNames ? MonoAndroidHelper.GetLibraryImportDirectoryNameForAssembly (aname) : aname, ImportsDirectory) + Path.DirectorySeparatorChar + ExpandString (s.Substring (ed + 1));
+				return s.Substring (0, st) + Path.Combine (OutputImportDirectory, UseShortFileNames ? assemblyMap.GetLibraryImportDirectoryNameForAssembly (aname) : aname, ImportsDirectory) + Path.DirectorySeparatorChar + ExpandString (s.Substring (ed + 1));
 			}
 			else
 				return s;
@@ -335,7 +361,9 @@ namespace Xamarin.Android.Tasks
 
 			if (match.Success) {
 				var file = match.Groups["file"].Value;
-				var line = int.Parse (match.Groups["line"].Value) + 1;
+				int line = 0;
+				if (!string.IsNullOrEmpty (match.Groups["line"]?.Value))
+					line = int.Parse (match.Groups["line"].Value) + 1;
 				var error = match.Groups["message"].Value;
 
 				// Try to map back to the original resource file, so when the user

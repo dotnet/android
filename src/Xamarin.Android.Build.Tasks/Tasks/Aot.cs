@@ -42,9 +42,6 @@ namespace Xamarin.Android.Tasks
 		public string AndroidApiLevel { get; set; }
 
 		[Required]
-		public string SdkBinDirectory { get; set; }
-
-		[Required]
 		public ITaskItem[] ResolvedAssemblies { get; set; }
 
 		// Which ABIs to include native libs for
@@ -210,7 +207,6 @@ namespace Xamarin.Android.Tasks
 			LogDebugMessage ("  EnableLLVM: {0}", EnableLLVM);
 			LogDebugMessage ("  IntermediateAssemblyDir: {0}", IntermediateAssemblyDir);
 			LogDebugMessage ("  LinkMode: {0}", LinkMode);
-			LogDebugMessage ("  SdkBinDirectory: {0}", SdkBinDirectory);
 			LogDebugMessage ("  SupportedAbis: {0}", SupportedAbis);
 			LogDebugTaskItems ("  ResolvedAssemblies:", ResolvedAssemblies);
 			LogDebugTaskItems ("  AdditionalNativeLibraryReferences:", AdditionalNativeLibraryReferences);
@@ -293,6 +289,8 @@ namespace Xamarin.Android.Tasks
 			NdkUtil.NdkVersion ndkVersion;
 			bool hasNdkVersion = NdkUtil.GetNdkToolchainRelease (AndroidNdkDirectory, out ndkVersion);
 
+			var sdkBinDirectory = MonoAndroidHelper.GetOSBinPath ();
+
 			var abis = SupportedAbis.Split (new char[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
 			foreach (var abi in abis) {
 				string aotCompiler = "";
@@ -302,14 +300,14 @@ namespace Xamarin.Android.Tasks
 
 				switch (abi) {
 				case "armeabi":
-					aotCompiler = Path.Combine (SdkBinDirectory, "cross-arm");
+					aotCompiler = Path.Combine (sdkBinDirectory, "cross-arm");
 					outdir = Path.Combine (AotOutputDirectory, "armeabi");
 					mtriple = "armv5-linux-gnueabi";
 					arch = AndroidTargetArch.Arm;
 					break;
 
 				case "armeabi-v7a":
-					aotCompiler = Path.Combine (SdkBinDirectory, "cross-arm");
+					aotCompiler = Path.Combine (sdkBinDirectory, "cross-arm");
 					outdir = Path.Combine (AotOutputDirectory, "armeabi-v7a");
 					mtriple = "armv7-linux-gnueabi";
 					arch = AndroidTargetArch.Arm;
@@ -318,21 +316,21 @@ namespace Xamarin.Android.Tasks
 				case "arm64":
 				case "arm64-v8a":
 				case "aarch64":
-					aotCompiler = Path.Combine (SdkBinDirectory, "cross-arm64");
+					aotCompiler = Path.Combine (sdkBinDirectory, "cross-arm64");
 					outdir = Path.Combine (AotOutputDirectory, "arm64-v8a");
 					mtriple = "aarch64-linux-android";
 					arch = AndroidTargetArch.Arm64;
 					break;			
 
 				case "x86":
-					aotCompiler = Path.Combine (SdkBinDirectory, "cross-x86");
+					aotCompiler = Path.Combine (sdkBinDirectory, "cross-x86");
 					outdir = Path.Combine (AotOutputDirectory, "x86");
 					mtriple = "i686-linux-android";
 					arch = AndroidTargetArch.X86;
 					break;
 
 				case "x86_64":
-					aotCompiler = Path.Combine (SdkBinDirectory, "cross-x86_64");
+					aotCompiler = Path.Combine (sdkBinDirectory, "cross-x86_64");
 					outdir = Path.Combine (AotOutputDirectory, "x86_64");
 					mtriple = "x86_64-linux-android";
 					arch = AndroidTargetArch.X86_64;
@@ -402,7 +400,7 @@ namespace Xamarin.Android.Tasks
 					aotOptions.Add ("mtriple="     + mtriple);
 					aotOptions.Add ("tool-prefix=" + GetShortPath (toolPrefix));
 					aotOptions.Add ("ld-flags="    + ldFlags);
-					aotOptions.Add ("llvm-path="   + GetShortPath (SdkBinDirectory));
+					aotOptions.Add ("llvm-path="   + GetShortPath (sdkBinDirectory));
 					aotOptions.Add ("temp-path="   + GetShortPath (tempDir));
 
 					string aotOptionsStr = (EnableLLVM ? "--llvm " : "") + "--aot=" + string.Join (",", aotOptions);

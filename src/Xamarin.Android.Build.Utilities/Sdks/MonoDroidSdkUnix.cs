@@ -8,26 +8,31 @@ namespace Xamarin.Android.Build.Utilities
 	class MonoDroidSdkUnix : MonoDroidSdkBase
 	{
 		readonly static string[] RuntimeToFrameworkPaths = new[]{
+			// runtimePath=$prefix/lib/xamarin.android/xbuild/Xamarin/Android/
+			Path.Combine ("..", "..", "..", "xbuild-frameworks", "MonoAndroid"),
 			Path.Combine ("..", "..", "..", ".xamarin.android", "lib", "xbuild-frameworks", "MonoAndroid"),
 			Path.Combine ("..", "xbuild-frameworks", "MonoAndroid"),
 			Path.Combine ("..", "mono", "2.1"),
 		};
 
 		readonly static string[] SearchPaths = {
+			"/Library/Frameworks/Xamarin.Android.framework/Versions/Current/lib/xamarin.android/xbuild/Xamarin/Android",
 			"/Library/Frameworks/Xamarin.Android.framework/Versions/Current/lib/mandroid",
 			"/Developer/MonoAndroid/usr/lib/mandroid",
 			"/app/lib/mandroid",
-			"/opt/mono-android/lib/mandroid"
+			"/app/lib/xamarin.android/xbuild/Xamarin/Android",
+			"/opt/mono-android/lib/mandroid",
+			"/opt/mono-android/lib/xamarin.android/xbuild/Xamarin/Android",
 		};
 
 		protected override string FindRuntime ()
 		{
 			string monoAndroidPath = Environment.GetEnvironmentVariable ("MONO_ANDROID_PATH");
 			if (!string.IsNullOrEmpty (monoAndroidPath)) {
-				string libMandroid = Path.Combine (monoAndroidPath, "lib", "mandroid");
-				if (Directory.Exists (libMandroid)) {
-					if (ValidateRuntime (libMandroid))
-						return libMandroid;
+				string msbuildDir = Path.Combine (monoAndroidPath, "lib", "xamarin.android", "xbuild", "Xamarin", "Android");
+				if (Directory.Exists (msbuildDir)) {
+					if (ValidateRuntime (msbuildDir))
+						return msbuildDir;
 					AndroidLogger.LogInfo (null, "MONO_ANDROID_PATH points to {0}, but it is invalid.", monoAndroidPath);
 				} else
 					AndroidLogger.LogInfo (null, "MONO_ANDROID_PATH points to {0}, but it does not exist.", monoAndroidPath);
@@ -36,18 +41,11 @@ namespace Xamarin.Android.Build.Utilities
 			// check also in the users folder
 			var personal = Environment.GetFolderPath (Environment.SpecialFolder.Personal);
 			var additionalSearchPaths = new [] {
-				// for Mono.Posix and Mono.Data.Sqlite builds in xamarin-android.
-				monoAndroidPath = Path.GetFullPath (Path.Combine (new Uri (GetType ().Assembly.CodeBase).LocalPath, "..", "..", "..", "..", "..", "lib", "mandroid")),
-				Path.Combine (personal, @".xamarin.android/lib/mandroid")
+				Path.GetFullPath (Path.GetDirectoryName (GetType ().Assembly.Location)),
+				Path.Combine (personal, @".xamarin.android/lib/xamarin.android/xbuild/Xamarin/Android")
 			};
 
 			return additionalSearchPaths.Concat (SearchPaths).FirstOrDefault (ValidateRuntime);
-		}
-
-		protected override bool ValidateBin (string binPath)
-		{
-			return !string.IsNullOrWhiteSpace (binPath) &&
-				File.Exists (Path.Combine (binPath, GeneratorScript));
 		}
 
 		protected override string FindFramework (string runtimePath)
@@ -70,33 +68,9 @@ namespace Xamarin.Android.Build.Utilities
 			return null;
 		}
 
-		protected override string FindBin (string runtimePath)
-		{
-			string binPath = Path.GetFullPath (Path.Combine (runtimePath, "..", "..", "bin"));
-			if (File.Exists (Path.Combine (binPath, GeneratorScript)))
-				return binPath;
-			return null;
-		}
-
-		protected override string FindInclude (string runtimePath)
-		{
-			string includeDir = Path.GetFullPath (Path.Combine (runtimePath, "..", "..", "include"));
-			if (Directory.Exists (includeDir))
-				return includeDir;
-			return null;
-		}
-
 		protected override string FindLibraries (string runtimePath)
 		{
 			return Path.GetFullPath (Path.Combine (runtimePath, ".."));
-		}
-
-		protected override IEnumerable<string> GetVersionFileLocations ()
-		{
-			yield return Path.GetFullPath (Path.Combine (RuntimePath, "..", "..", "Version"));
-			string sdkPath = Path.GetDirectoryName (Path.GetDirectoryName (RuntimePath));
-			if (Path.GetFileName (sdkPath) == "usr")
-				yield return Path.GetFullPath (Path.Combine (Path.GetDirectoryName (sdkPath), "Version"));
 		}
 	}
 }
