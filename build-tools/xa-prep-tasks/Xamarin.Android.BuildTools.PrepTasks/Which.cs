@@ -33,7 +33,7 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 			FileExtensions  = new string [(pathExts?.Length ?? 0) + 1];
 			FileExtensions [0] = null;
 			if (pathExts != null) {
-				Array.Copy (pathExts, 0, FileExtensions, 1, pathExt.Length);
+				Array.Copy (pathExts, 0, FileExtensions, 1, pathExts.Length);
 			}
 		}
 
