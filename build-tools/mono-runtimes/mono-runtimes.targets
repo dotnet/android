@@ -267,11 +267,11 @@
       />
       <_RuntimeEglibHeaderSource
           Condition=" '%(_MonoRuntime.DoBuild)' == 'True' "
-          Include="@(_MonoRuntime->'$(IntermediateOutputPath)\%(Identity)\eglib\config.h');@(_MonoRuntime->'$(IntermediateOutputPath)\%(Identity)\eglib\src\eglib-config.h')"
+          Include="@(_MonoRuntime->'$(IntermediateOutputPath)\%(Identity)\eglib\src\eglib-config.h')"
       />
       <_RuntimeEglibHeaderOutput
           Condition=" '%(_MonoRuntime.DoBuild)' == 'True' "
-          Include="@(_MonoRuntime->'$(_OutputIncludeDir)%(Identity)\eglib\config.h');@(_MonoRuntime->'$(_OutputIncludeDir)%(Identity)\eglib\eglib-config.h')"
+          Include="@(_MonoRuntime->'$(_OutputIncludeDir)%(Identity)\eglib\eglib-config.h')"
       />
       <_MonoConstsSource
           Condition=" '%(_MonoRuntime.DoBuild)' == 'True' "
