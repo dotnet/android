@@ -1,4 +1,4 @@
-#if ANDROID_25
+#if ANDROID_24
 
 using System;
 
