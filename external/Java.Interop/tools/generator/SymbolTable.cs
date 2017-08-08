@@ -7,7 +7,7 @@ namespace MonoDroid.Generation {
 
 	public static class SymbolTable {
 
-		static Dictionary<string, ISymbol> symbols = new Dictionary<string, ISymbol> ();
+		static Dictionary<string, List<ISymbol>> symbols = new Dictionary<string, List<ISymbol>> ();
 		static ISymbol char_seq;
 		static ISymbol fileinstream_sym;
 		static ISymbol fileoutstream_sym;
@@ -32,7 +32,7 @@ namespace MonoDroid.Generation {
 
 		public static IEnumerable<ISymbol> AllRegisteredSymbols ()
 		{
-			return symbols.Values;
+			return symbols.Values.SelectMany (v => v);
 		}
 
 		static SymbolTable ()
@@ -121,10 +121,7 @@ namespace MonoDroid.Generation {
 			bool he;
 			string key = symbol.IsEnum ? symbol.FullName : GetSymbolInfo (symbol.JavaName, out dummy, out ar, out he);
 
-			if (!ShouldAddType (key))
-				return;
-
-			symbols [key] = symbol;
+			AddType (key, symbol);
 		}
 
 		static bool ShouldAddType (string key)
@@ -138,10 +135,14 @@ namespace MonoDroid.Generation {
 
 		public static void AddType (string key, ISymbol symbol)
 		{
-			if (!ShouldAddType (key))
-				return;
-
-			symbols [key] = symbol;
+			List<ISymbol> values;
+			if (!symbols.TryGetValue (key, out values)) {
+				symbols.Add (key, new List<ISymbol> { symbol });
+			}
+			else {
+				if (!values.Any (v => object.ReferenceEquals (v, symbol)))
+					values.Add (symbol);
+			}
 		}
 		
 		public static string FilterPrimitiveFullName (string s)
@@ -254,8 +255,14 @@ namespace MonoDroid.Generation {
 			int ar;
 			bool he;
 			string key = GetSymbolInfo (java_type, out type_params, out ar, out he);
+			ISymbol sym;
+			List<ISymbol> values;
+			if (symbols.TryGetValue (key, out values)) {
+				sym = values [values.Count-1];
+			} else {
+				sym = AllRegisteredSymbols ().FirstOrDefault (v => v.FullName == key);
+			}
 			ISymbol result;
-			ISymbol sym = symbols.ContainsKey (key) ? symbols [key] : symbols.FirstOrDefault (s => s.Value.FullName == key).Value;
 			if (sym != null) {
 				if (type_params.Length > 0) {
 					GenBase gen = sym as GenBase;
@@ -279,9 +286,13 @@ namespace MonoDroid.Generation {
 		
 		public static void Dump ()
 		{
-			foreach (var p in symbols)
-				if (!p.Key.StartsWith ("System"))
-					Console.Error.WriteLine ("[{0}]: {1} {2}", p.Key, p.Value.GetType (), p.Value.FullName);
+			foreach (var p in symbols) {
+				if (p.Key.StartsWith ("System"))
+					continue;
+				foreach (var s in p.Value) {
+					Console.Error.WriteLine ("[{0}]: {1} {2}", p.Key, s.GetType (), s.FullName);
+				}
+			}
 		}
 
 		public static string GetNativeName (string name)
