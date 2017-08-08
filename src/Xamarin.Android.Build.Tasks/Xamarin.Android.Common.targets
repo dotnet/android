@@ -611,6 +611,9 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 			ReferenceAssemblyPaths="$(_XATargetFrameworkDirectories)"
 			TargetFrameworkVersion="$(TargetFrameworkVersion)"
 			UseLatestAndroidPlatformSdk="$(AndroidUseLatestPlatformSdk)"
+			JavaToolExe="$(JavaToolExe)"
+			LatestSupportedJavaVersion="$(LatestSupportedJavaVersion)"
+			MinimumSupportedJavaVersion="$(MinimumSupportedJavaVersion)"
 			LintToolPath="$(LintToolPath)"
 			ZipAlignPath="$(ZipAlignToolPath)">
 		<Output TaskParameter="AndroidApiLevel"           PropertyName="_AndroidApiLevel"           Condition="'$(_AndroidApiLevel)' == ''" />
