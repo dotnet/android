@@ -176,6 +176,9 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
 			TargetFrameworkVersion="$(TargetFrameworkVersion)"
 			SequencePointsMode="$(AndroidSequencePointsMode)"
 			UseLatestAndroidPlatformSdk="$(AndroidUseLatestPlatformSdk)"
+			JavaToolExe="$(JavaToolExe)"
+			LatestSupportedJavaVersion="$(LatestSupportedJavaVersion)"
+			MinimumSupportedJavaVersion="$(MinimumSupportedJavaVersion)"
 	>
 		<Output TaskParameter="AndroidApiLevel"           PropertyName="_AndroidApiLevel"           Condition="'$(_AndroidApiLevel)' == ''" />
 		<Output TaskParameter="AndroidApiLevelName"       PropertyName="_AndroidApiLevelName" />
