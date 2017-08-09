@@ -7,3 +7,4 @@ TestResult.xml
 TestResult-*.xml
 xa-gendarme.html
 packages
+.vs/
