@@ -1429,11 +1429,7 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="_ResolveAssemblies">
 	<!--- Remove the ImplicitlyExpandDesignTimeFacades assemblies. We have already build the app there are not required for packaging  -->
 	<ItemGroup>
-		<FilteredAssemblies Include="%(ReferenceCopyLocalPaths.Identity)"
-				Condition="'%(ReferenceCopyLocalPaths.ResolvedFrom)' != 'ImplicitlyExpandDesignTimeFacades' And '%(ReferenceCopyLocalPaths.Extension)' == '.dll' And '%(ReferenceCopyLocalPaths.DestinationSubDirectory)' == '' "/>
-		<!-- Fallback to @(ReferencePath) if @(ReferenceCopyLocalPaths) is empty. This is for xbuild support -->
-		<FilteredAssemblies Include="%(ReferencePath.Identity)"
-				Condition="'%(ReferencePath.ResolvedFrom)' != 'ImplicitlyExpandDesignTimeFacades' And '@(ReferenceCopyLocalPaths)' == '' "/>
+		<FilteredAssemblies Include="@(ReferencePath)" Condition="'%(ReferencePath.ResolvedFrom)' != 'ImplicitlyExpandDesignTimeFacades'" />
 	</ItemGroup>
 	<!-- Find all the assemblies this app requires -->
 	<ResolveAssemblies
