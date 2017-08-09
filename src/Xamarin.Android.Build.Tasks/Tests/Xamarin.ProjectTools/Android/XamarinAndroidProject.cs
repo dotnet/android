@@ -9,7 +9,8 @@ namespace Xamarin.ProjectTools
 {
 	public abstract class XamarinAndroidProject : XamarinProject
 	{
-		protected XamarinAndroidProject ()
+		protected XamarinAndroidProject (string debugConfigurationName = "Debug", string releaseConfigurationName = "Release")
+			: base (debugConfigurationName, releaseConfigurationName)
 		{
 			Language = XamarinAndroidProjectLanguage.CSharp;
 			TargetFrameworkVersion = Versions.Marshmallow;
