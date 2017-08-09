@@ -5,5 +5,7 @@
 		<DependsOnSystemRuntime Condition=" '$(DependsOnSystemRuntime)' == '' ">true</DependsOnSystemRuntime>
 		<CopyNuGetImplementations Condition=" '$(CopyNuGetImplementations)' == ''">true</CopyNuGetImplementations>
 		<YieldDuringToolExecution Condition="'$(YieldDuringToolExecution)' == ''">true</YieldDuringToolExecution>
+		<LatestSupportedJavaVersion>1.8.0</LatestSupportedJavaVersion>
+		<MinimumSupportedJavaVersion>1.6.0</MinimumSupportedJavaVersion>
 	</PropertyGroup>
 </Project>

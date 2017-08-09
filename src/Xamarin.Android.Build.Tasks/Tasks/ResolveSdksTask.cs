@@ -28,6 +28,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -37,6 +38,7 @@ using Microsoft.Build.Framework;
 using Xamarin.Android.Tools;
 using System.Xml.Linq;
 using Xamarin.Android.Build.Utilities;
+using System.Text.RegularExpressions;
 
 namespace Xamarin.Android.Tasks
 {
@@ -58,6 +60,12 @@ namespace Xamarin.Android.Tasks
 		public string ProjectFilePath             { get; set; }
 		public bool   UseLatestAndroidPlatformSdk { get; set; }
 		public bool   AotAssemblies               { get; set; }
+
+		public string JavaToolExe { get; set; }
+
+		public string LatestSupportedJavaVersion { get; set; }
+
+		public string MinimumSupportedJavaVersion { get; set; }
 
 		[Output]
 		public string[] ReferenceAssemblyPaths { get; set; }
@@ -146,6 +154,8 @@ namespace Xamarin.Android.Tasks
 			this.AndroidNdkPath = AndroidSdk.AndroidNdkPath;
 			this.AndroidSdkPath = AndroidSdk.AndroidSdkPath;
 			this.JavaSdkPath = AndroidSdk.JavaSdkPath;
+
+			ValidateJavaVersion (TargetFrameworkVersion, AndroidSdkBuildToolsVersion);
 
 			if (string.IsNullOrEmpty (AndroidSdkPath)) {
 				Log.LogCodedError ("XA5205", "The Android SDK Directory could not be found. Please set via /p:AndroidSdkDirectory.");
@@ -300,6 +310,69 @@ namespace Xamarin.Android.Tasks
 
 			//note: this task does not error out if it doesn't find all things. that's the job of the targets
 			return !Log.HasLoggedErrors;
+		}
+
+		static readonly Regex javaVersionRegex = new Regex (@"""(?<version>[\d\.]+)_\d+""");
+
+		Version GetJavaVersionForFramework (string targetFrameworkVersion)
+		{
+			var apiLevel = AndroidVersion.TryOSVersionToApiLevel (targetFrameworkVersion);
+			if (apiLevel >= 24)
+				return new Version (1, 8);
+			else if (apiLevel == 23)
+				return new Version (1, 7);
+			else
+				return new Version (1, 6);
+		}
+
+		Version GetJavaVersionForBuildTools (string buildToolsVersion)
+		{
+			Version buildTools;
+			if (!Version.TryParse (buildToolsVersion, out buildTools)) {
+				return Version.Parse (LatestSupportedJavaVersion);
+			}
+			if (buildTools >= new Version (24, 0, 1))
+				return new Version (1, 8);
+			return Version.Parse (MinimumSupportedJavaVersion);
+		}
+
+		void ValidateJavaVersion (string targetFrameworkVersion, string buildToolsVersion)
+		{
+			Version requiredJavaForFrameworkVersion = GetJavaVersionForFramework (targetFrameworkVersion);
+			Version requiredJavaForBuildTools = GetJavaVersionForBuildTools (buildToolsVersion);
+
+			Version required = requiredJavaForFrameworkVersion > requiredJavaForBuildTools ? requiredJavaForFrameworkVersion : requiredJavaForBuildTools;
+			
+			var sb = new StringBuilder ();
+			
+			var javaTool = Path.Combine (JavaSdkPath, "bin", JavaToolExe ?? (OS.IsWindows ? "java.exe" : "java"));
+			try {
+				MonoAndroidHelper.RunProcess (javaTool, "-version", (s, e) => {
+						if (!string.IsNullOrEmpty (e.Data))
+							sb.AppendLine (e.Data);
+					}, (s, e) => {
+						if (!string.IsNullOrEmpty (e.Data))
+							sb.AppendLine (e.Data);
+					}
+				);
+			} catch (Exception ex) {
+				Log.LogWarningFromException (ex);
+				Log.LogWarning ($"Failed to get the Java SDK version. Please ensure you have Java {required} or above installed.");
+				return;
+			}
+			var versionInfo = sb.ToString ();
+			var versionNumberMatch = javaVersionRegex.Match (versionInfo);
+			Version versionNumber;
+			if (versionNumberMatch.Success && Version.TryParse (versionNumberMatch.Groups ["version"]?.Value, out versionNumber)) {
+				Log.LogMessage (MessageImportance.Normal, $"Found Java SDK version {versionNumber}.");
+				if (versionNumber < requiredJavaForFrameworkVersion) {
+					Log.LogError ($"Java SDK {requiredJavaForFrameworkVersion} or above is required when targeting FrameworkVerison {targetFrameworkVersion}.");
+				}
+				if (versionNumber < requiredJavaForBuildTools) {
+					Log.LogError ($"Java SDK {requiredJavaForBuildTools} or above is required when using build-tools {buildToolsVersion}.");
+				}
+			} else
+				Log.LogWarning ($"Failed to get the Java SDK version. Found {versionInfo} but this does not seem to contain a valid version number.");
 		}
 
 		bool ValidateApiLevels ()

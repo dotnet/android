@@ -6,6 +6,7 @@ using Xamarin.ProjectTools;
 using NUnit.Framework;
 using System.Linq;
 using System.Threading;
+using System.Text;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -70,6 +71,68 @@ namespace Xamarin.Android.Build.Tests
 			proc.WaitForExit ();
 			var result = proc.StandardOutput.ReadToEnd ().Trim () + proc.StandardError.ReadToEnd ().Trim ();
 			return result;
+		}
+
+		protected string RunProcess (string exe, string args) {
+			var proc = System.Diagnostics.Process.Start (new System.Diagnostics.ProcessStartInfo (exe, args) { RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false });
+			proc.WaitForExit ();
+			var result = proc.StandardOutput.ReadToEnd ().Trim () + proc.StandardError.ReadToEnd ().Trim ();
+			return result;
+		}
+
+		protected string CreateFauxAndroidSdkDirectory (string path, string buildToolsVersion, int minApiLevel = 10, int maxApiLevel = 26)
+		{
+			var androidSdkDirectory = Path.Combine (Root, path);
+			var androidSdkToolsPath = Path.Combine (androidSdkDirectory, "tools");
+			var androidSdkBinPath = Path.Combine (androidSdkToolsPath, "bin");
+			var androidSdkPlatformToolsPath = Path.Combine (androidSdkDirectory, "platform-tools");
+			var androidSdkPlatformsPath = Path.Combine (androidSdkDirectory, "platforms");
+			var androidSdkBuildToolsPath = Path.Combine (androidSdkDirectory, "build-tools", buildToolsVersion);
+			Directory.CreateDirectory (androidSdkDirectory);
+			Directory.CreateDirectory (androidSdkToolsPath);
+			Directory.CreateDirectory (androidSdkBinPath);
+			Directory.CreateDirectory (androidSdkPlatformToolsPath);
+			Directory.CreateDirectory (androidSdkPlatformsPath);
+			Directory.CreateDirectory (androidSdkBuildToolsPath);
+
+			File.WriteAllText (Path.Combine (androidSdkPlatformToolsPath, IsWindows ? "adb.exe" : "adb"), "");
+			File.WriteAllText (Path.Combine (androidSdkBuildToolsPath, IsWindows ? "zipalign.exe" : "zipalign"), "");
+			File.WriteAllText (Path.Combine (androidSdkBuildToolsPath, IsWindows ? "aapt.exe" : "aapt"), "");
+
+			for (int i=minApiLevel; i < maxApiLevel; i++) {
+				var dir = Path.Combine (androidSdkPlatformsPath, $"android-{i}");
+				Directory.CreateDirectory(dir);
+				File.WriteAllText (Path.Combine (dir, "android.jar"), "");
+			}
+			return androidSdkDirectory;
+		}
+
+		protected string CreateFauxJavaSdkDirectory (string path, string javaVersion, out string javaExe)
+		{
+			javaExe = IsWindows ? "Java.cmd" : "java.bash";
+			var jarSigner = IsWindows ? "jarsigner.exe" : "jarsigner";
+			var javaPath = Path.Combine (Root, path);
+			var javaBinPath = Path.Combine (javaPath, "bin");
+			Directory.CreateDirectory (javaBinPath);
+			var sb = new StringBuilder ();
+			if (IsWindows) {
+				sb.AppendLine ("@echo off");
+				sb.AppendLine ($"echo java version \"{javaVersion}\"");
+				sb.AppendLine ($"echo Java(TM) SE Runtime Environment (build {javaVersion}-b13)");
+				sb.AppendLine ($"echo Java HotSpot(TM) 64-Bit Server VM (build 25.101-b13, mixed mode)");
+			} else {
+				sb.AppendLine ("#!/bin/bash");
+				sb.AppendLine ($"echo \"java version \\\"{javaVersion}\\\"\"");
+				sb.AppendLine ($"echo \"Java(TM) SE Runtime Environment (build {javaVersion}-b13)\"");
+				sb.AppendLine ($"echo \"Java HotSpot(TM) 64-Bit Server VM (build 25.101-b13, mixed mode)\"");
+			}
+			
+			File.WriteAllText (Path.Combine (javaBinPath, javaExe), sb.ToString ());
+			if (!IsWindows) {
+				RunProcess ("chmod", $"u+x {Path.Combine (javaBinPath, javaExe)}");
+			}
+			File.WriteAllText (Path.Combine (javaBinPath, jarSigner), "");
+			return javaPath;
 		}
 
 		protected ProjectBuilder CreateApkBuilder (string directory, bool cleanupAfterSuccessfulBuild = false, bool cleanupOnDispose = true)
