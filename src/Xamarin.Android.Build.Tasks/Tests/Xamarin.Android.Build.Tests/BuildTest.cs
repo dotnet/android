@@ -300,9 +300,9 @@ printf ""%d"" x
 			}
 		}
 
-		XamarinAndroidApplicationProject CreateMultiDexRequiredApplication ()
+		XamarinAndroidApplicationProject CreateMultiDexRequiredApplication (string debugConfigurationName = "Debug", string releaseConfigurationName = "Release")
 		{
-			var proj = new XamarinAndroidApplicationProject ();
+			var proj = new XamarinAndroidApplicationProject (debugConfigurationName, releaseConfigurationName);
 			proj.OtherBuildItems.Add (new BuildItem (AndroidBuildActions.AndroidJavaSource, "ManyMethods.java") {
 				TextContent = () => "public class ManyMethods { \n"
 					+ string.Join (Environment.NewLine, Enumerable.Range (0, 32768).Select (i => "public void method" + i + "() {}"))
@@ -327,6 +327,17 @@ printf ""%d"" x
 				b.ThrowOnBuildFailure = false;
 				Assert.IsFalse (b.Build (proj), "Without MultiDex option, build should fail");
 				b.Clean (proj);
+			}
+		}
+
+		[Test]
+		public void CreateMultiDexWithSpacesInConfig ()
+		{
+			var proj = CreateMultiDexRequiredApplication (releaseConfigurationName: "Test Config");
+			proj.IsRelease = true;
+			proj.SetProperty ("AndroidEnableMultiDex", "True");
+			using (var b = CreateApkBuilder ("temp/CreateMultiDexWithSpacesInConfig")) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 			}
 		}
 
@@ -1788,6 +1799,101 @@ public class Test
 			}
 		}
 
+#pragma warning disable 414
+		static object [] validateJavaVersionTestCases = new object [] {
+			new object [] {
+				/*targetFrameworkVersion*/ "v7.1",
+				/*buildToolsVersion*/ "24.0.1",
+				/*JavaVersion*/ "1.8.0_101",
+				/*expectedResult*/ true,
+			},
+			new object [] {
+				/*targetFrameworkVersion*/ "v7.1",
+				/*buildToolsVersion*/ "24.0.1",
+				/*JavaVersion*/ "1.7.0_101",
+				/*expectedResult*/ false,
+			},
+			new object [] {
+				/*targetFrameworkVersion*/ "v7.1",
+				/*buildToolsVersion*/ "24.0.1",
+				/*JavaVersion*/ "1.6.0_101",
+				/*expectedResult*/ false,
+			},
+			new object [] {
+				/*targetFrameworkVersion*/ "v6.0",
+				/*buildToolsVersion*/ "24.0.1",
+				/*JavaVersion*/ "1.8.0_101",
+				/*expectedResult*/ true,
+			},
+			new object [] {
+				/*targetFrameworkVersion*/ "v6.0",
+				/*buildToolsVersion*/ "24.0.0",
+				/*JavaVersion*/ "1.7.0_101",
+				/*expectedResult*/ true,
+			},
+			new object [] {
+				/*targetFrameworkVersion*/ "v6.0",
+				/*buildToolsVersion*/ "24.0.0",
+				/*JavaVersion*/ "1.6.0_101",
+				/*expectedResult*/ false,
+			},
+			new object [] {
+				/*targetFrameworkVersion*/ "v5.0",
+				/*buildToolsVersion*/ "24.0.1",
+				/*JavaVersion*/ "1.8.0_101",
+				/*expectedResult*/ true,
+			},
+			new object [] {
+				/*targetFrameworkVersion*/ "v5.0",
+				/*buildToolsVersion*/ "24.0.0",
+				/*JavaVersion*/ "1.7.0_101",
+				/*expectedResult*/ true,
+			},
+			new object [] {
+				/*targetFrameworkVersion*/ "v5.0",
+				/*buildToolsVersion*/ "24.0.0",
+				/*JavaVersion*/ "1.6.0_101",
+				/*expectedResult*/ true,
+			},
+			new object [] {
+				/*targetFrameworkVersion*/ "v5.0",
+				/*buildToolsVersion*/ "24.0.1",
+				/*JavaVersion*/ "1.6.0_101",
+				/*expectedResult*/ false,
+			},
+			new object [] {
+				/*targetFrameworkVersion*/ "v7.1",
+				/*buildToolsVersion*/ "24.0.1",
+				/*JavaVersion*/ "1.6.x_101",
+				/*expectedResult*/ true,
+			},
+		};
+#pragma warning restore 414
+
+		[Test]
+		[TestCaseSource ("validateJavaVersionTestCases")]
+		public void ValidateJavaVersion (string targetFrameworkVersion, string buildToolsVersion, string javaVersion, bool expectedResult) 
+		{
+			var path = Path.Combine ("temp", $"ValidateJavaVersion_{targetFrameworkVersion}_{buildToolsVersion}_{javaVersion}");
+			string javaExe = "java";
+			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "JavaSDK"), javaVersion, out javaExe);
+			var AndroidSdkDirectory = CreateFauxAndroidSdkDirectory (Path.Combine (path, "android-sdk"), buildToolsVersion);
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = true,
+				TargetFrameworkVersion = targetFrameworkVersion,
+			};
+			using (var builder = CreateApkBuilder (Path.Combine (path, proj.ProjectName), false, false)) {
+				builder.ThrowOnBuildFailure = false;
+				builder.Target = "_SetLatestTargetFrameworkVersion";
+				Assert.AreEqual (expectedResult, builder.Build (proj, parameters: new string[] {
+					$"JavaSdkDirectory={javaPath}",
+					$"JavaToolExe={javaExe}",
+					$"AndroidSdkBuildToolsVersion={buildToolsVersion}",
+					$"AndroidSdkDirectory={AndroidSdkDirectory}",
+				} ), string.Format ("Build should have {0}", expectedResult ? "succeeded" : "failed"));
+			}
+		}
+
 		[Test]
 		public void BuildAMassiveApp()
 		{
@@ -1854,7 +1960,7 @@ public class Test
 							TextContent = () => @"using System;
 
 namespace "+ libName + @" {
-
+ 
 	public class " + libName + @" {
 		public static void Foo () {
 		}

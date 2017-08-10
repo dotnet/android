@@ -24,7 +24,8 @@ namespace Xamarin.ProjectTools
 				default_layout_round_main = sr.ReadToEnd ();
 		}
 
-		public XamarinAndroidWearApplicationProject ()
+		public XamarinAndroidWearApplicationProject (string debugConfigurationName = "Debug", string releaseConfigurationName = "Release")
+			: base (debugConfigurationName, releaseConfigurationName)
 		{
 			TargetFrameworkVersion = Versions.KitkatWatch;
 			UseLatestPlatformSdk = false;

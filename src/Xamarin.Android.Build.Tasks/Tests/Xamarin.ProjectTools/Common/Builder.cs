@@ -124,13 +124,13 @@ namespace Xamarin.ProjectTools
 				ndkPath = Path.GetFullPath (Path.Combine (androidSdkToolPath, "ndk"));
 			StringBuilder args = new StringBuilder ();
 			var psi = new ProcessStartInfo (MSBuildExe);
-			if (Directory.Exists (sdkPath)) {
-				args.AppendFormat ("/p:AndroidSdkDirectory=\"{0}\" ", sdkPath);
-			}
-			if (Directory.Exists (ndkPath)) {
-				args.AppendFormat ("/p:AndroidNdkDirectory=\"{0}\" ", ndkPath);
-			}
 			if (RunXBuild) {
+				if (Directory.Exists (sdkPath)) {
+					args.AppendFormat ("/p:AndroidSdkDirectory=\"{0}\" ", sdkPath);
+				}
+				if (Directory.Exists (ndkPath)) {
+					args.AppendFormat ("/p:AndroidNdkDirectory=\"{0}\" ", ndkPath);
+				}
 				var outdir = Path.GetFullPath (Path.Combine (FrameworkLibDirectory, "..", ".."));
 				var targetsdir = Path.Combine (FrameworkLibDirectory, "xbuild");
 				args.AppendFormat (" {0} ", logger);
