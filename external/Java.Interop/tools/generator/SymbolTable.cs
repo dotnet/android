@@ -135,6 +135,9 @@ namespace MonoDroid.Generation {
 
 		public static void AddType (string key, ISymbol symbol)
 		{
+			if (!ShouldAddType (key))
+				return;
+
 			List<ISymbol> values;
 			if (!symbols.TryGetValue (key, out values)) {
 				symbols.Add (key, new List<ISymbol> { symbol });
