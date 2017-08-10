@@ -33,7 +33,8 @@ namespace Xamarin.ProjectTools
 
 		}
 
-		public XamarinAndroidApplicationProject ()
+		public XamarinAndroidApplicationProject (string debugConfigurationName = "Debug", string releaseConfigurationName = "Release")
+			: base (debugConfigurationName, releaseConfigurationName)
 		{
 			SetProperty ("AndroidApplication", "True");
 

@@ -19,9 +19,15 @@ namespace Xamarin.ProjectTools
 
 		public ProjectLanguage Language { get; set; }
 
-		protected XamarinProject ()
+		string debugConfigurationName;
+		string releaseConfigurationName;
+
+		protected XamarinProject (string debugConfigurationName = "Debug", string releaseConfigurationName = "Release")
 		{
 			ProjectName = "UnnamedProject";
+
+			this.debugConfigurationName = debugConfigurationName;
+			this.releaseConfigurationName = releaseConfigurationName;
 
 			Sources = new List<BuildItem> ();
 			References = new List<BuildItem> ();
@@ -37,9 +43,9 @@ namespace Xamarin.ProjectTools
 			CommonProperties = new List<Property> ();
 			common = new PropertyGroup (null, CommonProperties);
 			DebugProperties = new List<Property> ();
-			debug = new PropertyGroup ("'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'", DebugProperties);
+			debug = new PropertyGroup ($"'$(Configuration)|$(Platform)' == '{debugConfigurationName}|AnyCPU'", DebugProperties);
 			ReleaseProperties = new List<Property> ();
-			release = new PropertyGroup ("'$(Configuration)|$(Platform)' == 'Release|AnyCPU'", ReleaseProperties);
+			release = new PropertyGroup ($"'$(Configuration)|$(Platform)' == '{releaseConfigurationName}|AnyCPU'", ReleaseProperties);
 
 			PropertyGroups = new List<PropertyGroup> ();
 			PropertyGroups.Add (common);
@@ -48,7 +54,7 @@ namespace Xamarin.ProjectTools
 
 			Packages = new List<Package> ();
 
-			SetProperty (KnownProperties.Configuration, "Debug", "'$(Configuration)' == ''");
+			SetProperty (KnownProperties.Configuration, debugConfigurationName, "'$(Configuration)' == ''");
 			SetProperty ("Platform", "AnyCPU", "'$(Platform)' == ''");
 			SetProperty ("ErrorReport", "prompt");
 			SetProperty ("WarningLevel", "4");
@@ -60,16 +66,16 @@ namespace Xamarin.ProjectTools
 			SetProperty (DebugProperties, "DebugSymbols", "true");
 			SetProperty (DebugProperties, "DebugType", "full");
 			SetProperty (DebugProperties, "Optimize", "false");
-			SetProperty (DebugProperties, KnownProperties.OutputPath, Path.Combine ("bin", "Debug"));
+			SetProperty (DebugProperties, KnownProperties.OutputPath, Path.Combine ("bin", debugConfigurationName));
 			SetProperty (DebugProperties, "DefineConstants", "DEBUG;");
-			SetProperty (DebugProperties, KnownProperties.IntermediateOutputPath, Path.Combine ("obj", "Debug"));
+			SetProperty (DebugProperties, KnownProperties.IntermediateOutputPath, Path.Combine ("obj", debugConfigurationName));
 
 			SetProperty (ReleaseProperties, "Optimize", "true");
 			SetProperty (ReleaseProperties, "ErrorReport", "prompt");
 			SetProperty (ReleaseProperties, "WarningLevel", "4");
 			SetProperty (ReleaseProperties, "ConsolePause", "false");
-			SetProperty (ReleaseProperties, KnownProperties.OutputPath, Path.Combine ("bin", "Release"));
-			SetProperty (ReleaseProperties, KnownProperties.IntermediateOutputPath, Path.Combine ("obj", "Release"));
+			SetProperty (ReleaseProperties, KnownProperties.OutputPath, Path.Combine ("bin", releaseConfigurationName));
+			SetProperty (ReleaseProperties, KnownProperties.IntermediateOutputPath, Path.Combine ("obj", releaseConfigurationName));
 
 			Sources.Add (new BuildItem.Source (() => "Properties\\AssemblyInfo" + Language.DefaultExtension) { TextContent = () => ProcessSourceTemplate (AssemblyInfo ?? Language.DefaultAssemblyInfo) });
 
@@ -102,8 +108,8 @@ namespace Xamarin.ProjectTools
 		public abstract string ProjectTypeGuid { get; }
 
 		public bool IsRelease {
-			get { return GetProperty (KnownProperties.Configuration) == "Release"; }
-			set { SetProperty ("Configuration", value ? "Release" : "Debug"); }
+			get { return GetProperty (KnownProperties.Configuration) == releaseConfigurationName; }
+			set { SetProperty ("Configuration", value ? releaseConfigurationName : debugConfigurationName); }
 		}
 
 		public IList<Property> ActiveConfigurationProperties {
@@ -277,6 +283,7 @@ namespace Xamarin.ProjectTools
 				list.Add (new ProjectResource () {
 					Path = import.Project (),
 					Content = import.TextContent == null ? null : import.TextContent (),
+					Encoding = System.Text.Encoding.UTF8,
 				});
 
 			return list;

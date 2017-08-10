@@ -300,9 +300,9 @@ printf ""%d"" x
 			}
 		}
 
-		XamarinAndroidApplicationProject CreateMultiDexRequiredApplication ()
+		XamarinAndroidApplicationProject CreateMultiDexRequiredApplication (string debugConfigurationName = "Debug", string releaseConfigurationName = "Release")
 		{
-			var proj = new XamarinAndroidApplicationProject ();
+			var proj = new XamarinAndroidApplicationProject (debugConfigurationName, releaseConfigurationName);
 			proj.OtherBuildItems.Add (new BuildItem (AndroidBuildActions.AndroidJavaSource, "ManyMethods.java") {
 				TextContent = () => "public class ManyMethods { \n"
 					+ string.Join (Environment.NewLine, Enumerable.Range (0, 32768).Select (i => "public void method" + i + "() {}"))
@@ -327,6 +327,17 @@ printf ""%d"" x
 				b.ThrowOnBuildFailure = false;
 				Assert.IsFalse (b.Build (proj), "Without MultiDex option, build should fail");
 				b.Clean (proj);
+			}
+		}
+
+		[Test]
+		public void CreateMultiDexWithSpacesInConfig ()
+		{
+			var proj = CreateMultiDexRequiredApplication (releaseConfigurationName: "Test Config");
+			proj.IsRelease = true;
+			proj.SetProperty ("AndroidEnableMultiDex", "True");
+			using (var b = CreateApkBuilder ("temp/CreateMultiDexWithSpacesInConfig")) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 			}
 		}
 
@@ -1949,7 +1960,7 @@ public class Test
 							TextContent = () => @"using System;
 
 namespace "+ libName + @" {
-
+ 
 	public class " + libName + @" {
 		public static void Foo () {
 		}
