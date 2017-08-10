@@ -259,8 +259,8 @@ namespace Xamarin.Android.Tasks
 						// temporarily extracted directory will look like:
 						//    __library_projects__/[dllname]/[library_project_imports | jlibs]/bin
 						using (var zip = MonoAndroidHelper.ReadZipFile (finfo.FullName)) {
-							updated |= Files.ExtractAll (zip, outDirForDll, modifyCallback: (entryFullName) => {
-								return entryFullName.Replace ("library_project_imports", ImportsDirectory);
+							updated |= Files.ExtractAll (zip, importsDir, modifyCallback: (entryFullName) => {
+								return entryFullName.Replace ("library_project_imports/", "");
 							}, forceUpdate: false);
 						}
 
