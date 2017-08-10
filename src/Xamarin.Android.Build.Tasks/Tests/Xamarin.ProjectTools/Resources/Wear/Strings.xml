@@ -3,4 +3,10 @@
 	<string name="hello_rect">I\'m Rect. Tap Me!</string>
 	<string name="hello_round">I\'m Round. Tap Me!</string>
 	<string name="app_name">${PROJECT_NAME}</string>
+	<string name="auth_client_needs_enabling_title"></string>
+	<string name="auth_client_needs_installation_title"></string>
+	<string name="auth_client_needs_update_title"></string>
+	<string name="auth_client_play_services_err_notification_msg"></string>
+	<string name="auth_client_requested_by_msg"></string>
+	<string name="auth_client_using_bad_version_title"></string>
 </resources>
