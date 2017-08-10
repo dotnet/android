@@ -38,6 +38,7 @@
       <MSBuild Remove="$(LibDir)xbuild\Xamarin\Android\lib\host-Linux\**\*.*" />
       <MSBuild Remove="$(LibDir)xbuild\Xamarin\Android\Darwin\**\*.*" />
       <MSBuild Remove="$(LibDir)xbuild\Xamarin\Android\Linux\**\*.*" />
+      <MSBuild Remove="$(LibDir)xbuild\Xamarin\Android\**\*.dylib" />
       <MSBuild Include="..\..\src\Xamarin.Android.Build.Tasks\MSBuild\Xamarin\**\*.*" />
       <MSBuild>
         <VSIXSubPath Condition=" '%(VSIXSubPath)' == '' ">Xamarin/%(RecursiveDir)</VSIXSubPath>
@@ -45,9 +46,14 @@
       <MSBuild>
         <VSIXSubPath Condition=" '%(VSIXSubPath)' == '' ">Xamarin/Android/%(RecursiveDir)</VSIXSubPath>
       </MSBuild>
+      <MSBuild>
+        <VSIXSubPath Condition=" '%(VSIXSubPath)' == 'Xamarin/Android/lib/host-mxe-Win64/' ">Xamarin/Android/</VSIXSubPath>
+      </MSBuild>
       <MSBuild Remove="$(LibDir)xbuild\**\*.d.dll" />
       <MSBuild Remove="$(LibDir)xbuild\**\*.d.exe" />
       <ReferenceAssemblies Include="$(LibDir)xbuild-frameworks\**\*.*" />
+      <ReferenceAssemblies Remove="**\*.dylib" />
+      <ReferenceAssemblies Remove="**\libZipSharp*.*" />
       <ReferenceAssemblies>
         <VSIXSubPath Condition=" '%(VSIXSubPath)' == '' ">Microsoft/Framework/%(RecursiveDir)</VSIXSubPath>
       </ReferenceAssemblies>
