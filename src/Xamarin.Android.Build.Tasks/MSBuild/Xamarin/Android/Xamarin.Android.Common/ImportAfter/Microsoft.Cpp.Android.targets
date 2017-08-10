@@ -52,7 +52,7 @@ Copyright (C) 2014 Xamarin. All rights reserved.
             <Output TaskParameter="TargetOutputs" ItemName="_NativeAndroidRecipeFiles"/>
         </MSBuild>
 
-        <MergeApkRecipelists RecipeFiles="@(_NativeAndroidRecipeFiles)" Condition="'@(_NativeAndroidRecipeFiles)' != ''">
+        <MergeApkRecipelists RecipeFiles="%(_NativeAndroidRecipeFiles.Identity)" Condition="'@(_NativeAndroidRecipeFiles)' != '' And Exists('%(_NativeAndroidRecipeFiles.Identity)')">
             <Output TaskParameter="SOLibPaths" ItemName="NativeLibraryPaths" />
             <Output TaskParameter="AndroidArchitecture" PropertyName="NativeLibraryAbi" />
             <Output TaskParameter="HasMismatchedConfigurations" PropertyName="NativeHasMismatchedConfigurations" />

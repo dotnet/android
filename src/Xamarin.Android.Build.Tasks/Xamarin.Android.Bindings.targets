@@ -317,6 +317,7 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
 		Inputs="$(MSBuildProjectFullPath);$(_AndroidBuildPropertiesCache)"
 		Outputs="$(_AndroidLibraryProjectImportsCache)">
 	<ResolveLibraryProjectImports
+		ContinueOnError="$(DesignTimeBuild)"
 		CacheFile="$(_AndroidLibraryProjectImportsCache)"
 		Assemblies="@(ReferencePath);@(ReferenceDependencyPaths)"
 		ImportsDirectory="$(_LibraryProjectImportsDirectoryName)"
