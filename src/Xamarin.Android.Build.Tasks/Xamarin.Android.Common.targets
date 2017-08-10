@@ -1072,6 +1072,7 @@ because xbuild doesn't support framework reference assemblies.
 		Inputs="$(MSBuildProjectFullPath);@(ReferencePath);@(ReferenceDependencyPaths);$(_AndroidBuildPropertiesCache)"
 		Outputs="$(_AndroidLibraryProjectImportsCache)">
 	<ResolveLibraryProjectImports
+		ContinueOnError="$(DesignTimeBuild)"
 		CacheFile="$(_AndroidLibraryProjectImportsCache)"
 		Assemblies="@(ReferencePath);@(ReferenceDependencyPaths)"
 		ImportsDirectory="$(_LibraryProjectImportsDirectoryName)"
@@ -1324,6 +1325,7 @@ because xbuild doesn't support framework reference assemblies.
 
   <!-- Parse primary R.java and create Resources.Designer.cs -->
 	<GenerateResourceDesigner
+		ContinueOnError="$(DesignTimeBuild)"
 		NetResgenOutputFile="$(ResgenTemporaryDirectory)\$(AndroidResgenFilename)"
 		JavaResgenInputFile="$(_GeneratedPrimaryJavaResgenFile)"
 		Namespace="$(AndroidResgenNamespace)"
