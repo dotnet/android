@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using Microsoft.Build.Framework;
 using System.Xml.Linq;
 using System.Security.Cryptography;
+using System.Text.RegularExpressions;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -37,6 +38,8 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void DesignTimeBuild ([Values(false, true)] bool isRelease)
 		{
+			var regEx = new Regex (@"(?<type>([a-zA-Z_0-9])+)\slibrary_name=(?<value>([0-9A-Za-z])+);", RegexOptions.Compiled | RegexOptions.Multiline ); 
+
 			var path = Path.Combine (Root, "temp", $"DesignTimeBuild_{isRelease}");
 			var cachePath = Path.Combine (path, "Cache");
 			var envVar = new Dictionary<string, string> () {
@@ -71,8 +74,8 @@ using System.Runtime.CompilerServices;
 				},
 			};
 			
-			using (var l = CreateDllBuilder (Path.Combine (path, lib.ProjectName))) {
-				using (var b = CreateApkBuilder (Path.Combine (path, proj.ProjectName))) {
+			using (var l = CreateDllBuilder (Path.Combine (path, lib.ProjectName), false, false)) {
+				using (var b = CreateApkBuilder (Path.Combine (path, proj.ProjectName), false, false)) {
 					l.Verbosity = LoggerVerbosity.Diagnostic;
 					Assert.IsTrue(l.Clean(lib), "Lib1 should have cleaned successfully");
 					Assert.IsTrue (l.Build (lib), "Lib1 should have built successfully");
@@ -83,12 +86,26 @@ using System.Runtime.CompilerServices;
 						"first build failed");
 					Assert.IsTrue (b.LastBuildOutput.Contains ("Skipping download of "),
 						"failed to skip the downloading of files.");
+					var items = new List<string> ();
+					foreach (var file in Directory.EnumerateFiles (Path.Combine (path, proj.ProjectName, proj.IntermediateOutputPath, "android"), "R.java", SearchOption.AllDirectories)) {
+						var matches = regEx.Matches (File.ReadAllText (file));
+						items.AddRange (matches.Cast<System.Text.RegularExpressions.Match> ().Select(x => x.Groups ["value"].Value));
+					}
+					var first = items.First ();
+					Assert.IsTrue (items.All (x => x == first), "All Items should have matching values");
 					WaitFor (1000);
 					b.Target = "Build";
 					Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, parameters: new string [] { "DesignTimeBuild=false" }, environmentVariables: envVar), "second build failed");
 					Assert.IsFalse(b.Output.IsTargetSkipped ("_BuildAdditionalResourcesCache"), "_BuildAdditionalResourcesCache should have run.");
-					Assert.IsTrue (b.LastBuildOutput.Contains($"Downloading {url}") || b.LastBuildOutput.Contains ($"reusing existing archive: {zipPath}"), $"{url} should have been downloaded.");
+					Assert.IsTrue (b.LastBuildOutput.Contains ($"Downloading {url}") || b.LastBuildOutput.Contains ($"reusing existing archive: {zipPath}"), $"{url} should have been downloaded.");
 					Assert.IsTrue (File.Exists (Path.Combine (extractedDir, "1", "content", "android-N", "aapt")), $"Files should have been extracted to {extractedDir}");
+					items.Clear ();
+					foreach (var file in Directory.EnumerateFiles (Path.Combine (path, proj.ProjectName, proj.IntermediateOutputPath, "android"), "R.java", SearchOption.AllDirectories)) {
+						var matches = regEx.Matches (File.ReadAllText (file));
+						items.AddRange (matches.Cast<System.Text.RegularExpressions.Match> ().Select (x => x.Groups["value"].Value));
+					}
+					first = items.First ();
+					Assert.IsTrue (items.All (x => x == first), "All Items should have matching values");
 				}
 			}
 		}

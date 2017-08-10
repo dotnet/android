@@ -1256,7 +1256,8 @@ because xbuild doesn't support framework reference assemblies.
 		$(MSBuildAllProjects);
 		@(_AndroidResourceDest);
 		@(_LibraryResourceDirectoryStamps);
-		@(_AdditonalAndroidResourceCachePaths->'%(Identity)\cache.stamp')
+		@(_AdditonalAndroidResourceCachePaths->'%(Identity)\cache.stamp');
+		$(_AndroidBuildPropertiesCache)
 	</_UpdateAndroidResgenInputs>
 </PropertyGroup>
 
