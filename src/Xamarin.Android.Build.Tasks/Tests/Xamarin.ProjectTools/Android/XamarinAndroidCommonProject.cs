@@ -51,7 +51,8 @@ namespace Xamarin.ProjectTools
 			}
 		}
 
-		protected XamarinAndroidCommonProject ()
+		protected XamarinAndroidCommonProject (string debugConfigurationName = "Debug", string releaseConfigurationName = "Release")
+			: base (debugConfigurationName, releaseConfigurationName)
 		{
 			AndroidResources = new List<BuildItem> ();
 			ItemGroupList.Add (AndroidResources);
