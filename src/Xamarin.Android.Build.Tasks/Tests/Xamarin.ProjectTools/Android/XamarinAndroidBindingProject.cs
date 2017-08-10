@@ -16,7 +16,8 @@ namespace Xamarin.ProjectTools
 		public IList<BuildItem> Jars { get; private set; }
 		public IList<BuildItem> Transforms { get; private set; }
 
-		public XamarinAndroidBindingProject ()
+		public XamarinAndroidBindingProject (string debugConfigurationName = "Debug", string releaseConfigurationName = "Release")
+			: base (debugConfigurationName, releaseConfigurationName)
 		{
 			SetProperty ("MonoAndroidJavaPrefix", "Java");
 			SetProperty ("MonoAndroidTransformPrefix", "Transforms");
