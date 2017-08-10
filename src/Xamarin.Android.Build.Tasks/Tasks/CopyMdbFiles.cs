@@ -2,6 +2,7 @@
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using System.IO;
+using System.Collections.Generic;
 using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks {
@@ -12,6 +13,9 @@ namespace Xamarin.Android.Tasks {
 
 		public ITaskItem[] DestinationFiles { get; set; }
 
+		[Output]
+		public ITaskItem[] CopiedFiles { get; set; }
+
 		public override bool Execute() {
 			Log.LogDebugTaskItems ("SourceFiles:", SourceFiles);
 			Log.LogDebugTaskItems ("DestinationFiles:", DestinationFiles);
@@ -19,16 +23,21 @@ namespace Xamarin.Android.Tasks {
 			if (SourceFiles.Length != DestinationFiles.Length)
 				throw new ArgumentException ("source and destination count mismatch");
 
+			var copiedFiles = new List<ITaskItem> ();
 			for (int i = 0; i < SourceFiles.Length; i++) {
 				var src = SourceFiles[i].ItemSpec;
 				if (File.Exists (src)) {
 					var dst = DestinationFiles [i].ItemSpec;
 					var date = DateTime.Now;
-					MonoAndroidHelper.CopyIfChanged (src, dst);
-					MonoAndroidHelper.SetWriteable (dst);
-					MonoAndroidHelper.SetLastAccessAndWriteTimeUtc (dst, date, Log);
+					if (MonoAndroidHelper.CopyIfChanged (src, dst)) {
+						copiedFiles.Add (DestinationFiles [i]);
+						MonoAndroidHelper.SetWriteable (dst);
+						MonoAndroidHelper.SetLastAccessAndWriteTimeUtc (dst, date, Log);
+					}
 				}
 			}
+			CopiedFiles = copiedFiles.ToArray ();
+			Log.LogDebugTaskItems ("[Output] CopiedFiles:", CopiedFiles);
 			return true;
 		}
 	}
