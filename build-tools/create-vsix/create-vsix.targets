@@ -109,7 +109,7 @@
       <_Branch>$(_Branch.Replace ('\', '-'))</_Branch>
     </PropertyGroup>
     <PropertyGroup>
-      <VsixPath Condition=" '$(VsixPath)' == '' ">..\..\bin\Build$(Configuration)\$(AssemblyName)-OSS-$(ProductVersion).$(XAVersionCommitCount)_$(XAVersionBranch)_$(XAVersionHash).vsix</VsixPath>    
+      <VsixPath Condition=" '$(VsixPath)' == '' ">..\..\bin\Build$(Configuration)\$(AssemblyName)-OSS-$(ProductVersion).$(XAVersionCommitCount)_$(_Branch)_$(XAVersionHash).vsix</VsixPath>
     </PropertyGroup>
   </Target>
   <Target Name="_CopyToBuildConfiguration"
