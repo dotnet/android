@@ -19,14 +19,6 @@
     />
     <MonoDocCopyItem Include="monodoc.dll.config" />
   </ItemGroup>
-  <ItemGroup>
-    <FSharpItem Include="FSharp.Core.dll" />
-    <FSharpItem Include="FSharp.Core.optdata" />
-    <FSharpItem Include="FSharp.Core.sigdata" />
-  </ItemGroup>
-  <ItemGroup>
-    <_FSharpInstalledItems Include="@(FSharpItem->'$(OutputPath)\lib\xbuild-frameworks\MonoAndroid\v1.0\%(Identity)')" />
-  </ItemGroup>
   <UsingTask AssemblyFile="$(_SourceTopDir)\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.GetNugetPackageBasePath" />
   <Import Project="$(_SourceTopDir)\Configuration.props" />
   <ItemGroup>
@@ -440,11 +432,7 @@
     <ItemGroup>
       <_PackageConfigFiles Include="$(_SourceTopDir)\src\Xamarin.Android.Build.Tasks\packages.config" />
     </ItemGroup>
-    <GetNugetPackageBasePath PackageConfigFiles="@(_PackageConfigFiles)" PackageName="FSharp.Core">
-      <Output TaskParameter="BasePath" PropertyName="_FSharpCorePackagePath" />
-    </GetNugetPackageBasePath>
     <ItemGroup>
-      <_FSharp Include="$(_SourceTopDir)\$(_FSharpCorePackagePath)\lib\portable-net45+monoandroid10+monotouch10+xamarinios10\FSharp.Core*" />
       <_Facades Include="$(_MonoProfileDir)\Facades\*.dll" />
     </ItemGroup>
     <Copy
@@ -454,13 +442,6 @@
     <Copy
         SourceFiles="@(_Facades)"
         DestinationFolder="$(_BclFrameworkDir)\Facades"
-    />
-    <Copy
-        SourceFiles="@(_FSharp)"
-        DestinationFolder="$(_BclFrameworkDir)"
-    />
-    <Touch
-        Files="@(_FSharp->'$(_BclFrameworkDir)\%(Filename)%(Extension)')"
     />
     <Touch
         Files="@(_BclInstalledItem)"
@@ -571,7 +552,6 @@
       <BundleItem Include="@(_MonoDocInstalledItems)" />
       <BundleItem Include="@(_MonoCilStripDest)" />
       <BundleItem Include="@(_MonoUtilityDest)" />
-      <BundleItem Include="@(_FSharpInstalledItems)" />
       <BundleItem Include="@(MonoFacadeAssembly->'$(OutputPath)\lib\xbuild-frameworks\MonoAndroid\v1.0\Facades\%(Identity)')" />
       <BundleItem Include="$(OutputPath)\lib\xbuild-frameworks\MonoAndroid\v1.0\RedistList\FrameworkList.xml" />
       <BundleItem Include="@(_InstallRuntimeOutput)" />
