@@ -17,7 +17,7 @@ namespace Xamarin.ProjectTools
 		public string ProjectGuid { get; set; }
 		public string AssemblyName { get; set; }
 
-		public ProjectLanguage Language { get; set; }
+		public virtual ProjectLanguage Language { get; set; }
 
 		string debugConfigurationName;
 		string releaseConfigurationName;
@@ -62,6 +62,7 @@ namespace Xamarin.ProjectTools
 			SetProperty ("RootNamespace", () => RootNamespace ?? ProjectName);
 			SetProperty ("AssemblyName", () => AssemblyName ?? ProjectName);
 			SetProperty ("BuildingInsideVisualStudio", "True");
+			SetProperty ("BaseIntermediateOutputPath", "obj\\", " '$(BaseIntermediateOutputPath)' == '' ");
 
 			SetProperty (DebugProperties, "DebugSymbols", "true");
 			SetProperty (DebugProperties, "DebugType", "full");

@@ -39,10 +39,12 @@ namespace Xamarin.ProjectTools
 			SetProperty ("AndroidApplication", "True");
 
 			SetProperty ("AndroidResgenClass", "Resource");
-			SetProperty ("AndroidResgenFile", () => "Resources\\Resource.designer" + Language.DefaultExtension);
+			SetProperty ("AndroidResgenFile", () => "Resources\\Resource.designer" + Language.DefaultDesignerExtension);
 			SetProperty ("AndroidManifest", "Properties\\AndroidManifest.xml");
 			SetProperty (DebugProperties, "AndroidLinkMode", "None");
 			SetProperty (ReleaseProperties, "AndroidLinkMode", "SdkOnly");
+			SetProperty (DebugProperties, "EmbedAssembliesIntoApk", "False");
+			SetProperty (ReleaseProperties, "EmbedAssembliesIntoApk", "True");
 
 			AndroidManifest = default_android_manifest;
 			LayoutMain = default_layout_main;
