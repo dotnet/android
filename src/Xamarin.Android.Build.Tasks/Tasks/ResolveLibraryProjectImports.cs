@@ -200,6 +200,9 @@ namespace Xamarin.Android.Tasks
 						resolvedResourceDirectories.Add (resDir);
 					if (Directory.Exists (assemblyDir))
 						resolvedAssetDirectories.Add (assemblyDir);
+					foreach (var env in Directory.EnumerateFiles (importsDir, "__AndroidEnvironment__*", SearchOption.TopDirectoryOnly)) {
+						resolvedEnvironments.Add (env);
+					}
 					continue;
 				}
 
