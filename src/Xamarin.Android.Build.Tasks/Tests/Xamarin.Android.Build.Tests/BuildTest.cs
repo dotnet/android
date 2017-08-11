@@ -735,7 +735,7 @@ namespace App1
 			using (var b = CreateApkBuilder ("temp/CheckJavaError")) {
 				b.ThrowOnBuildFailure = false;
 				Assert.IsFalse (b.Build (proj), "Build should have failed.");
-				if (b.RunXBuild) {
+				if (b.IsUnix) {
 					var text = "TestMe.java(1,8):  javacerror :  error: class, interface, or enum expected";
 					if (b.RunningMSBuild)
 						text = "TestMe.java(1,8): javac error :  error: class, interface, or enum expected";

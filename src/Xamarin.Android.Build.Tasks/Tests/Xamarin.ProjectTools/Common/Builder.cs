@@ -14,7 +14,7 @@ namespace Xamarin.ProjectTools
 		const string msbuildapp = "msbuild";
 		string msbuildExe;
 
-		public bool RunXBuild { get; set; }
+		public bool IsUnix { get; set; }
 		public bool RunningMSBuild { get; set; }
 		public LoggerVerbosity Verbosity { get; set; }
 		public string LastBuildOutput { get; set; }
@@ -22,27 +22,28 @@ namespace Xamarin.ProjectTools
 		public string BuildLogFile { get; set; }
 		public bool ThrowOnBuildFailure { get; set; }
 
-		string GetXbuildPath ()
+		string GetUnixBuildExe ()
 		{
+			RunningMSBuild = false;
 			string path = Path.Combine (fixed_osx_xbuild_path, xbuildapp);
 			if (!string.IsNullOrEmpty (Environment.GetEnvironmentVariable ("USE_MSBUILD"))) {
 				path = Path.Combine (fixed_osx_xbuild_path, msbuildapp);
 				RunningMSBuild = true;
 			}
-			return File.Exists (path) ? path : xbuildapp;
+			return File.Exists (path) ? path : msbuildapp;
 		}
 
 		public string MSBuildExe {
 			get {
-				return RunXBuild
-					? File.Exists (fixed_osx_xbuild_path) ? fixed_osx_xbuild_path : "xbuild"
+				return IsUnix
+					? GetUnixBuildExe ()
 					: msbuildExe;
 			}
 		}
 
 		public string FrameworkLibDirectory {
 			get {
-				if (RunXBuild) {
+				if (IsUnix) {
 					var outdir = Environment.GetEnvironmentVariable ("XA_BUILD_OUTPUT_PATH");
 					if (String.IsNullOrEmpty(outdir))
 						outdir = Path.GetFullPath (Path.Combine (Root, "..", "..", "..", "..", "..", "..", "..", "out"));
@@ -69,7 +70,7 @@ namespace Xamarin.ProjectTools
 
 		public Builder ()
 		{
-			RunXBuild = Environment.OSVersion.Platform != PlatformID.Win32NT;
+			IsUnix = Environment.OSVersion.Platform != PlatformID.Win32NT;
 			BuildLogFile = "build.log";
 			// Allow the override of the location of MSBuild and try a couple of backup paths for 
 			// MSBuild 14.0 and 4.0 
@@ -124,7 +125,7 @@ namespace Xamarin.ProjectTools
 				ndkPath = Path.GetFullPath (Path.Combine (androidSdkToolPath, "ndk"));
 			StringBuilder args = new StringBuilder ();
 			var psi = new ProcessStartInfo (MSBuildExe);
-			if (RunXBuild) {
+			if (IsUnix) {
 				if (Directory.Exists (sdkPath)) {
 					args.AppendFormat ("/p:AndroidSdkDirectory=\"{0}\" ", sdkPath);
 				}
@@ -140,9 +141,12 @@ namespace Xamarin.ProjectTools
 					psi.EnvironmentVariables ["MSBuildExtensionsPath"] = targetsdir;
 				}
 				if (Directory.Exists (outdir)) {
+					var frameworksPath = Path.Combine (outdir, "lib", "xamarin.android", "xbuild-frameworks");
 					psi.EnvironmentVariables ["MONO_ANDROID_PATH"] = outdir;
-					psi.EnvironmentVariables ["XBUILD_FRAMEWORK_FOLDERS_PATH"] = Path.Combine (outdir, "lib", "xamarin.android", "xbuild-frameworks");
+					psi.EnvironmentVariables ["XBUILD_FRAMEWORK_FOLDERS_PATH"] = frameworksPath;
 					args.AppendFormat ("/p:MonoDroidInstallDirectory=\"{0}\" ", outdir);
+					if (RunningMSBuild)
+						args.AppendFormat ($"/p:TargetFrameworkRootPath={frameworksPath} ");
 				}
 				args.AppendFormat ("/t:{0} {1} /p:UseHostCompilerIfAvailable=false /p:BuildingInsideVisualStudio=true", target, QuoteFileName (Path.Combine (Root, projectOrSolution)));
 			}

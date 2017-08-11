@@ -12,7 +12,7 @@ namespace Xamarin.Android.LocaleTests
 		public void EnvironmentVariablesFromLibraryProjectsAreMerged ()
 		{
 			var v = Environment.GetEnvironmentVariable ("THIS_IS_MY_ENVIRONMENT");
-			Assert.AreEqual (v, "Well, hello there!");
+			Assert.AreEqual ("Well, hello there!", v);
 		}
 	}
 }

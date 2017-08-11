@@ -17,6 +17,8 @@ namespace Xamarin.ProjectTools
 		public static readonly byte[] icon_binary_xxhdpi;
 		public static readonly byte[] icon_binary_xxxhdpi;
 
+		BuildItem.Source resourceDesigner;
+
 		static byte[] ScaleIcon (Image image, int width, int height)
 		{
 			float scale = Math.Min (width / image.Width, height / image.Height);
@@ -56,8 +58,8 @@ namespace Xamarin.ProjectTools
 		{
 			AndroidResources = new List<BuildItem> ();
 			ItemGroupList.Add (AndroidResources);
-
-			Sources.Add (new BuildItem.Source (() => "Resources\\Resource.designer" + Language.DefaultExtension) { TextContent = () => string.Empty });
+			resourceDesigner = new BuildItem.Source (() => "Resources\\Resource.designer" + Language.DefaultDesignerExtension) { TextContent = () => string.Empty };
+			Sources.Add (resourceDesigner);
 			AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\drawable-mdpi\\Icon.png") { BinaryContent = () => icon_binary_mdpi });
 			AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\drawable-hdpi\\Icon.png") { BinaryContent = () => icon_binary_hdpi });
 			AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\drawable-xhdpi\\Icon.png") { BinaryContent = () => icon_binary_xhdpi });
@@ -77,6 +79,22 @@ namespace Xamarin.ProjectTools
 			foreach (var import in Imports)
 				root.AddImport (import.Project ());
 			return root;
+		}
+
+		public override ProjectLanguage Language {
+			get {
+				return base.Language;
+			}
+			set {
+				base.Language = value;
+				if (value == XamarinAndroidProjectLanguage.FSharp) {
+					// add the stuff needed for FSharp
+					Packages.Add (KnownPackages.FSharp_Core_Latest);
+					Packages.Add (KnownPackages.Xamarin_Android_FSharp_ResourceProvider_Runtime);
+					Sources.Remove (resourceDesigner);
+					OtherBuildItems.Add (new BuildItem.NoActionResource (() => "Resources\\Resource.designer" + Language.DefaultDesignerExtension) { TextContent = () => string.Empty });
+				}
+			}
 		}
 	}
 }
