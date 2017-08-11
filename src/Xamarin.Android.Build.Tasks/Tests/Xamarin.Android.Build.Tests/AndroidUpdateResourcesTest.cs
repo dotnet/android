@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿﻿﻿using System;
 using Xamarin.ProjectTools;
 using NUnit.Framework;
 using System.Linq;
@@ -107,6 +107,29 @@ using System.Runtime.CompilerServices;
 					first = items.First ();
 					Assert.IsTrue (items.All (x => x == first), "All Items should have matching values");
 				}
+			}
+		}
+
+		[Test]
+		public void CheckEmbeddedSupportLibraryResources ()
+		{
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = true,
+				Packages = {
+					KnownPackages.SupportMediaCompat_25_4_0_1,
+					KnownPackages.SupportFragment_25_4_0_1,
+					KnownPackages.SupportCoreUtils_25_4_0_1,
+					KnownPackages.SupportCoreUI_25_4_0_1,
+					KnownPackages.SupportCompat_25_4_0_1,
+					KnownPackages.AndroidSupportV4_25_4_0_1,
+					KnownPackages.SupportV7AppCompat_25_4_0_1,
+				},
+				TargetFrameworkVersion = "v7.1",
+			};
+			using (var b = CreateApkBuilder ("temp/CheckEmbeddedSupportLibraryResources")) {
+				Assert.IsTrue (b.Build (proj), "First build should have succeeded.");
+				var Rdrawable = b.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes", "android", "support", "v7", "appcompat", "R$drawable.class"));
+				Assert.IsTrue (File.Exists (Rdrawable), $"{Rdrawable} should exist");
 			}
 		}
 

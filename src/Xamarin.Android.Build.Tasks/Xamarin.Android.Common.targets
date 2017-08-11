@@ -1198,8 +1198,7 @@ because xbuild doesn't support framework reference assemblies.
 </PropertyGroup>
 
 <Target Name="_GenerateJavaDesignerForComponent"
-  Condition="'@(_AdditonalAndroidResourceCachePaths)' != ''"
-  Inputs="@(_AdditonalAndroidResourceCacheFiles)"
+  Inputs="@(_AdditonalAndroidResourceCacheFiles);@(_LibraryResourceDirectoryStamps)"
   Outputs="$(_AndroidComponentResgenFlagFile)"
   DependsOnTargets="$(_GenerateJavaDesignerForComponentDependsOnTargets)">
 
@@ -1208,7 +1207,7 @@ because xbuild doesn't support framework reference assemblies.
    ImportsDirectory="$(_LibraryProjectImportsDirectoryName)"
    OutputImportDirectory="$(_AndroidLibrayProjectIntermediatePath)"
    UseShortFileNames="$(UseShortFileNames)"
-   ManifestFiles="@(_AdditonalAndroidResourceCachePaths->'%(Identity)\AndroidManifest.xml')"
+   ManifestFiles="@(_AdditonalAndroidResourceCachePaths->'%(Identity)\AndroidManifest.xml');@(LibraryResourceDirectories->'%(Identity)\..\AndroidManifest.xml')"
    ApplicationName="$(_AndroidPackage)"
    JavaPlatformJarPath="$(JavaPlatformJarPath)"
    NonConstantId="true"

@@ -40,6 +40,15 @@ namespace Xamarin.ProjectTools
 					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Support.v4.23.1.1.0\\lib\\MonoAndroid403\\Xamarin.Android.Support.v4.dll" }
 			}
 		};
+		public static Package AndroidSupportV4_25_4_0_1 = new Package () {
+			Id = "Xamarin.Android.Support.v4",
+			Version = "25.4.0.1",
+			TargetFramework = "MonoAndroid70",
+			References = {
+				new BuildItem.Reference ("Xamarin.Android.Support.v4") {
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Support.v4.25.4.0.1\\lib\\MonoAndroid70\\Xamarin.Android.Support.v4.dll" }
+			}
+		};
 		public static Package AndroidSupportV4Beta = new Package () {
 			Id = "Xamarin.Android.Support.v4",
 			Version = "21.0.0.0-beta1",
@@ -137,6 +146,60 @@ namespace Xamarin.ProjectTools
 			References = {
 				new BuildItem.Reference ("Xamarin.Android.Support.v7.AppCompat") {
 					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Support.v7.AppCompat.23.1.1.0\\lib\\MonoAndroid403\\Xamarin.Android.Support.v7.AppCompat.dll" }
+			}
+		};
+		public static Package SupportV7AppCompat_25_4_0_1 = new Package {
+			Id = "Xamarin.Android.Support.v7.AppCompat",
+			Version = "25.4.0.1",
+			TargetFramework = "MonoAndroid70",
+			References = {
+				new BuildItem.Reference ("Xamarin.Android.Support.v7.AppCompat") {
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Support.v7.AppCompat.25.4.0.1\\lib\\MonoAndroid70\\Xamarin.Android.Support.v7.AppCompat.dll" }
+			}
+		};
+		public static Package SupportCompat_25_4_0_1 = new Package {
+			Id = "Xamarin.Android.Support.Compat",
+			Version = "25.4.0.1",
+			TargetFramework = "MonoAndroid70",
+			References = {
+				new BuildItem.Reference ("Xamarin.Android.Support.Compat") {
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Support.Compat.25.4.0.1\\lib\\MonoAndroid70\\Xamarin.Android.Support.Compat.dll" }
+			}
+		};
+		public static Package SupportCoreUI_25_4_0_1 = new Package {
+			Id = "Xamarin.Android.Support.Core.UI",
+			Version = "25.4.0.1",
+			TargetFramework = "MonoAndroid70",
+			References = {
+				new BuildItem.Reference ("Xamarin.Android.Support.Core.UI") {
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Support.Core.UI.25.4.0.1\\lib\\MonoAndroid70\\Xamarin.Android.Support.Core.UI.dll" }
+			}
+		};
+		public static Package SupportCoreUtils_25_4_0_1 = new Package {
+			Id = "Xamarin.Android.Support.Core.Utils",
+			Version = "25.4.0.1",
+			TargetFramework = "MonoAndroid70",
+			References = {
+				new BuildItem.Reference ("Xamarin.Android.Support.Core.Utils") {
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Support.Core.Utils.25.4.0.1\\lib\\MonoAndroid70\\Xamarin.Android.Support.Core.Utils.dll" }
+			}
+		};
+		public static Package SupportFragment_25_4_0_1 = new Package {
+			Id = "Xamarin.Android.Support.Fragment",
+			Version = "25.4.0.1",
+			TargetFramework = "MonoAndroid70",
+			References = {
+				new BuildItem.Reference ("Xamarin.Android.Support.Fragment") {
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Support.Fragment.25.4.0.1\\lib\\MonoAndroid70\\Xamarin.Android.Support.Fragment.dll" }
+			}
+		};
+		public static Package SupportMediaCompat_25_4_0_1 = new Package {
+			Id = "Xamarin.Android.Support.Media.Compat",
+			Version = "25.4.0.1",
+			TargetFramework = "MonoAndroid70",
+			References = {
+				new BuildItem.Reference ("Xamarin.Android.Support.Media.Compat") {
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Support.Media.Compat.25.4.0.1\\lib\\MonoAndroid70\\Xamarin.Android.Support.Media.Compat.dll" }
 			}
 		};
 		public static Package SupportV7MediaRouter_21_0_3_0 = new Package {
