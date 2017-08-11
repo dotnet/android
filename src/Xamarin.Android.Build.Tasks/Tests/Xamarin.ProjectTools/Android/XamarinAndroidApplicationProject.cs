@@ -36,10 +36,11 @@ namespace Xamarin.ProjectTools
 		public XamarinAndroidApplicationProject (string debugConfigurationName = "Debug", string releaseConfigurationName = "Release")
 			: base (debugConfigurationName, releaseConfigurationName)
 		{
-			SetProperty ("AndroidApplication", "True");
+			var defaultExtension = Language.DefaultExtension == ".fs" ? ".cs" : Language.DefaultExtension;
 
+			SetProperty ("AndroidApplication", "True");
 			SetProperty ("AndroidResgenClass", "Resource");
-			SetProperty ("AndroidResgenFile", () => "Resources\\Resource.designer" + Language.DefaultExtension);
+			SetProperty ("AndroidResgenFile", () => "Resources\\Resource.designer" + defaultExtension);
 			SetProperty ("AndroidManifest", "Properties\\AndroidManifest.xml");
 			SetProperty (DebugProperties, "AndroidLinkMode", "None");
 			SetProperty (ReleaseProperties, "AndroidLinkMode", "SdkOnly");

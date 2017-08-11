@@ -31,7 +31,7 @@ Copyright (C) 2012 Xamarin. All rights reserved.
              our mscorlib.dll isn't properly signed, as far as its concerned.
              Disable generation to avoid "bizarre" build errors. -->
         <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
-        <_AndroidResourceDesigner>Resource.Designer.fs</_AndroidResourceDesigner>
+        <_AndroidResourceDesigner>Resource.Designer.cs</_AndroidResourceDesigner>
     </PropertyGroup>
 
     <!-- xbuild searches multiple MSBuildExtensionsPath32, but only in the Import element, so we can't determine this with a variable -->
