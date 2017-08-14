@@ -201,7 +201,8 @@ namespace Xamarin.Android.Tools {
 			return ZipArchive.Open (filename, FileMode.Open, strictConsistencyChecks: strictConsistencyChecks);
 		}
 
-		public static bool ExtractAll(ZipArchive zip, string destination, Action<int, int> progressCallback = null, Func<string, string> modifyCallback = null, bool forceUpdate = true)
+		public static bool ExtractAll(ZipArchive zip, string destination, Action<int, int> progressCallback = null, Func<string, string> modifyCallback = null,
+			Func<string, bool> deleteCallback = null, bool forceUpdate = true)
 		{
 			int i = 0;
 			int total = (int)zip.EntryCount;
@@ -235,7 +236,7 @@ namespace Xamarin.Android.Tools {
 						outfile.EndsWith ("/__MACOSX", StringComparison.OrdinalIgnoreCase) ||
 						outfile.EndsWith ("/.DS_Store", StringComparison.OrdinalIgnoreCase))
 					continue;
-				if (!files.Contains (outfile)) {
+				if (!files.Contains (outfile) && !(deleteCallback?.Invoke (outfile) ?? true)) {
 					File.Delete (outfile);
 					updated = true;
 				}
