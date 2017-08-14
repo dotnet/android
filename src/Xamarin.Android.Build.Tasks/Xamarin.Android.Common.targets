@@ -1557,7 +1557,13 @@ because xbuild doesn't support framework reference assemblies.
 		Inputs="@(_ResolvedPdbFiles)"
 		Outputs="@(_ResolvedPdbFiles->'%(RootDir)%(Directory)%(Filename).dll.mdb')"
 		DependsOnTargets="_CollectPdbFiles">
-	<ConvertDebuggingFiles Files="@(_ResolvedPdbFiles)" />
+	<ConvertDebuggingFiles Files="@(_ResolvedPdbFiles)">
+		<Output TaskParameter="ConvertedFiles" ItemName="_ConvertedDebuggingFiles" />
+	</ConvertDebuggingFiles>
+	<WriteLinesToFile
+		File="$(IntermediateOutputPath)$(CleanFile)"
+		Lines="@(_ConvertedDebuggingFiles)"
+		Overwrite="false" />
 </Target>
 
 <Target Name="_CopyMdbFiles"
@@ -1566,13 +1572,20 @@ because xbuild doesn't support framework reference assemblies.
 		DependsOnTargets="_ConvertPdbFiles;_CollectMdbFiles" >
 	<CopyMdbFiles
 			SourceFiles="@(_ResolvedMdbFiles);@(_ResolvedPortablePdbFiles)"
-			DestinationFiles="@(_ResolvedMdbFiles->'$(OutputPath)%(Filename)%(Extension)');@(_ResolvedPortablePdbFiles->'$(OutputPath)%(Filename)%(Extension)')"
-	/>
+			DestinationFiles="@(_ResolvedMdbFiles->'$(OutputPath)%(Filename)%(Extension)');@(_ResolvedPortablePdbFiles->'$(OutputPath)%(Filename)%(Extension)')">
+		<Output TaskParameter="CopiedFiles" ItemName="_MdbFilesCopied" />
+	</CopyMdbFiles>
 	<Copy
-		SourceFiles="@(_ResolvedMdbFiles->'$(OutputPath)%(Filename)%(Extension)');@(_ResolvedPortablePdbFiles->'$(OutputPath)%(Filename)%(Extension)')"
-		DestinationFiles="@(_ResolvedMdbFiles->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)');@(_ResolvedPortablePdbFiles->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)')"
-		SkipUnchangedFiles="true"
-	/>
+			SourceFiles="@(_ResolvedMdbFiles->'$(OutputPath)%(Filename)%(Extension)');@(_ResolvedPortablePdbFiles->'$(OutputPath)%(Filename)%(Extension)')"
+			DestinationFiles="@(_ResolvedMdbFiles->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)');@(_ResolvedPortablePdbFiles->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)')"
+			SkipUnchangedFiles="true">
+		<Output TaskParameter="CopiedFiles" ItemName="_DebugFilesCopiedToLinkerSrc" />
+	</Copy>
+	<Touch Files="@(_DebugFilesCopiedToLinkerSrc)" />
+	<WriteLinesToFile
+		File="$(IntermediateOutputPath)$(CleanFile)"
+		Lines="@(_MdbFilesCopied);@(_DebugFilesCopiedToLinkerSrc)"
+		Overwrite="false" />
 </Target>
 	
 <Target Name="_LinkAssemblies"
@@ -2409,13 +2422,6 @@ because xbuild doesn't support framework reference assemblies.
 
 <!-- Cleaning -->
 
-<Target Name="_CleanGeneratedDebuggingFiles">
-	<ItemGroup>
-		<_OutputDebugSymbolFiles Include="$(OutputPath)*.dll.mdb;$(OutputPath)*.pdb" />
-	</ItemGroup>
-	<Delete Files="@(_OutputDebugSymbolFiles)"/>
-</Target>
-
 <Target Name="_CleanMsymArchive">
 	<GetAndroidPackageName ManifestFile="$(ProjectDir)$(AndroidManifest)" AssemblyName="$(AssemblyName)">
 		<Output TaskParameter="PackageName" PropertyName="_AndroidPackage" />
@@ -2430,7 +2436,7 @@ because xbuild doesn't support framework reference assemblies.
 	<Delete Files="@(_OutputDeploymentFiles)"/>
 </Target>
 
-<Target Name="_CleanMonoAndroidIntermediateDir" DependsOnTargets="_CleanGeneratedDebuggingFiles;_CleanGeneratedDeploymentFiles;_CleanMsymArchive">
+<Target Name="_CleanMonoAndroidIntermediateDir" DependsOnTargets="_CleanGeneratedDeploymentFiles;_CleanMsymArchive">
 	<RemoveDirFixed Directories="$(MonoAndroidIntermediate)android" Condition="Exists ('$(MonoAndroidIntermediate)android')" />
 	<!-- FIXME: remove this extraneous rmdir after a few release cycles since we release the one we killed it. -->
 	<RemoveDirFixed Directories="$(MonoAndroidIntermediate)assemblies" Condition="Exists ('$(MonoAndroidIntermediate)assemblies')" />
