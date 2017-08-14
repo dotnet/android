@@ -246,6 +246,7 @@ namespace Xamarin.Android.Tasks
 								outfs.Write (data, 0, data.Length);
 							updated = true;
 						}
+						jars.Add (outjarFile);
 					}
 
 					// embedded AndroidResourceLibrary archive
@@ -264,6 +265,8 @@ namespace Xamarin.Android.Tasks
 						using (var zip = MonoAndroidHelper.ReadZipFile (finfo.FullName)) {
 							updated |= Files.ExtractAll (zip, importsDir, modifyCallback: (entryFullName) => {
 								return entryFullName.Replace ("library_project_imports/", "");
+							}, deleteCallback: (fileToDelete) => {
+								return !jars.Contains (fileToDelete);
 							}, forceUpdate: false);
 						}
 
@@ -292,10 +295,12 @@ namespace Xamarin.Android.Tasks
 						stamp.Create ().Close ();
 				}
 			}
-
-			foreach (var f in outdir.GetFiles ("*.jar")
-					.Select (fi => fi.FullName))
+			foreach (var f in outdir.GetFiles ("*.jar", SearchOption.AllDirectories)
+					.Select (fi => fi.FullName)) {
+				if (jars.Contains (f))
+					continue;
 				jars.Add (f);
+			}
 		}
 	}
 }
