@@ -844,8 +844,7 @@ namespace Xamarin.Android.Tasks {
 			ms.Position = 0;
 			var s = new StreamReader (ms).ReadToEnd ();
 			if (ApplicationName != null)
-				s = s.Replace ("${applicationId}", ApplicationName)
-					.Replace ("dollar_openBracket_applicationId_closeBracket", ApplicationName);
+				s = s.Replace ("${applicationId}", ApplicationName);
 			if (Placeholders != null)
 				foreach (var entry in Placeholders.Select (e => e.Split (new char [] {'='}, 2, StringSplitOptions.None))) {
 					if (entry.Length == 2)

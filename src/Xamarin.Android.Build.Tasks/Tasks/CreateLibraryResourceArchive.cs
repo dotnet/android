@@ -90,8 +90,6 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
-			FixApplicationIdInManifests (OutputDirectory);
-
 			var outpath = Path.Combine (outDirInfo.Parent.FullName, "__AndroidLibraryProjects__.zip");
 
 			if (Files.ArchiveZip (outpath, f => {
@@ -102,27 +100,6 @@ namespace Xamarin.Android.Tasks
 				Log.LogDebugMessage ("Saving contents to " + outpath);
 			}
 			return true;
-		}
-
-		void FixApplicationIdInManifests (string directory)
-		{
-			var broken = new List<string> ();
-			string goodFile = null;
-			foreach (var file in Directory.EnumerateFiles (directory, "AndroidManifest.xml", SearchOption.AllDirectories)) {
-				string text = File.ReadAllText (file);
-				if (text.Contains (("dollar_openBracket_applicationId_closeBracket"))) {
-					broken.Add (file);
-				} else {
-					goodFile = file;
-				}
-			}
-			if (!string.IsNullOrEmpty (goodFile)) {
-				foreach (var file in broken) {
-					DateTime lastWriteTime = File.GetLastWriteTimeUtc (file);
-					File.Copy (goodFile, file, overwrite: true);
-					File.SetLastWriteTimeUtc (file, lastWriteTime);
-				}
-			}
 		}
 			
 		bool CopyLibraryContent (string projdir, bool isAar)
@@ -150,6 +127,9 @@ namespace Xamarin.Android.Tasks
 					if (!File.Exists (dstpath))
 						MonoAndroidHelper.CopyIfChanged (file, dstpath);
 				}
+				dstdir = Path.Combine (OutputDirectory, "aapt");
+				Directory.CreateDirectory (dstdir);
+				MonoAndroidHelper.CopyIfChanged (Path.Combine (projdir, "AndroidManifest.xml"), Path.Combine (dstdir, "AndroidManifest.xml"));
 			}
 			return true;
 		}
