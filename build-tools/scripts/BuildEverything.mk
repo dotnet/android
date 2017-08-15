@@ -144,6 +144,7 @@ create-vsix:
 			$(if $(EXPERIMENTAL),/p:IsExperimental="$(EXPERIMENTAL)") \
 			$(if $(PRODUCT_COMPONENT),/p:IsProductComponent="$(PRODUCT_COMPONENT)") \
 			$(if $(PACKAGE_VERSION),/p:ProductVersion="$(PACKAGE_VERSION)") \
+			$(if $(REPO_NAME),/p:XARepositoryName="$(REPO_NAME)") \
 			$(if $(PACKAGE_HEAD_BRANCH),/p:XAVersionBranch="$(PACKAGE_HEAD_BRANCH)") \
 			$(if $(PACKAGE_VERSION_REV),/p:XAVersionCommitCount="$(PACKAGE_VERSION_REV)") \
 			$(if $(COMMIT),/p:XAVersionHash="$(COMMIT)") ; )
