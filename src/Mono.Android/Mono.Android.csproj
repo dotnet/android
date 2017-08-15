@@ -75,6 +75,20 @@
       <Private>False</Private>
     </Reference>
   </ItemGroup>
+  <Import Project="$(JavaInteropFullPath)\src\Java.Interop.Tools.TypeNameMappings\Java.Interop.Tools.TypeNameMappings.projitems" Label="Shared" Condition="Exists('$(JavaInteropFullPath)\src\Java.Interop.Tools.TypeNameMappings\Java.Interop.Tools.TypeNameMappings.projitems')" />
+  <Import Project="..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems" Label="Shared" Condition="Exists('..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems')" />
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <ImplicitlyExpandDesignTimeFacades>False</ImplicitlyExpandDesignTimeFacades>
+    <IntermediateOutputPath>$(IntermediateOutputPath)android-$(AndroidApiLevel)\</IntermediateOutputPath>
+  </PropertyGroup>
+  <Import Project="Mono.Android.targets" />
+  <PropertyGroup>
+    <JavaCallableWrapperAbsAssembly>$([System.IO.Path]::GetFullPath ('$(OutputPath)$(AssemblyName).dll'))</JavaCallableWrapperAbsAssembly>
+    <JavaCallableWrapperAfterTargets>CoreBuild</JavaCallableWrapperAfterTargets>
+  </PropertyGroup>
+  <Import Project="..\..\build-tools\scripts\JavaCallableWrappers.targets" />
+  <Import Project="$(IntermediateOutputPath)mcw\Mono.Android.projitems" Condition="Exists('$(IntermediateOutputPath)mcw\Mono.Android.projitems')" />
   <ItemGroup>
     <Compile Include="Android\IncludeAndroidResourcesFromAttribute.cs" />
     <Compile Include="Android\LinkerSafeAttribute.cs" />
@@ -311,20 +325,6 @@
     <Compile Include="Xamarin.Android.Net\AuthModuleDigest.cs" />
     <Compile Include="Xamarin.Android.Net\IAndroidAuthenticationModule.cs" />
   </ItemGroup>
-  <Import Project="$(JavaInteropFullPath)\src\Java.Interop.Tools.TypeNameMappings\Java.Interop.Tools.TypeNameMappings.projitems" Label="Shared" Condition="Exists('$(JavaInteropFullPath)\src\Java.Interop.Tools.TypeNameMappings\Java.Interop.Tools.TypeNameMappings.projitems')" />
-  <Import Project="..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems" Label="Shared" Condition="Exists('..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems')" />
-  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
-  <PropertyGroup>
-    <ImplicitlyExpandDesignTimeFacades>False</ImplicitlyExpandDesignTimeFacades>
-    <IntermediateOutputPath>$(IntermediateOutputPath)android-$(AndroidApiLevel)\</IntermediateOutputPath>
-  </PropertyGroup>
-  <Import Project="Mono.Android.targets" />
-  <PropertyGroup>
-    <JavaCallableWrapperAbsAssembly>$([System.IO.Path]::GetFullPath ('$(OutputPath)$(AssemblyName).dll'))</JavaCallableWrapperAbsAssembly>
-    <JavaCallableWrapperAfterTargets>CoreBuild</JavaCallableWrapperAfterTargets>
-  </PropertyGroup>
-  <Import Project="..\..\build-tools\scripts\JavaCallableWrappers.targets" />
-  <Import Project="$(IntermediateOutputPath)mcw\Mono.Android.projitems" Condition="Exists('$(IntermediateOutputPath)mcw\Mono.Android.projitems')" />
   <ItemGroup>
     <ProjectReference Include="..\..\build-tools\api-merge\api-merge.csproj">
       <Project>{3FC3E78B-F7D4-42EA-BBE8-4535DF42BFF8}</Project>

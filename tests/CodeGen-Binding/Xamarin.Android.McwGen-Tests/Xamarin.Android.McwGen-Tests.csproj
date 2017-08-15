@@ -76,6 +76,7 @@
   </ItemGroup>
   <ItemGroup>
     <XamarinTestJar Include="java\com\xamarin\android\Bxc4288.java" />
+    <XamarinTestJar Include="java\com\xamarin\android\Bxc58383.java" />
     <XamarinTestJar Include="java\com\xamarin\android\CallMethodFromCtor.java" />
     <XamarinTestJar Include="java\com\xamarin\android\CallNonvirtualBase.java" />
     <XamarinTestJar Include="java\com\xamarin\android\CallNonvirtualDerived.java" />

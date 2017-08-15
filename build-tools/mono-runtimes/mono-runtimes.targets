@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"  TaskName="Xamarin.Android.BuildTools.PrepTasks.GitCommitTime" />
   <Target Name="Build" DependsOnTargets="$(BuildDependsOn)" />
   <PropertyGroup>
     <_SourceTopDir>..\..</_SourceTopDir>
@@ -19,14 +20,6 @@
         Include="mdoc.exe.mdb;monodoc.dll.mdb"
     />
     <MonoDocCopyItem Include="monodoc.dll.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <FSharpItem Include="FSharp.Core.dll" />
-    <FSharpItem Include="FSharp.Core.optdata" />
-    <FSharpItem Include="FSharp.Core.sigdata" />
-  </ItemGroup>
-  <ItemGroup>
-    <_FSharpInstalledItems Include="@(FSharpItem->'$(_BclFrameworkDir)%(Identity)')" />
   </ItemGroup>
   <UsingTask AssemblyFile="$(_SourceTopDir)\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.GetNugetPackageBasePath" />
   <ItemGroup>
@@ -116,14 +109,20 @@
     />
   </ItemGroup>
   <Target Name="_SetAutogenShTimeToLastCommitTimestamp">
-    <Exec
-        Command="touch -m -t `git log -1 --format=%25cd --date=format-local:%25Y%25m%25d%25H%25M.%25S` autogen.sh"
+    <GitCommitTime
         WorkingDirectory="$(MonoSourceFullPath)"
-    />
-    <Exec
-        Command="touch -m -t `git log -1 --format=%25cd --date=format-local:%25Y%25m%25d%25H%25M.%25S` Makefile.config.in"
+        ToolPath="$(GitToolPath)"
+        ToolExe="$(GitToolExe)">
+      <Output TaskParameter="Time" PropertyName="_MonoCommitTime" />
+    </GitCommitTime>
+    <Touch Files="$(MonoSourceFullPath)\autogen.sh" Time="$(_MonoCommitTime)" />
+    <GitCommitTime
         WorkingDirectory="$(LlvmSourceFullPath)"
-    />
+        ToolPath="$(GitToolPath)"
+        ToolExe="$(GitToolExe)">
+      <Output TaskParameter="Time" PropertyName="_LlvmCommitTime" />
+    </GitCommitTime>
+    <Touch Files="$(LlvmSourceFullPath)\Makefile.config.in" Time="$(_LlvmCommitTime)" />
   </Target>
   <Target Name="_PrepareLlvmItems">
     <ItemGroup>
@@ -440,11 +439,7 @@
     <ItemGroup>
       <_PackageConfigFiles Include="$(_SourceTopDir)\src\Xamarin.Android.Build.Tasks\packages.config" />
     </ItemGroup>
-    <GetNugetPackageBasePath PackageConfigFiles="@(_PackageConfigFiles)" PackageName="FSharp.Core">
-      <Output TaskParameter="BasePath" PropertyName="_FSharpCorePackagePath" />
-    </GetNugetPackageBasePath>
     <ItemGroup>
-      <_FSharp Include="$(_SourceTopDir)\$(_FSharpCorePackagePath)\lib\portable-net45+monoandroid10+monotouch10+xamarinios10\FSharp.Core*" />
       <_Facades Include="$(_MonoProfileDir)\Facades\*.dll" />
     </ItemGroup>
     <Copy
@@ -454,13 +449,6 @@
     <Copy
         SourceFiles="@(_Facades)"
         DestinationFolder="$(_BclFrameworkDir)Facades"
-    />
-    <Copy
-        SourceFiles="@(_FSharp)"
-        DestinationFolder="$(_BclFrameworkDir)"
-    />
-    <Touch
-        Files="@(_FSharp->'$(_BclFrameworkDir)%(Filename)%(Extension)')"
     />
     <Touch
         Files="@(_BclInstalledItem)"
@@ -570,7 +558,6 @@
       <BundleItem Include="@(_MonoDocInstalledItems)" />
       <BundleItem Include="@(_MonoCilStripDest)" />
       <BundleItem Include="@(_MonoUtilityDest)" />
-      <BundleItem Include="@(_FSharpInstalledItems)" />
       <BundleItem Include="@(MonoFacadeAssembly->'$(_BclFrameworkDir)Facades\%(Identity)')" />
       <BundleItem Include="$(_BclFrameworkDir)RedistList\FrameworkList.xml" />
       <BundleItem Include="@(_InstallRuntimeOutput)" />

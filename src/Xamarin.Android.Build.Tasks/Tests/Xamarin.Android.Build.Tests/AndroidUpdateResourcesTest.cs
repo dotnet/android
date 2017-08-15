@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿﻿﻿using System;
 using Xamarin.ProjectTools;
 using NUnit.Framework;
 using System.Linq;
@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using Microsoft.Build.Framework;
 using System.Xml.Linq;
 using System.Security.Cryptography;
+using System.Text.RegularExpressions;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -37,6 +38,8 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void DesignTimeBuild ([Values(false, true)] bool isRelease)
 		{
+			var regEx = new Regex (@"(?<type>([a-zA-Z_0-9])+)\slibrary_name=(?<value>([0-9A-Za-z])+);", RegexOptions.Compiled | RegexOptions.Multiline ); 
+
 			var path = Path.Combine (Root, "temp", $"DesignTimeBuild_{isRelease}");
 			var cachePath = Path.Combine (path, "Cache");
 			var envVar = new Dictionary<string, string> () {
@@ -71,8 +74,8 @@ using System.Runtime.CompilerServices;
 				},
 			};
 			
-			using (var l = CreateDllBuilder (Path.Combine (path, lib.ProjectName))) {
-				using (var b = CreateApkBuilder (Path.Combine (path, proj.ProjectName))) {
+			using (var l = CreateDllBuilder (Path.Combine (path, lib.ProjectName), false, false)) {
+				using (var b = CreateApkBuilder (Path.Combine (path, proj.ProjectName), false, false)) {
 					l.Verbosity = LoggerVerbosity.Diagnostic;
 					Assert.IsTrue(l.Clean(lib), "Lib1 should have cleaned successfully");
 					Assert.IsTrue (l.Build (lib), "Lib1 should have built successfully");
@@ -83,13 +86,50 @@ using System.Runtime.CompilerServices;
 						"first build failed");
 					Assert.IsTrue (b.LastBuildOutput.Contains ("Skipping download of "),
 						"failed to skip the downloading of files.");
+					var items = new List<string> ();
+					foreach (var file in Directory.EnumerateFiles (Path.Combine (path, proj.ProjectName, proj.IntermediateOutputPath, "android"), "R.java", SearchOption.AllDirectories)) {
+						var matches = regEx.Matches (File.ReadAllText (file));
+						items.AddRange (matches.Cast<System.Text.RegularExpressions.Match> ().Select(x => x.Groups ["value"].Value));
+					}
+					var first = items.First ();
+					Assert.IsTrue (items.All (x => x == first), "All Items should have matching values");
 					WaitFor (1000);
 					b.Target = "Build";
 					Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, parameters: new string [] { "DesignTimeBuild=false" }, environmentVariables: envVar), "second build failed");
 					Assert.IsFalse(b.Output.IsTargetSkipped ("_BuildAdditionalResourcesCache"), "_BuildAdditionalResourcesCache should have run.");
-					Assert.IsTrue (b.LastBuildOutput.Contains($"Downloading {url}") || b.LastBuildOutput.Contains ($"reusing existing archive: {zipPath}"), $"{url} should have been downloaded.");
+					Assert.IsTrue (b.LastBuildOutput.Contains ($"Downloading {url}") || b.LastBuildOutput.Contains ($"reusing existing archive: {zipPath}"), $"{url} should have been downloaded.");
 					Assert.IsTrue (File.Exists (Path.Combine (extractedDir, "1", "content", "android-N", "aapt")), $"Files should have been extracted to {extractedDir}");
+					items.Clear ();
+					foreach (var file in Directory.EnumerateFiles (Path.Combine (path, proj.ProjectName, proj.IntermediateOutputPath, "android"), "R.java", SearchOption.AllDirectories)) {
+						var matches = regEx.Matches (File.ReadAllText (file));
+						items.AddRange (matches.Cast<System.Text.RegularExpressions.Match> ().Select (x => x.Groups["value"].Value));
+					}
+					first = items.First ();
+					Assert.IsTrue (items.All (x => x == first), "All Items should have matching values");
 				}
+			}
+		}
+
+		[Test]
+		public void CheckEmbeddedSupportLibraryResources ()
+		{
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = true,
+				Packages = {
+					KnownPackages.SupportMediaCompat_25_4_0_1,
+					KnownPackages.SupportFragment_25_4_0_1,
+					KnownPackages.SupportCoreUtils_25_4_0_1,
+					KnownPackages.SupportCoreUI_25_4_0_1,
+					KnownPackages.SupportCompat_25_4_0_1,
+					KnownPackages.AndroidSupportV4_25_4_0_1,
+					KnownPackages.SupportV7AppCompat_25_4_0_1,
+				},
+				TargetFrameworkVersion = "v7.1",
+			};
+			using (var b = CreateApkBuilder ("temp/CheckEmbeddedSupportLibraryResources")) {
+				Assert.IsTrue (b.Build (proj), "First build should have succeeded.");
+				var Rdrawable = b.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes", "android", "support", "v7", "appcompat", "R$drawable.class"));
+				Assert.IsTrue (File.Exists (Rdrawable), $"{Rdrawable} should exist");
 			}
 		}
 
@@ -366,7 +406,7 @@ namespace UnnamedProject
 			};
 			using (var b = CreateApkBuilder ("temp/CheckResourceDesignerIsUpdatedWhenReadOnly")) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				var designerPath = Path.Combine (Root, b.ProjectDirectory, "Resources", "Resource.designer" + language.DefaultExtension);
+				var designerPath = Path.Combine (Root, b.ProjectDirectory, "Resources", "Resource.designer" + language.DefaultDesignerExtension);
 				var attr = File.GetAttributes (designerPath);
 				File.SetAttributes (designerPath, FileAttributes.ReadOnly);
 				Assert.IsTrue ((File.GetAttributes (designerPath) & FileAttributes.ReadOnly) == FileAttributes.ReadOnly,
@@ -383,25 +423,28 @@ namespace UnnamedProject
 		[TestCaseSource("ReleaseLanguage")]
 		public void CheckOldResourceDesignerIsNotUsed (bool isRelease, ProjectLanguage language)
 		{
+			if (language == XamarinAndroidProjectLanguage.FSharp)
+				Assert.Ignore ("Skipping CheckOldResourceDesignerIsNotUsed for FSharp until Xamarin.Android.FSharp.ResourceProvider supports it.");
 			var proj = new XamarinAndroidApplicationProject () {
 				Language = language,
 				IsRelease = isRelease,
 			};
 			proj.SetProperty ("AndroidUseIntermediateDesignerFile", "True");
 			using (var b = CreateApkBuilder ("temp/CheckOldResourceDesignerIsNotUsed")) {
-				var designer = proj.Sources.First (x => x.Include() == "Resources\\Resource.designer" + proj.Language.DefaultExtension);
-				designer.Deleted = true;
+				var designer = Path.Combine ("Resources", "Resource.designer" + proj.Language.DefaultDesignerExtension);
+				if (File.Exists (designer))
+					File.Delete (Path.Combine (Root, b.ProjectDirectory, designer));
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsFalse (File.Exists (Path.Combine (b.ProjectDirectory, "Resources",
-					"Resource.designer"  + proj.Language.DefaultExtension)),
-					"{0} should not exists", designer.Include ());
+					"Resource.designer"  + proj.Language.DefaultDesignerExtension)),
+					"{0} should not exists", designer);
 				var outputFile = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath,
-					"Resource.Designer"  + proj.Language.DefaultExtension);
+					"Resource.Designer"  + proj.Language.DefaultDesignerExtension);
 				Assert.IsTrue (File.Exists (outputFile), "Resource.Designer{1} should have been created in {0}",
-					proj.IntermediateOutputPath, proj.Language.DefaultExtension);
+					proj.IntermediateOutputPath, proj.Language.DefaultDesignerExtension);
 				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
 				Assert.IsFalse (File.Exists (outputFile), "Resource.Designer{1} should have been cleaned in {0}",
-					proj.IntermediateOutputPath, proj.Language.DefaultExtension);
+					proj.IntermediateOutputPath, proj.Language.DefaultDesignerExtension);
 			}
 		}
 
@@ -410,6 +453,8 @@ namespace UnnamedProject
 		[TestCaseSource("ReleaseLanguage")]
 		public void CheckOldResourceDesignerWithWrongCasingIsRemoved (bool isRelease, ProjectLanguage language)
 		{
+			if (language == XamarinAndroidProjectLanguage.FSharp)
+				Assert.Ignore ("Skipping CheckOldResourceDesignerIsNotUsed for FSharp until Xamarin.Android.FSharp.ResourceProvider supports it.");
 			var proj = new XamarinAndroidApplicationProject () {
 				Language = language,
 				IsRelease = isRelease,
@@ -417,19 +462,21 @@ namespace UnnamedProject
 			proj.SetProperty ("AndroidUseIntermediateDesignerFile", "True");
 			proj.SetProperty ("AndroidResgenFile", "Resources\\Resource.Designer" + proj.Language.DefaultExtension);
 			using (var b = CreateApkBuilder ("temp/CheckOldResourceDesignerWithWrongCasingIsRemoved")) {
-				var designer = proj.Sources.First (x => x.Include() == "Resources\\Resource.designer" + proj.Language.DefaultExtension);
+				var designer = proj.Sources.FirstOrDefault (x => x.Include() == "Resources\\Resource.designer" + proj.Language.DefaultDesignerExtension);
+				designer = designer ?? proj.OtherBuildItems.FirstOrDefault (x => x.Include () == "Resources\\Resource.designer" + proj.Language.DefaultDesignerExtension);
+				Assert.IsNotNull (designer, $"Failed to retrieve the Resource.designer.{proj.Language.DefaultDesignerExtension}");
 				designer.Deleted = true;
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsFalse (File.Exists (Path.Combine (b.ProjectDirectory, "Resources",
-					"Resource.designer"  + proj.Language.DefaultExtension)),
+					"Resource.designer"  + proj.Language.DefaultDesignerExtension)),
 					"{0} should not exists", designer.Include ());
 				var outputFile = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath,
-					"Resource.Designer"  + proj.Language.DefaultExtension);
+					"Resource.Designer"  + proj.Language.DefaultDesignerExtension);
 				Assert.IsTrue (File.Exists (outputFile), "Resource.Designer{1} should have been created in {0}",
-					proj.IntermediateOutputPath, proj.Language.DefaultExtension);
+					proj.IntermediateOutputPath, proj.Language.DefaultDesignerExtension);
 				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
 				Assert.IsFalse (File.Exists (outputFile), "Resource.Designer{1} should have been cleaned in {0}",
-					proj.IntermediateOutputPath, proj.Language.DefaultExtension);
+					proj.IntermediateOutputPath, proj.Language.DefaultDesignerExtension);
 			}
 		}
 

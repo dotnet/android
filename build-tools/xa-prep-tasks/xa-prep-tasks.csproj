@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -41,6 +41,7 @@
     <Compile Include="Xamarin.Android.BuildTools.PrepTasks\Git.cs" />
     <Compile Include="Xamarin.Android.BuildTools.PrepTasks\GitBranch.cs" />
     <Compile Include="Xamarin.Android.BuildTools.PrepTasks\GitCommitHash.cs" />
+    <Compile Include="Xamarin.Android.BuildTools.PrepTasks\GitCommitTime.cs" />
     <Compile Include="Xamarin.Android.BuildTools.PrepTasks\HashFileContents.cs" />
     <Compile Include="Xamarin.Android.BuildTools.PrepTasks\PathToolTask.cs" />
     <Compile Include="Xamarin.Android.BuildTools.PrepTasks\SystemUnzip.cs" />
