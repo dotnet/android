@@ -103,7 +103,7 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 					Log.LogMessage (MessageImportance.Normal, $"Last timing message: {(last - start).TotalMilliseconds}ms");
 
 					if (ResultsFilename != null) {
-						using (var resultsFile = new StreamWriter (Path.Combine (Path.GetDirectoryName (ResultsFilename), $"Test-{ApplicationPackageName}-times.csv"))) {
+						using (var resultsFile = new StreamWriter (Path.Combine (Path.GetDirectoryName (ResultsFilename), $"{Path.GetFileNameWithoutExtension (ResultsFilename)}-times.csv"))) {
 							WriteValues (resultsFile, results.Keys);
 							WriteValues (resultsFile, results.Values);
 							resultsFile.Close ();
