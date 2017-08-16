@@ -110,6 +110,7 @@
     </PropertyGroup>
     <PropertyGroup>
       <VsixPath Condition=" '$(VsixPath)' == '' ">..\..\bin\Build$(Configuration)\$(AssemblyName)-OSS-$(ProductVersion).$(XAVersionCommitCount)_$(_Branch)_$(XAVersionHash).vsix</VsixPath>
+      <_VsixDir>$([System.IO.Path]::GetDirectoryName ($(VsixPath)))</_VsixDir>
     </PropertyGroup>
   </Target>
   <Target Name="_CopyToBuildConfiguration"
@@ -119,6 +120,10 @@
     <Copy
         SourceFiles="$(OutputPath)$(AssemblyName).vsix"
         DestinationFiles="$(VsixPath)"
+    />
+    <Copy
+        SourceFiles="$(OutputPath)Xamarin.Android.Sdk.json"
+        DestinationFolder="$(_VsixDir)"
     />
   </Target>
   <!--
