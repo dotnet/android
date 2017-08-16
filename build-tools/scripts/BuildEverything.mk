@@ -58,6 +58,11 @@ ifneq ($(OS),Linux)
 ALL_HOST_ABIS += \
 	mxe-Win32 \
 	mxe-Win64
+else
+ALL_HOST_ABIS += \
+	linux-Win32 \
+	linux-Win64
+endif
 
 ALL_AOT_ABIS += \
 	win-armeabi \
@@ -65,6 +70,7 @@ ALL_AOT_ABIS += \
 	win-x86 \
 	win-x86_64
 
+ifneq ($(OS),Linux)
 MONO_OPTIONS += --arch=64
 endif
 
