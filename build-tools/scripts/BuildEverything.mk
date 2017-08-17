@@ -58,10 +58,6 @@ ifneq ($(OS),Linux)
 ALL_HOST_ABIS += \
 	mxe-Win32 \
 	mxe-Win64
-else
-ALL_HOST_ABIS += \
-	linux-Win32 \
-	linux-Win64
 endif
 
 ALL_AOT_ABIS += \
