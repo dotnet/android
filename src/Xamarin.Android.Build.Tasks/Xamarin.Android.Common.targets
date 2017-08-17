@@ -1013,7 +1013,7 @@ because xbuild doesn't support framework reference assemblies.
 	</ReadLinesFromFile>
 </Target>
 
-<Target Name="_CreatePropertiesCache" DependsOnTargets="_ReadPropertiesCache">
+<Target Name="_CreatePropertiesCache" DependsOnTargets="_SetupDesignTimeBuildForBuild;_ReadPropertiesCache">
 	<MakeDir Directories="$(IntermediateOutputPath)" Condition="!Exists('$(IntermediateOutputPath)')" />
 	<WriteLinesToFile
 		Condition="'@(_PropertiesCache)' != '@(_PropertyCacheItems)'" 
