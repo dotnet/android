@@ -35,7 +35,7 @@
 #
 
 name=$(basename "$0")
-truepath=$(readlink "$0" || echo "$0")
+truepath=$(readlink -f "$0" || echo "$0")
 prefix="$(cd `dirname "${truepath}"` && pwd)"
 
 if [ -z "$MSBUILD" ] ; then
