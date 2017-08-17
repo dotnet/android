@@ -16,6 +16,9 @@
     <!-- *Latest* API level binding that we support; used when building src/Xamarin.Android.Build.Tasks -->
     <AndroidLatestApiLevel Condition="'$(AndroidLatestApiLevel)' == ''">26</AndroidLatestApiLevel>
     <AndroidLatestFrameworkVersion Condition="'$(AndroidLatestFrameworkVersion)' == ''">v8.0</AndroidLatestFrameworkVersion>
+    <!-- The API level and TargetFrameworkVersion for the default Mono.Android.dll build -->
+    <AndroidApiLevel Condition=" '$(AndroidApiLevel)' == '' ">$(AndroidLatestApiLevel)</AndroidApiLevel>
+    <AndroidFrameworkVersion Condition=" '$(AndroidFrameworkVersion)' == '' ">$(AndroidLatestFrameworkVersion)</AndroidFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup>
     <AutoProvision Condition=" '$(AutoProvision)' == '' ">False</AutoProvision>
@@ -36,10 +39,8 @@
     <ManagedRuntimeArgs Condition=" '$(ManagedRuntimeArgs)' == '' And '$(ManagedRuntime)' == 'mono' ">--debug=casts</ManagedRuntimeArgs>
     <MonoSgenBridgeVersion Condition=" '$(MonoSgenBridgeVersion)' == '' ">5</MonoSgenBridgeVersion>
     <HOME Condition=" '$(HOME)' == '' ">$(HOMEDRIVE)$(HOMEPATH)</HOME>
-    <AndroidApiLevel Condition=" '$(AndroidApiLevel)' == '' ">25</AndroidApiLevel>
     <AndroidPlatformId Condition=" '$(AndroidPlatformId)' == '' ">$(AndroidApiLevel)</AndroidPlatformId>
     <AndroidPreviousFrameworkVersion Condition=" '$(AndroidPreviousFrameworkVersion)' == '' ">v1.0</AndroidPreviousFrameworkVersion>
-    <AndroidFrameworkVersion Condition=" '$(AndroidFrameworkVersion)' == '' ">$(AndroidLatestFrameworkVersion)</AndroidFrameworkVersion>
     <AndroidToolchainCacheDirectory Condition=" '$(AndroidToolchainCacheDirectory)' == '' ">$(HOME)\android-archives</AndroidToolchainCacheDirectory>
     <AndroidToolchainDirectory Condition=" '$(AndroidToolchainDirectory)' == '' ">$(HOME)\android-toolchain</AndroidToolchainDirectory>
     <AndroidMxeInstallPrefix Condition=" '$(AndroidMxeInstallPrefix)' == '' And '$(NeedMxe)' == 'true' ">$(AndroidToolchainDirectory)\mxe</AndroidMxeInstallPrefix>
