@@ -263,13 +263,17 @@ namespace Xamarin.Android.Tasks
 						// temporarily extracted directory will look like:
 						//    __library_projects__/[dllname]/[library_project_imports | jlibs]/bin
 						using (var zip = MonoAndroidHelper.ReadZipFile (finfo.FullName)) {
-							updated |= Files.ExtractAll (zip, importsDir, modifyCallback: (entryFullName) => {
-								return entryFullName
-									.Replace ("library_project_imports\\","")
-									.Replace ("library_project_imports/", "");
-							}, deleteCallback: (fileToDelete) => {
-								return !jars.Contains (fileToDelete);
-							}, forceUpdate: false);
+							try {
+								updated |= Files.ExtractAll (zip, importsDir, modifyCallback: (entryFullName) => {
+									return entryFullName
+										.Replace ("library_project_imports\\","")
+										.Replace ("library_project_imports/", "");
+								}, deleteCallback: (fileToDelete) => {
+									return !jars.Contains (fileToDelete);
+								}, forceUpdate: false);
+							} catch (PathTooLongException ex) {
+								Log.LogErrorFromException (new PathTooLongException ($"Error extracting resources from \"{assemblyPath}\"", ex));
+							}
 						}
 
 						// We used to *copy* the resources to overwrite other resources,
