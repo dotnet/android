@@ -53,24 +53,19 @@ ALL_AOT_ABIS = \
 	arm64 \
 	x86 \
 	x86_64 \
-#
-# On Linux we now disable building of all the Windows cross-compiler/AOT environments.
-# This is because Linux builds don't use mxe and the system-provided mingw environment
-# is missing a handful of libraries required by libmonodroid and libzip-windows
-#
-# When/if CppSharp is fixed to work on Linux we can re-enable the code below
-#
+
 ifneq ($(OS),Linux)
 ALL_HOST_ABIS += \
 	mxe-Win32 \
 	mxe-Win64
-endif
+
 
 ALL_AOT_ABIS += \
 	win-armeabi \
 	win-arm64 \
 	win-x86 \
 	win-x86_64
+endif
 
 ifneq ($(OS),Linux)
 MONO_OPTIONS += --arch=64

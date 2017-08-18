@@ -276,7 +276,7 @@
       <InstallPath Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Linux:'))">Linux/</InstallPath>
     </_LlvmRuntime>
 
-    <_LlvmRuntime Include="llvmwin32" Condition=" '$(_LlvmNeeded)' != '' And ($(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win32:')) Or $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':linux-Win32:'))) ">
+    <_LlvmRuntime Include="llvmwin32" Condition=" '$(_LlvmNeededWindows32)' != '' ">
       <BuildDir>build-win32</BuildDir>
       <Prefix>$(_LlvmPrefixWin32)</Prefix>
       <ConfigureFlags>$(_LlvmConfigureFlagsWin32)</ConfigureFlags>
@@ -287,7 +287,7 @@
       <InstallPath></InstallPath>
     </_LlvmRuntime>
 
-    <_LlvmRuntime Include="llvmwin64" Condition=" '$(_LlvmNeeded)' != '' And ($(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:')) Or $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':linux-Win64:'))) ">
+    <_LlvmRuntime Include="llvmwin64" Condition=" '$(_LlvmNeededWindows64)' != '' ">
       <BuildDir>build-win64</BuildDir>
       <Prefix>$(_LlvmPrefixWin64)</Prefix>
       <ConfigureFlags>$(_LlvmConfigureFlagsWin64)</ConfigureFlags>

@@ -27,6 +27,9 @@
     <!-- LLVM -->
     <_LlvmNeeded Condition=" '$(AndroidSupportedTargetAotAbis)' != '' ">yes</_LlvmNeeded>
     <_LlvmCanBuild64 Condition=" '$(HostBits)' == '64' ">yes</_LlvmCanBuild64>
+    <_LlvmHaveWindowsAOT Condition=" $(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':win-armeabi:')) Or $(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':win-arm64:')) Or $(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':win-x86:')) Or $(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':win-x86_64:'))">yes</_LlvmHaveWindowsAOT>
+    <_LlvmNeededWindows32 Condition=" '$(_LlvmNeeded)' != '' And '$(_LlvmHaveWindowsAOT)' == 'yes' And ($(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win32:')) Or $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Linux:'))) ">yes</_LlvmNeededWindows32>
+    <_LlvmNeededWindows64 Condition=" '$(_LlvmNeeded)' != '' And '$(_LlvmHaveWindowsAOT)' == 'yes' And '$(_LlvmCanBuild64)' == 'yes' And ($(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:')) Or $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Linux:'))) ">yes</_LlvmNeededWindows64>
     <_LlvmOutputDirTop>$(_CrossOutputDirTop)\llvm</_LlvmOutputDirTop>
 
     <_LlvmBuildDir32>$(_LlvmOutputDirTop)\build-32</_LlvmBuildDir32>
