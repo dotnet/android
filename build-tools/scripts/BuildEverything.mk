@@ -10,8 +10,14 @@ GIT_COMMIT        = $(shell LANG=C git log --no-color --first-parent -n1 --prett
 # "0" when commit hash is invalid (e.g. 00000000)
 -num-commits-since-version-change = $(shell LANG=C git log $(-commit-of-last-version-change)..HEAD --oneline 2>/dev/null | wc -l | sed 's/ //g')
 
+ifeq ($(OS),Linux)
+ZIP_EXTENSION         = tar.bz2
+else
+ZIP_EXTENSION         = zip
+endif
+
 ZIP_OUTPUT_BASENAME   = oss-xamarin.android_v$(PRODUCT_VERSION).$(-num-commits-since-version-change)_$(OS)-$(OS_ARCH)_$(GIT_BRANCH)_$(GIT_COMMIT)
-ZIP_OUTPUT            = $(ZIP_OUTPUT_BASENAME).zip
+ZIP_OUTPUT            = $(ZIP_OUTPUT_BASENAME).$(ZIP_EXTENSION)
 
 
 ## The following values *must* use SPACE, **not** TAB, to separate values.
@@ -167,8 +173,22 @@ package-oss $(ZIP_OUTPUT):
 		for f in `cat $$_sl` ; do \
 			echo "$(ZIP_OUTPUT_BASENAME)/bin/$$c/lib/xamarin.android/xbuild/$$f" >> "$$_exclude_list"; \
 		done; \
-	done; \
+	done
+ifeq ($(ZIP_EXTENSION),zip)
 	zip -r "$(ZIP_OUTPUT)" \
 		`ls -1d $(_BUNDLE_ZIPS_INCLUDE) 2>/dev/null` \
-		"-x@$$_exclude_list"
+		"-x@.__exclude_list.txt"
+else ifeq ($(ZIP_EXTENSION),tar.bz2)
+	tar --exclude-from=.__exclude_list.txt -cjhvf "$(ZIP_OUTPUT)" `ls -1d $(_BUNDLE_ZIPS_INCLUDE) 2>/dev/null`
+endif
 	-rm ".__exclude_list.txt"
+
+package-deb: $(ZIP_OUTPUT)
+	rm -fr $(ZIP_OUTPUT_BASENAME)
+	tar xf $(ZIP_OUTPUT)
+	cp -a build-tools/debian-metadata $(ZIP_OUTPUT_BASENAME)/debian
+	sed "s/%CONFIG%/$(CONFIGURATION)/" $(ZIP_OUTPUT_BASENAME)/debian/xamarin.android.install.in > $(ZIP_OUTPUT_BASENAME)/debian/xamarin.android.install && rm -f $(ZIP_OUTPUT_BASENAME)/debian/xamarin.android.install.in
+	cp LICENSE $(ZIP_OUTPUT_BASENAME)/debian/copyright
+	ln -sf $(ZIP_OUTPUT) oss-xamarin.android_$(PRODUCT_VERSION).$(-num-commits-since-version-change).orig.tar.bz2
+	cd $(ZIP_OUTPUT_BASENAME) && DEBEMAIL="Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>" dch --create -v $(PRODUCT_VERSION).$(-num-commits-since-version-change) --package oss-xamarin.android --force-distribution --distribution alpha "New release - please see git log for $(GIT_COMMIT)"
+	cd $(ZIP_OUTPUT_BASENAME) && dpkg-buildpackage -us -uc -rfakeroot

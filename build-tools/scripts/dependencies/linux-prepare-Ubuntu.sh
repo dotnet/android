@@ -20,6 +20,8 @@ if [ "$OS_ARCH" = "x86_64" ]; then
 UBUNTU_DEPS="$UBUNTU_DEPS 
 	lib32stdc++6 
 	lib32z1 
+	gcc-multilib 
+	g++-multilib 
 	libx32tinfo-dev 
 	linux-libc-dev:i386 
 	zlib1g-dev:i386
