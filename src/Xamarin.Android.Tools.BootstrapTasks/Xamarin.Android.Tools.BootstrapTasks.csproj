@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -43,6 +43,7 @@
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\CheckAdbTarget.cs" />
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\CreateAndroidEmulator.cs" />
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\Emulator.cs" />
+    <Compile Include="Xamarin.Android.Tools.BootstrapTasks\GenerateMonoDroidIncludes.cs" />
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\GenerateProfile.cs" />
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\GetNugetPackageBasePath.cs" />
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\RunInstrumentationTests.cs" />

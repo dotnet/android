@@ -42,7 +42,6 @@ Building Xamarin.Android requires:
 * [Mono 4.4 or later](#mono-sdk)
 * [The Java Development Kit (JDK)](#jdk)
 * [Autotools (`autoconf`, `automake`, etc.)](#autotools)
-* [`xxd`](#xxd)
 * [The Android SDK and NDK](#ndk)
 
 The `make prepare` build step will check that all required dependencies
@@ -90,17 +89,6 @@ On OS X, autotools are distributed with [Mono.framework][osx-mono].
 If you run into issues regarding `autoconf` or `automake` try to install it with `brew` via:
 
     brew install automake
-
-<a name="xxd" />
-
-## `xxd`
-
-The [xxd][xxd] utility is used to build [src/monodroid](src/monodroid).
-It is installed by default on OS X. Linux users may need to separately
-install it; it may be part of the [**vim-common** package][sid-vim-common].
-
-[xxd]: http://linux.die.net/man/1/xxd
-[sid-vim-common]: https://packages.debian.org/sid/vim-common
 
 <a name="ndk" />
 
