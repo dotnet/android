@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.IO;
 using System.Diagnostics;
 using Microsoft.Build.Framework;
@@ -61,6 +62,22 @@ namespace Xamarin.ProjectTools
 				}
 			}
 		}
+
+		public string LatestTargetFrameworkVersion () {
+			Version latest = new Version (1, 0);
+			var outdir = FrameworkLibDirectory;
+			var path = Path.Combine (outdir, IsUnix ? Path.Combine ("xbuild-frameworks", "MonoAndroid") : "");
+			foreach (var dir in Directory.EnumerateDirectories (path, "v*", SearchOption.TopDirectoryOnly)) {
+				Version version;
+				string v = Path.GetFileName (dir).Replace ("v", "");
+				if (!Version.TryParse (v, out version))
+					continue;
+				if (latest.Major < version.Major && latest.Minor <= version.Minor)
+					latest = version;
+			}
+			return "v" + latest.ToString (2);
+		}
+
 
 		public string Root {
 			get {
@@ -143,8 +160,8 @@ namespace Xamarin.ProjectTools
 				if (Directory.Exists (outdir)) {
 					var frameworksPath = Path.Combine (outdir, "lib", "xamarin.android", "xbuild-frameworks");
 					psi.EnvironmentVariables ["MONO_ANDROID_PATH"] = outdir;
-					psi.EnvironmentVariables ["XBUILD_FRAMEWORK_FOLDERS_PATH"] = frameworksPath;
 					args.AppendFormat ("/p:MonoDroidInstallDirectory=\"{0}\" ", outdir);
+					psi.EnvironmentVariables ["XBUILD_FRAMEWORK_FOLDERS_PATH"] = frameworksPath;
 					if (RunningMSBuild)
 						args.AppendFormat ($"/p:TargetFrameworkRootPath={frameworksPath} ");
 				}
