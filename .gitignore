@@ -9,3 +9,4 @@ packages
 .nuget
 TestResult.xml
 TestResult-*.xml
+.vs/
