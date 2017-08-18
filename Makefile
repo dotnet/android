@@ -37,11 +37,13 @@ install::
 	-mkdir -p "$(prefix)/lib/xamarin.android"
 	-mkdir -p "$(prefix)/lib/mono/xbuild/Xamarin/"
 	cp -a "bin/$(CONFIGURATION)/lib/xamarin.android/." "$(prefix)/lib/xamarin.android/"
-	cp tools/scripts/xabuild "$(prefix)/bin/xabuild"
 	-rm -rf "$(prefix)/lib/mono/xbuild/Xamarin/Android"
 	-rm -rf "$(prefix)/lib/mono/xbuild-frameworks/MonoAndroid"
 	ln -s "$(prefix)/lib/xamarin.android/xbuild/Xamarin/Android/" "$(prefix)/lib/mono/xbuild/Xamarin/Android"
 	ln -s "$(prefix)/lib/xamarin.android/xbuild-frameworks/MonoAndroid/" "$(prefix)/lib/mono/xbuild-frameworks/MonoAndroid"
+	if [ ! -e "$(prefix)/bin/mono" ]; then \
+		cp tools/scripts/xabuild "$(prefix)/bin/xabuild"
+	fi
 
 uninstall::
 	rm -rf "$(prefix)/lib/xamarin.android/" "$(prefix)/bin/xabuild"
