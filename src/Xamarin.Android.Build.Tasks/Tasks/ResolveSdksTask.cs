@@ -155,7 +155,8 @@ namespace Xamarin.Android.Tasks
 			this.AndroidSdkPath = AndroidSdk.AndroidSdkPath;
 			this.JavaSdkPath = AndroidSdk.JavaSdkPath;
 
-			ValidateJavaVersion (TargetFrameworkVersion, AndroidSdkBuildToolsVersion);
+			if (!ValidateJavaVersion (TargetFrameworkVersion, AndroidSdkBuildToolsVersion))
+				return false;
 
 			if (string.IsNullOrEmpty (AndroidSdkPath)) {
 				Log.LogCodedError ("XA5205", "The Android SDK Directory could not be found. Please set via /p:AndroidSdkDirectory.");
@@ -336,7 +337,7 @@ namespace Xamarin.Android.Tasks
 			return Version.Parse (MinimumSupportedJavaVersion);
 		}
 
-		void ValidateJavaVersion (string targetFrameworkVersion, string buildToolsVersion)
+		bool ValidateJavaVersion (string targetFrameworkVersion, string buildToolsVersion)
 		{
 			Version requiredJavaForFrameworkVersion = GetJavaVersionForFramework (targetFrameworkVersion);
 			Version requiredJavaForBuildTools = GetJavaVersionForBuildTools (buildToolsVersion);
@@ -358,7 +359,7 @@ namespace Xamarin.Android.Tasks
 			} catch (Exception ex) {
 				Log.LogWarningFromException (ex);
 				Log.LogWarning ($"Failed to get the Java SDK version. Please ensure you have Java {required} or above installed.");
-				return;
+				return false;
 			}
 			var versionInfo = sb.ToString ();
 			var versionNumberMatch = javaVersionRegex.Match (versionInfo);
@@ -373,6 +374,7 @@ namespace Xamarin.Android.Tasks
 				}
 			} else
 				Log.LogWarning ($"Failed to get the Java SDK version. Found {versionInfo} but this does not seem to contain a valid version number.");
+			return !Log.HasLoggedErrors;
 		}
 
 		bool ValidateApiLevels ()
