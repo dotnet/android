@@ -147,6 +147,7 @@
     Inputs="$(_AndroidSdkLocation)\$(_MultiDexAarInAndroidSdk);$(_SupportLicense)"
     Outputs="$(OutputPath)android-support-multidex.jar;$(OutputPath)MULTIDEX_JAR_LICENSE">
     <UnzipDirectoryChildren
+      HostOS="$(HostOS)"
       NoSubdirectory="true"
       SourceFiles="$(_AndroidSdkLocation)\$(_MultiDexAarInAndroidSdk)"
       DestinationFolder="$(IntermediateOutputPath)multidex-aar" />
