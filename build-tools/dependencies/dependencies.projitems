@@ -53,9 +53,6 @@
     <RequiredProgram Include="xz"                   Condition=" '$(NeedMxe)' == 'true' And $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))">
       <Homebrew>xz</Homebrew>
     </RequiredProgram>
-    <RequiredProgram Include="xxd">
-      <UbuntuInstall>$(_AptGetInstall) vim-common</UbuntuInstall>
-    </RequiredProgram>
     <RequiredProgram Include="$(ManagedRuntime)"    Condition=" '$(ManagedRuntime)' != '' ">
       <MinimumVersion>$(MonoRequiredMinimumVersion)</MinimumVersion>
       <DarwinMinimumVersion>$(MonoRequiredDarwinMinimumVersion)</DarwinMinimumVersion>

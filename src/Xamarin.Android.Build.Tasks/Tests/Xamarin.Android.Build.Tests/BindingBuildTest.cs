@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using Xamarin.ProjectTools;
 using NUnit.Framework;
 using System.IO;
@@ -274,6 +274,9 @@ namespace Com.Ipaulpro.Afilechooser {
 			binding.Jars.Add (new AndroidItem.LibraryProjectZip ("Jars\\mylibrary.aar") {
 				WebContent = "https://www.dropbox.com/s/astiqp8jo97x91h/mylibrary.aar?dl=1"
 			});
+			binding.Jars.Add (new AndroidItem.EmbeddedJar ("Jars\\svg-android.jar") {
+				WebContent = "https://www.dropbox.com/s/5ovudccigydohys/javaBindingIssue.jar?dl=1"
+			});
 			binding.SetProperty (binding.ActiveConfigurationProperties, "UseShortFileNames", useShortFileNames);
 			using (var bindingBuilder = CreateDllBuilder (Path.Combine ("temp", "BindingCheckHiddenFiles", "Binding"))) {
 				bindingBuilder.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Diagnostic;
@@ -304,6 +307,8 @@ namespace Com.Ipaulpro.Afilechooser {
 						Path.Combine (dsStorePath, ".DS_Store"));
 					var _macOSStorePath = Path.Combine (dsStorePath, "_MACOSX");
 					Assert.IsFalse (Directory.Exists (_macOSStorePath), "{0} should NOT exist.", _macOSStorePath);
+					var svgJar = Path.Combine (dsStorePath, "svg-android.jar");
+					Assert.IsTrue (File.Exists (svgJar), $"{svgJar} should exist.");
 				}
 			}
 		}

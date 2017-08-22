@@ -95,7 +95,8 @@ namespace Xamarin.Android.BuildTools.PrepTasks {
 
 			relativeDestDir = relativeDestDir?.Replace ('\\', Path.DirectorySeparatorChar);
 
-			if (string.Equals (HostOS, "Windows", StringComparison.OrdinalIgnoreCase)) {
+			bool isWindows = string.Equals (HostOS, "Windows", StringComparison.OrdinalIgnoreCase);
+			if (isWindows) {
 				ZipFile.ExtractToDirectory (sourceFile, nestedTemp, encoding);
 			} else {
 				var start = new ProcessStartInfo ("unzip", $"\"{sourceFile}\" -d \"{nestedTemp}\"") {
@@ -141,7 +142,16 @@ namespace Xamarin.Android.BuildTools.PrepTasks {
 					Directory.CreateDirectory (Path.GetDirectoryName (dest));
 					Log.LogMessage (MessageImportance.Low, $"mv '{file}' '{dest}'");
 					if (Directory.Exists (entry)) {
-						using (var p = Process.Start ("/bin/mv", $@"""{file}"" ""{dest}""")) {
+						ProcessStartInfo psi;
+						if (isWindows) {
+							psi = new ProcessStartInfo ("cmd", $@"/C move ""{file}"" ""{dest}""") {
+								CreateNoWindow = true,
+								UseShellExecute = false,
+							};
+						} else {
+							psi = new ProcessStartInfo ("/bin/mv", $@"""{file}"" ""{dest}""");
+						}
+						using (var p = Process.Start (psi)) {
 							p.WaitForExit ();
 						}
 					}

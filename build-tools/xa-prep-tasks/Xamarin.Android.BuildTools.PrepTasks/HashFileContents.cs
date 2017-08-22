@@ -73,15 +73,29 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 
 		string ProcessFile (HashAlgorithm complete, byte[] block, string path)
 		{
-			using (var fileHash = System.Security.Cryptography.HashAlgorithm.Create (HashAlgorithm))
-			using (var file = File.OpenRead (path)) {
-				int read;
-				while ((read = file.Read (block, 0, block.Length)) > 0) {
-					complete.TransformBlock (block, 0, read, block, 0);
-					fileHash.TransformBlock (block, 0, read, block, 0);
+			using (var memoryStream = new MemoryStream ()) {
+
+				//Read the file into a MemoryStream, ignoring newlines
+				using (var file = File.OpenRead (path)) {
+					int readByte;
+					while ((readByte = file.ReadByte()) != -1) {
+						byte b = (byte)readByte;
+						if (b != '\r' && b != '\n') {
+							memoryStream.WriteByte (b);
+						}
+					}
 				}
-				fileHash.TransformFinalBlock (block, 0, 0);
-				return FormatHash (fileHash.Hash);
+				memoryStream.Seek (0, SeekOrigin.Begin);
+
+				using (var fileHash = System.Security.Cryptography.HashAlgorithm.Create (HashAlgorithm)) {
+					int read;
+					while ((read = memoryStream.Read (block, 0, block.Length)) > 0) {
+						complete.TransformBlock (block, 0, read, block, 0);
+						fileHash.TransformBlock (block, 0, read, block, 0);
+					}
+					fileHash.TransformFinalBlock (block, 0, 0);
+					return FormatHash (fileHash.Hash);
+				}
 			}
 		}
 
