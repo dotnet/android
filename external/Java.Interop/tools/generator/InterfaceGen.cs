@@ -214,7 +214,7 @@ namespace MonoDroid.Generation {
 
 		void GenProperties (StreamWriter sw, string indent, CodeGenerationOptions opt)
 		{
-			foreach (Property prop in Properties)
+			foreach (Property prop in Properties.Where (p => !p.Getter.IsStatic))
 				prop.GenerateDeclaration (sw, indent, opt, this, AssemblyQualifiedName + "Invoker");
 		}
 
@@ -256,14 +256,14 @@ namespace MonoDroid.Generation {
 			sw.WriteLine ();
 
 			HashSet<string> members = new HashSet<string> ();
-			GenerateInvoker (sw, Properties, indent + "\t", opt, members);
-			GenerateInvoker (sw, Methods, indent + "\t", opt, members);
+			GenerateInvoker (sw, Properties.Where (p => !p.Getter.IsStatic), indent + "\t", opt, members);
+			GenerateInvoker (sw, Methods.Where (m => !m.IsStatic), indent + "\t", opt, members);
 			if (FullName == "Java.Lang.ICharSequence")
 				GenCharSequenceEnumerator (sw, indent + "\t", opt);
 
 			foreach (InterfaceGen iface in GetAllDerivedInterfaces ()) {
-				GenerateInvoker (sw, iface.Properties, indent + "\t", opt, members);
-				GenerateInvoker (sw, iface.Methods.Where (m => !IsCovariantMethod (m) && !(iface.FullName.StartsWith ("Java.Lang.ICharSequence") && m.Name.EndsWith ("Formatted"))), indent + "\t", opt, members);
+				GenerateInvoker (sw, iface.Properties.Where (p => !p.Getter.IsStatic), indent + "\t", opt, members);
+				GenerateInvoker (sw, iface.Methods.Where (m => !m.IsStatic && !IsCovariantMethod (m) && !(iface.FullName.StartsWith ("Java.Lang.ICharSequence") && m.Name.EndsWith ("Formatted"))), indent + "\t", opt, members);
 				if (iface.FullName == "Java.Lang.ICharSequence")
 					GenCharSequenceEnumerator (sw, indent + "\t", opt);
 			}
@@ -271,7 +271,7 @@ namespace MonoDroid.Generation {
 			sw.WriteLine ();
 		}
 
-		void GenerateInvoker (StreamWriter sw, List<Property> properties, string indent, CodeGenerationOptions opt, HashSet<string> members)
+		void GenerateInvoker (StreamWriter sw, IEnumerable<Property> properties, string indent, CodeGenerationOptions opt, HashSet<string> members)
 		{
 			foreach (Property prop in properties) {
 				if (members.Contains (prop.Name))
@@ -635,7 +635,7 @@ namespace MonoDroid.Generation {
 					m.GenerateAbstractDeclaration (sw, indent, opt, this, gen);
 				opt.ContextGeneratedMethods.Add (m); 
 			}
-			foreach (Property prop in Properties) {
+			foreach (Property prop in Properties.Where (p => !p.Getter.IsStatic)) {
 				if (gen.ContainsProperty (prop.Name, false))
 					continue;
 				prop.GenerateAbstractDeclaration (sw, indent, opt, gen);
