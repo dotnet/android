@@ -103,6 +103,10 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 					Log.LogError ($"Do you have another VM running on the machine? If so, please try exiting the VM and try again.");
 					sawError.Set ();
 				}
+				if (e.Data.StartsWith ("Unknown hax vcpu return", StringComparison.Ordinal)) {
+					Log.LogError ($"Emulator failed to start: `{e.Data}`. Please try again?");
+					sawError.Set ();
+				}
 			};
 
 			p.OutputDataReceived  += output;
