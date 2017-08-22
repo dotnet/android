@@ -50,7 +50,7 @@ namespace MonoDroid.Generation
 		}
 	}
 	
-#if USE_CECIL
+#if HAVE_CECIL
 	public class ManagedGenBaseSupport : GenBaseSupport
 	{
 		TypeDefinition t;
@@ -152,7 +152,7 @@ namespace MonoDroid.Generation
 			get { return t.IsPublic || t.IsNestedPublic ? "public" : "protected internal"; }
 		}
 	}
-#endif
+#endif	// HAVE_CECIL
 
 	public class XmlGenBaseSupport : GenBaseSupport
 	{

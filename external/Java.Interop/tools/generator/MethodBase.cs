@@ -20,7 +20,7 @@ namespace MonoDroid.Generation {
 		string Visibility { get; }
 	}
 
-#if USE_CECIL
+#if HAVE_CECIL
 	public class ManagedMethodBaseSupport : IMethodBaseSupport {
 		MethodDefinition m;
 		public ManagedMethodBaseSupport (MethodDefinition m)
@@ -79,7 +79,7 @@ namespace MonoDroid.Generation {
 			}
 		}
 	}
-#endif
+#endif	// HAVE_CECIL
 	
 	public class XmlMethodBaseSupport : IMethodBaseSupport {
 

@@ -14,6 +14,7 @@ using Xamarin.AndroidTools.AnnotationSupport;
 using Xamarin.Android.Tools.ApiXmlAdjuster;
 
 using Java.Interop.Tools.Cecil;
+using Java.Interop.Tools.TypeNameMappings;
 
 namespace Xamarin.Android.Binder {
 
@@ -262,8 +263,10 @@ namespace Xamarin.Android.Binder {
 							// For now generator fails to load generic types that have conflicting type e.g.
 							// AdapterView`1 and AdapterView cannot co-exist.
 							// It is mostly because generator primarily targets jar (no real generics land).
-							if (td.HasGenericParameters &&
-							    md.GetType (td.FullName.Substring (0, td.FullName.IndexOf ('`'))) != null)
+							var nonGenericOverload  = td.HasGenericParameters
+								? md.GetType (td.FullName.Substring (0, td.FullName.IndexOf ('`')))
+								: null;
+							if (BindSameType (td, nonGenericOverload))
 								continue;
 							ProcessReferencedType (td, opt);
 						}
@@ -366,6 +369,15 @@ namespace Xamarin.Android.Binder {
 				AddTypeToTable (nt);
 		}
 
+		static bool BindSameType (TypeDefinition a, TypeDefinition b)
+		{
+			if (a == null || b == null)
+				return false;
+			if (!a.ImplementsInterface ("Android.Runtime.IJavaObject") || !b.ImplementsInterface ("Android.Runtime.IJavaObject"))
+				return false;
+			return JniType.ToJniName (a) == JniType.ToJniName (b);
+		}
+
 		static IEnumerable<GenBase> FlattenNestedTypes (IEnumerable<GenBase> gens)
 		{
 			foreach (var g in gens) {
@@ -404,7 +416,7 @@ namespace Xamarin.Android.Binder {
 			} while (removed.Count > 0);
 		}
 
-#if USE_CECIL
+#if HAVE_CECIL
 		static void ProcessReferencedType (TypeDefinition td, CodeGenerationOptions opt)
 		{
 			if (!td.IsPublic && !td.IsNested)
@@ -434,7 +446,7 @@ namespace Xamarin.Android.Binder {
 			foreach (var nt in td.NestedTypes)
 				ProcessReferencedType (nt, opt);
 		}
-#endif
+#endif  // HAVE_CECIL
 
 		static void GenerateAnnotationAttributes (List<GenBase> gens, IEnumerable<string> zips)
 		{

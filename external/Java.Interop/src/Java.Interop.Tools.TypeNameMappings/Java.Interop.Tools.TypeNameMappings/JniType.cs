@@ -9,8 +9,8 @@ using Java.Interop;
 #if HAVE_CECIL
 using Mono.Cecil;
 using Java.Interop.Tools.Cecil;
-#if !GENERATOR
 using Android.Runtime;
+#if !GENERATOR
 using Java.Interop.Tools.JavaCallableWrappers;
 #endif  // !GENERATOR
 #endif  // HAVE_CECIL
@@ -252,7 +252,7 @@ namespace Java.Interop.Tools.TypeNameMappings {
 			return null;
 		}
 
-#if !GEN_JAVA_STUBS && !GENERATOR && !JAVADOC_TO_MDOC
+#if !GEN_JAVA_STUBS && !JAVADOC_TO_MDOC
 		// Keep in sync with ToJniNameFromAttributes(TypeDefinition)
 		public static string ToJniNameFromAttributes (Type type)
 		{
@@ -384,7 +384,7 @@ namespace Java.Interop.Tools.TypeNameMappings {
 		}
 #endif
 
-#if HAVE_CECIL && !GENERATOR
+#if HAVE_CECIL
 
 		internal static ExportParameterKind GetExportKind (Mono.Cecil.ICustomAttributeProvider p)
 		{

@@ -11,7 +11,7 @@ using Xamarin.Android.Binder;
 using Xamarin.Android.Tools;
 
 namespace MonoDroid.Generation {
-#if USE_CECIL
+#if HAVE_CECIL
 	public class ManagedInterfaceGen : InterfaceGen {
 		public ManagedInterfaceGen (TypeDefinition t)
 			: base (new ManagedGenBaseSupport (t))
@@ -34,7 +34,7 @@ namespace MonoDroid.Generation {
 			get { return !this.IsAcw; }
 		}
 	}
-#endif
+#endif	// HAVE_CECIL
 	
 	public class XmlInterfaceGen : InterfaceGen {
 

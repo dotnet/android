@@ -284,7 +284,7 @@ namespace MonoDroid.Generation {
 			return new Parameter (name, java_package + "." + java_type, null, false);
 		}
 		
-#if USE_CECIL
+#if HAVE_CECIL
 		public static Parameter FromManagedParameter (ParameterDefinition p, string jnitype, string rawtype)
 		{
 			// FIXME: safe to use CLR type name? assuming yes as we often use it in metadatamap.
@@ -297,6 +297,6 @@ namespace MonoDroid.Generation {
 		{
 			return new Parameter ("__self", javaType ?? t.FullName, t.FullName, false);
 		}
-#endif
+#endif	// HAVE_CECIL
 	}
 }

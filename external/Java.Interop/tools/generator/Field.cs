@@ -11,7 +11,7 @@ using MonoDroid.Utils;
 using System.Xml.Linq;
 
 namespace MonoDroid.Generation {
-#if USE_CECIL
+#if HAVE_CECIL
 	public class ManagedField : Field {
 		FieldDefinition f;
 		string java_name;
@@ -83,7 +83,7 @@ namespace MonoDroid.Generation {
 			}
 		}
 	}
-#endif
+#endif	// HAVE_CECIL
 
 	public class XmlField : Field {
 

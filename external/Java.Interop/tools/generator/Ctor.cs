@@ -8,7 +8,7 @@ using Mono.Cecil;
 using Xamarin.Android.Tools;
 
 namespace MonoDroid.Generation {
-#if USE_CECIL
+#if HAVE_CECIL
 	public class ManagedCtor : Ctor {
 		MethodDefinition m;
 		string name;
@@ -53,7 +53,7 @@ namespace MonoDroid.Generation {
 			get { return null; }
 		}
 	}
-#endif
+#endif  // HAVE_CECIL
 
 	public class XmlCtor : Ctor {
 		string name;

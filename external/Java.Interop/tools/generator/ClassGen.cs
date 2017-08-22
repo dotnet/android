@@ -15,7 +15,7 @@ using MonoDroid.Utils;
 using System.Xml.Linq;
 
 namespace MonoDroid.Generation {
-#if USE_CECIL
+#if HAVE_CECIL
 	static class ManagedExtensions
 	{
 		public static string FullNameCorrected (this TypeReference t)
@@ -69,7 +69,7 @@ namespace MonoDroid.Generation {
 			get { return t.IsSealed; }
 		}
 	}
-#endif
+#endif  // HAVE_CECIL
 	
 	public class XmlClassGen : ClassGen {
 		bool is_abstract;

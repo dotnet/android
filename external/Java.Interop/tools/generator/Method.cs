@@ -12,7 +12,7 @@ using MonoDroid.Utils;
 using System.Xml.Linq;
 
 namespace MonoDroid.Generation {
-#if USE_CECIL
+#if HAVE_CECIL
 	public class ManagedMethod : Method {
 		MethodDefinition m;
 		string java_name;
@@ -121,7 +121,7 @@ namespace MonoDroid.Generation {
 			get { return null; }
 		}
 	}
-#endif
+#endif	// HAVE_CECIL
 
 	public class XmlMethod : Method {
 

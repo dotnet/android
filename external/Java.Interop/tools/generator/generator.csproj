@@ -23,10 +23,11 @@
     <DebugType>full</DebugType>
     <Optimize>False</Optimize>
     <OutputPath>$(UtilityOutputFullPath)</OutputPath>
-    <DefineConstants>DEBUG;GENERATOR;USE_CECIL;JCW_ONLY_TYPE_NAMES</DefineConstants>
+    <DefineConstants>DEBUG;GENERATOR;HAVE_CECIL;JCW_ONLY_TYPE_NAMES</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <ConsolePause>false</ConsolePause>
+    <PlatformTarget>anycpu</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>full</DebugType>
@@ -35,7 +36,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Externalconsole>True</Externalconsole>
-    <DefineConstants>GENERATOR;USE_CECIL;JCW_ONLY_TYPE_NAMES</DefineConstants>
+    <DefineConstants>GENERATOR;HAVE_CECIL;JCW_ONLY_TYPE_NAMES</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
