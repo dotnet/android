@@ -4,7 +4,7 @@ namespace Xamarin.Android.Build.Utilities
 {
 	public class AndroidVersion
 	{
-		public static readonly int MaxApiLevel = 25;
+		public static readonly int MaxApiLevel = 26;
 
 		public AndroidVersion (int apilevel, string osVersion)
 		{
