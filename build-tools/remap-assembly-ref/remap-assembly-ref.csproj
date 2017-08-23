@@ -29,7 +29,7 @@
   <Import Project="..\..\Configuration.props" />
   <ItemGroup>
     <Reference Include="System" />
-    <ProjectReference Include="$(JavaInteropFullPath)\src\Xamarin.Android.Cecil\Xamarin.Android.Cecil.csproj">
+    <ProjectReference Include="..\..\external\Java.Interop\src\Xamarin.Android.Cecil\Xamarin.Android.Cecil.csproj">
       <Project>{15945D4B-FF56-4BCC-B598-2718D199DD08}</Project>
       <Name>Xamarin.Android.Cecil</Name>
     </ProjectReference>  </ItemGroup>

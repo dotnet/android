@@ -217,17 +217,20 @@ is no existing git changes in the `external` folder.
 
 On the main repo, you can use `git status` to ensure a clean slate.
 
-Then, you may do one of the following:
+Next, run `make`:
 
-1. Run make:
+    make
 
-       make
+The default `make all` target will only build a *subset* of runtime ABIs
+and `$(TargetFrameworkVersion)`s. If you want a complete environment --
+*all* the ABIs, all the API levels -- then instead use:
 
-2. Load `Xamarin.Android.sln` into Xamarin Studio and Build the project.
+    make jenkins
 
-    *Note*: The `Mono.Android` project may *fail* on the first build
-    because it generates sources, and those sources won't exist on the
-    initial project load. Rebuild the project should this happen.
+Unit tests are build in a separate target:
+
+    make all-tests
+
 
 ## Linux build notes
 

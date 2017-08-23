@@ -14,7 +14,7 @@
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
   <Import Project="..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems" Label="Shared" Condition="Exists('..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems')" />
-  <Import Project="$(JavaInteropFullPath)\src\Java.Interop.Tools.TypeNameMappings\Java.Interop.Tools.TypeNameMappings.projitems" Label="Shared" Condition="Exists('$(JavaInteropFullPath)\src\Java.Interop.Tools.TypeNameMappings\Java.Interop.Tools.TypeNameMappings.projitems')" />
+  <Import Project="..\..\external\Java.Interop\src\Java.Interop.Tools.TypeNameMappings\Java.Interop.Tools.TypeNameMappings.projitems" Label="Shared" Condition="Exists('..\..\external\Java.Interop\src\Java.Interop.Tools.TypeNameMappings\Java.Interop.Tools.TypeNameMappings.projitems')" />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>True</DebugSymbols>
     <DebugType>full</DebugType>
@@ -423,7 +423,7 @@
     <Compile Include="..\Mono.Android\Android.Runtime\IntDefinitionAttribute.cs">
       <Link>Mono.Android\IntDefinitionAttribute.cs</Link>
     </Compile>
-    <Compile Include="$(JavaInteropFullPath)\src\utils\StringRocks.cs">
+    <Compile Include="..\..\external\Java.Interop\src\utils\StringRocks.cs">
       <Link>Utilities\StringRocks.cs</Link>
     </Compile>
     <Compile Include="$(LinkerSourceFullPath)\tuner\Mono.Tuner\FilterAttributes.cs">
@@ -573,15 +573,15 @@
       <Project>{D27AD8F7-7710-40BE-B03B-55EFBEC13C44}</Project>
       <Name>Xamarin.Android.Tools.Aidl</Name>
     </ProjectReference>
-    <ProjectReference Include="$(JavaInteropFullPath)\src\Java.Interop.Tools.Diagnostics\Java.Interop.Tools.Diagnostics.csproj">
+    <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop.Tools.Diagnostics\Java.Interop.Tools.Diagnostics.csproj">
       <Project>{64CC4E44-CE3A-4319-BF3F-6CF8BD513870}</Project>
       <Name>Java.Interop.Tools.Diagnostics</Name>
     </ProjectReference>
-    <ProjectReference Include="$(JavaInteropFullPath)\src\Java.Interop.Tools.Cecil\Java.Interop.Tools.Cecil.csproj">
+    <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop.Tools.Cecil\Java.Interop.Tools.Cecil.csproj">
       <Project>{D48EE8D0-0A0A-4493-AEF5-DAF5F8CF86AD}</Project>
       <Name>Java.Interop.Tools.Cecil</Name>
     </ProjectReference>
-    <ProjectReference Include="$(JavaInteropFullPath)\src\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers.csproj">
+    <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers.csproj">
       <Project>{D18FCF91-8876-48A0-A693-2DC1E7D3D80A}</Project>
       <Name>Java.Interop.Tools.JavaCallableWrappers</Name>
     </ProjectReference>
@@ -589,7 +589,7 @@
       <Project>{91713046-C358-4647-B162-ED4E1442F3D8}</Project>
       <Name>Xamarin.Android.Build.Utilities</Name>
     </ProjectReference>
-    <ProjectReference Include="$(JavaInteropFullPath)\src\Xamarin.Android.Tools.Bytecode\Xamarin.Android.Tools.Bytecode.csproj">
+    <ProjectReference Include="..\..\external\Java.Interop\src\Xamarin.Android.Tools.Bytecode\Xamarin.Android.Tools.Bytecode.csproj">
       <Project>{B17475BC-45A2-47A3-B8FC-62F3A0959EE0}</Project>
       <Name>Xamarin.Android.Tools.Bytecode</Name>
     </ProjectReference>
@@ -621,15 +621,15 @@
       <Name>proguard</Name>
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
     </ProjectReference>
-    <ProjectReference Include="$(LibZipSharpSourceFullPath)\libZipSharp.csproj">
+    <ProjectReference Include="..\..\external\LibZipSharp\libZipSharp.csproj">
       <Project>{E248B2CA-303B-4645-ADDC-9D4459D550FD}</Project>
       <Name>libZipSharp</Name>
     </ProjectReference>
-    <ProjectReference Include="$(JavaInteropFullPath)\src\Xamarin.Android.Cecil\Xamarin.Android.Cecil.csproj">
+    <ProjectReference Include="..\..\external\Java.Interop\src\Xamarin.Android.Cecil\Xamarin.Android.Cecil.csproj">
       <Project>{15945D4B-FF56-4BCC-B598-2718D199DD08}</Project>
       <Name>Xamarin.Android.Cecil</Name>
     </ProjectReference>
-    <ProjectReference Include="$(JavaInteropFullPath)\src\Xamarin.Android.Cecil\Xamarin.Android.Cecil.Mdb.csproj">
+    <ProjectReference Include="..\..\external\Java.Interop\src\Xamarin.Android.Cecil\Xamarin.Android.Cecil.Mdb.csproj">
       <Project>{C0487169-8F81-497F-919E-EB42B1D0243F}</Project>
       <Name>Xamarin.Android.Cecil.Mdb</Name>
     </ProjectReference>
