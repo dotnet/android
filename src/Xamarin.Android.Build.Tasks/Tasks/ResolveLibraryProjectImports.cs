@@ -186,7 +186,7 @@ namespace Xamarin.Android.Tasks
 
 				// Skip already-extracted resources.
 				var stamp = new FileInfo (Path.Combine (outdir.FullName, assemblyIdentName + ".stamp"));
-				if (stamp.Exists && stamp.LastWriteTime > new FileInfo (assemblyPath).LastWriteTime) {
+				if (stamp.Exists && stamp.LastWriteTimeUtc > new FileInfo (assemblyPath).LastWriteTimeUtc) {
 					Log.LogDebugMessage ("Skipped resource lookup for {0}: extracted files are up to date", assemblyPath);
 #if SEPARATE_CRUNCH
 					// FIXME: review these binResDir/binAssemblyDir thing and enable this. Eclipse does this.
@@ -211,7 +211,7 @@ namespace Xamarin.Android.Tasks
 				Directory.CreateDirectory (importsDir);
 
 				var assembly = res.GetAssembly (assemblyPath);
-				var assemblyLastWrite = new FileInfo (assemblyPath).LastWriteTime;
+				var assemblyLastWrite = new FileInfo (assemblyPath).LastWriteTimeUtc;
 				bool updated = false;
 
 				foreach (var mod in assembly.Modules) {
@@ -223,7 +223,7 @@ namespace Xamarin.Android.Tasks
 						if (!Directory.Exists (outDirForDll))
 							Directory.CreateDirectory (outDirForDll);
 						var finfo = new FileInfo (Path.Combine (outDirForDll, envtxt.Name));
-						if (!finfo.Exists || finfo.LastWriteTime > assemblyLastWrite) {
+						if (!finfo.Exists || finfo.LastWriteTimeUtc > assemblyLastWrite) {
 							using (var fs = finfo.Create ()) {
 								var data = envtxt.GetResourceData ();
 								fs.Write (data, 0, data.Length);
@@ -240,7 +240,7 @@ namespace Xamarin.Android.Tasks
 					foreach (var resjar in resjars) {
 						var outjarFile = Path.Combine (importsDir, resjar.Name);
 						var fi = new FileInfo (outjarFile);
-						if (!fi.Exists || fi.LastWriteTime > assemblyLastWrite) {
+						if (!fi.Exists || fi.LastWriteTimeUtc > assemblyLastWrite) {
 							var data = resjar.GetResourceData ();
 							using (var outfs = File.Create (outjarFile))
 								outfs.Write (data, 0, data.Length);
