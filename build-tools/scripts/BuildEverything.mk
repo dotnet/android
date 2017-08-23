@@ -100,7 +100,7 @@ leeroy: leeroy-all framework-assemblies opentk-jcw
 
 leeroy-all:
 	$(foreach conf, $(CONFIGURATIONS), \
-		$(MSBUILD) $(MSBUILD_FLAGS) $(SOLUTION) /p:Configuration=$(conf) $(_MSBUILD_ARGS) ; )
+		$(_SLN_BUILD) $(MSBUILD_FLAGS) $(SOLUTION) /p:Configuration=$(conf) $(_MSBUILD_ARGS) ; )
 
 framework-assemblies:
 	PREV_VERSION="v1.0"; \
