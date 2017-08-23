@@ -1422,6 +1422,8 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="_ResolveAssemblies">
 	<!--- Remove the ImplicitlyExpandDesignTimeFacades assemblies. We have already build the app there are not required for packaging  -->
 	<ItemGroup>
+		<FilteredAssemblies Include="$(OutDir)$(TargetFileName)"
+				Condition="Exists ('$(OutDir)$(TargetFileName)')" />
 		<FilteredAssemblies Include="%(ReferenceCopyLocalPaths.Identity)"
 				Condition="'%(ReferenceCopyLocalPaths.ResolvedFrom)' != 'ImplicitlyExpandDesignTimeFacades' And '%(ReferenceCopyLocalPaths.Extension)' == '.dll' And '%(ReferenceCopyLocalPaths.DestinationSubDirectory)' == '' "/>
 		<!-- Fallback to @(ReferencePath) if @(ReferenceCopyLocalPaths) is empty. This is for xbuild support -->
@@ -1430,7 +1432,7 @@ because xbuild doesn't support framework reference assemblies.
 	</ItemGroup>
 	<!-- Find all the assemblies this app requires -->
 	<ResolveAssemblies
-		Assemblies="$(OutDir)$(TargetFileName);@(FilteredAssemblies)"
+		Assemblies="@(FilteredAssemblies)"
 		I18nAssemblies="$(MandroidI18n)"
 		LinkMode="$(AndroidLinkMode)"
 		ReferenceAssembliesDirectory="$(TargetFrameworkDirectory)">
