@@ -16,7 +16,9 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 			var licdir = Path.Combine (Path.Combine (AndroidSdkDirectory, "licenses"));
 			Directory.CreateDirectory (licdir);
 
-			var psi = new ProcessStartInfo (Path.Combine (AndroidSdkDirectory, "tools", "bin", "sdkmanager"), "--licenses") { UseShellExecute = false, RedirectStandardInput = true };
+			string _;
+			var path = Which.GetProgramLocation ("sdkmanager", out _, new [] { Path.Combine (AndroidSdkDirectory, "tools", "bin") });
+			var psi = new ProcessStartInfo (path, "--licenses") { UseShellExecute = false, RedirectStandardInput = true };
 			var proc = Process.Start (psi);
 			for (int i = 0; i < 10; i++)
 				proc.StandardInput.WriteLine ('y');

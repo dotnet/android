@@ -16,6 +16,6 @@
   </ItemGroup>
   <ItemGroup>
     <RequiredProgram Include="cmake" />
-    <RequiredProgram Include="make" />
+    <RequiredProgram Include="make" Condition=" '$(HostOS)' != 'Windows' " />
   </ItemGroup>
 </Project>

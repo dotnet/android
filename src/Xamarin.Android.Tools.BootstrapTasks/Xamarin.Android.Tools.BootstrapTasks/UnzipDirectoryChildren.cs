@@ -84,16 +84,35 @@ namespace Xamarin.Android.Tools.BootstrapTasks {
 #pragma warning disable 1998
 		async TTask ExtractFile (string tempDir, string sourceFile, string relativeDestDir, string destinationFolder, Encoding encoding)
 		{
-			var tempName    = Path.GetRandomFileName ();
-			var nestedTemp  = Path.Combine (tempDir, tempName);
-			Directory.CreateDirectory (nestedTemp);
-
 			relativeDestDir = relativeDestDir?.Replace ('\\', Path.DirectorySeparatorChar);
 
 			if (string.Equals (HostOS, "Windows", StringComparison.OrdinalIgnoreCase)) {
-				ZipFile.ExtractToDirectory (sourceFile, nestedTemp, encoding);
-			}
-			else {
+				//NOTE: to avoid MAX_PATH, we are not using %TEMP% on Windows
+				using (var source = File.OpenRead (sourceFile))
+				using (var zip = new ZipArchive (source)) {
+					foreach (var entry in zip.Entries) {
+						//Directory entries have empty names
+						if (!string.IsNullOrEmpty (entry.Name)) {
+							//entry.FullName can have / or \ depending on your .NET version
+							var entryPath = entry.FullName.Replace ('/', Path.DirectorySeparatorChar);
+							if (!NoSubdirectory) {
+								entryPath = entryPath.Substring (entryPath.IndexOf (Path.DirectorySeparatorChar) + 1);
+							}
+							var destinationPath = Path.Combine (destinationFolder, relativeDestDir, entryPath);
+							var destinationDir = Path.GetDirectoryName (destinationPath);
+							if (!Directory.Exists (destinationDir))
+								Directory.CreateDirectory (destinationDir);
+
+							entry.ExtractToFile (destinationPath, overwrite: true);
+						}
+					}
+				}
+			} else {
+				var tempName    = Path.GetRandomFileName ();
+				var nestedTemp  = Path.Combine (tempDir, tempName);
+				Directory.CreateDirectory (nestedTemp);
+
+				//NOTE: using unzip to preserve file attributes
 				var start   = new ProcessStartInfo ("unzip", $"\"{sourceFile}\" -d \"{nestedTemp}\"") {
 					CreateNoWindow  = true,
 					UseShellExecute = false,
@@ -101,25 +120,26 @@ namespace Xamarin.Android.Tools.BootstrapTasks {
 				Log.LogMessage (MessageImportance.Low, $"unzip \"{sourceFile}\" -d \"{nestedTemp}\"");
 				var p       = Process.Start (start);
 				p.WaitForExit ();
-			}
 
-			var dirs = NoSubdirectory ? new string [] { nestedTemp } : Directory.EnumerateDirectories (nestedTemp, "*");
 
-			foreach (var dir in dirs) {
-				foreach (var fse in Directory.EnumerateFileSystemEntries (dir)) {
-					var name    = Path.GetFileName (fse);
-					var destDir = string.IsNullOrEmpty (relativeDestDir)
-						? destinationFolder
-						: Path.Combine (destinationFolder, relativeDestDir);
-					Directory.CreateDirectory (destDir);
-					var dest    = Path.Combine (destDir, name);
-					Log.LogMessage (MessageImportance.Low, $"mv '{fse}' '{dest}'");
-					if (Directory.Exists (fse))
-						Process.Start ("/bin/mv", $@"""{fse}"" ""{dest}""").WaitForExit ();
-					else {
-						if (File.Exists (dest))
-							File.Delete (dest);
-						File.Move (fse, dest);
+				var dirs = NoSubdirectory ? new string [] { nestedTemp } : Directory.EnumerateDirectories (nestedTemp, "*");
+
+				foreach (var dir in dirs) {
+					foreach (var fse in Directory.EnumerateFileSystemEntries (dir)) {
+						var name    = Path.GetFileName (fse);
+						var destDir = string.IsNullOrEmpty (relativeDestDir)
+							? destinationFolder
+							: Path.Combine (destinationFolder, relativeDestDir);
+						Directory.CreateDirectory (destDir);
+						var dest    = Path.Combine (destDir, name);
+						Log.LogMessage (MessageImportance.Low, $"mv '{fse}' '{dest}'");
+						if (Directory.Exists (fse))
+							Process.Start ("/bin/mv", $@"""{fse}"" ""{dest}""").WaitForExit ();
+						else {
+							if (File.Exists (dest))
+								File.Delete (dest);
+							File.Move (fse, dest);
+						}
 					}
 				}
 			}

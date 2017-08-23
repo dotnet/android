@@ -46,6 +46,25 @@
       <HostOS>Darwin</HostOS>
       <DestDir>emulator</DestDir>
     </AndroidSdkItem>
+    <AndroidNdkItem Include="android-ndk-r14b-windows-x86_64.zip">
+      <HostOS>Windows</HostOS>
+    </AndroidNdkItem>
+    <AndroidSdkItem Include="build-tools_r$(XABuildToolsVersion)-windows.zip">
+      <HostOS>Windows</HostOS>
+      <DestDir>build-tools\$(XABuildToolsFolder)</DestDir>
+    </AndroidSdkItem>
+    <AndroidSdkItem Include="platform-tools_r26.0.0-windows.zip">
+      <HostOS>Windows</HostOS>
+      <DestDir>platform-tools</DestDir>
+    </AndroidSdkItem>
+    <AndroidSdkItem Include="sdk-tools-windows-3952940.zip">
+      <HostOS>Windows</HostOS>
+      <DestDir>tools</DestDir>
+    </AndroidSdkItem>
+    <AndroidSdkItem Include="emulator-windows-3965150.zip">
+      <HostOS>Windows</HostOS>
+      <DestDir>emulator</DestDir>
+    </AndroidSdkItem>
     <AndroidSdkItem Include="android-2.3.3_r02-linux.zip">
       <HostOS></HostOS>
       <DestDir>platforms\android-10</DestDir>
