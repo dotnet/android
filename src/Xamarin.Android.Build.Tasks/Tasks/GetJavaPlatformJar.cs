@@ -70,7 +70,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			platform            = GetTargetSdkVersion (platform, target_sdk);
-			JavaPlatformJarPath = Path.Combine (AndroidSdkDirectory, "platforms", "android-" + MonoAndroidHelper.GetPlatformApiLevelName (platform), "android.jar");
+			JavaPlatformJarPath = Path.Combine (AndroidSdk.GetPlatformDirectoryFromApiLevel (platform, MonoAndroidHelper.SupportedVersions), "android.jar");
 
 			if (!File.Exists (JavaPlatformJarPath)) {
 				Log.LogError ("Could not find android.jar for API Level {0}. " +
@@ -92,8 +92,8 @@ namespace Xamarin.Android.Tasks
 
 		string GetTargetSdkVersion (string target, XAttribute target_sdk)
 		{
-			string targetFrameworkVersion = MonoAndroidHelper.GetPlatformApiLevel (AndroidSdkPlatform);
-			string targetSdkVersion       = MonoAndroidHelper.GetPlatformApiLevel (target);
+			string targetFrameworkVersion = MonoAndroidHelper.SupportedVersions.GetIdFromApiLevel (AndroidSdkPlatform);
+			string targetSdkVersion       = MonoAndroidHelper.SupportedVersions.GetIdFromApiLevel (target);
 
 			int frameworkSdk, targetSdk;
 			if (int.TryParse (targetFrameworkVersion, out frameworkSdk) &&
@@ -118,8 +118,8 @@ namespace Xamarin.Android.Tasks
 						message:          "AndroidManifest.xml //uses-sdk/@android:targetSdkVersion '{0}' is less than $(TargetFrameworkVersion) '{1}'. Using API-{2} for ACW compilation.",
 						messageArgs:      new[]{
 							targetSdkVersion,
-							MonoDroidSdk.GetFrameworkVersionForApiLevel (targetFrameworkVersion),
-							MonoAndroidHelper.GetPlatformApiLevelName (targetFrameworkVersion),
+							MonoAndroidHelper.SupportedVersions.GetIdFromFrameworkVersion (targetFrameworkVersion),
+							MonoAndroidHelper.SupportedVersions.GetIdFromApiLevel (targetFrameworkVersion),
 						}
 				);
 				return targetFrameworkVersion;

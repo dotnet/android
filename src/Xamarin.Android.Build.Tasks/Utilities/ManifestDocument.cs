@@ -128,7 +128,7 @@ namespace Xamarin.Android.Tasks {
 		}
 
 		string SdkVersionName {
-			get { return MonoAndroidHelper.GetPlatformApiLevelName (SdkVersion); }
+			get { return MonoAndroidHelper.SupportedVersions.GetIdFromApiLevel (SdkVersion); }
 		}
 
 		string ToFullyQualifiedName (string typeName)
@@ -265,9 +265,10 @@ namespace Xamarin.Android.Tasks {
 				uses.AddBeforeSelf (new XComment ("suppress UsesMinSdkAttributes"));
 			}
 
-			int targetSdkVersionValue;
-			if (!int.TryParse (MonoAndroidHelper.GetPlatformApiLevel (targetSdkVersion), out targetSdkVersionValue))
+			int? tryTargetSdkVersion  = MonoAndroidHelper.SupportedVersions.GetApiLevelFromId (targetSdkVersion);
+			if (!tryTargetSdkVersion.HasValue)
 				throw new InvalidOperationException (string.Format ("The targetSdkVersion ({0}) is not a valid API level", targetSdkVersion));
+			int targetSdkVersionValue = tryTargetSdkVersion.Value;
 
 			foreach (var t in subclasses) {
 				if (t.IsAbstract)

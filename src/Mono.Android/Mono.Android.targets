@@ -2,6 +2,7 @@
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"   TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" />
   <Import Project="..\..\build-tools\scripts\XAVersionInfo.targets" />
+  <Import Project="Mono.Android.projitems" />
   <ItemGroup>
     <Compile Include="$(IntermediateOutputPath)AssemblyInfo.cs" />
   </ItemGroup>
@@ -117,6 +118,30 @@
    <WriteLinesToFile
        File="$(OutputPath)RedistList\FrameworkList.xml"
        Lines="@(FrameworkList)"
+       Overwrite="True"
+   />
+  </Target>
+  <Target Name="_GenerateAndroidApiInfo"
+      BeforeTargets="_GenerateFrameworkList"
+      Inputs="$(MSBuildProjectFullPath)"
+      Outputs="$(OutputPath)AndroidApiInfo.xml">
+   <MakeDir Directories="$(OutputPath)" />
+   <ItemGroup>
+     <_ApiInfo
+         Condition=" '%(Identity)' == '$(AndroidFrameworkVersion)' "
+         Include="@(AndroidApiInfo)"
+     />
+     <_Line Include="&lt;AndroidApiInfo&gt;" />
+     <_Line Include="@(_ApiInfo->'  &lt;Id>%(Id)&lt;/Id>')" />
+     <_Line Include="@(_ApiInfo->'  &lt;Level>%(Level)&lt;/Level>')" />
+     <_Line Include="@(_ApiInfo->'  &lt;Name>%(Name)&lt;/Name>')" />
+     <_Line Include="@(_ApiInfo->'  &lt;Version>%(Identity)&lt;/Version>')" />
+     <_Line Include="@(_ApiInfo->'  &lt;Stable>%(Stable)&lt;/Stable>')" />
+     <_Line Include="&lt;/AndroidApiInfo&gt;" />
+   </ItemGroup>
+   <WriteLinesToFile
+       File="$(OutputPath)AndroidApiInfo.xml"
+       Lines="@(_Line)"
        Overwrite="True"
    />
   </Target>
