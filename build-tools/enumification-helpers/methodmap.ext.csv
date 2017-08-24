@@ -1696,8 +1696,8 @@
 // 26, android.app.job, JobScheduler, enqueue, return, -it-was-not-enumified-at-api-level-21-
 26, android.app, NotificationChannel, getImportance, return, Android.App.NotificationImportance
 26, android.app, NotificationChannel, setImportance, importance, Android.App.NotificationImportance
-26, android.app, NotificationChannel, getLockScreenVisibility, return, Android.App.NotificationVisibility
-26, android.app, NotificationChannel, setLockScreenVisibility, lockScreenVisibility, Android.App.NotificationVisibility
+26, android.app, NotificationChannel, getLockscreenVisibility, return, Android.App.NotificationVisibility
+26, android.app, NotificationChannel, setLockscreenVisibility, lockscreenVisibility, Android.App.NotificationVisibility
 26, android.app, NotificationChannel, ctor, importance, Android.App.NotificationImportance
 26, android.app, PendingIntent, getForegroundService, flags, Android.App.PendingIntentFlags
 
