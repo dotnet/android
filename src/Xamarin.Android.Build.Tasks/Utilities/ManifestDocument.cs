@@ -128,7 +128,7 @@ namespace Xamarin.Android.Tasks {
 		}
 
 		string SdkVersionName {
-			get { return MonoAndroidHelper.GetPlatformApiLevelName (SdkVersion); }
+			get { return MonoAndroidHelper.SupportedVersions.GetIdFromApiLevel (SdkVersion); }
 		}
 
 		string ToFullyQualifiedName (string typeName)
@@ -265,9 +265,10 @@ namespace Xamarin.Android.Tasks {
 				uses.AddBeforeSelf (new XComment ("suppress UsesMinSdkAttributes"));
 			}
 
-			int targetSdkVersionValue;
-			if (!int.TryParse (MonoAndroidHelper.GetPlatformApiLevel (targetSdkVersion), out targetSdkVersionValue))
+			int? tryTargetSdkVersion  = MonoAndroidHelper.SupportedVersions.GetApiLevelFromId (targetSdkVersion);
+			if (!tryTargetSdkVersion.HasValue)
 				throw new InvalidOperationException (string.Format ("The targetSdkVersion ({0}) is not a valid API level", targetSdkVersion));
+			int targetSdkVersionValue = tryTargetSdkVersion.Value;
 
 			foreach (var t in subclasses) {
 				if (t.IsAbstract)
@@ -399,6 +400,16 @@ namespace Xamarin.Android.Tasks {
 					// otherwise, just add to the doc.
 					doc.Root.Add (FixupNameElements (package, new XNode [] { top }));
 			}
+		}
+
+		void RemoveDuplicateElements ()
+		{
+			var duplicates = doc.Descendants ()
+			                    .GroupBy (x => x.ToFullString ())
+					    .SelectMany (x => x.Skip (1));
+			foreach (var duplicate in duplicates)
+				duplicate.Remove ();
+			
 		}
 
 		IEnumerable<XNode> FixupNameElements(string packageName, IEnumerable<XNode> nodes)
@@ -838,6 +849,7 @@ namespace Xamarin.Android.Tasks {
 
 		public void Save (System.IO.TextWriter stream)
 		{
+			RemoveDuplicateElements ();
 			var ms = new MemoryStream ();
 			doc.Save (ms);
 			ms.Flush ();

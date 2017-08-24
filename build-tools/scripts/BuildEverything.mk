@@ -100,7 +100,7 @@ leeroy: leeroy-all framework-assemblies opentk-jcw
 
 leeroy-all:
 	$(foreach conf, $(CONFIGURATIONS), \
-		$(MSBUILD) $(MSBUILD_FLAGS) $(SOLUTION) /p:Configuration=$(conf) $(_MSBUILD_ARGS) ; )
+		$(_SLN_BUILD) $(MSBUILD_FLAGS) $(SOLUTION) /p:Configuration=$(conf) $(_MSBUILD_ARGS) ; )
 
 framework-assemblies:
 	PREV_VERSION="v1.0"; \
@@ -112,29 +112,29 @@ framework-assemblies:
 			if [ $$? -ne 0 ] ; then \
 				rm -f bin/$(conf)/lib/xamarin.android/xbuild-frameworks/MonoAndroid/$${CUR_VERSION}/RedistList/FrameworkList.xml; \
 			fi; \
-			$(MSBUILD) $(MSBUILD_FLAGS) src/Mono.Android/Mono.Android.csproj /p:Configuration=$(conf) $(_MSBUILD_ARGS) \
+			$(_SLN_BUILD) $(MSBUILD_FLAGS) src/Mono.Android/Mono.Android.csproj /p:Configuration=$(conf) $(_MSBUILD_ARGS) \
 				/p:AndroidApiLevel=$(a) /p:AndroidPlatformId=$(word $(a), $(ALL_PLATFORM_IDS)) /p:AndroidFrameworkVersion=$${CUR_VERSION} \
 				/p:AndroidPreviousFrameworkVersion=$${PREV_VERSION}; ) \
 		PREV_VERSION=$${CUR_VERSION}; )
 	$(foreach conf, $(CONFIGURATIONS), \
 		rm -f bin/$(conf)/lib/xamarin.android/xbuild-frameworks/MonoAndroid/v1.0/Xamarin.Android.NUnitLite.dll; \
-		$(MSBUILD) $(MSBUILD_FLAGS) src/Xamarin.Android.NUnitLite/Xamarin.Android.NUnitLite.csproj /p:Configuration=$(conf) $(_MSBUILD_ARGS) \
+		$(_SLN_BUILD) $(MSBUILD_FLAGS) src/Xamarin.Android.NUnitLite/Xamarin.Android.NUnitLite.csproj /p:Configuration=$(conf) $(_MSBUILD_ARGS) \
 			/p:AndroidApiLevel=$(firstword $(API_LEVELS)) /p:AndroidPlatformId=$(word $(firstword $(API_LEVELS)), $(ALL_PLATFORM_IDS)) /p:AndroidFrameworkVersion=$(firstword $(FRAMEWORKS)); )
 	_latest_framework=$$($(MSBUILD) /p:DoNotLoadOSProperties=True /nologo /v:minimal /t:GetAndroidLatestFrameworkVersion build-tools/scripts/Info.targets | tr -d '[[:space:]]') ; \
 	$(foreach conf, $(CONFIGURATIONS), \
 		rm -f "bin/$(conf)/lib/xamarin.android/xbuild-frameworks/MonoAndroid/$$_latest_framework"/Mono.Android.Export.* ; \
-		$(MSBUILD) $(MSBUILD_FLAGS) src/Mono.Android.Export/Mono.Android.Export.csproj /p:Configuration=$(conf) $(_MSBUILD_ARGS) \
+		$(_SLN_BUILD) $(MSBUILD_FLAGS) src/Mono.Android.Export/Mono.Android.Export.csproj /p:Configuration=$(conf) $(_MSBUILD_ARGS) \
 			/p:AndroidApiLevel=$(firstword $(API_LEVELS)) /p:AndroidPlatformId=$(word $(firstword $(API_LEVELS)), $(ALL_PLATFORM_IDS)) /p:AndroidFrameworkVersion=$(firstword $(FRAMEWORKS)); ) \
 	$(foreach conf, $(CONFIGURATIONS), \
 		rm -f "bin/$(conf)/lib/xamarin.android/xbuild-frameworks/MonoAndroid/$$_latest_framework"/OpenTK-1.0.* ; \
-		$(MSBUILD) $(MSBUILD_FLAGS) src/OpenTK-1.0/OpenTK.csproj /p:Configuration=$(conf) $(_MSBUILD_ARGS) \
+		$(_SLN_BUILD) $(MSBUILD_FLAGS) src/OpenTK-1.0/OpenTK.csproj /p:Configuration=$(conf) $(_MSBUILD_ARGS) \
 			/p:AndroidApiLevel=$(firstword $(API_LEVELS)) /p:AndroidPlatformId=$(word $(firstword $(API_LEVELS)), $(ALL_PLATFORM_IDS)) /p:AndroidFrameworkVersion=$(firstword $(FRAMEWORKS)); )
 
 opentk-jcw:
 	$(foreach a, $(API_LEVELS), \
 		$(foreach conf, $(CONFIGURATIONS), \
 			touch bin/$(conf)/lib/xamarin.android/xbuild-frameworks/MonoAndroid/*/OpenTK-1.0.dll; \
-			$(MSBUILD) $(MSBUILD_FLAGS) src/OpenTK-1.0/OpenTK.csproj /t:GenerateJavaCallableWrappers /p:Configuration=$(conf) $(_MSBUILD_ARGS) \
+			$(_SLN_BUILD) $(MSBUILD_FLAGS) src/OpenTK-1.0/OpenTK.csproj /t:GenerateJavaCallableWrappers /p:Configuration=$(conf) $(_MSBUILD_ARGS) \
 				/p:AndroidApiLevel=$(a) /p:AndroidPlatformId=$(word $(a), $(ALL_PLATFORM_IDS)) /p:AndroidFrameworkVersion=$(word $(a), $(ALL_FRAMEWORKS)); ))
 
 _BUNDLE_ZIPS_INCLUDE  = \

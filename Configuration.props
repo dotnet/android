@@ -67,6 +67,7 @@
     <AllSupportedTargetAndroidAbis>$(AllSupported32BitTargetAndroidAbis);$(AllSupported64BitTargetAndroidAbis)</AllSupportedTargetAndroidAbis>
     <XABuildToolsVersion>26-rc2</XABuildToolsVersion>
     <XABuildToolsFolder Condition="'$(XABuildToolsFolder)' == ''">26.0.0-rc2</XABuildToolsFolder>
+    <PathSeparator>$([System.IO.Path]::PathSeparator)</PathSeparator>
   </PropertyGroup>
   <PropertyGroup>
     <_MingwPrefixTail Condition=" '$(HostOS)' == 'Darwin' ">.static</_MingwPrefixTail>

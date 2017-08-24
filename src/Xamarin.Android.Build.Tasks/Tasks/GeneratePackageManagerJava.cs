@@ -47,7 +47,7 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugTaskItems ("  ResolvedUserAssemblies:", ResolvedUserAssemblies);
 
 			var shared_runtime = string.Compare (UseSharedRuntime, "true", true) == 0;
-			var doc = AndroidAppManifest.Load (Manifest);
+			var doc = AndroidAppManifest.Load (Manifest, MonoAndroidHelper.SupportedVersions);
 			int minApiVersion = doc.MinSdkVersion == null ? 4 : (int) doc.MinSdkVersion;
 			// We need to include any special assemblies in the Assemblies list
 			var assemblies = ResolvedUserAssemblies.Select (p => p.ItemSpec)
@@ -93,7 +93,7 @@ namespace Xamarin.Android.Tasks
 				// Write the platform api apk we need
 				pkgmgr.WriteLine ("\tpublic static final String ApiPackageName = {0};", shared_runtime
 						? string.Format ("\"Mono.Android.Platform.ApiLevel_{0}\"",
-							MonoDroidSdk.GetApiLevelForFrameworkVersion (TargetFrameworkVersion))
+							MonoAndroidHelper.SupportedVersions.GetApiLevelFromFrameworkVersion (TargetFrameworkVersion))
 						: "null");
 				pkgmgr.WriteLine ("}");
 			}
