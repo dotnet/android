@@ -73,7 +73,7 @@ using System.Runtime.CompilerServices;
 					new BuildItem.ProjectReference (@"..\Lib1\Lib1.csproj", lib.ProjectName, lib.ProjectGuid),
 				},
 			};
-			
+			proj.SetProperty ("_AndroidUseManagedDesignTimeResourceGenerator", "False");
 			using (var l = CreateDllBuilder (Path.Combine (path, lib.ProjectName), false, false)) {
 				using (var b = CreateApkBuilder (Path.Combine (path, proj.ProjectName), false, false)) {
 					l.Verbosity = LoggerVerbosity.Diagnostic;
@@ -430,6 +430,7 @@ namespace UnnamedProject
 				IsRelease = isRelease,
 			};
 			proj.SetProperty ("AndroidUseIntermediateDesignerFile", "True");
+			proj.SetProperty ("_AndroidUseManagedDesignTimeResourceGenerator", "False");
 			using (var b = CreateApkBuilder ("temp/CheckOldResourceDesignerIsNotUsed")) {
 				var designer = Path.Combine ("Resources", "Resource.designer" + proj.Language.DefaultDesignerExtension);
 				if (File.Exists (designer))
@@ -935,6 +936,141 @@ namespace Lib1 {
 					Assert.IsTrue (!File.Exists (themeFile), $"{themeFile} should have been deleted.");
 					var archive = Path.Combine (Root, path, libProj.ProjectName, libProj.IntermediateOutputPath, "__AndroidLibraryProjects__.zip");
 					Assert.IsNull (ZipHelper.ReadFileFromZip (archive, "res/values/theme.xml"), "res/values/theme.xml should have been removed from __AndroidLibraryProjects__.zip");
+				}
+			}
+		}
+
+		[Test]
+		public void BuildAppWithManagedResourceParser()
+		{
+			var path = Path.Combine ("temp", "BuildAppWithManagedResourceParser");
+			var appProj = new XamarinAndroidApplicationProject () {
+				IsRelease = true,
+				ProjectName = "App1",
+			};
+			appProj.SetProperty ("_AndroidUseManagedDesignTimeResourceGenerator", "True");
+			using (var appBuilder = CreateApkBuilder (Path.Combine (path, appProj.ProjectName))) {
+				appBuilder.Verbosity = LoggerVerbosity.Diagnostic;
+				appBuilder.Target = "Compile";
+				Assert.IsTrue (appBuilder.Build (appProj, parameters: new string[] { "DesignTimeBuild=true"} ),
+					"DesignTime Application Build should have succeeded.");
+				Assert.IsFalse (appProj.CreateBuildOutput (appBuilder).IsTargetSkipped ("_ManagedUpdateAndroidResgen"),
+					"Target '_ManagedUpdateAndroidResgen' should have run.");
+				var designerFile = Path.Combine (Root, path, appProj.ProjectName, appProj.IntermediateOutputPath, "designtime", "Resource.Designer.cs");
+				FileAssert.Exists (designerFile, $"'{designerFile}' should have been created.");
+
+				var designerContents = File.ReadAllText (designerFile);
+				StringAssert.Contains ("hello", designerContents, $"{designerFile} should contain Resources.Strings.hello");
+				StringAssert.Contains ("app_name", designerContents, $"{designerFile} should contain Resources.Strings.app_name");
+				StringAssert.Contains ("myButton", designerContents, $"{designerFile} should contain Resources.Id.myButton");
+				StringAssert.Contains ("Icon", designerContents, $"{designerFile} should contain Resources.Drawable.Icon");
+				StringAssert.Contains ("Main", designerContents, $"{designerFile} should contain Resources.Layout.Main");
+				appBuilder.Target = "SignAndroidPackage";
+				Assert.IsTrue (appBuilder.Build (appProj),
+					"Normal Application Build should have succeeded.");
+				Assert.IsTrue (appProj.CreateBuildOutput (appBuilder).IsTargetSkipped ("_ManagedUpdateAndroidResgen"),
+					"Target '_ManagedUpdateAndroidResgen' should not have run.");
+
+				Assert.IsTrue (appBuilder.Clean (appProj), "Clean should have succeeded");
+				Assert.IsFalse (File.Exists (designerFile), $"'{designerFile}' should have been cleaned.");
+
+			}
+		}
+
+		[Test]
+		public void BuildAppWithManagedResourceParserAndLibraries ()
+		{
+			int maxBuildTimeMs = 5000;
+			var path = Path.Combine ("temp", "BuildAppWithManagedResourceParserAndLibraries");
+			var theme = new AndroidItem.AndroidResource ("Resources\\values\\Theme.xml") {
+				TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
+<resources>
+	<color name=""theme_devicedefault_background"">#ffffffff</color>
+	<color name=""SomeColor"">#ffffffff</color>
+</resources>",
+			};
+			var libProj = new XamarinAndroidLibraryProject () {
+				IsRelease = true,
+				ProjectName = "Lib1",
+				AndroidResources = {
+					theme,
+				},
+			};
+			libProj.SetProperty ("_AndroidUseManagedDesignTimeResourceGenerator", "True");
+			var appProj = new XamarinAndroidApplicationProject () {
+				IsRelease = true,
+				ProjectName = "App1",
+				References = {
+					new BuildItem.ProjectReference (@"..\Lib1\Lib1.csproj", libProj.ProjectName, libProj.ProjectGuid),
+				},
+				Packages = {
+					KnownPackages.SupportMediaCompat_25_4_0_1,
+					KnownPackages.SupportFragment_25_4_0_1,
+					KnownPackages.SupportCoreUtils_25_4_0_1,
+					KnownPackages.SupportCoreUI_25_4_0_1,
+					KnownPackages.SupportCompat_25_4_0_1,
+					KnownPackages.AndroidSupportV4_25_4_0_1,
+					KnownPackages.SupportV7AppCompat_25_4_0_1,
+				},
+			};
+			appProj.SetProperty ("_AndroidUseManagedDesignTimeResourceGenerator", "True");
+			using (var libBuilder = CreateDllBuilder (Path.Combine (path, libProj.ProjectName), false, false)) {
+				libBuilder.Verbosity = LoggerVerbosity.Diagnostic;
+				using (var appBuilder = CreateApkBuilder (Path.Combine (path, appProj.ProjectName), false, false)) {
+					appBuilder.Verbosity = LoggerVerbosity.Diagnostic;
+					libBuilder.Target = "Compile";
+					Assert.IsTrue (libBuilder.Build (libProj, parameters: new string [] { "DesignTimeBuild=true" }), "Library project should have built");
+					Assert.LessOrEqual (libBuilder.LastBuildTime.TotalMilliseconds, maxBuildTimeMs, "DesingTime build should be less than 5 seconds.");
+					Assert.IsFalse (libProj.CreateBuildOutput (libBuilder).IsTargetSkipped ("_ManagedUpdateAndroidResgen"),
+						"Target '_ManagedUpdateAndroidResgen' should have run.");
+					appBuilder.Target = "Compile";
+					Assert.IsTrue (appBuilder.Build (appProj, parameters: new string [] { "DesignTimeBuild=true" }), "Library project should have built");
+					Assert.LessOrEqual (appBuilder.LastBuildTime.TotalMilliseconds, maxBuildTimeMs, "DesingTime build should be less than 5 seconds.");
+					Assert.IsFalse (appProj.CreateBuildOutput (appBuilder).IsTargetSkipped ("_ManagedUpdateAndroidResgen"),
+						"Target '_ManagedUpdateAndroidResgen' should have run.");
+					var designerFile = Path.Combine (Root, path, appProj.ProjectName, appProj.IntermediateOutputPath, "designtime", "Resource.Designer.cs");
+					FileAssert.Exists (designerFile, $"'{designerFile}' should have been created.");
+
+					var designerContents = File.ReadAllText (designerFile);
+					StringAssert.Contains ("hello", designerContents, $"{designerFile} should contain Resources.Strings.hello");
+					StringAssert.Contains ("app_name", designerContents, $"{designerFile} should contain Resources.Strings.app_name");
+					StringAssert.Contains ("myButton", designerContents, $"{designerFile} should contain Resources.Id.myButton");
+					StringAssert.Contains ("Icon", designerContents, $"{designerFile} should contain Resources.Drawable.Icon");
+					StringAssert.Contains ("Main", designerContents, $"{designerFile} should contain Resources.Layout.Main");
+					StringAssert.Contains ("material_grey_50", designerContents, $"{designerFile} should contain Resources.Color.material_grey_50");
+					StringAssert.DoesNotContain ("theme_devicedefault_background", designerContents, $"{designerFile} should not contain Resources.Color.theme_devicedefault_background");
+					libBuilder.Target = "Build";
+					Assert.IsTrue (libBuilder.Build (libProj), "Library project should have built");
+					Assert.IsTrue (libProj.CreateBuildOutput (libBuilder).IsTargetSkipped ("_ManagedUpdateAndroidResgen"),
+						"Target '_ManagedUpdateAndroidResgen' should not have run.");
+					appBuilder.Target = "Compile";
+					Assert.IsTrue (appBuilder.Build (appProj, parameters: new string [] { "DesignTimeBuild=true" }), "App project should have built");
+					Assert.LessOrEqual (appBuilder.LastBuildTime.TotalMilliseconds, maxBuildTimeMs, "DesingTime build should be less than 5 seconds.");
+					Assert.IsFalse (appProj.CreateBuildOutput (appBuilder).IsTargetSkipped ("_ManagedUpdateAndroidResgen"),
+					"Target '_ManagedUpdateAndroidResgen' should have run.");
+					FileAssert.Exists (designerFile, $"'{designerFile}' should have been created.");
+
+					designerContents = File.ReadAllText (designerFile);
+					StringAssert.Contains ("hello", designerContents, $"{designerFile} should contain Resources.Strings.hello");
+					StringAssert.Contains ("app_name", designerContents, $"{designerFile} should contain Resources.Strings.app_name");
+					StringAssert.Contains ("myButton", designerContents, $"{designerFile} should contain Resources.Id.myButton");
+					StringAssert.Contains ("Icon", designerContents, $"{designerFile} should contain Resources.Drawable.Icon");
+					StringAssert.Contains ("Main", designerContents, $"{designerFile} should contain Resources.Layout.Main");
+					StringAssert.Contains ("material_grey_50", designerContents, $"{designerFile} should contain Resources.Color.material_grey_50");
+					StringAssert.Contains ("theme_devicedefault_background", designerContents, $"{designerFile} should contain Resources.Color.theme_devicedefault_background");
+					StringAssert.Contains ("SomeColor", designerContents, $"{designerFile} should contain Resources.Color.SomeColor");
+
+					appBuilder.Target = "SignAndroidPackage";
+					Assert.IsTrue (appBuilder.Build (appProj), "App project should have built");
+
+
+					Assert.IsTrue (appBuilder.Clean (appProj), "Clean should have succeeded");
+					Assert.IsFalse (File.Exists (designerFile), $"'{designerFile}' should have been cleaned.");
+					designerFile = Path.Combine (Root, path, libProj.ProjectName, libProj.IntermediateOutputPath, "designtime", "Resource.Designer.cs");
+					Assert.IsTrue (libBuilder.Clean (libProj), "Clean should have succeeded");
+					Assert.IsFalse (File.Exists (designerFile), $"'{designerFile}' should have been cleaned.");
+
+
 				}
 			}
 		}

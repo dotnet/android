@@ -993,6 +993,9 @@ because xbuild doesn't support framework reference assemblies.
 	<_AndroidResourceDesignerFile Condition=" '$(AndroidUseIntermediateDesignerFile)' != 'True' ">$(AndroidResgenFile)</_AndroidResourceDesignerFile>
 	<_AndroidStaticResourcesFlag>$(IntermediateOutputPath)static.flag</_AndroidStaticResourcesFlag>
 	<_AndroidResourcesCacheFile>$(IntermediateOutputPath)mergeresources.cache</_AndroidResourcesCacheFile>
+	<_AndroidUseManagedDesignTimeResourceGenerator Condition=" '$(_AndroidUseManagedDesignTimeResourceGenerator)' == '' " >True</_AndroidUseManagedDesignTimeResourceGenerator>
+	<_AndroidDesignTimeResDirIntermediate>$(IntermediateOutputPath)designtime\</_AndroidDesignTimeResDirIntermediate>
+	<_AndroidManagedResourceDesignerFile>$(_AndroidDesignTimeResDirIntermediate)$(_AndroidResourceDesigner)</_AndroidManagedResourceDesignerFile>
 </PropertyGroup>
 
 <ItemGroup>
@@ -1036,11 +1039,60 @@ because xbuild doesn't support framework reference assemblies.
 		Overwrite="true"/>
 </Target>
 
+<Choose>
+	<When Condition=" $(_AndroidUseManagedDesignTimeResourceGenerator) == 'True' And '$(DesignTimeBuild)' == 'True' And '$(BuildingInsideVisualStudio)' == 'True' ">
+		<PropertyGroup>
+			<ManagedDesignTimeBuild>True</ManagedDesignTimeBuild>
+		</PropertyGroup>
+	</When>
+	<Otherwise>
+		<PropertyGroup>
+			<ManagedDesignTimeBuild>False</ManagedDesignTimeBuild>
+		</PropertyGroup>
+	</Otherwise>
+</Choose>
+
+<!-- Managed DesignTime Resource Generation -->
+<Target Name="_ManagedUpdateAndroidResgen" Condition=" '$(ManagedDesignTimeBuild)' == 'True' "
+		Inputs="@(AndroidResource);@(ReferencePath)"
+		Outputs="$(_AndroidManagedResourceDesignerFile)"
+		DependsOnTargets="_ExtractLibraryProjectImports">
+	<MakeDir Directories="$(_AndroidDesignTimeResDirIntermediate)" />
+	<!-- Parse primary R.java and create Resources.Designer.cs -->
+	<GenerateResourceDesigner
+		ContinueOnError="$(DesignTimeBuild)"
+		NetResgenOutputFile="$(_AndroidManagedResourceDesignerFile)"
+		JavaResgenInputFile="$(_GeneratedPrimaryJavaResgenFile)"
+		Namespace="$(AndroidResgenNamespace)"
+		ProjectDir="$(ProjectDir)"
+		Resources="@(AndroidResource)"
+		ResourceDirectory="$(MonoAndroidResourcePrefix)"
+		AdditionalResourceDirectories="@(LibraryResourceDirectories)"
+		IsApplication="$(AndroidApplication)"
+		References="@(ReferencePath)"
+		UseManagedResourceGenerator="True"
+	/>
+	<ItemGroup>
+		<CorrectCasedItem Include="%(Compile.Identity)" Condition="'%(Compile.Identity)' == '$(AndroidResgenFile)'"/>
+		<CorrectCasedItem Include="%(Compile.Identity)" Condition="'%(Compile.Identity)' == 'Resources\Resource.designer.cs'"/>
+		<Compile Remove="@(CorrectCasedItem)" Condition=" '$(ManagedDesignTimeBuild)' == 'True' And '%(CorrectCasedItem.Identity)' != '' "/>
+		<Compile Include="$(_AndroidManagedResourceDesignerFile)" Condition=" '$(ManagedDesignTimeBuild)' == 'True' And Exists ('$(_AndroidManagedResourceDesignerFile)')" />
+	</ItemGroup>
+	<WriteLinesToFile
+		Condition="Exists ('$(_AndroidManagedResourceDesignerFile)')"
+		File="$(IntermediateOutputPath)$(CleanFile)"
+		Lines="$(_AndroidManagedResourceDesignerFile)"
+		Overwrite="false" />
+</Target>
+	
 <!-- Resource Build -->
 
-<Target Name="UpdateAndroidResources"
-	DependsOnTargets="$(CoreResolveReferencesDependsOn);_CreatePropertiesCache;_CheckForDeletedResourceFile;_ComputeAndroidResourcePaths;_UpdateAndroidResgen;_AddLibraryProjectsEmbeddedResourceToProject;_GenerateJavaDesignerForComponent" />
+<Target Name="_UpdateAndroidResources" Condition=" '$(ManagedDesignTimeBuild)' == 'False' "
+	DependsOnTargets="$(CoreResolveReferencesDependsOn);_CreatePropertiesCache;_CheckForDeletedResourceFile;_ComputeAndroidResourcePaths;_UpdateAndroidResgen;_AddLibraryProjectsEmbeddedResourceToProject;_GenerateJavaDesignerForComponent"> 
+</Target>
 
+<Target Name="UpdateAndroidResources" DependsOnTargets="_ManagedUpdateAndroidResgen;_UpdateAndroidResources" />
+		
 <!-- Handle a case where the designer file has been deleted, but the flag file still exists -->
 <Target Name="_CheckForDeletedResourceFile">
 	<Delete Files="$(_AndroidResgenFlagFile)"
@@ -1348,6 +1400,7 @@ because xbuild doesn't support framework reference assemblies.
 		AdditionalResourceDirectories="@(LibraryResourceDirectories)"
 		IsApplication="$(AndroidApplication)"
 		References="@(ReferencePath)"
+		UseManagedResourceGenerator="False"
 	/>
 
 	<!-- Only copy if the file contents changed, so users only get Reload? dialog for real changes -->
@@ -2473,6 +2526,7 @@ because xbuild doesn't support framework reference assemblies.
 	<RemoveDirFixed Directories="$(MonoAndroidIntermediate)proguard" Condition="Exists ('$(MonoAndroidIntermediate)proguard')" />
 	<RemoveDirFixed Directories="$(MonoAndroidIntermediateResourceCache)" Condition="Exists ('$(MonoAndroidIntermediateResourceCache)')" />
 	<RemoveDirFixed Directories="$(_AndroidAotBinDirectory)" Condition="Exists ('$(_AndroidAotBinDirectory)')" />
+	<RemoveDirFixed Directories="$(_AndroidDesignTimeResDirIntermediate)" Condition="Exists ('$(_AndroidDesignTimeResDirIntermediate)')" />
 	<Delete Files="$(IntermediateOutputPath)_dex_stamp" />
  	<Delete Files="$(MonoAndroidIntermediate)R.cs.flag" />
 	<Delete Files="$(MonoAndroidIntermediate)acw-map.txt" />

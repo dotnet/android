@@ -1760,6 +1760,7 @@ public class Test
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 			};
+			proj.SetProperty ("_AndroidUseManagedDesignTimeResourceGenerator", "False");
 			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name), false ,false)) {
 				builder.Verbosity = LoggerVerbosity.Diagnostic;
 				builder.Target = "UpdateAndroidResources";

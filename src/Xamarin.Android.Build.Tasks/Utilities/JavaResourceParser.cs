@@ -9,11 +9,9 @@ using Microsoft.Build.Utilities;
 
 namespace Xamarin.Android.Tasks
 {
-	class JavaResourceParser
+	class JavaResourceParser : ResourceParser
 	{
-		public static TaskLoggingHelper Log { get; set; }
-
-		public static CodeTypeDeclaration Parse (string file, bool isApp, Dictionary<string, string> resourceMap)
+		public CodeTypeDeclaration Parse (string file, bool isApp, Dictionary<string, string> resourceMap)
 		{
 			if (!File.Exists (file))
 				throw new InvalidOperationException ("Specified Java resource file was not found: " + file);
@@ -49,18 +47,22 @@ namespace Xamarin.Android.Tasks
 		//     }
 		//   }
 		// }
-		static List<KeyValuePair<Regex, Func<Match, bool, CodeTypeDeclaration, Dictionary<string, string>, CodeTypeDeclaration>>> Parser = new List<KeyValuePair<Regex, Func<Match, bool, CodeTypeDeclaration, Dictionary<string, string>, CodeTypeDeclaration>>> () {
+		List<KeyValuePair<Regex, Func<Match, bool, CodeTypeDeclaration, Dictionary<string, string>, CodeTypeDeclaration>>> Parser;
+
+		public JavaResourceParser ()
+		{
+			Parser = new List<KeyValuePair<Regex, Func<Match, bool, CodeTypeDeclaration, Dictionary<string, string>, CodeTypeDeclaration>>> () {
 			Parse ("^public final class R {",
 					(m, app, _, map) => {
 						var decl = new CodeTypeDeclaration ("Resource") {
 							IsPartial = true,
 						};
 						var asm = Assembly.GetExecutingAssembly().GetName();
-						var codeAttrDecl = 
+						var codeAttrDecl =
 							new CodeAttributeDeclaration("System.CodeDom.Compiler.GeneratedCodeAttribute",
-			                        		new CodeAttributeArgument(
+								new CodeAttributeArgument(
 									new CodePrimitiveExpression(asm.Name)),
-			                			new CodeAttributeArgument(
+								new CodeAttributeArgument(
 									new CodePrimitiveExpression(asm.Version.ToString()))
 							);
 						decl.CustomAttributes.Add(codeAttrDecl);
@@ -116,44 +118,6 @@ namespace Xamarin.Android.Tasks
 						return g;
 					}),
 		};
-
-		internal static int ToInt32 (string value, int @base)
-		{
-			try {
-				return Convert.ToInt32 (value, @base);
-			} catch (Exception e) {
-				throw new NotSupportedException (
-						string.Format ("Could not convert value '{0}' (base '{1}') into an Int32.",
-							value, @base),
-						e);
-			}
 		}
-
-		internal static string GetNestedTypeName (string name)
-		{
-			switch (name) {
-				case "anim": return "Animation";
-				case "attr": return "Attribute";
-				case "bool": return "Boolean";
-				case "dimen": return "Dimension";
-				default: return char.ToUpperInvariant (name[0]) + name.Substring (1);
-			}
-		}
-
-		static string GetResourceName (string type, string name, Dictionary<string, string> map)
-		{
-			string mappedValue;
-			string key = string.Format ("{0}{1}{2}", type, Path.DirectorySeparatorChar, name).ToLowerInvariant ();
-
-			if (map.TryGetValue (key, out mappedValue)) {
-				Log.LogMessage ("  - Remapping resource: {0}.{1} -> {2}", type, name, mappedValue);
-				return mappedValue.Substring (mappedValue.LastIndexOf (Path.DirectorySeparatorChar) + 1);
-			}
-
-			Log.LogMessage ("  - Not remapping resource: {0}.{1}", type, name);
-
-			return name;
-		}
-
 	}
 }

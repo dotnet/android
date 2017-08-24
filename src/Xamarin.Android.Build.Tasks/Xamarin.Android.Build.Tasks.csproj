@@ -102,6 +102,8 @@
     <Compile Include="Mono.Android\GrantUriPermissionAttribute.Partial.cs" />
     <Compile Include="Utilities\InvalidActivityNameException.cs" />
     <Compile Include="Utilities\JavaResourceParser.cs" />
+    <Compile Include="Utilities\ResourceParser.cs" />
+    <Compile Include="Utilities\ManagedResourceParser.cs" />
     <Compile Include="Utilities\ManifestDocumentElement.cs" />
     <Compile Include="Utilities\ManifestDocument.cs" />
     <Compile Include="Mono.Android\MetaDataAttribute.Partial.cs" />
