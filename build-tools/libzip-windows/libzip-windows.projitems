@@ -13,5 +13,17 @@
       <OutputLibrary>libzip.dll</OutputLibrary>
       <OutputLibraryPath>lib/libzip.dll</OutputLibraryPath>
     </_LibZipTarget>
+    <_NuGetBinary Include="..\..\external\LibZipSharp\bin\$(OS)\$(Configuration)\libzip.dll">
+      <Destination>libzip.dll</Destination>
+    </_NuGetBinary>
+    <_NuGetBinary Include="..\..\external\LibZipSharp\bin\$(OS)\$(Configuration)\zlib.dll">
+      <Destination>zlib.dll</Destination>
+    </_NuGetBinary>
+    <_NuGetBinary Include="..\..\external\LibZipSharp\bin\$(OS)\$(Configuration)\x64\libzip.dll">
+      <Destination>x64\libzip.dll</Destination>
+    </_NuGetBinary>
+    <_NuGetBinary Include="..\..\external\LibZipSharp\bin\$(OS)\$(Configuration)\x64\zlib.dll">
+      <Destination>x64\zlib.dll</Destination>
+    </_NuGetBinary>
   </ItemGroup>
 </Project>

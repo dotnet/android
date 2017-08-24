@@ -62,6 +62,11 @@
       <Name>libzip</Name>
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
     </ProjectReference>
+    <ProjectReference Include="..\..\build-tools\libzip-windows\libzip-windows.mdproj" Condition=" '$(HostOS)' == 'Windows' ">
+      <Project>{0DE278D6-000F-4001-BB98-187C0AF58A61}</Project>
+      <Name>libzip-windows</Name>
+      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
+    </ProjectReference>
     <ProjectReference Include="..\..\build-tools\xa-prep-tasks\xa-prep-tasks.csproj">
       <Project>{7CE69551-BD73-4726-ACAA-AAF89C84BAF8}</Project>
       <Name>xa-prep-tasks</Name>
