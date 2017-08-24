@@ -145,11 +145,12 @@
         ToolPath="$(AdbToolPath)">
       <Output TaskParameter="FailedToRun" ItemName="_FailedComponent"/>
     </RunInstrumentationTests>
-    <Exec Command="&quot;$(AdbToolPath)\$(AdbToolExe)&quot; $(_AdbTarget) $(AdbOptions) logcat -v threadtime -d > test-logcat.txt" />
     <PropertyGroup>
       <_DefinitionsFilename Condition=" '%(UnitTestApk.TimingDefinitionsFilename)' == '' ">$(MSBuildThisFileDirectory)/TimingDefinitions.txt</_DefinitionsFilename>
       <_DefinitionsFilename Condition=" '%(UnitTestApk.TimingDefinitionsFilename)' != '' ">%(UnitTestApk.TimingDefinitionsFilename)</_DefinitionsFilename>
+      <_LogcatFilenameEnd>-logcat-$(Configuration)$(_AotName).txt</_LogcatFilenameEnd>
     </PropertyGroup>
-    <ProcessLogcatTiming LogcatFilename="test-logcat.txt" ApplicationPackageName="%(UnitTestApk.Package)" ResultsFilename="%(UnitTestApk.ResultsPath)" DefinitionsFilename="$(_DefinitionsFilename)" />
+    <Exec Command="&quot;$(AdbToolPath)\$(AdbToolExe)&quot; $(_AdbTarget) $(AdbOptions) logcat -v threadtime -d > %(UnitTestApk.Package)$(_LogcatFilenameEnd)" />
+    <ProcessLogcatTiming LogcatFilename="%(UnitTestApk.Package)$(_LogcatFilenameEnd)" ApplicationPackageName="%(UnitTestApk.Package)" ResultsFilename="%(UnitTestApk.ResultsPath)" DefinitionsFilename="$(_DefinitionsFilename)" />
   </Target>
 </Project>
