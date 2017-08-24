@@ -401,6 +401,16 @@ namespace Xamarin.Android.Tasks {
 			}
 		}
 
+		void RemoveDuplicateElements ()
+		{
+			var duplicates = doc.Descendants ()
+			                    .GroupBy (x => x.ToFullString ())
+					    .SelectMany (x => x.Skip (1));
+			foreach (var duplicate in duplicates)
+				duplicate.Remove ();
+			
+		}
+
 		IEnumerable<XNode> FixupNameElements(string packageName, IEnumerable<XNode> nodes)
 		{
 			foreach (var element in nodes.Select ( x => x as XElement).Where (x => x != null && ManifestAttributeFixups.ContainsKey (x.Name.LocalName))) {
@@ -838,6 +848,7 @@ namespace Xamarin.Android.Tasks {
 
 		public void Save (System.IO.TextWriter stream)
 		{
+			RemoveDuplicateElements ();
 			var ms = new MemoryStream ();
 			doc.Save (ms);
 			ms.Flush ();
