@@ -235,7 +235,7 @@ Unit tests are build in a separate target:
 
 ## Windows
 
-To build Xamarin.Android, run:
+To build Xamarin.Android, ensure you are using MSBuild version 15+ and run:
 
     msbuild build-tools\scripts\PrepareWindows.targets
     msbuild Xamarin.Android.sln
@@ -243,6 +243,8 @@ To build Xamarin.Android, run:
 These are roughly the same as how `make prepare` and `make` are used on other platforms.
 
 _NOTE: there is not currently an equivalent of `make jenkins` or `make all-tests` on Windows._
+
+_Troubleshooting: Ensure you check your MSBuild version(`msbuild -version`) and path for the proper verson of MSBuild._
 
 ## Linux build notes
 
