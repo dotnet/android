@@ -44,8 +44,9 @@ Building Xamarin.Android requires:
 * [Autotools (`autoconf`, `automake`, etc.)](#autotools)
 * [The Android SDK and NDK](#ndk)
 
-The `make prepare` build step will check that all required dependencies
-are present. If you would like `make prepare` to automatically install
+The `make prepare` build step (or `PrepareWindows.targets` on Windows) will
+check that all required dependencies are present.
+If you would like `make prepare` to automatically install
 required dependencies, set the `$(AutoProvision)` MSBuild property to True
 and (if necessary) set the `$(AutoProvisionUsesSudo)` property to True.
 (This is not supported on all operating systems.)
@@ -204,8 +205,9 @@ Overridable MSBuild properties include:
 
 # Build
 
-At this point in time, building Xamarin.Android is only supported on OS X.
-We will work to improve this.
+Xamarin.Android can be built on Linux, macOS, and Windows.
+
+## Linux and macOS
 
 To build Xamarin.Android, first prepare the project:
 
@@ -231,6 +233,16 @@ Unit tests are build in a separate target:
 
     make all-tests
 
+## Windows
+
+To build Xamarin.Android, run:
+
+    msbuild build-tools\scripts\PrepareWindows.targets
+    msbuild Xamarin.Android.sln
+
+These are roughly the same as how `make prepare` and `make` are used on other platforms.
+
+_NOTE: there is not currently an equivalent of `make jenkins` or `make all-tests` on Windows._
 
 ## Linux build notes
 
@@ -290,6 +302,9 @@ If any program is still not found, try to ensure it's linked via:
 Once the build has finished, [`tools/scripts/xabuild`](tools/scripts/xabuild)
 may be used on Unix-like platforms to build projects.
 See the [Samples](#Samples) section for example usage.
+
+Windows users will need to use the `setup-windows.exe` tool as described in
+[`Documentation/UsingJenkinsBuildArtifacts.md`](Documentation/UsingJenkinsBuildArtifacts.md#oss-xamarinandroidzip-installation).
 
 # Using Jenkins Build Artifacts
 
