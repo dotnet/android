@@ -244,7 +244,7 @@ These are roughly the same as how `make prepare` and `make` are used on other pl
 
 _NOTE: there is not currently an equivalent of `make jenkins` or `make all-tests` on Windows._
 
-_Troubleshooting: Ensure you check your MSBuild version(`msbuild -version`) and path for the proper verson of MSBuild._
+_Troubleshooting: Ensure you check your MSBuild version(`msbuild -version`) and path for the proper version of MSBuild._
 
 ## Linux build notes
 
