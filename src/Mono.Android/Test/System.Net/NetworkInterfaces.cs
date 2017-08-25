@@ -24,7 +24,7 @@ namespace System.NetTests
 
 			public override string ToString ()
 			{
-				return string.Format ("[InterfaceInfo: Name={0}, IsLoopback={1}, IsUp={2}, HardwareAddress={3}, Addresses={4}]", Name, IsLoopback, IsUp, HardwareAddress, Addresses);
+				return string.Format ("[InterfaceInfo: Name={0}, IsLoopback={1}, IsUp={2}, HardwareAddress={3}, Addresses={4}]", Name, IsLoopback, IsUp, HardwareAddressToString (), AddressesToString ());
 			}
 
 			public override bool Equals (object obj)
@@ -43,6 +43,26 @@ namespace System.NetTests
 					IsUp == other.IsUp &&
 					HardwareAddressesAreEqual (HardwareAddress, other.HardwareAddress) &&
 					AddressesAreEqual (Addresses, other.Addresses);
+			}
+
+			string HardwareAddressToString ()
+			{
+				if (HardwareAddress == null || HardwareAddress.Length == 0)
+					return "<>";
+				var ret = new List<string> ();
+				foreach (byte b in HardwareAddress)
+					ret.Add (b.ToString ("X02"));
+				return "<" + String.Join (":", ret) + ">";
+			}
+
+			string AddressesToString ()
+			{
+				if (Addresses == null || Addresses.Count == 0)
+					return "<>";
+				var ret = new List<string> ();
+				foreach (IPAddress a in Addresses)
+					ret.Add (a.ToString ());
+				return "<" + String.Join (", ", ret) + ">";
 			}
 
 			bool AddressesAreEqual (List <IPAddress> one, List <IPAddress> two)
@@ -80,11 +100,19 @@ namespace System.NetTests
 			}
 		}
 
-		//[Test]
+		[Test]
 		public void DotNetInterfacesShouldEqualJavaInterfaces ()
 		{
 			List <InterfaceInfo> dotnetInterfaces = GetInfos (MNetworkInterface.GetAllNetworkInterfaces ());
 			List <InterfaceInfo> javaInterfaces = GetInfos (JNetworkInterface.NetworkInterfaces);
+
+			Console.WriteLine ("Mono interfaces:");
+			foreach (InterfaceInfo inf in dotnetInterfaces)
+				 Console.WriteLine (inf);
+
+			Console.WriteLine ("Java interfaces:");
+			foreach (InterfaceInfo inf in javaInterfaces)
+				Console.WriteLine (inf);
 
 			Assert.IsNotNull (dotnetInterfaces, "#1.1");
 			Assert.IsTrue (dotnetInterfaces.Count > 0, "#1.2");
@@ -123,7 +151,11 @@ namespace System.NetTests
 				var addr = addresses.NextElement () as InetAddress;
 				if (addr == null)
 					continue;
-				ret.Add (new IPAddress (addr.GetAddress ()));
+				var ipv6 = addr as Inet6Address;
+				if (ipv6 != null && (ipv6.IsLinkLocalAddress || ipv6.IsMCLinkLocal))
+					ret.Add (new IPAddress (addr.GetAddress (), ipv6.ScopeId));
+				else
+					ret.Add (new IPAddress (addr.GetAddress ()));
 			}
 
 			return ret;
@@ -146,7 +178,7 @@ namespace System.NetTests
 		{
 			byte[] bytes = inf.GetPhysicalAddress ().GetAddressBytes ();
 			// Map to android's idea of device address
-			if (bytes.Length == 0 || inf.NetworkInterfaceType == NetworkInterfaceType.Unknown || inf.NetworkInterfaceType == NetworkInterfaceType.Tunnel)
+			if (bytes.Length == 0 || inf.NetworkInterfaceType == NetworkInterfaceType.Tunnel)
 				return null;
 			return bytes;
 		}
