@@ -4,6 +4,7 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{66CF299A-CE95-4131-BCD8-DB66E30C4BF7}</ProjectGuid>
+    <ProjectTypeGuids>{EFBA0AD7-5A72-4C68-AF49-83D382785DCF};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <OutputType>Library</OutputType>
     <RootNamespace>Android</RootNamespace>
     <AssemblyName>Mono.Android</AssemblyName>
@@ -75,7 +76,7 @@
       <Private>False</Private>
     </Reference>
   </ItemGroup>
-  <Import Project="$(JavaInteropFullPath)\src\Java.Interop.Tools.TypeNameMappings\Java.Interop.Tools.TypeNameMappings.projitems" Label="Shared" Condition="Exists('$(JavaInteropFullPath)\src\Java.Interop.Tools.TypeNameMappings\Java.Interop.Tools.TypeNameMappings.projitems')" />
+  <Import Project="..\..\external\Java.Interop\src\Java.Interop.Tools.TypeNameMappings\Java.Interop.Tools.TypeNameMappings.projitems" Label="Shared" Condition="Exists('..\..\external\Java.Interop\src\Java.Interop.Tools.TypeNameMappings\Java.Interop.Tools.TypeNameMappings.projitems')" />
   <Import Project="..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems" Label="Shared" Condition="Exists('..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems')" />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
@@ -336,12 +337,12 @@
       <Name>jnienv-gen</Name>
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
     </ProjectReference>
-    <ProjectReference Include="$(JavaInteropFullPath)\tools\generator\generator.csproj">
+    <ProjectReference Include="..\..\external\Java.Interop\tools\generator\generator.csproj">
       <Project>{D14A1B5C-2060-4930-92BE-F7190256C735}</Project>
       <Name>generator</Name>
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
     </ProjectReference>
-    <ProjectReference Include="$(JavaInteropFullPath)\tools\jcw-gen\jcw-gen.csproj">
+    <ProjectReference Include="..\..\external\Java.Interop\tools\jcw-gen\jcw-gen.csproj">
       <Project>{52C7D9B6-E8C8-47D0-9471-652D278D7D77}</Project>
       <Name>jcw-gen</Name>
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>

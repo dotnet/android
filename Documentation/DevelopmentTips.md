@@ -101,6 +101,21 @@ Alternatively, if you're working on an `mscorlib.dll` bug:
 	  adb push external/mono/mcs/class/lib/monodroid/mscorlib.dll \
 	    /data/data/Mono.Android_Tests/files/.__override__
 
+# Windows Build Notes
+
+Currently Windows avoids many of the macOS dependencies by downloading a zip bundle
+of binaries previously built on macOS. This speeds up the build and enables
+development on Windows, in general.
+
+A simple way to ensure you have the needed dependencies on Windows is to install
+Visual Studio 2017 (> 15.3.x) along with the Xamarin workload. This will ensure you have
+the correct version of Xamarin.Android, the Android SDK, and Java needed.
+
+It also is worth noting that opening `Xamarin.Android.sln` in Visual Studio tends
+to hold file locks on output assemblies containing MSBuild tasks. Until there is a solution
+for this, it might be more advisable to use an editor like Visual Studio Code and build via
+the command-line.
+
 # Unit Tests
 
 The `xamarin-android` repo contains several unit tests:

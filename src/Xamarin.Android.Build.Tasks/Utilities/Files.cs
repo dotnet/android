@@ -225,7 +225,11 @@ namespace Xamarin.Android.Tools {
 				files.Add (outfile);
 				var dt = File.Exists (outfile) ? File.GetLastWriteTimeUtc (outfile) : DateTime.MinValue;
 				if (forceUpdate || entry.ModificationTime > dt) {
-					entry.Extract (destination, fullName, FileMode.OpenOrCreate);
+					try {
+						entry.Extract (destination, fullName, FileMode.OpenOrCreate);
+					} catch (PathTooLongException) {
+						throw new PathTooLongException ($"Could not extract \"{fullName}\" to \"{outfile}\". Path is too long.");
+					}
 					updated = true;
 				}
 			}

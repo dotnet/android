@@ -151,7 +151,7 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="$(LibZipSharpSourceFullPath)\libZipSharp.csproj">
+    <ProjectReference Include="..\..\..\..\external\LibZipSharp\libZipSharp.csproj">
       <Project>{E248B2CA-303B-4645-ADDC-9D4459D550FD}</Project>
       <Name>libZipSharp</Name>
     </ProjectReference>

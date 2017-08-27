@@ -44,8 +44,9 @@ Building Xamarin.Android requires:
 * [Autotools (`autoconf`, `automake`, etc.)](#autotools)
 * [The Android SDK and NDK](#ndk)
 
-The `make prepare` build step will check that all required dependencies
-are present. If you would like `make prepare` to automatically install
+The `make prepare` build step (or `PrepareWindows.targets` on Windows) will
+check that all required dependencies are present.
+If you would like `make prepare` to automatically install
 required dependencies, set the `$(AutoProvision)` MSBuild property to True
 and (if necessary) set the `$(AutoProvisionUsesSudo)` property to True.
 (This is not supported on all operating systems.)
@@ -204,8 +205,9 @@ Overridable MSBuild properties include:
 
 # Build
 
-At this point in time, building Xamarin.Android is only supported on OS X.
-We will work to improve this.
+Xamarin.Android can be built on Linux, macOS, and Windows.
+
+## Linux and macOS
 
 To build Xamarin.Android, first prepare the project:
 
@@ -217,17 +219,32 @@ is no existing git changes in the `external` folder.
 
 On the main repo, you can use `git status` to ensure a clean slate.
 
-Then, you may do one of the following:
+Next, run `make`:
 
-1. Run make:
+    make
 
-       make
+The default `make all` target will only build a *subset* of runtime ABIs
+and `$(TargetFrameworkVersion)`s. If you want a complete environment --
+*all* the ABIs, all the API levels -- then instead use:
 
-2. Load `Xamarin.Android.sln` into Xamarin Studio and Build the project.
+    make jenkins
 
-    *Note*: The `Mono.Android` project may *fail* on the first build
-    because it generates sources, and those sources won't exist on the
-    initial project load. Rebuild the project should this happen.
+Unit tests are build in a separate target:
+
+    make all-tests
+
+## Windows
+
+To build Xamarin.Android, ensure you are using MSBuild version 15+ and run:
+
+    msbuild build-tools\scripts\PrepareWindows.targets
+    msbuild Xamarin.Android.sln
+
+These are roughly the same as how `make prepare` and `make` are used on other platforms.
+
+_NOTE: there is not currently an equivalent of `make jenkins` or `make all-tests` on Windows._
+
+_Troubleshooting: Ensure you check your MSBuild version(`msbuild -version`) and path for the proper version of MSBuild._
 
 ## Linux build notes
 
@@ -287,6 +304,9 @@ If any program is still not found, try to ensure it's linked via:
 Once the build has finished, [`tools/scripts/xabuild`](tools/scripts/xabuild)
 may be used on Unix-like platforms to build projects.
 See the [Samples](#Samples) section for example usage.
+
+Windows users will need to use the `setup-windows.exe` tool as described in
+[`Documentation/UsingJenkinsBuildArtifacts.md`](Documentation/UsingJenkinsBuildArtifacts.md#oss-xamarinandroidzip-installation).
 
 # Using Jenkins Build Artifacts
 
