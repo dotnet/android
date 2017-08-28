@@ -1,0 +1,12 @@
+#!/usr/bin/make -f
+
+build:
+build-arch:
+build-indep:
+override_dh_strip:
+override_dh_strip_nondeterminism:
+override_dh_shlibdeps:
+	echo "noop"
+
+%:
+	dh $@ 

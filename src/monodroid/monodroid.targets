@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(JavaInteropFullPath)\bin\BuildDebug\JdkInfo.props" />
+  <Import Project="..\..\external\Java.Interop\bin\BuildDebug\JdkInfo.props" />
   <Import Project="monodroid.props" />
   <Import Project="monodroid.projitems" />
   <Import Project="..\..\build-tools\scripts\RequiredPrograms.targets" />
+  <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.GenerateMonoDroidIncludes" />
   <PropertyGroup>
     <_Conf>$(Configuration.ToLowerInvariant())</_Conf>
   </PropertyGroup>
@@ -28,25 +29,19 @@
     <_UnixCFile Include="jni\xamarin_getifaddrs.c" />
   </ItemGroup>
   <ItemGroup>
-    <_EmbeddedBlob Include="config.xml">
-      <Config>monodroid.config</Config>
-      <Include>config.include</Include>
-    </_EmbeddedBlob>
-    <_EmbeddedBlob Include="machine.config.xml">
-      <Config>monodroid.machine.config</Config>
-      <Include>machine.config.include</Include>
-    </_EmbeddedBlob>
+    <_EmbeddedBlobSource Include="config.xml" />
+    <_EmbeddedBlobDestination Include="jni\config.include" />
+    <_EmbeddedBlobSource Include="machine.config.xml" />
+    <_EmbeddedBlobDestination Include="jni\machine.config.include" />
   </ItemGroup>
   <Target Name="_BuildRuntimes"
       DependsOnTargets="_GenerateIncludeFiles;_BuildAndroidRuntimes;_BuildHostRuntimes">
   </Target>
   <Target Name="_GenerateIncludeFiles"
-      Inputs="@(_EmbeddedBlob);jni/config.h"
-      Outputs="@(_EmbeddedBlob->'jni\%(Include)');$(MSBuildThisFileDirectory)bin\$(Configuration)\include\config.h">
+      Inputs="@(_EmbeddedBlobSource);jni/config.h"
+      Outputs="@(_EmbeddedBlobDestination);$(MSBuildThisFileDirectory)bin\$(Configuration)\include\config.h">
     <Copy SourceFiles="jni/config.h" DestinationFiles="$(MSBuildThisFileDirectory)bin\$(Configuration)\include\config.h" />
-    <Exec Command="(cat &quot;@(_EmbeddedBlob)&quot; ; dd if=/dev/zero bs=1 count=1 2>/dev/null) > %(_EmbeddedBlob.Config)" />
-    <Exec Command="xxd -i %(_EmbeddedBlob.Config) | sed 's/^unsigned /static const unsigned /g' > jni/%(_EmbeddedBlob.Include)" />
-    <Exec Command="rm %(_EmbeddedBlob.Config)" />
+    <GenerateMonoDroidIncludes SourceFiles="@(_EmbeddedBlobSource)" DestinationFiles="@(_EmbeddedBlobDestination)" />
   </Target>
   <Target Name="_BuildAndroidRuntimes"
       Inputs="@(_CFile);jni\Android.mk"

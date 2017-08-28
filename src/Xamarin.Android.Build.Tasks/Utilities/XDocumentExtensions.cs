@@ -22,6 +22,11 @@ namespace Xamarin.Android.Tasks
 				e = e.Elements (p);
 			return e.Select (p => p.Value).ToArray ();
 		}
+
+		public static string ToFullString (this XElement element)
+		{
+			return element.ToString (SaveOptions.DisableFormatting);
+		}
 	}
 }
 

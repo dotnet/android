@@ -107,6 +107,18 @@ namespace Xamarin.Android.Build.Tests
 			return androidSdkDirectory;
 		}
 
+		protected string CreateFauxReferencesDirectory (string path, string[] versions)
+		{
+			string referencesDirectory = Path.Combine (Root, path);
+			Directory.CreateDirectory (referencesDirectory);
+			Directory.CreateDirectory (Path.Combine (referencesDirectory, "v1.0"));
+			File.WriteAllText (Path.Combine (referencesDirectory, "v1.0", "mscorlib.dll"), "");
+			foreach (var v in versions){
+				Directory.CreateDirectory (Path.Combine (referencesDirectory, v));
+			}
+			return referencesDirectory;
+		}
+
 		protected string CreateFauxJavaSdkDirectory (string path, string javaVersion, out string javaExe)
 		{
 			javaExe = IsWindows ? "Java.cmd" : "java.bash";

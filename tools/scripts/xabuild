@@ -35,7 +35,8 @@
 #
 
 name=$(basename "$0")
-prefix="$(cd `dirname "$0"` && pwd)"
+truepath=$(readlink "$0" || echo "$0")
+prefix="$(cd `dirname "${truepath}"` && pwd)"
 
 if [ -z "$MSBUILD" ] ; then
 	MSBUILD=xbuild
@@ -95,14 +96,11 @@ fi
 export TARGETS_DIR
 export MONO_ANDROID_PATH="$prefix"
 
-
-if [ -z "$ANDROID_NDK_PATH" -a -f "$Paths_targets" ] ; then
+if [ -f "$Paths_targets" ] ; then
 	ANDROID_NDK_PATH=$($MSBUILD /nologo /v:minimal /t:GetAndroidNdkFullPath "$Paths_targets")
 	ANDROID_NDK_PATH=$(echo $ANDROID_NDK_PATH | sed 's/^\w*//g')
 	export ANDROID_NDK_PATH
-fi
 
-if [ -z "$ANDROID_SDK_PATH" -a -f "$Paths_targets" ] ; then
 	ANDROID_SDK_PATH=$($MSBUILD /nologo /v:minimal /t:GetAndroidSdkFullPath "$Paths_targets")
 	ANDROID_SDK_PATH=$(echo $ANDROID_SDK_PATH | sed 's/^\w*//g')
 	export ANDROID_SDK_PATH

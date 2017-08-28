@@ -21,8 +21,15 @@ export MONO_OPTIONS
 endif
 
 include build-tools/scripts/msbuild.mk
+
+ifeq ($(USE_MSBUILD),1)
+_SLN_BUILD  = $(MSBUILD)
+else    # $(MSBUILD) != 1
+_SLN_BUILD  = MSBUILD="$(MSBUILD)" tools/scripts/xabuild
+endif   # $(USE_MSBUILD) == 1
+
 all::
-	$(MSBUILD) $(MSBUILD_FLAGS) $(SOLUTION)
+	$(_SLN_BUILD) $(MSBUILD_FLAGS) $(SOLUTION)
 
 all-tests::
 	MSBUILD="$(MSBUILD)" tools/scripts/xabuild $(MSBUILD_FLAGS) Xamarin.Android-Tests.sln
@@ -37,11 +44,13 @@ install::
 	-mkdir -p "$(prefix)/lib/xamarin.android"
 	-mkdir -p "$(prefix)/lib/mono/xbuild/Xamarin/"
 	cp -a "bin/$(CONFIGURATION)/lib/xamarin.android/." "$(prefix)/lib/xamarin.android/"
-	cp tools/scripts/xabuild "$(prefix)/bin/xabuild"
 	-rm -rf "$(prefix)/lib/mono/xbuild/Xamarin/Android"
 	-rm -rf "$(prefix)/lib/mono/xbuild-frameworks/MonoAndroid"
 	ln -s "$(prefix)/lib/xamarin.android/xbuild/Xamarin/Android/" "$(prefix)/lib/mono/xbuild/Xamarin/Android"
 	ln -s "$(prefix)/lib/xamarin.android/xbuild-frameworks/MonoAndroid/" "$(prefix)/lib/mono/xbuild-frameworks/MonoAndroid"
+	if [ ! -e "$(prefix)/bin/mono" ]; then \
+		cp tools/scripts/xabuild "$(prefix)/bin/xabuild"
+	fi
 
 uninstall::
 	rm -rf "$(prefix)/lib/xamarin.android/" "$(prefix)/bin/xabuild"
@@ -146,12 +155,24 @@ TEST_APK_PROJECTS = \
 	tests/CodeGen-Binding/Xamarin.Android.JcwGen-Tests/Xamarin.Android.JcwGen-Tests.csproj \
 	tests/locales/Xamarin.Android.Locale-Tests/Xamarin.Android.Locale-Tests.csproj
 
-# Syntax: $(call BUILD_TEST_APK,path/to/project.csproj)
+TEST_APK_PROJECTS_RELEASE = \
+	src/Mono.Android/Test/Mono.Android-Tests.csproj
+
+# Syntax: $(call BUILD_TEST_APK,path/to/project.csproj,additional_msbuild_flags)
 define BUILD_TEST_APK
 	# Must use xabuild to ensure correct assemblies are resolved
-	MSBUILD="$(MSBUILD)" tools/scripts/xabuild $(MSBUILD_FLAGS) /t:SignAndroidPackage $(1)
+	MSBUILD="$(MSBUILD)" tools/scripts/xabuild $(MSBUILD_FLAGS) /t:SignAndroidPackage $(2) $(1)
 endef	# BUILD_TEST_APK
 
+# Syntax: $(call RUN_APK_TESTS,projects,additional_msbuild_flags)
+define RUN_APK_TESTS
+	$(foreach p, $(1), $(call BUILD_TEST_APK, $(p),$(2)))
+	$(MSBUILD) $(MSBUILD_FLAGS) $(2) tests/RunApkTests.targets
+endef
+
 run-apk-tests:
-	$(foreach p, $(TEST_APK_PROJECTS), $(call BUILD_TEST_APK, $(p)))
-	$(MSBUILD) $(MSBUILD_FLAGS) tests/RunApkTests.targets
+	$(call RUN_APK_TESTS, $(TEST_APK_PROJECTS), )
+ifneq ($(wildcard bin/Release),)
+	$(call RUN_APK_TESTS, $(TEST_APK_PROJECTS_RELEASE), /p:Configuration=Release)
+	$(call RUN_APK_TESTS, $(TEST_APK_PROJECTS_RELEASE), /p:Configuration=Release /p:AotAssemblies=true)
+endif

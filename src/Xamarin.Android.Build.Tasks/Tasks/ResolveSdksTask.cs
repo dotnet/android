@@ -148,14 +148,15 @@ namespace Xamarin.Android.Tasks
 			}
 			MonoAndroidBinPath  = MonoAndroidHelper.GetOSBinPath () + Path.DirectorySeparatorChar;
 
-			MonoAndroidHelper.RefreshMonoDroidSdk (MonoAndroidToolsPath, null, ReferenceAssemblyPaths);
+			MonoAndroidHelper.RefreshSupportedVersions (ReferenceAssemblyPaths);
 			MonoAndroidHelper.RefreshAndroidSdk (AndroidSdkPath, AndroidNdkPath, JavaSdkPath);
 
 			this.AndroidNdkPath = AndroidSdk.AndroidNdkPath;
 			this.AndroidSdkPath = AndroidSdk.AndroidSdkPath;
 			this.JavaSdkPath = AndroidSdk.JavaSdkPath;
 
-			ValidateJavaVersion (TargetFrameworkVersion, AndroidSdkBuildToolsVersion);
+			if (!ValidateJavaVersion (TargetFrameworkVersion, AndroidSdkBuildToolsVersion))
+				return false;
 
 			if (string.IsNullOrEmpty (AndroidSdkPath)) {
 				Log.LogCodedError ("XA5205", "The Android SDK Directory could not be found. Please set via /p:AndroidSdkDirectory.");
@@ -236,8 +237,7 @@ namespace Xamarin.Android.Tasks
 			if (!ValidateApiLevels ())
 				return false;
 
-			string  frameworksPath  = Path.GetDirectoryName (MonoDroidSdk.FrameworkPath);
-			if (!Directory.Exists (Path.Combine (frameworksPath, TargetFrameworkVersion))) {
+			if (!MonoAndroidHelper.SupportedVersions.FrameworkDirectories.Any (p => Directory.Exists (Path.Combine (p, TargetFrameworkVersion)))) {
 				Log.LogError (
 					subcategory:      string.Empty,
 					errorCode:        "XA0001",
@@ -262,7 +262,7 @@ namespace Xamarin.Android.Tasks
 
 			MonoAndroidHelper.TargetFrameworkDirectories = ReferenceAssemblyPaths;
 
-			AndroidApiLevelName = MonoAndroidHelper.GetPlatformApiLevelName (AndroidApiLevel);
+			AndroidApiLevelName = MonoAndroidHelper.SupportedVersions.GetIdFromApiLevel (AndroidApiLevel);
 
 			Log.LogDebugMessage ("ResolveSdksTask Outputs:");
 			Log.LogDebugMessage ("  AndroidApiLevel: {0}", AndroidApiLevel);
@@ -316,7 +316,7 @@ namespace Xamarin.Android.Tasks
 
 		Version GetJavaVersionForFramework (string targetFrameworkVersion)
 		{
-			var apiLevel = AndroidVersion.TryOSVersionToApiLevel (targetFrameworkVersion);
+			var apiLevel = MonoAndroidHelper.SupportedVersions.GetApiLevelFromFrameworkVersion (targetFrameworkVersion);
 			if (apiLevel >= 24)
 				return new Version (1, 8);
 			else if (apiLevel == 23)
@@ -336,7 +336,7 @@ namespace Xamarin.Android.Tasks
 			return Version.Parse (MinimumSupportedJavaVersion);
 		}
 
-		void ValidateJavaVersion (string targetFrameworkVersion, string buildToolsVersion)
+		bool ValidateJavaVersion (string targetFrameworkVersion, string buildToolsVersion)
 		{
 			Version requiredJavaForFrameworkVersion = GetJavaVersionForFramework (targetFrameworkVersion);
 			Version requiredJavaForBuildTools = GetJavaVersionForBuildTools (buildToolsVersion);
@@ -358,7 +358,7 @@ namespace Xamarin.Android.Tasks
 			} catch (Exception ex) {
 				Log.LogWarningFromException (ex);
 				Log.LogWarning ($"Failed to get the Java SDK version. Please ensure you have Java {required} or above installed.");
-				return;
+				return false;
 			}
 			var versionInfo = sb.ToString ();
 			var versionNumberMatch = javaVersionRegex.Match (versionInfo);
@@ -373,6 +373,7 @@ namespace Xamarin.Android.Tasks
 				}
 			} else
 				Log.LogWarning ($"Failed to get the Java SDK version. Found {versionInfo} but this does not seem to contain a valid version number.");
+			return !Log.HasLoggedErrors;
 		}
 
 		bool ValidateApiLevels ()
@@ -416,7 +417,7 @@ namespace Xamarin.Android.Tasks
 
 			if (!string.IsNullOrWhiteSpace (TargetFrameworkVersion)) {
 				TargetFrameworkVersion  = TargetFrameworkVersion.Trim ();
-				string apiLevel = MonoDroidSdk.GetApiLevelForFrameworkVersion (TargetFrameworkVersion);
+				string apiLevel = MonoAndroidHelper.SupportedVersions.GetIdFromFrameworkVersion (TargetFrameworkVersion);
 				if (apiLevel == null) {
 					Log.LogCodedError ("XA0000",
 							"Could not determine API level for $(TargetFrameworkVersion) of '{0}'.",
@@ -438,7 +439,7 @@ namespace Xamarin.Android.Tasks
 				.Select (platformDir => Path.GetFileName (platformDir))
 				.Where (dir => dir.StartsWith ("android-", StringComparison.OrdinalIgnoreCase))
 				.Select (dir => dir.Substring ("android-".Length))
-				.Select (apiName => MonoAndroidHelper.GetPlatformApiLevel (apiName));
+				.Select (apiName => MonoAndroidHelper.SupportedVersions.GetIdFromApiLevel (apiName));
 			int maxApiLevel = int.MinValue;
 			foreach (var level in apiLevels) {
 				int v;
@@ -463,7 +464,7 @@ namespace Xamarin.Android.Tasks
 			foreach (string versionedDir in ReferenceAssemblyPaths) {
 				string parent   = Path.GetDirectoryName (versionedDir.TrimEnd (Path.DirectorySeparatorChar));
 				for ( int l = level ; l > 0; l--) {
-					string tfv = MonoDroidSdk.GetFrameworkVersionForApiLevel (l.ToString ());
+					string tfv = MonoAndroidHelper.SupportedVersions.GetFrameworkVersionFromApiLevel (l);
 					if (tfv == null)
 						continue;
 					string dir = Path.Combine (parent, tfv);
@@ -476,8 +477,8 @@ namespace Xamarin.Android.Tasks
 
 		string GetTargetFrameworkVersionFromApiLevel ()
 		{
-			string targetFramework = MonoDroidSdk.GetFrameworkVersionForApiLevel (SupportedApiLevel) ??
-				MonoDroidSdk.GetFrameworkVersionForApiLevel (AndroidApiLevel);
+			string targetFramework = MonoAndroidHelper.SupportedVersions.GetFrameworkVersionFromId (SupportedApiLevel) ??
+				MonoAndroidHelper.SupportedVersions.GetFrameworkVersionFromId (AndroidApiLevel);
 			if (targetFramework != null)
 				return targetFramework;
 			Log.LogCodedError ("XA0000",

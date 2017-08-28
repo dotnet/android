@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -43,6 +43,7 @@
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\CheckAdbTarget.cs" />
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\CreateAndroidEmulator.cs" />
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\Emulator.cs" />
+    <Compile Include="Xamarin.Android.Tools.BootstrapTasks\GenerateMonoDroidIncludes.cs" />
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\GenerateProfile.cs" />
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\GetNugetPackageBasePath.cs" />
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\RunInstrumentationTests.cs" />
@@ -52,13 +53,18 @@
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\KillProcess.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="$(LibZipSharpSourceFullPath)\libZipSharp.csproj">
+    <ProjectReference Include="..\..\external\LibZipSharp\libZipSharp.csproj">
       <Project>{E248B2CA-303B-4645-ADDC-9D4459D550FD}</Project>
       <Name>libZipSharp</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\build-tools\libzip\libzip.mdproj">
+    <ProjectReference Include="..\..\build-tools\libzip\libzip.mdproj" Condition=" '$(HostOS)' != 'Windows' ">
       <Project>{900A0F71-BAAD-417A-8D1A-8D330297CDD0}</Project>
       <Name>libzip</Name>
+      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\..\build-tools\libzip-windows\libzip-windows.mdproj" Condition=" '$(HostOS)' == 'Windows' ">
+      <Project>{0DE278D6-000F-4001-BB98-187C0AF58A61}</Project>
+      <Name>libzip-windows</Name>
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
     </ProjectReference>
     <ProjectReference Include="..\..\build-tools\xa-prep-tasks\xa-prep-tasks.csproj">

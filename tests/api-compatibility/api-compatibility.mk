@@ -16,7 +16,6 @@ run-api-compatibility-tests: $(MONO_API_HTML) $(MONO_API_INFO)
 	make -C external/xamarin-android-api-compatibility check \
 		MONO_API_HTML="$(RUNTIME) $(abspath $(MONO_API_HTML))" \
 		MONO_API_INFO="$(RUNTIME) $(abspath $(MONO_API_INFO))" \
-		STABLE_FRAMEWORKS="$(STABLE_FRAMEWORKS)" \
 		XA_FRAMEWORK_DIR="$(abspath $(FRAMEWORK_DIR))"
 
 $(MONO_API_HTML): $(wildcard $(MONO_API_HTML_DIR)/*.cs) $(MONO_OPTIONS_SRC)

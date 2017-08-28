@@ -11,14 +11,20 @@ namespace Xamarin.Android.Build.Utilities
 {
 	public class AndroidAppManifest
 	{
+		AndroidVersions     versions;
 		XDocument doc;
 		XElement manifest, application, usesSdk;
 
 		static readonly XNamespace aNS = "http://schemas.android.com/apk/res/android";
 		static readonly XName aName = aNS + "name";
 
-		AndroidAppManifest (XDocument doc)
+		AndroidAppManifest (AndroidVersions versions, XDocument doc)
 		{
+			if (versions == null)
+				throw new ArgumentNullException (nameof (versions));
+			if (doc == null)
+				throw new ArgumentNullException (nameof (doc));
+			this.versions   = versions;
 			this.doc = doc;
 			manifest = doc.Root;
 			if (manifest.Name != "manifest")
@@ -51,9 +57,9 @@ namespace Xamarin.Android.Build.Utilities
 					: string.Join (".", packageParts);
 		}
 
-		public static AndroidAppManifest Create (string packageName, string appLabel)
+		public static AndroidAppManifest Create (string packageName, string appLabel, AndroidVersions versions)
 		{
-			return new AndroidAppManifest (XDocument.Parse (
+			return new AndroidAppManifest (versions, XDocument.Parse (
 				@"<?xml version=""1.0"" encoding=""utf-8""?>
 <manifest xmlns:android=""http://schemas.android.com/apk/res/android"" android:versionCode=""1"" android:versionName=""1.0"">
   <uses-sdk />
@@ -65,14 +71,14 @@ namespace Xamarin.Android.Build.Utilities
 			};
 		}
 
-		public static AndroidAppManifest Load (string filename)
+		public static AndroidAppManifest Load (string filename, AndroidVersions versions)
 		{
-			return Load (XDocument.Load (filename));
+			return Load (XDocument.Load (filename), versions);
 		}
 
-		public static AndroidAppManifest Load (XDocument doc)
+		public static AndroidAppManifest Load (XDocument doc, AndroidVersions versions)
 		{
-			return new AndroidAppManifest (doc);
+			return new AndroidAppManifest (versions, doc);
 		}
 
 		public void Write (XmlWriter writer)
@@ -165,8 +171,12 @@ namespace Xamarin.Android.Build.Utilities
 			if (string.IsNullOrEmpty (version))
 				return null;
 			int vn;
-			if (!int.TryParse (version, out vn))
-				vn = AndroidVersion.MaxApiLevel;
+			if (!int.TryParse (version, out vn)) {
+				int? apiLevel = versions.GetApiLevelFromId (version);
+				if (apiLevel.HasValue)
+					return apiLevel.Value;
+				return versions.MaxStableVersion.ApiLevel;
+			}
 			return vn;
 		}
 

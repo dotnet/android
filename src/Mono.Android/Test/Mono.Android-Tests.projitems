@@ -4,7 +4,7 @@
     <UnitTestApk Include="$(OutputPath)Mono.Android_Tests-Signed.apk">
       <Package>Mono.Android_Tests</Package>
       <InstrumentationType>xamarin.android.runtimetests.TestInstrumentation</InstrumentationType>
-      <ResultsPath>$(MSBuildThisFileDirectory)..\..\..\TestResult-Mono.Android_Tests.xml</ResultsPath>
+      <ResultsPath>$(MSBuildThisFileDirectory)..\..\..\TestResult-Mono.Android_Tests-$(Configuration)$(_AotName).xml</ResultsPath>
     </UnitTestApk>
   </ItemGroup>
 </Project>

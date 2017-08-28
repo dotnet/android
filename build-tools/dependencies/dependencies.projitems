@@ -5,15 +5,15 @@
     <_AptGetInstall>apt-get -f -u install</_AptGetInstall>
   </PropertyGroup>
   <ItemGroup>
-    <RequiredProgram Include="$(HostCcName)" />
-    <RequiredProgram Include="$(HostCxxName)" />
+    <RequiredProgram Include="$(HostCcName)"        Condition=" '$(HostOS)' != 'Windows' " />
+    <RequiredProgram Include="$(HostCxxName)"       Condition=" '$(HostOS)' != 'Windows' " />
     <RequiredProgram Include="7za"                  Condition=" '$(NeedMxe)' == 'true' And $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))">
       <Homebrew>p7zip</Homebrew>
     </RequiredProgram>
-    <RequiredProgram Include="autoconf">
+    <RequiredProgram Include="autoconf"             Condition=" '$(HostOS)' != 'Windows' ">
       <Homebrew>autoconf</Homebrew>
     </RequiredProgram>
-    <RequiredProgram Include="automake">
+    <RequiredProgram Include="automake"             Condition=" '$(HostOS)' != 'Windows' ">
       <Homebrew>automake</Homebrew>
     </RequiredProgram>
     <RequiredProgram Include="cmake"                Condition=" '$(NeedMxe)' == 'true' And $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))">
@@ -36,10 +36,11 @@
     </RequiredProgram>
     <RequiredProgram Include="javac">
       <MinimumVersion>1.8</MinimumVersion>
-      <CurrentVersionCommand>$(MSBuildThisFileDirectory)..\scripts\javac-version</CurrentVersionCommand>
+      <CurrentVersionCommand                        Condition=" '$(HostOS)' != 'Windows' ">$(MSBuildThisFileDirectory)..\scripts\javac-version</CurrentVersionCommand>
+      <CurrentVersionCommand                        Condition=" '$(HostOS)' == 'Windows' ">javac -version 2&gt;&amp;1</CurrentVersionCommand>
       <UbuntuInstall>$(_AptGetInstall) openjdk-8-jdk</UbuntuInstall>
     </RequiredProgram>
-    <RequiredProgram Include="make" />
+    <RequiredProgram Include="make"                 Condition=" '$(HostOS)' != 'Windows' " />
     <RequiredProgram Include="pkg-config"           Condition=" '$(NeedMxe)' == 'true' And $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))">
       <Homebrew>pkg-config</Homebrew>
     </RequiredProgram>
@@ -52,9 +53,6 @@
     </RequiredProgram>
     <RequiredProgram Include="xz"                   Condition=" '$(NeedMxe)' == 'true' And $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))">
       <Homebrew>xz</Homebrew>
-    </RequiredProgram>
-    <RequiredProgram Include="xxd">
-      <UbuntuInstall>$(_AptGetInstall) vim-common</UbuntuInstall>
     </RequiredProgram>
     <RequiredProgram Include="$(ManagedRuntime)"    Condition=" '$(ManagedRuntime)' != '' ">
       <MinimumVersion>$(MonoRequiredMinimumVersion)</MinimumVersion>

@@ -38,15 +38,12 @@
     <Compile Include="GdbPaths.cs" />
     <Compile Include="AndroidTargetArch.cs" />
     <Compile Include="OS.cs" />
-    <Compile Include="MonoDroidSdk.cs" />
     <Compile Include="AndroidAppManifest.cs" />
     <Compile Include="AndroidVersion.cs" />
+    <Compile Include="AndroidVersions.cs" />
     <Compile Include="FileUtil.cs" />
     <Compile Include="AndroidSdk.cs" />
     <Compile Include="SatelliteAssembly.cs" />
-    <Compile Include="Sdks\MonoDroidSdkBase.cs" />
-    <Compile Include="Sdks\MonoDroidSdkUnix.cs" />
-    <Compile Include="Sdks\MonoDroidSdkWindows.cs" />
     <Compile Include="AndroidLogger.cs" />
     <Compile Include="Sdks\AndroidSdkBase.cs" />
     <Compile Include="Sdks\AndroidSdkUnix.cs" />

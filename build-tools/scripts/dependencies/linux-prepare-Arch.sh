@@ -30,7 +30,6 @@ ARCH_DEPS="autoconf
 	unzip
 	which
 	zip
-	xxd
 	"
 if [ $NO_SUDO = "false" ]; then
 	sudo pacman -S --noconfirm --needed $ARCH_DEPS

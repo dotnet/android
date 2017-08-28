@@ -10,8 +10,14 @@ GIT_COMMIT        = $(shell LANG=C git log --no-color --first-parent -n1 --prett
 # "0" when commit hash is invalid (e.g. 00000000)
 -num-commits-since-version-change = $(shell LANG=C git log $(-commit-of-last-version-change)..HEAD --oneline 2>/dev/null | wc -l | sed 's/ //g')
 
+ifeq ($(OS),Linux)
+ZIP_EXTENSION         = tar.bz2
+else
+ZIP_EXTENSION         = zip
+endif
+
 ZIP_OUTPUT_BASENAME   = oss-xamarin.android_v$(PRODUCT_VERSION).$(-num-commits-since-version-change)_$(OS)-$(OS_ARCH)_$(GIT_BRANCH)_$(GIT_COMMIT)
-ZIP_OUTPUT            = $(ZIP_OUTPUT_BASENAME).zip
+ZIP_OUTPUT            = $(ZIP_OUTPUT_BASENAME).$(ZIP_EXTENSION)
 
 
 ## The following values *must* use SPACE, **not** TAB, to separate values.
@@ -47,24 +53,21 @@ ALL_AOT_ABIS = \
 	arm64 \
 	x86 \
 	x86_64 \
-#
-# On Linux we now disable building of all the Windows cross-compiler/AOT environments.
-# This is because Linux builds don't use mxe and the system-provided mingw environment
-# is missing a handful of libraries required by libmonodroid and libzip-windows
-#
-# When/if CppSharp is fixed to work on Linux we can re-enable the code below
-#
+
 ifneq ($(OS),Linux)
 ALL_HOST_ABIS += \
 	mxe-Win32 \
 	mxe-Win64
+
 
 ALL_AOT_ABIS += \
 	win-armeabi \
 	win-arm64 \
 	win-x86 \
 	win-x86_64
+endif
 
+ifneq ($(OS),Linux)
 MONO_OPTIONS += --arch=64
 endif
 
@@ -92,7 +95,7 @@ leeroy: leeroy-all framework-assemblies opentk-jcw
 
 leeroy-all:
 	$(foreach conf, $(CONFIGURATIONS), \
-		$(MSBUILD) $(MSBUILD_FLAGS) $(SOLUTION) /p:Configuration=$(conf) $(_MSBUILD_ARGS) ; )
+		$(_SLN_BUILD) $(MSBUILD_FLAGS) $(SOLUTION) /p:Configuration=$(conf) $(_MSBUILD_ARGS) ; )
 
 framework-assemblies:
 	PREV_VERSION="v1.0"; \
@@ -104,29 +107,29 @@ framework-assemblies:
 			if [ $$? -ne 0 ] ; then \
 				rm -f bin/$(conf)/lib/xamarin.android/xbuild-frameworks/MonoAndroid/$${CUR_VERSION}/RedistList/FrameworkList.xml; \
 			fi; \
-			$(MSBUILD) $(MSBUILD_FLAGS) src/Mono.Android/Mono.Android.csproj /p:Configuration=$(conf) $(_MSBUILD_ARGS) \
+			$(_SLN_BUILD) $(MSBUILD_FLAGS) src/Mono.Android/Mono.Android.csproj /p:Configuration=$(conf) $(_MSBUILD_ARGS) \
 				/p:AndroidApiLevel=$(a) /p:AndroidPlatformId=$(word $(a), $(ALL_PLATFORM_IDS)) /p:AndroidFrameworkVersion=$${CUR_VERSION} \
 				/p:AndroidPreviousFrameworkVersion=$${PREV_VERSION}; ) \
 		PREV_VERSION=$${CUR_VERSION}; )
 	$(foreach conf, $(CONFIGURATIONS), \
 		rm -f bin/$(conf)/lib/xamarin.android/xbuild-frameworks/MonoAndroid/v1.0/Xamarin.Android.NUnitLite.dll; \
-		$(MSBUILD) $(MSBUILD_FLAGS) src/Xamarin.Android.NUnitLite/Xamarin.Android.NUnitLite.csproj /p:Configuration=$(conf) $(_MSBUILD_ARGS) \
+		$(_SLN_BUILD) $(MSBUILD_FLAGS) src/Xamarin.Android.NUnitLite/Xamarin.Android.NUnitLite.csproj /p:Configuration=$(conf) $(_MSBUILD_ARGS) \
 			/p:AndroidApiLevel=$(firstword $(API_LEVELS)) /p:AndroidPlatformId=$(word $(firstword $(API_LEVELS)), $(ALL_PLATFORM_IDS)) /p:AndroidFrameworkVersion=$(firstword $(FRAMEWORKS)); )
 	_latest_framework=$$($(MSBUILD) /p:DoNotLoadOSProperties=True /nologo /v:minimal /t:GetAndroidLatestFrameworkVersion build-tools/scripts/Info.targets | tr -d '[[:space:]]') ; \
 	$(foreach conf, $(CONFIGURATIONS), \
 		rm -f "bin/$(conf)/lib/xamarin.android/xbuild-frameworks/MonoAndroid/$$_latest_framework"/Mono.Android.Export.* ; \
-		$(MSBUILD) $(MSBUILD_FLAGS) src/Mono.Android.Export/Mono.Android.Export.csproj /p:Configuration=$(conf) $(_MSBUILD_ARGS) \
+		$(_SLN_BUILD) $(MSBUILD_FLAGS) src/Mono.Android.Export/Mono.Android.Export.csproj /p:Configuration=$(conf) $(_MSBUILD_ARGS) \
 			/p:AndroidApiLevel=$(firstword $(API_LEVELS)) /p:AndroidPlatformId=$(word $(firstword $(API_LEVELS)), $(ALL_PLATFORM_IDS)) /p:AndroidFrameworkVersion=$(firstword $(FRAMEWORKS)); ) \
 	$(foreach conf, $(CONFIGURATIONS), \
 		rm -f "bin/$(conf)/lib/xamarin.android/xbuild-frameworks/MonoAndroid/$$_latest_framework"/OpenTK-1.0.* ; \
-		$(MSBUILD) $(MSBUILD_FLAGS) src/OpenTK-1.0/OpenTK.csproj /p:Configuration=$(conf) $(_MSBUILD_ARGS) \
+		$(_SLN_BUILD) $(MSBUILD_FLAGS) src/OpenTK-1.0/OpenTK.csproj /p:Configuration=$(conf) $(_MSBUILD_ARGS) \
 			/p:AndroidApiLevel=$(firstword $(API_LEVELS)) /p:AndroidPlatformId=$(word $(firstword $(API_LEVELS)), $(ALL_PLATFORM_IDS)) /p:AndroidFrameworkVersion=$(firstword $(FRAMEWORKS)); )
 
 opentk-jcw:
 	$(foreach a, $(API_LEVELS), \
 		$(foreach conf, $(CONFIGURATIONS), \
 			touch bin/$(conf)/lib/xamarin.android/xbuild-frameworks/MonoAndroid/*/OpenTK-1.0.dll; \
-			$(MSBUILD) $(MSBUILD_FLAGS) src/OpenTK-1.0/OpenTK.csproj /t:GenerateJavaCallableWrappers /p:Configuration=$(conf) $(_MSBUILD_ARGS) \
+			$(_SLN_BUILD) $(MSBUILD_FLAGS) src/OpenTK-1.0/OpenTK.csproj /t:GenerateJavaCallableWrappers /p:Configuration=$(conf) $(_MSBUILD_ARGS) \
 				/p:AndroidApiLevel=$(a) /p:AndroidPlatformId=$(word $(a), $(ALL_PLATFORM_IDS)) /p:AndroidFrameworkVersion=$(word $(a), $(ALL_FRAMEWORKS)); ))
 
 _BUNDLE_ZIPS_INCLUDE  = \
@@ -144,6 +147,7 @@ create-vsix:
 			$(if $(EXPERIMENTAL),/p:IsExperimental="$(EXPERIMENTAL)") \
 			$(if $(PRODUCT_COMPONENT),/p:IsProductComponent="$(PRODUCT_COMPONENT)") \
 			$(if $(PACKAGE_VERSION),/p:ProductVersion="$(PACKAGE_VERSION)") \
+			$(if $(REPO_NAME),/p:XARepositoryName="$(REPO_NAME)") \
 			$(if $(PACKAGE_HEAD_BRANCH),/p:XAVersionBranch="$(PACKAGE_HEAD_BRANCH)") \
 			$(if $(PACKAGE_VERSION_REV),/p:XAVersionCommitCount="$(PACKAGE_VERSION_REV)") \
 			$(if $(COMMIT),/p:XAVersionHash="$(COMMIT)") ; )
@@ -164,8 +168,22 @@ package-oss $(ZIP_OUTPUT):
 		for f in `cat $$_sl` ; do \
 			echo "$(ZIP_OUTPUT_BASENAME)/bin/$$c/lib/xamarin.android/xbuild/$$f" >> "$$_exclude_list"; \
 		done; \
-	done; \
+	done
+ifeq ($(ZIP_EXTENSION),zip)
 	zip -r "$(ZIP_OUTPUT)" \
 		`ls -1d $(_BUNDLE_ZIPS_INCLUDE) 2>/dev/null` \
-		"-x@$$_exclude_list"
+		"-x@.__exclude_list.txt"
+else ifeq ($(ZIP_EXTENSION),tar.bz2)
+	tar --exclude-from=.__exclude_list.txt -cjhvf "$(ZIP_OUTPUT)" `ls -1d $(_BUNDLE_ZIPS_INCLUDE) 2>/dev/null`
+endif
 	-rm ".__exclude_list.txt"
+
+package-deb: $(ZIP_OUTPUT)
+	rm -fr $(ZIP_OUTPUT_BASENAME)
+	tar xf $(ZIP_OUTPUT)
+	cp -a build-tools/debian-metadata $(ZIP_OUTPUT_BASENAME)/debian
+	sed "s/%CONFIG%/$(CONFIGURATION)/" $(ZIP_OUTPUT_BASENAME)/debian/xamarin.android.install.in > $(ZIP_OUTPUT_BASENAME)/debian/xamarin.android.install && rm -f $(ZIP_OUTPUT_BASENAME)/debian/xamarin.android.install.in
+	cp LICENSE $(ZIP_OUTPUT_BASENAME)/debian/copyright
+	ln -sf $(ZIP_OUTPUT) oss-xamarin.android_$(PRODUCT_VERSION).$(-num-commits-since-version-change).orig.tar.bz2
+	cd $(ZIP_OUTPUT_BASENAME) && DEBEMAIL="Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>" dch --create -v $(PRODUCT_VERSION).$(-num-commits-since-version-change) --package oss-xamarin.android --force-distribution --distribution alpha "New release - please see git log for $(GIT_COMMIT)"
+	cd $(ZIP_OUTPUT_BASENAME) && dpkg-buildpackage -us -uc -rfakeroot

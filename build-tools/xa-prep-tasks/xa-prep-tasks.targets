@@ -40,12 +40,12 @@
     />
     <WriteLinesToFile
         File="$(_VersionCommitFile)"
-        Lines="xamarin-android/$(XAVersionBranch)/$(XAVersionHash)"
+        Lines="$(XARepositoryName)/$(XAVersionBranch)/$(XAVersionHash)"
         Overwrite="True"
     />
     <WriteLinesToFile
         File="$(_XAVersionCommitFile)"
-        Lines="xamarin-android/$(XAVersionBranch)/$(XAVersionHash)"
+        Lines="$(XARepositoryName)/$(XAVersionBranch)/$(XAVersionHash)"
         Overwrite="True"
     />
     <WriteLinesToFile

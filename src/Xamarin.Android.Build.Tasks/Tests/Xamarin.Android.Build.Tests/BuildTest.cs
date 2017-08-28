@@ -346,16 +346,15 @@ printf ""%d"" x
 		public void BuildMultiDexApplication (bool useJackAndJill, string fxVersion)
 		{
 			var proj = CreateMultiDexRequiredApplication ();
-			proj.UseJackAndJill = useJackAndJill;
-			proj.TargetFrameworkVersion = fxVersion;
 			proj.UseLatestPlatformSdk = false;
 			proj.SetProperty ("AndroidEnableMultiDex", "True");
 
 			using (var b = CreateApkBuilder ("temp/BuildMultiDexApplication")) {
+				proj.TargetFrameworkVersion = b.LatestTargetFrameworkVersion ();
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsTrue (File.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android/bin/classes.dex")),
 					"multidex-ed classes.zip exists");
-				Assert.IsTrue (b.LastBuildOutput.Contains (Path.Combine (fxVersion, "mono.android.jar")), fxVersion + "/mono.android.jar should be used.");
+				Assert.IsTrue (b.LastBuildOutput.Contains (Path.Combine (proj.TargetFrameworkVersion, "mono.android.jar")), proj.TargetFrameworkVersion + "/mono.android.jar should be used.");
 			}
 		}
 
@@ -1881,8 +1880,11 @@ public class Test
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 				TargetFrameworkVersion = targetFrameworkVersion,
+				UseLatestPlatformSdk = false,
 			};
 			using (var builder = CreateApkBuilder (Path.Combine (path, proj.ProjectName), false, false)) {
+				if (!Directory.Exists(Path.Combine (builder.FrameworkLibDirectory, "xbuild-frameworks", "MonoAndroid", targetFrameworkVersion)))
+					Assert.Ignore ("This is a Pull Request Build. Ignoring test.");
 				builder.ThrowOnBuildFailure = false;
 				builder.Target = "_SetLatestTargetFrameworkVersion";
 				Assert.AreEqual (expectedResult, builder.Build (proj, parameters: new string[] {
@@ -1890,7 +1892,7 @@ public class Test
 					$"JavaToolExe={javaExe}",
 					$"AndroidSdkBuildToolsVersion={buildToolsVersion}",
 					$"AndroidSdkDirectory={AndroidSdkDirectory}",
-				} ), string.Format ("Build should have {0}", expectedResult ? "succeeded" : "failed"));
+				}), string.Format ("Build should have {0}", expectedResult ? "succeeded" : "failed"));
 			}
 		}
 
