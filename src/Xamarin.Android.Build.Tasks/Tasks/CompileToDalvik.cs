@@ -20,6 +20,8 @@ namespace Xamarin.Android.Tasks
 
 		public string DxJarPath { get; set; }
 
+		public string DxExtraArguments { get; set; }
+
 		public string JavaToolPath { get; set; }
 
 		[Required]
@@ -59,6 +61,7 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ("  ToolExe: {0}",  ToolExe);
 			Log.LogDebugMessage ("  ToolPath: {0}", ToolPath);
 			Log.LogDebugMessage ("  UseDx: {0}", UseDx);
+			Log.LogDebugMessage ("  DxExtraArguments: {0}", DxExtraArguments);
 			Log.LogDebugMessage ("  MultiDexEnabled: {0}", MultiDexEnabled);
 			Log.LogDebugMessage ("  MultiDexMainDexListFile: {0}", MultiDexMainDexListFile);
 			Log.LogDebugTaskItems ("  JavaLibrariesToCompile:", JavaLibrariesToCompile);
@@ -97,23 +100,23 @@ namespace Xamarin.Android.Tasks
 				cmd.AppendSwitchIfNotNull("-Xmx", JavaMaximumHeapSize);
 
 				cmd.AppendSwitchIfNotNull ("-jar ", Path.Combine (DxJarPath));
-				cmd.AppendSwitch ("--no-strict");
 			}
 
-			cmd.AppendSwitch ("--dex");
+			cmd.AppendSwitch (DxExtraArguments);
 
 			if (MultiDexEnabled) {
 				cmd.AppendSwitch ("--multi-dex");
 				cmd.AppendSwitchIfNotNull ("--main-dex-list=", MultiDexMainDexListFile);
 			}
-			cmd.AppendSwitchIfNotNull ("--output=", Path.GetDirectoryName (ClassesOutputDirectory));
+			cmd.AppendSwitchIfNotNull ("--output ", Path.GetDirectoryName (ClassesOutputDirectory));
 
 
 			// .jar files
 			if (File.Exists (OptionalObfuscatedJarFile))
 				cmd.AppendFileNameIfNotNull (OptionalObfuscatedJarFile);
 			else {
-				cmd.AppendFileNameIfNotNull (ClassesOutputDirectory);
+				foreach (var cls in Directory.GetFiles (ClassesOutputDirectory, "*.class", SearchOption.AllDirectories))
+					cmd.AppendFileNameIfNotNull (cls);
 				foreach (var jar in JavaLibrariesToCompile)
 					cmd.AppendFileNameIfNotNull (jar.ItemSpec);
 			}
