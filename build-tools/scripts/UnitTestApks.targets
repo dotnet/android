@@ -151,6 +151,6 @@
       <_LogcatFilenameEnd>-logcat-$(Configuration)$(_AotName).txt</_LogcatFilenameEnd>
     </PropertyGroup>
     <Exec Command="&quot;$(AdbToolPath)\$(AdbToolExe)&quot; $(_AdbTarget) $(AdbOptions) logcat -v threadtime -d > %(UnitTestApk.Package)$(_LogcatFilenameEnd)" />
-    <ProcessLogcatTiming LogcatFilename="%(UnitTestApk.Package)$(_LogcatFilenameEnd)" ApplicationPackageName="%(UnitTestApk.Package)" ResultsFilename="%(UnitTestApk.ResultsPath)" DefinitionsFilename="$(_DefinitionsFilename)" />
+    <ProcessLogcatTiming InputFilename="%(UnitTestApk.Package)$(_LogcatFilenameEnd)" ApplicationPackageName="%(UnitTestApk.Package)" ResultsFilename="%(UnitTestApk.ResultsPath)" DefinitionsFilename="$(_DefinitionsFilename)" />
   </Target>
 </Project>
