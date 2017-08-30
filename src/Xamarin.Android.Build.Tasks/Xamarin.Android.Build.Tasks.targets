@@ -172,7 +172,8 @@
 
   <Target Name="_BuildMonoSymbolicateScripts"
       Inputs="@(_MonoSymbolicateScriptSource)"
-      Outputs="@(_MonoSymbolicateScriptDestination)">
+      Outputs="@(_MonoSymbolicateScriptDestination)"
+      Condition=" '$(HostOS)' != 'Windows' ">
     <MakeDir Directories="$(OutputPath)$(HostOS)" />
     <Copy
         SourceFiles="@(_MonoSymbolicateScriptSource)"
