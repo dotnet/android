@@ -78,7 +78,7 @@ namespace Xamarin.Android.Tasks
 
 			assemblyMap.Load (AssemblyIdentityMapFile);
 
-			using (var resolver = new DirectoryAssemblyResolver (Log.LogWarning, loadDebugSymbols: false)) {
+			using (var resolver = new DirectoryAssemblyResolver (this.CreateTaskLogger (), loadDebugSymbols: false)) {
 				Extract (resolver, jars, resolvedResourceDirectories, resolvedAssetDirectories, resolvedEnvironmentFiles);
 			}
 

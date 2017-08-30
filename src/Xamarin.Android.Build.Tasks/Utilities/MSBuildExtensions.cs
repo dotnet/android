@@ -131,6 +131,43 @@ namespace Xamarin.Android.Tasks
 					messageArgs:        messageArgs);
 		}
 
+		public static Action<TraceLevel, string> CreateTaskLogger (this Task task)
+		{
+			Action<TraceLevel, string> logger = (level, value) => {
+				switch (level) {
+				case TraceLevel.Error:
+					task.Log.LogError ("{0}", value);
+					break;
+				case TraceLevel.Warning:
+					task.Log.LogWarning ("{0}", value);
+					break;
+				default:
+					task.Log.LogDebugMessage ("{0}", value);
+					break;
+				}
+			};
+			return logger;
+		}
+
+		public static Action<TraceLevel, string> CreateTaskLogger (this AsyncTask task)
+		{
+			Action<TraceLevel, string> logger = (level, value) => {
+				switch (level) {
+				case TraceLevel.Error:
+					task.LogError (value);
+					break;
+				case TraceLevel.Warning:
+					task.LogWarning (value);
+					break;
+				default:
+					task.LogDebugMessage (value);
+					break;
+				}
+			};
+			return logger;
+		}
+
+
 		public static IEnumerable<ITaskItem> Concat (params ITaskItem[][] values)
 		{
 			if (values == null)

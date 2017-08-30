@@ -78,27 +78,27 @@ namespace Xamarin.Android.Tasks
 				LogDebugMessage ("    {0}", item.ItemSpec);
 		}
 
-		protected void LogMessage (string message)
+		public void LogMessage (string message)
 		{
 			LogMessage (message, importance: MessageImportance.Normal);
 		}
 
-		protected void LogMessage (string message, params object[] messageArgs)
+		public void LogMessage (string message, params object[] messageArgs)
 		{
 			LogMessage (string.Format (message, messageArgs));
 		}
 
-		protected void LogDebugMessage (string message)
+		public void LogDebugMessage (string message)
 		{
 			LogMessage (message , importance: MessageImportance.Low);
 		}
 
-		protected void LogDebugMessage (string message, params object[] messageArgs)
+		public void LogDebugMessage (string message, params object[] messageArgs)
 		{
 			LogMessage (string.Format (message, messageArgs), importance: MessageImportance.Low);
 		}
 
-		protected void LogMessage (string message, MessageImportance importance = MessageImportance.Normal)
+		public void LogMessage (string message, MessageImportance importance = MessageImportance.Normal)
 		{
 			if (UIThreadId == Thread.CurrentThread.ManagedThreadId) {
 				#pragma warning disable 618
@@ -121,27 +121,27 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		protected void LogError (string message)
+		public void LogError (string message)
 		{
 			LogError (code: null, message: message, file: null, lineNumber: 0);
 		}
 
-		protected void LogError (string message, params object[] messageArgs)
+		public void LogError (string message, params object[] messageArgs)
 		{
 			LogError (code: null, message: string.Format (message, messageArgs));
 		}
 
-		protected void LogCodedError (string code, string message)
+		public void LogCodedError (string code, string message)
 		{
 			LogError (code: code, message: message, file: null, lineNumber: 0);
 		}
 
-		protected void LogCodedError (string code, string message, params object[] messageArgs)
+		public void LogCodedError (string code, string message, params object[] messageArgs)
 		{
 			LogError (code: code, message: string.Format (message, messageArgs), file: null, lineNumber: 0);
 		}
 
-		protected void LogError (string code, string message, string file = null, int lineNumber = 0)
+		public void LogError (string code, string message, string file = null, int lineNumber = 0)
 		{
 			if (UIThreadId == Thread.CurrentThread.ManagedThreadId) {
 				#pragma warning disable 618
@@ -180,12 +180,12 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		protected void LogWarning (string message, params object[] messageArgs)
+		public void LogWarning (string message, params object[] messageArgs)
 		{
 			LogWarning (string.Format (message, messageArgs));
 		}
 
-		protected void LogWarning (string message)
+		public void LogWarning (string message)
 		{
 			if (UIThreadId == Thread.CurrentThread.ManagedThreadId) {
 				#pragma warning disable 618

@@ -394,7 +394,7 @@ namespace Xamarin.Android.Tasks {
 				? CachePath
 				: Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.LocalApplicationData), CacheBaseDir);
 
-				using (var resolver = new DirectoryAssemblyResolver (LogWarning, loadDebugSymbols: false)) {
+				using (var resolver = new DirectoryAssemblyResolver (this.CreateTaskLogger (), loadDebugSymbols: false)) {
 					foreach (var assemblyItem in Assemblies) {
 						string fullPath = Path.GetFullPath (assemblyItem.ItemSpec);
 						if (assemblies.Contains (fullPath)) {

@@ -1993,6 +1993,36 @@ namespace "+ libName + @" {
 			Assert.IsTrue(sb.BuildProject(app1, "SignAndroidPackage"), "Build of project should have succeeded");
 			sb.Dispose();
 		}
+
+		[Test]
+		public void XA4212 ()
+		{
+			var proj = new XamarinAndroidApplicationProject () {
+			};
+			proj.Sources.Add (new BuildItem ("Compile", "MyBadJavaObject.cs") { TextContent = () => @"
+using System;
+using Android.Runtime;
+namespace UnnamedProject {
+    public class MyBadJavaObject : IJavaObject
+    {
+        public IntPtr Handle {
+			get {return IntPtr.Zero;}
+        }
+
+        public void Dispose ()
+        {
+        }
+    }
+}" });
+			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
+				builder.ThrowOnBuildFailure = false;
+				Assert.IsFalse (builder.Build (proj), "Build should have failed with XA4212.");
+				StringAssert.Contains ($"error XA4", builder.LastBuildOutput, "Error should be XA4212");
+				StringAssert.Contains ($"Type `UnnamedProject.MyBadJavaObject` implements `Android.Runtime.IJavaObject`", builder.LastBuildOutput, "Error should mention MyBadJavaObject");
+				Assert.IsTrue (builder.Build (proj, parameters: new [] { "AndroidErrorOnCustomJavaObject=False" }), "Build should have succeeded.");
+				StringAssert.Contains ($"warning XA4", builder.LastBuildOutput, "warning XA4212");
+			}
+		}
 	}
 }
 

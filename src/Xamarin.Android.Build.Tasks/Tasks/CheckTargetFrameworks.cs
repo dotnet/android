@@ -50,7 +50,7 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ("  ProjectFile: {0}", ProjectFile);
 			Log.LogDebugTaskItems ("  ResolvedUserAssemblies: {0}", ResolvedAssemblies);
 
-			using (var res = new DirectoryAssemblyResolver (Log.LogWarning, loadDebugSymbols: false)) {
+			using (var res = new DirectoryAssemblyResolver (this.CreateTaskLogger (), loadDebugSymbols: false)) {
 				foreach (var assembly in ResolvedAssemblies) {
 					res.Load (Path.GetFullPath (assembly.ItemSpec));
 					var apiLevel = ExtractApiLevel (res, assembly);

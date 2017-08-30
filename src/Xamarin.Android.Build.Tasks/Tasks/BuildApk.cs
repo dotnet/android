@@ -522,7 +522,7 @@ namespace Xamarin.Android.Tasks
 		{
 			int count = 0;
 			var abis = supportedAbis.Split (new char[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
-			using (var res = new DirectoryAssemblyResolver (Console.WriteLine, loadDebugSymbols: false)) {
+			using (var res = new DirectoryAssemblyResolver (this.CreateTaskLogger (), loadDebugSymbols: false)) {
 			foreach (var assembly in EmbeddedNativeLibraryAssemblies)
 				res.Load (assembly.ItemSpec);
 				foreach (var assemblyPath in EmbeddedNativeLibraryAssemblies) {
