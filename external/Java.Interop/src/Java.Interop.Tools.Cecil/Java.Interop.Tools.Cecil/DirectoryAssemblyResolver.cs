@@ -28,6 +28,7 @@
 //
 
 using System;
+using System.Diagnostics;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -62,20 +63,28 @@ namespace Java.Interop.Tools.Cecil {
 
 		Dictionary<string, AssemblyDefinition> cache;
 		bool loadDebugSymbols;
-		Action<string, object[]> logWarnings;
+		Action<TraceLevel, string>              logger;
 
 		ReaderParameters                        loadReaderParameters;
 
 		static  readonly    ReaderParameters    DefaultLoadReaderParameters = new ReaderParameters {
 		};
 
+		[Obsolete ("Use DirectoryAssemblyResolver(Action<TraceLevel, string>, bool, ReaderParameters)")]
 		public DirectoryAssemblyResolver (Action<string, object[]> logWarnings, bool loadDebugSymbols, ReaderParameters loadReaderParameters = null)
+			: this ((TraceLevel level, string value) => logWarnings?.Invoke ("{0}", new[]{value}), loadDebugSymbols, loadReaderParameters)
 		{
 			if (logWarnings == null)
 				throw new ArgumentNullException (nameof (logWarnings));
+		}
+
+		public DirectoryAssemblyResolver (Action<TraceLevel, string> logger, bool loadDebugSymbols, ReaderParameters loadReaderParameters = null)
+		{
+			if (logger == null)
+				throw new ArgumentNullException (nameof (logger));
 			cache = new Dictionary<string, AssemblyDefinition> ();
 			this.loadDebugSymbols = loadDebugSymbols;
-			this.logWarnings = logWarnings;
+			this.logger       = logger;
 			SearchDirectories = new List<string> ();
 			this.loadReaderParameters = loadReaderParameters ?? DefaultLoadReaderParameters;
 		}
@@ -141,10 +150,10 @@ namespace Java.Interop.Tools.Cecil {
 			try {
 				return AssemblyDefinition.ReadAssembly (file, reader_parameters);
 			} catch (Exception ex) {
-				logWarnings (
-						"Failed to read '{0}' with debugging symbols. Retrying to load it without it. Error details are logged below.",
-						new [] { file });
-				logWarnings ("{0}", new [] { ex.ToString () });
+				logger (
+						TraceLevel.Warning,
+						$"Failed to read '{file}' with debugging symbols. Retrying to load it without it. Error details are logged below.");
+				logger (TraceLevel.Warning, $"{ex.ToString ()}");
 				reader_parameters.ReadSymbols = false;
 				return AssemblyDefinition.ReadAssembly (file, reader_parameters);
 			}

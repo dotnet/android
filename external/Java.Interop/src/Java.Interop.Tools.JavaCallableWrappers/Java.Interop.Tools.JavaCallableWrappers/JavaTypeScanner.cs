@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using Mono.Cecil;
@@ -10,10 +11,19 @@ using Java.Interop.Tools.TypeNameMappings;
 
 namespace Java.Interop.Tools.JavaCallableWrappers
 {
-	public static class JavaTypeScanner
+	public class JavaTypeScanner
 	{
-		// Returns all types for which we need to generate Java delegate types.
-		public static List<TypeDefinition> GetJavaTypes (IEnumerable<string> assemblies, IAssemblyResolver resolver, Action<string, object[]> log)
+		public  Action<TraceLevel, string>      Logger                      { get; private set; }
+		public  bool                            ErrorOnCustomJavaObject     { get; set; }
+
+		public JavaTypeScanner (Action<TraceLevel, string> logger)
+		{
+			if (logger == null)
+				throw new ArgumentNullException (nameof (logger));
+			Logger      = logger;
+		}
+
+		public List<TypeDefinition> GetJavaTypes (IEnumerable<string> assemblies, IAssemblyResolver resolver)
 		{
 			var javaTypes = new List<TypeDefinition> ();
 
@@ -22,7 +32,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers
 
 				foreach (ModuleDefinition md in assm.Modules) {
 					foreach (TypeDefinition td in md.Types) {
-						AddJavaTypes (javaTypes, td, log);
+						AddJavaTypes (javaTypes, td);
 					}
 				}
 			}
@@ -30,16 +40,18 @@ namespace Java.Interop.Tools.JavaCallableWrappers
 			return javaTypes;
 		}
 
-		static void AddJavaTypes (List<TypeDefinition> javaTypes, TypeDefinition type, Action<string, object[]> log)
+		void AddJavaTypes (List<TypeDefinition> javaTypes, TypeDefinition type)
 		{
 			if (type.IsSubclassOf ("Java.Lang.Object") || type.IsSubclassOf ("Java.Lang.Throwable")) {
 
 				// For subclasses of e.g. Android.App.Activity.
 				javaTypes.Add (type);
 			} else if (type.IsClass && !type.IsSubclassOf ("System.Exception") && type.ImplementsInterface ("Android.Runtime.IJavaObject")) {
-				log (
-						"Type '{0}' implements Android.Runtime.IJavaObject but does not inherit from Java.Lang.Object. It is not supported.",
-						new [] { type.FullName });
+				var level   = ErrorOnCustomJavaObject ? TraceLevel.Error : TraceLevel.Warning;
+				var prefix  = ErrorOnCustomJavaObject ? "error" : "warning";
+				Logger (
+						level,
+						$"{prefix} XA412: Type `{type.FullName}` implements `Android.Runtime.IJavaObject` but does not inherit `Java.Lang.Object` or `Java.Lang.Throwable`. This is not supported.");
 				return;
 			}
 
@@ -47,7 +59,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers
 				return;
 
 			foreach (TypeDefinition nested in type.NestedTypes)
-				AddJavaTypes (javaTypes, nested, log);
+				AddJavaTypes (javaTypes, nested);
 		}
 
 		public static bool ShouldSkipJavaCallableWrapperGeneration (TypeDefinition type)
@@ -64,6 +76,11 @@ namespace Java.Interop.Tools.JavaCallableWrappers
 
 			return false;
 		}
-
+		// Returns all types for which we need to generate Java delegate types.
+		public static List<TypeDefinition> GetJavaTypes (IEnumerable<string> assemblies, IAssemblyResolver resolver, Action<string, object []> log)
+		{
+			Action<TraceLevel, string> l = (level, value) => log ("{0}", new string [] { value });
+			return new JavaTypeScanner (l).GetJavaTypes (assemblies, resolver);
+		}
 	}
 }

@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 using Mono.Cecil.Cil;
 
@@ -27,14 +28,14 @@ namespace Java.Interop.Tools.Diagnostics {
 	//					XA0013	Profiling support requires sgen to be enabled too
 	//					XA0014	iOS {0} does not support building applications targeting ARMv6
 	//					XA0020	Could not launch mandroid daemon.
-	
+
 	//					XA0100 EmbeddedNativeLibrary '{0}' is invalid in Android Application project. Please use AndroidNativeLibrary instead.
 	//					XA0101 @(Content) build action is not supported
 	//					XA0102 Lint Warning
 	//					XA0103 Lint Error
 	//					XA0104 Invalid Sequence Point mode
 	//					XA0105 The TargetFrameworkVersion for {0} (v{1}) is greater than the TargetFrameworkVersion for your project (v{2}). You need to increase the TargetFrameworkVersion for your project.
-	
+
 	// XA1xxx	file copy / symlinks (project related)
 	//			XA10xx	installer.cs / mtouch.cs
 	//					XA1001	Could not find an application at the specified directory
@@ -101,6 +102,7 @@ namespace Java.Interop.Tools.Diagnostics {
 	//					XA4209 Failed to create JavaTypeInfo for class: {0} due to {1}
 	//					XA4210 "You need to add a reference to Mono.Android.Export.dll when you use ExportAttribute or ExportFieldAttribute."
 	//					XA4211  AndroidManifest.xml //uses-sdk/@android:targetSdkVersion '{0}' is less than $(TargetFrameworkVersion) '{1}'. Using API-{1} for ACW compilation.
+	//					XA4212  Type `{0}` implements `Android.Runtime.IJavaObject` but does not inherit `Java.Lang.Object` or `Java.Lang.Throwable`. This is not supported.
 	// XA5xxx	GCC and toolchain
 	//			XA32xx	.apk generation
 	//					XA4300  Unsupported $(AndroidSupportedAbis) value '{0}'; ignoring.
@@ -175,6 +177,17 @@ namespace Java.Interop.Tools.Diagnostics {
 
 			destination.WriteLine ("monodroid: error XA0000: Unexpected error - Please file a bug report at http://bugzilla.xamarin.com. Reason: {0}",
 					verbose ? message.Message : message.ToString ());
+		}
+
+		public static Action<TraceLevel, string> CreateConsoleLogger ()
+		{
+			Action<TraceLevel, string> logger = (level, value) => {
+				if (level == TraceLevel.Error)
+					Console.Error.WriteLine (value);
+				else
+					Console.WriteLine (value);
+			};
+			return logger;
 		}
 	}
 }

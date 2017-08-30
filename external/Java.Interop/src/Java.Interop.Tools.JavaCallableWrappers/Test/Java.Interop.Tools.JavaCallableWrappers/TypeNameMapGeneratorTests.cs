@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -9,6 +10,7 @@ using Mono.Cecil;
 using NUnit.Framework;
 
 using Java.Interop.Tools.Cecil;
+using Java.Interop.Tools.Diagnostics;
 using Java.Interop.Tools.JavaCallableWrappers;
 
 using Android.App;
@@ -24,16 +26,25 @@ namespace Xamarin.Android.ToolsTests
 		public void ConstructorExceptions ()
 		{
 			Action<string, object []> logger = (f, o) => { };
-			Assert.Throws<ArgumentNullException> (() => new TypeNameMapGenerator ((string [])null, logger));
-			Assert.Throws<ArgumentNullException> (() => new TypeNameMapGenerator ((TypeDefinition [])null, logger));
-			Assert.Throws<ArgumentNullException> (() => new TypeNameMapGenerator (new string [0], null));
-			Assert.Throws<ArgumentNullException> (() => new TypeNameMapGenerator (new TypeDefinition [0], null));
+			Action<string, object []> nullLogger = null;
+			Action<TraceLevel, string> levelLogger = (l, v) => { };
+			Action<TraceLevel, string> nullLevelLogger = null;
+			Assert.Throws<ArgumentNullException> (() => new TypeNameMapGenerator ((string []) null, levelLogger));
+			Assert.Throws<ArgumentNullException> (() => new TypeNameMapGenerator ((TypeDefinition []) null, levelLogger));
+			Assert.Throws<ArgumentNullException> (() => new TypeNameMapGenerator (new string [0], nullLevelLogger));
+			Assert.Throws<ArgumentNullException> (() => new TypeNameMapGenerator (new TypeDefinition [0], nullLevelLogger));
+#pragma warning disable 0618
+			Assert.Throws<ArgumentNullException> (() => new TypeNameMapGenerator ((string []) null, logger));
+			Assert.Throws<ArgumentNullException> (() => new TypeNameMapGenerator ((TypeDefinition []) null, logger));
+			Assert.Throws<ArgumentNullException> (() => new TypeNameMapGenerator (new string [0], nullLogger));
+			Assert.Throws<ArgumentNullException> (() => new TypeNameMapGenerator (new TypeDefinition [0], nullLogger));
+#pragma warning restore 0618
 		}
 
 		[Test]
 		public void WriteJavaToManaged ()
 		{
-			var v = new TypeNameMapGenerator (SupportDeclarations.GetTestTypeDefinitions (), logMessage: Console.WriteLine);
+			var v = new TypeNameMapGenerator (SupportDeclarations.GetTestTypeDefinitions (), logger: Diagnostic.CreateConsoleLogger ());
 			var o = new MemoryStream ();
 			v.WriteJavaToManaged (o);
 			var a = ToArray (o);
@@ -97,7 +108,7 @@ namespace Xamarin.Android.ToolsTests
 		[Test]
 		public void WriteManagedToJava ()
 		{
-			var v = new TypeNameMapGenerator (SupportDeclarations.GetTestTypeDefinitions (), logMessage: Console.WriteLine);
+			var v = new TypeNameMapGenerator (SupportDeclarations.GetTestTypeDefinitions (), logger: Diagnostic.CreateConsoleLogger ());
 			var o = new MemoryStream ();
 			v.WriteManagedToJava (o);
 			var a = ToArray (o);

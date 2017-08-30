@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
@@ -56,18 +57,27 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 	 */
 	public class TypeNameMapGenerator : IDisposable {
 
-		Action<string, object[]>        Log;
+		Action<TraceLevel, string>      Log;
 		List<TypeDefinition>            Types;
 		DirectoryAssemblyResolver       Resolver;
+		JavaTypeScanner                 Scanner;
 
+		[Obsolete ("Use TypeNameMapGenerator(IEnumerable<string>, Action<TraceLevel, string>)")]
 		public TypeNameMapGenerator (IEnumerable<string> assemblies, Action<string, object []> logMessage)
+			: this (assemblies, (TraceLevel level, string value) => logMessage?.Invoke ("{0}", new[]{value}))
+		{
+			if (logMessage == null)
+				throw new ArgumentNullException (nameof (logMessage));
+		}
+
+		public TypeNameMapGenerator (IEnumerable<string> assemblies, Action<TraceLevel, string> logger)
 		{
 			if (assemblies == null)
 				throw new ArgumentNullException ("assemblies");
-			if (logMessage == null)
-				throw new ArgumentNullException (nameof (logMessage));
+			if (logger == null)
+				throw new ArgumentNullException (nameof (logger));
 
-			Log             = logMessage;
+			Log             = logger;
 			var Assemblies  = assemblies.ToList ();
 			var rp          = new ReaderParameters ();
 
@@ -83,17 +93,28 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 				Resolver.Load (Path.GetFullPath (assembly));
 			}
 
-			Types       = JavaTypeScanner.GetJavaTypes (Assemblies, Resolver, logMessage);
+			Scanner     = new JavaTypeScanner (Log) {
+				ErrorOnCustomJavaObject     = false,
+			};
+			Types       = Scanner.GetJavaTypes (Assemblies, Resolver);
 		}
 
+		[Obsolete ("Use TypeNameMapGenerator(IEnumerable<TypeDefinition>, Action<TraceLevel, string>)")]
 		public TypeNameMapGenerator (IEnumerable<TypeDefinition> types, Action<string, object[]> logMessage)
+			: this (types, (TraceLevel level, string value) => logMessage?.Invoke ("{0}", new [] { value }))
+		{
+			if (logMessage == null)
+				throw new ArgumentNullException (nameof (logMessage));
+		}
+
+		public TypeNameMapGenerator (IEnumerable<TypeDefinition> types, Action<TraceLevel, string> logger)
 		{
 			if (types == null)
 				throw new ArgumentNullException ("types");
-			if (logMessage == null)
-				throw new ArgumentNullException (nameof (logMessage));
+			if (logger == null)
+				throw new ArgumentNullException (nameof (logger));
 
-			Log         = logMessage;
+			Log         = logger;
 			Types       = types.ToList ();
 		}
 
@@ -110,11 +131,6 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 
 			Resolver.Dispose ();
 			Resolver = null;
-		}
-
-		void LogWarning (string format, params object[] args)
-		{
-			Log (format, args);
 		}
 
 		public void WriteJavaToManaged (Stream output)
@@ -160,10 +176,10 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 				}
 			}
 			foreach (var e in aliases.OrderBy (e => e.Key)) {
-				LogWarning ("Mapping for type '{0}' is ambiguous between {1} types.", e.Key, e.Value.Count);
-				LogWarning ("     Using: {0}", e.Value.First ());
+				Log (TraceLevel.Warning, $"Mapping for type '{e.Key}' is ambiguous between {e.Value.Count} types.");
+				Log (TraceLevel.Warning, $"     Using: {e.Value.First ()}");
 				foreach (var o in e.Value.Skip (1)) {
-					LogWarning ("  Ignoring: {0}", o);
+					Log (TraceLevel.Info, $"  Ignoring: {o}");
 				}
 			}
 			return typeMap.ToDictionary (e => e.Key, e => value (e.Value));

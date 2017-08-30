@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using System.IO;
 using System.Threading.Tasks;
 
 using Java.Interop.Tools.Cecil;
+using Java.Interop.Tools.Diagnostics;
 using Java.Interop.Tools.JavaCallableWrappers;
 using Mono.Cecil;
 using Mono.Options;
@@ -41,6 +43,7 @@ namespace Java.Interop.Tools
 				  "Show this message and exit",
 				  v => help = v != null },
 			};
+			var scanner = new JavaTypeScanner (Diagnostic.CreateConsoleLogger ());
 			try {
 				var assemblies = options.Parse (args);
 				if (assemblies.Count == 0 || outputPath == null || help) {
@@ -60,7 +63,7 @@ namespace Java.Interop.Tools
 					resolver.SearchDirectories.Add (Path.GetDirectoryName (assembly));
 					resolver.Load (assembly);
 				}
-				var types = JavaTypeScanner.GetJavaTypes (assemblies, resolver, log: Console.WriteLine)
+				var types = scanner.GetJavaTypes (assemblies, resolver)
 					.Where (td => !JavaTypeScanner.ShouldSkipJavaCallableWrapperGeneration (td));
 				foreach (var type in types) {
 					GenerateJavaCallableWrapper (type, outputPath);

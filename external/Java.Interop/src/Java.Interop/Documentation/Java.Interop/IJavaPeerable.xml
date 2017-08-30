@@ -314,7 +314,7 @@ partial class ExampleBinding {
   </member>
   <member name="M:SetPeerReference">
     <summary>Set the value returned by <c>PeerReference</c>.</summary>
-    <param name="value">
+    <param name="reference">
       A <see cref="T:Java.Interop.JniObjectReference" /> which contains the
       value that future invocations of the
       <see cref="P:Java.Interop.IJavaPeerable.PeerReference" />
