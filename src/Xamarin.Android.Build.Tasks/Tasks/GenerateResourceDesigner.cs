@@ -106,7 +106,7 @@ namespace Xamarin.Android.Tasks
 			var assemblyNames = new List<string> ();
 			if (IsApplication && References != null && References.Any ()) {
 				// FIXME: should this be unified to some better code with ResolveLibraryProjectImports?
-				using (var resolver = new DirectoryAssemblyResolver (Log.LogWarning, loadDebugSymbols: false)) {
+				using (var resolver = new DirectoryAssemblyResolver (this.CreateTaskLogger (), loadDebugSymbols: false)) {
 					foreach (var assemblyName in References) {
 						var suffix = assemblyName.ItemSpec.EndsWith (".dll") ? String.Empty : ".dll";
 						string hintPath = assemblyName.GetMetadata ("HintPath").Replace (Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
