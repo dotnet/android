@@ -322,6 +322,16 @@ namespace Xamarin.ProjectTools
 				},
 			}
 		};
+        public static Package SQLitePCLRaw_Core = new Package {
+            Id = "SQLitePCLRaw.core",
+            Version = "1.1.8",
+            TargetFramework = "monoandroid71",
+            References = {
+                new BuildItem.Reference("SQLitePCL") {
+                    MetadataValues = "HintPath=..\\packages\\SQLitePCLRaw.core.1.1.8\\lib\\MonoAndroid\\SQLitePCLRaw.core.dll"
+                }
+            }
+        };
 	}
 }
 
