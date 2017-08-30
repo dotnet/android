@@ -51,7 +51,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers
 				var prefix  = ErrorOnCustomJavaObject ? "error" : "warning";
 				Logger (
 						level,
-						$"{prefix} XA412: Type `{type.FullName}` implements `Android.Runtime.IJavaObject` but does not inherit `Java.Lang.Object` or `Java.Lang.Throwable`. This is not supported.");
+						$"{prefix} XA4212: Type `{type.FullName}` implements `Android.Runtime.IJavaObject` but does not inherit `Java.Lang.Object` or `Java.Lang.Throwable`. This is not supported.");
 				return;
 			}
 
