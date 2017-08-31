@@ -2145,6 +2145,7 @@ because xbuild doesn't support framework reference assemblies.
 	AndroidNdkDirectory="$(_AndroidNdkDirectory)"
 	AndroidApiLevel="$(_AndroidApiLevel)"
 	SdkBinDirectory="$(MonoAndroidBinDirectory)"
+	ManifestFile="$(IntermediateOutputPath)android\AndroidManifest.xml"
 	SupportedAbis="$(_BuildTargetAbis)"
 	AndroidSequencePointsMode="$(_SequencePointsMode)"
 	AotAdditionalArguments="$(AndroidAotAdditionalArguments)"
