@@ -8,53 +8,12 @@ using Microsoft.Build.Utilities;
 
 namespace Xamarin.Android.BuildTools.PrepTasks
 {
-	public class ProcessLogcatTiming : Task
+	public class ProcessLogcatTiming : ProcessPlotInput
 	{
-		[Required]
-		public string LogcatFilename { get; set; }
-
-		[Required]
-		public string ApplicationPackageName { get; set; }
-
-		[Required]
-		public string DefinitionsFilename { get; set; }
-
-		public string ResultsFilename { get; set; }
-
-		Dictionary<string, Regex> definedRegexs = new Dictionary<string, Regex> ();
-		Dictionary<string, string> results = new Dictionary<string, string> ();
-
-		void LoadDefinitions ()
-		{
-			using (var reader = new StreamReader (DefinitionsFilename)) {
-				string line;
-
-				while ((line = reader.ReadLine ()) != null) {
-					if (line.StartsWith ("#", StringComparison.Ordinal))
-						continue;
-					int index = line.IndexOf ('=');
-					if (index < 1 || index == line.Length)
-						continue;
-					var label = line.Substring (0, index);
-					var pattern = line.Substring (index + 1);
-					Regex regex;
-					try {
-						regex = new Regex (pattern);
-					} catch (Exception e) {
-						Log.LogWarning ($"unable to create regex for label: {label} from pattern: {pattern}\n{e}");
-						continue;
-					}
-					if (definedRegexs.ContainsKey (label))
-						Log.LogWarning ($"label '{label}' is defined multiple times. the last definition will be used");
-					definedRegexs [label] = regex;
-				}
-			}
-		}
-
 		public override bool Execute ()
 		{
 			LoadDefinitions ();
-			using (var reader = new StreamReader (LogcatFilename)) {
+			using (var reader = new StreamReader (InputFilename)) {
 				string line;
 				int pid = -1;
 				var procStartRegex = new Regex ($@"^(?<timestamp>\d+-\d+\s+[\d:\.]+)\s+.*ActivityManager: Start proc.*for added application {ApplicationPackageName}: pid=(?<pid>\d+)");
@@ -102,13 +61,7 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 					Log.LogMessage (MessageImportance.Normal, " -- Performance summary --");
 					Log.LogMessage (MessageImportance.Normal, $"Last timing message: {(last - start).TotalMilliseconds}ms");
 
-					if (ResultsFilename != null) {
-						using (var resultsFile = new StreamWriter (Path.Combine (Path.GetDirectoryName (ResultsFilename), $"{Path.GetFileNameWithoutExtension (ResultsFilename)}-times.csv"))) {
-							WriteValues (resultsFile, results.Keys);
-							WriteValues (resultsFile, results.Values);
-							resultsFile.Close ();
-						}
-					}
+					WriteResults ("times");
 				} else
 					Log.LogWarning ("Wasn't able to collect the performance data");
 
@@ -116,18 +69,6 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 			}
 
 			return true;
-		}
-
-		void WriteValues (StreamWriter writer, ICollection<string> values)
-		{
-			bool first = true;
-			foreach (var key in values) {
-				if (!first)
-					writer.Write (',');
-				writer.Write (key);
-				first = false;
-			}
-			writer.WriteLine ();
 		}
 
 		static Regex timeRegex = new Regex (@"(?<month>\d+)-(?<day>\d+)\s+(?<hour>\d+):(?<minute>\d+):(?<second>\d+)\.(?<millisecond>\d+)");

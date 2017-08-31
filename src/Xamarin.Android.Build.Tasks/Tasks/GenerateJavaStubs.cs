@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Microsoft.Build.Framework;
@@ -51,6 +52,8 @@ namespace Xamarin.Android.Tasks
 
 		public bool UseSharedRuntime { get; set; }
 
+		public bool ErrorOnCustomJavaObject { get; set; }
+
 		[Required]
 		public string ResourceDirectory { get; set; }
 
@@ -69,6 +72,7 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ("  PackageName: {0}", PackageName);
 			Log.LogDebugMessage ("  AndroidSdkDir: {0}", AndroidSdkDir);
 			Log.LogDebugMessage ("  AndroidSdkPlatform: {0}", AndroidSdkPlatform);
+			Log.LogDebugMessage ($"  {nameof (ErrorOnCustomJavaObject)}: {ErrorOnCustomJavaObject}");
 			Log.LogDebugMessage ("  OutputDirectory: {0}", OutputDirectory);
 			Log.LogDebugMessage ("  MergedAndroidManifestOutput: {0}", MergedAndroidManifestOutput);
 			Log.LogDebugMessage ("  UseSharedRuntime: {0}", UseSharedRuntime);
@@ -83,7 +87,7 @@ namespace Xamarin.Android.Tasks
 			try {
 				// We're going to do 3 steps here instead of separate tasks so
 				// we can share the list of JLO TypeDefinitions between them
-				using (var res = new DirectoryAssemblyResolver (Log.LogWarning, loadDebugSymbols: true)) {
+				using (var res = new DirectoryAssemblyResolver (this.CreateTaskLogger (), loadDebugSymbols: true)) {
 					Run (res);
 				}
 			}
@@ -91,6 +95,15 @@ namespace Xamarin.Android.Tasks
 				Log.LogCodedError (string.Format ("XA{0:0000}", e.Code), e.MessageWithoutCode);
 				if (MonoAndroidHelper.LogInternalExceptions)
 					Log.LogMessage (e.ToString ());
+			}
+
+			if (Log.HasLoggedErrors) {
+				// Ensure that on a rebuild, we don't *skip* the `_GenerateJavaStubs` target,
+				// by ensuring that the target outputs have been deleted.
+				Files.DeleteFile (MergedAndroidManifestOutput, Log);
+				Files.DeleteFile (AcwMapFile, Log);
+				Files.DeleteFile (Path.Combine (OutputDirectory, "typemap.jm"), Log);
+				Files.DeleteFile (Path.Combine (OutputDirectory, "typemap.mj"), Log);
 			}
 
 			return !Log.HasLoggedErrors;
@@ -117,9 +130,12 @@ namespace Xamarin.Android.Tasks
 			var fxAdditions = MonoAndroidHelper.GetFrameworkAssembliesToTreatAsUserAssemblies (ResolvedAssemblies)
 				.Where (a => assemblies.All (x => Path.GetFileName (x) != Path.GetFileName (a)));
 			assemblies = assemblies.Concat (fxAdditions).ToList ();
-			
+
 			// Step 1 - Find all the JLO types
-			var all_java_types = JavaTypeScanner.GetJavaTypes (assemblies, res, Log.LogWarning);
+			var scanner = new JavaTypeScanner (this.CreateTaskLogger ()) {
+				ErrorOnCustomJavaObject     = ErrorOnCustomJavaObject,
+			};
+			var all_java_types = scanner.GetJavaTypes (assemblies, res);
 
 			WriteTypeMappings (all_java_types);
 

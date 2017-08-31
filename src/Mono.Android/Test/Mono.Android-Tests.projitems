@@ -1,10 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\..\bin\Build$(Configuration)\xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.ProcessPlotInput" />
+  <PropertyGroup>
+    <_MonoAndroidTestResultsPath>$(MSBuildThisFileDirectory)..\..\..\TestResult-Mono.Android_Tests-$(Configuration)$(_AotName).xml</_MonoAndroidTestResultsPath>
+    <_MonoAndroidTestPackage>Mono.Android_Tests</_MonoAndroidTestPackage>
+    <_MonoAndroidTestApkFile>$(OutputPath)Mono.Android_Tests-Signed.apk</_MonoAndroidTestApkFile>
+    <_MonoAndroidTestApkSizesInput>apk-sizes-$(_MonoAndroidTestPackage)-$(Configuration)$(_AotName).txt</_MonoAndroidTestApkSizesInput>
+  </PropertyGroup>
   <ItemGroup>
-    <UnitTestApk Include="$(OutputPath)Mono.Android_Tests-Signed.apk">
-      <Package>Mono.Android_Tests</Package>
+    <UnitTestApk Include="$(_MonoAndroidTestApkFile)">
+      <Package>$(_MonoAndroidTestPackage)</Package>
       <InstrumentationType>xamarin.android.runtimetests.TestInstrumentation</InstrumentationType>
-      <ResultsPath>$(MSBuildThisFileDirectory)..\..\..\TestResult-Mono.Android_Tests-$(Configuration)$(_AotName).xml</ResultsPath>
+      <ResultsPath>$(_MonoAndroidTestResultsPath)</ResultsPath>
     </UnitTestApk>
   </ItemGroup>
+  <Target Name="_RecordApkSizes" AfterTargets="DeployUnitTestApks">
+    <Delete Files="$(MSBuildThisFileDirectory)..\..\..\TestResult-Mono.Android_Tests-values.csv" Condition=" '$(Configuration)' == 'Debug' " />
+    <Exec Condition=" '$(HostOS)' == 'Darwin' " Command="stat -f &quot;stat: %z %N&quot; &quot;$(_MonoAndroidTestApkFile)&quot; > $(_MonoAndroidTestApkSizesInput)" />
+    <Exec Condition=" '$(HostOS)' == 'Linux' " Command="stat -c &quot;stat: %s %N&quot; &quot;$(_MonoAndroidTestApkFile)&quot; > $(_MonoAndroidTestApkSizesInput)" />
+    <Exec Command="unzip -l &quot;$(_MonoAndroidTestApkFile)&quot; >> $(_MonoAndroidTestApkSizesInput)" />
+    <ProcessPlotInput InputFilename="$(_MonoAndroidTestApkSizesInput)" ApplicationPackageName="$(_MonoAndroidTestPackage)" ResultsFilename="$(MSBuildThisFileDirectory)..\..\..\TestResult-Mono.Android_Tests.xml" DefinitionsFilename="$(MSBuildThisFileDirectory)apk-sizes-definitions-$(Configuration)$(_AotName).txt" AddResults="true" />
+  </Target>
 </Project>

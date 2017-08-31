@@ -182,6 +182,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<AndroidSkipJavacVersionCheck Condition="'$(AndroidSkipJavacVersionCheck)' == ''">False</AndroidSkipJavacVersionCheck>
 	<AndroidBuildApplicationPackage Condition=" '$(AndroidBuildApplicationPackage)' == ''">False</AndroidBuildApplicationPackage>
 
+	<AndroidErrorOnCustomJavaObject Condition=" '$(AndroidErrorOnCustomJavaObject)' == '' ">True</AndroidErrorOnCustomJavaObject>
+
 	<!-- Ahead-of-time compilation properties -->
 	<AndroidAotMode Condition=" '$(AndroidAotMode)' == '' And '$(AotAssemblies)' == 'True' ">Normal</AndroidAotMode>
 	<AotAssemblies Condition=" '$(AndroidAotMode)' != '' ">True</AotAssemblies>
@@ -275,6 +277,11 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 		</PropertyGroup>
 	</When>
 	<When Condition=" '$(DebugSymbols)' != '' And $(DebugSymbols) And '$(DebugType)' == '' ">
+		<PropertyGroup>
+			<AndroidIncludeDebugSymbols>True</AndroidIncludeDebugSymbols>
+		</PropertyGroup>
+	</When>
+	<When Condition=" '$(EmbedAssembliesIntoApk)' == 'False' ">
 		<PropertyGroup>
 			<AndroidIncludeDebugSymbols>True</AndroidIncludeDebugSymbols>
 		</PropertyGroup>
@@ -1013,7 +1020,7 @@ because xbuild doesn't support framework reference assemblies.
 	</ReadLinesFromFile>
 </Target>
 
-<Target Name="_CreatePropertiesCache" DependsOnTargets="_ReadPropertiesCache">
+<Target Name="_CreatePropertiesCache" DependsOnTargets="_SetupDesignTimeBuildForBuild;_ReadPropertiesCache">
 	<MakeDir Directories="$(IntermediateOutputPath)" Condition="!Exists('$(IntermediateOutputPath)')" />
 	<WriteLinesToFile
 		Condition="'@(_PropertiesCache)' != '@(_PropertyCacheItems)'" 
@@ -1728,6 +1735,7 @@ because xbuild doesn't support framework reference assemblies.
   <GenerateJavaStubs
     ResolvedAssemblies="@(_ResolvedAssemblies)"
     ResolvedUserAssemblies="@(_ResolvedUserAssemblies)"
+    ErrorOnCustomJavaObject="$(AndroidErrorOnCustomJavaObject)"
 	ManifestTemplate="$(_AndroidManifestAbs)"
 	MergedManifestDocuments="@(ExtractedManifestDocuments)"
 	Debug="$(AndroidIncludeDebugSymbols)"
@@ -2151,6 +2159,7 @@ because xbuild doesn't support framework reference assemblies.
 	AndroidAotMode="$(AndroidAotMode)"
 	AndroidNdkDirectory="$(_AndroidNdkDirectory)"
 	AndroidApiLevel="$(_AndroidApiLevel)"
+	ManifestFile="$(IntermediateOutputPath)android\AndroidManifest.xml"
 	SupportedAbis="$(_BuildTargetAbis)"
 	AndroidSequencePointsMode="$(_SequencePointsMode)"
 	AotAdditionalArguments="$(AndroidAotAdditionalArguments)"
