@@ -16,6 +16,7 @@
 
 		<type fullname="System.AppDomainSetup" preserve="fields">
 			<method name="set_ShadowCopyFiles" />
+			<method name="set_ShadowCopyDirectories" />
 		</type>
 		<type fullname="System.AppDomainUnloadedException" />
 		<type fullname="System.ApplicationException" />
