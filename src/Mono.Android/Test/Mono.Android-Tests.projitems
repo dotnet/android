@@ -16,7 +16,8 @@
   </ItemGroup>
   <Target Name="_RecordApkSizes" AfterTargets="DeployUnitTestApks">
     <Delete Files="$(MSBuildThisFileDirectory)..\..\..\TestResult-Mono.Android_Tests-values.csv" Condition=" '$(Configuration)' == 'Debug' " />
-    <Exec Command="stat -f &quot;stat: %z %N&quot; &quot;$(_MonoAndroidTestApkFile)&quot; > $(_MonoAndroidTestApkSizesInput)" />
+    <Exec Condition=" '$(HostOS)' == 'Darwin' " Command="stat -f &quot;stat: %z %N&quot; &quot;$(_MonoAndroidTestApkFile)&quot; > $(_MonoAndroidTestApkSizesInput)" />
+    <Exec Condition=" '$(HostOS)' == 'Linux' " Command="stat -c &quot;stat: %s %N&quot; &quot;$(_MonoAndroidTestApkFile)&quot; > $(_MonoAndroidTestApkSizesInput)" />
     <Exec Command="unzip -l &quot;$(_MonoAndroidTestApkFile)&quot; >> $(_MonoAndroidTestApkSizesInput)" />
     <ProcessPlotInput InputFilename="$(_MonoAndroidTestApkSizesInput)" ApplicationPackageName="$(_MonoAndroidTestPackage)" ResultsFilename="$(MSBuildThisFileDirectory)..\..\..\TestResult-Mono.Android_Tests.xml" DefinitionsFilename="$(MSBuildThisFileDirectory)apk-sizes-definitions-$(Configuration)$(_AotName).txt" AddResults="true" />
   </Target>
