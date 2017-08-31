@@ -32,6 +32,7 @@
 [submodule "external/linker"]
 	path = external/linker
 	url = https://github.com/mono/linker.git
+	branch = d15-3
 [submodule "external/proguard"]
 	path = external/proguard
 	url = https://github.com/xamarin/proguard.git
