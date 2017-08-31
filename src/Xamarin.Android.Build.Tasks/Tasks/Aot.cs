@@ -42,6 +42,9 @@ namespace Xamarin.Android.Tasks
 		public string AndroidApiLevel { get; set; }
 
 		[Required]
+		public ITaskItem ManifestFile { get; set; }
+
+		[Required]
 		public ITaskItem[] ResolvedAssemblies { get; set; }
 
 		// Which ABIs to include native libs for
@@ -165,9 +168,22 @@ namespace Xamarin.Android.Tasks
 			return true;
 		}
 
-		static int GetNdkApiLevel(string androidNdkPath, string androidApiLevel, AndroidTargetArch arch)
+		int GetNdkApiLevel(string androidNdkPath, string androidApiLevel, AndroidTargetArch arch)
 		{
-			int level = int.Parse(androidApiLevel);
+			var manifest    = AndroidAppManifest.Load (ManifestFile.ItemSpec, MonoAndroidHelper.SupportedVersions);
+
+			int level;
+			if (manifest.MinSdkVersion.HasValue) {
+				level       = manifest.MinSdkVersion.Value;
+			}
+			else if (int.TryParse (androidApiLevel, out level)) {
+				// level already set
+			}
+			else {
+				// Probably not ideal!
+				level       = MonoAndroidHelper.SupportedVersions.MaxStableVersion.ApiLevel;
+			}
+
 			// Some Android API levels do not exist on the NDK level. Workaround this my mapping them to the
 			// most appropriate API level that does exist.
 			if (level == 6 || level == 7) level = 5;
