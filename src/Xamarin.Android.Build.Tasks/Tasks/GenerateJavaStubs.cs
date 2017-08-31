@@ -97,6 +97,15 @@ namespace Xamarin.Android.Tasks
 					Log.LogMessage (e.ToString ());
 			}
 
+			if (Log.HasLoggedErrors) {
+				// Ensure that on a rebuild, we don't *skip* the `_GenerateJavaStubs` target,
+				// by ensuring that the target outputs have been deleted.
+				Files.DeleteFile (MergedAndroidManifestOutput, Log);
+				Files.DeleteFile (AcwMapFile, Log);
+				Files.DeleteFile (Path.Combine (OutputDirectory, "typemap.jm"), Log);
+				Files.DeleteFile (Path.Combine (OutputDirectory, "typemap.mj"), Log);
+			}
+
 			return !Log.HasLoggedErrors;
 		}
 
