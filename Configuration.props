@@ -12,7 +12,7 @@
       Condition=" '$(DoNotLoadOSProperties)' != 'True' "
   />
   <PropertyGroup>
-    <ProductVersion>7.4.99</ProductVersion>
+    <ProductVersion>8.0.0</ProductVersion>
     <!-- *Latest* API level binding that we support; used when building src/Xamarin.Android.Build.Tasks -->
     <AndroidLatestApiLevel Condition="'$(AndroidLatestApiLevel)' == ''">25</AndroidLatestApiLevel>
     <AndroidLatestFrameworkVersion Condition="'$(AndroidLatestFrameworkVersion)' == ''">v7.1</AndroidLatestFrameworkVersion>
