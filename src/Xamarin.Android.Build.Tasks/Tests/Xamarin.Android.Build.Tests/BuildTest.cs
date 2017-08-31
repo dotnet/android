@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using Microsoft.Build.Framework;
 using NUnit.Framework;
@@ -209,12 +210,29 @@ printf ""%d"" x
 			proj.SetProperty (KnownProperties.TargetFrameworkVersion, "v5.1");
 			proj.SetProperty (KnownProperties.AndroidSupportedAbis, supportedAbis);
 			proj.SetProperty ("EnableLLVM", enableLLVM.ToString ());
+			if (enableLLVM) {
+				// Set //uses-sdk/@android:minSdkVersion so that LLVM uses the right libc.so
+				proj.AndroidManifest = $@"<?xml version=""1.0"" encoding=""utf-8""?>
+<manifest xmlns:android=""http://schemas.android.com/apk/res/android"" android:versionCode=""1"" android:versionName=""1.0"" package=""{proj.PackageName}"">
+	<uses-sdk android:minSdkVersion=""10"" />
+	<application android:label=""{proj.ProjectName}"">
+	</application>
+</manifest>";
+			}
 			using (var b = CreateApkBuilder (path)) {
 				b.ThrowOnBuildFailure = false;
 				b.Verbosity = LoggerVerbosity.Diagnostic;
 				Assert.AreEqual (expectedResult, b.Build (proj), "Build should have {0}.", expectedResult ? "succeeded" : "failed");
 				if (!expectedResult)
 					return;
+				if (enableLLVM) {
+					// LLVM passes a direct path to libc.so, and we need to use the libc.so
+					// which corresponds to the *minimum* SDK version specified in AndroidManifest.xml
+					// Since we overrode minSdkVersion=10, that means we should use libc.so from android-9.
+					var rightLibc   = new Regex (@"^\s*\[AOT\].*cross-.*--llvm.*,ld-flags=.*android-9.arch-.*.usr.lib.libc\.so", RegexOptions.Multiline);
+					var m           = rightLibc.Match (b.LastBuildOutput);
+					Assert.IsTrue (m.Success, "AOT+LLVM should use libc.so from minSdkVersion!");
+				}
 				foreach (var abi in supportedAbis.Split (new char [] { ';' })) {
 					var libapp = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath,
 						"bundles", abi, "libmonodroid_bundle_app.so");
