@@ -158,5 +158,28 @@ namespace Xamarin.Android.Build.Tests
 				}
 			}
 		}
+
+		[Test]
+		public void CheckIncludedNativeLibraries ()
+		{
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = true,
+			};
+			proj.Packages.Add(KnownPackages.SQLitePCLRaw_Core);
+			proj.SetProperty(proj.ReleaseProperties, KnownProperties.AndroidSupportedAbis, "x86");
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
+				b.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Diagnostic;
+				b.ThrowOnBuildFailure = false;
+				Assert.IsTrue (b.Build (proj), "build failed");
+				var apk = Path.Combine (Root, b.ProjectDirectory,
+						proj.IntermediateOutputPath, "android", "bin", "UnnamedProject.UnnamedProject.apk");
+				using (var zip = ZipHelper.OpenZip (apk)) {
+					var libFiles = zip.Where (x => x.FullName.StartsWith("lib/") && !x.FullName.Equals("lib/", StringComparison.InvariantCultureIgnoreCase));
+					var abiPaths = new string[] { "lib/x86/" };
+					foreach (var file in libFiles)
+						Assert.IsTrue(abiPaths.Any (x => file.FullName.Contains (x)), $"Apk contains an unnesscary lib file: {file.FullName}");
+				}
+			}
+		}
 	}
 }
