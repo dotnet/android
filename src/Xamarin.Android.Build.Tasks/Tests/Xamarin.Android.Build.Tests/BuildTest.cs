@@ -210,7 +210,8 @@ printf ""%d"" x
 			proj.SetProperty (KnownProperties.TargetFrameworkVersion, "v5.1");
 			proj.SetProperty (KnownProperties.AndroidSupportedAbis, supportedAbis);
 			proj.SetProperty ("EnableLLVM", enableLLVM.ToString ());
-			if (enableLLVM) {
+			bool checkMinLlvmPath = enableLLVM && (supportedAbis == "armeabi-v7a" || supportedAbis == "x86");
+			if (checkMinLlvmPath) {
 				// Set //uses-sdk/@android:minSdkVersion so that LLVM uses the right libc.so
 				proj.AndroidManifest = $@"<?xml version=""1.0"" encoding=""utf-8""?>
 <manifest xmlns:android=""http://schemas.android.com/apk/res/android"" android:versionCode=""1"" android:versionName=""1.0"" package=""{proj.PackageName}"">
@@ -225,7 +226,7 @@ printf ""%d"" x
 				Assert.AreEqual (expectedResult, b.Build (proj), "Build should have {0}.", expectedResult ? "succeeded" : "failed");
 				if (!expectedResult)
 					return;
-				if (enableLLVM) {
+				if (checkMinLlvmPath) {
 					// LLVM passes a direct path to libc.so, and we need to use the libc.so
 					// which corresponds to the *minimum* SDK version specified in AndroidManifest.xml
 					// Since we overrode minSdkVersion=10, that means we should use libc.so from android-9.
