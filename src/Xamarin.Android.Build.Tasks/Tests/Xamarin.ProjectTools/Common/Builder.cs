@@ -11,6 +11,7 @@ namespace Xamarin.ProjectTools
 	public class Builder : IDisposable
 	{
 		const string fixed_osx_xbuild_path = "/Library/Frameworks/Mono.framework/Commands";
+		const string fixed_linux_xbuild_path = "/usr/bin";
 		const string xbuildapp = "xbuild";
 		const string msbuildapp = "msbuild";
 		string msbuildExe;
@@ -26,9 +27,10 @@ namespace Xamarin.ProjectTools
 		string GetUnixBuildExe ()
 		{
 			RunningMSBuild = false;
-			string path = Path.Combine (fixed_osx_xbuild_path, xbuildapp);
+			var tooldir = Directory.Exists (fixed_osx_xbuild_path) ? fixed_osx_xbuild_path : fixed_linux_xbuild_path;
+			string path = Path.Combine (tooldir, xbuildapp);
 			if (!string.IsNullOrEmpty (Environment.GetEnvironmentVariable ("USE_MSBUILD"))) {
-				path = Path.Combine (fixed_osx_xbuild_path, msbuildapp);
+				path = Path.Combine (tooldir, msbuildapp);
 				RunningMSBuild = true;
 			}
 			return File.Exists (path) ? path : msbuildapp;
