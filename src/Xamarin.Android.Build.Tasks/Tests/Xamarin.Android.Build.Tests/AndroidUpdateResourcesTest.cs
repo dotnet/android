@@ -436,7 +436,7 @@ namespace UnnamedProject
 					File.Delete (Path.Combine (Root, b.ProjectDirectory, designer));
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				var fi = new FileInfo (Path.Combine (Root, b.ProjectDirectory, designer));
-				Assert.IsFalse (fi.Length > 3,
+				Assert.IsFalse (fi.Length > new [] { 0xef, 0xbb, 0xbf, 0x0d, 0x0a }.Length,
 					"{0} should not contain anything.", designer);
 				var outputFile = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath,
 					"Resource.Designer"  + proj.Language.DefaultDesignerExtension);
