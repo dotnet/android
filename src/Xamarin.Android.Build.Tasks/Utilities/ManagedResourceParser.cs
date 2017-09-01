@@ -197,7 +197,7 @@ namespace Xamarin.Android.Tasks
 			parentType.Members.Add (f);
 		}
 
-		HashSet<string> itemSubTypes = new HashSet<string> () {
+		HashSet<string> resourceNamesToUseDirectly = new HashSet<string> () {
 			"integer-array",
 			"string-array",
 			"declare-styleable",
@@ -208,7 +208,7 @@ namespace Xamarin.Android.Tasks
 		{
 			var i = root.IndexOf ('-');
 			var item = i < 0 ? root : root.Substring (0, i);
-			item = itemSubTypes.Contains (root) ? root : item;
+			item = resourceNamesToUseDirectly.Contains (root) ? root : item;
 			switch (item.ToLower ()) {
 			case "bool":
 				CreateIntField (boolean, fieldName);
