@@ -2,7 +2,7 @@
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Target Name="GenerateJavaCallableWrappers"
       AfterTargets="$(JavaCallableWrapperAfterTargets)"
-      Inputs="$(JavaCallableWrapperAbsAssembly)"
+      Inputs="$(JavaCallableWrapperAbsAssembly);@(JavaCallableWrapperSource)"
       Outputs="$(OutputPath)mono.android.jar">
     <MakeDir Directories="$(IntermediateOutputPath)jcw;$(IntermediateOutputPath)jcw\bin" />
     <PropertyGroup>
@@ -20,7 +20,7 @@
     </ItemGroup>
     <WriteLinesToFile
         File="$(IntermediateOutputPath)jcw\classes.txt"
-        Lines="@(_CommonJavaSources);@(_JavaSources)"
+        Lines="@(JavaCallableWrapperSource);@(_JavaSources)"
         Overwrite="True"
     />
     <PropertyGroup>
