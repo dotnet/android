@@ -2,6 +2,9 @@ CONFIGURATION=Debug
 
 SHELL = /bin/bash
 
+TOP=../../
+JAVA_INTEROP_PATH=../../external/Java.Interop
+
 ANDROID_SDK_PATH=$(shell find ~/ -maxdepth 1 -name android-sdk-*)
 
 DOCS_DIR=~/android-toolchain/docs
