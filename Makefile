@@ -49,7 +49,7 @@ install::
 	ln -s "$(prefix)/lib/xamarin.android/xbuild/Xamarin/Android/" "$(prefix)/lib/mono/xbuild/Xamarin/Android"
 	ln -s "$(prefix)/lib/xamarin.android/xbuild-frameworks/MonoAndroid/" "$(prefix)/lib/mono/xbuild-frameworks/MonoAndroid"
 	if [ ! -e "$(prefix)/bin/mono" ]; then \
-		cp tools/scripts/xabuild "$(prefix)/bin/xabuild"
+		cp tools/scripts/xabuild "$(prefix)/bin/xabuild"; \
 	fi
 
 uninstall::
