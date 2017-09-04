@@ -796,6 +796,13 @@ because xbuild doesn't support framework reference assemblies.
 				Condition="'$(DxJarPath)' == ''"
 		/>
 	</CreateProperty>
+
+	<CreateProperty Value="--dex --no-strict">
+		<Output TaskParameter="Value" PropertyName="DxExtraArguments"
+			Condition="'$(DxExtraArguments)' == ''"
+		/>
+	</CreateProperty>
+
 	<CreateProperty Value="$(AndroidSdkBuildToolsPath)\">
 		<Output TaskParameter="Value" PropertyName="DxToolPath"
 				Condition="'$(UseDx)' == 'True' And '$(DxToolPath)' == ''"
@@ -2037,6 +2044,7 @@ because xbuild doesn't support framework reference assemblies.
   <!-- Compile java code to dalvik -->
   <CompileToDalvik 
     DxJarPath="$(DxJarPath)"
+    DxExtraArguments="$(DxExtraArguments)"
     JavaToolPath="$(JavaToolPath)"
     JavaMaximumHeapSize="$(JavaMaximumHeapSize)"
     JavaOptions="$(JavaOptions)"
