@@ -5,6 +5,7 @@
       <Package>Xamarin.Android.Locale_Tests</Package>
       <InstrumentationType>xamarin.android.localetests.TestInstrumentation</InstrumentationType>
       <ResultsPath>$(MSBuildThisFileDirectory)..\..\..\TestResult-Xamarin.Android.Locale_Tests.xml</ResultsPath>
+      <TimingDefinitionsFilename>$(MSBuildThisFileDirectory)..\..\..\build-tools\scripts\TimingDefinitions.txt</TimingDefinitionsFilename>
     </UnitTestApk>
   </ItemGroup>
 </Project>
