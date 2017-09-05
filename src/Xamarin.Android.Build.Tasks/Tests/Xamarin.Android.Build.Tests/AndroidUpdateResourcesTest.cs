@@ -73,7 +73,7 @@ using System.Runtime.CompilerServices;
 					new BuildItem.ProjectReference (@"..\Lib1\Lib1.csproj", lib.ProjectName, lib.ProjectGuid),
 				},
 			};
-			proj.SetProperty ("_AndroidUseManagedDesignTimeResourceGenerator", "False");
+			proj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", "False");
 			using (var l = CreateDllBuilder (Path.Combine (path, lib.ProjectName), false, false)) {
 				using (var b = CreateApkBuilder (Path.Combine (path, proj.ProjectName), false, false)) {
 					l.Verbosity = LoggerVerbosity.Diagnostic;
@@ -430,7 +430,7 @@ namespace UnnamedProject
 				IsRelease = isRelease,
 			};
 			proj.SetProperty ("AndroidUseIntermediateDesignerFile", "True");
-			proj.SetProperty ("_AndroidUseManagedDesignTimeResourceGenerator", "False");
+			proj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", "False");
 			using (var b = CreateApkBuilder ("temp/CheckOldResourceDesignerIsNotUsed")) {
 				var designer = Path.Combine ("Resources", "Resource.designer" + proj.Language.DefaultDesignerExtension);
 				if (File.Exists (designer))
@@ -948,7 +948,7 @@ namespace Lib1 {
 				IsRelease = true,
 				ProjectName = "App1",
 			};
-			appProj.SetProperty ("_AndroidUseManagedDesignTimeResourceGenerator", "True");
+			appProj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", "True");
 			using (var appBuilder = CreateApkBuilder (Path.Combine (path, appProj.ProjectName))) {
 				appBuilder.Verbosity = LoggerVerbosity.Diagnostic;
 				appBuilder.Target = "Compile";
@@ -996,7 +996,7 @@ namespace Lib1 {
 					theme,
 				},
 			};
-			libProj.SetProperty ("_AndroidUseManagedDesignTimeResourceGenerator", "True");
+			libProj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", "True");
 			var appProj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 				ProjectName = "App1",
@@ -1013,7 +1013,7 @@ namespace Lib1 {
 					KnownPackages.SupportV7AppCompat_25_4_0_1,
 				},
 			};
-			appProj.SetProperty ("_AndroidUseManagedDesignTimeResourceGenerator", "True");
+			appProj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", "True");
 			using (var libBuilder = CreateDllBuilder (Path.Combine (path, libProj.ProjectName), false, false)) {
 				libBuilder.Verbosity = LoggerVerbosity.Diagnostic;
 				using (var appBuilder = CreateApkBuilder (Path.Combine (path, appProj.ProjectName), false, false)) {
