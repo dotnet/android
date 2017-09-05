@@ -1548,7 +1548,6 @@ public class Test
 			using (var builder = CreateDllBuilder (path, false, false)) {
 				try {
 					builder.Build (proj);
-					Console.WriteLine ("build output:\n<<<<start>>>>\n" + builder.LastBuildOutput + "\n<<<<end>>>>");
 					if (failureExpected)
 						Assert.Fail ("Build should fail.");
 					if (expectedWarning == null)
