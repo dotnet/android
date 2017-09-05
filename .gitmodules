@@ -5,7 +5,7 @@
 [submodule "external/mono"]
 	path = external/mono
 	url = https://github.com/mono/mono.git
-	branch = 2017-04
+	branch = 2017-06
 [submodule "external/mxe"]
 	path = external/mxe
 	url = https://github.com/xamarin/mxe.git
@@ -39,4 +39,4 @@
 [submodule "xamarin-android-api-compatibility"]
 	path = external/xamarin-android-api-compatibility
 	url = https://github.com/xamarin/xamarin-android-api-compatibility.git
-	branch = d15-4
+	branch = master
