@@ -38,6 +38,9 @@ namespace Xamarin.Android.Tasks
 
 		public ITaskItem[] References { get; set; }
 
+		[Required]
+		public bool UseManagedResourceGenerator { get; set; }
+
 		private Dictionary<string, string> resource_fixup = new Dictionary<string, string> (StringComparer.OrdinalIgnoreCase);
 
 		public override bool Execute ()
@@ -56,10 +59,11 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ("  ResourceDirectory: {0}", ResourceDirectory);
 			Log.LogDebugTaskItemsAndLogical ("  AdditionalResourceDirectories:", AdditionalResourceDirectories);
 			Log.LogDebugMessage ("  IsApplication: {0}", IsApplication);
+			Log.LogDebugMessage ("  UseManagedResourceGenerator: {0}", UseManagedResourceGenerator);
 			Log.LogDebugTaskItemsAndLogical ("  Resources:", Resources);
 			Log.LogDebugTaskItemsAndLogical ("  References:", References);
 
-			if (!File.Exists (JavaResgenInputFile))
+			if (!File.Exists (JavaResgenInputFile) && !UseManagedResourceGenerator)
 				return true;
 
 			// ResourceDirectory may be a relative path, and
@@ -89,8 +93,14 @@ namespace Xamarin.Android.Tasks
 			}
 
 			// Parse out the resources from the R.java file
-			JavaResourceParser.Log = Log;
-			var resources = JavaResourceParser.Parse (JavaResgenInputFile, IsApplication, resource_fixup);
+			CodeTypeDeclaration resources;
+			if (UseManagedResourceGenerator) {
+				var parser = new ManagedResourceParser () { Log = Log };
+				resources = parser.Parse (ResourceDirectory, AdditionalResourceDirectories?.Select (x => x.ItemSpec), IsApplication, resource_fixup);
+			} else {
+				var parser = new JavaResourceParser () { Log = Log };
+				resources = parser.Parse (JavaResgenInputFile, IsApplication, resource_fixup);
+			}
 			
 			var extension = Path.GetExtension (NetResgenOutputFile);
 			var language = string.Compare (extension, ".fs", StringComparison.OrdinalIgnoreCase) == 0 ? "F#" : CodeDomProvider.GetLanguageFromExtension (extension);
@@ -269,7 +279,7 @@ namespace Xamarin.Android.Tasks
 			int a = value.IndexOf ('-');
 
 			return
-				JavaResourceParser.GetNestedTypeName (value.Substring (0, (a < 0 || a >= s) ? s : a)).ToLowerInvariant () +
+				ResourceParser.GetNestedTypeName (value.Substring (0, (a < 0 || a >= s) ? s : a)).ToLowerInvariant () +
 				value.Substring (s);
 		}
 	}
