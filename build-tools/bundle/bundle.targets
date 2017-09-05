@@ -7,7 +7,6 @@
   <Import Project="..\libzip\libzip.projitems" />
   <Import Project="..\libzip-windows\libzip-windows.projitems" />
   <Import Project="..\libzip\libzip.targets" />
-  <Import Project="..\libzip-windows\libzip-windows.targets" />
   <Import Project="bundle-path.targets" />
   <Target Name="Clean"
       DependsOnTargets="GetBundleFileName">
