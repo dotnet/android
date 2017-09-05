@@ -111,6 +111,7 @@ Administrator-elevated **Developer Command Prompt for VS 2017** window:
 Within the elevated command prompt, execute the `setup-windows.exe` program:
 
 	> C:\xa-sdk\oss-xamarin.android_v7.4.99.60_Darwin-x86_64_master_4f3d604\bin\Debug\bin\setup-windows.exe
+	Executing: MKLINK /D "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\Common7\IDE\ReferenceAssemblies\Microsoft\Framework\MonoAndroid" "C:\xa-sdk\oss-xamarin.android_v7.4.99.57_Darwin-x86_64_master_97f08f7\bin\Debug\lib\xamarin.android\xbuild-frameworks\MonoAndroid"
 	Executing: MKLINK /D "C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\MonoAndroid" "C:\xa-sdk\oss-xamarin.android_v7.4.99.57_Darwin-x86_64_master_97f08f7\bin\Debug\lib\xamarin.android\xbuild-frameworks\MonoAndroid"
 	Executing: MKLINK /D "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\MSBuild\Xamarin\Android" "C:\xa-sdk\oss-xamarin.android_v7.4.99.57_Darwin-x86_64_master_97f08f7\bin\Debug\lib\xamarin.android\xbuild\Xamarin\Android"
 	Success!
