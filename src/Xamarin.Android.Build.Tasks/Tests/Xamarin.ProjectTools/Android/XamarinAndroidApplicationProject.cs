@@ -43,8 +43,8 @@ namespace Xamarin.ProjectTools
 			SetProperty ("AndroidManifest", "Properties\\AndroidManifest.xml");
 			SetProperty (DebugProperties, "AndroidLinkMode", "None");
 			SetProperty (ReleaseProperties, "AndroidLinkMode", "SdkOnly");
-			SetProperty (DebugProperties, "EmbedAssembliesIntoApk", "False");
-			SetProperty (ReleaseProperties, "EmbedAssembliesIntoApk", "True");
+			SetProperty (DebugProperties, "EmbedAssembliesIntoApk", "False", "'$(EmbedAssembliesIntoApk)' == ''");
+			SetProperty (ReleaseProperties, "EmbedAssembliesIntoApk", "True", "'$(EmbedAssembliesIntoApk)' == ''");
 
 			AndroidManifest = default_android_manifest;
 			LayoutMain = default_layout_main;

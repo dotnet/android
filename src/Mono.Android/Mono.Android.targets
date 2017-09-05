@@ -104,7 +104,7 @@
     <JavacSourceVersion Condition=" '$(JavacSourceVersion)' == '' ">1.6</JavacSourceVersion>
   </PropertyGroup>
   <ItemGroup>
-    <_CommonJavaSources Include="java\**\*.java" />
+    <JavaCallableWrapperSource Include="java\**\*.java" />
   </ItemGroup>
   <Target Name="_GenerateFrameworkList"
       BeforeTargets="GetTargetFrameworkProperties;GetReferenceAssemblyPaths;ResolveReferences"

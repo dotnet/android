@@ -435,9 +435,9 @@ namespace UnnamedProject
 				if (File.Exists (designer))
 					File.Delete (Path.Combine (Root, b.ProjectDirectory, designer));
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				Assert.IsFalse (File.Exists (Path.Combine (b.ProjectDirectory, "Resources",
-					"Resource.designer"  + proj.Language.DefaultDesignerExtension)),
-					"{0} should not exists", designer);
+				var fi = new FileInfo (Path.Combine (Root, b.ProjectDirectory, designer));
+				Assert.IsFalse (fi.Length > new [] { 0xef, 0xbb, 0xbf, 0x0d, 0x0a }.Length,
+					"{0} should not contain anything.", designer);
 				var outputFile = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath,
 					"Resource.Designer"  + proj.Language.DefaultDesignerExtension);
 				Assert.IsTrue (File.Exists (outputFile), "Resource.Designer{1} should have been created in {0}",
@@ -467,7 +467,7 @@ namespace UnnamedProject
 				Assert.IsNotNull (designer, $"Failed to retrieve the Resource.designer.{proj.Language.DefaultDesignerExtension}");
 				designer.Deleted = true;
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				Assert.IsFalse (File.Exists (Path.Combine (b.ProjectDirectory, "Resources",
+				Assert.IsFalse (File.Exists (Path.Combine (Root, b.ProjectDirectory, "Resources",
 					"Resource.designer"  + proj.Language.DefaultDesignerExtension)),
 					"{0} should not exists", designer.Include ());
 				var outputFile = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath,

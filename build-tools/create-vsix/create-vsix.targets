@@ -87,6 +87,14 @@
       <VsixVersion>$(ProductVersion).$(XAVersionCommitCount)</VsixVersion>
     </PropertyGroup>
   </Target>
+  <Target Name="FixupTargetVsixContainer"
+      BeforeTargets="VSIXContainerProjectOutputGroup;CreateVsixContainer"
+      DependsOnTargets="_GetVsixPath">
+    <PropertyGroup>
+      <TargetVsixContainerName>$([System.IO.Path]::GetFileName('$(VsixPath)'))</TargetVsixContainerName>
+      <TargetVsixContainer>$(OutDir)$(TargetVsixContainerName)</TargetVsixContainer>
+    </PropertyGroup>
+  </Target>
   <Target Name="GetIsExperimental"
       Returns="$(IsExperimental)">
   </Target>
@@ -114,11 +122,11 @@
   </Target>
   <Target Name="_CopyToBuildConfiguration"
       DependsOnTargets="_GetVsixPath"
-      Inputs="$(OutputPath)$(AssemblyName).vsix"
+      Inputs="$(TargetVsixContainer)"
       Outputs="$(VsixPath)">
     <Copy
-        SourceFiles="$(OutputPath)$(AssemblyName).vsix"
-        DestinationFiles="$(VsixPath)"
+        SourceFiles="$(TargetVsixContainer)"
+        DestinationFolder="$(_VsixDir)"
     />
     <Copy
         SourceFiles="$(OutputPath)Xamarin.Android.Sdk.json"
