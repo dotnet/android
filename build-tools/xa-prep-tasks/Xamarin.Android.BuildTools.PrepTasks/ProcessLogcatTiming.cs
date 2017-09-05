@@ -10,13 +10,16 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 {
 	public class ProcessLogcatTiming : ProcessPlotInput
 	{
+		public string Activity { get; set; }
+
 		public override bool Execute ()
 		{
 			LoadDefinitions ();
 			using (var reader = new StreamReader (InputFilename)) {
 				string line;
 				int pid = -1;
-				var procStartRegex = new Regex ($@"^(?<timestamp>\d+-\d+\s+[\d:\.]+)\s+.*ActivityManager: Start proc.*for added application {ApplicationPackageName}: pid=(?<pid>\d+)");
+				var procIdentification = string.IsNullOrEmpty (Activity) ? $"added application {ApplicationPackageName}" : $"activity {Activity}";
+				var procStartRegex = new Regex ($@"^(?<timestamp>\d+-\d+\s+[\d:\.]+)\s+.*ActivityManager: Start proc.*for {procIdentification}: pid=(?<pid>\d+)");
 				Regex timingRegex = null;
 				DateTime start = DateTime.Now;
 				DateTime last = start;

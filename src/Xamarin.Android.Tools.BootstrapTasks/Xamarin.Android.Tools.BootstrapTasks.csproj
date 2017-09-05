@@ -46,11 +46,12 @@
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\GenerateMonoDroidIncludes.cs" />
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\GenerateProfile.cs" />
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\GetNugetPackageBasePath.cs" />
-    <Compile Include="Xamarin.Android.Tools.BootstrapTasks\RunInstrumentationTests.cs" />
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\StartAndroidEmulator.cs" />
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\UnzipDirectoryChildren.cs" />
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\Zip.cs" />
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\KillProcess.cs" />
+    <Compile Include="Xamarin.Android.Tools.BootstrapTasks\RunUITests.cs" />
+    <Compile Include="Xamarin.Android.Tools.BootstrapTasks\RunInstrumentationTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\external\LibZipSharp\libZipSharp.csproj">

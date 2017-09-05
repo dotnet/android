@@ -8,14 +8,14 @@
     <_MonoAndroidTestApkSizesInput>apk-sizes-$(_MonoAndroidTestPackage)-$(Configuration)$(_AotName).txt</_MonoAndroidTestApkSizesInput>
   </PropertyGroup>
   <ItemGroup>
-    <UnitTestApk Include="$(_MonoAndroidTestApkFile)">
+    <TestApk Include="$(_MonoAndroidTestApkFile)">
       <Package>$(_MonoAndroidTestPackage)</Package>
       <InstrumentationType>xamarin.android.runtimetests.TestInstrumentation</InstrumentationType>
       <ResultsPath>$(_MonoAndroidTestResultsPath)</ResultsPath>
       <TimingDefinitionsFilename>$(MSBuildThisFileDirectory)timing-definitions-$(Configuration)$(_AotName).txt</TimingDefinitionsFilename>
-    </UnitTestApk>
+    </TestApk>
   </ItemGroup>
-  <Target Name="_RecordApkSizes" AfterTargets="DeployUnitTestApks">
+  <Target Name="_RecordApkSizes" AfterTargets="DeployTestApks">
     <Delete Files="$(MSBuildThisFileDirectory)..\..\..\TestResult-Mono.Android_Tests-values.csv;$(MSBuildThisFileDirectory)..\..\..\TestResult-Mono.Android_Tests-times.csv" Condition=" '$(Configuration)' == 'Debug' " />
     <Exec Condition=" '$(HostOS)' == 'Darwin' " Command="stat -f &quot;stat: %z %N&quot; &quot;$(_MonoAndroidTestApkFile)&quot; > $(_MonoAndroidTestApkSizesInput)" />
     <Exec Condition=" '$(HostOS)' == 'Linux' " Command="stat -c &quot;stat: %s %N&quot; &quot;$(_MonoAndroidTestApkFile)&quot; > $(_MonoAndroidTestApkSizesInput)" />

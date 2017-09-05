@@ -19,7 +19,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 
 		public                  string          AndroidSdkHome  {get; set;}
 		public                  string          Port            {get; set;}
-		public                  string          ImageName       {get; set;} = "XamarinAndroidUnitTestRunner";
+		public                  string          ImageName       {get; set;} = "XamarinAndroidTestRunner";
 		public                  string          ToolPath        {get; set;}
 		public                  string          ToolExe         {get; set;}
 

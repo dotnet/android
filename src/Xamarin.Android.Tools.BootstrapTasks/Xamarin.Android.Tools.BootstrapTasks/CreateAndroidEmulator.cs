@@ -21,7 +21,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 
 		public                  string          TargetId        {get; set;}
 
-		public                  string          ImageName       {get; set;} = "XamarinAndroidUnitTestRunner";
+		public                  string          ImageName       {get; set;} = "XamarinAndroidTestRunner";
 
 		public override bool Execute ()
 		{
