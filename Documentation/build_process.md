@@ -588,10 +588,10 @@ when packaing Release applications.
     Added in Xamarin.Android 7.2.
 
 -  **AndroidUseManagedDesignTimeResourceGenerator** &ndash; A boolean property which
-   will switch over the design time builds to use the managed resource parser rather
-   than `aapt`.
+    will switch over the design time builds to use the managed resource parser rather
+    than `aapt`.
 
-    Added in Xamarin.Android 7.3. 
+    Added in Xamarin.Android 8.1.
 
 ## Binding Project Build Properties
 
