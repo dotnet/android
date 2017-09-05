@@ -993,7 +993,7 @@ because xbuild doesn't support framework reference assemblies.
 	<_AndroidResourceDesignerFile Condition=" '$(AndroidUseIntermediateDesignerFile)' != 'True' ">$(AndroidResgenFile)</_AndroidResourceDesignerFile>
 	<_AndroidStaticResourcesFlag>$(IntermediateOutputPath)static.flag</_AndroidStaticResourcesFlag>
 	<_AndroidResourcesCacheFile>$(IntermediateOutputPath)mergeresources.cache</_AndroidResourcesCacheFile>
-	<_AndroidUseManagedDesignTimeResourceGenerator Condition=" '$(_AndroidUseManagedDesignTimeResourceGenerator)' == '' " >True</_AndroidUseManagedDesignTimeResourceGenerator>
+	<AndroidUseManagedDesignTimeResourceGenerator Condition=" '$(AndroidUseManagedDesignTimeResourceGenerator)' == '' " >True</AndroidUseManagedDesignTimeResourceGenerator>
 	<_AndroidDesignTimeResDirIntermediate>$(IntermediateOutputPath)designtime\</_AndroidDesignTimeResDirIntermediate>
 	<_AndroidManagedResourceDesignerFile>$(_AndroidDesignTimeResDirIntermediate)$(_AndroidResourceDesigner)</_AndroidManagedResourceDesignerFile>
 </PropertyGroup>
@@ -1040,7 +1040,7 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Choose>
-	<When Condition=" $(_AndroidUseManagedDesignTimeResourceGenerator) == 'True' And '$(DesignTimeBuild)' == 'True' And '$(BuildingInsideVisualStudio)' == 'True' ">
+	<When Condition=" $(AndroidUseManagedDesignTimeResourceGenerator) == 'True' And '$(DesignTimeBuild)' == 'True' And '$(BuildingInsideVisualStudio)' == 'True' ">
 		<PropertyGroup>
 			<ManagedDesignTimeBuild>True</ManagedDesignTimeBuild>
 		</PropertyGroup>
