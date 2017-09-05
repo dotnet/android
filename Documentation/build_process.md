@@ -234,7 +234,7 @@ when packaing Release applications.
     When True, such types will generate an XA4212 error, otherwise a
     XA4212 warning will be generated.
 
-    Support for this property was added in Xamarin.Android 7.6.
+    Support for this property was added in Xamarin.Android 8.1.
 
     This property is `True` by default.
 
