@@ -72,7 +72,7 @@ namespace Xamarin.ProjectTools
 				{ "armeabi", "cross-arm" },
 				{ "x86", "cross-x86" },
 				{ "x86_64", "cross-x86_64" },
-				{ "arm64", "cross-arm64" },
+				{ "arm64-v8a", "cross-arm64" },
 			};
 			bool result = true;
 			foreach (var abi in supportedAbis.Split (';')) {
