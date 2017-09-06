@@ -241,7 +241,7 @@ namespace Android.App {
 		{
 			var type = self.provider as TypeDefinition;
 			if (string.IsNullOrEmpty (self.Name) && type != null)
-				return JniType.ToJniName (type).Replace ('/', '.');
+				return JavaNativeTypeManager.ToJniName (type).Replace ('/', '.');
 
 			return self.Name;
 		}

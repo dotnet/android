@@ -277,8 +277,8 @@ namespace Xamarin.Android.Tasks {
 				if (PackageName == null)
 					PackageName = t.Namespace;
 
-				var name        = JniType.ToJniName (t).Replace ('/', '.');
-				var compatName  = JniType.ToCompatJniName (t).Replace ('/', '.');
+				var name        = JavaNativeTypeManager.ToJniName (t).Replace ('/', '.');
+				var compatName  = JavaNativeTypeManager.ToCompatJniName (t).Replace ('/', '.');
 				if (((string) app.Attribute (attName)) == compatName) {
 					app.SetAttributeValue (attName, name);
 				}
@@ -835,7 +835,7 @@ namespace Xamarin.Android.Tasks {
 			
 			foreach (var type in subclasses)
 				if (type.IsSubclassOf ("Android.App.Instrumentation")) {
-					var xe = InstrumentationFromTypeDefinition (type, JniType.ToJniName (type).Replace ('/', '.'), targetSdkVersion);
+					var xe = InstrumentationFromTypeDefinition (type, JavaNativeTypeManager.ToJniName (type).Replace ('/', '.'), targetSdkVersion);
 					if (xe != null)
 						manifest.Add (xe);
 				}

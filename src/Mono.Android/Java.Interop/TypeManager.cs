@@ -3,10 +3,9 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Linq;
 using System.Runtime.InteropServices;
+using Java.Interop.Tools.TypeNameMappings;
 
 using Android.Runtime;
-
-using JniTypeMapping    = Java.Interop.Tools.TypeNameMappings.JniType;
 
 namespace Java.Interop {
 
@@ -222,7 +221,7 @@ namespace Java.Interop {
 					return type;
 				}
 			}
-			if ((type = Type.GetType (JniTypeMapping.ToCliType (class_name))) != null) {
+			if ((type = Type.GetType (JavaNativeTypeManager.ToCliType (class_name))) != null) {
 				return type;
 			}
 			return null;
@@ -310,7 +309,7 @@ namespace Java.Interop {
 
 		public static void RegisterType (string java_class, Type t)
 		{
-			string jniFromType = JniTypeMapping.ToJniName (t);
+			string jniFromType = JavaNativeTypeManager.ToJniName (t);
 			lock (jniToManaged) {
 				Type lookup;
 				if (!jniToManaged.TryGetValue (java_class, out lookup)) {
