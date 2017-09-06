@@ -107,7 +107,7 @@ namespace Xamarin.Android.Tasks
 			var exceptionMatch = ExceptionRegEx.Match (singleLine);
 
 			if (writeOutputToKeepFile && !match.Success && !exceptionMatch.Success)
-				File.AppendAllText (MultiDexMainDexListFile, singleLine);
+				File.AppendAllText (MultiDexMainDexListFile, singleLine + "\n");
 			base.LogEventsFromTextOutput (singleLine, messageImportance);
 		}
 	}

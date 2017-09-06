@@ -373,6 +373,9 @@ printf ""%d"" x
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsTrue (File.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android/bin/classes.dex")),
 					"multidex-ed classes.zip exists");
+				var multidexKeepPath  = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "multidex.keep");
+				Assert.IsTrue (File.Exists (multidexKeepPath), "multidex.keep exists");
+				Assert.IsTrue (File.ReadAllLines (multidexKeepPath).Length > 1, "multidex.keep must contain more than one line.");
 				Assert.IsTrue (b.LastBuildOutput.Contains (Path.Combine (fxVersion, "mono.android.jar")), fxVersion + "/mono.android.jar should be used.");
 			}
 		}
