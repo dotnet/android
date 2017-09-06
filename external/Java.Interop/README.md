@@ -106,6 +106,9 @@ Overridable MSBuild properties include:
     [`java-interop`](src/java-interop) against. By default this is
     probed for from numerious locations within
     [`build-tools/scripts/jdk.mk`](build-tools/scripts/jdk.mk).
+* `$(JavaCPath)`: Path to the `javac` command-line tool, by default set to `javac`.
+* `$(JarPath)`: Path to the `jar` command-line tool, by default set to `jar`.
+  * It may be desirable to override these on Windows, depending on your `PATH`.
 * `$(UtilityOutputFullPath)`: Directory to place various utilities such as
     [`class-parse`](tools/class-parse), [`generator`](tools/generator),
     and [`logcat-parse`](tools/logcat-parse). This value should be a full path.

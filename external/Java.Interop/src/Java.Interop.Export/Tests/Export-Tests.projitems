@@ -8,6 +8,7 @@
   <PropertyGroup Label="Configuration">
     <Import_RootNamespace>Java.Interop.ExportTests</Import_RootNamespace>
   </PropertyGroup>
+  <Import Project="$(MSBuildThisFileDirectory)..\..\..\bin\Build$(Configuration)\JdkInfo.props" />
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\ExportTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\MarshalMemberBuilderTest.cs" />
@@ -17,7 +18,7 @@
   </ItemGroup>
   <Target Name="BuildExportTestJar" Inputs="@(JavaExportTestJar)" Outputs="$(OutputPath)export-test.jar">
     <MakeDir Directories="$(IntermediateOutputPath)et-classes" />
-    <Exec Command="javac -classpath &quot;$(OutputPath)..\$(Configuration)\java-interop.jar&quot; -source 1.5 -target 1.6 -d &quot;$(IntermediateOutputPath)et-classes&quot; @(JavaExportTestJar -&gt; '%(Identity)', ' ')" />
-    <Exec Command="jar cf &quot;$(OutputPath)export-test.jar&quot; -C &quot;$(IntermediateOutputPath)et-classes&quot; ." />
+    <Exec Command="&quot;$(JavaCPath)&quot; -classpath &quot;$(OutputPath)..\$(Configuration)\java-interop.jar&quot; -source 1.5 -target 1.6 -d &quot;$(IntermediateOutputPath)et-classes&quot; @(JavaExportTestJar -&gt; '%(Identity)', ' ')" />
+    <Exec Command="&quot;$(JarPath)&quot; cf &quot;$(OutputPath)export-test.jar&quot; -C &quot;$(IntermediateOutputPath)et-classes&quot; ." />
   </Target>
 </Project>

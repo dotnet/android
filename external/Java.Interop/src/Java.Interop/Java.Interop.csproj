@@ -27,6 +27,7 @@
     <ConsolePause>false</ConsolePause>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DocumentationFile>..\..\bin\Debug\Java.Interop.xml</DocumentationFile>
+    <JNIEnvGenPath>..\..\bin\BuildDebug</JNIEnvGenPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>full</DebugType>
@@ -38,6 +39,7 @@
     <DefineConstants>INTEROP;FEATURE_JNIENVIRONMENT_JI_PINVOKES;FEATURE_JNIOBJECTREFERENCE_INTPTRS</DefineConstants>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DocumentationFile>..\..\bin\Release\Java.Interop.xml</DocumentationFile>
+    <JNIEnvGenPath>..\..\bin\BuildRelease</JNIEnvGenPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'XAIntegrationDebug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -59,7 +61,7 @@
     <WarningLevel>4</WarningLevel>
     <ConsolePause>false</ConsolePause>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <JNIEnvGenPath>..\..\bin\BuildDebug</JNIEnvGenPath>
+    <JNIEnvGenPath>..\..\bin\BuildRelease</JNIEnvGenPath>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />

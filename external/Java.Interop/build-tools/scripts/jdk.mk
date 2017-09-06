@@ -147,4 +147,8 @@ bin/Build$(CONFIGURATION)/JdkInfo.props: $(JI_JDK_INCLUDE_PATHS) $(JI_JVM_PATH)
 	echo '      </ItemGroup>' >> "$@"
 	echo '    </When>' >> "$@"
 	echo '  </Choose>' >> "$@"
+	echo '  <PropertyGroup>' >> "$@"
+	echo "    <JavaCPath Condition=\" '\$$(JavaCPath)' == '' \">javac</JavaCPath>" >> "$@"
+	echo "    <JarPath Condition=\" '\$$(JarPath)' == '' \">jar</JarPath>" >> "$@"
+	echo '  </PropertyGroup>' >> "$@"
 	echo '</Project>' >> "$@"

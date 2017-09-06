@@ -8,6 +8,7 @@
   <PropertyGroup Label="Configuration">
     <Import_RootNamespace>Java.InteropTests</Import_RootNamespace>
   </PropertyGroup>
+  <Import Project="$(MSBuildThisFileDirectory)..\..\..\bin\Build$(Configuration)\JdkInfo.props" />
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Cadenza.Collections\CollectionContract.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Cadenza.Collections\EnumerableContract.cs" />
@@ -64,7 +65,7 @@
   </ItemGroup>
   <Target Name="BuildInteropTestJar" Inputs="@(JavaInteropTestJar)" Outputs="$(OutputPath)interop-test.jar">
     <MakeDir Directories="$(IntermediateOutputPath)it-classes" />
-    <Exec Command="javac -source 1.5 -target 1.6 -d &quot;$(IntermediateOutputPath)it-classes&quot; -classpath &quot;$(OutputPath)..\$(Configuration)\java-interop.jar&quot; @(JavaInteropTestJar -&gt; '%(Identity)', ' ')" />
-    <Exec Command="jar cf &quot;$(OutputPath)interop-test.jar&quot; -C &quot;$(IntermediateOutputPath)it-classes&quot; ." />
+    <Exec Command="&quot;$(JavaCPath)&quot; -source 1.5 -target 1.6 -d &quot;$(IntermediateOutputPath)it-classes&quot; -classpath &quot;$(OutputPath)..\$(Configuration)\java-interop.jar&quot; @(JavaInteropTestJar -&gt; '%(Identity)', ' ')" />
+    <Exec Command="&quot;$(JarPath)&quot; cf &quot;$(OutputPath)interop-test.jar&quot; -C &quot;$(IntermediateOutputPath)it-classes&quot; ." />
   </Target>
 </Project>

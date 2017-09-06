@@ -5,6 +5,7 @@
     <HasSharedItems>true</HasSharedItems>
     <SharedGUID>{0FBECD2A-7C91-41AB-A4B4-B781E8EC8479}</SharedGUID>
   </PropertyGroup>
+  <Import Project="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\JdkInfo.props" />
   <PropertyGroup Label="Configuration">
     <Import_RootNamespace>Java.Interop.PerformanceTests</Import_RootNamespace>
   </PropertyGroup>
@@ -17,7 +18,7 @@
   </ItemGroup>
   <Target Name="BuildPerformanceTestJar" Inputs="@(JavaPerformanceTestJar)" Outputs="$(OutputPath)performance-test.jar">
     <MakeDir Directories="$(IntermediateOutputPath)pt-classes" />
-    <Exec Command="javac -source 1.5 -target 1.6 -d &quot;$(IntermediateOutputPath)pt-classes&quot; @(JavaPerformanceTestJar -&gt; '%(Identity)', ' ')" />
-    <Exec Command="jar cf &quot;$(OutputPath)performance-test.jar&quot; -C &quot;$(IntermediateOutputPath)pt-classes&quot; ." />
+    <Exec Command="&quot;$(JavaCPath)&quot; -source 1.5 -target 1.6 -d &quot;$(IntermediateOutputPath)pt-classes&quot; @(JavaPerformanceTestJar -&gt; '%(Identity)', ' ')" />
+    <Exec Command="&quot;$(JarPath)&quot; cf &quot;$(OutputPath)performance-test.jar&quot; -C &quot;$(IntermediateOutputPath)pt-classes&quot; ." />
   </Target>
 </Project>
