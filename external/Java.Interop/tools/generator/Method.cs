@@ -396,7 +396,8 @@ namespace MonoDroid.Generation {
 		{
 			string event_name = EventName;
 			if (event_name == null) {
-				event_name = Name.Substring (0, Name.Length - 8).Substring (3);
+				var trimSize = Name.EndsWith ("Listener", StringComparison.Ordinal) ? 8 : 0;
+				event_name = Name.Substring (0, Name.Length - trimSize).Substring (3);
 				if (event_name.StartsWith ("On"))
 					event_name = event_name.Substring (2);
 				if (checkNameDuplicate (event_name))
