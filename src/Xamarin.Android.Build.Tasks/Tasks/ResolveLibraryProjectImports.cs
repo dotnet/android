@@ -264,7 +264,9 @@ namespace Xamarin.Android.Tasks
 						//    __library_projects__/[dllname]/[library_project_imports | jlibs]/bin
 						using (var zip = MonoAndroidHelper.ReadZipFile (finfo.FullName)) {
 							updated |= Files.ExtractAll (zip, importsDir, modifyCallback: (entryFullName) => {
-								return entryFullName.Replace ("library_project_imports/", "");
+								return entryFullName
+									.Replace ("library_project_imports\\","")
+									.Replace ("library_project_imports/", "");
 							}, deleteCallback: (fileToDelete) => {
 								return !jars.Contains (fileToDelete);
 							}, forceUpdate: false);
