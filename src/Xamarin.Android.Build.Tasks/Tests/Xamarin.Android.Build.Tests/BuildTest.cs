@@ -221,6 +221,8 @@ printf ""%d"" x
 </manifest>";
 			}
 			using (var b = CreateApkBuilder (path)) {
+				if (!b.CrossCompilerAvailable (supportedAbis))
+					Assert.Ignore ("Cross compiler was not available");
 				b.ThrowOnBuildFailure = false;
 				b.Verbosity = LoggerVerbosity.Diagnostic;
 				Assert.AreEqual (expectedResult, b.Build (proj), "Build should have {0}.", expectedResult ? "succeeded" : "failed");
@@ -277,6 +279,8 @@ printf ""%d"" x
 			proj.SetProperty (KnownProperties.AndroidSupportedAbis, supportedAbis);
 			proj.SetProperty ("EnableLLVM", enableLLVM.ToString ());
 			using (var b = CreateApkBuilder (path)) {
+				if (!b.CrossCompilerAvailable (supportedAbis))
+					Assert.Ignore ("Cross compiler was not available");
 				b.ThrowOnBuildFailure = false;
 				Assert.AreEqual (expectedResult, b.Build (proj), "Build should have {0}.", expectedResult ? "succeeded" : "failed");
 				if (!expectedResult)
@@ -1074,6 +1078,8 @@ namespace App1
 			proj.SetProperty (proj.ActiveConfigurationProperties, "DebugSymbols", debugSymbols);
 			proj.SetProperty (proj.ActiveConfigurationProperties, "DebugType", debugType);
 			using (var b = CreateApkBuilder ("temp/SequencePointChecks", false, false)) {
+				if (aotAssemblies && !b.CrossCompilerAvailable (string.Join (";", abis)))
+					Assert.Ignore ("Cross compiler was not available");
 				b.Verbosity = LoggerVerbosity.Diagnostic;
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				var apk = Path.Combine (Root, b.ProjectDirectory,
@@ -1755,12 +1761,12 @@ public class Test
 		}
 
 		[Test]
-		public void BuildInDesignTimeMode ()
+		public void BuildInDesignTimeMode ([Values(false, true)] bool useManagedParser)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 			};
-			proj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", "False");
+			proj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", useManagedParser.ToString ());
 			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name), false ,false)) {
 				builder.Verbosity = LoggerVerbosity.Diagnostic;
 				builder.Target = "UpdateAndroidResources";

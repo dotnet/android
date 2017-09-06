@@ -65,6 +65,28 @@ namespace Xamarin.ProjectTools
 			}
 		}
 
+		public bool CrossCompilerAvailable (string supportedAbis)
+		{
+			var crossCompilerLookup = new Dictionary<string, string> {
+				{ "armeabi-v7a", "cross-arm" },
+				{ "armeabi", "cross-arm" },
+				{ "x86", "cross-x86" },
+				{ "x86_64", "cross-x86_64" },
+				{ "arm64", "cross-arm64" },
+			};
+			bool result = true;
+			foreach (var abi in supportedAbis.Split (';')) {
+				var fileName = crossCompilerLookup [abi];
+				if (IsUnix) {
+					result &= (File.Exists (Path.Combine (FrameworkLibDirectory, "xbuild", "Xamarin", "Android", "Darwin", fileName)) ||
+						File.Exists (Path.Combine (FrameworkLibDirectory, "xbuild", "Xamarin", "Android", "Linux", fileName)));
+				} else {
+					result &= File.Exists (Path.Combine (FrameworkLibDirectory, ".exe"));
+				}
+			}
+			return result;
+		}
+
 		public string LatestTargetFrameworkVersion () {
 			Version latest = new Version (1, 0);
 			var outdir = FrameworkLibDirectory;
