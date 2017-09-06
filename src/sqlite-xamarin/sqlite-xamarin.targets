@@ -24,7 +24,7 @@
   <Target Name="_NdkBuild"
       Inputs="src\stamp"
       Outputs="@(_LibSqliteXamarin)">
-    <Exec Command="$(AndroidNdkDirectory)\ndk-build SQLITE_SOURCE_DIR=&quot;$(SqliteSourceFullPath)&quot; APP_ABI=&quot;$(_AppAbi)&quot;"
+    <Exec Command="&quot;$(NdkBuildPath)&quot; SQLITE_SOURCE_DIR=&quot;$(SqliteSourceFullPath)&quot; APP_ABI=&quot;$(_AppAbi)&quot;"
         WorkingDirectory="src\main\jni" />
   </Target>
   <Target Name="_CleanLibraries"

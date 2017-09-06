@@ -14,7 +14,7 @@
       DependsOnTargets="AndroidPrepareForBuild"
       Inputs="jni\reuse-threads.c;jni\Android.mk"
       Outputs="@(AndroidNativeLibrary)">
-    <Error Text="Could not locate Android NDK." Condition="!Exists ('$(AndroidNdkDirectory)\ndk-build')" />
-    <Exec Command="&quot;$(AndroidNdkDirectory)\ndk-build&quot;" />
+    <Error Text="Could not locate Android NDK." Condition="!Exists ('$(NdkBuildPath)')" />
+    <Exec Command="&quot;$(NdkBuildPath)&quot;" />
   </Target>
 </Project>
