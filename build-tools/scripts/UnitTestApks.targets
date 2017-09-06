@@ -150,6 +150,7 @@
     </PropertyGroup>
     <Exec Command="&quot;$(AdbToolPath)\$(AdbToolExe)&quot; $(_AdbTarget) $(AdbOptions) logcat -v threadtime -d > $(_LogcatFilename)" />
     <ProcessLogcatTiming
+        Condition=" '%(UnitTestApk.TimingDefinitionsFilename)' != '' "
         InputFilename="$(_LogcatFilename)"
         ApplicationPackageName="%(UnitTestApk.Package)"
         ResultsFilename="%(UnitTestApk.ResultsPath)"
