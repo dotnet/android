@@ -23,41 +23,44 @@ namespace Java.Interop.Tools.TypeNameMappings {
 		LowercaseWithAssemblyName,
 	}
 
-	class JniType {
+	public class JniTypeName
+	{
+		public string Type { get; internal set; }
+		public bool IsKeyword { get; internal set; }
+	}
+
+	static class JavaNativeTypeManager {
 
 		public static PackageNamingPolicy PackageNamingPolicy { get; set; }
 
 		public static string ApplicationJavaClass { get; set; }
 
-		public string Type {get; private set;}
-		public bool   IsKeyword { get; private set;}
-
-		public static JniType Parse (string jniType)
+		public static JniTypeName Parse (string jniType)
 		{
 			int _ = 0;
 			return ExtractType (jniType, ref _);
 		}
 
-		public static IEnumerable<JniType> FromSignature (string signature)
+		public static IEnumerable<JniTypeName> FromSignature (string signature)
 		{
 			if (signature.StartsWith ("(")) {
 				int e = signature.IndexOf (")");
 				signature = signature.Substring (1, e >= 0 ? e-1 : signature.Length-1);
 			}
 			int i = 0;
-			JniType t;
+			JniTypeName t;
 			while ((t = ExtractType (signature, ref i)) != null)
 				yield return t;
 		}
 
-		public static JniType ReturnTypeFromSignature (string signature)
+		public static JniTypeName ReturnTypeFromSignature (string signature)
 		{
 			int idx = signature.LastIndexOf (')') + 1;
 			return ExtractType (signature, ref idx);
 		}
 
 		// as per: http://java.sun.com/j2se/1.5.0/docs/guide/jni/spec/types.html
-		static JniType ExtractType (string signature, ref int index)
+		static JniTypeName ExtractType (string signature, ref int index)
 		{
 			if (index >= signature.Length)
 				return null;
@@ -67,38 +70,38 @@ namespace Java.Interop.Tools.TypeNameMappings {
 					++i;
 					if (i >= signature.Length)
 						throw new InvalidOperationException ("Missing array type after '[' at index " + i + " in: " + signature);
-					JniType r = ExtractType (signature, ref index);
-					return new JniType { Type = r.Type + "[]", IsKeyword = r.IsKeyword };
+					JniTypeName r = ExtractType (signature, ref index);
+					return new JniTypeName { Type = r.Type + "[]", IsKeyword = r.IsKeyword };
 				}
 				case 'B':
-					return new JniType { Type = "byte", IsKeyword = true };
+					return new JniTypeName { Type = "byte", IsKeyword = true };
 				case 'C':
-					return new JniType { Type = "char", IsKeyword = true };
+					return new JniTypeName { Type = "char", IsKeyword = true };
 				case 'D':
-					return new JniType { Type = "double", IsKeyword = true };
+					return new JniTypeName { Type = "double", IsKeyword = true };
 				case 'F':
-					return new JniType { Type = "float", IsKeyword = true };
+					return new JniTypeName { Type = "float", IsKeyword = true };
 				case 'I':
-					return new JniType { Type = "int", IsKeyword = true };
+					return new JniTypeName { Type = "int", IsKeyword = true };
 				case 'J':
-					return new JniType { Type = "long", IsKeyword = true };
+					return new JniTypeName { Type = "long", IsKeyword = true };
 				case 'L': {
 					var e = signature.IndexOf (";", index);
 					if (e <= 0)
 						throw new InvalidOperationException ("Missing reference type after 'L' at index " + i + "in: " + signature);
 					var s = index;
 					index = e + 1;
-					return new JniType {
+					return new JniTypeName {
 						Type      = signature.Substring (s, e - s).Replace ("/", ".").Replace ("$", "."),
 						IsKeyword = false,
 					};
 				}
 				case 'S':
-					return new JniType { Type = "short", IsKeyword = true };
+					return new JniTypeName { Type = "short", IsKeyword = true };
 				case 'V':
-					return new JniType { Type = "void", IsKeyword = true };
+					return new JniTypeName { Type = "void", IsKeyword = true };
 				case 'Z':
-					return new JniType { Type = "boolean", IsKeyword = true };
+					return new JniTypeName { Type = "boolean", IsKeyword = true };
 				default:
 					throw new InvalidOperationException ("Unknown JNI Type '" + signature [i] + "' within: " + signature);
 			}

@@ -49,16 +49,16 @@ namespace MonoDroid.Generation {
 			get { return m.IsPublic ? "public" : m.IsFamilyOrAssembly ? "protected internal" : m.IsFamily ? "protected" : m.IsAssembly ? "internal" : "private"; }
 		}
 		
-		internal JniType GetJniReturnType (CustomAttribute regatt)
+		internal JniTypeName GetJniReturnType (CustomAttribute regatt)
 		{
 			var jnisig = (string) (regatt.ConstructorArguments.Count > 1 ? regatt.ConstructorArguments [1].Value : regatt.Properties.First (p => p.Name == "JniSignature").Argument.Value);
-			return JniType.ReturnTypeFromSignature (jnisig);
+			return JavaNativeTypeManager.ReturnTypeFromSignature (jnisig);
 		}
 		
 		public IEnumerable<Parameter> GetParameters (CustomAttribute regatt)
 		{
 			var jnisig = (string) (regatt.ConstructorArguments.Count > 1 ? regatt.ConstructorArguments [1].Value : regatt.Properties.First (p => p.Name == "JniSignature").Argument.Value);
-			var types = jnisig == null ? null : JniType.FromSignature (jnisig);
+			var types = jnisig == null ? null : JavaNativeTypeManager.FromSignature (jnisig);
 			var e = types != null ? types.GetEnumerator () : null;
 
 			foreach (var p in m.Parameters) {

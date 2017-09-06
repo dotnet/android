@@ -9,6 +9,6 @@
     <Import_RootNamespace>Java.Interop.Tools.TypeNameMappings</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop.Tools.TypeNameMappings\JniType.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop.Tools.TypeNameMappings\JavaNativeTypeManager.cs" />
   </ItemGroup>
 </Project>

@@ -64,7 +64,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers
 
 		public static bool ShouldSkipJavaCallableWrapperGeneration (TypeDefinition type)
 		{
-			if (JniType.IsNonStaticInnerClass (type))
+			if (JavaNativeTypeManager.IsNonStaticInnerClass (type))
 				return true;
 
 			foreach (var r in type.GetCustomAttributes (typeof (global::Android.Runtime.RegisterAttribute))) {

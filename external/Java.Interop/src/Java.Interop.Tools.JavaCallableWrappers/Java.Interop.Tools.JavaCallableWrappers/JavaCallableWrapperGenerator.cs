@@ -28,7 +28,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 			{
 				this.FieldName = fieldName;
 				InitializerName = method.Name;
-				TypeName = JniType.ReturnTypeFromSignature (GetJniSignature (method)).Type;
+				TypeName = JavaNativeTypeManager.ReturnTypeFromSignature (GetJniSignature (method)).Type;
 				IsStatic = method.IsStatic;
 				Access = method.Attributes & MethodAttributes.MemberAccessMask;
 				Annotations = GetAnnotationsString ("\t", method.CustomAttributes);
@@ -82,9 +82,9 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 			foreach (TypeDefinition nt in type.NestedTypes) {
 				if (!nt.IsSubclassOf ("Java.Lang.Object"))
 					continue;
-				if (!JniType.IsNonStaticInnerClass (nt))
+				if (!JavaNativeTypeManager.IsNonStaticInnerClass (nt))
 					continue;
-				children.Add (new JavaCallableWrapperGenerator (nt, JniType.ToJniName (type), log));
+				children.Add (new JavaCallableWrapperGenerator (nt, JavaNativeTypeManager.ToJniName (type), log));
 				if (nt.HasNestedTypes)
 					AddNestedTypes (nt);
 			}
@@ -99,7 +99,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 			if (type.IsEnum || type.IsInterface || type.IsValueType)
 				Diagnostic.Error (4200, LookupSource (type), "Can only generate Java wrappers for 'class' types, not type '{0}'.", type.FullName);
 
-			string jniName = JniType.ToJniName (type);
+			string jniName = JavaNativeTypeManager.ToJniName (type);
 			if (jniName == null)
 				Diagnostic.Error (4201, LookupSource (type), "Unable to determine Java name for type {0}", type.FullName);
 			if (!string.IsNullOrEmpty (outerType)) {
@@ -318,7 +318,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 			if (attr.Properties.Count == 0)
 				return new ExportAttribute (name);
 			var typeArgs = (CustomAttributeArgument []) attr.Properties.FirstOrDefault (p => p.Name == "Throws").Argument.Value;
-			var thrown = typeArgs != null && typeArgs.Any () ? (from caa in typeArgs select JniType.Parse (GetJniTypeName ((TypeReference)caa.Value)).Type).ToArray () : null;
+			var thrown = typeArgs != null && typeArgs.Any () ? (from caa in typeArgs select JavaNativeTypeManager.Parse (GetJniTypeName ((TypeReference)caa.Value)).Type).ToArray () : null;
 			var superArgs = (string) attr.Properties.FirstOrDefault (p => p.Name == "SuperArgumentsString").Argument.Value;
 			return new ExportAttribute (name) {ThrownNames = thrown, SuperArgumentsString = superArgs};
 		}
@@ -401,12 +401,12 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 
 		static string GetJniTypeName (TypeReference typeRef, ExportParameterKind exportKind)
 		{
-			return JniType.GetJniTypeName (typeRef, exportKind);
+			return JavaNativeTypeManager.GetJniTypeName (typeRef, exportKind);
 		}
 
 		static string GetJniSignature (MethodDefinition ctor)
 		{
-			return JniType.GetJniSignature (ctor);
+			return JavaNativeTypeManager.GetJniSignature (ctor);
 		}
 
 		// example of java target to generate for a type
@@ -554,7 +554,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 		void GenerateBody (TextWriter sw)
 		{
 			foreach (Signature ctor in ctors) {
-				if (string.IsNullOrEmpty (ctor.Params) && JniType.IsApplication (type))
+				if (string.IsNullOrEmpty (ctor.Params) && JavaNativeTypeManager.IsApplication (type))
 					continue;
 				GenerateConstructor (ctor, sw);
 			}
@@ -567,12 +567,12 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 			foreach (Signature method in methods)
 				GenerateMethod (method, sw);
 
-			if (GenerateOnCreateOverrides && JniType.IsApplication (type) && !methods.Any (m => m.Name == "onCreate"))
+			if (GenerateOnCreateOverrides && JavaNativeTypeManager.IsApplication (type) && !methods.Any (m => m.Name == "onCreate"))
 				WriteApplicationOnCreate (sw, w => {
 						w.WriteLine ("\t\tmono.android.Runtime.register (\"{0}\", {1}.class, __md_methods);", type.GetAssemblyQualifiedName (), name);
 						w.WriteLine ("\t\tsuper.onCreate ();");
 				});
-			if (GenerateOnCreateOverrides && JniType.IsInstrumentation (type) && !methods.Any (m => m.Name == "onCreate"))
+			if (GenerateOnCreateOverrides && JavaNativeTypeManager.IsInstrumentation (type) && !methods.Any (m => m.Name == "onCreate"))
 				WriteInstrumentationOnCreate (sw, w => {
 						w.WriteLine ("\t\tmono.android.Runtime.register (\"{0}\", {1}.class, __md_methods);", type.GetAssemblyQualifiedName (), name);
 						w.WriteLine ("\t\tsuper.onCreate (arguments);");
@@ -627,7 +627,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 		static string GetJavaTypeName (TypeReference r)
 		{
 			TypeDefinition d = r.Resolve ();
-			string jniName = JniType.ToJniName (d);
+			string jniName = JavaNativeTypeManager.ToJniName (d);
 			if (jniName == null)
 				Diagnostic.Error (4201, "Unable to determine JNI name for type {0}.", r.FullName);
 			return jniName.Replace ('/', '.').Replace ('$', '.');
@@ -635,7 +635,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 
 		static bool CannotRegisterInStaticConstructor (TypeDefinition type)
 		{
-			return JniType.IsApplication (type) || JniType.IsInstrumentation (type);
+			return JavaNativeTypeManager.IsApplication (type) || JavaNativeTypeManager.IsInstrumentation (type);
 		}
 
 		class Signature {
@@ -683,7 +683,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 				var jnisig = signature;
 				int closer = jnisig.IndexOf (")");
 				string ret = jnisig.Substring (closer + 1);
-				retval = JniType.Parse (ret).Type;
+				retval = JavaNativeTypeManager.Parse (ret).Type;
 				string jniparms = jnisig.Substring (1, closer - 1);
 				if (string.IsNullOrEmpty (jniparms) && string.IsNullOrEmpty (superCall))
 					return;
@@ -692,7 +692,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 				var acall = new StringBuilder ();
 				bool first = true;
 				int i = 0;
-				foreach (JniType jti in JniType.FromSignature (jniparms)) {
+				foreach (JniTypeName jti in JavaNativeTypeManager.FromSignature (jniparms)) {
 					if (outerType != null) {
 						acall.Append (outerType).Append (".this");
 						outerType = null;
@@ -776,7 +776,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 
 		void GenerateApplicationConstructor (TextWriter sw)
 		{
-			if (!JniType.IsApplication (type)) {
+			if (!JavaNativeTypeManager.IsApplication (type)) {
 				return;
 			}
 

@@ -140,7 +140,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 
 			var typeMap = GetTypeMapping (
 					t => t.IsInterface || t.HasGenericParameters,
-					JniType.ToJniName,
+					JavaNativeTypeManager.ToJniName,
 					t => t.GetAssemblyQualifiedName ());
 
 			WriteBinaryMapping (output, typeMap);
@@ -235,7 +235,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 			var typeMap = GetTypeMapping (
 					t => false,
 					t => t.GetAssemblyQualifiedName (),
-					JniType.ToJniName);
+					JavaNativeTypeManager.ToJniName);
 
 			WriteBinaryMapping (output, typeMap);
 		}
