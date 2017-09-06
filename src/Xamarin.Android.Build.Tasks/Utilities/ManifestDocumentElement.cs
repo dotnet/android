@@ -25,7 +25,7 @@ namespace Xamarin.Android.Manifest {
 
 		public static string ToString (TypeDefinition typeDef)
 		{
-			return JniType.ToJniName (typeDef).Replace ('/', '.');
+			return JavaNativeTypeManager.ToJniName (typeDef).Replace ('/', '.');
 		}
 
 		public static TypeDefinition ResolveType (string type, ICustomAttributeProvider provider, IAssemblyResolver resolver)
