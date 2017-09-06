@@ -36,11 +36,11 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void DesignTimeBuild ([Values(false, true)] bool isRelease)
+		public void DesignTimeBuild ([Values(false, true)] bool isRelease, [Values (false, true)] bool useManagedParser)
 		{
 			var regEx = new Regex (@"(?<type>([a-zA-Z_0-9])+)\slibrary_name=(?<value>([0-9A-Za-z])+);", RegexOptions.Compiled | RegexOptions.Multiline ); 
 
-			var path = Path.Combine (Root, "temp", $"DesignTimeBuild_{isRelease}");
+			var path = Path.Combine (Root, "temp", $"DesignTimeBuild_{isRelease}_{useManagedParser}");
 			var cachePath = Path.Combine (path, "Cache");
 			var envVar = new Dictionary<string, string> () {
 				{ "XAMARIN_CACHEPATH", cachePath },
@@ -73,7 +73,7 @@ using System.Runtime.CompilerServices;
 					new BuildItem.ProjectReference (@"..\Lib1\Lib1.csproj", lib.ProjectName, lib.ProjectGuid),
 				},
 			};
-			proj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", "False");
+			proj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", useManagedParser.ToString ());
 			using (var l = CreateDllBuilder (Path.Combine (path, lib.ProjectName), false, false)) {
 				using (var b = CreateApkBuilder (Path.Combine (path, proj.ProjectName), false, false)) {
 					l.Verbosity = LoggerVerbosity.Diagnostic;
@@ -84,15 +84,18 @@ using System.Runtime.CompilerServices;
 					Assert.IsTrue (b.Clean(proj), "App should have cleaned successfully");
 					Assert.IsTrue (b.UpdateAndroidResources (proj, doNotCleanupOnUpdate: true, parameters: new string [] { "DesignTimeBuild=true" }, environmentVariables: envVar),
 						"first build failed");
-					Assert.IsTrue (b.LastBuildOutput.Contains ("Skipping download of "),
+					Assert.AreEqual (!useManagedParser, b.LastBuildOutput.Contains ("Skipping download of "),
 						"failed to skip the downloading of files.");
 					var items = new List<string> ();
-					foreach (var file in Directory.EnumerateFiles (Path.Combine (path, proj.ProjectName, proj.IntermediateOutputPath, "android"), "R.java", SearchOption.AllDirectories)) {
-						var matches = regEx.Matches (File.ReadAllText (file));
-						items.AddRange (matches.Cast<System.Text.RegularExpressions.Match> ().Select(x => x.Groups ["value"].Value));
+					string first = null;
+					if (!useManagedParser) {
+						foreach (var file in Directory.EnumerateFiles (Path.Combine (path, proj.ProjectName, proj.IntermediateOutputPath, "android"), "R.java", SearchOption.AllDirectories)) {
+							var matches = regEx.Matches (File.ReadAllText (file));
+							items.AddRange (matches.Cast<System.Text.RegularExpressions.Match> ().Select (x => x.Groups ["value"].Value));
+						}
+						first = items.First ();
+						Assert.IsTrue (items.All (x => x == first), "All Items should have matching values");
 					}
-					var first = items.First ();
-					Assert.IsTrue (items.All (x => x == first), "All Items should have matching values");
 					WaitFor (1000);
 					b.Target = "Build";
 					Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, parameters: new string [] { "DesignTimeBuild=false" }, environmentVariables: envVar), "second build failed");
@@ -100,12 +103,14 @@ using System.Runtime.CompilerServices;
 					Assert.IsTrue (b.LastBuildOutput.Contains ($"Downloading {url}") || b.LastBuildOutput.Contains ($"reusing existing archive: {zipPath}"), $"{url} should have been downloaded.");
 					Assert.IsTrue (File.Exists (Path.Combine (extractedDir, "1", "content", "android-N", "aapt")), $"Files should have been extracted to {extractedDir}");
 					items.Clear ();
-					foreach (var file in Directory.EnumerateFiles (Path.Combine (path, proj.ProjectName, proj.IntermediateOutputPath, "android"), "R.java", SearchOption.AllDirectories)) {
-						var matches = regEx.Matches (File.ReadAllText (file));
-						items.AddRange (matches.Cast<System.Text.RegularExpressions.Match> ().Select (x => x.Groups["value"].Value));
+					if (!useManagedParser) {
+						foreach (var file in Directory.EnumerateFiles (Path.Combine (path, proj.ProjectName, proj.IntermediateOutputPath, "android"), "R.java", SearchOption.AllDirectories)) {
+							var matches = regEx.Matches (File.ReadAllText (file));
+							items.AddRange (matches.Cast<System.Text.RegularExpressions.Match> ().Select (x => x.Groups ["value"].Value));
+						}
+						first = items.First ();
+						Assert.IsTrue (items.All (x => x == first), "All Items should have matching values");
 					}
-					first = items.First ();
-					Assert.IsTrue (items.All (x => x == first), "All Items should have matching values");
 				}
 			}
 		}
