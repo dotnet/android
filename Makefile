@@ -96,8 +96,10 @@ prepare-external: prepare-deps
 	git submodule update --init --recursive
 	nuget restore $(SOLUTION)
 	nuget restore Xamarin.Android-Tests.sln
-	(cd $(call GetPath,JavaInterop) && make prepare)
-	(cd $(call GetPath,JavaInterop) && make bin/BuildDebug/JdkInfo.props)
+	$(foreach conf, $(CONFIGURATIONS), \
+		(cd $(call GetPath,JavaInterop) && make prepare CONFIGURATION=$(CONFIGURATION)) && \
+		(cd $(call GetPath,JavaInterop) && make bin/Build$(CONFIGURATION)/JdkInfo.props CONFIGURATION=$(CONFIGURATION)) && ) \
+	true
 
 prepare-props: prepare-external
 	cp build-tools/scripts/Configuration.Java.Interop.Override.props external/Java.Interop/Configuration.Override.props
