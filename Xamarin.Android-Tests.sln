@@ -45,6 +45,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.BindingReso
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.BindingResolveImports-Tests", "tests\ResolveImports\Xamarin.Android.BindingResolveImports-Tests\Xamarin.Android.BindingResolveImports-Tests.csproj", "{B297008B-C313-455E-B230-E119589D2D79}"
 EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Xamarin.Forms.Performance.Integration", "tests\Xamarin.Forms-Performance-Integration\Xamarin.Forms.Performance.Integration.shproj", "{195BE9C2-1F91-40DC-BD6D-DE860BF083FB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Forms.Performance.Integration.Droid", "tests\Xamarin.Forms-Performance-Integration\Droid\Xamarin.Forms.Performance.Integration.Droid.csproj", "{576312CC-83FF-48B1-A473-488CDC7121AD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -115,6 +119,10 @@ Global
 		{B297008B-C313-455E-B230-E119589D2D79}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B297008B-C313-455E-B230-E119589D2D79}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B297008B-C313-455E-B230-E119589D2D79}.Release|Any CPU.Build.0 = Release|Any CPU
+                {576312CC-83FF-48B1-A473-488CDC7121AD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+                {576312CC-83FF-48B1-A473-488CDC7121AD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+                {576312CC-83FF-48B1-A473-488CDC7121AD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+                {576312CC-83FF-48B1-A473-488CDC7121AD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{2305B00D-DE81-4744-B0DA-357835CAFE5A} = {43A4FB09-279A-4138-8027-EC1E1CED2E8A}

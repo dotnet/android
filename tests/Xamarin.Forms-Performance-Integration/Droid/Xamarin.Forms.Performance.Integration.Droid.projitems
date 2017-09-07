@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <TestApk Include="$(OutputPath)Xamarin.Forms_Performance_Integration-Signed.apk">
+      <Package>Xamarin.Forms_Performance_Integration</Package>
+      <Activity>Xamarin.Forms_Performance_Integration/md52b709e14dec302485bbcaeac0bd817ce.MainActivity</Activity>
+      <ResultsPath>$(MSBuildThisFileDirectory)..\..\..\TestResult-Xamarin.Forms_Test.xml</ResultsPath>
+      <TimingDefinitionsFilename>$(MSBuildThisFileDirectory)timing-definitions.txt</TimingDefinitionsFilename>
+    </TestApk>
+  </ItemGroup>
+</Project>
