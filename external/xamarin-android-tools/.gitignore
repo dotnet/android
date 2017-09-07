@@ -11,3 +11,4 @@ src/*.dll
 bin
 **/obj
 packages/
+TestResult-*.xml
