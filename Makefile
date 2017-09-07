@@ -97,8 +97,8 @@ prepare-external: prepare-deps
 	nuget restore $(SOLUTION)
 	nuget restore Xamarin.Android-Tests.sln
 	$(foreach conf, $(CONFIGURATIONS), \
-		(cd $(call GetPath,JavaInterop) && make prepare CONFIGURATION=$(CONFIGURATION)) && \
-		(cd $(call GetPath,JavaInterop) && make bin/Build$(CONFIGURATION)/JdkInfo.props CONFIGURATION=$(CONFIGURATION)) && ) \
+		(cd $(call GetPath,JavaInterop) && make prepare CONFIGURATION=$(conf)) && \
+		(cd $(call GetPath,JavaInterop) && make bin/Build$(conf)/JdkInfo.props CONFIGURATION=$(conf)) && ) \
 	true
 
 prepare-props: prepare-external
