@@ -20,13 +20,7 @@ namespace Xamarin.Android.Tools
 				sdk.Initialize (androidSdkPath ?? sdk.PreferedAndroidSdkPath, androidNdkPath ?? sdk.PreferedAndroidNdkPath,
 					javaSdkPath ?? sdk.PreferedJavaSdkPath);
 				if (IsInstalled) {
-					var levels = GetInstalledPlatformVersions ().Select (l => l.ApiLevel.ToString ()).ToArray ();
-					string levelList;
-					if (levels == null || levels.Length == 0)
-						levelList = "(none)";
-					else
-						levelList = string.Join (", ", levels);
-					AndroidLogger.LogInfo (null, "Found Android SDK. API levels: {0}", levelList);
+					AndroidLogger.LogInfo (null, "Found Android SDK.");
 				} else {
 					AndroidLogger.LogInfo (null, "Did not find Android SDK");
 				}
@@ -80,13 +74,6 @@ namespace Xamarin.Android.Tools
 			return null;
 		}
 
-		// it was useful when android-21 was android-L, or android-23 was android-MNC.
-		// We will use this when similar preview release is out.
-		static string ToApiName (int apiLevel)
-		{
-			return apiLevel.ToString ();
-		}
-
 		static string ValidatePath (string path)
 		{
 			if (String.IsNullOrEmpty (path))
@@ -96,30 +83,33 @@ namespace Xamarin.Android.Tools
 
 		public static string GetPlatformDirectory (int apiLevel)
 		{
-			return Path.Combine (AndroidSdkPath, "platforms", "android-" + ToApiName (apiLevel));
+			return GetPlatformDirectoryFromId (apiLevel.ToString ());
 		}
 
-		public static string GetPlatformDirectory (string osVersion)
+		public static string GetPlatformDirectoryFromId (string id)
 		{
-			var level = AndroidVersion.TryOSVersionToApiLevel (osVersion);
-			if (level == 0)
-				return null;
-			return GetPlatformDirectory (level);
+			return Path.Combine (AndroidSdkPath, "platforms", "android-" + id);
+		}
+
+		public static string TryGetPlatformDirectoryFromApiLevel (string apiLevel, AndroidVersions versions)
+		{
+			var id  = versions.GetIdFromApiLevel (apiLevel);
+			var dir = GetPlatformDirectoryFromId (id);
+
+			if (Directory.Exists (dir))
+				return dir;
+
+			var level   = versions.GetApiLevelFromId (id);
+			dir         = level.HasValue ? GetPlatformDirectory (level.Value) : null;
+			if (dir != null && Directory.Exists (dir))
+				return dir;
+
+			return null;
 		}
 
 		public static bool IsPlatformInstalled (int apiLevel)
 		{
 			return apiLevel != 0 && Directory.Exists (GetPlatformDirectory (apiLevel));
-		}
-
-		public static IEnumerable<AndroidVersion> GetInstalledPlatformVersions ()
-		{
-			var knownAndInstalledSdkLevels = AndroidVersion.KnownVersions.Where (v => IsPlatformInstalled (v.ApiLevel));
-
-			return knownAndInstalledSdkLevels.Where (version => {
-				var apiLevel = MonoDroidSdk.GetApiLevelForFrameworkVersion (version.OSVersion);
-				return MonoDroidSdk.IsSupportedFrameworkLevel (apiLevel);
-			});
 		}
 
 		public static bool IsInstalled {

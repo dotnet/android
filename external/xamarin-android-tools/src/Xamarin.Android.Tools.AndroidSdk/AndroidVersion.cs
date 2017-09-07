@@ -1,108 +1,84 @@
 ﻿using System;
+using System.IO;
+using System.Xml.Linq;
 
 namespace Xamarin.Android.Tools
 {
 	public class AndroidVersion
 	{
-		public static readonly int MaxApiLevel = 24;
+		// Android API Level. *Usually* corresponds to $(AndroidSdkPath)/platforms/android-$(ApiLevel)/android.jar
+		public  int             ApiLevel                { get; private set; }
 
-		public AndroidVersion (int apilevel, string osVersion)
+		// Android API Level ID. == ApiLevel on stable versions, will be e.g. `N` for previews: $(AndroidSdkPath)/platforms/android-N/android.jar
+		public  string          Id                      { get; private set; }
+
+		// Name of an Android release, e.g. "Oreo"
+		public  string          CodeName                { get; private set; }
+
+		// Android version number, e.g. 8.0
+		public string           OSVersion               { get; private set; }
+
+		// Xamarin.Android $(TargetFrameworkVersion) value, e.g. 8.0
+		public Version          TargetFrameworkVersion  { get; private set; }
+
+		// TargetFrameworkVersion *with* a leading `v`, e.g. "v8.0"
+		public string           FrameworkVersion        { get; private set; }
+
+		// Is this API level stable? Should be False for non-numeric Id values.
+		public bool             Stable                  { get; private set; }
+
+		// Alternate Ids for a given API level. Allows for historical mapping, e.g. API-11 has alternate ID 'H'.
+		internal    string[]    AlternateIds            { get; set; }
+
+		public AndroidVersion (int apiLevel, string osVersion, string codeName = null, string id = null, bool stable = true)
 		{
-			this.ApiLevel = apilevel;
-			this.OSVersion = osVersion;
+			if (osVersion == null)
+				throw new ArgumentNullException (nameof (osVersion));
+
+			ApiLevel                = apiLevel;
+			Id                      = id ?? ApiLevel.ToString ();
+			CodeName                = codeName;
+			OSVersion               = osVersion;
+			TargetFrameworkVersion  = Version.Parse (osVersion);
+			FrameworkVersion        = "v" + osVersion;
+			Stable                  = stable;
 		}
 
-		AndroidVersion (int apilevel, string osVersion, string codeName, Version version)
+		public override string ToString ()
 		{
-			this.ApiLevel = apilevel;
-			// TODO: remove osVersion from parameter list and generate from version
-			this.OSVersion = osVersion;
-			this.CodeName = codeName;
-			this.Version = version;
+			return $"(AndroidVersion: ApiLevel={ApiLevel} Id={Id} OSVersion={OSVersion} CodeName='{CodeName}' TargetFrameworkVersion={TargetFrameworkVersion} Stable={Stable})";
 		}
 
-		public int ApiLevel { get; private set; }
-		public string OSVersion { get; private set; }
-		public string CodeName { get; private set; }
-		public Version Version { get; private set; }
-
-		public static int OSVersionToApiLevel (string osVersion)
+		public static AndroidVersion Load (Stream stream)
 		{
-			int ret = TryOSVersionToApiLevel (osVersion);
-			if (ret == 0)
-				throw new ArgumentOutOfRangeException ("OS version not recognized: " + osVersion);
-			return ret;
+			var doc = XDocument.Load (stream);
+			return Load (doc);
 		}
 
-		public static int TryOSVersionToApiLevel (string frameworkVersion)
+		public static AndroidVersion Load (string uri)
 		{
-			// Use MonoDroidSdk.GetApiLevelForFrameworkVersion because that will translate XA versions >= 5.xx to the correct api level
-			var apiLevelText = MonoDroidSdk.GetApiLevelForFrameworkVersion (frameworkVersion);
-			int apiLevel;
-			int.TryParse (apiLevelText, out apiLevel);
-			return apiLevel;
+			var doc = XDocument.Load (uri);
+			return Load (doc);
 		}
 
-		public static string ApiLevelToOSVersion (int apiLevel)
+		// Example:
+		// <AndroidApiInfo>
+		//   <Id>26</Id>
+		//   <Level>26</Level>
+		//   <Name>Oreo</Name>
+		//   <Version>v8.0</Version>
+		//   <Stable>True</Stable>
+		// </AndroidApiInfo>
+		static AndroidVersion Load (XDocument doc)
 		{
-			string ret = TryApiLevelToOSVersion (apiLevel);
-			if (ret == null)
-				throw new ArgumentOutOfRangeException ("API level not recognized: " + apiLevel);
-			return ret;
+			var id      = (string) doc.Root.Element ("Id");
+			var level   = (int) doc.Root.Element ("Level");
+			var name    = (string) doc.Root.Element ("Name");
+			var version = (string) doc.Root.Element ("Version");
+			var stable  = (bool) doc.Root.Element ("Stable");
+
+			return new AndroidVersion (level, version.TrimStart ('v'), name, id, stable);
 		}
-
-		public static string TryApiLevelToOSVersion (int apiLevel)
-		{
-			var osVersion = MonoDroidSdk.GetFrameworkVersionForApiLevel (apiLevel.ToString ());
-			if (!string.IsNullOrEmpty (osVersion))
-				return osVersion.TrimStart ('v');
-			return null;
-		}
-
-		public static string TryOSVersionToCodeName (string frameworkVersion)
-		{
-			// match on API level, the framework version might not match what we have here (>= XA 5.x uses a different version scheme)
-			var apiLevel = TryOSVersionToApiLevel (frameworkVersion);
-
-			foreach (AndroidVersion version in KnownVersions)
-				if (version.ApiLevel == apiLevel)
-					return version.CodeName;
-			return null;
-		}
-
-		public static string TryFrameworkVersionToOSVersion (string frameworkVersion)
-		{
-			// match on API level, the framework version might not match what we have here (>= XA 5.x uses a different version scheme)
-			var apiLevel = TryOSVersionToApiLevel (frameworkVersion);
-
-			foreach (AndroidVersion version in KnownVersions)
-				if (version.ApiLevel == apiLevel)
-					return version.OSVersion;
-			return null;
-		}
-
-		public static AndroidVersion[] KnownVersions = new[] {
-			new AndroidVersion (4,  "1.6",   "Donut",                   new Version (1, 6)),
-			new AndroidVersion (5,  "2.0",   "Eclair",                  new Version (2, 0)),
-			new AndroidVersion (6,  "2.0.1", "Eclair",                  new Version (2, 0, 1)),
-			new AndroidVersion (7,  "2.1",   "Eclair",                  new Version (2, 1)),
-			new AndroidVersion (8,  "2.2",   "Froyo",                   new Version (2, 2)),
-			new AndroidVersion (10, "2.3",   "Gingerbread",             new Version (2, 3)),
-			new AndroidVersion (11, "3.0",   "Honeycomb",               new Version (3, 0)),
-			new AndroidVersion (12, "3.1",   "Honeycomb",               new Version (3, 1)),
-			new AndroidVersion (13, "3.2",   "Honeycomb",               new Version (3, 2)),
-			new AndroidVersion (14, "4.0",   "Ice Cream Sandwich",      new Version (4, 0)),
-			new AndroidVersion (15, "4.0.3", "Ice Cream Sandwich",      new Version (4, 0, 3)),
-			new AndroidVersion (16, "4.1",   "Jelly Bean",              new Version (4, 1)),
-			new AndroidVersion (17, "4.2",   "Jelly Bean",              new Version (4, 2)),
-			new AndroidVersion (18, "4.3",   "Jelly Bean",              new Version (4, 3)),
-			new AndroidVersion (19, "4.4",   "Kit Kat",                 new Version (4, 4)),
-			new AndroidVersion (20, "4.4.87", "Kit Kat + Wear support", new Version (4, 4, 87)),
-			new AndroidVersion (21, "5.0",   "Lollipop",                new Version (5, 0)),
-			new AndroidVersion (22, "5.1",   "Lollipop",                new Version (5, 1)),
-			new AndroidVersion (23, "6.0",   "Marshmallow",             new Version (6, 0)),
-			new AndroidVersion (24, "7.0",   "Nougat",                  new Version (7, 0)),
-		};
 	}
 }
 

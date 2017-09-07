@@ -242,7 +242,7 @@ namespace Xamarin.Android.Tools
 
 		readonly Dictionary<Version, string>  SupportedFrameworks = new Dictionary<Version, string> ();
 
-		static readonly Dictionary<Version, string> FrameworkToApiLevels = new Dictionary<Version, string> (AndroidVersion.KnownVersions.ToDictionary<AndroidVersion, Version, string> (k => k.Version, v => v.ApiLevel.ToString ()));
+		static readonly Dictionary<Version, string> FrameworkToApiLevels = new Dictionary<Version, string> ();
 		static readonly Dictionary<Version, string> LegacyFrameworkToApiLevels = new Dictionary<Version, string> {
 			{ new Version (4, 5), "21" } // L Preview
 		};
