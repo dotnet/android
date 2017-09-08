@@ -21,7 +21,7 @@
 [submodule "external/mono"]
     path = external/mono
     url = https://github.com/mono/mono.git
-    branch = 2017-04
+    branch = d15-4-2017-04
 [submodule "external/mxe"]
     path = external/mxe
     url = https://github.com/xamarin/mxe.git
