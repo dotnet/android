@@ -43,7 +43,6 @@
   <ItemGroup>
     <Compile Include="AndroidVersionTests.cs" />
     <Compile Include="AndroidVersionsTests.cs" />
-    <Compile Include="MonoDroidSdkTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

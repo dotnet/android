@@ -38,13 +38,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="AndroidTargetArch.cs" />
     <Compile Include="OS.cs" />
-    <Compile Include="MonoDroidSdk.cs" />
     <Compile Include="AndroidVersion.cs" />
     <Compile Include="AndroidVersions.cs" />
     <Compile Include="AndroidSdk.cs" />
-    <Compile Include="Sdks\MonoDroidSdkBase.cs" />
-    <Compile Include="Sdks\MonoDroidSdkUnix.cs" />
-    <Compile Include="Sdks\MonoDroidSdkWindows.cs" />
     <Compile Include="AndroidLogger.cs" />
     <Compile Include="Sdks\AndroidSdkBase.cs" />
     <Compile Include="Sdks\AndroidSdkUnix.cs" />
