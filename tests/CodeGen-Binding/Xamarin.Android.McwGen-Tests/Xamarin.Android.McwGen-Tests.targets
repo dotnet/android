@@ -5,11 +5,11 @@
       Inputs="@(XamarinTestJar);%(IgnoreJar.Source)"
       Outputs="@(EmbeddedJar);@(IgnoreJar)">
     <MakeDir Directories="$(OutputPath)xt-classes" />
-    <Exec Command="&quot;$(JavaSdkDirectory)\bin\javac&quot; -source 1.5 -target 1.6 -d &quot;$(OutputPath)xt-classes&quot; -cp &quot;$(AndroidSdkDirectory)\platforms\android-$(_AndroidApiLevelName)\android.jar&quot; @(XamarinTestJar -&gt; '%(Identity)', ' ')" />
-    <Exec Command="&quot;$(JavaSdkDirectory)\bin\jar&quot; cf &quot;$(OutputPath)xamarin-test.jar&quot; -C &quot;$(OutputPath)xt-classes&quot; ." />
+    <Exec Command="&quot;$(JavaCPath)&quot; -source 1.5 -target 1.6 -d &quot;$(OutputPath)xt-classes&quot; -cp &quot;$(AndroidSdkDirectory)\platforms\android-$(_AndroidApiLevelName)\android.jar&quot; @(XamarinTestJar -&gt; '%(Identity)', ' ')" />
+    <Exec Command="&quot;$(JarPath)&quot; cf &quot;$(OutputPath)xamarin-test.jar&quot; -C &quot;$(OutputPath)xt-classes&quot; ." />
     <MakeDir Directories="@(IgnoreJar-&gt;'$(OutputPath)%(JarBaseName)')" />
-    <Exec Command="&quot;$(JavaSdkDirectory)\bin\javac&quot; -source 1.5 -target 1.6 -d @(IgnoreJar-&gt;'$(OutputPath)%(JarBaseName)') %(IgnoreJar.Source)" />
-    <Exec Command="&quot;$(JavaSdkDirectory)\bin\jar&quot; cf @(IgnoreJar-&gt;'$(OutputPath)%(JarBaseName).jar') -C @(IgnoreJar-&gt;'$(OutputPath)%(JarBaseName)') ." />
+    <Exec Command="&quot;$(JavaCPath)&quot; -source 1.5 -target 1.6 -d @(IgnoreJar-&gt;'$(OutputPath)%(JarBaseName)') %(IgnoreJar.Source)" />
+    <Exec Command="&quot;$(JarPath)&quot; cf @(IgnoreJar-&gt;'$(OutputPath)%(JarBaseName).jar') -C @(IgnoreJar-&gt;'$(OutputPath)%(JarBaseName)') ." />
   </Target>
   <Target Name="CleanLocal">
     <RemoveDir Directories="bin;obj;libs"/>

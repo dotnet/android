@@ -5,28 +5,27 @@
     <_TopDir>$(MSBuildThisFileDirectory)..\..</_TopDir>
     <_NuGet>.nuget\NuGet.exe</_NuGet>
   </PropertyGroup>
-  <ItemGroup>
-    <_ConfigurationFile Include="Windows-Configuration.OperatingSystem.props">
-      <Destination>$(_TopDir)\Configuration.OperatingSystem.props</Destination>
-    </_ConfigurationFile>
-    <_ConfigurationFile Include="Configuration.Java.Interop.Override.props">
-      <Destination>$(_TopDir)\external\Java.Interop\Configuration.Override.props</Destination>
-    </_ConfigurationFile>
-  </ItemGroup>
   <UsingTask AssemblyFile="$(_TopDir)\bin\Build$(Configuration)\xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.JdkInfo" />
+  <UsingTask AssemblyFile="$(_TopDir)\bin\Build$(Configuration)\xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" />
   <Target Name="Prepare">
     <Exec Command="git submodule update --init --recursive" WorkingDirectory="$(_TopDir)" />
-    <Copy
-        SourceFiles="@(_ConfigurationFile)"
-        DestinationFiles="@(_ConfigurationFile->'%(Destination)')"
-        SkipUnchangedFiles="True"
-    />
     <MSBuild Projects="$(MSBuildThisFileDirectory)..\xa-prep-tasks\xa-prep-tasks.csproj" />
     <JdkInfo
         AndroidSdkPath="$(AndroidSdkPath)"
         AndroidNdkPath="$(AndroidNdkPath)"
         JavaSdkPath="$(JavaSdkDirectory)"
-        Output="$(_TopDir)\external\Java.Interop\bin\BuildDebug\JdkInfo.props"
+        Output="$(_TopDir)\external\Java.Interop\bin\BuildDebug\JdkInfo.props">
+      <Output TaskParameter="JavaSdkDirectory" PropertyName="_JavaSdkDirectory" />
+    </JdkInfo>
+    <Copy
+        SourceFiles="Configuration.Java.Interop.Override.props"
+        DestinationFiles="$(_TopDir)\external\Java.Interop\Configuration.Override.props"
+        SkipUnchangedFiles="True"
+    />
+    <ReplaceFileContents
+        SourceFile="Windows-Configuration.OperatingSystem.props.in"
+        DestinationFile="$(_TopDir)\Configuration.OperatingSystem.props"
+        Replacements="@JAVA_HOME@=$(_JavaSdkDirectory)"
     />
     <Exec Command="$(_NuGet) restore Xamarin.Android.sln" WorkingDirectory="$(_TopDir)" />
     <Exec Command="$(_NuGet) restore external\Java.Interop\Java.Interop.sln" WorkingDirectory="$(_TopDir)" />

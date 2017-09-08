@@ -18,6 +18,9 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 
 		public string JavaSdkPath { get; set; }
 
+		[Output]
+		public string JavaSdkDirectory { get; set; }
+
 		public override bool Execute ()
 		{
 			Log.LogMessage (MessageImportance.Low, $"Task {nameof (JdkInfo)}");
@@ -67,7 +70,14 @@ namespace Xamarin.Android.BuildTools.PrepTasks
       </ItemGroup>
     </When>
   </Choose>
+  <PropertyGroup>
+    <JavaCPath Condition="" '$(JavaCPath)' == '' "">{Path.Combine (javaSdkPath, "bin", "javac.exe")}</JavaCPath>
+    <JarPath Condition="" '$(JarPath)' == '' "">{Path.Combine (javaSdkPath, "bin", "jar.exe")}</JarPath>
+  </PropertyGroup>
 </Project>");
+
+				JavaSdkDirectory = javaSdkPath;
+				Log.LogMessage (MessageImportance.Low, $"  [Output] {nameof (JavaSdkDirectory)}: {JavaSdkDirectory}");
 
 				return !Log.HasLoggedErrors;
 			}
