@@ -14,11 +14,14 @@ Xamarin.Android provides open-source bindings of the Android SDK for use with
 |-----------------------|--------|
 | **OSS macOS**         | [![OSS macOS x86_64][oss-macOS-x86_64-icon]][oss-macOS-x86_64-status] |
 | **OSS Ubuntu**        | [![OSS Linux/Ubuntu x86_64][oss-ubuntu-x86_64-icon]][oss-ubuntu-x86_64-status] |
+| **OSS Windows**       | [![OSS Windows x86_64][oss-windows-x86_64-icon]][oss-windows-x86_64-status] |
 
 [oss-macOS-x86_64-icon]: https://jenkins.mono-project.com/view/Xamarin.Android/job/xamarin-android/badge/icon
 [oss-macOS-x86_64-status]: https://jenkins.mono-project.com/view/Xamarin.Android/job/xamarin-android/
 [oss-ubuntu-x86_64-icon]: https://jenkins.mono-project.com/view/Xamarin.Android/job/xamarin-android-linux/badge/icon
 [oss-ubuntu-x86_64-status]: https://jenkins.mono-project.com/view/Xamarin.Android/job/xamarin-android-linux/
+[oss-windows-x86_64-icon]: https://devdiv.visualstudio.com/_apis/public/build/definitions/0bdbc590-a062-4c3f-b0f6-9383f67865ee/7212/badge
+[oss-windows-x86_64-status]: https://devdiv.visualstudio.com/DevDiv/Default/_build/index?definitionId=7212
 
 # Downloads
 
