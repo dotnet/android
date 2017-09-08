@@ -155,11 +155,11 @@ run-ji-tests:
 TEST_APK_PROJECTS = \
 	src/Mono.Android/Test/Mono.Android-Tests.csproj \
 	tests/CodeGen-Binding/Xamarin.Android.JcwGen-Tests/Xamarin.Android.JcwGen-Tests.csproj \
-	tests/Xamarin.Forms-Performance-Integration/Droid/Xamarin.Forms.Performance.Integration.Droid.csproj \
 	tests/locales/Xamarin.Android.Locale-Tests/Xamarin.Android.Locale-Tests.csproj
 
 TEST_APK_PROJECTS_RELEASE = \
-	src/Mono.Android/Test/Mono.Android-Tests.csproj
+	src/Mono.Android/Test/Mono.Android-Tests.csproj \
+	tests/Xamarin.Forms-Performance-Integration/Droid/Xamarin.Forms.Performance.Integration.Droid.csproj
 
 # Syntax: $(call BUILD_TEST_APK,path/to/project.csproj,additional_msbuild_flags)
 define BUILD_TEST_APK
