@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
@@ -15,6 +16,11 @@ namespace Xamarin.Android.Tools
 		const string ANDROID_INSTALLER_KEY = "Path";
 		const string XAMARIN_ANDROID_INSTALLER_PATH = @"SOFTWARE\Xamarin\MonoAndroid";
 		const string XAMARIN_ANDROID_INSTALLER_KEY = "PrivateAndroidSdkPath";
+
+		public AndroidSdkWindows (Action<TraceLevel, string> logger)
+			: base (logger)
+		{
+		}
 
 		public override string ZipAlign { get; protected set; } = "zipalign.exe";
 		public override string JarSigner { get; protected set; } = "jarsigner.exe";
@@ -54,7 +60,7 @@ namespace Xamarin.Android.Tools
 			var roots = new[] { RegistryEx.CurrentUser, RegistryEx.LocalMachine };
 			var wow = RegistryEx.Wow64.Key32;
 
-			AndroidLogger.LogInfo ("sdk", "Looking for Android SDK..");
+			Logger (TraceLevel.Info, "Looking for Android SDK...");
 
 			// Check for the key the user gave us in the VS/addin options
 			foreach (var root in roots)
@@ -98,14 +104,14 @@ namespace Xamarin.Android.Tools
 
 			string subkey = @"SOFTWARE\JavaSoft\Java Development Kit";
 
-			AndroidLogger.LogInfo ("sdk", "Looking for Java 6 SDK..");
+			Logger (TraceLevel.Info, "Looking for Java 6 SDK...");
 
 			foreach (var wow64 in new[] { RegistryEx.Wow64.Key32, RegistryEx.Wow64.Key64 }) {
 				string key_name = string.Format (@"{0}\{1}\{2}", "HKLM", subkey, "CurrentVersion");
 				var currentVersion = RegistryEx.GetValueString (RegistryEx.LocalMachine, subkey, "CurrentVersion", wow64);
 
 				if (!string.IsNullOrEmpty (currentVersion)) {
-					AndroidLogger.LogInfo ("sdk", "  Key {0} found.", key_name);
+					Logger (TraceLevel.Info, $"  Key {key_name} found.");
 
 					// No matter what the CurrentVersion is, look for 1.6 or 1.7 or 1.8
 					if (CheckRegistryKeyForExecutable (RegistryEx.LocalMachine, subkey + "\\" + "1.6", "JavaHome", wow64, "bin", JarSigner))
@@ -118,7 +124,7 @@ namespace Xamarin.Android.Tools
 						return RegistryEx.GetValueString (RegistryEx.LocalMachine, subkey + "\\" + "1.8", "JavaHome", wow64);
 				}
 
-				AndroidLogger.LogInfo ("sdk", "  Key {0} not found.", key_name);
+				Logger (TraceLevel.Info, $"  Key {key_name} not found.");
 			}
 
 			// We ran out of things to check..
@@ -130,7 +136,7 @@ namespace Xamarin.Android.Tools
 			var roots = new[] { RegistryEx.CurrentUser, RegistryEx.LocalMachine };
 			var wow = RegistryEx.Wow64.Key32;
 
-			AndroidLogger.LogInfo ("sdk", "Looking for Android NDK..");
+			Logger (TraceLevel.Info, "Looking for Android NDK...");
 
 			// Check for the key the user gave us in the VS/addin options
 			foreach (var root in roots)
@@ -184,16 +190,16 @@ namespace Xamarin.Android.Tools
 			var path = NullIfEmpty (RegistryEx.GetValueString (key, subkey, valueName, wow64));
 
 			if (path == null) {
-				AndroidLogger.LogInfo ("sdk", "  Key {0} not found.", key_name);
+				Logger (TraceLevel.Info, $"  Key {key_name} not found.");
 				return false;
 			}
 
 			if (!FindExecutableInDirectory (exe, Path.Combine (path, subdir)).Any ()) {
-				AndroidLogger.LogInfo ("sdk", "  Key {0} found:\n    Path does not contain {1} in \\{2} ({3}).", key_name, exe, subdir, path);
+				Logger (TraceLevel.Info, $"  Key {key_name} found:\n    Path does not contain {exe} in \\{subdir} ({path}).");
 				return false;
 			}
 
-			AndroidLogger.LogInfo ("sdk", "  Key {0} found:\n    Path contains {1} in \\{2} ({3}).", key_name, exe, subdir, path);
+			Logger (TraceLevel.Info, $"  Key {key_name} found:\n    Path contains {exe} in \\{subdir} ({path}).");
 
 			return true;
 		}

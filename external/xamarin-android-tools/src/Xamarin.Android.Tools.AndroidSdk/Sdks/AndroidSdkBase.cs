@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using System.IO;
 using System.Collections.Generic;
@@ -23,6 +24,13 @@ namespace Xamarin.Android.Tools
 					allAndroidNdks = GetAllAvailableAndroidNdks ().Distinct ().ToArray ();
 				return allAndroidNdks;
 			}
+		}
+
+		public readonly Action<TraceLevel, string> Logger;
+
+		public AndroidSdkBase (Action<TraceLevel, string> logger)
+		{
+			Logger  = logger;
 		}
 
 		public string AndroidSdkPath { get; private set; }
@@ -53,6 +61,10 @@ namespace Xamarin.Android.Tools
 
 		public virtual void Initialize (string androidSdkPath = null, string androidNdkPath = null, string javaSdkPath = null)
 		{
+			androidSdkPath  = androidSdkPath ?? PreferedAndroidSdkPath;
+			androidNdkPath  = androidNdkPath ?? PreferedAndroidNdkPath;
+			javaSdkPath     = javaSdkPath ?? PreferedJavaSdkPath;
+
 			AndroidSdkPath  = ValidateAndroidSdkLocation (androidSdkPath) ? androidSdkPath : AllAndroidSdks.FirstOrDefault ();
 			AndroidNdkPath  = ValidateAndroidNdkLocation (androidNdkPath) ? androidNdkPath : AllAndroidNdks.FirstOrDefault ();
 			JavaSdkPath     = ValidateJavaSdkLocation (javaSdkPath) ? javaSdkPath : GetJavaSdkPath ();

@@ -1,13 +1,19 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Xml;
 using System.Xml.Linq;
-using System.Collections.Generic;
-using System.IO;
 
 namespace Xamarin.Android.Tools
 {
 	class AndroidSdkUnix : AndroidSdkBase
 	{
+		public AndroidSdkUnix (Action<TraceLevel, string> logger)
+			: base (logger)
+		{
+		}
+
 		public override string NdkHostPlatform32Bit {
 			get { return OS.IsMac ? "darwin-x86" : "linux-x86"; }
 		}
@@ -197,7 +203,7 @@ namespace Xamarin.Android.Tools
 			}
 		}
 
-		private static XDocument GetUnixConfigFile ()
+		private XDocument GetUnixConfigFile ()
 		{
 			var file = UnixConfigPath;
 			XDocument doc = null;
@@ -209,7 +215,8 @@ namespace Xamarin.Android.Tools
 				try {
 					doc = XDocument.Load (file);
 				} catch (Exception ex) {
-					AndroidLogger.LogError ("Could not load monodroid configuration file", ex);
+					Logger (TraceLevel.Error, "Could not load monodroid configuration file");
+					Logger (TraceLevel.Verbose, ex.ToString ());
 
 					// move out of the way and create a new one
 					doc = new XDocument (new XElement ("monodroid"));

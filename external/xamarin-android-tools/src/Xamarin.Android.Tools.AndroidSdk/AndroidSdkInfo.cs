@@ -1,35 +1,33 @@
 using System;
-using System.Linq;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
 
 namespace Xamarin.Android.Tools
 {
-	public class AndroidSdk
+	public class AndroidSdkInfo
 	{
-		private static AndroidSdkBase sdk;
+		AndroidSdkBase sdk;
 
-		public static void Refresh (string androidSdkPath = null, string androidNdkPath = null, string javaSdkPath = null)
+		public AndroidSdkInfo (Action<TraceLevel, string> logger, string androidSdkPath = null, string androidNdkPath = null, string javaSdkPath = null)
 		{
-			if (OS.IsWindows)
-				sdk = new AndroidSdkWindows ();
-			else
-				sdk = new AndroidSdkUnix ();
+			if (logger == null)
+				throw new ArgumentNullException (nameof (logger));
 
-			try {
-				sdk.Initialize (androidSdkPath ?? sdk.PreferedAndroidSdkPath, androidNdkPath ?? sdk.PreferedAndroidNdkPath,
-					javaSdkPath ?? sdk.PreferedJavaSdkPath);
-				if (IsInstalled) {
-					AndroidLogger.LogInfo (null, "Found Android SDK.");
-				} else {
-					AndroidLogger.LogInfo (null, "Did not find Android SDK");
-				}
-			} catch (Exception ex) {
-				AndroidLogger.LogError ("Error finding Android/Java SDKs", ex);
-			}
+			sdk = OS.IsWindows
+				? (AndroidSdkBase) new AndroidSdkWindows (logger)
+				: (AndroidSdkBase) new AndroidSdkUnix (logger);
+			sdk.Initialize (androidSdkPath, androidNdkPath, javaSdkPath);
+
+			// shouldn't happen, in that sdk.Initialize() should throw instead
+			if (string.IsNullOrEmpty (AndroidSdkPath))
+				throw new InvalidOperationException ($"Could not determine Android SDK location. Please provide `{nameof (androidSdkPath)}`.");
+			if (string.IsNullOrEmpty (JavaSdkPath))
+				throw new InvalidOperationException ($"Could not determine Java SDK location. Please provide `{nameof (javaSdkPath)}`.");
 		}
 
-		public static IEnumerable<string> GetBuildToolsPaths (string preferredBuildToolsVersion)
+		public IEnumerable<string> GetBuildToolsPaths (string preferredBuildToolsVersion)
 		{
 			if (!string.IsNullOrEmpty (preferredBuildToolsVersion)) {
 				var preferredDir = Path.Combine (AndroidSdkPath, "build-tools", preferredBuildToolsVersion);
@@ -39,10 +37,8 @@ namespace Xamarin.Android.Tools
 			return GetBuildToolsPaths ();
 		}
 
-		public static IEnumerable<string> GetBuildToolsPaths ()
+		public IEnumerable<string> GetBuildToolsPaths ()
 		{
-			ValidatePath (AndroidSdkPath);
-
 			var buildTools  = Path.Combine (AndroidSdkPath, "build-tools");
 			if (Directory.Exists (buildTools)) {
 				var preview = Directory.EnumerateDirectories (buildTools)
@@ -74,26 +70,19 @@ namespace Xamarin.Android.Tools
 			return null;
 		}
 
-		static string ValidatePath (string path)
-		{
-			if (String.IsNullOrEmpty (path))
-				throw new InvalidOperationException ("This property is not valid when the SDK is not installed");
-			return path;
-		}
-
-		public static string GetPlatformDirectory (int apiLevel)
+		public string GetPlatformDirectory (int apiLevel)
 		{
 			return GetPlatformDirectoryFromId (apiLevel.ToString ());
 		}
 
-		public static string GetPlatformDirectoryFromId (string id)
+		public string GetPlatformDirectoryFromId (string id)
 		{
 			return Path.Combine (AndroidSdkPath, "platforms", "android-" + id);
 		}
 
-		public static string TryGetPlatformDirectoryFromApiLevel (string apiLevel, AndroidVersions versions)
+		public string TryGetPlatformDirectoryFromApiLevel (string idOrApiLevel, AndroidVersions versions)
 		{
-			var id  = versions.GetIdFromApiLevel (apiLevel);
+			var id  = versions.GetIdFromApiLevel (idOrApiLevel);
 			var dir = GetPlatformDirectoryFromId (id);
 
 			if (Directory.Exists (dir))
@@ -107,30 +96,24 @@ namespace Xamarin.Android.Tools
 			return null;
 		}
 
-		public static bool IsPlatformInstalled (int apiLevel)
+		public bool IsPlatformInstalled (int apiLevel)
 		{
 			return apiLevel != 0 && Directory.Exists (GetPlatformDirectory (apiLevel));
 		}
 
-		public static bool IsInstalled {
-			get {
-				return !string.IsNullOrEmpty (AndroidSdkPath) && !string.IsNullOrEmpty (JavaSdkPath);
-			}
-		}
-
-		public static string AndroidNdkPath {
+		public string AndroidNdkPath {
 			get { return sdk.AndroidNdkPath; }
 		}
 
-		public static string AndroidSdkPath {
+		public string AndroidSdkPath {
 			get { return sdk.AndroidSdkPath; }
 		}
 
-		public static string JavaSdkPath {
+		public string JavaSdkPath {
 			get { return sdk.JavaSdkPath; }
 		}
 
-		public static string AndroidNdkHostPlatform {
+		public string AndroidNdkHostPlatform {
 			get { return sdk.NdkHostPlatform; }
 		}
 	}
