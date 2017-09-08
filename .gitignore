@@ -9,4 +9,8 @@ packages
 .nuget
 TestResult.xml
 TestResult-*.xml
+TestResult-*.csv
 .vs/
+Resource.designer.cs
+logcat-*.txt
+apk-sizes-*.txt
