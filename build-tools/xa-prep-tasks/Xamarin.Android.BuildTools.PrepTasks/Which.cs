@@ -31,10 +31,10 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 			var pathExt     = Environment.GetEnvironmentVariable ("PATHEXT");
 			var pathExts    = pathExt?.Split (new char [] { Path.PathSeparator }, StringSplitOptions.RemoveEmptyEntries);
 			FileExtensions  = new string [(pathExts?.Length ?? 0) + 1];
-			FileExtensions [0] = null;
 			if (pathExts != null) {
-				Array.Copy (pathExts, 0, FileExtensions, 1, pathExts.Length);
+				Array.Copy (pathExts, 0, FileExtensions, 0, pathExts.Length);
 			}
+			FileExtensions [FileExtensions.Length - 1] = null;
 		}
 
 		public static string GetProgramLocation (string programBasename, out string filename, string[] directories = null)

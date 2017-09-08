@@ -40,6 +40,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\Adb.cs" />
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\Android.cs" />
+    <Compile Include="Xamarin.Android.Tools.BootstrapTasks\Ant.cs" />
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\CheckAdbTarget.cs" />
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\CreateAndroidEmulator.cs" />
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\Emulator.cs" />

@@ -9,7 +9,7 @@
   />
   <Import
       Project="$(MSBuildThisFileDirectory)Configuration.OperatingSystem.props"
-      Condition=" '$(DoNotLoadOSProperties)' != 'True' "
+      Condition=" Exists('$(MSBuildThisFileDirectory)Configuration.OperatingSystem.props') And '$(DoNotLoadOSProperties)' != 'True' "
   />
   <PropertyGroup>
     <ProductVersion>8.0.99</ProductVersion>
@@ -48,6 +48,7 @@
     <AndroidSdkDirectory>$(AndroidToolchainDirectory)\sdk</AndroidSdkDirectory>
     <AndroidNdkDirectory>$(AndroidToolchainDirectory)\ndk</AndroidNdkDirectory>
     <AntDirectory>$(AndroidToolchainDirectory)\ant</AntDirectory>
+    <AntToolPath>$(AntDirectory)\bin</AntToolPath>
     <AndroidSupportedHostJitAbis Condition=" '$(AndroidSupportedHostJitAbis)' == '' ">$(HostOS)</AndroidSupportedHostJitAbis>
     <AndroidSupportedTargetJitAbis Condition=" '$(AndroidSupportedTargetJitAbis)' == '' ">armeabi-v7a:x86</AndroidSupportedTargetJitAbis>
     <JavaInteropSourceDirectory Condition=" '$(JavaInteropSourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\Java.Interop</JavaInteropSourceDirectory>

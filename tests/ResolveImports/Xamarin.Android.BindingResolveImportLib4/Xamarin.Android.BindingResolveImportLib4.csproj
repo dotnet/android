@@ -75,7 +75,7 @@
     </CleanDependsOn>
   </PropertyGroup>
   <Target Name="BuildJar" Inputs="Jars/com/xamarin/android/test/binding/resolveimport/Lib4.java" Outputs="Jars/lib4.jar">
-    <Exec Command="javac -source 1.5 -target 1.6 -d Jars -sourcepath Jars Jars/com/xamarin/android/test/binding/resolveimport/Lib4.java" />
+    <Exec Command="&quot;$(JavaCPath)&quot; -source 1.5 -target 1.6 -d Jars -sourcepath Jars Jars/com/xamarin/android/test/binding/resolveimport/Lib4.java" />
     <Exec WorkingDirectory="Jars" Command="zip -r lib4.jar com" />
   </Target>
   <Target Name="CleanJar">
