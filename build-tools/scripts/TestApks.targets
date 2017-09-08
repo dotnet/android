@@ -156,7 +156,7 @@
     <PropertyGroup>
       <_LogcatFilename>logcat-$(Configuration)$(_AotName).txt</_LogcatFilename>
     </PropertyGroup>
-    <Exec Command="&quot;$(AdbToolPath)\$(AdbToolExe)&quot; $(_AdbTarget) $(AdbOptions) logcat -v threadtime -d > $(_LogcatFilename)" />
+    <Exec Command="&quot;$(AdbToolPath)\$(AdbToolExe)&quot; $(_AdbTarget) $(AdbOptions) logcat -v threadtime -d | tee $(_LogcatFilename)" />
     <ProcessLogcatTiming
         Condition=" '%(TestApk.TimingDefinitionsFilename)' != '' "
         InputFilename="$(_LogcatFilename)"
