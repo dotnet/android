@@ -99,7 +99,7 @@
       Returns="$(IsExperimental)">
   </Target>
   <Target Name="_CreateDependencies"
-      DependsOnTargets="GetXAVersionInfo"
+      DependsOnTargets="ResolveReferences;GetXAVersionInfo"
       BeforeTargets="Build"
       Inputs="Xamarin.Android.Sdk.pkgdef.in"
       Outputs="Xamarin.Android.Sdk.pkgdef">
