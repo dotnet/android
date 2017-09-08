@@ -37,7 +37,7 @@ using Microsoft.Build.Utilities;
 using Microsoft.Build.Framework;
 using Xamarin.Android.Tools;
 using System.Xml.Linq;
-using Xamarin.Android.Build.Utilities;
+using Xamarin.Android.Tools;
 using System.Text.RegularExpressions;
 
 namespace Xamarin.Android.Tasks
@@ -119,12 +119,10 @@ namespace Xamarin.Android.Tasks
 
 		public override bool Execute ()
 		{
-			MonoAndroidHelper.InitializeAndroidLogger (ErrorHandler, WarningHandler, InfoHandler, DebugHandler);
 			try {
 				return RunTask();
 			}
 			finally {
-				MonoAndroidHelper.ClearAndroidLogger (ErrorHandler, WarningHandler, InfoHandler, DebugHandler);
 			}
 		}
 
@@ -151,9 +149,9 @@ namespace Xamarin.Android.Tasks
 			MonoAndroidHelper.RefreshSupportedVersions (ReferenceAssemblyPaths);
 			MonoAndroidHelper.RefreshAndroidSdk (AndroidSdkPath, AndroidNdkPath, JavaSdkPath);
 
-			this.AndroidNdkPath = AndroidSdk.AndroidNdkPath;
-			this.AndroidSdkPath = AndroidSdk.AndroidSdkPath;
-			this.JavaSdkPath = AndroidSdk.JavaSdkPath;
+			this.AndroidNdkPath = MonoAndroidHelper.AndroidSdk.AndroidNdkPath;
+			this.AndroidSdkPath = MonoAndroidHelper.AndroidSdk.AndroidSdkPath;
+			this.JavaSdkPath    = MonoAndroidHelper.AndroidSdk.JavaSdkPath;
 
 			if (!ValidateJavaVersion (TargetFrameworkVersion, AndroidSdkBuildToolsVersion))
 				return false;
@@ -180,7 +178,7 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
-			foreach (var dir in AndroidSdk.GetBuildToolsPaths (AndroidSdkBuildToolsVersion)) {
+			foreach (var dir in MonoAndroidHelper.AndroidSdk.GetBuildToolsPaths (AndroidSdkBuildToolsVersion)) {
 				Log.LogDebugMessage ("Trying build-tools path: {0}", dir);
 				if (dir == null || !Directory.Exists (dir))
 					continue;

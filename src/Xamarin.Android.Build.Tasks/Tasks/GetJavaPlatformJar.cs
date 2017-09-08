@@ -8,7 +8,6 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
 using Xamarin.Android.Tools;
-using Xamarin.Android.Build.Utilities;
 
 namespace Xamarin.Android.Tasks
 {
@@ -70,7 +69,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			platform            = GetTargetSdkVersion (platform, target_sdk);
-			JavaPlatformJarPath = Path.Combine (AndroidSdk.GetPlatformDirectoryFromApiLevel (platform, MonoAndroidHelper.SupportedVersions), "android.jar");
+			JavaPlatformJarPath = Path.Combine (MonoAndroidHelper.AndroidSdk.TryGetPlatformDirectoryFromApiLevel (platform, MonoAndroidHelper.SupportedVersions), "android.jar");
 
 			if (!File.Exists (JavaPlatformJarPath)) {
 				Log.LogError ("Could not find android.jar for API Level {0}. " +
