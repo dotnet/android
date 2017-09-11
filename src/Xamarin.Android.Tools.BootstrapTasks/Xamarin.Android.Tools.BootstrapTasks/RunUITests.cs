@@ -10,10 +10,6 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 		[Required]
 		public                  string              Activity                    { get; set; }
 
-		protected   override    bool                LogTaskMessages {
-			get { return false; }
-		}
-
 		public override bool Execute ()
 		{
 			Log.LogMessage (MessageImportance.Low, $"Task {nameof (RunUITests)}");
