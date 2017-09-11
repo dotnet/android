@@ -154,6 +154,7 @@ run-ji-tests:
 # (2) Add a `@(UnitTestApk)` entry to `tests/RunApkTests.targets`
 TEST_APK_PROJECTS = \
 	src/Mono.Android/Test/Mono.Android-Tests.csproj \
+	tests/Xamarin.Forms-Performance-Integration/Droid/Xamarin.Forms.Performance.Integration.Droid.csproj \
 	tests/CodeGen-Binding/Xamarin.Android.JcwGen-Tests/Xamarin.Android.JcwGen-Tests.csproj \
 	tests/locales/Xamarin.Android.Locale-Tests/Xamarin.Android.Locale-Tests.csproj
 
