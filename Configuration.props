@@ -12,7 +12,7 @@
       Condition=" Exists('$(MSBuildThisFileDirectory)Configuration.OperatingSystem.props') And '$(DoNotLoadOSProperties)' != 'True' "
   />
   <PropertyGroup>
-    <ProductVersion>8.0.99</ProductVersion>
+    <ProductVersion>8.1.99</ProductVersion>
     <!-- *Latest* API level binding that we support; used when building src/Xamarin.Android.Build.Tasks -->
     <AndroidLatestApiLevel Condition="'$(AndroidLatestApiLevel)' == ''">26</AndroidLatestApiLevel>
     <AndroidLatestFrameworkVersion Condition="'$(AndroidLatestFrameworkVersion)' == ''">v8.0</AndroidLatestFrameworkVersion>
