@@ -105,7 +105,8 @@ namespace Xamarin.Android.Tasks
 				var document = new XDocument (
 					new XDeclaration ("1.0", "UTF-8", null),
 					new XElement ("Paths",
-						new XElement ("Jars", string.Join (";", Jars)),
+						new XElement ("Jars",
+							Jars.Select(e => new XElement ("Jar", e))),
 						new XElement ("ResolvedResourceDirectories",
 							ResolvedResourceDirectories.Select(e => new XElement ("ResolvedResourceDirectory", e))),
 						new XElement ("ResolvedAssetDirectories", 
