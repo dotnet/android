@@ -486,6 +486,8 @@ namespace Bug12935
             android:authorities='${applicationId}.FacebookInitProvider'
             android:name='.internal.FacebookInitProvider'
             android:exported='false' />
+        <meta-data android:name='android.support.VERSION' android:value='25.4.0' />
+        <meta-data android:name='android.support.VERSION' android:value='25.4.0' />
     </application>
 </manifest>
 ", encoding: System.Text.Encoding.UTF8);
@@ -522,6 +524,8 @@ namespace Bug12935
 						"${applicationId}.FacebookInitProvider was not replaced with com.xamarin.manifest.FacebookInitProvider");
 					Assert.IsTrue (manifest.Contains ("com.xamarin.test.internal.FacebookInitProvider"),
 						".internal.FacebookInitProvider was not replaced with com.xamarin.test.internal.FacebookInitProvider");
+					Assert.AreEqual (manifest.IndexOf ("meta-data", StringComparison.OrdinalIgnoreCase),
+					                 manifest.LastIndexOf ("meta-data", StringComparison.OrdinalIgnoreCase), "There should be only one meta-data element");
 				}
 			}
 		}

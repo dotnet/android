@@ -279,6 +279,11 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 			<AndroidIncludeDebugSymbols>True</AndroidIncludeDebugSymbols>
 		</PropertyGroup>
 	</When>
+	<When Condition=" '$(EmbedAssembliesIntoApk)' == 'False' ">
+		<PropertyGroup>
+			<AndroidIncludeDebugSymbols>True</AndroidIncludeDebugSymbols>
+		</PropertyGroup>
+	</When>
 	<Otherwise>
 		<PropertyGroup>
 			<AndroidIncludeDebugSymbols>False</AndroidIncludeDebugSymbols>
@@ -1025,7 +1030,7 @@ because xbuild doesn't support framework reference assemblies.
 	</ReadLinesFromFile>
 </Target>
 
-<Target Name="_CreatePropertiesCache" DependsOnTargets="_ReadPropertiesCache">
+<Target Name="_CreatePropertiesCache" DependsOnTargets="_SetupDesignTimeBuildForBuild;_ReadPropertiesCache">
 	<MakeDir Directories="$(IntermediateOutputPath)" Condition="!Exists('$(IntermediateOutputPath)')" />
 	<WriteLinesToFile
 		Condition="'@(_PropertiesCache)' != '@(_PropertyCacheItems)'" 
