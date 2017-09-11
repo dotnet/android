@@ -23,7 +23,7 @@ namespace Xamarin.Android.Tasks
 
 			var convertedFiles = new List<ITaskItem> ();
 			foreach (var file in Files) {
-				var pdb = file.ToString ();
+				var pdb = file.ItemSpec;
 
 				if (!File.Exists (pdb))
 					continue;
