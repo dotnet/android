@@ -166,6 +166,12 @@ namespace Xamarin.Android.Tasks
 			// that means for EVERYTHING! Which will be a HUGE amount of warnings for a large project
 			if (string.IsNullOrEmpty (DisabledIssues) || !DisabledIssues.Contains ("UnusedResources"))
 				DisabledIssues = "UnusedResources" + (!string.IsNullOrEmpty(DisabledIssues) ? ","+DisabledIssues : "");
+
+			// We need to hard code this test as disabled in because Lint will issue a warning
+			// for the MonoPackageManager.java since we have to use a static to keep track of the
+			// application instance.
+			if (string.IsNullOrEmpty (DisabledIssues) || !DisabledIssues.Contains ("StaticFieldLeak"))
+				DisabledIssues = "StaticFieldLeak" + (!string.IsNullOrEmpty (DisabledIssues) ? "," + DisabledIssues : "");
 			
 			Log.LogDebugMessage ("Lint Task");
 			Log.LogDebugMessage ("  TargetDirectory: {0}", TargetDirectory);
