@@ -45,6 +45,8 @@
     <Compile Include="Sdks\AndroidSdkUnix.cs" />
     <Compile Include="Sdks\AndroidSdkWindows.cs" />
     <Compile Include="ProcessUtils.cs" />
+    <Compile Include="AndroidAppManifest.cs" />
+    <Compile Include="FileUtil.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
