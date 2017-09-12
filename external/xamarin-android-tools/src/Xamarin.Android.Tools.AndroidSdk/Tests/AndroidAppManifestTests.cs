@@ -21,7 +21,7 @@ namespace Xamarin.Android.Tools.Tests
 			Assert.Throws<ArgumentNullException> (() => AndroidAppManifest.Load ((string) null, versions));
 			Assert.Throws<ArgumentNullException> (() => AndroidAppManifest.Load ("filename", null));
 			Assert.Throws<ArgumentNullException> (() => AndroidAppManifest.Load ((XDocument) null, versions));
-			Assert.Throws<ArgumentNullException> (() => AndroidAppManifest.Load (GetTestAppManifest (), versions));
+			Assert.Throws<ArgumentNullException> (() => AndroidAppManifest.Load (GetTestAppManifest (), null));
 
 			Assert.Throws<ArgumentException> (() => AndroidAppManifest.Load (XDocument.Parse ("<invalid-root/>"), versions));
 		}

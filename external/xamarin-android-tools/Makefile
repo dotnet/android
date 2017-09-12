@@ -34,7 +34,7 @@ endef
 $(NUNIT_CONSOLE): prepare
 
 NUNIT_TESTS = \
-	bin/Test$(CONFIGURATION)/Xamarin.Android.Tools-Tests.dll
+	bin/Test$(CONFIGURATION)/Xamarin.Android.Tools.AndroidSdk-Tests.dll
 
 run-nunit-tests: $(NUNIT_TESTS)
 	$(foreach t,$(NUNIT_TESTS), $(call RUN_NUNIT_TEST,$(t),1))

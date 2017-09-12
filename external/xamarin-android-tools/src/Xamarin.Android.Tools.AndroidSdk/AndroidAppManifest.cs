@@ -73,11 +73,21 @@ namespace Xamarin.Android.Tools
 
 		public static AndroidAppManifest Load (string filename, AndroidVersions versions)
 		{
+			if (filename == null)
+				throw new ArgumentNullException (nameof (filename));
+			if (versions == null)
+				throw new ArgumentNullException (nameof (versions));
+
 			return Load (XDocument.Load (filename), versions);
 		}
 
 		public static AndroidAppManifest Load (XDocument doc, AndroidVersions versions)
 		{
+			if (doc == null)
+				throw new ArgumentNullException (nameof (doc));
+			if (versions == null)
+				throw new ArgumentNullException (nameof (versions));
+
 			return new AndroidAppManifest (versions, doc);
 		}
 

@@ -6,7 +6,7 @@
     <ProjectGuid>{e34bcfa0-caa4-412c-aa1c-75db8d67d157}</ProjectGuid>
     <OutputType>Library</OutputType>
     <RootNamespace>Xamarin.Android.Tools</RootNamespace>
-    <AssemblyName>Xamarin.Android.Tools</AssemblyName>
+    <AssemblyName>Xamarin.Android.Tools.AndroidSdk</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>

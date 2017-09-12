@@ -8,7 +8,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Xamarin.Android.Tools.Tests</RootNamespace>
-    <AssemblyName>Xamarin.Android.Tools-Tests</AssemblyName>
+    <AssemblyName>Xamarin.Android.Tools.AndroidSdk-Tests</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
