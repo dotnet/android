@@ -151,7 +151,9 @@
         Condition=" '%(TestApk.Activity)' != '' "
         AdbTarget="$(_AdbTarget)"
         AdbOptions="$(AdbOptions)"
-        Activity="%(TestApk.Activity)">
+        Activity="%(TestApk.Activity)"
+        ToolExe="$(AdbToolExe)"
+        ToolPath="$(AdbToolPath)">
     </RunUITests>
     <PropertyGroup>
       <_LogcatFilename>logcat-$(Configuration)$(_AotName).txt</_LogcatFilename>
